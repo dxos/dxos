@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.MutationProtoUtil = exports.KeyValueProtoUtil = exports.ValueProtoUtil = void 0;
+exports.MutationUtil = exports.KeyValueUtil = exports.ValueUtil = void 0;
 
 var _v = _interopRequireDefault(require("uuid/v4"));
 
@@ -16,67 +16,67 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *
  * { null, boolean, number, string }
  */
-class ValueProtoUtil {
+class ValueUtil {
   // TODO(burdon): Detect?
   static createMessage(value) {
     if (value === null || value === undefined) {
       return {
-        [ValueProtoUtil.NULL]: true
+        [ValueUtil.NULL]: true
       };
     } else if (typeof value === 'boolean') {
       return {
-        [ValueProtoUtil.BOOLEAN]: value
+        [ValueUtil.BOOLEAN]: value
       };
     } else if (typeof value === 'number') {
       return {
-        [ValueProtoUtil.INTEGER]: value
+        [ValueUtil.INTEGER]: value
       };
     } else if (typeof value === 'string') {
       return {
-        [ValueProtoUtil.STRING]: value
+        [ValueUtil.STRING]: value
       };
     } else if (typeof value === 'object') {
       return {
-        [ValueProtoUtil.OBJECT]: value
+        [ValueUtil.OBJECT]: value
       };
     } else {
-      throw Error("Illegal value: ".concat(value));
+      throw Error(`Illegal value: ${value}`);
     }
   }
 
   static bool(value) {
     return {
-      [ValueProtoUtil.BOOLEAN]: value
+      [ValueUtil.BOOLEAN]: value
     };
   }
 
   static integer(value) {
     return {
-      [ValueProtoUtil.INTEGER]: value
+      [ValueUtil.INTEGER]: value
     };
   }
 
   static float(value) {
     return {
-      [ValueProtoUtil.FLOAT]: value
+      [ValueUtil.FLOAT]: value
     };
   }
 
   static string(value) {
     return {
-      [ValueProtoUtil.STRING]: value
+      [ValueUtil.STRING]: value
     };
   }
 
   static datetime(value) {
     return {
-      [ValueProtoUtil.DATE]: value
+      [ValueUtil.DATE]: value
     };
   }
 
   static fromMessage(value) {
     console.assert(value);
-    const types = [ValueProtoUtil.BOOLEAN, ValueProtoUtil.INTEGER, ValueProtoUtil.FLOAT, ValueProtoUtil.STRING, ValueProtoUtil.OBJECT, ValueProtoUtil.DATE];
+    const types = [ValueUtil.BOOLEAN, ValueUtil.INTEGER, ValueUtil.FLOAT, ValueUtil.STRING, ValueUtil.OBJECT, ValueUtil.DATE];
     return value[types.find(type => value[type] !== undefined)];
   }
 
@@ -86,26 +86,26 @@ class ValueProtoUtil {
  */
 
 
-exports.ValueProtoUtil = ValueProtoUtil;
+exports.ValueUtil = ValueUtil;
 
-_defineProperty(ValueProtoUtil, "NULL", 'isNull');
+_defineProperty(ValueUtil, "NULL", 'isNull');
 
-_defineProperty(ValueProtoUtil, "BOOLEAN", 'boolValue');
+_defineProperty(ValueUtil, "BOOLEAN", 'boolValue');
 
-_defineProperty(ValueProtoUtil, "INTEGER", 'intValue');
+_defineProperty(ValueUtil, "INTEGER", 'intValue');
 
-_defineProperty(ValueProtoUtil, "FLOAT", 'floatValue');
+_defineProperty(ValueUtil, "FLOAT", 'floatValue');
 
-_defineProperty(ValueProtoUtil, "STRING", 'stringValue');
+_defineProperty(ValueUtil, "STRING", 'stringValue');
 
-_defineProperty(ValueProtoUtil, "OBJECT", 'objectValue');
+_defineProperty(ValueUtil, "OBJECT", 'objectValue');
 
-class KeyValueProtoUtil {
+class KeyValueUtil {
   static createMessage(property, value) {
     console.assert(property);
     return {
       property,
-      value: ValueProtoUtil.createMessage(value)
+      value: ValueUtil.createMessage(value)
     };
   }
 
@@ -117,9 +117,9 @@ class KeyValueProtoUtil {
  */
 
 
-exports.KeyValueProtoUtil = KeyValueProtoUtil;
+exports.KeyValueUtil = KeyValueUtil;
 
-class MutationProtoUtil {
+class MutationUtil {
   static createMessage(objectId, value, options = undefined) {
     console.assert(objectId);
     return {
@@ -132,7 +132,7 @@ class MutationProtoUtil {
 
 
   static applyMutations(object, messages) {
-    messages.forEach(message => MutationProtoUtil.applyMutation(object, message));
+    messages.forEach(message => MutationUtil.applyMutation(object, message));
     return object;
   }
 
@@ -144,11 +144,11 @@ class MutationProtoUtil {
       }
     } = message;
 
-    if (value[ValueProtoUtil.NULL]) {
+    if (value[ValueUtil.NULL]) {
       delete object[property];
     } else {
       // TODO(burdon): Check type from proto schema.
-      object[property] = ValueProtoUtil.fromMessage(value);
+      object[property] = ValueUtil.fromMessage(value);
     }
 
     return object;
@@ -156,5 +156,5 @@ class MutationProtoUtil {
 
 }
 
-exports.MutationProtoUtil = MutationProtoUtil;
+exports.MutationUtil = MutationUtil;
 //# sourceMappingURL=mutation.js.map

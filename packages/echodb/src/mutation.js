@@ -9,7 +9,7 @@ import uuid from 'uuid/v4';
  *
  * { null, boolean, number, string }
  */
-export class ValueProtoUtil {
+export class ValueUtil {
 
   static NULL     = 'isNull';
   static BOOLEAN  = 'boolValue';
@@ -20,50 +20,50 @@ export class ValueProtoUtil {
 
   static createMessage(value) {
     if (value === null || value === undefined) {
-      return { [ValueProtoUtil.NULL]: true };
+      return { [ValueUtil.NULL]: true };
     } else if (typeof value === 'boolean') {
-      return { [ValueProtoUtil.BOOLEAN]: value };
+      return { [ValueUtil.BOOLEAN]: value };
     } else if (typeof value === 'number') {
-      return { [ValueProtoUtil.INTEGER]: value };
+      return { [ValueUtil.INTEGER]: value };
     } else if (typeof value === 'string') {
-      return { [ValueProtoUtil.STRING]: value };
+      return { [ValueUtil.STRING]: value };
     } else if (typeof value === 'object') {
-      return { [ValueProtoUtil.OBJECT]: value };
+      return { [ValueUtil.OBJECT]: value };
     } else {
       throw Error(`Illegal value: ${value}`);
     }
   }
 
   static bool(value) {
-    return { [ValueProtoUtil.BOOLEAN]: value };
+    return { [ValueUtil.BOOLEAN]: value };
   }
 
   static integer(value) {
-    return { [ValueProtoUtil.INTEGER]: value };
+    return { [ValueUtil.INTEGER]: value };
   }
 
   static float(value) {
-    return { [ValueProtoUtil.FLOAT]: value };
+    return { [ValueUtil.FLOAT]: value };
   }
 
   static string(value) {
-    return { [ValueProtoUtil.STRING]: value };
+    return { [ValueUtil.STRING]: value };
   }
 
   static datetime(value) {
-    return { [ValueProtoUtil.DATE]: value };
+    return { [ValueUtil.DATE]: value };
   }
 
   static fromMessage(value) {
     console.assert(value);
 
     const types = [
-      ValueProtoUtil.BOOLEAN,
-      ValueProtoUtil.INTEGER,
-      ValueProtoUtil.FLOAT,
-      ValueProtoUtil.STRING,
-      ValueProtoUtil.OBJECT,
-      ValueProtoUtil.DATE
+      ValueUtil.BOOLEAN,
+      ValueUtil.INTEGER,
+      ValueUtil.FLOAT,
+      ValueUtil.STRING,
+      ValueUtil.OBJECT,
+      ValueUtil.DATE
     ];
 
     return value[types.find(type => value[type] !== undefined)];
@@ -73,14 +73,14 @@ export class ValueProtoUtil {
 /**
  * Represents a named property value.
  */
-export class KeyValueProtoUtil {
+export class KeyValueUtil {
 
   static createMessage(property, value) {
     console.assert(property);
 
     return {
       property,
-      value: ValueProtoUtil.createMessage(value),
+      value: ValueUtil.createMessage(value),
     };
   }
 }
@@ -90,7 +90,7 @@ export class KeyValueProtoUtil {
  *
  * { id, objectId, property, value, depends }
  */
-export class MutationProtoUtil {
+export class MutationUtil {
 
   static createMessage(objectId, value, options = undefined) {
     console.assert(objectId);
@@ -106,18 +106,18 @@ export class MutationProtoUtil {
   // TODO(burdon): Recursive object, array (see alienlabs).
 
   static applyMutations(object, messages) {
-    messages.forEach(message => MutationProtoUtil.applyMutation(object, message));
+    messages.forEach(message => MutationUtil.applyMutation(object, message));
     return object;
   }
 
   static applyMutation(object, message) {
     const { value: { property, value } } = message;
 
-    if (value[ValueProtoUtil.NULL]) {
+    if (value[ValueUtil.NULL]) {
       delete object[property];
     } else {
       // TODO(burdon): Check type from proto schema.
-      object[property] = ValueProtoUtil.fromMessage(value);
+      object[property] = ValueUtil.fromMessage(value);
     }
 
     return object;

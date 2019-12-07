@@ -5,8 +5,7 @@
 import { EventEmitter } from 'events';
 import uuid from 'uuid/v4';
 
-import { KeyValueProtoUtil, MutationProtoUtil } from './mutation';
-import { sortByProperty } from './util';
+import { KeyValueUtil, MutationUtil } from './mutation';
 
 /**
  * Simple Object Datastore composed from log mutations.
@@ -51,80 +50,10 @@ export class ObjectModel extends EventEmitter {
 
   static fromObject(object) {
     return Object.keys(object.properties || {}).map((property) => {
-      return MutationProtoUtil.createMessage(
-        object.id, KeyValueProtoUtil.createMessage(property, object.properties[property])
+      return MutationUtil.createMessage(
+        object.id, KeyValueUtil.createMessage(property, object.properties[property])
       );
     });
-  }
-
-  /**
-   * Merge the given feeds, respecting the order when messages include the ID of a previous message.
-   * @param {[{ id, messages }]} feeds
-   * @return {[{Message}]}
-   */
-  static mergeFeeds(feeds) {
-
-    // Ordered list of merged messages.
-    const merged = [];
-
-    // Set of already merged objects (used to unlock pending messages).
-    const messages = new Set();
-
-    // Initial feed cursors (sorted to ensure deterministic processing of messages.
-    const feedCursors = feeds
-      .map(() => ({ position: 0, pending: null }))
-      .sort(sortByProperty('id'));
-
-    // Gets the index of the next available feed to process.
-    const nextIndex = (current) => {
-      let count = feedCursors.length;
-
-      let next = -1;
-      while (count > 0 && next === -1) {
-        if (++current === feedCursors.length) {
-          current = 0;
-        }
-
-        // Skip if exhausted or pending.
-        // TODO(burdon): Currently each feed blocks until the depending mutation is resolved, but we could
-        // restrict the dependencies to individual objects and create multiple concurrent DAGs.
-        if (feedCursors[current].position === feeds[current].messages.length || feedCursors[current].pending) {
-          count--;
-          continue;
-        }
-
-        next = current;
-      }
-
-      return next;
-    };
-
-    // Breadth-first merge.
-    let current = -1;
-    while ((current = nextIndex(current)) !== -1) {
-      const index = feedCursors[current];
-
-      // Continue if pending.
-      const message = feeds[current].messages[index.position];
-      if (message.depends && !messages.has(message.depends)) {
-        index.pending = message.depends;
-        continue;
-      }
-
-      // Unlock pending messages.
-      feedCursors.forEach((index) => {
-        if (index.pending === message.id) {
-          index.pending = null;
-        }
-      });
-
-      // Append the message and increment the cursor.
-      messages.add(message.id);
-      merged.push(message);
-      index.position++;
-    }
-
-    return merged;
   }
 
   // Objects indexed by ID.
@@ -192,7 +121,7 @@ export class ObjectModel extends EventEmitter {
             this._objectById.set(objectId, object);
           }
 
-          MutationProtoUtil.applyMutation(object.properties, message);
+          MutationUtil.applyMutation(object.properties, message);
         }
       }
     });

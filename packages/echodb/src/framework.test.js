@@ -9,7 +9,7 @@ import { Framework } from '@wirelineio/framework';
 
 import { ObjectModel } from './object';
 import { LogViewAdapter } from './view';
-import { MutationProtoUtil, KeyValueProtoUtil } from './mutation';
+import { MutationUtil, KeyValueUtil } from './mutation';
 
 const createFramework = async (partyKey, name) => {
   return new Framework({
@@ -100,7 +100,7 @@ test('mutations', async () => {
     expect(model1.objects.get(objects[1].id).properties.priority).toEqual(2);
 
     const mutations = [
-      MutationProtoUtil.createMessage(objects[1].id, KeyValueProtoUtil.createMessage('priority', 3))
+      MutationUtil.createMessage(objects[1].id, KeyValueUtil.createMessage('priority', 3))
     ];
     await model2.commitMutations(mutations);
 
@@ -111,7 +111,7 @@ test('mutations', async () => {
   // Delete object.
   {
     const mutations = [
-      MutationProtoUtil.createMessage(objects[1].id, null, { deleted: true })
+      MutationUtil.createMessage(objects[1].id, null, { deleted: true })
     ];
     await model2.commitMutations(mutations);
 

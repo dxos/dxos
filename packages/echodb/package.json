@@ -13,8 +13,9 @@
   "license": "GPL-3.0",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npm run clean && npm run build:babel",
+    "build": "npm run clean && npm run build:protobuf && npm run build:babel",
     "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps --copy-files",
+    "build:protobuf": "pbjs -t json ./src/data.proto -o ./src/data.json",
     "clean": "del-cli dist",
     "coverage": "jest --coverage --verbose src",
     "lint": "eslint ./src --ignore-path ../../.eslintignore",
@@ -26,10 +27,15 @@
   "browserslist": [
     "> 5%"
   ],
+  "jest": {
+    "testEnvironment": "node"
+  },
   "dependencies": {
+    "@dxos/codec-protobuf": "^1.1.0-beta.0",
     "debug": "^4.1.1",
     "hypercore-crypto": "^1.0.0",
     "lodash.merge": "^4.6.1",
+    "protobufjs": "^6.8.8",
     "protocol-buffers": "^4.1.0",
     "source-map-support": "^0.5.12",
     "uuid": "^3.3.3"
@@ -45,6 +51,7 @@
     "babel-jest": "^24.8.0",
     "babel-plugin-add-module-exports": "^1.0.2",
     "babel-plugin-inline-import": "^3.0.0",
+    "del-cli": "^3.0.0",
     "eslint": "^5.16.0",
     "jest": "^24.8.0",
     "wait-for-expect": "^3.0.0"

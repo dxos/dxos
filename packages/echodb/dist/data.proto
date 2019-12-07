@@ -40,26 +40,6 @@ message Value {
 }
 
 //
-// Generic mutation.
-//
-message Mutation {
-  string id                       = 1;
-  string depends                  = 2;        // TODO(burdon): Move from here (impl. vector clock?)
-  string objectId                 = 3;
-
-  oneof action {
-    bool deleted                  = 10;
-    string property               = 11;
-  }
-
-  oneof apply {
-    Value value                   = 20;
-    Array.Mutation array          = 21;
-    Set.Mutation set              = 22;
-  }
-}
-
-//
 // Object represents a set of (possibly hierarchical) named properties.
 //
 message Object {
@@ -105,4 +85,24 @@ message Set {
   }
 
   repeated Value value            = 1;
+}
+
+//
+// Generic mutation.
+//
+message Mutation {
+  string id                       = 1;
+  string depends                  = 2;        // TODO(burdon): Move from here (impl. vector clock?)
+  string objectId                 = 3;
+
+  oneof action {
+    bool deleted                  = 10;
+    string property               = 11;
+  }
+
+  oneof apply {
+    Value value                   = 20;
+    Array.Mutation array          = 21;
+    Set.Mutation set              = 22;
+  }
 }

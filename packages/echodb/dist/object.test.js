@@ -5,7 +5,10 @@
 import protobuf from 'protocol-buffers';
 import uuid from 'uuid/v4';
 
-import { MutationProtoUtil, KeyValueProtoUtil, ObjectModel } from '.';
+import { MutationUtil, KeyValueUtil } from './mutation';
+import { ObjectModel } from './object';
+
+import { mergeFeeds } from './crdt';
 
 import DataProtoDefs from './data.proto';
 
@@ -27,9 +30,9 @@ test('Mutations', () => {
   const feed = {
     id: uuid(),
     messages: [
-      MutationProtoUtil.createMessage(objectId, KeyValueProtoUtil.createMessage('title', 'Test-1')),
-      MutationProtoUtil.createMessage(objectId, KeyValueProtoUtil.createMessage('priority', 1)),
-      MutationProtoUtil.createMessage(objectId, KeyValueProtoUtil.createMessage('complete', false)),
+      MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('title', 'Test-1')),
+      MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('priority', 1)),
+      MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('complete', false)),
     ]
   };
 
@@ -65,26 +68,26 @@ test('Merge feeds', () => {
   const feed1 = {
     id: 'feed-1',
     messages: [
-      (ref.a = MutationProtoUtil.createMessage(obj.x, KeyValueProtoUtil.createMessage('title', 'Test-1'))),
-      (ref.b = MutationProtoUtil.createMessage(obj.x, KeyValueProtoUtil.createMessage('priority', 1))),
-      (ref.c = MutationProtoUtil.createMessage(obj.x, KeyValueProtoUtil.createMessage('complete', false))),
+      (ref.a = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('title', 'Test-1'))),
+      (ref.b = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('priority', 1))),
+      (ref.c = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('complete', false))),
     ]
   };
 
   const feed2 = {
     id: 'feed-2',
     messages: [
-      (ref.d = MutationProtoUtil.createMessage(obj.y, KeyValueProtoUtil.createMessage('title', 'Test-2'))),
-      (ref.e = MutationProtoUtil.createMessage(obj.x, KeyValueProtoUtil.createMessage('priority', 3), { depends: ref.b.id })),
-      (ref.f = MutationProtoUtil.createMessage(obj.y, KeyValueProtoUtil.createMessage('complete', true))),
+      (ref.d = MutationUtil.createMessage(obj.y, KeyValueUtil.createMessage('title', 'Test-2'))),
+      (ref.e = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('priority', 3), { depends: ref.b.id })),
+      (ref.f = MutationUtil.createMessage(obj.y, KeyValueUtil.createMessage('complete', true))),
     ]
   };
 
   const feed3 = {
     id: 'feed-3',
     messages: [
-      (ref.g = MutationProtoUtil.createMessage(obj.y, KeyValueProtoUtil.createMessage('complete', false), { depends: ref.f.id })),
-      (ref.h = MutationProtoUtil.createMessage(obj.x, KeyValueProtoUtil.createMessage('priority', 2), { depends: ref.b.id })),
+      (ref.g = MutationUtil.createMessage(obj.y, KeyValueUtil.createMessage('complete', false), { depends: ref.f.id })),
+      (ref.h = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('priority', 2), { depends: ref.b.id })),
     ]
   };
 
@@ -123,7 +126,7 @@ test('Merge feeds', () => {
   };
 
   // Test in any order.
-  test(ObjectModel.mergeFeeds([feed1, feed2, feed3]));
-  test(ObjectModel.mergeFeeds([feed3, feed2, feed1]));
-  test(ObjectModel.mergeFeeds([feed2, feed3, feed1]));
+  test(mergeFeeds([feed1, feed2, feed3]));
+  test(mergeFeeds([feed3, feed2, feed1]));
+  test(mergeFeeds([feed2, feed3, feed1]));
 });
