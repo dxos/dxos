@@ -1,0 +1,55 @@
+{
+  "name": "@dxos/echodb",
+  "version": "0.0.1",
+  "description": "ECHO database.",
+  "homepage": "https://github.com/dxos/echodb/tree/master/packages/echodb#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/echodb/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/echodb.git"
+  },
+  "license": "GPL-3.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npm run clean && npm run build:babel",
+    "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps --copy-files",
+    "clean": "del-cli dist",
+    "coverage": "jest --coverage --verbose src",
+    "lint": "eslint ./src --ignore-path ../../.eslintignore",
+    "test": "jest --rootDir ./src --verbose",
+    "posttest": "npm run lint",
+    "prepublishOnly": "npm run test && npm run build",
+    "watch": "babel-watch ./src --out-dir ./dist --source-maps"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "dependencies": {
+    "debug": "^4.1.1",
+    "hypercore-crypto": "^1.0.0",
+    "lodash.merge": "^4.6.1",
+    "protocol-buffers": "^4.1.0",
+    "source-map-support": "^0.5.12",
+    "uuid": "^3.3.3"
+  },
+  "devDependencies": {
+    "@babel/cli": "7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/plugin-proposal-export-default-from": "^7.5.2",
+    "@babel/preset-env": "^7.4.5",
+    "@wirelineio/discovery-swarm-memory": "^0.2.17",
+    "@wirelineio/framework": "^0.3.4",
+    "babel-jest": "^24.8.0",
+    "babel-plugin-add-module-exports": "^1.0.2",
+    "babel-plugin-inline-import": "^3.0.0",
+    "eslint": "^5.16.0",
+    "jest": "^24.8.0",
+    "wait-for-expect": "^3.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

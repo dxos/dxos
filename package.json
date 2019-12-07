@@ -1,0 +1,45 @@
+{
+  "name": "echodb",
+  "version": "0.0.1",
+  "description": "ECHODB.",
+  "homepage": "https://github.com/dxos/echodb#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/echodb/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/echodb.git"
+  },
+  "license": "GPL-3.0",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  },
+  "lint-staged": {
+    "*.js": "eslint --ignore-path .eslintignore"
+  },
+  "pre-commit": [
+    "lint:staged"
+  ],
+  "scripts": {
+    "clean": "lerna run clean",
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "lint": "lerna run lint",
+    "lint:fix": "lerna run lint -- --fix",
+    "lint:staged": "lint-staged"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.2",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-react": "^7.12.4",
+    "lerna": "^3.11.1",
+    "lint-staged": "^8.1.0",
+    "pre-commit": "^1.2.2"
+  }
+}

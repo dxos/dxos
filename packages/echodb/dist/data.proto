@@ -1,0 +1,108 @@
+//
+// Copyright 2019 Wireline, Inc.
+//
+
+syntax = "proto3";
+
+// TODO(burdon): map
+// TODO(burdon): Any @type
+// TODO(burdon): Struct (JSON)
+// https://developers.google.com/protocol-buffers/docs/proto3#json
+// https://developers.google.com/protocol-buffers/docs/proto#updating
+
+// TODO(burdon): https://ipld.io
+
+//
+// This package defines messages that can be used to form composite data structures, and arbitrary mutations.
+//
+package wireline.data;
+
+//
+// Value represents any scalar, collection, or composite data.
+//
+message Value {
+  oneof type {
+    bool    isNull                = 1;
+
+    bool    boolValue             = 2;
+    int32   intValue              = 3;
+    float   floatValue            = 4;
+    string  stringValue           = 5;
+
+    bytes   raw                   = 10;
+    string  timestamp             = 11;       // https://en.wikipedia.org/wiki/Unix_time
+    string  date                  = 12;       // https://en.wikipedia.org/wiki/ISO_8601 (e.g., "2019-10-25T18:48:16Z")
+
+    Object  objectValue           = 20;
+    Set     setValue              = 21;
+    Array   arrayValue            = 22;
+  }
+}
+
+//
+// Generic mutation.
+//
+message Mutation {
+  string id                       = 1;
+  string depends                  = 2;        // TODO(burdon): Move from here (impl. vector clock?)
+  string objectId                 = 3;
+
+  oneof action {
+    bool deleted                  = 10;
+    string property               = 11;
+  }
+
+  oneof apply {
+    Value value                   = 20;
+    Array.Mutation array          = 21;
+    Set.Mutation set              = 22;
+  }
+}
+
+//
+// Object represents a set of (possibly hierarchical) named properties.
+//
+message Object {
+
+  message KeyValue {
+    string property               = 1;
+    Value value                   = 2;
+  }
+
+  repeated KeyValue property      = 1;
+}
+
+//
+// Array represents an ordered collection of value.
+//
+message Array {
+
+  // Splice mutation semantics.
+  // TODO(burdon): Position only makes sense if reference previous state (not just previous mutation).
+  message Mutation {
+    int32 position                = 1;        // -1 to append.
+    int32 delete                  = 2;
+    repeated Value value          = 3;
+  }
+
+  repeated Value value            = 1;
+}
+
+//
+// Set represents a collection of unique values.
+// TODO(burdon): Limit to scalars (otherwise need to provide custom equivalence operators?)
+//
+message Set {
+
+  message Mutation {
+    enum Operation {
+      ADD                         = 0;        // Default.
+      REMOVE                      = 1;
+    }
+
+    Operation op                  = 1;
+    Value value                   = 2;
+  }
+
+  repeated Value value            = 1;
+}
