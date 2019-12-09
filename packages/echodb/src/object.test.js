@@ -2,30 +2,29 @@
 // Copyright 2019 Wireline, Inc.
 //
 
-import protobuf from 'protocol-buffers';
 import uuid from 'uuid/v4';
+
+// import { Codec } from '@dxos/codec-protobuf';
 
 import { MutationUtil, KeyValueUtil } from './mutation';
 import { ObjectModel } from './object';
+import { createId, fromObject } from './util';
 
 import { mergeFeeds } from './crdt';
 
-import DataProtoDefs from './data.proto';
+// import DataProtoDefs from './data.proto';
+
+// const codec = new Codec('.testing.Message')
+//   .addJson(require('./data.json'))
+//   .build();
 
 // TODO(burdon): Use protobuf defs.
 test('Protobuf', () => {
-
-  /**
-   * @type DataProto
-   * @property Value
-   */
-  const DataProto = protobuf(DataProtoDefs);
-
-  expect(DataProto.Value.decode(DataProto.Value.encode({ isNull: true }))).toEqual({ isNull: true });
+  // expect(DataProto.Value.decode(DataProto.Value.encode({ isNull: true }))).toEqual({ isNull: true });
 });
 
 test('Mutations', () => {
-  const objectId = ObjectModel.createId('test');
+  const objectId = createId('test');
 
   const feed = {
     id: uuid(),
@@ -38,10 +37,10 @@ test('Mutations', () => {
 
   const model = new ObjectModel().applyMutations(feed.messages);
 
-  expect(model.getObjects('test')).toHaveLength(1);
+  expect(model.getObjectsByType('test')).toHaveLength(1);
   expect(model.getTypes()).toEqual(['test']);
 
-  const object = model.objects.get(objectId);
+  const object = model.getObjectById(objectId);
   expect(object).toEqual({
     id: objectId,
     properties: {
@@ -52,9 +51,9 @@ test('Mutations', () => {
   });
 
   {
-    const messages = ObjectModel.fromObject(object);
+    const messages = fromObject(object);
     const model = new ObjectModel().applyMutations(messages);
-    const clone = model.objects.get(object.id);
+    const clone = model.getObjectById(object.id);
     expect(object).toEqual(clone);
   }
 });
@@ -62,7 +61,7 @@ test('Mutations', () => {
 // TODO(burdon): Test with Framework (Gravity/wireline-core)?
 // TODO(burdon): Describe consistency constraints (e.g., each Object is independent; mutation references previous).
 test('Merge feeds', () => {
-  const obj = { x: ObjectModel.createId('test'), y: ObjectModel.createId('test') };
+  const obj = { x: createId('test'), y: createId('test') };
   const ref = {};
 
   const feed1 = {
@@ -102,7 +101,7 @@ test('Merge feeds', () => {
     const model = new ObjectModel().applyMutations(messages);
 
     {
-      const object = model.objects.get(obj.x);
+      const object = model.getObjectById(obj.x);
       expect(object).toEqual({
         id: object.id,
         properties: {
@@ -114,7 +113,7 @@ test('Merge feeds', () => {
     }
 
     {
-      const object = model.objects.get(obj.y);
+      const object = model.getObjectById(obj.y);
       expect(object).toEqual({
         id: object.id,
         properties: {

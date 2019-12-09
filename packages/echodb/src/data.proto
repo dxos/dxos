@@ -42,6 +42,8 @@ message Value {
 //
 // Object represents a set of (possibly hierarchical) named properties.
 //
+// TODO(burdon): Rename Map.
+// TODO(burdon): Ordered Map.
 message Object {
 
   message KeyValue {
@@ -89,6 +91,7 @@ message Set {
 
 //
 // Generic mutation.
+// TODO(burdon): Create Wrapper with multiple mutations for single object.
 //
 message Mutation {
   string id                       = 1;

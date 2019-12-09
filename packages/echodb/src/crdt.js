@@ -4,6 +4,9 @@
 
 import { sortByProperty } from './util';
 
+// TODO(burdon): Move engineering docs here.
+// TODO(burdon): Dependency Graph: https://www.npmjs.com/package/dependency-graph
+
 /**
  * Merge the given feeds, respecting the order when messages include the ID of a previous message.
  * @param {[{ id, messages }]} feeds

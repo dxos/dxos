@@ -5,6 +5,10 @@
 import uuid from 'uuid/v4';
 
 /**
+ * @typedef {Object} Mutation
+ */
+
+/**
  * Represents scalar, array, and hierarchical values.
  *
  * { null, boolean, number, string }
