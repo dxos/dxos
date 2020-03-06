@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Wireline, Inc.
+// Copyright 2020 DxOS
 //
 
 import uuid from 'uuid/v4';
