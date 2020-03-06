@@ -11,7 +11,6 @@ import { createId, fromObject, parseId } from './util';
 /**
  * Stream adapter.
  */
-// TODO(burdon): Move to @dxos/echodb.
 export class EchoModel extends Model {
 
   _model = new ObjectModel();
