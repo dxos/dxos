@@ -1,0 +1,86 @@
+{
+  "name": "@dxos/gem",
+  "version": "0.1.0",
+  "description": "Gem UX Toolkit.",
+  "license": "GPL-3.0",
+  "repository": "https://github.com/dxos/gem",
+  "main": "dist/es/index.js",
+  "module": "dist/es/index.js",
+  "files": [
+    "data",
+    "dist/es"
+  ],
+  "lint-staged": {
+    "*.js": "eslint --ignore-path .eslintignore"
+  },
+  "scripts": {
+    "lint:staged": "lint-staged",
+    "clean": "rm -rf ./dist",
+    "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
+    "start": "yarn run storybook",
+    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.0.0",
+    "@babel/plugin-proposal-class-properties": "^7.4.0",
+    "@babel/plugin-proposal-export-default-from": "^7.2.0",
+    "@babel/plugin-transform-runtime": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-react": "^7.0.0",
+    "@storybook/addon-knobs": "^5.2.1",
+    "@storybook/react": "^5.2.1",
+    "JSONStream": "^1.3.5",
+    "babel-jest": "^24.7.1",
+    "babel-loader": "^8.0.0",
+    "babel-plugin-add-module-exports": "^1.0.0",
+    "css-loader": "^0.28.11",
+    "dotenv-webpack": "^1.7.0",
+    "eslint-loader": "^2.1.2",
+    "html-webpack-plugin": "^3.2.0",
+    "jest": "^24.7.1",
+    "rollup": "^1.24.0",
+    "style-loader": "^0.21.0",
+    "url-loader": "1.0.1",
+    "webpack": "^4.17.1",
+    "webpack-bundle-analyzer": "^3.0.4",
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-server": "^3.2.1",
+    "webpack-merge": "^4.2.1",
+    "zip-webpack-plugin": "^3.0.0"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.4.3",
+    "@material-ui/core": "^4.5.1",
+    "canonicalize": "^1.0.1",
+    "chance": "^1.0.13",
+    "d3": "^5.9.2",
+    "d3-array": "^2.0.3",
+    "d3-ease": "^1.0.5",
+    "d3-inertia": "^0.0.7",
+    "d3-scale": "^3.0.0",
+    "d3-time": "^1.0.11",
+    "d3-transition": "^1.2.0",
+    "events": "^3.0.0",
+    "fabric": "^3.0.0",
+    "lodash.defaults": "^4.2.0",
+    "lodash.defaultsdeep": "^4.6.0",
+    "lodash.filter": "^4.6.0",
+    "lodash.find": "^4.6.0",
+    "lodash.indexof": "^4.0.5",
+    "lodash.isequal": "^4.5.0",
+    "lodash.times": "^4.3.2",
+    "paper": "^0.12.0",
+    "prop-types": "^15.7.2",
+    "react-resize-aware": "^3.0.0-beta.3",
+    "string-hash": "^1.1.3",
+    "topojson": "^3.0.2"
+  },
+  "peerDependencies": {
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
