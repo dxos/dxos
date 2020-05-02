@@ -1,0 +1,44 @@
+{
+  "name": "@dxos/gem-experimental",
+  "version": "1.0.0",
+  "description": "Spore.",
+  "main": "stories/index.js",
+  "dependencies": {
+    "@dxos/react-ux": "^1.0.0-beta.20",
+    "@material-ui/core": "^4.9.10",
+    "clsx": "^1.1.0",
+    "d3": "^5.9.2",
+    "debug": "^4.1.1",
+    "immutability-helper": "^3.0.2",
+    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.get": "^4.4.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-hotkeys": "^2.0.0",
+    "react-resize-aware": "^3.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/plugin-proposal-export-default-from": "^7.8.3",
+    "@storybook/addon-knobs": "^5.3.18",
+    "@storybook/react": "^5.3.18",
+    "babel-jest": "^25.5.1",
+    "babel-loader": "^8.1.0",
+    "faker": "^4.1.0",
+    "jest": "^25.5.2"
+  },
+  "scripts": {
+    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
+    "test": "jest --rootDir ./src --verbose --passWithNoTests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/gem.git"
+  },
+  "author": "",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dxos/gem/issues"
+  },
+  "homepage": "https://github.com/dxos/gem#readme"
+}
