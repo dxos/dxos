@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import React, { Component } from 'react';
 
-import { Container } from '../Container';
+import { Container } from '@dxos/gem-core';
 
 const t = (delay = 500) => d3.transition()
   .duration(delay)
@@ -25,13 +25,13 @@ export class Grid extends Component {
       .selectAll('rect')
       .data(data)
       .join('rect')
-        .attr('id', ({ x, y }) => `${x}_${y}`)
-        .attr('x', ({ x }) => (x * (grid.x + padding.x)) - width)
-        .attr('y', ({ y }) => (y * (grid.y + padding.y)))
-        .attr('width', grid.x - 1)
-        .attr('height', grid.y - 1)
-        .transition(t())
-        .attr('x', ({ x }) => x * (grid.x + padding.x));
+      .attr('id', ({ x, y }) => `${x}_${y}`)
+      .attr('x', ({ x }) => (x * (grid.x + padding.x)) - width)
+      .attr('y', ({ y }) => (y * (grid.y + padding.y)))
+      .attr('width', grid.x - 1)
+      .attr('height', grid.y - 1)
+      .transition(t())
+      .attr('x', ({ x }) => x * (grid.x + padding.x));
   };
 
   render() {

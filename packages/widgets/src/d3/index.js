@@ -3,10 +3,8 @@
 //
 
 export * from './graph';
-export * from '../../../isometric/src';
-export * from './orbit';
-export * from './util';
 
 export * from './Bar';
 export * from './Grid';
+export * from './Orbit';
 export * from './TimeSeries';

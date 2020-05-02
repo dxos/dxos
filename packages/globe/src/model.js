@@ -4,6 +4,7 @@
 
 import { EventEmitter } from "events";
 import isEqual from 'lodash.isequal';
+import defaultsDeep from 'lodash.defaultsdeep';
 
 /**
  * Globe state.
@@ -31,17 +32,17 @@ export class Model extends EventEmitter {
   }
 
   get rotation() {
-    return this._state.rotation || Model.defaults.rotation
+    return this._state.rotation || Model.defaults.rotation;
   }
 
-  set(state, update) {
+  set(state) {
     Object.assign(this._state, state);
 
     return this;
   }
 
   update(state, now) {
-    const newState = defaults({}, state, this._state);
+    const newState = defaultsDeep({}, state, this._state);
 
     if (now) {
       this.set(newState);

@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import React, { Component } from 'react';
 
-import { Container, delayedListener } from '../../Container';
+import { Container, delayedListener } from '@dxos/gem-core';
 
 // TODO(burdon): Move to utils.
 const children = (root, nodes, links) => {
@@ -87,7 +87,7 @@ export class Orbit extends Component {
         .selectAll('g.orbit')
         .data(orbits, d => d.id);
 
-      const exited = selected.exit()
+      selected.exit()
         .remove();
 
       const entered = selected.enter()
@@ -96,7 +96,7 @@ export class Orbit extends Component {
         .attr('id', d => d.id)
         .call(el => el.append('svg:circle'));
 
-      const merged = selected.merge(entered)
+      selected.merge(entered)
         .selectAll('circle')
         .call(el => el
           .attr('cx', d => layout[d.id].x)
@@ -111,7 +111,7 @@ export class Orbit extends Component {
         .selectAll('g.node')
         .data(nodes, d => d.id);
 
-      const exited = selected.exit()
+      selected.exit()
         .remove();
 
       const entered = selected.enter()
@@ -120,14 +120,13 @@ export class Orbit extends Component {
         .attr('id', d => d.id)
         .call(el => el.append('svg:circle'));
 
-      const merged = selected.merge(entered)
+      selected.merge(entered)
         .selectAll('circle')
-        .call(el => {
-          el
+        .call(el => el
           .attr('cx', d => layout[d.id].x)
           .attr('cy', d => layout[d.id].y)
           .attr('r', d => layout[d.id].s)
-        });
+        );
     }
 
     // Links
@@ -140,7 +139,7 @@ export class Orbit extends Component {
         .selectAll('path.link')
         .data(data.links, d => d.id);
 
-      const exited = selected.exit()
+      selected.exit()
         .remove();
 
       const entered = selected.enter()
@@ -148,7 +147,7 @@ export class Orbit extends Component {
         .attr('class', 'link')
         .attr('id', d => d.id);
 
-      const merged = selected.merge(entered)
+      selected.merge(entered)
         .attr('d', ({ source, target }) => lineAdapter([
           { x: layout[source.id].x, y: layout[source.id].y },
           { x: layout[target.id].x, y: layout[target.id].y }

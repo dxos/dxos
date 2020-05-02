@@ -28,11 +28,7 @@ const styles = {
 
 class NetworkGraphStory extends React.Component {
 
-  static get props() {
-    return {}
-  }
-
-  static getDerivedStateFromProps(props, state) {
+  static getDerivedStateFromProps(props) {
     const { running } = props;
 
     return {

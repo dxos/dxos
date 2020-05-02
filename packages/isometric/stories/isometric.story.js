@@ -6,13 +6,11 @@ import * as d3 from 'd3';
 import React from 'react';
 
 import { withStyles } from '@material-ui/core';
-
-import blue from '@material-ui/core/colors/blue';
-import green from '@material-ui/core/colors/green';
 import grey from '@material-ui/core/colors/grey';
-import red from '@material-ui/core/colors/red';
 
-import { Isometric, Container, drawCube, bounds, resize } from '@dxos/gem-legacy/src';
+import { Container, bounds, resize } from '@dxos/gem-core';
+
+import { Isometric, drawCube } from '../src';
 
 const styles = {
   root: {
@@ -33,17 +31,17 @@ const canvasStyles = {
       fillStyle: grey[50],
       strokeStyle: grey[300]
     },
-    'blue': {
-      fillStyle: blue[50],
-      strokeStyle: blue[300]
+    's1': {
+      fillStyle: grey[100],
+      strokeStyle: grey[400]
     },
-    'green': {
-      fillStyle: green[50],
-      strokeStyle: green[300]
+    's2': {
+      fillStyle: grey[200],
+      strokeStyle: grey[400]
     },
-    'red': {
-      fillStyle: red[50],
-      strokeStyle: red[300]
+    's3': {
+      fillStyle: grey[300],
+      strokeStyle: grey[400]
     }
   }
 };
@@ -100,9 +98,9 @@ class IsometricStory extends React.Component {
     }
 
     this._generator
-      .add({ a: Math.PI / 4, x: 0, y: s, z: 1, h: 3.5, style: 'blue' })
-      .add({ a: Math.PI / 4, x: 0, y: s, z: 4.5, h: .5, style: 'red' })
-      .add({ a: Math.PI / 4, x: 0, y: s, z: 0, h: 1, style: 'green' });
+      .add({ a: Math.PI / 4, x: 0, y: s, z: 1,   h: 3.5, style: 's1' })
+      .add({ a: Math.PI / 4, x: 0, y: s, z: 4.5, h:  .5, style: 's2' })
+      .add({ a: Math.PI / 4, x: 0, y: s, z: 0,   h: 1,   style: 's3' });
 
     let da = 0;
     this._onUpdate = (period) => {
@@ -112,7 +110,7 @@ class IsometricStory extends React.Component {
       this._grid.data.forEach((item) => {
         const { x, y } = item;
         item.h = 1 + Math.cos(da + d * (x - y)) * .9;
-        item.style = x > 11 ? 'red' : x > 5 ? 'blue' : 'green';
+        item.style = x > 11 ? 's1' : x > 5 ? 's2' : 's3';
       });
 
       this._generator.data.find(({ id }) => id === 'i-1').a += period * .001;
@@ -144,7 +142,7 @@ class IsometricStory extends React.Component {
     this._grid.data.forEach(draw);
 
     context.restore();
-  };
+  }
 
   componentDidMount() {
     if (!this._timer) {
@@ -178,4 +176,15 @@ class IsometricStory extends React.Component {
   }
 }
 
-export default withStyles(styles)(IsometricStory);
+const IsometricStoryWithStyles = withStyles(styles)(IsometricStory);
+
+export default {
+  title: 'Isometric'
+};
+
+export const withField = () => {
+
+  return (
+    <IsometricStoryWithStyles />
+  );
+};

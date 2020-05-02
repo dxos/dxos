@@ -30,29 +30,29 @@ export const pulse = (graph, node, options) => {
         .attr('cy', p.y)
         .attr('r', radius)
         .transition()
-          .delay(50)
-          .duration(200 + Math.random() * 1000)
-          .ease(d3.easeLinear)
-          .tween('pathTween', function() {
-            let node = this;
-            let length = path.node().getTotalLength();
-            let r = d3.interpolate(0, length);
+        .delay(50)
+        .duration(200 + Math.random() * 1000)
+        .ease(d3.easeLinear)
+        .tween('pathTween', function() {
+          let node = this;
+          let length = path.node().getTotalLength();
+          let r = d3.interpolate(0, length);
 
-            return function(t) {
-              let point = path.node().getPointAtLength(r(t));
-              d3.select(node)
-                .attr('cx', point.x)
-                .attr('cy', point.y);
-            };
-          })
-          .on('end', function() {
-            d3.select(this).remove();
+          return function(t) {
+            let point = path.node().getPointAtLength(r(t));
+            d3.select(node)
+              .attr('cx', point.x)
+              .attr('cy', point.y);
+          };
+        })
+        .on('end', function() {
+          d3.select(this).remove();
 
-            // Propagate with circuit breaker to prevent infinite recursion.
-            let num = d3.select(graph.svg).selectAll('circle.dot').size();
-            if (num < max) {
-              pulse(graph, link.target.id);
-            }
-          });
+          // Propagate with circuit breaker to prevent infinite recursion.
+          let num = d3.select(graph.svg).selectAll('circle.dot').size();
+          if (num < max) {
+            pulse(graph, link.target.id);
+          }
+        });
     });
 };

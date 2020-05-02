@@ -4,5 +4,3 @@
 
 export * from './d3';
 export * from './data';
-
-export * from './Container';

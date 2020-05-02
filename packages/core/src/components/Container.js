@@ -83,14 +83,12 @@ export const resize = (el, { width, height }) => {
  */
 export const delayedListener = (callback, delay = 100) => {
   let timeout = 0;
-  let skipped = 0;
 
   return function() {
     const args = arguments;
 
     if (timeout) {
       clearInterval(timeout);
-      skipped++;
     }
 
     timeout = setTimeout(() => {

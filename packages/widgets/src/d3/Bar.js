@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 
-import { Container } from '../Container';
+import { Container } from '@dxos/gem-core';
 
 /**
  * Grid renderer.
@@ -34,7 +34,7 @@ export class Bar extends Component {
 
     let i = 0;
     let rects = [];
-    data.forEach(({ id, values }) => {
+    data.forEach(({ values }) => {
       if (values) {
         let prev = 0;
         rects = rects.concat(values.map((value, n) => {
@@ -61,12 +61,12 @@ export class Bar extends Component {
       .selectAll('rect')
       .data(rects)
       .join('rect')
-        .attr('id', d => d.id)
-        .attr('class', ({ n }) => `value-${n}`)
-        .attr('x', ({ x }) => x)
-        .attr('y', ({ y }) => y)
-        .attr('width', ({ width }) => width)
-        .attr('height', ({ height }) => height);
+      .attr('id', d => d.id)
+      .attr('class', ({ n }) => `value-${n}`)
+      .attr('x', ({ x }) => x)
+      .attr('y', ({ y }) => y)
+      .attr('width', ({ width }) => width)
+      .attr('height', ({ height }) => height);
   };
 
   render() {

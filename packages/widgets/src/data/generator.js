@@ -21,7 +21,7 @@ export class GraphGenerator {
   }
 
   static _createNodes(n = 1) {
-    return times(n, i => {
+    return times(n, () => {
       return {
         id: GraphGenerator.createId(),
         label: GraphGenerator._chance.word()
@@ -45,7 +45,7 @@ export class GraphGenerator {
     let remaining = filter(this._data.nodes, n => indexOf(exclude, n) === -1);
     n = Math.min(remaining.length, n);
 
-    return times(n, i => {
+    return times(n, () => {
       let node = GraphGenerator._chance.pickone(remaining);
       exclude.push(node);
       return node;
@@ -110,7 +110,7 @@ export class GraphGenerator {
       return this;
     }
 
-    times(n, i => {
+    times(n, () => {
       let [source, target] = this.pickNodes(2);
 
       if (source.id !== target.id) {
@@ -129,7 +129,7 @@ export class GraphGenerator {
    * Create separate trees.
    */
   createTrees(n = 1, maxDepth = 1) {
-    times(n, i => {
+    times(n, () => {
       this.createTree(GraphGenerator._chance.integer({ min: 1, max: maxDepth }));
     });
 

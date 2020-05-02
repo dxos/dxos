@@ -11,7 +11,7 @@ import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import { bounds, resize, Container, delayedListener } from '../../Container';
+import { bounds, resize, Container } from '@dxos/gem-core';
 
 import { createDrag } from './drag';
 import { Physics } from './physics';
@@ -28,16 +28,16 @@ const CreateMarkers = ({ arrowSize }) => el => el
     }
   ])
   .join('marker')
-    .attr('id', d => 'marker_' + d.name)
-    .attr('markerHeight', arrowSize)
-    .attr('markerWidth', arrowSize)
-    .attr('markerUnits', 'strokeWidth')
-    .attr('orient', 'auto')
-    .attr('refX', 0)
-    .attr('refY', 0)
-    .attr('viewBox', d => d.viewbox)
-      .append('svg:path')
-      .attr('d', d => d.path);
+  .attr('id', d => 'marker_' + d.name)
+  .attr('markerHeight', arrowSize)
+  .attr('markerWidth', arrowSize)
+  .attr('markerUnits', 'strokeWidth')
+  .attr('orient', 'auto')
+  .attr('refX', 0)
+  .attr('refY', 0)
+  .attr('viewBox', d => d.viewbox)
+  .append('svg:path')
+  .attr('d', d => d.path);
 
 /**
  * Graph utils.
@@ -63,7 +63,7 @@ class GraphLayout {
       return [
         { x: source.x, y: source.y },
         { x: target.x, y: target.y }
-      ]
+      ];
     }
   };
 
@@ -247,7 +247,7 @@ export class Graph extends React.Component {
       .data(nodes, d => d.id);
 
     // Fade out deleted nodes.
-    const exited = selected.exit()
+    selected.exit()
       .transition(fadeOutTransition)
       .style('opacity', 0)
       .call(el => el.selectAll('circle')
@@ -262,10 +262,10 @@ export class Graph extends React.Component {
       .attr('class', d => classnames('node', d.className))
       .attr('id', d => d.id)
 
-      .on('mouseover', function(d) {
+      .on('mouseover', function() {
         d3.select(this).classed('highlight', true);
       })
-      .on('mouseout', function(d) {
+      .on('mouseout', function() {
         d3.select(this).classed('highlight', false);
       })
 
@@ -274,7 +274,7 @@ export class Graph extends React.Component {
         if (d3.event.altKey && onDelete) {
           onDelete(d.id);
         } else if (onSelect) {
-          onSelect(d.id)
+          onSelect(d.id);
         }
       })
 
@@ -298,13 +298,13 @@ export class Graph extends React.Component {
 
     merged
       .select('circle')
-        .interrupt('fade')
-        .attr('class', d => classnames('node', d.className))
-        .attr('r', d => sizeAdapter(d));
+      .interrupt('fade')
+      .attr('class', d => classnames('node', d.className))
+      .attr('r', d => sizeAdapter(d));
 
     merged
       .select('text')
-        .text(d => d.label);
+      .text(d => d.label);
 
     //
     // Links
@@ -322,7 +322,7 @@ export class Graph extends React.Component {
         .append('svg:path')
         .attr('class', d => classnames('link', d.className))
         .attr('id', d => d.id)
-        .attr('marker-end', d => 'url(#marker_arrow)');
+        .attr('marker-end', () => 'url(#marker_arrow)');
     }
   }
 
@@ -342,7 +342,7 @@ export class Graph extends React.Component {
       .selectAll('path.link')
       .attr('d', d => GraphLayout.lineAdapter(
         GraphLayout.createPoints(d, sizeAdapter(d.source), sizeAdapter(d.target))));
-  };
+  }
 
   componentDidMount() {
     // console.log('componentDidMount');

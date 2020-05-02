@@ -13,7 +13,7 @@ import green from '@material-ui/core/colors/green';
 import blue from '@material-ui/core/colors/blue';
 import red from '@material-ui/core/colors/red';
 
-import { Container } from '../src';
+import { Container } from  '@dxos/gem-core';
 
 const styles = {
   root: {
@@ -64,7 +64,7 @@ class Grid {
     return {
       x: Math.floor(width / (size.width + size.border)) - 1,
       y: Math.floor(height / (size.height + size.border)) - 1
-    }
+    };
   }
 
   getPoint({ x, y }) {
@@ -78,7 +78,7 @@ class Grid {
     return {
       x: Math.floor(x / (size.width + size.border)),
       y: Math.floor(y / (size.height + size.border))
-    }
+    };
   }
 }
 
@@ -141,7 +141,7 @@ const layoutMove = (data, bounds) => {
     item.class = 'move';
     item.x = grid.getPoint(pos).x;
     item.y = grid.getPoint(pos).y;
-  })
+  });
 };
 
 // TODO(burdon): Functional layout?

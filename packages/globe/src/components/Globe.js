@@ -7,8 +7,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import * as topojson from 'topojson';
 
-// TODO(burdon): Replace with spore.
-import { Container, bounds, resize } from '../../../widgets/src';
+import { Container, bounds, resize } from '@dxos/gem-core';
 
 import { GlobeStyles } from '../style';
 import { GeoUtil } from '../util';
@@ -257,7 +256,7 @@ export class Globe extends React.Component {
       this._context.fillStyle = style.place;
       this._context.fill();
     }
-  };
+  }
 
   //
   // React lifecycle.
@@ -267,7 +266,7 @@ export class Globe extends React.Component {
     this.init();
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     const diff = prop => !isEqual(this.props[prop], prevProps[prop]);
     if (diff('projection') || diff('style')) {
       this.init();

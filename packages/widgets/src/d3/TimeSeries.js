@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 
-import { Container } from '../Container';
+import { Container } from '@dxos/gem-core';
 
 /**
  * Scrolling Time Series
@@ -60,10 +60,10 @@ export class TimeSeries extends Component {
           .selectAll('rect')
           .data(bins)
           .join('rect')
-            .attr('x', (d, i) => x(i + offsetTime + 2))
-            .attr('width', d => barWidth - 2)
-            .attr('y', d => height - y(d.value))
-            .attr('height', d => y(d.value));
+          .attr('x', (d, i) => x(i + offsetTime + 2))
+          .attr('width', () => barWidth - 2)
+          .attr('y', d => height - y(d.value))
+          .attr('height', d => y(d.value));
 
         this._bar
           .transition()
@@ -78,9 +78,6 @@ export class TimeSeries extends Component {
     clearInterval(this._interval);
   }
 
-  // TODO(burdon): Will trigger render.
-  componentWillReceiveProps(props) {}
-
   handleResize = ({ width, height }) => {
 
     // TODO(burdon): Get from component?
@@ -94,9 +91,9 @@ export class TimeSeries extends Component {
     root.selectAll('g')
       .data([
         { id: 'bar' },
-        ])
+      ])
       .join('g')
-        .attr('id', d => d.id);
+      .attr('id', d => d.id);
 
     this._bar = root
       .selectAll('g[id=bar]');
@@ -120,8 +117,7 @@ export class TimeSeries extends Component {
     const bins = d3.histogram()
       .domain(x.domain())
       .thresholds(x.ticks(points))
-      .value((d, i, data) => data[i].ts)
-      (data);
+      .value((d, i, data) => data[i].ts)(data);
 
     return bins.map(d => {
       return {

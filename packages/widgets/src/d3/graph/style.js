@@ -50,6 +50,6 @@ export class GraphStyleBuidler {
       '& path': {
         'stroke': blue[900]
       }
-    }
+    };
   }
 }

@@ -6,13 +6,13 @@ import React from 'react';
 import { withKnobs, boolean, number, select } from '@storybook/addon-knobs';
 import { withStyles } from '@material-ui/core/styles';
 
-import { Globe, Generator, Model, GlobeStyles, Spinner, Versor } from '../src';
+import { Globe, Generator, GlobeStyles, Model, Spinner, Versor } from '../src';
 
 import TopologyData from '../data/110m.json';
-import AirportsData from '../data/airports.json';
+// import AirportsData from '../data/airports.json';
 import CitiesData from '../data/cities.json';
 
-import Trip from './data/trip.json';
+// import Trip from './data/trip.json';
 
 const CITY = 'New York';
 
@@ -33,21 +33,6 @@ const styles = {
 };
 
 class GlobeStory extends React.Component {
-
-  static get props() {
-    return {
-      running: boolean('generator', false),
-      spinner: boolean('spinner', false),
-      projection: select('projection', Globe.Projections),
-      scale: number('scale', 180, { min: 10, max: 500 }),
-      tilt: number('tilt', 25, { min: -45, max: 45 }),
-      city: select('city', generator.cities, CITY),
-      style: select('style', GlobeStyles),
-      blur: number('blur', 0, { min: 0, max: 10 }),
-      x: number('x', 0, { min: -500, max: 500 }),
-      y: number('y', 500, { min: -500, max: 500 }),
-    };
-  }
 
   static getModelState(generator, props, prevProps = {}) {
     const state = {};
@@ -95,7 +80,7 @@ class GlobeStory extends React.Component {
           points,
           lines
         }
-      })
+      });
     });
 
     if (this.props.spinner) {
@@ -113,7 +98,7 @@ class GlobeStory extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    this._model.update(Globe.getModelState(generator, this.props, prevProps));
+    this._model.update(GlobeStory.getModelState(generator, this.props, prevProps));
 
     if (this.props.spinner !== prevProps.spinner) {
       if (this.props.spinner) {
@@ -137,7 +122,7 @@ class GlobeStory extends React.Component {
     const { features } = this.state;
 
     if (!this._model.initialized) {
-      this._model.set(Globe.getModelState(generator, this.props));
+      this._model.set(GlobeStory.getModelState(generator, this.props));
     }
 
     return (
@@ -158,10 +143,28 @@ class GlobeStory extends React.Component {
   }
 }
 
+const GlobeStoryWithStyles = withStyles(styles)(GlobeStory);
+
 export default {
   title: 'Globel',
   decorators: [withKnobs]
 };
 
 export const withEverything = () => {
+  const props = {
+    running: boolean('generator', false),
+    spinner: boolean('spinner', false),
+    projection: select('projection', Globe.Projections),
+    scale: number('scale', 180, { min: 10, max: 500 }),
+    tilt: number('tilt', 25, { min: -45, max: 45 }),
+    city: select('city', generator.cities, CITY),
+    style: select('style', GlobeStyles),
+    blur: number('blur', 0, { min: 0, max: 10 }),
+    x: number('x', 0, { min: -500, max: 500 }),
+    y: number('y', 500, { min: -500, max: 500 }),
+  };
+
+  return (
+    <GlobeStoryWithStyles {...props} />
+  );
 };

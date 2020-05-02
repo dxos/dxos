@@ -1,23 +1,26 @@
 {
   "name": "@dxos/gem-widgets",
-  "version": "0.1.0",
+  "version": "1.0.0-beta.1",
   "description": "D3 Widgets.",
   "license": "GPL-3.0",
   "repository": "https://github.com/dxos/gem",
   "lint-staged": {
     "*.js": "eslint --ignore-path .eslintignore"
   },
+  "main": "dist/es/index.js",
+  "module": "dist/es/index.js",
   "scripts": {
     "lint:staged": "lint-staged",
     "clean": "rm -rf ./dist",
     "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
+    "lint": "eslint ./src --ignore-path ../../.eslintignore",
     "start": "yarn run storybook",
-    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci"
+    "storybook": "start-storybook -s _stories/static -p 9001 -c .storybook --ci"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.0.0",
-    "@babel/plugin-proposal-class-properties": "^7.4.0",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-proposal-export-default-from": "^7.2.0",
     "@babel/plugin-transform-runtime": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
@@ -33,7 +36,6 @@
     "eslint-loader": "^2.1.2",
     "html-webpack-plugin": "^3.2.0",
     "jest": "^24.7.1",
-    "rollup": "^1.24.0",
     "style-loader": "^0.21.0",
     "url-loader": "1.0.1",
     "webpack": "^4.17.1",
@@ -45,6 +47,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.4.3",
+    "@dxos/gem-core": "^1.0.0-beta.1",
     "@material-ui/core": "^4.5.1",
     "canonicalize": "^1.0.1",
     "chance": "^1.0.13",

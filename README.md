@@ -1,10 +1,12 @@
-# Gem UX Toolkit
+# Graphical Elementary Modules
 
 Playground for visualization components.
 
-TODO(burdon): Convert to monorepo.
 
 ## Related
+
+- https://github.com/danielktaylor/fabric-js-editor
+
 - https://www.npmjs.com/package/react-d3
 - https://observablehq.com/@d3/histogram
 - https://observablehq.com/@d3/disjoint-force-directed-graph

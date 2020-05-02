@@ -26,24 +26,20 @@ const styles = {
 
 class GraphStory extends React.Component {
 
-  static get props() {
-    return {
-
-      // TODO(burdon): Doesn't seem to update simulation.
-      physics: () => {
-        return new Physics({
-          link: {
-            distance: number('link:distance', 50, { min: 0, max: 200 })
-          },
-          charge: {
-            strength: number('charge:strength', -100, { min: -500, max: 0 })
-          }
-        });
-      }
+  static defaultProps = {
+    physics: () => {
+      return new Physics({
+        link: {
+          distance: number('link:distance', 50, { min: 0, max: 200 })
+        },
+        charge: {
+          strength: number('charge:strength', -100, { min: -500, max: 0 })
+        }
+      });
     }
   }
 
-  static getDerivedStateFromProps(props, state) {
+  static getDerivedStateFromProps(props) {
     const { running } = props;
 
     return {
@@ -77,7 +73,7 @@ class GraphStory extends React.Component {
 
         // Delete
         if (Math.random() > .8) {
-          this._generator.deleteNodes(this._generator.pickNodes(1).map(node => node.id))
+          this._generator.deleteNodes(this._generator.pickNodes(1).map(node => node.id));
         }
 
         // Pulse
