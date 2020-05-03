@@ -21,15 +21,13 @@ NOTE: Performance is slow if the browser Devtools are open.
 - [ ] Multi-select and move.
 - [ ] Layout data structure (separate from data).
 - [ ] Load/save SVG.
-
 - [ ] Animate between scenes (different level of detail, layout: e.g., simulation within node).
-
-- [ ] Separate monorepo.
 - [ ] Data properties editor (DxOS app).
 
 
 ## Done
 
+- [x] Separate monorepo.
 - [x] Snap doesn't work when zoomed.
 - [x] Paths.
 - [x] Toolbar (shape, color)
