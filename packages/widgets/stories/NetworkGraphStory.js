@@ -6,7 +6,7 @@ import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { Chance } from 'chance';
 
-import { Graph, GraphGenerator, GraphStyleBuidler } from '../src';
+import { Graph, GraphStyleBuidler, GraphGenerator } from '../src';
 
 const chance = new Chance(0);
 

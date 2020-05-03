@@ -10,6 +10,8 @@ import { Layout } from './layout';
 
 /**
  * Creates layout from force simulation.
+ *
+ * https://github.com/d3/d3-force
  */
 export class ForceLayout extends Layout {
 

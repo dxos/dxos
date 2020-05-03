@@ -11,7 +11,7 @@ import { Container } from '@dxos/gem-core';
 /**
  * Grid renderer.
  */
-export class Bar extends Component {
+class Bar extends Component {
 
   // TODO(burdon): Vertical/horizontal.
 
@@ -59,14 +59,14 @@ export class Bar extends Component {
       .attr('width', width)
       .attr('height', height)
       .selectAll('rect')
-      .data(rects)
-      .join('rect')
-      .attr('id', d => d.id)
-      .attr('class', ({ n }) => `value-${n}`)
-      .attr('x', ({ x }) => x)
-      .attr('y', ({ y }) => y)
-      .attr('width', ({ width }) => width)
-      .attr('height', ({ height }) => height);
+        .data(rects)
+        .join('rect')
+        .attr('id', d => d.id)
+        .attr('class', ({ n }) => `value-${n}`)
+        .attr('x', ({ x }) => x)
+        .attr('y', ({ y }) => y)
+        .attr('width', ({ width }) => width)
+        .attr('height', ({ height }) => height);
   };
 
   render() {
@@ -77,3 +77,5 @@ export class Bar extends Component {
     );
   }
 }
+
+export default Bar;

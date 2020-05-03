@@ -15,6 +15,8 @@ export class Projector extends EventEmitter {
     this._options = defaultsDeep({}, options, {
       fade: false
     });
+
+    // console.log('###', options);
   }
 
   /**

@@ -8,12 +8,13 @@ import React from 'react';
 import times from 'lodash.times';
 
 import { withStyles } from '@material-ui/core/styles';
-
 import green from '@material-ui/core/colors/green';
 import blue from '@material-ui/core/colors/blue';
 import red from '@material-ui/core/colors/red';
 
 import { Container } from  '@dxos/gem-core';
+
+// TODO(burdon): Factor out Mesh components.
 
 const styles = {
   root: {

@@ -4,11 +4,9 @@
 
 import * as d3 from 'd3';
 
+import { createPoints, lineGenerator } from '../layout';
 import { Projector } from './projector';
-
-const lineGenerator = d3.line()
-  .x(d => d.x || 0)
-  .y(d => d.y || 0);
+import get from 'lodash.get';
 
 /**
  * Render links.
@@ -27,10 +25,13 @@ export class LinkProjector extends Projector {
       .selectAll('path')
         .data(links);
 
-    root
+    const paths = root
       .enter()
         .append('path')
         .attr('id', d => d.id);
+
+    // TODO(burdon): Options.
+    paths.attr('marker-end', () => 'url(#marker_arrow)');
 
     root
       .exit()
@@ -38,15 +39,23 @@ export class LinkProjector extends Projector {
   }
 
   onUpdate(grid, data, { group }) {
-    const { transition } = this._options;
+    const { nodeRadius, showArrows = true, transition } = this._options;
 
+    // TODO(burdon): Factor out line generation.
     const update = path => {
       path
         .attr('d', ({ source, target }) => {
-          return lineGenerator([
-            { x: source.x, y: source.y },
-            { x: target.x, y: target.y }
-          ]);
+          let points;
+          if (showArrows && nodeRadius) {
+            points = createPoints(source, target, nodeRadius, nodeRadius);
+          } else {
+            points = [
+              { x: source.x, y: source.y },
+              { x: target.x, y: target.y }
+            ];
+          }
+
+          return lineGenerator(points);
         });
     };
 

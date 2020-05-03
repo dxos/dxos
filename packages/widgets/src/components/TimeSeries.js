@@ -11,7 +11,7 @@ import { Container } from '@dxos/gem-core';
 /**
  * Scrolling Time Series
  */
-export class TimeSeries extends Component {
+class TimeSeries extends Component {
 
   static propTypes = {
     period: PropTypes.number,
@@ -137,3 +137,6 @@ export class TimeSeries extends Component {
     );
   }
 }
+
+export default TimeSeries;
+

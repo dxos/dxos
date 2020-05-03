@@ -15,6 +15,7 @@ import {
   View,
 
   createLinkId,
+  createItem,
   createItems,
   createGraph,
   createTree,
@@ -37,11 +38,13 @@ import {
   BoxProjector,
   GuideProjector,
   NodeProjector,
+  LinkProjector,
   TreeProjector,
 
   useDefaultStyles,
   useLayout,
 
+  createArrowMarkers,
   simulationDragHandler,
 } from '../src';
 
@@ -177,6 +180,120 @@ export const withForceLayout = () => {
 };
 
 /**
+ * Arrows.
+ */
+export const withArrows = () => {
+  const classes = useDefaultStyles();
+  const [resizeListener, size] = useResizeAware();
+  const { width, height } = size;
+  const grid = useGrid({ width, height });
+  const markers = useRef();
+
+  const [data] = useDataButton(() => convertTreeToGraph(createTree(4)));
+  const [layout] = useState(new ForceLayout());
+  const [{ nodeProjector, linkProjector }] = useState({
+    nodeProjector: new NodeProjector({ node: { radius: 16, showLabels: false } }),
+    linkProjector: new LinkProjector({ nodeRadius: 16, showArrows: true })
+  });
+
+  // Arrows markers.
+  useEffect(() => {
+    d3.select(markers.current)
+      .call(createArrowMarkers());
+  }, []);
+
+  return (
+    <FullScreen>
+      {resizeListener}
+      <View width={width} height={height}>
+        <Grid grid={grid} />
+
+        <g ref={markers} className={classes.markers}/>
+
+        <Graph
+          grid={grid}
+          data={data}
+          layout={layout}
+          nodeProjector={nodeProjector}
+          linkProjector={linkProjector}
+        />
+      </View>
+    </FullScreen>
+  );
+};
+
+/**
+ * Drag.
+ */
+export const withDrag = () => {
+  const classes = useDefaultStyles();
+  const [resizeListener, size] = useResizeAware();
+  const { width, height } = size;
+  const grid = useGrid({ width, height });
+  const guides = useRef();
+
+  const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree(4)));
+  const [layout] = useState(new ForceLayout());
+
+  // TODO(burdon): New projector generated each time???
+  const [nodeProjector] = useState(new NodeProjector({ node: { radius: 16, showLabels: false } }));
+
+  // TODO(burdon): Factor out.
+  const linkProjector = new LinkProjector();
+  const drag = simulationDragHandler(() => layout.simulation, { link: true });
+  drag.on('drag', ({ source, position }) => {
+    console.log(source, position);
+    const data = {
+      links: [
+        { id: 1, source, target: { ...position } },
+      ]
+    };
+    linkProjector.update(grid, data, { group: guides.current });
+  });
+  drag.on('end', ({ source, target }) => {
+    if (target) {
+      updateData({
+        links: {
+          $push: [{ id: createLinkId(source.id, target.id), source, target }]
+        }
+      });
+    } else {
+      const target = createItem();
+      updateData({
+        nodes: {
+          $push: [target]
+        },
+        links: {
+          $push: [{ id: createLinkId(source.id, target.id), source, target }]
+        }
+      });
+    }
+  });
+  drag.on('click', ({ id }) => {
+    console.log('click', id);
+  });
+
+  return (
+    <FullScreen>
+      {resizeListener}
+      <View width={width} height={height}>
+        <Grid grid={grid} />
+
+        <g ref={guides} className={classes.guide} />
+
+        <Graph
+          grid={grid}
+          data={data}
+          layout={layout}
+          nodeProjector={nodeProjector}
+          drag={drag}
+        />
+      </View>
+    </FullScreen>
+  );
+};
+
+/**
  * Muliple force layout.
  */
 export const withTwoForceLayouts = () => {
@@ -200,6 +317,8 @@ export const withTwoForceLayouts = () => {
   const [nodeProjector] = useState(new NodeProjector({ node: { showLabels: false } }));
 
   const drag = simulationDragHandler(() => layout1.simulation);
+
+  // Move node from one group to the other.
   drag.on('click', ({ id }) => {
     setSelected(id);
 

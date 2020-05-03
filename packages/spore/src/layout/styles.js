@@ -53,6 +53,14 @@ export const useDefaultStyles = makeStyles({
     }
   }),
 
+  markers: ({ color = defaultColor }) => ({
+    '& path.arrow': {
+      fill: 'none',
+      strokeWidth: .5,
+      stroke: colors[color][500],
+    },
+  }),
+
   graph: ({ color = defaultColor }) => ({
     '& path': {
       fill: 'none',
@@ -68,7 +76,7 @@ export const useDefaultStyles = makeStyles({
 
     '& circle': {
       strokeWidth: 1,
-      stroke: colors[color][500],
+      stroke: colors[color][800],
       fill: colors[color][100],
       cursor: 'pointer'
     },

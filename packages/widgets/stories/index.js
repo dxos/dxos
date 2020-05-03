@@ -7,10 +7,10 @@ import React from 'react';
 import BarStory from './BarStory';
 import GridStory from './GridStory';
 import LayoutStory from './LayoutStory';
-import NetworkGraphStory from './NetworkGraphStory';
-import OrbitStory from './OrbitStory';
-import SimpleGraphStory from './SimpleGraphStory';
 import TimeSeriesStory from './TimeSeriesStory';
+
+import NetworkGraphStory from './NetworkGraphStory';
+import SimpleGraphStory from './SimpleGraphStory';
 
 export default {
   title: 'Widgets'
@@ -19,7 +19,7 @@ export default {
 export const withBar = () => <BarStory />;
 export const withGrid = () => <GridStory />;
 export const withLayout = () => <LayoutStory />;
+export const withTimeSeries = () => <TimeSeriesStory />;
+
 export const withNetworkGraph = () => <NetworkGraphStory />;
 export const withSimpleGraph = () => <SimpleGraphStory />;
-export const withTimeSeries = () => <TimeSeriesStory />;
-export const withOrbit = () => <OrbitStory />;

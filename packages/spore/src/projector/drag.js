@@ -16,15 +16,18 @@ const value = v => (typeof v === 'function') ? v() : v;
  * https://observablehq.com/@d3/circle-dragging-i
  *
  * @param {Object|function} simulation
+ * @param {Object} options
  * @return {{ create: function, on: function, off: function }}
  */
 // TODO(burdon): If ForceLayout can have a stable instance, pass in here directly.
-export const simulationDragHandler = simulation => {
+export const simulationDragHandler = (simulation, options = {}) => {
   const emitter = new EventEmitter();
+  const { link } = options;
 
   const create = container => {
     const state = {
-      moved: false
+      moved: false,
+      link: null
     };
 
     // TODO(burdon): Configure.
@@ -47,7 +50,8 @@ export const simulationDragHandler = simulation => {
     // https://github.com/d3/d3-drag#drag_on
     // https://github.com/d3/d3-drag#drag-events
 
-      .on('start', function () {
+      .on('start', () => {
+        const { metaKey } = d3.event.sourceEvent;
         const group = parent();
 
         if (!d3.event.active) {
@@ -57,21 +61,28 @@ export const simulationDragHandler = simulation => {
         // Find group and raise.
         d3.select(group).raise();
 
-        d3.event.subject.fx = d3.event.subject.x;
-        d3.event.subject.fy = d3.event.subject.y;
         state.moved = false;
+        state.link = metaKey && link;
 
-        emitter.emit('start', d3.event.subject, group);
+        emitter.emit('start', { source: d3.event.subject });
       })
 
       .on('drag', () => {
-        const group = parent();
+        const position = {
+          x: d3.event.x,
+          y: d3.event.y
+        };
 
-        d3.event.subject.fx = d3.event.x;
-        d3.event.subject.fy = d3.event.y;
+        if (state.link) {
+          state.target = position;
+        } else {
+          d3.event.subject.fx = d3.event.x;
+          d3.event.subject.fy = d3.event.y;
+        }
+
         state.moved = true;
 
-        emitter.emit('drag', d3.event.subject, group);
+        emitter.emit('drag', { source: d3.event.subject, position });
       })
 
       .on('end', () => {
@@ -84,10 +95,16 @@ export const simulationDragHandler = simulation => {
         d3.event.subject.fx = null;
         d3.event.subject.fy = null;
 
-        if (!state.moved) {
-          emitter.emit('click', d3.event.subject, group);
+        // TODO(burdon): Fix position.
+        // TODO(burdon): Key modifiers.
+        // d3.event.subject.fx = d3.event.subject.x;
+        // d3.event.subject.fy = d3.event.subject.y;
+
+        if (state.moved) {
+          const target = value(simulation).find(d3.event.x, d3.event.y, 16);    // TODO(burdon): Radius.
+          emitter.emit('end', { source: d3.event.subject, target });
         } else {
-          emitter.emit('end', d3.event.subject, group);
+          emitter.emit('click', { source: d3.event.subject });
         }
       });
   };

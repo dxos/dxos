@@ -14,7 +14,7 @@ const t = (delay = 500) => d3.transition()
 /**
  * Grid renderer.
  */
-export class Grid extends Component {
+class Grid extends Component {
 
   handleResize = ({ width, height }) => {
     let { data, grid = { x: 16, y: 16 }, padding = { x: 2, y: 2 } } = this.props;
@@ -44,3 +44,6 @@ export class Grid extends Component {
     );
   }
 }
+
+export default Grid;
+

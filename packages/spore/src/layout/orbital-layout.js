@@ -16,7 +16,7 @@ const children = (root, nodes, links) => {
   }).filter(item => item !== undefined);
 };
 
-export class Orbit extends Component {
+export class OrbitalLayout extends Component {
 
   _angle = 0;
 

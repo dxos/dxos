@@ -6,7 +6,7 @@ import * as d3 from 'd3';
 import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 
-import { useDefaultStyles, useLayout, Layout } from '../layout';
+import { Layout, useDefaultStyles, useLayout } from '../layout';
 import { GuideProjector, LinkProjector, NodeProjector } from '../projector';
 
 /**
