@@ -2,27 +2,26 @@
   "name": "@dxos/gem-globe",
   "version": "1.0.0-beta.1",
   "description": "Gem Globe.",
-  "license": "GPL-3.0",
   "repository": "https://github.com/dxos/gem",
+  "license": "GPL-3.0",
   "main": "dist/es/index.js",
   "module": "dist/es/index.js",
   "files": [
     "data",
     "dist/es"
   ],
-  "lint-staged": {
-    "*.js": "eslint --ignore-path .eslintignore"
-  },
   "scripts": {
-    "lint:staged": "lint-staged",
-    "clean": "rm -rf ./dist",
     "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
+    "clean": "rm -rf ./dist",
+    "lint": "eslint ./src --ignore-path ../../.eslintignore",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "test": "jest --rootDir ./src --verbose --passWithNoTests"
   },
+  "lint-staged": {
+    "*.js": "eslint --ignore-path .eslintignore"
+  },
   "dependencies": {
     "@dxos/gem-core": "^1.0.0-beta.1",
-    "@dxos/react-ux": "^1.0.0-beta.20",
     "@material-ui/core": "^4.9.10",
     "clsx": "^1.1.0",
     "d3": "^5.9.2",
@@ -42,6 +41,7 @@
     "@storybook/react": "^5.3.18",
     "babel-jest": "^25.5.1",
     "babel-loader": "^8.1.0",
+    "eslint": "^6.8.0",
     "faker": "^4.1.0",
     "jest": "^25.5.2"
   },

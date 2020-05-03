@@ -18,7 +18,7 @@ const style = {
  * https://www.npmjs.com/package/react-resize-aware
  * https://reactjs.org/docs/hooks-reference.html
  */
-// TODO(burdon): Replace with spore/View
+// TODO(burdon): Deprecated.
 export const Container = (props) => {
   const { children, className, onRender } = props;
   const [ resizeListener, { width = 0, height = 0 } ] = useResizeAware();

@@ -5,7 +5,7 @@
 import React from 'react';
 import { withKnobs } from "@storybook/addon-knobs";
 
-import { FullScreen } from '@dxos/react-ux';
+import { FullScreen } from '@dxos/gem-core';
 
 export default {
   title: 'Experimental',

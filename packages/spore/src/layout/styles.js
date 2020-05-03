@@ -1,0 +1,117 @@
+//
+// Copyright 2020 DxOS, Inc.
+//
+
+import { makeStyles } from '@material-ui/core/styles';
+import * as colors from '@material-ui/core/colors';
+
+const defaultColor = 'grey';
+const highlightColor = 'orange';
+const selectedColor = 'blue';
+const guideColor = 'blueGrey';
+
+export const useDefaultStyles = makeStyles({
+
+  box: ({ color = defaultColor }) => ({
+    '& rect': {
+      fill: 'none',
+      strokeWidth: 1,
+      stroke: colors[color][500]
+    },
+
+    '& text': {
+      fill: colors['grey'][700],
+      fontFamily: 'monospace',
+      fontSize: 16
+    }
+  }),
+
+  tree: ({ color = defaultColor }) => ({
+    '& path': {
+      fill: 'none',
+      strokeWidth: 1,
+      stroke: colors[color][500],
+    },
+
+    '& rect': {
+      fill: 'none',
+      strokeWidth: 1,
+      stroke: colors[color][500]
+    },
+
+    '& circle': {
+      strokeWidth: 2,
+      stroke: colors[color][500],
+      fill: colors[color][100],
+      cursor: 'pointer'
+    },
+
+    '& text': {
+      fill: colors['grey'][700],
+      fontFamily: 'monospace',
+      fontSize: 16
+    }
+  }),
+
+  graph: ({ color = defaultColor }) => ({
+    '& path': {
+      fill: 'none',
+      strokeWidth: 1,
+      stroke: colors[color][500],
+    },
+
+    '& rect': {
+      fill: colors[color][50],
+      strokeWidth: 1,
+      stroke: colors[color][500]
+    },
+
+    '& circle': {
+      strokeWidth: 1,
+      stroke: colors[color][500],
+      fill: colors[color][100],
+      cursor: 'pointer'
+    },
+    '& circle.fixed': {
+      strokeWidth: 2,
+    },
+
+    '& text': {
+      fill: colors['grey'][400],
+      fontFamily: 'monospace',
+      fontSize: 16
+    },
+
+    '& [state=active]': {
+      '& circle': {
+        strokeWidth: 2,
+        stroke: colors[color][700],
+        fill: colors[color][200],
+      },
+
+      '& circle.highlight': {
+        stroke: colors[highlightColor][700],
+        fill: colors[highlightColor][500]
+      },
+
+      '& circle.selected': {
+        stroke: colors[selectedColor][700],
+        fill: colors[selectedColor][500]
+      },
+
+      '& text': {
+        fontFamily: 'monospace',
+        fill: colors['grey'][700]
+      }
+    }
+  }),
+
+  guide: {
+    '& > g > circle': {
+      strokeWidth: 8,
+      stroke: colors[guideColor][50],
+      fill: 'none',
+      opacity: .5
+    },
+  }
+});

@@ -1,38 +1,39 @@
 {
   "name": "@dxos/gem",
   "version": "1.0.0",
-  "description": "UX",
   "private": true,
+  "description": "UX",
+  "keywords": [],
+  "homepage": "https://github.com/dxos/gem#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/gem/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/gem.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  },
   "scripts": {
     "build": "lerna run build",
     "clean": "lerna run clean",
     "lint": "lerna run lint",
     "lint:fix": "lerna run lint -- --fix",
     "lint:staged": "lint-staged",
+    "sort-package-json": "lerna exec npx sort-package-json",
     "test": "lerna run test"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/gem.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/dxos/gem/issues"
-  },
-  "homepage": "https://github.com/dxos/gem#readme",
-  "workspaces": {
-    "packages": [
-      "packages/*"
-    ]
-  },
-  "lint-staged": {
-    "*.js": "eslint --ignore-path .eslintignore"
   },
   "pre-commit": [
     "lint:staged"
   ],
+  "lint-staged": {
+    "*.js": "eslint --ignore-path .eslintignore"
+  },
   "dependencies": {
     "lerna": "^3.19.0"
   },
@@ -40,7 +41,6 @@
     "babel-eslint": "^10.0.3",
     "eslint": "^6.7.2",
     "eslint-config-airbnb": "^18.0.0",
-    "eslint-loader": "^3.0.3",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jsdoc": "^21.0.0",
     "eslint-plugin-jsx-a11y": "^6.2.3",

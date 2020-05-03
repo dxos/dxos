@@ -2,9 +2,23 @@
   "name": "@dxos/gem-experimental",
   "version": "1.0.0-beta.1",
   "description": "Gem experimental components.",
+  "homepage": "https://github.com/dxos/gem#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/gem/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/gem.git"
+  },
+  "license": "GPL-3.0",
+  "author": "",
   "main": "stories/index.js",
+  "scripts": {
+    "lint": "eslint ./src --ignore-path ../../.eslintignore",
+    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
+    "test": "jest --rootDir ./src --verbose --passWithNoTests"
+  },
   "dependencies": {
-    "@dxos/react-ux": "^1.0.0-beta.20",
     "@material-ui/core": "^4.9.10",
     "clsx": "^1.1.0",
     "d3": "^5.9.2",
@@ -24,21 +38,8 @@
     "@storybook/react": "^5.3.18",
     "babel-jest": "^25.5.1",
     "babel-loader": "^8.1.0",
+    "eslint": "^6.8.0",
     "faker": "^4.1.0",
     "jest": "^25.5.2"
-  },
-  "scripts": {
-    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
-    "test": "jest --rootDir ./src --verbose --passWithNoTests"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/gem.git"
-  },
-  "author": "",
-  "license": "GPL-3.0",
-  "bugs": {
-    "url": "https://github.com/dxos/gem/issues"
-  },
-  "homepage": "https://github.com/dxos/gem#readme"
+  }
 }
