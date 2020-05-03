@@ -22,12 +22,15 @@ const value = v => (typeof v === 'function') ? v() : v;
 // TODO(burdon): If ForceLayout can have a stable instance, pass in here directly.
 export const simulationDragHandler = (simulation, options = {}) => {
   const emitter = new EventEmitter();
-  const { link } = options;
+  const { link, freeze } = options;
 
   const create = container => {
     const state = {
-      moved: false,
-      link: null
+      // Determines if dragging (if not then click on end).
+      dragging: false,
+
+      // Determines if linking.
+      linking: false
     };
 
     // TODO(burdon): Configure.
@@ -50,9 +53,9 @@ export const simulationDragHandler = (simulation, options = {}) => {
     // https://github.com/d3/d3-drag#drag_on
     // https://github.com/d3/d3-drag#drag-events
 
-      .on('start', () => {
-        const { metaKey } = d3.event.sourceEvent;
+      .on('start', function () {
         const group = parent();
+        const { [link]: linkModifier } = d3.event.sourceEvent;
 
         if (!d3.event.active) {
           value(simulation).alphaTarget(0.3).restart();
@@ -61,32 +64,30 @@ export const simulationDragHandler = (simulation, options = {}) => {
         // Find group and raise.
         d3.select(group).raise();
 
-        state.moved = false;
-        state.link = metaKey && link;
+        state.dragging = false;
+        state.linking = linkModifier && link;
 
         emitter.emit('start', { source: d3.event.subject });
       })
 
-      .on('drag', () => {
-        const position = {
-          x: d3.event.x,
-          y: d3.event.y
-        };
+      .on('drag', function () {
+        // NOTE: Mouse position is different from the event position.
+        const [x, y] = d3.mouse(this);
+        const position = { x, y };
 
-        if (state.link) {
-          state.target = position;
-        } else {
+        // Freeze simulation for node if dragging.
+        if (!state.linking) {
           d3.event.subject.fx = d3.event.x;
           d3.event.subject.fy = d3.event.y;
         }
 
-        state.moved = true;
-
         emitter.emit('drag', { source: d3.event.subject, position });
+
+        state.dragging = true;
       })
 
-      .on('end', () => {
-        const group = parent();
+      .on('end', function () {
+        const { [freeze]: freezeModifier } = d3.event.sourceEvent;
 
         if (!d3.event.active) {
           value(simulation).alphaTarget(0);
@@ -95,12 +96,14 @@ export const simulationDragHandler = (simulation, options = {}) => {
         d3.event.subject.fx = null;
         d3.event.subject.fy = null;
 
-        // TODO(burdon): Fix position.
-        // TODO(burdon): Key modifiers.
-        // d3.event.subject.fx = d3.event.subject.x;
-        // d3.event.subject.fy = d3.event.subject.y;
+        // Fix position.
+        if (freezeModifier) {
+          d3.event.subject.fx = d3.event.subject.x;
+          d3.event.subject.fy = d3.event.subject.y;
+        }
 
-        if (state.moved) {
+        // Link or click.
+        if (state.dragging) {
           const target = value(simulation).find(d3.event.x, d3.event.y, 16);    // TODO(burdon): Radius.
           emitter.emit('end', { source: d3.event.subject, target });
         } else {

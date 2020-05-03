@@ -240,18 +240,25 @@ export const withDrag = () => {
 
   // TODO(burdon): Factor out.
   const linkProjector = new LinkProjector();
-  const drag = simulationDragHandler(() => layout.simulation, { link: true });
+  const drag = simulationDragHandler(() => layout.simulation, { link: 'metaKey', freeze: 'shiftKey' });
   drag.on('drag', ({ source, position }) => {
-    console.log(source, position);
     const data = {
       links: [
-        { id: 1, source, target: { ...position } },
+        { id: 'guide-link', source, target: { id: 'guide-link-target', ...position } },
       ]
     };
+
     linkProjector.update(grid, data, { group: guides.current });
   });
   drag.on('end', ({ source, target }) => {
+    linkProjector.update(grid, {}, { group: guides.current });
     if (target) {
+      // TODO(burdon): Highlight source node.
+      // TODO(burdon): End marker for guide link.
+      // TODO(burdon): Escape to cancel.
+      // TODO(burdon): Check not already linked (util).
+      // TODO(burdon): Delete.
+      // TODO(burdon): New node spawned from parent location.
       updateData({
         links: {
           $push: [{ id: createLinkId(source.id, target.id), source, target }]
@@ -270,6 +277,7 @@ export const withDrag = () => {
     }
   });
   drag.on('click', ({ id }) => {
+    // TODO(burdon): Delete.
     console.log('click', id);
   });
 
@@ -319,16 +327,15 @@ export const withTwoForceLayouts = () => {
   const drag = simulationDragHandler(() => layout1.simulation);
 
   // Move node from one group to the other.
-  drag.on('click', ({ id }) => {
-    setSelected(id);
+  drag.on('click', ({ source: selected }) => {
+    setSelected(selected.id);
 
-    const idx = data1.nodes.findIndex(node => node.id === id);
-    const source = data1.nodes[idx];
+    const idx = data1.nodes.findIndex(node => node.id === selected.id);
     const target = faker.random.arrayElement(data2.nodes);
 
     const linkIndexes = [];
     data1.links.forEach(({ id: linkId, source, target }) => {
-      if (source.id === id || target.id === id) {
+      if (source.id === selected.id || target.id === selected.id) {
         linkIndexes.push(data1.links.findIndex(link => link.id === linkId));
       }
     });
@@ -348,14 +355,14 @@ export const withTwoForceLayouts = () => {
     updateData2({
       nodes: {
         $push: [
-          source
+          selected
         ]
       },
       links: {
         $push: [
           {
-            id: createLinkId(source.id, target.id),
-            source: source.id,
+            id: createLinkId(selected.id, target.id),
+            source: selected.id,
             target: target.id
           }
         ]

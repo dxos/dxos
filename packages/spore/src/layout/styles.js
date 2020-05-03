@@ -10,7 +10,24 @@ const highlightColor = 'orange';
 const selectedColor = 'blue';
 const guideColor = 'blueGrey';
 
+// TODO(burdon): Builder.
 export const useDefaultStyles = makeStyles({
+
+  // TODO(burdon): Unless "> g" then overridden by outer scope.
+  guide: {
+    '& path': {
+      strokeWidth: 2,
+      stroke: colors[guideColor][400],
+      fill: 'none'
+    },
+
+    '& > g > circle': {
+      strokeWidth: 8,
+      stroke: colors[guideColor][50],
+      fill: 'none',
+      opacity: .5
+    }
+  },
 
   box: ({ color = defaultColor }) => ({
     '& rect': {
@@ -77,7 +94,7 @@ export const useDefaultStyles = makeStyles({
     '& circle': {
       strokeWidth: 1,
       stroke: colors[color][800],
-      fill: colors[color][100],
+      // fill: colors[color][100],
       cursor: 'pointer'
     },
     '& circle.fixed': {
@@ -112,14 +129,5 @@ export const useDefaultStyles = makeStyles({
         fill: colors['grey'][700]
       }
     }
-  }),
-
-  guide: {
-    '& > g > circle': {
-      strokeWidth: 8,
-      stroke: colors[guideColor][50],
-      fill: 'none',
-      opacity: .5
-    },
-  }
+  })
 });

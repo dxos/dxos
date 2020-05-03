@@ -3,6 +3,9 @@
 React components and hooks for D3.
 
 
+- TODO(burdon): State values are recreated on each render (e.g., LinkProjector).
+
+
 ## D3
 
 - https://vega.github.io/vega/examples

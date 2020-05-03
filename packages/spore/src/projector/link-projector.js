@@ -6,7 +6,6 @@ import * as d3 from 'd3';
 
 import { createPoints, lineGenerator } from '../layout';
 import { Projector } from './projector';
-import get from 'lodash.get';
 
 /**
  * Render links.

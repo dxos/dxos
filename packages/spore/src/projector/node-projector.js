@@ -90,7 +90,7 @@ export class NodeProjector extends Projector {
 
       group
         .select('circle')
-          .attr('class', d => (selected === d.id) ? 'selected' : '')
+          .classed('selected', d => (selected === d.id))
           .attr('r', d => get(d, 'layout.node.radius', nodeRadius));
     };
 
