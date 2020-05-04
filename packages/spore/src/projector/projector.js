@@ -16,7 +16,7 @@ export class Projector extends EventEmitter {
       fade: false
     });
 
-    // console.log('###', options);
+    this.id = Math.random();
   }
 
   /**
@@ -25,6 +25,7 @@ export class Projector extends EventEmitter {
    * @param data
    * @param options
    */
+  // TODO(burdon): Merge or convert to simple function with factory/closure for options?
   update(grid, data, options) {
     this.onData(grid, data, options);
     this.onUpdate(grid, data, options);

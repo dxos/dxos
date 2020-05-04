@@ -5,9 +5,6 @@
 import * as d3 from 'd3';
 import EventEmitter from 'events';
 
-// TODO(burdon): Getter.
-const value = v => (typeof v === 'function') ? v() : v;
-
 /**
  * Drag handler for simulation.
  *
@@ -19,6 +16,7 @@ const value = v => (typeof v === 'function') ? v() : v;
  * @param {Object} options
  * @return {{ create: function, on: function, off: function }}
  */
+// TODO(burdon): Hook.
 // TODO(burdon): If ForceLayout can have a stable instance, pass in here directly.
 export const simulationDragHandler = (simulation, options = {}) => {
   const emitter = new EventEmitter();
@@ -47,7 +45,7 @@ export const simulationDragHandler = (simulation, options = {}) => {
 
       // Get the datum.
       // https://github.com/d3/d3-drag#drag_subject
-      .subject(() => value(simulation).find(d3.event.x, d3.event.y))
+      .subject(() => simulation.find(d3.event.x, d3.event.y))
 
     // Event handlers.
     // https://github.com/d3/d3-drag#drag_on
@@ -58,7 +56,7 @@ export const simulationDragHandler = (simulation, options = {}) => {
         const { [link]: linkModifier } = d3.event.sourceEvent;
 
         if (!d3.event.active) {
-          value(simulation).alphaTarget(0.3).restart();
+          simulation.alphaTarget(0.3).restart();
         }
 
         // Find group and raise.
@@ -90,7 +88,7 @@ export const simulationDragHandler = (simulation, options = {}) => {
         const { [freeze]: freezeModifier } = d3.event.sourceEvent;
 
         if (!d3.event.active) {
-          value(simulation).alphaTarget(0);
+          simulation.alphaTarget(0);
         }
 
         d3.event.subject.fx = null;
@@ -104,7 +102,7 @@ export const simulationDragHandler = (simulation, options = {}) => {
 
         // Link or click.
         if (state.dragging) {
-          const target = value(simulation).find(d3.event.x, d3.event.y, 16);    // TODO(burdon): Radius.
+          const target = simulation.find(d3.event.x, d3.event.y, 16);    // TODO(burdon): Radius.
           emitter.emit('end', { source: d3.event.subject, target });
         } else {
           emitter.emit('click', { source: d3.event.subject });

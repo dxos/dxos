@@ -34,6 +34,7 @@ export const useObjectMutator = (initalValue = {}) => {
 
     // Updater.
     // https://github.com/kolodny/immutability-helper
+    // NOTE: Use $apply to update variable (e.g., push to potentially null object).
     data => setData(ref.current = update(ref.current, data))
   ];
 };

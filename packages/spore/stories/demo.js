@@ -36,6 +36,7 @@ import {
   TreeLayout,
 
   BoxProjector,
+  BulletLinkProjector,
   GuideProjector,
   NodeProjector,
   LinkProjector,
@@ -125,9 +126,11 @@ export const withGridLayout = () => {
 
   const layout = new GridLayout();
   const projector = new NodeProjector({ node: { radius: 8, showLabels: false }, fade: false });
-  projector.on('click', ({ id }) => {
-    setSelected(id);
-  });
+  useEffect(() => {
+    projector.on('click', ({ id }) => {
+      setSelected(id);
+    });
+  }, [projector]);
 
   return (
     <FullScreen>
@@ -157,10 +160,12 @@ export const withForceLayout = () => {
   const [data] = useDataButton(() => convertTreeToGraph(createTree(4)));
   const [selected, setSelected] = useState();
   const [layout] = useState(new ForceLayout());
-  const drag = simulationDragHandler(() => layout.simulation);
-  drag.on('click', ({ id }) => {
-    setSelected(id);
-  });
+  const [drag] = useState(() => simulationDragHandler(layout.simulation));
+  useEffect(() => {
+    drag.on('click', ({ id }) => {
+      setSelected(id);
+    });
+  }, [drag]);
 
   return (
     <FullScreen>
@@ -223,6 +228,60 @@ export const withArrows = () => {
 };
 
 /**
+ * Bullets.
+ */
+export const withBullet = () => {
+  const classes = useDefaultStyles();
+  const [resizeListener, size] = useResizeAware();
+  const { width, height } = size;
+  const grid = useGrid({ width, height });
+  const markers = useRef();
+  const guides = useRef();
+
+  const [data] = useDataButton(() => convertTreeToGraph(createTree(4)));
+  const [layout] = useState(new ForceLayout());
+
+  const [{ nodeProjector, linkProjector }] = useState(() => {
+    return {
+      nodeProjector: new NodeProjector({ node: { radius: 8, showLabels: false } }),
+      linkProjector: new BulletLinkProjector(new LinkProjector({ nodeRadius: 8, showArrows: true }))
+    };
+  });
+
+  useEffect(() => {
+    nodeProjector.on('click', ({ id }) => {
+      linkProjector.fire(guides.current, id);
+    });
+  }, [nodeProjector]);
+
+  // Arrows markers.
+  useEffect(() => {
+    d3.select(markers.current)
+      .call(createArrowMarkers());
+  }, []);
+
+  return (
+    <FullScreen>
+      {resizeListener}
+      <View width={width} height={height}>
+        <Grid grid={grid} />
+
+        <g ref={markers} className={classes.markers}/>
+        <g ref={guides} className={classes.guide} />
+
+        <Graph
+          grid={grid}
+          data={data}
+          layout={layout}
+          nodeProjector={nodeProjector}
+          linkProjector={linkProjector}
+        />
+      </View>
+    </FullScreen>
+  );
+};
+
+/**
  * Drag.
  */
 export const withDrag = () => {
@@ -240,46 +299,48 @@ export const withDrag = () => {
 
   // TODO(burdon): Factor out.
   const linkProjector = new LinkProjector();
-  const drag = simulationDragHandler(() => layout.simulation, { link: 'metaKey', freeze: 'shiftKey' });
-  drag.on('drag', ({ source, position }) => {
-    const data = {
-      links: [
-        { id: 'guide-link', source, target: { id: 'guide-link-target', ...position } },
-      ]
-    };
+  // TODO(burdon): Hook (only once).
+  const [drag] = useState(() => simulationDragHandler(layout.simulation, { link: 'metaKey', freeze: 'shiftKey' }));
+  useEffect(() => {
+    drag.on('drag', ({ source, position }) => {
+      const data = {
+        links: [
+          { id: 'guide-link', source, target: { id: 'guide-link-target', ...position } },
+        ]
+      };
 
-    linkProjector.update(grid, data, { group: guides.current });
-  });
-  drag.on('end', ({ source, target }) => {
-    linkProjector.update(grid, {}, { group: guides.current });
-    if (target) {
-      // TODO(burdon): Highlight source node.
-      // TODO(burdon): End marker for guide link.
-      // TODO(burdon): Escape to cancel.
-      // TODO(burdon): Check not already linked (util).
-      // TODO(burdon): Delete.
-      // TODO(burdon): New node spawned from parent location.
-      updateData({
-        links: {
-          $push: [{ id: createLinkId(source.id, target.id), source, target }]
-        }
-      });
-    } else {
-      const target = createItem();
-      updateData({
-        nodes: {
-          $push: [target]
-        },
-        links: {
-          $push: [{ id: createLinkId(source.id, target.id), source, target }]
-        }
-      });
-    }
-  });
-  drag.on('click', ({ id }) => {
-    // TODO(burdon): Delete.
-    console.log('click', id);
-  });
+      linkProjector.update(grid, data, { group: guides.current });
+    });
+    drag.on('end', ({ source, target }) => {
+      linkProjector.update(grid, {}, { group: guides.current });
+      if (target) {
+        // TODO(burdon): Highlight source node.
+        // TODO(burdon): End marker for guide link.
+        // TODO(burdon): Escape to cancel.
+        // TODO(burdon): Check not already linked (util).
+        // TODO(burdon): Delete.
+        // TODO(burdon): New node spawned from parent location.
+        updateData({
+          links: {
+            $push: [{ id: createLinkId(source.id, target.id), source, target }]
+          }
+        });
+      } else {
+        const target = createItem();
+        updateData({
+          nodes: {
+            $push: [target]
+          },
+          links: {
+            $push: [{ id: createLinkId(source.id, target.id), source, target }]
+          }
+        });
+      }
+    });
+    drag.on('click', ({ id }) => {
+      console.log('click', id);
+    });
+  }, [drag]);
 
   return (
     <FullScreen>
@@ -323,8 +384,7 @@ export const withTwoForceLayouts = () => {
   }));
 
   const [nodeProjector] = useState(new NodeProjector({ node: { showLabels: false } }));
-
-  const drag = simulationDragHandler(() => layout1.simulation);
+  const [drag] = useState(() => simulationDragHandler(() => layout1.simulation));
 
   // Move node from one group to the other.
   drag.on('click', ({ source: selected }) => {

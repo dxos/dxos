@@ -6,6 +6,7 @@ export * from './drag';
 export * from './projector';
 
 export * from './box-projector';
+export * from './bullet-link-projector';
 export * from './guide-projector';
 export * from './link-projector';
 export * from './node-projector';
