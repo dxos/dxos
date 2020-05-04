@@ -130,6 +130,17 @@ export const createGraph = (numNodes = 0, numLinks = 0) => {
 };
 
 /**
+ * Delete nodes and related links.
+ * @param {{ nodes, links }} graph
+ * @param {string[]} ids
+ */
+export const deleteNodes = (graph, ids) => {
+  graph.nodes = graph.nodes.filter(({ id }) => ids.indexOf(id) === -1);
+  graph.links = graph.links.filter(({ source, target }) =>
+    ids.indexOf(source.id) === -1 && ids.indexOf(target.id) === -1);
+};
+
+/**
  * Test data set generator and mutator.
  *
  * @param {Object} [options]
