@@ -14,7 +14,7 @@ const guideColor = 'blueGrey';
 export const useDefaultStyles = makeStyles({
 
   // TODO(burdon): Unless "> g" then overridden by outer scope.
-  guide: {
+  guides: {
     '& path': {
       strokeWidth: 2,
       stroke: colors[guideColor][400],

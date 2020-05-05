@@ -11,7 +11,7 @@ import grey from '@material-ui/core/colors/grey';
 
 import { noop } from '@dxos/gem-core';
 
-import { dragGenerator } from '../drag';
+import { dragObjectGenerator } from '../drag';
 import { appendObject, updateObject } from '../shapes';
 
 // TODO(burdon): Factor out styles.
@@ -70,10 +70,10 @@ const useStyles = makeStyles({
 const Objects = ({ grid, objects, selected, onSelect = noop, onUpdate = noop }) => {
   const classes = useStyles();
   const layer = useRef();
-  const drag = useRef();
 
+  const drag = useRef();
   useEffect(() => {
-    drag.current = dragGenerator(layer.current, grid, onSelect, onUpdate);
+    drag.current = dragObjectGenerator(layer.current, grid, onSelect, onUpdate);
   }, [grid]);
 
   useEffect(() => {

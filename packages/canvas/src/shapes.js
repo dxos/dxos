@@ -6,8 +6,7 @@ import faker from "faker";
 
 import { createController, updateController } from './controller';
 
-// https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths
-const path = (points) => 'M ' + points.map(({ x, y }) => `${x} ${y}`).join(' L ');
+import { createPath } from './util';
 
 /**
  * Creates a display Object.
@@ -78,7 +77,7 @@ export const updateObject = (group, grid, drag, classes, selected) => {
     case 'path': {
       const { points } = group.datum();
       group.select('path')
-        .attr('d', () => path(points.map(grid.project)));
+        .attr('d', () => createPath(points.map(grid.project)));
       break;
     }
 

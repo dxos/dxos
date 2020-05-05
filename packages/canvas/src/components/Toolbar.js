@@ -2,6 +2,7 @@
 // Copyright 2020 DxOS, Inc.
 //
 
+import clsx from 'clsx';
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import IconButton from '@material-ui/core/IconButton';
@@ -21,7 +22,8 @@ import {
   GridOn,
   Undo,
   Redo,
-  Palette
+  Palette,
+  FontDownloadOutlined
 } from '@material-ui/icons';
 
 import {
@@ -35,14 +37,17 @@ const useStyles = makeStyles(() => ({
     display: 'flex',
     justifyContent: 'space-between',
     backgroundColor: grey[100]
+  },
+
+  selected: {
+    backgroundColor: grey[300]
   }
 }));
 
 /**
  *
- * @constructor
  */
-const Toolbar = ({ onAction = () => {} }) => {
+const Toolbar = ({ tool, onAction = () => {} }) => {
   const classes = useStyles();
 
   // https://material.io/resources/icons/?style=outline
@@ -51,10 +56,11 @@ const Toolbar = ({ onAction = () => {} }) => {
     {
       type: 'switch',
       items: [
-        { id: 'pointer', icon: NearMe },
+        { id: 'select', icon: NearMe },
         { id: 'path', icon: Timeline },
         { id: 'rect', icon: CheckBoxOutlineBlank },
         { id: 'ellipse', icon: RadioButtonUnchecked },
+        { id: 'text', icon: FontDownloadOutlined },
         { id: 'palette', icon: Palette },
       ]
     },
@@ -87,7 +93,7 @@ const Toolbar = ({ onAction = () => {} }) => {
   ];
 
   return (
-    <MuiToolbar variant="dense" disableGutters className={classes.toolbar}>
+    <MuiToolbar variant="dense" className={classes.toolbar}>
       {
         groups.map(({ items }, i) => (
           <div key={i}>
@@ -97,6 +103,8 @@ const Toolbar = ({ onAction = () => {} }) => {
                   key={id}
                   title={id}
                   disableRipple={true}
+                  size="small"
+                  className={clsx(id === tool && classes.selected)}
                   onClick={() => onAction(id)}
                 >
                   <Icon />

@@ -46,7 +46,7 @@ const Graph = (props) => {
 
   return (
     <g className={classes.graph}>
-      <g ref={guides} className={classes.guide} />
+      <g ref={guides} className={classes.guides} />
       <g ref={links} />
       <g ref={nodes} />
     </g>

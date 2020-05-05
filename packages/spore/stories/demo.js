@@ -267,7 +267,7 @@ export const withBullet = () => {
         <Grid grid={grid} />
 
         <g ref={markers} className={classes.markers}/>
-        <g ref={guides} className={classes.guide} />
+        <g ref={guides} className={classes.guides} />
 
         <Graph
           grid={grid}
@@ -348,7 +348,7 @@ export const withDrag = () => {
       <View width={width} height={height}>
         <Grid grid={grid} />
 
-        <g ref={guides} className={classes.guide} />
+        <g ref={guides} className={classes.guides} />
 
         <Graph
           grid={grid}
@@ -484,7 +484,7 @@ export const withTreeLayout = () => {
       {resizeListener}
       <View width={width} height={height}>
         <g className={classes.tree}>
-          <g ref={guides} className={classes.guide} />
+          <g ref={guides} className={classes.guides} />
           <g ref={links} />
           <g ref={nodes} />
         </g>

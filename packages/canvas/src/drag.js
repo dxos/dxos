@@ -5,7 +5,106 @@
 import * as d3 from 'd3';
 import debug from 'debug';
 
+import { createPath } from './util';
+
 const log = debug('spore:canvas:drag');
+
+/**
+ * @param container
+ * @param grid
+ * @param tool
+ * @param onSelect
+ * @returns {d3.drag}
+ */
+// TODO(burdon): Configure by tools (select, line, rect).
+export const dragSelectGenerator = (container, grid, tool, onSelect) => {
+  let initialPos = undefined;
+
+  return d3.drag()
+    .container(container)
+    .on('start', () => {
+      // console.log('start', tool);
+
+      initialPos = {
+        x: d3.event.x,
+        y: d3.event.y,
+      };
+
+      switch (tool) {
+        case 'path': {
+          d3.select(container)
+            .append('g')
+              .append('path');
+
+          break;
+        }
+
+        default: {
+          d3.select(container)
+            .append('g')
+            .call(group => {
+              // Inner and outer selection frame.
+              group.append('rect')
+                .attr('class', 'selector');
+              group.append('rect')
+                .attr('class', 'selector-inner');
+            });
+
+          break;
+        }
+      }
+
+      onSelect(null);
+    })
+    .on('drag', () => {
+      // console.log('drag');
+
+      const currentPos = {
+        x: d3.event.x,
+        y: d3.event.y,
+      };
+
+      switch (tool) {
+        case 'path': {
+          d3.select(container)
+            .select('g')
+              .select('path')
+                .attr('d', createPath([
+                  { x: initialPos.x, y: initialPos.y },
+                  { x: currentPos.x, y: currentPos.y }
+                ]));
+
+          break;
+        }
+
+        // TODO(burdon): Snap if not select.
+        default: {
+          const size = {
+            dx: currentPos.x - initialPos.x,
+            dy: currentPos.y - initialPos.y
+          };
+
+          d3.select(container)
+            .select('g')
+              .selectAll('rect')
+                .attr('x', initialPos.x + (size.dx < 0 ? size.dx : 0))
+                .attr('y', initialPos.y + (size.dy < 0 ? size.dy : 0))
+                .attr('width', Math.abs(size.dx))
+                .attr('height', Math.abs(size.dy));
+
+          break;
+        }
+      }
+    })
+    .on('end', () => {
+      // console.log('end');
+
+      // TODO(burdon): Select bounds or create object.
+      d3.select(container)
+        .select('g')
+        .remove();
+    });
+};
 
 /**
  * Creates a drag handler that manages moving and resizing objects.
@@ -13,8 +112,9 @@ const log = debug('spore:canvas:drag');
  * @param {Grid} grid
  * @param {function} onSelect
  * @param {function} onUpdate
+ * @returns {d3.drag}
  */
-export const dragGenerator = (container, grid, onSelect, onUpdate) => {
+export const dragObjectGenerator = (container, grid, onSelect, onUpdate) => {
   let initialPos = undefined;
   let initialObject = undefined;
 

@@ -13,8 +13,10 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Grid, View, useGrid, useObjectMutator } from '@dxos/gem-core';
 
 import { createObject} from '../shapes';
+
 import Objects from './Objects';
 import Toolbar from './Toolbar';
+import { dragSelectGenerator } from '../drag';
 
 const log = debug('spore:canvas');
 
@@ -23,6 +25,25 @@ const useStyles = makeStyles(() => ({
     display: 'flex',
     flexDirection: 'column',
     flex: 1
+  },
+
+  // TODO(burdon): Move to useDefaultStyles.
+  guides: {
+    '& > g > rect.selector': {
+      strokeWidth: 2,
+      stroke: 'darkblue',
+      fill: 'none'
+    },
+    '& > g > rect.selector-inner': {
+      fill: 'darkblue',
+      opacity: .1
+    },
+
+    '& > g > path': {
+      strokeWidth: 2,
+      stroke: 'darkblue',
+      fill: 'none'
+    }
   }
 }));
 
@@ -33,10 +54,12 @@ const Canvas = ({ data }) => {
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
   const [selected, setSelected] = useState({ ids: [] });
-  const [options, setOptions] = useState({ zoom: 1, showGrid: true, showAxis: false });
+  const [options, setOptions] = useState({ zoom: 1, showAxis: false, showGrid: true });
+  const [tool, setTool] = useState('select');
   const grid = useGrid({ width, height, zoom: options.zoom });
   const clipboard = useRef(null);
   const view = useRef();
+  const guides = useRef();
 
   // TODO(burdon): ECHO model.
   const [objects, setObjects, getObjects, updateObjects] = useObjectMutator(data);
@@ -55,36 +78,26 @@ const Canvas = ({ data }) => {
 
   // Reset selection.
   useEffect(() => {
+    const drag = dragSelectGenerator(
+      guides.current,
+      grid,
+      tool,
+      () => {
+        setSelected(null);
+      });
+
     d3.select(view.current)
-      .call(d3.drag()
-        .container(view.current)
-        .subject(function () {
-          // TODO(burdon): Reuse dragGenerator (pass in param for default subject).
-          // NOTE: if undefined start doesn't happen.
-          if (this === view.current) {
-            return { id: 'selection' };
-          }
-        })
-        .on('start', () => {
-          console.log('START', d3.event.subject);
-        })
-        .on('drag', () => {
-          console.log('DRAG');
-        })
-        .on('end', () => {
-          console.log('END');
-        })
-      )
+      .call(drag)
       .on('click', () => {
         // NOTE: Happens after drag ends.
+        console.log('click');
         const data = d3.select(d3.event.target).datum();
         if (!data) {
           setSelected(null);
         }
       });
-  }, [view]);
+  }, [view, tool]);
 
-  // log('selected', JSON.stringify(selected))
   const isSelected = objectId => selected && selected.ids.find(id => id === objectId);
 
   // Toolbar actions.
@@ -92,6 +105,31 @@ const Canvas = ({ data }) => {
     log(`Action: ${action}`);
 
     switch (action) {
+
+      //
+      // Tools
+      //
+
+      case 'select':
+      case 'path':
+        setTool(action === tool ? 'select' : action);
+        break;
+
+      case 'rect': {
+        const object = createObject('rect', { bounds: { x: 0, y: 0, width: 20, height: 20 } });
+        console.log(object);
+        setObjects([...objects, object]);
+        setSelected({ ids: [object.id] });
+        break;
+      }
+
+      case 'ellipse': {
+        const object = createObject('ellipse', { bounds: { x: 0, y: 0, width: 20, height: 20 } });
+        setObjects([...objects, object]);
+        setSelected({ ids: [object.id] });
+        break;
+      }
+
       //
       // Clipboard
       //
@@ -109,9 +147,11 @@ const Canvas = ({ data }) => {
       case 'cut': {
         if (selected) {
           const idx = objects.findIndex(object => isSelected(object.id));
-          clipboard.current = objects[idx];
-          updateObjects({ $splice: [[idx, 1]] });
-          setSelected(null);
+          if (idx !== -1) {
+            clipboard.current = objects[idx];
+            updateObjects({ $splice: [ [ idx, 1 ] ] });
+            setSelected(null);
+          }
         }
         break;
       }
@@ -137,42 +177,6 @@ const Canvas = ({ data }) => {
       }
 
       //
-      // Shapes
-      //
-
-      case 'path': {
-        const object = createObject('path', {
-          bounds: { x: 0, y: 0, width: 0, height: 0 },
-          // TODO(burdon): Initially 2 points.
-          points: [
-            { x: 0,  y: 0 },
-            { x: 10, y: 10 },
-            { x: 20, y: 0 },
-            { x: 30, y: 10 },
-          ]
-        });
-
-        setObjects([...objects, object]);
-        setSelected({ ids: [object.id] });
-        break;
-      }
-
-      case 'rect': {
-        const object = createObject('rect', { bounds: { x: 0, y: 0, width: 20, height: 20 } });
-        console.log(object);
-        setObjects([...objects, object]);
-        setSelected({ ids: [object.id] });
-        break;
-      }
-
-      case 'ellipse': {
-        const object = createObject('ellipse', { bounds: { x: 0, y: 0, width: 20, height: 20 } });
-        setObjects([...objects, object]);
-        setSelected({ ids: [object.id] });
-        break;
-      }
-
-      //
       // View
       //
 
@@ -180,14 +184,17 @@ const Canvas = ({ data }) => {
         setOptions({ ...options, showGrid: !options.showGrid });
         break;
       }
+
       case 'zoom-in': {
         setOptions({ ...options, zoom: Math.min(5, options.zoom + .5) });
         break;
       }
+
       case 'zoom-out': {
         setOptions({ ...options, zoom: Math.max(1, options.zoom - .5) });
         break;
       }
+
       case 'zoom-fit': {
         setOptions({ ...options, zoom: 1 });
         break;
@@ -200,6 +207,7 @@ const Canvas = ({ data }) => {
       case 'undo': {
         break;
       }
+
       case 'redo': {
         break;
       }
@@ -231,15 +239,15 @@ const Canvas = ({ data }) => {
         keyMap={keyMap}
         handlers={keyHandlers}
       >
-        <Toolbar onAction={handleAction} />
+        <Toolbar tool={tool} onAction={handleAction} />
 
         <div>
           {resizeListener}
           <View ref={view} width={width} height={height}>
             <Grid
               grid={grid}
+              showAxis={options.showAxis}
               showGrid={options.showGrid}
-              showAxis={options.showAxis || true}
             />
 
             <Objects
@@ -249,6 +257,8 @@ const Canvas = ({ data }) => {
               onSelect={ids => setSelected(ids ? { ids } : null)}
               onUpdate={handleUpdate}
             />
+
+            <g ref={guides} className={classes.guides} />
           </View>
         </div>
       </HotKeys>
