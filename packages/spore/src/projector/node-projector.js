@@ -32,6 +32,13 @@ export class NodeProjector extends Projector {
         .attr('id', d => d.id)
         .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`)
 
+        .on('mouseover', (d, i, nodes) => {
+          d3.select(nodes[i]).classed('highlight', true);
+        })
+        .on('mouseout', (d, i, nodes) => {
+          d3.select(nodes[i]).classed('highlight', false);
+        })
+
         .call(group => {
           // TODO(burdon): Render in different layer.
           if (showLabels) {
@@ -42,16 +49,9 @@ export class NodeProjector extends Projector {
 
           group
             .append('circle')
-
               // TODO(burdon): Drag/click issue: https://github.com/d3/d3-drag/issues/69
               .on('click', (d) => {
                 this.emit('click', d);
-              })
-              .on('mouseover', (d, i, nodes) => {
-                d3.select(nodes[i]).classed('highlight', true);
-              })
-              .on('mouseout', (d, i, nodes) => {
-                d3.select(nodes[i]).classed('highlight', false);
               });
         });
 
@@ -90,7 +90,6 @@ export class NodeProjector extends Projector {
 
       group
         .select('circle')
-          .classed('selected', d => (selected === d.id))
           .attr('r', d => get(d, 'layout.node.radius', nodeRadius));
     };
 
@@ -102,6 +101,7 @@ export class NodeProjector extends Projector {
 
     root
       .selectAll('g[state=active]')
+      .classed('selected', d => (selected === d.id))
       .call(group => {
         if (transition) {
           group.transition(transition()).call(update);

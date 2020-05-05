@@ -107,26 +107,30 @@ export const useDefaultStyles = makeStyles({
       fontSize: 16
     },
 
-    '& [state=active]': {
+    '& g[state=active]': {
       '& circle': {
         strokeWidth: 2,
         stroke: colors[color][700],
         fill: colors[color][200],
       },
 
-      '& circle.highlight': {
-        stroke: colors[highlightColor][700],
-        fill: colors[highlightColor][500]
-      },
-
-      '& circle.selected': {
-        stroke: colors[selectedColor][700],
-        fill: colors[selectedColor][500]
-      },
-
       '& text': {
         fontFamily: 'monospace',
         fill: colors['grey'][700]
+      }
+    },
+
+    '& g.selected': {
+      '& circle': {
+        stroke: colors[selectedColor][700],
+        fill: colors[selectedColor][500]
+      }
+    },
+
+    '& g.highlight': {
+      '& circle': {
+        stroke: colors[highlightColor][700],
+        fill: colors[highlightColor][500]
       }
     }
   })

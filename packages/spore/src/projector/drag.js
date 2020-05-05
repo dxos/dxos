@@ -22,6 +22,8 @@ export const simulationDragHandler = (simulation, options = {}) => {
   const emitter = new EventEmitter();
   const { link, freeze } = options;
 
+  console.log(':::', simulation);
+
   const create = container => {
     const state = {
       // Determines if dragging (if not then click on end).

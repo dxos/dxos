@@ -384,7 +384,7 @@ export const withTwoForceLayouts = () => {
   }));
 
   const [nodeProjector] = useState(new NodeProjector({ node: { showLabels: false } }));
-  const [drag] = useState(() => simulationDragHandler(() => layout1.simulation));
+  const [drag] = useState(() => simulationDragHandler(layout1.simulation));
 
   // Move node from one group to the other.
   drag.on('click', ({ source: selected }) => {
