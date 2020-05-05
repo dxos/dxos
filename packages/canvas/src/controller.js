@@ -43,7 +43,7 @@ export const createController = (group, classes) => {
       group.append('g')
         .selectAll('rect')
         .data(handles, d => d.id)
-        // TODO(burdon): Circles (like line).
+        // TODO(burdon): Change to circle (like line).
         .join('rect')
           .attr('class', classes.handle)
           .style('cursor', ({ cursor }) => cursor);
