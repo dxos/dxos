@@ -41,13 +41,17 @@ const useStyles = makeStyles(() => ({
 
   selected: {
     backgroundColor: grey[300]
+  },
+
+  off: {
+    color: grey[400]
   }
 }));
 
 /**
- *
+ * Main toolbar.
  */
-const Toolbar = ({ tool, onAction = () => {} }) => {
+const Toolbar = ({ tool, snap, onAction = () => {} }) => {
   const classes = useStyles();
 
   // https://material.io/resources/icons/?style=outline
@@ -84,7 +88,7 @@ const Toolbar = ({ tool, onAction = () => {} }) => {
 
     {
       items: [
-        { id: 'grid', icon: GridOn },
+        { id: 'grid', icon: GridOn, className: () => clsx(!snap && classes.off) },
         { id: 'zoom-in', icon: ZoomIn },
         { id: 'zoom-out', icon: ZoomOut },
         { id: 'zoom-fit', icon: ZoomOutMap },
@@ -98,13 +102,13 @@ const Toolbar = ({ tool, onAction = () => {} }) => {
         groups.map(({ items }, i) => (
           <div key={i}>
             {
-              items.map(({ id, icon: Icon }) => (
+              items.map(({ id, icon: Icon, className = id => clsx(id === tool && classes.selected) }) => (
                 <IconButton
                   key={id}
                   title={id}
                   disableRipple={true}
                   size="small"
-                  className={clsx(id === tool && classes.selected)}
+                  className={className(id)}
                   onClick={() => onAction(id)}
                 >
                   <Icon />

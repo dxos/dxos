@@ -62,7 +62,7 @@ const Canvas = ({ data }) => {
   const guides = useRef();
 
   // TODO(burdon): ECHO model.
-  const [objects, setObjects, getObjects, updateObjects] = useObjectMutator(data);
+  const [objects,, getObjects, updateObjects] = useObjectMutator(data);
 
   // Handle move/resize.
   const handleUpdate = (id, properties) => {
@@ -74,6 +74,8 @@ const Canvas = ({ data }) => {
     updateObjects({
       $splice: [[idx, 1, { ...object, ...properties }]]
     });
+
+    setTool('select');
   };
 
   // Reset selection.
@@ -82,8 +84,14 @@ const Canvas = ({ data }) => {
       guides.current,
       grid,
       tool,
-      () => {
-        setSelected(null);
+      options.showGrid,
+      object => {
+        if (object) {
+          updateObjects({ $push: [object] });
+          setSelected({ ids: [object.id] });
+        } else {
+          setSelected(null);
+        }
       });
 
     d3.select(view.current)
@@ -96,7 +104,7 @@ const Canvas = ({ data }) => {
           setSelected(null);
         }
       });
-  }, [view, tool]);
+  }, [view, tool, options]);
 
   const isSelected = objectId => selected && selected.ids.find(id => id === objectId);
 
@@ -112,21 +120,9 @@ const Canvas = ({ data }) => {
 
       case 'select':
       case 'path':
-        setTool(action === tool ? 'select' : action);
-        break;
-
-      case 'rect': {
-        const object = createObject('rect', { bounds: { x: 0, y: 0, width: 20, height: 20 } });
-        console.log(object);
-        setObjects([...objects, object]);
-        setSelected({ ids: [object.id] });
-        break;
-      }
-
+      case 'rect':
       case 'ellipse': {
-        const object = createObject('ellipse', { bounds: { x: 0, y: 0, width: 20, height: 20 } });
-        setObjects([...objects, object]);
-        setSelected({ ids: [object.id] });
+        setTool(action === tool ? 'select' : action);
         break;
       }
 
@@ -239,7 +235,7 @@ const Canvas = ({ data }) => {
         keyMap={keyMap}
         handlers={keyHandlers}
       >
-        <Toolbar tool={tool} onAction={handleAction} />
+        <Toolbar tool={tool} snap={options.showGrid} onAction={handleAction} />
 
         <div>
           {resizeListener}
@@ -252,9 +248,13 @@ const Canvas = ({ data }) => {
 
             <Objects
               grid={grid}
+              snap={options.showGrid}
               objects={objects}
               selected={selected}
-              onSelect={ids => setSelected(ids ? { ids } : null)}
+              onSelect={ids => {
+                setSelected(ids ? { ids } : null);
+                setTool('select');
+              }}
               onUpdate={handleUpdate}
             />
 

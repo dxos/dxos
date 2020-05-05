@@ -58,15 +58,40 @@ export const createGrid = ({ width, height, zoom = 1 }) => {
   };
 
   const i = interval(scaleX, ticks);
-  const clamp = (value, unit) => Math.round(value / unit) * unit;
-  const snapper = (value, scale) => scale(clamp(scale.invert(value), i));
+  const round = (value, unit) => Math.round(value / unit) * unit;
+  const snapper = (value, scale) => scale(round(scale.invert(value), i));
 
   return {
-    center: { x: 0, y: 0 },
+    //
+    // Screen space.
+    //
+
     size: { width, height },
+    center: { x: 0, y: 0 },
     snap: ({ x, y }) => ({ x: snapper(x, scaleX), y: snapper(y, scaleY) }),
-    snapUser: ({ x, y }) => ({ x: clamp(x, i), y: clamp(y, i) }),
+    bounds: ({ x: x1, y: y1 }, { x: x2, y: y2 }) => ({
+      x: Math.min(x1, x2),
+      y: Math.min(y1, y2),
+      width: Math.abs(x1 - x2),
+      height: Math.abs(y1 - y2)
+    }),
+
+    invert: ({ x, y }) => ({
+      x: scaleX.invert(x),
+      y: scaleY.invert(y)
+    }),
+
+    //
+    // Model space.
+    //
+
+    round: ({ x, y }) => ({ x: round(x, i), y: round(y, i) }),
     project: ({ x, y }) => ({ x: scaleX(x), y: scaleY(y) }),
+
+    //
+    // Grid.
+    //
+
     scaleX,
     scaleY,
     ticks,

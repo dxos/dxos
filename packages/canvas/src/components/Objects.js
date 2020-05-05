@@ -63,17 +63,18 @@ const useStyles = makeStyles({
  * @param {Grid} grid
  * @param {{ id, bounds }[]} objects
  * @param {string|undefined} selected
+ * @param {boolean} snap
  * @param {function} [onSelect]
  * @param {function} [onUpdate]
  */
 // TODO(burdon): Convert selected to array.
-const Objects = ({ grid, objects, selected, onSelect = noop, onUpdate = noop }) => {
+const Objects = ({ grid, objects, selected, snap = false, onSelect = noop, onUpdate = noop }) => {
   const classes = useStyles();
   const layer = useRef();
 
   const drag = useRef();
   useEffect(() => {
-    drag.current = createObjectDrag(layer.current, grid, onSelect, onUpdate);
+    drag.current = createObjectDrag(layer.current, grid, snap, onSelect, onUpdate);
   }, [grid]);
 
   useEffect(() => {

@@ -12,17 +12,13 @@ import EventEmitter from 'events';
  * https://bl.ocks.org/mbostock/ad70335eeef6d167bc36fd3c04378048 (simulation)
  * https://observablehq.com/@d3/circle-dragging-i
  *
- * @param {Object|function} simulation
+ * @param {Object} simulation
  * @param {Object} options
  * @return {{ create: function, on: function, off: function }}
  */
-// TODO(burdon): Hook.
-// TODO(burdon): If ForceLayout can have a stable instance, pass in here directly.
-export const simulationDragHandler = (simulation, options = {}) => {
+export const createSimulationDrag = (simulation, options = {}) => {
   const emitter = new EventEmitter();
   const { link, freeze } = options;
-
-  console.log(':::', simulation);
 
   const create = container => {
     const state = {

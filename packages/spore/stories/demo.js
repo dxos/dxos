@@ -46,7 +46,7 @@ import {
   useLayout,
 
   createArrowMarkers,
-  simulationDragHandler,
+  createSimulationDrag,
 } from '../src';
 
 export default {
@@ -160,7 +160,7 @@ export const withForceLayout = () => {
   const [data] = useDataButton(() => convertTreeToGraph(createTree(4)));
   const [selected, setSelected] = useState();
   const [layout] = useState(new ForceLayout());
-  const [drag] = useState(() => simulationDragHandler(layout.simulation));
+  const [drag] = useState(() => createSimulationDrag(layout.simulation));
   useEffect(() => {
     drag.on('click', ({ id }) => {
       setSelected(id);
@@ -300,7 +300,7 @@ export const withDrag = () => {
   // TODO(burdon): Factor out.
   const linkProjector = new LinkProjector();
   // TODO(burdon): Hook (only once).
-  const [drag] = useState(() => simulationDragHandler(layout.simulation, { link: 'metaKey', freeze: 'shiftKey' }));
+  const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey', freeze: 'shiftKey' }));
   useEffect(() => {
     drag.on('drag', ({ source, position }) => {
       const data = {
@@ -384,7 +384,7 @@ export const withTwoForceLayouts = () => {
   }));
 
   const [nodeProjector] = useState(new NodeProjector({ node: { showLabels: false } }));
-  const [drag] = useState(() => simulationDragHandler(layout1.simulation));
+  const [drag] = useState(() => createSimulationDrag(layout1.simulation));
 
   // Move node from one group to the other.
   drag.on('click', ({ source: selected }) => {
