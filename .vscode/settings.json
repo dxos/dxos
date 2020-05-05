@@ -1,10 +1,10 @@
 {
-    "files.exclude": {
-        ".idea/": true,
-        "dist/": true,
-        "node_modules/": true
-    },
-    "editor.renderLineHighlight": "gutter",
-    "editor.highlightActiveIndentGuide": false,
-    "editor.renderIndentGuides": false
+  "files.exclude": {
+    ".idea/": true,
+    "dist/": true,
+    "node_modules/": true
+  },
+  "editor.renderLineHighlight": "gutter",
+  "editor.highlightActiveIndentGuide": false,
+  "editor.renderIndentGuides": false
 }

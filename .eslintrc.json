@@ -26,7 +26,7 @@
   },
   "rules": {
     "semi": ["error", "always"],
-    "indent": ["error", 2, { "SwitchCase": 1 }],
+    "indent": ["error", 2, { "SwitchCase": 1, "MemberExpression": "off" }],
     "no-console": "off",
     "no-debugger": "off",
     "react/prop-types": "off"
