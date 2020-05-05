@@ -370,8 +370,8 @@ export const withTwoForceLayouts = () => {
   const { width, height } = size;
 
   const [selected, setSelected] = useState();
-  const [data1,,, updateData1] = useDataButton(() => convertTreeToGraph(createTree(2)), 'Left');
-  const [data2,,, updateData2] = useDataButton(() => convertTreeToGraph(createTree(4)), 'Right');
+  const [data1,, getData1, updateData1] = useDataButton(() => convertTreeToGraph(createTree(2)), 'Left');
+  const [data2,, getData2, updateData2] = useDataButton(() => convertTreeToGraph(createTree(4)), 'Right');
 
   const grid = useGrid({ width, height });
   const [layout1] = useState(() => new ForceLayout({
@@ -384,51 +384,56 @@ export const withTwoForceLayouts = () => {
   }));
 
   const [nodeProjector] = useState(new NodeProjector({ node: { showLabels: false } }));
-  const [drag] = useState(() => createSimulationDrag(layout1.simulation));
+  const [drag] = useState(createSimulationDrag(layout1.simulation));
 
   // Move node from one group to the other.
-  drag.on('click', ({ source: selected }) => {
-    setSelected(selected.id);
+  useEffect(() => {
+    drag.on('click', ({ source: selected }) => {
+      setSelected(selected.id);
 
-    const idx = data1.nodes.findIndex(node => node.id === selected.id);
-    const target = faker.random.arrayElement(data2.nodes);
+      const data1 = getData1();
+      const idx = data1.nodes.findIndex(node => node.id === selected.id);
 
-    const linkIndexes = [];
-    data1.links.forEach(({ id: linkId, source, target }) => {
-      if (source.id === selected.id || target.id === selected.id) {
-        linkIndexes.push(data1.links.findIndex(link => link.id === linkId));
-      }
+      const linkIndexes = [];
+      data1.links.forEach(({ id: linkId, source, target }) => {
+        if (source.id === selected.id || target.id === selected.id) {
+          linkIndexes.push(data1.links.findIndex(link => link.id === linkId));
+        }
+      });
+
+      updateData1({
+        nodes: {
+          $splice: [
+            [idx, 1]
+          ]
+        },
+        links: {
+          // NOTE: Have to change index when removing previous nodes.
+          $splice: linkIndexes.map((idx, i) => [idx - i, 1])
+        }
+      });
+
+      const data2 = getData2();
+      const target = faker.random.arrayElement(data2.nodes);
+
+      updateData2({
+        nodes: {
+          $push: [
+            selected
+          ]
+        },
+        links: {
+          $push: [
+            {
+              id: createLinkId(selected.id, target.id),
+              source: selected.id,
+              target: target.id
+            }
+          ]
+        }
+      });
     });
-
-    updateData1({
-      nodes: {
-        $splice: [
-          [idx, 1]
-        ]
-      },
-      links: {
-        // NOTE: Have to change index.
-        $splice: linkIndexes.map((idx, i) => [idx - i, 1])
-      }
-    });
-
-    updateData2({
-      nodes: {
-        $push: [
-          selected
-        ]
-      },
-      links: {
-        $push: [
-          {
-            id: createLinkId(selected.id, target.id),
-            source: selected.id,
-            target: target.id
-          }
-        ]
-      }
-    });
-  });
+  }, [drag]);
 
   return (
     <FullScreen>
