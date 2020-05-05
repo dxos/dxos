@@ -16,7 +16,7 @@ import { createObject} from '../shapes';
 
 import Objects from './Objects';
 import Toolbar from './Toolbar';
-import { dragSelectGenerator } from '../drag';
+import { createToolDrag } from '../drag';
 
 const log = debug('spore:canvas');
 
@@ -78,7 +78,7 @@ const Canvas = ({ data }) => {
 
   // Reset selection.
   useEffect(() => {
-    const drag = dragSelectGenerator(
+    const drag = createToolDrag(
       guides.current,
       grid,
       tool,

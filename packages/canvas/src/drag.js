@@ -10,6 +10,8 @@ import { createPath } from './util';
 const log = debug('spore:canvas:drag');
 
 /**
+ * Creates a drag handler that manages selecting and creating shapes.
+ *
  * @param container
  * @param grid
  * @param tool
@@ -17,7 +19,7 @@ const log = debug('spore:canvas:drag');
  * @returns {d3.drag}
  */
 // TODO(burdon): Configure by tools (select, line, rect).
-export const dragSelectGenerator = (container, grid, tool, onSelect) => {
+export const createToolDrag = (container, grid, tool, onSelect) => {
   let initialPos = undefined;
 
   return d3.drag()
@@ -108,13 +110,14 @@ export const dragSelectGenerator = (container, grid, tool, onSelect) => {
 
 /**
  * Creates a drag handler that manages moving and resizing objects.
+ *
  * @param {Node} container
  * @param {Grid} grid
  * @param {function} onSelect
  * @param {function} onUpdate
  * @returns {d3.drag}
  */
-export const dragObjectGenerator = (container, grid, onSelect, onUpdate) => {
+export const createObjectDrag = (container, grid, onSelect, onUpdate) => {
   let initialPos = undefined;
   let initialObject = undefined;
 
