@@ -18,30 +18,30 @@ export const withCanvas = () => {
   const data = [
     createObject('ellipse', {
       order: 1,
-      bounds: { x: -40, y: 0, width: 20, height: 20 }
+      bounds: { x: -40, y: -10, width: 20, height: 20 }
     }),
     createObject('path', {
       order: 2,
-      bounds: { x: -20, y: 10 },
+      bounds: { x: -20, y: 0 },
       points: [{ x: 0, y: 0 }, { x: 40, y: 0}]
     }),
     createObject('rect', {
       order: 3,
-      bounds: { x: 20, y: 0, width: 20, height: 20 }
+      bounds: { x: 20, y: -10, width: 20, height: 20 }
     }),
     createObject('text', {
       order: 4,
-      bounds: { x: -40, y: 0, width: 20, height: 20 },
+      bounds: { x: -40, y: -10, width: 20, height: 20 },
       text: 'A'
     }),
     createObject('text', {
       order: 4,
-      bounds: { x: 20, y: 0, width: 20, height: 20 },
+      bounds: { x: 20, y: -10, width: 20, height: 20 },
       text: 'B'
     }),
     createObject('text', {
       order: 4,
-      bounds: { x: -20, y: 30, width: 40, height: 10 },
+      bounds: { x: -20, y: 10, width: 40, height: 10 },
       text: 'Canvas'
     }),
   ];

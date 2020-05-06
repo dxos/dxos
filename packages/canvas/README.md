@@ -2,10 +2,6 @@
 
 A light-weight diagram editor using D3 and SVG.
 
-![Alt](./docs/example.png)
-
-Supports basic shapes and text.
-
 
 ## Testing
 
