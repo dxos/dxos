@@ -14,7 +14,7 @@ export default {
   decorators: [withKnobs]
 };
 
-export const withGrapher = () => {
+export const withCanvas = () => {
   const data = [
     createObject('ellipse', {
       order: 1,

@@ -1,6 +1,17 @@
 # Canvas Editor
 
-## Bugs
+A light-weight diagram editor using D3 and SVG.
+
+![Alt](./docs/example.png)
+
+Supports basic shapes and text.
+
+
+## Testing
+
+```
+yarn storybook
+```
 
 NOTE: Performance is slow if the browser Devtools are open.
 
