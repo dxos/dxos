@@ -17,13 +17,20 @@ export default {
 export const withGrapher = () => {
   const data = [
     createObject('ellipse', {
+      order: 1,
       bounds: { x: -40, y: 0, width: 20, height: 20 }
     }),
     createObject('path', {
+      order: 2,
       bounds: { x: -20, y: 10 },
       points: [{ x: 0, y: 0 }, { x: 40, y: 0}]
     }),
     createObject('rect', {
+      order: 3,
+      bounds: { x: 20, y: 0, width: 20, height: 20 }
+    }),
+    createObject('text', {
+      order: 4,
       bounds: { x: 20, y: 0, width: 20, height: 20 }
     }),
   ];

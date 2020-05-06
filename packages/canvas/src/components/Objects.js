@@ -71,6 +71,8 @@ const Objects = ({ grid, objects, selected, snap, onSelect = noop, onUpdate = no
   const classes = useStyles();
   const layer = useRef();
 
+  objects.sort((a, b) => a.order < b.order ? -1 : a.order > b.order ? 1 : 0);
+
   const drag = useRef();
   useEffect(() => {
     drag.current = createObjectDrag(layer.current, grid, snap, onSelect, onUpdate);

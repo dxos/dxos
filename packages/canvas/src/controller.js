@@ -41,10 +41,9 @@ export const createController = (group, classes) => {
 
       // Handle group (8 resize handles).
       group.append('g')
-        .selectAll('rect')
+        .selectAll('circle')
         .data(handles, d => d.id)
-        // TODO(burdon): Change to circle (like line).
-        .join('rect')
+        .join('circle')
           .attr('class', classes.handle)
           .style('cursor', ({ cursor }) => cursor);
     }
@@ -60,7 +59,7 @@ export const createController = (group, classes) => {
  * @param classes
  */
 export const updateController = (group, grid, drag, { width, height }, classes) => {
-  const handleSize = 6;
+  const handleSize = 5;
 
   const { type } = group.datum();
   switch (type) {
@@ -89,14 +88,13 @@ export const updateController = (group, grid, drag, { width, height }, classes) 
         .attr('height', Math.abs(height));
 
       // Handles.
-      group.selectAll(`g rect.${classes.handle}`)
+      group.selectAll(`g circle.${classes.handle}`)
         .each(({ handleX, handleY }, i, nodes) => {
           d3.select(nodes[i])
             .call(drag)
-            .attr('x', (handleX + 1) * (width / 2) - handleSize)
-            .attr('y', (handleY + 1) * (height / 2) - handleSize)
-            .attr('width', handleSize * 2)
-            .attr('height', handleSize * 2);
+            .attr('cx', (handleX + 1) * (width / 2))
+            .attr('cy', (handleY + 1) * (height / 2))
+            .attr('r', handleSize);
         });
     }
   }

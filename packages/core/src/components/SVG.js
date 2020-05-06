@@ -14,8 +14,9 @@ import { isNull } from '../util';
  * @param height
  * @param children
  */
+// TODO(burdon): Rename.
 // eslint-disable-next-line react/display-name
-const View = forwardRef(({ children, width, height }, ref) => {
+const SVG = forwardRef(({ children, width, height }, ref) => {
   if (!ref) {
     ref = useRef();
   }
@@ -39,4 +40,4 @@ const View = forwardRef(({ children, width, height }, ref) => {
   );
 });
 
-export default View;
+export default SVG;

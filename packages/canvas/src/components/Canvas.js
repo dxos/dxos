@@ -10,7 +10,7 @@ import { HotKeys } from "react-hotkeys";
 import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { Grid, View, useGrid, useObjectMutator } from '@dxos/gem-core';
+import { Grid, SVG, useGrid, useObjectMutator } from '@dxos/gem-core';
 
 import { createObject} from '../shapes';
 
@@ -53,13 +53,13 @@ const useStyles = makeStyles(() => ({
 const Canvas = ({ data }) => {
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
-  const [selected, setSelected] = useState({ ids: [] });
-  const [options, setOptions] = useState({ zoom: 1, showAxis: false, showGrid: true });
-  const [tool, setTool] = useState('select');
-  const grid = useGrid({ width, height, zoom: options.zoom });
-  const clipboard = useRef(null);
   const view = useRef();
   const guides = useRef();
+
+  //
+  // Data
+  // TODO(burdon): Factor out data.
+  //
 
   // TODO(burdon): ECHO model.
   const [objects,, getObjects, updateObjects] = useObjectMutator(data);
@@ -75,16 +75,38 @@ const Canvas = ({ data }) => {
       $splice: [[idx, 1, { ...object, ...properties }]]
     });
 
+    // TODO(burdon): Move.
     setTool('select');
   };
 
-  // Reset selection.
+  //
+  // App State
+  //
+
+  const [options, setOptions] = useState({ zoom: 1, showAxis: false, showGrid: true });
+  const { zoom, showAxis, showGrid } = options;
+  const [tool, setTool] = useState('select');
+  const grid = useGrid({ width, height, zoom });
+  const clipboard = useRef(null);
+
+  //
+  // Selection
+  // TODO(burdon): Rename selection.
+  //
+
+  const [selected, setSelected] = useState({ ids: [] });
+  const isSelected = objectId => selected && selected.ids.find(id => id === objectId);
+  const handleSelect = ids => {
+    setSelected(ids ? { ids } : null);
+    setTool('select');
+  };
+
   useEffect(() => {
     const drag = createToolDrag(
       guides.current,
       grid,
       tool,
-      options.showGrid,
+      showGrid,
       object => {
         if (object) {
           updateObjects({ $push: [object] });
@@ -104,13 +126,16 @@ const Canvas = ({ data }) => {
           setSelected(null);
         }
       });
-  }, [grid, view, tool, options]);
+  }, [grid, view, tool, showGrid]);
 
-  const isSelected = objectId => selected && selected.ids.find(id => id === objectId);
+  //
+  // Actions
+  //
 
-  // Toolbar actions.
   const handleAction = (action) => {
     log(`Action: ${action}`);
+
+    // clipboard, setTool, setSelected, objects, options
 
     switch (action) {
 
@@ -178,22 +203,70 @@ const Canvas = ({ data }) => {
       //
 
       case 'grid': {
-        setOptions({ ...options, showGrid: !options.showGrid });
+        setOptions({ ...options, showGrid: !showGrid });
         break;
       }
 
       case 'zoom-in': {
-        setOptions({ ...options, zoom: Math.min(5, options.zoom + .5) });
+        setOptions({ ...options, zoom: Math.min(5, zoom + .5) });
         break;
       }
 
       case 'zoom-out': {
-        setOptions({ ...options, zoom: Math.max(1, options.zoom - .5) });
+        setOptions({ ...options, zoom: Math.max(1, zoom - .5) });
         break;
       }
 
       case 'zoom-fit': {
         setOptions({ ...options, zoom: 1 });
+        break;
+      }
+
+      //
+      // Order
+      //
+
+      case 'move-up': {
+        const idx = objects.findIndex(object => isSelected(object.id));
+        const object = objects[idx];
+        const orders = objects.map(other => {
+          return !isSelected(other.id) && (other.order > object.order) ? other.order : false;
+        }).filter(Boolean).sort();
+        if (!orders.length) {
+          return;
+        }
+
+        const i = 0;
+        const min = orders[i];
+        const max = (orders.length > i + 1) ? orders[i + 1] : min + 1;
+        const order = min + (max - min) / 2;
+
+        updateObjects({
+          $splice: [[idx, 1, { ...object, order }]]
+        });
+
+        break;
+      }
+
+      case 'move-down': {
+        const idx = objects.findIndex(object => isSelected(object.id));
+        const object = objects[idx];
+        const orders = objects.map(other => {
+          return !isSelected(other.id) && (other.order < object.order) ? other.order : false;
+        }).filter(Boolean).sort();
+        if (!orders.length) {
+          return;
+        }
+
+        const i = orders.length - 1;
+        const min = (i > 0) ? orders[i - 1] : 0;
+        const max = orders[i];
+        const order = min + (max - min) / 2;
+
+        updateObjects({
+          $splice: [[idx, 1, { ...object, order }]]
+        });
+
         break;
       }
 
@@ -229,6 +302,8 @@ const Canvas = ({ data }) => {
     REDO: () => handleAction('redo'),
   };
 
+  // TODO(burdon): Factor out layout.
+
   return (
     <div className={classes.root}>
       <HotKeys
@@ -236,31 +311,28 @@ const Canvas = ({ data }) => {
         keyMap={keyMap}
         handlers={keyHandlers}
       >
-        <Toolbar tool={tool} snap={options.showGrid} onAction={handleAction} />
+        <Toolbar tool={tool} snap={showGrid} onAction={handleAction} />
 
-        <div>
+        <div className={classes.main}>
           {resizeListener}
-          <View ref={view} width={width} height={height}>
+          <SVG ref={view} width={width} height={height}>
             <Grid
               grid={grid}
-              showAxis={options.showAxis}
-              showGrid={options.showGrid}
+              showAxis={showAxis}
+              showGrid={showGrid}
             />
 
             <Objects
               grid={grid}
-              snap={options.showGrid}
+              snap={showGrid}
               objects={objects}
               selected={selected}
-              onSelect={ids => {
-                setSelected(ids ? { ids } : null);
-                setTool('select');
-              }}
+              onSelect={handleSelect}
               onUpdate={handleUpdate}
             />
 
             <g ref={guides} className={classes.guides} />
-          </View>
+          </SVG>
         </div>
       </HotKeys>
     </div>

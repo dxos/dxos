@@ -38,26 +38,10 @@ export const appendObject = (group) => {
       break;
     }
 
+    // TODO(burdon): Create overlay for editable text.
     case 'text': {
       group.append('text')
-        .attr('text-anchor', 'middle');
-
-      // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text
-      // TODO(burdon): Doesn't work in IE.
-      // https://stackoverflow.com/questions/13945454/d3-draggable-group-with-foreignobject-html-input-text-caused-it-to-be-not-editta
-      /*
-      group
-        .append("foreignObject")
-          .attr("width", 80)
-          .attr("height", 32)
-          .attr('x', 0)
-          .attr('y', -32)
-          .append("xhtml:body")
-            .attr('xmlns','http://www.w3.org/1999/xhtml')
-            .html("<input type='text' value='text' />");
-
-      */
-
+        .on('click', () => { console.log('edit'); });
       break;
     }
 
@@ -101,6 +85,7 @@ export const updateObject = (group, grid, drag, classes, selected) => {
       const { points } = group.datum();
       group.select('path')
         .attr('d', () => createPath(points.map(grid.project)));
+
       break;
     }
 
@@ -108,6 +93,7 @@ export const updateObject = (group, grid, drag, classes, selected) => {
       group.select('text')
         .style('font-size', fontSize)
         .style('font-family', 'monospace')
+        .attr('text-anchor', 'middle')
         .attr('x', grid.scaleX(bounds.width / 2))
         .attr('y', grid.scaleY(bounds.height / 2) + (fontSize / 3))
         .text('Text');
@@ -121,6 +107,7 @@ export const updateObject = (group, grid, drag, classes, selected) => {
         .attr('y', height)
         .attr('width', width)
         .attr('height', Math.abs(height));
+
       break;
     }
 
@@ -130,6 +117,7 @@ export const updateObject = (group, grid, drag, classes, selected) => {
         .attr('cy', height / 2)
         .attr('rx', width / 2)
         .attr('ry', Math.abs(height) / 2);
+
       break;
     }
 

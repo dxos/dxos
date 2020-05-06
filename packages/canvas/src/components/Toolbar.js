@@ -81,8 +81,8 @@ const Toolbar = ({ tool, snap, onAction = () => {} }) => {
 
     {
       items: [
-        { id: 'front', icon: FlipToFront },
-        { id: 'back', icon: FlipToBack },
+        { id: 'move-up', icon: FlipToFront },
+        { id: 'move-down', icon: FlipToBack },
       ]
     },
 

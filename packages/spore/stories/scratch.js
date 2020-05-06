@@ -15,7 +15,7 @@ import { withKnobs, select } from "@storybook/addon-knobs";
 import {
   FullScreen,
   Grid,
-  View,
+  SVG,
   useGrid,
   createGraph
 } from '@dxos/gem-core';
@@ -180,13 +180,13 @@ const Editor = ({ line }) => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} />
         <g className={classes.graph}>
           <g ref={links} />
           <g ref={objects} />
         </g>
-      </View>
+      </SVG>
     </FullScreen>
   );
 };

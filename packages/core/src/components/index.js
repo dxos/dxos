@@ -7,4 +7,4 @@ export * from './Container';
 
 export FullScreen from './FullScreen';
 export Grid from './Grid';
-export View from './View';
+export SVG from './SVG';

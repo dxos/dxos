@@ -12,7 +12,7 @@ import { withKnobs, boolean, button } from "@storybook/addon-knobs";
 import {
   FullScreen,
   Grid,
-  View,
+  SVG,
 
   createLinkId,
   createItem,
@@ -77,9 +77,9 @@ export const withGrid = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} showAxis={true} showGrid={true} />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -105,10 +105,10 @@ export const withBoxProjector = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} showAxis={true} tickFormat="" />
         <g ref={nodes} className={classes.box} />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -135,7 +135,7 @@ export const withGridLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} showAxis={true} tickFormat="" />
         <Graph
           grid={grid}
@@ -144,7 +144,7 @@ export const withGridLayout = () => {
           nodeProjector={projector}
           selected={selected}
         />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -170,7 +170,7 @@ export const withForceLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} />
         <Graph
           grid={grid}
@@ -179,7 +179,7 @@ export const withForceLayout = () => {
           selected={selected}
           drag={drag}
         />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -210,7 +210,7 @@ export const withArrows = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} />
 
         <g ref={markers} className={classes.markers}/>
@@ -222,7 +222,7 @@ export const withArrows = () => {
           nodeProjector={nodeProjector}
           linkProjector={linkProjector}
         />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -263,7 +263,7 @@ export const withBullet = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} />
 
         <g ref={markers} className={classes.markers}/>
@@ -276,7 +276,7 @@ export const withBullet = () => {
           nodeProjector={nodeProjector}
           linkProjector={linkProjector}
         />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -345,7 +345,7 @@ export const withDrag = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} />
 
         <g ref={guides} className={classes.guides} />
@@ -357,7 +357,7 @@ export const withDrag = () => {
           nodeProjector={nodeProjector}
           drag={drag}
         />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -438,7 +438,7 @@ export const withTwoForceLayouts = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} showGrid={false} />
         <Graph
           grid={grid}
@@ -453,7 +453,7 @@ export const withTwoForceLayouts = () => {
           layout={layout2}
           nodeProjector={nodeProjector}
         />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -487,13 +487,13 @@ export const withTreeLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <g className={classes.tree}>
           <g ref={guides} className={classes.guides} />
           <g ref={links} />
           <g ref={nodes} />
         </g>
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -547,10 +547,10 @@ export const withRandomLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} />
         <g ref={nodes} className={classes.graph} />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -599,10 +599,10 @@ export const withRadialLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} />
         <g ref={nodes} className={classes.graph} />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -650,12 +650,12 @@ export const withMultipleLayouts = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={size.width} height={size.height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} showAxis={true} />
         <g ref={group1} className={classes1.graph} />
         <g ref={group2} className={classes2.graph} />
         <g ref={group3} className={classes3.graph} />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
@@ -734,10 +734,10 @@ export const withChangingLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <View width={width} height={height}>
+      <SVG width={width} height={height}>
         <Grid grid={grid} />
         <g ref={nodes} className={classes.graph} />
-      </View>
+      </SVG>
     </FullScreen>
   );
 };
