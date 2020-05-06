@@ -39,7 +39,25 @@ export const appendObject = (group) => {
     }
 
     case 'text': {
-      group.append('text');
+      group.append('text')
+        .attr('text-anchor', 'middle');
+
+      // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text
+      // TODO(burdon): Doesn't work in IE.
+      // https://stackoverflow.com/questions/13945454/d3-draggable-group-with-foreignobject-html-input-text-caused-it-to-be-not-editta
+      /*
+      group
+        .append("foreignObject")
+          .attr("width", 80)
+          .attr("height", 32)
+          .attr('x', 0)
+          .attr('y', -32)
+          .append("xhtml:body")
+            .attr('xmlns','http://www.w3.org/1999/xhtml')
+            .html("<input type='text' value='text' />");
+
+      */
+
       break;
     }
 
@@ -73,10 +91,10 @@ export const updateObject = (group, grid, drag, classes, selected) => {
   const width = grid.scaleX(bounds.width);
   const height = grid.scaleY(bounds.height);
 
+  const fontSize = 18;
+
   group
     .attr('transform', () => `translate(${x || 0}, ${y || 0})`);
-
-  // TODO(burdon): Refine selection to first child.
 
   switch (type) {
     case 'path': {
@@ -88,9 +106,12 @@ export const updateObject = (group, grid, drag, classes, selected) => {
 
     case 'text': {
       group.select('text')
-        .attr('x', 0)
-        .attr('y', +grid.scaleY(3))      // TODO(burdon): Align.
+        .style('font-size', fontSize)
+        .style('font-family', 'monospace')
+        .attr('x', grid.scaleX(bounds.width / 2))
+        .attr('y', grid.scaleY(bounds.height / 2) + (fontSize / 3))
         .text('Text');
+
       break;
     }
 
