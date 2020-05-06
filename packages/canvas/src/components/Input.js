@@ -42,7 +42,7 @@ const Input = ({ grid, object, onUpdate, onEnter = () => {} }) => {
   }, []);
 
   // TODO(burdon): Update after delay.
-  const handleUpdate = event => onUpdate(event.target.value);
+  const handleUpdate = event => onUpdate(object.id, event.target.value);
   const handleKeyPress = event => {
     if (event.key === 'Enter') {
       onEnter();

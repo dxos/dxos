@@ -36,7 +36,8 @@ const useStyles = makeStyles(() => ({
   toolbar: {
     display: 'flex',
     justifyContent: 'space-between',
-    backgroundColor: grey[100]
+    backgroundColor: grey[100],
+    borderBottom: `1px solid ${grey[400]}`
   },
 
   selected: {

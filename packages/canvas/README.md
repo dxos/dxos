@@ -12,6 +12,13 @@ yarn storybook
 NOTE: Performance is slow if the browser Devtools are open.
 
 
+## Bugs
+
+- [ ] Select/cut.
+- [ ] Object order.
+- [ ] Default style.
+
+
 ## Milestones
 
 - [ ] Embed within document.

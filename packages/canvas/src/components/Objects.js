@@ -71,12 +71,15 @@ const Objects = ({ grid, objects, selected, snap, onSelect = noop, onUpdate = no
   const classes = useStyles();
   const layer = useRef();
 
-  objects.sort((a, b) => a.order < b.order ? -1 : a.order > b.order ? 1 : 0);
+  // NOTE: Update order calling raise on update.
+  objects.sort((a, b) => a.order < b.order ? -1 : a.order > b.order ? 1 : 0).reverse();
 
   const drag = useRef();
   useEffect(() => {
     drag.current = createObjectDrag(layer.current, grid, snap, onSelect, onUpdate);
   }, [grid, snap]);
+
+  const isSelected = objectId => selected && selected.ids.find(id => id === objectId);
 
   useEffect(() => {
     // Create.
@@ -85,7 +88,7 @@ const Objects = ({ grid, objects, selected, snap, onSelect = noop, onUpdate = no
         .data(objects, d => d.id)
         .join(enter => enter.append('g')
           .attr('id', d => d.id)
-          .attr('type', 'object')                         // Anchor for parent group.
+          .attr('type', 'object')                           // Anchor for parent group.
           .attr('class', classes.object)
           .each((d, i, nodes) => d3.select(nodes[i])
             .call(appendObject))
@@ -95,7 +98,12 @@ const Objects = ({ grid, objects, selected, snap, onSelect = noop, onUpdate = no
     objectGroups
       .call(drag.current)
       .each((d, i, nodes) => d3.select(nodes[i])
-        .call(updateObject, grid, drag.current, classes, selected && selected.ids.find(id => id === d.id)));
+        .call(updateObject, grid, drag.current, classes, isSelected(d.id))
+        .call(g => g.raise()));
+
+    // Raise selected.
+    objectGroups
+      .each((d, i, nodes) => isSelected(d.id) && d3.select(nodes[i]).raise());
 
   }, [drag, snap, grid, objects, selected]);
 

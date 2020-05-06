@@ -12,12 +12,13 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import { Grid, SVG, useGrid, useObjectMutator } from '@dxos/gem-core';
 
+import { createToolDrag } from '../drag';
 import { createObject } from '../shapes';
 
 import Input from './Input';
 import Objects from './Objects';
+import Palette from './Palette';
 import Toolbar from './Toolbar';
-import { createToolDrag } from '../drag';
 
 const log = debug('gem:canvas');
 
@@ -56,7 +57,12 @@ const useStyles = makeStyles(() => ({
 
   container: {
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',
+    flex: 1,
+  },
+
+  main: {
+    display: 'flex',
     flex: 1,
 
     // NOTE: Relative position for Input.
@@ -69,6 +75,43 @@ const useStyles = makeStyles(() => ({
 }));
 
 /**
+ * Key shortcuts.
+ */
+const Keys = ({ children, onAction }) => {
+  const classes = useStyles();
+  assert(onAction);
+
+  const keyMap = {
+    DELETE: ['del', 'backspace'],
+    CUT: 'command+x',
+    COPY: 'command+c',
+    PASTE: 'command+v',
+    UNDO: 'command+z',
+    REDO: 'shift+command+z'
+  };
+
+  const keyHandlers = {
+    DELETE: () => onAction('delete'),
+    CUT: () => onAction('cut'),
+    COPY: () => onAction('copy'),
+    PASTE: () => onAction('paste'),
+    UNDO: () => onAction('undo'),
+    REDO: () => onAction('redo'),
+  };
+
+  return (
+    <HotKeys
+      className={classes.keys}
+      allowChanges
+      keyMap={keyMap}
+      handlers={keyHandlers}
+    >
+      {children}
+    </HotKeys>
+  );
+};
+
+/**
  * Canvas application.
  */
 const Canvas = ({ data }) => {
@@ -79,10 +122,9 @@ const Canvas = ({ data }) => {
 
   //
   // Data
-  // TODO(burdon): Factor out data.
+  // TODO(burdon): Factor out data (ECHO model).
   //
 
-  // TODO(burdon): ECHO model.
   const [objects,, getObjects, updateObjects] = useObjectMutator(data);
 
   // Handle move/resize.
@@ -121,6 +163,8 @@ const Canvas = ({ data }) => {
     setSelected(ids ? { ids } : null);
     setTool('select');
   };
+  const object = objects.find(object => isSelected(object.id));
+  const textIdx = objects.findIndex(object => isSelected(object.id) && object.type === 'text');
 
   useEffect(() => {
     const drag = createToolDrag(
@@ -192,7 +236,7 @@ const Canvas = ({ data }) => {
           const idx = objects.findIndex(object => isSelected(object.id));
           if (idx !== -1) {
             clipboard.current = objects[idx];
-            updateObjects({ $splice: [ [ idx, 1 ] ] });
+            updateObjects({ $splice: [[ idx, 1 ]] });
             setSelected(null);
           }
         }
@@ -250,16 +294,16 @@ const Canvas = ({ data }) => {
       case 'move-up': {
         const idx = objects.findIndex(object => isSelected(object.id));
         const object = objects[idx];
-        const orders = objects.map(other => {
-          return !isSelected(other.id) && (other.order > object.order) ? other.order : false;
-        }).filter(Boolean).sort();
-        if (!orders.length) {
+        const orders = [...new Set(objects.map(object => (object.order || 1)))].sort();
+        const i = orders.findIndex(o => o === (object.order || 1));
+
+        if (i === 0) {
           return;
         }
 
-        const i = 0;
-        const min = orders[i];
-        const max = (orders.length > i + 1) ? orders[i + 1] : min + 1;
+        orders.unshift(0);
+        const min = orders[i - 1];
+        const max = orders[i];
         const order = min + (max - min) / 2;
 
         updateObjects({
@@ -272,16 +316,16 @@ const Canvas = ({ data }) => {
       case 'move-down': {
         const idx = objects.findIndex(object => isSelected(object.id));
         const object = objects[idx];
-        const orders = objects.map(other => {
-          return !isSelected(other.id) && (other.order < object.order) ? other.order : false;
-        }).filter(Boolean).sort();
-        if (!orders.length) {
+        const orders = [...new Set(objects.map(object => (object.order || 1)))].sort();
+        const i = orders.findIndex(o => o === (object.order || 1));
+
+        if (i === orders.length - 1) {
           return;
         }
 
-        const i = orders.length - 1;
-        const min = (i > 0) ? orders[i - 1] : 0;
-        const max = orders[i];
+        orders.push(...[orders[orders.length - 1] + 1, orders[orders.length - 1] + 2]);
+        const min = orders[i + 1];
+        const max = orders[i + 2];
         const order = min + (max - min) / 2;
 
         updateObjects({
@@ -305,83 +349,52 @@ const Canvas = ({ data }) => {
     }
   };
 
-  // TODO(burdon): Factor out layout.
-
-  // TODO(burdon): Factor out.
-  const textIdx = objects.findIndex(object => isSelected(object.id) && object.type === 'text');
-
   return (
-    <Keys>
+    <Keys onAction={handleAction}>
       <div className={classes.root}>
         <Toolbar tool={tool} snap={showGrid} onAction={handleAction} />
 
         <div className={classes.container}>
-          {textIdx !== -1 && (
-            <Input
-              grid={grid}
-              object={objects[textIdx]}
-              onUpdate={text => updateObjects({ $splice: [[textIdx, 1, { ...objects[textIdx], text }]] })}
-              onEnter={() => setSelected(null)}
-            />
-          )}
-
-          <div>
-            {resizeListener}
-            <SVG ref={view} width={width} height={height}>
-              <Grid
+          <div className={classes.main}>
+            {textIdx !== -1 && (
+              <Input
                 grid={grid}
-                showAxis={showAxis}
-                showGrid={showGrid}
+                object={objects[textIdx]}
+                onUpdate={(id, text) => {
+                  const idx = objects.findIndex(object => object.id === id);
+                  updateObjects({ $splice: [[idx, 1, { ...object, text }]] });
+                }}
+                onEnter={() => setSelected(null)}
               />
+            )}
 
-              <Objects
-                grid={grid}
-                snap={showGrid}
-                objects={objects}
-                selected={selected}
-                onSelect={handleSelect}
-                onUpdate={handleUpdate}
-              />
+            <div>
+              {resizeListener}
+              <SVG ref={view} width={width} height={height}>
+                <Grid
+                  grid={grid}
+                  showAxis={showAxis}
+                  showGrid={showGrid}
+                />
 
-              <g ref={guides} className={classes.guides} />
-            </SVG>
+                <Objects
+                  grid={grid}
+                  snap={showGrid}
+                  objects={objects}
+                  selected={selected}
+                  onSelect={handleSelect}
+                  onUpdate={handleUpdate}
+                />
+
+                <g ref={guides} className={classes.guides} />
+              </SVG>
+            </div>
           </div>
+
+          <Palette object={object} onUpdate={handleUpdate} />
         </div>
       </div>
     </Keys>
-  );
-};
-
-const Keys = ({ children, handleAction }) => {
-  const classes = useStyles();
-
-  const keyMap = {
-    DELETE: ['del', 'backspace'],
-    CUT: 'command+x',
-    COPY: 'command+c',
-    PASTE: 'command+v',
-    UNDO: 'command+z',
-    REDO: 'shift+command+z'
-  };
-
-  const keyHandlers = {
-    DELETE: () => handleAction('delete'),
-    CUT: () => handleAction('cut'),
-    COPY: () => handleAction('copy'),
-    PASTE: () => handleAction('paste'),
-    UNDO: () => handleAction('undo'),
-    REDO: () => handleAction('redo'),
-  };
-
-  return (
-    <HotKeys
-      className={classes.keys}
-      allowChanges
-      keyMap={keyMap}
-      handlers={keyHandlers}
-    >
-      {children}
-    </HotKeys>
   );
 };
 

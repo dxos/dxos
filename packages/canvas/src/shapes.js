@@ -80,6 +80,13 @@ export const updateObject = (group, grid, drag, classes, selected) => {
   const height = grid.scaleY(bounds.height);
   const fontSize = 18;
 
+  // TODO(burdon): Reference global style object (not custom properties).
+  const styleAttributes = ({ style }) => {
+    if (style) {
+      return `fill: ${style.background}; stroke: ${style.border}`;
+    }
+  };
+
   group
     .attr('transform', () => `translate(${x || 0}, ${y || 0})`);
 
@@ -107,6 +114,7 @@ export const updateObject = (group, grid, drag, classes, selected) => {
 
     case 'rect': {
       group.select('rect')
+        .attr('style', styleAttributes)
         .attr('x', 0)
         .attr('y', height)
         .attr('width', width)
@@ -117,6 +125,7 @@ export const updateObject = (group, grid, drag, classes, selected) => {
 
     case 'ellipse': {
       group.select('ellipse')
+        .attr('style', styleAttributes)
         .attr('cx', width / 2)
         .attr('cy', height / 2)
         .attr('rx', width / 2)
