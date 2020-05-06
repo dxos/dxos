@@ -8,15 +8,14 @@ NOTE: Performance is slow if the browser Devtools are open.
 ## Milestones
 
 - [ ] Embed within document.
-- [ ] Select/shape tool (toolbar): drag to create/select.
-- [ ] Path connection points.
 - [ ] App + CRDT model.
 
 
 ## Features
 
-- [ ] Fractions for user space coordinates.
-- [ ] Load/save.
+- [ ] Drag to select (and cut).
+- [ ] Fractions for user space coordinates (just round to nearest unit?)
+- [ ] Path connection points.
 - [ ] Object Properties (arrows, curves); vector of points (shape-specific properties).
 - [ ] Multi-select and move.
 - [ ] Layout data structure (separate from data).
@@ -27,6 +26,8 @@ NOTE: Performance is slow if the browser Devtools are open.
 
 ## Done
 
+- [x] Text
+- [x] Drag to create.
 - [x] Separate monorepo.
 - [x] Snap doesn't work when zoomed.
 - [x] Paths.

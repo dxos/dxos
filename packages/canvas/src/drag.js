@@ -8,7 +8,7 @@ import debug from 'debug';
 import { createPath } from './util';
 import { createObject } from './shapes';
 
-const log = debug('spore:canvas:drag');
+const log = debug('gem:canvas:drag');
 
 /**
  * Creates a drag handler that manages selecting and creating shapes.

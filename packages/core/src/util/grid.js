@@ -68,6 +68,7 @@ export const createGrid = ({ width, height, zoom = 1 }) => {
     // Screen space.
     //
 
+    empty: () => !(width && height),
     size: { width, height },
     center: { x: 0, y: 0 },
     snap: ({ x, y }) => ({ x: snapper(x, scaleX), y: snapper(y, scaleY) }),

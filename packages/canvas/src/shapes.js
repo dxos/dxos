@@ -38,7 +38,6 @@ export const appendObject = (group) => {
       break;
     }
 
-    // TODO(burdon): Create overlay for editable text.
     case 'text': {
       group.append('text')
         .on('click', () => { console.log('edit'); });
@@ -70,11 +69,15 @@ export const appendObject = (group) => {
  * @param selected
  */
 export const updateObject = (group, grid, drag, classes, selected) => {
-  const { type, bounds } = group.datum();
+  if (grid.empty()) {
+    return;
+  }
+
+  const d = group.datum();
+  const { type, bounds } = d;
   const { x, y } = grid.project(bounds);
   const width = grid.scaleX(bounds.width);
   const height = grid.scaleY(bounds.height);
-
   const fontSize = 18;
 
   group
@@ -90,13 +93,14 @@ export const updateObject = (group, grid, drag, classes, selected) => {
     }
 
     case 'text': {
+      // TODO(burdon): Why is .5 offset required to align with floating DIV text?
       group.select('text')
         .style('font-size', fontSize)
         .style('font-family', 'monospace')
         .attr('text-anchor', 'middle')
-        .attr('x', grid.scaleX(bounds.width / 2))
-        .attr('y', grid.scaleY(bounds.height / 2) + (fontSize / 3))
-        .text('Text');
+        .attr('x', grid.scaleX(bounds.width / 2) - .5)
+        .attr('y', grid.scaleY(bounds.height / 2) + (fontSize / 3) + .5)
+        .text(d.text);
 
       break;
     }

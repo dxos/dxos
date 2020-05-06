@@ -31,7 +31,18 @@ export const withGrapher = () => {
     }),
     createObject('text', {
       order: 4,
-      bounds: { x: 20, y: 0, width: 20, height: 20 }
+      bounds: { x: -40, y: 0, width: 20, height: 20 },
+      text: 'A'
+    }),
+    createObject('text', {
+      order: 4,
+      bounds: { x: 20, y: 0, width: 20, height: 20 },
+      text: 'B'
+    }),
+    createObject('text', {
+      order: 4,
+      bounds: { x: -20, y: 30, width: 40, height: 10 },
+      text: 'Canvas'
     }),
   ];
 

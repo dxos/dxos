@@ -5,26 +5,34 @@
 import * as d3 from 'd3';
 import assert from 'assert';
 import debug from 'debug';
-import React, { useEffect, useState, useRef } from 'react';
-import { HotKeys } from "react-hotkeys";
+import React, { useEffect, useRef, useState } from 'react';
+import { HotKeys } from 'react-hotkeys';
 import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
 
 import { Grid, SVG, useGrid, useObjectMutator } from '@dxos/gem-core';
 
-import { createObject} from '../shapes';
+import { createObject } from '../shapes';
 
+import Input from './Input';
 import Objects from './Objects';
 import Toolbar from './Toolbar';
 import { createToolDrag } from '../drag';
 
-const log = debug('spore:canvas');
+const log = debug('gem:canvas');
 
 const useStyles = makeStyles(() => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
     flex: 1
+  },
+
+  keys: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    outline: 'none'
   },
 
   // TODO(burdon): Move to useDefaultStyles.
@@ -43,6 +51,19 @@ const useStyles = makeStyles(() => ({
       strokeWidth: 2,
       stroke: 'darkblue',
       fill: 'none'
+    }
+  },
+
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+
+    // NOTE: Relative position for Input.
+    position: 'relative',
+    '& > div': {
+      display: 'flex',
+      flex: 1
     }
   }
 }));
@@ -284,6 +305,56 @@ const Canvas = ({ data }) => {
     }
   };
 
+  // TODO(burdon): Factor out layout.
+
+  // TODO(burdon): Factor out.
+  const textIdx = objects.findIndex(object => isSelected(object.id) && object.type === 'text');
+
+  return (
+    <Keys>
+      <div className={classes.root}>
+        <Toolbar tool={tool} snap={showGrid} onAction={handleAction} />
+
+        <div className={classes.container}>
+          {textIdx !== -1 && (
+            <Input
+              grid={grid}
+              object={objects[textIdx]}
+              onUpdate={text => updateObjects({ $splice: [[textIdx, 1, { ...objects[textIdx], text }]] })}
+              onEnter={() => setSelected(null)}
+            />
+          )}
+
+          <div>
+            {resizeListener}
+            <SVG ref={view} width={width} height={height}>
+              <Grid
+                grid={grid}
+                showAxis={showAxis}
+                showGrid={showGrid}
+              />
+
+              <Objects
+                grid={grid}
+                snap={showGrid}
+                objects={objects}
+                selected={selected}
+                onSelect={handleSelect}
+                onUpdate={handleUpdate}
+              />
+
+              <g ref={guides} className={classes.guides} />
+            </SVG>
+          </div>
+        </div>
+      </div>
+    </Keys>
+  );
+};
+
+const Keys = ({ children, handleAction }) => {
+  const classes = useStyles();
+
   const keyMap = {
     DELETE: ['del', 'backspace'],
     CUT: 'command+x',
@@ -302,40 +373,15 @@ const Canvas = ({ data }) => {
     REDO: () => handleAction('redo'),
   };
 
-  // TODO(burdon): Factor out layout.
-
   return (
-    <div className={classes.root}>
-      <HotKeys
-        allowChanges
-        keyMap={keyMap}
-        handlers={keyHandlers}
-      >
-        <Toolbar tool={tool} snap={showGrid} onAction={handleAction} />
-
-        <div className={classes.main}>
-          {resizeListener}
-          <SVG ref={view} width={width} height={height}>
-            <Grid
-              grid={grid}
-              showAxis={showAxis}
-              showGrid={showGrid}
-            />
-
-            <Objects
-              grid={grid}
-              snap={showGrid}
-              objects={objects}
-              selected={selected}
-              onSelect={handleSelect}
-              onUpdate={handleUpdate}
-            />
-
-            <g ref={guides} className={classes.guides} />
-          </SVG>
-        </div>
-      </HotKeys>
-    </div>
+    <HotKeys
+      className={classes.keys}
+      allowChanges
+      keyMap={keyMap}
+      handlers={keyHandlers}
+    >
+      {children}
+    </HotKeys>
   );
 };
 
