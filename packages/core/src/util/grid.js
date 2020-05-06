@@ -57,9 +57,11 @@ export const createGrid = ({ width, height, zoom = 1 }) => {
     return Math.abs(values[0] - values[1]);
   };
 
-  const i = interval(scaleX, ticks);
+  const unit = interval(scaleX, ticks);
+
   const round = (value, unit) => Math.round(value / unit) * unit;
-  const snapper = (value, scale) => scale(round(scale.invert(value), i));
+
+  const snapper = (value, scale) => scale(round(scale.invert(value), unit));
 
   return {
     //
@@ -85,7 +87,7 @@ export const createGrid = ({ width, height, zoom = 1 }) => {
     // Model space.
     //
 
-    round: ({ x, y }) => ({ x: round(x, i), y: round(y, i) }),
+    round: ({ x, y }) => ({ x: round(x, unit), y: round(y, unit) }),
     project: ({ x, y }) => ({ x: scaleX(x), y: scaleY(y) }),
 
     //
@@ -96,6 +98,7 @@ export const createGrid = ({ width, height, zoom = 1 }) => {
     scaleY,
     ticks,
     zoom,
+    unit
   };
 };
 

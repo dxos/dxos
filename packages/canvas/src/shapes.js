@@ -38,6 +38,11 @@ export const appendObject = (group) => {
       break;
     }
 
+    case 'text': {
+      group.append('text');
+      break;
+    }
+
     case 'rect': {
       group.append('rect');
       break;
@@ -78,6 +83,14 @@ export const updateObject = (group, grid, drag, classes, selected) => {
       const { points } = group.datum();
       group.select('path')
         .attr('d', () => createPath(points.map(grid.project)));
+      break;
+    }
+
+    case 'text': {
+      group.select('text')
+        .attr('x', 0)
+        .attr('y', +grid.scaleY(3))      // TODO(burdon): Align.
+        .text('Text');
       break;
     }
 

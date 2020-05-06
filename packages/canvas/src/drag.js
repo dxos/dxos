@@ -93,7 +93,6 @@ export const createToolDrag = (container, grid, tool, snap, onUpdate) => {
     })
     .on('end', () => {
       // console.log('end');
-      // TODO(burdon): Abort if zero size.
 
       const snapper = pos => snap ? grid.snap(pos) : pos;
       const startPos = snapper(initialPos);
@@ -109,13 +108,20 @@ export const createToolDrag = (container, grid, tool, snap, onUpdate) => {
 
       let object;
       switch (tool) {
+        case 'select': {
+          // TODO(burdon): Select from mouse position.
+          log('select', JSON.stringify(grid.bounds(initialPos, endPos)));
+          break;
+        }
+
         case 'path': {
           object = createObject('path', {
-            bounds: {
-              ...grid.invert(startPos),
-            },
+            bounds: { ...grid.invert(startPos), },
             points: [
-              { x: 0, y: 0 },
+              {
+                x: 0,
+                y: 0
+              },
               {
                 x: grid.scaleX.invert(size.dx),
                 y: grid.scaleY.invert(size.dy)
@@ -126,18 +132,22 @@ export const createToolDrag = (container, grid, tool, snap, onUpdate) => {
           break;
         }
 
+        case 'text':
         case 'rect':
         case 'ellipse': {
-          object = createObject(tool, {
-            bounds: {
-              ...grid.invert({
-                x: startPos.x + (size.dx < 0 ? size.dx : 0),
-                y: startPos.y + (size.dy < 0 ? 0 : size.dy)
-              }),
-              width: Math.abs(grid.scaleX.invert(size.dx)),
-              height: Math.abs(grid.scaleY.invert(size.dy))
-            }
+          const { x, y } = grid.invert({
+            x: startPos.x + (size.dx < 0 ? size.dx : 0),
+            y: startPos.y + (size.dy < 0 ? 0 : size.dy)
           });
+
+          // TODO(burdon): Round (replace "invert" with fractions).
+          const width = Math.abs(grid.scaleX.invert(size.dx));
+          const height = Math.abs(grid.scaleY.invert(size.dy));
+
+          // Minimal size.
+          if (Math.round(width / grid.unit) && Math.round(height / grid.unit)) {
+            object = createObject(tool, { bounds: { x, y, width, height } });
+          }
 
           break;
         }

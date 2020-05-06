@@ -104,7 +104,7 @@ const Canvas = ({ data }) => {
           setSelected(null);
         }
       });
-  }, [view, tool, options]);
+  }, [grid, view, tool, options]);
 
   const isSelected = objectId => selected && selected.ids.find(id => id === objectId);
 
@@ -121,7 +121,8 @@ const Canvas = ({ data }) => {
       case 'select':
       case 'path':
       case 'rect':
-      case 'ellipse': {
+      case 'ellipse':
+      case 'text': {
         setTool(action === tool ? 'select' : action);
         break;
       }
