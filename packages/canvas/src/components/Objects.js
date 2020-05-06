@@ -67,36 +67,35 @@ const useStyles = makeStyles({
  * @param {function} [onSelect]
  * @param {function} [onUpdate]
  */
-// TODO(burdon): Convert selected to array.
-const Objects = ({ grid, objects, selected, snap = false, onSelect = noop, onUpdate = noop }) => {
+const Objects = ({ grid, objects, selected, snap, onSelect = noop, onUpdate = noop }) => {
   const classes = useStyles();
   const layer = useRef();
 
   const drag = useRef();
   useEffect(() => {
     drag.current = createObjectDrag(layer.current, grid, snap, onSelect, onUpdate);
-  }, [grid]);
+  }, [grid, snap]);
 
   useEffect(() => {
-
     // Create.
-    const selection = d3.select(layer.current)
+    const objectGroups = d3.select(layer.current)
       .selectAll(`g.${classes.object}`)
         .data(objects, d => d.id)
         .join(enter => enter.append('g')
           .attr('id', d => d.id)
-          .attr('type', 'object')                       // Anchor for parent group.
+          .attr('type', 'object')                         // Anchor for parent group.
           .attr('class', classes.object)
           .each((d, i, nodes) => d3.select(nodes[i])
-            .call(appendObject)))
-        .call(drag.current);
+            .call(appendObject))
+        );
 
     // Update.
-    selection
+    objectGroups
+      .call(drag.current)
       .each((d, i, nodes) => d3.select(nodes[i])
         .call(updateObject, grid, drag.current, classes, selected && selected.ids.find(id => id === d.id)));
 
-  }, [grid, objects, selected, drag]);
+  }, [drag, snap, grid, objects, selected]);
 
   return (
     <g ref={layer} className={classes.objects} />

@@ -207,43 +207,23 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
       const parent = nodes[i].closest('g[type="object"]');
       const { id } = d3.select(parent).datum();
 
-
-
-      // TODO(burdon): Snap or not?
-      // TODO(burdon): Use grid methods (see dragger above).
-      // const snapper = pos => snap ? grid.snap(pos) : pos;
-      // TODO(burdon): Bug. Get position in screen space then snap and invert.
-      const delta = (ref = initialPos) => {
-        const { x, y } = grid.snap({
-          x: d3.event.x - ref.x,
-          y: d3.event.y - ref.y
-        });
-
-        return {
-          dx: Math.round(grid.scaleX.invert(x)),
-          dy: Math.round(grid.scaleY.invert(y))
-        };
-      };
-
-      // Clamp values in user space.
-      const clamp = ({ x, y }, { dx, dy }) => {
-        return grid.round({ x: x + dx, y: y + dy });
-      };
-
-
-
+      const snapper = pos => snap ? grid.round(pos) : pos;
+      const snapTo = ({ x, y }) => snapper({
+        x: grid.scaleX.invert(grid.scaleX(x) + d3.event.x - initialPos.x),
+        y: grid.scaleY.invert(grid.scaleY(y) + d3.event.y - initialPos.y)
+      });
 
       const { type } = d;
       switch (type) {
+
         //
         // Move point.
         //
         case 'handle-point': {
           const { points } = initialObject;
-          const { x, y } = clamp(points[i], delta());
-
           const updated = [...points];
-          updated.splice(i, 1, { x, y });
+          updated.splice(i, 1, snapTo(points[i]));
+
           onUpdate(id, { points: updated });
           break;
         }
@@ -252,34 +232,25 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
         // Resize bounds.
         //
         case 'handle-bounds': {
-          // Datum from drag handler.
-          const { handleX = 0, handleY = 0 } = d;
-          const { dx, dy } = delta();
           const { bounds } = initialObject;
 
-          // Prevent resize to zero.
-          {
-            const width = bounds.width + (dx * handleX);
-            const height = bounds.height + (dy * handleY);
-            if (width <= 0 || height <= 0) {
-              return;
-            }
-          }
+          // Datum from drag handler.
+          const { handleX = 0, handleY = 0 } = d;
 
-          // Clamp.
-          {
-            const { x, y } = grid.round({
-              x: bounds.x + (handleX < 0 ? dx : 0),
-              y: bounds.y + (handleY < 0 ? dy : 0)
-            });
+          const dx = d3.event.x - initialPos.x;
+          const dy = d3.event.y - initialPos.y;
 
-            const { x: width, y: height } = grid.round({
-              x: bounds.width + (dx * handleX),
-              y: bounds.height + (dy * handleY)
-            });
+          const { x, y } = snapper({
+            x: bounds.x + grid.scaleX.invert(handleX < 0 ? dx : 0),
+            y: bounds.y + grid.scaleY.invert(handleY < 0 ? dy : 0)
+          });
 
-            onUpdate(id, { bounds: { x, y, width, height } });
-          }
+          const { x: width, y: height } = snapper({
+            x: bounds.width + grid.scaleX.invert(dx * handleX),
+            y: bounds.height + grid.scaleY.invert(dy * handleY),
+          });
+
+          onUpdate(id, { bounds: { x, y, width, height } });
           break;
         }
 
@@ -288,7 +259,7 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
         //
         default: {
           const { id, bounds } = d;
-          const { x, y } = clamp(bounds, delta());
+          const { x, y } = snapTo(bounds);
 
           onUpdate(id, { bounds: { x, y, width: bounds.width, height: bounds.height } });
           break;
