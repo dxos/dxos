@@ -106,8 +106,9 @@ export const updateObject = (group, grid, drag, classes, selected) => {
         .style('font-family', 'monospace')
         .attr('text-anchor', 'middle')
         .attr('x', grid.scaleX(bounds.width / 2) - .5)
-        .attr('y', grid.scaleY(bounds.height / 2) + (fontSize / 3) + .5)
-        .text(d.text);
+        .attr('y', grid.scaleY(bounds.height / 2) + (fontSize / 3) + 1)
+        // If selected then show text overlay.
+        .text(d => selected ? null : d.text);
 
       break;
     }
