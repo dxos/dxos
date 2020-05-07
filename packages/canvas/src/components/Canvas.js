@@ -146,25 +146,30 @@ const Canvas = ({ data }) => {
   // App State
   //
 
+  const grid = useGrid({ width, height, zoom });
   const [options, setOptions] = useState({ zoom: 1, showAxis: false, showGrid: true });
   const { zoom, showAxis, showGrid } = options;
-  const [tool, setTool] = useState('select');
-  const grid = useGrid({ width, height, zoom });
   const clipboard = useRef(null);
+
+  // TODO(burdon): Wrap.
+  const [tool, setTool] = useState('select');
+  const toolRef = useRef(tool);
+  useEffect(() => { toolRef.current = tool; }, [tool]);
 
   //
   // Selection
-  // TODO(burdon): Rename selection.
+  // TODO(burdon): Rename selected=>selection.
   //
 
   const [selected, setSelected] = useState({ ids: [] });
   const isSelected = objectId => selected && selected.ids.find(id => id === objectId);
-  const handleSelect = ids => {
-    setSelected(ids ? { ids } : null);
-    setTool('select');
-  };
   const object = objects.find(object => isSelected(object.id));
   const textIdx = objects.findIndex(object => isSelected(object.id) && object.type === 'text');
+  const handleSelect = ids => {
+    if (toolRef.current === 'select') {
+      setSelected(ids ? { ids } : null);
+    }
+  };
 
   useEffect(() => {
     const drag = createToolDrag(

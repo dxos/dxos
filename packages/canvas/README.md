@@ -21,12 +21,14 @@ NOTE: Performance is slow if the browser Devtools are open.
 
 ## Milestones
 
+- [ ] Abstract model.
 - [ ] Embed within document.
 - [ ] App + CRDT model.
 
 
 ## Features
 
+- [ ] Connect handles for links.
 - [ ] Drag to select (and cut).
 - [ ] Fractions for user space coordinates (just round to nearest unit?)
 - [ ] Path connection points.

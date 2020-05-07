@@ -209,6 +209,7 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
       initialObject = { ...d3.select(parent).datum() };
       log('start', JSON.stringify(initialObject, null, 2));
 
+      // Select object.
       onSelect([id]);
     })
 
