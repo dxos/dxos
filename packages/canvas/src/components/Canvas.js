@@ -10,10 +10,11 @@ import { HotKeys } from 'react-hotkeys';
 import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { Grid, SVG, useGrid, useObjectMutator } from '@dxos/gem-core';
+import { Grid, SVG, useGrid } from '@dxos/gem-core';
 
 import { createToolDrag } from '../drag';
 import { createObject } from '../shapes';
+import { useModel } from '../useModel';
 
 import Input from './Input';
 import Objects from './Objects';
@@ -121,26 +122,10 @@ const Canvas = ({ data }) => {
   const guides = useRef();
 
   //
-  // Data
-  // TODO(burdon): Factor out data (ECHO model).
+  // Model
   //
 
-  const [objects,, getObjects, updateObjects] = useObjectMutator(data);
-
-  // Handle move/resize.
-  const handleUpdate = (id, properties) => {
-    const objects = getObjects();
-    const idx = objects.findIndex(object => object.id === id);
-    const object = objects[idx];
-    assert(object, `Invalid object: ${id}`);
-
-    updateObjects({
-      $splice: [[idx, 1, { ...object, ...properties }]]
-    });
-
-    // TODO(burdon): Move.
-    setTool('select');
-  };
+  const [objects, model] = useModel(data);
 
   //
   // App State
@@ -163,6 +148,7 @@ const Canvas = ({ data }) => {
 
   const [selected, setSelected] = useState({ ids: [] });
   const isSelected = objectId => selected && selected.ids.find(id => id === objectId);
+  // TODO(burdon): Multi-select.
   const object = objects.find(object => isSelected(object.id));
   const textIdx = objects.findIndex(object => isSelected(object.id) && object.type === 'text');
   const handleSelect = ids => {
@@ -179,7 +165,7 @@ const Canvas = ({ data }) => {
       showGrid,
       object => {
         if (object) {
-          updateObjects({ $push: [object] });
+          model.appendObject(object);
           setSelected({ ids: [object.id] });
         } else {
           setSelected(null);
@@ -219,6 +205,7 @@ const Canvas = ({ data }) => {
       case 'ellipse':
       case 'text': {
         setTool(action === tool ? 'select' : action);
+        setSelected(null);
         break;
       }
 
@@ -227,28 +214,28 @@ const Canvas = ({ data }) => {
       //
 
       case 'delete': {
+        // TODO(burdon): Multi-select.
         if (selected) {
-          const idx = objects.findIndex(object => isSelected(object.id));
-          assert(idx !== -1);
-          updateObjects({ $splice: [[idx, 1]] });
+          const object = objects.find(object => isSelected(object.id));
+          model.removeObject(object.id);
           setSelected(null);
         }
         break;
       }
 
       case 'cut': {
+        // TODO(burdon): Multi-select.
         if (selected) {
-          const idx = objects.findIndex(object => isSelected(object.id));
-          if (idx !== -1) {
-            clipboard.current = objects[idx];
-            updateObjects({ $splice: [[ idx, 1 ]] });
-            setSelected(null);
-          }
+          const object = objects.find(object => isSelected(object.id));
+          clipboard.current = object;
+          model.removeObject(object.id);
+          setSelected(null);
         }
         break;
       }
 
       case 'copy': {
+        // TODO(burdon): Multi-select.
         if (selected) {
           const object = objects.find(object => isSelected(object.id));
           if (object) {
@@ -259,10 +246,11 @@ const Canvas = ({ data }) => {
       }
 
       case 'paste': {
+        // TODO(burdon): Multi-select.
         if (clipboard.current) {
           const { type, ...rest } = clipboard.current;
           const object = createObject(type, rest);
-          updateObjects({ $push: [object] });
+          model.appendObject(object);
           setSelected({ ids: [object.id] });
         }
         break;
@@ -297,6 +285,7 @@ const Canvas = ({ data }) => {
       //
 
       case 'move-up': {
+        // TODO(burdon): Multi-select.
         const idx = objects.findIndex(object => isSelected(object.id));
         const object = objects[idx];
         const orders = [...new Set(objects.map(object => (object.order || 1)))].sort();
@@ -311,14 +300,12 @@ const Canvas = ({ data }) => {
         const max = orders[i];
         const order = min + (max - min) / 2;
 
-        updateObjects({
-          $splice: [[idx, 1, { ...object, order }]]
-        });
-
+        model.updateObject(object.id, { order });
         break;
       }
 
       case 'move-down': {
+        // TODO(burdon): Multi-select.
         const idx = objects.findIndex(object => isSelected(object.id));
         const object = objects[idx];
         const orders = [...new Set(objects.map(object => (object.order || 1)))].sort();
@@ -333,10 +320,7 @@ const Canvas = ({ data }) => {
         const max = orders[i + 2];
         const order = min + (max - min) / 2;
 
-        updateObjects({
-          $splice: [[idx, 1, { ...object, order }]]
-        });
-
+        model.updateObject(object.id, { order });
         break;
       }
 
@@ -365,10 +349,7 @@ const Canvas = ({ data }) => {
               <Input
                 grid={grid}
                 object={objects[textIdx]}
-                onUpdate={(id, text) => {
-                  const idx = objects.findIndex(object => object.id === id);
-                  updateObjects({ $splice: [[idx, 1, { ...object, text }]] });
-                }}
+                onUpdate={(id, text) => model.updateObject(id, { text })}
                 onEnter={() => setSelected(null)}
               />
             )}
@@ -388,7 +369,7 @@ const Canvas = ({ data }) => {
                   objects={objects}
                   selected={selected}
                   onSelect={handleSelect}
-                  onUpdate={handleUpdate}
+                  onUpdate={(id, properties) => model.updateObject(id, properties)}
                 />
 
                 <g ref={guides} className={classes.guides} />
@@ -396,7 +377,7 @@ const Canvas = ({ data }) => {
             </div>
           </div>
 
-          <Palette object={object} onUpdate={handleUpdate} />
+          <Palette object={object} onUpdate={(id, properties) => model.updateObject(id, properties)} />
         </div>
       </div>
     </Keys>
