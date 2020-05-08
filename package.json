@@ -1,7 +1,7 @@
 {
   "name": "echodb",
   "version": "0.0.1",
-  "description": "ECHODB.",
+  "description": "Eventually Consistent Hierarchical Object Database.",
   "homepage": "https://github.com/dxos/echodb#readme",
   "bugs": {
     "url": "https://github.com/dxos/echodb/issues"
@@ -29,7 +29,8 @@
     "test": "lerna run test",
     "lint": "lerna run lint",
     "lint:fix": "lerna run lint -- --fix",
-    "lint:staged": "lint-staged"
+    "lint:staged": "lint-staged",
+    "sort-package-json": "lerna exec npx sort-package-json"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.2",
