@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-spore",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Spore.",
   "homepage": "https://github.com/dxos/spore#readme",
   "bugs": {
@@ -21,7 +21,7 @@
     "test": "jest --rootDir ./src --verbose --passWithNoTests"
   },
   "dependencies": {
-    "@dxos/gem-core": "^1.0.0-beta.3",
+    "@dxos/gem-core": "^1.0.0-beta.4",
     "@material-ui/core": "^4.9.10",
     "clsx": "^1.1.0",
     "d3": "^5.9.2",
@@ -45,5 +45,8 @@
     "eslint": "^6.8.0",
     "jest": "^25.5.2"
   },
-  "gitHead": "5c024edc3a5ed5521fdb77f1834786b2e888cadd"
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "dc4e67ff17321cb190f01b234fe0051bd5462d89"
 }

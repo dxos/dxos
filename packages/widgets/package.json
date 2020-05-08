@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-widgets",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "D3 Widgets.",
   "repository": "https://github.com/dxos/gem",
   "license": "GPL-3.0",
@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.4.3",
-    "@dxos/gem-core": "^1.0.0-beta.3",
+    "@dxos/gem-core": "^1.0.0-beta.4",
     "@material-ui/core": "^4.5.1",
     "canonicalize": "^1.0.1",
     "chance": "^1.0.13",
@@ -80,5 +80,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "gitHead": "5c024edc3a5ed5521fdb77f1834786b2e888cadd"
+  "gitHead": "dc4e67ff17321cb190f01b234fe0051bd5462d89"
 }

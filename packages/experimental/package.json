@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-experimental",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Gem experimental components.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -42,5 +42,8 @@
     "faker": "^4.1.0",
     "jest": "^25.5.2"
   },
-  "gitHead": "5c024edc3a5ed5521fdb77f1834786b2e888cadd"
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "dc4e67ff17321cb190f01b234fe0051bd5462d89"
 }

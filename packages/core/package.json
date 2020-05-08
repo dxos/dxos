@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-core",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Gem core components.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -16,7 +16,7 @@
   "module": "dist/es/index.js",
   "scripts": {
     "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf ./dist",
     "lint": "eslint ./src --ignore-path ../../.eslintignore",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "test": "jest --rootDir ./src --verbose --passWithNoTests"
@@ -41,5 +41,8 @@
     "eslint": "^6.8.0",
     "jest": "^25.5.2"
   },
-  "gitHead": "5c024edc3a5ed5521fdb77f1834786b2e888cadd"
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "dc4e67ff17321cb190f01b234fe0051bd5462d89"
 }
