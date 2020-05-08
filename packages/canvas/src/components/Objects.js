@@ -62,7 +62,7 @@ const useStyles = makeStyles({
  *
  * @param {Grid} grid
  * @param {{ id, bounds }[]} objects
- * @param {string|undefined} selected
+ * @param {{ id: string[] }|undefined} selected
  * @param {boolean} snap
  * @param {function} [onSelect]
  * @param {function} [onUpdate]

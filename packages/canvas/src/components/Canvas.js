@@ -14,7 +14,6 @@ import { Grid, SVG, useGrid } from '@dxos/gem-core';
 
 import { createToolDrag } from '../drag';
 import { createObject } from '../shapes';
-import { useModel } from '../useModel';
 
 import Input from './Input';
 import Objects from './Objects';
@@ -115,17 +114,11 @@ const Keys = ({ children, onAction }) => {
 /**
  * Canvas application.
  */
-const Canvas = ({ data }) => {
+const Canvas = ({ objects, model }) => {
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
   const view = useRef();
   const guides = useRef();
-
-  //
-  // Model
-  //
-
-  const [objects, model] = useModel(data);
 
   //
   // App State
@@ -146,9 +139,9 @@ const Canvas = ({ data }) => {
   // TODO(burdon): Rename selected=>selection.
   //
 
+  // TODO(burdon): Multi-select (object).
   const [selected, setSelected] = useState({ ids: [] });
   const isSelected = objectId => selected && selected.ids.find(id => id === objectId);
-  // TODO(burdon): Multi-select.
   const object = objects.find(object => isSelected(object.id));
   const textIdx = objects.findIndex(object => isSelected(object.id) && object.type === 'text');
   const handleSelect = ids => {
@@ -177,8 +170,8 @@ const Canvas = ({ data }) => {
       .on('click', () => {
         // NOTE: Happens after drag ends.
         console.log('click');
-        const data = d3.select(d3.event.target).datum();
-        if (!data) {
+        const d = d3.select(d3.event.target).datum();
+        if (!d) {
           setSelected(null);
         }
       });
@@ -190,8 +183,6 @@ const Canvas = ({ data }) => {
 
   const handleAction = (action) => {
     log(`Action: ${action}`);
-
-    // clipboard, setTool, setSelected, objects, options
 
     switch (action) {
 

@@ -7,7 +7,7 @@ import { withKnobs } from "@storybook/addon-knobs";
 
 import { FullScreen } from '@dxos/gem-core';
 
-import { Canvas, createObject } from '../src';
+import { Canvas, createObject, useCanvasModel } from '../src';
 
 export default {
   title: 'Canvas',
@@ -51,9 +51,11 @@ export const withCanvas = () => {
     }),
   ];
 
+  const [objects, model] = useCanvasModel(data);
+
   return (
     <FullScreen>
-      <Canvas data={data} />
+      <Canvas objects={objects} model={model} />
     </FullScreen>
   );
 };

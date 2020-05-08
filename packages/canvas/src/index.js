@@ -4,4 +4,5 @@
 
 export * from './components';
 export * from './shapes';
+export * from './useCanvasModel';
 export * from './util';

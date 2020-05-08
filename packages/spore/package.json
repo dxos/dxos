@@ -11,7 +11,7 @@
     "url": "git+https://github.com/dxos/spore.git"
   },
   "license": "GPL-3.0",
-  "author": "",
+  "author": "DxOS.org",
   "main": "stories/index.js",
   "scripts": {
     "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",

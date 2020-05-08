@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "private": true,
   "description": "UX",
   "keywords": [],
@@ -13,7 +13,7 @@
     "url": "git+https://github.com/dxos/gem.git"
   },
   "license": "ISC",
-  "author": "",
+  "author": "DxOS.org",
   "workspaces": {
     "packages": [
       "packages/*"
@@ -34,9 +34,6 @@
   "lint-staged": {
     "*.js": "eslint --ignore-path .eslintignore"
   },
-  "dependencies": {
-    "lerna": "^3.19.0"
-  },
   "devDependencies": {
     "babel-eslint": "^10.0.3",
     "eslint": "^6.7.2",
@@ -45,6 +42,7 @@
     "eslint-plugin-jsdoc": "^21.0.0",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.17.0",
+    "lerna": "^3.19.0",
     "lint-staged": "^9.5.0",
     "pre-commit": "^1.2.2"
   }

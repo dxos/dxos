@@ -11,7 +11,7 @@
     "url": "git+https://github.com/dxos/gem.git"
   },
   "license": "GPL-3.0",
-  "author": "",
+  "author": "DxOS.org",
   "main": "stories/index.js",
   "scripts": {
     "lint": "eslint ./src --ignore-path ../../.eslintignore",
