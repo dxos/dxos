@@ -1,6 +1,6 @@
 {
   "name": "echodb",
-  "version": "0.0.1",
+  "version": "0.0.4-alpha.1",
   "description": "Eventually Consistent Hierarchical Object Database.",
   "homepage": "https://github.com/dxos/echodb#readme",
   "bugs": {
