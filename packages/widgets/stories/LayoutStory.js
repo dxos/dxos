@@ -2,46 +2,20 @@
 // Copyright 2018 DxOS
 //
 
+import times from 'lodash.times';
 import { Chance } from 'chance';
 import * as d3 from 'd3';
-import React from 'react';
-import times from 'lodash.times';
+import React, { useEffect, useRef } from 'react';
+import useResizeAware from 'react-resize-aware';
 
-import { withStyles } from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/core/styles';
 import green from '@material-ui/core/colors/green';
 import blue from '@material-ui/core/colors/blue';
 import red from '@material-ui/core/colors/red';
 
-import { Container } from  '@dxos/gem-core';
+import { SVG } from '@dxos/gem-core';
 
-// TODO(burdon): Factor out Mesh components.
-
-const styles = {
-  root: {
-    position: 'fixed',
-    display: 'flex',
-    flexGrow: 1,
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: '#333',
-
-    '& rect': {
-      'strokeWidth': 0,
-    },
-    '& rect.random': {
-      'fill': red[600],
-    },
-    '& rect.block': {
-      'fill': green[600],
-    },
-    '& rect.move': {
-      'fill': blue[600],
-      'filter': 'url(#blur)'
-    }
-  },
-};
+// TODO(burdon): Convert to Mesh/Grid widget/projector (hex also).
 
 const chance = new Chance(0);
 
@@ -54,7 +28,6 @@ const size = {
 };
 
 class Grid {
-
   constructor(bounds) {
     this._bounds = bounds;
   }
@@ -160,64 +133,83 @@ const rect = (el) => el
   .attr('width', size.width)
   .attr('height', size.height);
 
-class LayoutStory extends React.Component {
+const useStyles = makeStyles(() => ({
+  root: {
+    position: 'fixed',
+    display: 'flex',
+    flexGrow: 1,
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#333',
 
-  handleResize = ({ width, height }) => {
+    '& rect': {
+      'strokeWidth': 0,
+    },
+    '& rect.random': {
+      'fill': red[600],
+    },
+    '& rect.block': {
+      'fill': green[600],
+    },
+    '& rect.move': {
+      'fill': blue[600],
+      'filter': 'url(#blur)'
+    }
+  },
+}));
 
-    // TODO(burdon): Use translate to set origin.
-    // context.translate(width / 2, height / 2);
+const LayoutStory = () => {
+  const classes = useStyles();
+  const group = useRef();
+  const [resizeListener, { width, height }] = useResizeAware();
+
+  const next = ({ width, height }) => {
+    chance.pick(layouts)(data, { width, height });
 
     const t = () => d3.transition()
       .delay(1000)
       .duration(1000)
       .ease(d3.easePoly);
 
-    d3.select(this._svg)
-      .attr('width', width)
-      .attr('height', height);
+    d3.select('#boxes')
+      .transition(t())
+      .on('end', () => next({ width, height }))
+      .selectAll('rect')
+        .call(rect);
+  };
+
+  useEffect(() => {
+    layoutRandom(data, { width, height });
 
     const boxes = d3.select('#boxes')
       .selectAll('rect')
       .data(data)
       .join('rect');
 
-    layoutRandom(data, { width, height });
-
     boxes
       .call(rect);
 
-    const next = () => {
-      chance.pick(layouts)(data, { width, height });
+    next({ width, height });
+  }, [width, height]);
 
-      d3.select('#boxes')
-        .transition(t())
-        .on('end', next)
-        .selectAll('rect')
-        .call(rect);
-    };
+  return (
+    <div className={classes.root}>
+      {resizeListener}
+      <SVG width={width} height={height} center={false}>
+        <g ref={group}>
+          <defs>
+            <filter id="blur">
+              <feGaussianBlur stdDeviation="8" />
+            </filter>
+          </defs>
 
-    next();
-  };
+          <g id="boxes" />
+        </g>
+      </SVG>
+    </div>
+  );
+};
 
-  render() {
-    let { classes } = this.props;
-
-    return (
-      <div className={classes.root}>
-        <Container onRender={this.handleResize} delay={0}>
-          <svg ref={el => this._svg = el}>
-            <defs>
-              <filter id="blur">
-                <feGaussianBlur stdDeviation="8" />
-              </filter>
-            </defs>
-
-            <g id="boxes" />
-          </svg>
-        </Container>
-      </div>
-    );
-  }
-}
-
-export default withStyles(styles)(LayoutStory);
+export default LayoutStory;

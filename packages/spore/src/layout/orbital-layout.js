@@ -170,6 +170,7 @@ export class OrbitalLayout extends Component {
     // Triggered by state change.
     this.doLayout();
 
+    // TODO(burdon): Container deprecated.
     return (
       <Container {...{ className }} onRender={this.handleResize}>
         <svg ref={el => this._svg = el}>

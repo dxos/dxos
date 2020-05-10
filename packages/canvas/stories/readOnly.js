@@ -16,12 +16,12 @@ export default {
   decorators: [withKnobs]
 };
 
-export const withCanvas = () => {
-  const [objects, model] = useCanvasModel(data);
+export const withReadOnly = () => {
+  const [objects] = useCanvasModel(data);
 
   return (
     <FullScreen>
-      <Canvas objects={objects} model={model} />
+      <Canvas objects={objects} showToolbar={false} showPalette={false} />
     </FullScreen>
   );
 };

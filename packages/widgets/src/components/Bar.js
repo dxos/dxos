@@ -3,31 +3,15 @@
 //
 
 import * as d3 from 'd3';
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-
-import { Container } from '@dxos/gem-core';
+import React, { useEffect, useRef } from 'react';
 
 /**
  * Grid renderer.
  */
-class Bar extends Component {
+const Bar = ({ data, width, domain = [0, 100], delay = 0, barHeight = 16 }) => {
+  const group = useRef();
 
-  // TODO(burdon): Vertical/horizontal.
-
-  static propTypes = {
-    barHeight: PropTypes.number,
-    domain: PropTypes.array
-  };
-
-  static defaultProps = {
-    barHeight: 16,
-    domain: [0, 100]
-  };
-
-  handleResize = ({ width, height }) => {
-    let { data, barHeight, domain } = this.props;
-
+  useEffect(() => {
     const x = d3.scaleLinear()
       .domain(domain)
       .range([0, width]);
@@ -36,28 +20,23 @@ class Bar extends Component {
     let rects = [];
     data.forEach(({ values }) => {
       if (values) {
-        let prev = 0;
-        rects = rects.concat(values.map((value, n) => {
-          let rect = {
-            n,
-            x: x(prev),
-            y: i * barHeight + 1,
-            width: x(value - prev),
-            height: barHeight - 2
-          };
-
-          prev = value;
-
-          return rect;
-        }));
+        rects = rects.concat(values.map((value, n) => ({
+          n,
+          x: 0,
+          y: i * barHeight + 1,
+          width: x(value),
+          height: barHeight - 2
+        })));
       }
 
       i++;
     });
 
-    d3.select(this._svg)
-      .attr('width', width)
-      .attr('height', height)
+    const t = () => d3.transition()
+      .duration(delay)
+      .ease(d3.easePoly);
+
+    d3.select(group.current)
       .selectAll('rect')
         .data(rects)
         .join('rect')
@@ -65,17 +44,15 @@ class Bar extends Component {
         .attr('class', ({ n }) => `value-${n}`)
         .attr('x', ({ x }) => x)
         .attr('y', ({ y }) => y)
-        .attr('width', ({ width }) => width)
-        .attr('height', ({ height }) => height);
-  };
+        .attr('height', ({ height }) => height)
+        .transition(t)
+        .attr('width', ({ width }) => width);
 
-  render() {
-    return (
-      <Container onRender={this.handleResize}>
-        <svg ref={el => this._svg = el}/>
-      </Container>
-    );
-  }
-}
+  }, [data, barHeight]);
+
+  return (
+    <svg ref={group}/>
+  );
+};
 
 export default Bar;

@@ -166,6 +166,7 @@ class IsometricStory extends React.Component {
       }
     };
 
+    // TODO(burdon): Container deprecated.
     return (
       <div className={classes.root}>
         <Container onRender={handler} delay={0}>

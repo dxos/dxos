@@ -31,7 +31,7 @@ export const GlobeProjections = {
  * Detailed documentation.
  * https://d3indepth.com/geographic
  */
-// TODO(burdon): Convert to function.
+// TODO(burdon): Convert to function (in stages).
 export class Globe extends React.Component {
 
   static Projections = Object.keys(GlobeProjections);
@@ -76,6 +76,7 @@ export class Globe extends React.Component {
   /**
    * Create the projection and context now that the canvas element is available.
    */
+  // TODO(burdon): Move "state" outside of component.
   init() {
     const { projection, topology } = this.props;
 
@@ -285,6 +286,7 @@ export class Globe extends React.Component {
       }
     };
 
+    // TODO(burdon): Container deprecated.
     return (
       <Container {...{ className }} onRender={handler}>
         <canvas ref={el => this._canvas = el} />

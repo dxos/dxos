@@ -2,51 +2,64 @@
 // Copyright 2018 DxOS
 //
 
-import React from 'react';
 import times from 'lodash.times';
+import React, { useEffect, useState } from 'react';
+import useResizeAware from 'react-resize-aware';
 
-import { withStyles } from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/core/styles';
+import blueGrey from '@material-ui/core/colors/blueGrey';
+
+import { SVG } from '@dxos/gem-core';
 
 import { Bar } from '../src';
 
-const styles = {
-  root: {
+const useStyles = makeStyles(() => ({
+  root: ({ width }) => ({
     display: 'flex',
-    width: 400,
+    width,
     height: 80,
-    backgroundColor: '#EEE',
+    backgroundColor: blueGrey[50],
 
+    // TODO(burdon): Move to bar.
     '& rect': {
-      'fill': 'steelblue',
-      'stroke': 'steelblue'
+      stroke: 'none'
     },
-
-    '& .value-0': {
-      fill: '#666',
-      strokeWidth: 0
+    '& rect.value-0': {
+      fill: blueGrey[400]
     },
-    '& .value-1': {
-      fill: '#999',
-      strokeWidth: 0
+    '& rect.value-1': {
+      fill: blueGrey[800]
     }
-  }
+  })
+}));
+
+const domain = [0, 100];
+const rand = (min, max) => (max ? min : 0) + Math.floor(Math.random() * (max ? max - min : min));
+const generate = () => times(5, id => ({ id, values: [ rand(50, 100), rand(0, 50) ] }));
+
+const BarStory = () => {
+  const max = 400;
+  const delay = 3000;
+  const classes = useStyles({ width: max });
+  const [resizeListener, { width, height }] = useResizeAware();
+
+  const [data, setData] = useState(generate);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setData(generate());
+    }, delay);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className={classes.root}>
+      {resizeListener}
+      <SVG width={width} height={height} center={false}>
+        <Bar data={data} domain={domain} delay={delay / 2} width={max} />
+      </SVG>
+    </div>
+  );
 };
 
-class BarStory extends React.Component {
-
-  render() {
-    let { classes } = this.props;
-
-    const rand = (min, max) => (max ? min : 0) + Math.floor(Math.random() * (max ? max - min : min));
-
-    const data = times(5, id => ({ id, values: [ rand(1, 20), rand(20, 100) ] }));
-
-    return (
-      <div className={classes.root}>
-        <Bar data={data}/>
-      </div>
-    );
-  }
-}
-
-export default withStyles(styles)(BarStory);
+export default BarStory;

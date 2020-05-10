@@ -1,5 +1,14 @@
 # D3 Ideas
 
+
+- TODO(burdon): Replace chance with faker.
+- TODO(burdon): Convert to hooks.
+- TODO(burdon): Deprecate Container.
+- TODO(burdon): Container owns SVG.
+
+
+
+
 https://golem.network/
 https://www.mckinsey.com/business-functions/digital-mckinsey/our-insights/digital-globalization-the-new-era-of-global-flows
 

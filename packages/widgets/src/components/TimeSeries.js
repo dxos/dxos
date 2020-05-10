@@ -3,140 +3,111 @@
 //
 
 import * as d3 from 'd3';
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
 
-import { Container } from '@dxos/gem-core';
+const useStyles = makeStyles(() => ({
+  root: {
+    '& g': {
+      'fill': 'steelblue',
+      'stroke': 'steelblue'
+    }
+  }
+}));
+
+/**
+ * Map time series to histogram.
+ */
+const processData = (data, points, period) => {
+
+  // Quantize time.
+  // TODO(burdon): Timezone?
+  const t0 = Math.floor((Date.now() + period) / period) * period;
+  const t1 = t0 - points * period;
+  const x = d3.scaleTime()
+    .domain([new Date(t1), new Date(t0)]);
+
+  // Create histogram of time buckets.
+  // TODO(burdon): To be renamed bins?
+  const bins = d3.histogram()
+    .domain(x.domain())
+    .thresholds(x.ticks(points))
+    .value((d, i, data) => data[i].ts)(data);
+
+  return bins.map(d => {
+    return {
+      id: d.x0.getTime(),
+      value: d.length
+    };
+  });
+};
 
 /**
  * Scrolling Time Series
  */
-class TimeSeries extends Component {
+const TimeSeries = ({ data = [], domain = [0, 10], width, height, barWidth = 10, period = 500 }) => {
+  const classes = useStyles();
+  const group = useRef();
 
-  static propTypes = {
-    period: PropTypes.number,
-    barWidth: PropTypes.number,
-    data: PropTypes.array,            // [{ ts:Date.now() }]
-    domain: PropTypes.array           // [min, max]
-  };
+  // Update data reference.
+  const dataRef = useRef();
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
-  static defaultProps = {
-    period: 500,
-    barWidth: 10,
-    data: [],
-    domain: [0, 10]
-  };
-
-  componentDidMount() {
-    let { period } = this.props;
-
+  // Start scroller.
+  useEffect(() => {
     const startTime = Math.floor(Date.now() / period);
 
-    // Start scroller.
     // Interval adapts to be periodic based on load (i.e., catches up).
-    this._interval = d3.interval(() => {
-      let { domain, barWidth, data } = this.props;
+    const interval = d3.interval(() => {
 
-      if (this._bar) {
-        let { width, height } = this._bounds;
+      // TODO(burdon): Move to state/reference for performance.
+      // Space for bar at either end.
+      width += barWidth * 2;
 
-        // Space for bar at either end.
-        width += 2 * barWidth;
+      const x = d3.scaleLinear()
+        .domain([Math.floor(width / barWidth), 0])
+        .range([0, width]);
 
-        const x = d3.scaleLinear()
-          .domain([Math.floor(width / barWidth), 0])
-          .range([0, width]);
+      const y = d3.scaleLinear()
+        .domain(domain)
+        .range([0, height]);
 
-        const y = d3.scaleLinear()
-          .domain(domain)
-          .range([0, height]);
+      const bins = processData(dataRef.current, Math.floor(width / barWidth), period);
+      const offsetTime = Math.floor(Date.now() / period) - startTime;
 
-        const points = Math.floor(width / barWidth);
-        const bins = this._processData(data, points, period);
-
-        const offsetTime = Math.floor(Date.now() / period) - startTime;
-
-        this._bar
+      d3.select(group.current)
+        .selectAll('g[id=bar]')
           .selectAll('rect')
-          .data(bins)
+            .data(bins)
+
           .join('rect')
-          .attr('x', (d, i) => x(i + offsetTime + 2))
-          .attr('width', () => barWidth - 2)
-          .attr('y', d => height - y(d.value))
-          .attr('height', d => y(d.value));
+            .attr('x', (d, i) => x(i + offsetTime + 2))
+            .attr('width', () => barWidth - 2)
+            .attr('y', d => height - y(d.value))
+            .attr('height', d => y(d.value))
 
-        this._bar
+          // Scroll.
           .transition()
-          .duration(period)
-          .ease(d3.easeLinear)
-          .attr('transform', `translate(${barWidth * offsetTime})`);
-      }
+            .duration(period)
+            .ease(d3.easeLinear)
+            .attr('transform', `translate(${barWidth * offsetTime})`);
+
     }, period);
-  }
 
-  componentWillUnmount() {
-    clearInterval(this._interval);
-  }
+    return () => clearInterval(interval);
+  }, []);
 
-  handleResize = ({ width, height }) => {
+  // Renderer is designed to be re-entrant (i.e., lazily create parent groups.)
+  d3.select(group.current).selectAll('g')
+    .data([{ id: 'bar' }])
+    .join('g')
+    .attr('id', d => d.id);
 
-    // TODO(burdon): Get from component?
-    this._bounds = { width, height };
-
-    const root = d3.select(this._svg)
-      .attr('width', width)
-      .attr('height', height);
-
-    // Renderer is designed to be re-entrant (i.e., lazily create parent groups.)
-    root.selectAll('g')
-      .data([
-        { id: 'bar' },
-      ])
-      .join('g')
-      .attr('id', d => d.id);
-
-    this._bar = root
-      .selectAll('g[id=bar]');
-  };
-
-  /**
-   * Map time series to histogram.
-   */
-  _processData(data, points, period) {
-
-    // TODO(burdon): Timezone?
-
-    // Quantize time.
-    const t0 = Math.floor((Date.now() + period) / period) * period;
-    const t1 = t0 - points * period;
-    const x = d3.scaleTime()
-      .domain([new Date(t1), new Date(t0)]);
-
-    // Create histogram of time buckets.
-    // TODO(burdon): To be renamed bins()
-    const bins = d3.histogram()
-      .domain(x.domain())
-      .thresholds(x.ticks(points))
-      .value((d, i, data) => data[i].ts)(data);
-
-    return bins.map(d => {
-      return {
-        id: d.x0.getTime(),
-        value: d.length
-      };
-    });
-  }
-
-  render() {
-    let { className } = this.props;
-
-    return (
-      <Container {...{ className }} onRender={this.handleResize}>
-        <svg ref={el => this._svg = el} />
-      </Container>
-    );
-  }
-}
+  return (
+    <g ref={group} className={classes.root} />
+  );
+};
 
 export default TimeSeries;
-

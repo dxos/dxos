@@ -113,12 +113,19 @@ const Keys = ({ children, onAction }) => {
 
 /**
  * Canvas application.
+ *
+ * @param {Object[]} [objects]
+ * @param {Object} [model]
+ * @param {boolean} [showToolbar]
+ * @param {boolean} [showPalette]
  */
-const Canvas = ({ objects, model }) => {
+const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true }) => {
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
   const view = useRef();
   const guides = useRef();
+
+  // TODO(burdon): Read-only if model is null.
 
   //
   // App State
@@ -150,32 +157,34 @@ const Canvas = ({ objects, model }) => {
     }
   };
 
-  useEffect(() => {
-    const drag = createToolDrag(
-      guides.current,
-      grid,
-      tool,
-      showGrid,
-      object => {
-        if (object) {
-          model.appendObject(object);
-          setSelected({ ids: [object.id] });
-        } else {
-          setSelected(null);
-        }
-      });
+  if (model) {
+    useEffect(() => {
+      const drag = createToolDrag(
+        guides.current,
+        grid,
+        tool,
+        showGrid,
+        object => {
+          if (object) {
+            model.appendObject(object);
+            setSelected({ ids: [ object.id ] });
+          } else {
+            setSelected(null);
+          }
+        });
 
-    d3.select(view.current)
-      .call(drag)
-      .on('click', () => {
-        // NOTE: Happens after drag ends.
-        console.log('click');
-        const d = d3.select(d3.event.target).datum();
-        if (!d) {
-          setSelected(null);
-        }
-      });
-  }, [grid, view, tool, showGrid]);
+      d3.select(view.current)
+        .call(drag)
+        .on('click', () => {
+          // NOTE: Happens after drag ends.
+          console.log('click');
+          const d = d3.select(d3.event.target).datum();
+          if (!d) {
+            setSelected(null);
+          }
+        });
+    }, [ grid, view, tool, showGrid ]);
+  }
 
   //
   // Actions
@@ -184,6 +193,7 @@ const Canvas = ({ objects, model }) => {
   const handleAction = (action) => {
     log(`Action: ${action}`);
 
+    // TODO(burdon): Split read-only actions (no model required).
     switch (action) {
 
       //
@@ -332,7 +342,9 @@ const Canvas = ({ objects, model }) => {
   return (
     <Keys onAction={handleAction}>
       <div className={classes.root}>
-        <Toolbar tool={tool} snap={showGrid} onAction={handleAction} />
+        {showToolbar && (
+          <Toolbar tool={tool} snap={showGrid} onAction={handleAction} />
+        )}
 
         <div className={classes.container}>
           <div className={classes.main}>
@@ -368,7 +380,9 @@ const Canvas = ({ objects, model }) => {
             </div>
           </div>
 
-          <Palette object={object} onUpdate={(id, properties) => model.updateObject(id, properties)} />
+          {showPalette && (
+            <Palette object={object} onUpdate={(id, properties) => model.updateObject(id, properties)} />
+          )}
         </div>
       </div>
     </Keys>

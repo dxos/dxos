@@ -3,47 +3,50 @@
 //
 
 import * as d3 from 'd3';
-import React, { Component } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
 
-import { Container } from '@dxos/gem-core';
-
-const t = (delay = 500) => d3.transition()
-  .duration(delay)
-  .ease(d3.easePoly);
+const useStyles = makeStyles(() => ({
+  grid: {
+    '& rect': {
+      'fill': 'steelblue',
+      'stroke': 'steelblue'
+    }
+  }
+}));
 
 /**
  * Grid renderer.
  */
-class Grid extends Component {
+const Grid = ({ data, delay = 0, grid = { x: 8, y: 8 }, padding = { x: 0, y: 0 } }) => {
+  const classes = useStyles();
+  const group = useRef();
 
-  handleResize = ({ width, height }) => {
-    let { data, grid = { x: 16, y: 16 }, padding = { x: 2, y: 2 } } = this.props;
+  useEffect(() => {
+    const t = () => d3.transition()
+      .duration(delay)
+      .ease(d3.easePoly);
 
-    d3.select(this._svg)
-      .attr('width', width)
-      .attr('height', height)
+    let offset = 0;
+    data.forEach(({ x }) => { if (x > offset) offset = x; });
+
+    d3.select(group.current)
       .selectAll('rect')
-      .data(data)
+        .data(data)
       .join('rect')
-      .attr('id', ({ x, y }) => `${x}_${y}`)
-      .attr('x', ({ x }) => (x * (grid.x + padding.x)) - width)
-      .attr('y', ({ y }) => (y * (grid.y + padding.y)))
-      .attr('width', grid.x - 1)
-      .attr('height', grid.y - 1)
-      .transition(t())
-      .attr('x', ({ x }) => x * (grid.x + padding.x));
-  };
+        .attr('id', ({ x, y }) => `${x}_${y}`)
+        .attr('x', ({ x }) => ((x - offset - 2) * (grid.x + padding.x)))
+        .attr('y', ({ y }) => (y * (grid.y + padding.y)))
+        .attr('width', grid.x - 1)
+        .attr('height', grid.y - 1)
+        .transition(t())
+        .attr('x', ({ x }) => (x * (grid.x + padding.x)));
 
-  render() {
-    const { className } = this.props;
+  }, [data]);
 
-    return (
-      <Container {...{ className }} onRender={this.handleResize}>
-        <svg ref={el => this._svg = el} />
-      </Container>
-    );
-  }
-}
+  return (
+    <g ref={group} className={classes.grid}/>
+  );
+};
 
 export default Grid;
-

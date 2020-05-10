@@ -12,11 +12,12 @@ import { isNull } from '../util';
  *
  * @param width
  * @param height
+ * @param center
  * @param children
  */
 // TODO(burdon): Rename.
 // eslint-disable-next-line react/display-name
-const SVG = forwardRef(({ children, width, height }, ref) => {
+const SVG = forwardRef(({ children, width, height, center=true }, ref) => {
   if (!ref) {
     ref = useRef();
   }
@@ -26,10 +27,12 @@ const SVG = forwardRef(({ children, width, height }, ref) => {
       return;
     }
 
-    d3.select(ref.current)
-      // Move center.
-      // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox
-      .attr('viewBox', `${-width / 2},${-height / 2},${width + 1},${height + 1}`);
+    if (center) {
+      d3.select(ref.current)
+        // Move center.
+        // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox
+        .attr('viewBox', `${-width / 2},${-height / 2},${width + 1},${height + 1}`);
+    }
 
   }, [ref, width, height]);
 

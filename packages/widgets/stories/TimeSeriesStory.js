@@ -2,29 +2,13 @@
 // Copyright 2018 DxOS
 //
 
-import React from 'react';
-import { withStyles } from '@material-ui/core/styles';
+import React, { useState, useEffect } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import useResizeAware from 'react-resize-aware';
+
+import { SVG } from '@dxos/gem-core';
 
 import { TimeSeries } from '../src';
-
-const styles = () => ({
-  root: {
-    position: 'fixed',
-    display: 'flex',
-    left: 0,
-    right: 0,
-    top: 0,
-    height: 100,
-    backgroundColor: '#EEE'
-  },
-
-  timeseries: {
-    '& g': {
-      'fill': 'steelblue',
-      'stroke': 'steelblue'
-    }
-  }
-});
 
 /**
  * Test time-series data generator.
@@ -80,34 +64,42 @@ class Generator {
   }
 }
 
-class TimeSeriesStory extends React.Component {
+const useStyles = makeStyles(() => ({
+  root: ({ height }) => ({
+    position: 'fixed',
+    display: 'flex',
+    left: 0,
+    right: 0,
+    top: 0,
+    height,
 
-  state = {
-    data: []
-  };
+    backgroundColor: '#EEE'
+  })
+}));
 
-  constructor() {
-    super();
+const TimeSeriesStory = () => {
+  const barHeight = 80;
+  const classes = useStyles({ height: barHeight });
+  const [resizeListener, { width, height }] = useResizeAware();
+  const [generator] = useState(() => new Generator(100, 300));
+  const [data, setData] = useState([]);
 
-    this._generator = new Generator(100, 300).onUpdate(data => {
-      this.setState({ data });
+  useEffect(() => {
+    generator.onUpdate(data => {
+      setData([...data]);
     }).start();
-  }
 
-  componentWillUnmount() {
-    this._generator.stop();
-  }
+    return () => { generator.stop(); };
+  }, []);
 
-  render() {
-    let { classes } = this.props;
-    let { data=[] } = this.state;
+  return (
+    <div className={classes.root}>
+      {resizeListener}
+      <SVG width={width} height={height} center={false}>
+        <TimeSeries data={data} width={width} height={barHeight} />
+      </SVG>
+    </div>
+  );
+};
 
-    return (
-      <div className={classes.root}>
-        <TimeSeries className={classes.timeseries} data={data}/>
-      </div>
-    );
-  }
-}
-
-export default withStyles(styles)(TimeSeriesStory);
+export default TimeSeriesStory;
