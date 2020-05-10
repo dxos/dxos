@@ -146,7 +146,7 @@ class GlobeStory extends React.Component {
 const GlobeStoryWithStyles = withStyles(styles)(GlobeStory);
 
 export default {
-  title: 'Globel',
+  title: 'Globe',
   decorators: [withKnobs]
 };
 

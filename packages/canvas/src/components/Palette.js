@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS.og
+// Copyright 2020 DxOS.org
 //
 
 import clsx from 'clsx';

@@ -16,6 +16,8 @@ import { Model } from '../model';
 
 const d3 = Object.assign({}, require('d3'), require('d3-inertia'));
 
+// TODO(burdon): Port to modular hooks (performance for small inactive globes).
+
 /**
  * https://github.com/d3/d3-geo-projection
  */

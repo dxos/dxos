@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS
+// Copyright 2020 DxOS.org
 //
 
 export * from './grid';

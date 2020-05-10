@@ -2,8 +2,11 @@
 // Copyright 2019 DxOS.org
 //
 
+// TODO(burdon): https://www.npmjs.com/package/versor
+
 /**
- * Code from: https://observablehq.com/@mbostock/top-100-cities
+ * Code from:
+ * https://observablehq.com/@mbostock/top-100-cities
  * https://observablehq.com/@d3/versor-dragging
  */
 export class Versor {

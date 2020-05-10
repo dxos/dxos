@@ -96,7 +96,7 @@ const TimeSeries = ({ data = [], domain = [0, 10], width, height, barWidth = 10,
 
     }, period);
 
-    return () => clearInterval(interval);
+    return () => interval.stop();
   }, []);
 
   // Renderer is designed to be re-entrant (i.e., lazily create parent groups.)

@@ -3,4 +3,4 @@
 //
 
 export * from './Globe';
-export { Model } from '../model';
+export Globe2 from './Globe2';

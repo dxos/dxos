@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS, Inc.
+// Copyright 2020 DxOS.org
 //
 
 import * as d3 from 'd3';
