@@ -6,7 +6,8 @@ const d3 = Object.assign({}, require('d3'), require('d3-inertia'));
 import * as topojson from 'topojson';
 import React, { forwardRef, useEffect, useRef } from 'react';
 import useResizeAware from 'react-resize-aware';
-import { makeStyles } from '@material-ui/core/styles';
+
+// TODO(burdon): Factor out components.
 
 //
 // Utils.
@@ -24,12 +25,17 @@ const line = (p1, p2) => ({
 });
 
 // TODO(burdon): Factor out.
-const renderFeatures = (geoPath, features) => {
+const renderFeatures = (geoPath, features, styles) => {
   const context = geoPath.context();
   const { canvas: { width, height } } = context;
 
   // Clear background.
-  context.clearRect(0, 0, width, height);
+  if (styles.background) {
+    context.fillStyle = styles.background.fillStyle;
+    context.fillRect(0, 0, width, height);
+  } else {
+    context.clearRect(0, 0, width, height);
+  }
 
   // Render features.
   // https://github.com/d3/d3-geo#_path
@@ -57,6 +63,13 @@ const renderFeatures = (geoPath, features) => {
   });
 };
 
+/**
+ *
+ * @param topology
+ * @param features
+ * @param styles
+ * @returns {[{path: {type: string}, styles: *}]}
+ */
 const createLayers = (topology, features, styles) => {
   const layers = [
     {
@@ -66,6 +79,13 @@ const createLayers = (topology, features, styles) => {
       }
     }
   ];
+
+  if (styles.graticule) {
+    layers.push({
+      styles: styles.graticule,
+      path: d3.geoGraticule().step([10, 5])()
+    });
+  }
 
   if (topology) {
     layers.push(...[
@@ -81,7 +101,7 @@ const createLayers = (topology, features, styles) => {
     ]);
   }
 
-  if (features) {
+  if (features && styles.line && styles.point) {
     const { lines = [], points = [] } = features;
     layers.push(...[
       {
@@ -107,52 +127,19 @@ const createLayers = (topology, features, styles) => {
 };
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
-const globeStyles = {
-  defaults: {
-    water: {
-      fillStyle: '#000020'
-    },
-
-    land: {
-      fillStyle: '#354D37'
-    }
+const defaultStyles = {
+  background: {
+    fillStyle: '#111'
   },
 
-  light: {
-    water: {
-      fillStyle: '#F5F5F5'
-    },
+  water: {
+    fillStyle: '#123E6A'
+  },
 
-    land: {
-      fillStyle: '#FFF',
-      strokeStyle: '#BBB',
-      strokeWidth: 1
-    },
-
-    border: {
-      strokeStyle: '#EEE',
-      strokeWidth: 1
-    },
-
-    line: {
-      strokeStyle: 'darkred',
-      strokeWidth: 1,
-    },
-
-    point: {
-      fillStyle: 'orange',
-      strokeStyle: 'darkred',
-      strokeWidth: 1,
-      radius: 1
-    }
+  land: {
+    fillStyle: '#032153'
   }
 };
-
-const useStyles = makeStyles(() => ({
-  root: {
-    backgroundColor: '#333'
-  }
-}));
 
 /**
  * Basic globe renderer.
@@ -174,7 +161,6 @@ const Globe2 = forwardRef((props, canvas) => {
   canvas = canvas || useRef();
 
   const {
-    styles = globeStyles.light,
     projection = d3.geoOrthographic,
     events,
     topology,
@@ -185,7 +171,8 @@ const Globe2 = forwardRef((props, canvas) => {
     drag = false
   } = props;
 
-  const classes = useStyles();
+  let styles = props.styles || defaultStyles;
+
   const [resizeListener, { width, height }] = useResizeAware();
 
   //
@@ -219,7 +206,7 @@ const Globe2 = forwardRef((props, canvas) => {
     if (drag) {
       // TODO(burdon): Cancel if unmounted.
       d3.geoInertiaDrag(d3.select(canvas.current), () => {
-        renderFeatures(geoPath.current, layers.current);
+        renderFeatures(geoPath.current, layers.current, styles);
 
         events && events.emit('update', {
           translation: projectionRef.current.translate(),
@@ -229,7 +216,7 @@ const Globe2 = forwardRef((props, canvas) => {
       }, projectionRef.current, { time: 3000 });
     }
 
-    renderFeatures(geoPath.current, layers.current);
+    renderFeatures(geoPath.current, layers.current, styles);
   }, [projection, layers, drag]);
 
   //
@@ -263,12 +250,12 @@ const Globe2 = forwardRef((props, canvas) => {
     // Features.
     //
 
-    renderFeatures(geoPath.current, layers.current);
+    renderFeatures(geoPath.current, layers.current, styles);
 
-  }, [projection, geoPath, layers, rotation, scale, width, height]);
+  }, [projection, geoPath, layers, rotation, scale, styles, width, height]);
 
   return (
-    <div className={classes.root}>
+    <div>
       {resizeListener}
       <canvas ref={canvas} width={width} height={height}/>
     </div>

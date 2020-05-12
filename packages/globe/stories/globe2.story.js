@@ -7,7 +7,7 @@ import EventEmitter from 'events';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { withKnobs, select } from "@storybook/addon-knobs";
+import { withKnobs, button, number, select } from "@storybook/addon-knobs";
 
 import { FullScreen, useObjectMutator } from '@dxos/gem-core';
 
@@ -22,13 +22,12 @@ export default {
 };
 
 // TODO(burdon): Deprecate Globe2.
-// TODO(burdon): Knobs (e.g., tilt, offset).
-// TODO(burdon): Drag handler update rotater.
-// TODO(burdon): Spinner.
-// TODO(burdon): Blur.
+// TODO(burdon): Spinner (same state as rotator, drag).
+// TODO(burdon): Blur/shadow.
+// TODO(burdon): Offset (top/bottom/left/right).
 
 // Advanced
-// TODO(burdon): Styles.
+// TODO(burdon): Factor out generator, etc.
 // TODO(burdon): Test performance (e.g., internal tween vs external).
 // TODO(burdon): Searchbox.
 // TODO(burdon): Topology and geodata abstractions (different sets).
@@ -51,6 +50,35 @@ const useStateWithRef = (initial) => {
     value => { setValue(value); ref.current = value; },
     ref
   ];
+};
+
+/**
+ *
+ * @param initial
+ * @param duration
+ */
+const useScaler = (initial, duration = 1000) => {
+  const [scale, setScale, scaleRef] = useStateWithRef(initial);
+
+  const zoom = (canvas, scale, callback, t) => {
+    const oldScale = scaleRef.current;
+
+    // https://github.com/d3/d3-transition#selection_transition
+    d3.select(canvas)
+      .interrupt('globe-scale')
+      .transition('globe-scale')
+      .duration(t || duration)
+      .tween('globe-scale-tween', () => t => {
+        setScale(oldScale + (scale - oldScale) * t);
+        if (callback && t === 1) {
+          callback();
+        }
+      });
+  };
+
+  const stop = (canvas) => d3.select(canvas).interrupt('globe-scale').transition();
+
+  return [scale, setScale, scaleRef, zoom, stop];
 };
 
 /**
@@ -90,44 +118,35 @@ const useRotator = (initial, duration = 1000) => {
 
 /**
  *
- * @param initial
+ * @param callback
  * @param delta
  */
-/*
-const useSpinner = (initial, delta) => {
+const useSpinner = (callback, delta = [.00002, 0, 0]) => {
+  let timer;
 
-  // TODO(burdon): Start, stop.
-  return [];
-};
-*/
+  const start = (initial) => {
+    let t = 0;
+    let lastRotation = initial;
+    timer = d3.timer(elapsed => {
+      const dt = elapsed - t;
 
-/**
- *
- * @param initial
- * @param duration
- */
-const useScaler = (initial, duration = 1000) => {
-  const [scale, setScale, scaleRef] = useStateWithRef(initial);
+      const rotation = [
+        lastRotation[0] + (delta[0] * dt),
+        lastRotation[1] + (delta[1] * dt),
+        lastRotation[2] + (delta[2] * dt),
+      ];
 
-  const zoom = (canvas, scale, callback, t) => {
-    const oldScale = scaleRef.current;
+      lastRotation = rotation;
 
-    // https://github.com/d3/d3-transition#selection_transition
-    d3.select(canvas)
-      .interrupt('globe-scale')
-      .transition('globe-scale')
-      .duration(t || duration)
-      .tween('globe-scale-tween', () => t => {
-        setScale(oldScale + (scale - oldScale) * t);
-        if (callback && t === 1) {
-          callback();
-        }
-      });
+      callback(rotation);
+    });
   };
 
-  const stop = (canvas) => d3.select(canvas).interrupt('globe-scale').transition();
+  const stop = () => {
+    timer.stop();
+  };
 
-  return [scale, setScale, scaleRef, zoom, stop];
+  return [start, stop];
 };
 
 const projections = [
@@ -138,6 +157,91 @@ const projections = [
 const projectionValues = {
   'Orthographic': 0,
   'Mercator': 1
+};
+
+// https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
+const globeStyles = {
+  default: null,
+
+  blue: {
+    background: {
+      fillStyle: '#111'
+    },
+
+    water: {
+      fillStyle: '#123E6A'
+    },
+
+    land: {
+      fillStyle: '#032153'
+    },
+  },
+
+  green: {
+    background: {
+      fillStyle: '#111'
+    },
+
+    water: {
+      fillStyle: '#13293E'
+    },
+
+    land: {
+      fillStyle: '#2A554D'
+    },
+  },
+
+  light: {
+    background: {
+      fillStyle: '#333'
+    },
+
+    water: {
+      fillStyle: '#F5F5F5'
+    },
+
+    land: {
+      fillStyle: '#FFF',
+      strokeStyle: '#BBB',
+      strokeWidth: 1
+    },
+
+    border: {
+      strokeStyle: '#EEE',
+      strokeWidth: 1
+    },
+
+    graticule: {
+      strokeStyle: '#CCC',
+      strokeWidth: 1,
+    },
+
+    line: {
+      strokeStyle: 'darkred',
+      strokeWidth: 1,
+    },
+
+    point: {
+      fillStyle: 'orange',
+      strokeStyle: 'darkred',
+      strokeWidth: 1,
+      radius: 1
+    }
+  },
+
+  dark: {
+    background: {
+      fillStyle: '#000'
+    },
+
+    water: {
+      fillStyle: '#111'
+    },
+
+    land: {
+      fillStyle: '#222'
+    },
+  },
 };
 
 const useStyles = makeStyles(() => ({
@@ -154,11 +258,23 @@ const useStyles = makeStyles(() => ({
 export const withSimpleGlobe = () => {
   const canvas = useRef();
   const classes = useStyles();
-  const tilt = 20;
   const [features,, featuresRef, updateFeatures] = useObjectMutator({ points: [], lines: [] });
   const [scale,,, zoom, stopScaler] = useScaler(.9, 500);
-  const [rotation,,, rotate, stopRotator] = useRotator(Versor.coordinatesToAngles({ lat: 51.5074, lng: 0.1278 }, tilt));
+  const [rotation, setRotation,, rotate, stopRotator] = useRotator(Versor.coordinatesToAngles({ lat: 51.5074, lng: 0.1278 }, tilt));
+  const [startSpinner, stopSpinner] = useSpinner(rotation => {
+    setRotation(rotation);
+  });
+
   const [info, setInfo] = useState(null);
+
+  const tilt = number('tilt', 25, { min: -45, max: 45 });
+  const styles = select('style', globeStyles);
+
+  // TODO(burdon): Can't spin and rotate at same time (need shared state).
+  button('spin', () => {
+    stopRotator(canvas.current);
+    startSpinner(rotation);
+  });
 
   // Projection updates.
   const projectionType = select('Projection', projectionValues, 0);
@@ -172,11 +288,20 @@ export const withSimpleGlobe = () => {
   const eventEmitter = useRef(new EventEmitter());
   useEffect(() => {
     eventEmitter.current.on('update', ({ rotation }) => {
+      stopSpinner();
       stopRotator(canvas.current, rotation);
       stopScaler(canvas.current);
     });
   }, []);
 
+  // Clean-up.
+  useEffect(() => {
+    return () => {
+      stopSpinner();
+    };
+  }, []);
+
+  // TODO(burdon): Factor out feature generation.
   // Generate features.
   useEffect(() => {
     const interval = d3.interval(() => {
@@ -188,12 +313,6 @@ export const withSimpleGlobe = () => {
       // TODO(burdon): Select near-by point going east.
       const { properties: { name }, geometry: { coordinates} } = faker.random.arrayElement(CitiesData.features);
       const point = { lat: coordinates[1], lng: coordinates[0] };
-      rotate(canvas.current, Versor.coordinatesToAngles(point, tilt), () => {
-        setInfo({
-          name,
-          coordinates: { lat: coordinates[1], lng: coordinates[0] }
-        });
-      });
 
       // Add feature.
       // TODO(burdon): Pulse points.
@@ -216,6 +335,13 @@ export const withSimpleGlobe = () => {
           }
         }
       ));
+
+      rotate(canvas.current, Versor.coordinatesToAngles(point, tilt), () => {
+        setInfo({
+          name,
+          coordinates: { lat: coordinates[1], lng: coordinates[0] }
+        });
+      });
     }, 3000);
 
     return () => {
@@ -259,6 +385,7 @@ export const withSimpleGlobe = () => {
         ref={canvas}
         drag={true}
         events={eventEmitter.current}
+        styles={styles}
         projection={projection}
         topology={TopologyData}
         features={features}
