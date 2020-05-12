@@ -284,8 +284,6 @@ export const withSimpleGlobe = () => {
   useEffect(() => {
     stopSpinner();
     stopAnimation();
-
-    // TODO(burdon): Calculate spin from current location.
   }, [tilt]);
 
   const [scale,,, zoom, stopScaler] = useScaler(.9, 500);
@@ -300,7 +298,6 @@ export const withSimpleGlobe = () => {
     setProjection(() => projections[projectionType]);
   }, [projectionType]);
 
-  // TODO(burdon): Can't spin and rotate at same time (need shared state).
   button('spin', () => {
     stopAnimation();
     startSpinner(rotationRef.current);
@@ -314,30 +311,7 @@ export const withSimpleGlobe = () => {
     stopAnimation();
   });
 
-  // TODO(burdon): Cannot update state.
-  // const state = radios('state', ['spin', 'animate', 'stop'], 'stop');
   useEffect(() => {
-    /*
-    switch (state) {
-      case 'spin': {
-        stopAnimation();
-        startSpinner(rotationRef.current);
-        break;
-      }
-
-      case 'animate': {
-        stopSpinner();
-        startAnimation();
-        break;
-      }
-
-      default: {
-        stopSpinner();
-        stopAnimation();
-      }
-    }
-    */
-
     // Clean-up on unmount.
     return () => {
       stopSpinner();
@@ -351,6 +325,7 @@ export const withSimpleGlobe = () => {
   }, []);
 
   // Listen for drag updates.
+  // TODO(burdon): Cannot tilt, spin rotate at same time (need shared state).
   const eventEmitter = useRef(new EventEmitter());
   useEffect(() => {
     eventEmitter.current.on('update', ({ rotation }) => {
@@ -362,7 +337,6 @@ export const withSimpleGlobe = () => {
     });
   }, []);
 
-  // TODO(burdon): Factor out feature generation.
   // Generate features.
   const animationInterval = useRef(null);
   const startAnimation = () => {
@@ -433,7 +407,7 @@ export const withSimpleGlobe = () => {
         features={features}
         scale={scale}
         rotation={rotation}
-        offset={{ x: 0, y: 0 }}     // TODO(burdon): Function that gets bounds.
+        offset={{ x: 0, y: 0 }}     // TODO(burdon): Function that gets bounds (like d3 d => {}).
       />
     </FullScreen>
   );
