@@ -125,6 +125,8 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
   const view = useRef();
   const guides = useRef();
 
+  objects = objects || [];
+
   // TODO(burdon): Read-only if model is null.
 
   //

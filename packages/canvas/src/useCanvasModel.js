@@ -10,8 +10,8 @@ import { useObjectMutator } from '@dxos/gem-core';
  * Canvas model.
  * @param {Object[]} data - Initial data set.
  */
-export const useCanvasModel = (data) => {
-  const [objects,, getObjects, updateObjects] = useObjectMutator(data);
+export const useCanvasModel = (data = []) => {
+  const [objects,, getObjects, updateObjects] = useObjectMutator(data || []);
 
   // TODO(burdon): Create ECHO model (with async updates).
   // I.e., don't mutate to disk until stopped editing (don't append message while dragging).
