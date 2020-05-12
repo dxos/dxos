@@ -15,7 +15,7 @@ export class Versor {
 
   static interpolatePoint = (v1, v2) => t => ({ x: (v1.x + (v2.x - v1.x) * t), y: (v1.y + (v2.y - v1.y) * t) });
 
-  static coordinatesToAngles = ({ lat = 0, lng = 0 }, tilt = 0) => [-lng, tilt - lat, 0];
+  static coordinatesToAngles = ({ lat = 0, lng = 0 }, tilt = 0) => [-lng, tilt -lat, 0];
 
   static fromAngles([l, p, g]) {
     l *= Math.PI / 360;

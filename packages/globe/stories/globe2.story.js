@@ -22,12 +22,13 @@ export default {
 };
 
 // TODO(burdon): Deprecate Globe2.
-// TODO(burdon): Spinner (same state as rotator, drag).
 // TODO(burdon): Blur/shadow.
-// TODO(burdon): Offset (top/bottom/left/right).
 
 // Advanced
 // TODO(burdon): Factor out generator, etc.
+// TODO(burdon): Offset (top/bottom/left/right).
+// TODO(burdon): Spinner (same state as rotator, drag).
+// TODO(burdon): Pinch zoom.
 // TODO(burdon): Test performance (e.g., internal tween vs external).
 // TODO(burdon): Searchbox.
 // TODO(burdon): Topology and geodata abstractions (different sets).
@@ -38,24 +39,25 @@ export default {
 /**
  *
  * @param initial
- * @returns {[]}
+ * @returns {[function, function, function]}
  */
-// TODO(burdon): Factor out.
+// TODO(burdon): Factor out to core.
 const useStateWithRef = (initial) => {
   const [value, setValue] = useState(typeof initial === 'function' ? initial() : initial);
   const ref = useRef(value);
+  const update = value => {
+    setValue(value);
+    ref.current = value;
+  };
 
-  return [
-    value,
-    value => { setValue(value); ref.current = value; },
-    ref
-  ];
+  return [ value, update, ref ];
 };
 
 /**
  *
  * @param initial
  * @param duration
+ * @returns {[function, function, function, function, function]}
  */
 const useScaler = (initial, duration = 1000) => {
   const [scale, setScale, scaleRef] = useStateWithRef(initial);
@@ -85,7 +87,7 @@ const useScaler = (initial, duration = 1000) => {
  *
  * @param initial
  * @param duration
- * @returns {[]}
+ * @returns {[function, function, function, function, function]}
  */
 const useRotator = (initial, duration = 1000) => {
   const [rotation, setRotation, rotationRef] = useStateWithRef(initial);
@@ -120,14 +122,19 @@ const useRotator = (initial, duration = 1000) => {
  *
  * @param callback
  * @param delta
+ * @return {[function, function]}
  */
-const useSpinner = (callback, delta = [.00002, 0, 0]) => {
-  let timer;
+const useSpinner = (callback, delta = [.002, 0, 0]) => {
+  const timer = useRef(null);
 
   const start = (initial) => {
+    stop();
+
     let t = 0;
     let lastRotation = initial;
-    timer = d3.timer(elapsed => {
+
+    console.log('starting spinner...');
+    timer.current = d3.timer(elapsed => {
       const dt = elapsed - t;
 
       const rotation = [
@@ -137,13 +144,18 @@ const useSpinner = (callback, delta = [.00002, 0, 0]) => {
       ];
 
       lastRotation = rotation;
+      t = elapsed;
 
       callback(rotation);
     });
   };
 
   const stop = () => {
-    timer.stop();
+    if (timer.current) {
+      console.log('stopping spinner...');
+      timer.current.stop();
+      timer.current = undefined;
+    }
   };
 
   return [start, stop];
@@ -255,63 +267,113 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
+const locations = {
+  LONDON: {
+    lat: 51.5074, lng: 0.1278
+  }
+};
+
 export const withSimpleGlobe = () => {
   const canvas = useRef();
   const classes = useStyles();
   const [features,, featuresRef, updateFeatures] = useObjectMutator({ points: [], lines: [] });
-  const [scale,,, zoom, stopScaler] = useScaler(.9, 500);
-  const [rotation, setRotation,, rotate, stopRotator] = useRotator(Versor.coordinatesToAngles({ lat: 51.5074, lng: 0.1278 }, tilt));
-  const [startSpinner, stopSpinner] = useSpinner(rotation => {
-    setRotation(rotation);
-  });
-
   const [info, setInfo] = useState(null);
 
-  const tilt = number('tilt', 25, { min: -45, max: 45 });
   const styles = select('style', globeStyles);
+  const tilt = number('tilt', 25, { min: -45, max: 45 });
+  useEffect(() => {
+    stopSpinner();
+    stopAnimation();
 
-  // TODO(burdon): Can't spin and rotate at same time (need shared state).
-  button('spin', () => {
-    stopRotator(canvas.current);
-    startSpinner(rotation);
-  });
+    // TODO(burdon): Calculate spin from current location.
+  }, [tilt]);
+
+  const [scale,,, zoom, stopScaler] = useScaler(.9, 500);
+  const [rotation, setRotation, rotationRef, rotate, stopRotator] =
+    useRotator(Versor.coordinatesToAngles(locations.LONDON, tilt));
+  const [startSpinner, stopSpinner] = useSpinner(rotation => setRotation(rotation));
 
   // Projection updates.
-  const projectionType = select('Projection', projectionValues, 0);
+  const projectionType = select('projection', projectionValues, 0);
   const [projection, setProjection] = useState(() => projections[projectionType]);
   useEffect(() => {
     setProjection(() => projections[projectionType]);
   }, [projectionType]);
 
+  // TODO(burdon): Can't spin and rotate at same time (need shared state).
+  button('spin', () => {
+    stopAnimation();
+    startSpinner(rotationRef.current);
+  });
+  button('animate', () => {
+    stopSpinner();
+    startAnimation();
+  });
+  button('stop', () => {
+    stopSpinner();
+    stopAnimation();
+  });
+
+  // TODO(burdon): Cannot update state.
+  // const state = radios('state', ['spin', 'animate', 'stop'], 'stop');
+  useEffect(() => {
+    /*
+    switch (state) {
+      case 'spin': {
+        stopAnimation();
+        startSpinner(rotationRef.current);
+        break;
+      }
+
+      case 'animate': {
+        stopSpinner();
+        startAnimation();
+        break;
+      }
+
+      default: {
+        stopSpinner();
+        stopAnimation();
+      }
+    }
+    */
+
+    // Clean-up on unmount.
+    return () => {
+      stopSpinner();
+      stopAnimation();
+
+      // Cancel intervals and transitions.
+      // NOTE: Explicitely cancel all transitions (BUG: https://github.com/d3/d3-transition/issues/9).
+      stopScaler(canvas.current);
+      stopRotator(canvas.current);
+    };
+  }, []);
+
   // Listen for drag updates.
-  // TODO(burdon): Change to state object (tracks current state).
   const eventEmitter = useRef(new EventEmitter());
   useEffect(() => {
     eventEmitter.current.on('update', ({ rotation }) => {
       stopSpinner();
+      stopAnimation();
+
       stopRotator(canvas.current, rotation);
       stopScaler(canvas.current);
     });
   }, []);
 
-  // Clean-up.
-  useEffect(() => {
-    return () => {
-      stopSpinner();
-    };
-  }, []);
-
   // TODO(burdon): Factor out feature generation.
   // Generate features.
-  useEffect(() => {
-    const interval = d3.interval(() => {
+  const animationInterval = useRef(null);
+  const startAnimation = () => {
+    stopAnimation();
 
-      // Zoom scale.
-      zoom(canvas.current, Math.random() + .5);
+    console.log('starting animation...');
+    animationInterval.current = d3.interval(() => {
 
       // Add point.
       // TODO(burdon): Select near-by point going east.
-      const { properties: { name }, geometry: { coordinates} } = faker.random.arrayElement(CitiesData.features);
+      const { properties: { name }, geometry: { coordinates } } = faker.random.arrayElement(CitiesData.features);
       const point = { lat: coordinates[1], lng: coordinates[0] };
 
       // Add feature.
@@ -322,16 +384,16 @@ export const withSimpleGlobe = () => {
         {
           // TODO(burdon): Remove points (not part of current paths).
           points: {
-            $push: [point]
+            $push: [ point ]
           }
         },
         points.length && {
           lines: {
-            $splice: [[0, Math.max(0, 1 + lines.length - maxLines)]],
-            $push: [{
+            $splice: [ [ 0, Math.max(0, 1 + lines.length - maxLines) ] ],
+            $push: [ {
               source: points[points.length - 1],
               target: point
-            }]
+            } ]
           }
         }
       ));
@@ -342,38 +404,18 @@ export const withSimpleGlobe = () => {
           coordinates: { lat: coordinates[1], lng: coordinates[0] }
         });
       });
+
+      zoom(canvas.current, Math.random() + .5);
     }, 3000);
+  };
 
-    return () => {
-      // Cancel intervals and transitions.
-      interval.stop();
-
-      // NOTE: Explicitely cancel all transitions (BUG: https://github.com/d3/d3-transition/issues/9).
-      stopScaler(canvas.current);
-      stopRotator(canvas.current);
-    };
-  }, []);
-
-  /*
-  // TODO(burdon): Spinner.
-  useEffect(() => {
-    const interval = d3.interval(() => {
-      scaleRef.current += .0005;
-      setScale(scaleRef.current);
-
-      const r = [...rotationRef.current];
-      r[0] += 1;
-      rotationRef.current = r;
-      setRotation(rotationRef.current);
-
-      if (scaleRef.current > 1) {
-        interval.stop();
-      }
-    }, 1);
-
-    return () => interval.stop();
-  }, []);
-  */
+  const stopAnimation = () => {
+    if (animationInterval.current) {
+      console.log('stopping animation...');
+      animationInterval.current.stop();
+      animationInterval.current = undefined;
+    }
+  };
 
   return (
     <FullScreen>
