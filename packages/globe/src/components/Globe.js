@@ -6,15 +6,12 @@ import isEqual from 'lodash.isequal';
 import PropTypes from 'prop-types';
 import React from 'react';
 import * as topojson from 'topojson';
+const d3 = Object.assign({}, require('d3'), require('d3-inertia'));
 
 import { Container, bounds, resize } from '@dxos/gem-core';
 
-import { GlobeStyles } from '../style';
-import { GeoUtil } from '../util';
-import { Versor } from '../versor';
-import { Model } from '../model';
-
-const d3 = Object.assign({}, require('d3'), require('d3-inertia'));
+import { Model, GeoUtil, GlobeStyles } from '../deprecated';
+import { Versor } from '../util';
 
 // TODO(burdon): Port to modular hooks (performance for small inactive globes).
 

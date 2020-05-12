@@ -20,7 +20,7 @@ export class Generator extends EventEmitter {
       const key = keys[Math.floor(Math.random() * keys.length)];
       return collection[key];
     }
-  };
+  }
 
   _interval = 0;
 

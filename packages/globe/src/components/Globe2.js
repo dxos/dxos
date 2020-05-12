@@ -4,7 +4,7 @@
 
 const d3 = Object.assign({}, require('d3'), require('d3-inertia'));
 import * as topojson from 'topojson';
-import React, { useEffect, useRef } from 'react';
+import React, { forwardRef, useEffect, useRef } from 'react';
 import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -12,6 +12,18 @@ import { makeStyles } from '@material-ui/core/styles';
 // Utils.
 //
 
+// https://github.com/d3/d3-geo#geoCircle
+const circle = ({ lat, lng }, radius) => d3.geoCircle().center([lng, lat]).radius(radius)();
+
+const line = (p1, p2) => ({
+  type: 'LineString',
+  coordinates: [
+    [p1.lng, p1.lat],
+    [p2.lng, p2.lat]
+  ]
+});
+
+// TODO(burdon): Factor out.
 const renderFeatures = (geoPath, features) => {
   const context = geoPath.context();
   const { canvas: { width, height } } = context;
@@ -45,19 +57,100 @@ const renderFeatures = (geoPath, features) => {
   });
 };
 
-const defaultStyles = {
-  water: {
-    fillStyle: '#000020'
+const createLayers = (topology, features, styles) => {
+  const layers = [
+    {
+      styles: styles.water,
+      path: {
+        type: 'Sphere'
+      }
+    }
+  ];
+
+  if (topology) {
+    layers.push(...[
+      {
+        styles: styles.land,
+        path: topojson.feature(topology, topology.objects.land)
+      },
+      {
+        // TODO(burdon): Optional.
+        styles: styles.border,
+        path: topojson.mesh(topology, topology.objects.countries, (a, b) => a !== b)
+      }
+    ]);
+  }
+
+  if (features) {
+    const { lines = [], points = [] } = features;
+    layers.push(...[
+      {
+        // TODO(burdon): Animate.
+        // https://observablehq.com/@mbostock/top-100-cities
+        styles: styles.line,
+        path: {
+          type: 'GeometryCollection',
+          geometries: lines.map(({ source, target }) => line(source, target))
+        },
+      },
+      {
+        styles: styles.point,
+        path: {
+          type: 'GeometryCollection',
+          geometries: points.map(point => circle(point, styles.point.radius))
+        }
+      }
+    ]);
+  }
+
+  return layers;
+};
+
+// https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
+const globeStyles = {
+  defaults: {
+    water: {
+      fillStyle: '#000020'
+    },
+
+    land: {
+      fillStyle: '#354D37'
+    }
   },
 
-  land: {
-    fillStyle: '#354D37'
+  light: {
+    water: {
+      fillStyle: '#F5F5F5'
+    },
+
+    land: {
+      fillStyle: '#FFF',
+      strokeStyle: '#BBB',
+      strokeWidth: 1
+    },
+
+    border: {
+      strokeStyle: '#EEE',
+      strokeWidth: 1
+    },
+
+    line: {
+      strokeStyle: 'darkred',
+      strokeWidth: 1,
+    },
+
+    point: {
+      fillStyle: 'orange',
+      strokeStyle: 'darkred',
+      strokeWidth: 1,
+      radius: 1
+    }
   }
 };
 
 const useStyles = makeStyles(() => ({
   root: {
-    backgroundColor: '#000'
+    backgroundColor: '#333'
   }
 }));
 
@@ -65,59 +158,79 @@ const useStyles = makeStyles(() => ({
  * Basic globe renderer.
  *
  * @param props
- * @param props.topology
- * @param props.projection
  * @param props.styles
+ * @param props.events
+ * @param props.projection
+ * @param props.topology
+ * @param props.features
  * @param props.offset
  * @param props.rotation
  * @param props.scale
  * @param props.drag
+ * @param {Object|undefined} canvas
  */
-const Globe2 = (props) => {
+// eslint-disable-next-line react/display-name
+const Globe2 = forwardRef((props, canvas) => {
+  canvas = canvas || useRef();
+
   const {
+    styles = globeStyles.light,
+    projection = d3.geoOrthographic,
+    events,
     topology,
-    projection = d3.geoOrthographic(),
-    styles=defaultStyles,
+    features,
     offset = { x: 0, y: 0 },
     rotation = [0, 0, 0],
     scale = 0.9,
     drag = false
   } = props;
 
-  const features = [
-    {
-      path: { type: 'Sphere' },
-      styles: styles.water
-    },
-    {
-      path: topojson.feature(topology, topology.objects.land),
-      styles: styles.land
-    }
-  ];
-
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
-  const canvas = useRef();
-  const geoPath = useRef();
+
+  //
+  // Features
+  //
+
+  const layers = useRef();
+  useEffect(() => {
+    layers.current = createLayers(topology, features, styles);
+  }, [topology, features, styles ]);
 
   //
   // Init.
   //
 
+  const geoPath = useRef();
+
+  // NOTE: The d3 projection object is a function, which cannot be used directly as a state object.
+  const projectionRef = useRef(projection());
+
   useEffect(() => {
+    projectionRef.current = projection();
+
     // https://github.com/d3/d3-geo#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
     geoPath.current = d3.geoPath()
       .context(canvas.current.getContext('2d'))
-      .projection(projection);
+      .projection(projectionRef.current);
 
     // https://github.com/Fil/d3-inertia
     if (drag) {
+      // TODO(burdon): Cancel if unmounted.
       d3.geoInertiaDrag(d3.select(canvas.current), () => {
-        renderFeatures(geoPath.current, features);
-      }, projection, { time: 3000 });
+        renderFeatures(geoPath.current, layers.current);
+
+        events && events.emit('update', {
+          translation: projectionRef.current.translate(),
+          scale: projectionRef.current.scale(),
+          rotation: projectionRef.current.rotate()
+        });
+      }, projectionRef.current, { time: 3000 });
     }
-  }, [projection, drag]);
+
+    renderFeatures(geoPath.current, layers.current);
+  }, [projection, layers, drag]);
 
   //
   // Update projection and render.
@@ -135,7 +248,7 @@ const Globe2 = (props) => {
         y: offset.y + height / 2
       };
 
-      projection
+      projectionRef.current
         // https://github.com/d3/d3-geo#projection_translate
         .translate([ center.x, center.y ])
 
@@ -150,16 +263,16 @@ const Globe2 = (props) => {
     // Features.
     //
 
-    renderFeatures(geoPath.current, features);
+    renderFeatures(geoPath.current, layers.current);
 
-  }, [geoPath, rotation, scale, width, height]);
+  }, [projection, geoPath, layers, rotation, scale, width, height]);
 
   return (
     <div className={classes.root}>
       {resizeListener}
-      <canvas width={width} height={height} ref={canvas}/>
+      <canvas ref={canvas} width={width} height={height}/>
     </div>
   );
-};
+});
 
 export default Globe2;

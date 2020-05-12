@@ -16,7 +16,7 @@ export class GeoUtil {
         name,
         lng: coordinates[0],
         lat: coordinates[1]
-      }
+      };
     });
   }
 

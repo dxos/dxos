@@ -115,6 +115,7 @@ export class ForceLayout extends Layout {
       /**
        * https://github.com/d3/d3-force#forceManyBody
        */
+      // TODO(burdon): Strength accessor funiiton can determine strength for each node separately.
       .force('charge', d3.forceManyBody()
         .strength(force.charge.strength)
       )
