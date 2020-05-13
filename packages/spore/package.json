@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-spore",
-  "version": "1.0.0-beta.5",
+  "version": "1.0.0-beta.6",
   "description": "Spore.",
   "homepage": "https://github.com/dxos/spore#readme",
   "bugs": {
@@ -21,7 +21,7 @@
     "test": "jest --rootDir ./src --verbose --passWithNoTests"
   },
   "dependencies": {
-    "@dxos/gem-core": "^1.0.0-beta.5",
+    "@dxos/gem-core": "^1.0.0-beta.6",
     "@material-ui/core": "^4.9.10",
     "clsx": "^1.1.0",
     "d3": "^5.9.2",
