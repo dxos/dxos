@@ -60,7 +60,8 @@ const Palette = ({ object, onUpdate }) => {
                 <div
                   key={color}
                   onClick={() => onUpdate(object.id, { style })}
-                  className={clsx(classes.box, (object.style && id === object.style.id) ? classes.selected : null)}
+                  className={clsx(classes.box,
+                    (object.properties.style && id === object.properties.style.id) ? classes.selected : null)}
                   style={{
                     borderColor: style.border,
                     backgroundColor: style.background

@@ -72,7 +72,7 @@ const Objects = ({ grid, objects, selected, snap, onSelect = noop, onUpdate = no
   const layer = useRef();
 
   // NOTE: Update order calling raise on update.
-  objects.sort((a, b) => a.order < b.order ? -1 : a.order > b.order ? 1 : 0).reverse();
+  objects.sort(({ properties: { order: a } }, { properties: { order: b } }) => a < b ? -1 : a > b ? 1 : 0).reverse();
 
   const drag = useRef();
   useEffect(() => {

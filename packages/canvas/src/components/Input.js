@@ -41,15 +41,14 @@ const Input = ({ grid, object, onUpdate, onEnter = () => {} }) => {
     });
   }, []);
 
-  // TODO(burdon): Update after delay.
-  const handleUpdate = event => onUpdate(object.id, event.target.value);
+  const handleUpdate = event => onUpdate(object.id, { text: event.target.value });
   const handleKeyPress = event => {
     if (event.key === 'Enter') {
       onEnter();
     }
   };
 
-  const { text = '', bounds: { x, y, width: textWidth, height: textHeight } } = object;
+  const { properties: { text = '', bounds: { x, y, width: textWidth, height: textHeight } } } = object;
 
   // TODO(burdon): Map SVG coordinates.
   const inset = 10;

@@ -6,7 +6,6 @@ import * as d3 from 'd3';
 import debug from 'debug';
 
 import { createPath } from './util';
-import { createObject } from './shapes';
 
 const log = debug('gem:canvas:drag');
 
@@ -17,10 +16,10 @@ const log = debug('gem:canvas:drag');
  * @param grid
  * @param tool
  * @param snap
- * @param onUpdate
+ * @param onCreate
  * @returns {d3.drag}
  */
-export const createToolDrag = (container, grid, tool, snap, onUpdate) => {
+export const createToolDrag = (container, grid, tool, snap, onCreate) => {
   let initialPos = undefined;
 
   return d3.drag()
@@ -89,7 +88,7 @@ export const createToolDrag = (container, grid, tool, snap, onUpdate) => {
         }
       }
 
-      onUpdate(null);
+      onCreate(null);
     })
     .on('end', () => {
       // console.log('end');
@@ -106,7 +105,7 @@ export const createToolDrag = (container, grid, tool, snap, onUpdate) => {
         dy: endPos.y - startPos.y
       };
 
-      let object;
+      let properties;
       switch (tool) {
         case 'select': {
           // TODO(burdon): Select from mouse position.
@@ -115,7 +114,8 @@ export const createToolDrag = (container, grid, tool, snap, onUpdate) => {
         }
 
         case 'path': {
-          object = createObject('path', {
+          properties = {
+            type: 'path',
             bounds: { ...grid.invert(startPos), },
             points: [
               {
@@ -127,7 +127,7 @@ export const createToolDrag = (container, grid, tool, snap, onUpdate) => {
                 y: grid.scaleY.invert(size.dy)
               }
             ]
-          });
+          };
 
           break;
         }
@@ -146,7 +146,10 @@ export const createToolDrag = (container, grid, tool, snap, onUpdate) => {
 
           // Minimal size.
           if (Math.round(width / grid.unit) && Math.round(height / grid.unit)) {
-            object = createObject(tool, { bounds: { x, y, width, height } });
+            properties = {
+              type: tool,
+              bounds: { x, y, width, height }
+            };
           }
 
           break;
@@ -157,8 +160,8 @@ export const createToolDrag = (container, grid, tool, snap, onUpdate) => {
         }
       }
 
-      if (object) {
-        onUpdate(object);
+      if (properties) {
+        onCreate(properties);
       }
 
       d3.select(container)
@@ -231,10 +234,11 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
         // Move point.
         //
         case 'handle-point': {
-          const { points } = initialObject;
+          const { properties: { points } } = initialObject;
           const updated = [...points];
           updated.splice(i, 1, snapTo(points[i]));
 
+          // TODO(burdon): Check changed.
           onUpdate(id, { points: updated });
           break;
         }
@@ -243,7 +247,7 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
         // Resize bounds.
         //
         case 'handle-bounds': {
-          const { bounds } = initialObject;
+          const { properties: { bounds } } = initialObject;
 
           // Datum from drag handler.
           const { handleX = 0, handleY = 0 } = d;
@@ -261,6 +265,7 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
             y: bounds.height + grid.scaleY.invert(dy * handleY),
           });
 
+          // TODO(burdon): Check changed.
           onUpdate(id, { bounds: { x, y, width, height } });
           break;
         }
@@ -269,15 +274,17 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
         // Move Objects.
         //
         default: {
-          const { id, bounds } = d;
+          const { id, properties: { bounds } } = d;
           const { x, y } = snapTo(bounds);
 
+          // TODO(burdon): Check changed.
           onUpdate(id, { bounds: { x, y, width: bounds.width, height: bounds.height } });
           break;
         }
       }
     })
 
+    // TODO(burdon): "Commit" model.
     .on('end', (d, i, nodes) => {
       const data = d3.select(nodes[i].closest('g[type="object"]')).datum();
       log('end', JSON.stringify(data, null, 2));
@@ -285,8 +292,9 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
       const { type } = d;
       if (type === 'handle-point') {
         const parent = nodes[i].closest('g[type="object"]');
-        const { points } = d3.select(parent).datum();
+        const { properties: { points } } = d3.select(parent).datum();
 
+        // TODO(burdon): Create flag for drag (if not moved then click).
         // TODO(burdon): Select point on line (enable delete).
         if (points[i].x === d.x && points[i].y === d.y) {
           log('select', JSON.stringify(d));

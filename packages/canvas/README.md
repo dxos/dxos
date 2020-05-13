@@ -14,9 +14,9 @@ NOTE: Performance is slow if the browser Devtools are open.
 
 ## Bugs
 
-- [ ] Select/cut.
-- [ ] Object order.
-- [ ] Default style.
+- [ ] Round numbers/fractions.
+- [ ] Multi-select.
+- [ ] Frequent updates.
 
 
 ## Milestones
@@ -28,6 +28,7 @@ NOTE: Performance is slow if the browser Devtools are open.
 
 ## Features
 
+- [ ] Click text with text tool to edit.
 - [ ] Connect handles for links.
 - [ ] Drag to select (and cut).
 - [ ] Fractions for user space coordinates (just round to nearest unit?)
@@ -42,6 +43,7 @@ NOTE: Performance is slow if the browser Devtools are open.
 
 ## Done
 
+- [x] Object order.
 - [x] Text
 - [x] Drag to create.
 - [x] Separate monorepo.

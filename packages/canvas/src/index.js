@@ -3,6 +3,7 @@
 //
 
 export * from './components';
+export * from './drag';
+export * from './model';
 export * from './shapes';
-export * from './useCanvasModel';
 export * from './util';

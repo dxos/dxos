@@ -26,7 +26,7 @@ export const createController = (group, classes) => {
   ];
 
   // Handles.
-  const { type } = group.datum();
+  const { properties: { type } } = group.datum();
   switch (type) {
     case 'path': {
       // Handle group.
@@ -61,11 +61,11 @@ export const createController = (group, classes) => {
 export const updateController = (group, grid, drag, { width, height }, classes) => {
   const handleSize = 5;
 
-  const { type } = group.datum();
+  const { properties: { type } } = group.datum();
   switch (type) {
     case 'path': {
       // Control handle for each point.
-      const { points } = group.datum();
+      const { properties: { points } } = group.datum();
       group.select('g')
         .selectAll(`circle.${classes.handle}`)
           .data(points.map(point => ({ type: 'handle-point', ...point })))

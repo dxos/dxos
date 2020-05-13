@@ -13,7 +13,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Grid, SVG, useGrid } from '@dxos/gem-core';
 
 import { createToolDrag } from '../drag';
-import { createObject } from '../shapes';
 
 import Input from './Input';
 import Objects from './Objects';
@@ -152,7 +151,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
   const [selected, setSelected] = useState({ ids: [] });
   const isSelected = objectId => selected && selected.ids.find(id => id === objectId);
   const object = objects.find(object => isSelected(object.id));
-  const textIdx = objects.findIndex(object => isSelected(object.id) && object.type === 'text');
+  const textIdx = objects.findIndex(object => isSelected(object.id) && object.properties.type === 'text');
   const handleSelect = ids => {
     if (toolRef.current === 'select') {
       setSelected(ids ? { ids } : null);
@@ -166,10 +165,10 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         grid,
         tool,
         showGrid,
-        object => {
-          if (object) {
-            model.appendObject(object);
-            setSelected({ ids: [ object.id ] });
+        properties => {
+          if (properties) {
+            model.createObject(properties);
+            setSelected({ ids: [ properties.id ] });
           } else {
             setSelected(null);
           }
@@ -251,9 +250,9 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
       case 'paste': {
         // TODO(burdon): Multi-select.
         if (clipboard.current) {
-          const { type, ...rest } = clipboard.current;
-          const object = createObject(type, rest);
-          model.appendObject(object);
+          // TODO(burdon): Only grab properties (not ID, etc.)
+          const { type, ...properties } = clipboard.current;
+          const object = model.createObject({ type, ...properties });
           setSelected({ ids: [object.id] });
         }
         break;
@@ -268,6 +267,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         break;
       }
 
+      // TODO(burdon): Not working?
       case 'zoom-in': {
         setOptions({ ...options, zoom: Math.min(5, zoom + .5) });
         break;
@@ -291,8 +291,8 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         // TODO(burdon): Multi-select.
         const idx = objects.findIndex(object => isSelected(object.id));
         const object = objects[idx];
-        const orders = [...new Set(objects.map(object => (object.order || 1)))].sort();
-        const i = orders.findIndex(o => o === (object.order || 1));
+        const orders = [...new Set(objects.map(object => (object.properties.order || 1)))].sort();
+        const i = orders.findIndex(o => o === (object.properties.order || 1));
 
         if (i === 0) {
           return;
@@ -311,8 +311,8 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         // TODO(burdon): Multi-select.
         const idx = objects.findIndex(object => isSelected(object.id));
         const object = objects[idx];
-        const orders = [...new Set(objects.map(object => (object.order || 1)))].sort();
-        const i = orders.findIndex(o => o === (object.order || 1));
+        const orders = [...new Set(objects.map(object => (object.properties.order || 1)))].sort();
+        const i = orders.findIndex(o => o === (object.properties.order || 1));
 
         if (i === orders.length - 1) {
           return;
@@ -354,7 +354,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
               <Input
                 grid={grid}
                 object={objects[textIdx]}
-                onUpdate={(id, text) => model.updateObject(id, { text })}
+                onUpdate={(id, properties) => model.updateObject(id, properties)}
                 onEnter={() => setSelected(null)}
               />
             )}

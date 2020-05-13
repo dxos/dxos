@@ -2,35 +2,19 @@
 // Copyright 2020 DxOS.org
 //
 
-import faker from "faker";
+import assert from 'assert';
 
 import { createController, updateController } from './controller';
 
 import { createPath } from './util';
 
 /**
- * Creates a display Object.
- * @param type
- * @param properties
- * @return {{bounds: *, id: string, type: *}}
- */
-export const createObject = (type, properties) => {
-  const id = faker.random.uuid();
-
-  return {
-    ...properties,
-
-    id,
-    type,
-  };
-};
-
-/**
- * Creates the object.
+ * Appends the SVG object.
  * @param group
  */
 export const appendObject = (group) => {
-  const { type } = group.datum();
+  const { properties: { type } } = group.datum();
+  assert(type);
 
   switch (type) {
     case 'path': {
@@ -39,8 +23,7 @@ export const appendObject = (group) => {
     }
 
     case 'text': {
-      group.append('text')
-        .on('click', () => { console.log('edit'); });
+      group.append('text');
       break;
     }
 
@@ -61,7 +44,7 @@ export const appendObject = (group) => {
 };
 
 /**
- * Updates the object.
+ * Updates the SVG object.
  * @param group
  * @param grid
  * @param drag
@@ -74,14 +57,14 @@ export const updateObject = (group, grid, drag, classes, selected) => {
   }
 
   const d = group.datum();
-  const { type, bounds } = d;
+  const { properties: { type, bounds } } = d;
   const { x, y } = grid.project(bounds);
   const width = grid.scaleX(bounds.width);
   const height = grid.scaleY(bounds.height);
   const fontSize = 18;
 
   // TODO(burdon): Reference global style object (not custom properties).
-  const styleAttributes = ({ style }) => {
+  const styleAttributes = ({ properties: { style } }) => {
     if (style) {
       return `fill: ${style.background}; stroke: ${style.border}`;
     }
@@ -92,7 +75,7 @@ export const updateObject = (group, grid, drag, classes, selected) => {
 
   switch (type) {
     case 'path': {
-      const { points } = group.datum();
+      const { properties: { points } } = group.datum();
       group.select('path')
         .attr('d', () => createPath(points.map(grid.project)));
 
@@ -108,7 +91,7 @@ export const updateObject = (group, grid, drag, classes, selected) => {
         .attr('x', grid.scaleX(bounds.width / 2) - .5)
         .attr('y', grid.scaleY(bounds.height / 2) + (fontSize / 3) + 1)
         // If selected then show text overlay.
-        .text(d => selected ? null : d.text);
+        .text(d => selected ? null : d.properties.text || 'TEXT');
 
       break;
     }
