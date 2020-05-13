@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echodb",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/echodb/tree/master/packages/echodb#readme",
   "bugs": {
