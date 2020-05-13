@@ -41,7 +41,7 @@ export const useCanvasModel = (data = []) => {
 
       log('created', object);
       updateObjects({ $push: [object] });
-      return object;
+      return object.id;
     },
 
     /**

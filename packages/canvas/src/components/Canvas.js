@@ -256,8 +256,8 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         // TODO(burdon): Multi-select.
         if (clipboard.current) {
           const { properties } = clipboard.current;
-          const object = modelRef.current.createObject(properties);
-          setSelected({ ids: [object.id] });
+          const id = modelRef.current.createObject(properties);
+          setSelected({ ids: [id] });
         }
         break;
       }
