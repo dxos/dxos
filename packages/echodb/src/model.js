@@ -2,11 +2,15 @@
 // Copyright 2020 DxOS
 //
 
+import debug from 'debug';
+
 import { Model } from '@dxos/data-client';
 
 import { MutationUtil } from './mutation';
 import { ObjectModel } from './object';
 import { createId, fromObject, parseId } from './util';
+
+const log = debug('dxos:echo:model');
 
 /**
  * Stream adapter.
@@ -20,10 +24,10 @@ export class EchoModel extends Model {
   }
 
   createItem(type, properties) {
-    const mutations = fromObject({
-      id: createId(type),
-      properties
-    });
+    log('create', type, properties);
+
+    const id = createId(type);
+    const mutations = fromObject({ id, properties });
 
     // TODO(burdon): Create single message.
     mutations.forEach((mutation) => {
@@ -32,9 +36,13 @@ export class EchoModel extends Model {
         ...mutation
       });
     });
+
+    return id;
   }
 
   updateItem(id, properties) {
+    log('update', id, properties);
+
     const { type } = parseId(id);
     const mutations = fromObject({
       id,
@@ -51,6 +59,8 @@ export class EchoModel extends Model {
   }
 
   deleteItem(id) {
+    log('delete', id);
+
     const { type } = parseId(id);
     const mutation = MutationUtil.createMessage(id, undefined, { deleted: true });
 
