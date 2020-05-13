@@ -14,7 +14,7 @@ import { createPath } from './util';
  */
 export const appendObject = (group) => {
   const { properties: { type } } = group.datum();
-  assert(type);
+  assert(type, 'Invalid type');
 
   switch (type) {
     case 'path': {

@@ -141,8 +141,8 @@ export const createToolDrag = (container, grid, tool, snap, onCreate) => {
           });
 
           // TODO(burdon): Round (replace "invert" with fractions).
-          const width = Math.abs(grid.scaleX.invert(size.dx));
-          const height = Math.abs(grid.scaleY.invert(size.dy));
+          const width = Math.round(Math.abs(grid.scaleX.invert(size.dx)));
+          const height = Math.round(Math.abs(grid.scaleY.invert(size.dy)));
 
           // Minimal size.
           if (Math.round(width / grid.unit) && Math.round(height / grid.unit)) {

@@ -25,7 +25,8 @@ const useStyles = makeStyles(() => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    flex: 1
+    flex: 1,
+    overflow: 'hidden'
   },
 
   keys: {
@@ -127,18 +128,21 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
   objects = objects || [];
 
   // TODO(burdon): Read-only if model is null.
+  // TODO(burdon): Closures are stale if model property changes.
+  const modelRef = useRef(model);
+  useEffect(() => { modelRef.current = model; }, [model]);
 
   //
   // App State
   //
 
-  const grid = useGrid({ width, height, zoom });
   const [options, setOptions] = useState({ zoom: 1, showAxis: false, showGrid: true });
   const { zoom, showAxis, showGrid } = options;
+  const grid = useGrid({ width, height, zoom });
   const clipboard = useRef(null);
 
   // TODO(burdon): Wrap.
-  const [tool, setTool] = useState('select');
+  const [tool = 'select', setTool] = useState();
   const toolRef = useRef(tool);
   useEffect(() => { toolRef.current = tool; }, [tool]);
 
@@ -158,6 +162,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
     }
   };
 
+  // TODO(burdon): Remove if model changes to null.
   if (model) {
     useEffect(() => {
       const drag = createToolDrag(
@@ -167,8 +172,9 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         showGrid,
         properties => {
           if (properties) {
-            model.createObject(properties);
+            modelRef.current.createObject(properties);
             setSelected({ ids: [ properties.id ] });
+            setTool();
           } else {
             setSelected(null);
           }
@@ -178,7 +184,6 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         .call(drag)
         .on('click', () => {
           // NOTE: Happens after drag ends.
-          console.log('click');
           const d = d3.select(d3.event.target).datum();
           if (!d) {
             setSelected(null);
@@ -219,7 +224,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         // TODO(burdon): Multi-select.
         if (selected) {
           const object = objects.find(object => isSelected(object.id));
-          model.removeObject(object.id);
+          modelRef.current.deleteObject(object.id);
           setSelected(null);
         }
         break;
@@ -230,7 +235,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         if (selected) {
           const object = objects.find(object => isSelected(object.id));
           clipboard.current = object;
-          model.removeObject(object.id);
+          modelRef.current.deleteObject(object.id);
           setSelected(null);
         }
         break;
@@ -250,9 +255,8 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
       case 'paste': {
         // TODO(burdon): Multi-select.
         if (clipboard.current) {
-          // TODO(burdon): Only grab properties (not ID, etc.)
-          const { type, ...properties } = clipboard.current;
-          const object = model.createObject({ type, ...properties });
+          const { properties } = clipboard.current;
+          const object = modelRef.current.createObject(properties);
           setSelected({ ids: [object.id] });
         }
         break;
@@ -303,7 +307,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         const max = orders[i];
         const order = min + (max - min) / 2;
 
-        model.updateObject(object.id, { order });
+        modelRef.current.updateObject(object.id, { order });
         break;
       }
 
@@ -323,7 +327,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         const max = orders[i + 2];
         const order = min + (max - min) / 2;
 
-        model.updateObject(object.id, { order });
+        modelRef.current.updateObject(object.id, { order });
         break;
       }
 
@@ -342,8 +346,8 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
   };
 
   return (
-    <Keys onAction={handleAction}>
-      <div className={classes.root}>
+    <div className={classes.root}>
+      <Keys onAction={handleAction}>
         {showToolbar && (
           <Toolbar tool={tool} snap={showGrid} onAction={handleAction} />
         )}
@@ -354,7 +358,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
               <Input
                 grid={grid}
                 object={objects[textIdx]}
-                onUpdate={(id, properties) => model.updateObject(id, properties)}
+                onUpdate={(id, properties) => modelRef.current.updateObject(id, properties)}
                 onEnter={() => setSelected(null)}
               />
             )}
@@ -374,20 +378,20 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
                   objects={objects}
                   selected={selected}
                   onSelect={handleSelect}
-                  onUpdate={(id, properties) => model.updateObject(id, properties)}
+                  onUpdate={(id, properties) => modelRef.current.updateObject(id, properties)}
                 />
 
                 <g ref={guides} className={classes.guides} />
               </SVG>
             </div>
           </div>
-
-          {showPalette && (
-            <Palette object={object} onUpdate={(id, properties) => model.updateObject(id, properties)} />
-          )}
         </div>
-      </div>
-    </Keys>
+
+        {showPalette && (
+          <Palette object={object} onUpdate={(id, properties) => modelRef.current.updateObject(id, properties)} />
+        )}
+      </Keys>
+    </div>
   );
 };
 

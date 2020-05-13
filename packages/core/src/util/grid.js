@@ -79,9 +79,10 @@ export const createGrid = ({ width, height, zoom = 1 }) => {
       height: Math.abs(y1 - y2)
     }),
 
+    // TODO(burdon): Use fractions, or round to grid unit.
     invert: ({ x, y }) => ({
-      x: scaleX.invert(x),
-      y: scaleY.invert(y)
+      x: Math.round(scaleX.invert(x)),
+      y: Math.round(scaleY.invert(y))
     }),
 
     //

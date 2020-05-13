@@ -41,6 +41,7 @@ export const useCanvasModel = (data = []) => {
 
       log('created', object);
       updateObjects({ $push: [object] });
+      return object;
     },
 
     /**
@@ -56,7 +57,7 @@ export const useCanvasModel = (data = []) => {
       assert(id, `Invalid object: ${id}`);
       const updated = { ...rest, properties: { ...currentProperties, ...properties } };
 
-      // TODO(burdon): Check before calling.
+      // TODO(burdon): Test before calling.
       if (isEqual(object, updated)) {
         return;
       }
@@ -71,11 +72,11 @@ export const useCanvasModel = (data = []) => {
      *
      * @param {string} id
      */
-    removeObject: (id) => {
+    deleteObject: (id) => {
       const idx = objects.findIndex(object => object.id === id);
       assert(idx !== -1);
 
-      log('removed', id);
+      log('deleted', id);
       updateObjects({ $splice: [[idx, 1]] });
     }
   };

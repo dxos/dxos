@@ -19,18 +19,24 @@ export const palette = [
 const useStyles = makeStyles(() => ({
   root: {
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',
     flexShrink: 0,
-    width: 80,
+    height: 32,
     backgroundColor: colors['grey'][100]
+  },
+
+  colors: {
+    display: 'flex',
+    flexDirection: 'row',
   },
 
   box: {
     display: 'flex',
+    width: 16,
     height: 16,
-    margin: 8,
+    margin: 7,
     border: '1px solid',
-    padding: 1
+    padding: 1,
   },
   selected: {
     border: '2px solid',
@@ -47,29 +53,27 @@ const Palette = ({ object, onUpdate }) => {
   return (
     <div className={classes.root}>
       {object && (
-        <div>
-          <div>
-            {palette.map(({ id, color }) => {
-              const style = {
-                id,
-                border: colors[color][300],
-                background: colors[color][50]
-              };
+        <div className={classes.colors}>
+          {palette.map(({ id, color }) => {
+            const style = {
+              id,
+              border: colors[color][300],
+              background: colors[color][50]
+            };
 
-              return (
-                <div
-                  key={color}
-                  onClick={() => onUpdate(object.id, { style })}
-                  className={clsx(classes.box,
-                    (object.properties.style && id === object.properties.style.id) ? classes.selected : null)}
-                  style={{
-                    borderColor: style.border,
-                    backgroundColor: style.background
-                  }}
-                />
-              );
-            })}
-          </div>
+            return (
+              <div
+                key={color}
+                onClick={() => onUpdate(object.id, { style })}
+                className={clsx(classes.box,
+                  (object.properties.style && id === object.properties.style.id) ? classes.selected : null)}
+                style={{
+                  borderColor: style.border,
+                  backgroundColor: style.background
+                }}
+              />
+            );
+          })}
         </div>
       )}
     </div>
