@@ -2,14 +2,13 @@
 // Copyright 2020 DxOS
 //
 
-import uuid from 'uuid/v4';
+import { createId } from '@dxos/crypto';
 
 // import { Codec } from '@dxos/codec-protobuf';
 
 import { MutationUtil, KeyValueUtil } from './mutation';
 import { ObjectModel } from './object';
-import { createId, fromObject } from './util';
-
+import { createObjectId, fromObject } from './util';
 import { mergeFeeds } from './crdt';
 
 // import DataProtoDefs from './data.proto';
@@ -24,10 +23,10 @@ test('Protobuf', () => {
 });
 
 test('Mutations', () => {
-  const objectId = createId('test');
+  const objectId = createObjectId('test');
 
   const feed = {
-    id: uuid(),
+    id: createId,
     messages: [
       MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('title', 'Test-1')),
       MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('priority', 1)),
@@ -61,7 +60,7 @@ test('Mutations', () => {
 // TODO(burdon): Test with Framework (Gravity/wireline-core)?
 // TODO(burdon): Describe consistency constraints (e.g., each Object is independent; mutation references previous).
 test('Merge feeds', () => {
-  const obj = { x: createId('test'), y: createId('test') };
+  const obj = { x: createObjectId('test'), y: createObjectId('test') };
   const ref = {};
 
   const feed1 = {

@@ -7,10 +7,9 @@ syntax = "proto3";
 // TODO(burdon): map
 // TODO(burdon): Any @type
 // TODO(burdon): Struct (JSON)
+// TODO(burdon): https://ipld.io
 // https://developers.google.com/protocol-buffers/docs/proto3#json
 // https://developers.google.com/protocol-buffers/docs/proto#updating
-
-// TODO(burdon): https://ipld.io
 
 //
 // This package defines messages that can be used to form composite data structures, and arbitrary mutations.
@@ -21,17 +20,18 @@ package wireline.data;
 // Value represents any scalar, collection, or composite data.
 //
 message Value {
-  oneof type {
+  oneof Type {
     bool    isNull                = 1;
 
+    // TODO(burdon): "Value" suffix not required?
     bool    boolValue             = 2;
     int32   intValue              = 3;
     float   floatValue            = 4;
     string  stringValue           = 5;
 
-    bytes   raw                   = 10;
+    bytes   bytes                 = 10;
     string  timestamp             = 11;       // https://en.wikipedia.org/wiki/Unix_time
-    string  date                  = 12;       // https://en.wikipedia.org/wiki/ISO_8601 (e.g., "2019-10-25T18:48:16Z")
+    string  datetime              = 12;       // https://en.wikipedia.org/wiki/ISO_8601 (e.g., "2019-10-25T18:48:16Z")
 
     Object  objectValue           = 20;
     Set     setValue              = 21;
@@ -51,6 +51,7 @@ message Object {
     Value value                   = 2;
   }
 
+  // TODO(burdon): Rename properties?
   repeated KeyValue property      = 1;
 }
 
@@ -91,21 +92,24 @@ message Set {
 
 //
 // Generic mutation.
-// TODO(burdon): Create Wrapper with multiple mutations for single object.
 //
 message Mutation {
   string id                       = 1;
-  string depends                  = 2;        // TODO(burdon): Move from here (impl. vector clock?)
-  string objectId                 = 3;
+  string objectId                 = 2;
 
-  oneof action {
-    bool deleted                  = 10;
-    string property               = 11;
+  string depends                  = 3;      // TODO(burdon): Currently ignored (generalize CRDT).
+
+  // TODO(burdon): Define array of hierarchical ObjectMutations.
+  // Which should include array and set mutations (not just KeValue).
+
+  oneof Action {
+    bool deleted                  = 10;     // TODO(burdon): Currently ignored.
+    string property               = 11;     // TODO(burdon): Currently ignored.
   }
 
-  oneof apply {
-    Value value                   = 20;
-    Array.Mutation array          = 21;
-    Set.Mutation set              = 22;
+  oneof Apply {
+    Object.KeyValue value         = 20;
+    Array.Mutation array          = 21;     // TODO(burdon): Currently ignored.
+    Set.Mutation set              = 22;     // TODO(burdon): Currently ignored.
   }
 }

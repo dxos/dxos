@@ -4,11 +4,12 @@
 
 import debug from 'debug';
 
+// TODO(burdon): Remove dependency (via adapter).
 import { Model } from '@dxos/data-client';
 
 import { MutationUtil } from './mutation';
 import { ObjectModel } from './object';
-import { createId, fromObject, parseId } from './util';
+import { createObjectId, fromObject, parseId } from './util';
 
 const log = debug('dxos:echo:model');
 
@@ -26,7 +27,7 @@ export class EchoModel extends Model {
   createItem(type, properties) {
     log('create', type, properties);
 
-    const id = createId(type);
+    const id = createObjectId(type);
     const mutations = fromObject({ id, properties });
 
     // TODO(burdon): Create single message.
