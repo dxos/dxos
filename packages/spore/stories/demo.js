@@ -364,6 +364,8 @@ export const withDrag = () => {
 
 /**
  * Muliple force layout.
+ *
+ * TODO(burdon): Multiple focal points: https://bl.ocks.org/mbostock/1021841
  */
 export const withTwoForceLayouts = () => {
   const [resizeListener, size] = useResizeAware();

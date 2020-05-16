@@ -265,7 +265,6 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
             y: bounds.height + grid.scaleY.invert(dy * handleY),
           });
 
-          // TODO(burdon): Check changed.
           onUpdate(id, { bounds: { x, y, width, height } });
           break;
         }
@@ -277,8 +276,10 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
           const { id, properties: { bounds } } = d;
           const { x, y } = snapTo(bounds);
 
-          // TODO(burdon): Check changed.
-          onUpdate(id, { bounds: { x, y, width: bounds.width, height: bounds.height } });
+          // TODO(burdon): Check changed (bounds is stale).
+          if (x !== bounds.x || y !== bounds.y ) {
+            onUpdate(id, { bounds: { x, y, width: bounds.width, height: bounds.height } });
+          }
           break;
         }
       }

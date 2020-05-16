@@ -25,6 +25,12 @@ const useStyles = makeStyles(() => ({
     backgroundColor: colors['grey'][100]
   },
 
+  container: {
+    display: 'flex',
+    flex: 1,
+    justifyContent: 'space-between'
+  },
+
   colors: {
     display: 'flex',
     flexDirection: 'row',
@@ -38,23 +44,29 @@ const useStyles = makeStyles(() => ({
     border: '1px solid',
     padding: 1,
   },
+
   selected: {
     border: '2px solid',
     padding: 0
+  },
+
+  info: {
+    padding: 8,
+    fontFamily: 'monospace'
   }
 }));
 
 /**
  * Properties palette.
  */
-const Palette = ({ object, onUpdate }) => {
+const Palette = ({ info, object, onUpdate }) => {
   const classes = useStyles();
 
   return (
     <div className={classes.root}>
-      {object && (
+      <div className={classes.container}>
         <div className={classes.colors}>
-          {palette.map(({ id, color }) => {
+          {object && palette.map(({ id, color }) => {
             const style = {
               id,
               border: colors[color][300],
@@ -75,7 +87,11 @@ const Palette = ({ object, onUpdate }) => {
             );
           })}
         </div>
-      )}
+
+        <div className={classes.info}>
+          {JSON.stringify(info)}
+        </div>
+      </div>
     </div>
   );
 };

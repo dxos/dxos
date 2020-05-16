@@ -132,6 +132,14 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
   const modelRef = useRef(model);
   useEffect(() => { modelRef.current = model; }, [model]);
 
+  // Render info.
+  const info = useRef({ render: 0 });
+  useEffect(() => {
+    info.current = {
+      render: info.current.render + 1
+    };
+  });
+
   //
   // App State
   //
@@ -388,7 +396,11 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
         </div>
 
         {showPalette && (
-          <Palette object={object} onUpdate={(id, properties) => modelRef.current.updateObject(id, properties)} />
+          <Palette
+            info={info.current}
+            object={object}
+            onUpdate={(id, properties) => modelRef.current.updateObject(id, properties)}
+          />
         )}
       </Keys>
     </div>

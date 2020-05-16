@@ -5,7 +5,6 @@
 import assert from 'assert';
 import debug from 'debug';
 import faker from 'faker';
-import isEqual from 'lodash.isequal';
 
 import { useObjectMutator } from '@dxos/gem-core';
 
@@ -58,9 +57,9 @@ export const useCanvasModel = (data = []) => {
       const updated = { ...rest, properties: { ...currentProperties, ...properties } };
 
       // TODO(burdon): Test before calling.
-      if (isEqual(object, updated)) {
-        return;
-      }
+      // if (isEqual(object, updated)) {
+      //   return;
+      // }
 
       log('updated', updated);
       updateObjects({
