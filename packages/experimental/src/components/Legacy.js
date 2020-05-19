@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS.org
+// Copyright 2020 DxOS
 //
 
 import React, { Component } from 'react';
