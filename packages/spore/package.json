@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dxos/spore.git"
+    "url": "git+https://github.com/dxos/gem.git"
   },
   "license": "GPL-3.0",
   "author": "DxOS.org",
   "main": "stories/index.js",
   "scripts": {
     "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
-    "build:storybook": "build-storybook -c .storybook -o ./out",
+    "build:storybook": "build-storybook -c .storybook -o ./out --quiet",
     "clean": "rm -rf ./dist",
     "lint": "eslint ./src --ignore-path ../../.eslintignore",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",

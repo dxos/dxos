@@ -2,12 +2,13 @@
 
 #
 # Build static site for deploy by Netlify, etc.
-# TODO(burdon): Broken: https://github.com/storybookjs/storybook/issues/1291
+# TODO(burdon): Missing files when deployed (e.g., iframe.html).
 #
 
-yarn build:storybook
-
+rm -rf ./out
 mkdir -p ./out
+
+yarn build:storybook
 
 for i in "canvas" "globe" "spore" "widgets"
 do
