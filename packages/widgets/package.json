@@ -8,6 +8,7 @@
   "module": "dist/es/index.js",
   "scripts": {
     "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
+    "build:storybook": "build-storybook -c .storybook -o ./out",
     "clean": "rm -rf ./dist",
     "lint": "eslint ./src --ignore-path ../../.eslintignore",
     "start": "yarn run storybook",
