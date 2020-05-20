@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/dxos/gem.git"
   },
-  "license": "ISC",
+  "license": "GPL-3.0",
   "author": "DxOS.org",
   "workspaces": {
     "packages": [

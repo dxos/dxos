@@ -1,7 +1,7 @@
 {
   "name": "@dxos/gem-widgets",
   "version": "1.0.0-beta.10",
-  "description": "D3 Widgets.",
+  "description": "GEM Widgets.",
   "repository": "https://github.com/dxos/gem",
   "license": "GPL-3.0",
   "main": "dist/es/index.js",

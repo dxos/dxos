@@ -1,18 +1,11 @@
 {
   "name": "@dxos/gem-spore",
   "version": "1.0.0-beta.10",
-  "description": "Spore.",
-  "homepage": "https://github.com/dxos/spore#readme",
-  "bugs": {
-    "url": "https://github.com/dxos/spore/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/gem.git"
-  },
+  "description": "GEM Spore.",
+  "repository": "https://github.com/dxos/gem",
   "license": "GPL-3.0",
-  "author": "DxOS.org",
-  "main": "stories/index.js",
+  "main": "dist/es/index.js",
+  "module": "dist/es/index.js",
   "scripts": {
     "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
     "build:storybook": "build-storybook -c .storybook -o ./out --quiet",

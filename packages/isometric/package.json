@@ -6,10 +6,6 @@
   "license": "GPL-3.0",
   "main": "dist/es/index.js",
   "module": "dist/es/index.js",
-  "files": [
-    "data",
-    "dist/es"
-  ],
   "scripts": {
     "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
     "clean": "rm -rf ./dist",

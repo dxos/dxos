@@ -8,6 +8,7 @@
 rm -rf ./out
 mkdir -p ./out
 
+yarn build
 yarn build:storybook
 
 for i in "canvas" "globe" "spore" "widgets"
