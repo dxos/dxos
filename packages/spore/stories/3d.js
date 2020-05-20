@@ -4,23 +4,13 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { ForceGraph3D } from 'react-force-graph';
+import faker from 'faker';
+
+import { createGraph } from '@dxos/gem-core';
 
 export default {
   title: '3D'
 };
-
-// TODO(burdon): Factor out.
-function genRandomTree(N = 300, reverse = false) {
-  return {
-    nodes: [...Array(N).keys()].map(i => ({ id: i })),
-    links: [...Array(N).keys()]
-      .filter(id => id)
-      .map(id => ({
-        [reverse ? 'target' : 'source']: id,
-        [reverse ? 'source' : 'target']: Math.round(Math.random() * (id - 1))
-      }))
-  };
-}
 
 /**
  * https://www.npmjs.com/package/react-force-graph
@@ -28,7 +18,7 @@ function genRandomTree(N = 300, reverse = false) {
  */
 export const use3D = ({ distance = 1000 }) => {
   const graph = useRef();
-  const [data] = useState(() => genRandomTree());
+  const [data] = useState(() => createGraph(faker.random.number(64), faker.random.number(64)));
 
   // Rotation.
   useEffect(() => {
@@ -48,7 +38,6 @@ export const use3D = ({ distance = 1000 }) => {
 
       // TODO(burdon): By time.
       angle += Math.PI / 300;
-
       if (distance > 750) {
         distance -= 1;
       }
@@ -64,17 +53,17 @@ export const use3D = ({ distance = 1000 }) => {
 
   return (
     <ForceGraph3D
+      backgroundColor="#FFF"
       ref={graph}
       graphData={data}
       enableNodeDrag={false}
       enableNavigationControls={true}
-      showNavInfo={false}
-      nodeColor={() => '#CCCCCC'}
+      showNavInfo={true}
       nodeRelSize={5}
       nodeLabel={node => String(node.id)}
-      linkColor={() => '#AAAAAA'}
-      linkWidth={2}
-      backgroundColor="#333333"
+      nodeColor={() => '#999'}
+      linkColor={() => '#333'}
+      linkWidth={1}
     />
   );
 };

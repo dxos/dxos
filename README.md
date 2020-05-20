@@ -26,6 +26,15 @@ yarn lerna publish prerelease --dist-tag="beta" --force-publish
 ```
 
 
+### Publishing Storybooks to Netlify
+
+The following command may be configured to run by the netlify build hook.
+
+```bash
+yarn build:storybook
+```
+
+
 ## Related
 
 - https://github.com/danielktaylor/fabric-js-editor

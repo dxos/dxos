@@ -67,3 +67,6 @@ typings/
 # Pycharm
 .idea/workspace.xml
 
+dist/
+out/
+
