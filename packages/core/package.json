@@ -26,6 +26,7 @@
     "clsx": "^1.1.0",
     "debug": "^4.1.1",
     "faker": "^4.1.0",
+    "immutability-helper": "^3.0.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-resize-aware": "^3.0.0"
