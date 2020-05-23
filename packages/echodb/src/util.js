@@ -2,25 +2,20 @@
 // Copyright 2020 DxOS
 //
 
-import uuid from 'uuid/v4';
+import { createId } from '@dxos/crypto';
 
 import { KeyValueUtil, MutationUtil } from './mutation';
 
 /**
- * Sorting function for Array.sort.
- * @param {string} property
- */
-export const sortByProperty = property => ({ [property]: a }, { [property]: b }) => (a > b ? 1 : a < b ? -1 : 0);
-
-/**
- * Crate unique ID string.
+ * Crate typed object identifier.
  * @param {string} type
  * @param {string} [id]
  * @return {string} ID
  */
-export const createId = (type, id = undefined) => {
+// TODO(burdon): Make url safe?
+export const createObjectId = (type, id = undefined) => {
   console.assert(type);
-  return `${type}/${id || uuid()}`;
+  return `${type}/${id || createId()}`;
 };
 
 /**
@@ -39,6 +34,7 @@ export const parseId = (id) => {
  * @param {Object} object
  * @return {Mutation[]}
  */
+// TODO(burdon): Single mutation.
 export const fromObject = (object) => {
   return Object.keys(object.properties || {}).map((property) => {
     return MutationUtil.createMessage(
@@ -57,3 +53,9 @@ export const fromObjects = (objects) => {
     return messages.concat(fromObject(object));
   }, []);
 };
+
+/**
+ * Sorting function for Array.sort.
+ * @param {string} property
+ */
+export const sortByProperty = property => ({ [property]: a }, { [property]: b }) => (a > b ? 1 : a < b ? -1 : 0);

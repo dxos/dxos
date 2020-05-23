@@ -6,16 +6,16 @@
           "nested": {
             "Value": {
               "oneofs": {
-                "type": {
+                "Type": {
                   "oneof": [
                     "isNull",
                     "boolValue",
                     "intValue",
                     "floatValue",
                     "stringValue",
-                    "raw",
+                    "bytes",
                     "timestamp",
-                    "date",
+                    "datetime",
                     "objectValue",
                     "setValue",
                     "arrayValue"
@@ -43,7 +43,7 @@
                   "type": "string",
                   "id": 5
                 },
-                "raw": {
+                "bytes": {
                   "type": "bytes",
                   "id": 10
                 },
@@ -51,7 +51,7 @@
                   "type": "string",
                   "id": 11
                 },
-                "date": {
+                "datetime": {
                   "type": "string",
                   "id": 12
                 },
@@ -153,13 +153,13 @@
             },
             "Mutation": {
               "oneofs": {
-                "action": {
+                "Action": {
                   "oneof": [
                     "deleted",
                     "property"
                   ]
                 },
-                "apply": {
+                "Apply": {
                   "oneof": [
                     "value",
                     "array",
@@ -172,11 +172,11 @@
                   "type": "string",
                   "id": 1
                 },
-                "depends": {
+                "objectId": {
                   "type": "string",
                   "id": 2
                 },
-                "objectId": {
+                "depends": {
                   "type": "string",
                   "id": 3
                 },
@@ -189,7 +189,7 @@
                   "id": 11
                 },
                 "value": {
-                  "type": "Value",
+                  "type": "Object.KeyValue",
                   "id": 20
                 },
                 "array": {

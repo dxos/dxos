@@ -18,7 +18,7 @@
     ]
   },
   "lint-staged": {
-    "*.js": "eslint --ignore-path .eslintignore"
+    "*.js": "eslint"
   },
   "pre-commit": [
     "lint:staged"
@@ -34,13 +34,31 @@
   },
   "devDependencies": {
     "babel-eslint": "^10.0.2",
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-import": "^2.17.2",
-    "eslint-plugin-jsx-a11y": "^6.2.1",
-    "eslint-plugin-react": "^7.12.4",
     "lerna": "^3.11.1",
     "lint-staged": "^8.1.0",
-    "pre-commit": "^1.2.2"
+    "pre-commit": "^1.2.2",
+    "semistandard": "^14.2.0"
+  },
+  "eslintConfig": {
+    "parser": "babel-eslint",
+    "extends": [
+      "plugin:jest/recommended",
+      "semistandard",
+      "standard-jsx"
+    ],
+    "plugins": [
+      "babel"
+    ],
+    "rules": {
+      "babel/semi": 1
+    }
+  },
+  "semistandard": {
+    "parser": "babel-eslint",
+    "env": [
+      "jest",
+      "node",
+      "browser"
+    ]
   }
 }

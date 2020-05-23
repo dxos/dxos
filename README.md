@@ -1,4 +1,4 @@
-# ECHOdb
+# ECHO
 
 Eventually Consistent Hierarchical Objects Database.
 

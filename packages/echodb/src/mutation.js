@@ -2,89 +2,108 @@
 // Copyright 2020 DxOS
 //
 
-import uuid from 'uuid/v4';
+import assert from 'assert';
+
+import { createId } from '@dxos/crypto';
 
 /**
+ * @typedef {Object} Value
+ * @typedef {Object} KeyValue
  * @typedef {Object} Mutation
  */
-
-/**
- * Represents scalar, array, and hierarchical values.
- *
- * { null, boolean, number, string }
- */
-export class ValueUtil {
-
-  static NULL     = 'isNull';
-  static BOOLEAN  = 'boolValue';
-  static INTEGER  = 'intValue';
-  static FLOAT    = 'floatValue';       // TODO(burdon): Detect?
-  static STRING   = 'stringValue';
-  static OBJECT   = 'objectValue';
-
-  static createMessage(value) {
-    if (value === null || value === undefined) {
-      return { [ValueUtil.NULL]: true };
-    } else if (typeof value === 'boolean') {
-      return { [ValueUtil.BOOLEAN]: value };
-    } else if (typeof value === 'number') {
-      return { [ValueUtil.INTEGER]: value };
-    } else if (typeof value === 'string') {
-      return { [ValueUtil.STRING]: value };
-    } else if (typeof value === 'object') {
-      return { [ValueUtil.OBJECT]: value };
-    } else {
-      throw Error(`Illegal value: ${value}`);
-    }
-  }
-
-  static bool(value) {
-    return { [ValueUtil.BOOLEAN]: value };
-  }
-
-  static integer(value) {
-    return { [ValueUtil.INTEGER]: value };
-  }
-
-  static float(value) {
-    return { [ValueUtil.FLOAT]: value };
-  }
-
-  static string(value) {
-    return { [ValueUtil.STRING]: value };
-  }
-
-  static datetime(value) {
-    return { [ValueUtil.DATE]: value };
-  }
-
-  static fromMessage(value) {
-    console.assert(value);
-
-    const types = [
-      ValueUtil.BOOLEAN,
-      ValueUtil.INTEGER,
-      ValueUtil.FLOAT,
-      ValueUtil.STRING,
-      ValueUtil.OBJECT,
-      ValueUtil.DATE
-    ];
-
-    return value[types.find(type => value[type] !== undefined)];
-  }
-}
 
 /**
  * Represents a named property value.
  */
 export class KeyValueUtil {
-
-  static createMessage(property, value) {
+  static createMessagec (property, value) {
     console.assert(property);
 
     return {
       property,
-      value: ValueUtil.createMessage(value),
+      // eslint-disable-next-line no-use-before-define
+      value: ValueUtil.createMessage(value)
+    };
+  }
+}
+
+const TYPE = {
+  NULL: 'isNull',
+
+  // Scalar.
+  BOOLEAN: 'boolValue',
+  INTEGER: 'intValue',
+  FLOAT: 'floatValue',
+  STRING: 'stringValue',
+
+  BYTES: 'bytes',
+  TIMESTAMP: 'timestamp',
+  DATETIME: 'datetime',
+
+  OBJECT: 'objectValue'
+};
+
+const SCALAR_TYPES = [
+  TYPE.BOOLEAN,
+  TYPE.INTEGER,
+  TYPE.FLOAT,
+  TYPE.STRING,
+  TYPE.BYTES,
+  TYPE.TIMESTAMP,
+  TYPE.DATETIME
+];
+
+/**
+ * Represents scalar, array, and hierarchical values.
+ * { null, boolean, number, string }
+ */
+export class ValueUtil {
+  /**
+   * @param {any} value
+   * @return {{Value}}
+   */
+  // TODO(burdon): Rename createScalarValue.
+  static createMessage (value) {
+    if (value === null) {
+      return { [TYPE.NULL]: true };
+    } else if (typeof value === 'boolean') {
+      return ValueUtil.bool(value);
+    } else if (typeof value === 'number') { // TODO(burdon): Detect float?
+      return ValueUtil.integer(value);
+    } else if (typeof value === 'string') {
+      return ValueUtil.string(value);
+    } else if (typeof value === 'object') {
+      return ValueUtil.object(value);
+    } else {
+      throw Error(`Invalid value: ${value}`);
+    }
+  }
+
+  static bool (value) {
+    return { [TYPE.BOOLEAN]: value };
+  }
+
+  static integer (value) {
+    return { [TYPE.INTEGER]: value };
+  }
+
+  static float (value) {
+    return { [TYPE.FLOAT]: value };
+  }
+
+  static string (value) {
+    return { [TYPE.STRING]: value };
+  }
+
+  static datetime (value) {
+    return { [TYPE.DATE]: value };
+  }
+
+  static object (value) {
+    return {
+      [TYPE.OBJECT]: {
+        property: Object.keys(value).map(key => KeyValueUtil.createMessage(key, value[key]))
+      }
     };
   }
 }
@@ -95,33 +114,53 @@ export class KeyValueUtil {
  * { id, objectId, property, value, depends }
  */
 export class MutationUtil {
-
-  static createMessage(objectId, value, options = undefined) {
+  /**
+   * @param objectId
+   * @param value
+   * @param [properties]
+   * @return {{Mutation}}
+   */
+  static createMessage (objectId, value, properties) {
     console.assert(objectId);
 
     return {
-      id: uuid(),
+      id: createId(),
       objectId,
+
       value,
-      ...options
+
+      ...properties
     };
   }
 
-  // TODO(burdon): Recursive object, array (see alienlabs).
-
-  static applyMutations(object, messages) {
+  static applyMutations (object, messages) {
     messages.forEach(message => MutationUtil.applyMutation(object, message));
     return object;
   }
 
-  static applyMutation(object, message) {
-    const { value: { property, value } } = message;
+  static applyMutation (object, message) {
+    // TODO(burdon): Currently assumes value property.
+    if (message.value !== undefined) {
+      MutationUtil.applyKeyValue(object, message.value);
+    }
+  }
 
-    if (value[ValueUtil.NULL]) {
+  static applyKeyValue (object, message) {
+    const { property, value } = message;
+    assert(property, value);
+
+    if (value[TYPE.NULL]) {
       delete object[property];
     } else {
-      // TODO(burdon): Check type from proto schema.
-      object[property] = ValueUtil.fromMessage(value);
+      // Apply scalar.
+      const field = SCALAR_TYPES.find(field => value[field] !== undefined);
+      if (field) {
+        object[property] = value[field];
+        return object;
+      }
+
+      // Apply object.
+      throw new Error(`Unhandled value: ${JSON.stringify(value)}`);
     }
 
     return object;

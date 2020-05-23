@@ -12,8 +12,7 @@ import { sortByProperty } from './util';
  * @param {[{ id, messages }]} feeds
  * @return {[{Message}]}
  */
-export function mergeFeeds(feeds) {
-
+export function mergeFeeds (feeds) {
   // Ordered list of merged messages.
   // TODO(burdon): Convert to stream.
   const merged = [];

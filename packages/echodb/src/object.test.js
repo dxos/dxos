@@ -2,14 +2,13 @@
 // Copyright 2020 DxOS
 //
 
-import uuid from 'uuid/v4';
+import { createId } from '@dxos/crypto';
 
 // import { Codec } from '@dxos/codec-protobuf';
 
 import { MutationUtil, KeyValueUtil } from './mutation';
 import { ObjectModel } from './object';
-import { createId, fromObject } from './util';
-
+import { createObjectId, fromObject } from './util';
 import { mergeFeeds } from './crdt';
 
 // import DataProtoDefs from './data.proto';
@@ -24,14 +23,14 @@ test('Protobuf', () => {
 });
 
 test('Mutations', () => {
-  const objectId = createId('test');
+  const objectId = createObjectId('test');
 
   const feed = {
-    id: uuid(),
+    id: createId,
     messages: [
       MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('title', 'Test-1')),
       MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('priority', 1)),
-      MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('complete', false)),
+      MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('complete', false))
     ]
   };
 
@@ -61,7 +60,7 @@ test('Mutations', () => {
 // TODO(burdon): Test with Framework (Gravity/wireline-core)?
 // TODO(burdon): Describe consistency constraints (e.g., each Object is independent; mutation references previous).
 test('Merge feeds', () => {
-  const obj = { x: createId('test'), y: createId('test') };
+  const obj = { x: createObjectId('test'), y: createObjectId('test') };
   const ref = {};
 
   const feed1 = {
@@ -69,7 +68,7 @@ test('Merge feeds', () => {
     messages: [
       (ref.a = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('title', 'Test-1'))),
       (ref.b = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('priority', 1))),
-      (ref.c = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('complete', false))),
+      (ref.c = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('complete', false)))
     ]
   };
 
@@ -78,7 +77,7 @@ test('Merge feeds', () => {
     messages: [
       (ref.d = MutationUtil.createMessage(obj.y, KeyValueUtil.createMessage('title', 'Test-2'))),
       (ref.e = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('priority', 3), { depends: ref.b.id })),
-      (ref.f = MutationUtil.createMessage(obj.y, KeyValueUtil.createMessage('complete', true))),
+      (ref.f = MutationUtil.createMessage(obj.y, KeyValueUtil.createMessage('complete', true)))
     ]
   };
 
@@ -86,7 +85,7 @@ test('Merge feeds', () => {
     id: 'feed-3',
     messages: [
       (ref.g = MutationUtil.createMessage(obj.y, KeyValueUtil.createMessage('complete', false), { depends: ref.f.id })),
-      (ref.h = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('priority', 2), { depends: ref.b.id })),
+      (ref.h = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('priority', 2), { depends: ref.b.id }))
     ]
   };
 
@@ -106,8 +105,10 @@ test('Merge feeds', () => {
         id: object.id,
         properties: {
           title: 'Test-1',
-          complete: false,                            // value overwrites previous due to dependency.
-          priority: 2                                 // log-3 is processed after log-2 due to sorted log IDs.
+          // value overwrites previous due to dependency.
+          complete: false,
+          // log-3 is processed after log-2 due to sorted log IDs.
+          priority: 2
         }
       });
     }
