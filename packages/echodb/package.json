@@ -46,15 +46,12 @@
     "@babel/plugin-proposal-class-properties": "^7.5.5",
     "@babel/plugin-proposal-export-default-from": "^7.5.2",
     "@babel/preset-env": "^7.4.5",
-    "@wirelineio/discovery-swarm-memory": "^0.2.17",
-    "@wirelineio/framework": "^0.3.4",
     "babel-jest": "^24.8.0",
     "babel-plugin-add-module-exports": "^1.0.2",
     "babel-plugin-inline-import": "^3.0.0",
     "del-cli": "^3.0.0",
     "eslint": "^5.16.0",
-    "jest": "^24.8.0",
-    "wait-for-expect": "^3.0.0"
+    "jest": "^24.8.0"
   },
   "publishConfig": {
     "access": "public"
