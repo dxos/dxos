@@ -21,6 +21,7 @@
     "*.js": "eslint"
   },
   "pre-commit": [
+    "test",
     "lint:staged"
   ],
   "scripts": {

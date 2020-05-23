@@ -16,7 +16,7 @@ import { createId } from '@dxos/crypto';
  * Represents a named property value.
  */
 export class KeyValueUtil {
-  static createMessagec (property, value) {
+  static createMessage (property, value) {
     console.assert(property);
 
     return {
