@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-// TODO(burdon): Remove dependency (via adapter).
+// TODO(burdon): Remove dependency (via adapter). Or move to other package.
 import { Model } from '@dxos/data-client';
 
 import { MutationUtil } from './mutation';
@@ -17,14 +17,13 @@ const log = debug('dxos:echo:model');
  * Stream adapter.
  */
 export class EchoModel extends Model {
-
   _model = new ObjectModel();
 
-  getObjectsByType(type) {
+  getObjectsByType (type) {
     return this._model.getObjectsByType(type);
   }
 
-  createItem(type, properties) {
+  createItem (type, properties) {
     log('create', type, properties);
 
     const id = createObjectId(type);
@@ -41,7 +40,7 @@ export class EchoModel extends Model {
     return id;
   }
 
-  updateItem(id, properties) {
+  updateItem (id, properties) {
     log('update', id, properties);
 
     const { type } = parseId(id);
@@ -59,7 +58,7 @@ export class EchoModel extends Model {
     });
   }
 
-  deleteItem(id) {
+  deleteItem (id) {
     log('delete', id);
 
     const { type } = parseId(id);
@@ -71,7 +70,7 @@ export class EchoModel extends Model {
     });
   }
 
-  onUpdate(messages) {
+  onUpdate (messages) {
     this._model.applyMutations(messages);
   }
 }

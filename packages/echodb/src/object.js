@@ -12,7 +12,6 @@ import { parseId } from './util';
  */
 // TODO(burdon): Rename store?
 export class ObjectModel extends EventEmitter {
-
   // Objects indexed by ID.
   _objectById = new Map();
 
@@ -20,7 +19,7 @@ export class ObjectModel extends EventEmitter {
    * Returns an array of object types.
    * @returns {string[]}
    */
-  getTypes() {
+  getTypes () {
     return Array.from(
       Array.from(this._objectById.values()).reduce((set, { id }) => set.add(parseId(id).type), new Set())
     );
@@ -31,7 +30,7 @@ export class ObjectModel extends EventEmitter {
    * @returns {Object[]}
    */
   // TODO(burdon): orderBy?
-  getObjectsByType(type) {
+  getObjectsByType (type) {
     return Array.from(this._objectById.values()).filter(({ id }) => parseId(id).type === type);
   }
 
@@ -40,7 +39,7 @@ export class ObjectModel extends EventEmitter {
    * @param id
    * @returns {Object}
    */
-  getObjectById(id) {
+  getObjectById (id) {
     return this._objectById.get(id);
   }
 
@@ -48,7 +47,7 @@ export class ObjectModel extends EventEmitter {
    * Resets the entire model.
    * @returns {ObjectModel}
    */
-  reset() {
+  reset () {
     this._objectById.clear();
     return this;
   }
@@ -59,7 +58,7 @@ export class ObjectModel extends EventEmitter {
    * @returns {ObjectModel}
    */
   // TODO(burdon): Integrate with CRDT.
-  applyMutations(mutations = []) {
+  applyMutations (mutations = []) {
     mutations.forEach((message) => {
       const { objectId, deleted } = message;
 

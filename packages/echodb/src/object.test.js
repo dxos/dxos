@@ -30,7 +30,7 @@ test('Mutations', () => {
     messages: [
       MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('title', 'Test-1')),
       MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('priority', 1)),
-      MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('complete', false)),
+      MutationUtil.createMessage(objectId, KeyValueUtil.createMessage('complete', false))
     ]
   };
 
@@ -68,7 +68,7 @@ test('Merge feeds', () => {
     messages: [
       (ref.a = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('title', 'Test-1'))),
       (ref.b = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('priority', 1))),
-      (ref.c = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('complete', false))),
+      (ref.c = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('complete', false)))
     ]
   };
 
@@ -77,7 +77,7 @@ test('Merge feeds', () => {
     messages: [
       (ref.d = MutationUtil.createMessage(obj.y, KeyValueUtil.createMessage('title', 'Test-2'))),
       (ref.e = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('priority', 3), { depends: ref.b.id })),
-      (ref.f = MutationUtil.createMessage(obj.y, KeyValueUtil.createMessage('complete', true))),
+      (ref.f = MutationUtil.createMessage(obj.y, KeyValueUtil.createMessage('complete', true)))
     ]
   };
 
@@ -85,7 +85,7 @@ test('Merge feeds', () => {
     id: 'feed-3',
     messages: [
       (ref.g = MutationUtil.createMessage(obj.y, KeyValueUtil.createMessage('complete', false), { depends: ref.f.id })),
-      (ref.h = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('priority', 2), { depends: ref.b.id })),
+      (ref.h = MutationUtil.createMessage(obj.x, KeyValueUtil.createMessage('priority', 2), { depends: ref.b.id }))
     ]
   };
 
@@ -105,8 +105,10 @@ test('Merge feeds', () => {
         id: object.id,
         properties: {
           title: 'Test-1',
-          complete: false,                            // value overwrites previous due to dependency.
-          priority: 2                                 // log-3 is processed after log-2 due to sorted log IDs.
+          // value overwrites previous due to dependency.
+          complete: false,
+          // log-3 is processed after log-2 due to sorted log IDs.
+          priority: 2
         }
       });
     }

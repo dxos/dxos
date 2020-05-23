@@ -16,14 +16,13 @@ import { createId } from '@dxos/crypto';
  * Represents a named property value.
  */
 export class KeyValueUtil {
-
-  static createMessage(property, value) {
+  static createMessagec (property, value) {
     console.assert(property);
 
     return {
       property,
       // eslint-disable-next-line no-use-before-define
-      value: ValueUtil.createMessage(value),
+      value: ValueUtil.createMessage(value)
     };
   }
 }
@@ -41,7 +40,7 @@ const TYPE = {
   TIMESTAMP: 'timestamp',
   DATETIME: 'datetime',
 
-  OBJECT: 'objectValue',
+  OBJECT: 'objectValue'
 };
 
 const SCALAR_TYPES = [
@@ -59,18 +58,17 @@ const SCALAR_TYPES = [
  * { null, boolean, number, string }
  */
 export class ValueUtil {
-
   /**
    * @param {any} value
    * @return {{Value}}
    */
   // TODO(burdon): Rename createScalarValue.
-  static createMessage(value) {
+  static createMessage (value) {
     if (value === null) {
       return { [TYPE.NULL]: true };
     } else if (typeof value === 'boolean') {
       return ValueUtil.bool(value);
-    } else if (typeof value === 'number') {       // TODO(burdon): Detect float?
+    } else if (typeof value === 'number') { // TODO(burdon): Detect float?
       return ValueUtil.integer(value);
     } else if (typeof value === 'string') {
       return ValueUtil.string(value);
@@ -81,27 +79,27 @@ export class ValueUtil {
     }
   }
 
-  static bool(value) {
+  static bool (value) {
     return { [TYPE.BOOLEAN]: value };
   }
 
-  static integer(value) {
+  static integer (value) {
     return { [TYPE.INTEGER]: value };
   }
 
-  static float(value) {
+  static float (value) {
     return { [TYPE.FLOAT]: value };
   }
 
-  static string(value) {
+  static string (value) {
     return { [TYPE.STRING]: value };
   }
 
-  static datetime(value) {
+  static datetime (value) {
     return { [TYPE.DATE]: value };
   }
 
-  static object(value) {
+  static object (value) {
     return {
       [TYPE.OBJECT]: {
         property: Object.keys(value).map(key => KeyValueUtil.createMessage(key, value[key]))
@@ -116,14 +114,13 @@ export class ValueUtil {
  * { id, objectId, property, value, depends }
  */
 export class MutationUtil {
-
   /**
    * @param objectId
    * @param value
    * @param [properties]
    * @return {{Mutation}}
    */
-  static createMessage(objectId, value, properties) {
+  static createMessage (objectId, value, properties) {
     console.assert(objectId);
 
     return {
@@ -136,19 +133,19 @@ export class MutationUtil {
     };
   }
 
-  static applyMutations(object, messages) {
+  static applyMutations (object, messages) {
     messages.forEach(message => MutationUtil.applyMutation(object, message));
     return object;
   }
 
-  static applyMutation(object, message) {
+  static applyMutation (object, message) {
     // TODO(burdon): Currently assumes value property.
     if (message.value !== undefined) {
       MutationUtil.applyKeyValue(object, message.value);
     }
   }
 
-  static applyKeyValue(object, message) {
+  static applyKeyValue (object, message) {
     const { property, value } = message;
     assert(property, value);
 
