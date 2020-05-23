@@ -27,7 +27,7 @@ export class TreeLayout extends Layout {
 
     const { height } = hierarchy;
     data.guides = [...new Array(height)].map((ignore, i) => ({
-      id: `radius-${height}-${r}`,
+      id: `radius-${i}`,
       type: 'circle',
       cx: center.x,
       cy: center.y,
