@@ -13,13 +13,10 @@ export class TreeLayout extends Layout {
 
   _onUpdate(grid, data) {
     const { center, size } = grid;
-    const r = size.height * .4;
+    const r = size.height * .45;
 
     // https://github.com/d3/d3-hierarchy#tree
-    const tree = d3.tree()
-      .size([360, r])
-      .separation((a, b) => (a.parent === b.parent ? 1 : 3) / a.depth);
-
+    const tree = d3.tree().size([360, r]);
     const hierarchy = tree(d3.hierarchy(data, d => d.children));
 
     // TODO(burdon): Separate layout from data.
