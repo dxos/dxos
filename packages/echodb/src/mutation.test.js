@@ -20,8 +20,8 @@ test('ValueUtil', () => {
     };
 
     expect(ValueUtil.createMessage(value)).toStrictEqual({
-      objectValue: {
-        property: [
+      objectValue:
+        [
           {
             property: 'name',
             value: {
@@ -31,20 +31,18 @@ test('ValueUtil', () => {
           {
             property: 'data',
             value: {
-              objectValue: {
-                property: [
-                  {
-                    property: 'version',
-                    value: {
-                      intValue: 1
-                    }
+              objectValue: [
+                {
+                  property: 'version',
+                  value: {
+                    intValue: 1
                   }
-                ]
-              }
+                }
+              ]
             }
           }
         ]
-      }
+
     });
   }
 });
