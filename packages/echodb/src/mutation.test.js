@@ -58,5 +58,19 @@ test('MutationUtil', () => {
   MutationUtil.applyMutation(object, mutation);
   expect(object.name).toBe('DxOS');
 
-  // TODO(burdon): Test hierarchical mutations.
+});
+
+test('MutationUtilNested', () => {
+  const object = {
+    id: createObjectId('test')
+  };
+
+  const mutation = MutationUtil.createMessage(object.id, KeyValueUtil.createMessage('nameObject',
+    {
+      name: 'DxOS'
+    }
+  ));
+  MutationUtil.applyMutation(object, mutation);
+  expect(object.nameObject.name).toBe('DxOS');
+
 });
