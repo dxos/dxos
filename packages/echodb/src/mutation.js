@@ -3,8 +3,11 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { createId } from '@dxos/crypto';
+
+const log = debug('dxos:echo:mutation');
 
 /**
  * @typedef {Object} Value
@@ -101,9 +104,7 @@ export class ValueUtil {
 
   static object (value) {
     return {
-      [TYPE.OBJECT]: {
-        property: Object.keys(value).map(key => KeyValueUtil.createMessage(key, value[key]))
-      }
+      [TYPE.OBJECT]: Object.keys(value).map(key => KeyValueUtil.createMessage(key, value[key]))
     };
   }
 }
@@ -149,8 +150,17 @@ export class MutationUtil {
     const { property, value } = message;
     assert(property, value);
 
+    log(`applyKeyValue: ${JSON.stringify(property)}: ${JSON.stringify(value)}`);
+
     if (value[TYPE.NULL]) {
       delete object[property];
+    } else if (value[TYPE.OBJECT]) {
+      // TODO(dboreham): This matches the encoding above, but is it correct wrt protobuf?
+      const objectValues = value[TYPE.OBJECT];
+      const nestedObject = {};
+      objectValues.forEach(value => MutationUtil.applyKeyValue(nestedObject, value));
+      object[property] = nestedObject;
+      return object;
     } else {
       // Apply scalar.
       const field = SCALAR_TYPES.find(field => value[field] !== undefined);
