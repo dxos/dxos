@@ -21,7 +21,7 @@ const Graph = (props) => {
     layout = new Layout(),
     nodeProjector = new NodeProjector(),
     linkProjector = new LinkProjector(),
-    guideProjector = new GuideProjector(),
+    guideProjector = new GuideProjector(),        // TODO(burdon): Remove default.
     classes = useDefaultStyles()
   } = props;
 

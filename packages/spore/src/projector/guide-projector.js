@@ -11,27 +11,34 @@ import { Projector } from './projector';
 export class GuideProjector extends Projector {
 
   onUpdate(grid, data, { group }) {
-    const { guides } = data;
+    const { guides = [] } = data;
+    const { size: { width, height } } = grid;
 
     d3.select(group)
       .selectAll('g')
       .data(guides, d => d.id)
-      .join(enter => enter.append('g')
-        .each((d, i, nodes) => {
-          switch (d.type) {
-            case 'circle': {
-              d3.select(nodes[i])
-                .append('circle')
-                .attr('cx', d.cx)
-                .attr('cy', d.cy)
-                .attr('r', 1000)
-                .transition()
-                .duration(1000)
-                .attr('r', d => d.r);
-            }
-          }
-        })
-      )
-      .select('circle').transition().duration(1000).attr('r', d => d.r);
+      .join(
+        enter => {
+          enter.append('g')
+            .each((d, i, nodes) => {
+              switch (d.type) {
+                case 'circle': {
+                  d3.select(nodes[i])
+                    .append('circle')
+                    .attr('cx', d.cx)
+                    .attr('cy', d.cy)
+                    .attr('r', Math.min(width, height) / 2)
+                    .transition()
+                      .duration(1000)
+                      .attr('r', d => d.r);
+                }
+              }
+            });
+        },
+        update => {
+          // TODO(burdon): Called on every update.
+          update.select('circle').attr('r', d => d.r);
+        }
+      );
   }
 }
