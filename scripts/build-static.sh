@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo
+
 #
 # Build static site for deploy by Netlify, etc.
 #
@@ -15,4 +17,4 @@ do
   cp -R ./packages/$i/out ./out/$i
 done
 
-cp index.html ./out
+cp ./static/index.html ./out
