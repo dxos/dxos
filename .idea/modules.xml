@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/echodb.iml" filepath="$PROJECT_DIR$/.idea/echodb.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/echo.iml" filepath="$PROJECT_DIR$/.idea/echo.iml" />
     </modules>
   </component>
 </project>

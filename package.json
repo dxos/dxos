@@ -1,14 +1,14 @@
 {
-  "name": "echodb",
-  "version": "0.0.4-alpha.1",
+  "name": "@dxos/echo-monorep",
+  "version": "1.0.0-beta.3",
   "description": "Eventually Consistent Hierarchical Object Database.",
-  "homepage": "https://github.com/dxos/echodb#readme",
+  "homepage": "https://github.com/dxos/echo#readme",
   "bugs": {
-    "url": "https://github.com/dxos/echodb/issues"
+    "url": "https://github.com/dxos/echo/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dxos/echodb.git"
+    "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "GPL-3.0",
   "private": true,
