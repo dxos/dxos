@@ -12,7 +12,7 @@ mkdir -p ./out
 yarn build
 yarn build:storybook
 
-for i in "canvas" "globe" "isometric" "spore" "widgets"
+for i in "core" "canvas" "globe" "isometric" "spore" "widgets"
 do
   cp -R ./packages/$i/out ./out/$i
 done

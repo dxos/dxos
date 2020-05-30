@@ -17,7 +17,6 @@ import { isNull } from '../util';
  * @param props.children
  * @param {Object|undefined} svgRef
  */
-// TODO(burdon): Rename.
 // eslint-disable-next-line react/display-name
 const SVG = forwardRef(({ children, width, height, center=true }, svg) => {
   svg = svg || useRef();
