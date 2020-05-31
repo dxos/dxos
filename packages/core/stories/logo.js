@@ -12,7 +12,7 @@ import { FullScreen, SVG } from '../src/components';
 import { PATH } from '../src/icons/Fold';
 
 export default {
-  title: 'Core',
+  title: 'Logo',
   decorators: [withKnobs]
 };
 

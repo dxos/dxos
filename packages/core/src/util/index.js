@@ -4,4 +4,5 @@
 
 export * from './grid';
 export * from './math';
+export * from './path';
 export * from './util';

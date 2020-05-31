@@ -4,9 +4,9 @@
 
 import assert from 'assert';
 
-import { createController, updateController } from './controller';
+import { createPath } from '@dxos/gem-core';
 
-import { createPath } from './util';
+import { createController, updateController } from './controller';
 
 /**
  * Appends the SVG object.

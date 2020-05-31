@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import debug from 'debug';
 
-import { createPath } from './util';
+import { createPath } from '@dxos/gem-core';
 
 const log = debug('gem:canvas:drag');
 
