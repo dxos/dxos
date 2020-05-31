@@ -18,3 +18,4 @@ do
 done
 
 cp ./static/index.html ./out
+
