@@ -147,7 +147,7 @@ export const withFold = () => {
         .attr('d', d => createPath(d.map(({ x, y }) => ({ x: x * scale, y: y * scale }))));
     };
 
-    // render(i++);
+    render(i++);
     const t = d3.interval(() => {
       render(i);
       if (++i === points.length ) {
