@@ -36,7 +36,10 @@ export class PartiallyOrderedModel extends Model {
       // ...and discards the rest
       this._messageQueue = this._messageQueue.filter(m => !this._seenIds.has(m.previousMessageId));
 
-      nextMessageCandidates.forEach(m => this._seenIds.add(m.messageId));
+      nextMessageCandidates.forEach(m => {
+        this._seenIds.add(m.messageId);
+        this._maxSeenId = Math.max(this._maxSeenId, m.messageId);
+      });
     }
     await this.onUpdate(toApply);
   }
