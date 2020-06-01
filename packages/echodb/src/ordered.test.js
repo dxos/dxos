@@ -34,6 +34,23 @@ test('collects messages arriving out of order', async () => {
   ]);
 });
 
+test('collects messages with genesis message arriving last', async () => {
+  const model = new DefaultOrderedModel();
+  await model.processMessages([
+    { messageId: 2, previousMessageId: 1 },
+    { messageId: 3, previousMessageId: 2 },
+    { messageId: 4, previousMessageId: 3 },
+    { messageId: 1, previousMessageId: 0 }
+  ]);
+
+  expect(model.messages).toStrictEqual([
+    { messageId: 1, previousMessageId: 0 },
+    { messageId: 2, previousMessageId: 1 },
+    { messageId: 3, previousMessageId: 2 },
+    { messageId: 4, previousMessageId: 3 }
+  ]);
+});
+
 test('collects messages arriving out of order in different bunches', async () => {
   const model = new DefaultOrderedModel();
   await model.processMessages([
