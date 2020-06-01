@@ -23,6 +23,7 @@ export class OrderedModel extends Model {
 
     this._messageQueue.push(...messagesWithOrdering);
     this.tryApplyQueue();
+    this.emit('update', this);
   }
 
   async tryApplyQueue () {
