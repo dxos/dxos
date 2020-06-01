@@ -1,3 +1,7 @@
+//
+// Copyright 2020 DxOS
+//
+
 import { DefaultPartiallyOrderedModel } from './partially-ordered';
 
 class ModelUnderTest extends DefaultPartiallyOrderedModel {

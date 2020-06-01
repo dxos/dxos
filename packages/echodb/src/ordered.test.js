@@ -1,3 +1,7 @@
+//
+// Copyright 2020 DxOS
+//
+
 import { DefaultOrderedModel } from './ordered';
 
 test('collects messages arriving in order', async () => {

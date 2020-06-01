@@ -1,3 +1,7 @@
+//
+// Copyright 2020 DxOS
+//
+
 import { Model } from '@dxos/data-client';
 
 /**
