@@ -20,8 +20,8 @@ test('ValueUtil', () => {
     };
 
     expect(ValueUtil.createMessage(value)).toStrictEqual({
-      objectValue: {
-        property: [
+      objectValue:
+        [
           {
             property: 'name',
             value: {
@@ -31,20 +31,18 @@ test('ValueUtil', () => {
           {
             property: 'data',
             value: {
-              objectValue: {
-                property: [
-                  {
-                    property: 'version',
-                    value: {
-                      intValue: 1
-                    }
+              objectValue: [
+                {
+                  property: 'version',
+                  value: {
+                    intValue: 1
                   }
-                ]
-              }
+                }
+              ]
             }
           }
         ]
-      }
+
     });
   }
 });
@@ -58,5 +56,19 @@ test('MutationUtil', () => {
   MutationUtil.applyMutation(object, mutation);
   expect(object.name).toBe('DxOS');
 
-  // TODO(burdon): Test hierarchical mutations.
+});
+
+test('MutationUtilNested', () => {
+  const object = {
+    id: createObjectId('test')
+  };
+
+  const mutation = MutationUtil.createMessage(object.id, KeyValueUtil.createMessage('nameObject',
+    {
+      name: 'DxOS'
+    }
+  ));
+  MutationUtil.applyMutation(object, mutation);
+  expect(object.nameObject.name).toBe('DxOS');
+
 });
