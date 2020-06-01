@@ -77,7 +77,7 @@ describe('Partially Ordered Model', () => {
     expect(model.messages[3]).toStrictEqual({ messageId: 3, previousMessageId: 2, value: 'c' });
   });
 
-  test('message can be inserted retrospectively in the middle of feed', async () => {
+  test('message can be inserted retrospectively', async () => {
     const model = new DefaultPartiallyOrderedModel();
     await model.processMessages([
       { messageId: 1, previousMessageId: 0 },
@@ -98,5 +98,22 @@ describe('Partially Ordered Model', () => {
     ]);
 
     expect(model.messages.length).toEqual(5);
+  });
+
+  test.skip('message inserted retrospectively is sorted into the middle of the feed', async () => {
+    const model = new DefaultPartiallyOrderedModel();
+    await model.processMessages([
+      { messageId: 1, previousMessageId: 0 },
+      { messageId: 2, previousMessageId: 1, value: 'a' },
+      { messageId: 3, previousMessageId: 2, value: 'b' },
+      { messageId: 4, previousMessageId: 3, value: 'c' }
+    ]);
+
+    await model.processMessages([
+      { messageId: 2, previousMessageId: 1, value: 'retrospective add' }
+    ]);
+
+    expect(model.messages.length).toEqual(5);
+    expect(model.messages[4].value).toEqual('c');
   });
 });
