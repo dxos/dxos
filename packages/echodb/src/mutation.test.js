@@ -52,23 +52,21 @@ test('MutationUtil', () => {
     id: createObjectId('test')
   };
 
-  const mutation = MutationUtil.createMessage(object.id, KeyValueUtil.createMessage('name', 'DxOS'));
-  MutationUtil.applyMutation(object, mutation);
-  expect(object.name).toBe('DxOS');
+  // Simple object
+  {
+    const mutation = MutationUtil.createMessage(object.id, KeyValueUtil.createMessage('name', 'DxOS'));
+    MutationUtil.applyMutation(object, mutation);
+    expect(object.name).toBe('DxOS');
+  }
 
-});
-
-test('MutationUtilNested', () => {
-  const object = {
-    id: createObjectId('test')
-  };
-
-  const mutation = MutationUtil.createMessage(object.id, KeyValueUtil.createMessage('nameObject',
-    {
-      name: 'DxOS'
-    }
-  ));
-  MutationUtil.applyMutation(object, mutation);
-  expect(object.nameObject.name).toBe('DxOS');
-
+  // Nested objects
+  {
+    const mutation = MutationUtil.createMessage(object.id, KeyValueUtil.createMessage('nameObject',
+      {
+        name: 'DxOS'
+      }
+    ));
+    MutationUtil.applyMutation(object, mutation);
+    expect(object.nameObject.name).toBe('DxOS');
+  }
 });
