@@ -6,14 +6,8 @@ import { Model } from '@dxos/data-client';
 export class PartiallyOrderedModel extends Model {
   _messageQueue = [];
 
-  _orderedMessages = [];
-
   _seenIds = new Set([0]);
   _maxSeenId = 0;
-
-  get orderedMessages () {
-    return this._orderedMessages;
-  }
 
   async processMessages (messages) {
     const messagesWithOrdering = messages
@@ -37,7 +31,6 @@ export class PartiallyOrderedModel extends Model {
         break; // no messages from the queue could be applied at this time
       }
 
-      this._orderedMessages = [...this._orderedMessages, ...nextMessageCandidates];
       toApply.push(...nextMessageCandidates);
 
       // ...and discards the rest
@@ -50,17 +43,18 @@ export class PartiallyOrderedModel extends Model {
 
   /**
    * @Virtual
-   * When overriding this model, it can be used to apply a custom strategy (e.g. permissions to write messages)
-   * @param  {integer} intendedPosition - 0-indexed position of ordered messages, that the candidate is about to get
-   * @param  {object} message - message candidate
+   * Comparer used to sort messages forking from a single parent
+   * @param  {object} a
+   * @param  {object} b
    */
-  // eslint-disable-next-line
-  compareCandidates(a, b) {
+  compareCandidates (a, b) {
     return -1;
   }
 
-  // eslint-disable-next-line
-  async onUpdate(messages) {
+  /**
+   * @param {object} message
+   */
+  async onUpdate (messages) {
     throw new Error(`Not processed: ${messages.length}`);
   }
 
@@ -82,11 +76,13 @@ export class PartiallyOrderedModel extends Model {
 }
 
 export class DefaultPartiallyOrderedModel extends PartiallyOrderedModel {
+  _messages = [];
+
   get messages () {
-    return this._orderedMessages;
+    return this._messages;
   }
 
-  onUpdate () {
-
+  onUpdate (messages) {
+    this._messages = [...this._messages, ...messages];
   }
 }
