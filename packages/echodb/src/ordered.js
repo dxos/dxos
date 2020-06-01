@@ -70,19 +70,19 @@ export class OrderedModel extends Model {
 
   static createGenesisMessage (message) {
     return {
-      ...message,
       messageId: 1,
-      previousMessageId: 0
+      previousMessageId: 0,
+      ...message,
     };
   }
 
   appendMessage (message) {
     super.appendMessage({
-      ...message,
       messageId: this._orderedMessages.length + 1, // first message has id of 1
       previousMessageId: this._orderedMessages.length > 0
         ? this._orderedMessages[this._orderedMessages.length - 1].messageId
-        : 0
+        : 0,
+      ...message,
     });
   }
 }
