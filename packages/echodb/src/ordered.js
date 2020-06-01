@@ -72,7 +72,7 @@ export class OrderedModel extends Model {
     return {
       messageId: 1,
       previousMessageId: 0,
-      ...message,
+      ...message
     };
   }
 
@@ -82,7 +82,7 @@ export class OrderedModel extends Model {
       previousMessageId: this._orderedMessages.length > 0
         ? this._orderedMessages[this._orderedMessages.length - 1].messageId
         : 0,
-      ...message,
+      ...message
     });
   }
 }
