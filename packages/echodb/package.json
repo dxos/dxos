@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echodb",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/echodb/tree/master/packages/echodb#readme",
   "bugs": {
@@ -51,9 +51,9 @@
     "babel-jest": "^24.8.0",
     "babel-plugin-add-module-exports": "^1.0.2",
     "babel-plugin-inline-import": "^3.0.0",
+    "del-cli": "^3.0.0",
     "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-jest": "^23.13.1",
-    "del-cli": "^3.0.0",
     "jest": "^24.8.0",
     "semistandard": "^14.2.0"
   },
