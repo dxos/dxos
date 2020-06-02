@@ -80,7 +80,7 @@ test('collects messages arriving out of order in different bunches', async () =>
 });
 
 test('forks are resolved by picking the first candidate', async () => {
-  const model = new DefaultOrderedModel();
+  const model = new DefaultOrderedModel<any>();
   await model.processMessages([
     { messageId: 1, previousMessageId: 0 },
     { messageId: 2, previousMessageId: 1, value: 'a' },
@@ -93,8 +93,8 @@ test('forks are resolved by picking the first candidate', async () => {
   ]);
 });
 
-class ModelWithValidation extends DefaultOrderedModel {
-  validateCandidate (_intendedPosition, _message) {
+class ModelWithValidation extends DefaultOrderedModel<any> {
+  validateCandidate (_intendedPosition: number, _message: any) {
     return _intendedPosition === 0 || _message.value === 'b';
   }
 }

@@ -4,17 +4,18 @@
 
 // TODO(burdon): Remove dependency (via adapter). Or move to other package.
 import { Model } from '@dxos/data-client';
+import {OrderedMessage} from './common/OrderedMessage'
 
 /**
  * Partially ordered model accepts messages in a sequence of messageId and previousMessageId, allowing non-unique previousMessageIds
  */
-export class PartiallyOrderedModel extends Model {
-  _messageQueue = [];
+export class PartiallyOrderedModel<T extends OrderedMessage> extends Model {
+  _messageQueue: T[] = [];
 
   _seenIds = new Set([0]);
   _maxSeenId = 0;
 
-  async processMessages (messages) {
+  async processMessages (messages: T[]) {
     const messagesWithOrdering = messages
       .filter(
         m => m.messageId !== null && m.messageId !== undefined &&
@@ -55,18 +56,18 @@ export class PartiallyOrderedModel extends Model {
    * @param  {object} a
    * @param  {object} b
    */
-  compareCandidates (a, b) {
+  compareCandidates (a: T, b: T) {
     return -1;
   }
 
   /**
    * @param {object} message
    */
-  async onUpdate (messages) {
+  async onUpdate (messages: T[]) {
     throw new Error(`Not processed: ${messages.length}`);
   }
 
-  static createGenesisMessage (message) {
+  static createGenesisMessage (message: any) {
     return {
       ...message,
       messageId: 1,
@@ -74,7 +75,7 @@ export class PartiallyOrderedModel extends Model {
     };
   }
 
-  appendMessage (message) {
+  appendMessage (message: Omit<T, 'messageId' | 'previousMessageId'>) {
     super.appendMessage({
       ...message,
       messageId: this._maxSeenId + 1,
@@ -83,14 +84,14 @@ export class PartiallyOrderedModel extends Model {
   }
 }
 
-export class DefaultPartiallyOrderedModel extends PartiallyOrderedModel {
-  _messages = [];
+export class DefaultPartiallyOrderedModel<T extends OrderedMessage> extends PartiallyOrderedModel<T> {
+  _messages: T[] = [];
 
   get messages () {
     return this._messages;
   }
 
-  onUpdate (messages) {
+  async onUpdate (messages: T[]) {
     this._messages = [...this._messages, ...messages];
   }
 }
