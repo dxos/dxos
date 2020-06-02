@@ -69,7 +69,7 @@ export class ObjectStore extends EventEmitter {
   /**
    * Returns the object with the given ID (or undefined).
    * @param id
-   * @returns {Object}
+   * @returns {{ id }}
    */
   getObjectById (id) {
     return this._objectById.get(id);
