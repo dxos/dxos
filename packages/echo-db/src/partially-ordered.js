@@ -1,7 +1,8 @@
 //
-// Copyright 2020 DxOS
+// Copyright 2020 DxOS.org
 //
 
+// TODO(burdon): Remove dependency (via adapter). Or move to other package.
 import { Model } from '@dxos/data-client';
 
 /**

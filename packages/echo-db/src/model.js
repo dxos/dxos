@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS
+// Copyright 2020 DxOS.org
 //
 
 import debug from 'debug';
@@ -8,16 +8,17 @@ import debug from 'debug';
 import { Model } from '@dxos/data-client';
 
 import { MutationUtil } from './mutation';
-import { ObjectModel } from './object';
-import { createObjectId, fromObject, parseId } from './util';
+import { ObjectStore, fromObject } from './object-store';
+import { createObjectId, parseObjectId } from './util';
 
 const log = debug('dxos:echo:model');
 
 /**
  * Stream adapter.
  */
+// TODO(burdon): Rename ObjectModel.
 export class EchoModel extends Model {
-  _model = new ObjectModel();
+  _model = new ObjectStore();
 
   getObjectsByType (type) {
     return this._model.getObjectsByType(type);
@@ -43,7 +44,7 @@ export class EchoModel extends Model {
   updateItem (id, properties) {
     log('update', id, properties);
 
-    const { type } = parseId(id);
+    const { type } = parseObjectId(id);
     const mutations = fromObject({
       id,
       properties
@@ -61,7 +62,7 @@ export class EchoModel extends Model {
   deleteItem (id) {
     log('delete', id);
 
-    const { type } = parseId(id);
+    const { type } = parseObjectId(id);
     const mutation = MutationUtil.createMessage(id, undefined, { deleted: true });
 
     this.appendMessage({

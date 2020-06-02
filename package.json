@@ -1,6 +1,6 @@
 {
-  "name": "@dxos/echo-monorep",
-  "version": "1.0.0-beta.3",
+  "name": "@dxos/echo",
+  "version": "1.0.0-beta.5",
   "description": "Eventually Consistent Hierarchical Object Database.",
   "homepage": "https://github.com/dxos/echo#readme",
   "bugs": {
@@ -27,6 +27,7 @@
   "scripts": {
     "clean": "lerna run clean",
     "build": "lerna run build",
+    "depcheck": "lerna run depcheck",
     "test": "lerna run test",
     "lint": "lerna run lint",
     "lint:fix": "lerna run lint -- --fix",
@@ -36,9 +37,7 @@
   "devDependencies": {
     "babel-eslint": "^10.0.2",
     "lerna": "^3.11.1",
-    "lint-staged": "^8.1.0",
-    "pre-commit": "^1.2.2",
-    "semistandard": "^14.2.0"
+    "lint-staged": "^8.1.0"
   },
   "eslintConfig": {
     "parser": "babel-eslint",
