@@ -11,10 +11,11 @@
     "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "GPL-3.0",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "npm run clean && npm run build:protobuf && npm run build:babel",
-    "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps --copy-files",
+    "build": "npm run clean && npm run build:protobuf && npm run build:ts",
+    "build:ts": "tsc",
     "build:protobuf": "pbjs -t json ./src/proto/echo.proto -o src/proto/gen/echo.json",
     "clean": "del-cli dist",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
@@ -29,6 +30,7 @@
     "> 5%"
   ],
   "jest": {
+    "preset": "ts-jest/presets/js-with-ts",
     "testEnvironment": "node"
   },
   "dependencies": {
@@ -40,11 +42,7 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@babel/cli": "7.4.4",
-    "@babel/core": "^7.4.5",
-    "@babel/plugin-proposal-class-properties": "^7.5.5",
-    "@babel/plugin-proposal-export-default-from": "^7.5.2",
-    "@babel/preset-env": "^7.4.5",
+    "@types/jest": "^25.2.3",
     "babel-plugin-add-module-exports": "^1.0.2",
     "babel-plugin-inline-import": "^3.0.0",
     "babel-plugin-source-map-support": "^2.1.1",
@@ -56,7 +54,9 @@
     "pumpify": "^2.0.1",
     "semistandard": "^14.2.0",
     "stream-buffers": "^3.0.2",
-    "through2": "^3.0.1"
+    "through2": "^3.0.1",
+    "ts-jest": "^26.1.0",
+    "typescript": "^3.9.3"
   },
   "publishConfig": {
     "access": "public"
