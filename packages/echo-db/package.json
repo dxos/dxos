@@ -16,7 +16,7 @@
   "scripts": {
     "build": "npm run clean && npm run build:protobuf && npm run build:ts",
     "build:ts": "tsc",
-    "build:protobuf": "pbjs -t json ./src/proto/echo.proto -o src/proto/gen/echo.json",
+    "build:protobuf": "pbjs -t json ./src/proto/echo.proto -o ./src/proto/gen/echo.json && pbjs -t static-module -w commonjs ./src/proto/echo.proto -o ./src/proto/gen/echo.js && pbts -o ./src/proto/gen/echo.d.ts ./src/proto/gen/echo.js",
     "clean": "del-cli dist",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
