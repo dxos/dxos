@@ -169,23 +169,23 @@ $root.dxos = (function() {
             Value.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message["null"] != null && message.hasOwnProperty("null"))
+                if (message["null"] != null && Object.hasOwnProperty.call(message, "null"))
                     writer.uint32(/* id 1, wireType 0 =*/8).bool(message["null"]);
-                if (message.bool != null && message.hasOwnProperty("bool"))
+                if (message.bool != null && Object.hasOwnProperty.call(message, "bool"))
                     writer.uint32(/* id 2, wireType 0 =*/16).bool(message.bool);
-                if (message.int != null && message.hasOwnProperty("int"))
+                if (message.int != null && Object.hasOwnProperty.call(message, "int"))
                     writer.uint32(/* id 3, wireType 0 =*/24).int32(message.int);
-                if (message.float != null && message.hasOwnProperty("float"))
+                if (message.float != null && Object.hasOwnProperty.call(message, "float"))
                     writer.uint32(/* id 4, wireType 5 =*/37).float(message.float);
-                if (message.string != null && message.hasOwnProperty("string"))
+                if (message.string != null && Object.hasOwnProperty.call(message, "string"))
                     writer.uint32(/* id 5, wireType 2 =*/42).string(message.string);
-                if (message.timestamp != null && message.hasOwnProperty("timestamp"))
+                if (message.timestamp != null && Object.hasOwnProperty.call(message, "timestamp"))
                     writer.uint32(/* id 10, wireType 2 =*/82).string(message.timestamp);
-                if (message.datetime != null && message.hasOwnProperty("datetime"))
+                if (message.datetime != null && Object.hasOwnProperty.call(message, "datetime"))
                     writer.uint32(/* id 11, wireType 2 =*/90).string(message.datetime);
-                if (message.bytes != null && message.hasOwnProperty("bytes"))
+                if (message.bytes != null && Object.hasOwnProperty.call(message, "bytes"))
                     writer.uint32(/* id 12, wireType 2 =*/98).bytes(message.bytes);
-                if (message.object != null && message.hasOwnProperty("object"))
+                if (message.object != null && Object.hasOwnProperty.call(message, "object"))
                     $root.dxos.echo.Object.encode(message.object, writer.uint32(/* id 20, wireType 2 =*/162).fork()).ldelim();
                 return writer;
             };
@@ -738,9 +738,9 @@ $root.dxos = (function() {
             KeyValue.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.key != null && message.hasOwnProperty("key"))
+                if (message.key != null && Object.hasOwnProperty.call(message, "key"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.key);
-                if (message.value != null && message.hasOwnProperty("value"))
+                if (message.value != null && Object.hasOwnProperty.call(message, "value"))
                     $root.dxos.echo.Value.encode(message.value, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
                 return writer;
             };
@@ -981,13 +981,13 @@ $root.dxos = (function() {
             ObjectMutation.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.objectId != null && message.hasOwnProperty("objectId"))
+                if (message.objectId != null && Object.hasOwnProperty.call(message, "objectId"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.objectId);
-                if (message.id != null && message.hasOwnProperty("id"))
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 2, wireType 2 =*/18).string(message.id);
-                if (message.dependency != null && message.hasOwnProperty("dependency"))
+                if (message.dependency != null && Object.hasOwnProperty.call(message, "dependency"))
                     writer.uint32(/* id 3, wireType 2 =*/26).string(message.dependency);
-                if (message.deleted != null && message.hasOwnProperty("deleted"))
+                if (message.deleted != null && Object.hasOwnProperty.call(message, "deleted"))
                     writer.uint32(/* id 10, wireType 0 =*/80).bool(message.deleted);
                 if (message.mutations != null && message.mutations.length)
                     for (var i = 0; i < message.mutations.length; ++i)
@@ -1186,7 +1186,7 @@ $root.dxos = (function() {
             /**
              * Operation enum.
              * @name dxos.echo.ObjectMutation.Operation
-             * @enum {string}
+             * @enum {number}
              * @property {number} SET=0 SET value
              * @property {number} DELETE=1 DELETE value
              * @property {number} ARRAY_PUSH=2 ARRAY_PUSH value
@@ -1277,11 +1277,11 @@ $root.dxos = (function() {
                 Mutation.encode = function encode(message, writer) {
                     if (!writer)
                         writer = $Writer.create();
-                    if (message.operation != null && message.hasOwnProperty("operation"))
+                    if (message.operation != null && Object.hasOwnProperty.call(message, "operation"))
                         writer.uint32(/* id 1, wireType 0 =*/8).int32(message.operation);
-                    if (message.key != null && message.hasOwnProperty("key"))
+                    if (message.key != null && Object.hasOwnProperty.call(message, "key"))
                         writer.uint32(/* id 2, wireType 2 =*/18).string(message.key);
-                    if (message.value != null && message.hasOwnProperty("value"))
+                    if (message.value != null && Object.hasOwnProperty.call(message, "value"))
                         $root.dxos.echo.Value.encode(message.value, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                     return writer;
                 };
