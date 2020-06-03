@@ -1,0 +1,11 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "plugin:jest/recommended",
+    "semistandard",
+    "standard-jsx"
+  ],
+  "rules": {
+    "babel/semi": 1
+  }
+}

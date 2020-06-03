@@ -20,7 +20,7 @@
     "clean": "del-cli dist",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
-    "lint": "semistandard ./src/**/*.js",
+    "lint": "semistandard './src/**/*.ts'",
     "test": "jest --rootDir ./src --verbose",
     "posttest": "npm run lint",
     "prepublishOnly": "npm run test && npm run build",
@@ -65,5 +65,27 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "plugin:jest/recommended",
+      "semistandard",
+      "standard-jsx"
+    ],
+    "rules": {
+      "babel/semi": 1
+    }
+  },
+  "semistandard": {
+    "parser": "@typescript-eslint/parser",
+    "env": [
+      "jest",
+      "node",
+      "browser"
+    ],
+    "ignore": [
+      "./src/proto/gen/*"
+    ]
   }
 }
