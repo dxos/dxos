@@ -1,6 +1,6 @@
-const baseConfig = require('../../.eslintrc.json')
+const baseConfig = require('../../.eslintrc.json');
 
 module.exports = {
   ...baseConfig,
-  ignorePatterns: ['/src/proto/gen/*'],
-}
+  ignorePatterns: ['/src/proto/gen/*']
+};
