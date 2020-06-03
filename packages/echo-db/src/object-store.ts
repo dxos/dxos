@@ -7,6 +7,7 @@ import EventEmitter from 'events';
 
 import { MutationUtil, ValueUtil } from './mutation';
 import { parseObjectId } from './util';
+import { dxos } from './proto/gen/echo';
 
 /**
  * Create a set mutation messages from a single object.
@@ -62,7 +63,7 @@ export class ObjectStore extends EventEmitter {
    * @returns {Object[]}
    */
   // TODO(burdon): orderBy?
-  getObjectsByType (type) {
+  getObjectsByType (type: string) {
     return Array.from(this._objectById.values()).filter(({ id }) => parseObjectId(id).type === type);
   }
 
@@ -89,7 +90,7 @@ export class ObjectStore extends EventEmitter {
    * @param mutation
    * @returns {ObjectStore}
    */
-  applyMutation (mutation) {
+  applyMutation (mutation: dxos.echo.IObjectMutation) {
     const { objectId, deleted, mutations } = mutation;
     assert(objectId);
 
@@ -113,12 +114,12 @@ export class ObjectStore extends EventEmitter {
       this._objectById.set(objectId, object);
     }
 
-    MutationUtil.applyMutations(object.properties, mutations);
+    MutationUtil.applyMutations(object.properties, mutations!);
 
     return this;
   }
 
-  applyMutations (mutations) {
+  applyMutations (mutations: dxos.echo.IObjectMutation[]) {
     mutations.forEach(mutation => this.applyMutation(mutation));
 
     return this;
