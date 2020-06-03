@@ -12,6 +12,7 @@
     "outDir": "dist"
   },
   "include": [
+    "src",
     "src/**/*.js",
     "src/**/*.ts",
     "src/**/*.json"

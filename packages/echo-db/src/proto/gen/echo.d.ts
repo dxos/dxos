@@ -33,7 +33,7 @@ export namespace dxos {
             bytes?: (Uint8Array|null);
 
             /** Value object */
-            object?: (dxos.echo.IKeyValue|null);
+            object?: (dxos.echo.IObject|null);
         }
 
         /** Represents a Value. */
@@ -70,7 +70,7 @@ export namespace dxos {
             public bytes: Uint8Array;
 
             /** Value object. */
-            public object?: (dxos.echo.IKeyValue|null);
+            public object?: (dxos.echo.IObject|null);
 
             /** Value Type. */
             public Type?: ("null"|"bool"|"int"|"float"|"string"|"timestamp"|"datetime"|"bytes"|"object");
@@ -141,6 +141,96 @@ export namespace dxos {
 
             /**
              * Converts this Value to JSON.
+             * @returns JSON object
+             */
+            public toJSON(): { [k: string]: any };
+        }
+
+        /** Properties of an Object. */
+        interface IObject {
+
+            /** Object properties */
+            properties?: (dxos.echo.IKeyValue[]|null);
+        }
+
+        /** Represents an Object. */
+        class Object implements IObject {
+
+            /**
+             * Constructs a new Object.
+             * @param [properties] Properties to set
+             */
+            constructor(properties?: dxos.echo.IObject);
+
+            /** Object properties. */
+            public properties: dxos.echo.IKeyValue[];
+
+            /**
+             * Creates a new Object instance using the specified properties.
+             * @param [properties] Properties to set
+             * @returns Object instance
+             */
+            public static create(properties?: dxos.echo.IObject): dxos.echo.object;
+
+            /**
+             * Encodes the specified Object message. Does not implicitly {@link dxos.echo.Object.verify|verify} messages.
+             * @param message Object message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encode(message: dxos.echo.IObject, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Encodes the specified Object message, length delimited. Does not implicitly {@link dxos.echo.Object.verify|verify} messages.
+             * @param message Object message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encodeDelimited(message: dxos.echo.IObject, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Decodes an Object message from the specified reader or buffer.
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns Object
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): dxos.echo.object;
+
+            /**
+             * Decodes an Object message from the specified reader or buffer, length delimited.
+             * @param reader Reader or buffer to decode from
+             * @returns Object
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): dxos.echo.object;
+
+            /**
+             * Verifies an Object message.
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
+             */
+            public static verify(message: { [k: string]: any }): (string|null);
+
+            /**
+             * Creates an Object message from a plain object. Also converts values to their respective internal types.
+             * @param object Plain object
+             * @returns Object
+             */
+            public static fromObject(object: { [k: string]: any }): dxos.echo.object;
+
+            /**
+             * Creates a plain object from an Object message. Also converts values to other types if specified.
+             * @param message Object
+             * @param [options] Conversion options
+             * @returns Plain object
+             */
+            public static toObject(message: dxos.echo.object, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+            /**
+             * Converts this Object to JSON.
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };

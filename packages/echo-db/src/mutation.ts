@@ -120,14 +120,14 @@ export class ValueUtil {
 
     // Apply object properties.
     if (value[Type.OBJECT]) {
-      const { properties } = value[Type.OBJECT];
+      const { properties } = value[Type.OBJECT]!;
       const nestedObject = {};
-      properties.forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key, value));
+      (properties ?? []).forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key!, value!));
       object[key] = nestedObject;
       return object;
     }
 
-    // Apply scalar.
+    // Apply scalar.s
     const field = SCALAR_TYPES.find(field => value[field] !== undefined);
     if (field) {
       object[key] = value[field];

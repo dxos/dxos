@@ -2,8 +2,6 @@
 // Copyright 2020 DxOS.org
 //
 
-import { sortByProperty } from './util';
-
 // TODO(burdon): Dependency Graph: https://www.npmjs.com/package/dependency-graph
 
 export interface MessageBase {
@@ -37,7 +35,6 @@ export function mergeFeeds<T extends MessageBase> (feeds: Feed<T>[] ) {
   // Initial feed cursors (sorted to ensure deterministic processing of messages.
   const feedCursors: FeedCursor[] = feeds
     .map(() => ({ position: 0, pending: null }))
-    // .sort(sortByProperty('id')); // TODO(marik-d) either this or a line above is probably a bug
 
   // Gets the index of the next available feed to process.
   const nextIndex = (current: number) => {

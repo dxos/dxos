@@ -59,6 +59,15 @@
                 }
               }
             },
+            "Object": {
+              "fields": {
+                "properties": {
+                  "rule": "repeated",
+                  "type": "KeyValue",
+                  "id": 1
+                }
+              }
+            },
             "KeyValue": {
               "fields": {
                 "key": {
@@ -68,15 +77,6 @@
                 "value": {
                   "type": "Value",
                   "id": 2
-                }
-              }
-            },
-            "Object": {
-              "fields": {
-                "properites": {
-                  "rule": "repeated",
-                  "type": "KeyValue",
-                  "id": 1
                 }
               }
             },

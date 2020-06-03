@@ -41,7 +41,7 @@ $root.dxos = (function() {
              * @property {string|null} [timestamp] Value timestamp
              * @property {string|null} [datetime] Value datetime
              * @property {Uint8Array|null} [bytes] Value bytes
-             * @property {dxos.echo.IKeyValue|null} [object] Value object
+             * @property {dxos.echo.IObject|null} [object] Value object
              */
 
             /**
@@ -125,7 +125,7 @@ $root.dxos = (function() {
 
             /**
              * Value object.
-             * @member {dxos.echo.IKeyValue|null|undefined} object
+             * @member {dxos.echo.IObject|null|undefined} object
              * @memberof dxos.echo.Value
              * @instance
              */
@@ -169,24 +169,24 @@ $root.dxos = (function() {
             Value.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message["null"] != null && Object.hasOwnProperty.call(message, "null"))
+                if (message["null"] != null && message.hasOwnProperty("null"))
                     writer.uint32(/* id 1, wireType 0 =*/8).bool(message["null"]);
-                if (message.bool != null && Object.hasOwnProperty.call(message, "bool"))
+                if (message.bool != null && message.hasOwnProperty("bool"))
                     writer.uint32(/* id 2, wireType 0 =*/16).bool(message.bool);
-                if (message.int != null && Object.hasOwnProperty.call(message, "int"))
+                if (message.int != null && message.hasOwnProperty("int"))
                     writer.uint32(/* id 3, wireType 0 =*/24).int32(message.int);
-                if (message.float != null && Object.hasOwnProperty.call(message, "float"))
+                if (message.float != null && message.hasOwnProperty("float"))
                     writer.uint32(/* id 4, wireType 5 =*/37).float(message.float);
-                if (message.string != null && Object.hasOwnProperty.call(message, "string"))
+                if (message.string != null && message.hasOwnProperty("string"))
                     writer.uint32(/* id 5, wireType 2 =*/42).string(message.string);
-                if (message.timestamp != null && Object.hasOwnProperty.call(message, "timestamp"))
+                if (message.timestamp != null && message.hasOwnProperty("timestamp"))
                     writer.uint32(/* id 10, wireType 2 =*/82).string(message.timestamp);
-                if (message.datetime != null && Object.hasOwnProperty.call(message, "datetime"))
+                if (message.datetime != null && message.hasOwnProperty("datetime"))
                     writer.uint32(/* id 11, wireType 2 =*/90).string(message.datetime);
-                if (message.bytes != null && Object.hasOwnProperty.call(message, "bytes"))
+                if (message.bytes != null && message.hasOwnProperty("bytes"))
                     writer.uint32(/* id 12, wireType 2 =*/98).bytes(message.bytes);
-                if (message.object != null && Object.hasOwnProperty.call(message, "object"))
-                    $root.dxos.echo.KeyValue.encode(message.object, writer.uint32(/* id 20, wireType 2 =*/162).fork()).ldelim();
+                if (message.object != null && message.hasOwnProperty("object"))
+                    $root.dxos.echo.Object.encode(message.object, writer.uint32(/* id 20, wireType 2 =*/162).fork()).ldelim();
                 return writer;
             };
 
@@ -246,7 +246,7 @@ $root.dxos = (function() {
                         message.bytes = reader.bytes();
                         break;
                     case 20:
-                        message.object = $root.dxos.echo.KeyValue.decode(reader, reader.uint32());
+                        message.object = $root.dxos.echo.Object.decode(reader, reader.uint32());
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -343,7 +343,7 @@ $root.dxos = (function() {
                         return "Type: multiple values";
                     properties.Type = 1;
                     {
-                        var error = $root.dxos.echo.KeyValue.verify(message.object);
+                        var error = $root.dxos.echo.Object.verify(message.object);
                         if (error)
                             return "object." + error;
                     }
@@ -385,7 +385,7 @@ $root.dxos = (function() {
                 if (object.object != null) {
                     if (typeof object.object !== "object")
                         throw TypeError(".dxos.echo.Value.object: object expected");
-                    message.object = $root.dxos.echo.KeyValue.fromObject(object.object);
+                    message.object = $root.dxos.echo.Object.fromObject(object.object);
                 }
                 return message;
             };
@@ -444,7 +444,7 @@ $root.dxos = (function() {
                         object.Type = "bytes";
                 }
                 if (message.object != null && message.hasOwnProperty("object")) {
-                    object.object = $root.dxos.echo.KeyValue.toObject(message.object, options);
+                    object.object = $root.dxos.echo.Object.toObject(message.object, options);
                     if (options.oneofs)
                         object.Type = "object";
                 }
@@ -463,6 +463,214 @@ $root.dxos = (function() {
             };
 
             return Value;
+        })();
+
+        echo.Object = (function() {
+
+            /**
+             * Properties of an Object.
+             * @memberof dxos.echo
+             * @interface IObject
+             * @property {Array.<dxos.echo.IKeyValue>|null} [properties] Object properties
+             */
+
+            /**
+             * Constructs a new Object.
+             * @memberof dxos.echo
+             * @classdesc Represents an Object.
+             * @implements IObject
+             * @constructor
+             * @param {dxos.echo.IObject=} [properties] Properties to set
+             */
+            function Object(properties) {
+                this.properties = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+
+            /**
+             * Object properties.
+             * @member {Array.<dxos.echo.IKeyValue>} properties
+             * @memberof dxos.echo.Object
+             * @instance
+             */
+            Object.prototype.properties = $util.emptyArray;
+
+            /**
+             * Creates a new Object instance using the specified properties.
+             * @function create
+             * @memberof dxos.echo.Object
+             * @static
+             * @param {dxos.echo.IObject=} [properties] Properties to set
+             * @returns {dxos.echo.Object} Object instance
+             */
+            Object.create = function create(properties) {
+                return new Object(properties);
+            };
+
+            /**
+             * Encodes the specified Object message. Does not implicitly {@link dxos.echo.Object.verify|verify} messages.
+             * @function encode
+             * @memberof dxos.echo.Object
+             * @static
+             * @param {dxos.echo.IObject} message Object message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            Object.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.properties != null && message.properties.length)
+                    for (var i = 0; i < message.properties.length; ++i)
+                        $root.dxos.echo.KeyValue.encode(message.properties[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                return writer;
+            };
+
+            /**
+             * Encodes the specified Object message, length delimited. Does not implicitly {@link dxos.echo.Object.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof dxos.echo.Object
+             * @static
+             * @param {dxos.echo.IObject} message Object message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            Object.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+
+            /**
+             * Decodes an Object message from the specified reader or buffer.
+             * @function decode
+             * @memberof dxos.echo.Object
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {dxos.echo.Object} Object
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            Object.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.dxos.echo.Object();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        if (!(message.properties && message.properties.length))
+                            message.properties = [];
+                        message.properties.push($root.dxos.echo.KeyValue.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Decodes an Object message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof dxos.echo.Object
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {dxos.echo.Object} Object
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            Object.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+
+            /**
+             * Verifies an Object message.
+             * @function verify
+             * @memberof dxos.echo.Object
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            Object.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.properties != null && message.hasOwnProperty("properties")) {
+                    if (!Array.isArray(message.properties))
+                        return "properties: array expected";
+                    for (var i = 0; i < message.properties.length; ++i) {
+                        var error = $root.dxos.echo.KeyValue.verify(message.properties[i]);
+                        if (error)
+                            return "properties." + error;
+                    }
+                }
+                return null;
+            };
+
+            /**
+             * Creates an Object message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof dxos.echo.Object
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {dxos.echo.Object} Object
+             */
+            Object.fromObject = function fromObject(object) {
+                if (object instanceof $root.dxos.echo.Object)
+                    return object;
+                var message = new $root.dxos.echo.Object();
+                if (object.properties) {
+                    if (!Array.isArray(object.properties))
+                        throw TypeError(".dxos.echo.Object.properties: array expected");
+                    message.properties = [];
+                    for (var i = 0; i < object.properties.length; ++i) {
+                        if (typeof object.properties[i] !== "object")
+                            throw TypeError(".dxos.echo.Object.properties: object expected");
+                        message.properties[i] = $root.dxos.echo.KeyValue.fromObject(object.properties[i]);
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Creates a plain object from an Object message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof dxos.echo.Object
+             * @static
+             * @param {dxos.echo.Object} message Object
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            Object.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults)
+                    object.properties = [];
+                if (message.properties && message.properties.length) {
+                    object.properties = [];
+                    for (var j = 0; j < message.properties.length; ++j)
+                        object.properties[j] = $root.dxos.echo.KeyValue.toObject(message.properties[j], options);
+                }
+                return object;
+            };
+
+            /**
+             * Converts this Object to JSON.
+             * @function toJSON
+             * @memberof dxos.echo.Object
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            Object.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            return Object;
         })();
 
         echo.KeyValue = (function() {
@@ -530,9 +738,9 @@ $root.dxos = (function() {
             KeyValue.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.key != null && Object.hasOwnProperty.call(message, "key"))
+                if (message.key != null && message.hasOwnProperty("key"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.key);
-                if (message.value != null && Object.hasOwnProperty.call(message, "value"))
+                if (message.value != null && message.hasOwnProperty("value"))
                     $root.dxos.echo.Value.encode(message.value, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
                 return writer;
             };
@@ -773,13 +981,13 @@ $root.dxos = (function() {
             ObjectMutation.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.objectId != null && Object.hasOwnProperty.call(message, "objectId"))
+                if (message.objectId != null && message.hasOwnProperty("objectId"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.objectId);
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (message.id != null && message.hasOwnProperty("id"))
                     writer.uint32(/* id 2, wireType 2 =*/18).string(message.id);
-                if (message.dependency != null && Object.hasOwnProperty.call(message, "dependency"))
+                if (message.dependency != null && message.hasOwnProperty("dependency"))
                     writer.uint32(/* id 3, wireType 2 =*/26).string(message.dependency);
-                if (message.deleted != null && Object.hasOwnProperty.call(message, "deleted"))
+                if (message.deleted != null && message.hasOwnProperty("deleted"))
                     writer.uint32(/* id 10, wireType 0 =*/80).bool(message.deleted);
                 if (message.mutations != null && message.mutations.length)
                     for (var i = 0; i < message.mutations.length; ++i)
@@ -978,7 +1186,7 @@ $root.dxos = (function() {
             /**
              * Operation enum.
              * @name dxos.echo.ObjectMutation.Operation
-             * @enum {number}
+             * @enum {string}
              * @property {number} SET=0 SET value
              * @property {number} DELETE=1 DELETE value
              * @property {number} ARRAY_PUSH=2 ARRAY_PUSH value
@@ -1069,11 +1277,11 @@ $root.dxos = (function() {
                 Mutation.encode = function encode(message, writer) {
                     if (!writer)
                         writer = $Writer.create();
-                    if (message.operation != null && Object.hasOwnProperty.call(message, "operation"))
+                    if (message.operation != null && message.hasOwnProperty("operation"))
                         writer.uint32(/* id 1, wireType 0 =*/8).int32(message.operation);
-                    if (message.key != null && Object.hasOwnProperty.call(message, "key"))
+                    if (message.key != null && message.hasOwnProperty("key"))
                         writer.uint32(/* id 2, wireType 2 =*/18).string(message.key);
-                    if (message.value != null && Object.hasOwnProperty.call(message, "value"))
+                    if (message.value != null && message.hasOwnProperty("value"))
                         $root.dxos.echo.Value.encode(message.value, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                     return writer;
                 };
