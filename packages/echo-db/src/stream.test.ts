@@ -4,7 +4,7 @@
 
 import { ReadableStreamBuffer } from 'stream-buffers';
 import eos from 'end-of-stream';
-import {pumpify} from 'pumpify';
+import pumpify from 'pumpify';
 import through from 'through2';
 
 import { Codec } from '@dxos/codec-protobuf';
