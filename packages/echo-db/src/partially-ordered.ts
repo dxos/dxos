@@ -53,9 +53,8 @@ export class PartiallyOrderedModel<T extends OrderedMessage> extends Model {
   /**
    * @Virtual
    * Comparer used to sort messages forking from a single parent
-   * @param  {object} a
-   * @param  {object} b
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   compareCandidates (a: T, b: T) {
     return -1;
   }

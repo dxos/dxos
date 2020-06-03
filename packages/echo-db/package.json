@@ -20,7 +20,7 @@
     "clean": "del-cli dist",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
-    "lint": "semistandard './src/**/*.ts'",
+    "lint": "eslint './src/**/*.ts'",
     "test": "jest --rootDir ./src --verbose",
     "posttest": "npm run lint",
     "prepublishOnly": "npm run test && npm run build",

@@ -32,6 +32,7 @@ export class EchoModel extends Model {
     const { mutations } = fromObject({ id, properties });
 
     // TODO(burdon): Create single message.
+    // eslint-disable-next-line no-unused-expressions
     mutations?.forEach((mutation) => {
       this.appendMessage({
         __type_url: type,
@@ -52,6 +53,7 @@ export class EchoModel extends Model {
     });
 
     // TODO(burdon): Create single message.
+    // eslint-disable-next-line no-unused-expressions
     mutations?.forEach((mutation) => {
       this.appendMessage({
         __type_url: type,

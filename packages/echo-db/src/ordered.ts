@@ -4,7 +4,7 @@
 
 // TODO(burdon): Remove dependency (via adapter). Or move to other package.
 import { Model } from '@dxos/data-client';
-import { OrderedMessage } from './common/OrderedMessage';
+import type { OrderedMessage } from './common/OrderedMessage';
 
 /**
  * Basic ordered log model. Maintains a list of messages in an order of referencing messages to a previous ones.

@@ -3,5 +3,12 @@
   "extends": [
     "plugin:jest/recommended",
     "semistandard"
-  ]
+  ],
+  "plugins": [
+    "@typescript-eslint/eslint-plugin"
+  ],
+  "rules": {
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": ["error"]
+  }
 }
