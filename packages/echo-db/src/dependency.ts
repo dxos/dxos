@@ -24,7 +24,7 @@ interface FeedCursor {
  * @param {[{ id, messages }]} feeds
  * @return {[{Message}]}
  */
-export function mergeFeeds<T extends MessageBase> (feeds: Feed<T>[] ) {
+export function mergeFeeds<T extends MessageBase> (feeds: Feed<T>[]) {
   // Ordered list of merged messages.
   // TODO(burdon): Convert to stream.
   const merged = [];
@@ -34,7 +34,7 @@ export function mergeFeeds<T extends MessageBase> (feeds: Feed<T>[] ) {
 
   // Initial feed cursors (sorted to ensure deterministic processing of messages.
   const feedCursors: FeedCursor[] = feeds
-    .map(() => ({ position: 0, pending: null }))
+    .map(() => ({ position: 0, pending: null }));
 
   // Gets the index of the next available feed to process.
   const nextIndex = (current: number) => {

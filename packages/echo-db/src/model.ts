@@ -46,7 +46,7 @@ export class EchoModel extends Model {
     log('update', id, properties);
 
     const { type } = parseObjectId(id);
-    const {mutations} = fromObject({
+    const { mutations } = fromObject({
       id,
       properties
     });

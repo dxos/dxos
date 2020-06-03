@@ -25,7 +25,7 @@ enum Type {
   DATETIME = 'datetime',
 
   OBJECT = 'object'
-};
+}
 
 const SCALAR_TYPES = [
   Type.BOOLEAN,
@@ -164,10 +164,10 @@ export class MutationUtil {
     }
   }
 
-  static createMessage(objectId: string, { deleted = false }: { deleted?: boolean }): dxos.echo.IObjectMutation {
+  static createMessage (objectId: string, { deleted = false }: { deleted?: boolean }): dxos.echo.IObjectMutation {
     return {
       objectId,
-      deleted,
-    }
+      deleted
+    };
   }
 }

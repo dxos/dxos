@@ -4,7 +4,7 @@
 
 // TODO(burdon): Remove dependency (via adapter). Or move to other package.
 import { Model } from '@dxos/data-client';
-import {OrderedMessage} from './common/OrderedMessage'
+import { OrderedMessage } from './common/OrderedMessage';
 
 /**
  * Partially ordered model accepts messages in a sequence of messageId and previousMessageId, allowing non-unique previousMessageIds
