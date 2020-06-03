@@ -48,12 +48,8 @@
   },
   "devDependencies": {
     "@types/jest": "^25.2.3",
-    "babel-plugin-add-module-exports": "^1.0.2",
-    "babel-plugin-inline-import": "^3.0.0",
-    "babel-plugin-source-map-support": "^2.1.1",
     "del-cli": "^3.0.0",
     "end-of-stream": "^1.4.4",
-    "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-jest": "^23.13.1",
     "jest": "^24.8.0",
     "pumpify": "^2.0.1",
@@ -70,22 +66,10 @@
     "parser": "@typescript-eslint/parser",
     "extends": [
       "plugin:jest/recommended",
-      "semistandard",
-      "standard-jsx"
+      "eslint-config-semistandard"
     ],
     "rules": {
       "babel/semi": 1
     }
-  },
-  "semistandard": {
-    "parser": "@typescript-eslint/parser",
-    "env": [
-      "jest",
-      "node",
-      "browser"
-    ],
-    "ignore": [
-      "./src/proto/gen/*"
-    ]
   }
 }
