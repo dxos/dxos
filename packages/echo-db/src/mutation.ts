@@ -163,4 +163,11 @@ export class MutationUtil {
         throw new Error(`Operation not implemented: ${operation}`);
     }
   }
+
+  static createMessage(objectId: string, { deleted = false }: { deleted?: boolean }): dxos.echo.IObjectMutation {
+    return {
+      objectId,
+      deleted,
+    }
+  }
 }
