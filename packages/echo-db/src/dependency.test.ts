@@ -73,7 +73,7 @@ test('Merge feeds', () => {
     ]
   };
 
-  const runTest = (messages) => {
+  const runTest = (messages: any) => {
     expect(messages).toHaveLength(feed1.messages.length + feed2.messages.length + feed3.messages.length);
 
     const model = new ObjectStore().applyMutations(messages);

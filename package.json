@@ -18,7 +18,7 @@
     ]
   },
   "lint-staged": {
-    "*.js": "eslint"
+    "*.ts": "eslint"
   },
   "pre-commit": [
     "test",
@@ -35,30 +35,16 @@
     "sort-package-json": "lerna exec npx sort-package-json"
   },
   "devDependencies": {
-    "babel-eslint": "^10.0.2",
+    "@typescript-eslint/eslint-plugin": "^3.1.0",
+    "@typescript-eslint/parser": "^3.1.0",
+    "eslint": "^7.1.0",
+    "eslint-config-semistandard": "^15.0.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
     "lerna": "^3.11.1",
     "lint-staged": "^8.1.0"
-  },
-  "eslintConfig": {
-    "parser": "babel-eslint",
-    "extends": [
-      "plugin:jest/recommended",
-      "semistandard",
-      "standard-jsx"
-    ],
-    "plugins": [
-      "babel"
-    ],
-    "rules": {
-      "babel/semi": 1
-    }
-  },
-  "semistandard": {
-    "parser": "babel-eslint",
-    "env": [
-      "jest",
-      "node",
-      "browser"
-    ]
   }
 }

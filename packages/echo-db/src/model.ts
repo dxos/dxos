@@ -10,6 +10,7 @@ import { Model } from '@dxos/data-client';
 import { MutationUtil } from './mutation';
 import { ObjectStore, fromObject } from './object-store';
 import { createObjectId, parseObjectId } from './util';
+import { dxos } from './proto/gen/echo';
 
 const log = debug('dxos:echo:model');
 
@@ -20,18 +21,19 @@ const log = debug('dxos:echo:model');
 export class EchoModel extends Model {
   _model = new ObjectStore();
 
-  getObjectsByType (type) {
+  getObjectsByType (type: string) {
     return this._model.getObjectsByType(type);
   }
 
-  createItem (type, properties) {
+  createItem (type: string, properties: object) {
     log('create', type, properties);
 
     const id = createObjectId(type);
-    const mutations = fromObject({ id, properties });
+    const { mutations } = fromObject({ id, properties });
 
     // TODO(burdon): Create single message.
-    mutations.forEach((mutation) => {
+    // eslint-disable-next-line no-unused-expressions
+    mutations?.forEach((mutation) => {
       this.appendMessage({
         __type_url: type,
         ...mutation
@@ -41,17 +43,18 @@ export class EchoModel extends Model {
     return id;
   }
 
-  updateItem (id, properties) {
+  updateItem (id: string, properties: object) {
     log('update', id, properties);
 
     const { type } = parseObjectId(id);
-    const mutations = fromObject({
+    const { mutations } = fromObject({
       id,
       properties
     });
 
     // TODO(burdon): Create single message.
-    mutations.forEach((mutation) => {
+    // eslint-disable-next-line no-unused-expressions
+    mutations?.forEach((mutation) => {
       this.appendMessage({
         __type_url: type,
         ...mutation
@@ -59,11 +62,11 @@ export class EchoModel extends Model {
     });
   }
 
-  deleteItem (id) {
+  deleteItem (id: string) {
     log('delete', id);
 
     const { type } = parseObjectId(id);
-    const mutation = MutationUtil.createMessage(id, undefined, { deleted: true });
+    const mutation = MutationUtil.createMessage(id, { deleted: true });
 
     this.appendMessage({
       __type_url: type,
@@ -71,7 +74,7 @@ export class EchoModel extends Model {
     });
   }
 
-  onUpdate (messages) {
+  onUpdate (messages: dxos.echo.IObjectMutation[]) {
     this._model.applyMutations(messages);
   }
 }

@@ -2,16 +2,29 @@
 // Copyright 2020 DxOS.org
 //
 
-import { sortByProperty } from './util';
-
 // TODO(burdon): Dependency Graph: https://www.npmjs.com/package/dependency-graph
+
+export interface MessageBase {
+  id: string | number,
+  dependency?: string | number,
+}
+
+export interface Feed<T extends MessageBase> {
+  id?: string | number,
+  messages: T[],
+}
+
+interface FeedCursor {
+  position: number,
+  pending: null | number | string,
+}
 
 /**
  * Merge the given feeds, respecting the order when messages include the ID of a previous message.
  * @param {[{ id, messages }]} feeds
  * @return {[{Message}]}
  */
-export function mergeFeeds (feeds) {
+export function mergeFeeds<T extends MessageBase> (feeds: Feed<T>[]) {
   // Ordered list of merged messages.
   // TODO(burdon): Convert to stream.
   const merged = [];
@@ -20,12 +33,11 @@ export function mergeFeeds (feeds) {
   const messages = new Set();
 
   // Initial feed cursors (sorted to ensure deterministic processing of messages.
-  const feedCursors = feeds
-    .map(() => ({ position: 0, pending: null }))
-    .sort(sortByProperty('id'));
+  const feedCursors: FeedCursor[] = feeds
+    .map(() => ({ position: 0, pending: null }));
 
   // Gets the index of the next available feed to process.
-  const nextIndex = (current) => {
+  const nextIndex = (current: number) => {
     let count = feedCursors.length;
 
     let next = -1;

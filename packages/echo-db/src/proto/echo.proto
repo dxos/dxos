@@ -36,7 +36,7 @@ message Value {
 }
 
 message Object {
-  repeated KeyValue properites        = 1;
+  repeated KeyValue properties        = 1;
 }
 
 message KeyValue {

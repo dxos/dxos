@@ -4,22 +4,23 @@
 
 // TODO(burdon): Remove dependency (via adapter). Or move to other package.
 import { Model } from '@dxos/data-client';
+import type { OrderedMessage } from './common/OrderedMessage';
 
 /**
  * Basic ordered log model. Maintains a list of messages in an order of referencing messages to a previous ones.
  * It requires the previousMessageId of the first message (genesis) to be equal '0'
  * It requires every message to have id, and every message (except genesis) to have previousMessageId referencing an existing message's id
  */
-export class OrderedModel extends Model {
-  _messageQueue = [];
+export class OrderedModel<T extends OrderedMessage> extends Model {
+  _messageQueue: T[] = [];
 
-  _orderedMessages = [];
+  _orderedMessages: T[] = [];
 
   get orderedMessages () {
     return this._orderedMessages;
   }
 
-  async processMessages (messages) {
+  async processMessages (messages: T[]) {
     const messagesWithOrdering = messages
       .filter(
         m => m.messageId !== null && m.messageId !== undefined &&
@@ -64,16 +65,16 @@ export class OrderedModel extends Model {
    * @param  {object} message - message candidate
    */
   // eslint-disable-next-line
-  validateCandidate(_intendedPosition, _message) {
+  validateCandidate(_intendedPosition: number, _message: T) {
     return true;
   }
 
   // eslint-disable-next-line
-  async onUpdate(messages) {
+  async onUpdate(messages: T[]) {
     throw new Error(`Not processed: ${messages.length}`);
   }
 
-  static createGenesisMessage (message) {
+  static createGenesisMessage (message: any) {
     return {
       messageId: 1,
       previousMessageId: 0,
@@ -81,7 +82,7 @@ export class OrderedModel extends Model {
     };
   }
 
-  appendMessage (message) {
+  appendMessage (message: Omit<T, 'messageId' | 'previousMessageId'>) {
     super.appendMessage({
       messageId: this._orderedMessages.length + 1, // first message has id of 1
       previousMessageId: this._orderedMessages.length > 0
@@ -92,12 +93,12 @@ export class OrderedModel extends Model {
   }
 }
 
-export class DefaultOrderedModel extends OrderedModel {
+export class DefaultOrderedModel<T extends OrderedMessage> extends OrderedModel<T> {
   get messages () {
     return this._orderedMessages;
   }
 
-  onUpdate () {
+  async onUpdate () {
 
   }
 }

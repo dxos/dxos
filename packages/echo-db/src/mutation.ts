@@ -2,7 +2,10 @@
 // Copyright 2020 DxOS.org
 //
 
+/* eslint-disable no-unused-vars */
+
 import assert from 'assert';
+import { dxos } from './proto/gen/echo';
 
 /**
  * @typedef {Object} Value
@@ -11,36 +14,36 @@ import assert from 'assert';
  * @typedef {Object} ObjectMutationSet
  */
 
-const TYPE = {
-  NULL: 'null',
+enum Type {
+  NULL = 'null',
 
-  BOOLEAN: 'bool',
-  INTEGER: 'int',
-  FLOAT: 'float',
-  STRING: 'string',
+  BOOLEAN = 'bool',
+  INTEGER = 'int',
+  FLOAT = 'float',
+  STRING = 'string',
 
-  BYTES: 'bytes',
-  TIMESTAMP: 'timestamp',
-  DATETIME: 'datetime',
+  BYTES = 'bytes',
+  TIMESTAMP = 'timestamp',
+  DATETIME = 'datetime',
 
-  OBJECT: 'object'
-};
+  OBJECT = 'object'
+}
 
 const SCALAR_TYPES = [
-  TYPE.BOOLEAN,
-  TYPE.INTEGER,
-  TYPE.FLOAT,
-  TYPE.STRING,
-  TYPE.BYTES,
-  TYPE.TIMESTAMP,
-  TYPE.DATETIME
+  Type.BOOLEAN,
+  Type.INTEGER,
+  Type.FLOAT,
+  Type.STRING,
+  Type.BYTES,
+  Type.TIMESTAMP,
+  Type.DATETIME
 ];
 
 /**
  * Represents a named property value.
  */
 export class KeyValueUtil {
-  static createMessage (key, value) {
+  static createMessage (key: string, value: any): dxos.echo.IKeyValue {
     assert(key);
 
     return {
@@ -60,10 +63,10 @@ export class ValueUtil {
    * @param {any} value
    * @return {{Value}}
    */
-  static createMessage (value) {
+  static createMessage (value: any): dxos.echo.IValue {
     // NOTE: Process `null` different from `undefined`.
     if (value === null) {
-      return { [TYPE.NULL]: true };
+      return { [Type.NULL]: true };
     } else if (typeof value === 'boolean') {
       return ValueUtil.bool(value);
     } else if (typeof value === 'number') { // TODO(burdon): Detect float?
@@ -77,56 +80,56 @@ export class ValueUtil {
     }
   }
 
-  static bool (value) {
-    return { [TYPE.BOOLEAN]: value };
+  static bool (value: boolean): dxos.echo.IValue {
+    return { [Type.BOOLEAN]: value };
   }
 
-  static integer (value) {
-    return { [TYPE.INTEGER]: value };
+  static integer (value: number): dxos.echo.IValue {
+    return { [Type.INTEGER]: value };
   }
 
-  static float (value) {
-    return { [TYPE.FLOAT]: value };
+  static float (value: number): dxos.echo.IValue {
+    return { [Type.FLOAT]: value };
   }
 
-  static string (value) {
-    return { [TYPE.STRING]: value };
+  static string (value: string): dxos.echo.IValue {
+    return { [Type.STRING]: value };
   }
 
-  static datetime (value) {
-    return { [TYPE.DATE]: value };
+  static datetime (value: string): dxos.echo.IValue {
+    return { [Type.DATETIME]: value };
   }
 
-  static object (value) {
+  static object (value: Record<string, any>): dxos.echo.IValue {
     return {
-      [TYPE.OBJECT]: {
+      [Type.OBJECT]: {
         properties: Object.keys(value).map(key => KeyValueUtil.createMessage(key, value[key]))
       }
     };
   }
 
-  static applyValue (object, key, value) {
+  static applyValue (object: any, key: string, value: dxos.echo.IValue) {
     assert(object);
     assert(key);
     assert(value);
 
     // Remove property.
     // TODO(burdon): Null should stay set; remove if undefined?
-    if (value[TYPE.NULL]) {
+    if (value[Type.NULL]) {
       delete object[key];
       return object;
     }
 
     // Apply object properties.
-    if (value[TYPE.OBJECT]) {
-      const { properties } = value[TYPE.OBJECT];
+    if (value[Type.OBJECT]) {
+      const { properties } = value[Type.OBJECT]!;
       const nestedObject = {};
-      properties.forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key, value));
+      (properties ?? []).forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key!, value!));
       object[key] = nestedObject;
       return object;
     }
 
-    // Apply scalar.
+    // Apply scalar.s
     const field = SCALAR_TYPES.find(field => value[field] !== undefined);
     if (field) {
       object[key] = value[field];
@@ -144,16 +147,16 @@ export class ValueUtil {
  * { id, objectId, property, value, depends }
  */
 export class MutationUtil {
-  static applyMutations (object, messages) {
+  static applyMutations (object: any, messages: dxos.echo.ObjectMutation.IMutation[]) {
     messages.forEach(message => MutationUtil.applyMutation(object, message));
     return object;
   }
 
-  static applyMutation (object, mutation) {
+  static applyMutation (object: any, mutation: dxos.echo.ObjectMutation.IMutation) {
     const { operation = 0, key, value } = mutation;
     switch (operation) {
       case 0: {
-        ValueUtil.applyValue(object, key, value);
+        ValueUtil.applyValue(object, key!, value!);
         break;
       }
 
@@ -161,5 +164,12 @@ export class MutationUtil {
       default:
         throw new Error(`Operation not implemented: ${operation}`);
     }
+  }
+
+  static createMessage (objectId: string, { deleted = false }: { deleted?: boolean }): dxos.echo.IObjectMutation {
+    return {
+      objectId,
+      deleted
+    };
   }
 }

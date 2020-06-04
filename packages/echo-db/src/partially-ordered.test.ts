@@ -4,10 +4,10 @@
 
 import { DefaultPartiallyOrderedModel } from './partially-ordered';
 
-class ModelUnderTest extends DefaultPartiallyOrderedModel {
+class ModelUnderTest extends DefaultPartiallyOrderedModel<any> {
   constructor () {
     super();
-    this.on('append', message => this.processMessages([message]));
+    this.on('append', (message: any) => this.processMessages([message]));
   }
 }
 

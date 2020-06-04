@@ -11,15 +11,16 @@
     "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "GPL-3.0",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "npm run clean && npm run build:protobuf && npm run build:babel",
-    "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps --copy-files",
-    "build:protobuf": "pbjs -t json ./src/proto/echo.proto -o src/proto/gen/echo.json",
+    "build": "npm run clean && npm run build:protobuf && npm run build:ts",
+    "build:ts": "tsc",
+    "build:protobuf": "pbjs -t json ./src/proto/echo.proto -o ./src/proto/gen/echo.json && pbjs -t static-module -w commonjs ./src/proto/echo.proto -o ./src/proto/gen/echo.js && pbts -o ./src/proto/gen/echo.d.ts ./src/proto/gen/echo.js",
     "clean": "del-cli dist",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
-    "lint": "semistandard ./src/**/*.js",
+    "lint": "eslint './src/**/*.ts'",
     "test": "jest --rootDir ./src --verbose",
     "posttest": "npm run lint",
     "prepublishOnly": "npm run test && npm run build",
@@ -29,36 +30,46 @@
     "> 5%"
   ],
   "jest": {
+    "preset": "ts-jest/presets/js-with-ts",
     "testEnvironment": "node"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "^1.1.0-beta.0",
     "@dxos/crypto": "^0.0.1",
     "@dxos/data-client": "^1.0.0-beta.0",
+    "@types/debug": "^4.1.1",
+    "@types/end-of-stream": "^1.4.0",
+    "@types/node": "^14.0.9",
+    "@types/stream-buffers": "^3.0.2",
+    "@types/through2": "^2.0.36",
     "debug": "^4.1.1",
     "protobufjs": "^6.9.0",
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@babel/cli": "7.4.4",
-    "@babel/core": "^7.4.5",
-    "@babel/plugin-proposal-class-properties": "^7.5.5",
-    "@babel/plugin-proposal-export-default-from": "^7.5.2",
-    "@babel/preset-env": "^7.4.5",
-    "babel-plugin-add-module-exports": "^1.0.2",
-    "babel-plugin-inline-import": "^3.0.0",
-    "babel-plugin-source-map-support": "^2.1.1",
+    "@types/jest": "^25.2.3",
     "del-cli": "^3.0.0",
     "end-of-stream": "^1.4.4",
-    "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-jest": "^23.13.1",
     "jest": "^24.8.0",
     "pumpify": "^2.0.1",
     "semistandard": "^14.2.0",
     "stream-buffers": "^3.0.2",
-    "through2": "^3.0.1"
+    "through2": "^3.0.1",
+    "ts-jest": "^26.1.0",
+    "typescript": "^3.9.3"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "plugin:jest/recommended",
+      "eslint-config-semistandard"
+    ],
+    "rules": {
+      "babel/semi": 1
+    }
   }
 }
