@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 import { EventEmitter } from 'events';
 
 import { MutationUtil, ValueUtil } from './mutation';
@@ -13,6 +14,8 @@ interface ObjectBase {
   id: string,
   properties?: object,
 }
+
+const log = debug('dxos:echo:objectstore');
 
 /**
  * Create a set mutation messages from a single object.
@@ -119,6 +122,7 @@ export class ObjectStore extends EventEmitter {
   }
 
   applyMutations (mutations: dxos.echo.IObjectMutation[]) {
+    log(`applyMutations: ${JSON.stringify(mutations)}`);
     mutations.forEach(mutation => this.applyMutation(mutation));
 
     return this;

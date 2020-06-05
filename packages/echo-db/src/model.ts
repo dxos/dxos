@@ -29,15 +29,11 @@ export class EchoModel extends Model {
     log('create', type, properties);
 
     const id = createObjectId(type);
-    const { mutations } = fromObject({ id, properties });
+    const mutations = fromObject({ id, properties });
 
-    // TODO(burdon): Create single message.
-    // eslint-disable-next-line no-unused-expressions
-    mutations?.forEach((mutation) => {
-      this.appendMessage({
-        __type_url: type,
-        ...mutation
-      });
+    this.appendMessage({
+      __type_url: type,
+      ...mutations
     });
 
     return id;
@@ -47,18 +43,14 @@ export class EchoModel extends Model {
     log('update', id, properties);
 
     const { type } = parseObjectId(id);
-    const { mutations } = fromObject({
+    const mutations = fromObject({
       id,
       properties
     });
 
-    // TODO(burdon): Create single message.
-    // eslint-disable-next-line no-unused-expressions
-    mutations?.forEach((mutation) => {
-      this.appendMessage({
-        __type_url: type,
-        ...mutation
-      });
+    this.appendMessage({
+      __type_url: type,
+      ...mutations
     });
   }
 
