@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-isometric",
-  "version": "1.0.0-beta.11",
+  "version": "1.0.0-beta.12",
   "description": "Gem Isometric.",
   "repository": "https://github.com/dxos/gem",
   "license": "GPL-3.0",
@@ -22,7 +22,7 @@
     "*.js": "eslint --ignore-path .eslintignore"
   },
   "dependencies": {
-    "@dxos/gem-core": "^1.0.0-beta.11",
+    "@dxos/gem-core": "^1.0.0-beta.12",
     "@material-ui/core": "^4.9.10",
     "clsx": "^1.1.0",
     "d3": "^5.9.2",

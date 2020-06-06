@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-globe",
-  "version": "1.0.0-beta.11",
+  "version": "1.0.0-beta.12",
   "description": "Gem Globe.",
   "repository": "https://github.com/dxos/gem",
   "license": "GPL-3.0",
@@ -22,10 +22,12 @@
     "*.js": "eslint --ignore-path .eslintignore"
   },
   "dependencies": {
-    "@dxos/gem-core": "^1.0.0-beta.11",
+    "@dxos/gem-core": "^1.0.0-beta.12",
     "@material-ui/core": "^4.9.10",
     "clsx": "^1.1.0",
     "d3": "^5.9.2",
+    "d3-geo-projection": "^2.9.0",
+    "d3-inertia": "^0.1.0",
     "debug": "^4.1.1",
     "immutability-helper": "^3.0.2",
     "lodash.defaultsdeep": "^4.6.1",
@@ -33,7 +35,8 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-hotkeys": "^2.0.0",
-    "react-resize-aware": "^3.0.0"
+    "react-resize-aware": "^3.0.0",
+    "topojson": "^3.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

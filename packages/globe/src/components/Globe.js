@@ -2,294 +2,264 @@
 // Copyright 2018 DxOS
 //
 
-import isEqual from 'lodash.isequal';
-import PropTypes from 'prop-types';
-import React from 'react';
-import * as topojson from 'topojson';
 const d3 = Object.assign({}, require('d3'), require('d3-inertia'));
+import * as topojson from 'topojson';
+import React, { forwardRef, useEffect, useRef } from 'react';
+import useResizeAware from 'react-resize-aware';
 
-import { Container, bounds, resize } from '@dxos/gem-core';
+// TODO(burdon): Factor out components.
 
-import { Model, GeoUtil, GlobeStyles } from '../deprecated';
-import { Versor } from '../util';
+//
+// Utils.
+//
 
-// TODO(burdon): Port to modular hooks (performance for small inactive globes).
+// https://github.com/d3/d3-geo#geoCircle
+const circle = ({ lat, lng }, radius) => d3.geoCircle().center([lng, lat]).radius(radius)();
 
-/**
- * https://github.com/d3/d3-geo-projection
- */
-export const GlobeProjections = {
-  'Orthographic': () => d3.geoOrthographic(),
-  'Mercator': () => d3.geoMercator(),
-  'ConicConformal': () => d3.geoConicConformal(),
+const line = (p1, p2) => ({
+  type: 'LineString',
+  coordinates: [
+    [p1.lng, p1.lat],
+    [p2.lng, p2.lat]
+  ]
+});
+
+// TODO(burdon): Factor out.
+const renderFeatures = (geoPath, features, styles) => {
+  const context = geoPath.context();
+  const { canvas: { width, height } } = context;
+
+  // Clear background.
+  if (styles.background) {
+    context.fillStyle = styles.background.fillStyle;
+    context.fillRect(0, 0, width, height);
+  } else {
+    context.clearRect(0, 0, width, height);
+  }
+
+  // Render features.
+  // https://github.com/d3/d3-geo#_path
+  features.forEach(({ path, styles = {} }) => {
+    let doFill = false;
+    let doStroke = false;
+
+    Object.keys(styles).forEach(key => {
+      const value = styles[key];
+      context[key] = value;
+      doFill = (doFill || key === 'fillStyle' && value);
+      doStroke = (doStroke || key === 'strokeStyle' && value);
+    });
+
+    context.beginPath();
+    geoPath(path);
+
+    if (doFill) {
+      context.fill();
+    }
+
+    if (doStroke) {
+      context.stroke();
+    }
+  });
 };
 
 /**
- * Globe.
  *
- * Detailed documentation.
- * https://d3indepth.com/geographic
+ * @param topology
+ * @param features
+ * @param styles
+ * @returns {[{path: {type: string}, styles: *}]}
  */
-// TODO(burdon): Convert to function (in stages).
-export class Globe extends React.Component {
-
-  static Projections = Object.keys(GlobeProjections);
-
-  static propTypes = {
-    className: PropTypes.string,
-    projection: PropTypes.string,
-    topology: PropTypes.object.isRequired,
-    features: PropTypes.object,
-    duration: PropTypes.number
-  };
-
-  static defaultProps = {
-    model: new Model(),
-    projection: Object.keys(GlobeProjections)[0],
-    style: GlobeStyles[Object.keys(GlobeStyles)[0]],
-    duration: 1250,
-  };
-
-  state = {};
-
-  constructor(props) {
-    super(props);
-
-    const { model } = this.props;
-    model.on('update', (state, now) => {
-      const { offset, scale, rotation } = state;
-
-      // TODO(burdon): Stop drag.
-      if (now) {
-        this.doTransitionNow();
-      } else {
-        this.doTransition(offset, scale, rotation);
+const createLayers = (topology, features, styles) => {
+  const layers = [
+    {
+      styles: styles.water,
+      path: {
+        type: 'Sphere'
       }
+    }
+  ];
+
+  if (styles.graticule) {
+    layers.push({
+      styles: styles.graticule,
+      path: d3.geoGraticule().step([10, 5])()
     });
   }
 
-  get model() {
-    return this.props.model;
+  if (topology) {
+    layers.push(...[
+      {
+        styles: styles.land,
+        path: topojson.feature(topology, topology.objects.land)
+      },
+      {
+        // TODO(burdon): Optional.
+        styles: styles.border,
+        path: topojson.mesh(topology, topology.objects.countries, (a, b) => a !== b)
+      }
+    ]);
   }
 
-  /**
-   * Create the projection and context now that the canvas element is available.
-   */
-  // TODO(burdon): Move "state" outside of component.
-  init() {
-    const { projection, topology } = this.props;
+  if (features && styles.line && styles.point) {
+    const { lines = [], points = [] } = features;
+    layers.push(...[
+      {
+        // TODO(burdon): Animate.
+        // https://observablehq.com/@mbostock/top-100-cities
+        styles: styles.line,
+        path: {
+          type: 'GeometryCollection',
+          geometries: lines.map(({ source, target }) => line(source, target))
+        },
+      },
+      {
+        styles: styles.point,
+        path: {
+          type: 'GeometryCollection',
+          geometries: points.map(point => circle(point, styles.point.radius))
+        }
+      }
+    ]);
+  }
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
-    this._context = this._canvas.getContext('2d');
+  return layers;
+};
 
-    // https://github.com/d3/d3-geo-projection (Extended).
-    // https://github.com/d3/d3-geo/blob/master/README.md#projections
-    this._projection = GlobeProjections[projection]();
+// https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
+const defaultStyles = {
+  background: {
+    fillStyle: '#111'
+  },
+
+  water: {
+    fillStyle: '#123E6A'
+  },
+
+  land: {
+    fillStyle: '#032153'
+  }
+};
+
+/**
+ * Basic globe renderer.
+ *
+ * @param props
+ * @param props.styles
+ * @param props.events
+ * @param props.projection
+ * @param props.topology
+ * @param props.features
+ * @param props.offset
+ * @param props.rotation
+ * @param props.scale
+ * @param props.drag
+ * @param {Object|undefined} canvas
+ */
+// eslint-disable-next-line react/display-name
+const Globe2 = forwardRef((props, canvas) => {
+  canvas = canvas || useRef();
+
+  const {
+    projection = d3.geoOrthographic,
+    events,
+    topology,
+    features,
+    offset = { x: 0, y: 0 },
+    rotation = [0, 0, 0],
+    scale = 0.9,
+    drag = false
+  } = props;
+
+  let styles = props.styles || defaultStyles;
+
+  const [resizeListener, { width, height }] = useResizeAware();
+
+  //
+  // Features
+  //
+
+  const layers = useRef();
+  useEffect(() => {
+    layers.current = createLayers(topology, features, styles);
+  }, [topology, features, styles ]);
+
+  //
+  // Init.
+  //
+
+  const geoPath = useRef();
+
+  // NOTE: The d3 projection object is a function, which cannot be used directly as a state object.
+  const projectionRef = useRef(projection());
+
+  useEffect(() => {
+    projectionRef.current = projection();
 
     // https://github.com/d3/d3-geo#geoPath
-    // https://github.com/d3/d3/blob/master/API.md#paths-d3-path
-    this._path = d3.geoPath()
-      .projection(this._projection)
-      .context(this._context);
-
-    // https://github.com/d3/d3-geo
-    this._water = { type: 'Sphere' };
-
-    // https://github.com/topojson/topojson
-    this._land = topojson.feature(topology, topology.objects.land);
-
-    // https://github.com/d3/d3-geo#geoGraticule
-    this._graticule = d3.geoGraticule().step([10, 5])();
+    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+    geoPath.current = d3.geoPath()
+      .context(canvas.current.getContext('2d'))
+      .projection(projectionRef.current);
 
     // https://github.com/Fil/d3-inertia
-    this._drag = d3.geoInertiaDrag(d3.select(this._canvas), () => {
-      this.model.set({
-        rotation: this._projection.rotate()
-      });
+    if (drag) {
+      // TODO(burdon): Cancel if unmounted.
+      d3.geoInertiaDrag(d3.select(canvas.current), () => {
+        renderFeatures(geoPath.current, layers.current, styles);
 
-      this.repaint();
-    }, this._projection, { time: 1000 });
-
-    this.doTransitionNow();
-  }
-
-  doTransition(offset, scale, rotation) {
-    const { duration, onTransitionStart, onTransitionEnd } = this.props;
-    if (!duration) {
-      this.doTransitionNow();
+        events && events.emit('update', {
+          translation: projectionRef.current.translate(),
+          scale: projectionRef.current.scale(),
+          rotation: projectionRef.current.rotate()
+        });
+      }, projectionRef.current, { time: 3000 });
     }
 
-    const interpolateOffset = Versor.interpolatePoint(this.model.offset, offset);
-    const interpolateScale = Versor.interpolateScalar(this.model.scale, scale);
-    const interpolateRotation = Versor.interpolateAngles(this.model.rotation, rotation);
-
-    // Stop the spinner immediately.
-    onTransitionStart && onTransitionStart();
-
-    // https://github.com/d3/d3-transition#selection_transition
-    d3.select(this._canvas)
-      .interrupt('t0')
-      .transition('t0')
-      .duration(duration)
-      .tween('t1', () => t => {
-        this.updateProjection(interpolateOffset(t), interpolateScale(t), interpolateRotation(t));
-      })
-      // https://github.com/d3/d3-transition#transition_on
-      .on('end', () => {
-        onTransitionEnd && onTransitionEnd();
-      });
-  }
-
-  doTransitionNow() {
-    d3.select(this._canvas)
-      .interrupt('t0');
-
-    this.updateProjection(this.model.offset, this.model.scale, this.model.rotation);
-  }
-
-  updateProjection(offset, scale, rotation) {
-    const { width, height } = bounds(this._canvas);
-
-    // https://github.com/d3/d3-geo#projections
-    this._projection
-
-      // Center of canvas.
-      // https://github.com/d3/d3-geo#projection_translate
-      .translate([width / 2 + offset.x, height / 2 + offset.y])
-
-      // https://github.com/d3/d3-geo#projection_scale
-      .scale(scale * (Math.min(width, height) / 2))
-
-      // https://github.com/d3/d3-geo#projection_rotate
-      .rotate(rotation);
-
-    // Update current position.
-    this.model.set({
-      offset,
-      scale,
-      rotation
-    });
-
-    this.repaint();
-  }
-
-  repaint() {
-    const { filter, style } = this.props;
-    const { width, height } = bounds(this._canvas);
-
-    // Clear background.
-    if (style.background) {
-      this._context.fillStyle = style.background;
-      this._context.fillRect(0, 0, width, height);
-    } else {
-      this._context.clearRect(0, 0, width, height);
-    }
-
-    // Effects
-    // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter
-    if (filter) {
-      this._context.filter = filter;
-    }
-
-    if (style.shadow) {
-      this._context.filter = `drop-shadow(${style.shadow}px ${style.shadow}px 20px ${style.water})`;
-    }
-
-    // https://github.com/d3/d3-geo
-
-    // Water
-    if (style.water) {
-      this._context.beginPath();
-      this._path(this._water);
-      this._context.fillStyle = style.water;
-      this._context.fill();
-    }
-
-    if (style.shadow) {
-      this._context.filter = `drop-shadow(1px 1px 1px #000`;
-    }
-
-    // Land
-    if (style.land) {
-      this._context.beginPath();
-      this._path(this._land);
-      this._context.fillStyle = style.land;
-      this._context.fill();
-    }
-
-    this._context.filter = `drop-shadow()`;
-
-    // Graticule
-    if (style.graticule) {
-      this._context.beginPath();
-      this._path(this._graticule);
-      this._context.lineWidth = 1;
-      this._context.strokeStyle = style.graticule;
-      this._context.stroke();
-    }
-
-    // Features
-    const { features: { points = [], lines = [] } = {} } = this.props;
-
-    // Arcs
-    {
-      // TODO(burdon): Animate arcs (transition outside of repaint).
-      // https://observablehq.com/@mbostock/top-100-cities
-
-      this._context.beginPath();
-      this._path(GeoUtil.collection(lines.map(({ source, target }) => GeoUtil.line(source, target))));
-      this._context.lineWidth = style.width || 1.5;
-      this._context.strokeStyle = style.arc;
-
-      style.dash && this._context.setLineDash(style.dash);
-
-      this._context.stroke();
-    }
-
-    // Points
-    {
-      const size = .5;
-
-      // TODO(burdon): Transition.
-      this._context.beginPath();
-      this._path(GeoUtil.collection(points.map(p => GeoUtil.circle(p, size))));
-      this._context.fillStyle = style.place;
-      this._context.fill();
-    }
-  }
+    renderFeatures(geoPath.current, layers.current, styles);
+  }, [projection, layers, drag]);
 
   //
-  // React lifecycle.
+  // Update projection and render.
   //
 
-  componentDidMount() {
-    this.init();
-  }
+  useEffect(() => {
 
-  componentDidUpdate(prevProps) {
-    const diff = prop => !isEqual(this.props[prop], prevProps[prop]);
-    if (diff('projection') || diff('style')) {
-      this.init();
-      return;
+    //
+    // Update projection.
+    //
+
+    {
+      const center = {
+        x: offset.x + width / 2,
+        y: offset.y + height / 2
+      };
+
+      projectionRef.current
+        // https://github.com/d3/d3-geo#projection_translate
+        .translate([ center.x, center.y ])
+
+        // https://github.com/d3/d3-geo#projection_scale
+        .scale((Math.min(width, height) / 2) * scale)
+
+        // https://github.com/d3/d3-geo#projection_rotate
+        .rotate(rotation);
     }
 
-    this.repaint();
-  }
+    //
+    // Features.
+    //
 
-  render() {
-    let { className } = this.props;
+    renderFeatures(geoPath.current, layers.current, styles);
 
-    const handler = (bounds) => {
-      if (resize(this._canvas, bounds)) {
-        this.doTransitionNow();
-      }
-    };
+  }, [projection, geoPath, layers, rotation, scale, styles, width, height]);
 
-    // TODO(burdon): Container deprecated.
-    return (
-      <Container {...{ className }} onRender={handler}>
-        <canvas ref={el => this._canvas = el} />
-      </Container>
-    );
-  }
-}
+  return (
+    <div>
+      {resizeListener}
+      <canvas ref={canvas} width={width} height={height}/>
+    </div>
+  );
+});
+
+export default Globe2;
