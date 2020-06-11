@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "moduleResolution": "node",
     "allowJs": true,
     "strict": true,
     "resolveJsonModule": true,
@@ -8,7 +9,7 @@
     "composite": true,
     "sourceMap": true,
     "declarationMap": true,
-    "target": "ES5",
+    "target": "es6",
     "outDir": "dist"
   },
   "include": [
