@@ -1,1 +1,1 @@
-declare module '@dxos/data-client';
+declare module '@dxos/model-factory';
