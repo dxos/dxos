@@ -16,7 +16,14 @@
     "packages": [
       "packages/*"
     ],
-    "nohoist": ["**/semistandard", "**/semistandard/**"]
+    "nohoist": [
+      "**/semistandard/**",
+      "**/eslint-config-semistandard/**",
+      "**/eslint-config-standard/**",
+      "**/eslint-config-standard-jsx/**",
+      "**/eslint-plugin-standard/**",
+      "**/standard-engine/**"
+    ]
   },
   "lint-staged": {
     "*.ts": "eslint"
