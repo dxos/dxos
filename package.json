@@ -15,7 +15,8 @@
   "workspaces": {
     "packages": [
       "packages/*"
-    ]
+    ],
+    "nohoist": ["**/semistandard", "**/semistandard/**"]
   },
   "lint-staged": {
     "*.ts": "eslint"
