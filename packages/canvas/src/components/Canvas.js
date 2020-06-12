@@ -371,7 +371,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
               />
             )}
 
-            <div>
+            <div style={{ position: 'relative' }}>
               {resizeListener}
               <SVG ref={view} width={width} height={height}>
                 <Grid

@@ -6004,6 +6004,16 @@ d3-format@1.2.2:
   resolved "https://registry.yarnpkg.com/d3-format/-/d3-format-1.2.2.tgz#1a39c479c8a57fe5051b2e67a3bee27061a74e7a"
   integrity sha512-zH9CfF/3C8zUI47nsiKfD0+AGDEuM8LwBIP7pBVpyR4l/sKkZqITmMtxRp04rwBrlshIZ17XeFAaovN3++wzkw==
 
+d3-geo-projection@^2.9.0:
+  version "2.9.0"
+  resolved "https://registry.yarnpkg.com/d3-geo-projection/-/d3-geo-projection-2.9.0.tgz#826db62f748e8ecd67cd00aced4c26a236ec030c"
+  integrity sha512-ZULvK/zBn87of5rWAfFMc9mJOipeSo57O+BBitsKIXmU4rTVAnX1kSsJkE0R+TxY8pGNoM1nbyRRE7GYHhdOEQ==
+  dependencies:
+    commander "2"
+    d3-array "1"
+    d3-geo "^1.12.0"
+    resolve "^1.1.10"
+
 d3-geo@1:
   version "1.12.0"
   resolved "https://registry.yarnpkg.com/d3-geo/-/d3-geo-1.12.0.tgz#58ddbdf4d9db5f199db69d1b7c93dca6454a6f24"
@@ -6015,6 +6025,13 @@ d3-geo@1.9.1:
   version "1.9.1"
   resolved "https://registry.yarnpkg.com/d3-geo/-/d3-geo-1.9.1.tgz#157e3b0f917379d0f73bebfff3be537f49fa7356"
   integrity sha512-l9wL/cEQkyZQYXw3xbmLsH3eQ5ij+icNfo4r0GrLa5rOCZR/e/3am45IQ0FvQ5uMsv+77zBRunLc9ufTWSQYFA==
+  dependencies:
+    d3-array "1"
+
+d3-geo@^1.12.0:
+  version "1.12.1"
+  resolved "https://registry.yarnpkg.com/d3-geo/-/d3-geo-1.12.1.tgz#7fc2ab7414b72e59fbcbd603e80d9adc029b035f"
+  integrity sha512-XG4d1c/UJSEX9NfU02KwBL6BYPj8YKHxgBEw5om2ZnTRSbIcego6dhHwcxuSR3clxh0EpE38os1DVPOmnYtTPg==
   dependencies:
     d3-array "1"
 
@@ -6038,6 +6055,16 @@ d3-inertia@^0.0.7:
     d3-selection "^1.1.0"
     d3-timer "^1.0.7"
     versor "^0.0.1"
+
+d3-inertia@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/d3-inertia/-/d3-inertia-0.1.0.tgz#286724b4183c7e92f4c062fc1abab5feb2f3c504"
+  integrity sha512-tm+FRchVZWi07O13nIFMJd+EtoR2+oTXhuvNuqmZsX3oEjhsyaa7U6TbFcVt++76rUJqOsHnKTEp1t9RFRyDKg==
+  dependencies:
+    d3-drag "^1.2.1"
+    d3-selection "^1.1.0"
+    d3-timer "^1.0.7"
+    versor "^0.1"
 
 d3-interpolate@1, d3-interpolate@^1.2.0:
   version "1.4.0"
@@ -14382,7 +14409,7 @@ resolve@1.1.7:
   resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.1.7.tgz#203114d82ad2c5ed9e8e0411b3932875e889e97b"
   integrity sha1-IDEU2CrSxe2ejgQRs5ModeiJ6Xs=
 
-resolve@^1.1.6, resolve@^1.10.0, resolve@^1.11.0, resolve@^1.12.0, resolve@^1.13.1, resolve@^1.15.1, resolve@^1.17.0, resolve@^1.3.2, resolve@^1.8.1:
+resolve@^1.1.10, resolve@^1.1.6, resolve@^1.10.0, resolve@^1.11.0, resolve@^1.12.0, resolve@^1.13.1, resolve@^1.15.1, resolve@^1.17.0, resolve@^1.3.2, resolve@^1.8.1:
   version "1.17.0"
   resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.17.0.tgz#b25941b54968231cc2d1bb76a79cb7f2c0bf8444"
   integrity sha512-ic+7JYiV8Vi2yzQGFWOkiZD5Z9z7O2Zhm9XMaTxdJExKasieFCr+yXZ/WmXsckHiKl12ar0y6XiXDx3m4RHn1w==
@@ -16401,6 +16428,11 @@ versor@^0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/versor/-/versor-0.0.1.tgz#19e12d1a3b8e172c3803e9dcc9b991b8b913368c"
   integrity sha512-MR34lAhDnGPrbWdUCVTFWDiNLHZrfVkd1vFaXk1TWjEbhK7IFf6DNpt2WmL2ReLNIZeb3vfbin5O+u/HNr824w==
+
+versor@^0.1:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/versor/-/versor-0.1.2.tgz#0b145a22cd6376f222dace214ab1fd3b6369a8d9"
+  integrity sha512-/XNJOGXeis3j7OOOkdTp3LXzWDTxo/33wvYNtXLLbNOZ5lkTgESzTMPeThU6albr14UupCottC6KTXjcGDO0Lg==
 
 vm-browserify@^1.0.1:
   version "1.1.2"

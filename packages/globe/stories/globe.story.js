@@ -6,6 +6,7 @@ import * as d3 from 'd3';
 import EventEmitter from 'events';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
+import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
 import { withKnobs, button, number, select } from "@storybook/addon-knobs";
 
@@ -14,10 +15,10 @@ import { FullScreen, useObjectMutator } from '@dxos/gem-core';
 import CitiesData from '../data/cities.json';
 import TopologyData from '../data/110m.json';
 
-import { Globe2, Versor } from '../src';
+import { Globe, Versor } from '../src';
 
 export default {
-  title: 'Globe2',
+  title: 'Globe',
   decorators: [withKnobs]
 };
 
@@ -253,6 +254,18 @@ const globeStyles = {
     land: {
       fillStyle: '#222'
     },
+
+    line: {
+      strokeStyle: '#FFF',
+      strokeWidth: 1,
+    },
+
+    point: {
+      fillStyle: '#CCC',
+      strokeStyle: '#FFF',
+      strokeWidth: 1,
+      radius: 1
+    }
   },
 };
 
@@ -273,11 +286,12 @@ const locations = {
   }
 };
 
-export const withSimpleGlobe = () => {
+export const withGlobe = () => {
   const canvas = useRef();
   const classes = useStyles();
   const [features,, featuresRef, updateFeatures] = useObjectMutator({ points: [], lines: [] });
   const [info, setInfo] = useState(null);
+  const [resizeListener, { width, height }] = useResizeAware();
 
   const styles = select('style', globeStyles);
   const tilt = number('tilt', 25, { min: -45, max: 45 });
@@ -393,11 +407,13 @@ export const withSimpleGlobe = () => {
 
   return (
     <FullScreen>
+      {resizeListener}
+
       {info && (
         <pre className={classes.label}>{JSON.stringify(info, null, 2)}</pre>
       )}
 
-      <Globe2
+      <Globe
         ref={canvas}
         drag={true}
         events={eventEmitter.current}
@@ -408,6 +424,8 @@ export const withSimpleGlobe = () => {
         scale={scale}
         rotation={rotation}
         offset={{ x: 0, y: 0 }}     // TODO(burdon): Function that gets bounds (like d3 d => {}).
+        width={width}
+        height={height}
       />
     </FullScreen>
   );
