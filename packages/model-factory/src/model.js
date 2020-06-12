@@ -13,19 +13,14 @@ import { createId, humanize } from '@dxos/crypto';
  * Events: `append`, `update`, `destroy`
  */
 export class Model extends EventEmitter {
-  constructor (type, options = {}) {
+  constructor (options = {}) {
     super();
 
-    const { onAppend = () => {} } = options;
+    const { id = createId(), modelFactoryOptions = {} } = options;
 
-    this._type = type;
-    this._onAppend = onAppend;
-    this._id = createId();
+    this._id = id;
     this._destroyed = false;
-  }
-
-  get type () {
-    return this._type;
+    this._modelFactoryOptions = modelFactoryOptions;
   }
 
   get id () {
@@ -34,6 +29,17 @@ export class Model extends EventEmitter {
 
   get destroyed () {
     return this._destroyed;
+  }
+
+  get modelFactoryOptions () {
+    return this._modelFactoryOptions;
+  }
+
+  setAppendHandler (cb) {
+    if (this._appendHandler) {
+      throw new Error('append handler already defined');
+    }
+    this._appendHandler = cb;
   }
 
   async destroy () {
@@ -49,13 +55,20 @@ export class Model extends EventEmitter {
 
   // TODO(burdon): appendMessages.
   async appendMessage (message) {
-    await this._onAppend(message);
+    message = await this.onAppend(message);
+    if (this._appendHandler) {
+      await this._appendHandler(message);
+    }
     this.emit('append', message);
   }
 
   //
   // Virtual methods.
   //
+
+  async onAppend (message) {
+    return message;
+  }
 
   async onUpdate (messages) {
     throw new Error(`Not processed: ${messages.length}`);
