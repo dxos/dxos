@@ -51,7 +51,11 @@ export class ModelFactory {
     const feedInfo = subscriptionOptions.feedLevelIndexInfo;
 
     // TODO(burdon): Option to cache and reference count models.
-    const model = new ModelClass(type, message => this._onAppend(message, options));
+    const model = new ModelClass(type, {
+      // Why I have to pass the ...rest as it was some kind of extra fields?
+      // What happen if someone put a function there, are we going to store [function Function]?
+      onAppend: message => this._onAppend({ ...message, ...rest }, options)
+    });
 
     // metrics.set(`model.${model.id}.options`, { class: ModelClass.name, ...(type && { type }) });
     // const createTimer = metrics.start(`model.${model.id}.createTimer`);
