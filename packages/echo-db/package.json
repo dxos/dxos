@@ -41,6 +41,7 @@
     "@types/end-of-stream": "^1.4.0",
     "@types/node": "^14.0.9",
     "@types/stream-buffers": "^3.0.2",
+    "js-data-structs": "^1.1.2",
     "@types/through2": "^2.0.36",
     "debug": "^4.1.1",
     "protobufjs": "^6.9.0",
