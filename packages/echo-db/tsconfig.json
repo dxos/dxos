@@ -9,7 +9,8 @@
     "composite": true,
     "sourceMap": true,
     "declarationMap": true,
-    "target": "es5",
+    "target": "es6",
+    "module": "commonjs",
     "outDir": "dist"
   },
   "include": [
