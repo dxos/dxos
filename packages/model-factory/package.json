@@ -36,6 +36,7 @@
     "@dxos/crypto": "^0.0.1",
     "@dxos/debug": "^1.0.0-beta.20",
     "@dxos/feed-level-indexer": "^1.1.0-alpha.9",
+    "@dxos/metrics": "^1.0.0-beta.8",
     "charwise": "^3.0.1",
     "debug": "^4.1.1",
     "end-of-stream": "^1.4.4",

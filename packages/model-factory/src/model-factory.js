@@ -6,7 +6,7 @@ import assert from 'assert';
 import { Writable } from 'stream';
 import pump from 'pump';
 
-// import metrics from '@dxos/metrics';
+import metrics from '@dxos/metrics';
 
 import { Subscriber } from './subscriber';
 import { DefaultModel } from './model';
@@ -61,8 +61,10 @@ export class ModelFactory {
       return this._onAppend({ ...message, ...rest }, options);
     });
 
-    // metrics.set(`model.${model.id}.options`, { class: ModelClass.name, ...(type && { type }) });
-    // const createTimer = metrics.start(`model.${model.id}.createTimer`);
+    metrics.set(`model.${model.id}.options`, { class: ModelClass.name, ...(type && { type }) });
+
+    // I don't understand what this timer is for.
+    const createTimer = metrics.start(`model.${model.id}.createTimer`);
 
     //
     // Incoming messages (create read stream).
@@ -91,7 +93,7 @@ export class ModelFactory {
       }
 
       await model.processMessages(messages);
-      // metrics.inc(`model.${model.id}.length`, messages.length);
+      metrics.inc(`model.${model.id}.length`, messages.length);
     }, batchPeriod);
 
     const forEachMessage = new Writable({
@@ -115,13 +117,13 @@ export class ModelFactory {
       unsubscribe();
     });
 
-    // createTimer.end();
+    createTimer.end();
 
     return model;
   }
 
   destroyModel (model) {
-    // metrics.delete(`model.${model.id}`);
+    metrics.delete(`model.${model.id}`);
     return model.destroy();
   }
 }
