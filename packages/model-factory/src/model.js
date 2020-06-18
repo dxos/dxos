@@ -50,7 +50,7 @@ export class Model extends EventEmitter {
 
   async processMessages (messages) {
     await this.onUpdate(messages);
-    this.emit('update', this);
+    this.emit('update', this, messages);
   }
 
   // TODO(burdon): appendMessages.
