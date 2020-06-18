@@ -103,8 +103,6 @@ export class ObjectStore extends EventEmitter {
       return this;
     }
 
-    assert(mutations);
-
     // Create object if not found.
     let object = this._objectById.get(objectId);
     if (!object) {
@@ -116,7 +114,7 @@ export class ObjectStore extends EventEmitter {
       this._objectById.set(objectId, object);
     }
 
-    MutationUtil.applyMutations(object.properties, mutations);
+    MutationUtil.applyMutations(object.properties, mutations || []);
 
     return this;
   }

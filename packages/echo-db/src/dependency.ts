@@ -5,10 +5,11 @@
 // TODO(burdon): Dependency Graph: https://www.npmjs.com/package/dependency-graph
 
 export interface MessageBase {
-  id: string | number,
-  dependency?: string | number,
+  id?: (string | null),
+  dependency?: (string | null),
 }
 
+// TODO(dboreham): figure out how to prevent protobuf schema constraints leaking into our code (e.g. (string|null) ).
 export interface Feed<T extends MessageBase> {
   id?: string | number,
   messages: T[],
@@ -24,7 +25,7 @@ interface FeedCursor {
  * @param {[{ id, messages }]} feeds
  * @return {[{Message}]}
  */
-export function mergeFeeds<T extends MessageBase> (feeds: Feed<T>[]) {
+export function mergeFeeds<T extends MessageBase> (feeds: Feed<T>[]): T[] {
   // Ordered list of merged messages.
   // TODO(burdon): Convert to stream.
   const merged = [];
