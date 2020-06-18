@@ -7,6 +7,8 @@ import assert from 'assert';
 import levelmem from 'level-mem';
 import multi from 'multi-read-stream';
 import eos from 'end-of-stream';
+import timestamp from 'monotonic-timestamp';
+import charwise from 'charwise';
 
 import { FeedLevelIndexer } from '@dxos/feed-level-indexer';
 import { discoveryKey } from '@dxos/crypto';
@@ -50,7 +52,7 @@ export class Subscriber {
     };
 
     this._indexer = new FeedLevelIndexer(this._db, this._source).by(INDEX,
-      (feed, state) => [feed.metadata.topic, feed.data.__type_url, state.seq, feed.seq]);
+      (feed, state) => [feed.metadata.topic, feed.data.__type_url, charwise.encode(timestamp())]);
 
     this._indexer.open().catch(err => console.error(err));
   }
