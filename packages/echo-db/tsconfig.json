@@ -9,7 +9,7 @@
     "composite": true,
     "sourceMap": true,
     "declarationMap": true,
-    "target": "es6",
+    "target": "es5",
     "outDir": "dist"
   },
   "include": [

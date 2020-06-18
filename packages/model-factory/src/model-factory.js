@@ -52,7 +52,7 @@ export class ModelFactory {
 
     // TODO(burdon): Option to cache and reference count models.
     const model = new ModelClass({
-      modelFatoryOptions: options
+      modelFactoryOptions: options
     });
 
     model.setAppendHandler(message => {
