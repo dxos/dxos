@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "allowJs": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "composite": true,
+    "sourceMap": true,
+    "declarationMap": true,
+    "target": "es6",
+    "outDir": "dist"
+  },
+  "include": [
+    "src",
+    "src/**/*.js",
+    "src/**/*.ts",
+    "src/**/*.json"
+  ]
+}

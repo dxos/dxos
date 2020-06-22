@@ -30,3 +30,17 @@ export const parseObjectId = (id: string) => {
  */
 export const sortByProperty = <T>(property: keyof T) =>
   ({ [property]: a }: T, { [property]: b }: T) => (a > b ? 1 : a < b ? -1 : 0);
+
+/**
+ * Immediatelly throws an error passed as an argument.
+ *
+ * Usefull for throwing errors from inside expressions.
+ * For example:
+ * ```
+ * const item = model.getById(someId) ?? raise(new Error('Not found'));
+ * ```
+ * @param error
+ */
+export const raise = (error: Error): never => {
+  throw error;
+};
