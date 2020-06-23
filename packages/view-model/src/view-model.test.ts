@@ -64,7 +64,8 @@ test('update view metdata', () => {
     {
       __type_url: 'testing.View',
       viewId: '1',
-      displayName: 'foo'
+      displayName: 'foo',
+      metadata: { foo: 'bar' }
     },
     {
       __type_url: 'testing.View',

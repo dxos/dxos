@@ -55,8 +55,8 @@ export class ViewModel<M extends {} = {}> extends Model {
           displayName: message.displayName ?? view.displayName,
           deleted: message.deleted || view.deleted,
           metadata: {
-            ...message.metadata,
-            ...view.metadata
+            ...view.metadata,
+            ...message.metadata
           }
         });
       } else {
