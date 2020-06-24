@@ -25,15 +25,15 @@ export class ViewModel<M extends {} = {}> extends Model {
   private readonly _views = new Map<string, View<M>>()
 
   getById (viewId: string): View<M> | undefined {
-    const view = this._views.get(viewId);
-    if (view?.deleted) {
-      return undefined;
-    }
-    return view;
+    return this._views.get(viewId);
   }
 
   getAllViews (): View<M>[] {
     return Array.from(this._views.values()).filter(view => !view.deleted);
+  }
+
+  getAllDeletedViews (): View<M>[] {
+    return Array.from(this._views.values()).filter(view => view.deleted);
   }
 
   getAllForType (type: string): View<M>[] {
@@ -53,7 +53,7 @@ export class ViewModel<M extends {} = {}> extends Model {
         this._views.set(message.viewId, {
           ...view,
           displayName: message.displayName ?? view.displayName,
-          deleted: message.deleted || view.deleted,
+          deleted: message.deleted ?? view.deleted,
           metadata: {
             ...view.metadata,
             ...message.metadata
@@ -64,7 +64,7 @@ export class ViewModel<M extends {} = {}> extends Model {
           type: message.__type_url,
           viewId: message.viewId,
           displayName: message.displayName ?? message.viewId,
-          deleted: false,
+          deleted: message.deleted ?? false,
           metadata: (message.metadata ?? {}) as M
         });
       }
@@ -79,16 +79,25 @@ export class ViewModel<M extends {} = {}> extends Model {
 
   renameView (viewId: string, displayName: string) {
     const view = this.getById(viewId) ?? raise(new Error(`View not found for id: ${viewId}`));
+    if (view.deleted) throw new Error(`Cannot rename deleted view with id: ${viewId}`);
     super.appendMessage({ viewId, __type_url: view.type, displayName });
   }
 
-  updateView (viewId: string, metdata: Partial<M>) {
+  updateView (viewId: string, metadata: Partial<M>) {
     const view = this.getById(viewId) ?? raise(new Error(`View not found for id: ${viewId}`));
-    super.appendMessage({ viewId, __type_url: view.type, metdata });
+    if (view.deleted) throw new Error(`Cannot update deleted view with id: ${viewId}`);
+    super.appendMessage({ viewId, __type_url: view.type, metadata });
   }
 
   deleteView (viewId: string) {
     const view = this.getById(viewId) ?? raise(new Error(`View not found for id: ${viewId}`));
+    if (view.deleted) return;
     super.appendMessage({ viewId, __type_url: view.type, deleted: true });
+  }
+
+  restoreView (viewId: string) {
+    const view = this.getById(viewId) ?? raise(new Error(`View not found for id: ${viewId}`));
+    if (!view.deleted) return;
+    super.appendMessage({ viewId, __type_url: view.type, deleted: false });
   }
 }

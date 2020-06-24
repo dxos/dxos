@@ -30,6 +30,7 @@ test('create multiple views', () => {
       metadata: {}
     }
   ]);
+  expect(model.getAllDeletedViews()).toStrictEqual([]);
 });
 
 test('rename view', () => {
@@ -56,6 +57,7 @@ test('rename view', () => {
       metadata: {}
     }
   ]);
+  expect(model.getAllDeletedViews()).toStrictEqual([]);
 });
 
 test('update view metdata', () => {
@@ -83,6 +85,7 @@ test('update view metdata', () => {
       metadata: { foo: 'foo' }
     }
   ]);
+  expect(model.getAllDeletedViews()).toStrictEqual([]);
 });
 
 test('delete view', () => {
@@ -101,4 +104,68 @@ test('delete view', () => {
   ]);
 
   expect(model.getAllViews()).toStrictEqual([]);
+  expect(model.getAllDeletedViews()).toStrictEqual([
+    {
+      type: 'testing.View',
+      viewId: '1',
+      deleted: true,
+      displayName: 'foo',
+      metadata: {}
+    }
+  ]);
+});
+
+test('restore view', () => {
+  const model = new ViewModel();
+  model.onUpdate([
+    {
+      __type_url: 'testing.View',
+      viewId: '1',
+      displayName: 'foo'
+    },
+    {
+      __type_url: 'testing.View',
+      viewId: '1',
+      deleted: true
+    },
+    {
+      __type_url: 'testing.View',
+      viewId: '1',
+      deleted: false
+    }
+  ]);
+
+  expect(model.getAllViews()).toStrictEqual([
+    {
+      type: 'testing.View',
+      viewId: '1',
+      deleted: false,
+      displayName: 'foo',
+      metadata: {}
+    }
+  ]);
+  expect(model.getAllDeletedViews()).toStrictEqual([]);
+});
+
+test('can start a message in deleted state', () => {
+  const model = new ViewModel();
+  model.onUpdate([
+    {
+      __type_url: 'testing.View',
+      viewId: '1',
+      displayName: 'foo',
+      deleted: true
+    }
+  ]);
+
+  expect(model.getAllViews()).toStrictEqual([]);
+  expect(model.getAllDeletedViews()).toStrictEqual([
+    {
+      type: 'testing.View',
+      viewId: '1',
+      deleted: true,
+      displayName: 'foo',
+      metadata: {}
+    }
+  ]);
 });
