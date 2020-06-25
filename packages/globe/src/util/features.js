@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS.org
+// Copyright 2020 DXOS.org.org
 //
 
 const d3 = Object.assign({}, require('d3'));
@@ -18,13 +18,14 @@ import { circle, line } from './path';
 export const createLayers = (topology, features, styles) => {
   const layers = [];
 
-  // TODO(burdon): Skip if not globe projection.
-  layers.push({
-    styles: styles.water,
-    path: {
-      type: 'Sphere'
-    }
-  });
+  if (styles.water) {
+    layers.push({
+      styles: styles.water,
+      path: {
+        type: 'Sphere'
+      }
+    });
+  }
 
   if (styles.graticule) {
     layers.push({

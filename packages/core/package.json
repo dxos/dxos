@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-core",
-  "version": "1.0.0-beta.14",
+  "version": "1.0.0-beta.15",
   "description": "Gem core components.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -34,6 +34,7 @@
     "react-resize-aware": "^3.0.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.10.3",
     "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-export-default-from": "^7.8.3",
     "@babel/preset-react": "^7.9.4",

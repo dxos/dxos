@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS
+// Copyright 2020 DXOS.org
 //
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths

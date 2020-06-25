@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS.org
+// Copyright 2020 DXOS.org.org
 //
 
 const d3 = Object.assign({}, require('d3'));

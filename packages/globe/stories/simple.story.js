@@ -2,6 +2,7 @@
 // Copyright 2018 DxOS
 //
 
+import * as d3 from 'd3';
 import React, { useRef } from 'react';
 import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
@@ -39,6 +40,38 @@ export const withSimpleGlobe = () => {
         drag={true}
         topology={TopologyData}
         offset={{ x: 0, y: 200 }}
+        scale={1.8}
+        width={width}
+        height={height}
+      />
+    </div>
+  );
+};
+
+export const withFlatEarth = () => {
+  const canvas = useRef();
+  const classes = useStyles();
+  const [resizeListener, { width, height }] = useResizeAware();
+
+  const styles = {
+    background: {
+      fillStyle: '#111'
+    },
+
+    land: {
+      fillStyle: '#666'
+    },
+  };
+
+  return (
+    <div className={classes.root}>
+      {resizeListener}
+      <Globe
+        ref={canvas}
+        drag={true}
+        styles={styles}
+        topology={TopologyData}
+        projection={d3.geoMercator}
         scale={1.8}
         width={width}
         height={height}

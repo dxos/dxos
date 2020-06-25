@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS
+// Copyright 2020 DXOS.org
 //
 
 // TODO(burdon): https://www.npmjs.com/package/mathjs (https://mathjs.org/docs/datatypes/fractions.html)

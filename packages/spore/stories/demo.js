@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS
+// Copyright 2020 DXOS.org
 //
 
 import * as d3 from 'd3';
@@ -23,7 +23,7 @@ import {
 
   useGraphGenerator,
   useGrid,
-  useObjectMutator,
+  useObjectMutator
 } from '@dxos/gem-core';
 
 import {
