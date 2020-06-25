@@ -1,6 +1,6 @@
 {
   "name": "@dxos/view-model",
-  "version": "1.0.0-beta.19",
+  "version": "1.0.0-beta.20",
   "description": "View model",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/view-model#readme",
   "bugs": {
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@dxos/crypto": "^0.0.1",
-    "@dxos/model-factory": "^1.0.0-beta.19"
+    "@dxos/model-factory": "^1.0.0-beta.20"
   },
   "devDependencies": {
     "@types/jest": "^25.2.3",
