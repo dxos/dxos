@@ -33,4 +33,7 @@ test('EchoModel', async () => {
   expect(object).toHaveProperty('properties');
   expect(object.properties).toHaveProperty('prop1', 'prop1value');
   expect(object.properties).toHaveProperty('prop2', 'prop2value');
+
+  // Check that getItem gives the same info.
+  expect(object).toEqual(model.getItem(itemId));
 });

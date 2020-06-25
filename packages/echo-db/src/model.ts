@@ -66,6 +66,12 @@ export class EchoModel extends Model {
     });
   }
 
+  getItem (id: string) {
+    log('get', id);
+
+    return this._model.getObjectById(id);
+  }
+
   onUpdate (messages: dxos.echo.IObjectMutation[]) {
     this._model.applyMutations(messages);
   }
