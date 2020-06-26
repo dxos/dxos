@@ -3,11 +3,11 @@
 //
 
 import { dxos } from './proto/gen/echo';
-import { EchoModel } from './model';
+import { ObjectModel } from './model';
 
-test('EchoModel', async () => {
+test('ObjectModel', async () => {
   const TYPE_TEST_ECHO_OBJECT = 'wrn_dxos_org_test_echo_object';
-  const model = new EchoModel();
+  const model = new ObjectModel();
 
   const waitForAppend = new Promise(resolve => {
     let i = 0;
