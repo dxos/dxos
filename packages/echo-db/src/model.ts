@@ -17,8 +17,7 @@ const log = debug('dxos:echo:model');
 /**
  * Stream adapter.
  */
-// TODO(burdon): Rename ObjectModel.
-export class EchoModel extends Model {
+export class ObjectModel extends Model {
   _model = new ObjectStore();
 
   getObjectsByType (type: string) {
