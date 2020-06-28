@@ -61,13 +61,13 @@ const useStyles = makeStyles({
  * Each object has a `bounds` object with `{ x, y }` of the bottom left of the bounding box relative to the origin.
  *
  * @param {Grid} grid
- * @param {{ id, bounds }[]} objects
- * @param {{ id: string[] }|undefined} selected
  * @param {boolean} snap
+ * @param {{ id, bounds }[]} objects
+ * @param {Object} model
+ * @param {{ id: string[] }|undefined} selected
  * @param {function} [onSelect]
- * @param {function} [onUpdate]
  */
-const Objects = ({ grid, objects, selected, snap, onSelect = noop, onUpdate = noop }) => {
+const Objects = ({ grid, snap, objects, model, selected, onSelect = noop }) => {
   const classes = useStyles();
   const layer = useRef();
 
@@ -76,7 +76,7 @@ const Objects = ({ grid, objects, selected, snap, onSelect = noop, onUpdate = no
 
   const drag = useRef();
   useEffect(() => {
-    drag.current = createObjectDrag(layer.current, grid, snap, onSelect, onUpdate);
+    drag.current = createObjectDrag(layer.current, grid, snap, model, onSelect);
   }, [grid, snap]);
 
   const isSelected = objectId => selected && selected.ids.find(id => id === objectId);

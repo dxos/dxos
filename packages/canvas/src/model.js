@@ -29,13 +29,31 @@ const createObject = (properties) => ({
 export const useCanvasModel = (data = []) => {
   const [objects,, getObjects, updateObjects] = useObjectMutator(data.map(properties => createObject(properties)));
 
+  let mutations = null;
+
   const model = {
 
+    begin: () => {
+      console.log('BEGIN');
+      mutations = [];
+      return this;
+    },
+
+    commit: () => {
+      // TODO(burdon): Compress operations.
+      console.log('COMMIT', mutations);
+      mutations = null;
+      return this;
+    },
+
     /**
-     *
      * @param {Object} properties
      */
     createObject: (properties) => {
+      if (mutations) {
+        mutations.push({ action: 'create', properties });
+      }
+
       const object = createObject(properties);
 
       log('created', object);
@@ -44,11 +62,14 @@ export const useCanvasModel = (data = []) => {
     },
 
     /**
-     *
      * @param {string} id
      * @param {Object} properties
      */
     updateObject: (id, properties) => {
+      if (mutations) {
+        mutations.push({ action: 'update', id, properties });
+      }
+
       const objects = getObjects();
       const idx = objects.findIndex(object => object.id === id);
       const object = objects[idx];
@@ -68,16 +89,19 @@ export const useCanvasModel = (data = []) => {
     },
 
     /**
-     *
      * @param {string} id
      */
     deleteObject: (id) => {
+      if (mutations) {
+        mutations.push({ action: 'delete', id });
+      }
+
       const idx = objects.findIndex(object => object.id === id);
       assert(idx !== -1);
 
       log('deleted', id);
       updateObjects({ $splice: [[idx, 1]] });
-    }
+    },
   };
 
   return [objects, model];

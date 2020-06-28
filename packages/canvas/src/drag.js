@@ -178,11 +178,11 @@ export const createToolDrag = (container, grid, tool, snap, onCreate) => {
  * @param {Node} container
  * @param {Grid} grid
  * @param {boolean} snap
+ * @param {Object} model
  * @param {function} onSelect
- * @param {function} onUpdate
  * @returns {d3.drag}
  */
-export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
+export const createObjectDrag = (container, grid, snap, model, onSelect) => {
   let initialPos = undefined;
   let initialObject = undefined;
 
@@ -214,6 +214,9 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
 
       // Select object.
       onSelect([id]);
+
+      // Begin transaction.
+      model.begin();
     })
 
     .on('drag', (d, i, nodes) => {
@@ -239,7 +242,7 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
           updated.splice(i, 1, snapTo(points[i]));
 
           // TODO(burdon): Check changed.
-          onUpdate(id, { points: updated });
+          model.updateObject(id, { points: updated });
           break;
         }
 
@@ -265,7 +268,7 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
             y: bounds.height + grid.scaleY.invert(dy * handleY),
           });
 
-          onUpdate(id, { bounds: { x, y, width, height } });
+          model.updateObject(id, { bounds: { x, y, width, height } });
           break;
         }
 
@@ -278,7 +281,7 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
 
           // TODO(burdon): Check changed (bounds is stale).
           if (x !== bounds.x || y !== bounds.y ) {
-            onUpdate(id, { bounds: { x, y, width: bounds.width, height: bounds.height } });
+            model.updateObject(id, { bounds: { x, y, width: bounds.width, height: bounds.height } });
           }
           break;
         }
@@ -304,5 +307,8 @@ export const createObjectDrag = (container, grid, snap, onSelect, onUpdate) => {
 
       initialPos = undefined;
       initialObject = undefined;
+
+      // End transaction.
+      model.commit();
     });
 };

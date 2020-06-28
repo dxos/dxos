@@ -130,7 +130,9 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
   // TODO(burdon): Read-only if model is null.
   // TODO(burdon): Closures are stale if model property changes.
   const modelRef = useRef(model);
-  useEffect(() => { modelRef.current = model; }, [model]);
+  useEffect(() => {
+    modelRef.current = model;
+  }, [model]);
 
   // Render info.
   const info = useRef({ render: 0 });
@@ -170,23 +172,19 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
     }
   };
 
-  // TODO(burdon): Remove if model changes to null.
   if (model) {
+    const handleCreate = properties => {
+      if (properties) {
+        modelRef.current.createObject(properties);
+        setSelected({ ids: [ properties.id ] });
+        setTool();
+      } else {
+        setSelected(null);
+      }
+    };
+
     useEffect(() => {
-      const drag = createToolDrag(
-        guides.current,
-        grid,
-        tool,
-        showGrid,
-        properties => {
-          if (properties) {
-            modelRef.current.createObject(properties);
-            setSelected({ ids: [ properties.id ] });
-            setTool();
-          } else {
-            setSelected(null);
-          }
-        });
+      const drag = createToolDrag(guides.current, grid, tool, showGrid, handleCreate);
 
       d3.select(view.current)
         .call(drag)
@@ -384,9 +382,9 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
                   grid={grid}
                   snap={showGrid}
                   objects={objects}
+                  model={modelRef.current}
                   selected={selected}
                   onSelect={handleSelect}
-                  onUpdate={(id, properties) => modelRef.current.updateObject(id, properties)}
                 />
 
                 <g ref={guides} className={classes.guides} />
