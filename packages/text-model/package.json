@@ -1,0 +1,63 @@
+{
+  "name": "@dxos/text-model",
+  "version": "1.0.0-beta.21",
+  "description": "Text model",
+  "homepage": "https://github.com/dxos/echo/tree/master/packages/text-model#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/echo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/echo.git"
+  },
+  "license": "GPL-3.0",
+  "files": [
+    "dist",
+    "index.js"
+  ],
+  "main": "index.js",
+  "browser": "dist/index.js",
+  "scripts": {
+    "build": "npm run clean && npm run build:babel",
+    "build:watch": "npm run clean && npm run build:babel:watch",
+    "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps",
+    "build:babel:watch": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps --watch",
+    "clean": "del-cli dist",
+    "lint": "semistandard 'src/**/*.js'",
+    "prepublishOnly": "npm run build && npm run test",
+    "test": "jest --verbose --passWithNoTests src",
+    "posttest": "npm run lint"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@dxos/model-factory": "1.0.0-beta.21",
+    "yjs": "^13.2.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.7.0",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-export-default-from": "^7.5.2",
+    "@babel/preset-env": "^7.4.5",
+    "babel-eslint": "^10.0.2",
+    "babel-jest": "^24.8.0",
+    "babel-plugin-add-module-exports": "^1.0.2",
+    "babel-plugin-inline-import": "^3.0.0",
+    "semistandard": "^14.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "semistandard": {
+    "parser": "babel-eslint",
+    "env": [
+      "jest",
+      "node",
+      "browser"
+    ]
+  }
+}
