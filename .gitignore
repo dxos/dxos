@@ -65,3 +65,6 @@ dist/
 
 out/
 dist/
+
+.cache
+public
