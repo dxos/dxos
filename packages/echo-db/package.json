@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "1.0.0-beta.21",
+  "version": "1.0.0-beta.22",
   "description": "ECHO database monorepo.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echodb#readme",
   "bugs": {
@@ -36,7 +36,7 @@
   "dependencies": {
     "@dxos/codec-protobuf": "^1.1.0-beta.0",
     "@dxos/crypto": "^0.0.1",
-    "@dxos/model-factory": "^1.0.0-beta.21",
+    "@dxos/model-factory": "^1.0.0-beta.22",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/node": "^14.0.9",
