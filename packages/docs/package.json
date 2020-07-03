@@ -13,7 +13,7 @@
   "scripts": {
     "clean": "rm -rf ./.cache ./public",
     "dev": "gatsby develop --port 8003",
-    "build": "gatsby build",
+    "docbuild": "gatsby build",
     "serve": "gatsby serve",
     "test": "jest --rootDir ./content --passWithNoTests"
   },
