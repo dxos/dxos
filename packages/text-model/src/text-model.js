@@ -5,6 +5,8 @@
 import { Model } from '@dxos/model-factory';
 import { Doc, applyUpdate } from 'yjs';
 
+export const TYPE_TEXT_MODEL_UPDATE = 'wrn://dxos.org/echo/text-model/update';
+
 export class TextModel extends Model {
   _doc = new Doc();
 
@@ -23,7 +25,7 @@ export class TextModel extends Model {
 
     if (!remote) {
       this.appendMessage({
-        __type_url: 'testing.document.Update',
+        __type_url: TYPE_TEXT_MODEL_UPDATE,
         update,
         origin: { docClientId: this._doc.clientID }
       });
