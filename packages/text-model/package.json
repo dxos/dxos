@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "1.0.0-beta.23",
+  "version": "1.0.0-beta.24",
   "description": "Text model",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/text-model#readme",
   "bugs": {
@@ -35,7 +35,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/model-factory": "^1.0.0-beta.23",
+    "@dxos/model-factory": "^1.0.0-beta.24",
     "yjs": "^13.2.0"
   },
   "devDependencies": {
