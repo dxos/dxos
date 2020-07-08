@@ -46,6 +46,7 @@
     "multi-read-stream": "^2.0.0",
     "p-limit": "^3.0.1",
     "pump": "^3.0.0",
+    "signal-promise": "^1.0.3",
     "source-map-support": "^0.5.12",
     "through2": "^3.0.1"
   },

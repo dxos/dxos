@@ -5,6 +5,8 @@
 import assert from 'assert';
 import { Writable } from 'stream';
 import pump from 'pump';
+import Signal from 'signal-promise';
+import debounce from 'lodash.debounce';
 
 import metrics from '@dxos/metrics';
 
@@ -55,10 +57,33 @@ export class ModelFactory {
       modelFactoryOptions: options
     });
 
+    let queue = [];
+    const debouncedAppend = debounce(() => {
+      if (queue.length === 0) return;
+      const _queue = queue.slice();
+      queue = [];
+
+      this._onAppend(_queue.map(({ message }) => message), options)
+        .then(() => {
+          _queue.forEach(({ signal }) => signal.notify());
+        })
+        .catch(err => {
+          _queue.forEach(({ signal }) => signal.notify(err));
+        });
+    }, 0);
     model.setAppendHandler(message => {
       // Why I have to pass the ...rest as it was some kind of extra fields?
       // What happen if someone put a function there, are we going to store [function Function]?
-      return this._onAppend({ ...message, ...rest }, options);
+      const signal = new Signal();
+      queue.push({ signal, message: { ...message, ...rest } });
+
+      if (queue.length === 100) {
+        debouncedAppend.flush();
+      } else {
+        debouncedAppend();
+      }
+
+      return signal.wait();
     });
 
     metrics.set(`model.${model.id}.options`, { class: ModelClass.name, ...(type && { type }) });
