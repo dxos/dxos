@@ -28,3 +28,6 @@
 
 1. The above considers Partitions to be the domain of consistency (not parties).
 1. And that all messages correspond to exactly on model INSTANCE within a partition.
+1. This has implications for the current API -- and would motivate having Models defined "up-front"
+   rathar than ad-hoc in hook defintions (akin to Apollo GraphQL queries?)
+   
