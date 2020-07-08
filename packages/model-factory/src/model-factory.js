@@ -43,9 +43,9 @@ export class ModelFactory {
    * @param options.topic {String}
    * @param options.readStreamOptions {Object}
    * @param options.batchPeriod {number}
-   * @returns {Promise<Model>}
+   * @returns {Model}
    */
-  async createModel (ModelClass = DefaultModel, options = {}) {
+  createModel (ModelClass = DefaultModel, options = {}) {
     assert(ModelClass);
 
     const { type, topic, subscriptionOptions = {}, batchPeriod = 50, ...rest } = options;
@@ -70,7 +70,8 @@ export class ModelFactory {
         .catch(err => {
           _queue.forEach(({ signal }) => signal.notify(err));
         });
-    }, 0);
+    });
+
     model.setAppendHandler(message => {
       // Why I have to pass the ...rest as it was some kind of extra fields?
       // What happen if someone put a function there, are we going to store [function Function]?
