@@ -37,7 +37,7 @@ kanban boards, kanban cards, chess games, or any other record type. The model as
 manages the consistency guarantees of the Item.
 
 In this manner, we may represent a text document that has embedded within it a kanban that contains many
-cards, where each card has a notes field that is itself a text document.
+cards, where each card may have a field that is itself a text document.
 
 
 ## Mechanism
