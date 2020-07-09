@@ -58,7 +58,7 @@ cards, where each card may have a field that is itself a text document.
 ## Notes
 
 1. The above considers items to be the domain of consistency (not parties).
-1. All messages correspond to exactly on model INSTANCE within a item.
+1. All messages correspond to exactly one model INSTANCE within a item.
 1. This has implications for the current API -- and would motivate having Models defined "up-front"
    rathar than ad-hoc in hook defintions (akin to Apollo GraphQL queries?)
 1. This system may allow of queries that range across the party and return collections of Items.
