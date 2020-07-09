@@ -17,7 +17,8 @@ test('ValueUtil', () => {
     const message = ValueUtil.createMessage({
       name: 'DxOS',
       data: {
-        version: 1
+        valueI: 1,
+        valueF: 2.02
       }
     });
 
@@ -36,9 +37,15 @@ test('ValueUtil', () => {
               object: {
                 properties: [
                   {
-                    key: 'version',
+                    key: 'valueI',
                     value: {
                       int: 1
+                    }
+                  },
+                  {
+                    key: 'valueF',
+                    value: {
+                      float: 2.02
                     }
                   }
                 ]
@@ -73,4 +80,38 @@ test('ValueUtil.applyValue object', () => {
 
   const { module } = ValueUtil.applyValue({}, 'module', ValueUtil.createMessage(object));
   expect(module).toStrictEqual(object);
+});
+
+test('ValueUtil bytes', () => {
+  {
+    const data = Buffer.from('Hello');
+    const message = ValueUtil.createMessage({
+      name: 'DxOS',
+      data
+    });
+
+    expect(message).toStrictEqual({
+      object: {
+        properties: [
+          {
+            key: 'name',
+            value: {
+              string: 'DxOS'
+            }
+          },
+          {
+            key: 'data',
+            value: {
+              bytes: Buffer.from('Hello')
+            }
+          }
+        ]
+      }
+    });
+  }
+
+  {
+    const object = ValueUtil.applyValue({}, 'data', ValueUtil.createMessage(Buffer.from('World')));
+    expect(object.data).toEqual(Buffer.from('World'));
+  }
 });

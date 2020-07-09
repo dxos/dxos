@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 // TODO(burdon): Remove dependency (via adapter). Or move to other package.
-import { Model } from '@dxos/data-client';
+import { Model } from '@dxos/model-factory';
 
 import { MutationUtil } from './mutation';
 import { ObjectStore, fromObject } from './object-store';
@@ -17,8 +17,7 @@ const log = debug('dxos:echo:model');
 /**
  * Stream adapter.
  */
-// TODO(burdon): Rename ObjectModel.
-export class EchoModel extends Model {
+export class ObjectModel extends Model {
   _model = new ObjectStore();
 
   getObjectsByType (type: string) {
@@ -29,15 +28,11 @@ export class EchoModel extends Model {
     log('create', type, properties);
 
     const id = createObjectId(type);
-    const { mutations } = fromObject({ id, properties });
+    const mutations = fromObject({ id, properties });
 
-    // TODO(burdon): Create single message.
-    // eslint-disable-next-line no-unused-expressions
-    mutations?.forEach((mutation) => {
-      this.appendMessage({
-        __type_url: type,
-        ...mutation
-      });
+    this.appendMessage({
+      __type_url: type,
+      ...mutations
     });
 
     return id;
@@ -47,18 +42,14 @@ export class EchoModel extends Model {
     log('update', id, properties);
 
     const { type } = parseObjectId(id);
-    const { mutations } = fromObject({
+    const mutations = fromObject({
       id,
       properties
     });
 
-    // TODO(burdon): Create single message.
-    // eslint-disable-next-line no-unused-expressions
-    mutations?.forEach((mutation) => {
-      this.appendMessage({
-        __type_url: type,
-        ...mutation
-      });
+    this.appendMessage({
+      __type_url: type,
+      ...mutations
     });
   }
 
@@ -72,6 +63,12 @@ export class EchoModel extends Model {
       __type_url: type,
       ...mutation
     });
+  }
+
+  getItem (id: string) {
+    log('get', id);
+
+    return this._model.getObjectById(id);
   }
 
   onUpdate (messages: dxos.echo.IObjectMutation[]) {

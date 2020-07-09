@@ -10,7 +10,6 @@
     "sourceMap": true,
     "declarationMap": true,
     "target": "es6",
-    "module": "commonjs",
     "outDir": "dist"
   },
   "include": [

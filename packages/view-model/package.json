@@ -1,0 +1,54 @@
+{
+  "name": "@dxos/view-model",
+  "version": "1.0.0-beta.25",
+  "description": "View model",
+  "homepage": "https://github.com/dxos/echo/tree/master/packages/view-model#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/echo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/echo.git"
+  },
+  "license": "GPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint './src/**/*.ts'",
+    "test": "jest --rootDir ./src --verbose",
+    "prepublishOnly": "npm run test && npm run build"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "jest": {
+    "preset": "ts-jest/presets/js-with-ts",
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@dxos/crypto": "^0.0.1",
+    "@dxos/model-factory": "^1.0.0-beta.25"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.2.3",
+    "eslint-plugin-jest": "^23.13.1",
+    "jest": "^26.0.0",
+    "semistandard": "^14.2.0",
+    "ts-jest": "^26.1.0",
+    "typescript": "^3.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "plugin:jest/recommended",
+      "eslint-config-semistandard"
+    ],
+    "rules": {
+      "babel/semi": 1
+    }
+  }
+}

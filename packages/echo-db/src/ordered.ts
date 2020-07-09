@@ -3,7 +3,7 @@
 //
 
 // TODO(burdon): Remove dependency (via adapter). Or move to other package.
-import { Model } from '@dxos/data-client';
+import { Model } from '@dxos/model-factory';
 import type { OrderedMessage } from './common/OrderedMessage';
 
 /**

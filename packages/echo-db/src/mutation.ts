@@ -69,15 +69,21 @@ export class ValueUtil {
       return { [Type.NULL]: true };
     } else if (typeof value === 'boolean') {
       return ValueUtil.bool(value);
-    } else if (typeof value === 'number') { // TODO(burdon): Detect float?
-      return ValueUtil.integer(value);
+    } else if (typeof value === 'number') {
+      return (value % 1 === 0) ? ValueUtil.integer(value) : ValueUtil.float(value);
     } else if (typeof value === 'string') {
       return ValueUtil.string(value);
+    } else if (value instanceof Uint8Array || Buffer.isBuffer(value)) {
+      return ValueUtil.bytes(value);
     } else if (typeof value === 'object') {
       return ValueUtil.object(value);
     } else {
       throw Error(`Invalid value: ${value}`);
     }
+  }
+
+  static bytes (value: Uint8Array): dxos.echo.IValue {
+    return { [Type.BYTES]: value };
   }
 
   static bool (value: boolean): dxos.echo.IValue {
