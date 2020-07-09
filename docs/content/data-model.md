@@ -1,4 +1,4 @@
-# Notes on Consistency (and items)
+# Data Model
 
 ## Definitions
 
@@ -7,6 +7,9 @@
 1. Party: Collection of messages from multiple Feeds.
 1. Item: Logically consistent set of messages.
 1. Model: Versioned state machine that determines consistency of messges within a subset of a item.
+
+![ECHO DB](./diagrams/echo-db.png)
+
 
 ## Mechanism
 
