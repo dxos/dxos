@@ -18,12 +18,18 @@ const log = debug('dxos:echo:model');
  * Stream adapter.
  */
 export class ObjectModel extends Model {
-  _model = new ObjectStore();
+  _store = new ObjectStore();
 
-  getObjectsByType (type: string) {
-    return this._model.getObjectsByType(type);
+  // TODO(burdon): Rename getObject.
+  getItem (id: string) {
+    return this._store.getObjectById(id);
   }
 
+  getObjectsByType (type: string) {
+    return this._store.getObjectsByType(type);
+  }
+
+  // TODO(burdon): Rename createObject.
   createItem (type: string, properties: object) {
     log('create', type, properties);
 
@@ -38,6 +44,7 @@ export class ObjectModel extends Model {
     return id;
   }
 
+  // TODO(burdon): Rename updateObject.
   updateItem (id: string, properties: object) {
     log('update', id, properties);
 
@@ -53,6 +60,7 @@ export class ObjectModel extends Model {
     });
   }
 
+  // TODO(burdon): Rename deleteObject.
   deleteItem (id: string) {
     log('delete', id);
 
@@ -65,13 +73,7 @@ export class ObjectModel extends Model {
     });
   }
 
-  getItem (id: string) {
-    log('get', id);
-
-    return this._model.getObjectById(id);
-  }
-
   onUpdate (messages: dxos.echo.IObjectMutation[]) {
-    this._model.applyMutations(messages);
+    this._store.applyMutations(messages);
   }
 }
