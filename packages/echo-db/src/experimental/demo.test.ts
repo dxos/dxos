@@ -147,13 +147,11 @@ class Database {
   }
 }
 
-test('model', async () => {
+test('basic items', async () => {
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: 'utf-8' } });
   await feedStore.open();
 
-  // TODO(burdon): Pass write stream to modelfactory?
   const feed = await feedStore.openFeed('node-1');
-
   const database = new Database(feedStore, feed);
   await database.initialize();
 
