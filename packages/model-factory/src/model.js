@@ -53,7 +53,6 @@ export class Model extends EventEmitter {
     this.emit('update', this, messages);
   }
 
-  // TODO(burdon): appendMessages.
   async appendMessage (message) {
     this.emit('preappend', message);
     message = await this.onAppend(message);

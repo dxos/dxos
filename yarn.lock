@@ -958,6 +958,29 @@
     source-map-support "^0.5.12"
     through2 "^3.0.1"
 
+"@dxos/feed-store@^1.2.0-beta.23":
+  version "1.2.0-beta.23"
+  resolved "https://registry.yarnpkg.com/@dxos/feed-store/-/feed-store-1.2.0-beta.23.tgz#402f465b0393c8fe3f69a52cd0cd58aa602749ab"
+  integrity sha512-V62fjQIcG0zxTKAHpK5uMsHeKYzu00ppOJOsIC8IaPPiEp8HvYcsBXVHAIHKe4V/PawAQDD1U7NfimDW61zqsA==
+  dependencies:
+    buffer-json-encoding "^1.0.2"
+    debug "^4.1.1"
+    end-of-stream "^1.4.4"
+    from2 "^2.3.0"
+    hypercore "^7.7.1"
+    hypercore-crypto "^1.0.0"
+    hypertrie "^3.8.0"
+    multi-read-stream "^2.0.0"
+    mutexify "^1.2.0"
+    nanoresource-promise "^2.0.0-beta.2"
+    p-event "^4.1.0"
+    p-timeout "^3.2.0"
+    pify "^5.0.0"
+    pump "^3.0.0"
+    random-access-file "^2.1.0"
+    source-map-support "^0.5.12"
+    through2 "^3.0.1"
+
 "@dxos/metrics@^1.0.0-beta.8":
   version "1.0.0-beta.8"
   resolved "https://registry.yarnpkg.com/@dxos/metrics/-/metrics-1.0.0-beta.8.tgz#f9ae6b38eb4ed926d41b04e0d27e64e7478ef337"

@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS.org
+// Copyright 2020 DXOS.org
 //
 
 // TODO(burdon): Remove dependency (via adapter). Or move to other package.

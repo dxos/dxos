@@ -1,9 +1,9 @@
 //
-// Copyright 2020 DxOS.org
+// Copyright 2020 DXOS.org
 //
 
 import { dxos } from './proto/gen/echo';
-import { ObjectModel } from './model';
+import { ObjectModel } from './object-model';
 
 test('ObjectModel', async () => {
   const TYPE_TEST_ECHO_OBJECT = 'wrn_dxos_org_test_echo_object';
