@@ -48,12 +48,14 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
+    "@dxos/feed-store": "^1.2.0-beta.23",
     "@types/jest": "^25.2.3",
     "del-cli": "^3.0.0",
     "end-of-stream": "^1.4.4",
     "eslint-plugin-jest": "^23.13.1",
     "jest": "^26.0.0",
     "pumpify": "^2.0.1",
+    "random-access-memory": "^3.1.1",
     "semistandard": "^14.2.0",
     "stream-buffers": "^3.0.2",
     "through2": "^3.0.1",

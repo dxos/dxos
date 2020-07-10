@@ -21,7 +21,7 @@ jobs:
       - name: Build and NPM publish
         run: |
           git config --global user.email "npm@dxos.network"
-          git config --global user.name "DxOS"
+          git config --global user.name "DXOS"
           yarn
           yarn lint
           yarn build

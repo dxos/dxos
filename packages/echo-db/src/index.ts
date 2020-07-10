@@ -1,9 +1,9 @@
 //
-// Copyright 2020 DxOS.org
+// Copyright 2020 DXOS.org
 //
 
-export * from './model';
 export * from './mutation';
+export * from './object-model';
 export * from './object-store';
 export * from './util';
 export * from './ordered';

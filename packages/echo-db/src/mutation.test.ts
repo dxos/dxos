@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS.org
+// Copyright 2020 DXOS.org
 //
 
 import { ValueUtil } from './mutation';
@@ -15,7 +15,7 @@ test('ValueUtil', () => {
 
   {
     const message = ValueUtil.createMessage({
-      name: 'DxOS',
+      name: 'DXOS',
       data: {
         valueI: 1,
         valueF: 2.02
@@ -28,7 +28,7 @@ test('ValueUtil', () => {
           {
             key: 'name',
             value: {
-              string: 'DxOS'
+              string: 'DXOS'
             }
           },
           {
@@ -86,7 +86,7 @@ test('ValueUtil bytes', () => {
   {
     const data = Buffer.from('Hello');
     const message = ValueUtil.createMessage({
-      name: 'DxOS',
+      name: 'DXOS',
       data
     });
 
@@ -96,7 +96,7 @@ test('ValueUtil bytes', () => {
           {
             key: 'name',
             value: {
-              string: 'DxOS'
+              string: 'DXOS'
             }
           },
           {
