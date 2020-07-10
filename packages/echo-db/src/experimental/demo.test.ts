@@ -2,8 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(burdon): Import IDEA settings from mbp.
-// TODO(burdon): Move to package.
+// TODO(burdon): Move to experimental package?
 
 import debug from 'debug';
 import ram from 'random-access-memory';
@@ -14,12 +13,6 @@ import { FeedStore } from '@dxos/feed-store';
 
 import { ObjectStore, fromObject } from '../object-store';
 import { createObjectId } from '../util';
-
-// TODO(burdon): Deprecate FeedStore.create async constructor, discoveryKey, etc.
-// TODO(burdon): Item streams
-// TODO(burdon): Protobuf, encoding.
-
-// TODO(burdon): Export types to package.
 
 const log = debug('dxos:echo:experimental');
 debug.enable('dxos:*');
@@ -47,6 +40,9 @@ interface IModel {
   processMessages (messages: object[]): Promise<void>;
 }
 
+/**
+ *
+ */
 class ObjectModel implements IModel {
   _appendMessages: any;
 
@@ -79,6 +75,9 @@ class ObjectModel implements IModel {
   }
 }
 
+/**
+ *
+ */
 class Item {
   _id: string;
   _model: IModel;
@@ -97,6 +96,9 @@ class Item {
   }
 }
 
+/**
+ *
+ */
 class Database {
   // TODO(burdon): Fix lint.
   _feedStore: IFeedStore;
@@ -114,7 +116,10 @@ class Database {
       // TODO(burdon): Codec decode.
       const { data } = block;
       const { itemId, message } = JSON.parse(data);
+
+      // TODO(burdon): Create item if it doesn't exist (from spec).
       const item = this._itemsById.get(itemId);
+
       item.model.processMessages([message]);
     });
 
@@ -136,7 +141,7 @@ class Database {
     return item;
   }
 
-  // TODO(burdon): Create index.
+  // TODO(burdon): Get stream of items?
   async getItem (itemId: string): Promise<Item> {
     return this._itemsById.get(itemId);
   }
