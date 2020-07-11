@@ -47,6 +47,7 @@
     "@types/stream-buffers": "^3.0.2",
     "@types/through2": "^2.0.36",
     "debug": "^4.1.1",
+    "from2": "^2.3.0",
     "hypercore": "^7.7.1",
     "js-data-structs": "^1.1.2",
     "protobufjs": "^6.9.0",

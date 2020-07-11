@@ -103,6 +103,9 @@ export namespace dxos {
 
                 /** TestMessage id */
                 id?: (string|null);
+
+                /** TestMessage tag */
+                tag?: (string|null);
             }
 
             /** Represents a TestMessage. */
@@ -116,6 +119,9 @@ export namespace dxos {
 
                 /** TestMessage id. */
                 public id: string;
+
+                /** TestMessage tag. */
+                public tag: string;
 
                 /**
                  * Creates a new TestMessage instance using the specified properties.

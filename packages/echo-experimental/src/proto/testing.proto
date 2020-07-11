@@ -14,4 +14,5 @@ message Envelope {
 
 message TestMessage {
   string id = 1;
+  string tag = 2;
 }

@@ -106,5 +106,3 @@ test('message streams', async () => {
     feedStore.close();
   });
 });
-
-// TODO(burdon): Ordered streams.

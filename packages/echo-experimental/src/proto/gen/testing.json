@@ -19,6 +19,10 @@
                     "id": {
                       "type": "string",
                       "id": 1
+                    },
+                    "tag": {
+                      "type": "string",
+                      "id": 2
                     }
                   }
                 }
