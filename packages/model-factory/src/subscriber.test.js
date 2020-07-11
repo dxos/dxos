@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Wireline, Inc.
+// Copyright 2020 DXOS.org
 //
 
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
