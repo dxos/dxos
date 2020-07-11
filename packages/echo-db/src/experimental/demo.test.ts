@@ -24,7 +24,7 @@ type Class = string;
 // TODO(burdon): Define top-level protobuf for echo (separate from HALO).
 interface IMessage {
   itemId: ID;
-  message: object;
+  message: any;
 }
 
 interface IBlock {
@@ -32,7 +32,7 @@ interface IBlock {
 }
 
 interface IFeed {
-  append(data: string): void;
+  append (data: string): void;
 }
 
 interface IReadableStream {
@@ -40,11 +40,10 @@ interface IReadableStream {
 }
 
 interface IFeedStore {
-  createReadStream(config: object): IReadableStream;
+  createReadStream (config: object): IReadableStream;
 }
 
 interface IModel {
-  // TODO(burdon): Stream?
   processMessages (messages: object[]): Promise<void>;
 }
 
@@ -52,7 +51,7 @@ interface IModel {
  *
  */
 class ObjectModel implements IModel {
-  static ID = 'wrn://dxos/model/object';
+  static TYPE = 'wrn://dxos/model/object';
 
   _appendMessages?: Function;
   _store = new ObjectStore();
@@ -102,11 +101,14 @@ class ModelFactory {
 /**
  *
  */
+// TODO(burdon): Parent item.
 class Item {
+  _database: Database;
   _id: ID;
   _model: IModel;
 
-  constructor (id: ID, model: IModel) {
+  constructor (database: Database, id: ID, model: IModel) {
+    this._database = database;
     this._id = id;
     this._model = model;
   }
@@ -127,6 +129,7 @@ class Database {
   _feedStore: IFeedStore;
   _feed: IFeed;
   _modelFactory: ModelFactory;
+  _root?: Item;
   _itemsById = new Map();
 
   constructor (feedStore: IFeedStore, feed: IFeed, modelFactory: ModelFactory) {
@@ -135,25 +138,35 @@ class Database {
     this._modelFactory = modelFactory;
   }
 
+  get root () {
+    return this._root;
+  }
+
   async initialize () {
+    // TODO(burdon): Create stream abstraction that orders messages so that item genesis must come first.
     const stream = this._feedStore.createReadStream({ live: true });
 
     log('Streaming...');
-    stream.on('data', async (block: IBlock) => {
+    stream.on('data', (block: IBlock) => {
       // TODO(burdon): Codec decode.
       const { data } = block;
       const { itemId, message } = JSON.parse(data) as IMessage;
-
       log(`Message [item=${itemId}]: ${JSON.stringify(message)}`);
 
-      // TODO(burdon): Create item if it doesn't exist (from spec).
-      let item = this._itemsById.get(itemId);
-      if (!item) {
-        item = await this.createItem(ObjectModel.ID, itemId);
+      const item = this.getItem(itemId);
+      if (message.__type_url === 'wrn://dxos.org/type/system/item') {
+        if (!item) {
+          const { modelId } = message;
+          this.constructItem(modelId, itemId);
+        }
+      } else {
+        assert(item);
+        item.model.processMessages([message]);
       }
-
-      await item.model.processMessages([message]);
     });
+
+    // Create root item.
+    // this._root = await this.createItem(ObjectModel.TYPE);
 
     return this;
   }
@@ -162,8 +175,21 @@ class Database {
     this._itemsById.clear();
   }
 
-  // TODO(burdon): Nested from root.
-  async createItem (modelId: ID, itemId: ID = createId()): Promise<Item> {
+  createItem (modelId: ID): Item {
+    log('createItem', modelId);
+
+    const item = this.constructItem(modelId, createId());
+
+    // Write item genesis.
+    const message = { __type_url: 'wrn://dxos.org/type/system/item', modelId };
+    this._feed.append(JSON.stringify({ itemId: item.id, message }));
+
+    return item;
+  }
+
+  constructItem (modelId: ID, itemId: ID): Item {
+    log('constructItem', modelId);
+
     const model = this._modelFactory.createModel(modelId);
 
     // TODO(burdon): Generalize model and type.
@@ -173,20 +199,20 @@ class Database {
     });
 
     // TODO(burdon): Encode item metadata (e.g., model spec).
-    const item = new Item(itemId, model);
+    const item = new Item(this, itemId, model);
     this._itemsById.set(itemId, item);
     return item;
   }
 
   // TODO(burdon): Read-only until item has caught up.
-  async getItem (itemId: ID): Promise<Item> {
+  getItem (itemId: ID): Item {
     // TODO(burdon): Create (from metadata) if doesn't exist (mutex?)
     return this._itemsById.get(itemId);
   }
 }
 
 test('basic items', async () => {
-  const modelFactory = new ModelFactory().addModel(ObjectModel.ID, () => new ObjectModel());
+  const modelFactory = new ModelFactory().addModel(ObjectModel.TYPE, () => new ObjectModel());
 
   // TODO(burdon): ram gets reset after FeedStore closed?
   const directory = tempy.directory();
@@ -202,20 +228,24 @@ test('basic items', async () => {
 
     // Create item.
     {
-      const item = await database.createItem(ObjectModel.ID);
-      await (item.model as ObjectModel).createObject('test', { foo: 100 });
+      const item = database.createItem(ObjectModel.TYPE);
+
+      const objectModel = item.model as ObjectModel;
+      await objectModel.createObject('test', { foo: 100 });
+      await objectModel.createObject('test', { bar: 200 });
+
       itemId = item.id;
     }
 
     // Open cached item.
     {
       // TODO(burdon): Sleep or wait for anchor?
-      await sleep(5);
+      await sleep(10);
 
-      const item = await database.getItem(itemId);
+      const item = database.getItem(itemId);
       const objects = await (item.model as ObjectModel).getObjectsByType('test');
 
-      expect(objects).toHaveLength(1);
+      expect(objects).toHaveLength(2);
       expect(objects[0].properties.foo).toBe(100);
     }
 
@@ -233,12 +263,12 @@ test('basic items', async () => {
     await database.initialize();
 
     // TODO(burdon): Sleep or wait for anchor?
-    await sleep(5);
+    await sleep(10);
 
-    const item = await database.getItem(itemId);
+    const item = database.getItem(itemId);
     const objects = await (item.model as ObjectModel).getObjectsByType('test');
 
-    expect(objects).toHaveLength(1);
+    expect(objects).toHaveLength(2);
     expect(objects[0].properties.foo).toBe(100);
 
     await feed.close();
