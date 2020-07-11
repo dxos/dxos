@@ -17,7 +17,9 @@
   "scripts": {
     "build": "npm run clean && npm run build:protobuf && npm run build:ts",
     "build:ts": "tsc",
-    "build:protobuf": "pbjs -t json ./src/proto/demo.proto -o ./src/proto/gen/demo.json",
+    "build:protobuf": "npm run build:protobuf:proto && npm run build:protobuf:ts",
+    "build:protobuf:proto": "mkdir -p ./src/proto/gen && pbjs -t json ./src/proto/testing.proto -o ./src/proto/gen/testing.json",
+    "build:protobuf:ts": "pbjs -t static-module ./src/proto/testing.proto | pbts -o ./src/proto/gen/bundle.d.ts -",
     "clean": "del-cli dist",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
@@ -45,23 +47,27 @@
     "@types/stream-buffers": "^3.0.2",
     "@types/through2": "^2.0.36",
     "debug": "^4.1.1",
+    "hypercore": "^7.7.1",
     "js-data-structs": "^1.1.2",
     "protobufjs": "^6.9.0",
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
     "@types/jest": "^25.2.3",
+    "chance": "^1.1.6",
     "del-cli": "^3.0.0",
     "end-of-stream": "^1.4.4",
     "eslint-plugin-jest": "^23.13.1",
     "jest": "^26.0.0",
+    "pify": "^5.0.0",
     "pumpify": "^2.0.1",
     "random-access-memory": "^3.1.1",
     "semistandard": "^14.2.0",
     "stream-buffers": "^3.0.2",
     "through2": "^3.0.1",
     "ts-jest": "^26.1.0",
-    "typescript": "^3.9.3"
+    "typescript": "^3.9.3",
+    "wait-for-expect": "^3.0.2"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",

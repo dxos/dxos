@@ -13,7 +13,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ObjectStore, fromObject } from '@dxos/echo-db/dist/src/object-store';
 import { createObjectId } from '@dxos/echo-db/dist/src/util';
 
-const log = debug('dxos:echo:experimental');
+const log = debug('dxos:echo:testing');
 debug.enable('dxos:*');
 
 // TODO(burdon): Protobuf/codec.

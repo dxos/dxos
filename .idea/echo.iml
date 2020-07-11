@@ -6,5 +6,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Bundled Protobuf Distribution" level="application" />
     <orderEntry type="library" name="@types/jest" level="application" />
+    <orderEntry type="library" name="@types/chance" level="application" />
   </component>
 </module>

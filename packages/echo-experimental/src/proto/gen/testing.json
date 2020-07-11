@@ -1,0 +1,52 @@
+{
+  "nested": {
+    "dxos": {
+      "nested": {
+        "echo": {
+          "nested": {
+            "testing": {
+              "nested": {
+                "Envelope": {
+                  "fields": {
+                    "message": {
+                      "type": "google.protobuf.Any",
+                      "id": 1
+                    }
+                  }
+                },
+                "TestMessage": {
+                  "fields": {
+                    "id": {
+                      "type": "string",
+                      "id": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "google": {
+      "nested": {
+        "protobuf": {
+          "nested": {
+            "Any": {
+              "fields": {
+                "type_url": {
+                  "type": "string",
+                  "id": 1
+                },
+                "value": {
+                  "type": "bytes",
+                  "id": 2
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
