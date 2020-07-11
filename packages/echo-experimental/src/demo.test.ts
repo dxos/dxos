@@ -10,8 +10,8 @@ import { sleep } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 
-import { ObjectStore, fromObject } from '../object-store';
-import { createObjectId } from '../util';
+import { ObjectStore, fromObject } from '@dxos/echo-db/dist/src/object-store';
+import { createObjectId } from '@dxos/echo-db/dist/src/util';
 
 const log = debug('dxos:echo:experimental');
 debug.enable('dxos:*');

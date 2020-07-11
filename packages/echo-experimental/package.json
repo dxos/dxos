@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/echo-db",
+  "name": "@dxos/echo-experimental",
   "version": "1.0.0-beta.25",
   "description": "ECHO database monorepo.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo-db#readme",
@@ -13,10 +13,11 @@
   "license": "GPL-3.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "private": true,
   "scripts": {
     "build": "npm run clean && npm run build:protobuf && npm run build:ts",
     "build:ts": "tsc",
-    "build:protobuf": "pbjs -t json ./src/proto/echo.proto -o ./src/proto/gen/echo.json && pbjs -t static-module -w commonjs ./src/proto/echo.proto -o ./src/proto/gen/echo.js && pbts -o ./src/proto/gen/echo.d.ts ./src/proto/gen/echo.js",
+    "build:protobuf": "pbjs -t json ./src/proto/demo.proto -o ./src/proto/gen/demo.json",
     "clean": "del-cli dist",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
@@ -34,9 +35,10 @@
     "testEnvironment": "node"
   },
   "dependencies": {
+    "@dxos/async": "^1.0.0-beta.2",
     "@dxos/codec-protobuf": "^1.1.0-beta.0",
     "@dxos/crypto": "^0.0.1",
-    "@dxos/model-factory": "^1.0.0-beta.25",
+    "@dxos/feed-store": "^1.2.0-beta.23",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/node": "^14.0.9",
@@ -60,9 +62,6 @@
     "through2": "^3.0.1",
     "ts-jest": "^26.1.0",
     "typescript": "^3.9.3"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
