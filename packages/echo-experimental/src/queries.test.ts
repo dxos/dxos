@@ -27,16 +27,17 @@ const codec = new Codec('dxos.echo.testing.Envelope')
   .build();
 
 /**
- * FeedStore Streams with encoding.
+ * Filtered FeedStore message streams (using encoding).
  */
-test('message query streams', async () => {
+test('streaming message subscriptions', async (done) => {
   const config = {
     numFeeds: 5,
     numBlocks: 100,
-    maxChunks: 20,
+    maxBatch: 20,
     tags: ['red', 'green', 'blue']
   };
 
+  // In-memory feed store.
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
   await feedStore.open();
 
@@ -45,12 +46,12 @@ test('message query streams', async () => {
     await feedStore.openFeed(`feed-${i}`);
   }
 
-  // Create streamer.
-  const stream = feedStore.createReadStream({ live: true });
-  const streamer = new Indexer(stream);
-
   const descriptors = feedStore.getDescriptors();
   expect(descriptors).toHaveLength(config.numFeeds);
+
+  // Create index.
+  const stream = feedStore.createReadStream({ live: true });
+  const index = new Indexer(stream);
 
   const selection = config.tags[0];
 
@@ -58,10 +59,11 @@ test('message query streams', async () => {
   let blocks = 0;
   const counters = new Map();
   const generator = async () => {
-    const num = chance.integer({ min: 1, max: Math.min(config.numBlocks - blocks, config.maxChunks) });
+    const num = chance.integer({ min: 1, max: Math.min(config.numBlocks - blocks, config.maxBatch) });
     for (let i = 0; i < num; i++) {
       const { feed } = chance.pickone(descriptors);
       const tag = chance.pickone(config.tags);
+
       await feed.append({
         message: {
           __type_url: 'dxos.echo.testing.TestMessage',
@@ -70,8 +72,8 @@ test('message query streams', async () => {
         }
       });
 
-      counters.set(tag, (counters.get(tag) || 0) + 1);
       blocks++;
+      counters.set(tag, (counters.get(tag) || 0) + 1);
     }
   };
 
@@ -85,11 +87,13 @@ test('message query streams', async () => {
     }
   }, 100);
 
+  // Wait for some messages to get written.
   await sleep(300);
 
   // Create subscription.
+  // TODO(burdon): Get Subscription object with stream?
   let count = 0;
-  const results = streamer.subscribe(selection);
+  const results = index.subscribe(selection);
   results.on('data', (messages: dxos.echo.testing.TestMessage[]) => {
     messages.forEach(message => {
       const { id, tag } = message;
@@ -97,6 +101,11 @@ test('message query streams', async () => {
       log(JSON.stringify(id));
       count++;
     });
+  });
+
+  results.on('close', () => {
+    log('Subscription closed.');
+    done();
   });
 
   await waitForExpect(() => {

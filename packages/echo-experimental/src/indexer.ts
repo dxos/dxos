@@ -50,7 +50,14 @@ export class Indexer {
       (this._subscriptions.get(tag) || []).forEach((callback: Function) => callback(message));
     });
 
-    // TODO(burdon): Flush all subscriptions on close.
+    const cleanup = () => {
+      this._subscriptions.forEach(
+        subscriptions => subscriptions.forEach((callback: Function) => callback()));
+    };
+
+    // TODO(burdon): Both are called -- is this necessary?
+    stream.on('close', cleanup);
+    stream.on('end', cleanup);
   }
 
   /**
@@ -61,31 +68,41 @@ export class Indexer {
   subscribe (tag: string): IReadableStream {
     // TODO(burdon): Use model to manage order.
     const queue = [...this._index.get(tag) || []];
-    log('Subscription', tag);
 
+    log(`Created subscription[${tag}]: ${queue.length} initial message(s).`);
+
+    // Create stream.
     let pending: Function | undefined;
-    getOrSet(this._subscriptions, tag, Array).push((value: dxos.echo.testing.TestMessage) => {
-      assert(value !== undefined);
-      queue.push(value);
-
-      if (pending) {
-        pending();
-      }
-    });
-
-    // TODO(burdon): Is this the right way to do streams?
-    return from2.obj((size: number, next: Function) => {
+    const stream = from2.obj((size: number, next: Function) => {
       assert(!pending);
       if (queue.length) {
-        log(`Streaming ${queue.length} messages`);
+        // log(`Streaming ${queue.length} messages`);
         next(null, queue.splice(0, size));
       } else {
         pending = () => {
           pending = undefined;
-          log(`Streaming ${queue.length} messages`);
+          // log(`Streaming ${queue.length} messages`);
           next(null, queue.splice(0, size));
         };
       }
     });
+
+    // Register subscription.
+    getOrSet(this._subscriptions, tag, Array).push((value: dxos.echo.testing.TestMessage) => {
+      if (value !== undefined) {
+        queue.push(value);
+      }
+
+      // Update stream.
+      if (pending) {
+        pending();
+      }
+
+      if (value === undefined) {
+        stream.destroy();
+      }
+    });
+
+    return stream;
   }
 }
