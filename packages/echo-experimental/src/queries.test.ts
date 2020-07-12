@@ -119,6 +119,7 @@ test('message query streams', async () => {
   expect(descriptors).toHaveLength(config.numFeeds);
 
   // Create messages.
+  // TODO(burdon): Test writing in bursts.
   const counters = new Map();
   for (let i = 0; i < config.numBlocks; i++) {
     const { feed } = chance.pickone(descriptors);
