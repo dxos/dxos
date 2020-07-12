@@ -56,19 +56,25 @@ test('message query streams', async () => {
 
   // Generate messages.
   let blocks = 0;
+  const last = new Map();
   const counters = new Map();
   const generator = async () => {
     const num = chance.integer({ min: 1, max: Math.min(config.numBlocks - blocks, config.maxChunks) });
     for (let i = 0; i < num; i++) {
       const { feed } = chance.pickone(descriptors);
       const tag = chance.pickone(config.tags);
+      const id = createId();
+
       await feed.append({
         message: {
           __type_url: 'dxos.echo.testing.TestMessage',
-          id: createId(),
+          id,
+          depends: last.get(tag),
           tag
         }
       });
+
+      last.set(tag, id);
 
       counters.set(tag, (counters.get(tag) || 0) + 1);
       blocks++;

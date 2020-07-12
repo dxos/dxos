@@ -14,5 +14,6 @@ message Envelope {
 
 message TestMessage {
   string id = 1;
-  string tag = 2;
+  string depends = 2;
+  string tag = 3;
 }
