@@ -73,7 +73,7 @@ test('message query streams', async () => {
       counters.set(tag, (counters.get(tag) || 0) + 1);
       blocks++;
     }
-  }
+  };
 
   // Generate messages sporadically after subscription
   const interval = setInterval(async () => {
@@ -84,6 +84,8 @@ test('message query streams', async () => {
       clearInterval(interval);
     }
   }, 100);
+
+  await sleep(300);
 
   // Create subscription.
   let count = 0;

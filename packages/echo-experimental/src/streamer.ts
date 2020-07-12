@@ -43,8 +43,7 @@ export class Streamer {
   constructor (stream: IReadableStream) {
     stream.on('data', (block: IBlock) => {
       const { data: { message } } = block;
-      const { id, tag } = (message as dxos.echo.testing.TestMessage);
-
+      const { tag } = (message as dxos.echo.testing.TestMessage);
       const values = getOrSet(this._index, tag, Array);
       values.push(message);
 
@@ -56,7 +55,8 @@ export class Streamer {
 
   subscribe (tag: string): IReadableStream {
     // TODO(burdon): Use model to manage order.
-    let queue = [... this._index.get(tag) || []];
+    const queue = [...this._index.get(tag) || []];
+    log('Subscription', tag);
 
     let pending: Function | undefined;
     getOrSet(this._subscriptions, tag, Array).push((value: dxos.echo.testing.TestMessage) => {
@@ -72,10 +72,12 @@ export class Streamer {
     return from2.obj((size: number, next: Function) => {
       assert(!pending);
       if (queue.length) {
+        log(`Streaming ${queue.length} messages`);
         next(null, queue.splice(0, size));
       } else {
         pending = () => {
           pending = undefined;
+          log(`Streaming ${queue.length} messages`);
           next(null, queue.splice(0, size));
         };
       }
