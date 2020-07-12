@@ -35,8 +35,10 @@ test('hypercore encoding', async () => {
   };
 
   await pify(feed.append.bind(feed))({
-    // NOTE: Encode type.
-    message: Object.assign(message, { __type_url: 'dxos.echo.ObjectMutationSet' })
+    message: {
+      __type_url: 'dxos.echo.ObjectMutationSet',
+      ...message
+    }
   });
 
   const { message: { mutations } } = await pify(feed.get.bind(feed))(0);
