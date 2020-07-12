@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import from2 from 'from2';
 
-import { dxos } from './proto/gen/bundle';
+import { dxos } from './proto/gen/testing';
 
 const log = debug('dxos:echo:streamer');
 debug.enable('dxos:echo:*');
@@ -33,7 +33,7 @@ const getOrSet = (map: Map<string, any>, key: string, constructor: Function) => 
 /**
  * Consumes a message queue and provides streamable queries.
  */
-export class Streamer {
+export class Indexer {
   // Map of arrays by tag.
   _index = new Map();
 
@@ -53,6 +53,11 @@ export class Streamer {
     // TODO(burdon): Flush all subscriptions on close.
   }
 
+  /**
+   * Create a subscription for messages with the given tag.
+   * @param {string} tag
+   * @return {IReadableStream}
+   */
   subscribe (tag: string): IReadableStream {
     // TODO(burdon): Use model to manage order.
     const queue = [...this._index.get(tag) || []];

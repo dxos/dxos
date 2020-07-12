@@ -12,13 +12,15 @@ import { Codec } from '@dxos/codec-protobuf';
 import { ObjectStore } from './object-store';
 import { createObjectId } from './util';
 
-const schema = require('./proto/gen/echo.json');
+import EchoSchema from './proto/gen/echo.json';
 
-const codec = new Codec('echo.ObjectMutationSet')
-  .addJson(schema)
+// TODO(burdon): merge with protobuf.test
+
+const codec = new Codec('dxos.echo.ObjectMutationSet')
+  .addJson(EchoSchema)
   .build();
 
-const { values: Operation } = codec.getType('echo.ObjectMutation.Operation');
+const { values: Operation } = codec.getType('dxos.echo.ObjectMutation.Operation');
 
 test('protobuf codec', () => {
   const message = {

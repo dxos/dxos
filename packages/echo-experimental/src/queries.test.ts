@@ -12,10 +12,10 @@ import { Codec } from '@dxos/codec-protobuf';
 import { createId } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 
-import { dxos } from './proto/gen/bundle';
+import { dxos } from './proto/gen/testing';
 import TestingSchema from './proto/gen/testing.json';
 
-import { Streamer } from './streamer';
+import { Indexer } from './indexer';
 
 const log = debug('dxos:echo:testing');
 debug.enable('dxos:echo:*');
@@ -47,7 +47,7 @@ test('message query streams', async () => {
 
   // Create streamer.
   const stream = feedStore.createReadStream({ live: true });
-  const streamer = new Streamer(stream);
+  const streamer = new Indexer(stream);
 
   const descriptors = feedStore.getDescriptors();
   expect(descriptors).toHaveLength(config.numFeeds);

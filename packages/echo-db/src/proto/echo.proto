@@ -4,16 +4,15 @@
 
 syntax = "proto3";
 
-// https://developers.google.com/protocol-buffers/docs/proto3#json
-// https://developers.google.com/protocol-buffers/docs/proto#updating
+package dxos.echo;
+
+import "google/protobuf/any.proto";
 
 //
 // Object mutation messages.
+// https://developers.google.com/protocol-buffers/docs/proto#updating
+// https://developers.google.com/protocol-buffers/docs/proto3#json
 //
-
-package dxos.echo;
-
-// TODO(burdon): Should we support schema defs for the underlying objects (not just these mutation semantics?)
 
 //
 // Generic value.
@@ -63,10 +62,10 @@ message ObjectMutation {
   }
 
   // Meta.
-  // TODO(burdon): Other meta (e.g., creation time?)
+  // TODO(burdon): Any other meta (e.g., creation time?)
   string objectId                     = 1;
 
-  // TODO(burdon): Rethink dependencies/clock.
+  // TODO(burdon): Replace with consistency mechanism.
   string id                           = 2;
   string dependency                   = 3;
 
@@ -79,4 +78,12 @@ message ObjectMutation {
 //
 message ObjectMutationSet {
   repeated ObjectMutation mutations   = 1;
+}
+
+//
+// Envelope (for testing).
+// All top-level messages should be wrapped for protocol encoding/decoding.
+//
+message Envelope {
+  google.protobuf.Any message         = 1;
 }

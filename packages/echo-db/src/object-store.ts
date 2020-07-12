@@ -15,12 +15,12 @@ interface ObjectBase {
   properties?: object,
 }
 
-const log = debug('dxos:echo:objectstore');
+const log = debug('dxos:echo:object-store');
 
 /**
  * Create a set mutation messages from a single object.
  */
-// TODO(burdon): Rename.
+// TODO(burdon): Rename and move.
 export const fromObject = ({ id, properties = {} }: ObjectBase): dxos.echo.IObjectMutation => {
   assert(id);
 

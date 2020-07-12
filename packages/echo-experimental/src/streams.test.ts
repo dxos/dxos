@@ -12,7 +12,7 @@ import { Codec } from '@dxos/codec-protobuf';
 import { createId } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 
-import { dxos } from './proto/gen/bundle';
+import { dxos } from './proto/gen/testing';
 import TestingSchema from './proto/gen/testing.json';
 
 const chance = new Chance();
