@@ -101,8 +101,14 @@ export namespace dxos {
             /** Properties of a TestMessage. */
             interface ITestMessage {
 
+                /** TestMessage seq */
+                seq?: (number|null);
+
                 /** TestMessage id */
                 id?: (string|null);
+
+                /** TestMessage depends */
+                depends?: (string|null);
 
                 /** TestMessage tag */
                 tag?: (string|null);
@@ -117,8 +123,14 @@ export namespace dxos {
                  */
                 constructor(properties?: dxos.echo.testing.ITestMessage);
 
+                /** TestMessage seq. */
+                public seq: number;
+
                 /** TestMessage id. */
                 public id: string;
+
+                /** TestMessage depends. */
+                public depends: string;
 
                 /** TestMessage tag. */
                 public tag: string;

@@ -234,7 +234,9 @@ $root.dxos = (function() {
                  * Properties of a TestMessage.
                  * @memberof dxos.echo.testing
                  * @interface ITestMessage
+                 * @property {number|null} [seq] TestMessage seq
                  * @property {string|null} [id] TestMessage id
+                 * @property {string|null} [depends] TestMessage depends
                  * @property {string|null} [tag] TestMessage tag
                  */
 
@@ -254,12 +256,28 @@ $root.dxos = (function() {
                 }
 
                 /**
+                 * TestMessage seq.
+                 * @member {number} seq
+                 * @memberof dxos.echo.testing.TestMessage
+                 * @instance
+                 */
+                TestMessage.prototype.seq = 0;
+
+                /**
                  * TestMessage id.
                  * @member {string} id
                  * @memberof dxos.echo.testing.TestMessage
                  * @instance
                  */
                 TestMessage.prototype.id = "";
+
+                /**
+                 * TestMessage depends.
+                 * @member {string} depends
+                 * @memberof dxos.echo.testing.TestMessage
+                 * @instance
+                 */
+                TestMessage.prototype.depends = "";
 
                 /**
                  * TestMessage tag.
@@ -293,10 +311,14 @@ $root.dxos = (function() {
                 TestMessage.encode = function encode(message, writer) {
                     if (!writer)
                         writer = $Writer.create();
+                    if (message.seq != null && Object.hasOwnProperty.call(message, "seq"))
+                        writer.uint32(/* id 1, wireType 0 =*/8).int32(message.seq);
                     if (message.id != null && Object.hasOwnProperty.call(message, "id"))
-                        writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+                        writer.uint32(/* id 2, wireType 2 =*/18).string(message.id);
+                    if (message.depends != null && Object.hasOwnProperty.call(message, "depends"))
+                        writer.uint32(/* id 3, wireType 2 =*/26).string(message.depends);
                     if (message.tag != null && Object.hasOwnProperty.call(message, "tag"))
-                        writer.uint32(/* id 2, wireType 2 =*/18).string(message.tag);
+                        writer.uint32(/* id 4, wireType 2 =*/34).string(message.tag);
                     return writer;
                 };
 
@@ -332,9 +354,15 @@ $root.dxos = (function() {
                         var tag = reader.uint32();
                         switch (tag >>> 3) {
                         case 1:
-                            message.id = reader.string();
+                            message.seq = reader.int32();
                             break;
                         case 2:
+                            message.id = reader.string();
+                            break;
+                        case 3:
+                            message.depends = reader.string();
+                            break;
+                        case 4:
                             message.tag = reader.string();
                             break;
                         default:
@@ -372,9 +400,15 @@ $root.dxos = (function() {
                 TestMessage.verify = function verify(message) {
                     if (typeof message !== "object" || message === null)
                         return "object expected";
+                    if (message.seq != null && message.hasOwnProperty("seq"))
+                        if (!$util.isInteger(message.seq))
+                            return "seq: integer expected";
                     if (message.id != null && message.hasOwnProperty("id"))
                         if (!$util.isString(message.id))
                             return "id: string expected";
+                    if (message.depends != null && message.hasOwnProperty("depends"))
+                        if (!$util.isString(message.depends))
+                            return "depends: string expected";
                     if (message.tag != null && message.hasOwnProperty("tag"))
                         if (!$util.isString(message.tag))
                             return "tag: string expected";
@@ -393,8 +427,12 @@ $root.dxos = (function() {
                     if (object instanceof $root.dxos.echo.testing.TestMessage)
                         return object;
                     var message = new $root.dxos.echo.testing.TestMessage();
+                    if (object.seq != null)
+                        message.seq = object.seq | 0;
                     if (object.id != null)
                         message.id = String(object.id);
+                    if (object.depends != null)
+                        message.depends = String(object.depends);
                     if (object.tag != null)
                         message.tag = String(object.tag);
                     return message;
@@ -414,11 +452,17 @@ $root.dxos = (function() {
                         options = {};
                     var object = {};
                     if (options.defaults) {
+                        object.seq = 0;
                         object.id = "";
+                        object.depends = "";
                         object.tag = "";
                     }
+                    if (message.seq != null && message.hasOwnProperty("seq"))
+                        object.seq = message.seq;
                     if (message.id != null && message.hasOwnProperty("id"))
                         object.id = message.id;
+                    if (message.depends != null && message.hasOwnProperty("depends"))
+                        object.depends = message.depends;
                     if (message.tag != null && message.hasOwnProperty("tag"))
                         object.tag = message.tag;
                     return object;

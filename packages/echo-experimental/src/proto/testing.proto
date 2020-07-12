@@ -13,7 +13,8 @@ message Envelope {
 }
 
 message TestMessage {
-  string id = 1;
-  string depends = 2;
-  string tag = 3;
+  int32 seq = 1;
+  string id = 2;
+  string depends = 3;       // ID of dependent message.
+  string tag = 4;
 }

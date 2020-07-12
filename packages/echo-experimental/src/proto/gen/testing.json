@@ -16,13 +16,21 @@
                 },
                 "TestMessage": {
                   "fields": {
+                    "seq": {
+                      "type": "int32",
+                      "id": 1
+                    },
                     "id": {
                       "type": "string",
-                      "id": 1
+                      "id": 2
+                    },
+                    "depends": {
+                      "type": "string",
+                      "id": 3
                     },
                     "tag": {
                       "type": "string",
-                      "id": 2
+                      "id": 4
                     }
                   }
                 }

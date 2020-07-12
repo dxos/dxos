@@ -26,17 +26,23 @@ const codec = new Codec('dxos.echo.testing.Envelope')
   .addJson(TestingSchema)
   .build();
 
+interface ITestStream {
+  path: string,
+  message: dxos.echo.testing.TestMessage
+}
+
 /**
- * FeedStore Streams with encoding.
+ * Filtered FeedStore message streams (using encoding).
  */
-test('message query streams', async () => {
+test('streaming message subscriptions', async (done) => {
   const config = {
     numFeeds: 5,
     numBlocks: 100,
-    maxChunks: 20,
+    maxBatch: 20,
     tags: ['red', 'green', 'blue']
   };
 
+  // In-memory feed store.
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
   await feedStore.open();
 
@@ -45,12 +51,12 @@ test('message query streams', async () => {
     await feedStore.openFeed(`feed-${i}`);
   }
 
-  // Create streamer.
-  const stream = feedStore.createReadStream({ live: true });
-  const streamer = new Indexer(stream);
-
   const descriptors = feedStore.getDescriptors();
   expect(descriptors).toHaveLength(config.numFeeds);
+
+  // Create index.
+  const stream = feedStore.createReadStream({ live: true });
+  const index = new Indexer(stream);
 
   const selection = config.tags[0];
 
@@ -59,7 +65,7 @@ test('message query streams', async () => {
   const last = new Map();
   const counters = new Map();
   const generator = async () => {
-    const num = chance.integer({ min: 1, max: Math.min(config.numBlocks - blocks, config.maxChunks) });
+    const num = chance.integer({ min: 1, max: Math.min(config.numBlocks - blocks, config.maxBatch) });
     for (let i = 0; i < num; i++) {
       const { feed } = chance.pickone(descriptors);
       const tag = chance.pickone(config.tags);
@@ -68,6 +74,7 @@ test('message query streams', async () => {
       await feed.append({
         message: {
           __type_url: 'dxos.echo.testing.TestMessage',
+          seq: blocks,
           id,
           depends: last.get(tag),
           tag
@@ -76,8 +83,8 @@ test('message query streams', async () => {
 
       last.set(tag, id);
 
-      counters.set(tag, (counters.get(tag) || 0) + 1);
       blocks++;
+      counters.set(tag, (counters.get(tag) || 0) + 1);
     }
   };
 
@@ -91,18 +98,25 @@ test('message query streams', async () => {
     }
   }, 100);
 
+  // Wait for some messages to get written.
   await sleep(300);
 
   // Create subscription.
   let count = 0;
-  const results = streamer.subscribe(selection);
-  results.on('data', (messages: dxos.echo.testing.TestMessage[]) => {
-    messages.forEach(message => {
-      const { id, tag } = message;
+  const results = index.subscribe(selection);
+  results.on('data', (blocks: ITestStream[]) => {
+    blocks.forEach(block => {
+      // TODO(burdon): Test dependency order (since original stream can read from head of any feed).
+      const { path, message: { seq, id, tag } } = block;
       expect(tag).toBe(selection);
-      log(JSON.stringify(id));
+      log(JSON.stringify({ path, seq, id }));
       count++;
     });
+  });
+
+  results.on('close', () => {
+    log('Subscription closed.');
+    done();
   });
 
   await waitForExpect(() => {
@@ -110,4 +124,6 @@ test('message query streams', async () => {
     expect(count).toBe(counters.get(selection));
     feedStore.close();
   });
+
+  // TODO(burdon): Shutdown feedstore then open with first feed closed (queries should block).
 });

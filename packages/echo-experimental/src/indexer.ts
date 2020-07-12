@@ -13,6 +13,7 @@ debug.enable('dxos:echo:*');
 
 // TODO(burdon): Factor out?
 interface IBlock {
+  path: string,
   data: dxos.echo.testing.Envelope
 }
 
@@ -42,15 +43,26 @@ export class Indexer {
 
   constructor (stream: IReadableStream) {
     stream.on('data', (block: IBlock) => {
-      const { data: { message } } = block;
+      const { path, data: { message } } = block;
+
+      const data = { path, message };
+
+      // TODO(burdon): Configure type for filter.
       const { tag } = (message as dxos.echo.testing.TestMessage);
       const values = getOrSet(this._index, tag, Array);
-      values.push(message);
+      values.push(data);
 
-      (this._subscriptions.get(tag) || []).forEach((callback: Function) => callback(message));
+      (this._subscriptions.get(tag) || []).forEach((callback: Function) => callback(data));
     });
 
-    // TODO(burdon): Flush all subscriptions on close.
+    const cleanup = () => {
+      this._subscriptions.forEach(
+        subscriptions => subscriptions.forEach((callback: Function) => callback()));
+    };
+
+    // TODO(burdon): Both are called -- is this necessary?
+    stream.on('close', cleanup);
+    stream.on('end', cleanup);
   }
 
   /**
@@ -58,34 +70,47 @@ export class Indexer {
    * @param {string} tag
    * @return {IReadableStream}
    */
+  // TODO(burdon): Return subscription object?
   subscribe (tag: string): IReadableStream {
-    // TODO(burdon): Use model to manage order.
     const queue = [...this._index.get(tag) || []];
-    log('Subscription', tag);
 
+    // Create stream.
     let pending: Function | undefined;
-    getOrSet(this._subscriptions, tag, Array).push((value: dxos.echo.testing.TestMessage) => {
-      assert(value !== undefined);
-      queue.push(value);
+    const stream = from2.obj((size: number, next: Function) => {
+      // TODO(burdon): Check dependencies.
+      const process = () => {
+        // log(`Next ${queue.length} messages`);
+        next(null, queue.splice(0, size));
+      };
 
-      if (pending) {
-        pending();
-      }
-    });
-
-    // TODO(burdon): Is this the right way to do streams?
-    return from2.obj((size: number, next: Function) => {
       assert(!pending);
       if (queue.length) {
-        log(`Streaming ${queue.length} messages`);
-        next(null, queue.splice(0, size));
+        process();
       } else {
         pending = () => {
           pending = undefined;
-          log(`Streaming ${queue.length} messages`);
-          next(null, queue.splice(0, size));
+          process();
         };
       }
     });
+
+    // Register subscription.
+    getOrSet(this._subscriptions, tag, Array).push((value: dxos.echo.testing.TestMessage) => {
+      if (value !== undefined) {
+        queue.push(value);
+      }
+
+      // Update stream.
+      if (pending) {
+        pending();
+      }
+
+      if (value === undefined) {
+        stream.destroy();
+      }
+    });
+
+    log(`Created subscription[${tag}]: ${queue.length} initial message(s).`);
+    return stream;
   }
 }
