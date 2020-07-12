@@ -3,7 +3,6 @@
 //
 
 import Chance from 'chance';
-import debug from 'debug';
 import hypercore from 'hypercore';
 import pify from 'pify';
 import ram from 'random-access-memory';
@@ -15,9 +14,6 @@ import { FeedStore } from '@dxos/feed-store';
 
 import { dxos } from './proto/gen/bundle';
 import TestingSchema from './proto/gen/testing.json';
-
-const log = debug('dxos:echo:testing');
-debug.enable('dxos:echo:*');
 
 const chance = new Chance();
 
@@ -93,7 +89,7 @@ test('message streams', async () => {
   }
 
   // Test stream.
-  let ids = new Set();
+  const ids = new Set();
   const stream = feedStore.createReadStream({ live: true });
   stream.on('data', (block: IBlock) => {
     const { data: { message } } = block;
