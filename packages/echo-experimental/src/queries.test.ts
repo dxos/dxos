@@ -103,11 +103,11 @@ test('streaming message subscriptions', async (done) => {
   await sleep(300);
 
   // TODO(burdon): Sometimes fails.
-  // if (false) {
-  //   feedStore.closeFeed('feed-1');
-  //   await sleep(100);
-  //   feedStore.openFeed('feed-1');
-  // }
+  if (false) {
+    feedStore.closeFeed('feed-0');
+    await sleep(100);
+    feedStore.openFeed('feed-0');
+  }
 
   // Create subscription.
   let count = 0;
@@ -129,6 +129,7 @@ test('streaming message subscriptions', async (done) => {
 
   await waitForExpect(() => {
     expect(blocks).toBe(config.numBlocks);
+    expect(demuxer.count).toBe(config.numBlocks);
     expect(count).toBe(counters.get(selection));
     feedStore.close();
   });

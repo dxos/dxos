@@ -41,9 +41,12 @@ export class Demuxer {
   // Map of subscriptions by tag.
   _subscriptions = new Map();
 
+  _count = 0;
+
   constructor (stream: IReadableStream) {
     stream.on('data', (block: IBlock) => {
       const { path, data: { message } } = block;
+      this._count++;
 
       const data = { path, message };
 
@@ -63,6 +66,10 @@ export class Demuxer {
     // TODO(burdon): Both are called -- is this necessary?
     stream.on('close', cleanup);
     stream.on('end', cleanup);
+  }
+
+  get count () {
+    return this._count;
   }
 
   /**
