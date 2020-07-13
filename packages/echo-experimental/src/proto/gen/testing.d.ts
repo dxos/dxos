@@ -112,6 +112,9 @@ export namespace dxos {
 
                 /** TestMessage tag */
                 tag?: (string|null);
+
+                /** TestMessage map */
+                map?: ({ [k: string]: string }|null);
             }
 
             /** Represents a TestMessage. */
@@ -134,6 +137,9 @@ export namespace dxos {
 
                 /** TestMessage tag. */
                 public tag: string;
+
+                /** TestMessage map. */
+                public map: { [k: string]: string };
 
                 /**
                  * Creates a new TestMessage instance using the specified properties.

@@ -62,3 +62,8 @@ cards, where each card may have a field that is itself a text document.
 1. This has implications for the current API -- and would motivate having Models defined "up-front"
    rathar than ad-hoc in hook defintions (akin to Apollo GraphQL queries?)
 1. This system may allow of queries that range across the party and return collections of Items.
+
+
+## API
+
+

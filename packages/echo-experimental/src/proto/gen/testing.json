@@ -31,6 +31,11 @@
                     "tag": {
                       "type": "string",
                       "id": 4
+                    },
+                    "map": {
+                      "keyType": "string",
+                      "type": "string",
+                      "id": 10
                     }
                   }
                 }

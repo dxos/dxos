@@ -15,7 +15,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { dxos } from './proto/gen/testing';
 import TestingSchema from './proto/gen/testing.json';
 
-import { Indexer } from './indexer';
+import { Demuxer } from './demuxer';
 
 const log = debug('dxos:echo:testing');
 debug.enable('dxos:echo:*');
@@ -34,6 +34,7 @@ interface ITestStream {
 /**
  * Filtered FeedStore message streams (using encoding).
  */
+// eslint-disable-next-line jest/no-test-callback
 test('streaming message subscriptions', async (done) => {
   const config = {
     numFeeds: 5,
@@ -56,7 +57,7 @@ test('streaming message subscriptions', async (done) => {
 
   // Create index.
   const stream = feedStore.createReadStream({ live: true });
-  const index = new Indexer(stream);
+  const demuxer = new Demuxer(stream);
 
   const selection = config.tags[0];
 
@@ -101,9 +102,16 @@ test('streaming message subscriptions', async (done) => {
   // Wait for some messages to get written.
   await sleep(300);
 
+  // TODO(burdon): Sometimes fails.
+  // if (false) {
+  //   feedStore.closeFeed('feed-1');
+  //   await sleep(100);
+  //   feedStore.openFeed('feed-1');
+  // }
+
   // Create subscription.
   let count = 0;
-  const results = index.subscribe(selection);
+  const results = demuxer.subscribe(selection);
   results.on('data', (blocks: ITestStream[]) => {
     blocks.forEach(block => {
       // TODO(burdon): Test dependency order (since original stream can read from head of any feed).

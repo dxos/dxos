@@ -32,9 +32,9 @@ const getOrSet = (map: Map<string, any>, key: string, constructor: Function) => 
 };
 
 /**
- * Consumes a message queue and provides streamable queries.
+ * Consumes a message queue and provides fitlered message streams.
  */
-export class Indexer {
+export class Demuxer {
   // Map of arrays by tag.
   _index = new Map();
 
