@@ -15,7 +15,7 @@ export class Environment extends EventEmitter {
     this._provider = provider;
     this._agents = new Map();
 
-    this._stats = {
+    this._state = {
       appended: 0,
       processed: 0
     };
@@ -39,12 +39,12 @@ export class Environment extends EventEmitter {
     return Array.from(this._agents.values());
   }
 
-  get stats () {
-    return Object.assign({}, this._stats);
+  get state () {
+    return Object.assign({}, this._state);
   }
 
   get sync () {
-    return this._stats.processed === this._stats.appended * Math.pow(this.models.length, 2);
+    return this._state.processed === this._state.appended * Math.pow(this.models.length, 2);
   }
 
   getAgent (agentId) {
@@ -59,10 +59,10 @@ export class Environment extends EventEmitter {
 
     this._agents.set(agent.id, agent);
     agent.on('preappend', () => {
-      this._stats.appended++;
+      this._state.appended++;
     });
     agent.on('update', ({ messages }) => {
-      this._stats.processed += messages.length;
+      this._state.processed += messages.length;
       this.emit('model-update');
     });
 

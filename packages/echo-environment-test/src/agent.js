@@ -10,7 +10,7 @@ import { randomBytes } from '@dxos/crypto';
 
 const kAgent = Symbol('agent');
 const kPeer = Symbol('peer');
-const kStats = Symbol('stats');
+const kState = Symbol('state');
 
 export class Agent extends EventEmitter {
   constructor (topic, definition = {}) {
@@ -26,13 +26,13 @@ export class Agent extends EventEmitter {
     this._models = new Set();
   }
 
-  get stats () {
+  get state () {
     let appended = 0;
     let processed = 0;
 
     this.models.forEach(model => {
-      appended += model[kStats].appended;
-      processed += model[kStats].processed;
+      appended += model[kState].appended;
+      processed += model[kState].processed;
     });
 
     return { appended, processed };
@@ -43,26 +43,26 @@ export class Agent extends EventEmitter {
   }
 
   get sync () {
-    const stats = this.stats;
-    return stats.processed === (stats.appended * this._models.size);
+    const state = this.state;
+    return state.processed === (state.appended * this._models.size);
   }
 
   createModel (peer) {
     const model = peer.modelFactory.createModel(this._spec.ModelClass, { ...this._spec.options, topic: this._topic.toString('hex') });
     model[kAgent] = this;
     model[kPeer] = peer;
-    model[kStats] = {
+    model[kState] = {
       appended: 0,
       processed: 0
     };
 
     model.on('preappend', () => {
-      model[kStats].appended++;
+      model[kState].appended++;
       this.emit('preappend');
     });
 
     model.on('update', (_, messages) => {
-      model[kStats].processed += messages.length;
+      model[kState].processed += messages.length;
       this.emit('update', { topic: this._topic, peerId: peer.id, model, messages });
     });
 
@@ -96,15 +96,15 @@ export class Agent extends EventEmitter {
   }
 
   async waitForModelSync (model, timeout = 50 * 1000) {
-    const modelStats = model[kStats];
+    const modelState = model[kState];
 
-    if (modelStats.processed === this.stats.appended) {
+    if (modelState.processed === this.state.appended) {
       return;
     }
 
     return pEvent(model, 'update', {
       timeout,
-      filter: () => modelStats.processed === this.stats.appended
+      filter: () => modelState.processed === this.state.appended
     });
   }
 
@@ -115,4 +115,4 @@ export class Agent extends EventEmitter {
 }
 
 export const getAgent = (model) => model[kAgent];
-export const getStats = (model) => model[kStats];
+export const getState = (model) => model[kState];

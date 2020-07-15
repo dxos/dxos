@@ -24,7 +24,8 @@
     "clean": "del-cli dist",
     "lint": "semistandard 'src/**/*.js'",
     "prepublishOnly": "npm run build && npm run test",
-    "test": "node -r @babel/register test.js",
+    "example": "node -r @babel/register example.js",
+    "test": "jest --verbose --passWithNoTests src",
     "posttest": "npm run lint"
   },
   "browserslist": [
