@@ -1,8 +1,9 @@
 {
-  "name": "@dxos/model-factory",
-  "version": "1.0.0-beta.25",
-  "description": "Model factory.",
-  "homepage": "https://github.com/dxos/echo/tree/master/packages/model-factory#readme",
+  "name": "@dxos/echo-environment-test",
+  "version": "1.0.0-beta.18",
+  "description": "Echo environment test.",
+  "private": true,
+  "homepage": "https://github.com/dxos/echo/tree/master/packages/echo-environment-test#readme",
   "bugs": {
     "url": "https://github.com/dxos/echo/issues"
   },
@@ -23,7 +24,7 @@
     "clean": "del-cli dist",
     "lint": "semistandard 'src/**/*.js'",
     "prepublishOnly": "npm run build && npm run test",
-    "test": "jest --verbose --passWithNoTests src",
+    "test": "node -r @babel/register test.js",
     "posttest": "npm run lint"
   },
   "browserslist": [
@@ -33,46 +34,40 @@
     "testEnvironment": "node"
   },
   "dependencies": {
+    "@dxos/benchmark-suite": "^1.0.0-beta.0",
+    "@dxos/credentials": "^1.0.1-beta.4",
     "@dxos/crypto": "^1.0.0-beta.1",
-    "@dxos/debug": "^1.0.0-beta.20",
-    "@dxos/feed-level-indexer": "^1.1.0-alpha.9",
-    "@dxos/metrics": "^1.0.0-beta.8",
-    "@dxos/protocol-network-generator": "^1.1.0-beta.2",
-    "charwise": "^3.0.1",
-    "debug": "^4.1.1",
+    "@dxos/client": "^1.0.0-beta.107",
+    "@dxos/feed-store": "^1.2.0-beta.23",
+    "@dxos/model-factory": "^1.0.0-beta.17",
+    "@dxos/protocol": "^1.1.0-beta.10",
+    "@dxos/protocol-network-generator": "^1.1.0-beta.10",
+    "@dxos/protocol-plugin-replicator": "^1.1.0-beta.10",
+    "@dxos/random-access-multi-storage": "^1.1.0-beta.4",
+    "@wirelineio/discovery-swarm-memory": "^0.2.17",
+    "buffer-json-encoding": "^1.0.2",
     "end-of-stream": "^1.4.4",
-    "level-mem": "^5.0.1",
-    "lodash.debounce": "^4.0.8",
-    "monotonic-timestamp": "^0.0.9",
-    "multi-read-stream": "^2.0.0",
-    "p-limit": "^3.0.1",
-    "pump": "^3.0.0",
-    "signal-promise": "^1.0.3",
-    "source-map-support": "^0.5.12",
-    "through2": "^3.0.1"
+    "p-event": "^4.2.0",
+    "pify": "^5.0.0",
+    "source-map-support": "^0.5.12"
   },
   "devDependencies": {
     "@babel/cli": "^7.7.0",
     "@babel/core": "^7.4.5",
     "@babel/plugin-proposal-export-default-from": "^7.5.2",
     "@babel/preset-env": "^7.4.5",
-    "@dxos/async": "^1.0.0-beta.1",
-    "@dxos/feed-store": "^1.2.0-beta.21",
-    "@dxos/random-access-multi-storage": "^1.1.0-beta.3",
+    "@babel/register": "^7.10.3",
+    "@dxos/browser-runner": "^1.0.0-beta.9",
+    "@dxos/echo-db": "^1.0.0-beta.18",
     "babel-eslint": "^10.0.2",
     "babel-jest": "^24.8.0",
     "babel-plugin-add-module-exports": "^1.0.2",
     "babel-plugin-inline-import": "^3.0.0",
-    "buffer-json-encoding": "^1.0.2",
     "cpy-cli": "^2.0.0",
     "del-cli": "^3.0.0",
     "jest": "^24.5.0",
-    "pify": "^5.0.0",
     "semistandard": "14.2.0",
     "wait-for-expect": "^3.0.1"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "semistandard": {
     "parser": "babel-eslint",
