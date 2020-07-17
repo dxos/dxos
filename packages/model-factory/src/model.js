@@ -66,15 +66,24 @@ export class Model extends EventEmitter {
   // Virtual methods.
   //
 
-  async onAppend (message) {
+  /**
+   * @async
+   */
+  onAppend (message) {
     return message;
   }
 
-  async onUpdate (messages) {
+  /**
+   * @async
+   */
+  onUpdate (messages) {
     throw new Error(`Not processed: ${messages.length}`);
   }
 
-  async onDestroy () {}
+  /**
+   * @async
+   */
+  onDestroy () {}
 }
 
 /**

@@ -34,7 +34,7 @@
     "@types/jest": "^25.2.3",
     "eslint-plugin-jest": "^23.13.1",
     "jest": "^26.0.0",
-    "semistandard": "^14.2.0",
+    "semistandard": "14.2.0",
     "ts-jest": "^26.1.0",
     "typescript": "^3.9.3"
   },

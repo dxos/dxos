@@ -67,3 +67,4 @@ dist/
 
 .cache
 public
+.temp/

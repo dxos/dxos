@@ -47,7 +47,7 @@
     "babel-jest": "^24.8.0",
     "babel-plugin-add-module-exports": "^1.0.2",
     "babel-plugin-inline-import": "^3.0.0",
-    "semistandard": "^14.2.0"
+    "semistandard": "14.2.0"
   },
   "publishConfig": {
     "access": "public"
