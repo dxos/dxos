@@ -103,11 +103,9 @@ test('streaming message subscriptions', async (done) => {
   await sleep(300);
 
   // TODO(burdon): Sometimes fails.
-  if (false) {
-    feedStore.closeFeed('feed-0');
-    await sleep(100);
-    feedStore.openFeed('feed-0');
-  }
+  // feedStore.closeFeed('feed-0');
+  // await sleep(100);
+  // feedStore.openFeed('feed-0');
 
   // Create subscription.
   let count = 0;

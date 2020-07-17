@@ -9,14 +9,13 @@ import tempy from 'tempy';
 import { sleep } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
-
-import { ObjectStore, fromObject } from '@dxos/echo-db/dist/src/object-store';
-import { createObjectId } from '@dxos/echo-db/dist/src/util';
+import { ObjectStore, createObjectId, fromObject } from '@dxos/echo-db';
 
 const log = debug('dxos:echo:testing');
 debug.enable('dxos:*');
 
-// TODO(burdon): Protobuf/codec.
+// TODO(burdon): This test framework is to explore the new API for ModelFactory.
+// TODO(burdon): REPLACE THIS TEST WITH CODE THAT DIRECTLY USES @dxos/protocol.
 
 type ID = string;
 type Class = string;

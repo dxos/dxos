@@ -60,7 +60,6 @@ typings/
 # next.js build output
 .next
 
-dist/
 .idea/workspace.xml
 
 out/
