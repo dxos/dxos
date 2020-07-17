@@ -78,8 +78,10 @@ test('message streams', async () => {
   expect(descriptors).toHaveLength(config.numFeeds);
 
   // Create messages.
+  const count = new Map();
   for (let i = 0; i < config.numBlocks; i++) {
-    const { feed } = chance.pickone(descriptors);
+    const { path, feed } = chance.pickone(descriptors);
+    count.set(path, (count.get(path) ?? 0) + 1);
     await feed.append({
       message: {
         __type_url: 'dxos.echo.testing.TestMessage',
@@ -99,6 +101,11 @@ test('message streams', async () => {
 
   await waitForExpect(() => {
     expect(ids.size).toBe(config.numBlocks);
+    for (const descriptor of descriptors) {
+      const { path, feed } = descriptor;
+      expect(feed.length).toBe(count.get(path));
+    }
+
     feedStore.close();
   });
 });

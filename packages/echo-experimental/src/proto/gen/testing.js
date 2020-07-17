@@ -238,7 +238,6 @@ $root.dxos = (function() {
                  * @property {string|null} [id] TestMessage id
                  * @property {string|null} [depends] TestMessage depends
                  * @property {string|null} [tag] TestMessage tag
-                 * @property {Object.<string,string>|null} [map] TestMessage map
                  */
 
                 /**
@@ -250,7 +249,6 @@ $root.dxos = (function() {
                  * @param {dxos.echo.testing.ITestMessage=} [properties] Properties to set
                  */
                 function TestMessage(properties) {
-                    this.map = {};
                     if (properties)
                         for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                             if (properties[keys[i]] != null)
@@ -290,14 +288,6 @@ $root.dxos = (function() {
                 TestMessage.prototype.tag = "";
 
                 /**
-                 * TestMessage map.
-                 * @member {Object.<string,string>} map
-                 * @memberof dxos.echo.testing.TestMessage
-                 * @instance
-                 */
-                TestMessage.prototype.map = $util.emptyObject;
-
-                /**
                  * Creates a new TestMessage instance using the specified properties.
                  * @function create
                  * @memberof dxos.echo.testing.TestMessage
@@ -329,9 +319,6 @@ $root.dxos = (function() {
                         writer.uint32(/* id 3, wireType 2 =*/26).string(message.depends);
                     if (message.tag != null && Object.hasOwnProperty.call(message, "tag"))
                         writer.uint32(/* id 4, wireType 2 =*/34).string(message.tag);
-                    if (message.map != null && Object.hasOwnProperty.call(message, "map"))
-                        for (var keys = Object.keys(message.map), i = 0; i < keys.length; ++i)
-                            writer.uint32(/* id 10, wireType 2 =*/82).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]).uint32(/* id 2, wireType 2 =*/18).string(message.map[keys[i]]).ldelim();
                     return writer;
                 };
 
@@ -362,7 +349,7 @@ $root.dxos = (function() {
                 TestMessage.decode = function decode(reader, length) {
                     if (!(reader instanceof $Reader))
                         reader = $Reader.create(reader);
-                    var end = length === undefined ? reader.len : reader.pos + length, message = new $root.dxos.echo.testing.TestMessage(), key;
+                    var end = length === undefined ? reader.len : reader.pos + length, message = new $root.dxos.echo.testing.TestMessage();
                     while (reader.pos < end) {
                         var tag = reader.uint32();
                         switch (tag >>> 3) {
@@ -377,14 +364,6 @@ $root.dxos = (function() {
                             break;
                         case 4:
                             message.tag = reader.string();
-                            break;
-                        case 10:
-                            reader.skip().pos++;
-                            if (message.map === $util.emptyObject)
-                                message.map = {};
-                            key = reader.string();
-                            reader.pos++;
-                            message.map[key] = reader.string();
                             break;
                         default:
                             reader.skipType(tag & 7);
@@ -433,14 +412,6 @@ $root.dxos = (function() {
                     if (message.tag != null && message.hasOwnProperty("tag"))
                         if (!$util.isString(message.tag))
                             return "tag: string expected";
-                    if (message.map != null && message.hasOwnProperty("map")) {
-                        if (!$util.isObject(message.map))
-                            return "map: object expected";
-                        var key = Object.keys(message.map);
-                        for (var i = 0; i < key.length; ++i)
-                            if (!$util.isString(message.map[key[i]]))
-                                return "map: string{k:string} expected";
-                    }
                     return null;
                 };
 
@@ -464,13 +435,6 @@ $root.dxos = (function() {
                         message.depends = String(object.depends);
                     if (object.tag != null)
                         message.tag = String(object.tag);
-                    if (object.map) {
-                        if (typeof object.map !== "object")
-                            throw TypeError(".dxos.echo.testing.TestMessage.map: object expected");
-                        message.map = {};
-                        for (var keys = Object.keys(object.map), i = 0; i < keys.length; ++i)
-                            message.map[keys[i]] = String(object.map[keys[i]]);
-                    }
                     return message;
                 };
 
@@ -487,8 +451,6 @@ $root.dxos = (function() {
                     if (!options)
                         options = {};
                     var object = {};
-                    if (options.objects || options.defaults)
-                        object.map = {};
                     if (options.defaults) {
                         object.seq = 0;
                         object.id = "";
@@ -503,12 +465,6 @@ $root.dxos = (function() {
                         object.depends = message.depends;
                     if (message.tag != null && message.hasOwnProperty("tag"))
                         object.tag = message.tag;
-                    var keys2;
-                    if (message.map && (keys2 = Object.keys(message.map)).length) {
-                        object.map = {};
-                        for (var j = 0; j < keys2.length; ++j)
-                            object.map[keys2[j]] = message.map[keys2[j]];
-                    }
                     return object;
                 };
 
