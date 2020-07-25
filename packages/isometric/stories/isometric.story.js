@@ -184,7 +184,6 @@ export default {
 };
 
 export const withField = () => {
-
   return (
     <IsometricStoryWithStyles />
   );

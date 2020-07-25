@@ -15,7 +15,6 @@ export default {
 };
 
 export const withHello = () => {
-
   return (
     <FullScreen>
       <Hello />
@@ -24,7 +23,6 @@ export const withHello = () => {
 };
 
 export const withLegacy = () => {
-
   return (
     <FullScreen>
       <Legacy />
