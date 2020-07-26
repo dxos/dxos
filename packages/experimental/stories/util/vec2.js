@@ -28,14 +28,14 @@ Vec2.prototype.scale = function(s) {
 };
 
 Vec2.prototype.scaleTo = function(s) {
-  var length = this.length();
+  let length = this.length();
   this.x = this.x * s / length;
   this.y = this.y * s / length;
   return this;
 };
 
 Vec2.prototype.normalize = function() {
-  var length = this.length();
+  let length = this.length();
   this.x = this.x / length;
   this.y = this.y / length;
   return this;
@@ -46,7 +46,7 @@ Vec2.prototype.length = function() {
 };
 
 Vec2.prototype.truncate = function(max) {
-  var length = this.length();
+  let length = this.length();
   if (length > max) {
     this.x = this.x * max / length;
     this.y = this.y * max / length;
