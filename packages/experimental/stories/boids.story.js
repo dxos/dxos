@@ -12,79 +12,77 @@ import { FullScreen } from '@dxos/gem-core';
 
 import { Vec2 } from './vec2';
 
-debug.enable('gem:flock:*');
-
-export default {
-  title: 'Flock',
-  decorators: [withKnobs]
-};
+debug.enable('gem:boids:*');
 
 // Boids flocking
 // https://en.wikipedia.org/wiki/Boids
 // https://bl.ocks.org/veltman/995d3a677418100ac43877f3ed1cc728
 
+export default {
+  title: 'Boids',
+  decorators: [withKnobs]
+};
+
 // TODO(burdon): Move to knobs
+
 let flockmateRadius = 60;
 let separationDistance = 30;
-let maxVelocity = 2;
 
 let separationForce = 0.03;
 let alignmentForce = 0.03;
 let cohesionForce = 0.03;
 
-const configForces = {
-  separationForce,
-  alignmentForce,
-  cohesionForce
-};
+//
+// Utils
+//
 
-function randomVelocity() {
+function randomVelocity({ maxVelocity }) {
   return new Vec2(1 - Math.random() * 2, 1 - Math.random() * 2).scale(maxVelocity);
 }
 
-function radialVelocity(p) {
+function radialVelocity(p, { maxVelocity }) {
   return new Vec2(Math.sin(2 * Math.PI * p), Math.cos(2 * Math.PI * p)).scale(maxVelocity);
 }
 
-function initializeRandom({ numBoids }, { width, height }) {
-  return d3.range(numBoids).map(function() {
+function initializeRandom({ num, maxVelocity }, { width, height }) {
+  return d3.range(num).map(function() {
     return {
       position: new Vec2(Math.random() * width, Math.random() * height),
-      velocity: randomVelocity()
+      velocity: randomVelocity({ maxVelocity })
     };
   });
 }
 
-function initializePhyllotaxis({ numBoids }, { width, height }) {
-  return d3.range(numBoids).map(function(d, i) {
+function initializePhyllotaxis({ num, maxVelocity }, { width, height }) {
+  return d3.range(num).map(function(d, i) {
     let θ = Math.PI * i * (Math.sqrt(5) - 1);
-    let r = Math.sqrt(i) * 200 / Math.sqrt(numBoids);
+    let r = Math.sqrt(i) * 200 / Math.sqrt(num);
 
     return {
       position: new Vec2(width / 2 + r * Math.cos(θ),height / 2 - r * Math.sin(θ)),
-      velocity: radialVelocity(i / numBoids)
+      velocity: radialVelocity(i / num, { maxVelocity })
     };
   });
 }
 
-function initializeSine({ numBoids }, { width, height }) {
-  return d3.range(numBoids).map(function(i) {
-    let angle = 2 * Math.PI * i / numBoids;
-    let x = width * i / numBoids;
+function initializeSine({ num, maxVelocity }, { width, height }) {
+  return d3.range(num).map(function(i) {
+    let angle = 2 * Math.PI * i / num;
+    let x = width * i / num;
     let y = height / 2 + Math.sin(angle) * height / 4;
 
     return {
       position: new Vec2(x, y),
-      velocity: radialVelocity(i / numBoids)
+      velocity: radialVelocity(i / num, { maxVelocity })
     };
   });
 }
 
-function initializeCircleIn({ numBoids }, { width, height }) {
-  return d3.range(numBoids).map(function(i) {
-    let angle = i * 2 * Math.PI / numBoids,
-      x = 200 * Math.sin(angle),
-      y = 200 * Math.cos(angle);
+function initializeCircle({ num, maxVelocity }, { width, height }) {
+  return d3.range(num).map(function(i) {
+    let angle = i * 2 * Math.PI / num;
+    let x = 200 * Math.sin(angle);
+    let y = 200 * Math.cos(angle);
 
     return {
       position: new Vec2(x + width / 2, y + height / 2),
@@ -93,29 +91,43 @@ function initializeCircleIn({ numBoids }, { width, height }) {
   });
 }
 
-function initializeCircleRandom({ numBoids }, { width, height }) {
-  return d3.range(numBoids).map(function(i) {
-    let angle = i * 2 * Math.PI / numBoids;
+function initializeCircleRandom({ num, maxVelocity }, { width, height }) {
+  return d3.range(num).map(function(i) {
+    let angle = i * 2 * Math.PI / num;
     let x = 200 * Math.sin(angle);
     let y = 200 * Math.cos(angle);
 
     return {
       position: new Vec2(x + width / 2, y + height / 2),
-      velocity: randomVelocity().scale(maxVelocity)
+      velocity: randomVelocity({ maxVelocity }).scale(maxVelocity)
     };
   });
 }
 
-const initializers = {
+const initializeFunction = {
   initializeRandom,
   initializePhyllotaxis,
   initializeSine,
-  initializeCircleIn,
-  initializeCircleRandom,
+  initializeCircle,
+  initializeCircleRandom
 };
 
-function updateBoid(b, context, { width, height }, { coloring }) {
+const configForces = {
+  separationForce,
+  alignmentForce,
+  cohesionForce
+};
+
+const coloringFunction = {
+  'Rainbow': b => b.color,
+  'Grey': b => d3.interpolateGreys(0.25 + d3.mean(b.last)),
+  'Movement': b => d3.interpolateWarm(d3.mean(b.last))
+};
+
+function updateBoid(b, context, { width, height }, { radius, coloring, maxVelocity }) {
   b.position.add(b.velocity.add(b.acceleration).truncate(maxVelocity));
+
+  // TODO(burdon): Avoid obstacles/edge.
 
   if (b.position.y > height) {
     b.position.y -= height;
@@ -130,18 +142,17 @@ function updateBoid(b, context, { width, height }, { coloring }) {
   }
 
   context.beginPath();
-  if (coloring === 'Rainbow') {
-    context.fillStyle = b.color;
-  } else {
-    context.fillStyle = d3.interpolateWarm(d3.mean(b.last));
-  }
-  context.arc(b.position.x, b.position.y, 2, 0, 2 * Math.PI);
+  context.fillStyle = coloringFunction[coloring](b);
+  context.arc(b.position.x, b.position.y, radius, 0, 2 * Math.PI);
   context.fill();
 }
 
 function tick(boids, canvas, offscreenCanvas, { width, height }, config) {
+  const { trail, maxVelocity } = config;
+
+  // Vapor trail.
   const offscreenContext = offscreenCanvas.getContext('2d');
-  offscreenContext.globalAlpha = 0.85;
+  offscreenContext.globalAlpha = trail;
   offscreenContext.clearRect(0, 0, width, height);
   offscreenContext.drawImage(canvas, 0, 0, width, height);
 
@@ -150,19 +161,20 @@ function tick(boids, canvas, offscreenCanvas, { width, height }, config) {
   context.drawImage(offscreenCanvas, 0, 0, width, height);
 
   // Update physics.
-  boids.forEach(function(b) {
+  boids.forEach(function(b1) {
     let forces = {
       alignment: new Vec2(),
       cohesion: new Vec2(),
       separation: new Vec2()
     };
 
-    b.acceleration = new Vec2();
+    b1.acceleration = new Vec2();
 
+    // Flocking.
     boids.forEach(function(b2) {
-      if (b === b2) return;
+      if (b1 === b2) return;
 
-      let diff = b2.position.clone().subtract(b.position);
+      let diff = b2.position.clone().subtract(b1.position);
       let distance = diff.length();
 
       if (distance && distance < separationDistance) {
@@ -175,21 +187,22 @@ function tick(boids, canvas, offscreenCanvas, { width, height }, config) {
       }
     });
 
+    // Compute forces.
     for (let key in forces) {
       if (forces[key].active) {
         forces[key].scaleTo(maxVelocity)
-          .subtract(b.velocity)
-          .truncate(configForces[key + 'Force']); // TODO(burdon): Remove dep on globals.
+          .subtract(b1.velocity)
+          .truncate(configForces[key + 'Force']);
 
-        b.acceleration.add(forces[key]);
+        b1.acceleration.add(forces[key]);
       }
     }
 
     const { coloring } = config;
-    if (coloring === 'By Movement') {
-      b.last.push(b.acceleration.length() / (alignmentForce + cohesionForce + separationForce));
-      if (b.last.length > 20) {
-        b.last.shift();
+    if (coloring === 'Movement') {
+      b1.last.push(b1.acceleration.length() / (alignmentForce + cohesionForce + separationForce));
+      if (b1.last.length > 20) {
+        b1.last.shift();
       }
     }
   });
@@ -205,10 +218,10 @@ function restart(canvas, offscreenCanvas, { width, height }, config) {
   const context = canvas.getContext('2d');
   context.clearRect(0, 0, width, height);
 
-  const { numBoids, startingPosition } = config;
-  const boids = initializers[`initialize${startingPosition}`](config, { width, height });
+  const { num, startingPosition } = config;
+  const boids = initializeFunction[`initialize${startingPosition}`](config, { width, height });
   boids.forEach(function(b, i) {
-    b.color = d3.interpolateRainbow(i / numBoids);
+    b.color = d3.interpolateRainbow(i / num);
     b.last = [];
   });
 
@@ -224,29 +237,35 @@ export const withFlock = () => {
   const [boids, setBoids] = useState([]);
 
   // Knobs.
-  const numBoids = number('Boids', 100, { range: true, min: 1, max: 300 });
-  const startingPosition = select('Start', map(['Random', 'CircleIn', 'CircleRandom', 'Sine', 'Phyllotaxis']), 'Random');
-  const coloring = select('Coloring', map(['By Movement', 'Rainbow']), 'By Movement');
+  const num = number('Count', 100, { range: true, min: 1, max: 1000 });
+  const startingPosition = select('Start', map(['Random', 'Circle', 'CircleRandom', 'Sine', 'Phyllotaxis']), 'Random');
+  const coloring = select('Coloring', map(['Movement', 'Grey', 'Rainbow']), 'Movement');
+  const radius = number('Size', 2, { range: true, min: 1, max: 20, step: .5 });
+  const trail = number('Trail', 10, { range: true, min: 0, max: 20 });
+  const maxVelocity = number('Velocity', 2, { range: true, min: 1, max: 5, step: .1 });
 
   useEffect(() => {
     if (width && height) {
       setBoids(restart(canvas.current, offscreenCanvas.current, { width, height }, {
-        numBoids: numBoids || 1,
+        num,
         startingPosition,
-        coloring
+        maxVelocity
       }));
     }
-  }, [canvas, offscreenCanvas, width, height, numBoids, startingPosition, coloring]);
+  }, [canvas, offscreenCanvas, width, height, num, startingPosition]);
 
   useEffect(() => {
     const interval = d3.interval(() => {
       tick(boids, canvas.current, offscreenCanvas.current, { width, height }, {
-        coloring
+        coloring,
+        trail: (80 + trail) / 100,
+        radius,
+        maxVelocity
       });
     });
 
     return () => interval.stop();
-  }, [boids]);
+  }, [boids, radius, coloring, trail, maxVelocity]);
 
   return (
     <FullScreen>

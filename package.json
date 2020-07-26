@@ -46,5 +46,9 @@
     "lerna": "^3.19.0",
     "lint-staged": "^9.5.0",
     "pre-commit": "^1.2.2"
+  },
+  "dependencies": {
+    "semistandard": "^14.2.2",
+    "window": "^4.2.7"
   }
 }
