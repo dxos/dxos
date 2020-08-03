@@ -14,23 +14,51 @@
                     }
                   }
                 },
-                "TestMessage": {
+                "TestItemGenesis": {
                   "fields": {
+                    "itemId": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "model": {
+                      "type": "string",
+                      "id": 2
+                    }
+                  }
+                },
+                "TestItemMutation": {
+                  "fields": {
+                    "itemId": {
+                      "type": "string",
+                      "id": 1
+                    },
                     "seq": {
                       "type": "int32",
-                      "id": 1
+                      "id": 2
                     },
                     "id": {
                       "type": "string",
-                      "id": 2
+                      "id": 3
                     },
                     "depends": {
                       "type": "string",
-                      "id": 3
+                      "id": 4
                     },
                     "tag": {
                       "type": "string",
-                      "id": 4
+                      "id": 5
+                    },
+                    "key": {
+                      "type": "string",
+                      "id": 6
+                    },
+                    "value": {
+                      "type": "string",
+                      "id": 7
+                    },
+                    "payload": {
+                      "type": "google.protobuf.Any",
+                      "id": 8
                     }
                   }
                 }

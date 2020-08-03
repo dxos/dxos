@@ -9,6 +9,9 @@
     "composite": true,
     "sourceMap": true,
     "declarationMap": true,
+    "lib": [
+      "ESNext"
+    ],
     "target": "es6",
     "module": "commonjs",
     "outDir": "dist"

@@ -12,9 +12,18 @@ message Envelope {
   google.protobuf.Any message = 1;
 }
 
-message TestMessage {
-  int32 seq = 1;
-  string id = 2;
-  string depends = 3;       // ID of dependent message.
-  string tag = 4;
+message TestItemGenesis {
+  string itemId = 1;
+  string model = 2;
+}
+
+message TestItemMutation {
+  string itemId = 1;
+  int32 seq = 2;
+  string id = 3;
+  string depends = 4;       // ID of dependent message.
+  string tag = 5;
+  string key = 6;
+  string value = 7;
+  google.protobuf.Any payload = 8;
 }

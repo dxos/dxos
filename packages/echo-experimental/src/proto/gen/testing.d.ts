@@ -98,109 +98,229 @@ export namespace dxos {
                 public toJSON(): { [k: string]: any };
             }
 
-            /** Properties of a TestMessage. */
-            interface ITestMessage {
+            /** Properties of a TestItemGenesis. */
+            interface ITestItemGenesis {
 
-                /** TestMessage seq */
-                seq?: (number|null);
+                /** TestItemGenesis itemId */
+                itemId?: (string|null);
 
-                /** TestMessage id */
-                id?: (string|null);
-
-                /** TestMessage depends */
-                depends?: (string|null);
-
-                /** TestMessage tag */
-                tag?: (string|null);
+                /** TestItemGenesis model */
+                model?: (string|null);
             }
 
-            /** Represents a TestMessage. */
-            class TestMessage implements ITestMessage {
+            /** Represents a TestItemGenesis. */
+            class TestItemGenesis implements ITestItemGenesis {
 
                 /**
-                 * Constructs a new TestMessage.
+                 * Constructs a new TestItemGenesis.
                  * @param [properties] Properties to set
                  */
-                constructor(properties?: dxos.echo.testing.ITestMessage);
+                constructor(properties?: dxos.echo.testing.ITestItemGenesis);
 
-                /** TestMessage seq. */
-                public seq: number;
+                /** TestItemGenesis itemId. */
+                public itemId: string;
 
-                /** TestMessage id. */
-                public id: string;
-
-                /** TestMessage depends. */
-                public depends: string;
-
-                /** TestMessage tag. */
-                public tag: string;
+                /** TestItemGenesis model. */
+                public model: string;
 
                 /**
-                 * Creates a new TestMessage instance using the specified properties.
+                 * Creates a new TestItemGenesis instance using the specified properties.
                  * @param [properties] Properties to set
-                 * @returns TestMessage instance
+                 * @returns TestItemGenesis instance
                  */
-                public static create(properties?: dxos.echo.testing.ITestMessage): dxos.echo.testing.TestMessage;
+                public static create(properties?: dxos.echo.testing.ITestItemGenesis): dxos.echo.testing.TestItemGenesis;
 
                 /**
-                 * Encodes the specified TestMessage message. Does not implicitly {@link dxos.echo.testing.TestMessage.verify|verify} messages.
-                 * @param message TestMessage message or plain object to encode
+                 * Encodes the specified TestItemGenesis message. Does not implicitly {@link dxos.echo.testing.TestItemGenesis.verify|verify} messages.
+                 * @param message TestItemGenesis message or plain object to encode
                  * @param [writer] Writer to encode to
                  * @returns Writer
                  */
-                public static encode(message: dxos.echo.testing.ITestMessage, writer?: $protobuf.Writer): $protobuf.Writer;
+                public static encode(message: dxos.echo.testing.ITestItemGenesis, writer?: $protobuf.Writer): $protobuf.Writer;
 
                 /**
-                 * Encodes the specified TestMessage message, length delimited. Does not implicitly {@link dxos.echo.testing.TestMessage.verify|verify} messages.
-                 * @param message TestMessage message or plain object to encode
+                 * Encodes the specified TestItemGenesis message, length delimited. Does not implicitly {@link dxos.echo.testing.TestItemGenesis.verify|verify} messages.
+                 * @param message TestItemGenesis message or plain object to encode
                  * @param [writer] Writer to encode to
                  * @returns Writer
                  */
-                public static encodeDelimited(message: dxos.echo.testing.ITestMessage, writer?: $protobuf.Writer): $protobuf.Writer;
+                public static encodeDelimited(message: dxos.echo.testing.ITestItemGenesis, writer?: $protobuf.Writer): $protobuf.Writer;
 
                 /**
-                 * Decodes a TestMessage message from the specified reader or buffer.
+                 * Decodes a TestItemGenesis message from the specified reader or buffer.
                  * @param reader Reader or buffer to decode from
                  * @param [length] Message length if known beforehand
-                 * @returns TestMessage
+                 * @returns TestItemGenesis
                  * @throws {Error} If the payload is not a reader or valid buffer
                  * @throws {$protobuf.util.ProtocolError} If required fields are missing
                  */
-                public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): dxos.echo.testing.TestMessage;
+                public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): dxos.echo.testing.TestItemGenesis;
 
                 /**
-                 * Decodes a TestMessage message from the specified reader or buffer, length delimited.
+                 * Decodes a TestItemGenesis message from the specified reader or buffer, length delimited.
                  * @param reader Reader or buffer to decode from
-                 * @returns TestMessage
+                 * @returns TestItemGenesis
                  * @throws {Error} If the payload is not a reader or valid buffer
                  * @throws {$protobuf.util.ProtocolError} If required fields are missing
                  */
-                public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): dxos.echo.testing.TestMessage;
+                public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): dxos.echo.testing.TestItemGenesis;
 
                 /**
-                 * Verifies a TestMessage message.
+                 * Verifies a TestItemGenesis message.
                  * @param message Plain object to verify
                  * @returns `null` if valid, otherwise the reason why it is not
                  */
                 public static verify(message: { [k: string]: any }): (string|null);
 
                 /**
-                 * Creates a TestMessage message from a plain object. Also converts values to their respective internal types.
+                 * Creates a TestItemGenesis message from a plain object. Also converts values to their respective internal types.
                  * @param object Plain object
-                 * @returns TestMessage
+                 * @returns TestItemGenesis
                  */
-                public static fromObject(object: { [k: string]: any }): dxos.echo.testing.TestMessage;
+                public static fromObject(object: { [k: string]: any }): dxos.echo.testing.TestItemGenesis;
 
                 /**
-                 * Creates a plain object from a TestMessage message. Also converts values to other types if specified.
-                 * @param message TestMessage
+                 * Creates a plain object from a TestItemGenesis message. Also converts values to other types if specified.
+                 * @param message TestItemGenesis
                  * @param [options] Conversion options
                  * @returns Plain object
                  */
-                public static toObject(message: dxos.echo.testing.TestMessage, options?: $protobuf.IConversionOptions): { [k: string]: any };
+                public static toObject(message: dxos.echo.testing.TestItemGenesis, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
                 /**
-                 * Converts this TestMessage to JSON.
+                 * Converts this TestItemGenesis to JSON.
+                 * @returns JSON object
+                 */
+                public toJSON(): { [k: string]: any };
+            }
+
+            /** Properties of a TestItemMutation. */
+            interface ITestItemMutation {
+
+                /** TestItemMutation itemId */
+                itemId?: (string|null);
+
+                /** TestItemMutation seq */
+                seq?: (number|null);
+
+                /** TestItemMutation id */
+                id?: (string|null);
+
+                /** TestItemMutation depends */
+                depends?: (string|null);
+
+                /** TestItemMutation tag */
+                tag?: (string|null);
+
+                /** TestItemMutation key */
+                key?: (string|null);
+
+                /** TestItemMutation value */
+                value?: (string|null);
+
+                /** TestItemMutation payload */
+                payload?: (google.protobuf.IAny|null);
+            }
+
+            /** Represents a TestItemMutation. */
+            class TestItemMutation implements ITestItemMutation {
+
+                /**
+                 * Constructs a new TestItemMutation.
+                 * @param [properties] Properties to set
+                 */
+                constructor(properties?: dxos.echo.testing.ITestItemMutation);
+
+                /** TestItemMutation itemId. */
+                public itemId: string;
+
+                /** TestItemMutation seq. */
+                public seq: number;
+
+                /** TestItemMutation id. */
+                public id: string;
+
+                /** TestItemMutation depends. */
+                public depends: string;
+
+                /** TestItemMutation tag. */
+                public tag: string;
+
+                /** TestItemMutation key. */
+                public key: string;
+
+                /** TestItemMutation value. */
+                public value: string;
+
+                /** TestItemMutation payload. */
+                public payload?: (google.protobuf.IAny|null);
+
+                /**
+                 * Creates a new TestItemMutation instance using the specified properties.
+                 * @param [properties] Properties to set
+                 * @returns TestItemMutation instance
+                 */
+                public static create(properties?: dxos.echo.testing.ITestItemMutation): dxos.echo.testing.TestItemMutation;
+
+                /**
+                 * Encodes the specified TestItemMutation message. Does not implicitly {@link dxos.echo.testing.TestItemMutation.verify|verify} messages.
+                 * @param message TestItemMutation message or plain object to encode
+                 * @param [writer] Writer to encode to
+                 * @returns Writer
+                 */
+                public static encode(message: dxos.echo.testing.ITestItemMutation, writer?: $protobuf.Writer): $protobuf.Writer;
+
+                /**
+                 * Encodes the specified TestItemMutation message, length delimited. Does not implicitly {@link dxos.echo.testing.TestItemMutation.verify|verify} messages.
+                 * @param message TestItemMutation message or plain object to encode
+                 * @param [writer] Writer to encode to
+                 * @returns Writer
+                 */
+                public static encodeDelimited(message: dxos.echo.testing.ITestItemMutation, writer?: $protobuf.Writer): $protobuf.Writer;
+
+                /**
+                 * Decodes a TestItemMutation message from the specified reader or buffer.
+                 * @param reader Reader or buffer to decode from
+                 * @param [length] Message length if known beforehand
+                 * @returns TestItemMutation
+                 * @throws {Error} If the payload is not a reader or valid buffer
+                 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+                 */
+                public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): dxos.echo.testing.TestItemMutation;
+
+                /**
+                 * Decodes a TestItemMutation message from the specified reader or buffer, length delimited.
+                 * @param reader Reader or buffer to decode from
+                 * @returns TestItemMutation
+                 * @throws {Error} If the payload is not a reader or valid buffer
+                 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+                 */
+                public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): dxos.echo.testing.TestItemMutation;
+
+                /**
+                 * Verifies a TestItemMutation message.
+                 * @param message Plain object to verify
+                 * @returns `null` if valid, otherwise the reason why it is not
+                 */
+                public static verify(message: { [k: string]: any }): (string|null);
+
+                /**
+                 * Creates a TestItemMutation message from a plain object. Also converts values to their respective internal types.
+                 * @param object Plain object
+                 * @returns TestItemMutation
+                 */
+                public static fromObject(object: { [k: string]: any }): dxos.echo.testing.TestItemMutation;
+
+                /**
+                 * Creates a plain object from a TestItemMutation message. Also converts values to other types if specified.
+                 * @param message TestItemMutation
+                 * @param [options] Conversion options
+                 * @returns Plain object
+                 */
+                public static toObject(message: dxos.echo.testing.TestItemMutation, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+                /**
+                 * Converts this TestItemMutation to JSON.
                  * @returns JSON object
                  */
                 public toJSON(): { [k: string]: any };

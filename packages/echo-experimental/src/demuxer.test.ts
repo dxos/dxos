@@ -4,7 +4,7 @@
 
 import Chance from 'chance';
 import debug from 'debug';
-import ram from 'random-access-memory';
+import tempy from 'tempy';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
@@ -28,7 +28,7 @@ const codec = new Codec('dxos.echo.testing.Envelope')
 
 interface ITestStream {
   path: string,
-  message: dxos.echo.testing.TestMessage
+  message: dxos.echo.testing.TestItemMutation
 }
 
 /**
@@ -44,7 +44,8 @@ test('streaming message subscriptions', async (done) => {
   };
 
   // In-memory feed store.
-  const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+  const directory = tempy.directory();
+  const feedStore = new FeedStore(directory, { feedOptions: { valueEncoding: codec } });
   await feedStore.open();
 
   // Create feeds.
@@ -74,7 +75,7 @@ test('streaming message subscriptions', async (done) => {
 
       await feed.append({
         message: {
-          __type_url: 'dxos.echo.testing.TestMessage',
+          __type_url: 'dxos.echo.testing.TestItemMutation',
           seq: blocks,
           id,
           depends: last.get(tag),

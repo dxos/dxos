@@ -31,7 +31,7 @@ interface IBlock {
 test('proto encoding', () => {
   const buffer = codec.encode({
     message: {
-      __type_url: 'dxos.echo.testing.TestMessage',
+      __type_url: 'dxos.echo.testing.TestItemMutation',
       id: 'message-1'
     }
   });
@@ -48,7 +48,7 @@ test('hypercore encoding', async () => {
 
   await pify(feed.append.bind(feed))({
     message: {
-      __type_url: 'dxos.echo.testing.TestMessage',
+      __type_url: 'dxos.echo.testing.TestItemMutation',
       id: 'message-1'
     }
   });
@@ -84,7 +84,7 @@ test('message streams', async () => {
     count.set(path, (count.get(path) ?? 0) + 1);
     await feed.append({
       message: {
-        __type_url: 'dxos.echo.testing.TestMessage',
+        __type_url: 'dxos.echo.testing.TestItemMutation',
         id: createId()
       }
     });
@@ -95,7 +95,7 @@ test('message streams', async () => {
   const stream = feedStore.createReadStream({ live: true });
   stream.on('data', (block: IBlock) => {
     const { data: { message } } = block;
-    const { id } = (message as dxos.echo.testing.TestMessage);
+    const { id } = (message as dxos.echo.testing.TestItemMutation);
     ids.add(id);
   });
 

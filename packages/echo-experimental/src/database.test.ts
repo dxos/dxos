@@ -2,276 +2,164 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import Chance from 'chance';
 import debug from 'debug';
 import tempy from 'tempy';
 
 import { sleep } from '@dxos/async';
-import { createId } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
-import { ObjectStore, createObjectId, fromObject } from '@dxos/echo-db';
+import { Codec } from '@dxos/codec-protobuf';
+
+import { createItemDemuxer, ItemManager, Model, ModelMessage, ModelFactory } from './database';
+import { latch } from './util';
+
+import TestingSchema from './proto/gen/testing.json';
 
 const log = debug('dxos:echo:testing');
-debug.enable('dxos:*');
+debug.enable('dxos:echo:*');
 
-// TODO(burdon): This test framework is to explore the new API for ModelFactory.
-// TODO(burdon): REPLACE THIS TEST WITH CODE THAT DIRECTLY USES @dxos/protocol.
+const codec = new Codec('dxos.echo.testing.Envelope')
+  .addJson(TestingSchema)
+  .build();
 
-type ID = string;
-type Class = string;
-
-// TODO(burdon): Define top-level protobuf for echo (separate from HALO).
-interface IMessage {
-  itemId: ID;
-  message: any;
-}
-
-interface IBlock {
-  data: string;
-}
-
-interface IFeed {
-  append (data: string): void;
-}
-
-interface IReadableStream {
-  on (event: string, callback: object): void;
-}
-
-interface IFeedStore {
-  createReadStream (config: object): IReadableStream;
-}
-
-interface IModel {
-  processMessages (messages: object[]): Promise<void>;
-}
+const chance = new Chance();
 
 /**
- *
+ * Test model.
  */
-class ObjectModel implements IModel {
-  static TYPE = 'wrn://dxos/model/object';
+// TODO(burdon): Replace with echo ObjectModel.
+class TestModel extends Model {
+  // TODO(burdon): Format?
+  static type = 'wrn://dxos.io/model/test';
 
-  _appendMessages?: Function;
-  _store = new ObjectStore();
+  _values = new Map();
 
-  // TODO(burdon): Stream?
-  initialize (appendMessages: Function) {
-    this._appendMessages = appendMessages;
-    return this;
+  get keys () {
+    return Array.from(this._values.keys());
   }
 
-  getObjectsByType (type: string) {
-    return this._store.getObjectsByType(type);
+  get value () {
+    return Object.fromEntries(this._values);
   }
 
-  async createObject (type: string, properties: object) {
-    const id = createObjectId(type);
-    const mutations = fromObject({ id, properties });
-
-    // TODO(burdon): Stream?
-    assert(this._appendMessages);
-    await this._appendMessages([{
-      __type_url: type,
-      ...mutations
-    }]);
-
-    return id;
+  getValue (key: string) {
+    return this._values.get(key);
   }
 
-  async processMessages (messages: object[]) {
-    this._store.applyMutations(messages);
-  }
-}
-
-class ModelFactory {
-  _modelById = new Map();
-
-  addModel (modelId: ID, constructor: Function) {
-    this._modelById.set(modelId, constructor);
-    return this;
+  async processMessage (message: ModelMessage) {
+    const { data: { key, value } } = message;
+    await sleep(50);
+    this._values.set(key, value);
   }
 
-  createModel (modelId: ID) {
-    return this._modelById.get(modelId)();
-  }
-}
-
-/**
- *
- */
-// TODO(burdon): Parent item.
-class Item {
-  _database: Database;
-  _id: ID;
-  _model: IModel;
-
-  constructor (database: Database, id: ID, model: IModel) {
-    this._database = database;
-    this._id = id;
-    this._model = model;
-  }
-
-  get id () {
-    return this._id;
-  }
-
-  get model () {
-    return this._model;
-  }
-}
-
-/**
- *
- */
-class Database {
-  _feedStore: IFeedStore;
-  _feed: IFeed;
-  _modelFactory: ModelFactory;
-  _root?: Item;
-  _itemsById = new Map();
-
-  constructor (feedStore: IFeedStore, feed: IFeed, modelFactory: ModelFactory) {
-    this._feedStore = feedStore;
-    this._feed = feed;
-    this._modelFactory = modelFactory;
-  }
-
-  get root () {
-    return this._root;
-  }
-
-  async initialize () {
-    // TODO(burdon): Create stream abstraction that orders messages so that item genesis must come first.
-    const stream = this._feedStore.createReadStream({ live: true });
-
-    log('Streaming...');
-    stream.on('data', (block: IBlock) => {
-      // TODO(burdon): Codec decode.
-      const { data } = block;
-      const { itemId, message } = JSON.parse(data) as IMessage;
-      log(`Message [item=${itemId}]: ${JSON.stringify(message)}`);
-
-      const item = this.getItem(itemId);
-      if (message.__type_url === 'wrn://dxos.org/type/system/item') {
-        if (!item) {
-          const { modelId } = message;
-          this.constructItem(modelId, itemId);
-        }
-      } else {
-        assert(item);
-        item.model.processMessages([message]);
-      }
+  async setProperty (key: string, value: string) {
+    // TODO(burdon): Create wrapper for ItemMutation that includes the itemId.
+    await this.write({
+      __type_url: 'dxos.echo.testing.TestItemMutation',
+      itemId: this.itemId,
+      key,
+      value
     });
-
-    // Create root item.
-    // this._root = await this.createItem(ObjectModel.TYPE);
-
-    return this;
-  }
-
-  async close () {
-    this._itemsById.clear();
-  }
-
-  createItem (modelId: ID): Item {
-    log('createItem', modelId);
-
-    const item = this.constructItem(modelId, createId());
-
-    // Write item genesis.
-    const message = { __type_url: 'wrn://dxos.org/type/system/item', modelId };
-    this._feed.append(JSON.stringify({ itemId: item.id, message }));
-
-    return item;
-  }
-
-  constructItem (modelId: ID, itemId: ID): Item {
-    log('constructItem', modelId);
-
-    const model = this._modelFactory.createModel(modelId);
-
-    // TODO(burdon): Generalize model and type.
-    model.initialize(async (messages: object[]) => {
-      // TODO(burdon): Codec encode.
-      await messages.forEach((message: object) => this._feed.append(JSON.stringify({ itemId, message })));
-    });
-
-    // TODO(burdon): Encode item metadata (e.g., model spec).
-    const item = new Item(this, itemId, model);
-    this._itemsById.set(itemId, item);
-    return item;
-  }
-
-  // TODO(burdon): Read-only until item has caught up.
-  getItem (itemId: ID): Item {
-    // TODO(burdon): Create (from metadata) if doesn't exist (mutex?)
-    return this._itemsById.get(itemId);
   }
 }
 
-test('basic items', async () => {
-  const modelFactory = new ModelFactory().addModel(ObjectModel.TYPE, () => new ObjectModel());
+test('streaming', async () => {
+  const config = {
+    numFeeds: 5,
+    numItems: 1,
+    numMessages: 5
+  };
 
-  // TODO(burdon): ram gets reset after FeedStore closed?
+  const modelFactory = new ModelFactory().registerModel(TestModel.type, TestModel);
+
   const directory = tempy.directory();
-  const feedStore = new FeedStore(directory, { feedOptions: { valueEncoding: 'utf-8' } });
 
-  let itemId: ID;
+  // TODO(burdon): Create feedstore inside each scope (with same directory).
+  const feedStore = new FeedStore(directory, { feedOptions: { valueEncoding: codec } });
+
+  //
+  // Generate items.
+  //
   {
+    // TODO(burdon): Replace feed with Writeable stream from PartyManager.
+    // const feedStore = new FeedStore(directory, { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
-    const feed = await feedStore.openFeed('node-1');
 
-    const database = new Database(feedStore, feed, modelFactory);
-    await database.initialize();
+    const readable = feedStore.createReadStream({ live: true });
 
-    // Create item.
-    {
-      const item = database.createItem(ObjectModel.TYPE);
-
-      const objectModel = item.model as ObjectModel;
-      await objectModel.createObject('test', { foo: 100 });
-      await objectModel.createObject('test', { bar: 200 });
-
-      itemId = item.id;
+    // Create cloned feeds (including ours).
+    for (let i = 0; i < config.numFeeds; i++) {
+      await feedStore.openFeed(`feed-${i}`);
     }
 
-    // Open cached item.
-    {
-      // TODO(burdon): Sleep or wait for anchor?
-      await sleep(10);
+    const descriptors = feedStore.getDescriptors();
+    expect(descriptors).toHaveLength(config.numFeeds);
 
-      const item = database.getItem(itemId);
-      const objects = await (item.model as ObjectModel).getObjectsByType('test');
+    // Pick feed to belong to current node.
+    const { feed } = chance.pickone(descriptors);
+    const itemManager = new ItemManager(modelFactory, feed);
 
-      expect(objects).toHaveLength(2);
-      expect(objects[0].properties.foo).toBe(100);
+    // NOTE: This will be the Party's readable stream.
+    readable.pipe(createItemDemuxer(itemManager));
+
+    // TODO(burdon): Must not create using own readable stream!
+    const item = await itemManager.createItem(TestModel.type);
+
+    // TODO(burdon): Randomly create or mutate items.
+    for (let i = 0; i < config.numMessages; i++) {
+      // @ts-ignore TODO(burdon): Cast.
+      item.model.setProperty(chance.pickone(['a', 'b', 'c']), `value-${i}`);
     }
 
-    await feed.close();
-    await feedStore.close();
-    await database.close();
+    const [promise, callback] = latch(config.numMessages);
+    item.model.on('update', callback);
+    expect(await promise).toBe(config.numMessages);
+
+    // TODO(burdon): Test item and model.
+    expect(itemManager.getItem(item.id)).toBeTruthy();
+    // @ts-ignore TODO(burdon): Cast.
+    log(item.model.value);
+
+    // TODO(burdon): Breaks if close feedstore.
+    // await feedStore.close();
   }
 
-  // Open the database from cold and process existing messages.
+  //
+  // Replay items.
+  //
   {
+    // const feedStore = new FeedStore(directory, { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
-    const feed = await feedStore.openFeed('node-1');
+    const readable = feedStore.createReadStream({ live: true });
 
-    const database = new Database(feedStore, feed, modelFactory);
-    await database.initialize();
+    const descriptors = feedStore.getDescriptors();
+    expect(descriptors).toHaveLength(config.numFeeds);
 
-    // TODO(burdon): Sleep or wait for anchor?
-    await sleep(10);
+    const { feed } = chance.pickone(descriptors);
+    const itemManager = new ItemManager(modelFactory, feed);
 
-    const item = database.getItem(itemId);
-    const objects = await (item.model as ObjectModel).getObjectsByType('test');
+    // NOTE: This will be the Party's readable stream.
+    readable.pipe(createItemDemuxer(itemManager));
 
-    expect(objects).toHaveLength(2);
-    expect(objects[0].properties.foo).toBe(100);
+    // Wait for items to be processed.
+    const [promiseItems, callbackItem] = latch(config.numItems);
+    itemManager.on('create', callbackItem);
+    expect(await promiseItems).toBe(config.numItems);
 
-    await feed.close();
+    // Wait for all messages to be processed.
+    const [promiseUpdates, callbackUpdate] = latch(config.numMessages);
+    const items = itemManager.getItems();
+    for (const item of items) {
+      item.model.on('update', callbackUpdate);
+    }
+    expect(await promiseUpdates).toBe(config.numMessages);
+
+    // TODO(burdon): Test items have same state.
+    for (const item of items) {
+      // @ts-ignore TODO(burdon): Cast.
+      log(item.model.value);
+    }
+
     await feedStore.close();
-    await database.close();
   }
 });

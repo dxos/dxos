@@ -228,27 +228,25 @@ $root.dxos = (function() {
                 return Envelope;
             })();
 
-            testing.TestMessage = (function() {
+            testing.TestItemGenesis = (function() {
 
                 /**
-                 * Properties of a TestMessage.
+                 * Properties of a TestItemGenesis.
                  * @memberof dxos.echo.testing
-                 * @interface ITestMessage
-                 * @property {number|null} [seq] TestMessage seq
-                 * @property {string|null} [id] TestMessage id
-                 * @property {string|null} [depends] TestMessage depends
-                 * @property {string|null} [tag] TestMessage tag
+                 * @interface ITestItemGenesis
+                 * @property {string|null} [itemId] TestItemGenesis itemId
+                 * @property {string|null} [model] TestItemGenesis model
                  */
 
                 /**
-                 * Constructs a new TestMessage.
+                 * Constructs a new TestItemGenesis.
                  * @memberof dxos.echo.testing
-                 * @classdesc Represents a TestMessage.
-                 * @implements ITestMessage
+                 * @classdesc Represents a TestItemGenesis.
+                 * @implements ITestItemGenesis
                  * @constructor
-                 * @param {dxos.echo.testing.ITestMessage=} [properties] Properties to set
+                 * @param {dxos.echo.testing.ITestItemGenesis=} [properties] Properties to set
                  */
-                function TestMessage(properties) {
+                function TestItemGenesis(properties) {
                     if (properties)
                         for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                             if (properties[keys[i]] != null)
@@ -256,114 +254,88 @@ $root.dxos = (function() {
                 }
 
                 /**
-                 * TestMessage seq.
-                 * @member {number} seq
-                 * @memberof dxos.echo.testing.TestMessage
+                 * TestItemGenesis itemId.
+                 * @member {string} itemId
+                 * @memberof dxos.echo.testing.TestItemGenesis
                  * @instance
                  */
-                TestMessage.prototype.seq = 0;
+                TestItemGenesis.prototype.itemId = "";
 
                 /**
-                 * TestMessage id.
-                 * @member {string} id
-                 * @memberof dxos.echo.testing.TestMessage
+                 * TestItemGenesis model.
+                 * @member {string} model
+                 * @memberof dxos.echo.testing.TestItemGenesis
                  * @instance
                  */
-                TestMessage.prototype.id = "";
+                TestItemGenesis.prototype.model = "";
 
                 /**
-                 * TestMessage depends.
-                 * @member {string} depends
-                 * @memberof dxos.echo.testing.TestMessage
-                 * @instance
-                 */
-                TestMessage.prototype.depends = "";
-
-                /**
-                 * TestMessage tag.
-                 * @member {string} tag
-                 * @memberof dxos.echo.testing.TestMessage
-                 * @instance
-                 */
-                TestMessage.prototype.tag = "";
-
-                /**
-                 * Creates a new TestMessage instance using the specified properties.
+                 * Creates a new TestItemGenesis instance using the specified properties.
                  * @function create
-                 * @memberof dxos.echo.testing.TestMessage
+                 * @memberof dxos.echo.testing.TestItemGenesis
                  * @static
-                 * @param {dxos.echo.testing.ITestMessage=} [properties] Properties to set
-                 * @returns {dxos.echo.testing.TestMessage} TestMessage instance
+                 * @param {dxos.echo.testing.ITestItemGenesis=} [properties] Properties to set
+                 * @returns {dxos.echo.testing.TestItemGenesis} TestItemGenesis instance
                  */
-                TestMessage.create = function create(properties) {
-                    return new TestMessage(properties);
+                TestItemGenesis.create = function create(properties) {
+                    return new TestItemGenesis(properties);
                 };
 
                 /**
-                 * Encodes the specified TestMessage message. Does not implicitly {@link dxos.echo.testing.TestMessage.verify|verify} messages.
+                 * Encodes the specified TestItemGenesis message. Does not implicitly {@link dxos.echo.testing.TestItemGenesis.verify|verify} messages.
                  * @function encode
-                 * @memberof dxos.echo.testing.TestMessage
+                 * @memberof dxos.echo.testing.TestItemGenesis
                  * @static
-                 * @param {dxos.echo.testing.ITestMessage} message TestMessage message or plain object to encode
+                 * @param {dxos.echo.testing.ITestItemGenesis} message TestItemGenesis message or plain object to encode
                  * @param {$protobuf.Writer} [writer] Writer to encode to
                  * @returns {$protobuf.Writer} Writer
                  */
-                TestMessage.encode = function encode(message, writer) {
+                TestItemGenesis.encode = function encode(message, writer) {
                     if (!writer)
                         writer = $Writer.create();
-                    if (message.seq != null && Object.hasOwnProperty.call(message, "seq"))
-                        writer.uint32(/* id 1, wireType 0 =*/8).int32(message.seq);
-                    if (message.id != null && Object.hasOwnProperty.call(message, "id"))
-                        writer.uint32(/* id 2, wireType 2 =*/18).string(message.id);
-                    if (message.depends != null && Object.hasOwnProperty.call(message, "depends"))
-                        writer.uint32(/* id 3, wireType 2 =*/26).string(message.depends);
-                    if (message.tag != null && Object.hasOwnProperty.call(message, "tag"))
-                        writer.uint32(/* id 4, wireType 2 =*/34).string(message.tag);
+                    if (message.itemId != null && Object.hasOwnProperty.call(message, "itemId"))
+                        writer.uint32(/* id 1, wireType 2 =*/10).string(message.itemId);
+                    if (message.model != null && Object.hasOwnProperty.call(message, "model"))
+                        writer.uint32(/* id 2, wireType 2 =*/18).string(message.model);
                     return writer;
                 };
 
                 /**
-                 * Encodes the specified TestMessage message, length delimited. Does not implicitly {@link dxos.echo.testing.TestMessage.verify|verify} messages.
+                 * Encodes the specified TestItemGenesis message, length delimited. Does not implicitly {@link dxos.echo.testing.TestItemGenesis.verify|verify} messages.
                  * @function encodeDelimited
-                 * @memberof dxos.echo.testing.TestMessage
+                 * @memberof dxos.echo.testing.TestItemGenesis
                  * @static
-                 * @param {dxos.echo.testing.ITestMessage} message TestMessage message or plain object to encode
+                 * @param {dxos.echo.testing.ITestItemGenesis} message TestItemGenesis message or plain object to encode
                  * @param {$protobuf.Writer} [writer] Writer to encode to
                  * @returns {$protobuf.Writer} Writer
                  */
-                TestMessage.encodeDelimited = function encodeDelimited(message, writer) {
+                TestItemGenesis.encodeDelimited = function encodeDelimited(message, writer) {
                     return this.encode(message, writer).ldelim();
                 };
 
                 /**
-                 * Decodes a TestMessage message from the specified reader or buffer.
+                 * Decodes a TestItemGenesis message from the specified reader or buffer.
                  * @function decode
-                 * @memberof dxos.echo.testing.TestMessage
+                 * @memberof dxos.echo.testing.TestItemGenesis
                  * @static
                  * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
                  * @param {number} [length] Message length if known beforehand
-                 * @returns {dxos.echo.testing.TestMessage} TestMessage
+                 * @returns {dxos.echo.testing.TestItemGenesis} TestItemGenesis
                  * @throws {Error} If the payload is not a reader or valid buffer
                  * @throws {$protobuf.util.ProtocolError} If required fields are missing
                  */
-                TestMessage.decode = function decode(reader, length) {
+                TestItemGenesis.decode = function decode(reader, length) {
                     if (!(reader instanceof $Reader))
                         reader = $Reader.create(reader);
-                    var end = length === undefined ? reader.len : reader.pos + length, message = new $root.dxos.echo.testing.TestMessage();
+                    var end = length === undefined ? reader.len : reader.pos + length, message = new $root.dxos.echo.testing.TestItemGenesis();
                     while (reader.pos < end) {
                         var tag = reader.uint32();
                         switch (tag >>> 3) {
                         case 1:
-                            message.seq = reader.int32();
+                            message.itemId = reader.string();
                             break;
                         case 2:
-                            message.id = reader.string();
-                            break;
-                        case 3:
-                            message.depends = reader.string();
-                            break;
-                        case 4:
-                            message.tag = reader.string();
+                            message.model = reader.string();
                             break;
                         default:
                             reader.skipType(tag & 7);
@@ -374,32 +346,329 @@ $root.dxos = (function() {
                 };
 
                 /**
-                 * Decodes a TestMessage message from the specified reader or buffer, length delimited.
+                 * Decodes a TestItemGenesis message from the specified reader or buffer, length delimited.
                  * @function decodeDelimited
-                 * @memberof dxos.echo.testing.TestMessage
+                 * @memberof dxos.echo.testing.TestItemGenesis
                  * @static
                  * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-                 * @returns {dxos.echo.testing.TestMessage} TestMessage
+                 * @returns {dxos.echo.testing.TestItemGenesis} TestItemGenesis
                  * @throws {Error} If the payload is not a reader or valid buffer
                  * @throws {$protobuf.util.ProtocolError} If required fields are missing
                  */
-                TestMessage.decodeDelimited = function decodeDelimited(reader) {
+                TestItemGenesis.decodeDelimited = function decodeDelimited(reader) {
                     if (!(reader instanceof $Reader))
                         reader = new $Reader(reader);
                     return this.decode(reader, reader.uint32());
                 };
 
                 /**
-                 * Verifies a TestMessage message.
+                 * Verifies a TestItemGenesis message.
                  * @function verify
-                 * @memberof dxos.echo.testing.TestMessage
+                 * @memberof dxos.echo.testing.TestItemGenesis
                  * @static
                  * @param {Object.<string,*>} message Plain object to verify
                  * @returns {string|null} `null` if valid, otherwise the reason why it is not
                  */
-                TestMessage.verify = function verify(message) {
+                TestItemGenesis.verify = function verify(message) {
                     if (typeof message !== "object" || message === null)
                         return "object expected";
+                    if (message.itemId != null && message.hasOwnProperty("itemId"))
+                        if (!$util.isString(message.itemId))
+                            return "itemId: string expected";
+                    if (message.model != null && message.hasOwnProperty("model"))
+                        if (!$util.isString(message.model))
+                            return "model: string expected";
+                    return null;
+                };
+
+                /**
+                 * Creates a TestItemGenesis message from a plain object. Also converts values to their respective internal types.
+                 * @function fromObject
+                 * @memberof dxos.echo.testing.TestItemGenesis
+                 * @static
+                 * @param {Object.<string,*>} object Plain object
+                 * @returns {dxos.echo.testing.TestItemGenesis} TestItemGenesis
+                 */
+                TestItemGenesis.fromObject = function fromObject(object) {
+                    if (object instanceof $root.dxos.echo.testing.TestItemGenesis)
+                        return object;
+                    var message = new $root.dxos.echo.testing.TestItemGenesis();
+                    if (object.itemId != null)
+                        message.itemId = String(object.itemId);
+                    if (object.model != null)
+                        message.model = String(object.model);
+                    return message;
+                };
+
+                /**
+                 * Creates a plain object from a TestItemGenesis message. Also converts values to other types if specified.
+                 * @function toObject
+                 * @memberof dxos.echo.testing.TestItemGenesis
+                 * @static
+                 * @param {dxos.echo.testing.TestItemGenesis} message TestItemGenesis
+                 * @param {$protobuf.IConversionOptions} [options] Conversion options
+                 * @returns {Object.<string,*>} Plain object
+                 */
+                TestItemGenesis.toObject = function toObject(message, options) {
+                    if (!options)
+                        options = {};
+                    var object = {};
+                    if (options.defaults) {
+                        object.itemId = "";
+                        object.model = "";
+                    }
+                    if (message.itemId != null && message.hasOwnProperty("itemId"))
+                        object.itemId = message.itemId;
+                    if (message.model != null && message.hasOwnProperty("model"))
+                        object.model = message.model;
+                    return object;
+                };
+
+                /**
+                 * Converts this TestItemGenesis to JSON.
+                 * @function toJSON
+                 * @memberof dxos.echo.testing.TestItemGenesis
+                 * @instance
+                 * @returns {Object.<string,*>} JSON object
+                 */
+                TestItemGenesis.prototype.toJSON = function toJSON() {
+                    return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+                };
+
+                return TestItemGenesis;
+            })();
+
+            testing.TestItemMutation = (function() {
+
+                /**
+                 * Properties of a TestItemMutation.
+                 * @memberof dxos.echo.testing
+                 * @interface ITestItemMutation
+                 * @property {string|null} [itemId] TestItemMutation itemId
+                 * @property {number|null} [seq] TestItemMutation seq
+                 * @property {string|null} [id] TestItemMutation id
+                 * @property {string|null} [depends] TestItemMutation depends
+                 * @property {string|null} [tag] TestItemMutation tag
+                 * @property {string|null} [key] TestItemMutation key
+                 * @property {string|null} [value] TestItemMutation value
+                 * @property {google.protobuf.IAny|null} [payload] TestItemMutation payload
+                 */
+
+                /**
+                 * Constructs a new TestItemMutation.
+                 * @memberof dxos.echo.testing
+                 * @classdesc Represents a TestItemMutation.
+                 * @implements ITestItemMutation
+                 * @constructor
+                 * @param {dxos.echo.testing.ITestItemMutation=} [properties] Properties to set
+                 */
+                function TestItemMutation(properties) {
+                    if (properties)
+                        for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                            if (properties[keys[i]] != null)
+                                this[keys[i]] = properties[keys[i]];
+                }
+
+                /**
+                 * TestItemMutation itemId.
+                 * @member {string} itemId
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @instance
+                 */
+                TestItemMutation.prototype.itemId = "";
+
+                /**
+                 * TestItemMutation seq.
+                 * @member {number} seq
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @instance
+                 */
+                TestItemMutation.prototype.seq = 0;
+
+                /**
+                 * TestItemMutation id.
+                 * @member {string} id
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @instance
+                 */
+                TestItemMutation.prototype.id = "";
+
+                /**
+                 * TestItemMutation depends.
+                 * @member {string} depends
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @instance
+                 */
+                TestItemMutation.prototype.depends = "";
+
+                /**
+                 * TestItemMutation tag.
+                 * @member {string} tag
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @instance
+                 */
+                TestItemMutation.prototype.tag = "";
+
+                /**
+                 * TestItemMutation key.
+                 * @member {string} key
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @instance
+                 */
+                TestItemMutation.prototype.key = "";
+
+                /**
+                 * TestItemMutation value.
+                 * @member {string} value
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @instance
+                 */
+                TestItemMutation.prototype.value = "";
+
+                /**
+                 * TestItemMutation payload.
+                 * @member {google.protobuf.IAny|null|undefined} payload
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @instance
+                 */
+                TestItemMutation.prototype.payload = null;
+
+                /**
+                 * Creates a new TestItemMutation instance using the specified properties.
+                 * @function create
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @static
+                 * @param {dxos.echo.testing.ITestItemMutation=} [properties] Properties to set
+                 * @returns {dxos.echo.testing.TestItemMutation} TestItemMutation instance
+                 */
+                TestItemMutation.create = function create(properties) {
+                    return new TestItemMutation(properties);
+                };
+
+                /**
+                 * Encodes the specified TestItemMutation message. Does not implicitly {@link dxos.echo.testing.TestItemMutation.verify|verify} messages.
+                 * @function encode
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @static
+                 * @param {dxos.echo.testing.ITestItemMutation} message TestItemMutation message or plain object to encode
+                 * @param {$protobuf.Writer} [writer] Writer to encode to
+                 * @returns {$protobuf.Writer} Writer
+                 */
+                TestItemMutation.encode = function encode(message, writer) {
+                    if (!writer)
+                        writer = $Writer.create();
+                    if (message.itemId != null && Object.hasOwnProperty.call(message, "itemId"))
+                        writer.uint32(/* id 1, wireType 2 =*/10).string(message.itemId);
+                    if (message.seq != null && Object.hasOwnProperty.call(message, "seq"))
+                        writer.uint32(/* id 2, wireType 0 =*/16).int32(message.seq);
+                    if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                        writer.uint32(/* id 3, wireType 2 =*/26).string(message.id);
+                    if (message.depends != null && Object.hasOwnProperty.call(message, "depends"))
+                        writer.uint32(/* id 4, wireType 2 =*/34).string(message.depends);
+                    if (message.tag != null && Object.hasOwnProperty.call(message, "tag"))
+                        writer.uint32(/* id 5, wireType 2 =*/42).string(message.tag);
+                    if (message.key != null && Object.hasOwnProperty.call(message, "key"))
+                        writer.uint32(/* id 6, wireType 2 =*/50).string(message.key);
+                    if (message.value != null && Object.hasOwnProperty.call(message, "value"))
+                        writer.uint32(/* id 7, wireType 2 =*/58).string(message.value);
+                    if (message.payload != null && Object.hasOwnProperty.call(message, "payload"))
+                        $root.google.protobuf.Any.encode(message.payload, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
+                    return writer;
+                };
+
+                /**
+                 * Encodes the specified TestItemMutation message, length delimited. Does not implicitly {@link dxos.echo.testing.TestItemMutation.verify|verify} messages.
+                 * @function encodeDelimited
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @static
+                 * @param {dxos.echo.testing.ITestItemMutation} message TestItemMutation message or plain object to encode
+                 * @param {$protobuf.Writer} [writer] Writer to encode to
+                 * @returns {$protobuf.Writer} Writer
+                 */
+                TestItemMutation.encodeDelimited = function encodeDelimited(message, writer) {
+                    return this.encode(message, writer).ldelim();
+                };
+
+                /**
+                 * Decodes a TestItemMutation message from the specified reader or buffer.
+                 * @function decode
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @static
+                 * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+                 * @param {number} [length] Message length if known beforehand
+                 * @returns {dxos.echo.testing.TestItemMutation} TestItemMutation
+                 * @throws {Error} If the payload is not a reader or valid buffer
+                 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+                 */
+                TestItemMutation.decode = function decode(reader, length) {
+                    if (!(reader instanceof $Reader))
+                        reader = $Reader.create(reader);
+                    var end = length === undefined ? reader.len : reader.pos + length, message = new $root.dxos.echo.testing.TestItemMutation();
+                    while (reader.pos < end) {
+                        var tag = reader.uint32();
+                        switch (tag >>> 3) {
+                        case 1:
+                            message.itemId = reader.string();
+                            break;
+                        case 2:
+                            message.seq = reader.int32();
+                            break;
+                        case 3:
+                            message.id = reader.string();
+                            break;
+                        case 4:
+                            message.depends = reader.string();
+                            break;
+                        case 5:
+                            message.tag = reader.string();
+                            break;
+                        case 6:
+                            message.key = reader.string();
+                            break;
+                        case 7:
+                            message.value = reader.string();
+                            break;
+                        case 8:
+                            message.payload = $root.google.protobuf.Any.decode(reader, reader.uint32());
+                            break;
+                        default:
+                            reader.skipType(tag & 7);
+                            break;
+                        }
+                    }
+                    return message;
+                };
+
+                /**
+                 * Decodes a TestItemMutation message from the specified reader or buffer, length delimited.
+                 * @function decodeDelimited
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @static
+                 * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+                 * @returns {dxos.echo.testing.TestItemMutation} TestItemMutation
+                 * @throws {Error} If the payload is not a reader or valid buffer
+                 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+                 */
+                TestItemMutation.decodeDelimited = function decodeDelimited(reader) {
+                    if (!(reader instanceof $Reader))
+                        reader = new $Reader(reader);
+                    return this.decode(reader, reader.uint32());
+                };
+
+                /**
+                 * Verifies a TestItemMutation message.
+                 * @function verify
+                 * @memberof dxos.echo.testing.TestItemMutation
+                 * @static
+                 * @param {Object.<string,*>} message Plain object to verify
+                 * @returns {string|null} `null` if valid, otherwise the reason why it is not
+                 */
+                TestItemMutation.verify = function verify(message) {
+                    if (typeof message !== "object" || message === null)
+                        return "object expected";
+                    if (message.itemId != null && message.hasOwnProperty("itemId"))
+                        if (!$util.isString(message.itemId))
+                            return "itemId: string expected";
                     if (message.seq != null && message.hasOwnProperty("seq"))
                         if (!$util.isInteger(message.seq))
                             return "seq: integer expected";
@@ -412,21 +681,34 @@ $root.dxos = (function() {
                     if (message.tag != null && message.hasOwnProperty("tag"))
                         if (!$util.isString(message.tag))
                             return "tag: string expected";
+                    if (message.key != null && message.hasOwnProperty("key"))
+                        if (!$util.isString(message.key))
+                            return "key: string expected";
+                    if (message.value != null && message.hasOwnProperty("value"))
+                        if (!$util.isString(message.value))
+                            return "value: string expected";
+                    if (message.payload != null && message.hasOwnProperty("payload")) {
+                        var error = $root.google.protobuf.Any.verify(message.payload);
+                        if (error)
+                            return "payload." + error;
+                    }
                     return null;
                 };
 
                 /**
-                 * Creates a TestMessage message from a plain object. Also converts values to their respective internal types.
+                 * Creates a TestItemMutation message from a plain object. Also converts values to their respective internal types.
                  * @function fromObject
-                 * @memberof dxos.echo.testing.TestMessage
+                 * @memberof dxos.echo.testing.TestItemMutation
                  * @static
                  * @param {Object.<string,*>} object Plain object
-                 * @returns {dxos.echo.testing.TestMessage} TestMessage
+                 * @returns {dxos.echo.testing.TestItemMutation} TestItemMutation
                  */
-                TestMessage.fromObject = function fromObject(object) {
-                    if (object instanceof $root.dxos.echo.testing.TestMessage)
+                TestItemMutation.fromObject = function fromObject(object) {
+                    if (object instanceof $root.dxos.echo.testing.TestItemMutation)
                         return object;
-                    var message = new $root.dxos.echo.testing.TestMessage();
+                    var message = new $root.dxos.echo.testing.TestItemMutation();
+                    if (object.itemId != null)
+                        message.itemId = String(object.itemId);
                     if (object.seq != null)
                         message.seq = object.seq | 0;
                     if (object.id != null)
@@ -435,28 +717,43 @@ $root.dxos = (function() {
                         message.depends = String(object.depends);
                     if (object.tag != null)
                         message.tag = String(object.tag);
+                    if (object.key != null)
+                        message.key = String(object.key);
+                    if (object.value != null)
+                        message.value = String(object.value);
+                    if (object.payload != null) {
+                        if (typeof object.payload !== "object")
+                            throw TypeError(".dxos.echo.testing.TestItemMutation.payload: object expected");
+                        message.payload = $root.google.protobuf.Any.fromObject(object.payload);
+                    }
                     return message;
                 };
 
                 /**
-                 * Creates a plain object from a TestMessage message. Also converts values to other types if specified.
+                 * Creates a plain object from a TestItemMutation message. Also converts values to other types if specified.
                  * @function toObject
-                 * @memberof dxos.echo.testing.TestMessage
+                 * @memberof dxos.echo.testing.TestItemMutation
                  * @static
-                 * @param {dxos.echo.testing.TestMessage} message TestMessage
+                 * @param {dxos.echo.testing.TestItemMutation} message TestItemMutation
                  * @param {$protobuf.IConversionOptions} [options] Conversion options
                  * @returns {Object.<string,*>} Plain object
                  */
-                TestMessage.toObject = function toObject(message, options) {
+                TestItemMutation.toObject = function toObject(message, options) {
                     if (!options)
                         options = {};
                     var object = {};
                     if (options.defaults) {
+                        object.itemId = "";
                         object.seq = 0;
                         object.id = "";
                         object.depends = "";
                         object.tag = "";
+                        object.key = "";
+                        object.value = "";
+                        object.payload = null;
                     }
+                    if (message.itemId != null && message.hasOwnProperty("itemId"))
+                        object.itemId = message.itemId;
                     if (message.seq != null && message.hasOwnProperty("seq"))
                         object.seq = message.seq;
                     if (message.id != null && message.hasOwnProperty("id"))
@@ -465,21 +762,27 @@ $root.dxos = (function() {
                         object.depends = message.depends;
                     if (message.tag != null && message.hasOwnProperty("tag"))
                         object.tag = message.tag;
+                    if (message.key != null && message.hasOwnProperty("key"))
+                        object.key = message.key;
+                    if (message.value != null && message.hasOwnProperty("value"))
+                        object.value = message.value;
+                    if (message.payload != null && message.hasOwnProperty("payload"))
+                        object.payload = $root.google.protobuf.Any.toObject(message.payload, options);
                     return object;
                 };
 
                 /**
-                 * Converts this TestMessage to JSON.
+                 * Converts this TestItemMutation to JSON.
                  * @function toJSON
-                 * @memberof dxos.echo.testing.TestMessage
+                 * @memberof dxos.echo.testing.TestItemMutation
                  * @instance
                  * @returns {Object.<string,*>} JSON object
                  */
-                TestMessage.prototype.toJSON = function toJSON() {
+                TestItemMutation.prototype.toJSON = function toJSON() {
                     return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
                 };
 
-                return TestMessage;
+                return TestItemMutation;
             })();
 
             return testing;
