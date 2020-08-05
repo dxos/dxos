@@ -6,14 +6,14 @@ import assert from 'assert';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 import pify from 'pify';
+import { Readable, Transform, Writable } from 'stream';
+import { Constructor } from 'protobufjs';
 
 import { createId } from '@dxos/crypto';
 import { trigger } from '@dxos/async';
 
 import { dxos } from './proto/gen/testing';
 
-import { Readable, Transform } from 'stream';
-import { Constructor } from 'protobufjs';
 import { assertType, LazyMap } from './util';
 
 const log = debug('dxos:echo:database');
@@ -23,13 +23,13 @@ type ModelType = string;
 type ItemID = string;
 
 // TODO(burdon): Shim?
-interface Hypercore {
-  append (message: Message): void;
+export interface Hypercore {
+  append (message: Message, callback?: Function): void;
 }
 
 // TODO(burdon): Replace with protobuf envelope.
 // TOOD(burdon): Basic tutorial: https://www.typescriptlang.org/docs/handbook/interfaces.html
-interface Message {
+export interface Message {
   // eslint-disable-next-line camelcase
   __type_url: string;
   itemId: string;
@@ -37,9 +37,16 @@ interface Message {
 }
 
 export interface ModelMessage {
-  // feedKey: string TODO(marik_d): Add metadata
+  // feedKey: string; TODO(marik_d): Add metadata from feed.
   data: Message;
 }
+
+export const createFeedStream = (feed: Hypercore) => new Writable({
+  objectMode: true,
+  write (message, _, callback: Function) {
+    feed.append(message, callback);
+  }
+});
 
 /**
  * Abstract base class for Models.
@@ -51,7 +58,7 @@ export abstract class Model extends EventEmitter {
     private _type: string,
     private _itemId: string,
     private _readable: NodeJS.ReadableStream,
-    private _feed?: Hypercore
+    private _writable?: NodeJS.WritableStream
   ) {
     super();
 
@@ -60,7 +67,7 @@ export abstract class Model extends EventEmitter {
       transform: async (message, _, callback) => {
         await this.processMessage(message);
 
-        this.emit('update');
+        this.emit('update', this);
         callback();
       }
     }));
@@ -75,8 +82,8 @@ export abstract class Model extends EventEmitter {
    * @param message
    */
   async write (message: Message) {
-    assert(this._feed);
-    await pify(this._feed.append.bind(this._feed))({ message });
+    assert(this._writable);
+    await pify(this._writable.write.bind(this._writable))({ message });
   }
 
   /**
@@ -101,11 +108,11 @@ export class ModelFactory {
   }
 
   // TODO(burdon): Require version.
-  createModel (type: ModelType, itemId: ItemID, readable: NodeJS.ReadableStream, feed?: Hypercore) {
+  createModel (type: ModelType, itemId: ItemID, readable: NodeJS.ReadableStream, writable?: NodeJS.WritableStream) {
     const modelConstructor = this._models.get(type);
     if (modelConstructor) {
       // eslint-disable-next-line new-cap
-      return new modelConstructor(type, itemId, readable, feed);
+      return new modelConstructor(type, itemId, readable, writable);
     }
   }
 }
@@ -140,14 +147,14 @@ export class ItemManager extends EventEmitter {
   // Map of item promises (waiting for item construction after genesis message has been written).
   private _pendingItems = new Map<ItemID, (item: Item) => void>();
 
-  // TODO(burdoN): Pass in writeable object stream to abstract hypercore.
+  // TODO(burdon): Pass in writeable object stream to abstract hypercore.
   constructor (
     private _modelFactory: ModelFactory,
-    private _feed: Hypercore
+    private _writable: NodeJS.WritableStream
   ) {
     super();
     assert(this._modelFactory);
-    assert(this._feed);
+    assert(this._writable);
   }
 
   /**
@@ -163,7 +170,7 @@ export class ItemManager extends EventEmitter {
 
     // Write Item Genesis block.
     log('Creating Genesis:', itemId);
-    await pify(this._feed.append.bind(this._feed))({
+    await pify(this._writable.write.bind(this._writable))({
       message: {
         __type_url: 'dxos.echo.testing.TestItemGenesis',
         model: type,
@@ -182,7 +189,7 @@ export class ItemManager extends EventEmitter {
    * @param readable
    */
   async constructItem (type: string, itemId: string, readable: NodeJS.ReadableStream) {
-    const model = this._modelFactory.createModel(type, itemId, readable, this._feed);
+    const model = this._modelFactory.createModel(type, itemId, readable, this._writable);
     assert(model);
 
     const item = new Item(itemId, model);
@@ -218,22 +225,60 @@ export class ItemManager extends EventEmitter {
 }
 
 /**
+ * Reads party feeds and routes to items demuxer.
+ */
+// TODO(burdon): Replace with something that consumes the FeedStoreIterator.
+export const createPartyMuxer = (itemManager: ItemManager) => {
+  const itemDemuxers = new LazyMap<ItemID, Transform>(() => createItemDemuxer(itemManager));
+
+  // TODO(marik_d): either pipe to item demuxer or replace with Writable
+  return new Transform({
+    objectMode: true,
+
+    transform: async ({ data: { message } }, _, callback) => {
+      /* eslint-disable camelcase */
+      const { __type_url } = message;
+
+      switch (__type_url) {
+        case 'dxos.echo.testing.TestAdmit': {
+          assertType<dxos.echo.testing.ITestAdmit>(message);
+          // TODO(burdon): Process feed admission and notify iterator.
+          log('>>>', message);
+          break;
+        }
+
+        default: {
+          // TODO(burdon): Should expect ItemEnvelope.
+          assert(message.itemId);
+          itemDemuxers.getOrInit(message.itemId).write({ data: { message } });
+        }
+      }
+
+      callback();
+    }
+  });
+};
+
+/**
  * Reads party stream and routes to associate item stream.
  */
 export const createItemDemuxer = (itemManager: ItemManager) => {
   // Map of Item-specific streams.
-  // TODO(burdon): Abstract class.
-  const streams = new LazyMap<string, Readable>(() => new Readable({
+  // TODO(burdon): Abstract class?
+  const streams = new LazyMap<ItemID, Readable>(() => new Readable({
     objectMode: true,
     read () {}
   }));
 
   // TODO(burdon): Could this implement some "back-pressure" (hints) to the PartyProcessor?
+  // TODO(marik_d): Replace with Writable
   return new Transform({
     objectMode: true,
 
     // TODO(burdon): Is codec working? (expect envelope to be decoded.)
     transform: async ({ data: { message } }, _, callback) => {
+      log('//', message);
+
       /* eslint-disable camelcase */
       const { __type_url, itemId } = message;
       assert(__type_url);
@@ -256,7 +301,11 @@ export const createItemDemuxer = (itemManager: ItemManager) => {
 
           const stream = streams.getOrInit(itemId);
           stream.push({ data: message });
+          break;
         }
+
+        default:
+          throw new Error(`Unexpected type: ${__type_url}`);
       }
 
       callback();

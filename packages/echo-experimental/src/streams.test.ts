@@ -25,6 +25,8 @@ interface IBlock {
   data: dxos.echo.testing.Envelope
 }
 
+// Streams: https://devhints.io/nodejs-stream
+
 /**
  * Basic proto envelope encoding.
  */
@@ -95,7 +97,7 @@ test('message streams', async () => {
   const stream = feedStore.createReadStream({ live: true });
   stream.on('data', (block: IBlock) => {
     const { data: { message } } = block;
-    const { id } = (message as dxos.echo.testing.TestItemMutation);
+    const { id } = (message as unknown as dxos.echo.testing.TestItemMutation);
     ids.add(id);
   });
 

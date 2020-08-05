@@ -51,7 +51,7 @@ export class Demuxer {
       const data = { path, message };
 
       // TODO(burdon): Configure type for filter.
-      const { tag } = (message as dxos.echo.testing.TestItemMutation);
+      const { tag } = (message as unknown as dxos.echo.testing.TestItemMutation);
       const values = getOrSet(this._index, tag, Array);
       values.push(data);
 

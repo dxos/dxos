@@ -45,7 +45,8 @@ const createFactory = async () => {
   return {
     factory: new ModelFactory(feedStore, {
       onAppend (message) {
-        return pify(feed.append.bind(feed))(message);
+`        return pify(feed.append.bind(feed))(message);
+`;
       }
     }),
     topic

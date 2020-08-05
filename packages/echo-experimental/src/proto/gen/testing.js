@@ -228,6 +228,193 @@ $root.dxos = (function() {
                 return Envelope;
             })();
 
+            testing.TestAdmit = (function() {
+
+                /**
+                 * Properties of a TestAdmit.
+                 * @memberof dxos.echo.testing
+                 * @interface ITestAdmit
+                 * @property {string|null} [feedKey] TestAdmit feedKey
+                 */
+
+                /**
+                 * Constructs a new TestAdmit.
+                 * @memberof dxos.echo.testing
+                 * @classdesc Represents a TestAdmit.
+                 * @implements ITestAdmit
+                 * @constructor
+                 * @param {dxos.echo.testing.ITestAdmit=} [properties] Properties to set
+                 */
+                function TestAdmit(properties) {
+                    if (properties)
+                        for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                            if (properties[keys[i]] != null)
+                                this[keys[i]] = properties[keys[i]];
+                }
+
+                /**
+                 * TestAdmit feedKey.
+                 * @member {string} feedKey
+                 * @memberof dxos.echo.testing.TestAdmit
+                 * @instance
+                 */
+                TestAdmit.prototype.feedKey = "";
+
+                /**
+                 * Creates a new TestAdmit instance using the specified properties.
+                 * @function create
+                 * @memberof dxos.echo.testing.TestAdmit
+                 * @static
+                 * @param {dxos.echo.testing.ITestAdmit=} [properties] Properties to set
+                 * @returns {dxos.echo.testing.TestAdmit} TestAdmit instance
+                 */
+                TestAdmit.create = function create(properties) {
+                    return new TestAdmit(properties);
+                };
+
+                /**
+                 * Encodes the specified TestAdmit message. Does not implicitly {@link dxos.echo.testing.TestAdmit.verify|verify} messages.
+                 * @function encode
+                 * @memberof dxos.echo.testing.TestAdmit
+                 * @static
+                 * @param {dxos.echo.testing.ITestAdmit} message TestAdmit message or plain object to encode
+                 * @param {$protobuf.Writer} [writer] Writer to encode to
+                 * @returns {$protobuf.Writer} Writer
+                 */
+                TestAdmit.encode = function encode(message, writer) {
+                    if (!writer)
+                        writer = $Writer.create();
+                    if (message.feedKey != null && Object.hasOwnProperty.call(message, "feedKey"))
+                        writer.uint32(/* id 1, wireType 2 =*/10).string(message.feedKey);
+                    return writer;
+                };
+
+                /**
+                 * Encodes the specified TestAdmit message, length delimited. Does not implicitly {@link dxos.echo.testing.TestAdmit.verify|verify} messages.
+                 * @function encodeDelimited
+                 * @memberof dxos.echo.testing.TestAdmit
+                 * @static
+                 * @param {dxos.echo.testing.ITestAdmit} message TestAdmit message or plain object to encode
+                 * @param {$protobuf.Writer} [writer] Writer to encode to
+                 * @returns {$protobuf.Writer} Writer
+                 */
+                TestAdmit.encodeDelimited = function encodeDelimited(message, writer) {
+                    return this.encode(message, writer).ldelim();
+                };
+
+                /**
+                 * Decodes a TestAdmit message from the specified reader or buffer.
+                 * @function decode
+                 * @memberof dxos.echo.testing.TestAdmit
+                 * @static
+                 * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+                 * @param {number} [length] Message length if known beforehand
+                 * @returns {dxos.echo.testing.TestAdmit} TestAdmit
+                 * @throws {Error} If the payload is not a reader or valid buffer
+                 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+                 */
+                TestAdmit.decode = function decode(reader, length) {
+                    if (!(reader instanceof $Reader))
+                        reader = $Reader.create(reader);
+                    var end = length === undefined ? reader.len : reader.pos + length, message = new $root.dxos.echo.testing.TestAdmit();
+                    while (reader.pos < end) {
+                        var tag = reader.uint32();
+                        switch (tag >>> 3) {
+                        case 1:
+                            message.feedKey = reader.string();
+                            break;
+                        default:
+                            reader.skipType(tag & 7);
+                            break;
+                        }
+                    }
+                    return message;
+                };
+
+                /**
+                 * Decodes a TestAdmit message from the specified reader or buffer, length delimited.
+                 * @function decodeDelimited
+                 * @memberof dxos.echo.testing.TestAdmit
+                 * @static
+                 * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+                 * @returns {dxos.echo.testing.TestAdmit} TestAdmit
+                 * @throws {Error} If the payload is not a reader or valid buffer
+                 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+                 */
+                TestAdmit.decodeDelimited = function decodeDelimited(reader) {
+                    if (!(reader instanceof $Reader))
+                        reader = new $Reader(reader);
+                    return this.decode(reader, reader.uint32());
+                };
+
+                /**
+                 * Verifies a TestAdmit message.
+                 * @function verify
+                 * @memberof dxos.echo.testing.TestAdmit
+                 * @static
+                 * @param {Object.<string,*>} message Plain object to verify
+                 * @returns {string|null} `null` if valid, otherwise the reason why it is not
+                 */
+                TestAdmit.verify = function verify(message) {
+                    if (typeof message !== "object" || message === null)
+                        return "object expected";
+                    if (message.feedKey != null && message.hasOwnProperty("feedKey"))
+                        if (!$util.isString(message.feedKey))
+                            return "feedKey: string expected";
+                    return null;
+                };
+
+                /**
+                 * Creates a TestAdmit message from a plain object. Also converts values to their respective internal types.
+                 * @function fromObject
+                 * @memberof dxos.echo.testing.TestAdmit
+                 * @static
+                 * @param {Object.<string,*>} object Plain object
+                 * @returns {dxos.echo.testing.TestAdmit} TestAdmit
+                 */
+                TestAdmit.fromObject = function fromObject(object) {
+                    if (object instanceof $root.dxos.echo.testing.TestAdmit)
+                        return object;
+                    var message = new $root.dxos.echo.testing.TestAdmit();
+                    if (object.feedKey != null)
+                        message.feedKey = String(object.feedKey);
+                    return message;
+                };
+
+                /**
+                 * Creates a plain object from a TestAdmit message. Also converts values to other types if specified.
+                 * @function toObject
+                 * @memberof dxos.echo.testing.TestAdmit
+                 * @static
+                 * @param {dxos.echo.testing.TestAdmit} message TestAdmit
+                 * @param {$protobuf.IConversionOptions} [options] Conversion options
+                 * @returns {Object.<string,*>} Plain object
+                 */
+                TestAdmit.toObject = function toObject(message, options) {
+                    if (!options)
+                        options = {};
+                    var object = {};
+                    if (options.defaults)
+                        object.feedKey = "";
+                    if (message.feedKey != null && message.hasOwnProperty("feedKey"))
+                        object.feedKey = message.feedKey;
+                    return object;
+                };
+
+                /**
+                 * Converts this TestAdmit to JSON.
+                 * @function toJSON
+                 * @memberof dxos.echo.testing.TestAdmit
+                 * @instance
+                 * @returns {Object.<string,*>} JSON object
+                 */
+                TestAdmit.prototype.toJSON = function toJSON() {
+                    return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+                };
+
+                return TestAdmit;
+            })();
+
             testing.TestItemGenesis = (function() {
 
                 /**

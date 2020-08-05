@@ -123,6 +123,10 @@ The diagram below represent three feeds (from different peers) that contain all 
 
 ![ECHO DB](./diagrams/echo-feeds.png)
 
+Data flow
+
+![Streams](./diagrams/flow.svg)
+
 Messages are ordered within a particular feed, but a single message stream may be constructed by linearly
 scaanning each feed in any order.
 

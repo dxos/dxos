@@ -12,6 +12,10 @@ message Envelope {
   google.protobuf.Any message = 1;
 }
 
+message TestAdmit {
+  string feedKey = 1;
+}
+
 message TestItemGenesis {
   string itemId = 1;
   string model = 2;
