@@ -9,7 +9,7 @@ import pify from 'pify';
 import { Readable, Transform, Writable } from 'stream';
 import { Constructor } from 'protobufjs';
 
-import { createId } from '@dxos/crypto';
+import { createId, keyToString } from '@dxos/crypto';
 import { trigger } from '@dxos/async';
 
 import { dxos } from './proto/gen/testing';
@@ -227,23 +227,22 @@ export class ItemManager extends EventEmitter {
 /**
  * Reads party feeds and routes to items demuxer.
  */
-// TODO(burdon): Replace with something that consumes the FeedStoreIterator.
-export const createPartyMuxer = (itemManager: ItemManager) => {
+export const createPartyMuxer = (itemManager: ItemManager, feedStore: any, initalFeeds: string[]) => {
+  const allowedKeys = new Set<string>(initalFeeds);
   const itemDemuxers = new LazyMap<ItemID, Transform>(() => createItemDemuxer(itemManager));
 
-  // TODO(marik_d): either pipe to item demuxer or replace with Writable
-  return new Transform({
-    objectMode: true,
-
-    transform: async ({ data: { message } }, _, callback) => {
+  // TODO(marik-d): Add logic to stop the processing
+  setTimeout(async () => {
+    const iterator = feedStore.createSelectiveStream((feedDescriptor: any, message: any) => allowedKeys.has(keyToString(feedDescriptor.key)));
+    for await (const { data: { message } } of iterator) {
       /* eslint-disable camelcase */
       const { __type_url } = message;
 
       switch (__type_url) {
         case 'dxos.echo.testing.TestAdmit': {
           assertType<dxos.echo.testing.ITestAdmit>(message);
-          // TODO(burdon): Process feed admission and notify iterator.
-          log('>>>', message);
+          assert(message.feedKey);
+          allowedKeys.add(message.feedKey);
           break;
         }
 
@@ -253,10 +252,8 @@ export const createPartyMuxer = (itemManager: ItemManager) => {
           itemDemuxers.getOrInit(message.itemId).write({ data: { message } });
         }
       }
-
-      callback();
     }
-  });
+  }, 0);
 };
 
 /**
@@ -277,8 +274,6 @@ export const createItemDemuxer = (itemManager: ItemManager) => {
 
     // TODO(burdon): Is codec working? (expect envelope to be decoded.)
     transform: async ({ data: { message } }, _, callback) => {
-      log('//', message);
-
       /* eslint-disable camelcase */
       const { __type_url, itemId } = message;
       assert(__type_url);

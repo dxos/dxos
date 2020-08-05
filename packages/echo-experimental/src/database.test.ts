@@ -200,6 +200,11 @@ test('parties', async () => {
     await feedStore.openFeed('feed-2'),
     await feedStore.openFeed('feed-3')
   ];
+  const descriptors = [
+    feedStore.getOpenFeed((descriptor: any) => descriptor.path === 'feed-1'),
+    feedStore.getOpenFeed((descriptor: any) => descriptor.path === 'feed-2'),
+    feedStore.getOpenFeed((descriptor: any) => descriptor.path === 'feed-3')
+  ];
 
   const streams = [
     createFeedStream(feeds[0]),
@@ -224,7 +229,7 @@ test('parties', async () => {
       __type_url: 'dxos.echo.testing.TestItemMutation',
       itemId: itemIds[0],
       key: 'title',
-      value: 'Hello'
+      value: 'Hi'
     }
   });
   streams[1].write({
@@ -235,21 +240,43 @@ test('parties', async () => {
       value: 'World'
     }
   });
-  streams[0].write({
-    message: {
-      __type_url: 'dxos.echo.testing.TestAdmit',
-      feedKey: keyToString(feeds[1].key)
-    }
-  });
 
   const itemManager = new ItemManager(modelFactory, streams[0]);
 
-  const readable = feedStore.createReadStream({ live: true });
-  readable.pipe(createPartyMuxer(itemManager));
+  createPartyMuxer(itemManager, feedStore, [keyToString(descriptors[0].key)]);
 
   // TODO(burdon): Wait for everything to be read?
   await waitForExpect(() => {
     const items = itemManager.getItems();
     expect(items).toHaveLength(1);
+    expect((items[0].model as TestModel).getValue('title')).toEqual('Hi');
+  });
+
+  streams[0].write({
+    message: {
+      __type_url: 'dxos.echo.testing.TestItemMutation',
+      itemId: itemIds[0],
+      key: 'title',
+      value: 'Hello'
+    }
+  });
+
+  await waitForExpect(() => {
+    const items = itemManager.getItems();
+    expect(items).toHaveLength(1);
+    expect((items[0].model as TestModel).getValue('title')).toEqual('Hello');
+  });
+
+  streams[0].write({
+    message: {
+      __type_url: 'dxos.echo.testing.TestAdmit',
+      feedKey: keyToString(descriptors[1].key)
+    }
+  });
+
+  await waitForExpect(() => {
+    const items = itemManager.getItems();
+    expect(items).toHaveLength(1);
+    expect((items[0].model as TestModel).getValue('title')).toEqual('World');
   });
 });
