@@ -48,7 +48,7 @@ if (typeof window !== 'undefined' && typeof process !== 'undefined') {
 
     const rootModel = models[0];
 
-    await Promise.all([...Array(1000).keys()].map(m => rootModel.createItem('example.com/Test', { prop1: 'prop1value' })));
+    await Promise.all([...Array(1000).keys()].map(() => rootModel.createItem('example.com/Test', { prop1: 'prop1value' })));
 
     suite.test('reading first time', async () => {
       console.log('> prev state', JSON.stringify(env.state), '\n');

@@ -47,6 +47,9 @@ export class EnvironmentFactory extends EventEmitter {
 
     this._envs.add(env);
 
+    // wait for next macrotask
+    await new Promise(resolve => setTimeout(resolve, 0));
+
     return env;
   }
 
