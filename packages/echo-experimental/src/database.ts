@@ -145,6 +145,8 @@ export class ItemManager extends EventEmitter {
 
   // TODO(burdon): Lint issue: Unexpected whitespace between function name and paren
   // Map of item promises (waiting for item construction after genesis message has been written).
+  // TODO(burdon): Lint error.
+  // eslint-disable-next-line
   private _pendingItems = new Map<ItemID, (item: Item) => void>();
 
   // TODO(burdon): Pass in writeable object stream to abstract hypercore.
@@ -227,17 +229,27 @@ export class ItemManager extends EventEmitter {
 /**
  * Reads party feeds and routes to items demuxer.
  */
+// TODO(burdon): Convert to class.
 export const createPartyMuxer = (itemManager: ItemManager, feedStore: any, initalFeeds: string[]) => {
-  const allowedKeys = new Set<string>(initalFeeds);
-  const itemDemuxers = new LazyMap<ItemID, Transform>(() => createItemDemuxer(itemManager));
+  const itemDemuxers = createItemDemuxer(itemManager);
 
-  // TODO(marik-d): Add logic to stop the processing
+  // TODO(burdon): Use type for FeedKey.
+  const allowedKeys = new Set<string>(initalFeeds);
+
+  // TODO(marik-d): Add logic to stop the processing.
   setTimeout(async () => {
-    const iterator = feedStore.createSelectiveStream((feedDescriptor: any, message: any) => allowedKeys.has(keyToString(feedDescriptor.key)));
+    // TODO(burdon): Remove dependency on FeedStore custom methods?
+    const iterator = feedStore.createSelectiveStream(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      (feedDescriptor: any, message: any) => allowedKeys.has(keyToString(feedDescriptor.key))
+    );
+
+    // NOTE: The iterator my halt if there are gaps in the replicated feeds (according to the timestamps).
+    // In this case it would wait until a replication event notifies another feed has been added to the replication set.
+
     for await (const { data: { message } } of iterator) {
       /* eslint-disable camelcase */
       const { __type_url } = message;
-
       switch (__type_url) {
         case 'dxos.echo.testing.TestAdmit': {
           assertType<dxos.echo.testing.ITestAdmit>(message);
@@ -249,7 +261,7 @@ export const createPartyMuxer = (itemManager: ItemManager, feedStore: any, inita
         default: {
           // TODO(burdon): Should expect ItemEnvelope.
           assert(message.itemId);
-          itemDemuxers.getOrInit(message.itemId).write({ data: { message } });
+          itemDemuxers.write({ data: { message } });
         }
       }
     }

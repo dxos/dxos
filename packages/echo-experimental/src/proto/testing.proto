@@ -16,6 +16,21 @@ message TestAdmit {
   string feedKey = 1;
 }
 
+// TODO(dboreham): ???
+message TestVectorTimestamp {
+  message Feed {
+    bytes feedKey = 1;
+    int32 seq = 2;
+  }
+
+  repeated Feed timestamp = 1;
+}
+
+message TestItemEnvelope {
+  string itemId = 1;
+  TestVectorTimestamp = 2;
+}
+
 message TestItemGenesis {
   string itemId = 1;
   string model = 2;

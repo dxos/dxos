@@ -189,7 +189,7 @@ test('streaming', async () => {
   }
 });
 
-test('parties', async () => {
+test.skip('parties', async () => {
   const modelFactory = new ModelFactory().registerModel(TestModel.type, TestModel);
 
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
@@ -200,6 +200,7 @@ test('parties', async () => {
     await feedStore.openFeed('feed-2'),
     await feedStore.openFeed('feed-3')
   ];
+
   const descriptors = [
     feedStore.getOpenFeed((descriptor: any) => descriptor.path === 'feed-1'),
     feedStore.getOpenFeed((descriptor: any) => descriptor.path === 'feed-2'),
