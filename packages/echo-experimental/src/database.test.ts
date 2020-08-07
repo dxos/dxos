@@ -6,25 +6,17 @@ import Chance from 'chance';
 import debug from 'debug';
 import ram from 'random-access-memory';
 import tempy from 'tempy';
+import waitForExpect from 'wait-for-expect';
 
-import { sleep } from '@dxos/async';
 import { FeedStore } from '@dxos/feed-store';
 import { Codec } from '@dxos/codec-protobuf';
 import { createId, keyToString } from '@dxos/crypto';
 
-import {
-  createItemDemuxer,
-  createFeedStream,
-  ItemManager,
-  Model,
-  ModelMessage,
-  ModelFactory,
-  createPartyMuxer
-} from './database';
+import { createWritableFeedStream, createItemDemuxer, ItemManager, ModelFactory, PartyMuxer } from './database';
+import { TestModel } from './test-model';
 import { latch } from './util';
 
 import TestingSchema from './proto/gen/testing.json';
-import waitForExpect from 'wait-for-expect';
 
 const log = debug('dxos:echo:testing');
 debug.enable('dxos:echo:*');
@@ -35,45 +27,6 @@ const codec = new Codec('dxos.echo.testing.Envelope')
 
 const chance = new Chance();
 
-/**
- * Test model.
- */
-// TODO(burdon): Replace with echo ObjectModel.
-class TestModel extends Model {
-  // TODO(burdon): Format?
-  static type = 'wrn://dxos.io/model/test';
-
-  _values = new Map();
-
-  get keys () {
-    return Array.from(this._values.keys());
-  }
-
-  get value () {
-    return Object.fromEntries(this._values);
-  }
-
-  getValue (key: string) {
-    return this._values.get(key);
-  }
-
-  async processMessage (message: ModelMessage) {
-    const { data: { key, value } } = message;
-    await sleep(50);
-    this._values.set(key, value);
-  }
-
-  async setProperty (key: string, value: string) {
-    // TODO(burdon): Create wrapper for ItemMutation that includes the itemId.
-    await this.write({
-      __type_url: 'dxos.echo.testing.TestItemMutation',
-      itemId: this.itemId,
-      key,
-      value
-    });
-  }
-}
-
 test('item construction', async () => {
   const modelFactory = new ModelFactory().registerModel(TestModel.type, TestModel);
 
@@ -81,8 +34,9 @@ test('item construction', async () => {
   await feedStore.open();
   const feed = await feedStore.openFeed('test');
 
-  const readable = feedStore.createReadStream({ live: true });
-  const itemManager = new ItemManager(modelFactory, createFeedStream(feed));
+  // TODO(burdon): NOTE: Stream from readable is different from expected FeedMessage.
+  const readable = feedStore.createReadStream({ live: true, feedStoreInfo: true });
+  const itemManager = new ItemManager(modelFactory, createWritableFeedStream(feed));
   readable.pipe(createItemDemuxer(itemManager));
 
   const item = await itemManager.createItem(TestModel.type);
@@ -104,9 +58,8 @@ test('streaming', async () => {
 
   const modelFactory = new ModelFactory().registerModel(TestModel.type, TestModel);
 
-  const directory = tempy.directory();
-
   // TODO(burdon): Create feedstore inside each scope (with same directory).
+  const directory = tempy.directory();
   const feedStore = new FeedStore(directory, { feedOptions: { valueEncoding: codec } });
 
   const count = {
@@ -124,7 +77,7 @@ test('streaming', async () => {
     const feed = await feedStore.openFeed('test');
     const readable = feedStore.createReadStream({ live: true });
 
-    const itemManager = new ItemManager(modelFactory, createFeedStream(feed));
+    const itemManager = new ItemManager(modelFactory, createWritableFeedStream(feed));
 
     // NOTE: This will be the Party's readable stream.
     readable.pipe(createItemDemuxer(itemManager));
@@ -162,7 +115,7 @@ test('streaming', async () => {
     expect(descriptors).toHaveLength(config.numFeeds);
     const { feed } = chance.pickone(descriptors);
 
-    const itemManager = new ItemManager(modelFactory, createFeedStream(feed));
+    const itemManager = new ItemManager(modelFactory, createWritableFeedStream(feed));
 
     // NOTE: This will be the Party's readable stream.
     readable.pipe(createItemDemuxer(itemManager));
@@ -189,7 +142,7 @@ test('streaming', async () => {
   }
 });
 
-test.skip('parties', async () => {
+test('parties', async () => {
   const modelFactory = new ModelFactory().registerModel(TestModel.type, TestModel);
 
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
@@ -208,43 +161,58 @@ test.skip('parties', async () => {
   ];
 
   const streams = [
-    createFeedStream(feeds[0]),
-    createFeedStream(feeds[1]),
-    createFeedStream(feeds[2])
+    createWritableFeedStream(feeds[0]),
+    createWritableFeedStream(feeds[1]),
+    createWritableFeedStream(feeds[2])
   ];
 
   const itemIds = [
     createId()
   ];
 
-  // TODO(burdon): Better way to simulate multiple nodes?
   streams[0].write({
     message: {
-      __type_url: 'dxos.echo.testing.TestItemGenesis',
-      model: TestModel.type,
-      itemId: itemIds[0]
+      __type_url: 'dxos.echo.testing.ItemEnvelope',
+      itemId: itemIds[0],
+      payload: {
+        __type_url: 'dxos.echo.testing.ItemGenesis',
+        model: TestModel.type
+      }
     }
   });
   streams[0].write({
     message: {
-      __type_url: 'dxos.echo.testing.TestItemMutation',
+      __type_url: 'dxos.echo.testing.ItemEnvelope',
       itemId: itemIds[0],
-      key: 'title',
-      value: 'Hi'
+      payload: {
+        __type_url: 'dxos.echo.testing.ItemMutation',
+        key: 'title',
+        value: 'Hi'
+      }
     }
   });
   streams[1].write({
     message: {
-      __type_url: 'dxos.echo.testing.TestItemMutation',
+      __type_url: 'dxos.echo.testing.ItemEnvelope',
       itemId: itemIds[0],
-      key: 'title',
-      value: 'World'
+      payload: {
+        __type_url: 'dxos.echo.testing.ItemMutation',
+        key: 'title',
+        value: 'World'
+      }
     }
   });
 
-  const itemManager = new ItemManager(modelFactory, streams[0]);
+  const partyMuxer = new PartyMuxer(feedStore, [keyToString(descriptors[0].key)]);
 
-  createPartyMuxer(itemManager, feedStore, [keyToString(descriptors[0].key)]);
+  const itemManager = new ItemManager(modelFactory, streams[0]);
+  const itemDemuxer = createItemDemuxer(itemManager);
+
+  // TODO(burdon): Bad API: Just create a stream.
+  partyMuxer.output.pipe(itemDemuxer);
+
+  // TODO(burdon): ???
+  setImmediate(() => partyMuxer.run());
 
   // TODO(burdon): Wait for everything to be read?
   await waitForExpect(() => {
@@ -255,10 +223,13 @@ test.skip('parties', async () => {
 
   streams[0].write({
     message: {
-      __type_url: 'dxos.echo.testing.TestItemMutation',
+      __type_url: 'dxos.echo.testing.ItemEnvelope',
       itemId: itemIds[0],
-      key: 'title',
-      value: 'Hello'
+      payload: {
+        __type_url: 'dxos.echo.testing.ItemMutation',
+        key: 'title',
+        value: 'Hello'
+      }
     }
   });
 
@@ -270,7 +241,7 @@ test.skip('parties', async () => {
 
   streams[0].write({
     message: {
-      __type_url: 'dxos.echo.testing.TestAdmit',
+      __type_url: 'dxos.echo.testing.Admit',
       feedKey: keyToString(descriptors[1].key)
     }
   });

@@ -12,7 +12,7 @@
     "lib": [
       "ESNext"
     ],
-    "target": "es6",
+    "target": "ES2018",
     "module": "commonjs",
     "outDir": "dist"
   },
@@ -20,6 +20,7 @@
     "src",
     "src/**/*.js",
     "src/**/*.ts",
+    "src/**/*.d.ts",
     "src/**/*.json"
   ]
 }

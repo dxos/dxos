@@ -8,41 +8,53 @@ package dxos.echo.testing;
 
 import "google/protobuf/any.proto";
 
+// Augmented data from feeds.
+message FeedMessage {
+  string feedKey = 1;
+  Envelope data = 2;
+}
+
+// Root message type.
 message Envelope {
   google.protobuf.Any message = 1;
 }
 
-message TestAdmit {
+// Test HALO message.
+message Admit {
   string feedKey = 1;
 }
 
-// TODO(dboreham): ???
-message TestVectorTimestamp {
-  message Feed {
-    bytes feedKey = 1;
-    int32 seq = 2;
+// Wrapper for all ECHO messages.
+message ItemEnvelope {
+  message VectorTimestamp {
+    message Feed {
+      bytes feedKey = 1;
+      int32 seq = 2;
+    }
+
+    repeated Feed timestamp = 1;
   }
 
-  repeated Feed timestamp = 1;
+  string itemId = 1;
+  VectorTimestamp timestamp = 2;
+  google.protobuf.Any payload = 3;
 }
 
-message TestItemEnvelope {
-  string itemId = 1;
-  TestVectorTimestamp = 2;
+// New item.
+message ItemGenesis {
+  string model = 1;
 }
 
-message TestItemGenesis {
-  string itemId = 1;
-  string model = 2;
+// Item mutation.
+message ItemMutation {
+  string key = 1;
+  string value = 2;
 }
 
-message TestItemMutation {
-  string itemId = 1;
-  int32 seq = 2;
-  string id = 3;
-  string depends = 4;       // ID of dependent message.
-  string tag = 5;
-  string key = 6;
-  string value = 7;
-  google.protobuf.Any payload = 8;
+message TestData {
+  int32 data = 1;
+}
+
+message TestFeedRemove {
+  string feedKey = 1;
 }
