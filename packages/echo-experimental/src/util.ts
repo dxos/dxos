@@ -3,7 +3,32 @@
 //
 
 import assert from 'assert';
+import { EventEmitter } from 'events';
+
 import { trigger } from '@dxos/async';
+
+// TODO(burdon): Factor out to @dxos/async. (also remove useValue).
+/**
+ * Waits for the specified number of events from the given emitter.
+ * @param emitter
+ * @param event
+ * @param count
+ */
+export const sink = (emitter: EventEmitter, event: string, count = 1) => {
+  let resolver: Function;
+
+  let counter = 0;
+  const listener = () => {
+    if (++counter === count) {
+      emitter.off(event, listener);
+      resolver();
+    }
+  };
+
+  emitter.on(event, listener);
+
+  return new Promise(resolve => { resolver = resolve; });
+};
 
 // TODO(burdon): Factor out to @dxos/async. (also remove useValue).
 export const latch = (n: number) => {
@@ -75,8 +100,8 @@ export class LazyMap<K, V> extends Map<K, V> {
 }
 
 export class Trigger {
-  _promise!: Promise<void>
-  _wake!: () => void
+  _promise!: Promise<void>;
+  _wake!: () => void;
 
   constructor () {
     this.reset();

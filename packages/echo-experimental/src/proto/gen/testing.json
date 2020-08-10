@@ -9,7 +9,7 @@
                 "FeedMessage": {
                   "fields": {
                     "feedKey": {
-                      "type": "string",
+                      "type": "bytes",
                       "id": 1
                     },
                     "data": {
@@ -29,8 +29,43 @@
                 "Admit": {
                   "fields": {
                     "feedKey": {
-                      "type": "string",
+                      "type": "bytes",
                       "id": 1
+                    }
+                  }
+                },
+                "Remove": {
+                  "fields": {
+                    "feedKey": {
+                      "type": "bytes",
+                      "id": 1
+                    }
+                  }
+                },
+                "VectorTimestamp": {
+                  "fields": {
+                    "timestamp": {
+                      "rule": "repeated",
+                      "type": "Feed",
+                      "id": 1
+                    }
+                  },
+                  "nested": {
+                    "Feed": {
+                      "fields": {
+                        "feedKey": {
+                          "type": "bytes",
+                          "id": 1
+                        },
+                        "feedIndex": {
+                          "type": "int32",
+                          "id": 2
+                        },
+                        "seq": {
+                          "type": "int32",
+                          "id": 3
+                        }
+                      }
                     }
                   }
                 },
@@ -48,38 +83,17 @@
                       "type": "google.protobuf.Any",
                       "id": 3
                     }
-                  },
-                  "nested": {
-                    "VectorTimestamp": {
-                      "fields": {
-                        "timestamp": {
-                          "rule": "repeated",
-                          "type": "Feed",
-                          "id": 1
-                        }
-                      },
-                      "nested": {
-                        "Feed": {
-                          "fields": {
-                            "feedKey": {
-                              "type": "bytes",
-                              "id": 1
-                            },
-                            "seq": {
-                              "type": "int32",
-                              "id": 2
-                            }
-                          }
-                        }
-                      }
-                    }
                   }
                 },
                 "ItemGenesis": {
                   "fields": {
-                    "model": {
+                    "type": {
                       "type": "string",
                       "id": 1
+                    },
+                    "model": {
+                      "type": "string",
+                      "id": 2
                     }
                   }
                 },
@@ -99,14 +113,6 @@
                   "fields": {
                     "data": {
                       "type": "int32",
-                      "id": 1
-                    }
-                  }
-                },
-                "TestFeedRemove": {
-                  "fields": {
-                    "feedKey": {
-                      "type": "string",
                       "id": 1
                     }
                   }

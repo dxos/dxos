@@ -9,29 +9,32 @@ import { Readable } from 'stream';
 import { FeedStore, FeedDescriptor } from '@dxos/feed-store';
 
 import { Trigger } from './util';
+import { FeedKey } from './database';
 
 /**
- * We are using an iterator here instead of a stream to ensure we have full control over how and at what time data is read.
- * The reason for that is that the reader (PartyProcessor) has an effect via the feedSelector function over how data is generated.
- * NodeJS streams have intenal buffer that the system tends to eagerly fill.
+ * We are using an iterator here instead of a stream to ensure we have full control over how and at what time
+ * data is read. This allows the consumer (e.g., PartyProcessor) to control the order in which data is generated.
+ * (Streams would not be suitable since NodeJS streams have intenal buffer that the system tends to eagerly fill.)
  */
-// TODO(burdon): Define type: dxos.echo.testing.FeedMessage
 export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
-  static async create (feedStore: FeedStore, feedSelector: (feedKey: Buffer) => Promise<boolean>) {
+  // TODO(burdon): Export function.
+  static async create (feedStore: FeedStore, feedSelector: (feedKey: FeedKey) => Promise<boolean>) {
     if (feedStore.closing || feedStore.closed) {
       throw new Error('FeedStore closed');
     }
+
     if (!feedStore.opened) {
       await feedStore.ready();
     }
 
-    const existingDescriptors = feedStore.getDescriptors().filter(descriptor => descriptor.opened);
-
+    const initialDescriptors = feedStore.getDescriptors().filter(descriptor => descriptor.opened);
     const iterator = new FeedStoreIterator(feedSelector);
-    for (const descriptor of existingDescriptors) {
+    for (const descriptor of initialDescriptors) {
       iterator._trackDescriptor(descriptor);
     }
 
+    // Subscribe to new feeds.
+    // TODO(burdon): Need to test belong to party.
     (feedStore as any).on('feed', (_: never, descriptor: FeedDescriptor) => {
       iterator._trackDescriptor(descriptor);
     });
@@ -40,13 +43,19 @@ export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
   }
 
   private readonly _candidateFeeds = new Set<FeedDescriptor>();
-  private readonly _openFeeds = new Set<{ descriptor: FeedDescriptor, iterator: AsyncIterator<any>, frozen: boolean, sendQueue: any[] }>();
+  private readonly _openFeeds = new Set<{
+    descriptor: FeedDescriptor,
+    iterator: AsyncIterator<any>,
+    frozen: boolean,
+    sendQueue: any[]
+  }>();
+
   private readonly _trigger = new Trigger();
-  private _messageCount = 0; // needed for round-robin ordering
+  private _messageCount = 0; // Needed for round-robin ordering.
   private _destroyed = false;
 
   constructor (
-    private readonly _feedSelector: (feedKey: Buffer) => Promise<boolean>
+    private readonly _feedSelector: (feedKey: FeedKey) => Promise<boolean>
   ) { }
 
   private async _reevaluateFeeds () {
@@ -56,9 +65,11 @@ export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
       }
     }
 
-    for (const descriptor of Array.from(this._candidateFeeds.values())) { // snapshot cause we will be mutating the collection
+    // Get candidate snapshot since we will be mutating the collection.
+    for (const descriptor of Array.from(this._candidateFeeds.values())) {
       if (await this._feedSelector(descriptor.key)) {
-        const stream = new Readable({ objectMode: true }).wrap((descriptor.feed as Feed).createReadStream({ live: true }));
+        const stream = new Readable({ objectMode: true })
+          .wrap((descriptor.feed as Feed).createReadStream({ live: true }));
 
         this._openFeeds.add({
           descriptor,
@@ -75,9 +86,11 @@ export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
   private _popSendQueue () {
     const openFeeds = Array.from(this._openFeeds.values());
     for (let i = 0; i < openFeeds.length; i++) {
-      const idx = (this._messageCount + i) % openFeeds.length; // round-robin
+      const idx = (this._messageCount + i) % openFeeds.length; // Round-robin.
+
       if (openFeeds[idx].frozen) { continue; }
       if (openFeeds[idx].sendQueue.length === 0) { continue; }
+
       return openFeeds[idx].sendQueue.shift();
     }
 
