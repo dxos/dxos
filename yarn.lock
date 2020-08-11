@@ -970,10 +970,10 @@
     source-map-support "^0.5.12"
     through2 "^3.0.1"
 
-"@dxos/feed-store@^1.2.0-beta.29":
-  version "1.2.0-beta.29"
-  resolved "https://registry.yarnpkg.com/@dxos/feed-store/-/feed-store-1.2.0-beta.29.tgz#7f13c77f38be570409338cb58bc9357c67c61371"
-  integrity sha512-2vVNdW7ttAnQ/g+a8eisg/0or+E0mtxMmQi/atqcW31kEENhoM5+q3+zRZ5OjFRP2SWSh5EzyYkDdKUf3/PlKQ==
+"@dxos/feed-store@^1.2.0-beta.30":
+  version "1.2.0-beta.30"
+  resolved "https://registry.yarnpkg.com/@dxos/feed-store/-/feed-store-1.2.0-beta.30.tgz#6a6f4d233496679e5e24405a6bfaa0bd6c4363cc"
+  integrity sha512-o7xH0ddhVT0shzpx37V9jGHr68/aD+8AcDmhNLuiGSvlncVnBpv8r2NDKTcOJv1u0eVZBo6A2jemAfe56TCyiQ==
   dependencies:
     buffer-json-encoding "^1.0.2"
     debug "^4.1.1"

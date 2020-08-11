@@ -5,6 +5,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import assert from 'assert';
 import debug from 'debug';
+import { dxos } from './proto/gen/testing';
 
 const log = debug('dxos.echo.consistency');
 
@@ -65,9 +66,13 @@ export class LogicalClockStamp {
   private _vector: Map<bigint, number>;
 
   constructor (
-    data: [NodeId, number][] = []
+    data: Map<bigint, number> | [NodeId | bigint, number][] = []
   ) {
-    this._vector = new Map(data.map(([nodeId, seq]) => [BufferToBigInt(nodeId), seq]));
+    if (data instanceof Map) {
+      this._vector = data;
+    } else {
+      this._vector = new Map(data.map(([nodeId, seq]) => [typeof nodeId !== 'bigint' ? BufferToBigInt(nodeId) : nodeId, seq]));
+    }
   }
 
   static zero (): LogicalClockStamp {
@@ -139,23 +144,65 @@ export class LogicalClockStamp {
     }
   }
 
+  private _entries () {
+    return Array.from(this._vector.entries());
+  }
+
   // TODO(dboreham): Encoding scheme is a hack : use typed protocol buffer schema definition.
   toObject (): Record<string, number> {
-    return objectFromEntries(Array.from(this._vector.entries()).map(([key, value]) => [BigIntToBuffer(key).toString('hex'), value]));
+    return objectFromEntries(this._entries().map(([key, value]) => [BigIntToBuffer(key).toString('hex'), value]));
   }
 
   static fromObject (source: Record<string, number>): LogicalClockStamp {
     return new LogicalClockStamp(Object.entries(source).map(([key, seq]) => [Buffer.from(key), seq]));
   }
 
+  static encode (value: LogicalClockStamp): dxos.echo.testing.IVectorTimestamp {
+    return {
+      timestamp: value._entries().map(([feed, count]) => ({
+        feedKey: BigIntToBuffer(feed),
+        seq: count
+      }))
+    };
+  }
+
+  static decode (enc: dxos.echo.testing.IVectorTimestamp) {
+    assert(enc.timestamp);
+    return new LogicalClockStamp(enc.timestamp.map(feed => {
+      assert(feed.feedKey);
+      assert(feed.seq);
+      return [Buffer.from(feed.feedKey), feed.seq];
+    }));
+  }
+
   log (): string {
     // TODO(dboreham): Use DXOS lib for Buffer as Key.
-    return Array.from(this._vector.entries()).map(([key, value]) => `${BigIntToBuffer(key).toString('hex')}:${value}`).join(', ');
+    return this._entries().map(([key, value]) => `${BigIntToBuffer(key).toString('hex')}:${value}`).join(', ');
   }
 
   private _getSeqForNode (nodeId: bigint): number {
     const seq = this._vector.get(nodeId);
     return (seq === undefined) ? 0 : seq;
+  }
+
+  static max (a: LogicalClockStamp, b: LogicalClockStamp) {
+    const res = new Map<bigint, number>(a._vector);
+    for (const [key, count] of b._vector) {
+      res.set(key, Math.max(res.get(key) ?? 0, count));
+    }
+    return new LogicalClockStamp(res);
+  }
+
+  withoutFeed (feedKey: Buffer) {
+    const feedKeyInt = BufferToBigInt(feedKey);
+    return new LogicalClockStamp(this._entries().filter(([key, value]) => key !== feedKeyInt));
+  }
+
+  withFeed (feedKey: Buffer, seq: number) {
+    const feedKeyInt = BufferToBigInt(feedKey);
+    const mapClone = new Map(this._vector);
+    mapClone.set(feedKeyInt, Math.max(mapClone.get(feedKeyInt) ?? 0, seq));
+    return new LogicalClockStamp(mapClone);
   }
 }
 

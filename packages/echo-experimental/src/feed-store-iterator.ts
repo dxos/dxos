@@ -6,7 +6,7 @@ import assert from 'assert';
 import { Feed } from 'hypercore';
 import { Readable } from 'stream';
 
-import { FeedStore, FeedDescriptor } from '@dxos/feed-store';
+import { FeedStore, FeedDescriptor, createBatchStream } from '@dxos/feed-store';
 
 import { Trigger } from './util';
 import { FeedKey } from './database';
@@ -69,7 +69,7 @@ export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
     for (const descriptor of Array.from(this._candidateFeeds.values())) {
       if (await this._feedSelector(descriptor.key)) {
         const stream = new Readable({ objectMode: true })
-          .wrap((descriptor.feed as Feed).createReadStream({ live: true }));
+          .wrap(createBatchStream(descriptor.feed, { live: true }));
 
         this._openFeeds.add({
           descriptor,
@@ -103,7 +103,7 @@ export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
         feed.iterator.next().then(
           result => {
             assert(!result.done);
-            feed.sendQueue.push(result.value);
+            feed.sendQueue.push(...result.value);
             this._trigger.wake();
           },
           console.error // TODO(marik-d): Proper error handling
@@ -128,9 +128,7 @@ export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
         this._messageCount++;
 
         // TODO(burdon): Add feedKey (FeedMessage).
-        yield {
-          data: message
-        };
+        yield message;
       }
 
       await this._waitForData();

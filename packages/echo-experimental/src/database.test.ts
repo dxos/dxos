@@ -9,16 +9,17 @@ import tempy from 'tempy';
 
 import { FeedStore } from '@dxos/feed-store';
 import { Codec } from '@dxos/codec-protobuf';
-import { createId } from '@dxos/crypto';
+import { createId, randomBytes } from '@dxos/crypto';
 
 import {
-  createWritableFeedStream, createPartyMuxer, createItemDemuxer, ItemManager, ModelFactory
+  createWritableFeedStream, createPartyMuxer, createItemDemuxer, ItemManager, ModelFactory, createTimestampTransform
 } from './database';
 import { TestModel } from './test-model';
 import { sink } from './util';
-import { createAdmit, createItemGenesis, createItemMutation } from './testing';
+import { createAdmit, createItemGenesis, createItemMutation, collect, createTestMessageWithTimestamp } from './testing';
 
 import TestingSchema from './proto/gen/testing.json';
+import { LogicalClockStamp } from './logical-clock-stamp';
 
 const log = debug('dxos:echo:testing');
 debug.enable('dxos:echo:*');
@@ -139,6 +140,33 @@ describe('database', () => {
     }
   });
 
+  test('timestamp writer', () => {
+    const ownFeed = randomBytes();
+    const feed1Key = randomBytes();
+    const feed2Key = randomBytes();
+
+    const [inboundTransfrom, outboundTransfrom] = createTimestampTransform(ownFeed);
+    const writtenMessages = collect(outboundTransfrom);
+
+    outboundTransfrom.write({ message: { __type_url: 'dxos.echo.testing.ItemEnvelope' } }); // current timestamp = {}
+    inboundTransfrom.write(createTestMessageWithTimestamp(new LogicalClockStamp(), feed1Key, 1)); // current timestamp = { F1: 1 }
+    outboundTransfrom.write({ message: { __type_url: 'dxos.echo.testing.ItemEnvelope' } }); // current timestamp = { F1: 1 }
+    inboundTransfrom.write(createTestMessageWithTimestamp(new LogicalClockStamp(), feed1Key, 2)); // current timestamp = { F1: 2 }
+    outboundTransfrom.write({ message: { __type_url: 'dxos.echo.testing.ItemEnvelope' } }); // current timestamp = { F1: 2 }
+    inboundTransfrom.write(createTestMessageWithTimestamp(new LogicalClockStamp([[feed2Key, 1]]), feed1Key, 3)); // current timestamp = { F1: 3, F2: 1 }
+    outboundTransfrom.write({ message: { __type_url: 'dxos.echo.testing.ItemEnvelope' } }); // current timestamp = { F1: 3, F2: 1 }
+    inboundTransfrom.write(createTestMessageWithTimestamp(new LogicalClockStamp(), feed2Key, 1)); // current timestamp = { F1: 3, F2: 1 }
+    outboundTransfrom.write({ message: { __type_url: 'dxos.echo.testing.ItemEnvelope' } }); // current timestamp = { F1: 3, F2: 1 }
+
+    expect(writtenMessages).toEqual([
+      { message: { __type_url: 'dxos.echo.testing.ItemEnvelope', timestamp: LogicalClockStamp.encode(LogicalClockStamp.zero()) } },
+      { message: { __type_url: 'dxos.echo.testing.ItemEnvelope', timestamp: LogicalClockStamp.encode(new LogicalClockStamp([[feed1Key, 1]])) } },
+      { message: { __type_url: 'dxos.echo.testing.ItemEnvelope', timestamp: LogicalClockStamp.encode(new LogicalClockStamp([[feed1Key, 2]])) } },
+      { message: { __type_url: 'dxos.echo.testing.ItemEnvelope', timestamp: LogicalClockStamp.encode(new LogicalClockStamp([[feed1Key, 3], [feed2Key, 1]])) } },
+      { message: { __type_url: 'dxos.echo.testing.ItemEnvelope', timestamp: LogicalClockStamp.encode(new LogicalClockStamp([[feed1Key, 3], [feed2Key, 1]])) } }
+    ]);
+  });
+
   test('parties', async () => {
     const modelFactory = new ModelFactory().registerModel(TestModel.type, TestModel);
 
@@ -170,13 +198,14 @@ describe('database', () => {
       createId()
     ];
 
-    const itemManager = new ItemManager(modelFactory, streams[0]);
+    const [inboundTransfrom, outboundTransform] = createTimestampTransform(descriptors[0].key);
+    const itemManager = new ItemManager(modelFactory, outboundTransform.pipe(streams[0]));
 
     // Set-up pipeline.
     // TODO(burdon): Test closing pipeline.
     const partyMuxer = createPartyMuxer(feedStore, [descriptors[0].key]);
     const itemDemuxer = createItemDemuxer(itemManager);
-    partyMuxer.pipe(itemDemuxer);
+    partyMuxer.pipe(inboundTransfrom).pipe(itemDemuxer);
 
     {
       streams[0].write(createItemGenesis(itemIds[0], 'test'));

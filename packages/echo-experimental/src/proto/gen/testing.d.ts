@@ -679,6 +679,9 @@ export namespace dxos {
 
                 /** ItemGenesis model */
                 model?: (string|null);
+
+                /** ItemGenesis modelVersion */
+                modelVersion?: (string|null);
             }
 
             /** Represents an ItemGenesis. */
@@ -695,6 +698,9 @@ export namespace dxos {
 
                 /** ItemGenesis model. */
                 public model: string;
+
+                /** ItemGenesis modelVersion. */
+                public modelVersion: string;
 
                 /**
                  * Creates a new ItemGenesis instance using the specified properties.

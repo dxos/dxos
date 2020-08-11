@@ -94,6 +94,10 @@
                     "model": {
                       "type": "string",
                       "id": 2
+                    },
+                    "modelVersion": {
+                      "type": "string",
+                      "id": 3
                     }
                   }
                 },

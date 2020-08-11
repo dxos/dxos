@@ -1543,6 +1543,7 @@ $root.dxos = (function() {
                  * @interface IItemGenesis
                  * @property {string|null} [type] ItemGenesis type
                  * @property {string|null} [model] ItemGenesis model
+                 * @property {string|null} [modelVersion] ItemGenesis modelVersion
                  */
 
                 /**
@@ -1577,6 +1578,14 @@ $root.dxos = (function() {
                 ItemGenesis.prototype.model = "";
 
                 /**
+                 * ItemGenesis modelVersion.
+                 * @member {string} modelVersion
+                 * @memberof dxos.echo.testing.ItemGenesis
+                 * @instance
+                 */
+                ItemGenesis.prototype.modelVersion = "";
+
+                /**
                  * Creates a new ItemGenesis instance using the specified properties.
                  * @function create
                  * @memberof dxos.echo.testing.ItemGenesis
@@ -1604,6 +1613,8 @@ $root.dxos = (function() {
                         writer.uint32(/* id 1, wireType 2 =*/10).string(message.type);
                     if (message.model != null && Object.hasOwnProperty.call(message, "model"))
                         writer.uint32(/* id 2, wireType 2 =*/18).string(message.model);
+                    if (message.modelVersion != null && Object.hasOwnProperty.call(message, "modelVersion"))
+                        writer.uint32(/* id 3, wireType 2 =*/26).string(message.modelVersion);
                     return writer;
                 };
 
@@ -1643,6 +1654,9 @@ $root.dxos = (function() {
                             break;
                         case 2:
                             message.model = reader.string();
+                            break;
+                        case 3:
+                            message.modelVersion = reader.string();
                             break;
                         default:
                             reader.skipType(tag & 7);
@@ -1685,6 +1699,9 @@ $root.dxos = (function() {
                     if (message.model != null && message.hasOwnProperty("model"))
                         if (!$util.isString(message.model))
                             return "model: string expected";
+                    if (message.modelVersion != null && message.hasOwnProperty("modelVersion"))
+                        if (!$util.isString(message.modelVersion))
+                            return "modelVersion: string expected";
                     return null;
                 };
 
@@ -1704,6 +1721,8 @@ $root.dxos = (function() {
                         message.type = String(object.type);
                     if (object.model != null)
                         message.model = String(object.model);
+                    if (object.modelVersion != null)
+                        message.modelVersion = String(object.modelVersion);
                     return message;
                 };
 
@@ -1723,11 +1742,14 @@ $root.dxos = (function() {
                     if (options.defaults) {
                         object.type = "";
                         object.model = "";
+                        object.modelVersion = "";
                     }
                     if (message.type != null && message.hasOwnProperty("type"))
                         object.type = message.type;
                     if (message.model != null && message.hasOwnProperty("model"))
                         object.model = message.model;
+                    if (message.modelVersion != null && message.hasOwnProperty("modelVersion"))
+                        object.modelVersion = message.modelVersion;
                     return object;
                 };
 

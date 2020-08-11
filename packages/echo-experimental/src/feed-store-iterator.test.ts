@@ -13,7 +13,7 @@ import { Codec } from '@dxos/codec-protobuf';
 import { createWritableFeedStream } from './database';
 import { FeedStoreIterator } from './feed-store-iterator';
 import { assumeType, latch, sink } from './util';
-import { createAdmit, createRemove, createMessage } from './testing';
+import { createAdmit, createRemove, createMessage, feedItem } from './testing';
 
 import TestingSchema from './proto/gen/testing.json';
 import { dxos } from './proto/gen/testing';
@@ -53,9 +53,9 @@ describe('FeedStoreIterator', () => {
     }
 
     expect(messages).toEqual([
-      { data: createMessage(1) },
-      { data: createMessage(2) },
-      { data: createMessage(3) }
+      feedItem(createMessage(1)),
+      feedItem(createMessage(2)),
+      feedItem(createMessage(3))
     ]);
   });
 
@@ -75,8 +75,8 @@ describe('FeedStoreIterator', () => {
     }
 
     expect(messages).toEqual([
-      { data: createMessage(1) },
-      { data: createMessage(3) }
+      feedItem(createMessage(1)),
+      feedItem(createMessage(3))
     ]);
   });
 
@@ -100,9 +100,9 @@ describe('FeedStoreIterator', () => {
     await count;
 
     expect(messages).toEqual([
-      { data: createMessage(1) },
-      { data: createMessage(2) },
-      { data: createMessage(3) }
+      feedItem(createMessage(1)),
+      feedItem(createMessage(2)),
+      feedItem(createMessage(3))
     ]);
   });
 
@@ -161,8 +161,8 @@ describe('FeedStoreIterator', () => {
       await promise;
 
       expect(messages).toEqual([
-        { data: createMessage(1) },
-        { data: createMessage(3) }
+        feedItem(createMessage(1)),
+        feedItem(createMessage(3))
       ]);
     }
 
@@ -175,10 +175,10 @@ describe('FeedStoreIterator', () => {
       await promise;
 
       expect(messages).toEqual([
-        { data: createMessage(1) },
-        { data: createMessage(3) },
-        { data: createAdmit(descriptors[1].key) },
-        { data: createMessage(2) } // Now released.
+        feedItem(createMessage(1)),
+        feedItem(createMessage(3)),
+        feedItem(createAdmit(descriptors[1].key)),
+        feedItem(createMessage(2)) // Now released
       ]);
     }
 
@@ -200,12 +200,12 @@ describe('FeedStoreIterator', () => {
       await promise2;
 
       expect(messages).toEqual([
-        { data: createMessage(1) },
-        { data: createMessage(3) },
-        { data: createAdmit(descriptors[1].key) },
-        { data: createMessage(2) },
-        { data: createRemove(descriptors[0].key) },
-        { data: createMessage(5) }
+        feedItem(createMessage(1)),
+        feedItem(createMessage(3)),
+        feedItem(createAdmit(descriptors[1].key)),
+        feedItem(createMessage(2)),
+        feedItem(createRemove(descriptors[0].key)),
+        feedItem(createMessage(5))
       ]);
     }
   });
