@@ -33,10 +33,11 @@ export const createMessage = (data: number) => ({
   }
 });
 
-export const createItemGenesis = (itemId: ItemID, type: string) => ({
+export const createItemGenesis = (itemId: ItemID, type: string, timestamp?: LogicalClockStamp) => ({
   message: {
     __type_url: 'dxos.echo.testing.ItemEnvelope',
     itemId,
+    timestamp: timestamp ? LogicalClockStamp.encode(timestamp) : undefined,
     payload: {
       __type_url: 'dxos.echo.testing.ItemGenesis',
       type,
@@ -45,10 +46,11 @@ export const createItemGenesis = (itemId: ItemID, type: string) => ({
   }
 });
 
-export const createItemMutation = (itemId: ItemID, key: string, value: string) => ({
+export const createItemMutation = (itemId: ItemID, key: string, value: string, timestamp?: LogicalClockStamp) => ({
   message: {
     __type_url: 'dxos.echo.testing.ItemEnvelope',
     itemId,
+    timestamp: timestamp ? LogicalClockStamp.encode(timestamp) : undefined,
     payload: {
       __type_url: 'dxos.echo.testing.ItemMutation',
       key,
@@ -68,7 +70,7 @@ export const createTestMessageWithTimestamp = (timestamp: LogicalClockStamp, fee
   seq
 });
 
-export const feedItem = (data: any) => ({ data, key: expect.any(Buffer), seq: expect.any(Number), sync: expect.any(Boolean) });
+export const createExpectedFeedMessage = (data: any) => ({ data, key: expect.any(Buffer), seq: expect.any(Number), sync: expect.any(Boolean) });
 
 /**
  * Turns a stream into constantly mutating array of all messages emmited by the stream.

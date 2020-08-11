@@ -18,10 +18,10 @@ describe('LogicalClockStamp', () => {
 
     const order = LogicalClockStamp.compare(lcsZero, lcsNonZero);
     log(`compare(zero, nonZero) -> ${Order[order]}`);
-    expect(order).toBe(Order.AFTER);
+    expect(order).toBe(Order.BEFORE);
     const reverse = LogicalClockStamp.compare(lcsNonZero, lcsZero);
     log(`compare(nonZero, zero) -> ${Order[reverse]}`);
-    expect(reverse).toBe(Order.BEFORE);
+    expect(reverse).toBe(Order.AFTER);
   });
 
   test('ordered_one_node', () => {
@@ -32,10 +32,10 @@ describe('LogicalClockStamp', () => {
 
     const order = LogicalClockStamp.compare(lcsA, lcsB);
     log(`compare(A:1, A:2) -> ${Order[order]}`);
-    expect(order).toBe(Order.AFTER);
+    expect(order).toBe(Order.BEFORE);
     const reverse = LogicalClockStamp.compare(lcsB, lcsA);
     log(`compare(A:2, A:1) -> ${Order[reverse]}`);
-    expect(reverse).toBe(Order.BEFORE);
+    expect(reverse).toBe(Order.AFTER);
   });
 
   test('equal_one_nodes', () => {
@@ -67,10 +67,10 @@ describe('LogicalClockStamp', () => {
 
     const order = LogicalClockStamp.compare(lcsA, lcsB);
     log(`compare(zero, nonZero) -> ${Order[order]}`);
-    expect(order).toBe(Order.AFTER);
+    expect(order).toBe(Order.BEFORE);
     const reverse = LogicalClockStamp.compare(lcsB, lcsA);
     log(`compare(nonZero, zero) -> ${Order[reverse]}`);
-    expect(reverse).toBe(Order.BEFORE);
+    expect(reverse).toBe(Order.AFTER);
   });
 
   test('unordered_two_nodes', () => {

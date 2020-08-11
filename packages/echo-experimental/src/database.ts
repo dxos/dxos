@@ -18,7 +18,7 @@ import { dxos } from './proto/gen/testing';
 
 import { assumeType, LazyMap, assertAnyType } from './util';
 import { FeedStoreIterator } from './feed-store-iterator';
-import { LogicalClockStamp } from './logical-clock-stamp';
+import { LogicalClockStamp, Order } from './logical-clock-stamp';
 
 const log = debug('dxos:echo:database');
 
@@ -283,10 +283,31 @@ export const createPartyMuxer = (
   // Configure iterator with dynamic set of admitted feeds.
   const allowedFeeds: Set<string> = new Set(initialFeeds.map(feedKey => keyToString(feedKey)));
 
+  let currentTimestamp = new LogicalClockStamp();
+
   // TODO(burdon): Explain control.
   setImmediate(async () => {
     const iterator = await FeedStoreIterator.create(feedStore,
-      async feedKey => allowedFeeds.has(keyToString(feedKey))
+      async feedKey => allowedFeeds.has(keyToString(feedKey)),
+      candidates => {
+        for (let i = 0; i < candidates.length; i++) {
+          const { data: { message } } = candidates[i];
+          if (message.__type_url === 'dxos.echo.testing.ItemEnvelope') {
+            assumeType<dxos.echo.testing.IItemEnvelope>(message);
+            const timestamp = message.timestamp ? LogicalClockStamp.decode(message.timestamp) : LogicalClockStamp.zero();
+            const order = LogicalClockStamp.compare(timestamp, currentTimestamp);
+
+            // if message's timestamp is <= the current observed timestamp we can pass the message through
+            // TODO(marik-d): Do we have to order messages agains each other?
+            if (order === Order.EQUAL || order === Order.BEFORE) {
+              return i;
+            }
+          } else {
+            return i; // pass through all non-ECHO messages
+          }
+        }
+        return undefined;
+      }
     );
 
     // NOTE: The iterator may halt if there are gaps in the replicated feeds (according to the timestamps).
@@ -309,9 +330,12 @@ export const createPartyMuxer = (
         //
         // ECHO messages.
         //
-        default: {
+        case 'dxos.echo.testing.ItemEnvelope': {
           assumeType<dxos.echo.testing.IItemEnvelope>(message);
           assert(message.itemId);
+
+          const timestamp = LogicalClockStamp.zero().withFeed(key, seq);
+          currentTimestamp = LogicalClockStamp.max(currentTimestamp, timestamp);
 
           // TODO(burdon): Order by timestamp.
           outputStream.push({ data: { message }, key, seq });
@@ -320,7 +344,12 @@ export const createPartyMuxer = (
           // if (!this._output.push({ data: { message } })) {
           //   await new Promise(resolve => { this._output.once('drain', resolve )});
           // }
+          break;
         }
+
+        default:
+          console.warn(`Skipping unknown message type ${message.__type_url}`);
+          break;
       }
     }
   });

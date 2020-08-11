@@ -11,14 +11,24 @@ import { FeedStore, FeedDescriptor, createBatchStream } from '@dxos/feed-store';
 import { Trigger } from './util';
 import { FeedKey } from './database';
 
+export interface FeedMessage {
+  data: any
+  key: Buffer
+  seq: number
+}
+
 /**
  * We are using an iterator here instead of a stream to ensure we have full control over how and at what time
  * data is read. This allows the consumer (e.g., PartyProcessor) to control the order in which data is generated.
  * (Streams would not be suitable since NodeJS streams have intenal buffer that the system tends to eagerly fill.)
  */
-export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
+export class FeedStoreIterator implements AsyncIterable<FeedMessage> {
   // TODO(burdon): Export function.
-  static async create (feedStore: FeedStore, feedSelector: (feedKey: FeedKey) => Promise<boolean>) {
+  static async create (
+    feedStore: FeedStore,
+    feedSelector: (feedKey: FeedKey) => Promise<boolean>,
+    messageOrderer: (candidates: FeedMessage[]) => number | undefined = () => 0
+  ) {
     if (feedStore.closing || feedStore.closed) {
       throw new Error('FeedStore closed');
     }
@@ -28,7 +38,7 @@ export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
     }
 
     const initialDescriptors = feedStore.getDescriptors().filter(descriptor => descriptor.opened);
-    const iterator = new FeedStoreIterator(feedSelector);
+    const iterator = new FeedStoreIterator(feedSelector, messageOrderer);
     for (const descriptor of initialDescriptors) {
       iterator._trackDescriptor(descriptor);
     }
@@ -43,11 +53,12 @@ export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
   }
 
   private readonly _candidateFeeds = new Set<FeedDescriptor>();
-  private readonly _openFeeds = new Set<{
+  /** Feed key as hex => feed state */
+  private readonly _openFeeds = new Map<string, {
     descriptor: FeedDescriptor,
-    iterator: AsyncIterator<any>,
+    iterator: AsyncIterator<FeedMessage[]>,
     frozen: boolean,
-    sendQueue: any[]
+    sendQueue: FeedMessage[]
   }>();
 
   private readonly _trigger = new Trigger();
@@ -55,11 +66,12 @@ export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
   private _destroyed = false;
 
   constructor (
-    private readonly _feedSelector: (feedKey: FeedKey) => Promise<boolean>
+    private readonly _feedSelector: (feedKey: FeedKey) => Promise<boolean>,
+    private readonly _messageOrderer: (candidates: FeedMessage[]) => number | undefined
   ) { }
 
   private async _reevaluateFeeds () {
-    for (const feed of this._openFeeds) {
+    for (const [keyHex, feed] of this._openFeeds) {
       if (!await this._feedSelector(feed.descriptor.key)) {
         feed.frozen = true;
       }
@@ -71,7 +83,7 @@ export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
         const stream = new Readable({ objectMode: true })
           .wrap(createBatchStream(descriptor.feed, { live: true }));
 
-        this._openFeeds.add({
+        this._openFeeds.set(descriptor.key.toString('hex'), {
           descriptor,
           iterator: stream[Symbol.asyncIterator](),
           frozen: false,
@@ -85,20 +97,28 @@ export class FeedStoreIterator implements AsyncIterable<{ data: any }> {
 
   private _popSendQueue () {
     const openFeeds = Array.from(this._openFeeds.values());
-    for (let i = 0; i < openFeeds.length; i++) {
-      const idx = (this._messageCount + i) % openFeeds.length; // Round-robin.
+    const candidates = openFeeds
+      .filter(feed => !feed.frozen && feed.sendQueue.length > 0)
+      .map(feed => feed.sendQueue[0]);
 
-      if (openFeeds[idx].frozen) { continue; }
-      if (openFeeds[idx].sendQueue.length === 0) { continue; }
-
-      return openFeeds[idx].sendQueue.shift();
+    if (candidates.length === 0) {
+      return undefined;
     }
 
-    return undefined;
+    const selected = this._messageOrderer(candidates);
+    if (selected === undefined) {
+      return undefined;
+    }
+
+    const pickedCandidate = candidates[selected];
+    const feed = this._openFeeds.get(pickedCandidate.key.toString('hex'));
+    assert(feed);
+
+    return feed.sendQueue.shift();
   }
 
   private _pollFeeds () {
-    for (const feed of this._openFeeds) {
+    for (const [keyHex, feed] of this._openFeeds) {
       if (feed.sendQueue.length === 0) {
         feed.iterator.next().then(
           result => {

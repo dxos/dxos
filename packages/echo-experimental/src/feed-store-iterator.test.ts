@@ -11,9 +11,9 @@ import { FeedStore } from '@dxos/feed-store';
 import { Codec } from '@dxos/codec-protobuf';
 
 import { createWritableFeedStream } from './database';
-import { FeedStoreIterator } from './feed-store-iterator';
+import { FeedStoreIterator, FeedMessage } from './feed-store-iterator';
 import { assumeType, latch, sink } from './util';
-import { createAdmit, createRemove, createMessage, feedItem } from './testing';
+import { createAdmit, createRemove, createMessage, createExpectedFeedMessage } from './testing';
 
 import TestingSchema from './proto/gen/testing.json';
 import { dxos } from './proto/gen/testing';
@@ -53,9 +53,9 @@ describe('FeedStoreIterator', () => {
     }
 
     expect(messages).toEqual([
-      feedItem(createMessage(1)),
-      feedItem(createMessage(2)),
-      feedItem(createMessage(3))
+      createExpectedFeedMessage(createMessage(1)),
+      createExpectedFeedMessage(createMessage(2)),
+      createExpectedFeedMessage(createMessage(3))
     ]);
   });
 
@@ -75,8 +75,8 @@ describe('FeedStoreIterator', () => {
     }
 
     expect(messages).toEqual([
-      feedItem(createMessage(1)),
-      feedItem(createMessage(3))
+      createExpectedFeedMessage(createMessage(1)),
+      createExpectedFeedMessage(createMessage(3))
     ]);
   });
 
@@ -100,9 +100,9 @@ describe('FeedStoreIterator', () => {
     await count;
 
     expect(messages).toEqual([
-      feedItem(createMessage(1)),
-      feedItem(createMessage(2)),
-      feedItem(createMessage(3))
+      createExpectedFeedMessage(createMessage(1)),
+      createExpectedFeedMessage(createMessage(2)),
+      createExpectedFeedMessage(createMessage(3))
     ]);
   });
 
@@ -161,8 +161,8 @@ describe('FeedStoreIterator', () => {
       await promise;
 
       expect(messages).toEqual([
-        feedItem(createMessage(1)),
-        feedItem(createMessage(3))
+        createExpectedFeedMessage(createMessage(1)),
+        createExpectedFeedMessage(createMessage(3))
       ]);
     }
 
@@ -175,10 +175,10 @@ describe('FeedStoreIterator', () => {
       await promise;
 
       expect(messages).toEqual([
-        feedItem(createMessage(1)),
-        feedItem(createMessage(3)),
-        feedItem(createAdmit(descriptors[1].key)),
-        feedItem(createMessage(2)) // Now released
+        createExpectedFeedMessage(createMessage(1)),
+        createExpectedFeedMessage(createMessage(3)),
+        createExpectedFeedMessage(createAdmit(descriptors[1].key)),
+        createExpectedFeedMessage(createMessage(2)) // Now released
       ]);
     }
 
@@ -200,13 +200,62 @@ describe('FeedStoreIterator', () => {
       await promise2;
 
       expect(messages).toEqual([
-        feedItem(createMessage(1)),
-        feedItem(createMessage(3)),
-        feedItem(createAdmit(descriptors[1].key)),
-        feedItem(createMessage(2)),
-        feedItem(createRemove(descriptors[0].key)),
-        feedItem(createMessage(5))
+        createExpectedFeedMessage(createMessage(1)),
+        createExpectedFeedMessage(createMessage(3)),
+        createExpectedFeedMessage(createAdmit(descriptors[1].key)),
+        createExpectedFeedMessage(createMessage(2)),
+        createExpectedFeedMessage(createRemove(descriptors[0].key)),
+        createExpectedFeedMessage(createMessage(5))
       ]);
     }
+  });
+
+  test('can order multiple feeds', async () => {
+    const { feedStore, streams } = await setup(['feed-1', 'feed-2', 'feed-3']);
+
+    let lastCount = -1;
+    const iterator = await FeedStoreIterator.create(feedStore, async () => true, candidates => {
+      const idx = candidates.findIndex(candidate => candidate.data.message.data === lastCount + 1);
+      return idx === -1 ? undefined : idx;
+    });
+
+    const messages: FeedMessage[] = [];
+    const eventEmitter = new EventEmitter();
+    setImmediate(async () => {
+      for await (const message of iterator) {
+        lastCount = message.data.message.data;
+        messages.push(message);
+        eventEmitter.emit('update', message);
+      }
+    });
+    const promise = sink(eventEmitter, 'update', 10);
+
+    streams[0].write(createMessage(1));
+    streams[0].write(createMessage(5));
+    streams[0].write(createMessage(7));
+    streams[0].write(createMessage(9));
+
+    streams[1].write(createMessage(0));
+    streams[1].write(createMessage(6));
+
+    streams[2].write(createMessage(2));
+    streams[2].write(createMessage(3));
+    streams[2].write(createMessage(4));
+    streams[2].write(createMessage(8));
+
+    await promise;
+
+    expect(messages).toEqual([
+      createExpectedFeedMessage(createMessage(0)),
+      createExpectedFeedMessage(createMessage(1)),
+      createExpectedFeedMessage(createMessage(2)),
+      createExpectedFeedMessage(createMessage(3)),
+      createExpectedFeedMessage(createMessage(4)),
+      createExpectedFeedMessage(createMessage(5)),
+      createExpectedFeedMessage(createMessage(6)),
+      createExpectedFeedMessage(createMessage(7)),
+      createExpectedFeedMessage(createMessage(8)),
+      createExpectedFeedMessage(createMessage(9))
+    ]);
   });
 });

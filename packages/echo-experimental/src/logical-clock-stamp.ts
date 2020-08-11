@@ -102,10 +102,10 @@ export class LogicalClockStamp {
       if (aSeq !== bSeq) {
         allEqual = false;
       }
-      if (aSeq > bSeq) {
+      if (aSeq < bSeq) {
         allGreaterThanOrEqual = false;
       }
-      if (aSeq < bSeq) {
+      if (aSeq > bSeq) {
         allLessThanOrEqual = false;
       }
     }

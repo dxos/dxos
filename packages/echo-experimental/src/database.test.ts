@@ -10,6 +10,7 @@ import tempy from 'tempy';
 import { FeedStore } from '@dxos/feed-store';
 import { Codec } from '@dxos/codec-protobuf';
 import { createId, randomBytes } from '@dxos/crypto';
+import { sleep } from '@dxos/async';
 
 import {
   createWritableFeedStream, createPartyMuxer, createItemDemuxer, ItemManager, ModelFactory, createTimestampTransform
@@ -238,6 +239,67 @@ describe('database', () => {
       const items = itemManager.getItems();
       expect(items).toHaveLength(1);
       expect((items[0].model as TestModel).getValue('title')).toEqual('Value-2');
+    }
+  });
+
+  test('ordering', async () => {
+    const modelFactory = new ModelFactory().registerModel(TestModel.type, TestModel);
+
+    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    await feedStore.open();
+
+    const feeds = [
+      await feedStore.openFeed('feed-1'),
+      await feedStore.openFeed('feed-2')
+    ];
+
+    const descriptors = [
+      feedStore.getOpenFeed((descriptor: any) => descriptor.path === 'feed-1'),
+      feedStore.getOpenFeed((descriptor: any) => descriptor.path === 'feed-2')
+    ];
+
+    const set = new Set<Uint8Array>();
+    set.add(descriptors[0].feedKey);
+
+    const streams = [
+      createWritableFeedStream(feeds[0]),
+      createWritableFeedStream(feeds[1])
+    ];
+
+    const itemIds = [
+      createId(),
+      createId()
+    ];
+
+    const [inboundTransfrom, outboundTransform] = createTimestampTransform(descriptors[0].key);
+    const itemManager = new ItemManager(modelFactory, outboundTransform.pipe(streams[0]));
+
+    // Set-up pipeline.
+    // TODO(burdon): Test closing pipeline.
+    const partyMuxer = createPartyMuxer(feedStore, [descriptors[0].key, descriptors[1].key]);
+    const itemDemuxer = createItemDemuxer(itemManager);
+    partyMuxer.pipe(inboundTransfrom).pipe(itemDemuxer);
+
+    {
+      const timestamp = new LogicalClockStamp([[descriptors[1].key, 1]]); // require feed 2 to have 2 messages
+      streams[0].write(createItemGenesis(itemIds[0], 'test', timestamp));
+      streams[0].write(createItemMutation(itemIds[0], 'title', 'Value-1', timestamp));
+
+      await sleep(10); // TODO(marik-d): Is threre a better way to do this?
+
+      const items = itemManager.getItems();
+      expect(items).toHaveLength(0);
+    }
+
+    {
+      streams[1].write(createItemGenesis(itemIds[1], 'test'));
+      streams[1].write(createItemMutation(itemIds[1], 'title', 'Value-1'));
+
+      await sink(itemManager, 'create', 2);
+      await sink(itemManager, 'update', 2);
+
+      const items = itemManager.getItems();
+      expect(items).toHaveLength(2);
     }
   });
 });
