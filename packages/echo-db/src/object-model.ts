@@ -30,7 +30,7 @@ export class ObjectModel extends Model {
   }
 
   // TODO(burdon): Rename createObject.
-  createItem (type: string, properties: object, viewId?: string) {
+  createItem (type: string, properties: object, itemProperties = {}) {
     log('create', type, properties);
 
     const id = createObjectId(type);
@@ -38,7 +38,7 @@ export class ObjectModel extends Model {
 
     this.appendMessage({
       __type_url: type,
-      viewId,
+      ...itemProperties,
       ...mutations
     });
 
