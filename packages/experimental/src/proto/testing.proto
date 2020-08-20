@@ -1,0 +1,107 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo.testing;
+
+import "google/protobuf/any.proto";
+
+//
+// Typescript Note:
+// Use the interface name in code (e.g., IFeedEvenlope) and the concrete class name in the __type_url reference.
+//
+
+//
+// Feeds
+//
+
+// Outer message type decoded by Codec.
+// NOTE: Hypercore returns a field called `data`, which corresponds to this envelope (not the contained message).
+message FeedMessage {
+  HaloEnvelope halo = 1;
+  EchoEnvelope echo = 2;
+}
+
+//
+// HALO
+//
+
+// Wrapper for all HALO messages.
+message HaloEnvelope {
+  oneof action {
+    PartyGenesis genesis = 1;
+    PartyAdmit admit = 2;
+    PartyEject eject = 3;
+  }
+}
+
+// First block.
+// TODO(burdon): Generalize first block for all feeds (i.e., for owner and joiner).
+message PartyGenesis {
+  bytes partyKey = 1;
+  bytes feedKey = 2;
+}
+
+// Admit to party.
+message PartyAdmit {
+  bytes partyKey = 1;
+  bytes feedKey = 2;
+}
+
+// Reject from party.
+message PartyEject {
+  bytes partyKey = 1;
+  bytes feedKey = 2;
+}
+
+//
+// ECHO
+//
+
+// Wrapper for all ECHO messages.
+message EchoEnvelope {
+  Timeframe timeframe = 1;
+  string itemId = 2;
+
+  oneof action {
+    ItemGenesis genesis = 10;
+
+    // TODO(burdon): Rename properties model (and replace with ObjectModel).
+    ItemMutation itemMutation = 11;
+
+    // TODO(burdon): Dispatch to data model.
+//  google.protobuf.Any dataMutation = 12;
+  }
+}
+
+// Item creation.
+message ItemGenesis {
+  string itemType = 1;
+  string modelType = 2;
+  string modelVersion = 3;
+}
+
+message ItemMutation {
+  message Property {
+    string key = 1;
+    string value = 2;
+  }
+
+  Property set = 1;
+  Property append = 2;
+}
+
+// Vector timestamp used to order messages.
+message Timeframe {
+  message Frame {
+    // TODO(burdon): Remove (see below)?
+    bytes feedKey = 1;
+    // TODO(burdon): Determine if admit DAG can be ordered. Requires party messages to be ordered (by lexical feed key).
+    int32 feedIndex = 2;
+    int32 seq = 3;
+  }
+
+  repeated Frame frames = 1;
+}

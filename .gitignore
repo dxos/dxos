@@ -62,9 +62,12 @@ typings/
 
 .idea/workspace.xml
 
+gen/
 out/
 dist/
+public/
 
 .cache
-public
 .temp/
+.DS_Store/
+

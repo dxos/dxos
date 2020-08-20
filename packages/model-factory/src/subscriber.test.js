@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import eos from 'end-of-stream';
 
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { FeedStore } from '@dxos/feed-store';
 import { createId } from '@dxos/crypto';
 
@@ -14,7 +14,7 @@ const wait = (callback, n) => () => (--n === 0) && callback();
 
 const createSubscriber = async (path, topic) => {
   const feedStore = new FeedStore(createStorage('./temp', STORAGE_RAM), { feedOptions: { valueEncoding: 'json' } });
-  await feedStore.initialize();
+  await feedStore.open();
 
   const subscriber = new Subscriber(feedStore);
 
@@ -35,6 +35,7 @@ describe('Subscriber', () => {
 
     const { subscriber, feed } = await createSubscriber(root, topic);
 
+    // TODO(burdon): Convert to latch.
     const n = types.length * 10;
     const count = wait(done, 2 * (n / types.length));
 
