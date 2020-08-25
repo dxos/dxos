@@ -154,6 +154,8 @@ export class ValueUtil {
  */
 export class MutationUtil {
   static applyMutations (object: any, messages: dxos.echo.ObjectMutation.IMutation[]) {
+    console.log(':::::::::::', object, messages);
+
     messages.forEach(message => MutationUtil.applyMutation(object, message));
     return object;
   }

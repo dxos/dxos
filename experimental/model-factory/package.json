@@ -1,0 +1,75 @@
+{
+  "name": "@dxos/experimental-model-factory",
+  "version": "1.0.0-beta.28",
+  "description": "ECHO model factory.",
+  "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/echo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/echo.git"
+  },
+  "license": "GPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "private": false,
+  "scripts": {
+    "build": "npm run clean && npm run build:ts",
+    "build:ts": "tsc",
+    "clean": "del-cli dist",
+    "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
+    "coverage": "jest --coverage --verbose src",
+    "lint": "eslint './src/**/*.ts'",
+    "test": "jest --rootDir=./src --verbose --passWithNoTests",
+    "posttest": "npm run lint",
+    "prepublishOnly": "npm run test && npm run build",
+    "watch": "babel-watch src --out-dir ./dist --source-maps"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "jest": {
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@dxos/async": "^1.0.0-beta.5",
+    "@dxos/codec-protobuf": "^1.1.0-beta.0",
+    "@dxos/crypto": "^0.0.1",
+    "@dxos/experimental-echo-protocol": "^1.0.0-beta.28",
+    "@dxos/experimental-util": "^1.0.0-beta.28",
+    "@dxos/feed-store": "^1.2.0-beta.30",
+    "@types/debug": "^4.1.1",
+    "@types/end-of-stream": "^1.4.0",
+    "@types/lodash": "^4.14.159",
+    "@types/node": "^14.0.9",
+    "@types/stream-buffers": "^3.0.2",
+    "@types/through2": "^2.0.36",
+    "debug": "^4.1.1",
+    "hypercore": "^7.7.1",
+    "js-data-structs": "^1.1.2",
+    "lodash.merge": "^4.6.2",
+    "protobufjs": "^6.9.0",
+    "source-map-support": "^0.5.12"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.2.3",
+    "chance": "^1.1.6",
+    "del-cli": "^3.0.0",
+    "eslint-plugin-jest": "^23.13.1",
+    "jest": "^26.2.2",
+    "semistandard": "14.2.0",
+    "stream-buffers": "^3.0.2",
+    "ts-jest": "^26.1.4",
+    "typescript": "^3.9.3",
+    "wait-for-expect": "^3.0.2"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "plugin:jest/recommended",
+      "eslint-config-semistandard"
+    ]
+  }
+}

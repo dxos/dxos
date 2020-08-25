@@ -1,0 +1,12 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo.testing;
+
+message TestItemMutation {
+  string key = 1;
+  string value = 2;
+}

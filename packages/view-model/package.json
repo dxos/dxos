@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint './src/**/*.ts'",
-    "test": "jest --rootDir ./src --verbose",
+    "test": "jest --rootDir=./src --verbose --passWithNoTests",
     "prepublishOnly": "npm run test && npm run build"
   },
   "browserslist": [
@@ -46,9 +46,6 @@
     "extends": [
       "plugin:jest/recommended",
       "eslint-config-semistandard"
-    ],
-    "rules": {
-      "babel/semi": 1
-    }
+    ]
   }
 }

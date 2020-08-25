@@ -1,0 +1,39 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.halo;
+
+//
+// HALO
+//
+
+// Wrapper for all HALO messages.
+message HaloEnvelope {
+  oneof action {
+    PartyGenesis genesis = 1;
+    PartyAdmit admit = 2;
+    PartyEject eject = 3;
+  }
+}
+
+// First block.
+// TODO(burdon): Generalize first block for all feeds (i.e., for owner and joiner).
+message PartyGenesis {
+  bytes partyKey = 1;
+  bytes feedKey = 2;
+}
+
+// Admit to party.
+message PartyAdmit {
+  bytes partyKey = 1;
+  bytes feedKey = 2;
+}
+
+// Reject from party.
+message PartyEject {
+  bytes partyKey = 1;
+  bytes feedKey = 2;
+}

@@ -194,8 +194,6 @@ describe('Model factory', () => {
 
     await waitForMessages;
 
-    console.log(`Processed order: ${model.messages}`);
-
     const sortedMessages = [...model.messages];
     sortedMessages.sort((a, b) => a - b);
     expect(sortedMessages).toEqual(model.messages);

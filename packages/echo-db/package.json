@@ -2,7 +2,7 @@
   "name": "@dxos/echo-db",
   "version": "1.0.0-beta.28",
   "description": "ECHO database monorepo.",
-  "homepage": "https://github.com/dxos/echo/tree/master/packages/echo-db#readme",
+  "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
     "url": "https://github.com/dxos/echo/issues"
   },
@@ -24,7 +24,7 @@
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
     "lint": "eslint './src/**/*.ts'",
-    "test": "jest --rootDir ./src --verbose",
+    "test": "jest --rootDir=./src --verbose --passWithNoTests",
     "posttest": "npm run lint",
     "prepublishOnly": "npm run test && npm run build",
     "watch": "babel-watch ./src --out-dir ./dist --source-maps"
@@ -73,9 +73,6 @@
     "extends": [
       "plugin:jest/recommended",
       "eslint-config-semistandard"
-    ],
-    "rules": {
-      "babel/semi": 1
-    }
+    ]
   }
 }

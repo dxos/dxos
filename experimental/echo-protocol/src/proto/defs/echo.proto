@@ -1,0 +1,46 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo;
+
+import "google/protobuf/any.proto";
+
+//
+// ECHO
+//
+
+// Vector timestamp used to order messages.
+message Timeframe {
+  message Frame {
+    // TODO(burdon): Remove (see below)?
+    bytes feedKey = 1;
+    // TODO(burdon): Determine if admit DAG can be ordered. Requires party messages to be ordered (by lexical feed key).
+    int32 feedIndex = 2;
+    int32 seq = 3;
+  }
+
+  repeated Frame frames = 1;
+}
+
+// Wrapper for all ECHO messages.
+message EchoEnvelope {
+  string itemId = 1;
+  Timeframe timeframe = 2;
+
+  oneof action {
+    ItemGenesis genesis = 10;
+
+    // TODO(burdon): Optimize with numeric type_url value? Separate types.
+    google.protobuf.Any mutation = 11;
+  }
+}
+
+// Item creation.
+message ItemGenesis {
+  string itemType = 1;
+  string modelType = 2;
+  string modelVersion = 3;
+}
