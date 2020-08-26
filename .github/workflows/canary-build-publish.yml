@@ -36,6 +36,8 @@ jobs:
           yarn build --concurrency 1
           yarn lint
           yarn test
+          # Make lerna happy below by restoring consistency with git origin.
+          git checkout -- yarn.lock
       - name: Publish to NPM registry
         run: |
           # --registry required for lerna because it ignores registry-url set above.
