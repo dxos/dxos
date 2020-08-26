@@ -1,0 +1,41 @@
+# On every push to the desgnated branch, build test and publish to private npm registry using lerna.
+
+name: Build and Publish Canary Branch to DXOS NPM
+
+on:
+  push:
+    branches: [dboreham/canary]
+
+jobs:
+  build-publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # pulls all commits (needed for lerna / semantic release to correctly version)
+          fetch-depth: "0"
+      - name: Fetch git tags
+      # pulls all tags (needed for lerna / semantic release to correctly version)
+        run: |
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: http://npm.dev.dxos.network:5736/
+      - name: Build and test
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.dxos_npm_token}}
+        run: |
+          git config --global user.email "npm@dxos.network"
+          git config --global user.name "DXOS"
+          npm config set scripts-prepend-node-path auto
+          yarn
+          # Don't allow lerna to parallelize our world because pbjs isn't concurrency-safe at present.
+          yarn build --concurrency 1
+          yarn lint
+          yarn test
+      - name: Publish to NPM registry
+        run: |
+          # --registry required for lerna because it ignores registry-url set above.
+          # --no-verify-access required for lerna bug.
+          yarn lerna publish --registry http://npm.dev.dxos.network:5736/ --yes --dist-tag="canary" --canary --preid canary --force-publish --no-verify-access
