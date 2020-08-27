@@ -3,6 +3,7 @@
 //
 
 import { dxos } from './proto';
+import { dxos as dxoshalo } from '@dxos/credentials';
 
 //
 // Keys
@@ -51,7 +52,7 @@ export type FeedBlock = IFeedGenericBlock<dxos.FeedMessage>;
 
 export interface IHaloStream {
   meta: FeedMeta;
-  data: any
+  data: dxoshalo.halo.IHaloEnvelope;
 }
 
 export interface IEchoStream {
