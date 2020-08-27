@@ -17,24 +17,6 @@ import { PartyManager } from './party-manager';
 const log = debug('dxos:echo:party-manager-test');
 debug.enable('dxos:echo:*');
 
-// Create raw parties.
-const createRawParty = async (feedStore: FeedStore) => {
-  const keyring = new Keyring();
-  const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
-  const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-
-  // TODO(burdon): Create multiple feeds.
-  const feed = await feedStore.openFeed(partyKey.key, { metadata: { partyKey: partyKey.publicKey } } as any);
-  const feedKey = await keyring.addKeyRecord({
-    publicKey: feed.key,
-    secretKey: feed.secretKey,
-    type: KeyType.FEED
-  });
-
-  const feedStream = createWritableFeedStream(feed);
-  return feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
-};
-
 describe('Party manager', () => {
   test('Created locally', async () => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
@@ -71,7 +53,20 @@ describe('Party manager', () => {
     });
 
     // Create raw party.
-    await createRawParty(feedStore);
+    const keyring = new Keyring();
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+
+    // TODO(burdon): Create multiple feeds.
+    const feed = await feedStore.openFeed(partyKey.key, { metadata: { partyKey: partyKey.publicKey } } as any);
+    const feedKey = await keyring.addKeyRecord({
+      publicKey: feed.key,
+      secretKey: feed.secretKey,
+      type: KeyType.FEED
+    });
+
+    const feedStream = createWritableFeedStream(feed);
+    feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
 
     await update;
   });
@@ -81,10 +76,24 @@ describe('Party manager', () => {
     await feedStore.open();
 
     const numParties = 3;
+    // Create raw parties.
     {
       let i = 0;
       while (i++ < numParties) {
-        await createRawParty(feedStore);
+        const keyring = new Keyring();
+        const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+        const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+
+        // TODO(burdon): Create multiple feeds.
+        const feed = await feedStore.openFeed(partyKey.key, { metadata: { partyKey: partyKey.publicKey } } as any);
+        const feedKey = await keyring.addKeyRecord({
+          publicKey: feed.key,
+          secretKey: feed.secretKey,
+          type: KeyType.FEED
+        });
+
+        const feedStream = createWritableFeedStream(feed);
+        feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
       }
     }
 
