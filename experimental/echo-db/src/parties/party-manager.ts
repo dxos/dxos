@@ -143,8 +143,9 @@ export class PartyManager {
    * @param partyKey
    */
   async _constructParty (partyKey: PartyKey): Promise<Party> {
-    // TODO(telackey): I added this lock as a workaround for is a race condition between creating a Party, which
-    // makes a new feed and calls _constructParty, and the FeedStore firing its onFeed event, the handler for which
+    // TODO(telackey): I added this lock as a workaround for is a race condition in the existing (before this PR)
+    // party creation code that caused intermittent database test failures for me. The race is between creating a Party,
+    // which makes a new feed and calls _constructParty, and the FeedStore firing its onFeed event, the handler for which
     // calls _getOrCreateParty. If the event handler happens to be executed before the first call to _constructParty
     // has finished, this will result in _constructParty being called twice for the same party key.
     // For discussion: how to fix this race properly.
