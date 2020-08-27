@@ -10,11 +10,15 @@ import { jsonReplacer } from '@dxos/experimental-util';
 
 import { PartyProcessor } from './party-processor';
 
+/**
+ * A Set which handles PublicKeys (Buffers) as entries.
+ * (This implementation is not optimized.)
+ */
 class KeySet extends Set<PublicKey> {
   private _equalsMatch (value: PublicKey) {
-    for (const v of this.values()) {
-      if (v.equals(value)) {
-        return v;
+    for (const existing of this.values()) {
+      if (Buffer.compare(existing, value) === 0) {
+        return existing;
       }
     }
     return undefined;

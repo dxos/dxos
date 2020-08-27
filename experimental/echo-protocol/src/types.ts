@@ -13,7 +13,7 @@ import { dxos as dxoshalo } from '@dxos/credentials';
 // types of things, only distinct uses, and the same key may be used in more than one way (eg, as both the IdentityKey
 // for the user and as the PartyKey for their HALO).
 
-export type PublicKey = Buffer;
+export type PublicKey = Uint8Array;
 
 //
 // Feed
