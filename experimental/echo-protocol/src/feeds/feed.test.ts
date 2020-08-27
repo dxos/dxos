@@ -14,11 +14,7 @@ describe('Feed tests:', () => {
     const feedDescriptor = new FeedDescriptor('test-feed');
 
     const message1: dxos.IFeedMessage = {
-      halo: {
-        genesis: {
-          feedKey: feedDescriptor.key
-        }
-      }
+      halo: {}
     };
 
     const buffer = codec.encode(message1);
@@ -36,11 +32,7 @@ describe('Feed tests:', () => {
     expect(feed.length).toBe(0);
 
     const data: dxos.IFeedMessage = {
-      halo: {
-        genesis: {
-          feedKey: feed.key
-        }
-      }
+      halo: {}
     };
 
     await pify(feed.append.bind(feed))(data);

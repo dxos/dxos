@@ -21,38 +21,31 @@ const spacetime = new Spacetime(new FeedKeyMapper('feedKey'));
 export abstract class PartyProcessor {
   protected readonly _partyKey: PartyKey;
 
-  // Active set of admitted feeds.
-  protected readonly _feedKeys = new Set<FeedKey>();
-
   // Current timeframe.
   private _timeframe = spacetime.createTimeframe();
 
   /**
    * @param partyKey
-   * @param feedKey - Genesis feed for node.
    */
-  constructor (partyKey: PartyKey, feedKey: FeedKey) {
+  constructor (partyKey: PartyKey) {
     assert(partyKey);
-    assert(feedKey);
     this._partyKey = partyKey;
-    this._feedKeys.add(feedKey);
   }
 
   get partyKey () {
     return this._partyKey;
   }
 
-  get feedKeys () {
-    return Array.from(this._feedKeys);
-  }
+  abstract get feedKeys () : FeedKey[];
+
+  abstract get memberKeys () : FeedKey[];
 
   get timeframe () {
     return this._timeframe;
   }
 
   get feedSelector (): FeedSelector {
-    return (feedKey: FeedKey) =>
-      Array.from(this._feedKeys.values()).findIndex(k => Buffer.compare(k, feedKey) === 0) !== -1;
+    return (feedKey: FeedKey) => this.feedKeys.findIndex(k => Buffer.compare(k, feedKey) === 0) !== -1;
   }
 
   // TODO(burdon): Factor out from feed-store-iterator test.

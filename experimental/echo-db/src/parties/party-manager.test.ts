@@ -5,10 +5,10 @@
 import debug from 'debug';
 import ram from 'random-access-memory';
 
-import { createKeyPair, keyToString } from '@dxos/crypto';
+import { createPartyGenesisMessage, KeyType, Keyring } from '@dxos/credentials';
 import { FeedStore } from '@dxos/feed-store';
 import { ObjectModel } from '@dxos/experimental-object-model';
-import { codec, createPartyGenesis } from '@dxos/experimental-echo-protocol';
+import { codec } from '@dxos/experimental-echo-protocol';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { createWritableFeedStream, latch } from '@dxos/experimental-util';
 
@@ -16,6 +16,24 @@ import { PartyManager } from './party-manager';
 
 const log = debug('dxos:echo:party-manager-test');
 debug.enable('dxos:echo:*');
+
+// Create raw parties.
+const createRawParty = async (feedStore: FeedStore) => {
+  const keyring = new Keyring();
+  const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+  const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+
+  // TODO(burdon): Create multiple feeds.
+  const feed = await feedStore.openFeed(partyKey.key, { metadata: { partyKey: partyKey.publicKey } } as any);
+  const feedKey = await keyring.addKeyRecord({
+    publicKey: feed.key,
+    secretKey: feed.secretKey,
+    type: KeyType.FEED
+  });
+
+  const feedStream = createWritableFeedStream(feed);
+  return feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
+};
 
 describe('Party manager', () => {
   test('Created locally', async () => {
@@ -53,10 +71,7 @@ describe('Party manager', () => {
     });
 
     // Create raw party.
-    const { publicKey: partyKey } = createKeyPair();
-    const feed = await feedStore.openFeed(keyToString(partyKey), { metadata: { partyKey } } as any);
-    const feedStream = createWritableFeedStream(feed);
-    await feedStream.write(createPartyGenesis(partyKey, feed.key));
+    await createRawParty(feedStore);
 
     await update;
   });
@@ -65,14 +80,12 @@ describe('Party manager', () => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
-    // Create raw parties.
-    // TODO(burdon): Create multiple feeds.
     const numParties = 3;
-    for (let i = 0; i < numParties; i++) {
-      const { publicKey: partyKey } = createKeyPair();
-      const feed = await feedStore.openFeed(keyToString(partyKey), { metadata: { partyKey } } as any);
-      const feedStream = createWritableFeedStream(feed);
-      await feedStream.write(createPartyGenesis(partyKey, feed.key));
+    {
+      let i = 0;
+      while (i++ < numParties) {
+        await createRawParty(feedStore);
+      }
     }
 
     // Open.
