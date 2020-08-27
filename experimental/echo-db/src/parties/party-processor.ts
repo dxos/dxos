@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import {
-  FeedKey, FeedSelector, FeedBlock, FeedKeyMapper, IHaloStream, PartyKey, Spacetime, MessageSelector
+  FeedKey, FeedSelector, FeedBlock, FeedKeyMapper, IHaloStream, PartyKey, Spacetime, MessageSelector, PublicKey
 } from '@dxos/experimental-echo-protocol';
 import { jsonReplacer } from '@dxos/experimental-util';
 
@@ -38,7 +38,7 @@ export abstract class PartyProcessor {
 
   abstract get feedKeys () : FeedKey[];
 
-  abstract get memberKeys () : FeedKey[];
+  abstract get memberKeys () : PublicKey[];
 
   get timeframe () {
     return this._timeframe;
