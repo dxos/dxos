@@ -41,7 +41,7 @@ export class PartyManager {
   // TODO(burdon): Wrap with subscribe.
   readonly update = new Event<Party>();
 
-  // TODO(telackey): Implement more generic "critical section" locking in @dxos/async.
+  // TODO(telackey): Workaround for pre-existing race condition. See longer comment in _constructParty.
   private _lock = false;
 
   /**
