@@ -4,6 +4,14 @@
 
 import { dxos } from './proto';
 
+//
+// Keys
+//
+
+// TODO(telackey): Removing the specific PartyKey/FeedKey/IdentityKey types is advisable. They are not different
+// types of things, only distinct uses, and the same key may be used in more than one way (eg, as both the IdentityKey
+// for the user and as the PartyKey for their HALO).
+
 export type PublicKey = Buffer;
 
 //
@@ -59,11 +67,6 @@ export interface IEchoStream {
 export type ItemID = string;
 
 export type ItemType = string;
-
-// TODO(telackey): Having a single PublicKey type would make more sense than inventing a distinct type for each use
-// that a PublicKey might be put to, especially since in some cases the same key might be put to more than one use
-// (eg, the user's IdentityKey used as the PartyKey for their personal HALO) or keys representing different entities
-// in the real world be put to the same use (eg, adding both Device and Identity keys as members of Parties).
 
 //
 // Party

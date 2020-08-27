@@ -143,6 +143,11 @@ export class PartyManager {
    * @param partyKey
    */
   async _constructParty (partyKey: PartyKey): Promise<Party> {
+    // TODO(telackey): Intermittent errors in the database test show we are getting a race between creating
+    // the Party explicitly and the onFeed event triggering _getOurCreateParty. Reviewing that entire flow
+    // is in order, but assuming it is desirable, we could use a finer-grained lock to allow parallel construction
+    // of parties while still ensuring we never construct the same party twice. In the meantime, this makes
+    // sure we construct one party at a time.
     await waitForCondition(() => !this._lock);
 
     if (this._parties.has(keyToString(partyKey))) {
