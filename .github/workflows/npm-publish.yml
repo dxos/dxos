@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 12
-          registry-url: https://registry.npmjs.org/
+          registry-url: http://npm.dev.dxos.network:5736/
       - name: Build and NPM publish
         run: |
           git config --global user.email "npm@dxos.network"
