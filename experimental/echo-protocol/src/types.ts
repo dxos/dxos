@@ -52,7 +52,8 @@ export type FeedBlock = IFeedGenericBlock<dxos.FeedMessage>;
 
 export interface IHaloStream {
   meta: FeedMeta;
-  data: dxoshalo.halo.IHaloEnvelope;
+  // TODO(telackey): Rename dxos.halo.IHaloEnvelope
+  data: dxoshalo.credentials.Message;
 }
 
 export interface IEchoStream {

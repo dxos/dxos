@@ -23,6 +23,8 @@ message FeedMessage {
   oneof payload {
     // The message is expected to be a dxos.halo.HaloEnvelope.
     google.protobuf.Any halo = 1;
+    dxos.echo.EchoEnvelope echo = 2;
+  }
 }
 
 //
