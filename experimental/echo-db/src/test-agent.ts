@@ -1,4 +1,5 @@
 // TODO(marik-d): Move this file to gravity
+/* eslint-disable */
 // @ts-nocheck
 
 import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';

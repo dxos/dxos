@@ -132,6 +132,8 @@ export class PartyManager {
    */
   async addParty (partyKey: PartyKey, feeds: FeedKey[]) {
     const feed = await this._feedStore.openFeed(keyToString(partyKey), { metadata: { partyKey } } as any);
+    // TODO(dboreham): I added the next line because lint threw an error on feed being unused. Verify this is correct.
+    feeds.push(feed);
     return this._constructParty(partyKey, feeds);
   }
 

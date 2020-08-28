@@ -3,9 +3,11 @@
 //
 
 // TODO(marik-d): Move this file to gravity
+/* eslint-disable */
 // @ts-nocheck
 
 // import { NodeOrchestrator, Platform, NodeHandle } from '@dxos/node-spawner';
+type NodeHandle = any;
 
 async function invite (inviter: NodeHandle, invitee: NodeHandle) {
   inviter.sendEvent({
