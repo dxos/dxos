@@ -31,7 +31,7 @@ export class Database {
 
   constructor (
     private readonly _partyManager: PartyManager,
-    private readonly _options: Options = {},
+    private readonly _options: Options = {}
   ) { }
 
   get readOnly () {

@@ -44,7 +44,6 @@
     "@dxos/network-manager": "1.0.0-beta.105",
     "@dxos/protocol-plugin-replicator": "^1.1.0-beta.14",
     "@dxos/feed-store": "^1.2.0-beta.30",
-    "@dxos/node-spawner": "^1.0.0-beta.1",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/lodash": "^4.14.159",
