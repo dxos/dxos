@@ -27,7 +27,7 @@ describe('model factory', () => {
     const objects: dxos.echo.testing.ITestItemMutation[] = [];
 
     // Transform outbound mutations to inbounds model messsges (create loop).
-    const writable = createTransform<
+    const writeStream = createTransform<
       dxos.echo.testing.ITestItemMutation, ModelMessage<dxos.echo.testing.ITestItemMutation>
       >(
         async (mutation: dxos.echo.testing.ITestItemMutation) => {
@@ -46,7 +46,7 @@ describe('model factory', () => {
 
     // Create model.
     const modelFactory = new ModelFactory().registerModel(TestModel.meta, TestModel);
-    const model = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, writable);
+    const model = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, writeStream);
     expect(model).toBeTruthy();
 
     // Update model.
@@ -65,7 +65,7 @@ describe('model factory', () => {
     model.subscribe(onUpdate);
 
     // Loop model output to input.
-    writable.pipe(model.processor);
+    writeStream.pipe(model.processor);
 
     // Wait for message to be processed.
     await update;

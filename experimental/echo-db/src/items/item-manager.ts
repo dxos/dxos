@@ -10,7 +10,7 @@ import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { dxos, ItemID, ItemType, IEchoStream } from '@dxos/experimental-echo-protocol';
 import { Model, ModelType, ModelFactory, ModelMessage } from '@dxos/experimental-model-factory';
-import { createTransform } from '@dxos/experimental-util';
+import { checkType, createTransform } from '@dxos/experimental-util';
 
 import { ResultSet } from '../result';
 import { Item } from './item';
@@ -18,7 +18,7 @@ import { Item } from './item';
 const log = debug('dxos:echo:item-manager');
 
 export interface ItemFilter {
-  type: ItemType
+  type: ItemType | undefined
 }
 
 /**
@@ -50,12 +50,11 @@ export class ItemManager {
 
   /**
    * Creates an item and writes the genesis message.
-   * @param itemType item type
-   * @param modelType model type
+   * @param {ModelType} modelType
+   * @param {ItemType} [itemType]
    */
-  async createItem (itemType: ItemType, modelType: ModelType): Promise<Item<any>> {
+  async createItem (modelType: ModelType, itemType?: ItemType): Promise<Item<any>> {
     assert(this._writeStream);
-    assert(itemType);
     assert(modelType);
 
     // Pending until constructed (after genesis block is read from stream).
@@ -65,17 +64,15 @@ export class ItemManager {
     this._pendingItems.set(itemId, callback);
 
     // Write Item Genesis block.
+    // TODO(burdon): Document write vs. push.
     log('Writing Genesis:', itemId);
-    const message: dxos.echo.IEchoEnvelope = {
+    await pify(this._writeStream.write.bind(this._writeStream))(checkType<dxos.echo.IEchoEnvelope>({
       itemId,
       genesis: {
         itemType,
         modelType
       }
-    };
-
-    // TODO(burdon): Push?
-    await pify(this._writeStream.write.bind(this._writeStream))(message);
+    }));
 
     // Unlocked by construct.
     log('Waiting for item...');
@@ -85,16 +82,15 @@ export class ItemManager {
   /**
    * Constructs an item with the appropriate model.
    * @param itemId
-   * @param itemType
    * @param modelType
-   * @param readable - Inbound mutation stream (from multiplexer).
+   * @param itemType
+   * @param readStream - Inbound mutation stream (from multiplexer).
    */
-  async constructItem (itemId: ItemID, itemType: ItemType, modelType: ModelType, readable: NodeJS.ReadableStream) {
+  async constructItem (itemId: ItemID, modelType: ModelType, itemType: ItemType, readStream: NodeJS.ReadableStream) {
     assert(this._writeStream);
     assert(itemId);
-    assert(itemType);
     assert(modelType);
-    assert(readable);
+    assert(readStream);
 
     // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
     if (!this._modelFactory.hasModel(modelType)) {
@@ -127,21 +123,21 @@ export class ItemManager {
       return response;
     });
 
-    // Create model.
+    // Create the model with the outbound stream.
     const model: Model<any> = this._modelFactory.createModel(modelType, itemId, outboundTransform);
     assert(model, `Invalid model: ${modelType}`);
 
-    // Connect streams.
-    readable.pipe(inboundTransform).pipe(model.processor);
+    // Connect the streams.
+    readStream.pipe(inboundTransform).pipe(model.processor);
     outboundTransform.pipe(this._writeStream);
 
-    // Create item.
-    const item = new Item(itemId, itemType, model);
+    // Create the Item.
+    const item = new Item(itemId, itemType, model, this._writeStream);
     assert(!this._items.has(itemId));
     this._items.set(itemId, item);
     log('Constructed:', String(item));
 
-    // Item udpated.
+    // Notify Item was udpated.
     // TODO(burdon): Update the item directly?
     this._itemUpdate.emit(item);
 

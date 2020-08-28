@@ -8,7 +8,8 @@ import { expectToThrow } from '@dxos/async';
 import { createKeyPair, createId } from '@dxos/crypto';
 import { WritableArray } from '@dxos/experimental-util';
 
-import { dxos as _dxos } from './proto/gen/object';
+// TODO(burdon): import * as
+import { dxos as _dxos } from './proto/gen/object'; // TODO(burdon): Shorten-path.
 import { ObjectModel } from './object-model';
 import { ValueUtil } from './mutation';
 

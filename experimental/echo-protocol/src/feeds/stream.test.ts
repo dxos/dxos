@@ -49,8 +49,8 @@ describe('Stream tests', () => {
       const feed = await feedStore.openFeed('test-feed');
       expect(keyToString(feedKey)).toBe(keyToString(feed.key));
 
-      const readable = feedStore.createReadStream({ live: true });
-      await sink(readable, 'data', 1);
+      const readStream = feedStore.createReadStream({ live: true });
+      await sink(readStream, 'data', 1);
 
       await feedStore.close();
     }

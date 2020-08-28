@@ -2,17 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-
 import { Event } from '@dxos/async';
-import { FeedStore } from '@dxos/feed-store';
 import { PartyKey } from '@dxos/experimental-echo-protocol';
-import { ModelFactory } from '@dxos/experimental-model-factory';
-
 import { Party, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
+import { Invitation, InvitationResponse, InvitationResponder } from './invitation';
 
 export interface Options {
+  readOnly?: false;
   readLogger?: NodeJS.ReadWriteStream;
   writeLogger?: NodeJS.ReadWriteStream;
 }
@@ -31,18 +28,14 @@ export interface Options {
  */
 export class Database {
   private readonly _partyUpdate = new Event<Party>();
-  private readonly _partyManager: PartyManager;
 
-  /**
-   * @param {FeedStore} feedStore
-   * @param {ModelFactory} modelFactory
-   * @param {Options} options
-   */
-  // TODO(burdon): Pass in PartyManager?
-  constructor (feedStore: FeedStore, modelFactory: ModelFactory, options?: Options) {
-    assert(feedStore);
-    assert(modelFactory);
-    this._partyManager = new PartyManager(feedStore, modelFactory, options);
+  constructor (
+    private readonly _partyManager: PartyManager,
+    private readonly _options: Options = {},
+  ) { }
+
+  get readOnly () {
+    return this._options.readOnly;
   }
 
   /**
@@ -63,6 +56,10 @@ export class Database {
    * Creates a new party.
    */
   async createParty (): Promise<Party> {
+    if (this._options.readOnly) {
+      throw new Error('Read-only.');
+    }
+
     await this.open();
 
     const party = await this._partyManager.createParty();
@@ -93,5 +90,18 @@ export class Database {
     await this.open();
 
     return new ResultSet<Party>(this._partyUpdate, () => this._partyManager.parties);
+  }
+
+  /**
+   * Joins a party that was created by another peer and starts replicating with it.
+   * @param invitation
+   */
+  async joinParty (invitation: Invitation): Promise<InvitationResponder> {
+    const party = await this._partyManager.addParty(invitation.partyKey, invitation.feeds);
+    await party.open();
+
+    const response: InvitationResponse = { newFeedKey: party.writeFeedKey };
+
+    return new InvitationResponder(party, response);
   }
 }

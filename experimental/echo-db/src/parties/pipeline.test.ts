@@ -30,7 +30,7 @@ describe('pipeline', () => {
     // Create pipeline.
     //
     const { publicKey: partyKey } = createKeyPair();
-    const partyProcessor = new TestPartyProcessor(partyKey, feed.key);
+    const partyProcessor = new TestPartyProcessor(partyKey, [feed.key]);
     const pipeline = new Pipeline(partyProcessor, feedReadStream);
     const [readStream] = await pipeline.open();
     expect(readStream).toBeTruthy();

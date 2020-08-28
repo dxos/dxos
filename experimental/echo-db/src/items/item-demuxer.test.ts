@@ -27,7 +27,7 @@ describe('item demxuer', () => {
     //
     //
 
-    const writable = createTransform<dxos.echo.IEchoEnvelope, IEchoStream>(
+    const writeStream = createTransform<dxos.echo.IEchoEnvelope, IEchoStream>(
       async (message: dxos.echo.IEchoEnvelope): Promise<IEchoStream> => ({
         meta: {
           feedKey,
@@ -36,9 +36,9 @@ describe('item demxuer', () => {
         data: message
       }));
 
-    const itemManager = new ItemManager(modelFactory, writable);
+    const itemManager = new ItemManager(modelFactory, writeStream);
     const itemDemuxer = createItemDemuxer(itemManager);
-    writable.pipe(itemDemuxer);
+    writeStream.pipe(itemDemuxer);
 
     //
     // Query for items.
@@ -59,7 +59,7 @@ describe('item demxuer', () => {
         modelType: TestModel.meta.type
       }
     };
-    await writable.write(message);
+    await writeStream.write(message);
 
     //
     // Wait for mutations to be processed.

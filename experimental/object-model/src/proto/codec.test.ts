@@ -9,7 +9,7 @@ import { createAny } from '@dxos/experimental-util';
 
 import ObjectSchema from './gen/object.json';
 
-// NOTE: Cannot merge namespace definitions.
+// NOTE: Typescript cannot merge namespace definitions from different packages.
 import { dxos as _dxos } from './gen/object';
 
 const codec = new Codec('dxos.FeedMessage')
