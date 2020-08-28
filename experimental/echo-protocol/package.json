@@ -57,7 +57,9 @@
     "js-data-structs": "^1.1.2",
     "lodash.merge": "^4.6.2",
     "protobufjs": "^6.9.0",
-    "source-map-support": "^0.5.12"
+    "source-map-support": "^0.5.12",
+    "@types/readable-stream": "^2.3.9",
+    "readable-stream": "^3.6.0"
   },
   "devDependencies": {
     "@types/jest": "^25.2.3",

@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import { Readable } from 'stream';
+import { Readable } from 'readable-stream';
 
 import { keyToString } from '@dxos/crypto';
 import { createReadable, Trigger } from '@dxos/experimental-util';
