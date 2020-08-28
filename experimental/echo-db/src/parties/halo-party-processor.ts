@@ -18,7 +18,7 @@ export class HaloPartyProcessor extends PartyProcessor {
 
     this._stateMachine = new PartyStateMachine(partyKey);
     this._forwardEvents();
- }
+  }
 
   async _processMessage (message: IHaloStream): Promise<void> {
     const { data } = message;
@@ -37,7 +37,7 @@ export class HaloPartyProcessor extends PartyProcessor {
     throw new Error('Unsupported: _addFeedKey');
   }
 
-  private _forwardEvents() {
+  private _forwardEvents () {
     // TODO(telackey) @dxos/credentials was only half converted to TS. In its current state, the KeyRecord type
     // is not exported, and the PartyStateMachine being used is not properly understood as an EventEmitter by TS.
     // Casting to 'any' is a workaround for the compiler, but the fix is fully to convert @dxos/credentials to TS.
