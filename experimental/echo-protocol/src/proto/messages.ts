@@ -5,20 +5,7 @@
 import { createAny } from '@dxos/experimental-util';
 
 import { dxos } from './gen/dxos';
-import { FeedKey, ItemID, ItemType, PartyKey } from '../types';
-
-//
-// HALO generators.
-//
-
-export const createPartyGenesis = (partyKey: PartyKey, feedKey: FeedKey): dxos.IFeedMessage => ({
-  halo: {
-    genesis: {
-      partyKey,
-      feedKey
-    }
-  }
-});
+import { ItemID, ItemType } from '../types';
 
 //
 // ECHO generators.

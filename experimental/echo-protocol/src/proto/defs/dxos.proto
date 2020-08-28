@@ -6,7 +6,8 @@ syntax = "proto3";
 
 package dxos;
 
-import "halo.proto";
+import "google/protobuf/any.proto";
+
 import "echo.proto";
 import "testing.proto";
 
@@ -20,7 +21,8 @@ import "testing.proto";
 //
 message FeedMessage {
   oneof payload {
-    dxos.halo.HaloEnvelope halo = 1;
+    // The message is expected to be a dxos.halo.HaloEnvelope.
+    google.protobuf.Any halo = 1;
     dxos.echo.EchoEnvelope echo = 2;
   }
 }

@@ -16,7 +16,6 @@ import { Pipeline } from './pipeline';
 import { TestPartyProcessor } from './test-party-processor';
 
 const log = debug('dxos:echo:pipeline:test');
-debug.enable('dxos:echo:*');
 
 // TODO(burdon): Test read-only.
 describe('pipeline', () => {
