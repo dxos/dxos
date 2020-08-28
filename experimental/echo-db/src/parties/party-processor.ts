@@ -62,6 +62,8 @@ export abstract class PartyProcessor {
     return (candidates: FeedBlock[]) => 0;
   }
 
+  // TODO(telackey): Discussion needed, as in the HALO-case, it isn't possible to admit a FeedKey directly,
+  // rather it should be done by processing a signed FeedAdmitMessage.
   protected abstract _addFeedKey (key: FeedKey): void;
 
   updateTimeframe (key: FeedKey, seq: number) {
@@ -83,6 +85,8 @@ export abstract class PartyProcessor {
   abstract async _processMessage (message: IHaloStream): Promise<void>;
 
   // TODO(marik-d): This should probably be abstracted over some invitation mechanism
+  // TODO(telackey): Discussion needed, as in the HALO-case, it isn't possible to admit a FeedKey directly,
+  // rather it should be done by processing a signed FeedAdmitMessage.
   async admitFeed (key: FeedKey) {
     this._addFeedKey(key);
   }
