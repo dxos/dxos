@@ -21,19 +21,19 @@ export abstract class Model<T> {
 
   private readonly _meta: ModelMeta;
   private readonly _itemId: ItemID;
-  private readonly _writable?: NodeJS.WritableStream;
+  private readonly _writeStream?: NodeJS.WritableStream;
 
   /**
    * @param meta
    * @param itemId Parent item.
-   * @param writable Output mutation stream (unless read-only).
+   * @param writeStream Output mutation stream (unless read-only).
    */
-  constructor (meta: ModelMeta, itemId: ItemID, writable?: NodeJS.WritableStream) {
+  constructor (meta: ModelMeta, itemId: ItemID, writeStream?: NodeJS.WritableStream) {
     assert(meta);
     assert(itemId);
     this._meta = meta;
     this._itemId = itemId;
-    this._writable = writable;
+    this._writeStream = writeStream;
 
     // Create the input mutation stream.
     this._processor = createWritable<ModelMessage<T>>(async (message: ModelMessage<T>) => {
@@ -50,7 +50,7 @@ export abstract class Model<T> {
   }
 
   get readOnly (): boolean {
-    return this._writable === undefined;
+    return this._writeStream === undefined;
   }
 
   // TODO(burdon): Rename.
@@ -71,11 +71,11 @@ export abstract class Model<T> {
    * @param mutation
    */
   protected async write (mutation: T): Promise<void> {
-    if (!this._writable) {
+    if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
-    await pify(this._writable.write.bind(this._writable))(
+    await pify(this._writeStream.write.bind(this._writeStream))(
       createAny<T>(mutation, this._meta.mutation)
     );
   }

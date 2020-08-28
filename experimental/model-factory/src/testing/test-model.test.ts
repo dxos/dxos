@@ -51,7 +51,7 @@ describe('test model', () => {
           return message;
         });
 
-    // Create a writable model.
+    // Create a writeStream model.
     const model = new TestModel(TestModel.meta, itemId, transform);
 
     // Connect output to input processor.

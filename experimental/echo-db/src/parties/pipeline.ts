@@ -40,7 +40,7 @@ export class Pipeline {
   /**
    * @param {PartyProcessor} partyProcessor - Processes HALO messages to update party state.
    * @param feedReadStream - Inbound messages from the feed store.
-   * @param [feedWriteStream] - Outbound messages to the writable feed.
+   * @param [feedWriteStream] - Outbound messages to the writeStream feed.
    * @param [options]
    */
   constructor (
@@ -65,7 +65,7 @@ export class Pipeline {
     return this._readStream !== undefined;
   }
 
-  get readonly () {
+  get readOnly () {
     return this._writeStream === undefined;
   }
 

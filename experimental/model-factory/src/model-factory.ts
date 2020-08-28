@@ -29,7 +29,7 @@ export class ModelFactory {
     return this;
   }
 
-  createModel<T extends Model<any>> (modelType: ModelType, itemId: ItemID, writable?: NodeJS.WritableStream): T {
+  createModel<T extends Model<any>> (modelType: ModelType, itemId: ItemID, writeStream?: NodeJS.WritableStream): T {
     assert(itemId);
     if (!this._models.has(modelType)) {
       throw new Error(`Invalid model type: ${modelType}`);
@@ -38,6 +38,6 @@ export class ModelFactory {
     const { meta, constructor } = this._models.get(modelType)!;
 
     // eslint-disable-next-line new-cap
-    return new constructor(meta, itemId, writable);
+    return new constructor(meta, itemId, writeStream);
   }
 }

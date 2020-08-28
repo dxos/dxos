@@ -30,7 +30,7 @@ export type MessageSelector = (candidates: FeedBlock[]) => number | undefined;
  * @param feedStore
  * @param [feedSelector] - Returns true if the feed should be considered.
  * @param [messageSelector] - Returns the index of the selected message candidate (or undefined).
- * @readonly {NodeJS.ReadableStream} readable stream.
+ * @readonly {NodeJS.ReadableStream} readStream stream.
  */
 export async function createOrderedFeedStream (
   feedStore: FeedStore,
