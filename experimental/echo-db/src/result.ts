@@ -36,6 +36,11 @@ export class ResultSet<T> {
     return this._value;
   }
 
+  get first (): T {
+    assert(this._value.length);
+    return this._value[0];
+  }
+
   /**
    * Subscribe for updates.
    * @param listener

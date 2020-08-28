@@ -15,6 +15,9 @@ import { Pipeline } from './pipeline';
 
 export const PARTY_ITEM_TYPE = 'wrn://dxos.org/item/party';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface PartyFilter {}
+
 /**
  * A Party represents a shared dataset containing queryable Items that are constructed from an ordered stream
  * of mutations.
@@ -118,13 +121,12 @@ export class Party {
 
   /**
    * Creates a new item with the given queryable type and model.
-   * @param {ItemType} itemType
-   * @param {ModelType} modelType
+   * @param {ModelType} [modelType]
+   * @param {ItemType} [itemType]
    */
-  // TODO(burdon): Block until model updated?
-  async createItem (itemType: ItemType, modelType: ModelType = ObjectModel.meta.type): Promise<Item<any>> {
+  async createItem (modelType: ModelType = ObjectModel.meta.type, itemType?: ItemType | undefined): Promise<Item<any>> {
     assert(this._itemManager);
-    return this._itemManager.createItem(itemType, modelType);
+    return this._itemManager.createItem(modelType, itemType);
   }
 
   /**

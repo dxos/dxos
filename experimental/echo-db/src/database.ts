@@ -13,6 +13,7 @@ import { Party, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
 
 export interface Options {
+  readOnly?: false;
   readLogger?: NodeJS.ReadWriteStream;
   writeLogger?: NodeJS.ReadWriteStream;
 }
@@ -32,6 +33,7 @@ export interface Options {
 export class Database {
   private readonly _partyUpdate = new Event<Party>();
   private readonly _partyManager: PartyManager;
+  private readonly _options: Options;
 
   /**
    * @param {FeedStore} feedStore
@@ -42,7 +44,12 @@ export class Database {
   constructor (feedStore: FeedStore, modelFactory: ModelFactory, options?: Options) {
     assert(feedStore);
     assert(modelFactory);
-    this._partyManager = new PartyManager(feedStore, modelFactory, options);
+    this._options = options || {};
+    this._partyManager = new PartyManager(feedStore, modelFactory, this._options);
+  }
+
+  get readOnly () {
+    return this._options.readOnly;
   }
 
   /**
@@ -63,6 +70,10 @@ export class Database {
    * Creates a new party.
    */
   async createParty (): Promise<Party> {
+    if (this._options.readOnly) {
+      throw new Error('Read-only.');
+    }
+
     await this.open();
 
     const party = await this._partyManager.createParty();

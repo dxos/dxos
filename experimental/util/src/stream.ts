@@ -43,7 +43,7 @@ export function createWritableFeedStream (feed: Feed) {
 }
 
 /**
- * Creates a readable stream that can be used as a buffer into which messages can be pushed.
+ * Creates a readStream stream that can be used as a buffer into which messages can be pushed.
  */
 export function createReadable<T> (): Readable {
   return new Readable({
@@ -53,7 +53,7 @@ export function createReadable<T> (): Readable {
 }
 
 /**
- * Creates a writable object stream.
+ * Creates a writeStream object stream.
  * @param callback
  */
 export function createWritable<T> (callback: (message: T) => Promise<void>): NodeJS.WritableStream {
