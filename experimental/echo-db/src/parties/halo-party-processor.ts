@@ -17,15 +17,8 @@ export class HaloPartyProcessor extends PartyProcessor {
     super(partyKey);
 
     this._stateMachine = new PartyStateMachine(partyKey);
-
-    // TODO(telackey) @dxos/credentials was only half converted to TS. In its current state, the KeyRecord type
-    // is not exported, and the PartyStateMachine being used is not properly understood as an EventEmitter by TS.
-    // Casting to 'any' is a workaround for the compiler, but the fix is fully to convert @dxos/credentials to TS.
-    (this._stateMachine as any).on('admit:feed', (feedKeyRecord: any /* KeyRecord */) => {
-      console.log(`Added feed: ${feedKeyRecord.key}`);
-      this._feedAdded.emit(feedKeyRecord.publicKey);
-    });
-  }
+    this._forwardEvents();
+ }
 
   async _processMessage (message: IHaloStream): Promise<void> {
     const { data } = message;
@@ -41,6 +34,21 @@ export class HaloPartyProcessor extends PartyProcessor {
   }
 
   protected _addFeedKey (key: FeedKey) {
-    throw new Error('_addFeedKey not supported');
+    throw new Error('Unsupported: _addFeedKey');
+  }
+
+  private _forwardEvents() {
+    // TODO(telackey) @dxos/credentials was only half converted to TS. In its current state, the KeyRecord type
+    // is not exported, and the PartyStateMachine being used is not properly understood as an EventEmitter by TS.
+    // Casting to 'any' is a workaround for the compiler, but the fix is fully to convert @dxos/credentials to TS.
+    const state = this._stateMachine as any;
+
+    state.on('admit:feed', (keyRecord: any) => {
+      this._feedAdded.emit(keyRecord.publicKey);
+    });
+
+    state.on('admit:key', (keyRecord: any) => {
+      // this._keyAdded.emit(keyRecord.publicKey);
+    });
   }
 }
