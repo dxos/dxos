@@ -13,7 +13,7 @@ import { createLoggingTransform, latch, jsonReplacer } from '@dxos/experimental-
 
 import { codec } from './codec';
 import { Database } from './database';
-import { Party } from './parties';
+import { Party, PartyManager } from './parties';
 
 const log = debug('dxos:echo:database:test');
 debug.enable('dxos:*:error,dxos:echo:*');
@@ -29,7 +29,8 @@ const createDatabase = (verbose = true) => {
     writeLogger: createLoggingTransform((message: any) => { log('<<<', JSON.stringify(message, jsonReplacer, 2)); })
   } : undefined;
 
-  return new Database(feedStore, modelFactory, options);
+  const partyManager = new PartyManager(feedStore, modelFactory);
+  return new Database(partyManager, options);
 };
 
 describe('api tests', () => {
@@ -72,7 +73,7 @@ describe('api tests', () => {
     const unsubscribe = parties.subscribe(async (parties: Party[]) => {
       log('Updated:', parties.map(party => humanize(party.key)));
 
-      // TODO(burdon): Update currently called after all mutations below have completed?
+      // TODO(burdon): Update currentybly called after all mutations below have completed?
       expect(parties).toHaveLength(1);
       parties.map(async party => {
         const items = await party.queryItems();

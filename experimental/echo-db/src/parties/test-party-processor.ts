@@ -24,7 +24,7 @@ export class TestPartyProcessor extends PartyProcessor {
       assert(partyKey);
       assert(feedKey);
       assert(Buffer.compare(partyKey, this._partyKey) === 0);
-      this._feedKeys.add(feedKey);
+      this._addFeedKey(feedKey);
       return;
     }
 
@@ -36,7 +36,7 @@ export class TestPartyProcessor extends PartyProcessor {
       assert(partyKey);
       assert(feedKey);
       assert(Buffer.compare(partyKey, this._partyKey) === 0);
-      this._feedKeys.add(feedKey);
+      this._addFeedKey(feedKey);
       return;
     }
 

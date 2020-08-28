@@ -2,16 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Event } from '@dxos/async';
+import { createFeedMeta, dxos, FeedBlock, IEchoStream } from '@dxos/experimental-echo-protocol';
+import { createTransform, jsonReplacer } from '@dxos/experimental-util';
 import assert from 'assert';
 import debug from 'debug';
 import merge from 'lodash/merge';
 import { pipeline, Readable, Writable } from 'stream';
-
-import { Event } from '@dxos/async';
-import { dxos, createFeedMeta, FeedBlock, IEchoStream } from '@dxos/experimental-echo-protocol';
-import { createTransform, jsonReplacer } from '@dxos/experimental-util';
-
 import { PartyProcessor } from './party-processor';
+import { ReplicatorFactory, IReplicationAdapter } from '../replication';
 
 interface Options {
   readLogger?: NodeJS.ReadWriteStream;
@@ -37,6 +36,8 @@ export class Pipeline {
   // Messages to write into pipeline (e.g., mutations from model).
   private _writeStream: Writable | undefined;
 
+  private _replicationAdapter?: IReplicationAdapter;
+
   /**
    * @param {PartyProcessor} partyProcessor - Processes HALO messages to update party state.
    * @param feedReadStream - Inbound messages from the feed store.
@@ -47,6 +48,7 @@ export class Pipeline {
     partyProcessor: PartyProcessor,
     feedReadStream: NodeJS.ReadableStream,
     feedWriteStream?: NodeJS.WritableStream,
+    private readonly replicatorFactory?: ReplicatorFactory,
     options?: Options
   ) {
     assert(partyProcessor);
@@ -79,6 +81,10 @@ export class Pipeline {
 
   get errors () {
     return this._errors;
+  }
+
+  get memberFeeds () {
+    return this._partyProcessor.feedKeys;
   }
 
   /**
@@ -175,6 +181,10 @@ export class Pipeline {
       });
     }
 
+    // Replication
+    this._replicationAdapter = this.replicatorFactory?.(this.partyKey, this._partyProcessor.getActiveFeedSet());
+    this._replicationAdapter?.start();
+
     return [
       this._readStream,
       this._writeStream
@@ -195,5 +205,7 @@ export class Pipeline {
       this._writeStream.destroy();
       this._writeStream = undefined;
     }
+
+    this._replicationAdapter?.stop();
   }
 }

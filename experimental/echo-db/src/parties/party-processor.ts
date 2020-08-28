@@ -9,10 +9,16 @@ import {
   FeedKey, FeedSelector, FeedBlock, FeedKeyMapper, IHaloStream, PartyKey, Spacetime, MessageSelector
 } from '@dxos/experimental-echo-protocol';
 import { jsonReplacer } from '@dxos/experimental-util';
+import { Event } from '@dxos/async';
 
 const log = debug('dxos:echo:party-processor');
 
 const spacetime = new Spacetime(new FeedKeyMapper('feedKey'));
+
+export interface FeedSetProvider {
+  get(): FeedKey[]
+  added: Event<FeedKey>
+}
 
 /**
  * Manages current party state (e.g., admitted feeds).
@@ -21,8 +27,10 @@ const spacetime = new Spacetime(new FeedKeyMapper('feedKey'));
 export abstract class PartyProcessor {
   protected readonly _partyKey: PartyKey;
 
+  protected readonly _feedAdded = new Event<FeedKey>()
+
   // Active set of admitted feeds.
-  protected readonly _feedKeys = new Set<FeedKey>();
+  private readonly _feedKeys = new Set<FeedKey>();
 
   // Current timeframe.
   private _timeframe = spacetime.createTimeframe();
@@ -31,11 +39,12 @@ export abstract class PartyProcessor {
    * @param partyKey
    * @param feedKey - Genesis feed for node.
    */
-  constructor (partyKey: PartyKey, feedKey: FeedKey) {
+  constructor (partyKey: PartyKey, feeds: FeedKey[]) {
     assert(partyKey);
-    assert(feedKey);
     this._partyKey = partyKey;
-    this._feedKeys.add(feedKey);
+    for (const feed of feeds) {
+      this._feedKeys.add(feed);
+    }
   }
 
   get partyKey () {
@@ -61,6 +70,11 @@ export abstract class PartyProcessor {
     return (candidates: FeedBlock[]) => 0;
   }
 
+  protected _addFeedKey (key: FeedKey) {
+    this._feedKeys.add(key);
+    this._feedAdded.emit(key);
+  }
+
   updateTimeframe (key: FeedKey, seq: number) {
     this._timeframe = spacetime.merge(this._timeframe, spacetime.createTimeframe([[key as any, seq]]));
   }
@@ -70,5 +84,17 @@ export abstract class PartyProcessor {
     return this._processMessage(message);
   }
 
+  getActiveFeedSet (): FeedSetProvider {
+    return {
+      get: () => this.feedKeys,
+      added: this._feedAdded
+    };
+  }
+
   abstract async _processMessage (message: IHaloStream): Promise<void>;
+
+  // TODO(marik-d): This should probably be abstracted over some invitation mechanism
+  async admitFeed (key: FeedKey) {
+    this._addFeedKey(key);
+  }
 }
