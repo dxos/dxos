@@ -1,3 +1,6 @@
+// TODO(marik-d): Move this file to gravity
+// @ts-nocheck
+
 import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
