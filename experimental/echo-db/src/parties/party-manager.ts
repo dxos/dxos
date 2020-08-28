@@ -111,9 +111,6 @@ export class PartyManager {
   async createParty (): Promise<Party> {
     assert(!this._options.readOnly);
 
-    const { publicKey: partyKey } = createKeyPair();
-    const feed = await this._feedStore.openFeed(keyToString(partyKey), { metadata: { partyKey } } as any);
-    const party = await this._constructParty(partyKey);
     // TODO(telackey): Proper identity and keyring management.
     const keyring = new Keyring();
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
@@ -170,7 +167,7 @@ export class PartyManager {
    * @param partyKey
    * @param feedKeys Extra set of feeds to be included in the party
    */
-  async _constructParty (partyKey: PartyKey): Promise<Party> {
+  async _constructParty (partyKey: PartyKey, feedKeys: FeedKey[] = []): Promise<Party> {
     // TODO(telackey): I added this lock as a workaround for a race condition in the existing (before this PR) party
     // creation code that caused intermittent database test failures for me. The race is between creating a Party, which
     // makes a new feed and calls _constructParty, and the FeedStore firing its onFeed event, the handler for which
