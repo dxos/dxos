@@ -62,10 +62,7 @@ export abstract class PartyProcessor {
     return (candidates: FeedBlock[]) => 0;
   }
 
-  protected _addFeedKey (key: FeedKey) {
-    this._feedKeys.add(key);
-    this._feedAdded.emit(key);
-  }
+  protected abstract _addFeedKey (key: FeedKey): void;
 
   updateTimeframe (key: FeedKey, seq: number) {
     this._timeframe = spacetime.merge(this._timeframe, spacetime.createTimeframe([[key as any, seq]]));

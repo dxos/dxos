@@ -16,7 +16,6 @@ import { Database } from './database';
 import { Party, PartyManager } from './parties';
 
 const log = debug('dxos:echo:database:test');
-debug.enable('dxos:*:error,dxos:echo:*');
 
 const createDatabase = (verbose = true) => {
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });

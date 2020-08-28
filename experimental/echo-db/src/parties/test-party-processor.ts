@@ -48,10 +48,12 @@ export class TestPartyProcessor extends PartyProcessor {
   private _feedKeys = new KeySet();
   private _memberKeys = new KeySet();
 
-  // TODO(telackey): Remove feedKey.
-  constructor (partyKey: PartyKey, feedKey: FeedKey) {
+  // TODO(telackey): Remove feedKeys.
+  constructor (partyKey: PartyKey, feedKeys: FeedKey[]) {
     super(partyKey);
-    this._feedKeys.add(feedKey);
+    for (const feedKey of feedKeys) {
+      this._feedKeys.add(feedKey);
+    }
   }
 
   async _processMessage (message: IHaloStream): Promise<void> {
@@ -79,5 +81,10 @@ export class TestPartyProcessor extends PartyProcessor {
 
   public get memberKeys () {
     return Array.from(this._memberKeys.values());
+  }
+
+  protected _addFeedKey (key: FeedKey) {
+    this._feedKeys.add(key);
+    this._feedAdded.emit(key);
   }
 }

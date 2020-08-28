@@ -11,7 +11,6 @@ import { HaloPartyProcessor } from './halo-party-processor';
 import { TestPartyProcessor } from './test-party-processor';
 
 const log = debug('dxos:echo:party-processor:test');
-debug.enable('dxos:echo:*');
 
 describe('party-processor', () => {
   test('genesis - halo', async () => {
@@ -52,7 +51,7 @@ describe('party-processor', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
 
-    const partyProcessor = new TestPartyProcessor(partyKey.publicKey, feedKey.publicKey);
+    const partyProcessor = new TestPartyProcessor(partyKey.publicKey, [feedKey.publicKey]);
     expect(partyProcessor.partyKey).toBeTruthy();
 
     const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey);

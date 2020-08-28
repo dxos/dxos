@@ -15,7 +15,6 @@ import { createWritableFeedStream, latch } from '@dxos/experimental-util';
 import { PartyManager } from './party-manager';
 
 const log = debug('dxos:echo:party-manager-test');
-debug.enable('dxos:echo:*');
 
 describe('Party manager', () => {
   test('Created locally', async () => {
