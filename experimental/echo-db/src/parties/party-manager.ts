@@ -192,6 +192,9 @@ export class PartyManager {
       const feed = descriptor.feed;
 
       // Create pipeline.
+      // TODO(telackey): To use HaloPartyProcessor here we cannot keep passing FeedKey[] arrays around, instead
+      // we need to use createFeedAdmitMessage to a write a properly signed message FeedAdmitMessage and write it,
+      // like we do above for the PartyGenesis message.
       const partyProcessor = new TestPartyProcessor(partyKey, [feed.key, ...feedKeys]);
       const feedReadStream = await createOrderedFeedStream(
         this._feedStore, partyProcessor.feedSelector, partyProcessor.messageSelector);
