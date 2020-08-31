@@ -14,7 +14,6 @@ import { createItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 
 const log = debug('dxos:echo:item-demuxer:test');
-debug.enable('dxos:echo:*');
 
 describe('item demxuer', () => {
   test('set-up', async () => {

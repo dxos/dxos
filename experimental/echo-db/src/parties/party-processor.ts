@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import {
-  FeedKey, FeedSelector, FeedBlock, FeedKeyMapper, IHaloStream, PartyKey, Spacetime, MessageSelector
+  FeedKey, FeedSelector, FeedBlock, FeedKeyMapper, IHaloStream, PartyKey, Spacetime, MessageSelector, PublicKey
 } from '@dxos/experimental-echo-protocol';
 import { jsonReplacer } from '@dxos/experimental-util';
 import { Event } from '@dxos/async';
@@ -29,39 +29,31 @@ export abstract class PartyProcessor {
 
   protected readonly _feedAdded = new Event<FeedKey>()
 
-  // Active set of admitted feeds.
-  private readonly _feedKeys = new Set<FeedKey>();
-
   // Current timeframe.
   private _timeframe = spacetime.createTimeframe();
 
   /**
    * @param partyKey
-   * @param feedKey - Genesis feed for node.
    */
-  constructor (partyKey: PartyKey, feeds: FeedKey[]) {
+  constructor (partyKey: PartyKey) {
     assert(partyKey);
     this._partyKey = partyKey;
-    for (const feed of feeds) {
-      this._feedKeys.add(feed);
-    }
   }
 
   get partyKey () {
     return this._partyKey;
   }
 
-  get feedKeys () {
-    return Array.from(this._feedKeys);
-  }
+  abstract get feedKeys () : FeedKey[];
+
+  abstract get memberKeys () : PublicKey[];
 
   get timeframe () {
     return this._timeframe;
   }
 
   get feedSelector (): FeedSelector {
-    return (feedKey: FeedKey) =>
-      Array.from(this._feedKeys.values()).findIndex(k => Buffer.compare(k, feedKey) === 0) !== -1;
+    return (feedKey: FeedKey) => this.feedKeys.findIndex(k => Buffer.compare(k, feedKey) === 0) !== -1;
   }
 
   // TODO(burdon): Factor out from feed-store-iterator test.
@@ -70,10 +62,9 @@ export abstract class PartyProcessor {
     return (candidates: FeedBlock[]) => 0;
   }
 
-  protected _addFeedKey (key: FeedKey) {
-    this._feedKeys.add(key);
-    this._feedAdded.emit(key);
-  }
+  // TODO(telackey): Discussion needed, as in the HALO-case, it isn't possible to admit a FeedKey directly,
+  // rather it should be done by processing a signed FeedAdmitMessage.
+  protected abstract _addFeedKey (key: FeedKey): void;
 
   updateTimeframe (key: FeedKey, seq: number) {
     this._timeframe = spacetime.merge(this._timeframe, spacetime.createTimeframe([[key as any, seq]]));
@@ -94,6 +85,8 @@ export abstract class PartyProcessor {
   abstract async _processMessage (message: IHaloStream): Promise<void>;
 
   // TODO(marik-d): This should probably be abstracted over some invitation mechanism
+  // TODO(telackey): Discussion needed, as in the HALO-case, it isn't possible to admit a FeedKey directly,
+  // rather it should be done by processing a signed FeedAdmitMessage.
   async admitFeed (key: FeedKey) {
     this._addFeedKey(key);
   }
