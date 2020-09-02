@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './styles';
-
 export * from './layout';
 export * from './force-layout';
 export * from './grid-layout';

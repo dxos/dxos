@@ -24,6 +24,7 @@ export class BoxProjector extends Projector {
         .data(nodes, d => d.id)
       .join('g')
         .attr('id', d => d.id)
+        .attr('class', 'node')
         .call(group => {
           group
             .append('text')

@@ -3,11 +3,58 @@
 //
 
 import * as d3 from 'd3';
+import merge from 'lodash.merge';
 import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { makeStyles } from '@material-ui/core/styles';
+import * as colors from '@material-ui/core/colors';
 
-import { Layout, useDefaultStyles, useLayout } from '../layout';
+import { useLayout, Layout } from '../layout';
 import { GuideProjector, LinkProjector, NodeProjector } from '../projector';
+
+const defaultColor = 'grey';
+const highlightColor = 'orange';
+const selectedColor = 'blue';
+const guideColor = 'blueGrey';
+
+export const useGraphStyles = makeStyles(() => ({
+  root: {},
+  guides: {
+    '& circle': {
+      strokeWidth: 8,
+      stroke: colors[guideColor][50],
+      fill: 'none',
+      opacity: .5
+    }
+  },
+  links: ({ color = defaultColor }) => ({
+    '& path.link': {
+      fill: 'none',
+      strokeWidth: 1,
+      stroke: colors[color][500],
+    }
+  }),
+  nodes: ({ color = defaultColor }) => ({
+    '& g.node rect': {
+      strokeWidth: 1,
+      stroke: colors[color][800],
+      fill: colors[color][200],
+      cursor: 'pointer'
+    },
+    '& g.node circle': {
+      strokeWidth: 1,
+      stroke: colors[color][800],
+      fill: colors[color][200],
+      cursor: 'pointer'
+    },
+    '& g.highlight circle': {
+      fill: colors[highlightColor][200],
+    },
+    '& g.selected circle': {
+      fill: colors[selectedColor][200],
+    }
+  })
+}));
 
 /**
  * Graph compoent supports different layouts.
@@ -19,15 +66,17 @@ const Graph = (props) => {
     grid,
     drag,
     layout = new Layout(),
-    nodeProjector = new NodeProjector(),
+    guideProjector = new GuideProjector(),
     linkProjector = new LinkProjector(),
-    guideProjector = new GuideProjector(),        // TODO(burdon): Remove default.
-    classes = useDefaultStyles()
+    nodeProjector = new NodeProjector(),
+    classes
   } = props;
 
-  const nodes = useRef();
-  const links = useRef();
+  const clazzes = merge(useGraphStyles(), classes);
+
   const guides = useRef();
+  const links = useRef();
+  const nodes = useRef();
 
   // Drag handler.
   useEffect(() => {
@@ -39,16 +88,18 @@ const Graph = (props) => {
 
   // Update layout.
   useLayout(layout, grid, data, data => {
+    guideProjector.update(grid, data, { group: guides.current });
     nodeProjector.update(grid, data, { group: nodes.current, selected });
     linkProjector.update(grid, data, { group: links.current });
-    guideProjector.update(grid, data, { group: guides.current });
-  }, [data, layout, selected]);
+  }, [data, grid.size, layout, selected]);
 
   return (
-    <g className={classes.graph}>
-      <g ref={guides} className={classes.guides} />
-      <g ref={links} />
-      <g ref={nodes} />
+    <g className={clazzes.root}>
+      <g ref={guides} className={clazzes.guides} />
+      <g>
+        <g className={clazzes.links} ref={links} />
+        <g className={clazzes.nodes} ref={nodes} />
+      </g>
     </g>
   );
 };

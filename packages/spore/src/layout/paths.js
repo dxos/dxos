@@ -3,6 +3,38 @@
 //
 
 import * as d3 from 'd3';
+import React, { useEffect, useRef } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import * as colors from '@material-ui/core/colors';
+
+const useStyles = makeStyles(() => ({
+  root: {},
+  arrow: ({ color = 'grey' }) => ({
+    fill: 'none',
+    strokeWidth: .5,
+    stroke: colors[color][500],
+  })
+}));
+
+/**
+ * Markers include elements such as arrow-heads.
+ * @param classes
+ * @returns {JSX.Element}
+ * @constructor
+ */
+export const Markers = () => {
+  const classes = useStyles();
+  const markers = useRef();
+
+  // Arrows markers.
+  useEffect(() => {
+    d3.select(markers.current).call(createArrowMarkers({ classes }));
+  }, []);
+
+  return (
+    <g ref={markers} className={classes.root} />
+  );
+};
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker
@@ -10,9 +42,10 @@ import * as d3 from 'd3';
  * http://bl.ocks.org/dustinlarimer/5888271
  *
  * @param arrowSize
+ * @param classes
  * @return {function(*): null|undefined}
  */
-export const createArrowMarkers = ({ arrowSize = 32 } = {}) => group =>
+export const createArrowMarkers = ({ arrowSize = 32, classes } = {}) => group =>
   group
     .selectAll('marker')
       .data([
@@ -33,7 +66,7 @@ export const createArrowMarkers = ({ arrowSize = 32 } = {}) => group =>
         .attr('viewBox', d => d.viewbox)
         .append('path')
           .attr('d', d => d.path)
-          .attr('class', 'arrow');
+          .attr('class', classes?.arrow);
 
 /**
  * Creates an array of points on the the circumference of two nodes.
@@ -59,6 +92,9 @@ export const createPoints = (source, target, sourceSize, targetSize) => {
   ];
 };
 
+/**
+ * Convert datum (x, y) into SVG line.
+ */
 export const lineGenerator = d3.line()
   .x(d => d.x || 0)
   .y(d => d.y || 0);

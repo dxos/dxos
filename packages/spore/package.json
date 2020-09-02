@@ -24,6 +24,7 @@
     "immutability-helper": "^3.0.2",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
+    "lodash.merge": "^4.6.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-force-graph": "^1.33.1",

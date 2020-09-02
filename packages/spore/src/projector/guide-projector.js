@@ -25,6 +25,7 @@ export class GuideProjector extends Projector {
                 case 'circle': {
                   d3.select(nodes[i])
                     .append('circle')
+                    .attr('class', 'guide')
                     .attr('cx', d.cx)
                     .attr('cy', d.cy)
                     .attr('r', Math.min(width, height) / 2)
@@ -37,7 +38,8 @@ export class GuideProjector extends Projector {
         },
         update => {
           // TODO(burdon): Called on every update.
-          update.select('circle').attr('r', d => d.r);
+          update.select('circle')
+            .attr('r', d => d.r);
         }
       );
   }

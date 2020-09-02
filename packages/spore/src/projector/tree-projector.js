@@ -38,6 +38,7 @@ export class TreeProjector extends Projector {
         .data(data.descendants(), d => d.data.id)
       .join('g')
         .attr('id', d => d.data.id)
+        .attr('class', 'node')
         .attr('transform', d => `translate(${project(d.x, d.y)})`)
         .call(node => {
           node
@@ -60,6 +61,7 @@ export class TreeProjector extends Projector {
         .data(data.descendants().slice(1))
       .join('path')
         .attr('id', d => d.data.id)
+        .attr('class', 'link')
         .attr('d', d =>
           `M ${project(d.x, d.y)} C ${project(d.x, (d.y + d.parent.y) / 2)} ` +
           `${project(d.parent.x, (d.y + d.parent.y) / 2)} ${project(d.parent.x, d.parent.y)}`

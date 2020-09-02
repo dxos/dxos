@@ -20,7 +20,7 @@ export class ForceLayout extends Layout {
     return {
       force: {
         charge: {
-          strength: -30
+          strength: -100
         },
 
         radial: {
@@ -29,14 +29,15 @@ export class ForceLayout extends Layout {
         },
 
         links: {
+          distance: 50,
+
           // https://github.com/d3/d3-force#link_strength
           strength: (link /*, i, links*/) => {
             // TODO(burdon): Count links.
             const count = () => 1;
 
             return 1 / Math.min(count(link.source), count(link.target));
-          },
-          distance: 30
+          }
         }
       }
     };
@@ -85,6 +86,8 @@ export class ForceLayout extends Layout {
       }
     ];
 
+    // console.log(':::', JSON.stringify(force, undefined, 2));
+
     // TODO(burdon): Configure forces separately by config.
     this._simulation
 
@@ -132,8 +135,8 @@ export class ForceLayout extends Layout {
        */
       .force('links', d3.forceLink(links)
         .id(d => d.id)
-        // .strength(force.links.strength)
-        // .distance(force.links.distance)
+        .strength(force.links.strength)
+        .distance(force.links.distance)
       );
 
     const start = true;
