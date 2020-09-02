@@ -41,7 +41,7 @@ export const createSimulationDrag = (simulation, options = {}) => {
       // https://github.com/d3/d3-drag#drag_container
       .container(container)
 
-      // Get the datum.
+      // Get the datum of the element being dragged.
       // https://github.com/d3/d3-drag#drag_subject
       .subject(() => simulation.find(d3.event.x, d3.event.y))
 
@@ -77,7 +77,7 @@ export const createSimulationDrag = (simulation, options = {}) => {
           d3.event.subject.fy = d3.event.y;
         }
 
-        emitter.emit('drag', { source: d3.event.subject, position });
+        emitter.emit('drag', { source: d3.event.subject, position, linking: state.linking });
 
         state.dragging = true;
       })
@@ -93,6 +93,7 @@ export const createSimulationDrag = (simulation, options = {}) => {
         d3.event.subject.fy = null;
 
         // Fix position.
+        // TODO(burdon): Add class decoration.
         if (freezeModifier) {
           d3.event.subject.fx = d3.event.subject.x;
           d3.event.subject.fy = d3.event.subject.y;
@@ -100,8 +101,9 @@ export const createSimulationDrag = (simulation, options = {}) => {
 
         // Link or click.
         if (state.dragging) {
-          const target = simulation.find(d3.event.x, d3.event.y, 16);    // TODO(burdon): Radius.
-          emitter.emit('end', { source: d3.event.subject, target });
+          // TODO(burdon): Get radius from nodes (or target from currently highlighted).
+          const target = simulation.find(d3.event.x, d3.event.y, 16);
+          emitter.emit('end', { source: d3.event.subject, target, linking: state.linking });
         } else {
           emitter.emit('click', { source: d3.event.subject });
         }

@@ -18,6 +18,7 @@ export class LinkProjector extends Projector {
    */
 
   onData(grid, data, { group }) {
+    const { showArrows = false } = this._options;
     const { links = [], pulsars = [] } = data;
 
     if (pulsars.length) {
@@ -31,10 +32,12 @@ export class LinkProjector extends Projector {
     const paths = root
       .enter()
         .append('path')
-        .attr('id', d => d.id);
+        .attr('id', d => d.id)
+        .attr('class', 'link');
 
-    // TODO(burdon): Options.
-    paths.attr('marker-end', () => 'url(#marker_arrow)');
+    if (showArrows) {
+      paths.attr('marker-end', () => 'url(#marker_arrow)');
+    }
 
     root
       .exit()
@@ -42,7 +45,7 @@ export class LinkProjector extends Projector {
   }
 
   onUpdate(grid, data, { group }) {
-    const { nodeRadius, showArrows = true, transition } = this._options;
+    const { nodeRadius, showArrows = false, transition } = this._options;
 
     // TODO(burdon): Factor out line generation.
     const update = path => {
@@ -50,7 +53,9 @@ export class LinkProjector extends Projector {
         .attr('d', ({ source, target }) => {
           let points;
           if (showArrows && nodeRadius) {
-            points = createPoints(source, target, nodeRadius, nodeRadius);
+            const { radius: r1 = nodeRadius } = source;
+            const { radius: r2 = nodeRadius } = target;
+            points = createPoints(source, target, r1, r2);
           } else {
             points = [
               { x: source.x, y: source.y },

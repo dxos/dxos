@@ -36,7 +36,6 @@ const useStyles = makeStyles(() => ({
     outline: 'none'
   },
 
-  // TODO(burdon): Move to useDefaultStyles.
   guides: {
     '& > g > rect.selector': {
       strokeWidth: 2,

@@ -3,11 +3,14 @@
 //
 
 import * as d3 from 'd3';
+import { Chance } from 'chance';
 import debug from 'debug';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 import { withKnobs, boolean, button } from "@storybook/addon-knobs";
+import { makeStyles } from '@material-ui/core/styles';
+import * as colors from '@material-ui/core/colors';
 
 import {
   FullScreen,
@@ -28,6 +31,7 @@ import {
 
 import {
   Graph,
+  Markers,
 
   ForceLayout,
   GridLayout,
@@ -42,10 +46,8 @@ import {
   LinkProjector,
   TreeProjector,
 
-  useDefaultStyles,
   useLayout,
-
-  createArrowMarkers,
+  useGraphStyles,
   createSimulationDrag,
 } from '../src';
 
@@ -54,7 +56,9 @@ export default {
   decorators: [withKnobs]
 };
 
-debug.enable('spore:*');
+debug.enable('dxos:spore:*');
+
+const chance = new Chance(1);
 
 //
 // Actions
@@ -88,7 +92,7 @@ export const withGrid = () => {
  * Box projector.
  */
 export const withBoxProjector = () => {
-  const classes = useDefaultStyles();
+  const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
   const grid = useGrid({ width, height, zoom: 1 });
@@ -107,7 +111,7 @@ export const withBoxProjector = () => {
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} showAxis={true} tickFormat="" />
-        <g ref={nodes} className={classes.box} />
+        <g ref={nodes} className={classes.nodes} />
       </SVG>
     </FullScreen>
   );
@@ -162,7 +166,7 @@ export const withForceLayout = () => {
   const [layout] = useState(new ForceLayout());
   const [drag] = useState(() => createSimulationDrag(layout.simulation));
   useEffect(() => {
-    drag.on('click', ({ id }) => {
+    drag.on('click', ({ source: { id } }) => {
       setSelected(id);
     });
   }, [drag]);
@@ -188,11 +192,9 @@ export const withForceLayout = () => {
  * Arrows.
  */
 export const withArrows = () => {
-  const classes = useDefaultStyles();
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
   const grid = useGrid({ width, height });
-  const markers = useRef();
 
   const [data] = useDataButton(() => convertTreeToGraph(createTree(4)));
   const [layout] = useState(new ForceLayout());
@@ -201,20 +203,12 @@ export const withArrows = () => {
     linkProjector: new LinkProjector({ nodeRadius: 16, showArrows: true })
   });
 
-  // Arrows markers.
-  useEffect(() => {
-    d3.select(markers.current)
-      .call(createArrowMarkers());
-  }, []);
-
   return (
     <FullScreen>
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} />
-
-        <g ref={markers} className={classes.markers}/>
-
+        <Markers />
         <Graph
           grid={grid}
           data={data}
@@ -227,15 +221,65 @@ export const withArrows = () => {
   );
 };
 
+const nodeColors = ['red', 'green', 'blue'];
+const useCustomStyles = makeStyles(() => ({
+  nodes: nodeColors.reduce((map, color) => {
+    map[`& g.node.${color} circle`] = { fill: colors[color][400] };
+    return map;
+  }, {})
+}));
+
+/**
+ * Custom nodes.
+ */
+export const withCustomNodes = () => {
+  const classes = useCustomStyles();
+  const [resizeListener, size] = useResizeAware();
+  const { width, height } = size;
+  const grid = useGrid({ width, height });
+
+  const [data] = useDataButton(() => convertTreeToGraph(createTree(4)));
+  const [layout] = useState(new ForceLayout());
+  const [{ nodeProjector, linkProjector }] = useState({
+    nodeProjector: new NodeProjector({
+      node: {
+        showLabels: true,
+        propertyAdapter: (d) => ({
+          class: chance.pickone(nodeColors),
+          radius: d.children?.length > 2 ? 20 : 10
+        })
+      }
+    })
+  });
+
+  return (
+    <FullScreen>
+      {resizeListener}
+      <SVG width={width} height={height}>
+        <Grid grid={grid} />
+        <Graph
+          grid={grid}
+          data={data}
+          layout={layout}
+          classes={{
+            nodes: classes.nodes
+          }}
+          nodeProjector={nodeProjector}
+          linkProjector={linkProjector}
+        />
+      </SVG>
+    </FullScreen>
+  );
+};
+
 /**
  * Bullets.
  */
 export const withBullet = () => {
-  const classes = useDefaultStyles();
+  const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
   const grid = useGrid({ width, height });
-  const markers = useRef();
   const guides = useRef();
 
   const [data] = useDataButton(() => convertTreeToGraph(createTree(4)));
@@ -254,19 +298,13 @@ export const withBullet = () => {
     });
   }, [nodeProjector]);
 
-  // Arrows markers.
-  useEffect(() => {
-    d3.select(markers.current)
-      .call(createArrowMarkers());
-  }, []);
-
   return (
     <FullScreen>
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} />
+        <Markers />
 
-        <g ref={markers} className={classes.markers}/>
         <g ref={guides} className={classes.guides} />
 
         <Graph
@@ -281,38 +319,57 @@ export const withBullet = () => {
   );
 };
 
+const useNodeStyles = makeStyles({
+  'xxx': {
+    '& > circle': {
+      strokeWidth: 4
+    }
+  }
+});
+
 /**
  * Drag.
  */
 export const withDrag = () => {
-  const classes = useDefaultStyles();
+  const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
   const grid = useGrid({ width, height });
   const guides = useRef();
 
-  const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree(4)));
+  const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree(1)));
   const [layout] = useState(new ForceLayout());
 
-  // TODO(burdon): New projector generated each time???
-  const [nodeProjector] = useState(new NodeProjector({ node: { radius: 16, showLabels: false } }));
+  const [{ nodeProjector, linkProjector }] = useState({
+    nodeProjector: new NodeProjector({ node: { radius: 16, showLabels: false } }),
+    linkProjector: new LinkProjector({ nodeRadius: 16, showArrows: true })
+  });
 
-  // TODO(burdon): Factor out.
-  const linkProjector = new LinkProjector();
-  // TODO(burdon): Hook (only once).
+  // TODO(burdon): Factor out (move to Graph).
   const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey', freeze: 'shiftKey' }));
   useEffect(() => {
-    drag.on('drag', ({ source, position }) => {
+    drag.on('drag', ({ source, position, linking }) => {
+      if (!linking) {
+        return;
+      }
+
       const data = {
         links: [
-          { id: 'guide-link', source, target: { id: 'guide-link-target', ...position } },
+          { id: 'guide-link', source, target: { id: 'guide-link-target', ...position, radius: 0 } },
         ]
       };
 
+      // Draw line.
       linkProjector.update(grid, data, { group: guides.current });
     });
-    drag.on('end', ({ source, target }) => {
+
+    drag.on('end', ({ source, target, linking }) => {
+      if (!linking) {
+        return;
+      }
+
       linkProjector.update(grid, {}, { group: guides.current });
+
       if (target) {
         // TODO(burdon): Highlight source node.
         // TODO(burdon): End marker for guide link.
@@ -337,7 +394,8 @@ export const withDrag = () => {
         });
       }
     });
-    drag.on('click', ({ id }) => {
+
+    drag.on('click', ({ source: { id } }) => {
       console.log('click', id);
     });
   }, [drag]);
@@ -347,13 +405,15 @@ export const withDrag = () => {
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} />
+        <Markers />
 
-        <g ref={guides} className={classes.guides} />
+        <g ref={guides} className={classes.links} />
 
         <Graph
           grid={grid}
           data={data}
           layout={layout}
+          linkProjector={linkProjector}
           nodeProjector={nodeProjector}
           drag={drag}
         />
@@ -464,7 +524,7 @@ export const withTwoForceLayouts = () => {
  * Tree layout.
  */
 export const withTreeLayout = () => {
-  const classes = useDefaultStyles();
+  const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
 
@@ -486,14 +546,15 @@ export const withTreeLayout = () => {
     });
   });
 
+  // TODO(burdon): Create control for Tree (like Graph).
   return (
     <FullScreen>
       {resizeListener}
       <SVG width={width} height={height}>
-        <g className={classes.tree}>
+        <g className={classes.root}>
           <g ref={guides} className={classes.guides} />
-          <g ref={links} />
-          <g ref={nodes} />
+          <g ref={links} className={classes.links} />
+          <g ref={nodes} className={classes.nodes} />
         </g>
       </SVG>
     </FullScreen>
@@ -504,7 +565,7 @@ export const withTreeLayout = () => {
  * Random layout.
  */
 export const withRandomLayout = () => {
-  const classes = useDefaultStyles();
+  const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
   const [data, setData, getData, updateData] = useObjectMutator(createGraph(16));
   const nodes = useRef();
@@ -551,7 +612,7 @@ export const withRandomLayout = () => {
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} />
-        <g ref={nodes} className={classes.graph} />
+        <g ref={nodes} className={classes.nodes} />
       </SVG>
     </FullScreen>
   );
@@ -561,7 +622,7 @@ export const withRandomLayout = () => {
  * Radial layout.
  */
 export const withRadialLayout = () => {
-  const classes = useDefaultStyles();
+  const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
   const [data, setData, getData, updateData] = useObjectMutator({ nodes: [] });
   const nodes = useRef();
@@ -603,7 +664,7 @@ export const withRadialLayout = () => {
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} />
-        <g ref={nodes} className={classes.graph} />
+        <g ref={nodes} className={classes.nodes} />
       </SVG>
     </FullScreen>
   );
@@ -618,9 +679,9 @@ export const withMultipleLayouts = () => {
 
   const nodeProjector = new NodeProjector({ transition: d3.transition, node: { showLabels: false } });
 
-  const classes1 = useDefaultStyles();
-  const classes2 = useDefaultStyles({ color: 'blue' });
-  const classes3 = useDefaultStyles({ color: 'green' });
+  const classes1 = useGraphStyles();
+  const classes2 = useGraphStyles({ color: 'blue' });
+  const classes3 = useGraphStyles({ color: 'green' });
 
   const group1 = useRef();
   const group2 = useRef();
@@ -654,9 +715,9 @@ export const withMultipleLayouts = () => {
       {resizeListener}
       <SVG width={size.width} height={size.height}>
         <Grid grid={grid} showAxis={true} />
-        <g ref={group1} className={classes1.graph} />
-        <g ref={group2} className={classes2.graph} />
-        <g ref={group3} className={classes3.graph} />
+        <g ref={group1} className={classes1.nodes} />
+        <g ref={group2} className={classes2.nodes} />
+        <g ref={group3} className={classes3.nodes} />
       </SVG>
     </FullScreen>
   );
@@ -673,23 +734,23 @@ export const withChangingLayout = () => {
 
   const layouts = [
     {
-      classes: useDefaultStyles({ color: 'blue' }),
+      classes: useGraphStyles({ color: 'blue' }),
       layout: new RadialLayout({ radius: 100 })
     },
     {
-      classes: useDefaultStyles({ color: 'green' }),
+      classes: useGraphStyles({ color: 'green' }),
       layout: new RadialLayout({ radius: 200 })
     },
     {
-      classes: useDefaultStyles({ color: 'red' }),
+      classes: useGraphStyles({ color: 'red' }),
       layout: new RadialLayout({ radius: 300 })
     },
     {
-      classes: useDefaultStyles(),
+      classes: useGraphStyles(),
       layout: new RandomLayout({ radius: 400, node: { radius: 8 } })
     },
     {
-      classes: useDefaultStyles(),
+      classes: useGraphStyles(),
       layout: new ForceLayout({ node: { radius: 16 }}),
       projector: new NodeProjector({ node: { radius: 8, showLabels: false }, fade: false })
     },
@@ -738,7 +799,7 @@ export const withChangingLayout = () => {
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} />
-        <g ref={nodes} className={classes.graph} />
+        <g ref={nodes} className={classes.nodes} />
       </SVG>
     </FullScreen>
   );

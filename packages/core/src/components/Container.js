@@ -3,7 +3,7 @@
 //
 
 import * as d3 from 'd3';
-import React from 'react';
+import React, { useEffect } from 'react';
 import useResizeAware from 'react-resize-aware';
 
 const style = {
@@ -25,7 +25,7 @@ export const Container = (props) => {
 
   // Called after render.
   // https://reactjs.org/docs/hooks-effect.html
-  React.useEffect(() => {
+  useEffect(() => {
     if (width && height) {
       onRender({ width, height });
     }

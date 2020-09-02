@@ -14,8 +14,6 @@ import {
   SVG
 } from '@dxos/gem-core';
 
-import { useDefaultStyles } from '../src/layout';
-
 export default {
   title: 'Disturbance'
 };
@@ -40,7 +38,6 @@ const rand = p => Math.min(1, Math.max(0, p + (Math.random() - .5) * .1));
 const poly = points => points.map(p => `${p.x},${p.y}`).join(' ');
 
 export const withAnomoly = () => {
-  const classes = useDefaultStyles();
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
   const grid = useGrid({ width, height });
@@ -112,7 +109,7 @@ export const withAnomoly = () => {
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} showGrid={true} />
-        <g className={classes.box}>
+        <g>
           <polyline ref={polygon1} fill="#EEE" stroke="#FFF" opacity={.5} />
           <polyline ref={polygon2} fill="#CCC" stroke="#666" opacity={.5} />
           <polyline ref={polygon3} fill="#FFF" stroke="#666" strokeWidth={1} />
