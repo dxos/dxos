@@ -60,26 +60,17 @@
     "stream-buffers": "^3.0.2"
   },
   "devDependencies": {
+    "@dxos/eslint-plugin": "^1.0.0",
     "@types/jest": "^25.2.3",
     "chance": "^1.1.6",
     "del-cli": "^3.0.0",
-    "eslint-plugin-jest": "^23.13.1",
     "jest": "^26.2.2",
-    "semistandard": "14.2.0",
     "tempy": "^0.6.0",
     "ts-jest": "^26.1.4",
     "typescript": "^3.9.3",
     "wait-for-expect": "^3.0.2"
   },
   "eslintConfig": {
-    "parser": "@typescript-eslint/parser",
-    "extends": [
-      "plugin:jest/recommended",
-      "eslint-config-semistandard"
-    ],
-    "rules": {
-      "no-useless-constructor": "off",
-      "@typescript-eslint/no-useless-constructor": "error"
-    }
+    "extends": "plugin:@dxos/recomended"
   }
 }

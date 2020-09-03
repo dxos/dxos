@@ -1,4 +1,8 @@
-import * as $protobuf from "protobufjs";
+//
+// Copyright 2020 DXOS.org
+//
+
+import * as $protobuf from 'protobufjs';
 /** Namespace dxos. */
 export namespace dxos {
 
@@ -9,7 +13,7 @@ export namespace dxos {
         interface IValue {
 
             /** Value null */
-            "null"?: (boolean|null);
+            'null'?: (boolean|null);
 
             /** Value bool */
             bool?: (boolean|null);
@@ -38,12 +42,11 @@ export namespace dxos {
 
         /** Represents a Value. */
         class Value implements IValue {
-
-            /**
+          /**
              * Constructs a new Value.
              * @param [properties] Properties to set
              */
-            constructor(properties?: dxos.echo.IValue);
+          constructor(properties?: dxos.echo.IValue);
 
             /** Value null. */
             public null: boolean;
@@ -73,7 +76,7 @@ export namespace dxos {
             public object?: (dxos.echo.IObject|null);
 
             /** Value Type. */
-            public Type?: ("null"|"bool"|"int"|"float"|"string"|"timestamp"|"datetime"|"bytes"|"object");
+            public Type?: ('null'|'bool'|'int'|'float'|'string'|'timestamp'|'datetime'|'bytes'|'object');
 
             /**
              * Creates a new Value instance using the specified properties.
@@ -155,12 +158,11 @@ export namespace dxos {
 
         /** Represents an Object. */
         class Object implements IObject {
-
-            /**
+          /**
              * Constructs a new Object.
              * @param [properties] Properties to set
              */
-            constructor(properties?: dxos.echo.IObject);
+          constructor(properties?: dxos.echo.IObject);
 
             /** Object properties. */
             public properties: dxos.echo.IKeyValue[];
@@ -248,12 +250,11 @@ export namespace dxos {
 
         /** Represents a KeyValue. */
         class KeyValue implements IKeyValue {
-
-            /**
+          /**
              * Constructs a new KeyValue.
              * @param [properties] Properties to set
              */
-            constructor(properties?: dxos.echo.IKeyValue);
+          constructor(properties?: dxos.echo.IKeyValue);
 
             /** KeyValue key. */
             public key: string;
@@ -353,12 +354,11 @@ export namespace dxos {
 
         /** Represents an ObjectMutation. */
         class ObjectMutation implements IObjectMutation {
-
-            /**
+          /**
              * Constructs a new ObjectMutation.
              * @param [properties] Properties to set
              */
-            constructor(properties?: dxos.echo.IObjectMutation);
+          constructor(properties?: dxos.echo.IObjectMutation);
 
             /** ObjectMutation objectId. */
             public objectId: string;
@@ -472,12 +472,11 @@ export namespace dxos {
 
             /** Represents a Mutation. */
             class Mutation implements IMutation {
-
-                /**
+              /**
                  * Constructs a new Mutation.
                  * @param [properties] Properties to set
                  */
-                constructor(properties?: dxos.echo.ObjectMutation.IMutation);
+              constructor(properties?: dxos.echo.ObjectMutation.IMutation);
 
                 /** Mutation operation. */
                 public operation: dxos.echo.ObjectMutation.Operation;
@@ -569,12 +568,11 @@ export namespace dxos {
 
         /** Represents an ObjectMutationSet. */
         class ObjectMutationSet implements IObjectMutationSet {
-
-            /**
+          /**
              * Constructs a new ObjectMutationSet.
              * @param [properties] Properties to set
              */
-            constructor(properties?: dxos.echo.IObjectMutationSet);
+          constructor(properties?: dxos.echo.IObjectMutationSet);
 
             /** ObjectMutationSet mutations. */
             public mutations: dxos.echo.IObjectMutation[];
@@ -659,12 +657,11 @@ export namespace dxos {
 
         /** Represents an Envelope. */
         class Envelope implements IEnvelope {
-
-            /**
+          /**
              * Constructs a new Envelope.
              * @param [properties] Properties to set
              */
-            constructor(properties?: dxos.echo.IEnvelope);
+          constructor(properties?: dxos.echo.IEnvelope);
 
             /** Envelope message. */
             public message?: (google.protobuf.IAny|null);
@@ -760,12 +757,11 @@ export namespace google {
 
         /** Represents an Any. */
         class Any implements IAny {
-
-            /**
+          /**
              * Constructs a new Any.
              * @param [properties] Properties to set
              */
-            constructor(properties?: google.protobuf.IAny);
+          constructor(properties?: google.protobuf.IAny);
 
             /** Any type_url. */
             public type_url: string;

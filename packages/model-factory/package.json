@@ -21,7 +21,7 @@
     "build": "npm run clean && npm run build:babel",
     "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps",
     "clean": "del-cli dist",
-    "lint": "semistandard 'src/**/*.js'",
+    "lint": "eslint 'src/**/*.js'",
     "prepublishOnly": "npm run build && npm run test",
     "test": "jest --verbose --passWithNoTests src",
     "posttest": "npm run lint"
@@ -52,6 +52,7 @@
     "through2": "^3.0.1"
   },
   "devDependencies": {
+    "@dxos/eslint-plugin": "^1.0.0",
     "@babel/cli": "^7.7.0",
     "@babel/core": "^7.4.5",
     "@babel/plugin-proposal-export-default-from": "^7.5.2",
@@ -68,18 +69,17 @@
     "del-cli": "^3.0.0",
     "jest": "^24.5.0",
     "pify": "^5.0.0",
-    "semistandard": "14.2.0",
     "wait-for-expect": "^3.0.1"
   },
   "publishConfig": {
     "access": "public"
   },
-  "semistandard": {
-    "parser": "babel-eslint",
-    "env": [
-      "jest",
-      "node",
-      "browser"
-    ]
+  "eslintConfig": {
+    "extends": "plugin:@dxos/recomended",
+    "rules": {
+      "jest/no-test-callback": "off",
+      "jest/expect-expect": "off",
+      "@typescript-eslint/no-unused-vars": "off"
+    }
   }
 }
