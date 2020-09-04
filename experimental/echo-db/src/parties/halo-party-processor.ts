@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Party as PartyStateMachine } from '@dxos/credentials';
+import { Party as PartyStateMachine, KeyType } from '@dxos/credentials';
 import { PartyKey, IHaloStream, FeedKey } from '@dxos/experimental-echo-protocol';
 
 import { PartyProcessor } from './party-processor';
@@ -13,11 +13,21 @@ import { PartyProcessor } from './party-processor';
 export class HaloPartyProcessor extends PartyProcessor {
   private readonly _stateMachine: PartyStateMachine;
 
-  constructor (partyKey: PartyKey) {
+  constructor (partyKey: PartyKey, private readonly feedKeyHints: FeedKey[]) {
     super(partyKey);
 
     this._stateMachine = new PartyStateMachine(partyKey);
     this._forwardEvents();
+  }
+
+  // TODO(marik-d): After the party manager is decomposed into halo and test variants, make this only a method of halo party processor.
+  async init () {
+    // Gives state machine hints on initial feed set from where to read party genesis message.
+    await this._stateMachine.takeHints(this.feedKeyHints.map(publicKey => ({ publicKey, type: KeyType.FEED })));
+  }
+
+  get keyring () {
+    return this._stateMachine.keyring;
   }
 
   async _processMessage (message: IHaloStream): Promise<void> {
@@ -50,5 +60,9 @@ export class HaloPartyProcessor extends PartyProcessor {
     state.on('admit:key', (keyRecord: any) => {
       // this._keyAdded.emit(keyRecord.publicKey);
     });
+  }
+
+  async admitFeed (feedKey: FeedKey) {
+    // TODO(marik-d): Remove this method and make the class only do the processing
   }
 }

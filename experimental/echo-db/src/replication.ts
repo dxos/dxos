@@ -31,15 +31,22 @@ export function createReplicatorFactory (networkManager: any, feedStore: FeedSto
  * Joins a network swarm with replication protocol. Coordinates opening new feeds in the feed store.
  */
 export class ReplicationAdapter implements IReplicationAdapter {
+  private _started = false;
+
   constructor (
     private readonly networkManager: any,
     private readonly feedStore: FeedStore,
     private readonly peerId: Buffer,
     private readonly partyKey: PartyKey,
     private readonly activeFeeds: FeedSetProvider
-  ) {}
+  ) { }
 
   start (): void {
+    if (this._started) {
+      return;
+    }
+    this._started = true;
+
     this.networkManager.joinProtocolSwarm(
       this.partyKey,
       ({ channel }: any) => this._createProtocol(channel));
@@ -93,6 +100,10 @@ export class ReplicationAdapter implements IReplicationAdapter {
   }
 
   stop (): void {
+    if (!this._started) {
+      return;
+    }
+    this._started = false;
     // TODO(marik-d): Not implmented
   }
 }

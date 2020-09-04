@@ -4,7 +4,7 @@
 
 import { humanize } from '@dxos/crypto';
 import { FeedKey, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
-import { ModelFactory, ModelType } from '@dxos/experimental-model-factory';
+import { ModelFactory, ModelType, Model, ModelConstructor } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import assert from 'assert';
 import { createItemDemuxer, Item, ItemFilter, ItemManager } from '../items';
@@ -107,7 +107,7 @@ export class Party {
    */
   async setProperty (key: string, value: any): Promise<Party> {
     const item = await this._getPropertiestItem();
-    await (item.model as ObjectModel).setProperty(key, value);
+    await item.model.setProperty(key, value);
     return this;
   }
 
@@ -117,7 +117,7 @@ export class Party {
    */
   async getProperty (key: string): Promise<any> {
     const item = await this._getPropertiestItem();
-    return await (item.model as ObjectModel).getProperty(key);
+    return await item.model.getProperty(key);
   }
 
   /**
@@ -125,8 +125,17 @@ export class Party {
    * @param {ModelType} [modelType]
    * @param {ItemType} [itemType]
    */
-  async createItem (modelType: ModelType = ObjectModel.meta.type, itemType?: ItemType | undefined): Promise<Item<any>> {
+  // https://www.typescriptlang.org/docs/handbook/functions.html#overloads
+  async createItem (): Promise<Item<ObjectModel>>
+  async createItem (modelClass: undefined, itemType?: ItemType | undefined): Promise<Item<ObjectModel>>
+  async createItem (modelType: ModelType, itemType?: ItemType | undefined): Promise<Item<any>>
+  async createItem <M extends Model<any>>(modelClass: ModelConstructor<M>, itemType?: ItemType | undefined): Promise<Item<M>>
+  async createItem (modelType: ModelConstructor<Model<any>> | ModelType = ObjectModel.meta.type, itemType?: ItemType | undefined): Promise<Item<any>> {
     assert(this._itemManager);
+    if (typeof modelType !== 'string') {
+      modelType = modelType.meta.type;
+    }
+
     return this._itemManager.createItem(modelType, itemType);
   }
 
@@ -156,6 +165,7 @@ export class Party {
       feeds: this._pipeline.memberFeeds
     };
 
-    return new Inviter(invitation, this._partyProcessor);
+    assert(this._pipeline.writeStream);
+    return new Inviter(this._partyProcessor, this._pipeline.writeStream, invitation);
   }
 }

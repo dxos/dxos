@@ -136,8 +136,10 @@ export class Pipeline {
         }
       }
 
-      // TODO(burdon): Can we throw and have the pipeline log (without breaking the stream)?
-      log(`Skipping invalid message: ${JSON.stringify(message, jsonReplacer)}`);
+      if (!message.halo && !message.echo) {
+        // TODO(burdon): Can we throw and have the pipeline log (without breaking the stream)?
+        log(`Skipping invalid message: ${JSON.stringify(message, jsonReplacer)}`);
+      }
     });
 
     pipeline([

@@ -1,6 +1,6 @@
-// TODO(marik-d): Move this file to gravity
-/* eslint-disable */
-// @ts-nocheck
+//
+// Copyright 2020 DXOS.org
+//
 
 import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/experimental-model-factory';
@@ -8,12 +8,7 @@ import { ObjectModel } from '@dxos/experimental-object-model';
 import { FeedStore } from '@dxos/feed-store';
 import { NetworkManager } from '@dxos/network-manager';
 import { Agent, Environment, JsonObject } from '@dxos/node-spawner';
-
-import { codec } from './codec';
-import { Database } from './database';
-import { Inviter } from './invitation';
-import { Party, PartyManager } from './parties';
-import { createReplicatorFactory } from './replication';
+import { codec, Database, Inviter, Party, PartyManager, createReplicatorFactory, HaloPartyProcessor } from '@dxos/experimental-echo-db';
 
 export default class TestAgent implements Agent {
   private party?: Party;
@@ -35,7 +30,10 @@ export default class TestAgent implements Agent {
     const partyManager = new PartyManager(
       feedStore,
       modelFactory,
-      createReplicatorFactory(networkManager, feedStore, randomBytes())
+      createReplicatorFactory(networkManager, feedStore, randomBytes()),
+      {
+        partyProcessorFactory: (partyKey, feedKeys) => new HaloPartyProcessor(partyKey, feedKeys)
+      }
     );
     this.db = new Database(partyManager);
     await this.db.open();
@@ -46,14 +44,15 @@ export default class TestAgent implements Agent {
       this.party = await this.db.createParty();
 
       const items = await this.party.queryItems();
+      this.environment.metrics.set('item.count', items.value.length);
       items.subscribe(items => {
-        this.environment.metrics.set('itemCount', items.length);
+        this.environment.metrics.set('item.count', items.length);
       });
 
       this.inviter = this.party.createInvitation();
       this.environment.log('invitation', {
         partyKey: keyToString(this.inviter.invitation.partyKey as any),
-        feeds: this.inviter.invitation.feeds.map(keyToString)
+        feeds: this.inviter.invitation.feeds.map(key => keyToString(Buffer.from(key)))
       });
     } else if (event.command === 'ACCEPT_INVITATION') {
       const { response, party } = await this.db.joinParty({
@@ -63,16 +62,17 @@ export default class TestAgent implements Agent {
       this.party = party;
       const items = await this.party.queryItems();
       items.subscribe(items => {
-        this.environment.metrics.set('itemCount', items.length);
+        this.environment.metrics.set('item.count', items.length);
       });
 
-      this.environment.log('invitationResponse', { newFeedKey: keyToString(response.newFeedKey) });
+      this.environment.log('invitationResponse', { peerFeedKey: keyToString(Buffer.from(response.peerFeedKey)) });
     } else if (event.command === 'FINALIZE_INVITATION') {
-      this.inviter?.finalize({
-        newFeedKey: keyToBuffer((event.invitationResponse as any).newFeedKey)
+      this.inviter!.finalize({
+        peerFeedKey: keyToBuffer((event.invitationResponse as any).peerFeedKey),
+        feedAdmitMessage: (event.invitationResponse as any).feedAdmitMessage
       });
     } else {
-      this.party!.createItem('wrn://dxos.org/item/document');
+      this.party!.createItem(ObjectModel);
     }
   }
 

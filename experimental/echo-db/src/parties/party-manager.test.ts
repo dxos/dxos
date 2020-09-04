@@ -8,10 +8,10 @@ import ram from 'random-access-memory';
 import { createPartyGenesisMessage, KeyType, Keyring } from '@dxos/credentials';
 import { FeedStore } from '@dxos/feed-store';
 import { ObjectModel } from '@dxos/experimental-object-model';
-import { codec } from '@dxos/experimental-echo-protocol';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { createWritableFeedStream, latch } from '@dxos/experimental-util';
 
+import { codec } from '../codec';
 import { PartyManager } from './party-manager';
 
 const log = debug('dxos:echo:party-manager-test');
