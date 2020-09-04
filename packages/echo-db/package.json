@@ -52,6 +52,7 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
+    "@dxos/eslint-plugin": "^1.0.0",
     "@types/jest": "^25.2.3",
     "del-cli": "^3.0.0",
     "end-of-stream": "^1.4.4",
@@ -59,7 +60,6 @@
     "jest": "^26.0.0",
     "pumpify": "^2.0.1",
     "random-access-memory": "^3.1.1",
-    "semistandard": "^14.2.0",
     "stream-buffers": "^3.0.2",
     "through2": "^3.0.1",
     "ts-jest": "^26.1.0",
@@ -69,10 +69,9 @@
     "access": "public"
   },
   "eslintConfig": {
-    "parser": "@typescript-eslint/parser",
-    "extends": [
-      "plugin:jest/recommended",
-      "eslint-config-semistandard"
+    "extends": "plugin:@dxos/recomended",
+    "ignorePatterns": [
+      "src/proto/gen/*"
     ]
   }
 }

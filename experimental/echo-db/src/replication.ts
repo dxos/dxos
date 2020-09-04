@@ -1,3 +1,7 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 import { discoveryKey, keyToString } from '@dxos/crypto';
 import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
 import { FeedStore } from '@dxos/feed-store';

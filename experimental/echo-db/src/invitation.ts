@@ -1,3 +1,7 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
 import { PartyProcessor, Party } from './parties';
 

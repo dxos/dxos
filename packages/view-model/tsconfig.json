@@ -1,15 +1,6 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "moduleResolution": "node",
-    "allowJs": true,
-    "strict": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "composite": true,
-    "sourceMap": true,
-    "declarationMap": true,
-    "target": "ES2018",
     "outDir": "dist"
   },
   "include": [
