@@ -71,3 +71,5 @@ public/
 .temp/
 .DS_Store
 
+# Protocol buffers generated source files
+**/proto/gen/
