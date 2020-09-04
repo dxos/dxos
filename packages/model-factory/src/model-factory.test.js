@@ -85,7 +85,8 @@ describe('Model factory', () => {
       { __type_url: 'test.Type', id: createId() }
     ];
 
-    const counter = latch(2, cleanup);
+    const [onCount, counter] = latch(2);
+    onCount.then(cleanup);
 
     model1.on('update', () => {
       if (model1.messages.length === messages.length) {
