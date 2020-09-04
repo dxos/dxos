@@ -896,10 +896,10 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@dxos/async@1.0.0-beta.5":
-  version "1.0.0-beta.5"
-  resolved "http://npm.dev.dxos.network:5736/@dxos%2fasync/-/async-1.0.0-beta.5.tgz#6098efdbb7ec4f526be9221afd5f1c29cae7ab59"
-  integrity sha512-QMC/wrDIDz8COkAAyJK5GR6txY1PazjpCEk7Wv74ZJGiElvZ8HZdCU1x163cV9+dMw57+1FSZgkjXGL5NOo3Gw==
+"@dxos/async@^1.0.0-beta.7":
+  version "1.0.0-beta.7"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fasync/-/async-1.0.0-beta.7.tgz#b4dbbe66e6ac3dbf7fd804375e967e6c9e6538fe"
+  integrity sha512-f+PoB/h+JV+WbhoXA2rIOuE+NL8MwfXk0dt23TwqA/rcUFBRmUb19iK0JkQFmH9see7tCYuZJ1B8C3vwIVDwEg==
 
 "@dxos/async@^1.0.0-beta.1", "@dxos/async@^1.0.0-beta.5", "@dxos/async@^1.0.0-beta.7":
   version "1.0.0-beta.7"
