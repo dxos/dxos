@@ -42,4 +42,4 @@ jobs:
         run: |
           # --registry required for lerna because it ignores registry-url set above.
           # --no-verify-access required for lerna bug.
-          yarn lerna publish --registry http://npm.dev.dxos.network:5736/ --yes --dist-tag="canary" --canary --preid canary --force-publish --no-verify-access
+          yarn lerna publish --registry http://npm.dev.dxos.network:5736/ --yes --dist-tag="canary-experimental" --canary --preid canary --force-publish --no-verify-access
