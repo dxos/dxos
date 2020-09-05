@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "allowJs": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "composite": true,
+    "sourceMap": true,
+    "declarationMap": true,
+    "lib": [
+      "ESNext"
+    ],
+    "target": "ES2018",
+    "module": "commonjs",
+    "outDir": "dist"
+  },
+  "include": [
+    "src",
+    "src/**/*.js",
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.json"
+  ]
+}

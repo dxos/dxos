@@ -17,6 +17,7 @@
   "scripts": {
     "build": "npm run clean && npm run build:ts",
     "build:ts": "tsc",
+    "build:watch": "tsc --watch",
     "clean": "del-cli dist",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
@@ -34,7 +35,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/async": "1.0.0-beta.5",
+    "@dxos/async": "^1.0.0-beta.7",
     "@dxos/codec-protobuf": "^1.1.0-beta.0",
     "@dxos/crypto": "^0.0.1",
     "@dxos/experimental-echo-protocol": "^1.0.0-beta.28",

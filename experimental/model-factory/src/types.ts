@@ -17,7 +17,7 @@ export type ModelMeta = {
   mutation: MessageType
 }
 
-export type ModelConstructor<T> = new (meta: ModelMeta, itemId: ItemID, writeStream?: NodeJS.WritableStream) => T;
+export type ModelConstructor<T> = (new (meta: ModelMeta, itemId: ItemID, writeStream?: NodeJS.WritableStream) => T) & { meta: ModelMeta };
 
 export type ModelMessage<T> = {
   meta: FeedMeta,

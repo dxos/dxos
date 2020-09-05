@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build:watch",
+			"path": "experimental/echo-db/",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"group": "build",
+			"label": "npm: build:watch - experimental/echo-db",
+			"detail": "tsc --watch",
+			"isBackground": true
+		}
+	]
+}

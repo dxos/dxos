@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { PartyKey } from '@dxos/experimental-echo-protocol';
 import { Party, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
-import { Invitation, InvitationResponse, InvitationResponder } from './invitation';
+import { Invitation, InvitationResponder } from './invitation';
 
 export interface Options {
   readOnly?: false;
@@ -97,11 +97,6 @@ export class Database {
    * @param invitation
    */
   async joinParty (invitation: Invitation): Promise<InvitationResponder> {
-    const party = await this._partyManager.addParty(invitation.partyKey, invitation.feeds);
-    await party.open();
-
-    const response: InvitationResponse = { newFeedKey: party.writeFeedKey };
-
-    return new InvitationResponder(party, response);
+    return this._partyManager.addParty(invitation.partyKey, invitation.feeds);
   }
 }

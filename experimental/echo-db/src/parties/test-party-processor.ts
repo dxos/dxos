@@ -70,6 +70,8 @@ export class TestPartyProcessor extends PartyProcessor {
         this._memberKeys.add(admitKey);
         return;
       }
+      case PartyCredential.Type.FEED_ADMIT:
+        throw new Error('Not implemented'); // TODO(marik-d): Handle feed admit messages instead of having `admitFeed` method.
       default:
         throw new Error(`Invalid message: ${JSON.stringify(message, jsonReplacer)}`);
     }
@@ -86,5 +88,9 @@ export class TestPartyProcessor extends PartyProcessor {
   protected _addFeedKey (key: FeedKey) {
     this._feedKeys.add(key);
     this._feedAdded.emit(key);
+  }
+
+  async admitFeed (key: FeedKey) {
+    this._addFeedKey(key);
   }
 }

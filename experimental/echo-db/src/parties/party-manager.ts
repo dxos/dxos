@@ -7,7 +7,7 @@ import debug from 'debug';
 import hypercore from 'hypercore';
 import pify from 'pify';
 
-import { Event, waitForCondition } from '@dxos/async';
+import { Event, Lock } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
 import { createOrderedFeedStream, FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
@@ -20,13 +20,16 @@ import { ReplicatorFactory } from '../replication';
 import { Party, PARTY_ITEM_TYPE } from './party';
 import { Pipeline } from './pipeline';
 import { TestPartyProcessor } from './test-party-processor';
+import { InvitationResponder } from '../invitation';
+import { PartyProcessor } from './party-processor';
 
 const log = debug('dxos:echo:party-manager');
 
 interface Options {
   readLogger?: NodeJS.ReadWriteStream;
   writeLogger?: NodeJS.ReadWriteStream;
-  readOnly?: boolean
+  readOnly?: boolean;
+  partyProcessorFactory?: (partyKey: PartyKey, feedKeys: FeedKey[]) => PartyProcessor;
 }
 
 /**
@@ -48,7 +51,7 @@ export class PartyManager {
   readonly update = new Event<Party>();
 
   // TODO(telackey): Workaround for pre-existing race condition. See longer comment in _constructParty.
-  private _lock = false;
+  private readonly _lock = new Lock();
 
   /**
    * @param feedStore
@@ -128,7 +131,7 @@ export class PartyManager {
 
     // TODO(burdon): Call party processor to write genesis, etc.
     const message = createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey);
-    await pify(feed.append.bind(feed))(message);
+    await pify(feed.append.bind(feed))({ halo: message });
 
     // Connect the pipeline.
     await party.open();
@@ -145,10 +148,21 @@ export class PartyManager {
    * @param feeds Set of feeds belonging to that party
    */
   async addParty (partyKey: PartyKey, feeds: FeedKey[]) {
+    const keyring = new Keyring();
     const feed = await this._feedStore.openFeed(keyToString(partyKey), { metadata: { partyKey } } as any);
-    // TODO(dboreham): I added the next line because lint threw an error on feed being unused. Verify this is correct.
-    feeds.push(feed);
-    return this._constructParty(partyKey, feeds);
+    const feedKey = await keyring.addKeyRecord({
+      publicKey: feed.key,
+      secretKey: feed.secretKey,
+      type: KeyType.FEED
+    });
+
+    const party = await this._constructParty(partyKey, feeds);
+
+    return new InvitationResponder(
+      party,
+      keyring,
+      feedKey
+    );
   }
 
   /**
@@ -176,14 +190,11 @@ export class PartyManager {
     // calls _getOrCreateParty. If the event handler happens to be executed before the first call to _constructParty
     // has finished, this will result in _constructParty being called twice for the same party key.
     // For discussion: how to fix this race properly.
-    await waitForCondition(() => !this._lock);
+    return await this._lock.executeSynchronized(async () => {
+      if (this._parties.has(keyToString(partyKey))) {
+        return this._parties.get(keyToString(partyKey))!;
+      }
 
-    if (this._parties.has(keyToString(partyKey))) {
-      return this._parties.get(keyToString(partyKey)) as Party;
-    }
-
-    this._lock = true;
-    try {
       // TODO(burdon): Ensure that this node's feed (for this party) has been created first.
       //   I.e., what happens if remote feed is synchronized first triggering 'feed' event above.
       //   In this case create pipeline in read-only mode.
@@ -195,7 +206,9 @@ export class PartyManager {
       // TODO(telackey): To use HaloPartyProcessor here we cannot keep passing FeedKey[] arrays around, instead
       // we need to use createFeedAdmitMessage to a write a properly signed message FeedAdmitMessage and write it,
       // like we do above for the PartyGenesis message.
-      const partyProcessor = new TestPartyProcessor(partyKey, [feed.key, ...feedKeys]);
+      const partyProcessorFactory = this._options.partyProcessorFactory ?? ((partyKey, feedKeys) => new TestPartyProcessor(partyKey, feedKeys));
+      const partyProcessor = partyProcessorFactory(partyKey, [feed.key, ...feedKeys]);
+      await partyProcessor.init();
       const feedReadStream = await createOrderedFeedStream(
         this._feedStore, partyProcessor.feedSelector, partyProcessor.messageSelector);
       const feedWriteStream = createWritableFeedStream(feed);
@@ -203,11 +216,10 @@ export class PartyManager {
 
       // Create party.
       const party = new Party(this._modelFactory, pipeline, partyProcessor, feed.key);
+      assert(!this._parties.has(keyToString(party.key)));
       this._parties.set(keyToString(party.key), party);
 
       return party;
-    } finally {
-      this._lock = false;
-    }
+    });
   }
 }
