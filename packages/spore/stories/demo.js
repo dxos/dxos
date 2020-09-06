@@ -102,7 +102,7 @@ export const withBoxProjector = () => {
   const nodes = useRef();
   const layout = new GridLayout();
   const projector = new BoxProjector();
-  useLayout(layout, grid, data, data => {
+  useLayout(layout, grid, data, ({ data }) => {
     projector.update(grid, data, { group: nodes.current });
   });
 
@@ -319,14 +319,6 @@ export const withBullet = () => {
   );
 };
 
-const useNodeStyles = makeStyles({
-  'xxx': {
-    '& > circle': {
-      strokeWidth: 4
-    }
-  }
-});
-
 /**
  * Drag.
  */
@@ -338,7 +330,7 @@ export const withDrag = () => {
   const guides = useRef();
 
   const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree(1)));
-  const [layout] = useState(new ForceLayout());
+  const [layout] = useState(new ForceLayout({ force: { links: { distance: 80 } } }));
 
   const [{ nodeProjector, linkProjector }] = useState({
     nodeProjector: new NodeProjector({ node: { radius: 16, showLabels: false } }),
@@ -441,7 +433,6 @@ export const withTwoForceLayouts = () => {
   }));
   const [layout2] = useState(() => new ForceLayout({
     center: grid => ({ x: grid.center.x + grid.scaleX(50), y: grid.center.y }),
-    // TODO(burdon): Enable compute via context (grid).
     force: { radial: { radius: 100 } }
   }));
 
@@ -538,8 +529,8 @@ export const withTreeLayout = () => {
   const projector = new TreeProjector();
   const guideProjector = new GuideProjector();
   const grid = useGrid({ width, height });
-  useLayout(layout, grid, data, data => {
-    guideProjector.update(grid, data, { group: guides.current });
+  useLayout(layout, grid, data, ({ context, data }) => {
+    guideProjector.update(grid, context, { group: guides.current });
     projector.update(grid, data, {
       links: links.current,
       nodes: nodes.current
@@ -581,7 +572,7 @@ export const withRandomLayout = () => {
   });
 
   const nodeProjector = new NodeProjector({ transition: d3.transition, node: { radius: 8 } });
-  useLayout(layout, grid, data, data => {
+  useLayout(layout, grid, data, ({ data }) => {
     nodeProjector.update(grid, data, { group: nodes.current });
   });
 
@@ -655,7 +646,7 @@ export const withRadialLayout = () => {
     return () => timer.stop();
   }, []);
 
-  useLayout(layout, grid, data, data => {
+  useLayout(layout, grid, data, ({ data }) => {
     projector.update(grid, data, { group: nodes.current });
   });
 
@@ -706,9 +697,9 @@ export const withMultipleLayouts = () => {
   });
 
   // Share data set.
-  useLayout(layout1, grid, data1, data => nodeProjector.update(grid, data, { group: group1.current }));
-  useLayout(layout2, grid, data2, data => nodeProjector.update(grid, data, { group: group2.current }));
-  useLayout(layout3, grid, data2, data => nodeProjector.update(grid, data, { group: group3.current }));
+  useLayout(layout1, grid, data1, ({ data }) => nodeProjector.update(grid, data, { group: group1.current }));
+  useLayout(layout2, grid, data2, ({ data }) => nodeProjector.update(grid, data, { group: group2.current }));
+  useLayout(layout3, grid, data2, ({ data }) => nodeProjector.update(grid, data, { group: group3.current }));
 
   return (
     <FullScreen>
@@ -778,7 +769,7 @@ export const withChangingLayout = () => {
   const { width, height } = size;
   const grid = useGrid({ width, height });
 
-  useLayout(layout, grid, data, data => {
+  useLayout(layout, grid, data, ({ data }) => {
     projector.update(grid, data, { group: nodes.current });
   });
 

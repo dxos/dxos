@@ -27,8 +27,6 @@ export class CircleProjector extends Projector {
       return 4 + Math.max(5 - d.depth, 1) * 2;
     };
 
-    console.log(data);
-
     // d3.select(nodes)
     //   .selectAll('g')
     //     .data(data.descendants(), d => d.data.id)

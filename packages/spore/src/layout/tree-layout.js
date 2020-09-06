@@ -11,7 +11,7 @@ import { Layout } from './layout';
  */
 export class TreeLayout extends Layout {
 
-  _onUpdate(grid, data) {
+  _onUpdate(grid, data, context) {
     const { center, size } = grid;
     const r = size.height * .45;
 
@@ -23,7 +23,7 @@ export class TreeLayout extends Layout {
     data.descendants = hierarchy.descendants.bind(hierarchy);
 
     const { height } = hierarchy;
-    data.guides = [...new Array(height)].map((ignore, i) => ({
+    context.guides = [...new Array(height)].map((ignore, i) => ({
       id: `radius-${i}`,
       type: 'circle',
       cx: center.x,

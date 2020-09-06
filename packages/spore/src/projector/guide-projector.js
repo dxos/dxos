@@ -25,13 +25,13 @@ export class GuideProjector extends Projector {
                 case 'circle': {
                   d3.select(nodes[i])
                     .append('circle')
-                    .attr('class', 'guide')
-                    .attr('cx', d.cx)
-                    .attr('cy', d.cy)
-                    .attr('r', Math.min(width, height) / 2)
-                    .transition()
-                      .duration(1000)
-                      .attr('r', d => d.r);
+                      .attr('class', 'guide')
+                      .attr('cx', d.cx)
+                      .attr('cy', d.cy)
+                      .attr('r', Math.min(width, height) / 2)
+                      .transition()
+                        .duration(1000)
+                        .attr('r', d => d.r);
                 }
               }
             });

@@ -35,6 +35,7 @@ export class BulletLinkProjector extends Projector {
 
           const bullet = d3.select(group)
             .append('circle')
+              .attr('class', 'bullet')
               .attr('cx', p.x)
               .attr('cy', p.y)
               .attr('r', radius);

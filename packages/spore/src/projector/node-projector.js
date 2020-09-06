@@ -93,6 +93,7 @@ export class NodeProjector extends Projector {
       group
         .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`);
 
+      // TODO(burdon): Position left/right depending on center (from layout).
       group
         .select('text')
           .attr('x', d => nodeRadius(d) + marginRight)

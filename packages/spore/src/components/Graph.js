@@ -12,19 +12,24 @@ import * as colors from '@material-ui/core/colors';
 import { useLayout, Layout } from '../layout';
 import { GuideProjector, LinkProjector, NodeProjector } from '../projector';
 
+// TODO(burdon): Use theme.
 const defaultColor = 'grey';
 const highlightColor = 'orange';
 const selectedColor = 'blue';
+const contrastColor = 'red';
 const guideColor = 'blueGrey';
 
 export const useGraphStyles = makeStyles(() => ({
   root: {},
   guides: {
-    '& circle': {
+    '& circle.guide': {
       strokeWidth: 8,
       stroke: colors[guideColor][50],
       fill: 'none',
       opacity: .5
+    },
+    '& circle.bullet': {
+      fill: colors[contrastColor][400],
     }
   },
   links: ({ color = defaultColor }) => ({
@@ -46,6 +51,9 @@ export const useGraphStyles = makeStyles(() => ({
       stroke: colors[color][800],
       fill: colors[color][200],
       cursor: 'pointer'
+    },
+    '& g.node text': {
+      fontFamily: 'sans-serif'
     },
     '& g.highlight circle': {
       fill: colors[highlightColor][200],
@@ -74,31 +82,32 @@ const Graph = (props) => {
 
   const clazzes = merge(useGraphStyles(), classes);
 
-  const guides = useRef();
-  const links = useRef();
-  const nodes = useRef();
+  const guideGroup = useRef();
+  const linkGroup = useRef();
+  const nodeGroup = useRef();
 
   // Drag handler.
   useEffect(() => {
     if (drag) {
-      d3.select(nodes.current)
-        .call(drag.create(nodes.current));
+      d3.select(nodeGroup.current)
+        .call(drag.create(nodeGroup.current));
     }
   }, [drag]);
 
   // Update layout.
-  useLayout(layout, grid, data, data => {
-    guideProjector.update(grid, data, { group: guides.current });
-    nodeProjector.update(grid, data, { group: nodes.current, selected });
-    linkProjector.update(grid, data, { group: links.current });
+  // NOTE: Called every time force update changes data (positions, etc.)
+  useLayout(layout, grid, data, ({ context, data }) => {
+    guideProjector.update(grid, context, { group: guideGroup.current });
+    nodeProjector.update(grid, data, { group: nodeGroup.current, selected, layout });
+    linkProjector.update(grid, data, { group: linkGroup.current });
   }, [data, grid.size, layout, selected]);
 
   return (
     <g className={clazzes.root}>
-      <g ref={guides} className={clazzes.guides} />
+      <g ref={guideGroup} className={clazzes.guides} />
       <g>
-        <g className={clazzes.links} ref={links} />
-        <g className={clazzes.nodes} ref={nodes} />
+        <g className={clazzes.links} ref={linkGroup} />
+        <g className={clazzes.nodes} ref={nodeGroup} />
       </g>
     </g>
   );

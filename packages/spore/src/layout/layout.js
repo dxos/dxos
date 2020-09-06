@@ -23,8 +23,8 @@ export class Layout extends EventEmitter {
     return {};
   }
 
+  // Call to notify repaint.
   emitUpdate(data) {
-    // TODO(burdon): Separate layout from data.
     this.emit('update', data);
   }
 
@@ -34,9 +34,9 @@ export class Layout extends EventEmitter {
     this._onReset();
   }
 
-  update(grid, data) {
+  update(grid, data, context) {
     if (grid.size.width !== null && grid.size.height !== null) {
-      this._onUpdate(grid, data);
+      this._onUpdate(grid, data, context);
       this.emitUpdate(data);
     }
   }
@@ -47,8 +47,9 @@ export class Layout extends EventEmitter {
    * Compute the layout.
    * @param grid
    * @param data
+   * @param context
    * @private
    */
   // eslint-disable-next-line no-unused-vars
-  _onUpdate(grid, data) {}
+  _onUpdate(grid, data, context) {}
 }

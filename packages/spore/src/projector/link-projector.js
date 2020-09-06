@@ -19,11 +19,7 @@ export class LinkProjector extends Projector {
 
   onData(grid, data, { group }) {
     const { showArrows = false } = this._options;
-    const { links = [], pulsars = [] } = data;
-
-    if (pulsars.length) {
-      console.log(pulsars);
-    }
+    const { links = [] } = data;
 
     const root = d3.select(group)
       .selectAll('path')

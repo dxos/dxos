@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useResize } from './useResize';
 
@@ -13,34 +13,47 @@ import { useResize } from './useResize';
  * @param {Object} layout
  * @param {Object} grid
  * @param {Object} data
- * @param {function} [onUpdate]
+ * @param {function} callback
  * @param [deps]
  */
-export const useLayout = (layout, grid, data = {}, onUpdate, deps = []) => {
+export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
   assert(layout);
   assert(grid);
   assert(data);
+  assert(callback);
 
+  // TODO(burdon): Used by guides.
+  const [context] = useState({});
+
+  //
   // Update events.
+  //
   useEffect(() => {
+    const onUpdate = data => callback({ context, data });
     layout.on('update', onUpdate);
     return () => {
       layout.off('update', onUpdate);
     };
-  }, [layout, onUpdate]);
+  }, [layout, callback]);
 
-  // Update data.
-  useEffect(() => {
-    layout.update(grid, data);
-  }, [data, ...deps]);
-
+  //
   // Update on resize (throttled).
+  //
   const { size } = grid;
   useResize(() => {
-    layout.update(grid, data);
+    layout.update(grid, data, context);
   }, size);
 
+  //
+  // Update on external data change.
+  //
+  useEffect(() => {
+    layout.update(grid, data, context);
+  }, [context, data, ...deps]);
+
+  //
   // Clean-up.
+  //
   useEffect(() => {
     return () => {
       layout.reset();

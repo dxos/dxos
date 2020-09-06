@@ -57,26 +57,13 @@ export class ForceLayout extends Layout {
       .stop();
   }
 
-  _onUpdate(grid, data) {
+  _onUpdate(grid, data, context) {
     const { force } = this._options;
     const { nodes = [], links = [] } = data;
 
     const center = value(this._options.center)(grid);
 
-    // Set initial position.
-    nodes.forEach(node => {
-      if (!node.x || !node.y) {
-        Object.assign(node, {
-          x: center.x + (Math.random() - 0.5) * force.radial.radius,
-          y: center.y + (Math.random() - 0.5) * force.radial.radius,
-          vx: null,
-          vy: null
-        });
-      }
-    });
-
-    // TODO(burdon): Context data structure.
-    data.guides = [
+    context.guides = [
       {
         id: 'gravity',
         type: 'circle',
@@ -86,17 +73,30 @@ export class ForceLayout extends Layout {
       }
     ];
 
-    // console.log(':::', JSON.stringify(force, undefined, 2));
+    // Merge nodes.
+    const current = this._simulation.nodes();
+    const merged = nodes.map(node => {
+      const match = current.find(n => n.id === node.id);
+      if (match) {
+        // Merge force properties.
+        const { x, y, vx, vy, fx, fy } = match;
+        return Object.assign(node, { x, y, vx, vy, fx, fy });
+      }
+
+      Object.assign(node, {
+        x: center.x + (Math.random() - 0.5) * force.radial.radius,
+        y: center.y + (Math.random() - 0.5) * force.radial.radius,
+        vx: null,
+        vy: null
+      });
+
+      return node;
+    });
+    // TODO(burdon): Hack.
+    data.nodes = merged;
 
     // TODO(burdon): Configure forces separately by config.
     this._simulation
-
-      /**
-       * https://github.com/d3/d3-force#simulation_nodes
-       * Updates each datum with { index, x, y, vx, vy, fx, fy }
-       * NOTE: call before setting links.
-       */
-      .nodes(nodes)
 
       /**
        * https://github.com/d3/d3-force#simulation_on
@@ -104,6 +104,22 @@ export class ForceLayout extends Layout {
       .on('tick', () => {
         this.emitUpdate(data);
       })
+
+      /**
+       * https://github.com/d3/d3-force#simulation_nodes
+       * Updates each datum with { index, x, y, vx, vy, fx, fy }
+       * NOTE: call before setting links.
+       */
+      .nodes(merged)
+
+      /**
+       * https://github.com/d3/d3-force#link_links
+       */
+      .force('links', d3.forceLink(links)
+        .id(d => d.id)
+        .strength(force.links.strength)
+        .distance(force.links.distance)
+      )
 
       /**
        * https://github.com/d3/d3-force#forceCenter
@@ -128,15 +144,6 @@ export class ForceLayout extends Layout {
        */
       .force('gravity', d3.forceRadial(force.radial.radius, center.x, center.y)
         .strength(force.radial.strength)
-      )
-
-      /**
-       * https://github.com/d3/d3-force#link_links
-       */
-      .force('links', d3.forceLink(links)
-        .id(d => d.id)
-        .strength(force.links.strength)
-        .distance(force.links.distance)
       );
 
     const start = true;
