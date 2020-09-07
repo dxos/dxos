@@ -41,7 +41,7 @@ export abstract class PartyProcessor {
   }
 
   // TODO(burdon): Abstract?
-  async init () {}
+  async addHints (feedKeys: FeedKey[]) { }
 
   get partyKey () {
     return this._partyKey;
@@ -86,9 +86,4 @@ export abstract class PartyProcessor {
   }
 
   abstract async _processMessage (message: IHaloStream): Promise<void>;
-
-  // TODO(marik-d): This should probably be abstracted over some invitation mechanism
-  // TODO(telackey): Discussion needed, as in the HALO-case, it isn't possible to admit a FeedKey directly,
-  //   rather it should be done by processing a signed FeedAdmitMessage.
-  abstract async admitFeed (key: FeedKey): Promise<void>;
 }

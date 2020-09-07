@@ -32,15 +32,13 @@ export interface InvitationResponse {
  */
 export class Invitation {
   constructor (
-    private readonly _partyProcessor: PartyProcessor,
     private readonly _writeStream: NodeJS.WritableStream,
     public readonly request: InvitationRequest
   ) {}
 
   async finalize (response: InvitationResponse) {
     assert(response);
-    await this._partyProcessor.admitFeed(response.peerFeedKey);
-    this._writeStream.write(response.feedAdmitMessage);
+    this._writeStream.write({ halo: response.feedAdmitMessage } as any);
   }
 }
 

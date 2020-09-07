@@ -35,7 +35,7 @@ export default class TestAgent implements Agent {
       createReplicatorFactory(networkManager, feedStore, randomBytes()),
       // TODO(burdon): Remove as options.
       {
-        partyProcessorFactory: (partyKey, feedKeys) => new HaloPartyProcessor(partyKey, feedKeys)
+        partyProcessorFactory: (partyKey) => new HaloPartyProcessor(partyKey)
       }
     );
     this.db = new Database(partyManager);
@@ -56,7 +56,7 @@ export default class TestAgent implements Agent {
       this.invitation = this.party.createInvitation();
       this.environment.log('invitation', {
         partyKey: keyToString(this.invitation.request.partyKey as any),
-        feeds: this.invitation.request.feeds.map(key => keyToString(Buffer.from(key)))
+        feeds: this.invitation.request.feeds.map(key => keyToString(key))
       });
     } else if (event.command === 'ACCEPT_INVITATION') { // TODO(burdon): "invitation.accept", etc.
       const { response, party } = await this.db.joinParty({
@@ -69,11 +69,14 @@ export default class TestAgent implements Agent {
         this.environment.metrics.set('item.count', items.length);
       });
 
-      this.environment.log('invitationResponse', { peerFeedKey: keyToString(Buffer.from(response.peerFeedKey)) });
+      this.environment.log('invitationResponse', {
+        peerFeedKey: keyToString(response.peerFeedKey),
+        feedAdmitMessage: codec.encode({ halo: response.feedAdmitMessage }).toString('hex')
+      });
     } else if (event.command === 'FINALIZE_INVITATION') {
       this.invitation!.finalize({
         peerFeedKey: keyToBuffer((event.invitationResponse as any).peerFeedKey),
-        feedAdmitMessage: (event.invitationResponse as any).feedAdmitMessage
+        feedAdmitMessage: codec.decode(Buffer.from((event.invitationResponse as any).feedAdmitMessage, 'hex')).halo
       });
     } else {
       this.party!.createItem(ObjectModel.meta.type);

@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import hypercore from 'hypercore';
 
 import { discoveryKey, keyToString } from '@dxos/crypto';
@@ -11,6 +12,8 @@ import { Protocol } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
 import { FeedSetProvider } from './parties';
+
+const log = debug('dxos:echo:replication-adapter');
 
 // TODO(burdon): Comment.
 export interface IReplicationAdapter {
@@ -64,7 +67,7 @@ export class ReplicationAdapter implements IReplicationAdapter {
     if (!feed) {
       // TODO(burdon): Change path.
       feed = this.feedStore.openFeed(`/topic/${topic}/readable/${keyToString(key)}`, {
-        key: Buffer.from(key),
+        key,
         metadata: { partyKey: this.partyKey }
       } as any);
     }
@@ -76,12 +79,14 @@ export class ReplicationAdapter implements IReplicationAdapter {
     const replicator = new Replicator({
       load: async () => {
         const partyFeeds = await Promise.all(this.activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
+        log(`load feeds ${partyFeeds.map(feed => keyToString(feed.key))}`);
         return partyFeeds.map((feed) => {
           return { discoveryKey: feed.discoveryKey };
         });
       },
 
       subscribe: (addFeedToReplicatedSet: (feed: any) => void) => this.activeFeeds.added.on(async (feedKey) => {
+        log(`add feed ${keyToString(feedKey)}`);
         const feed = await this._openFeed(feedKey);
         addFeedToReplicatedSet({ discoveryKey: feed.discoveryKey });
       }),
