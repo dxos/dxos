@@ -41,7 +41,8 @@
     "lint": "lerna run lint",
     "lint:fix": "lerna run lint -- --fix",
     "lint:staged": "lint-staged",
-    "sort-package-json": "lerna exec npx sort-package-json"
+    "sort-package-json": "lerna exec npx sort-package-json",
+    "validate": "npm ls"
   },
   "devDependencies": {
     "eslint": "^7.7.0",

@@ -16,6 +16,7 @@ let models;
 
 jest.setTimeout(100000);
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function buildEnv (peers = 2) {
   /*
   const factory = new EnvironmentFactory();

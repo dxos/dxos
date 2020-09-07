@@ -8,12 +8,14 @@ import { ObjectModel } from '@dxos/experimental-object-model';
 import { FeedStore } from '@dxos/feed-store';
 import { NetworkManager } from '@dxos/network-manager';
 import { Agent, Environment, JsonObject } from '@dxos/node-spawner';
-import { codec, Database, Inviter, Party, PartyManager, createReplicatorFactory, HaloPartyProcessor } from '@dxos/experimental-echo-db';
+import {
+  codec, Database, Invitation, Party, PartyManager, createReplicatorFactory, HaloPartyProcessor
+} from '@dxos/experimental-echo-db';
 
 export default class TestAgent implements Agent {
   private party?: Party;
   private db!: Database;
-  private inviter?: Inviter;
+  private invitation?: Invitation;
 
   constructor (private environment: Environment) {}
 
@@ -31,6 +33,7 @@ export default class TestAgent implements Agent {
       feedStore,
       modelFactory,
       createReplicatorFactory(networkManager, feedStore, randomBytes()),
+      // TODO(burdon): Remove as options.
       {
         partyProcessorFactory: (partyKey, feedKeys) => new HaloPartyProcessor(partyKey, feedKeys)
       }
@@ -40,6 +43,7 @@ export default class TestAgent implements Agent {
   }
 
   async onEvent (event: JsonObject) {
+    // TODO(burdon): Switch command (not if).
     if (event.command === 'CREATE_PARTY') {
       this.party = await this.db.createParty();
 
@@ -49,15 +53,15 @@ export default class TestAgent implements Agent {
         this.environment.metrics.set('item.count', items.length);
       });
 
-      this.inviter = this.party.createInvitation();
+      this.invitation = this.party.createInvitation();
       this.environment.log('invitation', {
-        partyKey: keyToString(this.inviter.invitation.partyKey as any),
-        feeds: this.inviter.invitation.feeds.map(key => keyToString(Buffer.from(key)))
+        partyKey: keyToString(this.invitation.request.partyKey as any),
+        feeds: this.invitation.request.feeds.map(key => keyToString(Buffer.from(key)))
       });
-    } else if (event.command === 'ACCEPT_INVITATION') {
+    } else if (event.command === 'ACCEPT_INVITATION') { // TODO(burdon): "invitation.accept", etc.
       const { response, party } = await this.db.joinParty({
         partyKey: keyToBuffer((event.invitation as any).partyKey),
-        feeds: (event.invitation as any).feeds.map(keyToBuffer)
+        feeds: (event.invitation as any).feeds.map(keyToBuffer) // TODO(burdon): Don't convert map.
       });
       this.party = party;
       const items = await this.party.queryItems();
@@ -67,12 +71,12 @@ export default class TestAgent implements Agent {
 
       this.environment.log('invitationResponse', { peerFeedKey: keyToString(Buffer.from(response.peerFeedKey)) });
     } else if (event.command === 'FINALIZE_INVITATION') {
-      this.inviter!.finalize({
+      this.invitation!.finalize({
         peerFeedKey: keyToBuffer((event.invitationResponse as any).peerFeedKey),
         feedAdmitMessage: (event.invitationResponse as any).feedAdmitMessage
       });
     } else {
-      this.party!.createItem(ObjectModel);
+      this.party!.createItem(ObjectModel.meta.type);
     }
   }
 
@@ -82,7 +86,7 @@ export default class TestAgent implements Agent {
       items: items?.value.map(item => ({
         id: item.id,
         type: item.type
-        // model: JSON.parse(JSON.stringify(item.model)), // TODO(marik-d): Use a generic way to serialize items
+        // model: JSON.parse(JSON.stringify(item.model)), // TODO(marik-d): Use a generic way to serialize items.
       }))
     };
   }

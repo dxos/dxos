@@ -2,16 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 import { humanize } from '@dxos/crypto';
 import { FeedKey, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
-import { ModelFactory, ModelType, Model, ModelConstructor } from '@dxos/experimental-model-factory';
+import { ModelFactory, ModelType } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
-import assert from 'assert';
+
 import { createItemDemuxer, Item, ItemFilter, ItemManager } from '../items';
+import { Invitation, InvitationRequest } from '../invitation';
 import { ResultSet } from '../result';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
-import { Inviter, Invitation } from '../invitation';
 
 export const PARTY_ITEM_TYPE = 'wrn://dxos.org/item/party';
 
@@ -25,7 +27,6 @@ export interface PartyFilter {}
 export class Party {
   private _itemManager: ItemManager | undefined;
   private _itemDemuxer: NodeJS.WritableStream | undefined;
-
   private _unsubscribePipeline: (() => void) | undefined;
 
   /**
@@ -34,6 +35,7 @@ export class Party {
    * @param {Pipeline} pipeline
    */
   constructor (
+    // TODO(burdon): Do not inline.
     private readonly _modelFactory: ModelFactory,
     private readonly _pipeline: Pipeline,
     private readonly _partyProcessor: PartyProcessor,
@@ -45,7 +47,7 @@ export class Party {
   }
 
   toString () {
-    return `Party(${JSON.stringify({ key: humanize(this.key) })})`;
+    return `Party(${JSON.stringify({ key: humanize(this.key), open: this.isOpen })})`;
   }
 
   get key (): PartyKey {
@@ -73,7 +75,7 @@ export class Party {
     readStream.pipe(this._itemDemuxer);
 
     // TODO(burdon): Propagate errors.
-    this._unsubscribePipeline = this._pipeline.errors.on(() => {});
+    this._unsubscribePipeline = this._pipeline.errors.on(err => console.error(err));
 
     return this;
   }
@@ -107,7 +109,7 @@ export class Party {
    */
   async setProperty (key: string, value: any): Promise<Party> {
     const item = await this._getPropertiestItem();
-    await item.model.setProperty(key, value);
+    await (item.model as ObjectModel).setProperty(key, value);
     return this;
   }
 
@@ -117,25 +119,19 @@ export class Party {
    */
   async getProperty (key: string): Promise<any> {
     const item = await this._getPropertiestItem();
-    return await item.model.getProperty(key);
+    return await (item.model as ObjectModel).getProperty(key);
   }
 
   /**
    * Creates a new item with the given queryable type and model.
-   * @param {ModelType} [modelType]
+   * @param {ModelType} modelType
    * @param {ItemType} [itemType]
    */
-  // https://www.typescriptlang.org/docs/handbook/functions.html#overloads
-  async createItem (): Promise<Item<ObjectModel>>
-  async createItem (modelClass: undefined, itemType?: ItemType | undefined): Promise<Item<ObjectModel>>
-  async createItem (modelType: ModelType, itemType?: ItemType | undefined): Promise<Item<any>>
-  async createItem <M extends Model<any>>(modelClass: ModelConstructor<M>, itemType?: ItemType | undefined): Promise<Item<M>>
-  async createItem (modelType: ModelConstructor<Model<any>> | ModelType = ObjectModel.meta.type, itemType?: ItemType | undefined): Promise<Item<any>> {
+  // TODO(burdon): Get modelType from somewhere other than ObjectModel.meta.type.
+  // TODO(burdon): Pass in { type, parent } as options.
+  async createItem (modelType: ModelType, itemType?: ItemType | undefined): Promise<Item<any>> {
     assert(this._itemManager);
-    if (typeof modelType !== 'string') {
-      modelType = modelType.meta.type;
-    }
-
+    assert(modelType);
     return this._itemManager.createItem(modelType, itemType);
   }
 
@@ -149,23 +145,25 @@ export class Party {
   }
 
   /**
-   * Returns a special Item that is used by the Party to manage its properties.
+   * Creates an invition for a remote peer.
    */
-  async _getPropertiestItem (): Promise<Item<ObjectModel>> {
-    assert(this.isOpen);
-    assert(this._itemManager);
-    const { value: items } = await this._itemManager?.queryItems({ type: PARTY_ITEM_TYPE });
-    assert(items.length === 1);
-    return items[0];
-  }
-
-  createInvitation (): Inviter {
-    const invitation: Invitation = {
+  createInvitation (): Invitation {
+    const request: InvitationRequest = {
       partyKey: this.key,
       feeds: this._pipeline.memberFeeds
     };
 
     assert(this._pipeline.writeStream);
-    return new Inviter(this._partyProcessor, this._pipeline.writeStream, invitation);
+    return new Invitation(this._partyProcessor, this._pipeline.writeStream, request);
+  }
+
+  /**
+   * Returns a special Item that is used by the Party to manage its properties.
+   */
+  async _getPropertiestItem (): Promise<Item<ObjectModel>> {
+    assert(this._itemManager);
+    const { value: items } = await this._itemManager?.queryItems({ type: PARTY_ITEM_TYPE });
+    assert(items.length === 1);
+    return items[0];
   }
 }

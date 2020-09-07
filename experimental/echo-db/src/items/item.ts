@@ -5,12 +5,13 @@
 import assert from 'assert';
 import pify from 'pify';
 
-import { dxos, ItemID, ItemType } from '@dxos/experimental-echo-protocol';
+import { protocol, ItemID, ItemType } from '@dxos/experimental-echo-protocol';
 import { Model } from '@dxos/experimental-model-factory';
 import { checkType } from '@dxos/experimental-util';
 
 /**
  * Addressable data item.
+ * Items may have child items.
  */
 export class Item<M extends Model<any>> {
   private readonly _itemId: ItemID;
@@ -59,12 +60,13 @@ export class Item<M extends Model<any>> {
     return Array.from(this._children.values());
   }
 
+  // TODO(burdon): To ensure strong references (tree) must declare parent at time of construction.
   async addChild (item: Item<any>): Promise<void> {
     if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
-    await pify(this._writeStream.write.bind(this._writeStream))(checkType<dxos.echo.IEchoEnvelope>({
+    await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
       itemId: this._itemId,
       childMutation: {
         itemId: item.id
@@ -77,19 +79,21 @@ export class Item<M extends Model<any>> {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
-    await pify(this._writeStream.write.bind(this._writeStream))(checkType<dxos.echo.IEchoEnvelope>({
+    await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
       itemId: this._itemId,
       childMutation: {
-        operation: dxos.echo.ItemChildMutation.Operation.REMOVE,
+        operation: protocol.dxos.echo.ItemChildMutation.Operation.REMOVE,
         itemId
       }
     }));
   }
 
-  _processMutation (mutation: dxos.echo.ItemChildMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
+  _processMutation (mutation: protocol.dxos.echo.ItemChildMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
     const { operation, itemId } = mutation;
+    assert(itemId);
+
     switch (operation) {
-      case dxos.echo.ItemChildMutation.Operation.REMOVE: {
+      case protocol.dxos.echo.ItemChildMutation.Operation.REMOVE: {
         this._children.forEach(child => {
           if (child.id === itemId) {
             this._children.delete(child);
@@ -98,7 +102,7 @@ export class Item<M extends Model<any>> {
         break;
       }
 
-      case dxos.echo.ItemChildMutation.Operation.ADD:
+      case protocol.dxos.echo.ItemChildMutation.Operation.ADD:
       default: {
         const child = getItem(itemId);
         assert(child);

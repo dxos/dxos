@@ -51,6 +51,7 @@
     "@types/end-of-stream": "^1.4.0",
     "@types/lodash": "^4.14.159",
     "@types/node": "^14.0.9",
+    "@types/readable-stream": "^2.3.9",
     "@types/stream-buffers": "^3.0.2",
     "@types/through2": "^2.0.36",
     "debug": "^4.1.1",
@@ -58,16 +59,14 @@
     "js-data-structs": "^1.1.2",
     "lodash.merge": "^4.6.2",
     "protobufjs": "^6.9.0",
-    "source-map-support": "^0.5.12",
-    "@types/readable-stream": "^2.3.9",
-    "readable-stream": "^3.6.0"
+    "readable-stream": "^3.6.0",
+    "source-map-support": "^0.5.12"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "^1.0.0",
     "@types/jest": "^25.2.3",
     "chance": "^1.1.6",
     "del-cli": "^3.0.0",
-    "eslint-plugin-jest": "^23.13.1",
     "jest": "^26.2.2",
     "stream-buffers": "^3.0.2",
     "ts-jest": "^26.1.4",

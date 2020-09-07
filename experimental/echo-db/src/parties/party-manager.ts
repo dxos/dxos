@@ -61,7 +61,7 @@ export class PartyManager {
   constructor (
     feedStore: FeedStore,
     modelFactory: ModelFactory,
-    private readonly replicatorFactory?: ReplicatorFactory,
+    private readonly replicatorFactory?: ReplicatorFactory, // TODO(burdon): Make consistent.
     options?: Options
   ) {
     assert(feedStore);
@@ -157,12 +157,7 @@ export class PartyManager {
     });
 
     const party = await this._constructParty(partyKey, feeds);
-
-    return new InvitationResponder(
-      party,
-      keyring,
-      feedKey
-    );
+    return new InvitationResponder(keyring, party, feedKey);
   }
 
   /**
@@ -206,13 +201,15 @@ export class PartyManager {
       // TODO(telackey): To use HaloPartyProcessor here we cannot keep passing FeedKey[] arrays around, instead
       // we need to use createFeedAdmitMessage to a write a properly signed message FeedAdmitMessage and write it,
       // like we do above for the PartyGenesis message.
-      const partyProcessorFactory = this._options.partyProcessorFactory ?? ((partyKey, feedKeys) => new TestPartyProcessor(partyKey, feedKeys));
+      const partyProcessorFactory =
+        this._options.partyProcessorFactory ?? ((partyKey, feedKeys) => new TestPartyProcessor(partyKey, feedKeys));
       const partyProcessor = partyProcessorFactory(partyKey, [feed.key, ...feedKeys]);
       await partyProcessor.init();
       const feedReadStream = await createOrderedFeedStream(
         this._feedStore, partyProcessor.feedSelector, partyProcessor.messageSelector);
       const feedWriteStream = createWritableFeedStream(feed);
-      const pipeline = new Pipeline(partyProcessor, feedReadStream, feedWriteStream, this.replicatorFactory, this._options);
+      const pipeline =
+        new Pipeline(partyProcessor, feedReadStream, feedWriteStream, this.replicatorFactory, this._options);
 
       // Create party.
       const party = new Party(this._modelFactory, pipeline, partyProcessor, feed.key);

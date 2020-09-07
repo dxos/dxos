@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import { Readable } from 'stream';
 
-import { dxos, IEchoStream, ItemID } from '@dxos/experimental-echo-protocol';
+import { protocol, IEchoStream, ItemID } from '@dxos/experimental-echo-protocol';
 import { createReadable, createWritable, jsonReplacer } from '@dxos/experimental-util';
 
 import { ItemManager } from './item-manager';
@@ -37,13 +37,12 @@ export const createItemDemuxer = (itemManager: ItemManager): NodeJS.WritableStre
       assert(modelType);
 
       // Create inbound stream for item.
-      const itemStream = createReadable<dxos.echo.IEchoEnvelope>();
+      const itemStream = createReadable<protocol.dxos.echo.IEchoEnvelope>();
       itemStreams.set(itemId, itemStream);
 
       // Create item.
       const item = await itemManager.constructItem(itemId, modelType, itemType, itemStream);
       assert(item.id === itemId);
-
       return;
     }
 
@@ -56,7 +55,9 @@ export const createItemDemuxer = (itemManager: ItemManager): NodeJS.WritableStre
     //
     if (childMutation) {
       const parent = itemManager.getItem(itemId);
-      parent?._processMutation(childMutation, itemId => itemManager.getItem(itemId));
+      assert(parent);
+
+      parent._processMutation(childMutation, itemId => itemManager.getItem(itemId));
       return;
     }
 

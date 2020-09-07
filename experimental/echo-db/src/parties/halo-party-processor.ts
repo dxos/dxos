@@ -43,8 +43,9 @@ export class HaloPartyProcessor extends PartyProcessor {
     return this._stateMachine.memberKeys;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _addFeedKey (key: FeedKey) {
-    throw new Error('Unsupported: _addFeedKey');
+    throw new Error('Not implemented');
   }
 
   private _forwardEvents () {
@@ -57,11 +58,13 @@ export class HaloPartyProcessor extends PartyProcessor {
       this._feedAdded.emit(keyRecord.publicKey);
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state.on('admit:key', (keyRecord: any) => {
       // this._keyAdded.emit(keyRecord.publicKey);
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async admitFeed (feedKey: FeedKey) {
     // TODO(marik-d): Remove this method and make the class only do the processing
   }

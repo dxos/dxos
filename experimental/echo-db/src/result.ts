@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Event } from '@dxos/async';
 
 /**
- * Query results.
+ * Reactive query results.
  */
 export class ResultSet<T> {
   private readonly _resultsUpdate = new Event<T[]>();
@@ -52,6 +52,7 @@ export class ResultSet<T> {
       this._itemUpdate.on(this._handleUpdate);
     }
 
+    // TODO(burdon): Return subscription object with unsubscribe method?
     return () => {
       this._resultsUpdate.off(listener);
       if (this._resultsUpdate.listenerCount() === 0) {

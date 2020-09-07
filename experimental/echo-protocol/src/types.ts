@@ -2,16 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
-import { dxos } from './proto';
-import { dxos as dxoshalo } from '@dxos/credentials';
+// eslint-disable-next-line camelcase
+import { dxos as halo_dxos } from '@dxos/credentials';
+
+import { protocol } from './proto';
 
 //
 // Keys
 //
 
-// TODO(telackey): Removing the specific PartyKey/FeedKey/IdentityKey types is advisable. They are not different
-// types of things, only distinct uses, and the same key may be used in more than one way (eg, as both the IdentityKey
-// for the user and as the PartyKey for their HALO).
+// TODO(burdon): Move defs to @dxos/crypto. Define KeyPair.
+// TODO(telackey): Removing the specific PartyKey/FeedKey/IdentityKey types is advisable.
+//  They are not different types of things, only distinct uses, and the same key may be used in more than one way
+//  (e.g., as both the IdentityKey for the user and as the PartyKey for their HALO).
 
 export type PublicKey = Uint8Array;
 
@@ -48,17 +51,18 @@ export const createFeedMeta = (block: IFeedGenericBlock<any>): FeedMeta => ({
   seq: block.seq
 });
 
-export type FeedBlock = IFeedGenericBlock<dxos.FeedMessage>;
+export type FeedBlock = IFeedGenericBlock<protocol.dxos.FeedMessage>;
 
 export interface IHaloStream {
   meta: FeedMeta;
   // TODO(telackey): Rename dxos.halo.IHaloEnvelope
-  data: dxoshalo.credentials.Message;
+  // eslint-disable-next-line camelcase
+  data: halo_dxos.credentials.Message;
 }
 
 export interface IEchoStream {
   meta: FeedMeta;
-  data: dxos.echo.IEchoEnvelope;
+  data: protocol.dxos.echo.IEchoEnvelope;
 }
 
 //
@@ -74,6 +78,7 @@ export type ItemType = string;
 // Party
 //
 
+// TODO(burdon): How does this map into IPLD? (https://ipld.io) and WRN?
 export type PartyKey = PublicKey;
 
 //

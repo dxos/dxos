@@ -136,7 +136,6 @@ class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   }
 
   /**
-   *
    * @private
    */
   // TODO(burdon): Comment.
@@ -156,6 +155,7 @@ class FeedStoreIterator implements AsyncIterable<FeedBlock> {
 
         this._openFeeds.set(keyToString(descriptor.key), {
           descriptor,
+          // TODO(burdon): stream[Symbol.asyncIterator] is not a function (in the browser).
           iterator: stream[Symbol.asyncIterator](),
           frozen: false,
           sendQueue: []
@@ -167,7 +167,6 @@ class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   }
 
   /**
-   *
    * @private
    */
   // TODO(burdon): Comment.
