@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import ProtoSchema from './gen/dxos.json';
-
 import { dxos as dxos1 } from './gen/dxos';
+import ProtoSchema from './gen/dxos.json';
 
 export const Schema = ProtoSchema;
 

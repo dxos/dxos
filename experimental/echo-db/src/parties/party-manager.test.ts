@@ -6,16 +6,16 @@ import debug from 'debug';
 import ram from 'random-access-memory';
 
 import { createPartyGenesisMessage, KeyType, Keyring } from '@dxos/credentials';
-import { FeedStore } from '@dxos/feed-store';
-import { ObjectModel } from '@dxos/experimental-object-model';
-import { ModelFactory } from '@dxos/experimental-model-factory';
-import { createWritableFeedStream, latch } from '@dxos/experimental-util';
 import { keyToBuffer } from '@dxos/crypto';
+import { ModelFactory } from '@dxos/experimental-model-factory';
+import { ObjectModel } from '@dxos/experimental-object-model';
+import { createWritableFeedStream, latch } from '@dxos/experimental-util';
+import { FeedStore } from '@dxos/feed-store';
 
 import { codec } from '../codec';
-import { PartyManager } from './party-manager';
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { PartyFactory } from '../party-factory';
+import { PartyManager } from './party-manager';
 
 const log = debug('dxos:echo:party-manager-test');
 

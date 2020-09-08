@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { FeedStore } from '@dxos/feed-store';
-import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
-import { keyToString } from '@dxos/crypto';
 import { Feed } from 'hypercore';
+
+import { keyToString } from '@dxos/crypto';
+import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
+import { FeedStore } from '@dxos/feed-store';
 
 export class FeedStoreAdapter {
   constructor (

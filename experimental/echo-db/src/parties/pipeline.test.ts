@@ -6,14 +6,13 @@ import debug from 'debug';
 import ram from 'random-access-memory';
 
 import { createId, createKeyPair } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
-
-import { createWritableFeedStream, jsonReplacer, createWritable, latch } from '@dxos/experimental-util';
 import { codec, createOrderedFeedStream, IEchoStream } from '@dxos/experimental-echo-protocol';
 import { createSetPropertyMutation } from '@dxos/experimental-model-factory';
+import { createWritableFeedStream, jsonReplacer, createWritable, latch } from '@dxos/experimental-util';
+import { FeedStore } from '@dxos/feed-store';
 
-import { Pipeline } from './pipeline';
 import { PartyProcessor } from './party-processor';
+import { Pipeline } from './pipeline';
 
 const log = debug('dxos:echo:pipeline:test');
 

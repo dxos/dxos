@@ -6,8 +6,8 @@ import assert from 'assert';
 import Chance from 'chance';
 import pify from 'pify';
 import ram from 'random-access-memory';
-import tempy from 'tempy';
 import { Writable } from 'stream';
+import tempy from 'tempy';
 
 import { createId, keyToString } from '@dxos/crypto';
 import { createWritableFeedStream, latch, sink } from '@dxos/experimental-util';

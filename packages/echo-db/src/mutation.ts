@@ -5,6 +5,7 @@
 /* eslint-disable no-unused-vars */
 
 import assert from 'assert';
+
 import { dxos } from './proto/gen/echo';
 
 /**

@@ -5,8 +5,8 @@
 import { createContext, useEffect, useContext, useState, useRef } from 'react';
 
 import { humanize, keyToString } from '@dxos/crypto';
-import { Database, Party, Item } from '@dxos/experimental-echo-db';
 import { truncateString } from '@dxos/debug';
+import { Database, Party, Item } from '@dxos/experimental-echo-db';
 
 //
 // SDK Prototype.

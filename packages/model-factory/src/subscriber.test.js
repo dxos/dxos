@@ -4,9 +4,9 @@
 
 import eos from 'end-of-stream';
 
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
-import { FeedStore } from '@dxos/feed-store';
 import { createId } from '@dxos/crypto';
+import { FeedStore } from '@dxos/feed-store';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { Subscriber } from './subscriber';
 

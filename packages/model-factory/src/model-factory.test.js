@@ -5,10 +5,10 @@
 import bufferJson from 'buffer-json-encoding';
 import pify from 'pify';
 
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { latch } from '@dxos/async';
 import { createId, randomBytes } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { DefaultModel } from './model';
 import { ModelFactory } from './model-factory';

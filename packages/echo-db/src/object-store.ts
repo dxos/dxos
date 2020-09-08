@@ -7,8 +7,8 @@ import debug from 'debug';
 import { EventEmitter } from 'events';
 
 import { MutationUtil, ValueUtil } from './mutation';
-import { parseObjectId } from './util';
 import { dxos } from './proto/gen/echo';
+import { parseObjectId } from './util';
 
 interface ObjectBase {
   id: string,

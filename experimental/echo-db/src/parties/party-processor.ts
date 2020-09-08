@@ -3,11 +3,12 @@
 //
 
 import debug from 'debug';
-import { Party as PartyStateMachine, KeyType } from '@dxos/credentials';
-import { PartyKey, IHaloStream, FeedKey, Spacetime, FeedKeyMapper, FeedSelector, MessageSelector, FeedBlock } from '@dxos/experimental-echo-protocol';
-import { keyToString } from '@dxos/crypto';
-import { jsonReplacer } from '@dxos/experimental-util';
+
 import { Event } from '@dxos/async';
+import { Party as PartyStateMachine, KeyType } from '@dxos/credentials';
+import { keyToString } from '@dxos/crypto';
+import { PartyKey, IHaloStream, FeedKey, Spacetime, FeedKeyMapper, FeedSelector, MessageSelector, FeedBlock } from '@dxos/experimental-echo-protocol';
+import { jsonReplacer } from '@dxos/experimental-util';
 
 const log = debug('dxos:echo:halo-party-processor');
 

@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { NodeOrchestrator, Platform, NodeHandle } from '@dxos/node-spawner';
 import debug from 'debug';
+
+import { NodeOrchestrator, Platform, NodeHandle } from '@dxos/node-spawner';
 
 const log = debug('dxos:echo:e2e:test');
 

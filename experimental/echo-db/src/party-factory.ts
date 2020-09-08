@@ -2,19 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
-import { FeedKey, PartyKey, createOrderedFeedStream } from '@dxos/experimental-echo-protocol';
-import { FeedStoreAdapter } from './feed-store-adapter';
-import { keyToString, keyToBuffer } from '@dxos/crypto';
 import assert from 'assert';
-import { PartyProcessor, Pipeline } from './parties';
-import { createWritableFeedStream } from '@dxos/experimental-util';
-import { ReplicatorFactory } from './replication';
-import { ModelFactory } from '@dxos/experimental-model-factory';
-import { Party, PARTY_ITEM_TYPE } from './parties/party';
-import { Keyring, KeyType, createPartyGenesisMessage } from '@dxos/credentials';
-
-import { ObjectModel } from '@dxos/experimental-object-model';
 import pify from 'pify';
+
+import { Keyring, KeyType, createPartyGenesisMessage } from '@dxos/credentials';
+import { keyToString, keyToBuffer } from '@dxos/crypto';
+import { FeedKey, PartyKey, createOrderedFeedStream } from '@dxos/experimental-echo-protocol';
+import { ModelFactory } from '@dxos/experimental-model-factory';
+import { ObjectModel } from '@dxos/experimental-object-model';
+import { createWritableFeedStream } from '@dxos/experimental-util';
+
+import { FeedStoreAdapter } from './feed-store-adapter';
+import { PartyProcessor, Pipeline } from './parties';
+import { Party, PARTY_ITEM_TYPE } from './parties/party';
+import { ReplicatorFactory } from './replication';
 
 interface Options {
   readLogger?: NodeJS.ReadWriteStream;

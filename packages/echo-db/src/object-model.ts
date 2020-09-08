@@ -9,8 +9,8 @@ import { Model } from '@dxos/model-factory';
 
 import { MutationUtil } from './mutation';
 import { ObjectStore, fromObject } from './object-store';
-import { createObjectId, parseObjectId } from './util';
 import { dxos } from './proto/gen/echo';
+import { createObjectId, parseObjectId } from './util';
 
 const log = debug('dxos:echo:model');
 

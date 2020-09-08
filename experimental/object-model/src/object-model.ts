@@ -10,8 +10,8 @@ import { FeedMeta } from '@dxos/experimental-echo-protocol';
 import { ModelMeta, Model } from '@dxos/experimental-model-factory';
 import { checkType, jsonReplacer } from '@dxos/experimental-util';
 
-import { protocol } from './proto';
 import { MutationUtil, ValueUtil } from './mutation';
+import { protocol } from './proto';
 
 const log = debug('dxos:echo:object-model');
 

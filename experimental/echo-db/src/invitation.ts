@@ -4,8 +4,8 @@
 
 import assert from 'assert';
 
-import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
 import { createFeedAdmitMessage } from '@dxos/credentials';
+import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
 
 import { PartyProcessor, Party } from './parties';
 

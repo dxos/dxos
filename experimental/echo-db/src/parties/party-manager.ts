@@ -2,12 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+import debug from 'debug';
+
 import { Event, Lock } from '@dxos/async';
 import { keyToString } from '@dxos/crypto';
 import { FeedKey, PartyKey, PublicKey } from '@dxos/experimental-echo-protocol';
 import { ComplexMap } from '@dxos/experimental-util';
-import assert from 'assert';
-import debug from 'debug';
+
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { InvitationResponder } from '../invitation';
 import { PartyFactory } from '../party-factory';

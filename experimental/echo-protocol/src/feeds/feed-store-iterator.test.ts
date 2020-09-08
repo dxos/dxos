@@ -10,11 +10,10 @@ import pify from 'pify';
 import ram from 'random-access-memory';
 
 import { createId, keyToString } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
 import { createWritable, latch } from '@dxos/experimental-util';
+import { FeedStore } from '@dxos/feed-store';
 
 import { protocol, codec, createTestItemMutation } from '../proto';
-
 import { FeedKeyMapper, Spacetime } from '../spacetime';
 import { FeedBlock } from '../types';
 import { createOrderedFeedStream } from './feed-store-iterator';

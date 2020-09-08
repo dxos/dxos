@@ -8,10 +8,9 @@ import ram from 'random-access-memory';
 
 import { Codec } from '@dxos/codec-protobuf';
 
+import { fromObject } from './object-store';
 import { dxos } from './proto/gen/echo';
 import EchoSchema from './proto/gen/echo.json';
-
-import { fromObject } from './object-store';
 
 const codec = new Codec('dxos.echo.Envelope')
   .addJson(EchoSchema)
