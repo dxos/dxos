@@ -4,9 +4,10 @@
 
 import { Event } from '@dxos/async';
 import { PartyKey } from '@dxos/experimental-echo-protocol';
+
+import { InvitationRequest, InvitationResponder } from './invitation';
 import { Party, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
-import { Invitation, InvitationResponder } from './invitation';
 
 export interface Options {
   readOnly?: false;
@@ -32,7 +33,12 @@ export class Database {
   constructor (
     private readonly _partyManager: PartyManager,
     private readonly _options: Options = {}
-  ) { }
+  ) {}
+
+  // TODO(burdon): Identifier?
+  toString () {
+    return 'Database()';
+  }
 
   get readOnly () {
     return this._options.readOnly;
@@ -96,7 +102,12 @@ export class Database {
    * Joins a party that was created by another peer and starts replicating with it.
    * @param invitation
    */
-  async joinParty (invitation: Invitation): Promise<InvitationResponder> {
-    return this._partyManager.addParty(invitation.partyKey, invitation.feeds);
+  async joinParty (invitation: InvitationRequest): Promise<InvitationResponder> {
+    const response = await this._partyManager.addParty(invitation.partyKey, invitation.feeds);
+    await response.party.open();
+
+    this._partyUpdate.emit(response.party);
+
+    return response;
   }
 }

@@ -8,7 +8,7 @@ import pify from 'pify';
 
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
-import { dxos, ItemID, ItemType, IEchoStream } from '@dxos/experimental-echo-protocol';
+import { protocol, ItemID, ItemType, IEchoStream } from '@dxos/experimental-echo-protocol';
 import { Model, ModelType, ModelFactory, ModelMessage } from '@dxos/experimental-model-factory';
 import { checkType, createTransform } from '@dxos/experimental-util';
 
@@ -32,7 +32,7 @@ export class ItemManager {
 
   // TODO(burdon): Lint issue: Unexpected whitespace between function name and paren
   // Map of item promises (waiting for item construction after genesis message has been written).
-  // eslint-disable-next-line
+  // eslint-disable-next-line func-call-spacing
   private _pendingItems = new Map<ItemID, (item: Item<any>) => void>();
 
   _modelFactory: ModelFactory;
@@ -68,9 +68,8 @@ export class ItemManager {
     this._pendingItems.set(itemId, callback);
 
     // Write Item Genesis block.
-    // TODO(burdon): Document write vs. push.
-    log('Writing Genesis:', itemId);
-    await pify(this._writeStream.write.bind(this._writeStream))(checkType<dxos.echo.IEchoEnvelope>({
+    log('Item Genesis:', itemId);
+    await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
       itemId,
       genesis: {
         itemType,
@@ -79,8 +78,9 @@ export class ItemManager {
     }));
 
     // Unlocked by construct.
-    log('Waiting for item...');
-    return await waitForCreation();
+    log('Pending Item:', itemId);
+    // TODO(burdon): Type trigger.
+    return await (waitForCreation as any)();
   }
 
   /**
@@ -118,8 +118,8 @@ export class ItemManager {
     //
     // Convert model-specific outbound mutation to outbound envelope message.
     //
-    const outboundTransform = createTransform<any, dxos.echo.IEchoEnvelope>(async (mutation) => {
-      const response: dxos.echo.IEchoEnvelope = {
+    const outboundTransform = createTransform<any, protocol.dxos.echo.IEchoEnvelope>(async (mutation) => {
+      const response: protocol.dxos.echo.IEchoEnvelope = {
         itemId,
         mutation
       };
@@ -162,7 +162,7 @@ export class ItemManager {
    * Return matching items.
    * @param [filter]
    */
-  async queryItems (filter?: ItemFilter): Promise<ResultSet<Item<any>>> {
+  queryItems (filter?: ItemFilter): ResultSet<Item<any>> {
     const { type } = filter || {};
     return new ResultSet<Item<any>>(this._itemUpdate, () => Array.from(this._items.values())
       .filter(item => !type || type === item.type));

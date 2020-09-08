@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Clean-up
 
-- Typescript namespace merging (see import { dxos as _dxos }).
+- Typescript namespace merging (see import { dxos as xxx_dxos }).
 - Ensure streams are closed when objects are destroyed (on purpose or on error); error handling. Asserts vs Errors?
 - BUG: Stream error if transformer async callback throws error.
 - Consistent error logging.
@@ -43,4 +43,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rewrite FeedStore (remove hypertrie, path, etc.)
 
 NOTE: Issue with each module generating overlapping protobuf TS definitions.
-Local module (e.g., object-store) has to import namespace as _dxos.
+Local module (e.g., object-store) has to import namespace as xxx_dxos.

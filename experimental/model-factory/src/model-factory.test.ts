@@ -4,7 +4,7 @@
 
 import { createId, createKeyPair } from '@dxos/crypto';
 import { createAny, createTransform, latch } from '@dxos/experimental-util';
-import { dxos } from '@dxos/experimental-echo-protocol';
+import { protocol } from '@dxos/experimental-echo-protocol';
 
 import { TestModel } from './testing';
 import { ModelFactory } from './model-factory';
@@ -24,15 +24,15 @@ describe('model factory', () => {
     const { publicKey: feedKey } = createKeyPair();
     const itemId = createId();
 
-    const objects: dxos.echo.testing.ITestItemMutation[] = [];
+    const objects: protocol.dxos.echo.testing.ITestItemMutation[] = [];
 
     // Transform outbound mutations to inbounds model messsges (create loop).
     const writeStream = createTransform<
-      dxos.echo.testing.ITestItemMutation, ModelMessage<dxos.echo.testing.ITestItemMutation>
+      protocol.dxos.echo.testing.ITestItemMutation, ModelMessage<protocol.dxos.echo.testing.ITestItemMutation>
       >(
-        async (mutation: dxos.echo.testing.ITestItemMutation) => {
+        async (mutation: protocol.dxos.echo.testing.ITestItemMutation) => {
           objects.push(mutation);
-          const out: ModelMessage<dxos.echo.testing.ITestItemMutation> = {
+          const out: ModelMessage<protocol.dxos.echo.testing.ITestItemMutation> = {
             meta: {
               feedKey,
               seq: 1
@@ -52,7 +52,7 @@ describe('model factory', () => {
     // Update model.
     await model.setProperty('title', 'Hello');
     expect(objects).toHaveLength(1);
-    expect(objects[0]).toEqual(createAny<dxos.echo.testing.ITestItemMutation>({
+    expect(objects[0]).toEqual(createAny<protocol.dxos.echo.testing.ITestItemMutation>({
       key: 'title',
       value: 'Hello'
     }, 'dxos.echo.testing.TestItemMutation'));

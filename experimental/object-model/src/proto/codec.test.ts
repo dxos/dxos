@@ -4,13 +4,12 @@
 
 import { createId } from '@dxos/crypto';
 import { Codec } from '@dxos/codec-protobuf';
-import { dxos, Schema } from '@dxos/experimental-echo-protocol';
+import { protocol, Schema } from '@dxos/experimental-echo-protocol';
 import { createAny } from '@dxos/experimental-util';
 
 import ObjectSchema from './gen/object.json';
-
-// NOTE: Typescript cannot merge namespace definitions from different packages.
-import { dxos as _dxos } from './gen/object';
+// eslint-disable-next-line camelcase
+import { dxos as object_dxos } from './gen/object';
 
 const codec = new Codec('dxos.FeedMessage')
   .addJson(Schema)
@@ -19,11 +18,12 @@ const codec = new Codec('dxos.FeedMessage')
 
 describe('Protobuf', () => {
   test('merge definitions', () => {
-    const message1: dxos.FeedMessage = {
+    const message1: protocol.dxos.FeedMessage = {
       echo: {
         itemId: createId(),
-        mutation: createAny<_dxos.echo.object.IObjectMutation>({
-          operation: _dxos.echo.object.ObjectMutation.Operation.SET,
+        // eslint-disable-next-line camelcase
+        mutation: createAny<object_dxos.echo.object.IObjectMutation>({
+          operation: object_dxos.echo.object.ObjectMutation.Operation.SET,
           key: 'title',
           value: {
             string: 'DXOS'

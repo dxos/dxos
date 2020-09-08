@@ -8,8 +8,7 @@ import { expectToThrow } from '@dxos/async';
 import { createKeyPair, createId } from '@dxos/crypto';
 import { WritableArray } from '@dxos/experimental-util';
 
-// TODO(burdon): import * as
-import { dxos as _dxos } from './proto/gen/object'; // TODO(burdon): Shorten-path.
+import { protocol } from './proto';
 import { ObjectModel } from './object-model';
 import { ValueUtil } from './mutation';
 
@@ -30,7 +29,7 @@ describe('object model', () => {
   });
 
   test('mutation', async () => {
-    const buffer = new WritableArray<_dxos.echo.object.IObjectMutationSet>();
+    const buffer = new WritableArray<protocol.dxos.echo.object.IObjectMutationSet>();
 
     const itemId = createId();
     const model = new ObjectModel(ObjectModel.meta, itemId, buffer);

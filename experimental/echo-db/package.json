@@ -37,7 +37,7 @@
   "dependencies": {
     "@dxos/async": "^1.0.0-beta.7",
     "@dxos/codec-protobuf": "^1.1.0-beta.0",
-    "@dxos/crypto": "^0.0.1",
+    "@dxos/crypto": "^1.0.0-beta.4",
     "@dxos/experimental-echo-protocol": "^1.0.0-beta.28",
     "@dxos/experimental-model-factory": "^1.0.0-beta.28",
     "@dxos/experimental-object-model": "^1.0.0-beta.28",
@@ -56,6 +56,7 @@
     "lodash.merge": "^4.6.2",
     "pify": "^5.0.0",
     "protobufjs": "^6.9.0",
+    "pump": "^3.0.0",
     "random-access-memory": "^3.1.1",
     "source-map-support": "^0.5.12",
     "stream-buffers": "^3.0.2"

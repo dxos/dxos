@@ -25,8 +25,7 @@ async function invite (inviter: NodeHandle, invitee: NodeHandle) {
   });
 }
 
-// TODO(mairk-d): Skipped while the replication doesn't work with halo
-test.skip('replication', async () => {
+test('replication', async () => {
   const orchestrator = new NodeOrchestrator();
 
   const node1 = await orchestrator.createNode(require.resolve('./test-agent'), Platform.IN_PROCESS);
@@ -44,12 +43,15 @@ test.skip('replication', async () => {
 
   node1.sendEvent({});
 
-  await node1.metrics.update.waitFor(() => !!node1.metrics.getNumber('item.count') && node1.metrics.getNumber('item.count')! >= 2);
+  await node1.metrics.update.waitFor(
+    () => !!node1.metrics.getNumber('item.count') && node1.metrics.getNumber('item.count')! >= 2);
   log('node1 has items');
-  await node2.metrics.update.waitFor(() => !!node2.metrics.getNumber('item.count') && node2.metrics.getNumber('item.count')! >= 2);
+  await node2.metrics.update.waitFor(
+    () => !!node2.metrics.getNumber('item.count') && node2.metrics.getNumber('item.count')! >= 2);
   log('node2 has items');
 
   node1.snapshot();
+  node2.snapshot();
 
   orchestrator.destroy();
 });
@@ -67,7 +69,8 @@ test('create party', async () => {
     command: 'CREATE_PARTY'
   });
 
-  await node1.metrics.update.waitFor(() => !!node1.metrics.getNumber('item.count') && node1.metrics.getNumber('item.count')! > 0);
+  await node1.metrics.update.waitFor(
+    () => !!node1.metrics.getNumber('item.count') && node1.metrics.getNumber('item.count')! > 0);
   node1.snapshot();
 
   orchestrator.destroy();

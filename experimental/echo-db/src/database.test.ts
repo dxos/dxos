@@ -15,7 +15,7 @@ import { codec } from './codec';
 import { Database } from './database';
 import { Party, PartyManager } from './parties';
 
-const log = debug('dxos:echo:database:test');
+const log = debug('dxos:echo:database:test,dxos:*:error');
 
 const createDatabase = (verbose = true) => {
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
@@ -33,7 +33,7 @@ const createDatabase = (verbose = true) => {
 };
 
 describe('api tests', () => {
-  test('create party and udpate properties.', async () => {
+  test('create party and update properties.', async () => {
     const db = createDatabase();
     await db.open();
 
@@ -128,8 +128,9 @@ describe('api tests', () => {
     const party = await db.createParty();
     expect(party.isOpen).toBeTruthy();
 
+    // TODO(burdon): Child must be created with parent.
     const parent = await party.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/document');
-    const child = await party.createItem();
+    const child = await party.createItem(ObjectModel.meta.type);
     await parent.addChild(child);
 
     await updated;

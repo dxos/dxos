@@ -2,13 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
-import { createFeedMeta, dxos, FeedBlock, IEchoStream } from '@dxos/experimental-echo-protocol';
-import { createTransform, jsonReplacer } from '@dxos/experimental-util';
 import assert from 'assert';
 import debug from 'debug';
 import merge from 'lodash/merge';
-import { pipeline, Readable, Writable } from 'stream';
+import pump from 'pump';
+import { Readable, Writable } from 'stream';
+
+import { Event } from '@dxos/async';
+import { protocol, createFeedMeta, FeedBlock, IEchoStream } from '@dxos/experimental-echo-protocol';
+import { createTransform, jsonReplacer } from '@dxos/experimental-util';
+
 import { PartyProcessor } from './party-processor';
 import { ReplicatorFactory, IReplicationAdapter } from '../replication';
 
@@ -25,7 +28,7 @@ const error = debug('dxos:echo:pipeline:error');
  */
 export class Pipeline {
   private readonly _errors = new Event<Error>();
-  private readonly _partyProcessor: PartyProcessor;
+  private readonly _partyProcessor: PartyProcessor; // TODO(burdon): Remove.
   private readonly _feedReadStream: NodeJS.ReadableStream;
   private readonly _feedWriteStream?: NodeJS.WritableStream;
   private readonly _options: Options;
@@ -142,11 +145,11 @@ export class Pipeline {
       }
     });
 
-    pipeline([
+    pump([
       this._feedReadStream,
       readLogger,
       this._readStream
-    ].filter(Boolean) as any[], (err) => {
+    ].filter(Boolean) as any[], (err: Error | undefined) => {
       // TODO(burdon): Handle error.
       error('Inbound pipieline:', err || 'closed');
       if (err) {
@@ -159,22 +162,23 @@ export class Pipeline {
     // Sets the current timeframe.
     //
     if (this._feedWriteStream) {
-      this._writeStream = createTransform<dxos.echo.IEchoEnvelope, dxos.IFeedMessage>(
-        async (message: dxos.echo.IEchoEnvelope) => {
-          const data: dxos.IFeedMessage = {
+      this._writeStream = createTransform<protocol.dxos.echo.IEchoEnvelope, protocol.dxos.IFeedMessage>(
+        async (message: protocol.dxos.echo.IEchoEnvelope) => {
+          const data: protocol.dxos.IFeedMessage = {
             echo: merge({
               timeframe: this._partyProcessor.timeframe
             }, message)
           };
 
           return data;
-        });
+        }
+      );
 
-      pipeline([
+      pump([
         this._writeStream,
         writeLogger,
         this._feedWriteStream
-      ].filter(Boolean) as any[], (err) => {
+      ].filter(Boolean) as any[], (err: Error | undefined) => {
         // TODO(burdon): Handle error.
         error('Outbound pipeline:', err || 'closed');
         if (err) {
