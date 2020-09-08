@@ -12,8 +12,8 @@ import { Event } from '@dxos/async';
 import { protocol, createFeedMeta, FeedBlock, IEchoStream } from '@dxos/experimental-echo-protocol';
 import { createTransform, jsonReplacer } from '@dxos/experimental-util';
 
-import { PartyProcessor } from './party-processor';
 import { ReplicatorFactory, IReplicationAdapter } from '../replication';
+import { PartyProcessor } from './party-processor';
 
 interface Options {
   readLogger?: NodeJS.ReadWriteStream;

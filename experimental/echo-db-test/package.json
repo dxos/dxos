@@ -16,7 +16,7 @@
     "@dxos/crypto": "^1.0.0-beta.4"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "^1.0.0",
+    "@dxos/eslint-plugin": "^1.0.4",
     "jest": "^26.4.2",
     "ts-jest": "^26.3.0",
     "typescript": "^3.9.3"

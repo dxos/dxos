@@ -5,10 +5,8 @@
 import { Feed as BaseFeed, mergeFeeds } from './dependency';
 import { KeyValueUtil } from './mutation';
 import { ObjectStore } from './object-store';
-import { createObjectId } from './util';
-
 import { dxos } from './proto';
-
+import { createObjectId } from './util';
 import IObjectMutation = dxos.echo.IObjectMutation;
 
 test('Merge feeds', () => {

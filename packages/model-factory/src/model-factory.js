@@ -3,16 +3,16 @@
 //
 
 import assert from 'assert';
-import { Writable } from 'stream';
+import debounce from 'lodash.debounce';
 import pump from 'pump';
 import Signal from 'signal-promise';
-import debounce from 'lodash.debounce';
+import { Writable } from 'stream';
 
 import metrics from '@dxos/metrics';
 
-import { Subscriber } from './subscriber';
-import { DefaultModel } from './model';
 import { bufferedStreamHandler } from './buffer-stream';
+import { DefaultModel } from './model';
+import { Subscriber } from './subscriber';
 
 /**
  * Model factory creates instances of Model classes and creates a bound Readable stream configured

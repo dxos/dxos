@@ -8,9 +8,9 @@ import { expectToThrow } from '@dxos/async';
 import { createKeyPair, createId } from '@dxos/crypto';
 import { WritableArray } from '@dxos/experimental-util';
 
-import { protocol } from './proto';
-import { ObjectModel } from './object-model';
 import { ValueUtil } from './mutation';
+import { ObjectModel } from './object-model';
+import { protocol } from './proto';
 
 const log = debug('dxos:echo:object-model:testing');
 debug.enable('dxos:echo:*');

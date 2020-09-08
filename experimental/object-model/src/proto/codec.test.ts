@@ -2,14 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import { createId } from '@dxos/crypto';
 import { Codec } from '@dxos/codec-protobuf';
+import { createId } from '@dxos/crypto';
 import { protocol, Schema } from '@dxos/experimental-echo-protocol';
 import { createAny } from '@dxos/experimental-util';
 
-import ObjectSchema from './gen/object.json';
 // eslint-disable-next-line camelcase
 import { dxos as object_dxos } from './gen/object';
+import ObjectSchema from './gen/object.json';
 
 const codec = new Codec('dxos.FeedMessage')
   .addJson(Schema)

@@ -3,15 +3,14 @@
 //
 
 import assert from 'assert';
-
-import levelmem from 'level-mem';
-import multi from 'multi-read-stream';
-import eos from 'end-of-stream';
-import timestamp from 'monotonic-timestamp';
 import charwise from 'charwise';
+import eos from 'end-of-stream';
+import levelmem from 'level-mem';
+import timestamp from 'monotonic-timestamp';
+import multi from 'multi-read-stream';
 
-import { FeedLevelIndexer } from '@dxos/feed-level-indexer';
 import { discoveryKey } from '@dxos/crypto';
+import { FeedLevelIndexer } from '@dxos/feed-level-indexer';
 
 import { createMatcher } from './filter';
 

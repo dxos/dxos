@@ -4,9 +4,9 @@
 
 import ram from 'random-access-memory';
 
-import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { createWritableFeedStream } from '@dxos/experimental-util';
+import { FeedStore } from '@dxos/feed-store';
 
 import { ItemManager } from './item-manager';
 

@@ -4,6 +4,7 @@
 
 // TODO(burdon): Remove dependency (via adapter). Or move to other package.
 import { Model } from '@dxos/model-factory';
+
 import { OrderedMessage } from './common/OrderedMessage';
 
 /**

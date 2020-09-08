@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import eos from 'end-of-stream';
 import debounce from 'lodash.debounce';
 import pLimit from 'p-limit';
-import eos from 'end-of-stream';
 
 /**
  * Debounce a handler where meanwhile it buffers incoming messages.

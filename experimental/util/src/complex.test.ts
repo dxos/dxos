@@ -3,6 +3,7 @@
 //
 
 import { randomBytes, keyToString } from '@dxos/crypto';
+
 import { makeSet, makeMap } from './complex';
 
 const PulicKeySet = makeSet<Uint8Array>(keyToString);

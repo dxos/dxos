@@ -10,3 +10,4 @@ export * from './replication';
 export * from './result';
 export * from './replication';
 export * from './invitation';
+export * from './feed-store-adapter';

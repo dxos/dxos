@@ -1185,11 +1185,12 @@
   dependencies:
     debug "^4.1.1"
 
-"@dxos/eslint-plugin@^1.0.0":
-  version "1.0.0"
-  resolved "http://npm.dev.dxos.network:5736/@dxos%2feslint-plugin/-/eslint-plugin-1.0.0.tgz#83e0196ccd50172c2be1444f567d001eb582d0bc"
-  integrity sha512-vEZMxpIq9OBqKrPiH8+Aycs5s3iCFuFkCGWPbhiwURsiT7IEszY5A9AXp2Al043Gif1X8KbIQ3TYYKCIOMknbQ==
+"@dxos/eslint-plugin@^1.0.4":
+  version "1.0.4"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2feslint-plugin/-/eslint-plugin-1.0.4.tgz#3407fd5fac51b1856140ae3b7b77c9c21c410994"
+  integrity sha512-RR3MQJdavNY7/S4TagQQUTUV1qitcEN9/HWSJBgvQ+U7ITZHpDKHAubh6ezP76DzUVcyBeZfGX1MvOgwrP2eQQ==
   dependencies:
+    "@rushstack/eslint-patch" "^1.0.3"
     "@typescript-eslint/eslint-plugin" "^3.10.1"
     "@typescript-eslint/parser" "^3.10.1"
     eslint-config-semistandard "^15.0.1"
@@ -2940,6 +2941,11 @@
     invariant "^2.2.3"
     prop-types "^15.6.1"
     react-lifecycles-compat "^3.0.4"
+
+"@rushstack/eslint-patch@^1.0.3":
+  version "1.0.3"
+  resolved "http://npm.dev.dxos.network:5736/@rushstack%2feslint-patch/-/eslint-patch-1.0.3.tgz#daeed4dfb515427497925fb1464c181a020620ce"
+  integrity sha512-Oq5EYosOGfqE8r2tuRMfJSeZKO+M3QozrYKs5bPuqyWB9pHhclS/Kp8boyu/pPwskE9PtPkagc+qwW+yO2b9Kw==
 
 "@sammacbeth/random-access-idb-mutable-file@^0.1.1":
   version "0.1.1"

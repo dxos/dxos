@@ -2,17 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ReadableStreamBuffer } from 'stream-buffers';
 import eos from 'end-of-stream';
 import pumpify from 'pumpify';
+import { ReadableStreamBuffer } from 'stream-buffers';
 import through from 'through2';
 
 import { Codec } from '@dxos/codec-protobuf';
 
 import { ObjectStore } from './object-store';
-import { createObjectId } from './util';
-
 import EchoSchema from './proto/gen/echo.json';
+import { createObjectId } from './util';
 
 // TODO(burdon): merge with protobuf.test
 

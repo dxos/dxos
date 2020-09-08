@@ -2,16 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 
-import {
-  FeedKey, FeedSelector, FeedBlock, FeedKeyMapper, IHaloStream, PartyKey, Spacetime, MessageSelector, PublicKey
-} from '@dxos/experimental-echo-protocol';
-import { jsonReplacer } from '@dxos/experimental-util';
 import { Event } from '@dxos/async';
+import { Party as PartyStateMachine, KeyType } from '@dxos/credentials';
+import { keyToString } from '@dxos/crypto';
+import { PartyKey, IHaloStream, FeedKey, Spacetime, FeedKeyMapper, FeedSelector, MessageSelector, FeedBlock } from '@dxos/experimental-echo-protocol';
+import { jsonReplacer } from '@dxos/experimental-util';
 
-const log = debug('dxos:echo:party-processor');
+const log = debug('dxos:echo:halo-party-processor');
 
 const spacetime = new Spacetime(new FeedKeyMapper('feedKey'));
 
@@ -21,10 +20,9 @@ export interface FeedSetProvider {
 }
 
 /**
- * Manages current party state (e.g., admitted feeds).
- * This is a base class that is extended by `HALO`, which manages access control.
+ * Party processor for testing.
  */
-export abstract class PartyProcessor {
+export class PartyProcessor {
   protected readonly _partyKey: PartyKey;
 
   protected readonly _feedAdded = new Event<FeedKey>()
@@ -32,27 +30,45 @@ export abstract class PartyProcessor {
   // Current timeframe.
   private _timeframe = spacetime.createTimeframe();
 
-  /**
-   * @param partyKey
-   */
-  constructor (partyKey: PartyKey) {
-    assert(partyKey);
-    this._partyKey = partyKey;
-  }
+  private readonly _stateMachine: PartyStateMachine;
 
-  // TODO(burdon): Abstract?
-  async addHints (feedKeys: FeedKey[]) { }
+  constructor (partyKey: PartyKey) {
+    this._partyKey = partyKey;
+    this._stateMachine = new PartyStateMachine(partyKey);
+
+    // TODO(telackey) @dxos/credentials was only half converted to TS. In its current state, the KeyRecord type
+    // is not exported, and the PartyStateMachine being used is not properly understood as an EventEmitter by TS.
+    // Casting to 'any' is a workaround for the compiler, but the fix is fully to convert @dxos/credentials to TS.
+    const state = this._stateMachine as any;
+
+    state.on('admit:feed', (keyRecord: any) => {
+      this._feedAdded.emit(keyRecord.publicKey);
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    state.on('admit:key', (keyRecord: any) => {
+      // this._keyAdded.emit(keyRecord.publicKey);
+    });
+  }
 
   get partyKey () {
     return this._partyKey;
   }
 
-  abstract get feedKeys () : FeedKey[];
-
-  abstract get memberKeys () : PublicKey[];
-
   get timeframe () {
     return this._timeframe;
+  }
+
+  get keyring () {
+    return this._stateMachine.keyring;
+  }
+
+  public get feedKeys () {
+    return this._stateMachine.memberFeeds;
+  }
+
+  public get memberKeys () {
+    return this._stateMachine.memberKeys;
   }
 
   get feedSelector (): FeedSelector {
@@ -65,19 +81,6 @@ export abstract class PartyProcessor {
     return (candidates: FeedBlock[]) => 0;
   }
 
-  // TODO(telackey): Discussion needed, as in the HALO-case, it isn't possible to admit a FeedKey directly,
-  //   rather it should be done by processing a signed FeedAdmitMessage.
-  protected abstract _addFeedKey (key: FeedKey): void;
-
-  updateTimeframe (key: FeedKey, seq: number) {
-    this._timeframe = spacetime.merge(this._timeframe, spacetime.createTimeframe([[key as any, seq]]));
-  }
-
-  async processMessage (message: IHaloStream): Promise<void> {
-    log(`Processing: ${JSON.stringify(message, jsonReplacer)}`);
-    return this._processMessage(message);
-  }
-
   getActiveFeedSet (): FeedSetProvider {
     return {
       get: () => this.feedKeys,
@@ -85,5 +88,19 @@ export abstract class PartyProcessor {
     };
   }
 
-  abstract async _processMessage (message: IHaloStream): Promise<void>;
+  async addHints (feedKeys: FeedKey[]) {
+    log(`addHints ${feedKeys.map(key => keyToString(key))}`);
+    // Gives state machine hints on initial feed set from where to read party genesis message.
+    await this._stateMachine.takeHints(feedKeys.map(publicKey => ({ publicKey, type: KeyType.FEED })));
+  }
+
+  updateTimeframe (key: FeedKey, seq: number) {
+    this._timeframe = spacetime.merge(this._timeframe, spacetime.createTimeframe([[key as any, seq]]));
+  }
+
+  async processMessage (message: IHaloStream): Promise<void> {
+    log(`Processing: ${JSON.stringify(message, jsonReplacer)}`);
+    const { data } = message;
+    return this._stateMachine.processMessages([data]);
+  }
 }

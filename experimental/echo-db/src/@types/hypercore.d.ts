@@ -11,6 +11,7 @@ declare module 'hypercore' {
 
     export interface Feed {
       key: Buffer;
+      secretKey: Buffer;
       discoveryKey: Buffer;
       length: number;
 
