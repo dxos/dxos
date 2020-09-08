@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { humanize } from '@dxos/crypto';
 import { FeedKey, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
-import { ModelFactory, ModelType } from '@dxos/experimental-model-factory';
+import { ModelFactory, ModelType, ModelConstructor, Model } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 
 import { createItemDemuxer, Item, ItemFilter, ItemManager } from '../items';
@@ -123,15 +123,15 @@ export class Party {
 
   /**
    * Creates a new item with the given queryable type and model.
-   * @param {ModelType} modelType
+   * @param {ModelType} model
    * @param {ItemType} [itemType]
    */
   // TODO(burdon): Get modelType from somewhere other than ObjectModel.meta.type.
   // TODO(burdon): Pass in { type, parent } as options.
-  async createItem (modelType: ModelType, itemType?: ItemType | undefined): Promise<Item<any>> {
+  async createItem <M extends Model<any>> (model: ModelConstructor<M>, itemType?: ItemType | undefined): Promise<Item<M>> {
     assert(this._itemManager);
-    assert(modelType);
-    return this._itemManager.createItem(modelType, itemType);
+    assert(model?.meta?.type);
+    return this._itemManager.createItem(model.meta.type, itemType);
   }
 
   /**

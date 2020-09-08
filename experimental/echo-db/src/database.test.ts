@@ -14,11 +14,14 @@ import { createLoggingTransform, latch, jsonReplacer } from '@dxos/experimental-
 import { codec } from './codec';
 import { Database } from './database';
 import { Party, PartyManager } from './parties';
+import { PartyFactory } from './party-factory';
+import { FeedStoreAdapter } from './feed-store-adapter';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 
 const createDatabase = (verbose = true) => {
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+  const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
   const modelFactory = new ModelFactory()
     .registerModel(ObjectModel.meta, ObjectModel);
@@ -28,7 +31,8 @@ const createDatabase = (verbose = true) => {
     writeLogger: createLoggingTransform((message: any) => { log('<<<', JSON.stringify(message, jsonReplacer, 2)); })
   } : undefined;
 
-  const partyManager = new PartyManager(feedStore, modelFactory);
+  const partyFactory = new PartyFactory(feedStoreAdapter, modelFactory, undefined);
+  const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
   return new Database(partyManager, options);
 };
 
@@ -91,9 +95,9 @@ describe('api tests', () => {
     expect(party.isOpen).toBeTruthy();
 
     // TODO(burdon): Test item mutations.
-    await party.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/document');
-    await party.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/document');
-    await party.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/kanban');
+    await party.createItem(ObjectModel, 'wrn://dxos.org/item/document');
+    await party.createItem(ObjectModel, 'wrn://dxos.org/item/document');
+    await party.createItem(ObjectModel, 'wrn://dxos.org/item/kanban');
 
     await updated;
     unsubscribe();
@@ -129,8 +133,8 @@ describe('api tests', () => {
     expect(party.isOpen).toBeTruthy();
 
     // TODO(burdon): Child must be created with parent.
-    const parent = await party.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/document');
-    const child = await party.createItem(ObjectModel.meta.type);
+    const parent = await party.createItem(ObjectModel, 'wrn://dxos.org/item/document');
+    const child = await party.createItem(ObjectModel);
     await parent.addChild(child);
 
     await updated;

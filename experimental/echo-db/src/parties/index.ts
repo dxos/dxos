@@ -6,4 +6,4 @@ export * from './party';
 export * from './party-manager';
 export * from './party-processor';
 export * from './pipeline';
-export * from './halo-party-processor';
+export * from './party-processor';

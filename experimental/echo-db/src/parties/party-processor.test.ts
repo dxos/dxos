@@ -7,7 +7,7 @@ import debug from 'debug';
 import { Keyring, KeyType, createPartyGenesisMessage, createFeedAdmitMessage } from '@dxos/credentials';
 import { IHaloStream } from '@dxos/experimental-echo-protocol';
 
-import { HaloPartyProcessor } from './halo-party-processor';
+import { PartyProcessor } from './party-processor';
 
 const log = debug('dxos:echo:party-processor:test');
 
@@ -18,7 +18,7 @@ describe('party-processor', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
 
-    const partyProcessor = new HaloPartyProcessor(partyKey.publicKey);
+    const partyProcessor = new PartyProcessor(partyKey.publicKey);
     expect(partyProcessor.partyKey).toBeTruthy();
 
     const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey);
@@ -51,7 +51,7 @@ describe('party-processor', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
 
-    const partyProcessor = new HaloPartyProcessor(partyKey.publicKey);
+    const partyProcessor = new PartyProcessor(partyKey.publicKey);
     expect(partyProcessor.partyKey).toBeTruthy();
 
     const genesisMessage: IHaloStream = {

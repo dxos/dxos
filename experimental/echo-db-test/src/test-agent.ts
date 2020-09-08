@@ -9,8 +9,9 @@ import { FeedStore } from '@dxos/feed-store';
 import { NetworkManager } from '@dxos/network-manager';
 import { Agent, Environment, JsonObject } from '@dxos/node-spawner';
 import {
-  codec, Database, Invitation, Party, PartyManager, createReplicatorFactory, HaloPartyProcessor
+  codec, Database, Invitation, Party, PartyManager, createReplicatorFactory, FeedStoreAdapter
 } from '@dxos/experimental-echo-db';
+import { PartyFactory } from '@dxos/experimental-echo-db/dist/src/party-factory';
 
 export default class TestAgent implements Agent {
   private party?: Party;
@@ -23,21 +24,19 @@ export default class TestAgent implements Agent {
     const { storage, swarmProvider } = this.environment;
 
     const feedStore = new FeedStore(storage, { feedOptions: { valueEncoding: codec } });
+    const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
     const networkManager = new NetworkManager(feedStore, swarmProvider);
 
     const modelFactory = new ModelFactory()
       .registerModel(ObjectModel.meta, ObjectModel);
 
-    const partyManager = new PartyManager(
-      feedStore,
+    const partyFactory = new PartyFactory(
+      feedStoreAdapter,
       modelFactory,
-      createReplicatorFactory(networkManager, feedStore, randomBytes()),
-      // TODO(burdon): Remove as options.
-      {
-        partyProcessorFactory: (partyKey) => new HaloPartyProcessor(partyKey)
-      }
+      createReplicatorFactory(networkManager, feedStore, randomBytes())
     );
+    const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
     this.db = new Database(partyManager);
     await this.db.open();
   }
@@ -79,7 +78,7 @@ export default class TestAgent implements Agent {
         feedAdmitMessage: codec.decode(Buffer.from((event.invitationResponse as any).feedAdmitMessage, 'hex')).halo
       });
     } else {
-      this.party!.createItem(ObjectModel.meta.type);
+      this.party!.createItem(ObjectModel);
     }
   }
 

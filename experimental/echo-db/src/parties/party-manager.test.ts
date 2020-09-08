@@ -14,14 +14,23 @@ import { keyToBuffer } from '@dxos/crypto';
 
 import { codec } from '../codec';
 import { PartyManager } from './party-manager';
+import { FeedStoreAdapter } from '../feed-store-adapter';
+import { PartyFactory } from '../party-factory';
 
 const log = debug('dxos:echo:party-manager-test');
 
 describe('Party manager', () => {
-  test('Created locally', async () => {
+  const setup = () => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStoreAdapter = new FeedStoreAdapter(feedStore);
     const modelFactory = new ModelFactory().registerModel(ObjectModel.meta, ObjectModel);
-    const partyManager = new PartyManager(feedStore, modelFactory);
+    const partyFactory = new PartyFactory(feedStoreAdapter, modelFactory, undefined);
+    const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
+    return { feedStore, partyManager };
+  };
+
+  test('Created locally', async () => {
+    const { partyManager } = setup();
     await partyManager.open();
 
     const [update, setUpdated] = latch();
@@ -39,9 +48,7 @@ describe('Party manager', () => {
   });
 
   test('Created via sync', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
-    const modelFactory = new ModelFactory().registerModel(ObjectModel.meta, ObjectModel);
-    const partyManager = new PartyManager(feedStore, modelFactory);
+    const { feedStore, partyManager } = setup();
     await partyManager.open();
 
     const [update, setUpdated] = latch();
@@ -74,7 +81,7 @@ describe('Party manager', () => {
   });
 
   test('Create from cold start', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const { feedStore, partyManager } = setup();
     await feedStore.open();
 
     const numParties = 3;
@@ -100,8 +107,6 @@ describe('Party manager', () => {
     }
 
     // Open.
-    const modelFactory = new ModelFactory().registerModel(ObjectModel.meta, ObjectModel);
-    const partyManager = new PartyManager(feedStore, modelFactory);
     await partyManager.open();
 
     expect(partyManager.parties).toHaveLength(numParties);

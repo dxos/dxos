@@ -116,7 +116,7 @@ const EchoGraph = (
 
           case 'party': {
             const party = await database.getParty(source.partyKey);
-            await party.createItem(ObjectModel.meta.type);
+            await party.createItem(ObjectModel);
             break;
           }
 
