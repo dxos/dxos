@@ -15,28 +15,26 @@ import { Layout } from './layout';
  */
 export class ForceLayout extends Layout {
 
-  // TODO(burdon): Based on grid or size?
   get defaults() {
     return {
       force: {
-        charge: {
-          strength: -100
+        gravity: {
+          strength: .1
         },
-
         radial: {
           radius: 200,
           strength: .1
         },
-
+        charge: {
+          strength: -100
+        },
         links: {
-          distance: 50,
+          distance: 20,
 
           // https://github.com/d3/d3-force#link_strength
           strength: (link /*, i, links*/) => {
-            // TODO(burdon): Count links.
             const count = () => 1;
-
-            return 1 / Math.min(count(link.source), count(link.target));
+            return 1 / Math.max(count(link.source), count(link.target));
           }
         }
       }
@@ -60,18 +58,9 @@ export class ForceLayout extends Layout {
   _onUpdate(grid, data, context) {
     const { force } = this._options;
     const { nodes = [], links = [] } = data;
-
     const center = value(this._options.center)(grid);
 
-    context.guides = [
-      {
-        id: 'gravity',
-        type: 'circle',
-        cx: center.x,
-        cy: center.y,
-        r: force.radial.radius
-      }
-    ];
+    context.guides = [];
 
     // Merge nodes.
     const current = this._simulation.nodes();
@@ -84,8 +73,8 @@ export class ForceLayout extends Layout {
       }
 
       Object.assign(node, {
-        x: center.x + (Math.random() - 0.5) * force.radial.radius,
-        y: center.y + (Math.random() - 0.5) * force.radial.radius,
+        x: center.x + (Math.random() - 0.5) * force.radial?.radius || 20,
+        y: center.y + (Math.random() - 0.5) * force.radial?.radius || 20,
         vx: null,
         vy: null
       });
@@ -95,56 +84,73 @@ export class ForceLayout extends Layout {
     // TODO(burdon): Hack.
     data.nodes = merged;
 
-    // TODO(burdon): Configure forces separately by config.
+    /**
+     * https://github.com/d3/d3-force#simulation_on
+     */
     this._simulation
-
-      /**
-       * https://github.com/d3/d3-force#simulation_on
-       */
       .on('tick', () => {
         this.emitUpdate(data);
-      })
+      });
 
-      /**
-       * https://github.com/d3/d3-force#simulation_nodes
-       * Updates each datum with { index, x, y, vx, vy, fx, fy }
-       * NOTE: call before setting links.
-       */
-      .nodes(merged)
+    /**
+     * https://github.com/d3/d3-force#simulation_nodes
+     * Updates each datum with { index, x, y, vx, vy, fx, fy }
+     * NOTE: call before setting links.
+     */
+    this._simulation
+      .nodes(merged);
 
-      /**
-       * https://github.com/d3/d3-force#link_links
-       */
-      .force('links', d3.forceLink(links)
-        .id(d => d.id)
+    /**
+     * https://github.com/d3/d3-force#link_links
+     */
+    if (force.links) {
+      this._simulation.force('links', d3.forceLink(links).id(d => d.id)
         .strength(force.links.strength)
         .distance(force.links.distance)
-      )
+      );
+    }
 
-      /**
-       * https://github.com/d3/d3-force#forceCenter
-       */
-      .force('center', d3.forceCenter(center.x, center.y))
+    /**
+     * https://github.com/d3/d3-force#forceCenter
+     */
+    if (force.gravity) {
+      this._simulation.force('gravity', d3.forceCenter(center.x, center.y));
+      // .strength(1));
+    }
 
-      /**
-       * https://github.com/d3/d3-force#forceCollide
-       */
-      .force('collide', d3.forceCollide())
+    /**
+     * https://github.com/d3/d3-force#forceCollide
+     */
+    if (force.collide) {
+      this._simulation.force('collide', d3.forceCollide())
+    }
 
-      /**
-       * https://github.com/d3/d3-force#forceManyBody
-       */
-      // TODO(burdon): Strength accessor funiiton can determine strength for each node separately.
-      .force('charge', d3.forceManyBody()
+    /**
+     * https://github.com/d3/d3-force#forceManyBody
+     */
+    // TODO(burdon): Strength accessor function can determine strength for each node separately.
+    if (force.charge) {
+      this._simulation.force('charge', d3.forceManyBody()
         .strength(force.charge.strength)
       )
+    }
 
-      /**
-       * https://github.com/d3/d3-force#forceRadial
-       */
-      .force('gravity', d3.forceRadial(force.radial.radius, center.x, center.y)
+    /**
+     * https://github.com/d3/d3-force#forceRadial
+     */
+    if (force.radial) {
+      this._simulation.force('radial', d3.forceRadial(force.radial.radius, center.x, center.y)
         .strength(force.radial.strength)
       );
+
+      context.guides.push({
+        id: 'gravity',
+        type: 'circle',
+        cx: center.x,
+        cy: center.y,
+        r: force.radial.radius
+      });
+    }
 
     const start = true;
     if (start) {

@@ -111,8 +111,6 @@ export const withFeeds = () => {
       return block;
     });
 
-    console.log(sortedBlocks);
-
     let x, y;
     switch (layout) {
       case 'deps': {

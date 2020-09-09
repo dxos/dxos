@@ -96,6 +96,7 @@ const Graph = (props) => {
 
   // Update layout.
   // NOTE: Called every time force update changes data (positions, etc.)
+  // TODO(burdon): Layout is complex object (unsuitable for deps?)
   useLayout(layout, grid, data, ({ context, data }) => {
     guideProjector.update(grid, context, { group: guideGroup.current });
     nodeProjector.update(grid, data, { group: nodeGroup.current, selected, layout });

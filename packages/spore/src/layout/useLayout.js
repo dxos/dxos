@@ -22,7 +22,7 @@ export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
   assert(data);
   assert(callback);
 
-  // TODO(burdon): Used by guides.
+  // Used by guides.
   const [context] = useState({});
 
   //
@@ -34,7 +34,7 @@ export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
     return () => {
       layout.off('update', onUpdate);
     };
-  }, [layout, callback]);
+  }, [layout]);
 
   //
   // Update on resize (throttled).

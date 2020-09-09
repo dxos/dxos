@@ -39,6 +39,8 @@ export class GuideProjector extends Projector {
         update => {
           // TODO(burdon): Called on every update.
           update.select('circle')
+            .attr('cx', d => d.cx)
+            .attr('cy', d => d.cy)
             .attr('r', d => d.r);
         }
       );
