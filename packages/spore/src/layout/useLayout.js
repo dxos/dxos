@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { useResize } from './useResize';
 
@@ -15,15 +15,14 @@ import { useResize } from './useResize';
  * @param {Object} data
  * @param {function} callback
  * @param [deps]
+ * @param [context]
  */
-export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
+export const useLayout = (layout, grid, data = {}, callback, deps = [], context = {}) => {
   assert(layout);
   assert(grid);
   assert(data);
   assert(callback);
-
-  // Used by guides.
-  const [context] = useState({});
+  assert(context);
 
   //
   // Update events.
@@ -49,7 +48,7 @@ export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
   //
   useEffect(() => {
     layout.update(grid, data, context);
-  }, [context, data, ...deps]);
+  }, [data, ...deps]);
 
   //
   // Clean-up.

@@ -29,14 +29,14 @@ export const useGraphStyles = makeStyles(() => ({
       opacity: .5
     },
     '& circle.bullet': {
-      fill: colors[contrastColor][400],
+      fill: colors[contrastColor][400]
     }
   },
   links: ({ color = defaultColor }) => ({
     '& path.link': {
       fill: 'none',
       strokeWidth: 1,
-      stroke: colors[color][500],
+      stroke: colors[color][500]
     }
   }),
   nodes: ({ color = defaultColor }) => ({
@@ -53,13 +53,14 @@ export const useGraphStyles = makeStyles(() => ({
       cursor: 'pointer'
     },
     '& g.node text': {
-      fontFamily: 'sans-serif'
+      fontFamily: 'sans-serif',
+      fontWeight: 100
     },
     '& g.highlight circle': {
-      fill: colors[highlightColor][200],
+      fill: colors[highlightColor][200]
     },
     '& g.selected circle': {
-      fill: colors[selectedColor][200],
+      fill: colors[selectedColor][200]
     }
   })
 }));
