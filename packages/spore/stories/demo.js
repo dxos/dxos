@@ -251,7 +251,7 @@ export const withChangingForceLayout = () => {
   const [data] = useState(convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 2 })));
 
   const [{ layout, drag }, setLayout] = useState(() => {
-    const layout = new ForceLayout();
+    const layout = new ForceLayout({ center: { x: -200, y: 0 }, force: { links: { distance: 100 }}});
     return {
       layout,
       drag: createSimulationDrag(layout.simulation)
@@ -266,11 +266,15 @@ export const withChangingForceLayout = () => {
           y: 0
         },
         force: {
+          links: {
+            distance: 20
+          },
           radial: {
             radius: 100
           }
         }
       });
+
       setLayout({
         layout,
         drag: createSimulationDrag(layout.simulation)

@@ -32,33 +32,34 @@ export class NodeProjector extends Projector {
     root
       .enter()
         .append('g')
-        .attr('state', 'enter')
-        .attr('id', d => d.id)
-        .attr('class', d => clsx('node', propertyAdapter(d)?.class))
-        .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`)
+          .attr('state', 'enter')
+          .attr('id', d => d.id)
+          .attr('class', d => clsx('node', propertyAdapter(d)?.class))
+          .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`)
 
-        .on('mouseover', (d, i, nodes) => {
-          d3.select(nodes[i]).classed('highlight', true);
-        })
-        .on('mouseout', (d, i, nodes) => {
-          d3.select(nodes[i]).classed('highlight', false);
-        })
+          // TODO(burdon): Plugin.
+          .on('mouseover', (d, i, nodes) => {
+            d3.select(nodes[i]).classed('highlight', true);
+          })
+          .on('mouseout', (d, i, nodes) => {
+            d3.select(nodes[i]).classed('highlight', false);
+          })
 
-        .call(group => {
-          // TODO(burdon): Render in different layer to prevent node occlusion?
-          if (showLabels) {
+          .call(group => {
+            // TODO(burdon): Render in different layer to prevent node occlusion?
+            if (showLabels) {
+              group
+                .append('text')
+                .text(d => d.title);
+            }
+
             group
-              .append('text')
-              .text(d => d.title);
-          }
-
-          group
-            .append('circle')
-              // TODO(burdon): Fixes drag/click issue: https://github.com/d3/d3-drag/issues/69
-              .on('click', (d) => {
-                this.emit('click', d);
-              });
-        });
+              .append('circle')
+                // TODO(burdon): Fixes drag/click issue: https://github.com/d3/d3-drag/issues/69
+                .on('click', (d) => {
+                  this.emit('click', d);
+                });
+          });
 
     root
       .exit()
@@ -91,7 +92,7 @@ export class NodeProjector extends Projector {
         propertyAdapter(d)?.radius || get(d, 'layout.node.radius', get(this._options, 'node.radius', defaultRadius));
 
       group
-        .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`);
+        .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`)
 
       // TODO(burdon): Position left/right depending on center (from layout).
       group

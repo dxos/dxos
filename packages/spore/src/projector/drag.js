@@ -26,7 +26,10 @@ export const createSimulationDrag = (simulation, options = {}) => {
       dragging: false,
 
       // Determines if linking.
-      linking: false
+      linking: false,
+
+      // Determines if temporarily freezing positions while dragging.
+      frozen: {}
     };
 
     // TODO(burdon): Configure.
@@ -63,6 +66,12 @@ export const createSimulationDrag = (simulation, options = {}) => {
         state.dragging = false;
         state.linking = linkModifier && link;
 
+        // Check if already frozen.
+        state.frozen = {
+          x: d3.event.subject.fx !== null,
+          y: d3.event.subject.fy !== null
+        };
+
         emitter.emit('start', { source: d3.event.subject });
       })
 
@@ -73,8 +82,13 @@ export const createSimulationDrag = (simulation, options = {}) => {
 
         // Freeze simulation for node if dragging.
         if (!state.linking) {
-          d3.event.subject.fx = d3.event.x;
-          d3.event.subject.fy = d3.event.y;
+          if (!state.frozen.x) {
+            d3.event.subject.fx = d3.event.x;
+          }
+
+          if (!state.frozen.y) {
+            d3.event.subject.fy = d3.event.y;
+          }
         }
 
         emitter.emit('drag', { source: d3.event.subject, position, linking: state.linking });
@@ -85,12 +99,24 @@ export const createSimulationDrag = (simulation, options = {}) => {
       .on('end', function () {
         const { [freeze]: freezeModifier } = d3.event.sourceEvent;
 
+        // TODO(burdon): Restart simulation?
         if (!d3.event.active) {
           simulation.alphaTarget(0);
         }
 
-        d3.event.subject.fx = null;
-        d3.event.subject.fy = null;
+        //
+        // Frozen nodes.
+        //
+
+        if (!state.frozen.x) {
+          d3.event.subject.fx = null;
+        }
+
+        if (!state.frozen.y) {
+          d3.event.subject.fy = null;
+        }
+
+        state.frozen = {};
 
         // Fix position.
         // TODO(burdon): Add class decoration.

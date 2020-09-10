@@ -15,18 +15,23 @@ import { Layout } from './layout';
  */
 export class ForceLayout extends Layout {
 
+  // https://github.com/d3/d3-force
+  _simulation = d3.forceSimulation();
+
+  // TODO(burdon): Don't automatically merge.
   get defaults() {
     return {
       force: {
-        gravity: {
-          strength: .1
-        },
+        // TODO(burdon): Remove as default.
+        // gravity: {
+        //   strength: .1
+        // },
         radial: {
           radius: 200,
           strength: .1
         },
         charge: {
-          strength: -100
+          strength: -300
         },
         links: {
           distance: 20,
@@ -41,9 +46,6 @@ export class ForceLayout extends Layout {
     };
   }
 
-  // https://github.com/d3/d3-force
-  _simulation = d3.forceSimulation().stop();
-
   get simulation() {
     return this._simulation;
   }
@@ -57,30 +59,38 @@ export class ForceLayout extends Layout {
 
   _onUpdate(grid, data, context) {
     const { force } = this._options;
-    const { nodes = [], links = [] } = data;
     const center = value(this._options.center)(grid);
+    const { nodes = [], links = [] } = data;
 
     context.guides = [];
 
     // Merge nodes.
     const current = this._simulation.nodes();
+    // console.log('current', JSON.stringify(current, undefined, 2));
     const merged = nodes.map(node => {
       const match = current.find(n => n.id === node.id);
       if (match) {
-        // Merge force properties.
+        // Merge current force properties.
+        // https://github.com/d3/d3-force#simulation_nodes
         const { x, y, vx, vy, fx, fy } = match;
         return Object.assign(node, { x, y, vx, vy, fx, fy });
       }
 
+      // Initial properties.
       Object.assign(node, {
-        x: center.x + (Math.random() - 0.5) * force.radial?.radius || 20,
-        y: center.y + (Math.random() - 0.5) * force.radial?.radius || 20,
-        vx: null,
-        vy: null
-      });
+        // TODO(burdon): Random initial position?
+        x: center.x,
+        y: center.y,
+        vx: 0,
+        vy: 0,
+        fx: null,
+        fy: null
+      }, this._options.initializer && this._options.initializer(node, center));
 
       return node;
     });
+    // console.log('merged', JSON.stringify(merged, undefined, 2));
+
     // TODO(burdon): Hack.
     data.nodes = merged;
 
@@ -111,14 +121,6 @@ export class ForceLayout extends Layout {
     }
 
     /**
-     * https://github.com/d3/d3-force#forceCenter
-     */
-    if (force.gravity) {
-      this._simulation.force('gravity', d3.forceCenter(center.x, center.y));
-      // .strength(1));
-    }
-
-    /**
      * https://github.com/d3/d3-force#forceCollide
      */
     if (force.collide) {
@@ -136,7 +138,18 @@ export class ForceLayout extends Layout {
     }
 
     /**
+     * https://github.com/d3/d3-force#forceCenter
+     * NOTE: Opposes radial.
+     */
+    if (force.gravity) {
+      this._simulation.force('gravity', d3.forceCenter(center.x, center.y)
+        // .strength(1) // TODO(burdon): V6
+      );
+    }
+
+    /**
      * https://github.com/d3/d3-force#forceRadial
+     * NOTE: Opposes gravity.
      */
     if (force.radial) {
       this._simulation.force('radial', d3.forceRadial(force.radial.radius, center.x, center.y)
