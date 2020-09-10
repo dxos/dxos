@@ -14,23 +14,24 @@ import { FeedStore } from '@dxos/feed-store';
 
 import { codec } from '../codec';
 import { FeedStoreAdapter } from '../feed-store-adapter';
-import { PartyFactory } from '../party-factory';
+import { PartyFactory } from './party-factory';
 import { PartyManager } from './party-manager';
 
 const log = debug('dxos:echo:party-manager-test');
 
 describe('Party manager', () => {
-  const setup = () => {
+  const setup = async () => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
     const modelFactory = new ModelFactory().registerModel(ObjectModel.meta, ObjectModel);
     const partyFactory = new PartyFactory(feedStoreAdapter, modelFactory, undefined);
+    await partyFactory.initIdentity();
     const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
     return { feedStore, partyManager };
   };
 
   test('Created locally', async () => {
-    const { partyManager } = setup();
+    const { partyManager } = await setup();
     await partyManager.open();
 
     const [update, setUpdated] = latch();
@@ -48,7 +49,7 @@ describe('Party manager', () => {
   });
 
   test('Created via sync', async () => {
-    const { feedStore, partyManager } = setup();
+    const { feedStore, partyManager } = await setup();
     await partyManager.open();
 
     const [update, setUpdated] = latch();
@@ -81,7 +82,7 @@ describe('Party manager', () => {
   });
 
   test('Create from cold start', async () => {
-    const { feedStore, partyManager } = setup();
+    const { feedStore, partyManager } = await setup();
     await feedStore.open();
 
     const numParties = 3;
