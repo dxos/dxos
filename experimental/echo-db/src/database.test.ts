@@ -15,11 +15,11 @@ import { codec } from './codec';
 import { Database } from './database';
 import { FeedStoreAdapter } from './feed-store-adapter';
 import { Party, PartyManager } from './parties';
-import { PartyFactory } from './party-factory';
+import { PartyFactory } from './parties/party-factory';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 
-const createDatabase = (verbose = true) => {
+const createDatabase = async (verbose = true) => {
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
   const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
@@ -32,13 +32,14 @@ const createDatabase = (verbose = true) => {
   } : undefined;
 
   const partyFactory = new PartyFactory(feedStoreAdapter, modelFactory, undefined);
+  await partyFactory.initIdentity();
   const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
   return new Database(partyManager, options);
 };
 
 describe('api tests', () => {
   test('create party and update properties.', async () => {
-    const db = createDatabase();
+    const db = await createDatabase();
     await db.open();
 
     const parties = await db.queryParties({ open: true });
@@ -65,7 +66,7 @@ describe('api tests', () => {
   });
 
   test('create party and items.', async () => {
-    const db = createDatabase();
+    const db = await createDatabase();
     await db.open();
 
     const parties = await db.queryParties({ open: true });
@@ -104,7 +105,7 @@ describe('api tests', () => {
   });
 
   test('create party and item with child item.', async () => {
-    const db = createDatabase();
+    const db = await createDatabase();
     await db.open();
 
     const parties = await db.queryParties({ open: true });
@@ -125,6 +126,7 @@ describe('api tests', () => {
         const { first: item } = await party.queryItems({ type: 'wrn://dxos.org/item/document' });
         expect(item.children).toHaveLength(1);
         expect(item.children[0].type).toBe(undefined);
+        // TODO(burdon): Test parent.
         onUpdate();
       });
     });
@@ -132,10 +134,9 @@ describe('api tests', () => {
     const party = await db.createParty();
     expect(party.isOpen).toBeTruthy();
 
-    // TODO(burdon): Child must be created with parent.
     const parent = await party.createItem(ObjectModel, 'wrn://dxos.org/item/document');
     const child = await party.createItem(ObjectModel);
-    await parent.addChild(child);
+    await child.setParent(parent.id);
 
     await updated;
     unsubscribe();

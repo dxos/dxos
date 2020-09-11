@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 
+import { Keyring } from '@dxos/credentials';
 import { humanize } from '@dxos/crypto';
 import { FeedKey, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
 import { ModelFactory, ModelType, ModelConstructor, Model } from '@dxos/experimental-model-factory';
@@ -31,14 +32,13 @@ export class Party {
 
   /**
    * The Party is constructed by the `Database` object.
-   * @param {ModelFactory} modelFactory
-   * @param {Pipeline} pipeline
    */
   constructor (
-    // TODO(burdon): Do not inline.
     private readonly _modelFactory: ModelFactory,
     private readonly _pipeline: Pipeline,
-    private readonly _partyProcessor: PartyProcessor
+    private readonly _partyProcessor: PartyProcessor,
+    private readonly _keyring: Keyring,
+    private readonly _identityKeypair: any
   ) {
     assert(this._modelFactory);
     assert(this._pipeline);
@@ -69,7 +69,7 @@ export class Party {
     const [readStream, writeStream] = await this._pipeline.open();
 
     // Connect to the downstream item demuxer.
-    this._itemManager = new ItemManager(this._modelFactory, writeStream);
+    this._itemManager = new ItemManager(this.key, this._modelFactory, writeStream);
     this._itemDemuxer = createItemDemuxer(this._itemManager);
     readStream.pipe(this._itemDemuxer);
 
@@ -140,6 +140,7 @@ export class Party {
    */
   async queryItems (filter?: ItemFilter): Promise<ResultSet<Item<any>>> {
     assert(this._itemManager);
+
     return this._itemManager.queryItems(filter);
   }
 
@@ -152,8 +153,8 @@ export class Party {
       feeds: this._pipeline.memberFeeds
     };
 
-    assert(this._pipeline.writeStream);
-    return new Invitation(this._pipeline.writeStream, request);
+    assert(this._pipeline.haloWriteStream);
+    return new Invitation(this._pipeline.haloWriteStream, request, this._keyring, this.key, this._identityKeypair);
   }
 
   /**

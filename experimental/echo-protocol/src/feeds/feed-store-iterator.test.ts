@@ -9,6 +9,7 @@ import hypercore from 'hypercore';
 import pify from 'pify';
 import ram from 'random-access-memory';
 
+import { Event } from '@dxos/async';
 import { createId, keyToString } from '@dxos/crypto';
 import { createWritable, latch } from '@dxos/experimental-util';
 import { FeedStore } from '@dxos/feed-store';
@@ -16,7 +17,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { protocol, codec, createTestItemMutation } from '../proto';
 import { FeedKeyMapper, Spacetime } from '../spacetime';
 import { FeedBlock } from '../types';
-import { createOrderedFeedStream } from './feed-store-iterator';
+import { createOrderedFeedStream, FeedSetProvider } from './feed-store-iterator';
 
 const chance = new Chance(999);
 
@@ -71,7 +72,11 @@ describe('feed store iterator', () => {
       return next[0]?.i;
     };
 
-    const readStream = await createOrderedFeedStream(feedStore, () => true, messageSelector);
+    const feedSetProvider: FeedSetProvider = {
+      get: () => Array.from(feeds.keys()) as any,
+      added: new Event()
+    };
+    const readStream = await createOrderedFeedStream(feedStore, feedSetProvider, messageSelector);
 
     //
     // Create feeds.

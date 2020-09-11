@@ -6,8 +6,9 @@ import assert from 'assert';
 import debug from 'debug';
 import { Readable } from 'readable-stream';
 
+import { Event } from '@dxos/async';
 import { keyToString } from '@dxos/crypto';
-import { createReadable, Trigger } from '@dxos/experimental-util';
+import { createReadable, Trigger, ComplexSet } from '@dxos/experimental-util';
 import { FeedStore, FeedDescriptor, createBatchStream } from '@dxos/feed-store';
 
 import { FeedKey, FeedBlock } from '../types';
@@ -20,7 +21,10 @@ const log = debug('dxos:echo:feed-store-iterator');
 // - construction separate from open
 
 // TODO(burdon): Invert (ask for set of feed keys).
-export type FeedSelector = (feedKey: FeedKey) => boolean;
+export interface FeedSetProvider {
+  get(): FeedKey[]
+  added: Event<FeedKey>
+}
 
 export type MessageSelector = (candidates: FeedBlock[]) => number | undefined;
 
@@ -34,7 +38,7 @@ export type MessageSelector = (candidates: FeedBlock[]) => number | undefined;
  */
 export async function createOrderedFeedStream (
   feedStore: FeedStore,
-  feedSelector: FeedSelector = () => true,
+  feedSetProvider: FeedSetProvider,
   messageSelector: MessageSelector = () => 0
 ): Promise<NodeJS.ReadableStream> {
   assert(!feedStore.closing && !feedStore.closed);
@@ -43,7 +47,7 @@ export async function createOrderedFeedStream (
     await feedStore.ready();
   }
 
-  const iterator = new FeedStoreIterator(feedSelector, messageSelector);
+  const iterator = new FeedStoreIterator(feedSetProvider, messageSelector);
 
   // TODO(burdon): Only add feeds that belong to party (or use feedSelector).
   const initialDescriptors = feedStore.getDescriptors().filter(descriptor => descriptor.opened);
@@ -89,7 +93,7 @@ class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   private readonly _trigger = new Trigger();
   private readonly _generatorInstance = this._generator();
 
-  private readonly _feedSelector: FeedSelector;
+  private readonly _feedSetProvider: FeedSetProvider;
   private readonly _messageSelector: MessageSelector;
 
   // Needed for round-robin ordering.
@@ -98,13 +102,15 @@ class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   private _destroyed = false;
 
   constructor (
-    feedSelector: FeedSelector,
+    feedSetProvider: FeedSetProvider,
     messageSelector: MessageSelector
   ) {
-    assert(feedSelector);
+    assert(feedSetProvider);
     assert(messageSelector);
-    this._feedSelector = feedSelector;
+    this._feedSetProvider = feedSetProvider;
     this._messageSelector = messageSelector;
+
+    feedSetProvider.added.on(() => this._trigger.wake());
   }
 
   /**
@@ -140,16 +146,17 @@ class FeedStoreIterator implements AsyncIterable<FeedBlock> {
    */
   // TODO(burdon): Comment.
   private async _reevaluateFeeds () {
+    const feeds = new ComplexSet(keyToString, this._feedSetProvider.get());
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [keyHex, feed] of this._openFeeds) {
-      if (!this._feedSelector(feed.descriptor.key)) {
+      if (!feeds.has(feed.descriptor.key)) {
         feed.frozen = true;
       }
     }
 
     // Get candidate snapshot since we will be mutating the collection.
     for (const descriptor of Array.from(this._candidateFeeds.values())) {
-      if (await this._feedSelector(descriptor.key)) {
+      if (feeds.has(descriptor.key)) {
         const stream = new Readable({ objectMode: true })
           .wrap(createBatchStream(descriptor.feed, { live: true }));
 

@@ -1153,16 +1153,7 @@
     humanhash "^1.0.4"
     hypercore-crypto "^1.0.0"
 
-"@dxos/crypto@^1.0.0-beta.1", "@dxos/crypto@^1.0.0-beta.2":
-  version "1.0.0-beta.2"
-  resolved "http://npm.dev.dxos.network:5736/@dxos%2fcrypto/-/crypto-1.0.0-beta.2.tgz#39477a8825d501aed851aee3ed0923ef3040a95b"
-  integrity sha512-wM7bYWd+XHSmlHJ92hMmKULs+EU9GdP5Wz0ENMFQ1RW6smrkjpFtbIA+2k8Ft2la78Lt2txavWuQnr+9xpNveA==
-  dependencies:
-    crypto-js "^3.1.9-1"
-    humanhash "^1.0.4"
-    hypercore-crypto "^1.0.0"
-
-"@dxos/crypto@^1.0.0-beta.4":
+"@dxos/crypto@^1.0.0-beta.1", "@dxos/crypto@^1.0.0-beta.2", "@dxos/crypto@^1.0.0-beta.4":
   version "1.0.0-beta.4"
   resolved "http://npm.dev.dxos.network:5736/@dxos%2fcrypto/-/crypto-1.0.0-beta.4.tgz#bbef21c6d19a82de6d1e7e00bc88f15b8dbfe904"
   integrity sha512-nFM2UcbCPL1ial0WByZ3DkII5CQoqoQCHTH01Yhy6S7UaxNEcQTRsup0cktIL98vPTcrTqSBxJhMry/r6De5kA==
@@ -1242,10 +1233,10 @@
     source-map-support "^0.5.12"
     through2 "^3.0.1"
 
-"@dxos/gem-core@^1.0.0-beta.16", "@dxos/gem-core@^1.0.0-beta.19":
-  version "1.0.0-beta.19"
-  resolved "http://npm.dev.dxos.network:5736/@dxos%2fgem-core/-/gem-core-1.0.0-beta.19.tgz#8a0404897374e589212e9a33fcd03acc48951d78"
-  integrity sha512-hmFrXNszBYiHKshPQW6gwI7yOVtI4niWTEm89iCxh2GOe3FUyfb3TLfyPGmEYMjSwRssqDrX9WvRn7GbVDExog==
+"@dxos/gem-core@^1.0.0-beta.16", "@dxos/gem-core@^1.0.0-beta.20":
+  version "1.0.0-beta.20"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fgem-core/-/gem-core-1.0.0-beta.20.tgz#585b24ddaec44ed5af7431e9438a1d2ffcf6114a"
+  integrity sha512-MHe8Q5aGKON3rJr8o/K87Nj+8xtTMZVMX7thPRxaxvJv4m242PK5KS1NphBvRn/34sAZbbkOxebmjZ/UvsBRkg==
   dependencies:
     "@material-ui/core" "^4.9.10"
     clsx "^1.1.0"
@@ -1258,11 +1249,11 @@
     react-resize-aware "^3.0.0"
 
 "@dxos/gem-spore@^1.0.0-beta.16":
-  version "1.0.0-beta.19"
-  resolved "http://npm.dev.dxos.network:5736/@dxos%2fgem-spore/-/gem-spore-1.0.0-beta.19.tgz#a011fa62563fc33bebef3fc15278376b6b4d28cb"
-  integrity sha512-hQlxnf6q8DG4cr0TxusEnQzdf/q2O6Rp7GiLW6tjZ8A8Q8di/XKvmA00Z7Ixg4rCiwlslermiyTzeAXNRpHXlQ==
+  version "1.0.0-beta.20"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fgem-spore/-/gem-spore-1.0.0-beta.20.tgz#2b53111245b059f63a112f73b727ee996a0c2e75"
+  integrity sha512-MRySc0CymoS8LaJ09pbQNR1Wf6IB7BmICxJqKmGaifcoMDzL++VPtGPWVGQx26gx0koFAqqU+lRtA7AnOHNRWw==
   dependencies:
-    "@dxos/gem-core" "^1.0.0-beta.19"
+    "@dxos/gem-core" "^1.0.0-beta.20"
     "@material-ui/core" "^4.9.10"
     clsx "^1.1.0"
     d3 "^5.9.2"
@@ -1355,9 +1346,9 @@
     mississippi "^4.0.0"
 
 "@dxos/protocol-network-generator@^1.1.0-beta.2":
-  version "1.1.0-beta.15"
-  resolved "http://npm.dev.dxos.network:5736/@dxos%2fprotocol-network-generator/-/protocol-network-generator-1.1.0-beta.15.tgz#1c64c85b28c4ea3d71a17a358de8c29234050c9d"
-  integrity sha512-uLVXo0uWbJcNWoRZ8apUNVMoApWYHRcVA85iP3Gz02lsi/I8GDDlFZd3r4dyhaWbqby2Zmujp4GMyHlhwlVh0w==
+  version "1.1.0-beta.17"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fprotocol-network-generator/-/protocol-network-generator-1.1.0-beta.17.tgz#715aff985112c130a650c5022c493dd30dc9b05b"
+  integrity sha512-Oqo9ijkqaBTXxSytbAEC6s3y6CKBroNgDEfuoJFF8xIgg2iT1SnrACx98+KVWg0/EQZN9U8THHbbjUPxmJFOtQ==
   dependencies:
     "@dxos/network-generator" "^1.0.0-beta.1"
     debug "^4.1.1"
@@ -1366,20 +1357,20 @@
     source-map-support "^0.5.12"
 
 "@dxos/protocol-plugin-replicator@^1.1.0-alpha.4", "@dxos/protocol-plugin-replicator@^1.1.0-beta.1", "@dxos/protocol-plugin-replicator@^1.1.0-beta.14":
-  version "1.1.0-beta.15"
-  resolved "http://npm.dev.dxos.network:5736/@dxos%2fprotocol-plugin-replicator/-/protocol-plugin-replicator-1.1.0-beta.15.tgz#50f9f1b81be914ae74cf0426871db079367f43c5"
-  integrity sha512-1vjFY4sC1bDIyhEnTdA/dPlwDmwyzcuFIL1Yu+IXJNCBWoggzq0WjHn6ZOHESCXb1sVfz3ks4sHWLt6QmL7+EA==
+  version "1.1.0-beta.17"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fprotocol-plugin-replicator/-/protocol-plugin-replicator-1.1.0-beta.17.tgz#db09df7c6e806a7039aecbc8b3b4274687b9333c"
+  integrity sha512-TpRc3dAPNZE9EFIPvpuK1rfiTTBJSO2FHJRtSlRchkfAlRrIqYlqfSHvHUGfFMZZhXOcmhMqYcXX6yxg74Bfgg==
   dependencies:
     "@dxos/codec-protobuf" "^1.1.0-beta.9"
-    "@dxos/protocol" "^1.1.0-beta.15"
+    "@dxos/protocol" "^1.1.0-beta.17"
     buffer-json-encoding "^1.0.2"
     debug "^4.1.1"
     source-map-support "^0.5.12"
 
-"@dxos/protocol@^1.1.0-alpha.4", "@dxos/protocol@^1.1.0-beta.1", "@dxos/protocol@^1.1.0-beta.15":
-  version "1.1.0-beta.15"
-  resolved "http://npm.dev.dxos.network:5736/@dxos%2fprotocol/-/protocol-1.1.0-beta.15.tgz#b176a1938908308230fa3bb67d03fab0b5c5b955"
-  integrity sha512-j4TMc2dH3FvndOfXO+KxbZPQd8domB4gMvsMp8kEqCRcadRZ9qeluhdHTf2PPZ+KDglTnOxCktAIFQxCKrJt7g==
+"@dxos/protocol@^1.1.0-alpha.4", "@dxos/protocol@^1.1.0-beta.1", "@dxos/protocol@^1.1.0-beta.17":
+  version "1.1.0-beta.17"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fprotocol/-/protocol-1.1.0-beta.17.tgz#2eb1f16abda74214624e5c96a4d940c93d501b20"
+  integrity sha512-DEXHRteJCTIgl1620GkgzuFCDIKhKtGAjHCS0JB73R7IyBM594wbfN3vjW3yFFB2BWMZPA3F42FADUjgnCFBUg==
   dependencies:
     "@dxos/codec-protobuf" "^1.1.0-beta.9"
     assert "^2.0.0"
@@ -2778,12 +2769,12 @@
     "@octokit/types" "^5.0.0"
 
 "@octokit/endpoint@^6.0.1":
-  version "6.0.5"
-  resolved "http://npm.dev.dxos.network:5736/@octokit%2fendpoint/-/endpoint-6.0.5.tgz#43a6adee813c5ffd2f719e20cfd14a1fee7c193a"
-  integrity sha512-70K5u6zd45ItOny6aHQAsea8HHQjlQq85yqOMe+Aj8dkhN2qSJ9T+Q3YjUjEYfPRBcuUWNgMn62DQnP/4LAIiQ==
+  version "6.0.6"
+  resolved "http://npm.dev.dxos.network:5736/@octokit%2fendpoint/-/endpoint-6.0.6.tgz#4f09f2b468976b444742a1d5069f6fa45826d999"
+  integrity sha512-7Cc8olaCoL/mtquB7j/HTbPM+sY6Ebr4k2X2y4JoXpVKQ7r5xB4iGQE0IoO58wIPsUk4AzoT65AMEpymSbWTgQ==
   dependencies:
     "@octokit/types" "^5.0.0"
-    is-plain-object "^4.0.0"
+    is-plain-object "^5.0.0"
     universal-user-agent "^6.0.0"
 
 "@octokit/plugin-enterprise-rest@^6.0.1":
@@ -2830,15 +2821,15 @@
     once "^1.4.0"
 
 "@octokit/request@^5.2.0":
-  version "5.4.7"
-  resolved "http://npm.dev.dxos.network:5736/@octokit%2frequest/-/request-5.4.7.tgz#fd703ee092e0463ceba49ff7a3e61cb4cf8a0fde"
-  integrity sha512-FN22xUDP0i0uF38YMbOfx6TotpcENP5W8yJM1e/LieGXn6IoRxDMnBf7tx5RKSW4xuUZ/1P04NFZy5iY3Rax1A==
+  version "5.4.8"
+  resolved "http://npm.dev.dxos.network:5736/@octokit%2frequest/-/request-5.4.8.tgz#13ad36e172bb57e78bacf02cd86210d1f7412f04"
+  integrity sha512-mWbxjsARJzAq5xp+ZrQfotc+MHFz3/Am2qATJwflv4PZ1TjhgIJnr60PCVdZT9Z/tl+uPXooaVgeviy1KkDlLQ==
   dependencies:
     "@octokit/endpoint" "^6.0.1"
     "@octokit/request-error" "^2.0.0"
     "@octokit/types" "^5.0.0"
     deprecation "^2.0.0"
-    is-plain-object "^4.0.0"
+    is-plain-object "^5.0.0"
     node-fetch "^2.3.0"
     once "^1.4.0"
     universal-user-agent "^6.0.0"
@@ -3668,9 +3659,9 @@
     "@babel/types" "^7.0.0"
 
 "@types/babel__traverse@*", "@types/babel__traverse@^7.0.6":
-  version "7.0.13"
-  resolved "http://npm.dev.dxos.network:5736/@types%2fbabel__traverse/-/babel__traverse-7.0.13.tgz#1874914be974a492e1b4cb00585cabb274e8ba18"
-  integrity sha512-i+zS7t6/s9cdQvbqKDARrcbrPvtJGlbYsMkazo03nTAK3RX9FNrLllXys22uiTGJapPOTZTQ35nHh4ISph4SLQ==
+  version "7.0.14"
+  resolved "http://npm.dev.dxos.network:5736/@types%2fbabel__traverse/-/babel__traverse-7.0.14.tgz#e99da8c075d4fb098c774ba65dabf7dc9954bd13"
+  integrity sha512-8w9szzKs14ZtBVuP6Wn7nMLRJ0D6dfB0VEBEyRgxrZ/Ln49aNMykrghM2FaNn4FJRzNppCSa0Rv9pBRM5Xc3wg==
   dependencies:
     "@babel/types" "^7.3.0"
 
@@ -3800,9 +3791,9 @@
   integrity sha1-aaI6OtKcrwCX8G7aWbNh7i8GOfY=
 
 "@types/node@*", "@types/node@>= 8", "@types/node@^14.0.9":
-  version "14.6.4"
-  resolved "http://npm.dev.dxos.network:5736/@types%2fnode/-/node-14.6.4.tgz#a145cc0bb14ef9c4777361b7bbafa5cf8e3acb5a"
-  integrity sha512-Wk7nG1JSaMfMpoMJDKUsWYugliB2Vy55pdjLpmLixeyMi7HizW2I/9QoxsPCkXl3dO+ZOVqPumKaDUv5zJu2uQ==
+  version "14.10.0"
+  resolved "http://npm.dev.dxos.network:5736/@types%2fnode/-/node-14.10.0.tgz#15815dff82c8dc30827f6b1286f865902945095a"
+  integrity sha512-SOIyrdADB4cq6eY1F+9iU48iIomFAPltu11LCvA9PKcyEwHadjCFzNVPotAR+oEJA0bCP4Xvvgy+vwu1ZjVh8g==
 
 "@types/node@11.11.6":
   version "11.11.6"
@@ -3810,9 +3801,9 @@
   integrity sha512-Exw4yUWMBXM3X+8oqzJNRqZSwUAaS4+7NdvHqQuFi/d+synz++xmX3QIf+BFqneW8N31R8Ky+sikfZUXq07ggQ==
 
 "@types/node@^13.7.0":
-  version "13.13.16"
-  resolved "http://npm.dev.dxos.network:5736/@types%2fnode/-/node-13.13.16.tgz#66f2177047b61131eaac18c47eb25d6f1317070a"
-  integrity sha512-dJ9vXxJ8MEwzNn4GkoAGauejhXoKuJyYKegsA6Af25ZpEDXomeVXt5HUWUNVHk5UN7+U0f6ghC6otwt+7PdSDg==
+  version "13.13.18"
+  resolved "http://npm.dev.dxos.network:5736/@types%2fnode/-/node-13.13.18.tgz#e932b06eb33294f5b97a67de3b820fc6f456ad1c"
+  integrity sha512-nru5D2PxzwzWyo3ocADAkzbc5H1KxVJMmX8oco9Fe5c+4vv6+MMp93wPq6ADqwHAwDtNH55eTCNGVaIZHZsAFQ==
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.0"
@@ -4353,9 +4344,9 @@ acorn-globals@^6.0.0:
     acorn-walk "^7.1.1"
 
 acorn-jsx@^5.2.0:
-  version "5.2.0"
-  resolved "http://npm.dev.dxos.network:5736/acorn-jsx/-/acorn-jsx-5.2.0.tgz#4c66069173d6fdd68ed85239fc256226182b2ebe"
-  integrity sha512-HiUX/+K2YpkpJ+SzBffkM/AQ2YE03S0U1kjTLVpoJdhZMOWy8qvXVN9JdLqv2QsaQ6MPYQIuNmwD8zOiYUofLQ==
+  version "5.3.1"
+  resolved "http://npm.dev.dxos.network:5736/acorn-jsx/-/acorn-jsx-5.3.1.tgz#fc8661e11b7ac1539c47dbfea2e72b3af34d267b"
+  integrity sha512-K0Ptm/47OKfQRpNQ2J/oIN/3QYiK6FwW+eJbILhsdxh2WTLdl+30o8aGdTbm5JbffpFFAg/g+zi1E+jvJha5ng==
 
 acorn-walk@^6.0.1:
   version "6.2.0"
@@ -4993,11 +4984,9 @@ babel-loader@8.1.0:
     schema-utils "^2.6.5"
 
 babel-plugin-add-module-exports@^1.0.2:
-  version "1.0.2"
-  resolved "http://npm.dev.dxos.network:5736/babel-plugin-add-module-exports/-/babel-plugin-add-module-exports-1.0.2.tgz#96cd610d089af664f016467fc4567c099cce2d9c"
-  integrity sha512-4paN7RivvU3Rzju1vGSHWPjO8Y0rI6droWvSFKI6dvEQ4mvoV0zGojnlzVRfI6N8zISo6VERXt3coIuVmzuvNg==
-  optionalDependencies:
-    chokidar "^2.0.4"
+  version "1.0.4"
+  resolved "http://npm.dev.dxos.network:5736/babel-plugin-add-module-exports/-/babel-plugin-add-module-exports-1.0.4.tgz#6caa4ddbe1f578c6a5264d4d3e6c8a2720a7ca2b"
+  integrity sha512-g+8yxHUZ60RcyaUpfNzy56OtWW+x9cyEe9j+CranqLiqbju2yf/Cy6ZtYK40EZxtrdHllzlVZgLmcOUCTlJ7Jg==
 
 babel-plugin-add-react-displayname@^0.0.5:
   version "0.0.5"
@@ -5566,14 +5555,14 @@ browserslist@4.7.0:
     node-releases "^1.1.29"
 
 browserslist@^4.12.0, browserslist@^4.8.5:
-  version "4.14.1"
-  resolved "http://npm.dev.dxos.network:5736/browserslist/-/browserslist-4.14.1.tgz#cb2b490ba881d45dc3039078c7ed04411eaf3fa3"
-  integrity sha512-zyBTIHydW37pnb63c7fHFXUG6EcqWOqoMdDx6cdyaDFriZ20EoVxcE95S54N+heRqY8m8IUgB5zYta/gCwSaaA==
+  version "4.14.2"
+  resolved "http://npm.dev.dxos.network:5736/browserslist/-/browserslist-4.14.2.tgz#1b3cec458a1ba87588cc5e9be62f19b6d48813ce"
+  integrity sha512-HI4lPveGKUR0x2StIz+2FXfDk9SfVMrxn6PLh1JeGUwcuoDkdKZebWiyLRJ68iIPDpMI4JLVDf7S7XzslgWOhw==
   dependencies:
-    caniuse-lite "^1.0.30001124"
-    electron-to-chromium "^1.3.562"
+    caniuse-lite "^1.0.30001125"
+    electron-to-chromium "^1.3.564"
     escalade "^3.0.2"
-    node-releases "^1.1.60"
+    node-releases "^1.1.61"
 
 bs-logger@0.x:
   version "0.2.6"
@@ -5856,10 +5845,10 @@ can-use-dom@^0.1.0:
   resolved "http://npm.dev.dxos.network:5736/can-use-dom/-/can-use-dom-0.1.0.tgz#22cc4a34a0abc43950f42c6411024a3f6366b45a"
   integrity sha1-IsxKNKCrxDlQ9CxkEQJKP2NmtFo=
 
-caniuse-lite@^1.0.30000989, caniuse-lite@^1.0.30001109, caniuse-lite@^1.0.30001124:
-  version "1.0.30001124"
-  resolved "http://npm.dev.dxos.network:5736/caniuse-lite/-/caniuse-lite-1.0.30001124.tgz#5d9998190258e11630d674fc50ea8e579ae0ced2"
-  integrity sha512-zQW8V3CdND7GHRH6rxm6s59Ww4g/qGWTheoboW9nfeMg7sUoopIfKCcNZUjwYRCOrvereh3kwDpZj4VLQ7zGtA==
+caniuse-lite@^1.0.30000989, caniuse-lite@^1.0.30001109, caniuse-lite@^1.0.30001125:
+  version "1.0.30001125"
+  resolved "http://npm.dev.dxos.network:5736/caniuse-lite/-/caniuse-lite-1.0.30001125.tgz#2a1a51ee045a0a2207474b086f628c34725e997b"
+  integrity sha512-9f+r7BW8Qli917mU3j0fUaTweT3f3vnX/Lcs+1C73V+RADmFme+Ih0Br8vONQi3X0lseOe6ZHfsZLCA8MSjxUA==
 
 canonicalize@^1.0.1:
   version "1.0.3"
@@ -6524,6 +6513,17 @@ cosmiconfig@^6.0.0:
     parse-json "^5.0.0"
     path-type "^4.0.0"
     yaml "^1.7.2"
+
+cosmiconfig@^7.0.0:
+  version "7.0.0"
+  resolved "http://npm.dev.dxos.network:5736/cosmiconfig/-/cosmiconfig-7.0.0.tgz#ef9b44d773959cae63ddecd122de23853b60f8d3"
+  integrity sha512-pondGvTuVYDk++upghXJabWzL6Kxu6f26ljFw64Swq9v6sQPUL3EUlVDV56diOjpCayKihL6hVe8exIACU4XcA==
+  dependencies:
+    "@types/parse-json" "^4.0.0"
+    import-fresh "^3.2.1"
+    parse-json "^5.0.0"
+    path-type "^4.0.0"
+    yaml "^1.10.0"
 
 count-trailing-zeros@^1.0.1:
   version "1.0.1"
@@ -7779,10 +7779,10 @@ ejs@^2.7.4:
   resolved "http://npm.dev.dxos.network:5736/ejs/-/ejs-2.7.4.tgz#48661287573dcc53e366c7a1ae52c3a120eec9ba"
   integrity sha512-7vmuyh5+kuUyJKePhQfRQBhXV5Ce+RnaeeQArKu1EAMpL3WbgMt5WG6uQZpEVvYSSsxMXRKOewtDk9RaTKXRlA==
 
-electron-to-chromium@^1.3.247, electron-to-chromium@^1.3.562:
-  version "1.3.562"
-  resolved "http://npm.dev.dxos.network:5736/electron-to-chromium/-/electron-to-chromium-1.3.562.tgz#79c20277ee1c8d0173a22af00e38433b752bc70f"
-  integrity sha512-WhRe6liQ2q/w1MZc8mD8INkenHivuHdrr4r5EQHNomy3NJux+incP6M6lDMd0paShP3MD0WGe5R1TWmEClf+Bg==
+electron-to-chromium@^1.3.247, electron-to-chromium@^1.3.564:
+  version "1.3.565"
+  resolved "http://npm.dev.dxos.network:5736/electron-to-chromium/-/electron-to-chromium-1.3.565.tgz#8511797ab2b66b767e1aef4eb17d636bf01a2c72"
+  integrity sha512-me5dGlHFd8Q7mKhqbWRLIYnKjw4i0fO6hmW0JBxa7tM87fBfNEjWokRnDF7V+Qme/9IYpwhfMn+soWs40tXWqg==
 
 elegant-spinner@^1.0.1:
   version "1.0.1"
@@ -9753,14 +9753,14 @@ humanize-ms@^1.2.1:
     ms "^2.0.0"
 
 husky@^4.2.5:
-  version "4.2.5"
-  resolved "http://npm.dev.dxos.network:5736/husky/-/husky-4.2.5.tgz#2b4f7622673a71579f901d9885ed448394b5fa36"
-  integrity sha512-SYZ95AjKcX7goYVZtVZF2i6XiZcHknw50iXvY7b0MiGoj5RwdgRQNEHdb+gPDPCXKlzwrybjFjkL6FOj8uRhZQ==
+  version "4.3.0"
+  resolved "http://npm.dev.dxos.network:5736/husky/-/husky-4.3.0.tgz#0b2ec1d66424e9219d359e26a51c58ec5278f0de"
+  integrity sha512-tTMeLCLqSBqnflBZnlVDhpaIMucSGaYyX6855jM4AguGeWCeSzNdb1mfyWduTZ3pe3SJVvVWGL0jO1iKZVPfTA==
   dependencies:
     chalk "^4.0.0"
     ci-info "^2.0.0"
     compare-versions "^3.6.0"
-    cosmiconfig "^6.0.0"
+    cosmiconfig "^7.0.0"
     find-versions "^3.2.0"
     opencollective-postinstall "^2.0.2"
     pkg-dir "^4.2.0"
@@ -10214,9 +10214,9 @@ is-buffer@^1.0.2, is-buffer@^1.1.5:
   integrity sha512-NcdALwpXkTm5Zvvbk7owOUSvVvBKDgKP5/ewfXEznmQFfs4ZRmanOeKBTjRVjka3QFoN6XJ+9F3USqfHqTaU5w==
 
 is-callable@^1.1.4, is-callable@^1.2.0:
-  version "1.2.0"
-  resolved "http://npm.dev.dxos.network:5736/is-callable/-/is-callable-1.2.0.tgz#83336560b54a38e35e3a2df7afd0454d691468bb"
-  integrity sha512-pyVD9AaGLxtg6srb2Ng6ynWJqkHU9bEM087AKck0w8QwDarTfNcpIYoU8x8Hv2Icm8u6kFJM18Dag8lyqGkviw==
+  version "1.2.1"
+  resolved "http://npm.dev.dxos.network:5736/is-callable/-/is-callable-1.2.1.tgz#4d1e21a4f437509d25ce55f8184350771421c96d"
+  integrity sha512-wliAfSzx6V+6WfMOmus1xy0XvSgf/dlStkvTfq7F0g4bOIW0PSUbnyse3NhDwdyYS1ozfUtAAySqTws3z9Eqgg==
 
 is-ci@^2.0.0:
   version "2.0.0"
@@ -10277,7 +10277,7 @@ is-docker@^2.0.0:
   resolved "http://npm.dev.dxos.network:5736/is-docker/-/is-docker-2.1.1.tgz#4125a88e44e450d384e09047ede71adc2d144156"
   integrity sha512-ZOoqiXfEwtGknTiuDEy8pN2CfE3TxMHprvNer1mXiqwkOT77Rw3YVrUQ52EqAOU3QAWDQ+bQdx7HJzrv7LS2Hw==
 
-is-dom@^1.1.0:
+is-dom@^1.0.0:
   version "1.1.0"
   resolved "http://npm.dev.dxos.network:5736/is-dom/-/is-dom-1.1.0.tgz#af1fced292742443bb59ca3f76ab5e80907b4e8a"
   integrity sha512-u82f6mvhYxRPKpw8V1N0W8ce1xXwOrQtgGcxl6UCL5zBmZu3is/18K0rR7uFCnMDuAsS/3W54mGL4vsaFUQlEQ==
@@ -10477,10 +10477,10 @@ is-plain-object@^3.0.0:
   resolved "http://npm.dev.dxos.network:5736/is-plain-object/-/is-plain-object-3.0.1.tgz#662d92d24c0aa4302407b0d45d21f2251c85f85b"
   integrity sha512-Xnpx182SBMrr/aBik8y+GuR4U1L9FqMSojwDQwPMmxyC6bvEqly9UBCxhauBF5vNh2gwWJNX6oDV7O+OM4z34g==
 
-is-plain-object@^4.0.0:
-  version "4.1.1"
-  resolved "http://npm.dev.dxos.network:5736/is-plain-object/-/is-plain-object-4.1.1.tgz#1a14d6452cbd50790edc7fdaa0aed5a40a35ebb5"
-  integrity sha512-5Aw8LLVsDlZsETVMhoMXzqsXwQqr/0vlnBYzIXJbYo2F4yYlhLHs+Ez7Bod7IIQKWkJbJfxrWD7pA1Dw1TKrwA==
+is-plain-object@^5.0.0:
+  version "5.0.0"
+  resolved "http://npm.dev.dxos.network:5736/is-plain-object/-/is-plain-object-5.0.0.tgz#4427f50ab3429e9025ea7d52e9043a9ef4159344"
+  integrity sha512-VRSzKkbMm5jMDoKLbltAkFQ5Qr7VDiTFGXxYFXXowVj387GeGNOCsOH6Msy00SGZ3Fp84b1Naa1psqgcCIEP5Q==
 
 is-potential-custom-element-name@^1.0.0:
   version "1.0.0"
@@ -13420,10 +13420,10 @@ node-pre-gyp@^0.13.0:
     semver "^5.3.0"
     tar "^4"
 
-node-releases@^1.1.29, node-releases@^1.1.60:
-  version "1.1.60"
-  resolved "http://npm.dev.dxos.network:5736/node-releases/-/node-releases-1.1.60.tgz#6948bdfce8286f0b5d0e5a88e8384e954dfe7084"
-  integrity sha512-gsO4vjEdQaTusZAEebUWp2a5d7dF5DYoIpDG7WySnk7BuZDW+GPpHXoXXuYawRBr/9t5q54tirPz79kFIWg4dA==
+node-releases@^1.1.29, node-releases@^1.1.61:
+  version "1.1.61"
+  resolved "http://npm.dev.dxos.network:5736/node-releases/-/node-releases-1.1.61.tgz#707b0fca9ce4e11783612ba4a2fcba09047af16e"
+  integrity sha512-DD5vebQLg8jLCOzwupn954fbIiZht05DAZs0k2u8NStSe6h9XdsuIQL8hSRKYiU8WUQRznmSDrKGbv3ObOmC7g==
 
 nopt@^4.0.1:
   version "4.0.3"
@@ -14598,7 +14598,7 @@ promzard@^0.3.0:
   dependencies:
     read "1"
 
-prop-types@^15.5.10, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.7.2:
+prop-types@^15.0.0, prop-types@^15.5.10, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.7.2:
   version "15.7.2"
   resolved "http://npm.dev.dxos.network:5736/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
   integrity sha512-8QQikdH7//R2vurIJSutZ1smHYTcLpRWEOlHnzcWHmBYrOGUysKwSsrC89BCiFj3CbrfJ/nXFdJepOVrY1GCHQ==
@@ -15112,13 +15112,13 @@ react-input-autosize@^2.2.2:
     prop-types "^15.5.8"
 
 react-inspector@^5.0.1:
-  version "5.0.1"
-  resolved "http://npm.dev.dxos.network:5736/react-inspector/-/react-inspector-5.0.1.tgz#8a30f3d488c4f40203624bbe24800f508ae05d3a"
-  integrity sha512-qRIENuAIcRaytrmg/TL5nN5igYZMzyQqIKlWA8zoYRDltULsZC1bWy2Ua5wYJuwEYnC3gK4FCjcIQnb+5OyLsQ==
+  version "5.1.0"
+  resolved "http://npm.dev.dxos.network:5736/react-inspector/-/react-inspector-5.1.0.tgz#45a325e15f33e595be5356ca2d3ceffb7d6b8c3a"
+  integrity sha512-JAwswiengIcxi4X/Ssb8nf6suOuQsyit8Fxo04+iPKTnPNY3XIOuagjMZSzpJDDKkYcc/ARlySOYZZv626WUvA==
   dependencies:
-    "@babel/runtime" "^7.8.7"
-    is-dom "^1.1.0"
-    prop-types "^15.6.1"
+    "@babel/runtime" "^7.0.0"
+    is-dom "^1.0.0"
+    prop-types "^15.0.0"
 
 react-is@^16.12.0, react-is@^16.7.0, react-is@^16.8.0, react-is@^16.8.1, react-is@^16.8.4:
   version "16.13.1"
@@ -18384,7 +18384,7 @@ yallist@^4.0.0:
   resolved "http://npm.dev.dxos.network:5736/yallist/-/yallist-4.0.0.tgz#9bb92790d9c0effec63be73519e11a35019a3a72"
   integrity sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==
 
-yaml@^1.7.2:
+yaml@^1.10.0, yaml@^1.7.2:
   version "1.10.0"
   resolved "http://npm.dev.dxos.network:5736/yaml/-/yaml-1.10.0.tgz#3b593add944876077d4d683fee01081bd9fff31e"
   integrity sha512-yr2icI4glYaNG+KWONODapy2/jDdMSDnrONSjblABjD9B4Z5LgiircSt8m8sRZFNi08kG9Sm0uSHtEmP3zaEGg==

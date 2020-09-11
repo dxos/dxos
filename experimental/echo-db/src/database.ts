@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { createId } from '@dxos/crypto';
 import { PartyKey } from '@dxos/experimental-echo-protocol';
 
 import { InvitationRequest, InvitationResponder } from './invitation';
@@ -35,9 +36,10 @@ export class Database {
     private readonly _options: Options = {}
   ) {}
 
-  // TODO(burdon): Identifier?
   toString () {
-    return 'Database()';
+    return `Database(${JSON.stringify({
+      parties: this._partyManager.parties.length, options: this._options
+    })})`;
   }
 
   get readOnly () {

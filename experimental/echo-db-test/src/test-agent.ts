@@ -4,9 +4,8 @@
 
 import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
 import {
-  codec, Database, Invitation, Party, PartyManager, createReplicatorFactory, FeedStoreAdapter
+  codec, Database, Invitation, Party, PartyManager, createReplicatorFactory, FeedStoreAdapter, PartyFactory
 } from '@dxos/experimental-echo-db';
-import { PartyFactory } from '@dxos/experimental-echo-db/dist/src/party-factory';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { FeedStore } from '@dxos/feed-store';
@@ -36,6 +35,7 @@ export default class TestAgent implements Agent {
       modelFactory,
       createReplicatorFactory(networkManager, feedStore, randomBytes())
     );
+    await partyFactory.initIdentity();
     const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
     this.db = new Database(partyManager);
     await this.db.open();
@@ -70,11 +70,13 @@ export default class TestAgent implements Agent {
 
       this.environment.log('invitationResponse', {
         peerFeedKey: keyToString(response.peerFeedKey),
+        keyAdmitMessage: codec.encode({ halo: response.keyAdmitMessage }).toString('hex'),
         feedAdmitMessage: codec.encode({ halo: response.feedAdmitMessage }).toString('hex')
       });
     } else if (event.command === 'FINALIZE_INVITATION') {
       this.invitation!.finalize({
         peerFeedKey: keyToBuffer((event.invitationResponse as any).peerFeedKey),
+        keyAdmitMessage: codec.decode(Buffer.from((event.invitationResponse as any).keyAdmitMessage, 'hex')).halo,
         feedAdmitMessage: codec.decode(Buffer.from((event.invitationResponse as any).feedAdmitMessage, 'hex')).halo
       });
     } else {
@@ -87,7 +89,8 @@ export default class TestAgent implements Agent {
     return {
       items: items?.value.map(item => ({
         id: item.id,
-        type: item.type
+        type: item.type,
+        model: item.model._meta.type
         // model: JSON.parse(JSON.stringify(item.model)), // TODO(marik-d): Use a generic way to serialize items.
       }))
     };

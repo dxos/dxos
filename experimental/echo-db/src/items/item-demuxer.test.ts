@@ -17,14 +17,11 @@ const log = debug('dxos:echo:item-demuxer:test');
 
 describe('item demxuer', () => {
   test('set-up', async () => {
+    const { publicKey: partyKey } = createKeyPair();
     const { publicKey: feedKey } = createKeyPair();
 
     const modelFactory = new ModelFactory()
       .registerModel(TestModel.meta, TestModel);
-
-    //
-    //
-    //
 
     const writeStream = createTransform<protocol.dxos.echo.IEchoEnvelope, IEchoStream>(
       async (message: protocol.dxos.echo.IEchoEnvelope): Promise<IEchoStream> => ({
@@ -36,7 +33,7 @@ describe('item demxuer', () => {
       })
     );
 
-    const itemManager = new ItemManager(modelFactory, writeStream);
+    const itemManager = new ItemManager(partyKey, modelFactory, writeStream);
     const itemDemuxer = createItemDemuxer(itemManager);
     writeStream.pipe(itemDemuxer);
 

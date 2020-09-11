@@ -5,31 +5,39 @@
 import assert from 'assert';
 import pify from 'pify';
 
-import { protocol, ItemID, ItemType } from '@dxos/experimental-echo-protocol';
+import { protocol, ItemID, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
 import { Model } from '@dxos/experimental-model-factory';
 import { checkType } from '@dxos/experimental-util';
 
 /**
- * Addressable data item.
- * Items may have child items.
+ * A globally addressable data item.
+ * Items are hermetic data structures contained within a Party. They may be hierarchical.
+ * The Item data structure is governed by a Model class, which implements data consistency.
  */
 export class Item<M extends Model<any>> {
+  private readonly _partyKey: PartyKey;
   private readonly _itemId: ItemID;
   private readonly _itemType?: ItemType; // TODO(burdon): If optional, is this just a label (or "kind"?)
   private readonly _model: M;
   private readonly _writeStream?: NodeJS.WritableStream;
+
+  // Parent item (or null if this item is a root item).
+  private _parent: Item<any> | null = null;
   private readonly _children = new Set<Item<any>>();
 
   /**
    * Items are constructed by a `Party` object.
+   * @param {PartyKey} partyKey
    * @param {ItemID} itemId - Addressable ID.
    * @param {ItemType} itemType - User defined type (WRN).
    * @param {Model} model - Data model (provided by `ModelFactory`).
    * @param [writeStream] - Write stream if not read-only.
    */
-  constructor (itemId: ItemID, itemType: ItemType, model: M, writeStream?: NodeJS.WritableStream) {
+  constructor (partyKey: PartyKey, itemId: ItemID, itemType: ItemType, model: M, writeStream?: NodeJS.WritableStream) {
+    assert(partyKey);
     assert(itemId);
     assert(model);
+    this._partyKey = partyKey;
     this._itemId = itemId;
     this._itemType = itemType;
     this._model = model;
@@ -37,7 +45,11 @@ export class Item<M extends Model<any>> {
   }
 
   toString () {
-    return `Item(${JSON.stringify({ itemId: this._itemId, itemType: this._itemType })})`;
+    return `Item(${JSON.stringify({ itemId: this._itemId, parentId: this.parent?.id, itemType: this._itemType })})`;
+  }
+
+  get partyKey (): PartyKey {
+    return this._partyKey;
   }
 
   get id (): ItemID {
@@ -56,59 +68,40 @@ export class Item<M extends Model<any>> {
     return !!this._writeStream;
   }
 
+  get parent (): Item<any> | null {
+    return this._parent;
+  }
+
   get children (): Item<any>[] {
     return Array.from(this._children.values());
   }
 
-  // TODO(burdon): To ensure strong references (tree) must declare parent at time of construction.
-  async addChild (item: Item<any>): Promise<void> {
+  async setParent (parentId: ItemID): Promise<void> {
     if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
     await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
       itemId: this._itemId,
-      childMutation: {
-        itemId: item.id
+      itemMutation: {
+        parentId
       }
     }));
   }
 
-  async removeChild (itemId: ItemID): Promise<void> {
-    if (!this._writeStream) {
-      throw new Error(`Read-only model: ${this._itemId}`);
+  _processMutation (mutation: protocol.dxos.echo.ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
+    const { parentId } = mutation;
+
+    if (this._parent) {
+      this._parent._children.delete(this);
     }
 
-    await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
-      itemId: this._itemId,
-      childMutation: {
-        operation: protocol.dxos.echo.ItemChildMutation.Operation.REMOVE,
-        itemId
-      }
-    }));
-  }
-
-  _processMutation (mutation: protocol.dxos.echo.ItemChildMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
-    const { operation, itemId } = mutation;
-    assert(itemId);
-
-    switch (operation) {
-      case protocol.dxos.echo.ItemChildMutation.Operation.REMOVE: {
-        this._children.forEach(child => {
-          if (child.id === itemId) {
-            this._children.delete(child);
-          }
-        });
-        break;
-      }
-
-      case protocol.dxos.echo.ItemChildMutation.Operation.ADD:
-      default: {
-        const child = getItem(itemId);
-        assert(child);
-        this._children.add(child);
-        break;
-      }
+    if (parentId) {
+      this._parent = getItem(parentId) || null;
+      assert(this._parent);
+      this._parent._children.add(this);
+    } else {
+      this._parent = null;
     }
   }
 }

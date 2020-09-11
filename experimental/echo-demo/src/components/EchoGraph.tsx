@@ -6,7 +6,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
-import { jsonReplacer } from '@dxos/experimental-util';
 
 import {
   createSimulationDrag,
@@ -22,6 +21,7 @@ import { ObjectModel } from '@dxos/experimental-object-model';
 
 import { useDatabase, useGraphData } from '../hooks';
 
+// TODO(burdon): Merge styles.
 const useCustomStyles = makeStyles(() => ({
   nodes: {
     '& g.node.database circle': {
@@ -33,24 +33,111 @@ const useCustomStyles = makeStyles(() => ({
     '& g.node.item circle': {
       fill: colors['grey'][400]
     },
+    '& g.node text': {
+      fontFamily: 'sans-serif',
+      fontWeight: 100
+    },
   }
 }));
+
+const createLayout = ({ database, grid, guides, delta, linkProjector, handleSelect }) => {
+  const layout = new ForceLayout({
+    center: {
+      x: grid.center.x + delta.x,
+      y: grid.center.y + delta.y,
+    },
+    force: {
+      links: {
+        distance: 60
+      }
+    },
+    initializer: (d, center) => {
+      const { type } = d;
+      if (type === 'database') {
+        return {
+          fx: center.x,
+          fy: center.y
+        }
+      }
+    }
+  });
+
+  const drag = createSimulationDrag(layout.simulation, { link: 'metaKey' });
+
+  drag.on('click', ({ source }) => {
+    handleSelect(source);
+  });
+
+  drag.on('drag', ({ source, position, linking }) => {
+    if (!linking) {
+      return;
+    }
+
+    const data = {
+      links: [
+        { id: 'guide-link', source, target: { id: 'guide-link-target', ...position } },
+      ]
+    };
+
+    linkProjector.update(grid, data, { group: guides });
+  });
+
+  drag.on('end', ({ source, target, linking }) => {
+    if (!linking) {
+      return;
+    }
+
+    console.log({ source, target });
+    setImmediate(async () => {
+      switch (source.type) {
+        case 'database': {
+          await database.createParty();
+          break;
+        }
+
+        case 'party': {
+          const party = await database.getParty(source.partyKey);
+          await party.createItem(ObjectModel);
+          break;
+        }
+
+        case 'item': {
+          // TODO(burdon): Change parent if target specified.
+          const party = await database.getParty(source.partyKey);
+          const child = await party.createItem(ObjectModel);
+          await child.setParent(source.id);
+          break;
+        }
+      }
+    });
+
+    linkProjector.update(grid, {}, { group: guides });
+  });
+
+  return {
+    layout,
+    drag
+  }
+};
 
 /**
  * @param id
  * @param grid
- * @param dx
+ * @param delta
+ * @param radius
  * @param onSelect
  * @constructor
  */
 const EchoGraph = (
-  { id, grid, dx, onSelect }: { id: string, grid: any, dx: number, onSelect: Function }
+  {
+    id, grid, delta, radius = 250, onSelect
+  }: {
+    id: string, grid: any, delta: { x: number, y: number }, radius: number, onSelect: Function
+  }
 ) => {
   const classes = useGraphStyles();
   const customClasses = useCustomStyles();
   const guides = useRef();
-
-  const database = useDatabase();
 
   const data = useGraphData({ id });
 
@@ -73,63 +160,22 @@ const EchoGraph = (
     linkProjector: new LinkProjector({ nodeRadius: 16, showArrows: true })
   });
 
-  const [layout] = useState(new ForceLayout({
-    center: (grid: any) => ({ x: grid.center.x + grid.scaleX(dx), y: grid.center.y }),
-    force: { links: { distance: 80 }, radial: { radius: 250 } }
+  const handleSelect = source => {
+    setSelected(source.id);
+    onSelect && onSelect(source);
+  };
+
+  const database = useDatabase();
+  const [selected, setSelected] = useState();
+  const [{ layout, drag }, setLayout] = useState(() => createLayout({
+    database, delta, grid, guides: guides.current, linkProjector, handleSelect
   }));
 
-  const [selected, setSelected] = useState();
-  const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey' }));
   useEffect(() => {
-    // TODO(burdon): Click to open.
-    // TODO(burdon): Drag to invite?
-    drag.on('click', ({ source }) => {
-      setSelected(source.id);
-      onSelect && onSelect(source);
-    });
-
-    drag.on('drag', ({ source, position, linking }) => {
-      if (!linking) {
-        return;
-      }
-
-      const data = {
-        links: [
-          { id: 'guide-link', source, target: { id: 'guide-link-target', ...position } },
-        ]
-      };
-
-      linkProjector.update(grid, data, { group: guides.current });
-    });
-
-    drag.on('end', ({ source, target, linking }) => {
-      if (!linking) {
-        return;
-      }
-
-      setImmediate(async () => {
-        switch (source.type) {
-          case 'database': {
-            await database.createParty();
-            break;
-          }
-
-          case 'party': {
-            const party = await database.getParty(source.partyKey);
-            await party.createItem(ObjectModel);
-            break;
-          }
-
-          case 'item': {
-            console.log('### CHILD ITEM ###');
-            break;
-          }
-        }
-      });
-
-      linkProjector.update(grid, {}, { group: guides.current });
-    });
-  }, [drag]);
+    setLayout(createLayout({
+      database, delta, grid, guides: guides.current, linkProjector, handleSelect
+    }));
+  }, [delta]);
 
   return (
     <g>
@@ -139,12 +185,12 @@ const EchoGraph = (
         grid={grid}
         data={data}
         layout={layout}
+        drag={drag}
+        linkProjector={linkProjector}
+        nodeProjector={nodeProjector}
         classes={{
           nodes: customClasses.nodes
         }}
-        linkProjector={linkProjector}
-        nodeProjector={nodeProjector}
-        drag={drag}
       />
     </g>
   );

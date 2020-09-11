@@ -30,13 +30,15 @@ message EchoEnvelope {
   string itemId = 1;
   Timeframe timeframe = 2;
 
-  oneof action {
-    ItemGenesis genesis = 10;
-    ItemChildMutation childMutation = 11;
+  // Create item.
+  ItemGenesis genesis = 10;
 
-    // TODO(burdon): Optimize with numeric type_url value? Separate types.
-    google.protobuf.Any mutation = 20;
-  }
+  // Item system mutations.
+  ItemMutation itemMutation = 11;
+
+  // User model mutations.
+  // TODO(burdon): Optimize with numeric type_url value? Separate types.
+  google.protobuf.Any mutation = 12;
 }
 
 // Item creation.
@@ -46,12 +48,6 @@ message ItemGenesis {
   string modelVersion = 3;
 }
 
-message ItemChildMutation {
-  enum Operation {
-    ADD = 0;
-    REMOVE = 1;
-  }
-
-  Operation operation = 1;
-  string itemId = 2;
+message ItemMutation {
+  string parentId = 1;
 }

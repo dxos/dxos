@@ -8,7 +8,7 @@ import pify from 'pify';
 
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
-import { protocol, ItemID, ItemType, IEchoStream } from '@dxos/experimental-echo-protocol';
+import { protocol, ItemID, ItemType, IEchoStream, PartyKey } from '@dxos/experimental-echo-protocol';
 import { Model, ModelType, ModelFactory, ModelMessage } from '@dxos/experimental-model-factory';
 import { checkType, createTransform } from '@dxos/experimental-util';
 
@@ -28,22 +28,30 @@ export class ItemManager {
   private readonly _itemUpdate = new Event<Item<any>>();
 
   // Map of active items.
-  private _items = new Map<ItemID, Item<any>>();
+  private readonly _items = new Map<ItemID, Item<any>>();
 
   // TODO(burdon): Lint issue: Unexpected whitespace between function name and paren
   // Map of item promises (waiting for item construction after genesis message has been written).
   // eslint-disable-next-line func-call-spacing
-  private _pendingItems = new Map<ItemID, (item: Item<any>) => void>();
+  private readonly _pendingItems = new Map<ItemID, (item: Item<any>) => void>();
 
-  _modelFactory: ModelFactory;
-  _writeStream?: NodeJS.WritableStream;
+  private readonly _partyKey: PartyKey;
+  private readonly _modelFactory: ModelFactory;
+  private readonly _writeStream?: NodeJS.WritableStream;
 
   /**
+   * @param partyKey
    * @param modelFactory
    * @param writeStream Outbound `dxos.echo.IEchoEnvelope` mutation stream.
    */
-  constructor (modelFactory: ModelFactory, writeStream?: NodeJS.WritableStream) {
+  constructor (
+    partyKey: PartyKey,
+    modelFactory: ModelFactory,
+    writeStream?: NodeJS.WritableStream
+  ) {
+    assert(partyKey);
     assert(modelFactory);
+    this._partyKey = partyKey;
     this._modelFactory = modelFactory;
     this._writeStream = writeStream;
   }
@@ -136,7 +144,7 @@ export class ItemManager {
     outboundTransform.pipe(this._writeStream);
 
     // Create the Item.
-    const item = new Item(itemId, itemType, model, this._writeStream);
+    const item = new Item(this._partyKey, itemId, itemType, model, this._writeStream);
     assert(!this._items.has(itemId));
     this._items.set(itemId, item);
     log('Constructed:', String(item));

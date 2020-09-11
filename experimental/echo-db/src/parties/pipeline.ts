@@ -9,7 +9,7 @@ import pump from 'pump';
 import { Readable, Writable } from 'stream';
 
 import { Event } from '@dxos/async';
-import { protocol, createFeedMeta, FeedBlock, IEchoStream } from '@dxos/experimental-echo-protocol';
+import { protocol, createFeedMeta, FeedBlock, IEchoStream, IHaloStream } from '@dxos/experimental-echo-protocol';
 import { createTransform, jsonReplacer } from '@dxos/experimental-util';
 
 import { ReplicatorFactory, IReplicationAdapter } from '../replication';
@@ -38,6 +38,9 @@ export class Pipeline {
 
   // Messages to write into pipeline (e.g., mutations from model).
   private _writeStream: Writable | undefined;
+
+  // Halo messages to write into pipeline.
+  private _haloWriteStream: Writable | undefined;
 
   private _replicationAdapter?: IReplicationAdapter;
 
@@ -82,6 +85,10 @@ export class Pipeline {
     return this._writeStream;
   }
 
+  get haloWriteStream () {
+    return this._haloWriteStream;
+  }
+
   get errors () {
     return this._errors;
   }
@@ -107,41 +114,45 @@ export class Pipeline {
     // Processes inbound messages (piped from feed store).
     //
     this._readStream = createTransform<FeedBlock, IEchoStream>(async (block: FeedBlock) => {
-      const { data: message } = block;
+      try {
+        const { data: message } = block;
 
-      //
-      // HALO
-      //
-      if (message.halo) {
-        await this._partyProcessor.processMessage({
-          meta: createFeedMeta(block),
-          data: message.halo
-        });
-      }
-
-      // Update timeframe.
-      // NOTE: It is OK to update here even though the message may not have been processed,
-      // since any paused dependent message must be intended for this stream.
-      const { key, seq } = block;
-      this._partyProcessor.updateTimeframe(key, seq);
-
-      //
-      // ECHO
-      //
-      if (message.echo) {
-        // Validate messge.
-        const { itemId } = message.echo;
-        if (itemId) {
-          return {
+        //
+        // HALO
+        //
+        if (message.halo) {
+          await this._partyProcessor.processMessage({
             meta: createFeedMeta(block),
-            data: message.echo
-          };
+            data: message.halo
+          });
         }
-      }
 
-      if (!message.halo && !message.echo) {
-        // TODO(burdon): Can we throw and have the pipeline log (without breaking the stream)?
-        log(`Skipping invalid message: ${JSON.stringify(message, jsonReplacer)}`);
+        // Update timeframe.
+        // NOTE: It is OK to update here even though the message may not have been processed,
+        // since any paused dependent message must be intended for this stream.
+        const { key, seq } = block;
+        this._partyProcessor.updateTimeframe(key, seq);
+
+        //
+        // ECHO
+        //
+        if (message.echo) {
+          // Validate messge.
+          const { itemId } = message.echo;
+          if (itemId) {
+            return {
+              meta: createFeedMeta(block),
+              data: message.echo
+            };
+          }
+        }
+
+        if (!message.halo && !message.echo) {
+          // TODO(burdon): Can we throw and have the pipeline log (without breaking the stream)?
+          log(`Skipping invalid message: ${JSON.stringify(message, jsonReplacer)}`);
+        }
+      } catch (err) {
+        log(`Error in message processing: ${err}`);
       }
     });
 
@@ -185,9 +196,33 @@ export class Pipeline {
           this._errors.emit(err);
         }
       });
+
+      this._haloWriteStream = createTransform<any, protocol.dxos.IFeedMessage>(
+        async (message: any) => {
+          const data: protocol.dxos.IFeedMessage = {
+            halo: message
+          };
+
+          return data;
+        }
+      );
+
+      // TODO(marik-d): Code duplication
+      pump([
+        this._haloWriteStream,
+        writeLogger,
+        this._feedWriteStream
+      ].filter(Boolean) as any[], (err: Error | undefined) => {
+        // TODO(burdon): Handle error.
+        error('Outbound pipeline:', err || 'closed');
+        if (err) {
+          this._errors.emit(err);
+        }
+      });
     }
 
-    // Replication
+    // Replication.
+    // TODO(burdon): Move out of pipeline?
     this._replicationAdapter = this.replicatorFactory?.(this.partyKey, this._partyProcessor.getActiveFeedSet());
     this._replicationAdapter?.start();
 

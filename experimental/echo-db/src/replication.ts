@@ -66,7 +66,7 @@ export class ReplicationAdapter implements IReplicationAdapter {
     let feed = this.feedStore.getOpenFeed(desc => desc.feed.key.equals(key));
     if (!feed) {
       // TODO(burdon): Change path.
-      feed = this.feedStore.openFeed(`/topic/${topic}/readable/${keyToString(key)}`, {
+      feed = this.feedStore.openFeed(keyToString(key), {
         key,
         metadata: { partyKey: this.partyKey }
       } as any);
