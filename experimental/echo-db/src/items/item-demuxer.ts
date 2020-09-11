@@ -46,7 +46,7 @@ export const createItemDemuxer = (itemManager: ItemManager): NodeJS.WritableStre
     }
 
     //
-    // NOTE: Spacetime should guarantee that the item genesis message has already been processed.
+    // NOTE: Spacetime guarantees that the item genesis message has already been processed.
     //
 
     //

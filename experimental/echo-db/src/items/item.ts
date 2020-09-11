@@ -10,8 +10,9 @@ import { Model } from '@dxos/experimental-model-factory';
 import { checkType } from '@dxos/experimental-util';
 
 /**
- * Addressable data item.
- * Items may have child items.
+ * A globally addressable data item.
+ * Items are hermetic data structures contained within a Party. They may be hierarchical.
+ * The Item data structure is governed by a Model class, which implements data consistency.
  */
 export class Item<M extends Model<any>> {
   private readonly _partyKey: PartyKey;
@@ -19,8 +20,10 @@ export class Item<M extends Model<any>> {
   private readonly _itemType?: ItemType; // TODO(burdon): If optional, is this just a label (or "kind"?)
   private readonly _model: M;
   private readonly _writeStream?: NodeJS.WritableStream;
+
+  // Parent item (or null if this item is a root item).
+  private _parent: Item<any> | null = null;
   private readonly _children = new Set<Item<any>>();
-  private _parent: Item<any> | undefined;
 
   /**
    * Items are constructed by a `Party` object.
@@ -42,7 +45,7 @@ export class Item<M extends Model<any>> {
   }
 
   toString () {
-    return `Item(${JSON.stringify({ itemId: this._itemId, itemType: this._itemType })})`;
+    return `Item(${JSON.stringify({ itemId: this._itemId, parentId: this.parent?.id, itemType: this._itemType })})`;
   }
 
   get partyKey (): PartyKey {
@@ -65,12 +68,12 @@ export class Item<M extends Model<any>> {
     return !!this._writeStream;
   }
 
-  get children (): Item<any>[] {
-    return Array.from(this._children.values());
+  get parent (): Item<any> | null {
+    return this._parent;
   }
 
-  get parent (): Item<any> | undefined {
-    return this._parent;
+  get children (): Item<any>[] {
+    return Array.from(this._children.values());
   }
 
   async setParent (parentId: ItemID): Promise<void> {
@@ -94,11 +97,11 @@ export class Item<M extends Model<any>> {
     }
 
     if (parentId) {
-      this._parent = getItem(parentId);
+      this._parent = getItem(parentId) || null;
       assert(this._parent);
       this._parent._children.add(this);
     } else {
-      this._parent = undefined;
+      this._parent = null;
     }
   }
 }
