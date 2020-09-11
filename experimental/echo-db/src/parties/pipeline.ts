@@ -221,7 +221,8 @@ export class Pipeline {
       });
     }
 
-    // Replication
+    // Replication.
+    // TODO(burdon): Move out of pipeline?
     this._replicationAdapter = this.replicatorFactory?.(this.partyKey, this._partyProcessor.getActiveFeedSet());
     this._replicationAdapter?.start();
 

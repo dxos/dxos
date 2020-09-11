@@ -36,7 +36,7 @@ export const useParties = (): Party[] => {
   useEffect(() => {
     let unsubscribe;
     setImmediate(async () => {
-      // TODO(burdon): Make synchronous.
+      // TODO(burdon): Make synchronous?
       const result = await database.queryParties();
       unsubscribe = result.subscribe(() => {
         setParties(result.value);
@@ -45,10 +45,12 @@ export const useParties = (): Party[] => {
       setParties(result.value);
     });
 
-    if (unsubscribe) {
-      unsubscribe();
-    }
-  }, []);
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [database]);
 
   return parties;
 };
@@ -69,9 +71,11 @@ export const useItems = ({ partyKey }): Item<any>[] => {
       setItems(result.value);
     });
 
-    if (unsubscribe) {
-      unsubscribe();
-    }
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   return items;
@@ -92,7 +96,7 @@ const createGraphData = (
       {
         id: rootId,
         type: 'database',
-        title: `Database ${id}`,
+        title: `ECHO(${id})`,
         partyKey: null
       }
     ],
@@ -116,7 +120,6 @@ const createGraphData = (
         target: partyKey
       });
 
-      // TODO(burdon): Hierarchical items.
       items.forEach(item => {
         data.nodes.push({
           id: item.id,
@@ -125,9 +128,10 @@ const createGraphData = (
           partyKey: party.key
         });
 
+        const id = item.parent ? item.parent.id : partyKey;
         data.links.push({
-          id: `${partyKey}-${item.id}`,
-          source: partyKey,
+          id: `${id}-${item.id}`,
+          source: id,
           target: item.id
         });
       });
@@ -146,9 +150,19 @@ export const useGraphData = ({ id }) => {
   const [data, setData] = useState<GraphData>(createGraphData(id));
   const parties = useParties();
 
+  // TODO(burdon): For open parties only.
   useEffect(() => {
+    // Remove obsolete parties.
+    partyMap.current.forEach(({ party }) => {
+      if (!parties.find(p => Buffer.compare(p.key, party.key) !== 0)) {
+        const partyKey = keyToString(party.key);
+        subscriptions.current.get(partyKey)();
+        subscriptions.current.delete(partyKey);
+        partyMap.current.delete(partyKey);
+      }
+    });
+
     // Create party subscriptions.
-    // TODO(burdon): For open parties only (remove deleted).
     parties.forEach(async party => {
       const partyKey = keyToString(party.key);
       if (!subscriptions.current.has(partyKey)) {
@@ -162,6 +176,9 @@ export const useGraphData = ({ id }) => {
         updateParty();
       }
     });
+
+    // Update.
+    setData(createGraphData(id, partyMap.current));
 
     return () => {
       for (const unsubscribe of subscriptions.current.values()) {

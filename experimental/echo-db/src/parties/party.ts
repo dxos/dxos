@@ -32,11 +32,8 @@ export class Party {
 
   /**
    * The Party is constructed by the `Database` object.
-   * @param {ModelFactory} modelFactory
-   * @param {Pipeline} pipeline
    */
   constructor (
-    // TODO(burdon): Do not inline.
     private readonly _modelFactory: ModelFactory,
     private readonly _pipeline: Pipeline,
     private readonly _partyProcessor: PartyProcessor,
@@ -72,7 +69,7 @@ export class Party {
     const [readStream, writeStream] = await this._pipeline.open();
 
     // Connect to the downstream item demuxer.
-    this._itemManager = new ItemManager(this._modelFactory, writeStream);
+    this._itemManager = new ItemManager(this.key, this._modelFactory, writeStream);
     this._itemDemuxer = createItemDemuxer(this._itemManager);
     readStream.pipe(this._itemDemuxer);
 
@@ -143,6 +140,7 @@ export class Party {
    */
   async queryItems (filter?: ItemFilter): Promise<ResultSet<Item<any>>> {
     assert(this._itemManager);
+
     return this._itemManager.queryItems(filter);
   }
 

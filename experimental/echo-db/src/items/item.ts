@@ -5,7 +5,7 @@
 import assert from 'assert';
 import pify from 'pify';
 
-import { protocol, ItemID, ItemType } from '@dxos/experimental-echo-protocol';
+import { protocol, ItemID, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
 import { Model } from '@dxos/experimental-model-factory';
 import { checkType } from '@dxos/experimental-util';
 
@@ -14,22 +14,27 @@ import { checkType } from '@dxos/experimental-util';
  * Items may have child items.
  */
 export class Item<M extends Model<any>> {
+  private readonly _partyKey: PartyKey;
   private readonly _itemId: ItemID;
   private readonly _itemType?: ItemType; // TODO(burdon): If optional, is this just a label (or "kind"?)
   private readonly _model: M;
   private readonly _writeStream?: NodeJS.WritableStream;
   private readonly _children = new Set<Item<any>>();
+  private _parent: Item<any> | undefined;
 
   /**
    * Items are constructed by a `Party` object.
+   * @param {PartyKey} partyKey
    * @param {ItemID} itemId - Addressable ID.
    * @param {ItemType} itemType - User defined type (WRN).
    * @param {Model} model - Data model (provided by `ModelFactory`).
    * @param [writeStream] - Write stream if not read-only.
    */
-  constructor (itemId: ItemID, itemType: ItemType, model: M, writeStream?: NodeJS.WritableStream) {
+  constructor (partyKey: PartyKey, itemId: ItemID, itemType: ItemType, model: M, writeStream?: NodeJS.WritableStream) {
+    assert(partyKey);
     assert(itemId);
     assert(model);
+    this._partyKey = partyKey;
     this._itemId = itemId;
     this._itemType = itemType;
     this._model = model;
@@ -38,6 +43,10 @@ export class Item<M extends Model<any>> {
 
   toString () {
     return `Item(${JSON.stringify({ itemId: this._itemId, itemType: this._itemType })})`;
+  }
+
+  get partyKey (): PartyKey {
+    return this._partyKey;
   }
 
   get id (): ItemID {
@@ -60,55 +69,36 @@ export class Item<M extends Model<any>> {
     return Array.from(this._children.values());
   }
 
-  // TODO(burdon): To ensure strong references (tree) must declare parent at time of construction.
-  async addChild (item: Item<any>): Promise<void> {
+  get parent (): Item<any> | undefined {
+    return this._parent;
+  }
+
+  async setParent (parentId: ItemID): Promise<void> {
     if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
     await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
       itemId: this._itemId,
-      childMutation: {
-        itemId: item.id
+      itemMutation: {
+        parentId
       }
     }));
   }
 
-  async removeChild (itemId: ItemID): Promise<void> {
-    if (!this._writeStream) {
-      throw new Error(`Read-only model: ${this._itemId}`);
+  _processMutation (mutation: protocol.dxos.echo.ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
+    const { parentId } = mutation;
+
+    if (this._parent) {
+      this._parent._children.delete(this);
     }
 
-    await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
-      itemId: this._itemId,
-      childMutation: {
-        operation: protocol.dxos.echo.ItemChildMutation.Operation.REMOVE,
-        itemId
-      }
-    }));
-  }
-
-  _processMutation (mutation: protocol.dxos.echo.ItemChildMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
-    const { operation, itemId } = mutation;
-    assert(itemId);
-
-    switch (operation) {
-      case protocol.dxos.echo.ItemChildMutation.Operation.REMOVE: {
-        this._children.forEach(child => {
-          if (child.id === itemId) {
-            this._children.delete(child);
-          }
-        });
-        break;
-      }
-
-      case protocol.dxos.echo.ItemChildMutation.Operation.ADD:
-      default: {
-        const child = getItem(itemId);
-        assert(child);
-        this._children.add(child);
-        break;
-      }
+    if (parentId) {
+      this._parent = getItem(parentId);
+      assert(this._parent);
+      this._parent._children.add(this);
+    } else {
+      this._parent = undefined;
     }
   }
 }

@@ -126,6 +126,7 @@ describe('api tests', () => {
         const { first: item } = await party.queryItems({ type: 'wrn://dxos.org/item/document' });
         expect(item.children).toHaveLength(1);
         expect(item.children[0].type).toBe(undefined);
+        // TODO(burdon): Test parent.
         onUpdate();
       });
     });
@@ -133,10 +134,9 @@ describe('api tests', () => {
     const party = await db.createParty();
     expect(party.isOpen).toBeTruthy();
 
-    // TODO(burdon): Child must be created with parent.
     const parent = await party.createItem(ObjectModel, 'wrn://dxos.org/item/document');
     const child = await party.createItem(ObjectModel);
-    await parent.addChild(child);
+    await child.setParent(parent.id);
 
     await updated;
     unsubscribe();
