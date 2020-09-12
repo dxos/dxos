@@ -81,6 +81,7 @@ export const createSimulationDrag = (simulation, options = {}) => {
         const position = { x, y };
 
         // Freeze simulation for node if dragging.
+        // TODO(burdon): Need to decorate datum if fixed by data model or by key modifier.
         if (!state.linking) {
           if (!state.frozen.x) {
             d3.event.subject.fx = d3.event.x;

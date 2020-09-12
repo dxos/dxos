@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useResize } from './useResize';
 
@@ -15,14 +15,14 @@ import { useResize } from './useResize';
  * @param {Object} data
  * @param {function} callback
  * @param [deps]
- * @param [context]
  */
-export const useLayout = (layout, grid, data = {}, callback, deps = [], context = {}) => {
+export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
   assert(layout);
   assert(grid);
   assert(data);
   assert(callback);
-  assert(context);
+
+  const [context] = useState({});
 
   //
   // Update events.
