@@ -10,7 +10,7 @@ import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
 import blue from '@material-ui/core/colors/blue';
 import grey from '@material-ui/core/colors/grey';
-import { withKnobs, select } from "@storybook/addon-knobs";
+import { withKnobs, select } from '@storybook/addon-knobs';
 
 import {
   FullScreen,

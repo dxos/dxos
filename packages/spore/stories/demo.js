@@ -8,7 +8,7 @@ import debug from 'debug';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
-import { withKnobs, boolean, button, number } from "@storybook/addon-knobs";
+import { withKnobs, boolean, button, number } from '@storybook/addon-knobs';
 import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
 

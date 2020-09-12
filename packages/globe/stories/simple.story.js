@@ -7,7 +7,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import EventEmitter from 'events';
 import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
-import { withKnobs } from "@storybook/addon-knobs";
+import { withKnobs } from '@storybook/addon-knobs';
 
 import TopologyData from '../data/110m.json';
 

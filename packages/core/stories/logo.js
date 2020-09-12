@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import React, { useEffect, useRef } from 'react';
 import useResizeAware from 'react-resize-aware';
-import { withKnobs } from "@storybook/addon-knobs";
+import { withKnobs } from '@storybook/addon-knobs';
 
 import { FullScreen, SVG } from '../src/components';
 
