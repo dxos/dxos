@@ -14,7 +14,7 @@
   "dependencies": {
     "@material-ui/core": "^4.9.10",
     "clsx": "^1.1.0",
-    "d3": "^5.9.2",
+    "d3": "^6.1.1",
     "debug": "^4.1.1",
     "immutability-helper": "^3.0.2",
     "lodash.defaultsdeep": "^4.6.1",

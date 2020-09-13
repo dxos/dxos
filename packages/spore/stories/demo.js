@@ -622,7 +622,7 @@ export const withTreeLayout = () => {
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
 
-  const [data] = useDataButton(() => createTree({ minDepth: 2, maxDepth: 4, maxChildren: 2 }));
+  const [data] = useDataButton(() => createTree({ minDepth: 2, maxDepth: 4, maxChildren: 4 }));
 
   const links = useRef();
   const nodes = useRef();

@@ -187,9 +187,9 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
 
       d3.select(view.current)
         .call(drag)
-        .on('click', () => {
+        .on('click', (event) => {
           // NOTE: Happens after drag ends.
-          const d = d3.select(d3.event.target).datum();
+          const d = d3.select(event.target).datum();
           if (!d) {
             setSelected(null);
           }

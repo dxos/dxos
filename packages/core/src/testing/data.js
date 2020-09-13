@@ -39,11 +39,11 @@ export const createItems = (n = 0) => [...new Array(n)].map(createItem);
  * @param maxDepth
  * @param maxChildren
  */
-export const createTree = ({ minDepth = 1, maxDepth = 1, maxChildren = 8 }) => {
+export const createTree = ({ minDepth = 2, maxDepth = 2, maxChildren = 8 }) => {
   const createChildren = (root, d = 0) => {
     if (d < maxDepth) {
       const num = faker.random.number({
-        min: minDepth,
+        min: Math.max(0, minDepth - d),
         max: (maxChildren - 1) / (d + 1)
       });
 

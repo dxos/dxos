@@ -101,7 +101,7 @@ const Editor = ({ line }) => {
       .append('circle')
         .attr('cx', 0)
         .attr('cy', 0)
-        .on('click', d => {
+        .on('click', (event, d) => {
           if (d.id === selectionRef.current) {
             setSelected(undefined);
           } else {

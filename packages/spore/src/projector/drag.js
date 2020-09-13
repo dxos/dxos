@@ -33,8 +33,7 @@ export const createSimulationDrag = (simulation, options = {}) => {
     };
 
     // TODO(burdon): Configure.
-    const parent = () => d3.event.sourceEvent.target
-      .closest(`g[id="${d3.event.subject.id}"]`);
+    const parent = event => event.sourceEvent.target.closest(`g[id="${event.subject.id}"]`);
 
     // https://github.com/d3/d3-drag#drag
     // https://observablehq.com/@d3/click-vs-drag
@@ -46,17 +45,17 @@ export const createSimulationDrag = (simulation, options = {}) => {
 
       // Get the datum of the element being dragged.
       // https://github.com/d3/d3-drag#drag_subject
-      .subject(() => simulation.find(d3.event.x, d3.event.y))
+      .subject(event => simulation.find(event.x, event.y))
 
     // Event handlers.
     // https://github.com/d3/d3-drag#drag_on
     // https://github.com/d3/d3-drag#drag-events
 
-      .on('start', function () {
-        const group = parent();
-        const { [link]: linkModifier } = d3.event.sourceEvent;
+      .on('start', function (event) {
+        const group = parent(event);
+        const { [link]: linkModifier } = event.sourceEvent;
 
-        if (!d3.event.active) {
+        if (!event.active) {
           simulation.alphaTarget(0.3).restart();
         }
 
@@ -68,40 +67,40 @@ export const createSimulationDrag = (simulation, options = {}) => {
 
         // Check if already frozen.
         state.frozen = {
-          x: d3.event.subject.fx !== null,
-          y: d3.event.subject.fy !== null
+          x: event.subject.fx !== null,
+          y: event.subject.fy !== null
         };
 
-        emitter.emit('start', { source: d3.event.subject });
+        emitter.emit('start', { source: event.subject });
       })
 
-      .on('drag', function () {
+      .on('drag', function (event) {
         // NOTE: Mouse position is different from the event position.
-        const [x, y] = d3.mouse(this);
+        const [x, y] = d3.pointer(this);
         const position = { x, y };
 
         // Freeze simulation for node if dragging.
         // TODO(burdon): Need to decorate datum if fixed by data model or by key modifier.
         if (!state.linking) {
           if (!state.frozen.x) {
-            d3.event.subject.fx = d3.event.x;
+            event.subject.fx = event.x;
           }
 
           if (!state.frozen.y) {
-            d3.event.subject.fy = d3.event.y;
+            event.subject.fy = event.y;
           }
         }
 
-        emitter.emit('drag', { source: d3.event.subject, position, linking: state.linking });
+        emitter.emit('drag', { source: event.subject, position, linking: state.linking });
 
         state.dragging = true;
       })
 
-      .on('end', function () {
-        const { [freeze]: freezeModifier } = d3.event.sourceEvent;
+      .on('end', function (event) {
+        const { [freeze]: freezeModifier } = event.sourceEvent;
 
         // TODO(burdon): Restart simulation?
-        if (!d3.event.active) {
+        if (!event.active) {
           simulation.alphaTarget(0);
         }
 
@@ -110,11 +109,11 @@ export const createSimulationDrag = (simulation, options = {}) => {
         //
 
         if (!state.frozen.x) {
-          d3.event.subject.fx = null;
+          event.subject.fx = null;
         }
 
         if (!state.frozen.y) {
-          d3.event.subject.fy = null;
+          event.subject.fy = null;
         }
 
         state.frozen = {};
@@ -122,17 +121,17 @@ export const createSimulationDrag = (simulation, options = {}) => {
         // Fix position.
         // TODO(burdon): Add class decoration.
         if (freezeModifier) {
-          d3.event.subject.fx = d3.event.subject.x;
-          d3.event.subject.fy = d3.event.subject.y;
+          event.subject.fx = event.subject.x;
+          event.subject.fy = event.subject.y;
         }
 
         // Link or click.
         if (state.dragging) {
           // TODO(burdon): Get radius from nodes (or target from currently highlighted).
-          const target = simulation.find(d3.event.x, d3.event.y, 16);
-          emitter.emit('end', { source: d3.event.subject, target, linking: state.linking });
+          const target = simulation.find(event.x, event.y, 16);
+          emitter.emit('end', { source: event.subject, target, linking: state.linking });
         } else {
-          emitter.emit('click', { source: d3.event.subject });
+          emitter.emit('click', { source: event.subject });
         }
       });
   };
