@@ -10,38 +10,46 @@ import defaultsDeep from 'lodash.defaultsdeep';
  */
 export class Layout extends EventEmitter {
 
-  constructor(options = {}) {
+  _data = {
+    guides: []
+  };
+
+  constructor (options = undefined, mergeDefaults = true) {
     super();
 
-    this._options = defaultsDeep({}, options, this.defaults, {
+    this._options = defaultsDeep({}, options, (!options || mergeDefaults) && this.defaults, {
       center: grid => grid.center,
       radius: grid => Math.min(grid.size.width, grid.size.height) * .25
     });
   }
 
-  get defaults() {
+  get defaults () {
     return {};
   }
 
+  get data () {
+    return this._data;
+  }
+
   // Call to notify repaint.
-  emitUpdate(data) {
+  emitUpdate (data) {
     this.emit('update', data);
   }
 
   // TODO(burdon): Data structure for guides (e.g., radius circle).
 
-  reset() {
+  reset () {
     this._onReset();
   }
 
-  update(grid, data, context) {
+  update (grid, data, context) {
     if (grid.size.width !== null && grid.size.height !== null) {
       this._onUpdate(grid, data, context);
       this.emitUpdate(data);
     }
   }
 
-  _onReset() {}
+  _onReset () {}
 
   /**
    * Compute the layout.
@@ -51,5 +59,5 @@ export class Layout extends EventEmitter {
    * @private
    */
   // eslint-disable-next-line no-unused-vars
-  _onUpdate(grid, data, context) {}
+  _onUpdate (grid, data, context) {}
 }

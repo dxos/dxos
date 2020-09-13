@@ -102,6 +102,7 @@ export const withBoxProjector = () => {
   const nodes = useRef();
   const layout = new GridLayout();
   const projector = new BoxProjector();
+
   useLayout(layout, grid, data, ({ data }) => {
     projector.update(grid, data, { group: nodes.current });
   });
@@ -633,8 +634,8 @@ export const withTreeLayout = () => {
   const projector = new TreeProjector();
   const guideProjector = new GuideProjector();
   const grid = useGrid({ width, height });
-  useLayout(layout, grid, data, ({ context, data }) => {
-    guideProjector.update(grid, context, { group: guides.current });
+  useLayout(layout, grid, data, ({ data }) => {
+    guideProjector.update(grid, layout.data, { group: guides.current });
     projector.update(grid, data, {
       links: links.current,
       nodes: nodes.current

@@ -15,38 +15,39 @@ import { Layout } from './layout';
  */
 export class ForceLayout extends Layout {
 
+  static defaults = {
+    alphaTarget: .2,
+    force: {
+      center: {
+        strength: .3
+      },
+      radial: {
+        radius: 200,
+        strength: .3
+      },
+      charge: {
+        strength: -300
+      },
+      collide: {
+        strength: .1
+      },
+      links: {
+        distance: 30,
+
+        // https://github.com/d3/d3-force#link_strength
+        strength: (link /*, i, links*/) => {
+          const count = () => 1;
+          return 1 / Math.min(count(link.source), count(link.target));
+        }
+      }
+    }
+  }
+
   // https://github.com/d3/d3-force
   _simulation = d3.forceSimulation();
 
-  // TODO(burdon): Don't automatically merge (otherwise cannot override).
   get defaults () {
-    return {
-      alphaTarget: .2,
-      force: {
-        center: {
-          strength: .3
-        },
-        radial: {
-          radius: 200,
-          strength: .3
-        },
-        charge: {
-          strength: -300
-        },
-        collide: {
-          strength: .1
-        },
-        links: {
-          distance: 30,
-
-          // https://github.com/d3/d3-force#link_strength
-          strength: (link /*, i, links*/) => {
-            const count = () => 1;
-            return 1 / Math.min(count(link.source), count(link.target));
-          }
-        }
-      }
-    };
+    return ForceLayout.defaults;
   }
 
   get simulation () {
@@ -60,12 +61,11 @@ export class ForceLayout extends Layout {
       .stop();
   }
 
-  _onUpdate (grid, data, context) {
-    const { alphaTarget, force } = this._options;
-    const center = value(this._options.center)(grid);
+  _onUpdate (grid, data) {
+    const { alphaTarget } = this._options;
 
-    // Guides.
-    context.guides = [];
+    // Reset.
+    this.data.guides = [];
 
     // TODO(burdon): Don't mutate data set; instead attach data to nodes.
     data.nodes = this._mergeData(grid, data);
@@ -75,7 +75,7 @@ export class ForceLayout extends Layout {
 
     // Set forces.
     // https://github.com/d3/d3-force#simulation_force
-    const forces = this._getForces(grid, data, context);
+    const forces = this._getForces(grid, data);
     Object.values(forces).forEach((value, key) => this._simulation.force(key, value));
 
     // https://github.com/d3/d3-force#simulation_restart
@@ -123,7 +123,7 @@ export class ForceLayout extends Layout {
     });
   }
 
-  _getForces (grid, data, context) {
+  _getForces (grid, data) {
     const { force } = this._options;
     const center = value(this._options.center)(grid);
     const { links = [] } = data;
@@ -181,7 +181,7 @@ export class ForceLayout extends Layout {
       forces.radial = d3.forceRadial(force.radial.radius, center.x, center.y)
         .strength(force.radial.strength);
 
-      context.guides.push({
+      this.data.guides.push({
         id: 'radial',
         type: 'circle',
         cx: center.x,
