@@ -38,7 +38,7 @@ export default {
   decorators: [withKnobs]
 };
 
-const createDatabase = () => {
+const createDatabase = async (options) => {
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
   const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
@@ -46,15 +46,17 @@ const createDatabase = () => {
     .registerModel(ObjectModel.meta, ObjectModel);
 
   const networkManager = new NetworkManager(feedStore, new SwarmProvider());
-  const partyFactory = new PartyFactory(feedStoreAdapter, modelFactory, createReplicatorFactory(networkManager, feedStore, randomBytes()));
-  partyFactory.initIdentity(); // TODO(marik-d): await this
+  const partyFactory = new PartyFactory(
+    feedStoreAdapter, modelFactory, createReplicatorFactory(networkManager, feedStore, randomBytes()));
+
+  await partyFactory.initIdentity();
   const partyManager = new PartyManager(
     feedStoreAdapter,
     partyFactory
   );
 
-  return new Database(partyManager);
-}
+  return new Database(partyManager, options);
+};
 
 const useStyles = makeStyles(() => ({
   info: {
@@ -82,14 +84,16 @@ export const withDatabase = () => {
   const [peers, setPeers] = useState([]);
   useEffect(() => {
     // TODO(burdon): Reuse existing.
-    const peers = [...new Array(n)].map((_, i) => {
-      const id = `db-${i + 1}`;
-      const database = createDatabase({ id, ts: Date.now() });
-      console.log('Created:', String(database));
-      return { id, database };
-    });
+    setImmediate(async () => {
+      const peers = await Promise.all([...new Array(n)].map(async (_, i) => {
+        const id = `db-${i + 1}`;
+        const database = await createDatabase({ id });
+        console.log('Created:', String(database));
+        return { id, database };
+      }));
 
-    setPeers(peers);
+      setPeers(peers);
+    });
   }, [n]);
 
   return (
