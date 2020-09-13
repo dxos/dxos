@@ -63,11 +63,11 @@
   "devDependencies": {
     "@dxos/eslint-plugin": "^1.0.4",
     "@types/jest": "^25.2.3",
-    "@storybook/addon-knobs": "^5.3.18",
+    "@storybook/addon-knobs": "^6.0.21",
     "@storybook/addon-links": "^6.0.19",
     "@storybook/addon-actions": "^6.0.19",
     "babel-loader": "8.1.0",
-    "@storybook/react": "^5.3.18",
+    "@storybook/react": "^6.0.21",
     "chance": "^1.1.6",
     "del-cli": "^3.0.0",
     "eslint-plugin-jest": "^23.13.1",
