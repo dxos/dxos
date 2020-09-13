@@ -185,7 +185,7 @@ export const withForceLayout = () => {
  * Force layout.
  */
 export const withMultipleForceLayout = () => {
-  const n = number('graphs', 1, { min: 1, max: 4 });
+  const n = number('graphs', 3, { min: 1, max: 4 });
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
   const grid = useGrid({ width, height });
@@ -309,7 +309,7 @@ export const withArrows = () => {
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} />
-        <Markers />
+        <Markers arrowSize={16} />
         <Graph
           grid={grid}
           data={data}

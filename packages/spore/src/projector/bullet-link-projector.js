@@ -7,6 +7,9 @@ import assert from 'assert';
 
 import { Projector } from './projector';
 
+/**
+ * Animated bullets between nodes.
+ */
 export class BulletLinkProjector extends Projector {
 
   constructor(linkProjector, options) {
@@ -22,7 +25,7 @@ export class BulletLinkProjector extends Projector {
   }
 
   fire(group, node) {
-    const { max = 20, radius = 3 } = this._options || {};
+    const { max = 32, radius = 3 } = this._options || {};
 
     d3.select(this._group)
       .selectAll('path')
@@ -42,7 +45,7 @@ export class BulletLinkProjector extends Projector {
 
           bullet
             .transition()
-            .delay(50)                                      // TODO(burdon): Config.
+            .delay(50) // TODO(burdon): Config.
             .duration(200 + Math.random() * 1000)
             .ease(d3.easeLinear)
             .tween('pathTween', function() {

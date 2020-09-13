@@ -11,24 +11,25 @@ const useStyles = makeStyles(() => ({
   root: {},
   arrow: ({ color = 'grey' }) => ({
     fill: 'none',
-    strokeWidth: .5,
+    strokeWidth: 1,
     stroke: colors[color][500],
   })
 }));
 
 /**
  * Markers include elements such as arrow-heads.
+ * @param arrowSize
  * @param classes
  * @returns {JSX.Element}
  * @constructor
  */
-export const Markers = () => {
+export const Markers = ({ arrowSize = 16 }) => {
   const classes = useStyles();
   const markers = useRef();
 
   // Arrows markers.
   useEffect(() => {
-    d3.select(markers.current).call(createArrowMarkers({ classes }));
+    d3.select(markers.current).call(createArrowMarkers({ arrowSize, classes }));
   }, []);
 
   return (
@@ -45,20 +46,24 @@ export const Markers = () => {
  * @param classes
  * @return {function(*): null|undefined}
  */
-export const createArrowMarkers = ({ arrowSize = 32, classes } = {}) => group =>
-  group
+export const createArrowMarkers = ({ arrowSize = 16, classes } = {}) => group => {
+  const n = arrowSize;
+  const m = n * 2/3;
+  const points = [[-n, -m], [0, 0], [-n, m]];
+
+  return group
     .selectAll('marker')
       .data([
         {
           name: 'arrow',
-          path: 'M -6,-4 L 0,0 L -6,+4',
-          viewbox: '-6 -4 12 8'
+          path: 'M' + points.map(p => p.join(',')).join(' L'),
+          viewbox: `-${n} -${n} ${n * 2} ${n * 2}`
         }
       ])
       .join('marker')
         .attr('id', d => 'marker_' + d.name)
-        .attr('markerHeight', arrowSize)
-        .attr('markerWidth', arrowSize)
+        .attr('markerHeight', arrowSize * 2)
+        .attr('markerWidth', arrowSize * 2)
         .attr('markerUnits', 'strokeWidth')
         .attr('orient', 'auto')
         .attr('refX', 0)
@@ -67,6 +72,7 @@ export const createArrowMarkers = ({ arrowSize = 32, classes } = {}) => group =>
         .append('path')
           .attr('d', d => d.path)
           .attr('class', classes?.arrow);
+};
 
 /**
  * Creates an array of points on the the circumference of two nodes.
