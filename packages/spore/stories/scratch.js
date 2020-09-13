@@ -10,7 +10,7 @@ import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
 import blue from '@material-ui/core/colors/blue';
 import grey from '@material-ui/core/colors/grey';
-import { withKnobs, select } from "@storybook/addon-knobs";
+import { withKnobs, select } from '@storybook/addon-knobs';
 
 import {
   FullScreen,
@@ -101,7 +101,7 @@ const Editor = ({ line }) => {
       .append('circle')
         .attr('cx', 0)
         .attr('cy', 0)
-        .on('click', d => {
+        .on('click', (event, d) => {
           if (d.id === selectionRef.current) {
             setSelected(undefined);
           } else {

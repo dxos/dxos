@@ -7,7 +7,7 @@ import faker from 'faker';
 import toposort from 'toposort';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
-import { withKnobs, select } from "@storybook/addon-knobs";
+import { withKnobs, select } from '@storybook/addon-knobs';
 import { makeStyles } from '@material-ui/core/styles';
 
 import blue from '@material-ui/core/colors/blue';

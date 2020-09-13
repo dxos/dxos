@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 import React from 'react';
-import { withKnobs } from "@storybook/addon-knobs";
+import { withKnobs } from '@storybook/addon-knobs';
 
 import { FullScreen } from '@dxos/gem-core';
 

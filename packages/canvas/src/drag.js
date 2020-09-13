@@ -24,12 +24,10 @@ export const createToolDrag = (container, grid, tool, snap, onCreate) => {
 
   return d3.drag()
     .container(container)
-    .on('start', () => {
-      // console.log('start', tool);
-
+    .on('start', (event) => {
       initialPos = {
-        x: d3.event.x,
-        y: d3.event.y,
+        x: event.x,
+        y: event.y,
       };
 
       switch (tool) {
@@ -56,12 +54,12 @@ export const createToolDrag = (container, grid, tool, snap, onCreate) => {
         }
       }
     })
-    .on('drag', () => {
+    .on('drag', (event) => {
       // console.log('drag');
 
       const currentPos = {
-        x: d3.event.x,
-        y: d3.event.y,
+        x: event.x,
+        y: event.y,
       };
 
       switch (tool) {
@@ -90,14 +88,14 @@ export const createToolDrag = (container, grid, tool, snap, onCreate) => {
 
       onCreate(null);
     })
-    .on('end', () => {
+    .on('end', (event) => {
       // console.log('end');
 
       const snapper = pos => snap ? grid.snap(pos) : pos;
       const startPos = snapper(initialPos);
       const endPos = snapper({
-        x: d3.event.x,
-        y: d3.event.y,
+        x: event.x,
+        y: event.y,
       });
 
       const size = {
@@ -188,7 +186,7 @@ export const createObjectDrag = (container, grid, snap, model, onSelect) => {
 
   // https://github.com/d3/d3-drag#drag
   // https://observablehq.com/@d3/click-vs-drag
-  return d3.drag()
+  const drag = d3.drag()
     .container(container)
 
     // Default (return null to prevent drag -- e.g., if locked).
@@ -196,16 +194,16 @@ export const createObjectDrag = (container, grid, snap, model, onSelect) => {
       return d3.select(this).datum();
     })
 
-    // d3.event.subject === d
-    .on('start', (d, i, nodes) => {
+    // event.subject === d
+    .on('start', function (event) {
       // Get parent (in case handle).
-      const parent = nodes[i].closest('g[type="object"]');
+      const parent = this.closest('g[type="object"]');
       const { id } = d3.select(parent).datum();
 
       // Starting position.
       initialPos = {
-        x: d3.event.x,
-        y: d3.event.y,
+        x: event.x,
+        y: event.y,
       };
 
       // Keep a clone of the object.
@@ -219,15 +217,15 @@ export const createObjectDrag = (container, grid, snap, model, onSelect) => {
       model.begin();
     })
 
-    .on('drag', (d, i, nodes) => {
+    .on('drag', function (event, d) {
       // Datum from parent object.
-      const parent = nodes[i].closest('g[type="object"]');
+      const parent = this.closest('g[type="object"]');
       const { id } = d3.select(parent).datum();
 
       const snapper = pos => snap ? grid.round(pos) : pos;
       const snapTo = ({ x, y }) => snapper({
-        x: grid.scaleX.invert(grid.scaleX(x) + d3.event.x - initialPos.x),
-        y: grid.scaleY.invert(grid.scaleY(y) + d3.event.y - initialPos.y)
+        x: grid.scaleX.invert(grid.scaleX(x) + event.x - initialPos.x),
+        y: grid.scaleY.invert(grid.scaleY(y) + event.y - initialPos.y)
       });
 
       const { type } = d;
@@ -239,6 +237,7 @@ export const createObjectDrag = (container, grid, snap, model, onSelect) => {
         case 'handle-point': {
           const { properties: { points } } = initialObject;
           const updated = [...points];
+          const i = drag.nodes().indexOf(this);
           updated.splice(i, 1, snapTo(points[i]));
 
           // TODO(burdon): Check changed.
@@ -255,8 +254,8 @@ export const createObjectDrag = (container, grid, snap, model, onSelect) => {
           // Datum from drag handler.
           const { handleX = 0, handleY = 0 } = d;
 
-          const dx = d3.event.x - initialPos.x;
-          const dy = d3.event.y - initialPos.y;
+          const dx = event.x - initialPos.x;
+          const dy = event.y - initialPos.y;
 
           const { x, y } = snapper({
             x: bounds.x + grid.scaleX.invert(handleX < 0 ? dx : 0),
@@ -289,14 +288,15 @@ export const createObjectDrag = (container, grid, snap, model, onSelect) => {
     })
 
     // TODO(burdon): "Commit" model.
-    .on('end', (d, i, nodes) => {
-      const data = d3.select(nodes[i].closest('g[type="object"]')).datum();
+    .on('end', function (event, d) {
+      const data = d3.select(this.closest('g[type="object"]')).datum();
       log('end', JSON.stringify(data, null, 2));
 
       const { type } = d;
       if (type === 'handle-point') {
-        const parent = nodes[i].closest('g[type="object"]');
+        const parent = this.closest('g[type="object"]');
         const { properties: { points } } = d3.select(parent).datum();
+        const i = drag.nodes().indexOf(this);
 
         // TODO(burdon): Create flag for drag (if not moved then click).
         // TODO(burdon): Select point on line (enable delete).
@@ -311,4 +311,6 @@ export const createObjectDrag = (container, grid, snap, model, onSelect) => {
       // End transaction.
       model.commit();
     });
+
+  return drag;
 };

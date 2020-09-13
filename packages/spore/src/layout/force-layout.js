@@ -18,14 +18,13 @@ export class ForceLayout extends Layout {
   // https://github.com/d3/d3-force
   _simulation = d3.forceSimulation();
 
-  // TODO(burdon): Don't automatically merge.
+  // TODO(burdon): Don't automatically merge (otherwise cannot override).
   get defaults() {
     return {
       force: {
-        // TODO(burdon): Remove as default.
-        // gravity: {
-        //   strength: .1
-        // },
+        gravity: {
+          strength: .1
+        },
         radial: {
           radius: 200,
           strength: .1
@@ -34,12 +33,12 @@ export class ForceLayout extends Layout {
           strength: -300
         },
         links: {
-          distance: 20,
+          distance: 30,
 
           // https://github.com/d3/d3-force#link_strength
           strength: (link /*, i, links*/) => {
             const count = () => 1;
-            return 1 / Math.max(count(link.source), count(link.target));
+            return 1 / Math.min(count(link.source), count(link.target));
           }
         }
       }
@@ -78,9 +77,9 @@ export class ForceLayout extends Layout {
 
       // Initial properties.
       Object.assign(node, {
-        // TODO(burdon): Random initial position?
-        x: center.x,
-        y: center.y,
+        // Random initial position (otherwise explodes)?
+        x: center.x + (Math.random() - .5) * grid.width / 2,
+        y: center.y + (Math.random() - .5) * grid.height / 2,
         vx: 0,
         vy: 0,
         fx: null,
@@ -124,7 +123,7 @@ export class ForceLayout extends Layout {
      * https://github.com/d3/d3-force#forceCollide
      */
     if (force.collide) {
-      this._simulation.force('collide', d3.forceCollide())
+      this._simulation.force('collide', d3.forceCollide());
     }
 
     /**
@@ -134,7 +133,7 @@ export class ForceLayout extends Layout {
     if (force.charge) {
       this._simulation.force('charge', d3.forceManyBody()
         .strength(force.charge.strength)
-      )
+      );
     }
 
     /**

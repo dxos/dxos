@@ -8,7 +8,7 @@ import debug from 'debug';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
-import { withKnobs, boolean, button, number } from "@storybook/addon-knobs";
+import { withKnobs, boolean, button, number } from '@storybook/addon-knobs';
 import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
 
@@ -162,14 +162,8 @@ export const withForceLayout = () => {
   const grid = useGrid({ width, height });
 
   const [data] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 })));
-  const [selected, setSelected] = useState();
   const [layout] = useState(() => new ForceLayout());
   const [drag] = useState(() => createSimulationDrag(layout.simulation));
-  useEffect(() => {
-    drag.on('click', ({ source: { id } }) => {
-      setSelected(id);
-    });
-  }, [drag]);
 
   return (
     <FullScreen>
@@ -180,7 +174,6 @@ export const withForceLayout = () => {
           grid={grid}
           data={data}
           layout={layout}
-          selected={selected}
           drag={drag}
         />
       </SVG>
@@ -216,11 +209,9 @@ export const withMultipleForceLayout = () => {
         data: convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 2 })),
         drag: createSimulationDrag(layout.simulation),
         layout
-      }
+      };
     }));
   }, [n]);
-
-  console.log(agents);
 
   return (
     <FullScreen>
@@ -278,7 +269,7 @@ export const withChangingForceLayout = () => {
       setLayout({
         layout,
         drag: createSimulationDrag(layout.simulation)
-      })
+      });
     }, 2000);
   }, []);
 
@@ -439,7 +430,7 @@ export const withDrag = () => {
   const grid = useGrid({ width, height });
   const guides = useRef();
 
-  const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 4 })));
+  const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 })));
   const [layout] = useState(() => new ForceLayout({ force: { links: { distance: 80 } } }));
 
   const [{ nodeProjector, linkProjector }] = useState({
@@ -631,7 +622,7 @@ export const withTreeLayout = () => {
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
 
-  const [data] = useDataButton(() => createTree({ minDepth: 2, maxDepth: 4, maxChildren: 2 }));
+  const [data] = useDataButton(() => createTree({ minDepth: 2, maxDepth: 4, maxChildren: 4 }));
 
   const links = useRef();
   const nodes = useRef();

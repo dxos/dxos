@@ -38,11 +38,11 @@ export class NodeProjector extends Projector {
           .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`)
 
           // TODO(burdon): Plugin.
-          .on('mouseover', (d, i, nodes) => {
-            d3.select(nodes[i]).classed('highlight', true);
+          .on('mouseover', function () {
+            d3.select(this).classed('highlight', true);
           })
-          .on('mouseout', (d, i, nodes) => {
-            d3.select(nodes[i]).classed('highlight', false);
+          .on('mouseout', function () {
+            d3.select(this).classed('highlight', false);
           })
 
           .call(group => {
@@ -56,7 +56,7 @@ export class NodeProjector extends Projector {
             group
               .append('circle')
                 // TODO(burdon): Fixes drag/click issue: https://github.com/d3/d3-drag/issues/69
-                .on('click', (d) => {
+                .on('click', (event, d) => {
                   this.emit('click', d);
                 });
           });
@@ -92,7 +92,7 @@ export class NodeProjector extends Projector {
         propertyAdapter(d)?.radius || get(d, 'layout.node.radius', get(this._options, 'node.radius', defaultRadius));
 
       group
-        .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`)
+        .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`);
 
       // TODO(burdon): Position left/right depending on center (from layout).
       group
@@ -102,7 +102,7 @@ export class NodeProjector extends Projector {
 
       group
         .select('circle')
-          .attr('r', d => nodeRadius(d))
+          .attr('r', d => nodeRadius(d));
     };
 
     const root = d3.select(group);

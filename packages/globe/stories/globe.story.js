@@ -8,7 +8,7 @@ import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
-import { withKnobs, button, number, select } from "@storybook/addon-knobs";
+import { withKnobs, button, number, select } from '@storybook/addon-knobs';
 
 import { FullScreen, useObjectMutator } from '@dxos/gem-core';
 
