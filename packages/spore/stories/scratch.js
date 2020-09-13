@@ -165,7 +165,7 @@ const Editor = ({ line }) => {
     const simulation = d3.forceSimulation()
       .nodes(graph.nodes)
       .force('charge', d3.forceManyBody().strength(-50))
-      .force('gravity', d3.forceRadial(50, 0, 0).strength(.01))
+      .force('radial', d3.forceRadial(50, 0, 0).strength(.01))
       .on('tick', handleUpdate)
       .on('end', () => {
         log('end');

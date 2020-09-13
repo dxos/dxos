@@ -182,114 +182,6 @@ export const withForceLayout = () => {
 };
 
 /**
- * Force layout.
- */
-export const withMultipleForceLayout = () => {
-  const n = number('graphs', 3, { min: 1, max: 4 });
-  const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
-
-  const [agents, setAgents] = useState([]);
-  useEffect(() => {
-    const r = 120;
-    setAgents([...new Array(n)].map((_, i) => {
-      const layout = new ForceLayout({
-        center: {
-          x: (i - (n - 1) / 2) * (r * 2.5), y: 0
-        },
-        force: {
-          radial: {
-            radius: r
-          }
-        }
-      });
-
-      return {
-        data: convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 2 })),
-        drag: createSimulationDrag(layout.simulation),
-        layout
-      };
-    }));
-  }, [n]);
-
-  return (
-    <FullScreen>
-      {resizeListener}
-      <SVG width={width} height={height}>
-        {agents.map(({ data, layout, drag }, i) => (
-          <Graph
-            key={i}
-            grid={grid}
-            data={data}
-            layout={layout}
-            drag={drag}
-          />
-        ))}
-      </SVG>
-    </FullScreen>
-  );
-};
-
-/**
- * Force layout.
- */
-export const withChangingForceLayout = () => {
-  const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
-
-  const [data] = useState(convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 2 })));
-
-  const [{ layout, drag }, setLayout] = useState(() => {
-    const layout = new ForceLayout({ center: { x: -200, y: 0 }, force: { links: { distance: 100 }}});
-    return {
-      layout,
-      drag: createSimulationDrag(layout.simulation)
-    };
-  });
-
-  useEffect(() => {
-    setTimeout(() => {
-      const layout = new ForceLayout({
-        center: {
-          x: 200,
-          y: 0
-        },
-        force: {
-          links: {
-            distance: 20
-          },
-          radial: {
-            radius: 100
-          }
-        }
-      });
-
-      setLayout({
-        layout,
-        drag: createSimulationDrag(layout.simulation)
-      });
-    }, 2000);
-  }, []);
-
-  return (
-    <FullScreen>
-      {resizeListener}
-      <SVG width={width} height={height}>
-        <Grid grid={grid} />
-        <Graph
-          grid={grid}
-          data={data}
-          layout={layout}
-          drag={drag}
-        />
-      </SVG>
-    </FullScreen>
-  );
-};
-
-/**
  * Arrows.
  */
 export const withArrows = () => {
@@ -365,53 +257,6 @@ export const withCustomNodes = () => {
           classes={{
             nodes: classes.nodes
           }}
-          nodeProjector={nodeProjector}
-          linkProjector={linkProjector}
-        />
-      </SVG>
-    </FullScreen>
-  );
-};
-
-/**
- * Bullets.
- */
-export const withBullet = () => {
-  const classes = useGraphStyles();
-  const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
-  const guides = useRef();
-
-  const [data] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 4 })));
-  const [layout] = useState(() => new ForceLayout());
-
-  const [{ nodeProjector, linkProjector }] = useState(() => {
-    return {
-      nodeProjector: new NodeProjector({ node: { radius: 8, showLabels: false } }),
-      linkProjector: new BulletLinkProjector(new LinkProjector({ nodeRadius: 8, showArrows: true }))
-    };
-  });
-
-  useEffect(() => {
-    nodeProjector.on('click', ({ id }) => {
-      linkProjector.fire(guides.current, id);
-    });
-  }, [nodeProjector]);
-
-  return (
-    <FullScreen>
-      {resizeListener}
-      <SVG width={width} height={height}>
-        <Grid grid={grid} />
-        <Markers />
-
-        <g ref={guides} className={classes.guides} />
-
-        <Graph
-          grid={grid}
-          data={data}
-          layout={layout}
           nodeProjector={nodeProjector}
           linkProjector={linkProjector}
         />
@@ -516,11 +361,60 @@ export const withDrag = () => {
 };
 
 /**
+ * Force layout.
+ */
+export const withMultipleForceLayouts = () => {
+  const n = number('graphs', 3, { min: 1, max: 4 });
+  const [resizeListener, size] = useResizeAware();
+  const { width, height } = size;
+  const grid = useGrid({ width, height });
+
+  const [agents, setAgents] = useState([]);
+  useEffect(() => {
+    const r = 120;
+    setAgents([...new Array(n)].map((_, i) => {
+      const layout = new ForceLayout({
+        center: {
+          x: (i - (n - 1) / 2) * (r * 2.5), y: 0
+        },
+        force: {
+          radial: {
+            radius: r
+          }
+        }
+      });
+
+      return {
+        data: convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 2 })),
+        drag: createSimulationDrag(layout.simulation),
+        layout
+      };
+    }));
+  }, [n]);
+
+  return (
+    <FullScreen>
+      {resizeListener}
+      <SVG width={width} height={height}>
+        {agents.map(({ data, layout, drag }, i) => (
+          <Graph
+            key={i}
+            grid={grid}
+            data={data}
+            layout={layout}
+            drag={drag}
+          />
+        ))}
+      </SVG>
+    </FullScreen>
+  );
+};
+
+/**
  * Muliple force layout.
- *
  * TODO(burdon): Multiple focal points: https://bl.ocks.org/mbostock/1021841
  */
-export const withTwoForceLayouts = () => {
+export const withDoubleForceLayouts = () => {
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
 
@@ -615,6 +509,113 @@ export const withTwoForceLayouts = () => {
 };
 
 /**
+ * Dynamic layout.
+ */
+export const withDynamicLayout = () => {
+  const [resizeListener, size] = useResizeAware();
+  const { width, height } = size;
+  const grid = useGrid({ width, height });
+
+  const [data] = useState(convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 2 })));
+
+  const [{ layout, drag }, setLayout] = useState(() => {
+    const layout = new ForceLayout({ center: { x: -200, y: 0 }, force: { links: { distance: 50 }}});
+    return {
+      layout,
+      drag: createSimulationDrag(layout.simulation)
+    };
+  });
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const layout = new ForceLayout({
+        center: {
+          x: 200,
+          y: 0
+        },
+        force: {
+          links: {
+            distance: 20
+          },
+          radial: {
+            radius: 100
+          }
+        }
+      });
+
+      setLayout({
+        layout,
+        drag: createSimulationDrag(layout.simulation)
+      });
+    }, 2000);
+
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <FullScreen>
+      {resizeListener}
+      <SVG width={width} height={height}>
+        <Grid grid={grid} />
+        <Graph
+          grid={grid}
+          data={data}
+          layout={layout}
+          drag={drag}
+        />
+      </SVG>
+    </FullScreen>
+  );
+};
+
+/**
+ * Bullets.
+ */
+export const withBullets = () => {
+  const classes = useGraphStyles();
+  const [resizeListener, size] = useResizeAware();
+  const { width, height } = size;
+  const grid = useGrid({ width, height });
+  const guides = useRef();
+
+  const [data] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 4 })));
+  const [layout] = useState(() => new ForceLayout());
+
+  const [{ nodeProjector, linkProjector }] = useState(() => {
+    return {
+      nodeProjector: new NodeProjector({ node: { radius: 8, showLabels: false } }),
+      linkProjector: new BulletLinkProjector(new LinkProjector({ nodeRadius: 8, showArrows: true }))
+    };
+  });
+
+  useEffect(() => {
+    nodeProjector.on('click', ({ id }) => {
+      linkProjector.fire(guides.current, id);
+    });
+  }, [nodeProjector]);
+
+  return (
+    <FullScreen>
+      {resizeListener}
+      <SVG width={width} height={height}>
+        <Grid grid={grid} />
+        <Markers />
+
+        <g ref={guides} className={classes.guides} />
+
+        <Graph
+          grid={grid}
+          data={data}
+          layout={layout}
+          nodeProjector={nodeProjector}
+          linkProjector={linkProjector}
+        />
+      </SVG>
+    </FullScreen>
+  );
+};
+
+/**
  * Tree layout.
  */
 export const withTreeLayout = () => {
@@ -650,6 +651,59 @@ export const withTreeLayout = () => {
           <g ref={links} className={classes.links} />
           <g ref={nodes} className={classes.nodes} />
         </g>
+      </SVG>
+    </FullScreen>
+  );
+};
+
+/**
+ * Multiple layouts.
+ */
+export const withMultipleLayouts = () => {
+  const [resizeListener, size] = useResizeAware();
+  const grid = useGrid(size);
+
+  const nodeProjector = new NodeProjector({ transition: d3.transition, node: { showLabels: false } });
+
+  const classes1 = useGraphStyles();
+  const classes2 = useGraphStyles({ color: 'blue' });
+  const classes3 = useGraphStyles({ color: 'green' });
+
+  const group1 = useRef();
+  const group2 = useRef();
+  const group3 = useRef();
+
+  const [data1] = useState({ nodes: createItems(6) });
+  const [data2] = useState({ nodes: createItems(12) });
+
+  const layout1 = new RadialLayout({
+    center: () => ({ x: grid.center.x + grid.scaleX(-60), y: grid.center.y + grid.scaleY(30) }),
+    radius: () => grid.scaleX(10)
+  });
+
+  const layout2 = new RadialLayout({
+    center: () => ({ x: grid.center.x + grid.scaleX(40), y: grid.center.y }),
+    radius: () => grid.scaleX(40)
+  });
+
+  const layout3 = new RadialLayout({
+    center: () => ({ x: grid.center.x + grid.scaleX(-20), y: grid.center.y }),
+    radius: () => grid.scaleX(20)
+  });
+
+  // Share data set.
+  useLayout(layout1, grid, data1, ({ data }) => nodeProjector.update(grid, data, { group: group1.current }));
+  useLayout(layout2, grid, data2, ({ data }) => nodeProjector.update(grid, data, { group: group2.current }));
+  useLayout(layout3, grid, data2, ({ data }) => nodeProjector.update(grid, data, { group: group3.current }));
+
+  return (
+    <FullScreen>
+      {resizeListener}
+      <SVG width={size.width} height={size.height}>
+        <Grid grid={grid} showAxis={true} />
+        <g ref={group1} className={classes1.nodes} />
+        <g ref={group2} className={classes2.nodes} />
+        <g ref={group3} className={classes3.nodes} />
       </SVG>
     </FullScreen>
   );
@@ -759,59 +813,6 @@ export const withRadialLayout = () => {
       <SVG width={width} height={height}>
         <Grid grid={grid} />
         <g ref={nodes} className={classes.nodes} />
-      </SVG>
-    </FullScreen>
-  );
-};
-
-/**
- * Multiple layouts.
- */
-export const withMultipleLayouts = () => {
-  const [resizeListener, size] = useResizeAware();
-  const grid = useGrid(size);
-
-  const nodeProjector = new NodeProjector({ transition: d3.transition, node: { showLabels: false } });
-
-  const classes1 = useGraphStyles();
-  const classes2 = useGraphStyles({ color: 'blue' });
-  const classes3 = useGraphStyles({ color: 'green' });
-
-  const group1 = useRef();
-  const group2 = useRef();
-  const group3 = useRef();
-
-  const [data1] = useState({ nodes: createItems(6) });
-  const [data2] = useState({ nodes: createItems(12) });
-
-  const layout1 = new RadialLayout({
-    center: () => ({ x: grid.center.x + grid.scaleX(-60), y: grid.center.y + grid.scaleY(30) }),
-    radius: () => grid.scaleX(10)
-  });
-
-  const layout2 = new RadialLayout({
-    center: () => ({ x: grid.center.x + grid.scaleX(40), y: grid.center.y }),
-    radius: () => grid.scaleX(40)
-  });
-
-  const layout3 = new RadialLayout({
-    center: () => ({ x: grid.center.x + grid.scaleX(-20), y: grid.center.y }),
-    radius: () => grid.scaleX(20)
-  });
-
-  // Share data set.
-  useLayout(layout1, grid, data1, ({ data }) => nodeProjector.update(grid, data, { group: group1.current }));
-  useLayout(layout2, grid, data2, ({ data }) => nodeProjector.update(grid, data, { group: group2.current }));
-  useLayout(layout3, grid, data2, ({ data }) => nodeProjector.update(grid, data, { group: group3.current }));
-
-  return (
-    <FullScreen>
-      {resizeListener}
-      <SVG width={size.width} height={size.height}>
-        <Grid grid={grid} showAxis={true} />
-        <g ref={group1} className={classes1.nodes} />
-        <g ref={group2} className={classes2.nodes} />
-        <g ref={group3} className={classes3.nodes} />
       </SVG>
     </FullScreen>
   );
