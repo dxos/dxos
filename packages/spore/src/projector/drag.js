@@ -55,6 +55,7 @@ export const createSimulationDrag = (simulation, options = {}) => {
         const group = parent(event);
         const { [link]: linkModifier } = event.sourceEvent;
 
+        // Restart the force simulation.
         if (!event.active) {
           simulation.alphaTarget(0.3).restart();
         }
@@ -75,8 +76,9 @@ export const createSimulationDrag = (simulation, options = {}) => {
       })
 
       .on('drag', function (event) {
-        // NOTE: Mouse position is different from the event position.
-        const [x, y] = d3.pointer(this);
+        // Absolution position from top-left.
+        // NOTE: The event position is the center of the target.
+        const [x, y] = d3.pointer(event, this);
         const position = { x, y };
 
         // Freeze simulation for node if dragging.
@@ -91,7 +93,7 @@ export const createSimulationDrag = (simulation, options = {}) => {
           }
         }
 
-        emitter.emit('drag', { source: event.subject, position, linking: state.linking });
+        emitter.emit('drag', { source: event.subject, linking: state.linking, position });
 
         state.dragging = true;
       })

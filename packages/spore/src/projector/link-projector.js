@@ -49,6 +49,7 @@ export class LinkProjector extends Projector {
         .attr('d', ({ source, target }) => {
           let points;
           if (showArrows && nodeRadius) {
+            // TODO(burdon): Set radius in data.
             const { radius: r1 = nodeRadius } = source;
             const { radius: r2 = nodeRadius } = target;
             points = createPoints(source, target, r1, r2);

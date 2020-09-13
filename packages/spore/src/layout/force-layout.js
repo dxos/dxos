@@ -67,9 +67,10 @@ export class ForceLayout extends Layout {
     // Reset.
     this.data.guides = [];
 
-    // TODO(burdon): Don't mutate data set; instead attach data to nodes.
-    data.nodes = this._mergeData(grid, data);
+    // Update node layout.
+    this.data.nodes = this._mergeData(grid, data);
 
+    // Pause simulation until nodes and forces are set.
     // https://github.com/d3/d3-force#simulation_nodes
     this._simulation.stop().nodes(data.nodes);
 
@@ -78,38 +79,42 @@ export class ForceLayout extends Layout {
     const forces = this._getForces(grid, data);
     Object.values(forces).forEach((value, key) => this._simulation.force(key, value));
 
+    // Restart the simulation.
     // https://github.com/d3/d3-force#simulation_restart
     // NOTE: Set alpha since data/forces have changed.
     this._simulation.alphaTarget(alphaTarget).restart();
 
     // https://github.com/d3/d3-force#simulation_on
     this._simulation.on('tick', () => {
-      this.emitUpdate(data);
+      this.emitUpdate(data); // TODO(burdon): this.data?
     });
   }
 
   /**
-   * Merge data with existing nodes.
-   * Updates each datum with { index, x, y, vx, vy, fx, fy }
+   * The layout maintains a set of nodes controlled by the simulation.
+   * The data graph is used to update this set but is not modified.
+   * Each simulation node has the following properties: { index, x, y, vx, vy, fx, fy }
    */
   _mergeData (grid, data) {
     const { force } = this._options;
     const center = value(this._options.center)(grid);
     const { nodes = [] } = data;
+    console.log('MERGE');
 
     // Merge nodes.
+    // TODO(burdon): Set the data.node as a property of the force node.
     const current = this._simulation.nodes();
     return nodes.map(node => {
       const match = current.find(n => n.id === node.id);
       if (match) {
-        // Merge current force properties.
+        // Preserve current force properties.
         // https://github.com/d3/d3-force#simulation_nodes
-        const { x, y, vx, vy, fx, fy } = match;
-        return Object.assign(node, { x, y, vx, vy, fx, fy });
+        const { x, y, vx, vy, fx = null, fy = null } = match;
+        return Object.assign(match, node, { x, y, vx, vy, fx, fy });
       }
 
-      // Initial properties.
-      Object.assign(node, {
+      // Create new node with properties.
+      Object.assign({}, node, {
         // Random initial position (otherwise explodes)?
         x: center.x + (Math.random() - .5) * (force.radial?.radius || grid.width / 2),
         y: center.y + (Math.random() - .5) * (force.radial?.radius || grid.height / 2),

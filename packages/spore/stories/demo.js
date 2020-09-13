@@ -162,9 +162,13 @@ export const withForceLayout = () => {
   const { width, height } = size;
   const grid = useGrid({ width, height });
 
-  const [data] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 })));
+  const { data, generate } = useGraphGenerator({ data: convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 }))} );
   const [layout] = useState(() => new ForceLayout());
   const [drag] = useState(() => createSimulationDrag(layout.simulation));
+
+  button('Mutate', () => {
+    generate();
+  });
 
   return (
     <FullScreen>
@@ -294,7 +298,16 @@ export const withDrag = () => {
 
       const data = {
         links: [
-          { id: 'guide-link', source, target: { id: 'guide-link-target', ...position, radius: 0 } },
+          {
+            id: 'guide-link',
+            source,
+            target: {
+              id: 'guide-link-target',
+              radius: 0,
+              x: position.x,
+              y: position.y
+            }
+          }
         ]
       };
 

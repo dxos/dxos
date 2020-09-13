@@ -97,12 +97,11 @@ const Graph = (props) => {
 
   // Update layout.
   // NOTE: Called every time force update changes data (positions, etc.)
-  // TODO(burdon): Layout is complex object (unsuitable for deps?)
   useLayout(layout, grid, data, ({ data }) => {
     guideProjector.update(grid, layout.data, { group: guideGroup.current });
-    nodeProjector.update(grid, data, { group: nodeGroup.current, selected, layout });
+    nodeProjector.update(grid, layout.data, { group: nodeGroup.current, selected, layout });
     linkProjector.update(grid, data, { group: linkGroup.current });
-  }, [data, grid.size, layout, selected]);
+  }, [data, grid.size, layout, selected]); // TODO(burdon): Layout is complex object (unsuiable for deps?)
 
   return (
     <g className={clazzes.root}>
