@@ -12,19 +12,19 @@ import { Projector } from './projector';
  */
 export class BulletLinkProjector extends Projector {
 
-  constructor(linkProjector, options) {
+  constructor (linkProjector, options) {
     super(options);
 
     assert(linkProjector);
     this._linkProjector = linkProjector;
   }
 
-  update(grid, data, { group }) {
+  update (grid, data, { group }) {
     this._group = group;
     this._linkProjector.update(grid, data, { group });
   }
 
-  fire(group, node) {
+  fire (group, node) {
     const { max = 32, radius = 3 } = this._options || {};
 
     d3.select(this._group)

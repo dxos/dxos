@@ -52,25 +52,25 @@ export const createSimulationDrag = (simulation, options = {}) => {
     // https://github.com/d3/d3-drag#drag-events
 
       .on('start', function (event) {
-        const group = parent(event);
-        const { [link]: linkModifier } = event.sourceEvent;
-
-        // Restart the force simulation.
-        if (!event.active) {
-          simulation.alphaTarget(0.3).restart();
-        }
-
         // Find group and raise.
+        const group = parent(event);
         d3.select(group).raise();
-
-        state.dragging = false;
-        state.linking = linkModifier && link;
 
         // Check if already frozen.
         state.frozen = {
           x: event.subject.fx !== null,
           y: event.subject.fy !== null
         };
+
+        // Check if linking.
+        const { [link]: linkModifier } = event.sourceEvent;
+        state.linking = linkModifier && link;
+        if (state.linking) {
+          event.subject.fx = event.x;
+          event.subject.fy = event.y;
+        }
+
+        state.dragging = false;
 
         emitter.emit('start', { source: event.subject });
       })
@@ -80,6 +80,11 @@ export const createSimulationDrag = (simulation, options = {}) => {
         // NOTE: The event position is the center of the target.
         const [x, y] = d3.pointer(event, this);
         const position = { x, y };
+
+        // Restart the force simulation.
+        if (!state.linking) {
+          simulation.alphaTarget(0).alpha(1).restart();
+        }
 
         // Freeze simulation for node if dragging.
         // TODO(burdon): Need to decorate datum if fixed by data model or by key modifier.
@@ -102,9 +107,9 @@ export const createSimulationDrag = (simulation, options = {}) => {
         const { [freeze]: freezeModifier } = event.sourceEvent;
 
         // TODO(burdon): Restart simulation?
-        if (!event.active) {
-          simulation.alphaTarget(0);
-        }
+        // if (!event.active) {
+        //   simulation.alphaTarget(0);
+        // }
 
         //
         // Frozen nodes.

@@ -28,7 +28,7 @@ export class TreeProjector extends Projector {
   // https://bl.ocks.org/mbostock/5672200 (v3)
   // https://bl.ocks.org/FrissAnalytics/ffbd3cb71848616957cd4c0f41738aec (radial tree v4)
 
-  onUpdate(grid, data, { nodes, links }) {
+  onUpdate (grid, data, { nodes, links }) {
     const nodeRadius = d => {
       return 4 + Math.max(5 - d.depth, 1) * 2;
     };

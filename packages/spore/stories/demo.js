@@ -137,6 +137,8 @@ export const withGridLayout = () => {
     });
   }, [projector]);
 
+  console.log(data);
+
   return (
     <FullScreen>
       {resizeListener}
@@ -532,19 +534,32 @@ export const withDynamicLayout = () => {
 
   const [data] = useState(convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 2 })));
 
-  const [{ layout, drag }, setLayout] = useState(() => {
-    const layout = new ForceLayout({ center: { x: -200, y: 0 }, force: { links: { distance: 50 }}});
-    return {
-      layout,
-      drag: createSimulationDrag(layout.simulation)
-    };
-  });
+  const [{ layout, drag }, setLayout] = useState({});
 
   useEffect(() => {
+    // Initial layout.
+    const layout = new ForceLayout({
+      center: {
+        x: -grid.scaleX(40),
+        y: 0
+      },
+      force: {
+        links: {
+          distance: 50
+        }
+      }
+    });
+
+    setLayout({
+      layout,
+      drag: createSimulationDrag(layout.simulation)
+    });
+
+    // Updated layout.
     const t = setTimeout(() => {
       const layout = new ForceLayout({
         center: {
-          x: 200,
+          x: grid.scaleX(40),
           y: 0
         },
         force: {
@@ -564,7 +579,7 @@ export const withDynamicLayout = () => {
     }, 2000);
 
     return () => clearTimeout(t);
-  }, []);
+  }, [grid]);
 
   return (
     <FullScreen>

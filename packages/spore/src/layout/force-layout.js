@@ -16,20 +16,23 @@ import { Layout } from './layout';
 export class ForceLayout extends Layout {
 
   static defaults = {
-    alphaTarget: .2,
+    // https://github.com/d3/d3-force#simulation_alpha
+    alphaDecay: 0.05,
+
+    // https://github.com/d3/d3-force#forces
     force: {
       center: {
-        strength: .3
+        strength: 0.3
       },
       radial: {
         radius: 200,
-        strength: .3
+        strength: 0.05
       },
       charge: {
         strength: -300
       },
       collide: {
-        strength: .1
+        strength: 0.1
       },
       links: {
         distance: 30,
@@ -55,6 +58,7 @@ export class ForceLayout extends Layout {
   }
 
   _onReset () {
+    // TODO(burdon): Reset forces.
     this._simulation
       .on('tick', null)
       .nodes([])
@@ -62,27 +66,34 @@ export class ForceLayout extends Layout {
   }
 
   _onUpdate (grid, data) {
-    const { alphaTarget } = this._options;
+    const { alphaDecay } = this._options;
 
     // Reset.
     this.data.guides = [];
 
     // Update node layout.
     this.data.nodes = this._mergeData(grid, data);
+    this.data.links = data.links;
 
     // Pause simulation until nodes and forces are set.
     // https://github.com/d3/d3-force#simulation_nodes
-    this._simulation.stop().nodes(data.nodes);
+    this._simulation
+      .stop()
+      .nodes(data.nodes);
 
     // Set forces.
     // https://github.com/d3/d3-force#simulation_force
-    const forces = this._getForces(grid, data);
+    const forces = this._createForces(grid, data);
     Object.values(forces).forEach((value, key) => this._simulation.force(key, value));
 
     // Restart the simulation.
     // https://github.com/d3/d3-force#simulation_restart
     // NOTE: Set alpha since data/forces have changed.
-    this._simulation.alphaTarget(alphaTarget).restart();
+    this._simulation
+      .alphaTarget(0)
+      .alpha(1)
+      .alphaDecay(alphaDecay)
+      .restart();
 
     // https://github.com/d3/d3-force#simulation_on
     this._simulation.on('tick', () => {
@@ -93,16 +104,15 @@ export class ForceLayout extends Layout {
   /**
    * The layout maintains a set of nodes controlled by the simulation.
    * The data graph is used to update this set but is not modified.
-   * Each simulation node has the following properties: { index, x, y, vx, vy, fx, fy }
+   * Each simulation node has the following properties: { index, x, y, vx, vy, fx, fy }.
    */
   _mergeData (grid, data) {
     const { force } = this._options;
     const center = value(this._options.center)(grid);
     const { nodes = [] } = data;
-    console.log('MERGE');
 
     // Merge nodes.
-    // TODO(burdon): Set the data.node as a property of the force node.
+    // TODO(burdon): Set the data.node as a property of the force node for liveness.
     const current = this._simulation.nodes();
     return nodes.map(node => {
       const match = current.find(n => n.id === node.id);
@@ -110,14 +120,17 @@ export class ForceLayout extends Layout {
         // Preserve current force properties.
         // https://github.com/d3/d3-force#simulation_nodes
         const { x, y, vx, vy, fx = null, fy = null } = match;
-        return Object.assign(match, node, { x, y, vx, vy, fx, fy });
+        // return Object.assign(match, node, { x, y, vx, vy, fx, fy });
+        return Object.assign(node, { x, y, vx, vy, fx, fy });
       }
 
+      // TODO(burdon): This isn't working in the echo demo.
       // Create new node with properties.
-      Object.assign({}, node, {
-        // Random initial position (otherwise explodes)?
-        x: center.x + (Math.random() - .5) * (force.radial?.radius || grid.width / 2),
-        y: center.y + (Math.random() - .5) * (force.radial?.radius || grid.height / 2),
+      Object.assign(node, {
+      // Object.assign({}, node, {
+        // Random initial position (otherwise explodes).
+        x: center.x + (Math.random() - .5) * (force?.radial.radius || grid.width / 2),
+        y: center.y + (Math.random() - .5) * (force?.radial.radius || grid.height / 2),
         vx: 0,
         vy: 0,
         fx: null,
@@ -128,10 +141,9 @@ export class ForceLayout extends Layout {
     });
   }
 
-  _getForces (grid, data) {
+  _createForces (grid, data) {
     const { force } = this._options;
     const center = value(this._options.center)(grid);
-    const { links = [] } = data;
 
     const forces = {
       collide: null,
@@ -153,6 +165,7 @@ export class ForceLayout extends Layout {
      * https://github.com/d3/d3-force#link_links
      */
     if (force.links) {
+      const { links = [] } = data;
       forces.links = d3.forceLink(links)
         .id(d => d.id)
         .distance(force.links.distance)
@@ -173,9 +186,9 @@ export class ForceLayout extends Layout {
      * NOTE: Opposes radial.
      */
     if (force.center) {
-      forces.center = d3.forceCenter(center.x, center.y);
       // TODO(burdon): Bug. If strength is set after changing the center then center isn't updated?
-      // .strength(force.center.strength)
+      forces.center = d3.forceCenter(center.x, center.y)
+        .strength(force.center.strength);
     }
 
     /**

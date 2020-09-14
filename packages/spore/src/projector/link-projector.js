@@ -17,7 +17,7 @@ export class LinkProjector extends Projector {
    * {{ id, source, target }}
    */
 
-  onData(grid, data, { group }) {
+  onData (grid, data, { group }) {
     const { showArrows = false } = this._options;
     const { links = [] } = data;
 
@@ -40,7 +40,7 @@ export class LinkProjector extends Projector {
         .remove();
   }
 
-  onUpdate(grid, data, { group }) {
+  onUpdate (grid, data, { group }) {
     const { nodeRadius, showArrows = false, transition } = this._options;
 
     // TODO(burdon): Factor out line generation.

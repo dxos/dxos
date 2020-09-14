@@ -14,10 +14,10 @@ export class Layout extends EventEmitter {
     guides: []
   };
 
-  constructor (options = undefined, mergeDefaults = true) {
+  constructor (options = undefined) {
     super();
 
-    this._options = defaultsDeep({}, options, (!options || mergeDefaults) && this.defaults, {
+    this._options = defaultsDeep({}, options, this.defaults, {
       center: grid => grid.center,
       radius: grid => Math.min(grid.size.width, grid.size.height) * .25
     });

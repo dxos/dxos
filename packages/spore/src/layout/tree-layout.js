@@ -11,7 +11,7 @@ import { Layout } from './layout';
  */
 export class TreeLayout extends Layout {
 
-  _onUpdate(grid, data) {
+  _onUpdate (grid, data) {
     const { center, size } = grid;
     const r = size.height * .45;
 

@@ -9,16 +9,19 @@ import { Layout } from './layout';
  */
 export class GridLayout extends Layout {
 
-  _onUpdate(grid, data) {
-    const { nodes = [] } = data;
+  _onUpdate (grid, data) {
+    const { nodes = [], links } = data;
     const { scaleX, scaleY } = grid;
 
     const w = Math.floor(Math.sqrt(nodes.length));
     const unit = 10;
 
-    nodes.forEach((node, i) => {
-      node.x = scaleX(i % w * unit);
-      node.y = scaleY(Math.floor(i / w) * unit);
-    });
+    // TODO(burdon): Don't modify data directly.
+    this.data.nodes = nodes.map((node, i) => Object.assign(node, {
+      x: scaleX(i % w * unit),
+      y: scaleY(Math.floor(i / w) * unit)
+    }));
+
+    this.data.links = links;
   }
 }
