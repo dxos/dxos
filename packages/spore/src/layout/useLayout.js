@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { useResize } from './useResize';
 
@@ -14,7 +14,7 @@ import { useResize } from './useResize';
  * @param {Object} grid
  * @param {Object} data
  * @param {function} callback
- * @param [deps]
+ * @param [deps] - Additional dependencies to trigger update.
  */
 export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
   assert(layout);
@@ -22,13 +22,11 @@ export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
   assert(data);
   assert(callback);
 
-  const [context] = useState({});
-
   //
   // Update events.
   //
   useEffect(() => {
-    const onUpdate = data => callback({ context, data });
+    const onUpdate = data => callback({ layout, grid, data });
     layout.on('update', onUpdate);
     return () => {
       layout.off('update', onUpdate);
@@ -40,14 +38,14 @@ export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
   //
   const { size } = grid;
   useResize(() => {
-    layout.update(grid, data, context);
+    layout.update(grid, data);
   }, size);
 
   //
   // Update on external data change.
   //
   useEffect(() => {
-    layout.update(grid, data, context);
+    layout.update(grid, data);
   }, [data, ...deps]);
 
   //

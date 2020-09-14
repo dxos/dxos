@@ -13,7 +13,7 @@ import { Layout } from './layout';
  */
 export class RadialLayout extends Layout {
 
-  _onUpdate(grid, data) {
+  _onUpdate (grid, data) {
     const { nodes = [] } = data;
 
     const center = value(this._options.center)(grid);

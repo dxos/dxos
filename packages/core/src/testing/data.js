@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import debug from 'debug';
 import faker from 'faker';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useObjectMutator } from '@dxos/gem-core';
 
@@ -65,6 +65,18 @@ export const createTree = ({ minDepth = 2, maxDepth = 2, maxChildren = 8 }) => {
  * @returns {string}
  */
 export const createLinkId = (source, target) => `${source}_${target}`;
+
+/**
+ *
+ * @param source
+ * @param target
+ * @returns {{id: string, source: *, target: *}}
+ */
+export const createLink = (source, target) => ({
+  id: createLinkId(source.id, target.id),
+  source: source.id,
+  target: target.id
+});
 
 /**
  *
@@ -147,23 +159,30 @@ export const deleteNodes = (graph, ids) => {
  * @return {{ data: { nodes: [] } }}
  */
 // eslint-disable-next-line no-unused-vars
-export const useGraphGenerator = (options) => {
-  const [data, setData,, updateData] = useObjectMutator({ nodes: [], links: [] });
+export const useGraphGenerator = (options = {}) => {
+  const [data, setData,, updateData] = useObjectMutator(options.data || { nodes: [], links: [] });
 
   const interval = useRef(null);
 
   const generate = () => {
+    const parent = data.nodes.length ? pick(data.nodes) : undefined;
+    const item = createItem();
+
     updateData({
       nodes: {
         $push: [
-          createItem()
+          item
         ]
-      }
+      },
+      links: Object.assign({}, parent && {
+        $push: [
+          createLink(parent, item)
+        ]
+      })
     });
   };
 
-  // TODO(burdon): Reset.
-  const init = (options = {}) => {
+  const reset = (options = {}) => {
     const { count = 0 } = options;
     setData({
       nodes: [],
@@ -190,9 +209,13 @@ export const useGraphGenerator = (options) => {
     return stop;
   };
 
+  // Cancel on exit.
+  useEffect(() => stop, []);
+
   return {
     data,
-    init,
+    reset,
+    generate,
     start,
     stop
   };

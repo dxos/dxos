@@ -16,7 +16,7 @@ export class BoxProjector extends Projector {
    * {{ id, title }}
    */
 
-  onData(grid, data, { group }) {
+  onData (grid, data, { group }) {
     const { nodes = [] } = data;
 
     d3.select(group)
@@ -35,7 +35,7 @@ export class BoxProjector extends Projector {
         });
   }
 
-  onUpdate(grid, data, { group }) {
+  onUpdate (grid, data, { group }) {
 
     // TODO(burdon): Co-ord system (project function). From top-left. Change viewbox?
     const width = grid.scaleX(10);

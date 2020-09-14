@@ -10,7 +10,7 @@ import { Projector } from './projector';
  */
 export class GuideProjector extends Projector {
 
-  onUpdate(grid, data, { group }) {
+  onUpdate (grid, data, { group }) {
     const { guides = [] } = data;
     const { size: { width, height } } = grid;
 

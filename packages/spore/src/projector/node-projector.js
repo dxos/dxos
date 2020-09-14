@@ -18,7 +18,7 @@ export class NodeProjector extends Projector {
    * {{ id, title }}
    */
 
-  onData(grid, data, { group }) {
+  onData (grid, data, { group }) {
     const showLabels = this._options.node?.showLabels;
     const propertyAdapter = this._options.node?.propertyAdapter || (() => undefined);
     const { nodes = [] } = data;
@@ -81,7 +81,7 @@ export class NodeProjector extends Projector {
         });
   }
 
-  onUpdate(grid, data, { group, selected }) {
+  onUpdate (grid, data, { group, selected }) {
     const propertyAdapter = this._options.node?.propertyAdapter || (() => undefined);
     const { transition } = this._options;
 

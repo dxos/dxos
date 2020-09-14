@@ -13,7 +13,7 @@ import { Layout } from './layout';
  */
 export class RandomLayout extends Layout {
 
-  _onUpdate(grid, data) {
+  _onUpdate (grid, data) {
     const center = value(this._options.center)(grid);
     const radius = value(this._options.radius)(grid);
     const nodeRadius = get(this._options, 'node.radius', grid.scaleX(5));

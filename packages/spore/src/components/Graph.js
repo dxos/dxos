@@ -9,7 +9,7 @@ import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
 
-import { useLayout, Layout } from '../layout';
+import { useLayout, ForceLayout } from '../layout';
 import { GuideProjector, LinkProjector, NodeProjector } from '../projector';
 
 // TODO(burdon): Use theme.
@@ -73,8 +73,8 @@ const Graph = (props) => {
     data = {},
     selected,
     grid,
-    layout = new Layout(),
     drag,
+    layout = new ForceLayout(),
     guideProjector = new GuideProjector(),
     linkProjector = new LinkProjector(),
     nodeProjector = new NodeProjector(),
@@ -97,11 +97,11 @@ const Graph = (props) => {
 
   // Update layout.
   // NOTE: Called every time force update changes data (positions, etc.)
-  // TODO(burdon): Layout is complex object (unsuitable for deps?)
-  useLayout(layout, grid, data, ({ context, data }) => {
-    guideProjector.update(grid, context, { group: guideGroup.current });
-    nodeProjector.update(grid, data, { group: nodeGroup.current, selected, layout });
-    linkProjector.update(grid, data, { group: linkGroup.current });
+  useLayout(layout, grid, data, () => {
+    // TODO(burdon): Pass layout directly?
+    guideProjector.update(grid, layout.data, { group: guideGroup.current });
+    nodeProjector.update(grid, layout.data, { group: nodeGroup.current, selected });
+    linkProjector.update(grid, layout.data, { group: linkGroup.current });
   }, [data, grid.size, layout, selected]);
 
   return (

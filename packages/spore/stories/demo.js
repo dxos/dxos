@@ -102,6 +102,7 @@ export const withBoxProjector = () => {
   const nodes = useRef();
   const layout = new GridLayout();
   const projector = new BoxProjector();
+
   useLayout(layout, grid, data, ({ data }) => {
     projector.update(grid, data, { group: nodes.current });
   });
@@ -136,6 +137,8 @@ export const withGridLayout = () => {
     });
   }, [projector]);
 
+  console.log(data);
+
   return (
     <FullScreen>
       {resizeListener}
@@ -161,9 +164,13 @@ export const withForceLayout = () => {
   const { width, height } = size;
   const grid = useGrid({ width, height });
 
-  const [data] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 })));
+  const { data, generate } = useGraphGenerator({ data: convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 }))} );
   const [layout] = useState(() => new ForceLayout());
   const [drag] = useState(() => createSimulationDrag(layout.simulation));
+
+  button('Mutate', () => {
+    generate();
+  });
 
   return (
     <FullScreen>
@@ -293,7 +300,16 @@ export const withDrag = () => {
 
       const data = {
         links: [
-          { id: 'guide-link', source, target: { id: 'guide-link-target', ...position, radius: 0 } },
+          {
+            id: 'guide-link',
+            source,
+            target: {
+              id: 'guide-link-target',
+              radius: 0,
+              x: position.x,
+              y: position.y
+            }
+          }
         ]
       };
 
@@ -518,19 +534,32 @@ export const withDynamicLayout = () => {
 
   const [data] = useState(convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 2 })));
 
-  const [{ layout, drag }, setLayout] = useState(() => {
-    const layout = new ForceLayout({ center: { x: -200, y: 0 }, force: { links: { distance: 50 }}});
-    return {
-      layout,
-      drag: createSimulationDrag(layout.simulation)
-    };
-  });
+  const [{ layout, drag }, setLayout] = useState({});
 
   useEffect(() => {
+    // Initial layout.
+    const layout = new ForceLayout({
+      center: {
+        x: -grid.scaleX(40),
+        y: 0
+      },
+      force: {
+        links: {
+          distance: 50
+        }
+      }
+    });
+
+    setLayout({
+      layout,
+      drag: createSimulationDrag(layout.simulation)
+    });
+
+    // Updated layout.
     const t = setTimeout(() => {
       const layout = new ForceLayout({
         center: {
-          x: 200,
+          x: grid.scaleX(40),
           y: 0
         },
         force: {
@@ -550,7 +579,7 @@ export const withDynamicLayout = () => {
     }, 2000);
 
     return () => clearTimeout(t);
-  }, []);
+  }, [grid]);
 
   return (
     <FullScreen>
@@ -633,8 +662,8 @@ export const withTreeLayout = () => {
   const projector = new TreeProjector();
   const guideProjector = new GuideProjector();
   const grid = useGrid({ width, height });
-  useLayout(layout, grid, data, ({ context, data }) => {
-    guideProjector.update(grid, context, { group: guides.current });
+  useLayout(layout, grid, data, ({ data }) => {
+    guideProjector.update(grid, layout.data, { group: guides.current });
     projector.update(grid, data, {
       links: links.current,
       nodes: nodes.current
