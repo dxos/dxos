@@ -191,30 +191,23 @@ export class Pipeline {
         this._feedWriteStream
       ].filter(Boolean) as any[], (err: Error | undefined) => {
         // TODO(burdon): Handle error.
-        error('Outbound pipeline:', err || 'closed');
+        error('Outbound ECHO pipeline:', err || 'closed');
         if (err) {
           this._errors.emit(err);
         }
       });
 
       this._haloWriteStream = createTransform<any, protocol.dxos.IFeedMessage>(
-        async (message: any) => {
-          const data: protocol.dxos.IFeedMessage = {
-            halo: message
-          };
-
-          return data;
-        }
+        async (message: any): Promise<protocol.dxos.IFeedMessage> => ({ halo: message })
       );
 
-      // TODO(marik-d): Code duplication
       pump([
         this._haloWriteStream,
         writeLogger,
         this._feedWriteStream
       ].filter(Boolean) as any[], (err: Error | undefined) => {
         // TODO(burdon): Handle error.
-        error('Outbound pipeline:', err || 'closed');
+        error('Outbound HALO pipeline:', err || 'closed');
         if (err) {
           this._errors.emit(err);
         }

@@ -6,11 +6,13 @@ import assert from 'assert';
 
 import { Keyring } from '@dxos/credentials';
 import { humanize } from '@dxos/crypto';
-import { FeedKey, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
+import { PublicKey, FeedKey, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
 import { ModelFactory, ModelType, ModelConstructor, Model } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 
-import { Invitation, InvitationRequest } from '../invitation';
+import { InvitationDetails } from '../invitations/common';
+import { GreetingResponder } from '../invitations/greeting-responder';
+import { InvitationDescriptor, InvitationDescriptorType } from '../invitations/invitation-descriptor';
 import { createItemDemuxer, Item, ItemFilter, ItemManager } from '../items';
 import { ResultSet } from '../result';
 import { PartyProcessor } from './party-processor';
@@ -38,7 +40,8 @@ export class Party {
     private readonly _pipeline: Pipeline,
     private readonly _partyProcessor: PartyProcessor,
     private readonly _keyring: Keyring,
-    private readonly _identityKeypair: any
+    private readonly _identityKeypair: any,
+    private readonly _networkManager?: any
   ) {
     assert(this._modelFactory);
     assert(this._pipeline);
@@ -147,14 +150,24 @@ export class Party {
   /**
    * Creates an invition for a remote peer.
    */
-  createInvitation (): Invitation {
-    const request: InvitationRequest = {
-      partyKey: this.key,
-      feeds: this._pipeline.memberFeeds
-    };
-
+  async createInvitation (inviteDetails: InvitationDetails) {
     assert(this._pipeline.haloWriteStream);
-    return new Invitation(this._pipeline.haloWriteStream, request, this._keyring, this.key, this._identityKeypair);
+    assert(this._networkManager);
+    const responder = new GreetingResponder(
+      this.key,
+      this._keyring,
+      this._networkManager,
+      this._pipeline.haloWriteStream,
+      () => this._pipeline.memberFeeds,
+      this._identityKeypair
+    );
+
+    const { secretValidator, secretProvider } = inviteDetails;
+
+    const swarmKey = await responder.start();
+    const invitation = await responder.invite(secretValidator, secretProvider/* onFinish, expiration */);
+
+    return new InvitationDescriptor(InvitationDescriptorType.INTERACTIVE, swarmKey, invitation);
   }
 
   /**

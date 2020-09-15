@@ -6,16 +6,20 @@ import assert from 'assert';
 import pify from 'pify';
 
 import { Keyring, KeyType, createPartyGenesisMessage } from '@dxos/credentials';
-import { keyToString, keyToBuffer } from '@dxos/crypto';
+import { keyToString, keyToBuffer, randomBytes } from '@dxos/crypto';
 import { FeedKey, PartyKey, createOrderedFeedStream } from '@dxos/experimental-echo-protocol';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { createWritableFeedStream } from '@dxos/experimental-util';
 
-import { PartyProcessor, Pipeline } from '.';
 import { FeedStoreAdapter } from '../feed-store-adapter';
-import { ReplicatorFactory } from '../replication';
+import { SecretProvider } from '../invitations/common';
+import { GreetingInitiator } from '../invitations/greeting-initiator';
+import { InvitationDescriptor } from '../invitations/invitation-descriptor';
+import { createReplicatorFactory, ReplicatorFactory } from '../replication';
 import { Party, PARTY_ITEM_TYPE } from './party';
+import { PartyProcessor } from './party-processor';
+import { Pipeline } from './pipeline';
 
 interface Options {
   readLogger?: NodeJS.ReadWriteStream;
@@ -28,12 +32,17 @@ export class PartyFactory {
 
   private _identityKey: any;
 
+  private _replicatorFactory: ReplicatorFactory | undefined;
+
   constructor (
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _modelFactory: ModelFactory,
-    private readonly _replicatorFactory: ReplicatorFactory | undefined,
+    private readonly _networkManager: any | undefined,
+    peerId: Buffer = randomBytes(),
     private readonly _options: Options = {}
-  ) { }
+  ) {
+    this._replicatorFactory = _networkManager && createReplicatorFactory(this._networkManager, this._feedStore, peerId);
+  }
 
   async initIdentity () {
     this._identityKey = await this._keyring.createKeyRecord({ type: KeyType.IDENTITY });
@@ -52,7 +61,7 @@ export class PartyFactory {
     // TODO(telackey): Proper identity and keyring management.
     const partyKey = await this._keyring.createKeyRecord({ type: KeyType.PARTY });
 
-    const feed = await this._feedStore.openFeed(keyToBuffer(partyKey.key), partyKey.publicKey);
+    const feed = await this._feedStore.createWritableFeed(partyKey.publicKey);
     const feedKey = await this._keyring.addKeyRecord({
       publicKey: feed.key,
       secretKey: feed.secretKey,
@@ -79,12 +88,8 @@ export class PartyFactory {
    * @param feeds set of hints for existing feeds belonging to this party.
    */
   async addParty (partyKey: PartyKey, feeds: FeedKey[]) {
-    const feed = await this._feedStore.openFeed(partyKey, partyKey);
-    const feedKey = await this._keyring.addKeyRecord({
-      publicKey: feed.key,
-      secretKey: feed.secretKey,
-      type: KeyType.FEED
-    });
+    const feed = await this._initWritableFeed(partyKey);
+    const feedKey = await this._keyring.getKey(feed.key);
 
     const party = await this.constructParty(partyKey, feeds);
     await party.open();
@@ -101,7 +106,7 @@ export class PartyFactory {
     // TODO(burdon): Ensure that this node's feed (for this party) has been created first.
     //   I.e., what happens if remote feed is synchronized first triggering 'feed' event above.
     //   In this case create pipeline in read-only mode.
-    const feed = this._feedStore.getFeed(partyKey);
+    const feed = this._feedStore.queryWritableFeed(partyKey);
     assert(feed, `Feed not found for party: ${keyToString(partyKey)}`);
 
     // Create pipeline.
@@ -117,8 +122,41 @@ export class PartyFactory {
       new Pipeline(partyProcessor, feedReadStream, feedWriteStream, this._replicatorFactory, this._options);
 
     // Create party.
-    const party = new Party(this._modelFactory, pipeline, partyProcessor, this._keyring, this._identityKey);
+    const party = new Party(this._modelFactory, pipeline, partyProcessor, this._keyring, this._identityKey, this._networkManager);
 
     return party;
+  }
+
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<Party> {
+    const initiator = new GreetingInitiator(
+      this._networkManager,
+      this._keyring,
+      async partyKey => {
+        const feed = await this._initWritableFeed(partyKey);
+        return this._keyring.getKey(feed.key);
+      },
+      this._identityKey,
+      invitationDescriptor
+    );
+    await initiator.connect();
+    const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
+    const { party } = await this.addParty(partyKey, hints);
+    await initiator.destroy();
+    return party;
+  }
+
+  // TODO(marik-d): Refactor this
+  private async _initWritableFeed (partyKey: PartyKey) {
+    const feed = await this._feedStore.queryWritableFeed(partyKey) ??
+      await this._feedStore.createWritableFeed(partyKey);
+
+    if (!this._keyring.hasKey(feed.key)) {
+      await this._keyring.addKeyRecord({
+        publicKey: feed.key,
+        secretKey: feed.secretKey,
+        type: KeyType.FEED
+      });
+    }
+    return feed;
   }
 }

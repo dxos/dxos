@@ -2,9 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
+import assert from 'assert';
+
+import { keyToString } from '@dxos/crypto';
 import {
-  codec, Database, Invitation, Party, PartyManager, createReplicatorFactory, FeedStoreAdapter, PartyFactory
+  codec, Database, FeedStoreAdapter, InvitationDescriptor, Party, PartyFactory, PartyManager
 } from '@dxos/experimental-echo-db';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
@@ -12,10 +14,16 @@ import { FeedStore } from '@dxos/feed-store';
 import { NetworkManager } from '@dxos/network-manager';
 import { Agent, Environment, JsonObject } from '@dxos/node-spawner';
 
+export enum Command {
+  CREATE_PARTY = 'CREATE_PARTY',
+  CREATE_INVITATION = 'CREATE_INVITATION',
+  JOIN_PARTY = 'JOIN_PARTY',
+  CREATE_ITEM = 'CREATE_ITEM',
+}
+
 export default class TestAgent implements Agent {
   private party?: Party;
   private db!: Database;
-  private invitation?: Invitation;
 
   constructor (private environment: Environment) {}
 
@@ -33,7 +41,7 @@ export default class TestAgent implements Agent {
     const partyFactory = new PartyFactory(
       feedStoreAdapter,
       modelFactory,
-      createReplicatorFactory(networkManager, feedStore, randomBytes())
+      networkManager
     );
     await partyFactory.initIdentity();
     const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
@@ -42,45 +50,48 @@ export default class TestAgent implements Agent {
   }
 
   async onEvent (event: JsonObject) {
-    // TODO(burdon): Switch command (not if).
-    if (event.command === 'CREATE_PARTY') {
-      this.party = await this.db.createParty();
+    this.environment.logMessage('onEvent', JSON.stringify(event));
 
-      const items = await this.party.queryItems();
-      this.environment.metrics.set('item.count', items.value.length);
-      items.subscribe(items => {
-        this.environment.metrics.set('item.count', items.length);
-      });
+    switch (event.command) {
+      case Command.CREATE_PARTY: {
+        this.party = await this.db.createParty();
 
-      this.invitation = this.party.createInvitation();
-      this.environment.log('invitation', {
-        partyKey: keyToString(this.invitation.request.partyKey as any),
-        feeds: this.invitation.request.feeds.map(key => keyToString(key))
-      });
-    } else if (event.command === 'ACCEPT_INVITATION') { // TODO(burdon): "invitation.accept", etc.
-      const { response, party } = await this.db.joinParty({
-        partyKey: keyToBuffer((event.invitation as any).partyKey),
-        feeds: (event.invitation as any).feeds.map(keyToBuffer) // TODO(burdon): Don't convert map.
-      });
-      this.party = party;
-      const items = await this.party.queryItems();
-      items.subscribe(items => {
-        this.environment.metrics.set('item.count', items.length);
-      });
-
-      this.environment.log('invitationResponse', {
-        peerFeedKey: keyToString(response.peerFeedKey),
-        keyAdmitMessage: codec.encode({ halo: response.keyAdmitMessage }).toString('hex'),
-        feedAdmitMessage: codec.encode({ halo: response.feedAdmitMessage }).toString('hex')
-      });
-    } else if (event.command === 'FINALIZE_INVITATION') {
-      this.invitation!.finalize({
-        peerFeedKey: keyToBuffer((event.invitationResponse as any).peerFeedKey),
-        keyAdmitMessage: codec.decode(Buffer.from((event.invitationResponse as any).keyAdmitMessage, 'hex')).halo,
-        feedAdmitMessage: codec.decode(Buffer.from((event.invitationResponse as any).feedAdmitMessage, 'hex')).halo
-      });
-    } else {
-      this.party!.createItem(ObjectModel);
+        const items = await this.party.queryItems();
+        this.environment.metrics.set('item.count', items.value.length);
+        items.subscribe(items => {
+          this.environment.metrics.set('item.count', items.length);
+        });
+        this.environment.log('party', {
+          partyKey: keyToString(this.party.key)
+        });
+      } break;
+      case Command.CREATE_INVITATION: {
+        assert(this.party);
+        const invitation = await this.party.createInvitation({
+          secretProvider: async () => Buffer.from('0000'),
+          secretValidator: async () => true
+        });
+        this.environment.log('invitation', {
+          invitation: invitation.toQueryParameters() as any
+        });
+      } break;
+      case Command.JOIN_PARTY: {
+        const invitation = InvitationDescriptor.fromQueryParameters(event.invitation as any);
+        this.party = await this.db.joinParty(invitation, async () => Buffer.from('0000'));
+        const items = await this.party.queryItems();
+        items.subscribe(items => {
+          this.environment.metrics.set('item.count', items.length);
+        });
+        this.environment.log('joinParty', {
+          partyKey: keyToString(this.party.key)
+        });
+      } break;
+      case Command.CREATE_ITEM:
+        this.party!.createItem(ObjectModel);
+        break;
+      default: {
+        throw new Error('Invalid command');
+      }
     }
   }
 
