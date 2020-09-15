@@ -166,9 +166,9 @@ export class PartyFactory {
     const { keyring, identityKey, deviceKey } = this._identityManager;
 
     // 1. Create a feed for the HALO.
-    console.log("BEFORE")
+    console.log('BEFORE');
     const feed = await this._feedStore.createWritableFeed(randomBytes());
-    console.log("AFTER")
+    console.log('AFTER');
     const writeToFeed = pify(feed.append.bind(feed));
     const feedKey = await keyring.addKeyRecord({
       publicKey: feed.key,
