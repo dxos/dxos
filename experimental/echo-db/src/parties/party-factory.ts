@@ -32,8 +32,8 @@ export class PartyFactory {
   private _replicatorFactory: ReplicatorFactory | undefined;
 
   constructor (
-    private readonly _feedStore: FeedStoreAdapter,
     private readonly _identityManager: IdentityManager,
+    private readonly _feedStore: FeedStoreAdapter,
     private readonly _modelFactory: ModelFactory,
     private readonly _networkManager: any | undefined,
     peerId: Buffer = randomBytes(),
@@ -43,6 +43,8 @@ export class PartyFactory {
   }
 
   async initIdentity () {
+    // TODO(telackey): Is this safe?
+    await this._feedStore.open();
     return this._createHalo();
   }
 
@@ -166,9 +168,7 @@ export class PartyFactory {
     const { keyring, identityKey, deviceKey } = this._identityManager;
 
     // 1. Create a feed for the HALO.
-    console.log('BEFORE');
-    const feed = await this._feedStore.createWritableFeed(randomBytes());
-    console.log('AFTER');
+    const feed = await this._feedStore.createWritableFeed(identityKey.publicKey);
     const writeToFeed = pify(feed.append.bind(feed));
     const feedKey = await keyring.addKeyRecord({
       publicKey: feed.key,

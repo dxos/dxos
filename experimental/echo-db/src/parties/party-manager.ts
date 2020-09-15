@@ -13,6 +13,7 @@ import { ComplexMap } from '@dxos/experimental-util';
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { SecretProvider } from '../invitations/common';
 import { InvitationDescriptor } from '../invitations/invitation-descriptor';
+import { IdentityManager } from './identity-manager';
 import { Party } from './party';
 import { PartyFactory } from './party-factory';
 
@@ -34,6 +35,7 @@ export class PartyManager {
   readonly update = new Event<Party>();
 
   constructor (
+    private readonly _identityManager: IdentityManager,
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _partyFactory: PartyFactory
   ) { }
@@ -48,7 +50,10 @@ export class PartyManager {
 
       // Iterate descriptors and pre-create Party objects.
       for (const partyKey of this._feedStore.enumerateParties()) {
-        if (!this._parties.has(partyKey)) {
+        if (Buffer.compare(partyKey, this._identityManager.identityKey.publicKey) === 0) {
+          this._halo = await this._partyFactory.constructParty(partyKey, []);
+          this.update.emit(this._halo);
+        } else if (!this._parties.has(partyKey)) {
           const party = await this._partyFactory.constructParty(partyKey, []);
           this._parties.set(party.key, party);
           this.update.emit(party);

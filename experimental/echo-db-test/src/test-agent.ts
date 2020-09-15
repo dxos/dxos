@@ -41,13 +41,13 @@ export default class TestAgent implements Agent {
       .registerModel(ObjectModel.meta, ObjectModel);
 
     const partyFactory = new PartyFactory(
-      feedStoreAdapter,
       identityManager,
+      feedStoreAdapter,
       modelFactory,
       networkManager
     );
     await partyFactory.initIdentity();
-    const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
+    const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
     this.db = new Database(partyManager);
     await this.db.open();
   }

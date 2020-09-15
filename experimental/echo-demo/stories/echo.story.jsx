@@ -48,10 +48,11 @@ const createDatabase = async (options) => {
 
   const networkManager = new NetworkManager(feedStore, new SwarmProvider());
   const identityManager = new IdentityManager(new Keyring());
-  const partyFactory = new PartyFactory(feedStoreAdapter, modelFactory, networkManager);
+  const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, networkManager);
 
   await partyFactory.initIdentity();
   const partyManager = new PartyManager(
+    identityManager,
     feedStoreAdapter,
     partyFactory
   );

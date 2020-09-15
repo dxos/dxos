@@ -26,9 +26,9 @@ describe('Party manager', () => {
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
     const identityManager = new IdentityManager(new Keyring());
     const modelFactory = new ModelFactory().registerModel(ObjectModel.meta, ObjectModel);
-    const partyFactory = new PartyFactory(feedStoreAdapter, identityManager, modelFactory, undefined);
+    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, undefined);
     await partyFactory.initIdentity();
-    const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
+    const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
     return { feedStore, partyManager };
   };
 
