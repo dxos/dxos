@@ -25,6 +25,8 @@ export class PartyManager {
   // Map of parties by party key.
   private readonly _parties = new ComplexMap<PublicKey, Party>(keyToString);
 
+  private _halo?: Party = undefined;
+
   private readonly _lock = new Lock();
 
   // External event listener.

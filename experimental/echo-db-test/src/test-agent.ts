@@ -4,9 +4,10 @@
 
 import assert from 'assert';
 
+import { Keyring } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
 import {
-  codec, Database, FeedStoreAdapter, InvitationDescriptor, Party, PartyFactory, PartyManager
+  codec, Database, FeedStoreAdapter, InvitationDescriptor, Party, PartyFactory, PartyManager, IdentityManager
 } from '@dxos/experimental-echo-db';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
@@ -33,6 +34,7 @@ export default class TestAgent implements Agent {
     const feedStore = new FeedStore(storage, { feedOptions: { valueEncoding: codec } });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
+    const identityManager = new IdentityManager(new Keyring());
     const networkManager = new NetworkManager(feedStore, swarmProvider);
 
     const modelFactory = new ModelFactory()
@@ -40,6 +42,7 @@ export default class TestAgent implements Agent {
 
     const partyFactory = new PartyFactory(
       feedStoreAdapter,
+      identityManager,
       modelFactory,
       networkManager
     );

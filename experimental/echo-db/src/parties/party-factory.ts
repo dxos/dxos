@@ -5,7 +5,7 @@
 import assert from 'assert';
 import pify from 'pify';
 
-import { Keyring, KeyType, createPartyGenesisMessage } from '@dxos/credentials';
+import { Keyring, KeyType, createPartyGenesisMessage, createKeyAdmitMessage } from '@dxos/credentials';
 import { keyToString, keyToBuffer, randomBytes } from '@dxos/crypto';
 import { FeedKey, PartyKey, createOrderedFeedStream } from '@dxos/experimental-echo-protocol';
 import { ModelFactory } from '@dxos/experimental-model-factory';
@@ -17,6 +17,7 @@ import { SecretProvider } from '../invitations/common';
 import { GreetingInitiator } from '../invitations/greeting-initiator';
 import { InvitationDescriptor } from '../invitations/invitation-descriptor';
 import { createReplicatorFactory, ReplicatorFactory } from '../replication';
+import { IdentityManager } from './identity-manager';
 import { Party, PARTY_ITEM_TYPE } from './party';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
@@ -28,14 +29,11 @@ interface Options {
 }
 
 export class PartyFactory {
-  private readonly _keyring = new Keyring();
-
-  private _identityKey: any;
-
   private _replicatorFactory: ReplicatorFactory | undefined;
 
   constructor (
     private readonly _feedStore: FeedStoreAdapter,
+    private readonly _identityManager: IdentityManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _networkManager: any | undefined,
     peerId: Buffer = randomBytes(),
@@ -45,12 +43,14 @@ export class PartyFactory {
   }
 
   async initIdentity () {
-    this._identityKey = await this._keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    return this._createHalo();
   }
 
-  get keyring () { return this._keyring; }
+  // TODO(telackey): Remove
+  get keyring () { return this._identityManager.keyring; }
 
-  get identityKey () { return this._identityKey; }
+  // TODO(telackey): Remove
+  get identityKey () { return this._identityManager.identityKey; }
 
   /**
    * Create a new party with a new feed for it. Writes a party genensis message to this feed.
@@ -59,10 +59,10 @@ export class PartyFactory {
     assert(!this._options.readOnly);
 
     // TODO(telackey): Proper identity and keyring management.
-    const partyKey = await this._keyring.createKeyRecord({ type: KeyType.PARTY });
+    const partyKey = await this._identityManager.keyring.createKeyRecord({ type: KeyType.PARTY });
 
     const feed = await this._feedStore.createWritableFeed(partyKey.publicKey);
-    const feedKey = await this._keyring.addKeyRecord({
+    const feedKey = await this._identityManager.keyring.addKeyRecord({
       publicKey: feed.key,
       secretKey: feed.secretKey,
       type: KeyType.FEED
@@ -71,7 +71,7 @@ export class PartyFactory {
     const party = await this.constructParty(partyKey.publicKey, []);
 
     // TODO(burdon): Call party processor to write genesis, etc.
-    const message = createPartyGenesisMessage(this._keyring, partyKey, feedKey, this._identityKey);
+    const message = createPartyGenesisMessage(this._identityManager.keyring, partyKey, feedKey, this._identityManager.identityKey);
     await pify(feed.append.bind(feed))({ halo: message });
 
     // Connect the pipeline.
@@ -89,7 +89,7 @@ export class PartyFactory {
    */
   async addParty (partyKey: PartyKey, feeds: FeedKey[]) {
     const feed = await this._initWritableFeed(partyKey);
-    const feedKey = await this._keyring.getKey(feed.key);
+    const feedKey = await this._identityManager.keyring.getKey(feed.key);
 
     const party = await this.constructParty(partyKey, feeds);
     await party.open();
@@ -122,7 +122,8 @@ export class PartyFactory {
       new Pipeline(partyProcessor, feedReadStream, feedWriteStream, this._replicatorFactory, this._options);
 
     // Create party.
-    const party = new Party(this._modelFactory, pipeline, partyProcessor, this._keyring, this._identityKey, this._networkManager);
+    const party = new Party(this._modelFactory, pipeline, partyProcessor,
+      this._identityManager.keyring, this._identityManager.identityKey, this._networkManager);
 
     return party;
   }
@@ -130,12 +131,12 @@ export class PartyFactory {
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<Party> {
     const initiator = new GreetingInitiator(
       this._networkManager,
-      this._keyring,
+      this._identityManager.keyring,
       async partyKey => {
         const feed = await this._initWritableFeed(partyKey);
-        return this._keyring.getKey(feed.key);
+        return this._identityManager.keyring.getKey(feed.key);
       },
-      this._identityKey,
+      this._identityManager.identityKey,
       invitationDescriptor
     );
     await initiator.connect();
@@ -150,13 +151,48 @@ export class PartyFactory {
     const feed = await this._feedStore.queryWritableFeed(partyKey) ??
       await this._feedStore.createWritableFeed(partyKey);
 
-    if (!this._keyring.hasKey(feed.key)) {
-      await this._keyring.addKeyRecord({
+    if (!this._identityManager.keyring.hasKey(feed.key)) {
+      await this._identityManager.keyring.addKeyRecord({
         publicKey: feed.key,
         secretKey: feed.secretKey,
         type: KeyType.FEED
       });
     }
     return feed;
+  }
+
+  private async _createHalo (): Promise<Party> {
+    await this._identityManager.initIdentity();
+    const { keyring, identityKey, deviceKey } = this._identityManager;
+
+    // 1. Create a feed for the HALO.
+    console.log("BEFORE")
+    const feed = await this._feedStore.createWritableFeed(randomBytes());
+    console.log("AFTER")
+    const writeToFeed = pify(feed.append.bind(feed));
+    const feedKey = await keyring.addKeyRecord({
+      publicKey: feed.key,
+      secretKey: feed.secretKey,
+      type: KeyType.FEED
+    });
+    const halo = await this.constructParty(identityKey.publicKey, [feedKey.publicKey]);
+
+    // 2. Write a PartyGenesis message for the HALO. This message must be signed by the:
+    //      A. Identity key (in the case of the HALO, this serves as the Party key)
+    //      B. Device key (the first "member" of the Identity's HALO)
+    //      C. Feed key (the feed owned by the Device)
+    await writeToFeed(createPartyGenesisMessage(keyring, identityKey, feedKey, deviceKey));
+
+    // 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
+    //    message will be copied into other Parties which we create or join.
+    await writeToFeed(createKeyAdmitMessage(keyring, identityKey.publicKey, identityKey));
+
+    // 4. LATER write the IdentityInfo message with descriptive details (eg, display name).
+    // 5. LATER write the DeviceInfo message with descriptive details (eg, display name).
+
+    // Connect the pipeline.
+    await halo.open();
+
+    return halo;
   }
 }

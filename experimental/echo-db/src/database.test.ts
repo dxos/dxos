@@ -5,6 +5,7 @@
 import debug from 'debug';
 import ram from 'random-access-memory';
 
+import { Keyring } from '@dxos/credentials';
 import { humanize, randomBytes } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
@@ -14,7 +15,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { codec } from './codec';
 import { Database } from './database';
 import { FeedStoreAdapter } from './feed-store-adapter';
-import { Party, PartyManager } from './parties';
+import { IdentityManager, Party, PartyManager } from './parties';
 import { PartyFactory } from './parties/party-factory';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
@@ -31,7 +32,8 @@ const createDatabase = async (verbose = true) => {
     writeLogger: createLoggingTransform((message: any) => { log('<<<', JSON.stringify(message, jsonReplacer, 2)); })
   } : undefined;
 
-  const partyFactory = new PartyFactory(feedStoreAdapter, modelFactory, undefined);
+  const identityManager = new IdentityManager(new Keyring());
+  const partyFactory = new PartyFactory(feedStoreAdapter, identityManager, modelFactory, undefined);
   await partyFactory.initIdentity();
   const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
   return new Database(partyManager, options);

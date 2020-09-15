@@ -60,15 +60,11 @@ export class PartyProcessor {
     return this._timeframe;
   }
 
-  get keyring () {
-    return this._stateMachine.keyring;
-  }
-
-  public get feedKeys () {
+  get feedKeys () {
     return this._stateMachine.memberFeeds;
   }
 
-  public get memberKeys () {
+  get memberKeys () {
     return this._stateMachine.memberKeys;
   }
 

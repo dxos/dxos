@@ -21,9 +21,10 @@ import {
   Markers
 } from '@dxos/gem-spore';
 
+import { Keyring } from '@dxos/credentials';
 import { randomBytes } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
-import { codec, createReplicatorFactory, Database, PartyManager, PartyFactory, FeedStoreAdapter } from '@dxos/experimental-echo-db';
+import { codec, createReplicatorFactory, Database, PartyManager, PartyFactory, FeedStoreAdapter, IdentityManager } from '@dxos/experimental-echo-db';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
@@ -46,6 +47,7 @@ const createDatabase = async (options) => {
     .registerModel(ObjectModel.meta, ObjectModel);
 
   const networkManager = new NetworkManager(feedStore, new SwarmProvider());
+  const identityManager = new IdentityManager(new Keyring());
   const partyFactory = new PartyFactory(feedStoreAdapter, modelFactory, networkManager);
 
   await partyFactory.initIdentity();
