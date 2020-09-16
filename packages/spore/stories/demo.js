@@ -8,47 +8,42 @@ import debug from 'debug';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
-import { withKnobs, boolean, button, number } from '@storybook/addon-knobs';
+import { boolean, button, number, withKnobs } from '@storybook/addon-knobs';
 import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
 
 import {
+  convertTreeToGraph,
+  createGraph,
+  createItems,
+  createLinkId,
+  createTree,
   FullScreen,
   Grid,
   SVG,
-
-  createLinkId,
-  createItem,
-  createItems,
-  createGraph,
-  createTree,
-  convertTreeToGraph,
-
   useGraphGenerator,
   useGrid,
-  useObjectMutator
+  useObjectMutator,
 } from '@dxos/gem-core';
 
 import {
-  Graph,
-  Markers,
-
-  ForceLayout,
-  GridLayout,
-  RandomLayout,
-  RadialLayout,
-  TreeLayout,
-
   BoxProjector,
   BulletLinkProjector,
-  GuideProjector,
-  NodeProjector,
-  LinkProjector,
-  TreeProjector,
-
-  useLayout,
-  useGraphStyles,
   createSimulationDrag,
+  ForceLayout,
+  Graph,
+  GraphLinker,
+  GridLayout,
+  GuideProjector,
+  LinkProjector,
+  Markers,
+  NodeProjector,
+  RadialLayout,
+  RandomLayout,
+  TreeLayout,
+  TreeProjector,
+  useGraphStyles,
+  useLayout,
 } from '../src';
 
 export default {
@@ -137,8 +132,6 @@ export const withGridLayout = () => {
     });
   }, [projector]);
 
-  console.log(data);
-
   return (
     <FullScreen>
       {resizeListener}
@@ -224,7 +217,18 @@ export const withArrows = () => {
 const nodeColors = ['red', 'green', 'blue'];
 const useCustomStyles = makeStyles(() => ({
   nodes: nodeColors.reduce((map, color) => {
-    map[`& g.node.${color} circle`] = { fill: colors[color][400] };
+    map[`& g.node.${color} circle`] = {
+      fill: colors[color][400],
+      stroke: colors[color][700],
+      strokeWidth: 4
+    };
+
+    map[`& g.node.${color} text`] = {
+      fontFamily: 'sans-serif',
+      fontSize: 12,
+      fill: colors['grey'][700]
+    };
+
     return map;
   }, {})
 }));
@@ -238,8 +242,9 @@ export const withCustomNodes = () => {
   const { width, height } = size;
   const grid = useGrid({ width, height });
 
-  const [data] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 4 })));
+  const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 4 })));
   const [layout] = useState(() => new ForceLayout());
+  const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey', freeze: 'shiftKey' }));
   const [{ nodeProjector, linkProjector }] = useState({
     nodeProjector: new NodeProjector({
       node: {
@@ -257,15 +262,24 @@ export const withCustomNodes = () => {
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} />
+
         <Graph
           grid={grid}
           data={data}
+          drag={drag}
           layout={layout}
           classes={{
             nodes: classes.nodes
           }}
           nodeProjector={nodeProjector}
           linkProjector={linkProjector}
+        />
+
+        <GraphLinker
+          grid={grid}
+          drag={drag}
+          linkProjector={linkProjector}
+          onUpdate={updateData}
         />
       </SVG>
     </FullScreen>
@@ -276,83 +290,17 @@ export const withCustomNodes = () => {
  * Drag.
  */
 export const withDrag = () => {
-  const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
   const grid = useGrid({ width, height });
-  const guides = useRef();
 
   const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 })));
   const [layout] = useState(() => new ForceLayout({ force: { links: { distance: 80 } } }));
-
+  const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey', freeze: 'shiftKey' }));
   const [{ nodeProjector, linkProjector }] = useState({
     nodeProjector: new NodeProjector({ node: { radius: 16, showLabels: false } }),
     linkProjector: new LinkProjector({ nodeRadius: 16, showArrows: true })
   });
-
-  // TODO(burdon): Factor out (move to Graph).
-  const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey', freeze: 'shiftKey' }));
-  useEffect(() => {
-    drag.on('drag', ({ source, position, linking }) => {
-      if (!linking) {
-        return;
-      }
-
-      const data = {
-        links: [
-          {
-            id: 'guide-link',
-            source,
-            target: {
-              id: 'guide-link-target',
-              radius: 0,
-              x: position.x,
-              y: position.y
-            }
-          }
-        ]
-      };
-
-      // Draw line.
-      linkProjector.update(grid, data, { group: guides.current });
-    });
-
-    drag.on('end', ({ source, target, linking }) => {
-      if (!linking) {
-        return;
-      }
-
-      linkProjector.update(grid, {}, { group: guides.current });
-
-      if (target) {
-        // TODO(burdon): Highlight source node.
-        // TODO(burdon): End marker for guide link.
-        // TODO(burdon): Escape to cancel.
-        // TODO(burdon): Check not already linked (util).
-        // TODO(burdon): Delete.
-        // TODO(burdon): New node spawned from parent location.
-        updateData({
-          links: {
-            $push: [{ id: createLinkId(source.id, target.id), source, target }]
-          }
-        });
-      } else {
-        const target = createItem();
-        updateData({
-          nodes: {
-            $push: [target]
-          },
-          links: {
-            $push: [{ id: createLinkId(source.id, target.id), source, target }]
-          }
-        });
-      }
-    });
-
-    drag.on('click', ({ source: { id } }) => {
-      console.log('click', id);
-    });
-  }, [drag]);
 
   return (
     <FullScreen>
@@ -361,8 +309,6 @@ export const withDrag = () => {
         <Grid grid={grid} />
         <Markers />
 
-        <g ref={guides} className={classes.links} />
-
         <Graph
           grid={grid}
           data={data}
@@ -370,6 +316,13 @@ export const withDrag = () => {
           linkProjector={linkProjector}
           nodeProjector={nodeProjector}
           drag={drag}
+        />
+
+        <GraphLinker
+          grid={grid}
+          drag={drag}
+          linkProjector={linkProjector}
+          onUpdate={updateData}
         />
       </SVG>
     </FullScreen>
@@ -536,30 +489,12 @@ export const withDynamicLayout = () => {
 
   const [{ layout, drag }, setLayout] = useState({});
 
+  // Update layout.
   useEffect(() => {
-    // Initial layout.
-    const layout = new ForceLayout({
-      center: {
-        x: -grid.scaleX(40),
-        y: 0
-      },
-      force: {
-        links: {
-          distance: 50
-        }
-      }
-    });
-
-    setLayout({
-      layout,
-      drag: createSimulationDrag(layout.simulation)
-    });
-
-    // Updated layout.
     const t = setTimeout(() => {
       const layout = new ForceLayout({
         center: {
-          x: grid.scaleX(40),
+          x: grid.scaleX(50),
           y: 0
         },
         force: {
@@ -576,7 +511,7 @@ export const withDynamicLayout = () => {
         layout,
         drag: createSimulationDrag(layout.simulation)
       });
-    }, 2000);
+    }, 1000);
 
     return () => clearTimeout(t);
   }, [grid]);

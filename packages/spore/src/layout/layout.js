@@ -31,15 +31,13 @@ export class Layout extends EventEmitter {
     return this._data;
   }
 
-  // Call to notify repaint.
-  emitUpdate (data) {
-    this.emit('update', data);
-  }
-
-  // TODO(burdon): Data structure for guides (e.g., radius circle).
-
   reset () {
     this._onReset();
+  }
+
+  // Call to notify repaint.
+  emitUpdate () {
+    this.emit('update', this);
   }
 
   update (grid, data, context) {

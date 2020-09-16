@@ -26,9 +26,10 @@ export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
   // Update events.
   //
   useEffect(() => {
-    const onUpdate = data => callback({ layout, grid, data });
+    const onUpdate = () => callback({ layout, grid, data });
     layout.on('update', onUpdate);
     return () => {
+      layout.reset();
       layout.off('update', onUpdate);
     };
   }, [layout]);

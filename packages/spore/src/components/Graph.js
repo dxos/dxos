@@ -98,7 +98,9 @@ const Graph = (props) => {
   // Update layout.
   // NOTE: Called every time force update changes data (positions, etc.)
   useLayout(layout, grid, data, () => {
-    // TODO(burdon): Pass layout directly?
+
+    // TODO(burdon): Detach old layout!
+
     guideProjector.update(grid, layout.data, { group: guideGroup.current });
     nodeProjector.update(grid, layout.data, { group: nodeGroup.current, selected });
     linkProjector.update(grid, layout.data, { group: linkGroup.current });

@@ -3,3 +3,4 @@
 //
 
 export Graph, { useGraphStyles } from './Graph';
+export GraphLinker from './GraphLinker';

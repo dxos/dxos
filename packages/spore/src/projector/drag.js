@@ -52,9 +52,7 @@ export const createSimulationDrag = (simulation, options = {}) => {
     // https://github.com/d3/d3-drag#drag-events
 
       .on('start', function (event) {
-        // Find group and raise.
-        const group = parent(event);
-        d3.select(group).raise();
+        state.dragging = false;
 
         // Check if already frozen.
         state.frozen = {
@@ -70,7 +68,9 @@ export const createSimulationDrag = (simulation, options = {}) => {
           event.subject.fy = event.y;
         }
 
-        state.dragging = false;
+        // Find group and raise.
+        const group = parent(event);
+        d3.select(group).raise();
 
         emitter.emit('start', { source: event.subject });
       })
@@ -80,11 +80,6 @@ export const createSimulationDrag = (simulation, options = {}) => {
         // NOTE: The event position is the center of the target.
         const [x, y] = d3.pointer(event, this);
         const position = { x, y };
-
-        // Restart the force simulation.
-        if (!state.linking) {
-          simulation.alphaTarget(0).alpha(1).restart();
-        }
 
         // Freeze simulation for node if dragging.
         // TODO(burdon): Need to decorate datum if fixed by data model or by key modifier.
@@ -97,6 +92,9 @@ export const createSimulationDrag = (simulation, options = {}) => {
             event.subject.fy = event.y;
           }
         }
+
+        // Restart the force simulation.
+        simulation.alphaTarget(0).alpha(0.1).restart();
 
         emitter.emit('drag', { source: event.subject, linking: state.linking, position });
 

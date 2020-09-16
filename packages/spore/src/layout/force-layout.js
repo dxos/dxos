@@ -17,16 +17,16 @@ export class ForceLayout extends Layout {
 
   static defaults = {
     // https://github.com/d3/d3-force#simulation_alpha
-    alphaDecay: 0.05,
+    alphaDecay: 0.03,
 
     // https://github.com/d3/d3-force#forces
     force: {
       center: {
-        strength: 0.3
+        strength: .2
       },
       radial: {
         radius: 200,
-        strength: 0.05
+        strength: 0.3
       },
       charge: {
         strength: -300
@@ -97,7 +97,7 @@ export class ForceLayout extends Layout {
 
     // https://github.com/d3/d3-force#simulation_on
     this._simulation.on('tick', () => {
-      this.emitUpdate(data); // TODO(burdon): this.data?
+      this.emitUpdate();
     });
   }
 
@@ -112,32 +112,33 @@ export class ForceLayout extends Layout {
     const { nodes = [] } = data;
 
     // Merge nodes.
-    // TODO(burdon): Set the data.node as a property of the force node for liveness.
     const current = this._simulation.nodes();
     return nodes.map(node => {
-      const match = current.find(n => n.id === node.id);
-      if (match) {
+      const existing = current.find(n => n.id === node.id);
+      if (existing) {
         // Preserve current force properties.
         // https://github.com/d3/d3-force#simulation_nodes
-        const { x, y, vx, vy, fx = null, fy = null } = match;
+        const { x, y, vx, vy, fx = null, fy = null } = existing;
+
+        // TODO(burdon): Set the data.node as a property of the force node for liveness.
         // return Object.assign(match, node, { x, y, vx, vy, fx, fy });
         return Object.assign(node, { x, y, vx, vy, fx, fy });
       }
 
-      // TODO(burdon): This isn't working in the echo demo.
-      // Create new node with properties.
-      Object.assign(node, {
+      // Create new node with initial properties.
+      // TODO(burdon): This isn't working in the echo demo (links are incorrect).
+      const n = Object.assign(node, {
       // Object.assign({}, node, {
         // Random initial position (otherwise explodes).
-        x: center.x + (Math.random() - .5) * (force?.radial.radius || grid.width / 2),
-        y: center.y + (Math.random() - .5) * (force?.radial.radius || grid.height / 2),
+        x: center.x + (Math.random() - 0.5) * (force?.radial.radius || grid.width / 4),
+        y: center.y + (Math.random() - 0.5) * (force?.radial.radius || grid.height / 4),
         vx: 0,
         vy: 0,
         fx: null,
         fy: null
       }, this._options.initializer && this._options.initializer(node, center));
 
-      return node;
+      return n;
     });
   }
 
@@ -186,7 +187,6 @@ export class ForceLayout extends Layout {
      * NOTE: Opposes radial.
      */
     if (force.center) {
-      // TODO(burdon): Bug. If strength is set after changing the center then center isn't updated?
       forces.center = d3.forceCenter(center.x, center.y)
         .strength(force.center.strength);
     }
