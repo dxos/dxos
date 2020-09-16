@@ -24,11 +24,22 @@ describe('Party manager', () => {
   const setup = async () => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
-    const identityManager = new IdentityManager(new Keyring());
+
+    let identityManager;
+    {
+      const keyring = new Keyring();
+      await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      await keyring.createKeyRecord({ type: KeyType.DEVICE });
+      identityManager = new IdentityManager(keyring);
+    }
+
     const modelFactory = new ModelFactory().registerModel(ObjectModel.meta, ObjectModel);
-    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, undefined);
-    await partyFactory.initIdentity();
+    const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, undefined);
     const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
+
+    await partyManager.open();
+    await partyManager.createHalo();
+
     return { feedStore, partyManager };
   };
 
@@ -85,16 +96,16 @@ describe('Party manager', () => {
 
   test('Create from cold start', async () => {
     const { feedStore, partyManager } = await setup();
-    await feedStore.open();
+
+    const keyring = new Keyring();
+    const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     const numParties = 3;
     // Create raw parties.
     {
       let i = 0;
       while (i++ < numParties) {
-        const keyring = new Keyring();
         const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
-        const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
         // TODO(burdon): Create multiple feeds.
         const feed = await feedStore.openFeed(partyKey.key,

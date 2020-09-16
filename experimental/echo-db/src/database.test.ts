@@ -5,7 +5,7 @@
 import debug from 'debug';
 import ram from 'random-access-memory';
 
-import { Keyring } from '@dxos/credentials';
+import { Keyring, KeyType } from '@dxos/credentials';
 import { humanize, randomBytes } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
@@ -24,6 +24,14 @@ const createDatabase = async (verbose = true) => {
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
   const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
+  let identityManager;
+  {
+    const keyring = new Keyring();
+    await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    await keyring.createKeyRecord({ type: KeyType.DEVICE });
+    identityManager = new IdentityManager(keyring);
+  }
+
   const modelFactory = new ModelFactory()
     .registerModel(ObjectModel.meta, ObjectModel);
 
@@ -32,10 +40,12 @@ const createDatabase = async (verbose = true) => {
     writeLogger: createLoggingTransform((message: any) => { log('<<<', JSON.stringify(message, jsonReplacer, 2)); })
   } : undefined;
 
-  const identityManager = new IdentityManager(new Keyring());
-  const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, undefined);
-  await partyFactory.initIdentity();
+  const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, undefined);
   const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
+
+  await partyManager.open();
+  await partyManager.createHalo();
+
   return new Database(partyManager, options);
 };
 
