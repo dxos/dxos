@@ -6,13 +6,13 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event, Lock } from '@dxos/async';
-import { KeyType } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
 import { FeedKey, PartyKey, PublicKey } from '@dxos/experimental-echo-protocol';
 import { ComplexMap } from '@dxos/experimental-util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
-import { InvitationResponder } from '../invitation';
+import { SecretProvider } from '../invitations/common';
+import { InvitationDescriptor } from '../invitations/invitation-descriptor';
 import { Party } from './party';
 import { PartyFactory } from './party-factory';
 
@@ -80,10 +80,18 @@ export class PartyManager {
     return this._lock.executeSynchronized(async () => {
       log(`Adding party partyKey=${keyToString(partyKey)} feeds=${feeds.map(keyToString)}`);
       assert(!this._parties.has(partyKey));
-      const { party, feedKey } = await this._partyFactory.addParty(partyKey, feeds);
+      const { party } = await this._partyFactory.addParty(partyKey, feeds);
       this._parties.set(party.key, party);
       this.update.emit(party);
-      return new InvitationResponder(this._partyFactory.keyring, party, feedKey, this._partyFactory.identityKey);
+    });
+  }
+
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
+    return this._lock.executeSynchronized(async () => {
+      const party = await this._partyFactory.joinParty(invitationDescriptor, secretProvider);
+      this._parties.set(party.key, party);
+      this.update.emit(party);
+      return party;
     });
   }
 }

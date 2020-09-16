@@ -5,7 +5,7 @@
 import debug from 'debug';
 import ram from 'random-access-memory';
 
-import { humanize } from '@dxos/crypto';
+import { humanize, randomBytes } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { createLoggingTransform, latch, jsonReplacer } from '@dxos/experimental-util';

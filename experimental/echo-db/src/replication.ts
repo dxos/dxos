@@ -7,10 +7,10 @@ import hypercore from 'hypercore';
 
 import { discoveryKey, keyToString } from '@dxos/crypto';
 import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
 import { Protocol } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
+import { FeedStoreAdapter } from './feed-store-adapter';
 import { FeedSetProvider } from './parties';
 
 const log = debug('dxos:echo:replication-adapter');
@@ -23,9 +23,9 @@ export interface IReplicationAdapter {
 
 export type ReplicatorFactory = (partyKey: PartyKey, activeFeeds: FeedSetProvider) => IReplicationAdapter;
 
-export function createReplicatorFactory (networkManager: any, feedStore: FeedStore, peerId: Buffer) {
+export function createReplicatorFactory (_networkManager: any, feedStore: FeedStoreAdapter, peerId: Buffer) {
   return (partyKey: PartyKey, activeFeeds: FeedSetProvider) => new ReplicationAdapter(
-    networkManager,
+    _networkManager,
     feedStore,
     peerId,
     partyKey,
@@ -40,52 +40,37 @@ export class ReplicationAdapter implements IReplicationAdapter {
   private _started = false;
 
   constructor (
-    // TODO(burdon): Underscores for private.
-    private readonly networkManager: any,
-    private readonly feedStore: FeedStore,
-    private readonly peerId: Buffer,
-    private readonly partyKey: PartyKey,
-    private readonly activeFeeds: FeedSetProvider
+    private readonly _networkManager: any,
+    private readonly _feedStore: FeedStoreAdapter,
+    private readonly _peerId: Buffer,
+    private readonly _partyKey: PartyKey,
+    private readonly _activeFeeds: FeedSetProvider
   ) {}
 
   start (): void {
     if (this._started) {
       return;
     }
-
     this._started = true;
 
-    this.networkManager.joinProtocolSwarm(this.partyKey, ({ channel }: any) => this._createProtocol(channel));
+    this._networkManager.joinProtocolSwarm(this._partyKey, ({ channel }: any) => this._createProtocol(channel));
   }
 
-  private _openFeed (key: FeedKey): hypercore.Feed {
-    const topic = keyToString(this.partyKey);
-
-    // Get the feed if we have it already, else create it.
-    // TODO(marik-d): Rethink FeedStore API: Remove openFeed.
-    let feed = this.feedStore.getOpenFeed(desc => desc.feed.key.equals(key));
-    if (!feed) {
-      // TODO(burdon): Change path.
-      feed = this.feedStore.openFeed(keyToString(key), {
-        key,
-        metadata: { partyKey: this.partyKey }
-      } as any);
-    }
-
-    return feed;
+  private async _openFeed (key: FeedKey): Promise<hypercore.Feed> {
+    return this._feedStore.getFeed(key) ?? await this._feedStore.createReadOnlyFeed(key, this._partyKey);
   }
 
   private _createProtocol (channel: any) {
     const replicator = new Replicator({
       load: async () => {
-        const partyFeeds = await Promise.all(this.activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
+        const partyFeeds = await Promise.all(this._activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
         log(`load feeds ${partyFeeds.map(feed => keyToString(feed.key))}`);
         return partyFeeds.map((feed) => {
           return { discoveryKey: feed.discoveryKey };
         });
       },
 
-      subscribe: (addFeedToReplicatedSet: (feed: any) => void) => this.activeFeeds.added.on(async (feedKey) => {
+      subscribe: (addFeedToReplicatedSet: (feed: any) => void) => this._activeFeeds.added.on(async (feedKey) => {
         log(`add feed ${keyToString(feedKey)}`);
         const feed = await this._openFeed(feedKey);
         addFeedToReplicatedSet({ discoveryKey: feed.discoveryKey });
@@ -95,7 +80,7 @@ export class ReplicationAdapter implements IReplicationAdapter {
       replicate: async (remoteFeeds: any, info: any) => {
         // We can ignore remoteFeeds entirely, because the set of feeds we want to replicate is dictated by the Party.
         // TODO(telackey): why are we opening feeds? Necessary or belt/braces thinking, or because open party does it?
-        return Promise.all(this.activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
+        return Promise.all(this._activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
       }
     });
 
@@ -105,17 +90,17 @@ export class ReplicationAdapter implements IReplicationAdapter {
       },
 
       discoveryToPublicKey: (dk: any) => {
-        if (!discoveryKey(this.partyKey).equals(dk)) {
+        if (!discoveryKey(this._partyKey).equals(dk)) {
           return undefined;
         }
 
         // TODO(marik-d): Why does this do side effects.
         // TODO(burdon): Remove need for external closure (i.e., pass object to this callback).
-        protocol.setContext({ topic: keyToString(this.partyKey) });
-        return this.partyKey;
+        protocol.setContext({ topic: keyToString(this._partyKey) });
+        return this._partyKey;
       }
     })
-      .setSession({ peerId: this.peerId })
+      .setSession({ peerId: this._peerId })
       .setExtensions([replicator.createExtension()])
       .init(channel);
     return protocol;

@@ -18,6 +18,8 @@ import { protocol } from './proto';
 
 export type PublicKey = Uint8Array;
 
+export type SwarmKey = PublicKey;
+
 //
 // Feed
 //
