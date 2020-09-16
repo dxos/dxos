@@ -56,10 +56,11 @@ export class PartyManager {
       for (const partyKey of this._feedStore.getPartyKeys()) {
         if (Buffer.compare(partyKey, this._identityManager.identityKey.publicKey) === 0) {
           if (!this._halo) {
-            this._halo = await this._partyFactory.constructParty(partyKey, []);
+            const { party } = await this._partyFactory.constructParty(partyKey, []);
+            this._halo = party;
           }
         } else if (!this._parties.has(partyKey)) {
-          const party = await this._partyFactory.constructParty(partyKey, []);
+          const { party } = await this._partyFactory.constructParty(partyKey, []);
           this._parties.set(party.key, party);
           this.update.emit(party);
         }

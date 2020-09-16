@@ -72,11 +72,11 @@ export class PartyFactory {
 
     const { party, pipeline } = await this.constructParty(partyKey.publicKey, []);
 
-    // TODO(burdon): Call party processor to write genesis, etc.
-    pipeline.haloWriteStream!.write(createPartyGenesisMessage(this._identityManager.keyring, partyKey, feedKey, this._identityManager.identityKey));
-
     // Connect the pipeline.
     await party.open();
+
+    // TODO(burdon): Call party processor to write genesis, etc.
+    pipeline.haloWriteStream!.write(createPartyGenesisMessage(this._identityManager.keyring, partyKey, feedKey, this._identityManager.identityKey));
 
     // Create special properties item.
     await party.createItem(ObjectModel, PARTY_ITEM_TYPE);
