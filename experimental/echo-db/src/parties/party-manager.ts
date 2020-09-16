@@ -54,9 +54,10 @@ export class PartyManager {
 
       // Iterate descriptors and pre-create Party objects.
       for (const partyKey of this._feedStore.enumerateParties()) {
-        if (!this._halo && Buffer.compare(partyKey, this._identityManager.identityKey.publicKey) === 0) {
-          this._halo = await this._partyFactory.constructParty(partyKey, []);
-          this.update.emit(this._halo);
+        if (Buffer.compare(partyKey, this._identityManager.identityKey.publicKey) === 0) {
+          if (!this._halo) {
+            this._halo = await this._partyFactory.constructParty(partyKey, []);
+          }
         } else if (!this._parties.has(partyKey)) {
           const party = await this._partyFactory.constructParty(partyKey, []);
           this._parties.set(party.key, party);
