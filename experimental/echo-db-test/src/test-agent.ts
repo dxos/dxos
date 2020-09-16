@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { Keyring } from '@dxos/credentials';
+import { Keyring, KeyType } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
 import {
   codec, Database, FeedStoreAdapter, InvitationDescriptor, Party, PartyFactory, PartyManager, IdentityManager
@@ -34,20 +34,29 @@ export default class TestAgent implements Agent {
     const feedStore = new FeedStore(storage, { feedOptions: { valueEncoding: codec } });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
-    const identityManager = new IdentityManager(new Keyring());
+    let identityManager;
+    {
+      const keyring = new Keyring();
+      await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      await keyring.createKeyRecord({ type: KeyType.DEVICE });
+      identityManager = new IdentityManager(keyring);
+    }
+
     const networkManager = new NetworkManager(feedStore, swarmProvider);
 
     const modelFactory = new ModelFactory()
       .registerModel(ObjectModel.meta, ObjectModel);
 
     const partyFactory = new PartyFactory(
-      identityManager,
+      identityManager.keyring,
       feedStoreAdapter,
       modelFactory,
       networkManager
     );
-    await partyFactory.initIdentity();
     const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
+    await partyManager.open();
+    await partyManager.createHalo();
+
     this.db = new Database(partyManager);
     await this.db.open();
   }
