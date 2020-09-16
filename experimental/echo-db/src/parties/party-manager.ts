@@ -40,6 +40,10 @@ export class PartyManager {
     private readonly _partyFactory: PartyFactory
   ) { }
 
+  get halo () {
+    return this._halo;
+  }
+
   get parties (): Party[] {
     return Array.from(this._parties.values());
   }
