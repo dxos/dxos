@@ -36,6 +36,7 @@ export class PartyFactory {
   // TODO(burdon): MemoryNetworkManager by default.
   private readonly _replicatorFactory: ReplicatorFactory | undefined;
 
+  // TODO(telackey): It might be better to take Keyring as a param to createParty/constructParty/etc.
   constructor (
     private readonly _keyring: Keyring,
     private readonly _feedStore: FeedStoreAdapter,
@@ -160,16 +161,19 @@ export class PartyFactory {
     return { feed, feedKey };
   }
 
+  // TODO(telackey): Combine with createParty?
   async createHalo (): Promise<Party> {
-    const identityKey = this._getIdentityKey();
+    const identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
     const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+    assert(identityKey, 'Identity key required.');
+    assert(deviceKey, 'Device key required.');
 
     // 1. Create a feed for the HALO.
     // TODO(telackey): Just create the FeedKey and then let other code create the feed with the correct key.
     const { feedKey } = await this._initWritableFeed(identityKey.publicKey);
-    const { party, pipeline } = await this.constructParty(identityKey.publicKey, [feedKey.publicKey]);
+    const { party: halo, pipeline } = await this.constructParty(identityKey.publicKey, [feedKey.publicKey]);
     // Connect the pipeline.
-    await party.open();
+    await halo.open();
 
     // 2. Write a PartyGenesis message for the HALO. This message must be signed by the:
     //      A. Identity key (in the case of the HALO, this serves as the Party key)
@@ -184,9 +188,11 @@ export class PartyFactory {
     // 4. LATER write the IdentityInfo message with descriptive details (eg, display name).
     // 5. LATER write the DeviceInfo message with descriptive details (eg, display name).
 
-    return party;
+    return halo;
   }
 
+  // TODO(telackey): This seems kind of out of place. Perhaps we should simply pass the IdentityManager
+  // either to PartyFactory or as a param to the create/add methods.
   private _getIdentityKey () {
     return this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
   }
