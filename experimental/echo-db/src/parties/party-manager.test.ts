@@ -101,6 +101,13 @@ describe('Party manager', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     const numParties = 3;
+
+    // TODO(telackey): Injecting "raw" Parties into the feeds behind the scenes seems fishy to me, as it writes the
+    // Party messages in a slightly different way than the code inside PartyFactory does, and so could easily diverge
+    // from reality. Perhaps the thing to do would be to setup temporary storage, add the Parties in the usual way
+    // via PartyManager/PartyFactory, close everything, and then compare the end-state after re-opening using the
+    // same storage.
+
     // Create raw parties.
     {
       let i = 0;
@@ -117,7 +124,7 @@ describe('Party manager', () => {
         });
 
         const feedStream = createWritableFeedStream(feed);
-        feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
+        feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey) });
       }
     }
 
