@@ -11,6 +11,8 @@ import { Party } from './party';
 export type KeyRecord = any;
 
 export class IdentityManager {
+  // TODO(telackey): Party here is wrong, or at least incomplete. To build KeyChains and retrieve IdentityGenesis
+  // messages, whether accessed directly or indirectly, we need the PartyStateMachine.
   private _halo?: Party;
 
   constructor (
