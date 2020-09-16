@@ -68,12 +68,7 @@ export class PartyFactory {
     // TODO(telackey): Proper identity and keyring management.
     const partyKey = await this._identityManager.keyring.createKeyRecord({ type: KeyType.PARTY });
 
-    const feed = await this._feedStore.createWritableFeed(partyKey.publicKey);
-    const feedKey = await this._identityManager.keyring.addKeyRecord({
-      publicKey: feed.key,
-      secretKey: feed.secretKey,
-      type: KeyType.FEED
-    });
+    const { feed, feedKey } = await this._initWritableFeed(partyKey.publicKey);
 
     const party = await this.constructParty(partyKey.publicKey, []);
 
@@ -96,8 +91,7 @@ export class PartyFactory {
    * @param feeds - set of hints for existing feeds belonging to this party.
    */
   async addParty (partyKey: PartyKey, feeds: FeedKey[]) {
-    const feed = await this._initWritableFeed(partyKey);
-    const feedKey = await this._identityManager.keyring.getKey(feed.key);
+    const { feed, feedKey } = await this._initWritableFeed(partyKey);
 
     const party = await this.constructParty(partyKey, feeds);
     await party.open();
@@ -150,8 +144,8 @@ export class PartyFactory {
       this._networkManager,
       this._identityManager.keyring,
       async partyKey => {
-        const feed = await this._initWritableFeed(partyKey);
-        return this._identityManager.keyring.getKey(feed.key);
+        const { feedKey } = await this._initWritableFeed(partyKey);
+        return feedKey;
       },
       this._identityManager.identityKey,
       invitationDescriptor
@@ -169,15 +163,14 @@ export class PartyFactory {
     const feed = await this._feedStore.queryWritableFeed(partyKey) ??
       await this._feedStore.createWritableFeed(partyKey);
 
-    if (!this._identityManager.keyring.hasKey(feed.key)) {
+    const feedKey = this._identityManager.keyring.getKey(feed.key) ??
       await this._identityManager.keyring.addKeyRecord({
         publicKey: feed.key,
         secretKey: feed.secretKey,
         type: KeyType.FEED
       });
-    }
 
-    return feed;
+    return { feed, feedKey };
   }
 
   private async _createHalo (): Promise<Party> {
@@ -186,13 +179,8 @@ export class PartyFactory {
 
     // 1. Create a feed for the HALO.
     // TODO(telackey): Just create the FeedKey and then let other code create the feed with the correct key.
-    const feed = await this._feedStore.createWritableFeed(identityKey.publicKey);
+    const { feed, feedKey } = await this._initWritableFeed(identityKey.publicKey);
     const writeToFeed = pify(feed.append.bind(feed));
-    const feedKey = await keyring.addKeyRecord({
-      publicKey: feed.key,
-      secretKey: feed.secretKey,
-      type: KeyType.FEED
-    });
     const halo = await this.constructParty(identityKey.publicKey, [feedKey.publicKey]);
 
     // 2. Write a PartyGenesis message for the HALO. This message must be signed by the:
