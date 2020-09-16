@@ -70,11 +70,10 @@ export class PartyFactory {
 
     const { feed, feedKey } = await this._initWritableFeed(partyKey.publicKey);
 
-    const party = await this.constructParty(partyKey.publicKey, []);
+    const { party, pipeline } = await this.constructParty(partyKey.publicKey, []);
 
     // TODO(burdon): Call party processor to write genesis, etc.
-    const message = createPartyGenesisMessage(this._identityManager.keyring, partyKey, feedKey, this._identityManager.identityKey);
-    await pify(feed.append.bind(feed))({ halo: message });
+    pipeline.haloWriteStream!.write(createPartyGenesisMessage(this._identityManager.keyring, partyKey, feedKey, this._identityManager.identityKey));
 
     // Connect the pipeline.
     await party.open();
@@ -93,7 +92,7 @@ export class PartyFactory {
   async addParty (partyKey: PartyKey, feeds: FeedKey[]) {
     const { feed, feedKey } = await this._initWritableFeed(partyKey);
 
-    const party = await this.constructParty(partyKey, feeds);
+    const { party } = await this.constructParty(partyKey, feeds);
     await party.open();
 
     // TODO(marik-d): Refactor so it doesn't return a tuple
@@ -136,7 +135,7 @@ export class PartyFactory {
     const party = new Party(
       this._modelFactory, partyProcessor, pipeline, this._identityManager.keyring, this._identityManager.identityKey, this._networkManager);
     log(`Constructed: ${party}`);
-    return party;
+    return { party, pipeline };
   }
 
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<Party> {
@@ -179,26 +178,24 @@ export class PartyFactory {
 
     // 1. Create a feed for the HALO.
     // TODO(telackey): Just create the FeedKey and then let other code create the feed with the correct key.
-    const { feed, feedKey } = await this._initWritableFeed(identityKey.publicKey);
-    const writeToFeed = pify(feed.append.bind(feed));
-    const halo = await this.constructParty(identityKey.publicKey, [feedKey.publicKey]);
+    const { feedKey } = await this._initWritableFeed(identityKey.publicKey);
+    const { party, pipeline } = await this.constructParty(identityKey.publicKey, [feedKey.publicKey]);
+    // Connect the pipeline.
+    await party.open();
 
     // 2. Write a PartyGenesis message for the HALO. This message must be signed by the:
     //      A. Identity key (in the case of the HALO, this serves as the Party key)
     //      B. Device key (the first "member" of the Identity's HALO)
     //      C. Feed key (the feed owned by the Device)
-    await writeToFeed(createPartyGenesisMessage(keyring, identityKey, feedKey, deviceKey));
+    pipeline.haloWriteStream!.write(createPartyGenesisMessage(keyring, identityKey, feedKey, deviceKey));
 
     // 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
     //    message will be copied into other Parties which we create or join.
-    await writeToFeed(createKeyAdmitMessage(keyring, identityKey.publicKey, identityKey));
+    pipeline.haloWriteStream!.write(createKeyAdmitMessage(keyring, identityKey.publicKey, identityKey));
 
     // 4. LATER write the IdentityInfo message with descriptive details (eg, display name).
     // 5. LATER write the DeviceInfo message with descriptive details (eg, display name).
 
-    // Connect the pipeline.
-    await halo.open();
-
-    return halo;
+    return party;
   }
 }
