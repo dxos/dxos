@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 import pify from 'pify';
 
 import { Keyring, KeyType, createPartyGenesisMessage, createKeyAdmitMessage } from '@dxos/credentials';
@@ -13,9 +14,7 @@ import { ObjectModel } from '@dxos/experimental-object-model';
 import { createWritableFeedStream } from '@dxos/experimental-util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
-import { SecretProvider } from '../invitations/common';
-import { GreetingInitiator } from '../invitations/greeting-initiator';
-import { InvitationDescriptor } from '../invitations/invitation-descriptor';
+import { GreetingInitiator, InvitationDescriptor, SecretProvider } from '../invitations';
 import { createReplicatorFactory, ReplicatorFactory } from '../replication';
 import { IdentityManager } from './identity-manager';
 import { Party, PARTY_ITEM_TYPE } from './party';
@@ -28,15 +27,21 @@ interface Options {
   readOnly?: boolean;
 }
 
+const log = debug('dxos:echo:party-factory');
+
+/**
+ * Manages the lifecycle of parties.
+ */
 export class PartyFactory {
-  private _replicatorFactory: ReplicatorFactory | undefined;
+  // TODO(burdon): MemoryNetworkManager by default.
+  private readonly _replicatorFactory: ReplicatorFactory | undefined;
 
   constructor (
     private readonly _identityManager: IdentityManager,
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _modelFactory: ModelFactory,
-    private readonly _networkManager: any | undefined,
-    peerId: Buffer = randomBytes(),
+    private readonly _networkManager: any | undefined, // TODO(burdon): By default provide MemoryNetworkManager?
+    peerId: Buffer = randomBytes(), // TODO(burdon): If optional move to options?
     private readonly _options: Options = {}
   ) {
     this._replicatorFactory = _networkManager && createReplicatorFactory(this._networkManager, this._feedStore, peerId);
@@ -87,7 +92,8 @@ export class PartyFactory {
 
   /**
    * Constructs a party object and creates a local write feed for it.
-   * @param feeds set of hints for existing feeds belonging to this party.
+   * @param partyKey
+   * @param feeds - set of hints for existing feeds belonging to this party.
    */
   async addParty (partyKey: PartyKey, feeds: FeedKey[]) {
     const feed = await this._initWritableFeed(partyKey);
@@ -95,6 +101,7 @@ export class PartyFactory {
 
     const party = await this.constructParty(partyKey, feeds);
     await party.open();
+
     // TODO(marik-d): Refactor so it doesn't return a tuple
     return { party, feedKey };
   }
@@ -111,22 +118,30 @@ export class PartyFactory {
     const feed = this._feedStore.queryWritableFeed(partyKey);
     assert(feed, `Feed not found for party: ${keyToString(partyKey)}`);
 
-    // Create pipeline.
+    //
+    // Create the pipeline.
     // TODO(telackey): To use HaloPartyProcessor here we cannot keep passing FeedKey[] arrays around, instead
     // we need to use createFeedAdmitMessage to a write a properly signed message FeedAdmitMessage and write it,
     // like we do above for the PartyGenesis message.
+    //
+
     const partyProcessor = new PartyProcessor(partyKey);
     await partyProcessor.addHints([feed.key, ...feedKeys]);
+
     const feedReadStream = await createOrderedFeedStream(
       this._feedStore.feedStore, partyProcessor.getActiveFeedSet(), partyProcessor.messageSelector);
     const feedWriteStream = createWritableFeedStream(feed);
-    const pipeline =
-      new Pipeline(partyProcessor, feedReadStream, feedWriteStream, this._replicatorFactory, this._options);
 
-    // Create party.
-    const party = new Party(this._modelFactory, pipeline, partyProcessor,
-      this._identityManager.keyring, this._identityManager.identityKey, this._networkManager);
+    // TODO(burdon): Move replicatorFactory to Party?
+    const pipeline = new Pipeline(
+      partyProcessor, feedReadStream, feedWriteStream, this._replicatorFactory, this._options);
 
+    //
+    // Create the party.
+    //
+    const party = new Party(
+      this._modelFactory, partyProcessor, pipeline, this._identityManager.keyring, this._identityManager.identityKey, this._networkManager);
+    log(`Constructed: ${party}`);
     return party;
   }
 
@@ -141,6 +156,7 @@ export class PartyFactory {
       this._identityManager.identityKey,
       invitationDescriptor
     );
+
     await initiator.connect();
     const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
     const { party } = await this.addParty(partyKey, hints);
@@ -148,7 +164,7 @@ export class PartyFactory {
     return party;
   }
 
-  // TODO(marik-d): Refactor this
+  // TODO(marik-d): Refactor this.
   private async _initWritableFeed (partyKey: PartyKey) {
     const feed = await this._feedStore.queryWritableFeed(partyKey) ??
       await this._feedStore.createWritableFeed(partyKey);
@@ -160,6 +176,7 @@ export class PartyFactory {
         type: KeyType.FEED
       });
     }
+
     return feed;
   }
 
