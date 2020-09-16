@@ -84,6 +84,7 @@ export class PartyManager {
    */
   async createHalo (): Promise<Party> {
     assert(this._opened, 'PartyManager is not open.');
+    assert(!this._identityManager.halo, 'HALO already exists.');
 
     return this._lock.executeSynchronized(async () => {
       const halo = await this._partyFactory.createHalo();
