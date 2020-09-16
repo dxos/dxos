@@ -164,10 +164,11 @@ export class PartyFactory {
   }
 
   private async _createHalo (): Promise<Party> {
-    await this._identityManager.initIdentity();
+    await this._identityManager.initialize();
     const { keyring, identityKey, deviceKey } = this._identityManager;
 
     // 1. Create a feed for the HALO.
+    // TODO(telackey): Just create the FeedKey and then let other code create the feed with the correct key.
     const feed = await this._feedStore.createWritableFeed(identityKey.publicKey);
     const writeToFeed = pify(feed.append.bind(feed));
     const feedKey = await keyring.addKeyRecord({

@@ -30,11 +30,11 @@ export class IdentityManager {
     return this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   }
 
-  // TODO(telackey): IdentityManager shouldn't create Identity keys.
-  async initIdentity () {
+  async initialize () {
     assert(!this.identityKey, 'IDENTITY key already exists.');
     assert(!this.deviceKey, 'DEVICE key already exists.');
 
+    // TODO(telackey): IdentityManager shouldn't create Identity keys. They have an external origin.
     await this._keyring.createKeyRecord({ type: KeyType.IDENTITY });
     await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
   }
