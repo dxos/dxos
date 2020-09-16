@@ -34,6 +34,7 @@ export class IdentityManager {
     return this._deviceKey;
   }
 
+  // TODO(telackey): IdentityManager shouldn't create Identity keys.
   async initIdentity () {
     assert(!this.identityKey, 'IDENTITY key already exists.');
     assert(!this.deviceKey, 'DEVICE key already exists.');
