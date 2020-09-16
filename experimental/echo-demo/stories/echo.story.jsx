@@ -3,27 +3,20 @@
 //
 
 import debug from 'debug';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ram from 'random-access-memory';
 import useResizeAware from 'react-resize-aware';
-import { withKnobs, button, number } from '@storybook/addon-knobs';
+import { withKnobs, number } from '@storybook/addon-knobs';
 import { makeStyles } from '@material-ui/core/styles';
 import { blueGrey } from '@material-ui/core/colors';
 
-import {
-  FullScreen,
-  Grid,
-  SVG,
-  useGrid,
-} from '@dxos/gem-core';
-
-import {
-  Markers
-} from '@dxos/gem-spore';
-
-import { randomBytes } from '@dxos/crypto';
+import { FullScreen, Grid, SVG, useGrid } from '@dxos/gem-core';
+import { Markers } from '@dxos/gem-spore';
+import { createId, randomBytes } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
-import { codec, createReplicatorFactory, Database, PartyManager, PartyFactory, FeedStoreAdapter } from '@dxos/experimental-echo-db';
+import {
+  codec, createReplicatorFactory, Database, PartyManager, PartyFactory, FeedStoreAdapter
+} from '@dxos/experimental-echo-db';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
@@ -47,14 +40,14 @@ const createDatabase = async (options) => {
 
   const networkManager = new NetworkManager(feedStore, new SwarmProvider());
   const partyFactory = new PartyFactory(feedStoreAdapter, modelFactory, networkManager);
-
   await partyFactory.initIdentity();
+
   const partyManager = new PartyManager(
     feedStoreAdapter,
     partyFactory
   );
 
-  return new Database(partyManager, options);
+  return new Database(partyManager);
 };
 
 const useStyles = makeStyles(() => ({
@@ -63,7 +56,7 @@ const useStyles = makeStyles(() => ({
     display: 'flex',
     flexDirection: 'column',
     '& > div': {
-      width: 300,
+      maxWidth: 300,
       overflow: 'hidden',
       padding: 8,
       margin: 8,
@@ -82,17 +75,22 @@ export const withDatabase = () => {
 
   const [peers, setPeers] = useState([]);
   useEffect(() => {
-    // TODO(burdon): Reuse existing.
-    setImmediate(async () => {
-      const peers = await Promise.all([...new Array(n)].map(async (_, i) => {
-        const id = `db-${i + 1}`;
-        const database = await createDatabase({ id });
-        console.log('Created:', String(database));
-        return { id, database };
-      }));
+    if (n > peers.length) {
+      setImmediate(async () => {
+        const newPeers = await Promise.all([...new Array(n - peers.length)].map(async (_, i) => {
+          const id = createId();
+          const database = await createDatabase({ id });
+          console.log('Created:', String(database));
+          return { id, database };
+        }));
 
-      setPeers(peers);
-    });
+        setPeers([...peers, ...newPeers]);
+      });
+    } else if (n < peers.length) {
+      const diff = peers.length - n;
+      peers.splice(peers.length - diff, diff);
+      setPeers([...peers]);
+    }
   }, [n]);
 
   return (
@@ -148,7 +146,6 @@ const Test = ({ peers, showGrid = false }) => {
         log('Invited Party:', String(remoteParty));
 
         // TODO(burdon): Bugs after creating multiple parties.
-
         // events.js:46 MaxListenersExceededWarning: Possible EventEmitter memory leak detected.
         // 11 feed listeners added. Use emitter.setMaxListeners() to increase limit
         //     at _addListener (http://localhost:9001/vendors~main.3e634c573a17f55911d9.bundle.js:265267:15)
@@ -157,13 +154,6 @@ const Test = ({ peers, showGrid = false }) => {
         //     at async Database.open (http://localhost:9001/main.3e634c573a17f55911d9.bundle.js:4448:9)
         //     at async Database.createParty (http://localhost:9001/main.3e634c573a17f55911d9.bundle.js:4463:9)
         //     at async http://localhost:9001/main.3e634c573a17f55911d9.bundle.js:11284:25
-
-        // events.js:46 MaxListenersExceededWarning: Possible EventEmitter memory leak detected.
-        // 11 feed listeners added. Use emitter.setMaxListeners() to increase limit
-        //     at _addListener (http://localhost:9001/vendors~main.1409ee48732d4f30e02a.bundle.js:265267:15)
-        //     at FeedStore.addListener (http://localhost:9001/vendors~main.1409ee48732d4f30e02a.bundle.js:265283:10)
-        //     at Object.createOrderedFeedStream (http://localhost:9001/main.1409ee48732d4f30e02a.bundle.js:5982:15)
-        //     at http://localhost:9001/main.1409ee48732d4f30e02a.bundle.js:5235:71
       }
     }));
   };

@@ -5,8 +5,7 @@
 import { Event } from '@dxos/async';
 import { PartyKey } from '@dxos/experimental-echo-protocol';
 
-import { SecretProvider } from './invitations/common';
-import { InvitationDescriptor } from './invitations/invitation-descriptor';
+import { InvitationDescriptor, SecretProvider } from './invitations';
 import { Party, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
 
@@ -38,7 +37,8 @@ export class Database {
 
   toString () {
     return `Database(${JSON.stringify({
-      parties: this._partyManager.parties.length, options: this._options
+      parties: this._partyManager.parties.length,
+      options: Object.keys(this._options).length ? this._options : undefined
     })})`;
   }
 
@@ -102,7 +102,8 @@ export class Database {
 
   /**
    * Joins a party that was created by another peer and starts replicating with it.
-   * @param invitation
+   * @param invitationDescriptor
+   * @param secretProvider
    */
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<Party> {
     return this._partyManager.joinParty(invitationDescriptor, secretProvider);

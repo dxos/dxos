@@ -23,6 +23,7 @@ export interface IReplicationAdapter {
 
 export type ReplicatorFactory = (partyKey: PartyKey, activeFeeds: FeedSetProvider) => IReplicationAdapter;
 
+// TODO(burdon): Comment (used by?)
 export function createReplicatorFactory (_networkManager: any, feedStore: FeedStoreAdapter, peerId: Buffer) {
   return (partyKey: PartyKey, activeFeeds: FeedSetProvider) => new ReplicationAdapter(
     _networkManager,
@@ -51,9 +52,18 @@ export class ReplicationAdapter implements IReplicationAdapter {
     if (this._started) {
       return;
     }
-    this._started = true;
 
+    this._started = true;
     this._networkManager.joinProtocolSwarm(this._partyKey, ({ channel }: any) => this._createProtocol(channel));
+  }
+
+  stop (): void {
+    if (!this._started) {
+      return;
+    }
+
+    // TODO(marik-d): Not implmented.
+    this._started = false;
   }
 
   private async _openFeed (key: FeedKey): Promise<hypercore.Feed> {
@@ -103,14 +113,7 @@ export class ReplicationAdapter implements IReplicationAdapter {
       .setSession({ peerId: this._peerId })
       .setExtensions([replicator.createExtension()])
       .init(channel);
-    return protocol;
-  }
 
-  stop (): void {
-    if (!this._started) {
-      return;
-    }
-    this._started = false;
-    // TODO(marik-d): Not implmented
+    return protocol;
   }
 }

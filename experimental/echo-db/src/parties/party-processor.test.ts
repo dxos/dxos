@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { assert } from 'console';
 import debug from 'debug';
 
-import { Keyring, KeyType, createPartyGenesisMessage, createFeedAdmitMessage, createKeyAdmitMessage, createEnvelopeMessage } from '@dxos/credentials';
+import {
+  Keyring, KeyType, createPartyGenesisMessage, createFeedAdmitMessage, createKeyAdmitMessage, createEnvelopeMessage
+} from '@dxos/credentials';
 import { IHaloStream } from '@dxos/experimental-echo-protocol';
 
 import { PartyProcessor } from './party-processor';

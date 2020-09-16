@@ -5,7 +5,7 @@
 import debug from 'debug';
 import ram from 'random-access-memory';
 
-import { humanize, randomBytes } from '@dxos/crypto';
+import { humanize } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { createLoggingTransform, latch, jsonReplacer } from '@dxos/experimental-util';
@@ -14,8 +14,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { codec } from './codec';
 import { Database } from './database';
 import { FeedStoreAdapter } from './feed-store-adapter';
-import { Party, PartyManager } from './parties';
-import { PartyFactory } from './parties/party-factory';
+import { Party, PartyFactory, PartyManager } from './parties';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 

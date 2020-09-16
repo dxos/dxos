@@ -78,6 +78,7 @@ export class PartyProcessor {
     return (candidates: FeedBlock[]) => 0;
   }
 
+  // TODO(burdon): Rename xxxProvider.
   getActiveFeedSet (): FeedSetProvider {
     return {
       get: () => this.feedKeys,
