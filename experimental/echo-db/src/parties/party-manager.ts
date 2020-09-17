@@ -103,6 +103,11 @@ export class PartyManager {
 
     return this._lock.executeSynchronized(async () => {
       const party = await this._partyFactory.createParty();
+      
+      if(this._parties.has(party.key)) {
+        await party.close();
+        throw new Error(`Party already exists ${keyToString(party.key)}`); // TODO(marik-d): Handle this gracefully
+      }
       this._parties.set(party.key, party);
       this.update.emit(party);
       return party;
@@ -124,6 +129,11 @@ export class PartyManager {
       log(`Adding party partyKey=${keyToString(partyKey)} feeds=${feeds.map(keyToString)}`);
       assert(!this._parties.has(partyKey));
       const { party } = await this._partyFactory.addParty(partyKey, feeds);
+      
+      if(this._parties.has(party.key)) {
+        await party.close();
+        throw new Error(`Party already exists ${keyToString(party.key)}`); // TODO(marik-d): Handle this gracefully
+      }
       this._parties.set(party.key, party);
       this.update.emit(party);
     });
@@ -134,7 +144,13 @@ export class PartyManager {
     assert(this._identityManager.initialized, 'IdentityManager has not been initialized with the HALO.');
 
     return this._lock.executeSynchronized(async () => {
+      // TODO(marik-d): Somehow check that we don't already have this party
       const party = await this._partyFactory.joinParty(invitationDescriptor, secretProvider);
+      
+      if(this._parties.has(party.key)) {
+        await party.close();
+        throw new Error(`Party already exists ${keyToString(party.key)}`); // TODO(marik-d): Handle this gracefully
+      }
       this._parties.set(party.key, party);
       this.update.emit(party);
       return party;

@@ -25,7 +25,7 @@ import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { EchoContext, EchoGraph, useDatabase } from '../src';
 
 const log = debug('dxos:echo:demo');
-debug.enable('dxos:echo:demo, dxos:*:error');
+debug.enable('dxos:echo:demo, dxos:*:error, dxos:*');
 
 export default {
   title: 'Demo',
