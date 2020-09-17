@@ -45,11 +45,7 @@ export const useParties = (): Party[] => {
       setParties(result.value);
     });
 
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    return () => unsubscribe?.();
   }, [database]);
 
   return parties;
