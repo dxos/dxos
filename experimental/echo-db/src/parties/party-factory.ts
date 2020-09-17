@@ -167,9 +167,11 @@ export class PartyFactory {
   // TODO(telackey): Combine with createParty?
   async createHalo (): Promise<Party> {
     const identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
-    const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
     assert(identityKey, 'Identity key required.');
-    assert(deviceKey, 'Device key required.');
+    let deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+    if (!deviceKey) {
+      deviceKey = await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
+    }
 
     // 1. Create a feed for the HALO.
     // TODO(telackey): Just create the FeedKey and then let other code create the feed with the correct key.

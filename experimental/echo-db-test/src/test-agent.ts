@@ -38,7 +38,6 @@ export default class TestAgent implements Agent {
     {
       const keyring = new Keyring();
       await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      await keyring.createKeyRecord({ type: KeyType.DEVICE });
       identityManager = new IdentityManager(keyring);
     }
 

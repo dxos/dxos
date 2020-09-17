@@ -27,11 +27,6 @@ export class IdentityManager {
     return this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
   }
 
-  // TODO(telackey): port DeviceManager?
-  get deviceKey () {
-    return this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
-  }
-
   get initialized () {
     return !!this._halo;
   }

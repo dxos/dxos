@@ -30,7 +30,6 @@ describe('Party manager', () => {
     {
       const keyring = new Keyring();
       await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      await keyring.createKeyRecord({ type: KeyType.DEVICE });
       identityManager = new IdentityManager(keyring);
     }
 
@@ -103,7 +102,6 @@ describe('Party manager', () => {
 
     const keyring = new Keyring();
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    await keyring.createKeyRecord({ type: KeyType.DEVICE });
     const identityManager = new IdentityManager(keyring);
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel.meta, ObjectModel);

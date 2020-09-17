@@ -40,7 +40,6 @@ const createDatabase = async (options) => {
   {
     const keyring = new Keyring();
     await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    await keyring.createKeyRecord({ type: KeyType.DEVICE });
     identityManager = new IdentityManager(keyring);
   }
 
