@@ -7,8 +7,9 @@ import { createContext, useEffect, useContext, useState, useRef } from 'react';
 import { humanize, keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';
 import { Database, Party, Item } from '@dxos/experimental-echo-db';
-import { ComplexMap } from '../../util/dist/src';
 import { PartyKey } from '@dxos/experimental-echo-protocol';
+
+import { ComplexMap } from '../../util/dist/src';
 
 //
 // SDK Prototype.
@@ -38,7 +39,7 @@ export const useParties = (): Party[] => {
   useEffect(asyncEffect(async () => {
     const result = await database.queryParties();
     setParties(result.value);
-    
+
     return result.subscribe(() => {
       setParties(result.value);
     });
@@ -139,14 +140,14 @@ const createGraphData = (
 export const useGraphData = ({ id }) => {
   const [data, setData] = useState<GraphData>(createGraphData(id));
   const parties = useParties();
-  
+
   // TODO(burdon): For open parties only.
   useEffect(asyncEffect(async () => {
     const partyMap = new ComplexMap<PartyKey, { party: Party, items: Item<any>[] }>(keyToString);
 
-    for(const party of parties) {
-      console.log(party, party.key)
-      partyMap.set(party.key, { party, items: [] })
+    for (const party of parties) {
+      console.log(party, party.key);
+      partyMap.set(party.key, { party, items: [] });
     }
     setData(createGraphData(id, partyMap));
 
@@ -158,8 +159,8 @@ export const useGraphData = ({ id }) => {
       return result.subscribe(() => {
         partyMap.set(party.key, { party, items: result.value });
         setData(createGraphData(id, partyMap));
-      })
-    })))
+      });
+    })));
   }), [parties]);
 
   return data;
@@ -167,18 +168,18 @@ export const useGraphData = ({ id }) => {
 
 /**
  * Turn array of callbacks into a single callback that calls them all.
- * @param callbacks 
+ * @param callbacks
  */
-function liftCallback(callbacks: (() => void)[]): () => void {
+function liftCallback (callbacks: (() => void)[]): () => void {
   return () => callbacks.forEach(cb => cb());
 }
 
 /**
  * Helper to use async functions inside effects
  */
-function asyncEffect(fun: () => Promise<(() => void) | undefined>): () => (() => void) | undefined {
+function asyncEffect (fun: () => Promise<(() => void) | undefined>): () => (() => void) | undefined {
   return () => {
-    const promise = fun()
-    return () => promise.then(cb => cb?.())
-  }
+    const promise = fun();
+    return () => promise.then(cb => cb?.());
+  };
 }

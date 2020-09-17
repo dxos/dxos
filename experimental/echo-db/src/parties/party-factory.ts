@@ -37,7 +37,7 @@ export class PartyFactory {
   // TODO(telackey): It might be better to take Keyring as a param to createParty/constructParty/etc.
   // TODO(marik-d): Maybe pass identityManager here instead to be able to copy genesis messages.
   constructor (
-    private readonly _keyring: Keyring, 
+    private readonly _keyring: Keyring,
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _modelFactory: ModelFactory,
     private readonly _networkManager: NetworkManager,

@@ -35,8 +35,8 @@ export class ReplicationAdapter {
       return;
     }
     this._started = true;
-    
-    log('Start', keyToString(this._partyKey))
+
+    log('Start', keyToString(this._partyKey));
     this._networkManager.joinProtocolSwarm(Buffer.from(this._partyKey), ({ channel }: any) => this._createProtocol(channel));
   }
 
@@ -44,7 +44,7 @@ export class ReplicationAdapter {
     if (!this._started) {
       return;
     }
-    log('Stop')
+    log('Stop');
 
     // TODO(marik-d): Not implmented.
     this._started = false;
