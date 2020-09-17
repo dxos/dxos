@@ -7,6 +7,7 @@ import hypercore from 'hypercore';
 
 import { discoveryKey, keyToString } from '@dxos/crypto';
 import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
+import { NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
@@ -24,7 +25,7 @@ export interface IReplicationAdapter {
 export type ReplicatorFactory = (partyKey: PartyKey, activeFeeds: FeedSetProvider) => IReplicationAdapter;
 
 // TODO(burdon): Comment (used by?)
-export function createReplicatorFactory (_networkManager: any, feedStore: FeedStoreAdapter, peerId: Buffer) {
+export function createReplicatorFactory (_networkManager: NetworkManager, feedStore: FeedStoreAdapter, peerId: Buffer) {
   return (partyKey: PartyKey, activeFeeds: FeedSetProvider) => new ReplicationAdapter(
     _networkManager,
     feedStore,
@@ -41,7 +42,7 @@ export class ReplicationAdapter implements IReplicationAdapter {
   private _started = false;
 
   constructor (
-    private readonly _networkManager: any,
+    private readonly _networkManager: NetworkManager,
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _peerId: Buffer,
     private readonly _partyKey: PartyKey,
@@ -54,7 +55,7 @@ export class ReplicationAdapter implements IReplicationAdapter {
     }
 
     this._started = true;
-    this._networkManager.joinProtocolSwarm(this._partyKey, ({ channel }: any) => this._createProtocol(channel));
+    this._networkManager.joinProtocolSwarm(Buffer.from(this._partyKey), ({ channel }: any) => this._createProtocol(channel));
   }
 
   stop (): void {

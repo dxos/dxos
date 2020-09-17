@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { Keyring } from '@dxos/credentials';
+import { KeyRecord, Keyring } from '@dxos/credentials';
 import { humanize } from '@dxos/crypto';
 import { ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
 import { ModelFactory, ModelType, ModelConstructor, Model } from '@dxos/experimental-model-factory';
@@ -41,7 +41,7 @@ export class Party {
     private readonly _partyProcessor: PartyProcessor,
     private readonly _pipeline: Pipeline,
     private readonly _keyring: Keyring,
-    private readonly _identityKeypair: any,
+    private readonly _identityKeypair: KeyRecord,
     private readonly _networkManager?: any // TODO(burdon): Optional?
   ) {
     assert(this._modelFactory);

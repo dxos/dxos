@@ -6,10 +6,6 @@ import { Keyring, KeyType, Filter } from '@dxos/credentials';
 
 import { Party } from './party';
 
-// TODO(telackey) @dxos/credentials was only half converted to TS. In its current state, the KeyRecord type
-// Aliasing to 'any' is a workaround for the compiler, but the fix is fully to convert @dxos/credentials to TS.
-export type KeyRecord = any;
-
 export class IdentityManager {
   // TODO(telackey): Party here is wrong, or at least incomplete. To build KeyChains and retrieve Identity "genesis"
   // messages, we need the PartyStateMachine, whether directly or indirectly.

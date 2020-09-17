@@ -1157,10 +1157,48 @@
     lodash.merge "^4.6.2"
     protobufjs "^6.9.0"
 
-"@dxos/credentials@^1.0.1-beta.29", "@dxos/credentials@^1.0.1-beta.36", "@dxos/credentials@^1.0.1-beta.37", "@dxos/credentials@^1.0.1-canary.5+999327e":
+"@dxos/credentials@^1.0.1-beta.29", "@dxos/credentials@^1.0.1-beta.36", "@dxos/credentials@^1.0.1-canary.5+999327e":
   version "1.0.1-canary.5"
   resolved "http://npm.dev.dxos.network:5736/@dxos%2fcredentials/-/credentials-1.0.1-canary.5.tgz#3eb7f36ae53b73cfc2dd31ca293b2820903e21e9"
   integrity sha512-+LWi7K+s7MUVBNfcWx9MJF5MaPUXhtRlLTExyKeU4fFu5h5m93xX7HAuNS05bZDWlRP6mx/xV+qggdHFRcqxiQ==
+  dependencies:
+    "@dxos/codec-protobuf" "^1.1.0-beta.10"
+    "@dxos/crypto" "^1.0.0-beta.1"
+    "@dxos/feed-store" "^1.2.0-beta.23"
+    "@dxos/protocol" "^1.1.0-beta.1"
+    "@types/pify" "^3.0.2"
+    "@types/pump" "^1.1.0"
+    bip39 "^3.0.2"
+    buffer-json-encoding "^1.0.2"
+    crypto-js "^3.1.9-1"
+    debug "^4.1.1"
+    encoding-down "^6.3.0"
+    end-of-stream "^1.4.1"
+    hypercore-crypto "^1.0.0"
+    hypercore-protocol "^6.11.1"
+    hypertrie "^3.8.0"
+    json-stable-stringify "^1.0.1"
+    leveldown "^5.4.1"
+    levelup "^4.3.2"
+    lodash.defaultsdeep "^4.6.1"
+    lodash.get "^4.4.2"
+    lodash.isobject "^3.0.2"
+    lodash.isplainobject "^4.0.6"
+    lodash.mapvalues "^4.6.0"
+    lodash.matches "^4.6.0"
+    memdown "^5.1.0"
+    moment "^2.24.0"
+    ngraph.graph "^18.0.1"
+    pump "^3.0.0"
+    queue-microtask "^1.1.2"
+    source-map-support "^0.5.12"
+    stream-to-array "^2.3.0"
+    uuid "^3.3.2"
+
+"@dxos/credentials@^1.0.1-beta.43":
+  version "1.0.1-beta.43"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fcredentials/-/credentials-1.0.1-beta.43.tgz#93ccaa7f83f62239970f4fba491b860cd1465f39"
+  integrity sha512-neumjllOhDA+B1WGZpLNTommfoTQofrY9pnplhu52OebAy+XSoAPl5WAhUBs79SBWPyKzEfXEj8FUuXBnJ2x9g==
   dependencies:
     "@dxos/codec-protobuf" "^1.1.0-beta.10"
     "@dxos/crypto" "^1.0.0-beta.1"
@@ -1350,6 +1388,20 @@
   integrity sha512-UcGs4Mc/gRuTir4dseIXDiEYSv+BbRgXecThBtfdQLaXe8CIFXwP7VOYsaAqRO4w/rrf7PCdsMnawHL0GwxZAg==
   dependencies:
     "@babel/plugin-transform-runtime" "^7.9.6"
+    "@dxos/crypto" "^1.0.0-beta.1"
+    "@dxos/metrics" "^1.0.0-beta.6"
+    "@dxos/protocol" "^1.1.0-beta.1"
+    "@geut/discovery-swarm-webrtc" "^3.0.0-beta.3"
+    "@wirelineio/discovery-swarm-memory" "^0.2.17"
+    assert "^2.0.0"
+    debug "^4.1.1"
+    wrtc "^0.4.3"
+
+"@dxos/network-manager@1.0.0-beta.106":
+  version "1.0.0-beta.106"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fnetwork-manager/-/network-manager-1.0.0-beta.106.tgz#e11b199d1ae665ffee437a4ea1cf7620b751bfb3"
+  integrity sha512-Kgz1Z98SFPjnHeaUt9RUMu8RwNztl2zBN0qc2/wCUSOBVEmabSVAS5iXXbDjOPwiv7vr9whSdVqqwGmO5iLnEw==
+  dependencies:
     "@dxos/crypto" "^1.0.0-beta.1"
     "@dxos/metrics" "^1.0.0-beta.6"
     "@dxos/protocol" "^1.1.0-beta.1"

@@ -9,11 +9,13 @@ import { Event } from '@dxos/async';
 import {
   createEnvelopeMessage, Greeter,
   GreetingCommandPlugin,
+  KeyRecord,
   Keyring,
   KeyType
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
 import { FeedKey, PartyKey, SwarmKey } from '@dxos/experimental-echo-protocol';
+import { NetworkManager } from '@dxos/network-manager';
 
 import { Party } from '../parties';
 import { SecretProvider, SecretValidator } from './common';
@@ -55,10 +57,10 @@ export class GreetingResponder {
   constructor (
     private readonly _partyKey: PartyKey, // TODO(burdon): Move to bottom.
     private readonly _keyring: Keyring,
-    private readonly _networkManager: any,
+    private readonly _networkManager: NetworkManager,
     private readonly _writeStream: NodeJS.WritableStream,
     private readonly _getMemberFeeds: () => FeedKey[], // TODO(burdon): Is callback required?
-    private readonly _identityKeypair: any // TODO(marik-d): Use proper type once @dxos/credentials exports them
+    private readonly _identityKeypair: KeyRecord
   ) {
     this._greeter = new Greeter(
       Buffer.from(this._partyKey),
@@ -148,7 +150,7 @@ export class GreetingResponder {
 
     // As the Greeter, use the topic as our peerId.
     // (For reasons why see detailed comment on greetClient).
-    await this._networkManager.joinProtocolSwarm(this._swarmKey,
+    await this._networkManager.joinProtocolSwarm(Buffer.from(this._swarmKey),
       greetingProtocolProvider(this._swarmKey, this._swarmKey, [this._greeterPlugin]));
 
     log(`Greeting for: ${keyToString(this._partyKey)} on swarmKey ${keyToString(this._swarmKey)}`);
@@ -164,7 +166,7 @@ export class GreetingResponder {
   async stop () {
     log('Stopping...');
     if (this._swarmKey) {
-      await this._networkManager.leaveProtocolSwarm(this._swarmKey);
+      await this._networkManager.leaveProtocolSwarm(Buffer.from(this._swarmKey));
     }
 
     this._state = GreetingState.STOPPED;
@@ -217,7 +219,7 @@ export class GreetingResponder {
       //     return matchCount === myAdmits.length;
       //   });
 
-      const envelope = createEnvelopeMessage(this._keyring, Buffer.from(this._partyKey), message, this._identityKeypair, null);
+      const envelope = createEnvelopeMessage(this._keyring, Buffer.from(this._partyKey), message, [this._identityKeypair], null);
       this._writeStream.write(envelope as any, () => { /** TODO(marik-d): await callback */ });
 
       // await partyMessageWaiter;
