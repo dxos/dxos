@@ -7,6 +7,8 @@ import { createContext, useEffect, useContext, useState, useRef } from 'react';
 import { humanize, keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';
 import { Database, Party, Item } from '@dxos/experimental-echo-db';
+import { ComplexMap } from '../../util/dist/src';
+import { PartyKey } from '@dxos/experimental-echo-protocol';
 
 //
 // SDK Prototype.
@@ -33,20 +35,14 @@ export const useParties = (): Party[] => {
   const { database } = useContext(EchoContext);
   const [parties, setParties] = useState<Party[]>([]);
 
-  useEffect(() => {
-    let unsubscribe;
-    setImmediate(async () => {
-      // TODO(burdon): Make synchronous?
-      const result = await database.queryParties();
-      unsubscribe = result.subscribe(() => {
-        setParties(result.value);
-      });
-
+  useEffect(asyncEffect(async () => {
+    const result = await database.queryParties();
+    setParties(result.value);
+    
+    return result.subscribe(() => {
       setParties(result.value);
     });
-
-    return () => unsubscribe?.();
-  }, [database]);
+  }), [database]);
 
   return parties;
 };
@@ -84,7 +80,7 @@ interface GraphData {
 }
 
 const createGraphData = (
-  id, partyMap: Map<string, { party: Party, items: Item<any>[] }> = undefined
+  id, partyMap: ComplexMap<PartyKey, { party: Party, items: Item<any>[] }> = undefined
 ) => {
   const rootId = `__root_${id}__`;
   const data = {
@@ -141,47 +137,48 @@ const createGraphData = (
  * Generate GEM graph data.
  */
 export const useGraphData = ({ id }) => {
-  const subscriptions = useRef(new Map<string, Function>([]));
-  const partyMap = useRef(new Map<string, { party: Party, items: Item<any>[] }>());
   const [data, setData] = useState<GraphData>(createGraphData(id));
   const parties = useParties();
-
+  
   // TODO(burdon): For open parties only.
-  useEffect(() => {
-    // Remove obsolete parties.
-    partyMap.current.forEach(({ party }) => {
-      if (!parties.find(p => Buffer.compare(p.key, party.key) !== 0)) {
-        const partyKey = keyToString(party.key);
-        subscriptions.current.get(partyKey)();
-        subscriptions.current.delete(partyKey);
-        partyMap.current.delete(partyKey);
-      }
-    });
+  useEffect(asyncEffect(async () => {
+    const partyMap = new ComplexMap<PartyKey, { party: Party, items: Item<any>[] }>(keyToString);
 
-    // Create party subscriptions.
-    parties.forEach(async party => {
-      const partyKey = keyToString(party.key);
-      if (!subscriptions.current.has(partyKey)) {
-        const result = await party.queryItems();
-        const updateParty = () => {
-          partyMap.current.set(partyKey, { party, items: result.value });
-          setData(createGraphData(id, partyMap.current));
-        };
+    for(const party of parties) {
+      console.log(party, party.key)
+      partyMap.set(party.key, { party, items: [] })
+    }
+    setData(createGraphData(id, partyMap));
 
-        subscriptions.current.set(partyKey, result.subscribe(updateParty));
-        updateParty();
-      }
-    });
+    return liftCallback(await Promise.all(parties.map(async party => {
+      const result = await party.queryItems();
 
-    // Update.
-    setData(createGraphData(id, partyMap.current));
-
-    return () => {
-      for (const unsubscribe of subscriptions.current.values()) {
-        unsubscribe();
-      }
-    };
-  }, [parties]);
+      partyMap.set(party.key, { party, items: result.value });
+      setData(createGraphData(id, partyMap));
+      return result.subscribe(() => {
+        partyMap.set(party.key, { party, items: result.value });
+        setData(createGraphData(id, partyMap));
+      })
+    })))
+  }), [parties]);
 
   return data;
 };
+
+/**
+ * Turn array of callbacks into a single callback that calls them all.
+ * @param callbacks 
+ */
+function liftCallback(callbacks: (() => void)[]): () => void {
+  return () => callbacks.forEach(cb => cb());
+}
+
+/**
+ * Helper to use async functions inside effects
+ */
+function asyncEffect(fun: () => Promise<(() => void) | undefined>): () => (() => void) | undefined {
+  return () => {
+    const promise = fun()
+    return () => promise.then(cb => cb?.())
+  }
+}
