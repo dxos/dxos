@@ -3,8 +3,8 @@
 //
 
 import debug from 'debug';
+import leveljs from 'level-js';
 import React, { useEffect, useState } from 'react';
-import ram from 'random-access-memory';
 import useResizeAware from 'react-resize-aware';
 import { withKnobs, number } from '@storybook/addon-knobs';
 import { makeStyles } from '@material-ui/core/styles';
@@ -17,10 +17,11 @@ import { FeedStore } from '@dxos/feed-store';
 import {
   codec, Database, PartyManager, PartyFactory, FeedStoreAdapter, IdentityManager
 } from '@dxos/experimental-echo-db';
-import { Keyring, KeyType } from '@dxos/credentials';
+import { Keyring, KeyType, KeyStore } from '@dxos/credentials';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
+import { createStorage } from '@dxos/random-access-multi-storage';
 
 import { EchoContext, EchoGraph, useDatabase } from '../src';
 
@@ -33,13 +34,14 @@ export default {
 };
 
 const createDatabase = async (options) => {
-  const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+  const feedStore = new FeedStore(createStorage('dxos/echo-demo'), { feedOptions: { valueEncoding: codec } });
   const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
   let identityManager;
   {
-    const keyring = new Keyring();
-    await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    const keystore = new KeyStore(leveljs('dxos/echo-demo/keystore'));
+    const keyring = new Keyring(keystore);
+    await keyring.load();
     identityManager = new IdentityManager(keyring);
   }
 
@@ -51,7 +53,11 @@ const createDatabase = async (options) => {
   const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
   await partyManager.open();
-  await partyManager.createHalo();
+
+  if (!identityManager.identityKey) {
+    await identityManager.keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    await partyManager.createHalo();
+  }
 
   return new Database(partyManager);
 };

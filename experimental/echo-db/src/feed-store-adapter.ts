@@ -7,7 +7,7 @@ import { Feed } from 'hypercore';
 
 import { createId } from '@dxos/crypto';
 import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedStore, FeedDescriptor } from '@dxos/feed-store';
 
 /**
  * An adapter class to better define the API surface of FeedStore we use.
@@ -25,7 +25,16 @@ export class FeedStoreAdapter {
   }
 
   async open () {
-    await this._feedStore.open();
+    if (!this._feedStore.opened) {
+      await this._feedStore.open();
+    }
+    // TODO(telackey): There may be a better way to do this, but at the moment,
+    // we don't have any feeds we don't need to be open.
+    for await (const descriptor of this._feedStore.getDescriptors()) {
+      if (!descriptor.opened) {
+        await this._feedStore.openFeed(descriptor.path, descriptor.metadata);
+      }
+    }
   }
 
   async close () {

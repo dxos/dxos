@@ -55,15 +55,21 @@ export class PartyManager {
       await this._feedStore.open();
 
       // Open the HALO first (if present).
-      if (this._feedStore.queryWritableFeed(this._identityManager.identityKey.publicKey)) {
-        const { party: halo } = await this._partyFactory.constructParty(this._identityManager.identityKey.publicKey);
-        await this._identityManager.initialize(halo);
+      if (this._identityManager.identityKey) {
+        if (this._feedStore.queryWritableFeed(this._identityManager.identityKey.publicKey)) {
+          const { party: halo } = await this._partyFactory.constructParty(this._identityManager.identityKey.publicKey);
+          // Always open the HALO.
+          await halo.open();
+          await this._identityManager.initialize(halo);
+        }
       }
 
       // Iterate descriptors and pre-create Party objects.
       for (const partyKey of this._feedStore.getPartyKeys()) {
         if (!this._parties.has(partyKey) && !this._isHalo(partyKey)) {
           const { party } = await this._partyFactory.constructParty(partyKey);
+          // TODO(telackey): Should parties be auto-opened?
+          await party.open();
           this._parties.set(party.key, party);
           this.update.emit(party);
         }
