@@ -51,6 +51,7 @@ export class PartyManager {
 
   async open () {
     return this._lock.executeSynchronized(async () => {
+      if(this._opened) return;
       await this._feedStore.open();
 
       // Open the HALO first (if present).
