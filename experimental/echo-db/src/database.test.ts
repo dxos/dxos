@@ -17,6 +17,7 @@ import { Database } from './database';
 import { FeedStoreAdapter } from './feed-store-adapter';
 import { IdentityManager, Party, PartyManager } from './parties';
 import { PartyFactory } from './parties/party-factory';
+import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 
@@ -40,7 +41,7 @@ const createDatabase = async (verbose = true) => {
     writeLogger: createLoggingTransform((message: any) => { log('<<<', JSON.stringify(message, jsonReplacer, 2)); })
   } : undefined;
 
-  const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, undefined);
+  const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
   const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
   await partyManager.open();

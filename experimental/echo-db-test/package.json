@@ -8,6 +8,7 @@
     "lint": "eslint 'src/**/*.ts'"
   },
   "dependencies": {
+    "@dxos/credentials": "^1.0.1-beta.43",
     "@dxos/experimental-echo-db": "^1.0.0-beta.28",
     "@dxos/node-spawner": "^1.0.0-canary.60",
     "@dxos/experimental-model-factory": "^1.0.0-beta.28",

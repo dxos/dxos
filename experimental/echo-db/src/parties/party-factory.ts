@@ -17,7 +17,6 @@ import { NetworkManager } from '@dxos/network-manager';
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { GreetingInitiator, InvitationDescriptor, SecretProvider } from '../invitations';
 import { createReplicatorFactory, ReplicatorFactory } from '../replication';
-import { IdentityManager } from './identity-manager';
 import { Party, PARTY_ITEM_TYPE } from './party';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
@@ -35,18 +34,18 @@ const log = debug('dxos:echo:party-factory');
  */
 export class PartyFactory {
   // TODO(burdon): MemoryNetworkManager by default.
-  private readonly _replicatorFactory: ReplicatorFactory | undefined;
+  private readonly _replicatorFactory: ReplicatorFactory;
 
   // TODO(telackey): It might be better to take Keyring as a param to createParty/constructParty/etc.
   constructor (
     private readonly _keyring: Keyring,
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _modelFactory: ModelFactory,
-    private readonly _networkManager: NetworkManager | undefined, // TODO(burdon): By default provide MemoryNetworkManager?
+    private readonly _networkManager: NetworkManager,
     peerId: Buffer = randomBytes(), // TODO(burdon): If optional move to options?
     private readonly _options: Options = {}
   ) {
-    this._replicatorFactory = _networkManager && createReplicatorFactory(_networkManager, this._feedStore, peerId);
+    this._replicatorFactory = createReplicatorFactory(_networkManager, this._feedStore, peerId);
   }
 
   /**
@@ -58,7 +57,7 @@ export class PartyFactory {
     // TODO(telackey): Proper identity and keyring management.
     const partyKey = await this._keyring.createKeyRecord({ type: KeyType.PARTY });
 
-    const { feed, feedKey } = await this._initWritableFeed(partyKey.publicKey);
+    const { feedKey } = await this._initWritableFeed(partyKey.publicKey);
 
     const { party, pipeline } = await this.constructParty(partyKey.publicKey, []);
 
@@ -130,7 +129,7 @@ export class PartyFactory {
 
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<Party> {
     const initiator = new GreetingInitiator(
-      this._networkManager!,
+      this._networkManager,
       this._keyring,
       async partyKey => {
         const { feedKey } = await this._initWritableFeed(partyKey);

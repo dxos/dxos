@@ -17,6 +17,7 @@ import { FeedStoreAdapter } from '../feed-store-adapter';
 import { IdentityManager } from './identity-manager';
 import { PartyFactory } from './party-factory';
 import { PartyManager } from './party-manager';
+import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 
 const log = debug('dxos:echo:party-manager-test');
 
@@ -34,7 +35,7 @@ describe('Party manager', () => {
     }
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel.meta, ObjectModel);
-    const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, undefined);
+    const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
     const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
     await partyManager.open();
