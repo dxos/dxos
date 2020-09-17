@@ -28,6 +28,7 @@ export class PartyProcessor {
   protected readonly _feedAdded = new Event<FeedKey>()
 
   // Current timeframe.
+  // TODO(marik-d): Move into separate class
   private _timeframe = spacetime.createTimeframe();
 
   private readonly _stateMachine: PartyStateMachine;

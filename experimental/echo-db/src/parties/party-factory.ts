@@ -16,7 +16,7 @@ import { NetworkManager } from '@dxos/network-manager';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { GreetingInitiator, InvitationDescriptor, SecretProvider } from '../invitations';
-import { createReplicatorFactory, ReplicatorFactory } from '../replication';
+import { ReplicationAdapter } from '../replication';
 import { Party, PARTY_ITEM_TYPE } from './party';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
@@ -25,6 +25,7 @@ interface Options {
   readLogger?: NodeJS.ReadWriteStream;
   writeLogger?: NodeJS.ReadWriteStream;
   readOnly?: boolean;
+  peerId?: Buffer,
 }
 
 const log = debug('dxos:echo:party-factory');
@@ -33,20 +34,15 @@ const log = debug('dxos:echo:party-factory');
  * Manages the lifecycle of parties.
  */
 export class PartyFactory {
-  // TODO(burdon): MemoryNetworkManager by default.
-  private readonly _replicatorFactory: ReplicatorFactory;
-
   // TODO(telackey): It might be better to take Keyring as a param to createParty/constructParty/etc.
+  // TODO(marik-d): Maybe pass identityManager here instead to be able to copy genesis messages.
   constructor (
-    private readonly _keyring: Keyring,
+    private readonly _keyring: Keyring, 
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _modelFactory: ModelFactory,
     private readonly _networkManager: NetworkManager,
-    peerId: Buffer = randomBytes(), // TODO(burdon): If optional move to options?
     private readonly _options: Options = {}
-  ) {
-    this._replicatorFactory = createReplicatorFactory(_networkManager, this._feedStore, peerId);
-  }
+  ) {}
 
   /**
    * Create a new party with a new feed for it. Writes a party genensis message to this feed.
@@ -114,15 +110,22 @@ export class PartyFactory {
       this._feedStore.feedStore, partyProcessor.getActiveFeedSet(), partyProcessor.messageSelector);
     const feedWriteStream = createWritableFeedStream(feed);
 
-    // TODO(burdon): Move replicatorFactory to Party?
     const pipeline = new Pipeline(
-      partyProcessor, feedReadStream, feedWriteStream, this._replicatorFactory, this._options);
+      partyProcessor, feedReadStream, feedWriteStream, this._options);
+
+    const replicator = new ReplicationAdapter(
+      this._networkManager,
+      this._feedStore,
+      this._options.peerId ?? randomBytes(),
+      partyKey,
+      partyProcessor.getActiveFeedSet()
+    );
 
     //
     // Create the party.
     //
     const party = new Party(
-      this._modelFactory, partyProcessor, pipeline, this._keyring, this._getIdentityKey(), this._networkManager);
+      this._modelFactory, partyProcessor, pipeline, this._keyring, this._getIdentityKey(), this._networkManager, replicator);
     log(`Constructed: ${party}`);
     return { party, pipeline };
   }

@@ -16,29 +16,10 @@ import { FeedSetProvider } from './parties';
 
 const log = debug('dxos:echo:replication-adapter');
 
-// TODO(burdon): Comment.
-export interface IReplicationAdapter {
-  start(): void
-  stop(): void
-}
-
-export type ReplicatorFactory = (partyKey: PartyKey, activeFeeds: FeedSetProvider) => IReplicationAdapter;
-
-// TODO(burdon): Comment (used by?)
-export function createReplicatorFactory (_networkManager: NetworkManager, feedStore: FeedStoreAdapter, peerId: Buffer) {
-  return (partyKey: PartyKey, activeFeeds: FeedSetProvider) => new ReplicationAdapter(
-    _networkManager,
-    feedStore,
-    peerId,
-    partyKey,
-    activeFeeds
-  );
-}
-
 /**
  * Joins a network swarm with replication protocol. Coordinates opening new feeds in the feed store.
  */
-export class ReplicationAdapter implements IReplicationAdapter {
+export class ReplicationAdapter {
   private _started = false;
 
   constructor (

@@ -6,18 +6,18 @@ import debug from 'debug';
 import ram from 'random-access-memory';
 
 import { Keyring, KeyType } from '@dxos/credentials';
-import { humanize, randomBytes } from '@dxos/crypto';
+import { humanize } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { createLoggingTransform, latch, jsonReplacer } from '@dxos/experimental-util';
 import { FeedStore } from '@dxos/feed-store';
+import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 
 import { codec } from './codec';
 import { Database } from './database';
 import { FeedStoreAdapter } from './feed-store-adapter';
 import { IdentityManager, Party, PartyManager } from './parties';
 import { PartyFactory } from './parties/party-factory';
-import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 

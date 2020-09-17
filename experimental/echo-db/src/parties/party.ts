@@ -9,11 +9,13 @@ import { humanize } from '@dxos/crypto';
 import { ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
 import { ModelFactory, ModelType, ModelConstructor, Model } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
+import { NetworkManager } from '@dxos/network-manager';
 
 import {
   GreetingResponder, InvitationDetails, InvitationDescriptor, InvitationDescriptorType
 } from '../invitations';
 import { createItemDemuxer, Item, ItemFilter, ItemManager } from '../items';
+import { ReplicationAdapter } from '../replication';
 import { ResultSet } from '../result';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
@@ -42,7 +44,8 @@ export class Party {
     private readonly _pipeline: Pipeline,
     private readonly _keyring: Keyring,
     private readonly _identityKeypair: KeyRecord,
-    private readonly _networkManager?: any // TODO(burdon): Optional?
+    private readonly _networkManager: NetworkManager,
+    private readonly _replicator: ReplicationAdapter
   ) {
     assert(this._modelFactory);
     assert(this._partyProcessor);
@@ -79,6 +82,9 @@ export class Party {
     this._itemDemuxer = createItemDemuxer(this._itemManager);
     readStream.pipe(this._itemDemuxer);
 
+    // Replication.
+    this._replicator.start();
+
     // TODO(burdon): Propagate errors.
     this._unsubscribePipelineErrors = this._pipeline.errors.on(err => console.error(err));
 
@@ -92,6 +98,8 @@ export class Party {
     if (!this._itemManager) {
       return this;
     }
+
+    this._replicator.stop();
 
     // Disconnect the read stream.
     this._pipeline.readStream?.unpipe(this._itemDemuxer);

@@ -11,13 +11,13 @@ import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { createWritableFeedStream, latch } from '@dxos/experimental-util';
 import { FeedStore } from '@dxos/feed-store';
+import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 
 import { codec } from '../codec';
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { IdentityManager } from './identity-manager';
 import { PartyFactory } from './party-factory';
 import { PartyManager } from './party-manager';
-import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 
 const log = debug('dxos:echo:party-manager-test');
 
