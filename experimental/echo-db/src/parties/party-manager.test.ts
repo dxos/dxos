@@ -22,7 +22,7 @@ import { PartyManager } from './party-manager';
 const log = debug('dxos:echo:party-manager-test');
 
 describe('Party manager', () => {
-  const setup = async () => {
+  const setup = async (open = true) => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
@@ -38,8 +38,10 @@ describe('Party manager', () => {
     const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
     const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
-    await partyManager.open();
-    await partyManager.createHalo();
+    if (open) {
+      await partyManager.open();
+      await partyManager.createHalo();
+    }
 
     return { feedStore, partyManager };
   };
@@ -96,10 +98,19 @@ describe('Party manager', () => {
   });
 
   test('Create from cold start', async () => {
-    const { feedStore, partyManager } = await setup();
+    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
     const keyring = new Keyring();
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    await keyring.createKeyRecord({ type: KeyType.DEVICE });
+    const identityManager = new IdentityManager(keyring);
+
+    const modelFactory = new ModelFactory().registerModel(ObjectModel.meta, ObjectModel);
+    const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
+    const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
+
+    await feedStore.open();
 
     const numParties = 3;
 
@@ -110,23 +121,20 @@ describe('Party manager', () => {
     // same storage.
 
     // Create raw parties.
-    {
-      let i = 0;
-      while (i++ < numParties) {
-        const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    for (let i = 0; i < numParties; i++) {
+      const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
-        // TODO(burdon): Create multiple feeds.
-        const feed = await feedStore.openFeed(partyKey.key,
-          { metadata: { partyKey: partyKey.publicKey, writable: true } } as any);
-        const feedKey = await keyring.addKeyRecord({
-          publicKey: feed.key,
-          secretKey: feed.secretKey,
-          type: KeyType.FEED
-        });
+      // TODO(burdon): Create multiple feeds.
+      const feed = await feedStore.openFeed(partyKey.key,
+        { metadata: { partyKey: partyKey.publicKey, writable: true } } as any);
+      const feedKey = await keyring.addKeyRecord({
+        publicKey: feed.key,
+        secretKey: feed.secretKey,
+        type: KeyType.FEED
+      });
 
-        const feedStream = createWritableFeedStream(feed);
-        feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey) });
-      }
+      const feedStream = createWritableFeedStream(feed);
+      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey) });
     }
 
     // Open.

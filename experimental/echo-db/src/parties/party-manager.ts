@@ -61,7 +61,7 @@ export class PartyManager {
       }
 
       // Iterate descriptors and pre-create Party objects.
-      for await (const partyKey of this._feedStore.getPartyKeys()) {
+      for (const partyKey of this._feedStore.getPartyKeys()) {
         if (!this._parties.has(partyKey) && !this._isHalo(partyKey)) {
           const { party } = await this._partyFactory.constructParty(partyKey);
           this._parties.set(party.key, party);
