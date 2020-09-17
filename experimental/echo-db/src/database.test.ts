@@ -5,22 +5,33 @@
 import debug from 'debug';
 import ram from 'random-access-memory';
 
+import { Keyring, KeyType } from '@dxos/credentials';
 import { humanize } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { createLoggingTransform, latch, jsonReplacer } from '@dxos/experimental-util';
 import { FeedStore } from '@dxos/feed-store';
+import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 
 import { codec } from './codec';
 import { Database } from './database';
 import { FeedStoreAdapter } from './feed-store-adapter';
-import { Party, PartyFactory, PartyManager } from './parties';
+import { IdentityManager, Party, PartyManager } from './parties';
+import { PartyFactory } from './parties/party-factory';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 
 const createDatabase = async (verbose = true) => {
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
   const feedStoreAdapter = new FeedStoreAdapter(feedStore);
+
+  let identityManager;
+  {
+    const keyring = new Keyring();
+    await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    await keyring.createKeyRecord({ type: KeyType.DEVICE });
+    identityManager = new IdentityManager(keyring);
+  }
 
   const modelFactory = new ModelFactory()
     .registerModel(ObjectModel.meta, ObjectModel);
@@ -30,9 +41,12 @@ const createDatabase = async (verbose = true) => {
     writeLogger: createLoggingTransform((message: any) => { log('<<<', JSON.stringify(message, jsonReplacer, 2)); })
   } : undefined;
 
-  const partyFactory = new PartyFactory(feedStoreAdapter, modelFactory, undefined);
-  await partyFactory.initIdentity();
-  const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
+  const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
+  const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
+
+  await partyManager.open();
+  await partyManager.createHalo();
+
   return new Database(partyManager, options);
 };
 

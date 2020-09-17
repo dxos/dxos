@@ -28,8 +28,6 @@ export interface Options {
  * `Spactime` `Timeframe` (which implements a vector clock).
  */
 export class Database {
-  private readonly _partyUpdate = new Event<Party>();
-
   constructor (
     private readonly _partyManager: PartyManager,
     private readonly _options: Options = {}
@@ -73,9 +71,6 @@ export class Database {
     const party = await this._partyManager.createParty();
     await party.open();
 
-    // Notify update event.
-    setImmediate(() => this._partyUpdate.emit(party));
-
     return party;
   }
 
@@ -97,7 +92,7 @@ export class Database {
   async queryParties (filter?: PartyFilter): Promise<ResultSet<Party>> {
     await this.open();
 
-    return new ResultSet<Party>(this._partyUpdate, () => this._partyManager.parties);
+    return new ResultSet<Party>(this._partyManager.update, () => this._partyManager.parties);
   }
 
   /**

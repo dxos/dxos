@@ -12,11 +12,12 @@ import { blueGrey } from '@material-ui/core/colors';
 
 import { FullScreen, Grid, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
-import { createId, randomBytes } from '@dxos/crypto';
+import { createId } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 import {
-  codec, createReplicatorFactory, Database, PartyManager, PartyFactory, FeedStoreAdapter
+  codec, Database, PartyManager, PartyFactory, FeedStoreAdapter, IdentityManager
 } from '@dxos/experimental-echo-db';
+import { Keyring, KeyType } from '@dxos/credentials';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
@@ -35,17 +36,23 @@ const createDatabase = async (options) => {
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
   const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
+  let identityManager;
+  {
+    const keyring = new Keyring();
+    await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    await keyring.createKeyRecord({ type: KeyType.DEVICE });
+    identityManager = new IdentityManager(keyring);
+  }
+
   const modelFactory = new ModelFactory()
     .registerModel(ObjectModel.meta, ObjectModel);
 
   const networkManager = new NetworkManager(feedStore, new SwarmProvider());
-  const partyFactory = new PartyFactory(feedStoreAdapter, modelFactory, networkManager);
-  await partyFactory.initIdentity();
+  const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, networkManager);
+  const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
-  const partyManager = new PartyManager(
-    feedStoreAdapter,
-    partyFactory
-  );
+  await partyManager.open();
+  await partyManager.createHalo();
 
   return new Database(partyManager);
 };

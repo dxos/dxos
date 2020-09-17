@@ -12,7 +12,6 @@ import { Event } from '@dxos/async';
 import { protocol, createFeedMeta, FeedBlock, IEchoStream } from '@dxos/experimental-echo-protocol';
 import { createTransform, jsonReplacer } from '@dxos/experimental-util';
 
-import { ReplicatorFactory, IReplicationAdapter } from '../replication';
 import { PartyProcessor } from './party-processor';
 
 interface Options {
@@ -40,9 +39,6 @@ export class Pipeline {
   private readonly _feedWriteStream?: NodeJS.WritableStream;
 
   //
-  private readonly _replicatorFactory?: ReplicatorFactory;
-
-  //
   private readonly _options: Options;
 
   // TODO(burdon): Rename streams.
@@ -56,9 +52,6 @@ export class Pipeline {
   // Halo messages to write into pipeline.
   private _haloWriteStream: Writable | undefined;
 
-  // TODO(burdon): Factor out.
-  private _replicationAdapter?: IReplicationAdapter;
-
   /**
    * @param {PartyProcessor} partyProcessor - Processes HALO messages to update party state.
    * @param feedReadStream - Inbound messages from the feed store.
@@ -70,7 +63,6 @@ export class Pipeline {
     partyProcessor: PartyProcessor,
     feedReadStream: NodeJS.ReadableStream,
     feedWriteStream?: NodeJS.WritableStream,
-    replicatorFactory?: ReplicatorFactory,
     options?: Options
   ) {
     assert(partyProcessor);
@@ -78,7 +70,6 @@ export class Pipeline {
     this._partyProcessor = partyProcessor;
     this._feedReadStream = feedReadStream;
     this._feedWriteStream = feedWriteStream;
-    this._replicatorFactory = replicatorFactory;
     this._options = options || {};
   }
 
@@ -227,11 +218,6 @@ export class Pipeline {
       });
     }
 
-    // Replication.
-    // TODO(burdon): Move out of pipeline?
-    this._replicationAdapter = this._replicatorFactory?.(this.partyKey, this._partyProcessor.getActiveFeedSet());
-    this._replicationAdapter?.start();
-
     return [
       this._readStream,
       this._writeStream
@@ -252,7 +238,5 @@ export class Pipeline {
       this._writeStream.destroy();
       this._writeStream = undefined;
     }
-
-    this._replicationAdapter?.stop();
   }
 }

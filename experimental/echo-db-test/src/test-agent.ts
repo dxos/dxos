@@ -4,9 +4,10 @@
 
 import assert from 'assert';
 
+import { Keyring, KeyType } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
 import {
-  codec, Database, FeedStoreAdapter, InvitationDescriptor, Party, PartyFactory, PartyManager
+  codec, Database, FeedStoreAdapter, InvitationDescriptor, Party, PartyFactory, PartyManager, IdentityManager
 } from '@dxos/experimental-echo-db';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
@@ -33,18 +34,29 @@ export default class TestAgent implements Agent {
     const feedStore = new FeedStore(storage, { feedOptions: { valueEncoding: codec } });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
+    let identityManager;
+    {
+      const keyring = new Keyring();
+      await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      await keyring.createKeyRecord({ type: KeyType.DEVICE });
+      identityManager = new IdentityManager(keyring);
+    }
+
     const networkManager = new NetworkManager(feedStore, swarmProvider);
 
     const modelFactory = new ModelFactory()
       .registerModel(ObjectModel.meta, ObjectModel);
 
     const partyFactory = new PartyFactory(
+      identityManager.keyring,
       feedStoreAdapter,
       modelFactory,
       networkManager
     );
-    await partyFactory.initIdentity();
-    const partyManager = new PartyManager(feedStoreAdapter, partyFactory);
+    const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
+    await partyManager.open();
+    await partyManager.createHalo();
+
     this.db = new Database(partyManager);
     await this.db.open();
   }
