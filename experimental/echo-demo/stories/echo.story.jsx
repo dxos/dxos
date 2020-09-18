@@ -63,7 +63,7 @@ export const withDatabase = () => {
       setImmediate(async () => {
         const newPeers = await Promise.all([...new Array(n - peers.length)].map(async (_, i) => {
           const id = createId();
-          const database = await createDatabase({ id });
+          const { database } = await createDatabase({ id });
           console.log('Created:', String(database));
           return { id, database };
         }));

@@ -6,6 +6,7 @@
     "esModuleInterop": true,
     "jsx": "react",
     "lib": [
+      "DOM",
       "ESNext"
     ],
     "module": "commonjs",

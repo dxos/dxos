@@ -24,22 +24,19 @@ import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { createStorage } from '@dxos/random-access-multi-storage';
 import ram from 'random-access-memory';
 
-export const createDatabase = async ({ storage = ram, keyStorage = undefined } = {}) => {
+export const createDatabase = async ({ storage = ram, keyStorage = undefined, swarmProvider = new SwarmProvider() } = {}) => {
   const feedStore = new FeedStore(storage, { feedOptions: { valueEncoding: codec } });
   const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
-  let identityManager;
-  {
-    const keystore = new KeyStore(keyStorage);
-    const keyring = new Keyring(keystore);
-    await keyring.load();
-    identityManager = new IdentityManager(keyring);
-  }
+  const keystore = new KeyStore(keyStorage);
+  const keyring = new Keyring(keystore);
+  await keyring.load();
+  const identityManager = new IdentityManager(keyring);
 
   const modelFactory = new ModelFactory()
     .registerModel(ObjectModel.meta, ObjectModel);
 
-  const networkManager = new NetworkManager(feedStore, new SwarmProvider());
+  const networkManager = new NetworkManager(feedStore, swarmProvider);
   const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, networkManager);
   const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
@@ -50,5 +47,7 @@ export const createDatabase = async ({ storage = ram, keyStorage = undefined } =
     await partyManager.createHalo();
   }
 
-  return new Database(partyManager);
+  const database = new Database(partyManager);
+
+  return { database, keyring }
 };
