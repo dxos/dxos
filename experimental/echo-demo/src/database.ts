@@ -2,27 +2,28 @@
 // Copyright 2020 DXOS.org
 //
 
+import { withKnobs, number } from '@storybook/addon-knobs';
 import debug from 'debug';
 import leveljs from 'level-js';
+import ram from 'random-access-memory';
 import React, { useEffect, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
-import { withKnobs, number } from '@storybook/addon-knobs';
-import { makeStyles } from '@material-ui/core/styles';
-import { blueGrey } from '@material-ui/core/colors';
 
-import { FullScreen, Grid, SVG, useGrid } from '@dxos/gem-core';
-import { Markers } from '@dxos/gem-spore';
+import { blueGrey } from '@material-ui/core/colors';
+import { makeStyles } from '@material-ui/core/styles';
+
+import { Keyring, KeyType, KeyStore } from '@dxos/credentials';
 import { createId } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
 import {
   codec, Database, PartyManager, PartyFactory, FeedStoreAdapter, IdentityManager
 } from '@dxos/experimental-echo-db';
-import { Keyring, KeyType, KeyStore } from '@dxos/credentials';
-import { ObjectModel } from '@dxos/experimental-object-model';
 import { ModelFactory } from '@dxos/experimental-model-factory';
+import { ObjectModel } from '@dxos/experimental-object-model';
+import { FeedStore } from '@dxos/feed-store';
+import { FullScreen, Grid, SVG, useGrid } from '@dxos/gem-core';
+import { Markers } from '@dxos/gem-spore';
 import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { createStorage } from '@dxos/random-access-multi-storage';
-import ram from 'random-access-memory';
 
 export const createDatabase = async ({ storage = ram, keyStorage = undefined, swarmProvider = new SwarmProvider() } = {}) => {
   const feedStore = new FeedStore(storage, { feedOptions: { valueEncoding: codec } });
@@ -49,5 +50,5 @@ export const createDatabase = async ({ storage = ram, keyStorage = undefined, sw
 
   const database = new Database(partyManager);
 
-  return { database, keyring }
+  return { database, keyring };
 };

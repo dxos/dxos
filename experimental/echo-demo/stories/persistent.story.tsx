@@ -56,7 +56,7 @@ export const withPersistent = () => {
 
     console.log(JSON.stringify(invitation.toQueryParameters()))
   };
-  
+
   const [invitation, setInvitation] = useState('')
 
   async function handleJoin() {
@@ -65,10 +65,11 @@ export const withPersistent = () => {
     await party.open();
   }
 
-  function resetStorage() {
-    storage.destory()
+  async function resetStorage() {
     localStorage.clear();
-    keyring.deleteAllKeyRecords();
+    await keyring.deleteAllKeyRecords();
+    await storage.destroy();
+    window.location.reload();
   }
 
   return (
@@ -96,7 +97,7 @@ export const withPersistent = () => {
             onSelect={node => node.type === 'party' && handleInvite(node)}
           />
         </EchoContext.Provider>}
-        
+
       </SVG>
     </FullScreen>
   );
