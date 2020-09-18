@@ -22,6 +22,7 @@ import { ObjectModel } from '@dxos/experimental-object-model';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { createStorage } from '@dxos/random-access-multi-storage';
+import { createDatabase } from '../src/database'
 
 import { EchoContext, EchoGraph, useDatabase } from '../src';
 
@@ -31,35 +32,6 @@ debug.enable('dxos:echo:demo, dxos:*:error');
 export default {
   title: 'Demo',
   decorators: [withKnobs]
-};
-
-const createDatabase = async (options) => {
-  const feedStore = new FeedStore(createStorage('dxos/echo-demo'), { feedOptions: { valueEncoding: codec } });
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore);
-
-  let identityManager;
-  {
-    const keystore = new KeyStore(leveljs('dxos/echo-demo/keystore'));
-    const keyring = new Keyring(keystore);
-    await keyring.load();
-    identityManager = new IdentityManager(keyring);
-  }
-
-  const modelFactory = new ModelFactory()
-    .registerModel(ObjectModel.meta, ObjectModel);
-
-  const networkManager = new NetworkManager(feedStore, new SwarmProvider());
-  const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, networkManager);
-  const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
-
-  await partyManager.open();
-
-  if (!identityManager.identityKey) {
-    await identityManager.keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    await partyManager.createHalo();
-  }
-
-  return new Database(partyManager);
 };
 
 const useStyles = makeStyles(() => ({
