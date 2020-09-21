@@ -3,8 +3,8 @@
 //
 
 import debug from 'debug';
+import leveljs from 'level-js';
 import React, { useEffect, useState } from 'react';
-import ram from 'random-access-memory';
 import useResizeAware from 'react-resize-aware';
 import { withKnobs, number } from '@storybook/addon-knobs';
 import { makeStyles } from '@material-ui/core/styles';
@@ -17,10 +17,12 @@ import { FeedStore } from '@dxos/feed-store';
 import {
   codec, Database, PartyManager, PartyFactory, FeedStoreAdapter, IdentityManager
 } from '@dxos/experimental-echo-db';
-import { Keyring, KeyType } from '@dxos/credentials';
+import { Keyring, KeyType, KeyStore } from '@dxos/credentials';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
+import { createStorage } from '@dxos/random-access-multi-storage';
+import { createDatabase } from '../src/database'
 
 import { EchoContext, EchoGraph, useDatabase } from '../src';
 
@@ -30,30 +32,6 @@ debug.enable('dxos:echo:demo, dxos:*:error');
 export default {
   title: 'Demo',
   decorators: [withKnobs]
-};
-
-const createDatabase = async (options) => {
-  const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore);
-
-  let identityManager;
-  {
-    const keyring = new Keyring();
-    await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    identityManager = new IdentityManager(keyring);
-  }
-
-  const modelFactory = new ModelFactory()
-    .registerModel(ObjectModel.meta, ObjectModel);
-
-  const networkManager = new NetworkManager(feedStore, new SwarmProvider());
-  const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, networkManager);
-  const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
-
-  await partyManager.open();
-  await partyManager.createHalo();
-
-  return new Database(partyManager);
 };
 
 const useStyles = makeStyles(() => ({
@@ -85,7 +63,7 @@ export const withDatabase = () => {
       setImmediate(async () => {
         const newPeers = await Promise.all([...new Array(n - peers.length)].map(async (_, i) => {
           const id = createId();
-          const database = await createDatabase({ id });
+          const { database } = await createDatabase({ id });
           console.log('Created:', String(database));
           return { id, database };
         }));

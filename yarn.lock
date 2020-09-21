@@ -1496,6 +1496,20 @@
     mutexify "^1.3.0"
     random-access-storage "^1.3.0"
 
+"@dxos/random-access-multi-storage@^1.1.0-beta.0":
+  version "1.1.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@dxos/random-access-multi-storage/-/random-access-multi-storage-1.1.0-beta.0.tgz#b50967510e9a4bfab1dcb21a978acde3167e0004"
+  integrity sha512-TQYDdcdmBB2fCPznHzey+dlUrtSS3laP5HlQ09At+XvjFq19P0o57NuF9C1ETUcFH+dYvTmaGIZVs0CYoso0GA==
+  dependencies:
+    del "^5.1.0"
+    pify "^4.0.1"
+    random-access-chrome-file "^1.1.3"
+    random-access-file "^2.1.3"
+    random-access-idb "^1.2.1"
+    random-access-memory "^3.1.1"
+    random-access-web "^2.0.3"
+    source-map-support "^0.5.16"
+
 "@dxos/random-access-multi-storage@^1.1.0-beta.3", "@dxos/random-access-multi-storage@^1.1.0-beta.4":
   version "1.1.0-beta.4"
   resolved "http://npm.dev.dxos.network:5736/@dxos%2frandom-access-multi-storage/-/random-access-multi-storage-1.1.0-beta.4.tgz#266ab1c68bf58ee87d0be8b8b4e3db13e9856df8"
@@ -4314,7 +4328,7 @@ abstract-leveldown@^6.1.1, abstract-leveldown@^6.2.1:
     level-supports "~1.0.0"
     xtend "~4.0.0"
 
-abstract-leveldown@~6.2.1:
+abstract-leveldown@~6.2.1, abstract-leveldown@~6.2.3:
   version "6.2.3"
   resolved "http://npm.dev.dxos.network:5736/abstract-leveldown/-/abstract-leveldown-6.2.3.tgz#036543d87e3710f2528e47040bc3261b77a9a8eb"
   integrity sha512-BsLm5vFMRUrrLeCcRc+G0t2qOaTzpoJQLOubq2XM72eNpjF5UdU5o/5NvlNhx95XHcAvcl8OMXr4mlg/fRgUXQ==
@@ -12102,6 +12116,16 @@ level-iterator-stream@~4.0.0:
     readable-stream "^3.4.0"
     xtend "^4.0.2"
 
+level-js@^5.0.2:
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/level-js/-/level-js-5.0.2.tgz#5e280b8f93abd9ef3a305b13faf0b5397c969b55"
+  integrity sha512-SnBIDo2pdO5VXh02ZmtAyPP6/+6YTJg2ibLtl9C34pWvmtMEmRTWpra+qO/hifkUtBTOtfx6S9vLDjBsBK4gRg==
+  dependencies:
+    abstract-leveldown "~6.2.3"
+    buffer "^5.5.0"
+    inherits "^2.0.3"
+    ltgt "^2.1.2"
+
 level-mem@^5.0.1:
   version "5.0.1"
   resolved "http://npm.dev.dxos.network:5736/level-mem/-/level-mem-5.0.1.tgz#c345126b74f5b8aa376dc77d36813a177ef8251d"
@@ -12577,7 +12601,7 @@ lru-cache@^6.0.0:
   dependencies:
     yallist "^4.0.0"
 
-ltgt@^2.2.0, ltgt@~2.2.0:
+ltgt@^2.1.2, ltgt@^2.2.0, ltgt@~2.2.0:
   version "2.2.1"
   resolved "http://npm.dev.dxos.network:5736/ltgt/-/ltgt-2.2.1.tgz#f35ca91c493f7b73da0e07495304f17b31f87ee5"
   integrity sha1-81ypHEk/e3PaDgdJUwTxezH4fuU=
@@ -15000,7 +15024,7 @@ ramda@^0.21.0:
   resolved "http://npm.dev.dxos.network:5736/ramda/-/ramda-0.21.0.tgz#a001abedb3ff61077d4ff1d577d44de77e8d0a35"
   integrity sha1-oAGr7bP/YQd9T/HVd9RN536NCjU=
 
-random-access-chrome-file@^1.1.2:
+random-access-chrome-file@^1.1.2, random-access-chrome-file@^1.1.3:
   version "1.1.4"
   resolved "http://npm.dev.dxos.network:5736/random-access-chrome-file/-/random-access-chrome-file-1.1.4.tgz#059bdada8429203f284d9aa48b3c0f6819701fed"
   integrity sha512-xZW1BT26g+gl8AF1kC/oXX97jCMVoLIbf6yx4eVMwLgOddGhhkJygimnfERSEmhUKiGs3DTymNao6wf/P23Nkg==

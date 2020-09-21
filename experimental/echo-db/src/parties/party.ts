@@ -154,7 +154,7 @@ export class Party {
    * @param filter
    */
   async queryItems (filter?: ItemFilter): Promise<ResultSet<Item<any>>> {
-    assert(this._itemManager);
+    assert(this._itemManager, 'ItemManger is missing.');
 
     return this._itemManager.queryItems(filter);
   }
