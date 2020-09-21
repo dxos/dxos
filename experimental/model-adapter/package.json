@@ -67,7 +67,7 @@
     "@types/jest": "^25.2.3",
     "chance": "^1.1.6",
     "del-cli": "^3.0.0",
-    "eslint-plugin-jest": "^23.13.1",
+    "eslint-plugin-jest": "^24.0.2",
     "jest": "^26.2.2",
     "stream-buffers": "^3.0.2",
     "ts-jest": "^26.1.4",
