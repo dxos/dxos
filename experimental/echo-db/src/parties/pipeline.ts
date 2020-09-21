@@ -9,10 +9,9 @@ import pump from 'pump';
 import { Readable, Writable } from 'stream';
 
 import { Event } from '@dxos/async';
-import { protocol, createFeedMeta, FeedBlock, IEchoStream, IHaloStream } from '@dxos/experimental-echo-protocol';
+import { protocol, createFeedMeta, FeedBlock, IEchoStream } from '@dxos/experimental-echo-protocol';
 import { createTransform, jsonReplacer } from '@dxos/experimental-util';
 
-import { ReplicatorFactory, IReplicationAdapter } from '../replication';
 import { PartyProcessor } from './party-processor';
 
 interface Options {
@@ -26,35 +25,44 @@ const error = debug('dxos:echo:pipeline:error');
 /**
  * Manages the inbound and outbound message streams for an individual party.
  */
+// TODO(burdon): Requires major refactoring/simplification?
 export class Pipeline {
   private readonly _errors = new Event<Error>();
-  private readonly _partyProcessor: PartyProcessor; // TODO(burdon): Remove.
+
+  // TODO(burdon): Split (e.g., pass in Timeline and stream)?
+  private readonly _partyProcessor: PartyProcessor;
+
+  //
   private readonly _feedReadStream: NodeJS.ReadableStream;
+
+  //
   private readonly _feedWriteStream?: NodeJS.WritableStream;
+
+  //
   private readonly _options: Options;
 
-  // Messages to be consumed from pipeline (e.g., mutations to model).
+  // TODO(burdon): Rename streams.
+  // Messages to be consumed from the pipeline (e.g., mutations to model).
   private _readStream: Readable | undefined;
 
   // Messages to write into pipeline (e.g., mutations from model).
   private _writeStream: Writable | undefined;
 
+  // TODO(burdon): Pair with PartyProcessor.
   // Halo messages to write into pipeline.
   private _haloWriteStream: Writable | undefined;
-
-  private _replicationAdapter?: IReplicationAdapter;
 
   /**
    * @param {PartyProcessor} partyProcessor - Processes HALO messages to update party state.
    * @param feedReadStream - Inbound messages from the feed store.
    * @param [feedWriteStream] - Outbound messages to the writeStream feed.
+   * @param replicatorFactory
    * @param [options]
    */
   constructor (
     partyProcessor: PartyProcessor,
     feedReadStream: NodeJS.ReadableStream,
     feedWriteStream?: NodeJS.WritableStream,
-    private readonly replicatorFactory?: ReplicatorFactory,
     options?: Options
   ) {
     assert(partyProcessor);
@@ -91,10 +99,6 @@ export class Pipeline {
 
   get errors () {
     return this._errors;
-  }
-
-  get memberFeeds () {
-    return this._partyProcessor.feedKeys;
   }
 
   /**
@@ -214,11 +218,6 @@ export class Pipeline {
       });
     }
 
-    // Replication.
-    // TODO(burdon): Move out of pipeline?
-    this._replicationAdapter = this.replicatorFactory?.(this.partyKey, this._partyProcessor.getActiveFeedSet());
-    this._replicationAdapter?.start();
-
     return [
       this._readStream,
       this._writeStream
@@ -239,7 +238,5 @@ export class Pipeline {
       this._writeStream.destroy();
       this._writeStream = undefined;
     }
-
-    this._replicationAdapter?.stop();
   }
 }

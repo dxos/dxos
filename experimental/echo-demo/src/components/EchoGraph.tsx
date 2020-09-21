@@ -46,11 +46,6 @@ const createLayout = ({ database, grid, guides, delta, linkProjector, handleSele
       x: grid.center.x + delta.x,
       y: grid.center.y + delta.y,
     },
-    force: {
-      links: {
-        distance: 60
-      }
-    },
     initializer: (d, center) => {
       const { type } = d;
       if (type === 'database') {
@@ -58,6 +53,24 @@ const createLayout = ({ database, grid, guides, delta, linkProjector, handleSele
           fx: center.x,
           fy: center.y
         }
+      }
+    },
+    force: {
+      center: {
+        strength: 0
+      },
+      radial: {
+        radius: 200,
+        strength: 0.5
+      },
+      links: {
+        distance: 30
+      },
+      charge: {
+        strength: -300
+      },
+      collide: {
+        strength: 0.1
       }
     }
   });

@@ -4,20 +4,23 @@
 
 import assert from 'assert';
 
-import { Keyring } from '@dxos/credentials';
+import { KeyRecord, Keyring } from '@dxos/credentials';
 import { humanize } from '@dxos/crypto';
-import { PublicKey, FeedKey, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
+import { ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
 import { ModelFactory, ModelType, ModelConstructor, Model } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
+import { NetworkManager } from '@dxos/network-manager';
 
-import { InvitationDetails } from '../invitations/common';
-import { GreetingResponder } from '../invitations/greeting-responder';
-import { InvitationDescriptor, InvitationDescriptorType } from '../invitations/invitation-descriptor';
+import {
+  GreetingResponder, InvitationDetails, InvitationDescriptor, InvitationDescriptorType
+} from '../invitations';
 import { createItemDemuxer, Item, ItemFilter, ItemManager } from '../items';
+import { ReplicationAdapter } from '../replication';
 import { ResultSet } from '../result';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
 
+// TODO(burdon): Format?
 export const PARTY_ITEM_TYPE = 'wrn://dxos.org/item/party';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -30,22 +33,25 @@ export interface PartyFilter {}
 export class Party {
   private _itemManager: ItemManager | undefined;
   private _itemDemuxer: NodeJS.WritableStream | undefined;
-  private _unsubscribePipeline: (() => void) | undefined;
+  private _unsubscribePipelineErrors: (() => void) | undefined;
 
   /**
    * The Party is constructed by the `Database` object.
    */
   constructor (
     private readonly _modelFactory: ModelFactory,
-    private readonly _pipeline: Pipeline,
     private readonly _partyProcessor: PartyProcessor,
+    private readonly _pipeline: Pipeline,
     private readonly _keyring: Keyring,
-    private readonly _identityKeypair: any,
-    private readonly _networkManager?: any
+    private readonly _identityKeypair: KeyRecord,
+    private readonly _networkManager: NetworkManager,
+    private readonly _replicator: ReplicationAdapter
   ) {
     assert(this._modelFactory);
-    assert(this._pipeline);
     assert(this._partyProcessor);
+    assert(this._pipeline);
+    assert(this._keyring);
+    assert(this._identityKeypair);
   }
 
   toString () {
@@ -76,8 +82,11 @@ export class Party {
     this._itemDemuxer = createItemDemuxer(this._itemManager);
     readStream.pipe(this._itemDemuxer);
 
+    // Replication.
+    this._replicator.start();
+
     // TODO(burdon): Propagate errors.
-    this._unsubscribePipeline = this._pipeline.errors.on(err => console.error(err));
+    this._unsubscribePipelineErrors = this._pipeline.errors.on(err => console.error(err));
 
     return this;
   }
@@ -90,6 +99,8 @@ export class Party {
       return this;
     }
 
+    this._replicator.stop();
+
     // Disconnect the read stream.
     this._pipeline.readStream?.unpipe(this._itemDemuxer);
 
@@ -99,7 +110,7 @@ export class Party {
     // TODO(burdon): Create test to ensure everything closes cleanly.
     await this._pipeline.close();
 
-    this._unsubscribePipeline!();
+    this._unsubscribePipelineErrors!();
 
     return this;
   }
@@ -134,6 +145,7 @@ export class Party {
   async createItem <M extends Model<any>> (model: ModelConstructor<M>, itemType?: ItemType | undefined): Promise<Item<M>> {
     assert(this._itemManager);
     assert(model?.meta?.type);
+
     return this._itemManager.createItem(model.meta.type, itemType);
   }
 
@@ -142,7 +154,7 @@ export class Party {
    * @param filter
    */
   async queryItems (filter?: ItemFilter): Promise<ResultSet<Item<any>>> {
-    assert(this._itemManager);
+    assert(this._itemManager, 'ItemManger is missing.');
 
     return this._itemManager.queryItems(filter);
   }
@@ -153,13 +165,14 @@ export class Party {
   async createInvitation (inviteDetails: InvitationDetails) {
     assert(this._pipeline.haloWriteStream);
     assert(this._networkManager);
+
     const responder = new GreetingResponder(
-      this.key,
+      this.key, // TODO(burdon): Change order.
       this._keyring,
       this._networkManager,
       this._pipeline.haloWriteStream,
-      () => this._pipeline.memberFeeds,
-      this._identityKeypair
+      () => this._partyProcessor.feedKeys, // TODO(burdon): This can be accessed directly from partyProcessor!
+      this._identityKeypair // TODO(burdon): Move to keyring?
     );
 
     const { secretValidator, secretProvider } = inviteDetails;

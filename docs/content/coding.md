@@ -14,3 +14,7 @@
 
 - Testing
     - Don't create temporary files in the source tree (e.g., file store temp)
+
+- General
+    - Don't pass `this` into functions.
+    - Order function parameter from lest to most invariant.

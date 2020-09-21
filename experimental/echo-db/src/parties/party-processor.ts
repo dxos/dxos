@@ -28,6 +28,7 @@ export class PartyProcessor {
   protected readonly _feedAdded = new Event<FeedKey>()
 
   // Current timeframe.
+  // TODO(marik-d): Move into separate class
   private _timeframe = spacetime.createTimeframe();
 
   private readonly _stateMachine: PartyStateMachine;
@@ -60,15 +61,11 @@ export class PartyProcessor {
     return this._timeframe;
   }
 
-  get keyring () {
-    return this._stateMachine.keyring;
-  }
-
-  public get feedKeys () {
+  get feedKeys () {
     return this._stateMachine.memberFeeds;
   }
 
-  public get memberKeys () {
+  get memberKeys () {
     return this._stateMachine.memberKeys;
   }
 
@@ -78,6 +75,7 @@ export class PartyProcessor {
     return (candidates: FeedBlock[]) => 0;
   }
 
+  // TODO(burdon): Rename xxxProvider.
   getActiveFeedSet (): FeedSetProvider {
     return {
       get: () => this.feedKeys,

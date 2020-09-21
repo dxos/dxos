@@ -5,8 +5,7 @@
 import { Event } from '@dxos/async';
 import { PartyKey } from '@dxos/experimental-echo-protocol';
 
-import { SecretProvider } from './invitations/common';
-import { InvitationDescriptor } from './invitations/invitation-descriptor';
+import { InvitationDescriptor, SecretProvider } from './invitations';
 import { Party, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
 
@@ -29,8 +28,6 @@ export interface Options {
  * `Spactime` `Timeframe` (which implements a vector clock).
  */
 export class Database {
-  private readonly _partyUpdate = new Event<Party>();
-
   constructor (
     private readonly _partyManager: PartyManager,
     private readonly _options: Options = {}
@@ -38,7 +35,8 @@ export class Database {
 
   toString () {
     return `Database(${JSON.stringify({
-      parties: this._partyManager.parties.length, options: this._options
+      parties: this._partyManager.parties.length,
+      options: Object.keys(this._options).length ? this._options : undefined
     })})`;
   }
 
@@ -73,9 +71,6 @@ export class Database {
     const party = await this._partyManager.createParty();
     await party.open();
 
-    // Notify update event.
-    setImmediate(() => this._partyUpdate.emit(party));
-
     return party;
   }
 
@@ -97,12 +92,13 @@ export class Database {
   async queryParties (filter?: PartyFilter): Promise<ResultSet<Party>> {
     await this.open();
 
-    return new ResultSet<Party>(this._partyUpdate, () => this._partyManager.parties);
+    return new ResultSet<Party>(this._partyManager.update, () => this._partyManager.parties);
   }
 
   /**
    * Joins a party that was created by another peer and starts replicating with it.
-   * @param invitation
+   * @param invitationDescriptor
+   * @param secretProvider
    */
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<Party> {
     return this._partyManager.joinParty(invitationDescriptor, secretProvider);

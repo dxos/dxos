@@ -7,6 +7,7 @@ import hypercore from 'hypercore';
 
 import { discoveryKey, keyToString } from '@dxos/crypto';
 import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
+import { NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
@@ -15,32 +16,14 @@ import { FeedSetProvider } from './parties';
 
 const log = debug('dxos:echo:replication-adapter');
 
-// TODO(burdon): Comment.
-export interface IReplicationAdapter {
-  start(): void
-  stop(): void
-}
-
-export type ReplicatorFactory = (partyKey: PartyKey, activeFeeds: FeedSetProvider) => IReplicationAdapter;
-
-export function createReplicatorFactory (_networkManager: any, feedStore: FeedStoreAdapter, peerId: Buffer) {
-  return (partyKey: PartyKey, activeFeeds: FeedSetProvider) => new ReplicationAdapter(
-    _networkManager,
-    feedStore,
-    peerId,
-    partyKey,
-    activeFeeds
-  );
-}
-
 /**
  * Joins a network swarm with replication protocol. Coordinates opening new feeds in the feed store.
  */
-export class ReplicationAdapter implements IReplicationAdapter {
+export class ReplicationAdapter {
   private _started = false;
 
   constructor (
-    private readonly _networkManager: any,
+    private readonly _networkManager: NetworkManager,
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _peerId: Buffer,
     private readonly _partyKey: PartyKey,
@@ -53,7 +36,18 @@ export class ReplicationAdapter implements IReplicationAdapter {
     }
     this._started = true;
 
-    this._networkManager.joinProtocolSwarm(this._partyKey, ({ channel }: any) => this._createProtocol(channel));
+    log('Start', keyToString(this._partyKey));
+    this._networkManager.joinProtocolSwarm(Buffer.from(this._partyKey), ({ channel }: any) => this._createProtocol(channel));
+  }
+
+  stop (): void {
+    if (!this._started) {
+      return;
+    }
+    log('Stop');
+
+    // TODO(marik-d): Not implmented.
+    this._started = false;
   }
 
   private async _openFeed (key: FeedKey): Promise<hypercore.Feed> {
@@ -103,14 +97,7 @@ export class ReplicationAdapter implements IReplicationAdapter {
       .setSession({ peerId: this._peerId })
       .setExtensions([replicator.createExtension()])
       .init(channel);
-    return protocol;
-  }
 
-  stop (): void {
-    if (!this._started) {
-      return;
-    }
-    this._started = false;
-    // TODO(marik-d): Not implmented
+    return protocol;
   }
 }

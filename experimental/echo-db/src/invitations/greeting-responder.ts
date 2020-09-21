@@ -9,13 +9,15 @@ import { Event } from '@dxos/async';
 import {
   createEnvelopeMessage, Greeter,
   GreetingCommandPlugin,
+  KeyRecord,
   Keyring,
   KeyType
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
 import { FeedKey, PartyKey, SwarmKey } from '@dxos/experimental-echo-protocol';
+import { NetworkManager } from '@dxos/network-manager';
 
-import { Party, Pipeline } from '../parties';
+import { Party } from '../parties';
 import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 
@@ -39,46 +41,39 @@ export enum GreetingState {
  * Upon successful greeting, the peer is admitted into the Party specified in the invitation descriptor.
  */
 export class GreetingResponder {
-  private _state: GreetingState;
-
   private readonly _greeter: Greeter;
 
   private readonly _greeterPlugin: GreetingCommandPlugin;
 
   private readonly _swarmKey: SwarmKey = randomBytes();
 
+  private _state: GreetingState = GreetingState.INITIALIZED;
+
   /**
    * Param: Invitation id
    */
   readonly connected = new Event<any>();
 
-  /**
-   * @param {Party} party
-   * @param {PartyManager} partyManager
-   * @param {Keyring} keyring
-   * @param {NetworkManager} networkManager
-   */
   constructor (
-    private readonly _partyKey: PartyKey,
+    private readonly _partyKey: PartyKey, // TODO(burdon): Move to bottom.
     private readonly _keyring: Keyring,
-    private readonly _networkManager: any,
+    private readonly _networkManager: NetworkManager,
     private readonly _writeStream: NodeJS.WritableStream,
-    private readonly _getMemberFeeds: () => FeedKey[],
-    private readonly _identityKeypair: any // TODO(marik-d): Use proper type once @dxos/credentials exports them
+    private readonly _getMemberFeeds: () => FeedKey[], // TODO(burdon): Is callback required?
+    private readonly _identityKeypair: KeyRecord
   ) {
     this._greeter = new Greeter(
       Buffer.from(this._partyKey),
       async (messages: any) => this._writeCredentialsToParty(messages),
       async () => this._gatherHints()
     );
-    this._greeterPlugin = new GreetingCommandPlugin(this._swarmKey, this._greeter.createMessageHandler());
 
-    this._state = GreetingState.INITIALIZED;
+    this._greeterPlugin = new GreetingCommandPlugin(this._swarmKey, this._greeter.createMessageHandler());
   }
 
   /**
    * Accessor for UI to display status to the user.
-   * Return the current state for this Greeting Responder (waiting, peer connected, successful auth, auth failed, etc).
+   * Return the current state for this Greeting Responder (waiting, peer connected, successful auth, auth failed, etc.)
    * @return {GreetingState}
    */
   get state () {
@@ -87,11 +82,18 @@ export class GreetingResponder {
 
   /**
    * Listen for connections from invitee peers.
+   * @param secretValidator
+   * @param secretProvider
    * @param {function} [onFinish] A function to be called when the invitation is closed (successfully or not).
    * @param {int} [expiration] Date.now()-style timestamp of when this invitation should expire.
    */
-  // TODO(telackey): Change to nounVerb form.
-  async invite (secretValidator: SecretValidator, secretProvider?: SecretProvider, onFinish?: Function, expiration?: number): Promise<Buffer> {
+  // TODO(burdon): Rename listenForXXX?
+  async invite (
+    secretValidator: SecretValidator,
+    secretProvider?: SecretProvider,
+    onFinish?: Function,
+    expiration?: number
+  ): Promise<Buffer> {
     assert(secretValidator);
     assert(this._state === GreetingState.LISTENING);
 
@@ -100,6 +102,7 @@ export class GreetingResponder {
       if (timeout) {
         clearTimeout(timeout);
       }
+
       if (onFinish) {
         try {
           await onFinish();
@@ -107,6 +110,7 @@ export class GreetingResponder {
           log(err);
         }
       }
+
       return this.destroy();
     };
 
@@ -146,7 +150,7 @@ export class GreetingResponder {
 
     // As the Greeter, use the topic as our peerId.
     // (For reasons why see detailed comment on greetClient).
-    await this._networkManager.joinProtocolSwarm(this._swarmKey,
+    await this._networkManager.joinProtocolSwarm(Buffer.from(this._swarmKey),
       greetingProtocolProvider(this._swarmKey, this._swarmKey, [this._greeterPlugin]));
 
     log(`Greeting for: ${keyToString(this._partyKey)} on swarmKey ${keyToString(this._swarmKey)}`);
@@ -162,7 +166,7 @@ export class GreetingResponder {
   async stop () {
     log('Stopping...');
     if (this._swarmKey) {
-      await this._networkManager.leaveProtocolSwarm(this._swarmKey);
+      await this._networkManager.leaveProtocolSwarm(Buffer.from(this._swarmKey));
     }
 
     this._state = GreetingState.STOPPED;
@@ -215,7 +219,7 @@ export class GreetingResponder {
       //     return matchCount === myAdmits.length;
       //   });
 
-      const envelope = createEnvelopeMessage(this._keyring, Buffer.from(this._partyKey), message, this._identityKeypair, null);
+      const envelope = createEnvelopeMessage(this._keyring, Buffer.from(this._partyKey), message, [this._identityKeypair], null);
       this._writeStream.write(envelope as any, () => { /** TODO(marik-d): await callback */ });
 
       // await partyMessageWaiter;

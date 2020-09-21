@@ -15,10 +15,12 @@ import {
   createKeyAdmitMessage,
   Greeter,
   GreetingCommandPlugin,
+  KeyRecord,
   Keyring
 } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
 import { PartyKey } from '@dxos/experimental-echo-protocol';
+import { NetworkManager } from '@dxos/network-manager';
 
 import { SecretProvider } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
@@ -43,10 +45,10 @@ export class GreetingInitiator {
    * @param _feedInitializer Callback to open or create a write feed for this party and return it's keypair
    */
   constructor (
-    private readonly _networkManager: any,
+    private readonly _networkManager: NetworkManager,
     private readonly _keyring: Keyring,
     private readonly _feedInitializer: (partyKey: PartyKey) => Promise<any /* Keypair */>,
-    private readonly _identityKeypair: any,
+    private readonly _identityKeypair: KeyRecord,
     private readonly _invitationDescriptor: InvitationDescriptor
   ) {
     assert(InvitationDescriptorType.INTERACTIVE === this._invitationDescriptor.type);
@@ -86,7 +88,7 @@ export class GreetingInitiator {
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
       (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId), timeout);
 
-    await this._networkManager.joinProtocolSwarm(swarmKey,
+    await this._networkManager.joinProtocolSwarm(Buffer.from(swarmKey),
       greetingProtocolProvider(swarmKey, localPeerId, [this._greeterPlugin]));
 
     await peerJoinedWaiter;
@@ -162,7 +164,7 @@ export class GreetingInitiator {
     );
     // And the Feed, signed for by the FEED and by the DEVICE keychain, as above.
     credentialMessages.push(
-      createFeedAdmitMessage(this._keyring, partyKey, feedKey, this._identityKeypair, nonce)
+      createFeedAdmitMessage(this._keyring, partyKey, feedKey, [this._identityKeypair], nonce)
     );
     // }
 
@@ -189,7 +191,7 @@ export class GreetingInitiator {
 
   async disconnect () {
     const { swarmKey } = this._invitationDescriptor;
-    await this._networkManager.leaveProtocolSwarm(swarmKey);
+    await this._networkManager.leaveProtocolSwarm(Buffer.from(swarmKey));
     this._state = GreetingState.DISCONNECTED;
   }
 
