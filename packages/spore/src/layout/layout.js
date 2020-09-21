@@ -40,10 +40,10 @@ export class Layout extends EventEmitter {
     this.emit('update', this);
   }
 
-  update (grid, data, context) {
+  update (grid, data) {
     if (grid.size.width !== null && grid.size.height !== null) {
-      this._onUpdate(grid, data, context);
-      this.emitUpdate(data);
+      this._onUpdate(grid, data);
+      this.emitUpdate();
     }
   }
 
@@ -53,9 +53,8 @@ export class Layout extends EventEmitter {
    * Compute the layout.
    * @param grid
    * @param data
-   * @param context
    * @private
    */
   // eslint-disable-next-line no-unused-vars
-  _onUpdate (grid, data, context) {}
+  _onUpdate (grid, data) {}
 }

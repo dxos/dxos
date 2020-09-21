@@ -91,10 +91,10 @@ export const createSimulationDrag = (simulation, options = {}) => {
           if (!state.frozen.y) {
             event.subject.fy = event.y;
           }
-        }
 
-        // Restart the force simulation.
-        simulation.alphaTarget(0).alpha(0.1).restart();
+          // Restart the force simulation.
+          simulation.alphaTarget(0).alpha(0.1).restart();
+        }
 
         emitter.emit('drag', { source: event.subject, linking: state.linking, position });
 
@@ -103,11 +103,6 @@ export const createSimulationDrag = (simulation, options = {}) => {
 
       .on('end', function (event) {
         const { [freeze]: freezeModifier } = event.sourceEvent;
-
-        // TODO(burdon): Restart simulation?
-        // if (!event.active) {
-        //   simulation.alphaTarget(0);
-        // }
 
         //
         // Frozen nodes.

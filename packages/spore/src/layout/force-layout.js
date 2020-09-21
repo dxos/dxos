@@ -68,6 +68,10 @@ export class ForceLayout extends Layout {
   _onUpdate (grid, data) {
     const { alphaDecay } = this._options;
 
+    // TODO(burdon): Calculate alpha based on diff.
+    const num = this.data.nodes?.length || 0;
+    const alpha = (num === 0 || Math.abs(num - data.nodes.length) > 3) ? 1 : 0.2;
+
     // Reset.
     this.data.guides = [];
 
@@ -91,7 +95,7 @@ export class ForceLayout extends Layout {
     // NOTE: Set alpha since data/forces have changed.
     this._simulation
       .alphaTarget(0)
-      .alpha(1)
+      .alpha(alpha)
       .alphaDecay(alphaDecay)
       .restart();
 

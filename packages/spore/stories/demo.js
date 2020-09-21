@@ -3,7 +3,6 @@
 //
 
 import * as d3 from 'd3';
-import { Chance } from 'chance';
 import debug from 'debug';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
@@ -52,8 +51,6 @@ export default {
 };
 
 debug.enable('dxos:spore:*');
-
-const chance = new Chance(1);
 
 //
 // Actions
@@ -122,9 +119,10 @@ export const withGridLayout = () => {
   const grid = useGrid({ width, height, zoom: 1 });
 
   const [data] = useDataButton(() => createGraph(faker.random.number(32), 8));
-  const [selected, setSelected] = useState();
 
   const layout = new GridLayout();
+
+  const [selected, setSelected] = useState();
   const projector = new NodeProjector({ node: { radius: 8, showLabels: false }, fade: false });
   useEffect(() => {
     projector.on('click', ({ id }) => {
@@ -140,9 +138,9 @@ export const withGridLayout = () => {
         <Graph
           grid={grid}
           data={data}
+          selected={selected}
           layout={layout}
           nodeProjector={projector}
-          selected={selected}
         />
       </SVG>
     </FullScreen>
@@ -157,10 +155,17 @@ export const withForceLayout = () => {
   const { width, height } = size;
   const grid = useGrid({ width, height });
 
-  const { data, generate } = useGraphGenerator({ data: convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 }))} );
   const [layout] = useState(() => new ForceLayout());
+  const [selected, setSelected] = useState();
   const [drag] = useState(() => createSimulationDrag(layout.simulation));
+  useEffect(() => {
+    drag.on('click', ({ source: selected }) => {
+      setSelected(selected);
+      console.log(selected);
+    });
+  }, [drag]);
 
+  const { data, generate } = useGraphGenerator({ data: convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 }))} );
   button('Mutate', () => {
     generate();
   });
@@ -173,6 +178,7 @@ export const withForceLayout = () => {
         <Graph
           grid={grid}
           data={data}
+          selected={selected}
           layout={layout}
           drag={drag}
         />
@@ -245,14 +251,17 @@ export const withCustomNodes = () => {
   const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 4 })));
   const [layout] = useState(() => new ForceLayout());
   const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey', freeze: 'shiftKey' }));
-  const [{ nodeProjector, linkProjector }] = useState({
+  const [{ nodeProjector }] = useState({
     nodeProjector: new NodeProjector({
       node: {
-        showLabels: true,
-        propertyAdapter: (d) => ({
-          class: chance.pickone(nodeColors),
-          radius: d.children?.length > 2 ? 20 : 10
-        })
+        showLabels: false,
+        propertyAdapter: (d) => {
+          const i = Number('0x' + d.id.slice(0, 4)) % nodeColors.length;
+          return {
+            class: nodeColors[i],
+            radius: d.children?.length > 2 ? 20 : 10
+          };
+        }
       }
     })
   });
@@ -263,6 +272,12 @@ export const withCustomNodes = () => {
       <SVG width={width} height={height}>
         <Grid grid={grid} />
 
+        <GraphLinker
+          grid={grid}
+          drag={drag}
+          onUpdate={updateData}
+        />
+
         <Graph
           grid={grid}
           data={data}
@@ -272,14 +287,6 @@ export const withCustomNodes = () => {
             nodes: classes.nodes
           }}
           nodeProjector={nodeProjector}
-          linkProjector={linkProjector}
-        />
-
-        <GraphLinker
-          grid={grid}
-          drag={drag}
-          linkProjector={linkProjector}
-          onUpdate={updateData}
         />
       </SVG>
     </FullScreen>
@@ -309,6 +316,13 @@ export const withDrag = () => {
         <Grid grid={grid} />
         <Markers />
 
+        <GraphLinker
+          grid={grid}
+          drag={drag}
+          linkProjector={linkProjector}
+          onUpdate={updateData}
+        />
+
         <Graph
           grid={grid}
           data={data}
@@ -316,13 +330,6 @@ export const withDrag = () => {
           linkProjector={linkProjector}
           nodeProjector={nodeProjector}
           drag={drag}
-        />
-
-        <GraphLinker
-          grid={grid}
-          drag={drag}
-          linkProjector={linkProjector}
-          onUpdate={updateData}
         />
       </SVG>
     </FullScreen>
@@ -387,7 +394,6 @@ export const withDoubleForceLayouts = () => {
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
 
-  const [selected, setSelected] = useState();
   const [data1,, getData1, updateData1] =
     useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 3 })), 'Left');
   const [data2,, getData2, updateData2] =
@@ -408,8 +414,6 @@ export const withDoubleForceLayouts = () => {
   // Move node from one group to the other.
   useEffect(() => {
     drag.on('click', ({ source: selected }) => {
-      setSelected(selected.id);
-
       const data1 = getData1();
       const idx = data1.nodes.findIndex(node => node.id === selected.id);
 
@@ -459,13 +463,14 @@ export const withDoubleForceLayouts = () => {
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} showGrid={false} />
+
         <Graph
           grid={grid}
           data={data1}
           layout={layout1}
-          selected={selected}
           drag={drag}
         />
+
         <Graph
           grid={grid}
           data={data2}
@@ -511,7 +516,7 @@ export const withDynamicLayout = () => {
         layout,
         drag: createSimulationDrag(layout.simulation)
       });
-    }, 1000);
+    }, 3000);
 
     return () => clearTimeout(t);
   }, [grid]);
@@ -521,6 +526,7 @@ export const withDynamicLayout = () => {
       {resizeListener}
       <SVG width={width} height={height}>
         <Grid grid={grid} />
+
         <Graph
           grid={grid}
           data={data}

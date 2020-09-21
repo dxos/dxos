@@ -26,11 +26,17 @@ export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
   // Update events.
   //
   useEffect(() => {
-    const onUpdate = () => callback({ layout, grid, data });
+    const onUpdate = () => {
+      callback({ layout, grid, data });
+    };
+
     layout.on('update', onUpdate);
+    layout.reset();
+    layout.update(grid, data);
+
     return () => {
-      layout.reset();
       layout.off('update', onUpdate);
+      layout.reset();
     };
   }, [layout]);
 
@@ -48,13 +54,4 @@ export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
   useEffect(() => {
     layout.update(grid, data);
   }, [data, ...deps]);
-
-  //
-  // Clean-up.
-  //
-  useEffect(() => {
-    return () => {
-      layout.reset();
-    };
-  }, []);
 };

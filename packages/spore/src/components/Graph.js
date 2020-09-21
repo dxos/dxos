@@ -96,15 +96,13 @@ const Graph = (props) => {
   }, [drag]);
 
   // Update layout.
+  // TODO(burdon): Selection not working.
   // NOTE: Called every time force update changes data (positions, etc.)
   useLayout(layout, grid, data, () => {
-
-    // TODO(burdon): Detach old layout!
-
     guideProjector.update(grid, layout.data, { group: guideGroup.current });
     nodeProjector.update(grid, layout.data, { group: nodeGroup.current, selected });
-    linkProjector.update(grid, layout.data, { group: linkGroup.current });
-  }, [data, grid.size, layout, selected]);
+    linkProjector.update(grid, layout.data, { group: linkGroup.current, selected });
+  }, [selected]);
 
   return (
     <g className={clazzes.root}>

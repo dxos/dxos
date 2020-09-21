@@ -8,6 +8,19 @@ import get from 'lodash.get';
 
 import { Projector } from './projector';
 
+// TODO(burdon): Option.
+const highlight = group => group
+  .on('mouseover', function () {
+    d3.select(this).classed('highlight', true);
+  })
+  .on('mouseout', function () {
+    d3.select(this).classed('highlight', false);
+  });
+
+const updateProps = (group, propertyAdapter) => group
+  .attr('class', d => clsx('node', propertyAdapter(d)?.class))
+  .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`);
+
 /**
  * Render nodes.
  */
@@ -34,16 +47,9 @@ export class NodeProjector extends Projector {
         .append('g')
           .attr('state', 'enter')
           .attr('id', d => d.id)
-          .attr('class', d => clsx('node', propertyAdapter(d)?.class))
-          .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`)
 
-          // TODO(burdon): Plugin.
-          .on('mouseover', function () {
-            d3.select(this).classed('highlight', true);
-          })
-          .on('mouseout', function () {
-            d3.select(this).classed('highlight', false);
-          })
+          .call(updateProps, propertyAdapter)
+          .call(highlight)
 
           .call(group => {
             // TODO(burdon): Render in different layer to prevent node occlusion?
@@ -92,9 +98,9 @@ export class NodeProjector extends Projector {
         propertyAdapter(d)?.radius || get(d, 'layout.node.radius', get(this._options, 'node.radius', defaultRadius));
 
       group
-        .attr('transform', d => {
-          return`translate(${d.x || 0}, ${d.y || 0})`;
-        });
+        // .attr('class', d => clsx('node', propertyAdapter(d)?.class))
+        // .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`);
+        .call(updateProps, propertyAdapter);
 
       // TODO(burdon): Position left/right depending on center (from layout).
       // https://stackoverflow.com/questions/29031659/calculate-width-of-text-before-drawing-the-text
@@ -116,7 +122,7 @@ export class NodeProjector extends Projector {
 
     root
       .selectAll('g[state=active]')
-      .classed('selected', d => (selected === d.id))
+      .classed('selected', d => (Array.isArray(selected) ? selected.indexOf(d.id) : selected === d.id))
       .call(group => {
         if (transition) {
           group.transition(transition()).call(update);

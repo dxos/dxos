@@ -2,11 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import React, { useEffect, useRef } from 'react';
 
 import { createItem, createLinkId } from '@dxos/gem-core';
 
-import { useGraphStyles } from './index';
+import { LinkProjector } from '../projector';
+import { useGraphStyles } from './Graph';
 
 /**
  * @param grid
@@ -16,7 +18,11 @@ import { useGraphStyles } from './index';
  * @returns {JSX.Element}
  * @constructor
  */
-export const GraphLinker = ({ grid, drag, linkProjector, onUpdate }) => {
+export const GraphLinker = ({ grid, drag, linkProjector = new LinkProjector(), onUpdate }) => {
+  assert(grid);
+  assert(drag);
+  assert(onUpdate);
+
   const classes = useGraphStyles();
   const guides = useRef();
 
