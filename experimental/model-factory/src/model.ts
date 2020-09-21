@@ -59,6 +59,7 @@ export abstract class Model<T> {
   }
 
   // TODO(burdon): How to subtype handler via polymorphic this types?
+  // TODO(marik-d): You can use `this` in a context of a class as a reference to class instance type. So `Event<this>` and `(result: this) => void`.
   subscribe (listener: (result: Model<T>) => void) {
     this._modelUpdate.on(listener);
     return () => {
