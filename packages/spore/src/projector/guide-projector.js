@@ -30,7 +30,7 @@ export class GuideProjector extends Projector {
                       .attr('cy', d.cy)
                       .attr('r', Math.min(width, height) / 2)
                       .transition()
-                        .duration(1000)
+                        .duration(750)
                         .attr('r', d => d.r);
                 }
               }

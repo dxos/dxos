@@ -22,13 +22,12 @@ export class Projector extends EventEmitter {
   /**
    * On data items updated.
    * @param grid
-   * @param data
+   * @param layout
    * @param options
    */
-  // TODO(burdon): Merge or convert to simple function with factory/closure for options?
-  update (grid, data, options) {
-    this.onData(grid, data, options);
-    this.onUpdate(grid, data, options);
+  update (grid, layout, options) {
+    this.onData(grid, layout.data, options);
+    this.onUpdate(grid, layout.data, options);
   }
 
   // eslint-disable-next-line no-unused-vars

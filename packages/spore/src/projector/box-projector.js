@@ -22,17 +22,17 @@ export class BoxProjector extends Projector {
     d3.select(group)
       .selectAll('g')
         .data(nodes, d => d.id)
-      .join('g')
-        .attr('id', d => d.id)
-        .attr('class', 'node')
-        .call(group => {
-          group
-            .append('text')
-            .text(d => d.title.substring(0, 1));
+        .join('g')
+          .attr('id', d => d.id)
+          .attr('class', 'node')
+          .call(group => {
+            group
+              .append('rect');
 
-          group
-            .append('rect');
-        });
+            group
+              .append('text')
+                .text(d => d.title.substring(0, 3));
+          });
   }
 
   onUpdate (grid, data, { group }) {
@@ -40,6 +40,7 @@ export class BoxProjector extends Projector {
     // TODO(burdon): Co-ord system (project function). From top-left. Change viewbox?
     const width = grid.scaleX(10);
     const height = Math.abs(grid.scaleY(10));
+    const margin = grid.scaleX(2);
 
     d3.select(group)
       .selectAll('g')
@@ -48,13 +49,13 @@ export class BoxProjector extends Projector {
           .attr('transform', d => `translate(${d.x}, ${d.y - height})`);
 
         group
-          // TODO(burdon): Adjust bounds.
-          .select('text')
-            .attr('dx', width / 2)
-            .attr('dy', height / 2);
+          // TODO(burdon): Adjust bounds via SVG measure functionality.
+          .selectAll('text')
+            .attr('dx', margin)
+            .attr('dy', height - margin);
 
         group
-          .select('rect')
+          .selectAll('rect')
             .attr('width', width)
             .attr('height', height);
       });

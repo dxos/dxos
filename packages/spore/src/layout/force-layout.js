@@ -72,22 +72,21 @@ export class ForceLayout extends Layout {
     const num = this.data.nodes?.length || 0;
     const alpha = (num === 0 || Math.abs(num - data.nodes.length) > 3) ? 1 : 0.2;
 
-    // Reset.
-    this.data.guides = [];
+    // Update layout data.
+    this._mergeData(grid, data);
 
-    // Update node layout.
-    this.data.nodes = this._mergeData(grid, data);
-    this.data.links = data.links;
+    // TODO(burdon): Factor out.
+    Object.assign(this.data, { guides: [] });
 
     // Pause simulation until nodes and forces are set.
     // https://github.com/d3/d3-force#simulation_nodes
     this._simulation
       .stop()
-      .nodes(data.nodes);
+      .nodes(this.data.nodes);
 
     // Set forces.
     // https://github.com/d3/d3-force#simulation_force
-    const forces = this._createForces(grid, data);
+    const forces = this._createForces(grid, this.data);
     Object.values(forces).forEach((value, key) => this._simulation.force(key, value));
 
     // Restart the simulation.
@@ -109,40 +108,44 @@ export class ForceLayout extends Layout {
    * The layout maintains a set of nodes controlled by the simulation.
    * The data graph is used to update this set but is not modified.
    * Each simulation node has the following properties: { index, x, y, vx, vy, fx, fy }.
+   *
+   * @param grid
+   * @param data - User data (not force updated data).
    */
   _mergeData (grid, data) {
     const { force } = this._options;
     const center = value(this._options.center)(grid);
-    const { nodes = [] } = data;
+    const { nodes = [], links = [] } = data;
 
     // Merge nodes.
     const current = this._simulation.nodes();
-    return nodes.map(node => {
+    const mergedNodes = nodes.map(node => {
       const existing = current.find(n => n.id === node.id);
       if (existing) {
         // Preserve current force properties.
         // https://github.com/d3/d3-force#simulation_nodes
         const { x, y, vx, vy, fx = null, fy = null } = existing;
 
-        // TODO(burdon): Set the data.node as a property of the force node for liveness.
-        // return Object.assign(match, node, { x, y, vx, vy, fx, fy });
-        return Object.assign(node, { x, y, vx, vy, fx, fy });
+        // TODO(burdon): Assign data property instead of ALL of the node's properties.
+        return Object.assign(existing, node, { x, y, vx, vy, fx, fy });
       }
 
       // Create new node with initial properties.
-      // TODO(burdon): This isn't working in the echo demo (links are incorrect).
-      const n = Object.assign(node, {
-      // Object.assign({}, node, {
-        // Random initial position (otherwise explodes).
+      return Object.assign({}, node, {
+        // Random initial position (otherwise repulsion is unstable).
         x: center.x + (Math.random() - 0.5) * (force?.radial.radius || grid.width / 4),
         y: center.y + (Math.random() - 0.5) * (force?.radial.radius || grid.height / 4),
         vx: 0,
         vy: 0,
         fx: null,
         fy: null
+        // TODO(burdon): Unify with property adapter.
       }, this._options.initializer && this._options.initializer(node, center));
+    });
 
-      return n;
+    this._setData({
+      nodes: mergedNodes,
+      links
     });
   }
 

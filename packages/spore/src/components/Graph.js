@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import * as d3 from 'd3';
 import merge from 'lodash.merge';
 import React, { useEffect, useRef } from 'react';
@@ -9,7 +10,7 @@ import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
 
-import { useLayout, ForceLayout } from '../layout';
+import { useLayout } from '../layout';
 import { GuideProjector, LinkProjector, NodeProjector } from '../projector';
 
 // TODO(burdon): Use theme.
@@ -74,12 +75,13 @@ const Graph = (props) => {
     selected,
     grid,
     drag,
-    layout = new ForceLayout(),
+    layout,
     guideProjector = new GuideProjector(),
     linkProjector = new LinkProjector(),
     nodeProjector = new NodeProjector(),
     classes
   } = props;
+  assert(layout);
 
   const clazzes = merge(useGraphStyles(), classes);
 
@@ -99,9 +101,9 @@ const Graph = (props) => {
   // TODO(burdon): Selection not working.
   // NOTE: Called every time force update changes data (positions, etc.)
   useLayout(layout, grid, data, () => {
-    guideProjector.update(grid, layout.data, { group: guideGroup.current });
-    nodeProjector.update(grid, layout.data, { group: nodeGroup.current, selected });
-    linkProjector.update(grid, layout.data, { group: linkGroup.current, selected });
+    guideProjector.update(grid, layout, { group: guideGroup.current });
+    nodeProjector.update(grid, layout, { group: nodeGroup.current, selected });
+    linkProjector.update(grid, layout, { group: linkGroup.current, selected });
   }, [selected]);
 
   return (

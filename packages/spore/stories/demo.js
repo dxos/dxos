@@ -12,14 +12,15 @@ import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
 
 import {
-  convertTreeToGraph,
-  createGraph,
-  createItems,
-  createLinkId,
-  createTree,
   FullScreen,
   Grid,
   SVG,
+  convertTreeToGraph,
+  createGraph,
+  createItems,
+  createLink,
+  createTree,
+  seed,
   useGraphGenerator,
   useGrid,
   useObjectMutator,
@@ -50,6 +51,7 @@ export default {
   decorators: [withKnobs]
 };
 
+const log = debug('dxos:spore:demo');
 debug.enable('dxos:spore:*');
 
 //
@@ -95,8 +97,8 @@ export const withBoxProjector = () => {
   const layout = new GridLayout();
   const projector = new BoxProjector();
 
-  useLayout(layout, grid, data, ({ data }) => {
-    projector.update(grid, data, { group: nodes.current });
+  useLayout(layout, grid, data, () => {
+    projector.update(grid, layout, { group: nodes.current });
   });
 
   return (
@@ -161,7 +163,7 @@ export const withForceLayout = () => {
   useEffect(() => {
     drag.on('click', ({ source: selected }) => {
       setSelected(selected);
-      console.log(selected);
+      log('Selected:', selected);
     });
   }, [drag]);
 
@@ -181,6 +183,45 @@ export const withForceLayout = () => {
           selected={selected}
           layout={layout}
           drag={drag}
+        />
+      </SVG>
+    </FullScreen>
+  );
+};
+
+/**
+ * Force layout with cloned data.
+ */
+export const withClonedData = () => {
+  const [resizeListener, size] = useResizeAware();
+  const { width, height } = size;
+  const grid = useGrid({ width, height });
+
+  const generate = () => {
+    seed(123); // Same seed:
+    return convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 }));
+  };
+
+  // TODO(burdon): Show Labels updating in real time.
+  const [layout] = useState(new ForceLayout());
+  const [data, setData] = useState(generate);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      log('Updating...');
+      setData(generate());
+    }, 2000);
+
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <FullScreen>
+      {resizeListener}
+      <SVG width={width} height={height}>
+        <Graph
+          grid={grid}
+          data={data}
+          layout={layout}
         />
       </SVG>
     </FullScreen>
@@ -447,11 +488,7 @@ export const withDoubleForceLayouts = () => {
         },
         links: {
           $push: [
-            {
-              id: createLinkId(selected.id, target.id),
-              source: selected.id,
-              target: target.id
-            }
+            createLink(selected, target)
           ]
         }
       });
@@ -491,8 +528,9 @@ export const withDynamicLayout = () => {
   const grid = useGrid({ width, height });
 
   const [data] = useState(convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 2 })));
-
-  const [{ layout, drag }, setLayout] = useState({});
+  const [{ layout, drag }, setLayout] = useState({
+    layout: new ForceLayout()
+  });
 
   // Update layout.
   useEffect(() => {
@@ -530,8 +568,8 @@ export const withDynamicLayout = () => {
         <Graph
           grid={grid}
           data={data}
-          layout={layout}
           drag={drag}
+          layout={layout}
         />
       </SVG>
     </FullScreen>
@@ -603,9 +641,9 @@ export const withTreeLayout = () => {
   const projector = new TreeProjector();
   const guideProjector = new GuideProjector();
   const grid = useGrid({ width, height });
-  useLayout(layout, grid, data, ({ data }) => {
-    guideProjector.update(grid, layout.data, { group: guides.current });
-    projector.update(grid, data, {
+  useLayout(layout, grid, data, () => {
+    guideProjector.update(grid, layout, { group: guides.current });
+    projector.update(grid, layout, {
       links: links.current,
       nodes: nodes.current
     });
@@ -662,9 +700,9 @@ export const withMultipleLayouts = () => {
   });
 
   // Share data set.
-  useLayout(layout1, grid, data1, ({ data }) => nodeProjector.update(grid, data, { group: group1.current }));
-  useLayout(layout2, grid, data2, ({ data }) => nodeProjector.update(grid, data, { group: group2.current }));
-  useLayout(layout3, grid, data2, ({ data }) => nodeProjector.update(grid, data, { group: group3.current }));
+  useLayout(layout1, grid, data1, ({ layout }) => nodeProjector.update(grid, layout, { group: group1.current }));
+  useLayout(layout2, grid, data2, ({ layout }) => nodeProjector.update(grid, layout, { group: group2.current }));
+  useLayout(layout3, grid, data2, ({ layout }) => nodeProjector.update(grid, layout, { group: group3.current }));
 
   return (
     <FullScreen>
@@ -699,8 +737,8 @@ export const withRandomLayout = () => {
   });
 
   const nodeProjector = new NodeProjector({ transition: d3.transition, node: { radius: 8 } });
-  useLayout(layout, grid, data, ({ data }) => {
-    nodeProjector.update(grid, data, { group: nodes.current });
+  useLayout(layout, grid, data, () => {
+    nodeProjector.update(grid, layout, { group: nodes.current });
   });
 
   // Generate data.
@@ -773,8 +811,8 @@ export const withRadialLayout = () => {
     return () => timer.stop();
   }, []);
 
-  useLayout(layout, grid, data, ({ data }) => {
-    projector.update(grid, data, { group: nodes.current });
+  useLayout(layout, grid, data, () => {
+    projector.update(grid, layout, { group: nodes.current });
   });
 
   return (
@@ -843,8 +881,8 @@ export const withChangingLayout = () => {
   const { width, height } = size;
   const grid = useGrid({ width, height });
 
-  useLayout(layout, grid, data, ({ data }) => {
-    projector.update(grid, data, { group: nodes.current });
+  useLayout(layout, grid, data, () => {
+    projector.update(grid, layout, { group: nodes.current });
   });
 
   useEffect(() => {
