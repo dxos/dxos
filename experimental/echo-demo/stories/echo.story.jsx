@@ -3,28 +3,17 @@
 //
 
 import debug from 'debug';
-import leveljs from 'level-js';
 import React, { useEffect, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 import { withKnobs, number } from '@storybook/addon-knobs';
 import { makeStyles } from '@material-ui/core/styles';
 import { blueGrey } from '@material-ui/core/colors';
 
-import { FullScreen, Grid, SVG, useGrid } from '@dxos/gem-core';
+import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 import { createId } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
-import {
-  codec, Database, PartyManager, PartyFactory, FeedStoreAdapter, IdentityManager
-} from '@dxos/experimental-echo-db';
-import { Keyring, KeyType, KeyStore } from '@dxos/credentials';
-import { ObjectModel } from '@dxos/experimental-object-model';
-import { ModelFactory } from '@dxos/experimental-model-factory';
-import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
-import { createStorage } from '@dxos/random-access-multi-storage';
-import { createDatabase } from '../src/database'
 
-import { EchoContext, EchoGraph, useDatabase } from '../src';
+import { createDatabase, EchoContext, EchoGraph, useDatabase } from '../src';
 
 const log = debug('dxos:echo:demo');
 debug.enable('dxos:echo:demo, dxos:*:error');
@@ -105,7 +94,7 @@ const Info = () => {
   );
 };
 
-const Test = ({ peers, showGrid = false }) => {
+const Test = ({ peers }) => {
   const classes = useStyles();
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
@@ -154,10 +143,6 @@ const Test = ({ peers, showGrid = false }) => {
       {resizeListener}
 
       <SVG width={width} height={height}>
-        {showGrid && (
-          <Grid grid={grid} />
-        )}
-
         <Markers />
 
         {peers.map((peer, i) => {
