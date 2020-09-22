@@ -100,7 +100,7 @@ const createLayout = ({ database, grid, guides, delta, linkProjector, handleSele
       return;
     }
 
-    console.log({ source, target });
+    // console.log({ source, target });
     setImmediate(async () => {
       switch (source.type) {
         case 'database': {
@@ -136,16 +136,20 @@ const createLayout = ({ database, grid, guides, delta, linkProjector, handleSele
 /**
  * @param id
  * @param grid
- * @param delta
- * @param radius
- * @param onSelect
+ * @param [delta]
+ * @param [radius]
+ * @param [onSelect]
  * @constructor
  */
 const EchoGraph = (
   {
-    id, grid, delta, radius = 250, onSelect
+    id, grid, delta = { x: 0, y: 0 }, radius = 250, onSelect = () => {}
   }: {
-    id: string, grid: any, delta: { x: number, y: number }, radius: number, onSelect: Function
+    id: string,
+    grid: any,
+    delta?: { x: number, y: number },
+    radius?: number,
+    onSelect?: Function
   }
 ) => {
   const classes = useGraphStyles();
@@ -188,7 +192,7 @@ const EchoGraph = (
     setLayout(createLayout({
       database, delta, grid, guides: guides.current, linkProjector, handleSelect
     }));
-  }, [delta]);
+  }, [delta.x, delta.y]);
 
   return (
     <g>
