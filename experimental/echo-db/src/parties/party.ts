@@ -7,12 +7,12 @@ import assert from 'assert';
 import { KeyRecord, Keyring } from '@dxos/credentials';
 import { humanize } from '@dxos/crypto';
 import { ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
-import { ModelFactory, ModelType, ModelConstructor, Model } from '@dxos/experimental-model-factory';
+import { Model, ModelConstructor, ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { NetworkManager } from '@dxos/network-manager';
 
 import {
-  GreetingResponder, InvitationDetails, InvitationDescriptor, InvitationDescriptorType
+  GreetingResponder, InvitationDescriptor, InvitationDescriptorType, InvitationDetails
 } from '../invitations';
 import { createItemDemuxer, Item, ItemFilter, ItemManager } from '../items';
 import { ReplicationAdapter } from '../replication';

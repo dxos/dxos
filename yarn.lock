@@ -1265,10 +1265,10 @@
   dependencies:
     debug "^4.1.1"
 
-"@dxos/eslint-plugin@^1.0.4":
-  version "1.0.4"
-  resolved "http://npm.dev.dxos.network:5736/@dxos%2feslint-plugin/-/eslint-plugin-1.0.4.tgz#3407fd5fac51b1856140ae3b7b77c9c21c410994"
-  integrity sha512-RR3MQJdavNY7/S4TagQQUTUV1qitcEN9/HWSJBgvQ+U7ITZHpDKHAubh6ezP76DzUVcyBeZfGX1MvOgwrP2eQQ==
+"@dxos/eslint-plugin@^1.0.5":
+  version "1.0.5"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2feslint-plugin/-/eslint-plugin-1.0.5.tgz#e30c4576ce339c87d0f4354a947f356356286103"
+  integrity sha512-WvuoyBg2oADjFOK7qfSr0GbN6wh7CApk1RYrAcH0uTtWvcHJgVDrszlHEEzAQcP8ZC5wOGLSGVQh8JNM3/URJg==
   dependencies:
     "@rushstack/eslint-patch" "^1.0.3"
     "@typescript-eslint/eslint-plugin" "^3.10.1"

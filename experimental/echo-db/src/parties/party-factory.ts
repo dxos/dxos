@@ -4,11 +4,10 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import pify from 'pify';
 
-import { Keyring, KeyType, createPartyGenesisMessage, createKeyAdmitMessage, Filter } from '@dxos/credentials';
-import { keyToString, keyToBuffer, randomBytes } from '@dxos/crypto';
-import { FeedKey, PartyKey, createOrderedFeedStream } from '@dxos/experimental-echo-protocol';
+import { createKeyAdmitMessage, createPartyGenesisMessage, Filter, Keyring, KeyType } from '@dxos/credentials';
+import { keyToString, randomBytes } from '@dxos/crypto';
+import { createOrderedFeedStream, FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { createWritableFeedStream } from '@dxos/experimental-util';
@@ -75,7 +74,7 @@ export class PartyFactory {
    * @param feeds - set of hints for existing feeds belonging to this party.
    */
   async addParty (partyKey: PartyKey, feeds: FeedKey[]) {
-    const { feed, feedKey } = await this._initWritableFeed(partyKey);
+    const { feedKey } = await this._initWritableFeed(partyKey);
 
     const { party } = await this.constructParty(partyKey, feeds);
     await party.open();

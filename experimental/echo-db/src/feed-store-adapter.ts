@@ -7,7 +7,7 @@ import { Feed } from 'hypercore';
 
 import { createId } from '@dxos/crypto';
 import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
-import { FeedStore, FeedDescriptor } from '@dxos/feed-store';
+import { FeedStore } from '@dxos/feed-store';
 
 /**
  * An adapter class to better define the API surface of FeedStore we use.

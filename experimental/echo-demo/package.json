@@ -64,7 +64,7 @@
     "stream-buffers": "^3.0.2"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "^1.0.4",
+    "@dxos/eslint-plugin": "^1.0.5",
     "@storybook/addon-actions": "^6.0.19",
     "@storybook/addon-knobs": "^6.0.21",
     "@storybook/addon-links": "^6.0.19",

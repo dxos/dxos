@@ -63,7 +63,7 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "^1.0.4",
+    "@dxos/eslint-plugin": "^1.0.5",
     "@types/jest": "^25.2.3",
     "chance": "^1.1.6",
     "del-cli": "^3.0.0",

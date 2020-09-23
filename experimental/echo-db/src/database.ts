@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
 import { PartyKey } from '@dxos/experimental-echo-protocol';
 
 import { InvitationDescriptor, SecretProvider } from './invitations';
