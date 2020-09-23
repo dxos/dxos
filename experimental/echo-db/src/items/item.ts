@@ -81,6 +81,7 @@ export class Item<M extends Model<any>> {
     return Array.from(this._children.values());
   }
 
+  // TODO(telackey): This does not allow null or undefined as a parentId, but should it since we allow a null parent?
   async setParent (parentId: ItemID): Promise<void> {
     if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
