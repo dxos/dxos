@@ -290,17 +290,28 @@ export const withCustomNodes = () => {
   const grid = useGrid({ width, height });
 
   const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 4 })));
-  const [layout] = useState(() => new ForceLayout());
+  const [layout] = useState(() => new ForceLayout({
+    // TODO(burdon): Reconsile with propertyAdapter?
+    initializer: (node, center) => {
+      // Freeze first node.
+      if (node.id === data.nodes[0].id) {
+        return {
+          fx: center.x,
+          fy: center.y
+        };
+      }
+    }
+  }));
   const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey', freeze: 'shiftKey' }));
   const [{ nodeProjector }] = useState({
     nodeProjector: new NodeProjector({
       node: {
         showLabels: false,
-        propertyAdapter: (d) => {
-          const i = Number('0x' + d.id.slice(0, 4)) % nodeColors.length;
+        propertyAdapter: (node) => {
+          const i = Number('0x' + node.id.slice(0, 4)) % nodeColors.length;
           return {
             class: nodeColors[i],
-            radius: d.children?.length > 2 ? 20 : 10
+            radius: node.children?.length > 2 ? 20 : 10
           };
         }
       }
