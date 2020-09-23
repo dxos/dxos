@@ -5,7 +5,7 @@
 import assert from 'assert';
 import React, { useEffect, useRef } from 'react';
 
-import { createItem, createLinkId } from '@dxos/gem-core';
+import { createItem, createLink } from '@dxos/gem-core';
 
 import { LinkProjector } from '../projector';
 import { useGraphStyles } from './Graph';
@@ -67,17 +67,17 @@ export const GraphLinker = ({ grid, drag, linkProjector = new LinkProjector(), o
       if (target) {
         onUpdate({
           links: {
-            $push: [{ id: createLinkId(source.id, target.id), source, target }],
+            $push: [createLink(source, target)]
           },
         });
       } else {
         const target = createItem();
         onUpdate({
           nodes: {
-            $push: [target],
+            $push: [target]
           },
           links: {
-            $push: [{ id: createLinkId(source.id, target.id), source, target }],
+            $push: [createLink(source, target)]
           },
         });
       }

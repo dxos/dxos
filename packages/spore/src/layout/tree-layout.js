@@ -18,17 +18,17 @@ export class TreeLayout extends Layout {
     // https://github.com/d3/d3-hierarchy#tree
     const tree = d3.tree().size([360, r]);
     const hierarchy = tree(d3.hierarchy(data, d => d.children));
-
-    // TODO(burdon): Separate layout from data.
-    data.descendants = hierarchy.descendants.bind(hierarchy);
-
     const { height } = hierarchy;
-    this.data.guides = [...new Array(height)].map((ignore, i) => ({
-      id: `radius-${i}`,
-      type: 'circle',
-      cx: center.x,
-      cy: center.y,
-      r: (i + 1) * (r / height)
-    }));
+
+    Object.assign(this.data, {
+      descendants: hierarchy.descendants.bind(hierarchy),
+      guides: [...new Array(height)].map((ignore, i) => ({
+        id: `radius-${i}`,
+        type: 'circle',
+        cx: center.x,
+        cy: center.y,
+        r: (i + 1) * (r / height)
+      }))
+    });
   }
 }

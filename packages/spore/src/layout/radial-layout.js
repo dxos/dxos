@@ -14,7 +14,7 @@ import { Layout } from './layout';
 export class RadialLayout extends Layout {
 
   _onUpdate (grid, data) {
-    const { nodes = [] } = data;
+    const { nodes = [], links = [] } = data;
 
     const center = value(this._options.center)(grid);
     const radius = value(this._options.radius)(grid);
@@ -24,16 +24,18 @@ export class RadialLayout extends Layout {
 
     const theta = Math.PI * 2 / nodes.length;
 
-    nodes.forEach((node, i) => {
-      Object.assign(node, {
+    this._setData({
+      nodes: nodes.map((node, i) => Object.assign({}, node, {
+        x: center.x + Math.sin(theta * i) * radius,
+        y: center.y - Math.cos(theta * i) * radius,
         layout: {
           node: {
             radius: nodeRadius
           }
-        },
-        x: center.x + Math.sin(theta * i) * radius,
-        y: center.y - Math.cos(theta * i) * radius
-      });
+        }
+      })),
+
+      links
     });
   }
 }

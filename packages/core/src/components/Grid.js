@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import * as d3 from 'd3';
 import React, { useEffect, useRef } from 'react';
 
@@ -45,12 +46,14 @@ const useStyles = makeStyles(() => ({
  */
 const Grid = ({ grid, showGrid = true, showAxis = false, tickFormat }) => {
   const classes = useStyles();
-  const { size, scaleX, scaleY, ticks } = grid;
 
   const xAxisRef = useRef();
   const yAxisRef = useRef();
   const xGridRef = useRef();
   const yGridRef = useRef();
+
+  const { size, scaleX, scaleY, ticks } = grid;
+  assert(grid.size);
 
   useEffect(() => {
     if (showAxis) {

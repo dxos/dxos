@@ -11,12 +11,14 @@ import { useObjectMutator } from '@dxos/gem-core';
 
 const log = debug('spore:testing');
 
+// https://www.npmjs.com/package/faker#setting-a-randomness-seed
+export const seed = seed => faker.seed(seed);
+
 /**
- *
  * @param array
  * @returns {*}
  */
-const pick = array => array[faker.random.number({ min: 0, max: array.length - 1 })];
+export const pick = array => array[faker.random.number({ min: 0, max: array.length - 1 })];
 
 /**
  *
@@ -62,18 +64,10 @@ export const createTree = ({ minDepth = 2, maxDepth = 2, maxChildren = 8 }) => {
  *
  * @param source
  * @param target
- * @returns {string}
- */
-export const createLinkId = (source, target) => `${source}_${target}`;
-
-/**
- *
- * @param source
- * @param target
  * @returns {{id: string, source: *, target: *}}
  */
 export const createLink = (source, target) => ({
-  id: createLinkId(source.id, target.id),
+  id: `${source.id}_${target.id}`,
   source: source.id,
   target: target.id
 });
@@ -91,14 +85,8 @@ export const convertTreeToGraph = root => {
 
   const traverse = node => {
     graph.nodes.push(node);
-
-    (node.children || []).forEach(child => {
-      graph.links.push({
-        id: createLinkId(node.id, child.id),
-        source: node.id,
-        target: child.id
-      });
-
+    node.children?.forEach(child => {
+      graph.links.push(createLink(node, child));
       traverse(child);
     });
   };
@@ -123,13 +111,9 @@ export const createGraph = (numNodes = 0, numLinks = 0) => {
       const target = pick(nodes);
 
       if (source.id !== target.id) {
-        const id = createLinkId(source.id, target.id);
-        if (!links.get(id)) {
-          links.set(id, {
-            id,
-            source,
-            target
-          });
+        const link = createLink(source, target);
+        if (!links.get(link.id)) {
+          links.set(link.id, link);
         }
       }
     }

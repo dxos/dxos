@@ -4,6 +4,7 @@
 
 import EventEmitter from 'events';
 import defaultsDeep from 'lodash.defaultsdeep';
+import assert from "assert";
 
 /**
  * Base class for layouts.
@@ -57,4 +58,25 @@ export class Layout extends EventEmitter {
    */
   // eslint-disable-next-line no-unused-vars
   _onUpdate (grid, data) {}
+
+  // TODO(burdon): Move to graph.
+  _setData (data) {
+    const find = id => {
+      assert(typeof id === 'string');
+      const node = data.nodes.find(n => n.id === id);
+      assert(node);
+      return node;
+    };
+
+    Object.assign(this.data, {
+      nodes: data.nodes,
+      links: data.links.map(({ id, source, target }) => {
+        return {
+          id,
+          source: find(source),
+          target: find(target)
+        };
+      })
+    });
+  }
 }
