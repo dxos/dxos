@@ -32,8 +32,10 @@ export class Item<M extends Model<any>> {
    * @param {ItemType} itemType - User defined type (WRN).
    * @param {Model} model - Data model (provided by `ModelFactory`).
    * @param [writeStream] - Write stream if not read-only.
+   * @param {Item<any>} [parent] - Parent Item (if not a root Item).
    */
-  constructor (partyKey: PartyKey, itemId: ItemID, itemType: ItemType, model: M, writeStream?: NodeJS.WritableStream) {
+  constructor (partyKey: PartyKey, itemId: ItemID, itemType: ItemType, model: M,
+               writeStream?: NodeJS.WritableStream, parent?: Item<any> | null) {
     assert(partyKey);
     assert(itemId);
     assert(model);
@@ -42,6 +44,7 @@ export class Item<M extends Model<any>> {
     this._itemType = itemType;
     this._model = model;
     this._writeStream = writeStream;
+    this._parent = parent ?? null;
   }
 
   toString () {

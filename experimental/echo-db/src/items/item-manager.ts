@@ -60,8 +60,9 @@ export class ItemManager {
    * Creates an item and writes the genesis message.
    * @param {ModelType} modelType
    * @param {ItemType} [itemType]
+   * @param {ItemID} [parentId]
    */
-  async createItem (modelType: ModelType, itemType?: ItemType): Promise<Item<any>> {
+  async createItem (modelType: ModelType, itemType?: ItemType, parentId?: ItemID): Promise<Item<any>> {
     assert(this._writeStream);
     assert(modelType);
 
@@ -81,7 +82,8 @@ export class ItemManager {
       itemId,
       genesis: {
         itemType,
-        modelType
+        modelType,
+        parentId
       }
     }));
 
@@ -97,12 +99,20 @@ export class ItemManager {
    * @param modelType
    * @param itemType
    * @param readStream - Inbound mutation stream (from multiplexer).
+   * @param [parentId] - ItemID of the parent of this Item (optional).
    */
-  async constructItem (itemId: ItemID, modelType: ModelType, itemType: ItemType, readStream: NodeJS.ReadableStream) {
+  async constructItem (itemId: ItemID, modelType: ModelType,
+                       itemType: ItemType, readStream: NodeJS.ReadableStream,
+                       parentId?: ItemID) {
     assert(this._writeStream);
     assert(itemId);
     assert(modelType);
     assert(readStream);
+
+    const parent = parentId ? this._items.get(parentId) : null;
+    if (parentId && !parent) {
+      throw new Error(`Missing parent: ${parentId}`);
+    }
 
     // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
     if (!this._modelFactory.hasModel(modelType)) {
@@ -144,7 +154,7 @@ export class ItemManager {
     outboundTransform.pipe(this._writeStream);
 
     // Create the Item.
-    const item = new Item(this._partyKey, itemId, itemType, model, this._writeStream);
+    const item = new Item(this._partyKey, itemId, itemType, model, this._writeStream, parent);
     assert(!this._items.has(itemId));
     this._items.set(itemId, item);
     log('Constructed:', String(item));
