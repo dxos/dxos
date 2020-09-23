@@ -5,7 +5,7 @@
 import { PartyKey } from '@dxos/experimental-echo-protocol';
 
 import { InvitationDescriptor, SecretProvider } from './invitations';
-import { Party, PartyFilter, PartyManager } from './parties';
+import { PartyFilter, PartyManager, Party } from './parties';
 import { ResultSet } from './result';
 
 export interface Options {
@@ -67,10 +67,10 @@ export class Database {
 
     await this.open();
 
-    const party = await this._partyManager.createParty();
-    await party.open();
+    const impl = await this._partyManager.createParty();
+    await impl.open();
 
-    return party;
+    return new Party(impl);
   }
 
   /**
@@ -80,7 +80,8 @@ export class Database {
   async getParty (partyKey: PartyKey): Promise<Party | undefined> {
     await this.open();
 
-    return this._partyManager.parties.find(party => Buffer.compare(party.key, partyKey) === 0);
+    const impl = this._partyManager.parties.find(party => Buffer.compare(party.key, partyKey) === 0);
+    return impl && new Party(impl);
   }
 
   /**
@@ -91,7 +92,7 @@ export class Database {
   async queryParties (filter?: PartyFilter): Promise<ResultSet<Party>> {
     await this.open();
 
-    return new ResultSet<Party>(this._partyManager.update, () => this._partyManager.parties);
+    return new ResultSet(this._partyManager.update.discardParameter(), () => this._partyManager.parties.map(impl => new Party(impl)));
   }
 
   /**
@@ -100,6 +101,7 @@ export class Database {
    * @param secretProvider
    */
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<Party> {
-    return this._partyManager.joinParty(invitationDescriptor, secretProvider);
+    const impl = await this._partyManager.joinParty(invitationDescriptor, secretProvider);
+    return new Party(impl);
   }
 }

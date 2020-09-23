@@ -19,7 +19,7 @@ import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { codec } from './codec';
 import { Database } from './database';
 import { FeedStoreAdapter } from './feed-store-adapter';
-import { IdentityManager, Party, PartyManager } from './parties';
+import { IdentityManager, PartyManager } from './parties';
 import { PartyFactory } from './parties/party-factory';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
@@ -62,7 +62,7 @@ describe('api tests', () => {
     expect(parties.value).toHaveLength(0);
 
     const [updated, onUpdate] = latch();
-    const unsubscribe = parties.subscribe(async (parties: Party[]) => {
+    const unsubscribe = parties.subscribe(async parties => {
       log('Updated:', parties.map(party => humanize(party.key)));
       expect(parties).toHaveLength(1);
       parties.map(async party => {
@@ -89,7 +89,7 @@ describe('api tests', () => {
     expect(parties.value).toHaveLength(0);
 
     const [updated, onUpdate] = latch();
-    const unsubscribe = parties.subscribe(async (parties: Party[]) => {
+    const unsubscribe = parties.subscribe(async parties => {
       log('Updated:', parties.map(party => humanize(party.key)));
 
       // TODO(burdon): Update currentybly called after all mutations below have completed?
@@ -128,7 +128,7 @@ describe('api tests', () => {
     expect(parties.value).toHaveLength(0);
 
     const [updated, onUpdate] = latch();
-    const unsubscribe = parties.subscribe(async (parties: Party[]) => {
+    const unsubscribe = parties.subscribe(async parties => {
       log('Updated:', parties.map(party => humanize(party.key)));
 
       expect(parties).toHaveLength(1);

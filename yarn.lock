@@ -1105,6 +1105,11 @@
   resolved "http://npm.dev.dxos.network:5736/@dxos%2fasync/-/async-1.0.0-beta.7.tgz#b4dbbe66e6ac3dbf7fd804375e967e6c9e6538fe"
   integrity sha512-f+PoB/h+JV+WbhoXA2rIOuE+NL8MwfXk0dt23TwqA/rcUFBRmUb19iK0JkQFmH9see7tCYuZJ1B8C3vwIVDwEg==
 
+"@dxos/async@^1.0.0-beta.8":
+  version "1.0.0-beta.8"
+  resolved "https://registry.npmjs.org/@dxos/async/-/async-1.0.0-beta.8.tgz#051a47259d17a18e1a77c0ef8056fa0377d95207"
+  integrity sha512-sAak4G0ufz2a/SBs28Kgu4TiwyGODPnVxTOYdojdAset7CEM1SpvEci0D7MPU0eCqlB2IMniveIp5paas6i8Vw==
+
 "@dxos/client@^1.0.0-beta.260":
   version "1.0.0-moon.4"
   resolved "http://npm.dev.dxos.network:5736/@dxos%2fclient/-/client-1.0.0-moon.4.tgz#47b7364e8fb9a6b43a0f5aaacb11164a08a87cfb"

@@ -14,8 +14,8 @@ import { FeedStoreAdapter } from '../feed-store-adapter';
 import { SecretProvider } from '../invitations/common';
 import { InvitationDescriptor } from '../invitations/invitation-descriptor';
 import { IdentityManager } from './identity-manager';
-import { Party } from './party';
 import { PartyFactory } from './party-factory';
+import { PartyInternal } from './party-internal';
 
 const log = debug('dxos:echo:party-manager');
 
@@ -27,13 +27,13 @@ export class PartyManager {
   private _opened = false;
 
   // Map of parties by party key.
-  private readonly _parties = new ComplexMap<PublicKey, Party>(keyToString);
+  private readonly _parties = new ComplexMap<PublicKey, PartyInternal>(keyToString);
 
   private readonly _lock = new Lock();
 
   // External event listener.
   // TODO(burdon): Wrap with subscribe.
-  readonly update = new Event<Party>();
+  readonly update = new Event<PartyInternal>();
 
   constructor (
     private readonly _identityManager: IdentityManager,
@@ -41,7 +41,7 @@ export class PartyManager {
     private readonly _partyFactory: PartyFactory
   ) { }
 
-  get parties (): Party[] {
+  get parties (): PartyInternal[] {
     return Array.from(this._parties.values());
   }
 
@@ -89,7 +89,7 @@ export class PartyManager {
   /**
    * Creates a new party, writing its genesis block to the stream.
    */
-  async createHalo (): Promise<Party> {
+  async createHalo (): Promise<PartyInternal> {
     assert(this._opened, 'PartyManager is not open.');
     assert(!this._identityManager.halo, 'HALO already exists.');
 
@@ -103,7 +103,7 @@ export class PartyManager {
   /**
    * Creates a new party, writing its genesis block to the stream.
    */
-  async createParty (): Promise<Party> {
+  async createParty (): Promise<PartyInternal> {
     assert(this._opened, 'PartyManager is not open.');
     assert(this._identityManager.initialized, 'IdentityManager has not been initialized with the HALO.');
 
@@ -134,7 +134,7 @@ export class PartyManager {
     return this._lock.executeSynchronized(async () => {
       log(`Adding party partyKey=${keyToString(partyKey)} feeds=${feeds.map(keyToString)}`);
       assert(!this._parties.has(partyKey));
-      const { party } = await this._partyFactory.addParty(partyKey, feeds);
+      const party = await this._partyFactory.addParty(partyKey, feeds);
 
       if (this._parties.has(party.key)) {
         await party.close();

@@ -41,7 +41,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/async": "^1.0.0-beta.7",
+    "@dxos/async": "^1.0.0-beta.8",
     "@dxos/codec-protobuf": "^1.1.0-beta.0",
     "@dxos/crypto": "^1.0.0-beta.4",
     "@dxos/experimental-echo-protocol": "^1.0.0-beta.28",

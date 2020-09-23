@@ -172,7 +172,7 @@ export class ItemManager {
    */
   queryItems (filter?: ItemFilter): ResultSet<Item<any>> {
     const { type } = filter || {};
-    return new ResultSet<Item<any>>(this._itemUpdate, () => Array.from(this._items.values())
+    return new ResultSet<Item<any>>(this._itemUpdate.discardParameter(), () => Array.from(this._items.values())
       .filter(item => !type || type === item.type));
   }
 }
