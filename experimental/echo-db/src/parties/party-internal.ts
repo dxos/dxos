@@ -119,8 +119,8 @@ export class PartyInternal {
   // TODO(burdon): Get modelType from somewhere other than ObjectModel.meta.type.
   // TODO(burdon): Pass in { type, parent } as options.
   async createItem <M extends Model<any>> (model: ModelConstructor<M>,
-                                           itemType?: ItemType | undefined,
-                                           parentId?: ItemID | undefined): Promise<Item<M>> {
+    itemType?: ItemType | undefined,
+    parentId?: ItemID | undefined): Promise<Item<M>> {
     assert(this._itemManager);
     assert(model?.meta?.type);
 
