@@ -102,7 +102,7 @@ export class Party {
     this._replicator.stop();
 
     // Disconnect the read stream.
-    this._pipeline.readStream?.unpipe(this._itemDemuxer);
+    this._pipeline.inboundEchoStream?.unpipe(this._itemDemuxer);
 
     this._itemManager = undefined;
     this._itemDemuxer = undefined;
@@ -163,14 +163,14 @@ export class Party {
    * Creates an invition for a remote peer.
    */
   async createInvitation (inviteDetails: InvitationDetails) {
-    assert(this._pipeline.haloWriteStream);
+    assert(this._pipeline.outboundHaloStream);
     assert(this._networkManager);
 
     const responder = new GreetingResponder(
       this.key, // TODO(burdon): Change order.
       this._keyring,
       this._networkManager,
-      this._pipeline.haloWriteStream,
+      this._pipeline.outboundHaloStream,
       () => this._partyProcessor.feedKeys, // TODO(burdon): This can be accessed directly from partyProcessor!
       this._identityKeypair // TODO(burdon): Move to keyring?
     );

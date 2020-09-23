@@ -5,9 +5,9 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { createKeyAdmitMessage, createPartyGenesisMessage, Filter, Keyring, KeyType } from '@dxos/credentials';
+import { Keyring, KeyType, createPartyGenesisMessage, createKeyAdmitMessage, Filter } from '@dxos/credentials';
 import { keyToString, randomBytes } from '@dxos/crypto';
-import { createOrderedFeedStream, FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
+import { FeedKey, PartyKey } from '@dxos/experimental-echo-protocol';
 import { ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { createWritableFeedStream } from '@dxos/experimental-util';
@@ -49,18 +49,16 @@ export class PartyFactory {
   async createParty (): Promise<Party> {
     assert(!this._options.readOnly);
 
-    // TODO(telackey): Proper identity and keyring management.
     const partyKey = await this._keyring.createKeyRecord({ type: KeyType.PARTY });
-
     const { feedKey } = await this._initWritableFeed(partyKey.publicKey);
-
-    const { party, pipeline } = await this.constructParty(partyKey.publicKey, []);
+    const { party, pipeline } = await this.constructParty(partyKey.publicKey);
 
     // Connect the pipeline.
     await party.open();
 
     // TODO(burdon): Call party processor to write genesis, etc.
-    pipeline.haloWriteStream!.write(createPartyGenesisMessage(this._keyring, partyKey, feedKey, this._getIdentityKey()));
+    // TODO(marik-d): Wait for this message to be processed first
+    pipeline.outboundHaloStream!.write(createPartyGenesisMessage(this._keyring, partyKey, feedKey, this._getIdentityKey()));
 
     // Create special properties item.
     await party.createItem(ObjectModel, PARTY_ITEM_TYPE);
@@ -71,12 +69,15 @@ export class PartyFactory {
   /**
    * Constructs a party object and creates a local write feed for it.
    * @param partyKey
-   * @param feeds - set of hints for existing feeds belonging to this party.
+   * @param feedKeyHints - set of hints for existing feeds belonging to this party.
    */
-  async addParty (partyKey: PartyKey, feeds: FeedKey[]) {
+  // TODO(marik-d): Expand this API to accept any type of hint.
+  async addParty (partyKey: PartyKey, feedKeyHints: FeedKey[] = []) {
     const { feedKey } = await this._initWritableFeed(partyKey);
 
-    const { party } = await this.constructParty(partyKey, feeds);
+    // TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
+    // mechanism is broken by not waiting on the messages to be processed before returning.
+    const { party } = await this.constructParty(partyKey, [feedKey.publicKey, ...feedKeyHints]);
     await party.open();
 
     // TODO(marik-d): Refactor so it doesn't return a tuple
@@ -86,9 +87,9 @@ export class PartyFactory {
   /**
    * Constructs a party object from an existing set of feeds.
    * @param partyKey
-   * @param feedKeys
+   * @param feedKeyHints
    */
-  async constructParty (partyKey: PartyKey, feedKeys: FeedKey[] = []) {
+  async constructParty (partyKey: PartyKey, feedKeyHints: FeedKey[] = []) {
     // TODO(burdon): Ensure that this node's feed (for this party) has been created first.
     //   I.e., what happens if remote feed is synchronized first triggering 'feed' event above.
     //   In this case create pipeline in read-only mode.
@@ -103,14 +104,15 @@ export class PartyFactory {
     //
 
     const partyProcessor = new PartyProcessor(partyKey);
-    await partyProcessor.addHints([feed.key, ...feedKeys]);
+    if (feedKeyHints.length) {
+      await partyProcessor.takeHints(feedKeyHints);
+    }
 
-    const feedReadStream = await createOrderedFeedStream(
-      this._feedStore.feedStore, partyProcessor.getActiveFeedSet(), partyProcessor.messageSelector);
+    const iterator = await this._feedStore.createIterator(partyKey, partyProcessor.messageSelector);
     const feedWriteStream = createWritableFeedStream(feed);
 
     const pipeline = new Pipeline(
-      partyProcessor, feedReadStream, feedWriteStream, this._options);
+      partyProcessor, iterator, feedWriteStream, this._options);
 
     const replicator = new ReplicationAdapter(
       this._networkManager,
@@ -175,7 +177,7 @@ export class PartyFactory {
     // 1. Create a feed for the HALO.
     // TODO(telackey): Just create the FeedKey and then let other code create the feed with the correct key.
     const { feedKey } = await this._initWritableFeed(identityKey.publicKey);
-    const { party: halo, pipeline } = await this.constructParty(identityKey.publicKey, [feedKey.publicKey]);
+    const { party: halo, pipeline } = await this.constructParty(identityKey.publicKey);
     // Connect the pipeline.
     await halo.open();
 
@@ -183,11 +185,11 @@ export class PartyFactory {
     //      A. Identity key (in the case of the HALO, this serves as the Party key)
     //      B. Device key (the first "member" of the Identity's HALO)
     //      C. Feed key (the feed owned by the Device)
-    pipeline.haloWriteStream!.write(createPartyGenesisMessage(this._keyring, identityKey, feedKey, deviceKey));
+    pipeline.outboundHaloStream!.write(createPartyGenesisMessage(this._keyring, identityKey, feedKey, deviceKey));
 
     // 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
     //    message will be copied into other Parties which we create or join.
-    pipeline.haloWriteStream!.write(createKeyAdmitMessage(this._keyring, identityKey.publicKey, identityKey));
+    pipeline.outboundHaloStream!.write(createKeyAdmitMessage(this._keyring, identityKey.publicKey, identityKey));
 
     // 4. LATER write the IdentityInfo message with descriptive details (eg, display name).
     // 5. LATER write the DeviceInfo message with descriptive details (eg, display name).

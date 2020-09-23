@@ -74,6 +74,7 @@ export class ReplicationAdapter {
       replicate: async (remoteFeeds: any, info: any) => {
         // We can ignore remoteFeeds entirely, because the set of feeds we want to replicate is dictated by the Party.
         // TODO(telackey): why are we opening feeds? Necessary or belt/braces thinking, or because open party does it?
+        log(`replicate: peerId=${info.session.peerId.toString('hex')}, feeds=${this._activeFeeds.get().map(keyToString)}`);
         return Promise.all(this._activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
       }
     });

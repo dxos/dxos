@@ -15,7 +15,8 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "target": "ES2018"
+    "target": "ES2018",
+    "removeComments": false
   },
   "include": [
     "src",
