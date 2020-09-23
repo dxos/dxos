@@ -29,7 +29,7 @@ export class Party {
   }
 
   get isOpen (): boolean {
-    return !!this._impl.isOpen;
+    return this._impl.isOpen;
   }
 
   /**

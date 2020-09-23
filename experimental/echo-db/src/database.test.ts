@@ -156,6 +156,34 @@ describe('api tests', () => {
     unsubscribe();
   });
 
+  test('create party, two items with child items, and then move child.', async () => {
+    const db = await createDatabase();
+    await db.open();
+
+    const parties = await db.queryParties({ open: true });
+    log('Parties:', parties.value.map(party => humanize(party.key)));
+    expect(parties.value).toHaveLength(0);
+
+    const party = await db.createParty();
+    expect(party.isOpen).toBeTruthy();
+
+    const parentA = await party.createItem(ObjectModel, 'wrn://dxos.org/item/document');
+    const childA = await party.createItem(ObjectModel, undefined, parentA.id);
+    expect(parentA.children).toHaveLength(1);
+    expect(parentA.children[0].id).toEqual(childA.id);
+
+    const parentB = await party.createItem(ObjectModel, 'wrn://dxos.org/item/document');
+    const childB = await party.createItem(ObjectModel, undefined, parentB.id);
+    expect(parentB.children).toHaveLength(1);
+    expect(parentB.children[0].id).toEqual(childB.id);
+
+    await childB.setParent(parentA.id);
+    expect(parentA.children).toHaveLength(2);
+    expect(parentA.children[0].id).toEqual(childA.id);
+    expect(parentA.children[1].id).toEqual(childB.id);
+    expect(parentB.children).toHaveLength(0);
+  });
+
   test('cold start from replicated party', async () => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
