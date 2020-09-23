@@ -95,6 +95,8 @@ export class Item<M extends Model<any>> {
       }
     }));
 
+    // It would be very surprising for item.parent still to reference the old parent just after calling item.setParent.
+    // To prevent that unexpected result, we wait for the mutation written above to be processed.
     await waitForProcessing;
   }
 
