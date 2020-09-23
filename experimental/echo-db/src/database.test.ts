@@ -150,8 +150,7 @@ describe('api tests', () => {
     expect(party.isOpen).toBeTruthy();
 
     const parent = await party.createItem(ObjectModel, 'wrn://dxos.org/item/document');
-    const child = await party.createItem(ObjectModel);
-    await child.setParent(parent.id);
+    await party.createItem(ObjectModel, undefined, parent.id);
 
     await updated;
     unsubscribe();

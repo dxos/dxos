@@ -44,7 +44,7 @@ export class Item<M extends Model<any>> {
     this._itemType = itemType;
     this._model = model;
     this._writeStream = writeStream;
-    this._parent = parent ?? null;
+    this._updateParent(parent);
   }
 
   toString () {
@@ -95,13 +95,17 @@ export class Item<M extends Model<any>> {
   _processMutation (mutation: protocol.dxos.echo.ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
     const { parentId } = mutation;
 
+    const parent = getItem(parentId);
+    this._updateParent(parent);
+  }
+
+  _updateParent (parent: Item<any> | null | undefined) {
     if (this._parent) {
       this._parent._children.delete(this);
     }
 
-    if (parentId) {
-      this._parent = getItem(parentId) || null;
-      assert(this._parent);
+    if (parent) {
+      this._parent = parent;
       this._parent._children.add(this);
     } else {
       this._parent = null;
