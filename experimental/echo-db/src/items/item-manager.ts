@@ -83,8 +83,8 @@ export class ItemManager {
       genesis: {
         itemType,
         modelType,
-        parentId
-      }
+      },
+      itemMutation: parentId ? { parentId } : undefined
     }));
 
     // Unlocked by construct.
