@@ -1105,6 +1105,11 @@
   resolved "http://npm.dev.dxos.network:5736/@dxos%2fasync/-/async-1.0.0-beta.7.tgz#b4dbbe66e6ac3dbf7fd804375e967e6c9e6538fe"
   integrity sha512-f+PoB/h+JV+WbhoXA2rIOuE+NL8MwfXk0dt23TwqA/rcUFBRmUb19iK0JkQFmH9see7tCYuZJ1B8C3vwIVDwEg==
 
+"@dxos/async@^1.0.0-beta.8":
+  version "1.0.0-beta.8"
+  resolved "https://registry.npmjs.org/@dxos/async/-/async-1.0.0-beta.8.tgz#051a47259d17a18e1a77c0ef8056fa0377d95207"
+  integrity sha512-sAak4G0ufz2a/SBs28Kgu4TiwyGODPnVxTOYdojdAset7CEM1SpvEci0D7MPU0eCqlB2IMniveIp5paas6i8Vw==
+
 "@dxos/client@^1.0.0-beta.260":
   version "1.0.0-moon.4"
   resolved "http://npm.dev.dxos.network:5736/@dxos%2fclient/-/client-1.0.0-moon.4.tgz#47b7364e8fb9a6b43a0f5aaacb11164a08a87cfb"
@@ -1195,10 +1200,10 @@
     stream-to-array "^2.3.0"
     uuid "^3.3.2"
 
-"@dxos/credentials@^1.0.1-beta.46":
-  version "1.0.1-beta.46"
-  resolved "https://registry.yarnpkg.com/@dxos/credentials/-/credentials-1.0.1-beta.46.tgz#491af7375b966fe119d0e4300e6393a87148b4fe"
-  integrity sha512-GjRC8FuBm7qy2zK/xG/1Vz6GHoELC+Gfwv9VY9yp80ei8sSc9IdhobXJ/KlpQoOk5p7uS3Oaz/jnnJgXHVWJ4w==
+"@dxos/credentials@^1.0.1-beta.47":
+  version "1.0.1-beta.47"
+  resolved "https://registry.yarnpkg.com/@dxos/credentials/-/credentials-1.0.1-beta.47.tgz#df37db9e7d3e35d461acc9260d2b304457c6c4cd"
+  integrity sha512-jQNsnElxroZC3L95tZOn4syatV0eJhlK+zXBSOhjA0WlPIuBZEkm/C2fmnSKlKUkGKnQDwyNk1VtLNieoBQBSQ==
   dependencies:
     "@dxos/codec-protobuf" "^1.1.0-beta.10"
     "@dxos/crypto" "^1.0.0-beta.1"
@@ -1265,10 +1270,10 @@
   dependencies:
     debug "^4.1.1"
 
-"@dxos/eslint-plugin@^1.0.4":
-  version "1.0.4"
-  resolved "http://npm.dev.dxos.network:5736/@dxos%2feslint-plugin/-/eslint-plugin-1.0.4.tgz#3407fd5fac51b1856140ae3b7b77c9c21c410994"
-  integrity sha512-RR3MQJdavNY7/S4TagQQUTUV1qitcEN9/HWSJBgvQ+U7ITZHpDKHAubh6ezP76DzUVcyBeZfGX1MvOgwrP2eQQ==
+"@dxos/eslint-plugin@^1.0.5":
+  version "1.0.5"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2feslint-plugin/-/eslint-plugin-1.0.5.tgz#e30c4576ce339c87d0f4354a947f356356286103"
+  integrity sha512-WvuoyBg2oADjFOK7qfSr0GbN6wh7CApk1RYrAcH0uTtWvcHJgVDrszlHEEzAQcP8ZC5wOGLSGVQh8JNM3/URJg==
   dependencies:
     "@rushstack/eslint-patch" "^1.0.3"
     "@typescript-eslint/eslint-plugin" "^3.10.1"

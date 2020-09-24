@@ -8,10 +8,10 @@ import { Readable } from 'readable-stream';
 
 import { Event } from '@dxos/async';
 import { keyToString } from '@dxos/crypto';
-import { createReadable, Trigger, ComplexSet } from '@dxos/experimental-util';
-import { FeedStore, FeedDescriptor, createBatchStream } from '@dxos/feed-store';
+import { Trigger } from '@dxos/experimental-util';
+import { createBatchStream, FeedDescriptor, FeedStore } from '@dxos/feed-store';
 
-import { FeedKey, FeedBlock } from '../types';
+import { FeedBlock, FeedKey } from '../types';
 
 const log = debug('dxos:echo:feed-store-iterator');
 
@@ -27,27 +27,27 @@ export interface FeedSetProvider {
 }
 
 export type MessageSelector = (candidates: FeedBlock[]) => number | undefined;
+export type FeedSelector = (descriptor: FeedDescriptor) => boolean;
 
 /**
  * Creates an ordered stream.
  *
  * @param feedStore
- * @param [feedSelector] - Returns true if the feed should be considered.
+ * @param [feedSelector] - Filter for desired feeds.
  * @param [messageSelector] - Returns the index of the selected message candidate (or undefined).
  * @readonly {NodeJS.ReadableStream} readStream stream.
  */
-export async function createOrderedFeedStream (
+export async function createIterator (
   feedStore: FeedStore,
-  feedSetProvider: FeedSetProvider,
+  feedSelector: FeedSelector = () => true,
   messageSelector: MessageSelector = () => 0
-): Promise<NodeJS.ReadableStream> {
+): Promise<FeedStoreIterator> {
   assert(!feedStore.closing && !feedStore.closed);
   if (!feedStore.opened) {
     await feedStore.open();
     await feedStore.ready();
   }
-
-  const iterator = new FeedStoreIterator(feedSetProvider, messageSelector);
+  const iterator = new FeedStoreIterator(feedSelector, messageSelector);
 
   // TODO(burdon): Only add feeds that belong to party (or use feedSelector).
   const initialDescriptors = feedStore.getDescriptors().filter(descriptor => descriptor.opened);
@@ -60,17 +60,7 @@ export async function createOrderedFeedStream (
     iterator.addFeedDescriptor(descriptor);
   });
 
-  // Create stream from iterator.
-  // TODO(burdon): What happens to iterator when the stream is closed?
-  // TODO(burdon): Is there a way to avoid setImmediate. Separate function to creast stream?
-  const readStream = createReadable<FeedBlock>();
-  setImmediate(async () => {
-    for await (const message of iterator) {
-      readStream.push(message);
-    }
-  });
-
-  return readStream;
+  return iterator;
 }
 
 /**
@@ -78,7 +68,8 @@ export async function createOrderedFeedStream (
  * data is read. This allows the consumer (e.g., PartyProcessor) to control the order in which data is generated.
  * (Streams would not be suitable since NodeJS streams have intenal buffer that the system tends to eagerly fill.)
  */
-class FeedStoreIterator implements AsyncIterable<FeedBlock> {
+// TODO(marik-d): Add stop method.
+export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   /** Curent set of active feeds. */
   private readonly _candidateFeeds = new Set<FeedDescriptor>();
 
@@ -93,24 +84,17 @@ class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   private readonly _trigger = new Trigger();
   private readonly _generatorInstance = this._generator();
 
-  private readonly _feedSetProvider: FeedSetProvider;
-  private readonly _messageSelector: MessageSelector;
-
   // Needed for round-robin ordering.
   private _messageCount = 0;
 
   private _destroyed = false;
 
   constructor (
-    feedSetProvider: FeedSetProvider,
-    messageSelector: MessageSelector
+    private readonly _feedSelector: FeedSelector,
+    private readonly _messageSelector: MessageSelector
   ) {
-    assert(feedSetProvider);
-    assert(messageSelector);
-    this._feedSetProvider = feedSetProvider;
-    this._messageSelector = messageSelector;
-
-    feedSetProvider.added.on(() => this._trigger.wake());
+    assert(_feedSelector);
+    assert(_messageSelector);
   }
 
   /**
@@ -146,17 +130,16 @@ class FeedStoreIterator implements AsyncIterable<FeedBlock> {
    */
   // TODO(burdon): Comment.
   private async _reevaluateFeeds () {
-    const feeds = new ComplexSet(keyToString, this._feedSetProvider.get());
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [keyHex, feed] of this._openFeeds) {
-      if (!feeds.has(feed.descriptor.key)) {
+      if (!this._feedSelector(feed.descriptor)) {
         feed.frozen = true;
       }
     }
 
     // Get candidate snapshot since we will be mutating the collection.
     for (const descriptor of Array.from(this._candidateFeeds.values())) {
-      if (feeds.has(descriptor.key)) {
+      if (this._feedSelector(descriptor)) {
         const stream = new Readable({ objectMode: true })
           .wrap(createBatchStream(descriptor.feed, { live: true }));
 

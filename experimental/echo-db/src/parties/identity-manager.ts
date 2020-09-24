@@ -4,12 +4,12 @@
 
 import { Keyring, KeyType, Filter } from '@dxos/credentials';
 
-import { Party } from './party';
+import { PartyInternal } from './party-internal';
 
 export class IdentityManager {
   // TODO(telackey): Party here is wrong, or at least incomplete. To build KeyChains and retrieve Identity "genesis"
   // messages, we need the PartyStateMachine, whether directly or indirectly.
-  private _halo?: Party;
+  private _halo?: PartyInternal;
 
   constructor (
     private readonly _keyring: Keyring
@@ -31,7 +31,7 @@ export class IdentityManager {
     return !!this._halo;
   }
 
-  async initialize (halo: Party) {
+  async initialize (halo: PartyInternal) {
     this._halo = halo;
   }
 }

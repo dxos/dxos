@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { createContext, useEffect, useContext, useState, useRef } from 'react';
+import { createContext, useEffect, useContext, useState } from 'react';
 
 import { humanize, keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';

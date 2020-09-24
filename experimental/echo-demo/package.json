@@ -35,7 +35,7 @@
   "dependencies": {
     "@dxos/async": "^1.0.0-beta.5",
     "@dxos/codec-protobuf": "^1.1.0-beta.0",
-    "@dxos/credentials": "^1.0.1-beta.46",
+    "@dxos/credentials": "^1.0.1-beta.47",
     "@dxos/crypto": "^1.0.0-beta.4",
     "@dxos/experimental-echo-db": "^1.0.0-beta.28",
     "@dxos/experimental-echo-protocol": "^1.0.0-beta.28",
@@ -64,7 +64,7 @@
     "stream-buffers": "^3.0.2"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "^1.0.4",
+    "@dxos/eslint-plugin": "^1.0.5",
     "@storybook/addon-actions": "^6.0.19",
     "@storybook/addon-knobs": "^6.0.21",
     "@storybook/addon-links": "^6.0.19",

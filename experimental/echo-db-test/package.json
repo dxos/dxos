@@ -8,7 +8,7 @@
     "lint": "eslint 'src/**/*.ts'"
   },
   "dependencies": {
-    "@dxos/credentials": "^1.0.1-beta.46",
+    "@dxos/credentials": "^1.0.1-beta.47",
     "@dxos/experimental-echo-db": "^1.0.0-beta.28",
     "@dxos/node-spawner": "^1.0.0-canary.60",
     "@dxos/experimental-model-factory": "^1.0.0-beta.28",
@@ -17,7 +17,7 @@
     "@dxos/crypto": "^1.0.0-beta.4"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "^1.0.4",
+    "@dxos/eslint-plugin": "^1.0.5",
     "jest": "^26.4.2",
     "ts-jest": "^26.3.0",
     "typescript": "^3.9.3"
