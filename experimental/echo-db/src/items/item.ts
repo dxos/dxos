@@ -25,7 +25,7 @@ export class Item<M extends Model<any>> {
   // Parent item (or null if this item is a root item).
   private _parent: Item<any> | null = null;
   private readonly _children = new Set<Item<any>>();
-  private readonly _parentChange = new Event<Item<any> | null>();
+  private readonly _onUpdateParent = new Event<Item<any> | null>();
 
   /**
    * Items are constructed by a `Party` object.
@@ -87,7 +87,7 @@ export class Item<M extends Model<any>> {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
-    const waitForProcessing = this._parentChange.waitFor((parent: Item<any> | null) => parentId === parent?.id);
+    const waitForProcessing = this._onUpdateParent.waitFor((parent: Item<any> | null) => parentId === parent?.id);
 
     await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
       itemId: this._itemId,
@@ -120,6 +120,6 @@ export class Item<M extends Model<any>> {
       this._parent = null;
     }
 
-    this._parentChange.emit(this._parent);
+    this._onUpdateParent.emit(this._parent);
   }
 }
