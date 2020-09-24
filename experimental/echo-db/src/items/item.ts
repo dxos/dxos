@@ -25,7 +25,7 @@ export class Item<M extends Model<any>> {
   // Parent item (or null if this item is a root item).
   private _parent: Item<any> | null = null;
   private readonly _children = new Set<Item<any>>();
-  private readonly _onUpdateParent = new Event<Item<any> | null>();
+  private readonly _onUpdate = new Event<Item<M>>();
 
   /**
    * Items are constructed by a `Party` object.
@@ -87,13 +87,21 @@ export class Item<M extends Model<any>> {
     return Array.from(this._children.values());
   }
 
+  /**
+   * Subscribe for updates.
+   * @param listener
+   */
+  subscribe (listener: (item: Item<M>) => void) {
+    return this._onUpdate.on(listener);
+  }
+
   // TODO(telackey): This does not allow null or undefined as a parentId, but should it since we allow a null parent?
   async setParent (parentId: ItemID): Promise<void> {
     if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
-    const waitForProcessing = this._onUpdateParent.waitFor((parent: Item<any> | null) => parentId === parent?.id);
+    const waitForProcessing = this._onUpdate.waitFor(() => parentId === this._parent?.id);
 
     await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
       itemId: this._itemId,
@@ -112,6 +120,8 @@ export class Item<M extends Model<any>> {
 
     const parent = getItem(parentId);
     this._updateParent(parent);
+
+    this._onUpdate.emit(this);
   }
 
   _updateParent (parent: Item<any> | null | undefined) {
@@ -125,7 +135,5 @@ export class Item<M extends Model<any>> {
     } else {
       this._parent = null;
     }
-
-    this._onUpdateParent.emit(this._parent);
   }
 }

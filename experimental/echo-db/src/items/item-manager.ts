@@ -167,6 +167,11 @@ export class ItemManager {
     // TODO(burdon): Update the item directly?
     this._itemUpdate.emit(item);
 
+    // TODO(telackey): Unsubscribe?
+    item.subscribe(() => {
+      this._itemUpdate.emit(item);
+    });
+
     // Notify pending creates.
     this._pendingItems.get(itemId)?.(item);
     return item;

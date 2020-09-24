@@ -116,7 +116,8 @@ const createLayout = ({ database, grid, guides, delta, linkProjector, handleSele
 
         case 'item': {
           const party = await database.getParty(source.partyKey);
-          await party.createItem(ObjectModel, undefined, source.id);
+          const item = await party.createItem(ObjectModel);
+          await item.setParent(source.id);
           break;
         }
       }
