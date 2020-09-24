@@ -36,8 +36,14 @@ export class Item<M extends Model<any>> {
    * @param [writeStream] - Write stream if not read-only.
    * @param {Item<any>} [parent] - Parent Item (if not a root Item).
    */
-  constructor (partyKey: PartyKey, itemId: ItemID, itemType: ItemType, model: M,
-    writeStream?: NodeJS.WritableStream, parent?: Item<any> | null) {
+  constructor (
+    partyKey: PartyKey,
+    itemId: ItemID,
+    itemType: ItemType,
+    model: M,
+    writeStream?: NodeJS.WritableStream,
+    parent?: Item<any> | null
+  ) {
     assert(partyKey);
     assert(itemId);
     assert(model);

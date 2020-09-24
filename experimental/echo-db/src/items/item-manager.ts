@@ -101,9 +101,13 @@ export class ItemManager {
    * @param readStream - Inbound mutation stream (from multiplexer).
    * @param [parentId] - ItemID of the parent of this Item (optional).
    */
-  async constructItem (itemId: ItemID, modelType: ModelType,
-    itemType: ItemType, readStream: NodeJS.ReadableStream,
-    parentId?: ItemID) {
+  async constructItem (
+    itemId: ItemID,
+    modelType: ModelType,
+    itemType: ItemType,
+    readStream: NodeJS.ReadableStream,
+    parentId?: ItemID
+  ) {
     assert(this._writeStream);
     assert(itemId);
     assert(modelType);
