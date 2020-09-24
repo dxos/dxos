@@ -5,6 +5,7 @@
 import assert from 'assert';
 import pify from 'pify';
 
+import { Event } from '@dxos/async';
 import { protocol, ItemID, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
 import { Model } from '@dxos/experimental-model-factory';
 import { checkType } from '@dxos/experimental-util';
@@ -24,6 +25,7 @@ export class Item<M extends Model<any>> {
   // Parent item (or null if this item is a root item).
   private _parent: Item<any> | null = null;
   private readonly _children = new Set<Item<any>>();
+  private readonly _onUpdate = new Event<Item<M>>();
 
   /**
    * Items are constructed by a `Party` object.
@@ -32,8 +34,16 @@ export class Item<M extends Model<any>> {
    * @param {ItemType} itemType - User defined type (WRN).
    * @param {Model} model - Data model (provided by `ModelFactory`).
    * @param [writeStream] - Write stream if not read-only.
+   * @param {Item<any>} [parent] - Parent Item (if not a root Item).
    */
-  constructor (partyKey: PartyKey, itemId: ItemID, itemType: ItemType, model: M, writeStream?: NodeJS.WritableStream) {
+  constructor (
+    partyKey: PartyKey,
+    itemId: ItemID,
+    itemType: ItemType,
+    model: M,
+    writeStream?: NodeJS.WritableStream,
+    parent?: Item<any> | null
+  ) {
     assert(partyKey);
     assert(itemId);
     assert(model);
@@ -42,6 +52,7 @@ export class Item<M extends Model<any>> {
     this._itemType = itemType;
     this._model = model;
     this._writeStream = writeStream;
+    this._updateParent(parent);
   }
 
   toString () {
@@ -76,10 +87,21 @@ export class Item<M extends Model<any>> {
     return Array.from(this._children.values());
   }
 
+  /**
+   * Subscribe for updates.
+   * @param listener
+   */
+  subscribe (listener: (item: Item<M>) => void) {
+    return this._onUpdate.on(listener);
+  }
+
+  // TODO(telackey): This does not allow null or undefined as a parentId, but should it since we allow a null parent?
   async setParent (parentId: ItemID): Promise<void> {
     if (!this._writeStream) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
+
+    const waitForProcessing = this._onUpdate.waitFor(() => parentId === this._parent?.id);
 
     await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
       itemId: this._itemId,
@@ -87,18 +109,28 @@ export class Item<M extends Model<any>> {
         parentId
       }
     }));
+
+    // It would be very surprising for item.parent still to reference the old parent just after calling item.setParent.
+    // To prevent that unexpected result, we wait for the mutation written above to be processed.
+    await waitForProcessing;
   }
 
   _processMutation (mutation: protocol.dxos.echo.ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
     const { parentId } = mutation;
 
+    const parent = getItem(parentId);
+    this._updateParent(parent);
+
+    this._onUpdate.emit(this);
+  }
+
+  _updateParent (parent: Item<any> | null | undefined) {
     if (this._parent) {
       this._parent._children.delete(this);
     }
 
-    if (parentId) {
-      this._parent = getItem(parentId) || null;
-      assert(this._parent);
+    if (parent) {
+      this._parent = parent;
       this._parent._children.add(this);
     } else {
       this._parent = null;

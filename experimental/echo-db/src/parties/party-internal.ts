@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { KeyRecord, Keyring } from '@dxos/credentials';
-import { ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
+import { ItemType, PartyKey, ItemID } from '@dxos/experimental-echo-protocol';
 import { Model, ModelConstructor, ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { NetworkManager } from '@dxos/network-manager';
@@ -114,14 +114,17 @@ export class PartyInternal {
    * Creates a new item with the given queryable type and model.
    * @param {ModelType} model
    * @param {ItemType} [itemType]
+   * @param {ItemID} [parentId]
    */
   // TODO(burdon): Get modelType from somewhere other than ObjectModel.meta.type.
   // TODO(burdon): Pass in { type, parent } as options.
-  async createItem <M extends Model<any>> (model: ModelConstructor<M>, itemType?: ItemType | undefined): Promise<Item<M>> {
+  async createItem <M extends Model<any>> (model: ModelConstructor<M>,
+    itemType?: ItemType | undefined,
+    parentId?: ItemID | undefined): Promise<Item<M>> {
     assert(this._itemManager);
     assert(model?.meta?.type);
 
-    return this._itemManager.createItem(model.meta.type, itemType);
+    return this._itemManager.createItem(model.meta.type, itemType, parentId);
   }
 
   /**
