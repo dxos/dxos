@@ -82,7 +82,7 @@ export class ItemManager {
       itemId,
       genesis: {
         itemType,
-        modelType,
+        modelType
       },
       itemMutation: parentId ? { parentId } : undefined
     }));
