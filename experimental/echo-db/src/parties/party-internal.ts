@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { KeyRecord, Keyring } from '@dxos/credentials';
-import { ItemType, PartyKey, ItemID } from '@dxos/experimental-echo-protocol';
+import { ItemID, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
 import { Model, ModelConstructor, ModelFactory } from '@dxos/experimental-model-factory';
 import { ObjectModel } from '@dxos/experimental-object-model';
 import { NetworkManager } from '@dxos/network-manager';
@@ -131,7 +131,7 @@ export class PartyInternal {
    * Queries for a set of Items matching the optional filter.
    * @param filter
    */
-  async queryItems (filter?: ItemFilter): Promise<ResultSet<Item<any>>> {
+  queryItems (filter?: ItemFilter): ResultSet<Item<any>> {
     assert(this._itemManager, 'ItemManger is missing.');
 
     return this._itemManager.queryItems(filter);
@@ -169,5 +169,13 @@ export class PartyInternal {
     const { value: items } = await this._itemManager?.queryItems({ type: PARTY_ITEM_TYPE });
     assert(items.length === 1);
     return items[0];
+  }
+
+  /**
+   * Retrieves a item from the index.
+   * @param itemId
+   */
+  getItem (itemId: ItemID): Item<any> | undefined {
+    return this._itemManager?.getItem(itemId);
   }
 }

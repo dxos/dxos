@@ -3,7 +3,7 @@
 //
 
 import { humanize } from '@dxos/crypto';
-import { ItemType, PartyKey, ItemID } from '@dxos/experimental-echo-protocol';
+import { ItemID, ItemType, PartyKey } from '@dxos/experimental-echo-protocol';
 import { Model, ModelConstructor } from '@dxos/experimental-model-factory';
 
 import { InvitationDetails } from '../invitations';
@@ -87,7 +87,7 @@ export class Party {
    * Queries for a set of Items matching the optional filter.
    * @param filter
    */
-  async queryItems (filter?: ItemFilter): Promise<ResultSet<Item<any>>> {
+  queryItems (filter?: ItemFilter): ResultSet<Item<any>> {
     return this._impl.queryItems(filter);
   }
 
@@ -96,5 +96,13 @@ export class Party {
    */
   async createInvitation (inviteDetails: InvitationDetails) {
     return this._impl.createInvitation(inviteDetails);
+  }
+
+  /**
+   * Retrieves a item from the index.
+   * @param itemId
+   */
+  getItem (itemId: ItemID): Item<any> | undefined {
+    return this._impl.getItem(itemId);
   }
 }

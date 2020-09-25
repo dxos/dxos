@@ -1,6 +1,6 @@
 {
   "name": "@dxos/experimental-model-adapter",
-  "version": "1.0.0-beta.28",
+  "version": "1.0.0-beta.33",
   "description": "Adapter to use models with the original API in ECHO 2",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -14,7 +14,8 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
-    "dist/src/proto/gen"
+    "dist",
+    "src"
   ],
   "private": false,
   "scripts": {

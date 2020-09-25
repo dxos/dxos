@@ -1,6 +1,6 @@
 {
   "name": "@dxos/experimental-text-model",
-  "version": "1.0.0-beta.28",
+  "version": "1.0.0-beta.33",
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
