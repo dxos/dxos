@@ -30,7 +30,6 @@
     "*.ts": "eslint --cache --fix"
   },
   "pre-commit": [
-    "test",
     "lint:staged"
   ],
   "scripts": {

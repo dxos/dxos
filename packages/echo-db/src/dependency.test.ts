@@ -7,6 +7,7 @@ import { KeyValueUtil } from './mutation';
 import { ObjectStore } from './object-store';
 import { dxos } from './proto';
 import { createObjectId } from './util';
+// eslint-disable-next-line import/order
 import IObjectMutation = dxos.echo.IObjectMutation;
 
 test('Merge feeds', () => {

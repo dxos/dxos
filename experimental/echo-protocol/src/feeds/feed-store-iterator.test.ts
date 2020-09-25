@@ -9,15 +9,14 @@ import hypercore from 'hypercore';
 import pify from 'pify';
 import ram from 'random-access-memory';
 
-import { Event } from '@dxos/async';
 import { createId, keyToString } from '@dxos/crypto';
-import { createWritable, latch } from '@dxos/experimental-util';
+import { ComplexMap, latch } from '@dxos/experimental-util';
 import { FeedStore } from '@dxos/feed-store';
 
-import { protocol, codec, createTestItemMutation } from '../proto';
+import { codec, createTestItemMutation, protocol } from '../proto';
 import { FeedKeyMapper, Spacetime } from '../spacetime';
-import { FeedBlock } from '../types';
-import { createOrderedFeedStream, FeedSetProvider } from './feed-store-iterator';
+import { FeedBlock, FeedKey } from '../types';
+import { createIterator, FeedSelector } from './feed-store-iterator';
 
 const chance = new Chance(999);
 
@@ -72,17 +71,14 @@ describe('feed store iterator', () => {
       return next[0]?.i;
     };
 
-    const feedSetProvider: FeedSetProvider = {
-      get: () => Array.from(feeds.keys()) as any,
-      added: new Event()
-    };
-    const readStream = await createOrderedFeedStream(feedStore, feedSetProvider, messageSelector);
+    const feedSelector: FeedSelector = descriptor => feeds.has(descriptor.key);
+    const readStream = await createIterator(feedStore, feedSelector, messageSelector);
 
     //
     // Create feeds.
     //
 
-    const feeds = new Map<string, hypercore.Feed>();
+    const feeds = new ComplexMap<FeedKey, hypercore.Feed>(keyToString);
     for await (const i of Array.from({ length: config.numFeeds }, (_, i) => i + 1)) {
       const feed = await feedStore.openFeed(`feed-${i}`);
       feeds.set(feed.key, feed);
@@ -121,28 +117,29 @@ describe('feed store iterator', () => {
     //
     let j = 0;
     const [counter, updateCounter] = latch(config.numMessages);
-    const writeStream = createWritable<FeedBlock>(async message => {
-      assert(message.data?.echo?.mutation);
+    setImmediate(async () => {
+      for await (const message of readStream) {
+        assert(message.data?.echo?.mutation);
 
-      const { key: feedKey, seq, data: { echo: { itemId, timeframe, mutation } } } = message;
-      assert(itemId);
-      assert(timeframe);
-      assert(mutation);
-      const { key, value: word } = (mutation as protocol.dxos.echo.testing.ITestItemMutation);
-      const i = parseInt(key!);
-      log('Read:', j, { i, word }, i === j, spacetime.stringify(timeframe));
+        const { key: feedKey, seq, data: { echo: { itemId, timeframe, mutation } } } = message;
+        assert(itemId);
+        assert(timeframe);
+        assert(mutation);
 
-      // Check order.
-      expect(i).toBe(j);
+        const { key, value: word } = (mutation as protocol.dxos.echo.testing.ITestItemMutation);
+        const i = parseInt(key!);
+        log('Read:', j, { i, word }, i === j, spacetime.stringify(timeframe));
 
-      // Update timeframe for node.
-      currentTimeframe = spacetime.merge(currentTimeframe, spacetime.createTimeframe([[feedKey, seq]]));
+        // Check order.
+        expect(i).toBe(j);
 
-      updateCounter();
-      j++;
+        // Update timeframe for node.
+        currentTimeframe = spacetime.merge(currentTimeframe, spacetime.createTimeframe([[feedKey, seq]]));
+
+        updateCounter();
+        j++;
+      }
     });
-
-    readStream.pipe(writeStream);
 
     //
     // Tests
