@@ -63,6 +63,9 @@ export class PartyFactory {
     // Create special properties item.
     await party.createItem(ObjectModel, PARTY_ITEM_TYPE);
 
+    // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
+    await this._keyring.deleteSecretKey(partyKey);
+
     return party;
   }
 

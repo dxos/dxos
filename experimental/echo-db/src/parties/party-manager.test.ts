@@ -42,11 +42,11 @@ describe('Party manager', () => {
       await partyManager.createHalo();
     }
 
-    return { feedStore, partyManager };
+    return { feedStore, partyManager, identityManager };
   };
 
   test('Created locally', async () => {
-    const { partyManager } = await setup();
+    const { partyManager, identityManager } = await setup();
     await partyManager.open();
 
     const [update, setUpdated] = latch();
@@ -59,6 +59,11 @@ describe('Party manager', () => {
     const party = await partyManager.createParty();
     await party.open();
     expect(party.isOpen).toBeTruthy();
+
+    // The Party key is an inception key, so its secret should be destroyed immediately after use.
+    const partyKey = identityManager.keyring.getKey(party.key);
+    expect(partyKey).toBeDefined();
+    expect(identityManager.keyring.hasSecretKey(partyKey)).toBe(false);
 
     await update;
   });
