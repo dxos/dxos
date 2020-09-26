@@ -100,8 +100,6 @@ export class NodeProjector extends Projector {
       group
         .call(updateProps, propertyAdapter);
 
-      // TODO(burdon): Position left/right depending on center (from layout).
-      // https://stackoverflow.com/questions/29031659/calculate-width-of-text-before-drawing-the-text
       group
         .select('text')
           .style('text-anchor', ({ x }) => (x >= 0) ? 'start' : 'end')
