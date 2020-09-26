@@ -98,8 +98,6 @@ export class NodeProjector extends Projector {
         propertyAdapter(d)?.radius || get(d, 'layout.node.radius', get(this._options, 'node.radius', defaultRadius));
 
       group
-        // .attr('class', d => clsx('node', propertyAdapter(d)?.class))
-        // .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`);
         .call(updateProps, propertyAdapter);
 
       // TODO(burdon): Position left/right depending on center (from layout).
@@ -122,14 +120,14 @@ export class NodeProjector extends Projector {
 
     root
       .selectAll('g[state=active]')
-      .classed('selected', d => (Array.isArray(selected) ? selected.indexOf(d.id) : selected === d.id))
       .call(group => {
         if (transition) {
           group.transition(transition()).call(update);
         } else {
           group.call(update);
         }
-      });
+      })
+      .classed('selected', d => Array.isArray(selected) ? selected.indexOf(d.id) : selected === d.id);
 
     root
       .selectAll('g[state=exit]')

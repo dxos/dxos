@@ -101,9 +101,9 @@ const Graph = (props) => {
   // TODO(burdon): Selection not working.
   // NOTE: Called every time force update changes data (positions, etc.)
   useLayout(layout, grid, data, () => {
-    guideProjector.update(grid, layout, { group: guideGroup.current });
-    nodeProjector.update(grid, layout, { group: nodeGroup.current, selected });
-    linkProjector.update(grid, layout, { group: linkGroup.current, selected });
+    guideProjector.update(grid, layout.data, { group: guideGroup.current });
+    nodeProjector.update(grid, layout.data, { group: nodeGroup.current, selected });
+    linkProjector.update(grid, layout.data, { group: linkGroup.current, selected });
   }, [selected]);
 
   return (
