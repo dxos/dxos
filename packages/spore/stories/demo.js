@@ -306,7 +306,7 @@ export const withCustomNodes = () => {
   const [{ nodeProjector }] = useState({
     nodeProjector: new NodeProjector({
       node: {
-        showLabels: false,
+        showLabels: true,
         propertyAdapter: (node) => {
           const i = Number('0x' + node.id.slice(0, 4)) % nodeColors.length;
           return {

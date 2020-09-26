@@ -104,7 +104,8 @@ export class NodeProjector extends Projector {
       // https://stackoverflow.com/questions/29031659/calculate-width-of-text-before-drawing-the-text
       group
         .select('text')
-          .attr('x', d => nodeRadius(d) + marginRight)
+          .style('text-anchor', ({ x }) => (x >= 0) ? 'start' : 'end')
+          .attr('x', d => (d.x >= 0 ? 1 : -1) * (nodeRadius(d) + marginRight))
           .attr('dy', '.31em');
 
       group

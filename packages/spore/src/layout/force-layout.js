@@ -73,7 +73,6 @@ export class ForceLayout extends Layout {
     const alpha = (num === 0 || Math.abs(num - data.nodes.length) > 3) ? 1 : 0.2;
 
     // Update layout data.
-    console.log('$$$$$$', data);
     this._mergeData(grid, data);
 
     // TODO(burdon): Factor out.
