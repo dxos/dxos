@@ -98,15 +98,12 @@ export class NodeProjector extends Projector {
         propertyAdapter(d)?.radius || get(d, 'layout.node.radius', get(this._options, 'node.radius', defaultRadius));
 
       group
-        // .attr('class', d => clsx('node', propertyAdapter(d)?.class))
-        // .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`);
         .call(updateProps, propertyAdapter);
 
-      // TODO(burdon): Position left/right depending on center (from layout).
-      // https://stackoverflow.com/questions/29031659/calculate-width-of-text-before-drawing-the-text
       group
         .select('text')
-          .attr('x', d => nodeRadius(d) + marginRight)
+          .style('text-anchor', ({ x }) => (x >= 0) ? 'start' : 'end')
+          .attr('x', d => (d.x >= 0 ? 1 : -1) * (nodeRadius(d) + marginRight))
           .attr('dy', '.31em');
 
       group
@@ -122,14 +119,14 @@ export class NodeProjector extends Projector {
 
     root
       .selectAll('g[state=active]')
-      .classed('selected', d => (Array.isArray(selected) ? selected.indexOf(d.id) : selected === d.id))
       .call(group => {
         if (transition) {
           group.transition(transition()).call(update);
         } else {
           group.call(update);
         }
-      });
+      })
+      .classed('selected', d => Array.isArray(selected) ? selected.indexOf(d.id) : selected === d.id);
 
     root
       .selectAll('g[state=exit]')

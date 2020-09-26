@@ -62,12 +62,13 @@ export class Layout extends EventEmitter {
   // TODO(burdon): Move to graph.
   _setData (data) {
     const find = id => {
-      assert(typeof id === 'string');
+      assert(typeof id === 'string', 'invalid type');
       const node = data.nodes.find(n => n.id === id);
-      assert(node);
+      assert(node, 'missing node: ' + id);
       return node;
     };
 
+    // TODO(burdon): Missing node after removed.
     Object.assign(this.data, {
       nodes: data.nodes,
       links: data.links.map(({ id, source, target }) => {

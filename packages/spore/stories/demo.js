@@ -98,7 +98,7 @@ export const withBoxProjector = () => {
   const projector = new BoxProjector();
 
   useLayout(layout, grid, data, () => {
-    projector.update(grid, layout, { group: nodes.current });
+    projector.update(grid, layout.data, { group: nodes.current });
   });
 
   return (
@@ -306,7 +306,7 @@ export const withCustomNodes = () => {
   const [{ nodeProjector }] = useState({
     nodeProjector: new NodeProjector({
       node: {
-        showLabels: false,
+        showLabels: true,
         propertyAdapter: (node) => {
           const i = Number('0x' + node.id.slice(0, 4)) % nodeColors.length;
           return {
@@ -467,11 +467,16 @@ export const withDoubleForceLayouts = () => {
   useEffect(() => {
     drag.on('click', ({ source: selected }) => {
       const data1 = getData1();
+
+      //
+      // Find and remove node.
+      //
+
       const idx = data1.nodes.findIndex(node => node.id === selected.id);
 
       const linkIndexes = [];
       data1.links.forEach(({ id: linkId, source, target }) => {
-        if (source.id === selected.id || target.id === selected.id) {
+        if (source === selected.id || target === selected.id) {
           linkIndexes.push(data1.links.findIndex(link => link.id === linkId));
         }
       });
@@ -487,6 +492,10 @@ export const withDoubleForceLayouts = () => {
           $splice: linkIndexes.map((idx, i) => [idx - i, 1])
         }
       });
+
+      //
+      // Add node to other graph.
+      //
 
       const data2 = getData2();
       const target = faker.random.arrayElement(data2.nodes);
@@ -653,8 +662,8 @@ export const withTreeLayout = () => {
   const guideProjector = new GuideProjector();
   const grid = useGrid({ width, height });
   useLayout(layout, grid, data, () => {
-    guideProjector.update(grid, layout, { group: guides.current });
-    projector.update(grid, layout, {
+    guideProjector.update(grid, layout.data, { group: guides.current });
+    projector.update(grid, layout.data, {
       links: links.current,
       nodes: nodes.current
     });
@@ -711,9 +720,9 @@ export const withMultipleLayouts = () => {
   });
 
   // Share data set.
-  useLayout(layout1, grid, data1, ({ layout }) => nodeProjector.update(grid, layout, { group: group1.current }));
-  useLayout(layout2, grid, data2, ({ layout }) => nodeProjector.update(grid, layout, { group: group2.current }));
-  useLayout(layout3, grid, data2, ({ layout }) => nodeProjector.update(grid, layout, { group: group3.current }));
+  useLayout(layout1, grid, data1, ({ layout }) => nodeProjector.update(grid, layout.data, { group: group1.current }));
+  useLayout(layout2, grid, data2, ({ layout }) => nodeProjector.update(grid, layout.data, { group: group2.current }));
+  useLayout(layout3, grid, data2, ({ layout }) => nodeProjector.update(grid, layout.data, { group: group3.current }));
 
   return (
     <FullScreen>
@@ -749,7 +758,7 @@ export const withRandomLayout = () => {
 
   const nodeProjector = new NodeProjector({ transition: d3.transition, node: { radius: 8 } });
   useLayout(layout, grid, data, () => {
-    nodeProjector.update(grid, layout, { group: nodes.current });
+    nodeProjector.update(grid, layout.data, { group: nodes.current });
   });
 
   // Generate data.
@@ -823,7 +832,7 @@ export const withRadialLayout = () => {
   }, []);
 
   useLayout(layout, grid, data, () => {
-    projector.update(grid, layout, { group: nodes.current });
+    projector.update(grid, layout.data, { group: nodes.current });
   });
 
   return (
@@ -893,7 +902,7 @@ export const withChangingLayout = () => {
   const grid = useGrid({ width, height });
 
   useLayout(layout, grid, data, () => {
-    projector.update(grid, layout, { group: nodes.current });
+    projector.update(grid, layout.data, { group: nodes.current });
   });
 
   useEffect(() => {

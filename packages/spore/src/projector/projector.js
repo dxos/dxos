@@ -22,12 +22,12 @@ export class Projector extends EventEmitter {
   /**
    * On data items updated.
    * @param grid
-   * @param layout
+   * @param data
    * @param options
    */
-  update (grid, layout, options) {
-    this.onData(grid, layout.data, options);
-    this.onUpdate(grid, layout.data, options);
+  update (grid, data, options) {
+    this.onData(grid, data, options);
+    this.onUpdate(grid, data, options);
   }
 
   // eslint-disable-next-line no-unused-vars
