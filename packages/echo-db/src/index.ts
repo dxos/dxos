@@ -2,10 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './mutation';
-export * from './object-model';
-export * from './object-store';
-export * from './ordered';
-export * from './partially-ordered';
-export * from './proto';
-export * from './util';
+export * from './codec';
+export * from './database';
+export * from './items';
+export * from './parties';
+export * from './replication';
+export * from './result';
+export * from './replication';
+export * from './feed-store-adapter';
+export * from './invitations';
