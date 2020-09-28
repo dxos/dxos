@@ -14,8 +14,7 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "packages/*",
-      "experimental/*"
+      "packages/*"
     ],
     "nohoist": [
       "**/semistandard/**",
