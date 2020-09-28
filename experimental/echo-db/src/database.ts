@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 import { PartyKey } from '@dxos/experimental-echo-protocol';
 
 import { InvitationDescriptor, SecretProvider } from './invitations';
@@ -77,8 +79,8 @@ export class Database {
    * Returns an individual party by it's key.
    * @param {PartyKey} partyKey
    */
-  async getParty (partyKey: PartyKey): Promise<Party | undefined> {
-    await this.open();
+  getParty (partyKey: PartyKey): Party | undefined {
+    assert(this._partyManager.opened, 'Database not open.');
 
     const impl = this._partyManager.parties.find(party => Buffer.compare(party.key, partyKey) === 0);
     return impl && new Party(impl);
@@ -89,8 +91,8 @@ export class Database {
    * @param {PartyFilter} filter
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async queryParties (filter?: PartyFilter): Promise<ResultSet<Party>> {
-    await this.open();
+  queryParties (filter?: PartyFilter): ResultSet<Party> {
+    assert(this._partyManager.opened, 'Database not open.');
 
     return new ResultSet(this._partyManager.update.discardParameter(), () => this._partyManager.parties.map(impl => new Party(impl)));
   }
@@ -101,6 +103,8 @@ export class Database {
    * @param secretProvider
    */
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<Party> {
+    assert(this._partyManager.opened, 'Database not open.');
+
     const impl = await this._partyManager.joinParty(invitationDescriptor, secretProvider);
     return new Party(impl);
   }

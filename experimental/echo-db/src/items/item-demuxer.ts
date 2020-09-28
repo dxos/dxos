@@ -33,7 +33,7 @@ export const createItemDemuxer = (itemManager: ItemManager): NodeJS.WritableStre
     // New item.
     //
     if (genesis) {
-      const { itemType, modelType } = genesis;
+      const { itemType, modelType, parentId } = genesis;
       assert(modelType);
 
       // Create inbound stream for item.
@@ -41,7 +41,7 @@ export const createItemDemuxer = (itemManager: ItemManager): NodeJS.WritableStre
       itemStreams.set(itemId, itemStream);
 
       // Create item.
-      const item = await itemManager.constructItem(itemId, modelType, itemType, itemStream);
+      const item = await itemManager.constructItem(itemId, modelType, itemType, itemStream, parentId);
       assert(item.id === itemId);
     }
 

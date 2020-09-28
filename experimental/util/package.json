@@ -1,6 +1,6 @@
 {
   "name": "@dxos/experimental-util",
-  "version": "1.0.0-beta.28",
+  "version": "1.0.0-beta.33",
   "description": "Utilities to be moved to other repos.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -13,7 +13,7 @@
   "license": "GPL-3.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "private": true,
+  "private": false,
   "scripts": {
     "build": "npm run clean && npm run build:ts",
     "build:ts": "tsc",
