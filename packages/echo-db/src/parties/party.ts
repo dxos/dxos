@@ -3,12 +3,10 @@
 //
 
 import { humanize } from '@dxos/crypto';
-import { ItemID, ItemType, PartyKey } from '@dxos/echo-protocol';
-import { Model, ModelConstructor } from '@dxos/model-factory';
+import { PartyKey } from '@dxos/echo-protocol';
 
 import { InvitationDetails } from '../invitations';
-import { Item, ItemFilter } from '../items';
-import { ResultSet } from '../result';
+import { Database } from '../items/database';
 import { PartyInternal } from './party-internal';
 
 /**
@@ -16,9 +14,13 @@ import { PartyInternal } from './party-internal';
  * of mutations.
  */
 export class Party {
+  private readonly _database: Database;
+
   constructor (
     private readonly _impl: PartyInternal
-  ) {}
+  ) {
+    this._database = new Database(() => this._impl.itemManager);
+  }
 
   toString () {
     return `Party(${JSON.stringify({ key: humanize(this.key), open: this.isOpen })})`;
@@ -30,6 +32,10 @@ export class Party {
 
   get isOpen (): boolean {
     return this._impl.isOpen;
+  }
+
+  get database () {
+    return this._database;
   }
 
   /**
@@ -70,39 +76,9 @@ export class Party {
   }
 
   /**
-   * Creates a new item with the given queryable type and model.
-   * @param {ModelType} model
-   * @param {ItemType} [itemType]
-   * @param {ItemID} [parentId]
-   */
-  // TODO(burdon): Get modelType from somewhere other than ObjectModel.meta.type.
-  // TODO(burdon): Pass in { type, parent } as options.
-  async createItem <M extends Model<any>> (model: ModelConstructor<M>,
-    itemType?: ItemType | undefined,
-    parentId?: ItemID | undefined): Promise<Item<M>> {
-    return this._impl.createItem(model, itemType, parentId);
-  }
-
-  /**
-   * Queries for a set of Items matching the optional filter.
-   * @param filter
-   */
-  queryItems (filter?: ItemFilter): ResultSet<Item<any>> {
-    return this._impl.queryItems(filter);
-  }
-
-  /**
    * Creates an invition for a remote peer.
    */
   async createInvitation (inviteDetails: InvitationDetails) {
     return this._impl.createInvitation(inviteDetails);
-  }
-
-  /**
-   * Retrieves a item from the index.
-   * @param itemId
-   */
-  getItem (itemId: ItemID): Item<any> | undefined {
-    return this._impl.getItem(itemId);
   }
 }

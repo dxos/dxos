@@ -13,7 +13,7 @@ import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 import { createId } from '@dxos/crypto';
 
-import { createDatabase, EchoContext, EchoGraph, useDatabase } from '../src';
+import { createECHO, EchoContext, EchoGraph, useDatabase } from '../src';
 
 const log = debug('dxos:echo:demo');
 debug.enable('dxos:echo:demo, dxos:*:error');
@@ -52,9 +52,9 @@ export const withDatabase = () => {
       setImmediate(async () => {
         const newPeers = await Promise.all([...new Array(n - peers.length)].map(async (_, i) => {
           const id = createId();
-          const { database } = await createDatabase({ id });
-          console.log('Created:', String(database));
-          return { id, database };
+          const { echo } = await createECHO();
+          console.log('Created:', String(echo));
+          return { id, database: echo };
         }));
 
         setPeers([...peers, ...newPeers]);
@@ -67,7 +67,7 @@ export const withDatabase = () => {
   }, [n]);
 
   return (
-    <Test peers={peers} radius={200} />
+    <Test peers={peers} />
   );
 };
 
@@ -154,7 +154,7 @@ const Test = ({ peers }) => {
 
           // TODO(burdon): Does context change?
           return (
-            <EchoContext.Provider key={id} value={{ id, database }}>
+            <EchoContext.Provider key={id} value={{ database }}>
               <EchoGraph
                 id={id}
                 grid={grid}
@@ -171,7 +171,7 @@ const Test = ({ peers }) => {
         {peers.map((peer, i) => {
           const { id, database } = peer;
           return (
-            <EchoContext.Provider key={id} value={{ id, database }}>
+            <EchoContext.Provider key={id} value={{ database }}>
               <Info />
             </EchoContext.Provider>
           );

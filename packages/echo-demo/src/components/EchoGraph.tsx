@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-// @ts-ignore
 import React, { useEffect, useRef, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
@@ -14,7 +13,6 @@ import {
   ForceLayout,
   LinkProjector,
   NodeProjector,
-// @ts-ignore
 } from '@dxos/gem-spore';
 
 import { ObjectModel } from '@dxos/object-model';
@@ -110,13 +108,13 @@ const createLayout = ({ database, grid, guides, delta, linkProjector, handleSele
 
         case 'party': {
           const party = await database.getParty(source.partyKey);
-          await party.createItem(ObjectModel);
+          await party.database.createItem(ObjectModel);
           break;
         }
 
         case 'item': {
           const party = await database.getParty(source.partyKey);
-          const item = await party.createItem(ObjectModel, undefined, source.id);
+          const item = await party.database.createItem(ObjectModel, undefined, source.id);
           break;
         }
       }

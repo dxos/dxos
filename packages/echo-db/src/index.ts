@@ -3,7 +3,7 @@
 //
 
 export * from './codec';
-export * from './database';
+export * from './echo';
 export * from './items';
 export * from './parties';
 export * from './replication';

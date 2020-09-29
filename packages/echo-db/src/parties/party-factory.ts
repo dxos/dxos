@@ -61,7 +61,8 @@ export class PartyFactory {
     pipeline.outboundHaloStream!.write(createPartyGenesisMessage(this._keyring, partyKey, feedKey, this._getIdentityKey()));
 
     // Create special properties item.
-    await party.createItem(ObjectModel, PARTY_ITEM_TYPE);
+    assert(party.itemManager);
+    await party.itemManager.createItem(ObjectModel.meta.type, PARTY_ITEM_TYPE);
 
     // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
     await this._keyring.deleteSecretKey(partyKey);

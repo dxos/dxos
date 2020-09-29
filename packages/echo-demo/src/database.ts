@@ -6,14 +6,14 @@ import ram from 'random-access-memory';
 
 import { Keyring, KeyType, KeyStore } from '@dxos/credentials';
 import {
-  codec, Database, PartyManager, PartyFactory, FeedStoreAdapter, IdentityManager
+  codec, ECHO, PartyManager, PartyFactory, FeedStoreAdapter, IdentityManager
 } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
-export const createDatabase = async ({
+export const createECHO = async ({
   storage = ram, keyStorage = undefined, swarmProvider = new SwarmProvider()
 } = {}) => {
   const feedStore = new FeedStore(storage, { feedOptions: { valueEncoding: codec } });
@@ -38,7 +38,7 @@ export const createDatabase = async ({
     await partyManager.createHalo();
   }
 
-  const database = new Database(partyManager);
+  const echo = new ECHO(partyManager);
 
-  return { database, keyring };
+  return { echo, keyring };
 };

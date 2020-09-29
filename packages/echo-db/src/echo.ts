@@ -28,7 +28,7 @@ export interface Options {
  * Messages are streamed into the pipeline (from the `FeedStore`) in logical order, determined by the
  * `Spactime` `Timeframe` (which implements a vector clock).
  */
-export class Database {
+export class ECHO {
   constructor (
     private readonly _partyManager: PartyManager,
     private readonly _options: Options = {}

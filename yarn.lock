@@ -4961,6 +4961,11 @@ babel-loader@8.1.0, babel-loader@^8.0.6:
     pify "^4.0.1"
     schema-utils "^2.6.5"
 
+babel-plugin-add-module-exports@^1.0.4:
+  version "1.0.4"
+  resolved "http://npm.dev.dxos.network:5736/babel-plugin-add-module-exports/-/babel-plugin-add-module-exports-1.0.4.tgz#6caa4ddbe1f578c6a5264d4d3e6c8a2720a7ca2b"
+  integrity sha512-g+8yxHUZ60RcyaUpfNzy56OtWW+x9cyEe9j+CranqLiqbju2yf/Cy6ZtYK40EZxtrdHllzlVZgLmcOUCTlJ7Jg==
+
 babel-plugin-add-react-displayname@^0.0.5:
   version "0.0.5"
   resolved "http://npm.dev.dxos.network:5736/babel-plugin-add-react-displayname/-/babel-plugin-add-react-displayname-0.0.5.tgz#339d4cddb7b65fd62d1df9db9fe04de134122bd5"
