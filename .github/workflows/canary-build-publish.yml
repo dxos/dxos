@@ -4,7 +4,7 @@ name: Build and Publish Canary Branch to DXOS NPM
 
 on:
   push:
-    branches: [canary-experimental]
+    branches: [dev]
 
 jobs:
   build-publish-npm:
