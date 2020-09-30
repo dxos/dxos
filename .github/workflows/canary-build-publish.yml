@@ -29,6 +29,8 @@ jobs:
           git config --global user.email "npm@dxos.network"
           git config --global user.name "DXOS"
           npm config set scripts-prepend-node-path auto
+          # Delete yarn.lock because it may have baked in DNS host name for another npm registry.
+          # rm yarn.lock
           yarn
           # Don't allow lerna to parallelize our world because pbjs isn't concurrency-safe at present.
           yarn build --concurrency 1
@@ -40,4 +42,4 @@ jobs:
         run: |
           # --registry required for lerna because it ignores registry-url set above.
           # --no-verify-access required for lerna bug.
-          yarn lerna publish --registry http://npm.dev.dxos.network:5736/ --yes --dist-tag="dev" --canary --preid "0-dev" --force-publish --no-verify-access
+          yarn lerna publish --registry http://npm.dev.dxos.network:5736/ --yes --dist-tag="canary-experimental" --canary --preid canary --force-publish --no-verify-access
