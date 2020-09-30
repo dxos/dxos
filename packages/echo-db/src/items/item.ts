@@ -6,7 +6,7 @@ import assert from 'assert';
 import pify from 'pify';
 
 import { Event } from '@dxos/async';
-import { protocol, ItemID, ItemType, PartyKey } from '@dxos/echo-protocol';
+import { EchoEnvelope, ItemID, ItemMutation, ItemType, PartyKey } from '@dxos/echo-protocol';
 import { Model } from '@dxos/model-factory';
 import { checkType } from '@dxos/util';
 
@@ -39,7 +39,7 @@ export class Item<M extends Model<any>> {
   constructor (
     partyKey: PartyKey,
     itemId: ItemID,
-    itemType: ItemType,
+    itemType: ItemType | undefined,
     model: M,
     writeStream?: NodeJS.WritableStream,
     parent?: Item<any> | null
@@ -103,7 +103,7 @@ export class Item<M extends Model<any>> {
 
     const waitForProcessing = this._onUpdate.waitFor(() => parentId === this._parent?.id);
 
-    await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
+    await pify(this._writeStream.write.bind(this._writeStream))(checkType<EchoEnvelope>({
       itemId: this._itemId,
       itemMutation: {
         parentId
@@ -115,11 +115,13 @@ export class Item<M extends Model<any>> {
     await waitForProcessing;
   }
 
-  _processMutation (mutation: protocol.dxos.echo.ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
+  _processMutation (mutation: ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
     const { parentId } = mutation;
 
-    const parent = getItem(parentId);
-    this._updateParent(parent);
+    if (parentId) {
+      const parent = getItem(parentId);
+      this._updateParent(parent);
+    }
 
     this._onUpdate.emit(this);
   }

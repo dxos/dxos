@@ -7,7 +7,7 @@ import pify from 'pify';
 
 import { Event } from '@dxos/async';
 import { FeedMeta, ItemID } from '@dxos/echo-protocol';
-import { createAny, createWritable } from '@dxos/util';
+import { createWritable } from '@dxos/util';
 
 import { ModelMessage, ModelMeta } from './types';
 
@@ -36,7 +36,7 @@ export abstract class Model<T> {
     this._writeStream = writeStream;
 
     // Create the input mutation stream.
-    this._processor = createWritable<ModelMessage<T>>(async (message: ModelMessage<T>) => {
+    this._processor = createWritable<ModelMessage<T>>(async message => {
       const { meta, mutation } = message;
       assert(meta);
       assert(mutation);
@@ -76,9 +76,7 @@ export abstract class Model<T> {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
-    await pify(this._writeStream.write.bind(this._writeStream))(
-      createAny<T>(mutation, this._meta.mutation)
-    );
+    await pify(this._writeStream.write.bind(this._writeStream))(mutation);
   }
 
   async processMessage (meta: FeedMeta, message: T): Promise<void> {

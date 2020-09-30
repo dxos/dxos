@@ -10,7 +10,7 @@ import { WritableArray } from '@dxos/util';
 
 import { ValueUtil } from './mutation';
 import { ObjectModel } from './object-model';
-import { protocol } from './proto';
+import { ObjectMutationSet } from './proto';
 
 const log = debug('dxos:echo:object-model:testing');
 debug.enable('dxos:echo:*');
@@ -29,7 +29,7 @@ describe('object model', () => {
   });
 
   test('mutation', async () => {
-    const buffer = new WritableArray<protocol.dxos.echo.object.IObjectMutationSet>();
+    const buffer = new WritableArray<ObjectMutationSet>();
 
     const itemId = createId();
     const model = new ObjectModel(ObjectModel.meta, itemId, buffer);

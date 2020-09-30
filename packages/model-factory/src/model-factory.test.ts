@@ -3,8 +3,8 @@
 //
 
 import { createId, createKeyPair } from '@dxos/crypto';
-import { protocol } from '@dxos/echo-protocol';
-import { createAny, createTransform, latch } from '@dxos/util';
+import { TestItemMutation } from '@dxos/echo-protocol';
+import { createTransform, latch } from '@dxos/util';
 
 import { ModelFactory } from './model-factory';
 import { TestModel } from './testing';
@@ -24,25 +24,23 @@ describe('model factory', () => {
     const { publicKey: feedKey } = createKeyPair();
     const itemId = createId();
 
-    const objects: protocol.dxos.echo.testing.ITestItemMutation[] = [];
+    const objects: TestItemMutation[] = [];
 
     // Transform outbound mutations to inbounds model messsges (create loop).
-    const writeStream = createTransform<
-      protocol.dxos.echo.testing.ITestItemMutation, ModelMessage<protocol.dxos.echo.testing.ITestItemMutation>
-      >(
-        async (mutation: protocol.dxos.echo.testing.ITestItemMutation) => {
-          objects.push(mutation);
-          const out: ModelMessage<protocol.dxos.echo.testing.ITestItemMutation> = {
-            meta: {
-              feedKey,
-              seq: 1
-            },
-            mutation
-          };
+    const writeStream = createTransform<TestItemMutation, ModelMessage<TestItemMutation>>(
+      async mutation => {
+        objects.push(mutation);
+        const out: ModelMessage<TestItemMutation> = {
+          meta: {
+            feedKey,
+            seq: 1
+          },
+          mutation
+        };
 
-          return out;
-        }
-      );
+        return out;
+      }
+    );
 
     // Create model.
     const modelFactory = new ModelFactory().registerModel(TestModel.meta, TestModel);
@@ -52,10 +50,10 @@ describe('model factory', () => {
     // Update model.
     await model.setProperty('title', 'Hello');
     expect(objects).toHaveLength(1);
-    expect(objects[0]).toEqual(createAny<protocol.dxos.echo.testing.ITestItemMutation>({
+    expect(objects[0]).toEqual({
       key: 'title',
       value: 'Hello'
-    }, 'dxos.echo.testing.TestItemMutation'));
+    });
 
     // Expect model has not been updated (mutation has not been processed).
     expect(model.getProperty('title')).toBeFalsy();

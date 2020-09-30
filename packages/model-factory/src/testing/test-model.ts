@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { protocol, FeedMeta } from '@dxos/echo-protocol';
+import { FeedMeta, schema, TestItemMutation } from '@dxos/echo-protocol';
 import { checkType } from '@dxos/util';
 
 import { Model } from '../model';
@@ -11,10 +11,10 @@ import { ModelMeta } from '../types';
 /**
  * Test model.
  */
-export class TestModel extends Model<protocol.dxos.echo.testing.ITestItemMutation> {
+export class TestModel extends Model<TestItemMutation> {
   static meta: ModelMeta = {
     type: 'wrn://dxos.org/model/test',
-    mutation: 'dxos.echo.testing.TestItemMutation'
+    mutation: schema.getCodecForType('dxos.echo.testing.TestItemMutation')
   };
 
   private _values = new Map();
@@ -32,13 +32,13 @@ export class TestModel extends Model<protocol.dxos.echo.testing.ITestItemMutatio
   }
 
   async setProperty (key: string, value: string) {
-    await this.write(checkType<protocol.dxos.echo.testing.ITestItemMutation>({
+    await this.write(checkType<TestItemMutation>({
       key,
       value
     }));
   }
 
-  async _processMessage (meta: FeedMeta, message: protocol.dxos.echo.testing.ITestItemMutation) {
+  async _processMessage (meta: FeedMeta, message: TestItemMutation) {
     const { key, value } = message;
     this._values.set(key, value);
     return true;

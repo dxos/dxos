@@ -37,8 +37,7 @@ message EchoEnvelope {
   ItemMutation itemMutation = 11;
 
   // User model mutations.
-  // TODO(burdon): Optimize with numeric type_url value? Separate types.
-  google.protobuf.Any mutation = 12;
+  bytes mutation = 12;
 }
 
 // Item creation.

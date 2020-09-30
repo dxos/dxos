@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
@@ -90,7 +91,9 @@ export class PartyProcessor {
           if (echo.genesis && !Object.keys({}).length) {
             return i;
           } else {
+            assert(echo.timeframe);
             const gaps = spacetime.dependencies(echo.timeframe, this._timeframe);
+            assert(gaps.frames);
             if (gaps.frames.length === 0) {
               return i;
             } else {

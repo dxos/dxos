@@ -7,17 +7,15 @@ import ram from 'random-access-memory';
 
 import { FeedStore } from '@dxos/feed-store';
 
-import { protocol, codec } from '../proto';
+import { codec, FeedMessage } from '../proto';
 
 describe('Feed tests:', () => {
   test('codec', () => {
-    const message1: protocol.dxos.IFeedMessage = {
-      halo: {}
-    };
+    const message1: FeedMessage = {};
 
     const buffer = codec.encode(message1);
 
-    const message2: protocol.dxos.IFeedMessage = codec.decode(buffer);
+    const message2 = codec.decode(buffer);
 
     expect(message1).toEqual(message2);
   });
@@ -29,9 +27,7 @@ describe('Feed tests:', () => {
     const feed = await feedStore.openFeed('test-feed');
     expect(feed.length).toBe(0);
 
-    const data: protocol.dxos.IFeedMessage = {
-      halo: {}
-    };
+    const data: FeedMessage = {};
 
     await pify(feed.append.bind(feed))(data);
 

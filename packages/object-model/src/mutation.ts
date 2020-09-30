@@ -6,7 +6,7 @@
 
 import assert from 'assert';
 
-import { protocol } from './proto';
+import { KeyValue, ObjectMutation, ObjectMutationSet, Value } from './proto';
 
 /**
  * @typedef {Object} Value
@@ -44,7 +44,7 @@ const SCALAR_TYPES = [
  * Represents a named property value.
  */
 export class KeyValueUtil {
-  static createMessage (key: string, value: any): protocol.dxos.echo.object.IKeyValue {
+  static createMessage (key: string, value: any): KeyValue {
     assert(key);
 
     return {
@@ -64,7 +64,7 @@ export class ValueUtil {
    * @param {any} value
    * @return {{Value}}
    */
-  static createMessage (value: any): protocol.dxos.echo.object.IValue {
+  static createMessage (value: any): Value {
     // NOTE: Process `null` different from `undefined`.
     if (value === null) {
       return { [Type.NULL]: true };
@@ -83,31 +83,31 @@ export class ValueUtil {
     }
   }
 
-  static bytes (value: Uint8Array): protocol.dxos.echo.object.IValue {
+  static bytes (value: Uint8Array): Value {
     return { [Type.BYTES]: value };
   }
 
-  static bool (value: boolean): protocol.dxos.echo.object.IValue {
+  static bool (value: boolean): Value {
     return { [Type.BOOLEAN]: value };
   }
 
-  static integer (value: number): protocol.dxos.echo.object.IValue {
+  static integer (value: number): Value {
     return { [Type.INTEGER]: value };
   }
 
-  static float (value: number): protocol.dxos.echo.object.IValue {
+  static float (value: number): Value {
     return { [Type.FLOAT]: value };
   }
 
-  static string (value: string): protocol.dxos.echo.object.IValue {
+  static string (value: string): Value {
     return { [Type.STRING]: value };
   }
 
-  static datetime (value: string): protocol.dxos.echo.object.IValue {
+  static datetime (value: string): Value {
     return { [Type.DATETIME]: value };
   }
 
-  static object (value: Record<string, any>): protocol.dxos.echo.object.IValue {
+  static object (value: Record<string, any>): Value {
     return {
       [Type.OBJECT]: {
         properties: Object.keys(value).map(key => KeyValueUtil.createMessage(key, value[key]))
@@ -115,7 +115,7 @@ export class ValueUtil {
     };
   }
 
-  static applyValue (object: any, key: string, value: protocol.dxos.echo.object.IValue) {
+  static applyValue (object: any, key: string, value: Value) {
     assert(object);
     assert(key);
     assert(value);
@@ -130,8 +130,8 @@ export class ValueUtil {
     // Apply object properties.
     if (value[Type.OBJECT]) {
       const nestedObject = {};
-      const { properties }: { properties: protocol.dxos.echo.object.KeyValue[] } = value[Type.OBJECT]!;
-      properties.forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key!, value!));
+      const { properties } = value[Type.OBJECT]!;
+      properties!.forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key!, value!));
       object[key] = nestedObject;
       return object;
     }
@@ -152,15 +152,15 @@ export class ValueUtil {
  * Represents mutations on objects.
  */
 export class MutationUtil {
-  static applyMutationSet (object: any, message: protocol.dxos.echo.object.IObjectMutationSet) {
+  static applyMutationSet (object: any, message: ObjectMutationSet) {
     assert(message);
     const { mutations } = message;
     mutations?.forEach(mutation => MutationUtil.applyMutation(object, mutation));
     return object;
   }
 
-  static applyMutation (object: any, mutation: protocol.dxos.echo.object.IObjectMutation) {
-    const { operation = protocol.dxos.echo.object.ObjectMutation.Operation.SET, key, value } = mutation;
+  static applyMutation (object: any, mutation: ObjectMutation) {
+    const { operation = ObjectMutation.Operation.SET, key, value } = mutation;
     switch (operation) {
       // TODO(burdon): Namespace conflict when imported into echo-db.
       case 0: { // protocol.dxos.echo.object.ObjectMutation.Operation.SET: {

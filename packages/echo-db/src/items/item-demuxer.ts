@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import { Readable } from 'stream';
 
-import { protocol, IEchoStream, ItemID } from '@dxos/echo-protocol';
+import { EchoEnvelope, IEchoStream, ItemID } from '@dxos/echo-protocol';
 import { createReadable, createWritable, jsonReplacer } from '@dxos/util';
 
 import { ItemManager } from './item-manager';
@@ -33,15 +33,16 @@ export const createItemDemuxer = (itemManager: ItemManager): NodeJS.WritableStre
     // New item.
     //
     if (genesis) {
-      const { itemType, modelType, parentId } = genesis;
+      const { itemType, modelType } = genesis;
       assert(modelType);
 
       // Create inbound stream for item.
-      const itemStream = createReadable<protocol.dxos.echo.IEchoEnvelope>();
+      const itemStream = createReadable<EchoEnvelope>();
       itemStreams.set(itemId, itemStream);
 
       // Create item.
-      const item = await itemManager.constructItem(itemId, modelType, itemType, itemStream, parentId);
+      // TODO(marik-d): Investigate whether gensis message shoudl be able to set parrentId.
+      const item = await itemManager.constructItem(itemId, modelType, itemType, itemStream, undefined);
       assert(item.id === itemId);
     }
 

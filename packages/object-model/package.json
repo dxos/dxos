@@ -21,10 +21,7 @@
   "scripts": {
     "build": "npm run clean && npm run build:protobuf && npm run build:ts",
     "build:ts": "tsc",
-    "build:protobuf": "mkdir -p src/proto/gen && npm run build:protobuf:json && npm run build:protobuf:js && npm run build:protobuf:ts",
-    "build:protobuf:json": "pbjs -t json ./src/proto/defs/object.proto -o ./src/proto/gen/object.json",
-    "build:protobuf:js": "pbjs -t static-module -w commonjs ./src/proto/defs/object.proto -o ./src/proto/gen/object.js",
-    "build:protobuf:ts": "pbts src/proto/gen/object.js -o ./src/proto/gen/object.d.ts",
+    "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/defs/object.proto -o src/proto/gen",
     "clean": "del-cli dist",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
@@ -71,7 +68,7 @@
     "jest": "^26.2.2",
     "stream-buffers": "^3.0.2",
     "ts-jest": "^26.1.4",
-    "typescript": "^3.9.3",
+    "typescript": "^4.0.2",
     "wait-for-expect": "^3.0.2"
   },
   "eslintConfig": {

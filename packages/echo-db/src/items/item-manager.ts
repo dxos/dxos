@@ -8,7 +8,7 @@ import pify from 'pify';
 
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
-import { protocol, ItemID, ItemType, IEchoStream, PartyKey } from '@dxos/echo-protocol';
+import { ItemID, ItemType, IEchoStream, PartyKey, EchoEnvelope } from '@dxos/echo-protocol';
 import { Model, ModelType, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { checkType, createTransform } from '@dxos/util';
 
@@ -78,7 +78,7 @@ export class ItemManager {
 
     // Write Item Genesis block.
     log('Item Genesis:', itemId);
-    await pify(this._writeStream.write.bind(this._writeStream))(checkType<protocol.dxos.echo.IEchoEnvelope>({
+    await pify(this._writeStream.write.bind(this._writeStream))(checkType<EchoEnvelope>({
       itemId,
       genesis: {
         itemType,
@@ -104,7 +104,7 @@ export class ItemManager {
   async constructItem (
     itemId: ItemID,
     modelType: ModelType,
-    itemType: ItemType,
+    itemType: ItemType | undefined,
     readStream: NodeJS.ReadableStream,
     parentId?: ItemID
   ) {
@@ -122,31 +122,29 @@ export class ItemManager {
     if (!this._modelFactory.hasModel(modelType)) {
       throw new Error(`Unknown model: ${modelType}`);
     }
+    const { mutation: mutationCodec } = this._modelFactory.getModelMeta(modelType);
 
     //
     // Convert inbound envelope message to model specific mutation.
     //
-    const inboundTransform = createTransform<IEchoStream, ModelMessage<any>>(async (message: IEchoStream) => {
+    const inboundTransform = createTransform<IEchoStream, ModelMessage<unknown>>(async (message: IEchoStream) => {
       const { meta, data: { itemId: mutationItemId, mutation } } = message;
       assert(mutationItemId === itemId);
-      const response: ModelMessage<any> = {
+      assert(mutation);
+      return {
         meta,
-        mutation
+        mutation: mutationCodec.decode(mutation)
       };
-
-      return response;
     });
 
     //
     // Convert model-specific outbound mutation to outbound envelope message.
     //
-    const outboundTransform = createTransform<any, protocol.dxos.echo.IEchoEnvelope>(async (mutation) => {
-      const response: protocol.dxos.echo.IEchoEnvelope = {
+    const outboundTransform = createTransform<unknown, EchoEnvelope>(async (mutation) => {
+      return {
         itemId,
-        mutation
+        mutation: mutationCodec.encode(mutation)
       };
-
-      return response;
     });
 
     // Create the model with the outbound stream.

@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Codec } from '@dxos/codec-experimental-runtime';
 import { FeedMeta, ItemID } from '@dxos/echo-protocol';
 
 //
@@ -10,11 +11,9 @@ import { FeedMeta, ItemID } from '@dxos/echo-protocol';
 
 export type ModelType = string;
 
-export type MessageType = string;
-
 export type ModelMeta = {
   type: ModelType,
-  mutation: MessageType
+  mutation: Codec<any> // TODO(marik-d): Specify generic type param here to match model's expected message type
 }
 
 export type ModelConstructor<T> =

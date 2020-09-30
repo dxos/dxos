@@ -8,13 +8,13 @@ import { TextModel, TYPE_TEXT_MODEL_UPDATE } from '@dxos/text-model';
 import { WritableArray } from '@dxos/util';
 
 import { createModelAdapter } from './adapter';
-import { protocol } from './proto';
+import { Mutation } from './proto/gen/dxos/echo/adapter';
 
 const TextModelAdapter = createModelAdapter<any>(TYPE_TEXT_MODEL_UPDATE, TextModel);
 
 describe('TextModel', () => {
   test('local', async () => {
-    const buffer = new WritableArray<protocol.dxos.echo.adapter.IMutation>();
+    const buffer = new WritableArray<Mutation>();
     const model = new TextModelAdapter(TextModelAdapter.meta, createId(), buffer);
 
     model.model.insert(0, 'INSERTED TEXT');
@@ -25,9 +25,9 @@ describe('TextModel', () => {
   });
 
   test('Sync', async () => {
-    const buffer1 = new WritableArray<protocol.dxos.echo.adapter.IMutation>();
+    const buffer1 = new WritableArray<Mutation>();
     const model1 = new TextModelAdapter(TextModelAdapter.meta, createId(), buffer1);
-    const buffer2 = new WritableArray<protocol.dxos.echo.adapter.IMutation>();
+    const buffer2 = new WritableArray<Mutation>();
     const model2 = new TextModelAdapter(TextModelAdapter.meta, createId(), buffer2);
 
     model1.model.insert(0, 'INSERTED TEXT');

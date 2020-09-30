@@ -3,9 +3,7 @@
 //
 
 // eslint-disable-next-line camelcase
-import { dxos as halo_dxos } from '@dxos/credentials';
-
-import { protocol } from './proto';
+import { EchoEnvelope, FeedMessage } from './proto';
 
 //
 // Keys
@@ -53,18 +51,20 @@ export const createFeedMeta = (block: IFeedGenericBlock<any>): FeedMeta => ({
   seq: block.seq
 });
 
-export type FeedBlock = IFeedGenericBlock<protocol.dxos.FeedMessage>;
+export type FeedBlock = IFeedGenericBlock<FeedMessage>;
+
+export type HaloMessage = unknown;
 
 export interface IHaloStream {
   meta: FeedMeta;
   // TODO(telackey): Rename dxos.halo.IHaloEnvelope
   // eslint-disable-next-line camelcase
-  data: halo_dxos.credentials.Message;
+  data: HaloMessage;
 }
 
 export interface IEchoStream {
   meta: FeedMeta;
-  data: protocol.dxos.echo.IEchoEnvelope;
+  data: EchoEnvelope;
 }
 
 //

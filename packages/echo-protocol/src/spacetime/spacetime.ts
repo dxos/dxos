@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { keyToString } from '@dxos/crypto';
 
-import { protocol } from '../proto';
+import { Timeframe } from '../proto';
 import { FeedKey } from '../types';
 
 // Required to access property by variable.
@@ -31,17 +31,17 @@ export abstract class KeyMapper<T, S> {
     return this._key;
   }
 
-  get (frame: protocol.dxos.echo.Timeframe.IFrame): T {
+  get (frame: Timeframe.Frame): T {
     return (frame as IIndexable)[this._key];
   }
 
-  toArray (timeframe: protocol.dxos.echo.ITimeframe): [T, number][] {
+  toArray (timeframe: Timeframe): [T, number][] {
     const { frames = [] } = timeframe;
     assert(frames);
     return frames.map(frame => [(frame as IIndexable)[this._key], frame.seq as number]);
   }
 
-  fromArray (frames: [T, number][]): protocol.dxos.echo.ITimeframe {
+  fromArray (frames: [T, number][]): Timeframe {
     return {
       frames: frames.map(([key, seq]) => ({ [this._key]: key, seq }))
     };
@@ -86,7 +86,7 @@ export class Spacetime<T, S> {
     return this._keyMapper;
   }
 
-  toJson (timeframe: protocol.dxos.echo.ITimeframe) {
+  toJson (timeframe: Timeframe) {
     assert(timeframe);
     const { frames = [] } = timeframe;
     return frames?.map(frame => ({
@@ -95,11 +95,11 @@ export class Spacetime<T, S> {
     }));
   }
 
-  stringify (timeframe?: protocol.dxos.echo.ITimeframe | null | undefined) {
+  stringify (timeframe?: Timeframe | null | undefined) {
     return timeframe ? JSON.stringify(this.toJson(timeframe)) : null;
   }
 
-  createTimeframe (frames?: [T, number][]): protocol.dxos.echo.ITimeframe {
+  createTimeframe (frames?: [T, number][]): Timeframe {
     return {
       frames: (frames || []).map(([key, seq]) => ({ [this._keyMapper.key]: key, seq }))
     };
@@ -109,7 +109,7 @@ export class Spacetime<T, S> {
    * Merges the values, updating the highest sequence numbers.
    * @param timeframes
    */
-  merge (...timeframes: protocol.dxos.echo.ITimeframe[]): protocol.dxos.echo.ITimeframe {
+  merge (...timeframes: Timeframe[]): Timeframe {
     const map = new Map();
     const arrays = timeframes.map(timeframes => this._keyMapper.toArray(timeframes));
     arrays.reduce((a, b) => [...a, ...b], []).forEach(([key, seq]) => {
@@ -129,7 +129,7 @@ export class Spacetime<T, S> {
    * @param timeframe
    * @param keys
    */
-  removeKeys (timeframe: protocol.dxos.echo.ITimeframe, keys: T[]): protocol.dxos.echo.ITimeframe {
+  removeKeys (timeframe: Timeframe, keys: T[]): Timeframe {
     return {
       frames: this._keyMapper.toArray(timeframe)
         .filter(([key]) => keys.indexOf(key) === -1)
@@ -148,8 +148,8 @@ export class Spacetime<T, S> {
    * @param tf2
    */
   dependencies<T> (
-    tf1: protocol.dxos.echo.ITimeframe, tf2: protocol.dxos.echo.ITimeframe
-  ): protocol.dxos.echo.ITimeframe {
+    tf1: Timeframe, tf2: Timeframe
+  ): Timeframe {
     return {
       frames: tf1.frames?.filter(frame => {
         assert(frame.seq !== undefined && frame.seq !== null);

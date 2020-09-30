@@ -20,11 +20,17 @@ import "testing.proto";
 // Outer message type decoded by Codec.
 //
 message FeedMessage {
-  oneof payload {
-    // The message is expected to be a dxos.halo.HaloEnvelope.
-    google.protobuf.Any halo = 1;
-    dxos.echo.EchoEnvelope echo = 2;
-  }
+  CredentialsMessage halo = 1;
+  dxos.echo.EchoEnvelope echo = 2;
+}
+
+// 
+// A container for dxos.credentials.Message
+//
+// TODO(marik-d): Figure out how to import a protobuf type from @dxos/credentials package.
+//
+message CredentialsMessage {
+  bytes data = 1;
 }
 
 //

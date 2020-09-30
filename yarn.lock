@@ -1131,6 +1131,22 @@
     through2 "^3.0.1"
     wrtc "^0.4.3"
 
+"@dxos/codec-experimental-compiler@^1.0.4":
+  version "1.0.4"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fcodec-experimental-compiler/-/codec-experimental-compiler-1.0.4.tgz#f7c668d6736d2e8b26f3f7c24dd3626b948fc2b0"
+  integrity sha512-OukuEsLJSx4tEtf4dRLwQV86G/UhR9J1EkgJ859GyTs1Q+OfWutX83I7BCsOdyoYwE3hQaZ8LSTzUL30owCnyw==
+  dependencies:
+    argparse "^2.0.1"
+    chalk "^4.1.0"
+    read-pkg "^5.2.0"
+
+"@dxos/codec-experimental-runtime@^1.0.2":
+  version "1.0.2"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fcodec-experimental-runtime/-/codec-experimental-runtime-1.0.2.tgz#fc9a9d287926e2764c7e1d77406ffc0a7d01967e"
+  integrity sha512-nMzLTJJICfm2RIUtt54P2SH9aw/3J0FuojwSUVfcNisgrV9oQQ6gWSjJwC1o0pIBGzzOrxHrTEHyQCRwyy6rTQ==
+  dependencies:
+    protobufjs "^6.10.1"
+
 "@dxos/codec-protobuf@^1.1.0-beta.0", "@dxos/codec-protobuf@^1.1.0-beta.10", "@dxos/codec-protobuf@^1.1.0-beta.11", "@dxos/codec-protobuf@^1.1.0-beta.9":
   version "1.1.0-beta.11"
   resolved "http://npm.dev.dxos.network:5736/@dxos%2fcodec-protobuf/-/codec-protobuf-1.1.0-beta.11.tgz#2325420040ce97a450390e097ae60f525a62b80c"
@@ -4627,6 +4643,11 @@ argparse@^1.0.7:
   integrity sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==
   dependencies:
     sprintf-js "~1.0.2"
+
+argparse@^2.0.1:
+  version "2.0.1"
+  resolved "http://npm.dev.dxos.network:5736/argparse/-/argparse-2.0.1.tgz#246f50f3ca78a3240f6c997e8a9bd1eac49e4b38"
+  integrity sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==
 
 arr-diff@^4.0.0:
   version "4.0.0"
@@ -14014,7 +14035,7 @@ proto-list@~1.2.1:
   resolved "http://npm.dev.dxos.network:5736/proto-list/-/proto-list-1.2.4.tgz#212d5bfe1318306a420f6402b8e26ff39647a849"
   integrity sha1-IS1b/hMYMGpCD2QCuOJv85ZHqEk=
 
-protobufjs@^6.9.0:
+protobufjs@^6.10.1, protobufjs@^6.9.0:
   version "6.10.1"
   resolved "http://npm.dev.dxos.network:5736/protobufjs/-/protobufjs-6.10.1.tgz#e6a484dd8f04b29629e9053344e3970cccf13cd2"
   integrity sha512-pb8kTchL+1Ceg4lFd5XUpK8PdWacbvV5SK2ULH2ebrYtl4GjJmS24m6CKME67jzV53tbJxHlnNOSqQHbTsR9JQ==
@@ -16718,10 +16739,10 @@ typedarray@^0.0.6:
   resolved "http://npm.dev.dxos.network:5736/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
-typescript@^3.9.3:
-  version "3.9.7"
-  resolved "http://npm.dev.dxos.network:5736/typescript/-/typescript-3.9.7.tgz#98d600a5ebdc38f40cb277522f12dc800e9e25fa"
-  integrity sha512-BLbiRkiBzAwsjut4x/dsibSTB6yWpwT5qWmC2OfuCg3GgVQCSgMs4vEctYPhsaGtd0AeuuHMkjZ2h2WG8MSzRw==
+typescript@^4.0.2:
+  version "4.0.3"
+  resolved "http://npm.dev.dxos.network:5736/typescript/-/typescript-4.0.3.tgz#153bbd468ef07725c1df9c77e8b453f8d36abba5"
+  integrity sha512-tEu6DGxGgRJPb/mVPIZ48e69xCn2yRmCgYmDugAVwmJ6o+0u1RI18eO7E7WBTLYLaEVVOhwQmcdhQHweux/WPg==
 
 uglify-js@^3.1.4:
   version "3.10.4"
