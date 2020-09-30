@@ -37,7 +37,7 @@
   "dependencies": {
     "@dxos/async": "^1.0.0-beta.8",
     "@dxos/codec-protobuf": "^1.1.0-beta.0",
-    "@dxos/credentials": "^1.0.1-beta.48",
+    "@dxos/credentials": "^1.0.1-beta.51",
     "@dxos/crypto": "^1.0.0-beta.7",
     "@dxos/echo-protocol": "^1.0.0-alpha.28",
     "@dxos/model-factory": "^1.0.0-alpha.28",

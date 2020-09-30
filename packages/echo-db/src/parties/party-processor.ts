@@ -79,8 +79,8 @@ export class PartyProcessor {
       for (let i = 0; i < candidates.length; i++) {
         const { key: feedKey, data: { halo, echo } } = candidates[i];
 
-        const feedAdmitted = this._stateMachine.memberCredentials.has(keyToString(feedKey));
-        const genesisRequired = !this._stateMachine.memberCredentials.size;
+        const feedAdmitted = this._stateMachine.credentialMessages.has(keyToString(feedKey));
+        const genesisRequired = !this._stateMachine.credentialMessages.size;
 
         if (feedAdmitted && halo) {
           // Accept this candidate if this Feed has already been admitted to the Party.

@@ -5,7 +5,15 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Keyring, KeyType, createPartyGenesisMessage, createKeyAdmitMessage, Filter } from '@dxos/credentials';
+import {
+  Filter,
+  Keyring,
+  KeyType,
+  createDeviceInfoMessage,
+  createIdentityInfoMessage,
+  createKeyAdmitMessage,
+  createPartyGenesisMessage
+} from '@dxos/credentials';
 import { keyToString, randomBytes } from '@dxos/crypto';
 import { FeedKey, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -19,6 +27,14 @@ import { ReplicationAdapter } from '../replication';
 import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
+
+/**
+ * Options allowed when creating the HALO.
+ */
+interface HaloCreationOptions {
+  identityDisplayName?: string,
+  deviceDisplayName?: string
+}
 
 interface Options {
   readLogger?: NodeJS.ReadWriteStream;
@@ -170,7 +186,7 @@ export class PartyFactory {
   }
 
   // TODO(telackey): Combine with createParty?
-  async createHalo (): Promise<PartyInternal> {
+  async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
     const identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
     assert(identityKey, 'Identity key required.');
     let deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
@@ -195,8 +211,19 @@ export class PartyFactory {
     //    message will be copied into other Parties which we create or join.
     pipeline.outboundHaloStream!.write(createKeyAdmitMessage(this._keyring, identityKey.publicKey, identityKey));
 
-    // 4. LATER write the IdentityInfo message with descriptive details (eg, display name).
-    // 5. LATER write the DeviceInfo message with descriptive details (eg, display name).
+    if (options.identityDisplayName) {
+      // 4. Write the IdentityInfo message with descriptive details (eg, display name).
+      pipeline.outboundHaloStream!.write(
+        createIdentityInfoMessage(this._keyring, options.identityDisplayName, identityKey)
+      );
+    }
+
+    if (options.deviceDisplayName) {
+      // 5. Write the DeviceInfo message with descriptive details (eg, display name).
+      pipeline.outboundHaloStream!.write(
+        createDeviceInfoMessage(this._keyring, options.deviceDisplayName, deviceKey)
+      );
+    }
 
     return halo;
   }

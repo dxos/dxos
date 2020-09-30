@@ -1195,10 +1195,10 @@
     stream-to-array "^2.3.0"
     uuid "^3.3.2"
 
-"@dxos/credentials@^1.0.1-beta.48":
-  version "1.0.1-beta.48"
-  resolved "https://registry.npmjs.org/@dxos/credentials/-/credentials-1.0.1-beta.48.tgz#dcc1b9605f72f5f8a47ef710b360332c4be88acb"
-  integrity sha512-mfutT9XRIuDSW/BT5SUK4fjaups7efuLVVhjLZ3goHD4Nh+1YouyBGwTNlNaE3ziY8jvE8ZQOAs+BsOtNjyicQ==
+"@dxos/credentials@^1.0.1-beta.51":
+  version "1.0.1-beta.51"
+  resolved "https://registry.yarnpkg.com/@dxos/credentials/-/credentials-1.0.1-beta.51.tgz#d27748eb9e1132130942d7c353c663e251a6f492"
+  integrity sha512-JmjmGjCD5GpaqMf6kT+lzz+SYb3NB99UnzCKAogJDQjx7Dnv9jaNCe+RaBfkMtpdjO2OKop6S5DsOMLR5DBW6Q==
   dependencies:
     "@dxos/codec-protobuf" "^1.1.0-beta.10"
     "@dxos/crypto" "^1.0.0-beta.1"
