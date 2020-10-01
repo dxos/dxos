@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db-test",
-  "version": "1.0.0-alpha.33",
+  "version": "0.2.0-dev",
   "private": true,
   "license": "GPL-3.0",
   "scripts": {
@@ -9,12 +9,12 @@
   },
   "dependencies": {
     "@dxos/credentials": "^1.0.1-beta.51",
-    "@dxos/echo-db": "^1.0.0-alpha.28",
-    "@dxos/node-spawner": "^1.0.0-canary.60",
-    "@dxos/model-factory": "^1.0.0-alpha.28",
-    "@dxos/object-model": "^1.0.0-alpha.28",
+    "@dxos/crypto": "^1.0.0-beta.7",
+    "@dxos/echo-db": "^0.2.0-dev",
+    "@dxos/model-factory": "^0.2.0-dev",
     "@dxos/network-manager": "^1.0.0-beta.105",
-    "@dxos/crypto": "^1.0.0-beta.7"
+    "@dxos/node-spawner": "^1.0.0-canary.60",
+    "@dxos/object-model": "^0.2.0-dev"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "^1.0.5",
