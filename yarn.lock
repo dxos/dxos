@@ -1157,10 +1157,10 @@
     lodash.merge "^4.6.2"
     protobufjs "^6.9.0"
 
-"@dxos/credentials@^1.0.1-beta.29", "@dxos/credentials@^1.0.1-beta.36":
-  version "1.0.1-beta.43"
-  resolved "http://npm.dev.dxos.network:5736/@dxos%2fcredentials/-/credentials-1.0.1-beta.43.tgz#93ccaa7f83f62239970f4fba491b860cd1465f39"
-  integrity sha512-neumjllOhDA+B1WGZpLNTommfoTQofrY9pnplhu52OebAy+XSoAPl5WAhUBs79SBWPyKzEfXEj8FUuXBnJ2x9g==
+"@dxos/credentials@1.0.1-beta.51":
+  version "1.0.1-beta.51"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fcredentials/-/credentials-1.0.1-beta.51.tgz#d27748eb9e1132130942d7c353c663e251a6f492"
+  integrity sha512-JmjmGjCD5GpaqMf6kT+lzz+SYb3NB99UnzCKAogJDQjx7Dnv9jaNCe+RaBfkMtpdjO2OKop6S5DsOMLR5DBW6Q==
   dependencies:
     "@dxos/codec-protobuf" "^1.1.0-beta.10"
     "@dxos/crypto" "^1.0.0-beta.1"
@@ -1195,10 +1195,10 @@
     stream-to-array "^2.3.0"
     uuid "^3.3.2"
 
-"@dxos/credentials@^1.0.1-beta.51":
-  version "1.0.1-beta.51"
-  resolved "https://registry.yarnpkg.com/@dxos/credentials/-/credentials-1.0.1-beta.51.tgz#d27748eb9e1132130942d7c353c663e251a6f492"
-  integrity sha512-JmjmGjCD5GpaqMf6kT+lzz+SYb3NB99UnzCKAogJDQjx7Dnv9jaNCe+RaBfkMtpdjO2OKop6S5DsOMLR5DBW6Q==
+"@dxos/credentials@^1.0.1-beta.29", "@dxos/credentials@^1.0.1-beta.36":
+  version "1.0.1-beta.43"
+  resolved "http://npm.dev.dxos.network:5736/@dxos%2fcredentials/-/credentials-1.0.1-beta.43.tgz#93ccaa7f83f62239970f4fba491b860cd1465f39"
+  integrity sha512-neumjllOhDA+B1WGZpLNTommfoTQofrY9pnplhu52OebAy+XSoAPl5WAhUBs79SBWPyKzEfXEj8FUuXBnJ2x9g==
   dependencies:
     "@dxos/codec-protobuf" "^1.1.0-beta.10"
     "@dxos/crypto" "^1.0.0-beta.1"
