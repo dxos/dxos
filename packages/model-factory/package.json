@@ -52,12 +52,12 @@
     "through2": "^3.0.1"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "^1.0.5",
     "@babel/cli": "^7.7.0",
     "@babel/core": "^7.4.5",
     "@babel/plugin-proposal-export-default-from": "^7.5.2",
     "@babel/preset-env": "^7.4.5",
     "@dxos/async": "^1.0.0-beta.7",
+    "@dxos/eslint-plugin": "^1.0.5",
     "@dxos/feed-store": "^1.2.0-beta.21",
     "@dxos/random-access-multi-storage": "^1.1.0-beta.3",
     "babel-eslint": "^10.0.2",
