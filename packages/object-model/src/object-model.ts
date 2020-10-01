@@ -11,7 +11,7 @@ import { ModelMeta, Model } from '@dxos/model-factory';
 import { checkType, jsonReplacer } from '@dxos/util';
 
 import { MutationUtil, ValueUtil } from './mutation';
-import { ObjectMutationSet, schema } from './proto';
+import { ObjectMutation, ObjectMutationSet, schema } from './proto';
 
 const log = debug('dxos:echo:object-model');
 
@@ -48,18 +48,24 @@ export class ObjectModel extends Model<ObjectMutationSet> {
     await this.write(checkType<ObjectMutationSet>({
       mutations: [
         {
-          // TODO(burdon): Namespace conflict when imported into echo-db.
-          operation: 0, // _protocol.dxos.echo.object.ObjectMutation.Operation.SET,
+          operation: ObjectMutation.Operation.SET,
           key,
           value: ValueUtil.createMessage(value)
         }
       ]
     }));
+
+    // Wait for the property to by updated so that getProperty will return the expected value.
+    // TODO(telackey): It would be better if we could check for a unique ID per mutation rather than the value.
+    const match = () => this.getProperty(key) === value;
+    if (!match()) {
+      await this._modelUpdate.waitFor(match);
+    }
   }
 
-  async _processMessage (meta: FeedMeta, messsage: ObjectMutationSet) {
-    log('processMessage', JSON.stringify({ meta, messsage }, jsonReplacer));
-    MutationUtil.applyMutationSet(this._object, messsage);
+  async _processMessage (meta: FeedMeta, message: ObjectMutationSet) {
+    log('processMessage', JSON.stringify({ meta, message }, jsonReplacer));
+    MutationUtil.applyMutationSet(this._object, message);
     return true;
   }
 }

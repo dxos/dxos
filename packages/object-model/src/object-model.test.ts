@@ -38,7 +38,7 @@ describe('object model', () => {
     log(model.toObject());
 
     // Update.
-    await model.setProperty('title', 'DXOS');
+    const processed = model.setProperty('title', 'DXOS');
     expect(buffer.objects).toHaveLength(1);
     const { mutations } = buffer.objects[0];
     expect(mutations).toHaveLength(1);
@@ -53,6 +53,7 @@ describe('object model', () => {
     const { publicKey: feedKey } = createKeyPair();
     const meta = { feedKey, seq: 0 };
     await model.processMessage(meta, buffer.objects[0]);
+    await processed;
     expect(model.toObject()).toStrictEqual({
       title: 'DXOS'
     });
