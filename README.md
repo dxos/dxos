@@ -21,10 +21,10 @@ yarn test
 
 ### Publishing to npm
 
-To publish new versions of all public packages to the beta channel:
+To publish new versions of all public packages:
 
 ```bash
 yarn build
 yarn test
-yarn lerna publish prerelease --dist-tag="beta" --force-publish
+yarn lerna publish --force-publish
 ```
