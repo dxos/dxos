@@ -1,6 +1,6 @@
 {
   "name": "@dxos/model-factory",
-  "version": "1.0.0-beta.33",
+  "version": "0.1.0",
   "description": "Model factory.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/model-factory#readme",
   "bugs": {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/view-model",
-  "version": "1.0.0-beta.33",
+  "version": "0.1.0",
   "description": "View model",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/view-model#readme",
   "bugs": {
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@dxos/crypto": "^0.0.1",
-    "@dxos/model-factory": "^1.0.0-beta.28"
+    "@dxos/model-factory": "^0.1.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "^1.0.5",
