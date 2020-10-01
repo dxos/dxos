@@ -1,6 +1,6 @@
 {
   "name": "@dxos/model-adapter",
-  "version": "0.2.0-dev",
+  "version": "0.2.0-dev.1",
   "description": "Adapter to use models with the original API in ECHO 2",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {

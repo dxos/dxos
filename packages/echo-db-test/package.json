@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db-test",
-  "version": "0.2.0-dev",
+  "version": "0.2.0-dev.1",
   "private": true,
   "license": "GPL-3.0",
   "scripts": {
