@@ -16,7 +16,7 @@ import { ModelMessage, ModelMeta } from './types';
  * Models define a root message type, which is contained in the partent Item's message envelope.
  */
 export abstract class Model<T> {
-  private readonly _modelUpdate = new Event<Model<T>>();
+  protected readonly _modelUpdate = new Event<this>();
   private readonly _processor: NodeJS.WritableStream;
 
   private readonly _meta: ModelMeta;
@@ -58,13 +58,8 @@ export abstract class Model<T> {
     return this._processor;
   }
 
-  // TODO(burdon): How to subtype handler via polymorphic this types?
-  // TODO(marik-d): You can use `this` in a context of a class as a reference to class instance type. So `Event<this>` and `(result: this) => void`.
-  subscribe (listener: (result: Model<T>) => void) {
-    this._modelUpdate.on(listener);
-    return () => {
-      this._modelUpdate.off(listener);
-    };
+  subscribe (listener: (result: this) => void) {
+    return this._modelUpdate.on(listener);
   }
 
   /**

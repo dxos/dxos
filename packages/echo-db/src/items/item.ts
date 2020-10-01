@@ -25,7 +25,7 @@ export class Item<M extends Model<any>> {
   // Parent item (or null if this item is a root item).
   private _parent: Item<any> | null = null;
   private readonly _children = new Set<Item<any>>();
-  private readonly _onUpdate = new Event<Item<M>>();
+  private readonly _onUpdate = new Event<this>();
 
   /**
    * Items are constructed by a `Party` object.
@@ -53,6 +53,9 @@ export class Item<M extends Model<any>> {
     this._model = model;
     this._writeStream = writeStream;
     this._updateParent(parent);
+
+    // Model updates mean Item updates, so make sure we are subscribed as well.
+    this._onUpdate.addEffect(() => this._model.subscribe(() => this._onUpdate.emit(this)));
   }
 
   toString () {
