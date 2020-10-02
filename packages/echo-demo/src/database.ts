@@ -23,7 +23,7 @@ export const createECHO = async ({
   const identityManager = new IdentityManager(keyring);
 
   const modelFactory = new ModelFactory()
-    .registerModel(ObjectModel.meta, ObjectModel);
+    .registerModel(ObjectModel);
 
   const networkManager = new NetworkManager(feedStore, swarmProvider);
   const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, networkManager);

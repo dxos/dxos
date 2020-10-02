@@ -44,7 +44,7 @@ export default class TestAgent implements Agent {
     const networkManager = new NetworkManager(feedStore, swarmProvider);
 
     const modelFactory = new ModelFactory()
-      .registerModel(ObjectModel.meta, ObjectModel);
+      .registerModel(ObjectModel);
 
     const partyFactory = new PartyFactory(
       identityManager,

@@ -15,7 +15,7 @@ describe('model factory', () => {
     const itemId = createId();
 
     // Create model.
-    const modelFactory = new ModelFactory().registerModel(TestModel.meta, TestModel);
+    const modelFactory = new ModelFactory().registerModel(TestModel);
     const model = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId);
     expect(model).toBeTruthy();
   });
@@ -43,7 +43,7 @@ describe('model factory', () => {
     );
 
     // Create model.
-    const modelFactory = new ModelFactory().registerModel(TestModel.meta, TestModel);
+    const modelFactory = new ModelFactory().registerModel(TestModel);
     const model = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, writeStream);
     expect(model).toBeTruthy();
 

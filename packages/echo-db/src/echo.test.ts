@@ -36,7 +36,7 @@ const createECHO = async (verbose = true) => {
   }
 
   const modelFactory = new ModelFactory()
-    .registerModel(ObjectModel.meta, ObjectModel);
+    .registerModel(ObjectModel);
 
   const options = verbose ? {
     readLogger: createLoggingTransform((message: any) => { log('>>>', JSON.stringify(message, jsonReplacer, 2)); }),
@@ -236,7 +236,7 @@ describe('api tests', () => {
 
     log('Initializing database');
     const modelFactory = new ModelFactory()
-      .registerModel(ObjectModel.meta, ObjectModel);
+      .registerModel(ObjectModel);
 
     const identityManager = new IdentityManager(keyring);
     const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));

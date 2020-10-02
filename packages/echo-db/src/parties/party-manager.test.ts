@@ -33,7 +33,7 @@ describe('Party manager', () => {
       identityManager = new IdentityManager(keyring);
     }
 
-    const modelFactory = new ModelFactory().registerModel(ObjectModel.meta, ObjectModel);
+    const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
     const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
@@ -109,7 +109,7 @@ describe('Party manager', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     const identityManager = new IdentityManager(keyring);
 
-    const modelFactory = new ModelFactory().registerModel(ObjectModel.meta, ObjectModel);
+    const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
     const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 

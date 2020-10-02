@@ -22,9 +22,10 @@ export class ModelFactory {
     return this._models.has(modelType);
   }
 
-  registerModel (meta: ModelMeta, constructor: ModelConstructor<any>): ModelFactory {
-    assert(meta && meta.type && meta.mutation);
-    assert(constructor);
+  registerModel (constructor: ModelConstructor<any>): this {
+    assert(constructor?.meta);
+    const { meta } = constructor;
+    assert(meta.type && meta.mutation);
     this._models.set(meta.type, { meta, constructor });
     return this;
   }

@@ -21,7 +21,7 @@ describe('item demxuer', () => {
     const { publicKey: feedKey } = createKeyPair();
 
     const modelFactory = new ModelFactory()
-      .registerModel(TestModel.meta, TestModel);
+      .registerModel(TestModel);
 
     const writeStream = createTransform<EchoEnvelope, IEchoStream>(
       async (message: EchoEnvelope): Promise<IEchoStream> => ({
