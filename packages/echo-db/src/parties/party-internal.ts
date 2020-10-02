@@ -64,6 +64,10 @@ export class PartyInternal {
     return this._itemManager;
   }
 
+  get processor () {
+    return this._partyProcessor;
+  }
+
   /**
    * Opens the pipeline and connects the streams.
    */

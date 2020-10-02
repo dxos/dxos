@@ -43,21 +43,21 @@ const createECHO = async (verbose = true) => {
     writeLogger: createLoggingTransform((message: any) => { log('<<<', JSON.stringify(message, jsonReplacer, 2)); })
   } : undefined;
 
-  const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
+  const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
   const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
   await partyManager.open();
-  await partyManager.createHalo();
+  await partyManager.createHalo({ identityDisplayName: humanize(identityManager.identityKey.publicKey) });
 
   return new ECHO(partyManager, options);
 };
 
 describe('api tests', () => {
   test('create party and update properties.', async () => {
-    const db = await createECHO();
-    await db.open();
+    const echo = await createECHO();
+    await echo.open();
 
-    const parties = await db.queryParties({ open: true });
+    const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
@@ -72,7 +72,7 @@ describe('api tests', () => {
       });
     });
 
-    const party = await db.createParty();
+    const party = await echo.createParty();
     expect(party.isOpen).toBeTruthy();
     await party.setProperty('title', 'DXOS');
 
@@ -81,10 +81,10 @@ describe('api tests', () => {
   });
 
   test('create party and items.', async () => {
-    const db = await createECHO();
-    await db.open();
+    const echo = await createECHO();
+    await echo.open();
 
-    const parties = await db.queryParties({ open: true });
+    const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
@@ -107,8 +107,13 @@ describe('api tests', () => {
       });
     });
 
-    const party = await db.createParty();
+    const party = await echo.createParty();
     expect(party.isOpen).toBeTruthy();
+
+    const members = party.queryMembers().value;
+    expect(members.length).toBe(1);
+    // Within this test, we use the humanized key as the name.
+    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
 
     // TODO(burdon): Test item mutations.
     await party.database.createItem(ObjectModel, 'wrn://dxos.org/item/document');
@@ -120,10 +125,10 @@ describe('api tests', () => {
   });
 
   test('create party and item with child item.', async () => {
-    const db = await createECHO();
-    await db.open();
+    const echo = await createECHO();
+    await echo.open();
 
-    const parties = await db.queryParties({ open: true });
+    const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
@@ -146,8 +151,13 @@ describe('api tests', () => {
       });
     });
 
-    const party = await db.createParty();
+    const party = await echo.createParty();
     expect(party.isOpen).toBeTruthy();
+
+    const members = party.queryMembers().value;
+    expect(members.length).toBe(1);
+    // Within this test, we use the humanized key as the name.
+    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
 
     const parent = await party.database.createItem(ObjectModel, 'wrn://dxos.org/item/document');
     await party.database.createItem(ObjectModel, undefined, parent.id);
@@ -157,15 +167,20 @@ describe('api tests', () => {
   });
 
   test('create party, two items with child items, and then move child.', async () => {
-    const db = await createECHO();
-    await db.open();
+    const echo = await createECHO();
+    await echo.open();
 
-    const parties = await db.queryParties({ open: true });
+    const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => humanize(party.key)));
     expect(parties.value).toHaveLength(0);
 
-    const party = await db.createParty();
+    const party = await echo.createParty();
     expect(party.isOpen).toBeTruthy();
+
+    const members = party.queryMembers().value;
+    expect(members.length).toBe(1);
+    // Within this test, we use the humanized key as the name.
+    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
 
     const parentA = await party.database.createItem(ObjectModel, 'wrn://dxos.org/item/document');
     const childA = await party.database.createItem(ObjectModel, undefined, parentA.id);
@@ -224,7 +239,7 @@ describe('api tests', () => {
       .registerModel(ObjectModel.meta, ObjectModel);
 
     const identityManager = new IdentityManager(keyring);
-    const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
+    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
     const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
     await partyManager.open();

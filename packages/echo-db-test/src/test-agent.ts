@@ -47,7 +47,7 @@ export default class TestAgent implements Agent {
       .registerModel(ObjectModel.meta, ObjectModel);
 
     const partyFactory = new PartyFactory(
-      identityManager.keyring,
+      identityManager,
       feedStoreAdapter,
       modelFactory,
       networkManager

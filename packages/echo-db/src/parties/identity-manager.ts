@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { waitForCondition } from '@dxos/async';
 import { Keyring, KeyType, Filter } from '@dxos/credentials';
 
 import { PartyInternal } from './party-internal';
@@ -33,5 +34,9 @@ export class IdentityManager {
 
   async initialize (halo: PartyInternal) {
     this._halo = halo;
+    // TODO(telackey): We should wait for the Device key too, once we have multi-device,
+    // and Identity/DeviceInfo messages if we make them mandatory.
+    // Wait for the Identity key to be processed; it will be the first one.
+    await waitForCondition(() => halo.processor.memberKeys.length);
   }
 }

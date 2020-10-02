@@ -9,7 +9,7 @@ import useResizeAware from 'react-resize-aware';
 
 import { Button, TextField, Toolbar } from '@material-ui/core';
 
-import { createId } from '@dxos/crypto';
+import { createId, keyToString } from '@dxos/crypto';
 import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
@@ -17,7 +17,8 @@ import { createStorage } from '@dxos/random-access-multi-storage';
 import { SwarmProvider } from '@dxos/network-manager'
 import { Keyring } from '@dxos/credentials';
 
-import { createECHO, EchoContext, EchoGraph } from '../src';
+import { createECHO, EchoContext, EchoGraph, usePartyMembers } from '../src';
+import { MemberList } from '../src/components/MemberList';
 
 const log = debug('dxos:echo:demo');
 debug.enable('dxos:*');
@@ -79,6 +80,8 @@ export const withSwarm = () => {
     window.location.reload();
   }
 
+  const activeParty = database?.queryParties().value[0]
+
   return (
     <FullScreen>
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
@@ -97,6 +100,8 @@ export const withSwarm = () => {
             <Button onClick={handleResetStorage}>Reset</Button>
           </div>
         </Toolbar>
+
+        {activeParty && <MemberList party={database.queryParties().first} />}
 
         <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
           {resizeListener}

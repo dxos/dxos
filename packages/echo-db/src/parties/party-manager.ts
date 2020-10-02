@@ -14,7 +14,7 @@ import { FeedStoreAdapter } from '../feed-store-adapter';
 import { SecretProvider } from '../invitations/common';
 import { InvitationDescriptor } from '../invitations/invitation-descriptor';
 import { IdentityManager } from './identity-manager';
-import { PartyFactory } from './party-factory';
+import { PartyFactory, HaloCreationOptions } from './party-factory';
 import { PartyInternal } from './party-internal';
 
 const log = debug('dxos:echo:party-manager');
@@ -89,12 +89,12 @@ export class PartyManager {
   /**
    * Creates a new party, writing its genesis block to the stream.
    */
-  async createHalo (): Promise<PartyInternal> {
+  async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
     assert(this._opened, 'PartyManager is not open.');
     assert(!this._identityManager.halo, 'HALO already exists.');
 
     return this._lock.executeSynchronized(async () => {
-      const halo = await this._partyFactory.createHalo();
+      const halo = await this._partyFactory.createHalo(options);
       await this._identityManager.initialize(halo);
       return halo;
     });

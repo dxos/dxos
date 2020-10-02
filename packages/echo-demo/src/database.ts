@@ -26,7 +26,7 @@ export const createECHO = async ({
     .registerModel(ObjectModel.meta, ObjectModel);
 
   const networkManager = new NetworkManager(feedStore, swarmProvider);
-  const partyFactory = new PartyFactory(identityManager.keyring, feedStoreAdapter, modelFactory, networkManager);
+  const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, networkManager);
   const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
   await partyManager.open();

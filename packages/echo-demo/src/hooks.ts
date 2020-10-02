@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { createContext, useEffect, useContext, useState } from 'react';
+import { createContext, useEffect, useContext, useState, useMemo } from 'react';
+import { useSubscription } from 'use-subscription';
 
 import { humanize, keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';
-import { ECHO, Party, Item } from '@dxos/echo-db';
+import { ECHO, Party, Item, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 
 import { ComplexMap } from '../../util/dist/src';
@@ -182,4 +183,15 @@ function asyncEffect (fun: () => Promise<(() => void) | undefined>): () => (() =
     const promise = fun();
     return () => promise.then(cb => cb?.());
   };
+}
+
+export function useResultSet<T> (resultSet: ResultSet<T>): T[] {
+  return useSubscription(useMemo(() => ({
+    getCurrentValue: () => resultSet.value,
+    subscribe: cb => resultSet.subscribe(cb)
+  }), [resultSet]));
+}
+
+export function usePartyMembers (party: Party) {
+  return useResultSet(useMemo(() => party.queryMembers(), [keyToString(party.key)]));
 }

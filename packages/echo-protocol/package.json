@@ -42,7 +42,7 @@
     "@dxos/async": "^1.0.0-beta.8",
     "@dxos/codec-experimental-runtime": "^1.0.2",
     "@dxos/codec-protobuf": "^1.1.0-beta.0",
-    "@dxos/credentials": "1.0.1-beta.51",
+    "@dxos/credentials": "1.0.1-beta.52",
     "@dxos/crypto": "^1.0.0-beta.7",
     "@dxos/feed-store": "^1.2.0-beta.30",
     "@dxos/util": "^0.2.0-dev",

@@ -10,6 +10,7 @@ import {
   Keyring,
   KeyType,
   createDeviceInfoMessage,
+  createEnvelopeMessage,
   createIdentityInfoMessage,
   createKeyAdmitMessage,
   createPartyGenesisMessage
@@ -24,6 +25,7 @@ import { createWritableFeedStream } from '@dxos/util';
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { GreetingInitiator, InvitationDescriptor, SecretProvider } from '../invitations';
 import { ReplicationAdapter } from '../replication';
+import { IdentityManager } from './identity-manager';
 import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
@@ -31,7 +33,7 @@ import { Pipeline } from './pipeline';
 /**
  * Options allowed when creating the HALO.
  */
-interface HaloCreationOptions {
+export interface HaloCreationOptions {
   identityDisplayName?: string,
   deviceDisplayName?: string
 }
@@ -52,7 +54,7 @@ export class PartyFactory {
   // TODO(telackey): It might be better to take Keyring as a param to createParty/constructParty/etc.
   // TODO(marik-d): Maybe pass identityManager here instead to be able to copy genesis messages.
   constructor (
-    private readonly _keyring: Keyring,
+    private readonly _identityManager: IdentityManager,
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _modelFactory: ModelFactory,
     private readonly _networkManager: NetworkManager,
@@ -64,8 +66,10 @@ export class PartyFactory {
    */
   async createParty (): Promise<PartyInternal> {
     assert(!this._options.readOnly);
+    const { keyring } = this._identityManager;
+    const identityKey = this._getIdentityKey();
 
-    const partyKey = await this._keyring.createKeyRecord({ type: KeyType.PARTY });
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
     const { feedKey } = await this._initWritableFeed(partyKey.publicKey);
     const { party, pipeline } = await this.constructParty(partyKey.publicKey);
 
@@ -74,14 +78,22 @@ export class PartyFactory {
 
     // TODO(burdon): Call party processor to write genesis, etc.
     // TODO(marik-d): Wait for this message to be processed first
-    pipeline.outboundHaloStream!.write(createPartyGenesisMessage(this._keyring, partyKey, feedKey, this._getIdentityKey()));
+    pipeline.outboundHaloStream!.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
+
+    // TODO(telackey): Should we simply assert that the HALO exists?
+    if (this._identityManager.halo) {
+      const infoMessage = this._identityManager.halo.processor.infoMessages.get(identityKey.key);
+      if (infoMessage) {
+        pipeline.outboundHaloStream!.write(createEnvelopeMessage(keyring, partyKey.publicKey, infoMessage, [identityKey]));
+      }
+    }
 
     // Create special properties item.
     assert(party.itemManager);
     await party.itemManager.createItem(ObjectModel.meta.type, PARTY_ITEM_TYPE);
 
     // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
-    await this._keyring.deleteSecretKey(partyKey);
+    await keyring.deleteSecretKey(partyKey);
 
     return party;
   }
@@ -146,7 +158,7 @@ export class PartyFactory {
     // Create the party.
     //
     const party = new PartyInternal(
-      this._modelFactory, partyProcessor, pipeline, this._keyring, this._getIdentityKey(), this._networkManager, replicator);
+      this._modelFactory, partyProcessor, pipeline, this._identityManager.keyring, this._getIdentityKey(), this._networkManager, replicator);
     log(`Constructed: ${party}`);
     return { party, pipeline };
   }
@@ -154,7 +166,7 @@ export class PartyFactory {
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<PartyInternal> {
     const initiator = new GreetingInitiator(
       this._networkManager,
-      this._keyring,
+      this._identityManager.keyring,
       async partyKey => {
         const { feedKey } = await this._initWritableFeed(partyKey);
         return feedKey;
@@ -175,8 +187,8 @@ export class PartyFactory {
     const feed = await this._feedStore.queryWritableFeed(partyKey) ??
       await this._feedStore.createWritableFeed(partyKey);
 
-    const feedKey = this._keyring.getKey(feed.key) ??
-      await this._keyring.addKeyRecord({
+    const feedKey = this._identityManager.keyring.getKey(feed.key) ??
+      await this._identityManager.keyring.addKeyRecord({
         publicKey: feed.key,
         secretKey: feed.secretKey,
         type: KeyType.FEED
@@ -187,11 +199,11 @@ export class PartyFactory {
 
   // TODO(telackey): Combine with createParty?
   async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
-    const identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
+    const identityKey = this._identityManager.keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
     assert(identityKey, 'Identity key required.');
-    let deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+    let deviceKey = this._identityManager.keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
     if (!deviceKey) {
-      deviceKey = await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
+      deviceKey = await this._identityManager.keyring.createKeyRecord({ type: KeyType.DEVICE });
     }
 
     // 1. Create a feed for the HALO.
@@ -205,23 +217,23 @@ export class PartyFactory {
     //      A. Identity key (in the case of the HALO, this serves as the Party key)
     //      B. Device key (the first "member" of the Identity's HALO)
     //      C. Feed key (the feed owned by the Device)
-    pipeline.outboundHaloStream!.write(createPartyGenesisMessage(this._keyring, identityKey, feedKey, deviceKey));
+    pipeline.outboundHaloStream!.write(createPartyGenesisMessage(this._identityManager.keyring, identityKey, feedKey, deviceKey));
 
     // 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
     //    message will be copied into other Parties which we create or join.
-    pipeline.outboundHaloStream!.write(createKeyAdmitMessage(this._keyring, identityKey.publicKey, identityKey));
+    pipeline.outboundHaloStream!.write(createKeyAdmitMessage(this._identityManager.keyring, identityKey.publicKey, identityKey));
 
     if (options.identityDisplayName) {
       // 4. Write the IdentityInfo message with descriptive details (eg, display name).
       pipeline.outboundHaloStream!.write(
-        createIdentityInfoMessage(this._keyring, options.identityDisplayName, identityKey)
+        createIdentityInfoMessage(this._identityManager.keyring, options.identityDisplayName, identityKey)
       );
     }
 
     if (options.deviceDisplayName) {
       // 5. Write the DeviceInfo message with descriptive details (eg, display name).
       pipeline.outboundHaloStream!.write(
-        createDeviceInfoMessage(this._keyring, options.deviceDisplayName, deviceKey)
+        createDeviceInfoMessage(this._identityManager.keyring, options.deviceDisplayName, deviceKey)
       );
     }
 
@@ -231,6 +243,6 @@ export class PartyFactory {
   // TODO(telackey): This seems kind of out of place. Perhaps we should simply pass the IdentityManager
   // either to PartyFactory or as a param to the create/add methods.
   private _getIdentityKey () {
-    return this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
+    return this._identityManager.keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
   }
 }

@@ -35,7 +35,7 @@
   "dependencies": {
     "@dxos/async": "^1.0.0-beta.5",
     "@dxos/codec-protobuf": "^1.1.0-beta.0",
-    "@dxos/credentials": "1.0.1-beta.51",
+    "@dxos/credentials": "1.0.1-beta.52",
     "@dxos/crypto": "^1.0.0-beta.7",
     "@dxos/echo-db": "^0.2.0-dev",
     "@dxos/echo-protocol": "^0.2.0-dev",
@@ -53,6 +53,7 @@
     "@types/lodash": "^4.14.159",
     "@types/node": "^14.0.9",
     "@types/stream-buffers": "^3.0.2",
+    "@types/use-subscription": "^1.0.0",
     "clsx": "^1.1.0",
     "d3": "^5.9.2",
     "debug": "^4.1.1",
@@ -61,7 +62,8 @@
     "random-access-memory": "^3.1.1",
     "react-resize-aware": "^3.0.0",
     "source-map-support": "^0.5.12",
-    "stream-buffers": "^3.0.2"
+    "stream-buffers": "^3.0.2",
+    "use-subscription": "^1.4.1"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "^1.0.5",
