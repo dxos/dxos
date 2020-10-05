@@ -22,7 +22,8 @@
       "**/eslint-config-standard/**",
       "**/eslint-config-standard-jsx/**",
       "**/eslint-plugin-standard/**",
-      "**/standard-engine/**"
+      "**/standard-engine/**",
+      "**/@dxos/node-spawner/**"
     ]
   },
   "lint-staged": {
