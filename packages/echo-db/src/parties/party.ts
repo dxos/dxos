@@ -5,7 +5,7 @@
 import { humanize } from '@dxos/crypto';
 import { PartyKey, PublicKey } from '@dxos/echo-protocol';
 
-import { InvitationDetails } from '../invitations';
+import { InvitationAuthenticator } from '../invitations';
 import { Database } from '../items/database';
 import { ResultSet } from '../result';
 import { PartyInternal } from './party-internal';
@@ -97,7 +97,7 @@ export class Party {
   /**
    * Creates an invition for a remote peer.
    */
-  async createInvitation (inviteDetails: InvitationDetails) {
+  async createInvitation (inviteDetails: InvitationAuthenticator) {
     return this._impl.createInvitation(inviteDetails);
   }
 }

@@ -83,14 +83,14 @@ export class GreetingResponder {
    * Listen for connections from invitee peers.
    * @param secretValidator
    * @param secretProvider
-   * @param {function} [onFinish] A function to be called when the invitation is closed (successfully or not).
-   * @param {int} [expiration] Date.now()-style timestamp of when this invitation should expire.
+   * @param onFinish A function to be called when the invitation is closed (successfully or not).
+   * @param expiration Date.now()-style timestamp of when this invitation should expire.
    */
   // TODO(burdon): Rename listenForXXX?
   async invite (
     secretValidator: SecretValidator,
     secretProvider?: SecretProvider,
-    onFinish?: Function,
+    onFinish?: () => void,
     expiration?: number
   ): Promise<Buffer> {
     assert(secretValidator);
@@ -113,7 +113,6 @@ export class GreetingResponder {
       return this.destroy();
     };
 
-    // TODO(telackey): This seems fragile - how do we know expiration is in the future?
     if (expiration) {
       timeout = setTimeout(cleanup, expiration - Date.now());
     }

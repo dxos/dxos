@@ -11,7 +11,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
 import {
-  GreetingResponder, InvitationDescriptor, InvitationDescriptorType, InvitationDetails
+  GreetingResponder, InvitationDescriptor, InvitationDescriptorType, InvitationAuthenticator, InvitationOptions
 } from '../invitations';
 import { createItemDemuxer, Item, ItemManager } from '../items';
 import { ReplicationAdapter } from '../replication';
@@ -120,7 +120,7 @@ export class PartyInternal {
   /**
    * Creates an invition for a remote peer.
    */
-  async createInvitation (inviteDetails: InvitationDetails) {
+  async createInvitation (authenticationDetails: InvitationAuthenticator, options: InvitationOptions = {}) {
     assert(this._pipeline.outboundHaloStream);
     assert(this._networkManager);
 
@@ -133,10 +133,11 @@ export class PartyInternal {
       this._identityKeypair // TODO(burdon): Move to keyring?
     );
 
-    const { secretValidator, secretProvider } = inviteDetails;
+    const { secretValidator, secretProvider } = authenticationDetails;
+    const { onFinish, expiration } = options;
 
     const swarmKey = await responder.start();
-    const invitation = await responder.invite(secretValidator, secretProvider/* onFinish, expiration */);
+    const invitation = await responder.invite(secretValidator, secretProvider, onFinish, expiration);
 
     return new InvitationDescriptor(InvitationDescriptorType.INTERACTIVE, swarmKey, invitation);
   }
