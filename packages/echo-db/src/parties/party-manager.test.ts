@@ -6,7 +6,7 @@ import debug from 'debug';
 import ram from 'random-access-memory';
 
 import { createPartyGenesisMessage, KeyType, Keyring } from '@dxos/credentials';
-import { keyToBuffer } from '@dxos/crypto';
+import { keyToBuffer, randomBytes, sign, verify, SIGNATURE_LENGTH, createKeyPair, keyToString } from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -15,6 +15,8 @@ import { ObjectModel } from '@dxos/object-model';
 import { createWritableFeedStream, latch } from '@dxos/util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
+import { SecretProvider, SecretValidator } from '../invitations';
+import { Item } from '../items';
 import { IdentityManager } from './identity-manager';
 import { PartyFactory } from './party-factory';
 import { PartyManager } from './party-manager';
@@ -144,5 +146,123 @@ describe('Party manager', () => {
     await partyManager.open();
 
     expect(partyManager.parties).toHaveLength(numParties);
+  });
+
+  test('Join a party - PIN', async () => {
+    const { partyManager: partyManagerA } = await setup();
+    const { partyManager: partyManagerB } = await setup();
+    await partyManagerA.open();
+    await partyManagerB.open();
+
+    const PIN = Buffer.from('0000');
+
+    // Create the Party.
+    expect(partyManagerA.parties).toHaveLength(0);
+    const partyA = await partyManagerA.createParty();
+    expect(partyManagerA.parties).toHaveLength(1);
+    log(`Created ${keyToString(partyA.key)}`);
+
+    // Create a validation function which tests the signature of a specific KeyPair.
+    const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
+
+    // And a provider for the secret.
+    // (We reuse the function here, but normally both the Inviter and Invitee would have their own SecretProvider.)
+    const secretProvider: SecretProvider = async () => PIN;
+
+    // Issue the invitation to the Party on A.
+    const invitationDescriptor = await partyA.createInvitation({ secretProvider, secretValidator });
+
+    // Redeem the invitation on B.
+    expect(partyManagerB.parties).toHaveLength(0);
+    const partyB = await partyManagerB.joinParty(invitationDescriptor, secretProvider);
+    expect(partyB).toBeDefined();
+    log(`Joined ${keyToString(partyB.key)}`);
+
+    let itemA: Item<any> | null = null;
+    const [updated, onUpdate] = latch();
+
+    // Subscribe to Item updates on B.
+    partyB.itemManager?.queryItems({ type: 'wrn://dxos.org/item/test' })
+      .subscribe((result) => {
+        if (result.length) {
+          const [itemB] = result;
+          if (itemA && itemA.id === itemB.id) {
+            log(`B has ${result[0].id}`);
+            onUpdate();
+          }
+        }
+      });
+
+    // Create a new Item on A.
+    itemA = await partyA.itemManager?.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/test') as Item<any>;
+    log(`A created ${itemA.id}`);
+
+    // Now wait to see it on B.
+    await updated;
+  });
+
+  test('Join a party - signature', async () => {
+    const { partyManager: partyManagerA } = await setup();
+    const { partyManager: partyManagerB } = await setup();
+    await partyManagerA.open();
+    await partyManagerB.open();
+
+    // This would typically be a keypair associated with BotFactory.
+    const keyPair = createKeyPair();
+
+    // Create the Party.
+    expect(partyManagerA.parties).toHaveLength(0);
+    const partyA = await partyManagerA.createParty();
+    expect(partyManagerA.parties).toHaveLength(1);
+    log(`Created ${keyToString(partyA.key)}`);
+
+    // Create a validation function which tests the signature of a specific KeyPair.
+    const secretValidator: SecretValidator = async (invitation, secret) => {
+      const signature = secret.slice(0, SIGNATURE_LENGTH);
+      const message = secret.slice(SIGNATURE_LENGTH);
+      return verify(message, signature, keyPair.publicKey);
+    };
+
+    // Issue the invitation to the Party on A.
+    const invitationDescriptor = await partyA.createInvitation({ secretValidator });
+
+    // The "secret" is composed of the signature (fixed length) followed by the message (variable length).
+    // The "secret" must be signed by the designated key.
+    const secretProvider: SecretProvider = async () => {
+      const message = randomBytes();
+      const signature = sign(message, keyPair.secretKey);
+      const secret = Buffer.alloc(signature.length + message.length);
+      signature.copy(secret);
+      message.copy(secret, signature.length);
+      return secret;
+    };
+
+    // Redeem the invitation on B.
+    expect(partyManagerB.parties).toHaveLength(0);
+    const partyB = await partyManagerB.joinParty(invitationDescriptor, secretProvider);
+    expect(partyB).toBeDefined();
+    log(`Joined ${keyToString(partyB.key)}`);
+
+    let itemA: Item<any> | null = null;
+    const [updated, onUpdate] = latch();
+
+    // Subscribe to Item updates on B.
+    partyB.itemManager?.queryItems({ type: 'wrn://dxos.org/item/test' })
+      .subscribe((result) => {
+        if (result.length) {
+          const [itemB] = result;
+          if (itemA && itemA.id === itemB.id) {
+            log(`B has ${result[0].id}`);
+            onUpdate();
+          }
+        }
+      });
+
+    // Create a new Item on A.
+    itemA = await partyA.itemManager?.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/test') as Item<any>;
+    log(`A created ${itemA.id}`);
+
+    // Now wait to see it on B.
+    await updated;
   });
 });

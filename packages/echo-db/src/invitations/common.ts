@@ -18,7 +18,7 @@ export type SecretValidator = (invitation: InvitationDescriptor, secret: Buffer)
  * Defines a way for peers to authenticate each other through a side channel.
  */
 export interface InvitationAuthenticator {
-  secretProvider: SecretProvider
+  secretProvider?: SecretProvider
   secretValidator: SecretValidator
 }
 
