@@ -4,19 +4,18 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import merge from 'lodash/merge';
 import pump from 'pump';
 import { Readable, Writable } from 'stream';
 
 import { Event } from '@dxos/async';
 import { createFeedMeta, EchoEnvelope, FeedBlock, FeedMessage } from '@dxos/echo-protocol';
-import { createReadable, createTransform, jsonReplacer } from '@dxos/util';
+import { createLoggingTransform, createReadable, createTransform, jsonReplacer } from '@dxos/util';
 
 import { PartyProcessor } from './party-processor';
 
 interface Options {
-  readLogger?: NodeJS.ReadWriteStream;
-  writeLogger?: NodeJS.ReadWriteStream;
+  readLogger?: (msg: any) => void;
+  writeLogger?: (msg: any) => void;
 }
 
 const log = debug('dxos:echo:pipeline');
@@ -126,9 +125,7 @@ export class Pipeline {
 
     setImmediate(async () => {
       for await (const block of this._messageIterator) {
-        if (readLogger) {
-          readLogger.write(block as any);
-        }
+        readLogger?.(block as any);
 
         try {
           const { data: message } = block;
@@ -142,12 +139,6 @@ export class Pipeline {
               data: message.halo
             });
           }
-
-          // Update timeframe.
-          // NOTE: It is OK to update here even though the message may not have been processed,
-          // since any paused dependent message must be intended for this stream.
-          const { key, seq } = block;
-          this._partyProcessor.updateTimeframe(key, seq);
 
           //
           // ECHO
@@ -179,15 +170,11 @@ export class Pipeline {
     // Sets the current timeframe.
     //
     if (this._feedWriteStream) {
-      this._outboundEchoStream = createTransform<EchoEnvelope, FeedMessage>(async message => ({
-        echo: merge({
-          timeframe: this._partyProcessor.timeframe
-        }, message)
-      }));
+      this._outboundEchoStream = createTransform<EchoEnvelope, FeedMessage>(async message => ({ echo: message }));
 
       pump([
         this._outboundEchoStream,
-        writeLogger,
+        writeLogger ? createLoggingTransform(writeLogger) : undefined,
         this._feedWriteStream
       ].filter(Boolean) as any[], (err: Error | undefined) => {
         // TODO(burdon): Handle error.
@@ -201,7 +188,7 @@ export class Pipeline {
 
       pump([
         this._outboundHaloStream,
-        writeLogger,
+        writeLogger ? createLoggingTransform(writeLogger) : undefined,
         this._feedWriteStream
       ].filter(Boolean) as any[], (err: Error | undefined) => {
         // TODO(burdon): Handle error.

@@ -8,12 +8,12 @@ import debug from 'debug';
 import { Event } from '@dxos/async';
 import { Party as PartyStateMachine, KeyType, KeyRecord, PartyCredential, getPartyCredentialMessageType } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
-import { PartyKey, IHaloStream, FeedKey, PublicKey, Spacetime, FeedKeyMapper, MessageSelector, FeedBlock } from '@dxos/echo-protocol';
+import { PartyKey, IHaloStream, FeedKey, PublicKey, MessageSelector, FeedBlock } from '@dxos/echo-protocol';
 import { jsonReplacer } from '@dxos/util';
 
-const log = debug('dxos:echo:halo-party-processor');
+import { TimeframeClock } from '../items/timeframe-clock';
 
-const spacetime = new Spacetime(new FeedKeyMapper('feedKey'));
+const log = debug('dxos:echo:halo-party-processor');
 
 export interface FeedSetProvider {
   get(): FeedKey[]
@@ -24,21 +24,17 @@ export interface FeedSetProvider {
  * Party processor for testing.
  */
 export class PartyProcessor {
-  protected readonly _partyKey: PartyKey;
-
   protected readonly _feedAdded = new Event<FeedKey>()
-
-  // Current timeframe.
-  // TODO(marik-d): Move into separate class
-  private _timeframe = spacetime.createTimeframe();
 
   private readonly _stateMachine: PartyStateMachine;
 
   public readonly keyAdded: Event<KeyRecord>;
 
-  constructor (partyKey: PartyKey) {
-    this._partyKey = partyKey;
-    this._stateMachine = new PartyStateMachine(partyKey);
+  constructor (
+    private readonly _partyKey: PartyKey,
+    private readonly _timeframeClock: TimeframeClock
+  ) {
+    this._stateMachine = new PartyStateMachine(this._partyKey);
 
     // TODO(telackey) @dxos/credentials was only half converted to TS. In its current state, the KeyRecord type
     // is not exported, and the PartyStateMachine being used is not properly understood as an EventEmitter by TS.
@@ -56,10 +52,6 @@ export class PartyProcessor {
 
   get partyKey () {
     return this._partyKey;
-  }
-
-  get timeframe () {
-    return this._timeframe;
   }
 
   get feedKeys () {
@@ -100,14 +92,8 @@ export class PartyProcessor {
             return i;
           } else {
             assert(echo.timeframe);
-            const gaps = spacetime.dependencies(echo.timeframe, this._timeframe);
-            assert(gaps.frames);
-            if (gaps.frames.length === 0) {
+            if (!this._timeframeClock.hasGaps(echo.timeframe)) {
               return i;
-            } else {
-              log(`this._timeframe: ${spacetime.stringify(this._timeframe)}; ` +
-                  `echoMsg: ${spacetime.stringify(echo.timeframe)}; ` +
-                  `gap: ${spacetime.stringify(gaps)}`);
             }
           }
         } else if (genesisRequired && halo) {
@@ -145,10 +131,6 @@ export class PartyProcessor {
     // what feeds and keys to trust immediately after Greeting, before we have had the opportunity to replicate the
     // credential messages for ourselves.
     await this._stateMachine.takeHints(feedKeys.map(publicKey => ({ publicKey, type: KeyType.FEED })));
-  }
-
-  updateTimeframe (key: FeedKey, seq: number) {
-    this._timeframe = spacetime.merge(this._timeframe, spacetime.createTimeframe([[key as any, seq]]));
   }
 
   async processMessage (message: IHaloStream): Promise<void> {

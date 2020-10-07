@@ -12,8 +12,8 @@ import { ResultSet } from './result';
 
 export interface Options {
   readOnly?: false;
-  readLogger?: NodeJS.ReadWriteStream;
-  writeLogger?: NodeJS.ReadWriteStream;
+  readLogger?: (msg: any) => void;
+  writeLogger?: (msg: any) => void;
 }
 
 /**

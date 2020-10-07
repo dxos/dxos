@@ -14,6 +14,7 @@ import {
   GreetingResponder, InvitationDescriptor, InvitationDescriptorType, InvitationAuthenticator, InvitationOptions
 } from '../invitations';
 import { createItemDemuxer, Item, ItemManager } from '../items';
+import { TimeframeClock } from '../items/timeframe-clock';
 import { ReplicationAdapter } from '../replication';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
@@ -43,7 +44,8 @@ export class PartyInternal {
     private readonly _keyring: Keyring,
     private readonly _identityKeypair: KeyRecord,
     private readonly _networkManager: NetworkManager,
-    private readonly _replicator: ReplicationAdapter
+    private readonly _replicator: ReplicationAdapter,
+    private readonly _timeframeClock: TimeframeClock
   ) {
     assert(this._modelFactory);
     assert(this._partyProcessor);
@@ -80,8 +82,8 @@ export class PartyInternal {
     const [readStream, writeStream] = await this._pipeline.open();
 
     // Connect to the downstream item demuxer.
-    this._itemManager = new ItemManager(this.key, this._modelFactory, writeStream);
-    this._itemDemuxer = createItemDemuxer(this._itemManager);
+    this._itemManager = new ItemManager(this.key, this._modelFactory, this._timeframeClock, writeStream);
+    this._itemDemuxer = createItemDemuxer(this._itemManager, this._timeframeClock);
     readStream.pipe(this._itemDemuxer);
 
     // Replication.

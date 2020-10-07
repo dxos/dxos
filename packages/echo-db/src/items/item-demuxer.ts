@@ -10,6 +10,7 @@ import { EchoEnvelope, IEchoStream, ItemID } from '@dxos/echo-protocol';
 import { createReadable, createWritable, jsonReplacer } from '@dxos/util';
 
 import { ItemManager } from './item-manager';
+import { TimeframeClock } from './timeframe-clock';
 
 const log = debug('dxos:echo:item-demuxer');
 
@@ -17,7 +18,7 @@ const log = debug('dxos:echo:item-demuxer');
  * Creates a stream that consumes `IEchoStream` messages and routes them to the associated items.
  * @param itemManager
  */
-export const createItemDemuxer = (itemManager: ItemManager): NodeJS.WritableStream => {
+export const createItemDemuxer = (itemManager: ItemManager, timeframeClock: TimeframeClock): NodeJS.WritableStream => {
   assert(itemManager);
 
   // Mutations are buffered for each item.
@@ -26,8 +27,10 @@ export const createItemDemuxer = (itemManager: ItemManager): NodeJS.WritableStre
   // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
   return createWritable<IEchoStream>(async (message: IEchoStream) => {
     log('Reading:', JSON.stringify(message, jsonReplacer));
-    const { data: { itemId, genesis, itemMutation, mutation } } = message;
+    const { data: { itemId, genesis, itemMutation, mutation }, meta: { feedKey, seq } } = message;
     assert(itemId);
+
+    timeframeClock.updateTimeframe(feedKey, seq);
 
     //
     // New item.
@@ -45,10 +48,6 @@ export const createItemDemuxer = (itemManager: ItemManager): NodeJS.WritableStre
       const item = await itemManager.constructItem(itemId, modelType, itemType, itemStream, undefined);
       assert(item.id === itemId);
     }
-
-    //
-    // NOTE: Spacetime guarantees that the item genesis message has already been processed.
-    //
 
     //
     // Set parent item references.

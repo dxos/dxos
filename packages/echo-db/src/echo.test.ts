@@ -15,7 +15,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { createLoggingTransform, latch, jsonReplacer } from '@dxos/util';
+import { latch, jsonReplacer } from '@dxos/util';
 
 import { ECHO } from './echo';
 import { FeedStoreAdapter } from './feed-store-adapter';
@@ -39,11 +39,11 @@ const createECHO = async (verbose = true) => {
     .registerModel(ObjectModel);
 
   const options = verbose ? {
-    readLogger: createLoggingTransform((message: any) => { log('>>>', JSON.stringify(message, jsonReplacer, 2)); }),
-    writeLogger: createLoggingTransform((message: any) => { log('<<<', JSON.stringify(message, jsonReplacer, 2)); })
+    readLogger: (message: any) => { log('>>>', JSON.stringify(message, jsonReplacer, 2)); },
+    writeLogger: (message: any) => { log('<<<', JSON.stringify(message, jsonReplacer, 2)); }
   } : undefined;
 
-  const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
+  const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()), options);
   const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
   await partyManager.open();

@@ -12,6 +12,7 @@ import { createTransform, latch } from '@dxos/util';
 import { Item } from './item';
 import { createItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
+import { TimeframeClock } from './timeframe-clock';
 
 const log = debug('dxos:echo:item-demuxer:test');
 
@@ -33,8 +34,9 @@ describe('item demxuer', () => {
       })
     );
 
-    const itemManager = new ItemManager(partyKey, modelFactory, writeStream);
-    const itemDemuxer = createItemDemuxer(itemManager);
+    const timeframeClock = new TimeframeClock();
+    const itemManager = new ItemManager(partyKey, modelFactory, timeframeClock, writeStream);
+    const itemDemuxer = createItemDemuxer(itemManager, timeframeClock);
     writeStream.pipe(itemDemuxer);
 
     //

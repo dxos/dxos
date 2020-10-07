@@ -14,6 +14,7 @@ import { checkType, createTransform } from '@dxos/util';
 
 import { ResultSet } from '../result';
 import { Item } from './item';
+import { TimeframeClock } from './timeframe-clock';
 
 const log = debug('dxos:echo:item-manager');
 
@@ -35,8 +36,6 @@ export class ItemManager {
   // eslint-disable-next-line func-call-spacing
   private readonly _pendingItems = new Map<ItemID, (item: Item<any>) => void>();
 
-  private readonly _partyKey: PartyKey;
-  private readonly _modelFactory: ModelFactory;
   private readonly _writeStream?: NodeJS.WritableStream;
 
   /**
@@ -45,15 +44,19 @@ export class ItemManager {
    * @param writeStream Outbound `dxos.echo.IEchoEnvelope` mutation stream.
    */
   constructor (
-    partyKey: PartyKey,
-    modelFactory: ModelFactory,
-    writeStream?: NodeJS.WritableStream
+     private readonly _partyKey: PartyKey,
+     private readonly _modelFactory: ModelFactory,
+     private readonly _timeframeClock: TimeframeClock,
+     writeStream?: NodeJS.WritableStream
   ) {
-    assert(partyKey);
-    assert(modelFactory);
-    this._partyKey = partyKey;
-    this._modelFactory = modelFactory;
-    this._writeStream = writeStream;
+    if (writeStream) {
+      const stream = createTransform<EchoEnvelope, EchoEnvelope>(async message => ({
+        ...message,
+        timeframe: this._timeframeClock.timeframe
+      }));
+      stream.pipe(writeStream);
+      this._writeStream = stream;
+    }
   }
 
   /**

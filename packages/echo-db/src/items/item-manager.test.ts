@@ -10,6 +10,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createWritableFeedStream } from '@dxos/util';
 
 import { ItemManager } from './item-manager';
+import { TimeframeClock } from './timeframe-clock';
 
 describe('items', () => {
   test('item construction', async () => {
@@ -20,7 +21,7 @@ describe('items', () => {
     const { publicKey: partyKey } = createKeyPair();
 
     const modelFactory = new ModelFactory();
-    const itemManager = new ItemManager(partyKey, modelFactory, createWritableFeedStream(feed));
+    const itemManager = new ItemManager(partyKey, modelFactory, new TimeframeClock(), createWritableFeedStream(feed));
     expect(itemManager).toBeTruthy();
   });
 });

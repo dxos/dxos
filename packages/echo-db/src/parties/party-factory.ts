@@ -24,6 +24,7 @@ import { createWritableFeedStream } from '@dxos/util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { GreetingInitiator, InvitationDescriptor, SecretProvider } from '../invitations';
+import { TimeframeClock } from '../items/timeframe-clock';
 import { ReplicationAdapter } from '../replication';
 import { IdentityManager } from './identity-manager';
 import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
@@ -39,8 +40,8 @@ export interface HaloCreationOptions {
 }
 
 interface Options {
-  readLogger?: NodeJS.ReadWriteStream;
-  writeLogger?: NodeJS.ReadWriteStream;
+  readLogger?: (msg: any) => void;
+  writeLogger?: (msg: any) => void;
   readOnly?: boolean;
   peerId?: Buffer,
 }
@@ -135,7 +136,9 @@ export class PartyFactory {
     // like we do above for the PartyGenesis message.
     //
 
-    const partyProcessor = new PartyProcessor(partyKey);
+    const timeframeClock = new TimeframeClock();
+
+    const partyProcessor = new PartyProcessor(partyKey, timeframeClock);
     if (feedKeyHints.length) {
       await partyProcessor.takeHints(feedKeyHints);
     }
@@ -158,7 +161,15 @@ export class PartyFactory {
     // Create the party.
     //
     const party = new PartyInternal(
-      this._modelFactory, partyProcessor, pipeline, this._identityManager.keyring, this._getIdentityKey(), this._networkManager, replicator);
+      this._modelFactory,
+      partyProcessor,
+      pipeline,
+      this._identityManager.keyring,
+      this._getIdentityKey(),
+      this._networkManager,
+      replicator,
+      timeframeClock
+    );
     log(`Constructed: ${party}`);
     return { party, pipeline };
   }
