@@ -65,12 +65,21 @@ export class ItemManager {
    * @param {ItemType} [itemType]
    * @param {ItemID} [parentId]
    */
-  async createItem (modelType: ModelType, itemType?: ItemType, parentId?: ItemID): Promise<Item<any>> {
+  async createItem (modelType: ModelType, itemType?: ItemType, parentId?: ItemID, initProps?: any): Promise<Item<any>> {
     assert(this._writeStream);
     assert(modelType);
 
     if (!this._modelFactory.hasModel(modelType)) {
       throw new Error(`Unknown model: ${modelType}`);
+    }
+
+    let mutation: Uint8Array | undefined;
+    if (initProps) {
+      const meta = this._modelFactory.getModelMeta(modelType);
+      if (!meta.getInitMutation) {
+        throw new Error('Tried to provide initialization params to a model with no initializer');
+      }
+      mutation = meta.mutation.encode(await meta.getInitMutation(initProps));
     }
 
     // Pending until constructed (after genesis block is read from stream).
@@ -87,7 +96,8 @@ export class ItemManager {
         itemType,
         modelType
       },
-      itemMutation: parentId ? { parentId } : undefined
+      itemMutation: parentId ? { parentId } : undefined,
+      mutation
     }));
 
     // Unlocked by construct.
@@ -109,7 +119,8 @@ export class ItemManager {
     modelType: ModelType,
     itemType: ItemType | undefined,
     readStream: NodeJS.ReadableStream,
-    parentId?: ItemID
+    parentId?: ItemID,
+    initialMutation?: ModelMessage<Uint8Array>
   ) {
     assert(this._writeStream);
     assert(itemId);
@@ -163,6 +174,10 @@ export class ItemManager {
     assert(!this._items.has(itemId));
     this._items.set(itemId, item);
     log('Constructed:', String(item));
+
+    if (initialMutation) {
+      await item.model.processMessage(initialMutation.meta, mutationCodec.decode(initialMutation.mutation));
+    }
 
     // Notify Item was udpated.
     // TODO(burdon): Update the item directly?

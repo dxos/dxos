@@ -8,9 +8,9 @@ import get from 'lodash/get';
 
 import { FeedMeta } from '@dxos/echo-protocol';
 import { ModelMeta, Model } from '@dxos/model-factory';
-import { checkType, jsonReplacer } from '@dxos/util';
+import { jsonReplacer } from '@dxos/util';
 
-import { MutationUtil, ValueUtil } from './mutation';
+import { createMultiFieldMutationSet, MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation, ObjectMutationSet, schema } from './proto';
 
 const log = debug('dxos:echo:object-model');
@@ -21,13 +21,19 @@ const log = debug('dxos:echo:object-model');
 export class ObjectModel extends Model<ObjectMutationSet> {
   static meta: ModelMeta = {
     type: 'wrn://protocol.dxos.org/model/object',
-    mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet')
+    mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
+
+    async getInitMutation (obj: any): Promise<ObjectMutationSet> {
+      return {
+        mutations: createMultiFieldMutationSet(obj)
+      };
+    }
   };
 
   private _object = {};
 
   /**
-   * Returns an immutable object.p
+   * Returns an immutable object.
    */
   toObject () {
     return cloneDeep(this._object);
@@ -45,7 +51,7 @@ export class ObjectModel extends Model<ObjectMutationSet> {
 
   // TODO(burdon): Create builder pattern (replace static methods).
   async setProperty (key: string, value: any) {
-    await this.write(checkType<ObjectMutationSet>({
+    await this.write({
       mutations: [
         {
           operation: ObjectMutation.Operation.SET,
@@ -53,11 +59,24 @@ export class ObjectModel extends Model<ObjectMutationSet> {
           value: ValueUtil.createMessage(value)
         }
       ]
-    }));
+    });
 
     // Wait for the property to by updated so that getProperty will return the expected value.
     // TODO(telackey): It would be better if we could check for a unique ID per mutation rather than the value.
     const match = () => this.getProperty(key) === value;
+    if (!match()) {
+      await this._modelUpdate.waitFor(match);
+    }
+  }
+
+  async setProperties (properties: any) {
+    await this.write({
+      mutations: createMultiFieldMutationSet(properties)
+    });
+
+    // Wait for the property to by updated so that getProperty will return the expected value.
+    // TODO(telackey): It would be better if we could check for a unique ID per mutation rather than the value.
+    const match = () => Object.entries(properties).every(([key, value]) => this.getProperty(key) === value);
     if (!match()) {
       await this._modelUpdate.waitFor(match);
     }

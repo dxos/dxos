@@ -27,10 +27,10 @@ export const createItemDemuxer = (itemManager: ItemManager, timeframeClock: Time
   // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
   return createWritable<IEchoStream>(async (message: IEchoStream) => {
     log('Reading:', JSON.stringify(message, jsonReplacer));
-    const { data: { itemId, genesis, itemMutation, mutation }, meta: { feedKey, seq } } = message;
+    const { data: { itemId, genesis, itemMutation, mutation }, meta } = message;
     assert(itemId);
 
-    timeframeClock.updateTimeframe(feedKey, seq);
+    timeframeClock.updateTimeframe(meta.feedKey, meta.seq);
 
     //
     // New item.
@@ -45,7 +45,14 @@ export const createItemDemuxer = (itemManager: ItemManager, timeframeClock: Time
 
       // Create item.
       // TODO(marik-d): Investigate whether gensis message shoudl be able to set parrentId.
-      const item = await itemManager.constructItem(itemId, modelType, itemType, itemStream, undefined);
+      const item = await itemManager.constructItem(
+        itemId,
+        modelType,
+        itemType,
+        itemStream,
+        undefined,
+        mutation ? { mutation, meta } : undefined
+      );
       assert(item.id === itemId);
     }
 
@@ -62,7 +69,7 @@ export const createItemDemuxer = (itemManager: ItemManager, timeframeClock: Time
     //
     // Model mutations.
     //
-    if (mutation) {
+    if (mutation && !genesis) {
       const itemStream = itemStreams.get(itemId);
       assert(itemStream, `Missing item: ${itemId}`);
 

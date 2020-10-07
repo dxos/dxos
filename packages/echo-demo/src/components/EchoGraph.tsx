@@ -18,6 +18,7 @@ import {
 import { ObjectModel } from '@dxos/object-model';
 
 import { useDatabase, useGraphData } from '../hooks';
+import { ECHO } from '@dxos/echo-db';
 
 // TODO(burdon): Merge styles.
 const useCustomStyles = makeStyles(() => ({
@@ -38,7 +39,16 @@ const useCustomStyles = makeStyles(() => ({
   }
 }));
 
-const createLayout = ({ database, grid, guides, delta, linkProjector, handleSelect }) => {
+interface CreateLayoutOpts {
+  database: ECHO
+  grid: any,
+  guides: any
+  delta: any
+  linkProjector: any
+  handleSelect: any
+}
+
+const createLayout = ({ database, grid, guides, delta, linkProjector, handleSelect }: CreateLayoutOpts) => {
   const layout = new ForceLayout({
     center: {
       x: grid.center.x + delta.x,
@@ -108,13 +118,13 @@ const createLayout = ({ database, grid, guides, delta, linkProjector, handleSele
 
         case 'party': {
           const party = await database.getParty(source.partyKey);
-          await party.database.createItem(ObjectModel);
+          await party.database.createItem({ model: ObjectModel });
           break;
         }
 
         case 'item': {
           const party = await database.getParty(source.partyKey);
-          const item = await party.database.createItem(ObjectModel, undefined, source.id);
+          const item = await party.database.createItem({ model: ObjectModel, parrent: source.id });
           break;
         }
       }

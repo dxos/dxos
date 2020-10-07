@@ -5,11 +5,18 @@
 import assert from 'assert';
 
 import { ItemID, ItemType } from '@dxos/echo-protocol';
-import { Model, ModelConstructor, ModelType } from '@dxos/model-factory';
+import { Model, ModelConstructor } from '@dxos/model-factory';
 
 import { ResultSet } from '../result';
 import { Item } from './item';
 import { ItemFilter, ItemManager } from './item-manager';
+
+export interface ItemCreationOptions<M> {
+  model: ModelConstructor<M>
+  type?: ItemType
+  parrent?: ItemID
+  props?: any // TODO(marik-d): Type this better.
+}
 
 /**
  * Represents a shared dataset containing queryable Items that are constructed from an ordered stream
@@ -24,32 +31,10 @@ export class Database {
 
   /**
    * Creates a new item with the given queryable type and model.
-   * @param model
-   * @param itemType
-   * @param parentId
    */
   // TODO(burdon): Get modelType from somewhere other than ObjectModel.meta.type.
-  // TODO(burdon): Pass in { type, parent } as options.
-  createItem <M extends Model<any>> (
-    model: ModelConstructor<M>,
-    itemType?: ItemType | undefined,
-    parentId?: ItemID | undefined
-  ): Promise<Item<M>> {
-    return this._getItemManager().createItem(model.meta.type, itemType, parentId);
-  }
-
-  /**
-   * Creates a new item with the given queryable type and model.
-   * @param modelType
-   * @param itemType
-   * @param parentId
-   */
-  createItemByType (
-    modelType: ModelType,
-    itemType?: ItemType,
-    parentId?: ItemID
-  ): Promise<Item<Model<unknown>>> {
-    return this._getItemManager().createItem(modelType, itemType, parentId);
+  createItem <M extends Model<any>> (options: ItemCreationOptions<M>): Promise<Item<M>> {
+    return this._getItemManager().createItem(options.model.meta.type, options.type, options.parrent, options.props);
   }
 
   /**

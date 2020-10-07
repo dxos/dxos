@@ -58,4 +58,30 @@ describe('object model', () => {
       title: 'DXOS'
     });
   });
+
+  test('setProperties', async () => {
+    const buffer = new WritableArray<ObjectMutationSet>();
+
+    const itemId = createId();
+    const model = new ObjectModel(ObjectModel.meta, itemId, buffer);
+    expect(model.itemId).toBe(itemId);
+    expect(model.toObject()).toEqual({});
+    log(model.toObject());
+
+    // Update.
+    const processed = model.setProperties({
+      title: 'DXOS',
+      version: 2
+    });
+
+    // Process.
+    const { publicKey: feedKey } = createKeyPair();
+    const meta = { feedKey, seq: 0 };
+    await model.processMessage(meta, buffer.objects[0]);
+    await processed;
+    expect(model.toObject()).toStrictEqual({
+      title: 'DXOS',
+      version: 2
+    });
+  });
 });

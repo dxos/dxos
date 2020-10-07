@@ -99,7 +99,7 @@ export default class TestAgent implements Agent {
       } break;
       case Command.CREATE_ITEM:
         assert(this.party);
-        this.party.database.createItem(ObjectModel);
+        this.party.database.createItem({ model: ObjectModel });
         break;
       default: {
         throw new Error('Invalid command');

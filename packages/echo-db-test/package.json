@@ -4,6 +4,7 @@
   "private": true,
   "license": "GPL-3.0",
   "scripts": {
+    "build": "tsc",
     "test": "jest --rootDir=./src --verbose --passWithNoTests",
     "lint": "eslint 'src/**/*.ts'"
   },

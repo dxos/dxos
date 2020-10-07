@@ -175,3 +175,11 @@ export class MutationUtil {
     return object;
   }
 }
+
+export function createMultiFieldMutationSet (object: any): ObjectMutation[] {
+  return Object.entries(object).map(([key, value]) => ({
+    operation: ObjectMutation.Operation.SET,
+    key,
+    value: ValueUtil.createMessage(value)
+  }));
+}
