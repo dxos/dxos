@@ -6,8 +6,9 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event, Lock } from '@dxos/async';
+import { KeyHint } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
-import { FeedKey, PartyKey, PublicKey } from '@dxos/echo-protocol';
+import { PartyKey, PublicKey } from '@dxos/echo-protocol';
 import { ComplexMap } from '@dxos/util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
@@ -123,18 +124,18 @@ export class PartyManager {
   /**
    * Construct a party object and start replicating with the remote peer that created that party.
    * @param partyKey
-   * @param feeds Set of feeds belonging to that party
+   * @param hints
    */
   // TODO(telackey): Remove 'feeds' since should not be listed here. The set of trusted feeds is the
   // under the authority of the PartyStateMachine.
-  async addParty (partyKey: PartyKey, feeds: FeedKey[] = []) {
+  async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     assert(this._opened, 'PartyManager is not open.');
     assert(this._identityManager.initialized, 'IdentityManager has not been initialized with the HALO.');
 
     return this._lock.executeSynchronized(async () => {
-      log(`Adding party partyKey=${keyToString(partyKey)} feeds=${feeds.map(keyToString)}`);
+      log(`Adding party partyKey=${keyToString(partyKey)} hints=${hints.length}`);
       assert(!this._parties.has(partyKey));
-      const party = await this._partyFactory.addParty(partyKey, feeds);
+      const party = await this._partyFactory.addParty(partyKey, hints);
 
       if (this._parties.has(party.key)) {
         await party.close();

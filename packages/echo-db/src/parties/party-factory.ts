@@ -6,15 +6,18 @@ import assert from 'assert';
 import debug from 'debug';
 
 import {
+  Authenticator,
   Keyring,
+  KeyHint,
   KeyType,
+  createAuthMessage,
   createDeviceInfoMessage,
   createEnvelopeMessage,
   createIdentityInfoMessage,
   createKeyAdmitMessage,
   createPartyGenesisMessage
 } from '@dxos/credentials';
-import { keyToString, randomBytes } from '@dxos/crypto';
+import { keyToString } from '@dxos/crypto';
 import { FeedKey, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -43,7 +46,6 @@ interface Options {
   readLogger?: (msg: any) => void;
   writeLogger?: (msg: any) => void;
   readOnly?: boolean;
-  peerId?: Buffer,
 }
 
 const log = debug('dxos:echo:party-factory');
@@ -102,15 +104,21 @@ export class PartyFactory {
   /**
    * Constructs a party object and creates a local write feed for it.
    * @param partyKey
-   * @param feedKeyHints - set of hints for existing feeds belonging to this party.
+   * @param hints
    */
-  // TODO(marik-d): Expand this API to accept any type of hint.
-  async addParty (partyKey: PartyKey, feedKeyHints: FeedKey[] = []) {
+  async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     const { feedKey } = await this._initWritableFeed(partyKey);
 
     // TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
     // mechanism is broken by not waiting on the messages to be processed before returning.
-    const party = await this.constructParty(partyKey, [feedKey.publicKey, ...feedKeyHints]);
+    const party = await this.constructParty(partyKey, [
+      {
+        type: feedKey.type,
+        publicKey: feedKey.publicKey
+      },
+      ...hints
+    ]);
+
     await party.open();
 
     // TODO(marik-d): Refactor so it doesn't return a tuple
@@ -120,9 +128,9 @@ export class PartyFactory {
   /**
    * Constructs a party object from an existing set of feeds.
    * @param partyKey
-   * @param feedKeyHints
+   * @param hints
    */
-  async constructParty (partyKey: PartyKey, feedKeyHints: FeedKey[] = []) {
+  async constructParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     // TODO(burdon): Ensure that this node's feed (for this party) has been created first.
     //   I.e., what happens if remote feed is synchronized first triggering 'feed' event above.
     //   In this case create pipeline in read-only mode.
@@ -139,8 +147,8 @@ export class PartyFactory {
     const timeframeClock = new TimeframeClock();
 
     const partyProcessor = new PartyProcessor(partyKey);
-    if (feedKeyHints.length) {
-      await partyProcessor.takeHints(feedKeyHints);
+    if (hints.length) {
+      await partyProcessor.takeHints(hints);
     }
 
     const iterator = await this._feedStore.createIterator(partyKey, createMessageSelector(partyProcessor, timeframeClock));
@@ -152,9 +160,11 @@ export class PartyFactory {
     const replicator = new ReplicationAdapter(
       this._networkManager,
       this._feedStore,
-      this._options.peerId ?? randomBytes(),
+      this._identityManager.identityKey.publicKey, // TODO(telackey): This should be the Device PublicKey.
       partyKey,
-      partyProcessor.getActiveFeedSet()
+      partyProcessor.getActiveFeedSet(),
+      this._createCredentialsProvider(partyKey, feed?.key),
+      partyProcessor.authenticator
     );
 
     //
@@ -247,5 +257,17 @@ export class PartyFactory {
     }
 
     return halo;
+  }
+
+  private _createCredentialsProvider (partyKey: PartyKey, feedKey: FeedKey) {
+    return {
+      get: () => Authenticator.encodePayload(createAuthMessage(
+        this._identityManager.keyring,
+        Buffer.from(partyKey),
+        this._identityManager.identityKey,
+        this._identityManager.identityKey, // TODO(telackey): This should be the Device KeyChain.
+        this._identityManager.keyring.getKey(feedKey)
+      ))
+    };
   }
 }

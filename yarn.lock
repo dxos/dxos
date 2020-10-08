@@ -1157,10 +1157,10 @@
     lodash.merge "^4.6.2"
     protobufjs "^6.9.0"
 
-"@dxos/credentials@^0.2.7":
-  version "0.2.7"
-  resolved "https://registry.yarnpkg.com/@dxos/credentials/-/credentials-0.2.7.tgz#1581e783d45e41d857da069dc932a018b684aa4f"
-  integrity sha512-ntRMASik9of8pjflBhgv53uoYYbB63J5L3Mq+Th+9xwC0wo23+W9s7IRQAQDFgL6rvLwmBKL/XOvF/CY9eP3zA==
+"@dxos/credentials@^0.2.8":
+  version "0.2.8"
+  resolved "https://registry.yarnpkg.com/@dxos/credentials/-/credentials-0.2.8.tgz#7822130bce35dfa8e6c8b4f812f517e09f155294"
+  integrity sha512-XBykaY3QQrtl1wIlaG3AcRJaxyB0FMqZY8rV6Gt2o95WTdD0p8zN5Y9c6SLesUDxhxgIfq6nIGguWh9O1pTY1w==
   dependencies:
     "@dxos/codec-protobuf" "^1.1.0-beta.10"
     "@dxos/crypto" "^1.0.0-beta.1"

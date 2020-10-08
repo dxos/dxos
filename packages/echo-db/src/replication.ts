@@ -5,6 +5,7 @@
 import debug from 'debug';
 import hypercore from 'hypercore';
 
+import { AuthPlugin, Authenticator } from '@dxos/credentials';
 import { discoveryKey, keyToString } from '@dxos/crypto';
 import { FeedKey, PartyKey } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
@@ -15,6 +16,13 @@ import { FeedStoreAdapter } from './feed-store-adapter';
 import { FeedSetProvider } from './parties';
 
 const log = debug('dxos:echo:replication-adapter');
+
+export interface CredentialsProvider {
+  /**
+   * The credentials (eg, a serialized AuthMessage) as a bytes.
+   */
+  get(): Buffer
+}
 
 /**
  * Joins a network swarm with replication protocol. Coordinates opening new feeds in the feed store.
@@ -27,7 +35,9 @@ export class ReplicationAdapter {
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _peerId: Buffer,
     private readonly _partyKey: PartyKey,
-    private readonly _activeFeeds: FeedSetProvider
+    private readonly _activeFeeds: FeedSetProvider,
+    private readonly _credentials: CredentialsProvider,
+    private readonly _authenticator: Authenticator
   ) {}
 
   start (): void {
@@ -55,6 +65,8 @@ export class ReplicationAdapter {
   }
 
   private _createProtocol (channel: any) {
+    const auth = new AuthPlugin(this._peerId, this._authenticator, [Replicator.extension]);
+
     const replicator = new Replicator({
       load: async () => {
         const partyFeeds = await Promise.all(this._activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
@@ -95,8 +107,16 @@ export class ReplicationAdapter {
         return this._partyKey;
       }
     })
-      .setSession({ peerId: this._peerId })
-      .setExtensions([replicator.createExtension()])
+      .setSession({
+        peerId: this._peerId,
+        // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
+        credentials: this._credentials.get().toString('base64')
+      })
+      .setExtensions([
+        auth.createExtension(),
+        // TODO(telackey): Offline Invitation handler goes here: new GreetingCommandPlugin....
+        replicator.createExtension()
+      ])
       .init(channel);
 
     return protocol;

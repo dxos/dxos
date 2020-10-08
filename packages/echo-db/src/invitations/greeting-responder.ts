@@ -5,8 +5,9 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Event } from '@dxos/async';
+import { Event, waitForCondition } from '@dxos/async';
 import {
+  admitsKeys,
   createEnvelopeMessage, Greeter,
   GreetingCommandPlugin,
   KeyRecord,
@@ -14,7 +15,7 @@ import {
   KeyType
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
-import { PartyKey, SwarmKey } from '@dxos/echo-protocol';
+import { PartyKey, PublicKey, SwarmKey } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { PartyProcessor } from '../parties';
@@ -202,25 +203,20 @@ export class GreetingResponder {
     // Place the self-signed messages inside an Envelope, sign then write the signed Envelope to the Party.
     const envelopes = [];
     for (const message of messages) {
-      // wait for keys to be admitted
-      // const myAdmits = admitsKeys(message);
-      // const partyMessageWaiter = waitForEvent(this._partyManager, 'party:update',
-      //   (eventPartyKey) => {
-      //     let matchCount = 0;
-      //     if (eventPartyKey.equals(this._party.publicKey)) {
-      //       for (const key of myAdmits) {
-      //         if (this._party.isMemberKey(key) || this._party.isMemberFeed(key)) {
-      //           matchCount++;
-      //         }
-      //       }
-      //     }
-      //     return matchCount === myAdmits.length;
-      //   });
+      const admittedKeys = admitsKeys(message);
+
+      // TODO(telackey): Add hasKey/isMember to PartyProcessor?
+      const hasKey = (key: PublicKey) => {
+        const allKeys = [...this._partyProcessor.memberKeys, ...this._partyProcessor.feedKeys];
+        return allKeys.find(value => value.equals(key));
+      };
 
       const envelope = createEnvelopeMessage(this._keyring, Buffer.from(this._partyKey), message, [this._identityKeypair], null);
       await this._partyProcessor.writeHaloMessage(envelope);
 
-      // await partyMessageWaiter;
+      // Wait for keys to be admitted.
+      await waitForCondition(() => admittedKeys.every(hasKey));
+
       envelopes.push(envelope);
     }
     this._state = GreetingState.SUCCEEDED;
@@ -238,12 +234,12 @@ export class GreetingResponder {
   _gatherHints () {
     assert(this._state === GreetingState.SUCCEEDED);
 
-    // const memberKeys = this._party.memberKeys.map(publicKey => {
-    //   return {
-    //     publicKey,
-    //     type: this._party.keyring.getKey(publicKey).type
-    //   };
-    // });
+    const memberKeys = this._partyProcessor.memberKeys.map(publicKey => {
+      return {
+        publicKey,
+        type: KeyType.UNKNOWN
+      };
+    });
 
     const memberFeeds = this._partyProcessor.feedKeys.map(publicKey => {
       return {
@@ -252,7 +248,6 @@ export class GreetingResponder {
       };
     });
 
-    // TODO(marik-d): Include memberKeys.
-    return [...memberFeeds];
+    return [...memberKeys, ...memberFeeds];
   }
 }

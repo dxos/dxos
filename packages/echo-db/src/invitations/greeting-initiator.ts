@@ -185,7 +185,7 @@ export class GreetingInitiator {
     this._state = GreetingState.SUCCEEDED;
     return {
       partyKey,
-      hints: notarizeResponse.hints.map((hint: any) => hint.publicKey) // TODO(marik-d): Take full hint object here
+      hints: notarizeResponse.hints
     };
   }
 

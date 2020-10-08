@@ -7,7 +7,13 @@ import debug from 'debug';
 import pify from 'pify';
 
 import { Event } from '@dxos/async';
-import { Party as PartyStateMachine, KeyType, KeyRecord } from '@dxos/credentials';
+import {
+  Authenticator,
+  KeyHint,
+  KeyRecord,
+  Party as PartyStateMachine,
+  PartyAuthenticator
+} from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
 import { PartyKey, IHaloStream, FeedKey, PublicKey } from '@dxos/echo-protocol';
 import { jsonReplacer } from '@dxos/util';
@@ -26,6 +32,7 @@ export class PartyProcessor {
   protected readonly _feedAdded = new Event<FeedKey>()
 
   private readonly _stateMachine: PartyStateMachine;
+  private readonly _authenticator: Authenticator;
 
   public readonly keyAdded: Event<KeyRecord>;
 
@@ -35,6 +42,7 @@ export class PartyProcessor {
     private readonly _partyKey: PartyKey
   ) {
     this._stateMachine = new PartyStateMachine(this._partyKey);
+    this._authenticator = new PartyAuthenticator(this._stateMachine);
 
     // TODO(telackey) @dxos/credentials was only half converted to TS. In its current state, the KeyRecord type
     // is not exported, and the PartyStateMachine being used is not properly understood as an EventEmitter by TS.
@@ -74,6 +82,10 @@ export class PartyProcessor {
     return this._stateMachine.credentialMessages.size === 0;
   }
 
+  get authenticator () {
+    return this._authenticator;
+  }
+
   isFeedAdmitted (feedKey: FeedKey) {
     return this._stateMachine.credentialMessages.has(keyToString(feedKey));
   }
@@ -91,13 +103,13 @@ export class PartyProcessor {
     };
   }
 
-  async takeHints (feedKeys: FeedKey[]) {
-    log(`addHints ${feedKeys.map(key => keyToString(key))}`);
+  async takeHints (hints: KeyHint[]) {
+    log(`addHints ${hints.length}`);
     // Gives state machine hints on initial feed set from where to read party genesis message.
     // TODO(telackey): Hints were not intended to provide a feed set for PartyGenesis messages. They are about
     // what feeds and keys to trust immediately after Greeting, before we have had the opportunity to replicate the
     // credential messages for ourselves.
-    await this._stateMachine.takeHints(feedKeys.map(publicKey => ({ publicKey, type: KeyType.FEED })));
+    await this._stateMachine.takeHints(hints);
   }
 
   async processMessage (message: IHaloStream): Promise<void> {

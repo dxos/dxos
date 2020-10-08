@@ -5,6 +5,7 @@
 import debug from 'debug';
 import ram from 'random-access-memory';
 
+import { KeyType } from '@dxos/credentials';
 import { createId, createKeyPair } from '@dxos/crypto';
 import { codec, createIterator, IEchoStream, FeedSelector } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
@@ -32,7 +33,10 @@ describe('pipeline', () => {
     //
     const { publicKey: partyKey } = createKeyPair();
     const partyProcessor = new PartyProcessor(partyKey);
-    await partyProcessor.takeHints([feed.key]);
+    await partyProcessor.takeHints([{
+      type: KeyType.FEED,
+      publicKey: feed.key
+    }]);
     const pipeline = new Pipeline(partyProcessor, feedReadStream);
     const [readStream] = await pipeline.open();
     expect(readStream).toBeTruthy();
