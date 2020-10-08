@@ -9,7 +9,6 @@ import {
 } from '@dxos/credentials';
 import { IHaloStream } from '@dxos/echo-protocol';
 
-import { TimeframeClock } from '../items/timeframe-clock';
 import { PartyProcessor } from './party-processor';
 
 const log = debug('dxos:echo:party-processor:test');
@@ -21,7 +20,7 @@ describe('party-processor', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
 
-    const partyProcessor = new PartyProcessor(partyKey.publicKey, new TimeframeClock());
+    const partyProcessor = new PartyProcessor(partyKey.publicKey);
     expect(partyProcessor.partyKey).toBeTruthy();
 
     const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey);
@@ -54,7 +53,7 @@ describe('party-processor', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
 
-    const partyProcessor = new PartyProcessor(partyKey.publicKey, new TimeframeClock());
+    const partyProcessor = new PartyProcessor(partyKey.publicKey);
     expect(partyProcessor.partyKey).toBeTruthy();
 
     const genesisMessage: IHaloStream = {
@@ -93,7 +92,7 @@ describe('party-processor', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
 
-    const partyProcessor = new PartyProcessor(partyKey.publicKey, new TimeframeClock());
+    const partyProcessor = new PartyProcessor(partyKey.publicKey);
     expect(partyProcessor.partyKey).toBeTruthy();
 
     const genesisMessage: IHaloStream = {

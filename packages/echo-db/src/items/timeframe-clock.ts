@@ -19,6 +19,6 @@ export class TimeframeClock {
 
   hasGaps (timeframe: Timeframe) {
     const gaps = spacetime.dependencies(timeframe, this._timeframe);
-    return gaps.frames?.length !== 0;
+    return gaps.frames && gaps.frames.length !== 0;
   }
 }

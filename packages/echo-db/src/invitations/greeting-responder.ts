@@ -14,9 +14,10 @@ import {
   KeyType
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
-import { FeedKey, PartyKey, SwarmKey } from '@dxos/echo-protocol';
+import { PartyKey, SwarmKey } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 
+import { PartyProcessor } from '../parties';
 import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 
@@ -54,12 +55,11 @@ export class GreetingResponder {
   readonly connected = new Event<any>();
 
   constructor (
-    private readonly _partyKey: PartyKey, // TODO(burdon): Move to bottom.
     private readonly _keyring: Keyring,
     private readonly _networkManager: NetworkManager,
-    private readonly _writeStream: NodeJS.WritableStream,
-    private readonly _getMemberFeeds: () => FeedKey[], // TODO(burdon): Is callback required?
-    private readonly _identityKeypair: KeyRecord
+    private readonly _partyProcessor: PartyProcessor,
+    private readonly _identityKeypair: KeyRecord,
+    private readonly _partyKey: PartyKey
   ) {
     this._greeter = new Greeter(
       Buffer.from(this._partyKey),
@@ -218,7 +218,7 @@ export class GreetingResponder {
       //   });
 
       const envelope = createEnvelopeMessage(this._keyring, Buffer.from(this._partyKey), message, [this._identityKeypair], null);
-      this._writeStream.write(envelope as any, () => { /** TODO(marik-d): await callback */ });
+      await this._partyProcessor.writeHaloMessage(envelope);
 
       // await partyMessageWaiter;
       envelopes.push(envelope);
@@ -245,7 +245,7 @@ export class GreetingResponder {
     //   };
     // });
 
-    const memberFeeds = this._getMemberFeeds().map(publicKey => {
+    const memberFeeds = this._partyProcessor.feedKeys.map(publicKey => {
       return {
         publicKey,
         type: KeyType.FEED

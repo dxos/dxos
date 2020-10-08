@@ -4,14 +4,13 @@
 
 import assert from 'assert';
 import debug from 'debug';
+import pify from 'pify';
 
 import { Event } from '@dxos/async';
-import { Party as PartyStateMachine, KeyType, KeyRecord, PartyCredential, getPartyCredentialMessageType } from '@dxos/credentials';
+import { Party as PartyStateMachine, KeyType, KeyRecord } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
-import { PartyKey, IHaloStream, FeedKey, PublicKey, MessageSelector, FeedBlock } from '@dxos/echo-protocol';
+import { PartyKey, IHaloStream, FeedKey, PublicKey } from '@dxos/echo-protocol';
 import { jsonReplacer } from '@dxos/util';
-
-import { TimeframeClock } from '../items/timeframe-clock';
 
 const log = debug('dxos:echo:halo-party-processor');
 
@@ -30,9 +29,10 @@ export class PartyProcessor {
 
   public readonly keyAdded: Event<KeyRecord>;
 
+  private _outboundHaloStream: NodeJS.WritableStream | undefined;
+
   constructor (
-    private readonly _partyKey: PartyKey,
-    private readonly _timeframeClock: TimeframeClock
+    private readonly _partyKey: PartyKey
   ) {
     this._stateMachine = new PartyStateMachine(this._partyKey);
 
@@ -70,45 +70,12 @@ export class PartyProcessor {
     return this._stateMachine.infoMessages;
   }
 
-  get messageSelector (): MessageSelector {
-    // TODO(telackey): Add KeyAdmit checks.
-    // The MessageSelector makes sure that we read in a trusted order. The first message we wish to process is
-    // the PartyGenesis, which will admit a Feed. As we encounter and process FeedAdmit messages those are added
-    // to the Party's trust, and we begin processing messages from them as well.
-    return (candidates: FeedBlock[]) => {
-      for (let i = 0; i < candidates.length; i++) {
-        const { key: feedKey, data: { halo, echo } } = candidates[i];
+  get genesisRequired () {
+    return this._stateMachine.credentialMessages.size === 0;
+  }
 
-        const feedAdmitted = this._stateMachine.credentialMessages.has(keyToString(feedKey));
-        const genesisRequired = !this._stateMachine.credentialMessages.size;
-
-        if (feedAdmitted && halo) {
-          // Accept this candidate if this Feed has already been admitted to the Party.
-          return i;
-        } else if (feedAdmitted && echo) {
-          // ItemZero has no timeframe.
-          // TODO(telackey): Is this a bug?
-          if (echo.genesis && !Object.keys({}).length) {
-            return i;
-          } else {
-            assert(echo.timeframe);
-            if (!this._timeframeClock.hasGaps(echo.timeframe)) {
-              return i;
-            }
-          }
-        } else if (genesisRequired && halo) {
-          const messageType = getPartyCredentialMessageType(halo);
-          // TODO(telackey): Add check that this is for the right Party.
-          if (messageType === PartyCredential.Type.PARTY_GENESIS) {
-            return i;
-          }
-        }
-      }
-
-      // Not ready for this message yet.
-
-      return undefined;
-    };
+  isFeedAdmitted (feedKey: FeedKey) {
+    return this._stateMachine.credentialMessages.has(keyToString(feedKey));
   }
 
   getMemberInfo (publicKey: PublicKey) {
@@ -137,5 +104,14 @@ export class PartyProcessor {
     log(`Processing: ${JSON.stringify(message, jsonReplacer)}`);
     const { data } = message;
     return this._stateMachine.processMessages([data]);
+  }
+
+  setOutboundStream (stream: NodeJS.WritableStream) {
+    this._outboundHaloStream = stream;
+  }
+
+  async writeHaloMessage (message: any) {
+    assert(this._outboundHaloStream, 'Party is closed or read-only');
+    await pify(this._outboundHaloStream.write.bind(this._outboundHaloStream))(message);
   }
 }

@@ -14,7 +14,7 @@ import { FeedStoreAdapter } from '../feed-store-adapter';
 import { SecretProvider } from '../invitations/common';
 import { InvitationDescriptor } from '../invitations/invitation-descriptor';
 import { IdentityManager } from './identity-manager';
-import { PartyFactory, HaloCreationOptions } from './party-factory';
+import { HaloCreationOptions, PartyFactory } from './party-factory';
 import { PartyInternal } from './party-internal';
 
 const log = debug('dxos:echo:party-manager');
@@ -57,7 +57,7 @@ export class PartyManager {
       // Open the HALO first (if present).
       if (this._identityManager.identityKey) {
         if (this._feedStore.queryWritableFeed(this._identityManager.identityKey.publicKey)) {
-          const { party: halo } = await this._partyFactory.constructParty(this._identityManager.identityKey.publicKey);
+          const halo = await this._partyFactory.constructParty(this._identityManager.identityKey.publicKey);
           // Always open the HALO.
           await halo.open();
           await this._identityManager.initialize(halo);
@@ -67,7 +67,7 @@ export class PartyManager {
       // Iterate descriptors and pre-create Party objects.
       for (const partyKey of this._feedStore.getPartyKeys()) {
         if (!this._parties.has(partyKey) && !this._isHalo(partyKey)) {
-          const { party } = await this._partyFactory.constructParty(partyKey);
+          const party = await this._partyFactory.constructParty(partyKey);
           // TODO(telackey): Should parties be auto-opened?
           await party.open();
           this._parties.set(party.key, party);

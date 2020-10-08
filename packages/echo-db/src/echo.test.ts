@@ -228,6 +228,7 @@ describe('api tests', () => {
     await writeToGenesisFeed({
       echo: {
         itemId: createId(),
+        timeframe: {},
         genesis: {
           modelType: ObjectModel.meta.type
         }
