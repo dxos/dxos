@@ -5,57 +5,25 @@
 import assert from 'assert';
 import debug from 'debug';
 import pify from 'pify';
-import ram from 'random-access-memory';
 
 import { waitForCondition } from '@dxos/async';
-import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
+import { createFeedAdmitMessage, createPartyGenesisMessage, KeyType } from '@dxos/credentials';
 import { createId, humanize } from '@dxos/crypto';
-import { codec } from '@dxos/echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
-import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { latch, jsonReplacer } from '@dxos/util';
+import { latch } from '@dxos/util';
 
-import { ECHO } from './echo';
-import { FeedStoreAdapter } from './feed-store-adapter';
-import { IdentityManager, PartyManager } from './parties';
-import { PartyFactory } from './parties/party-factory';
+import { createTestInstance } from './testing';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 
 const createECHO = async (verbose = true) => {
-  const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore);
-
-  let identityManager;
-  {
-    const keyring = new Keyring();
-    await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    identityManager = new IdentityManager(keyring);
-  }
-
-  const modelFactory = new ModelFactory()
-    .registerModel(ObjectModel);
-
-  const options = verbose ? {
-    readLogger: (message: any) => { log('>>>', JSON.stringify(message, jsonReplacer, 2)); },
-    writeLogger: (message: any) => { log('<<<', JSON.stringify(message, jsonReplacer, 2)); }
-  } : undefined;
-
-  const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()), options);
-  const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
-
-  await partyManager.open();
-  await partyManager.createHalo({ identityDisplayName: humanize(identityManager.identityKey.publicKey) });
-
-  return new ECHO(partyManager, options);
+  const { echo } = await createTestInstance({ verboseLogging: verbose, initialized: true });
+  return echo;
 };
 
 describe('api tests', () => {
   test('create party and update properties.', async () => {
     const echo = await createECHO();
-    await echo.open();
 
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => humanize(party.key)));
@@ -82,7 +50,6 @@ describe('api tests', () => {
 
   test('create party and items.', async () => {
     const echo = await createECHO();
-    await echo.open();
 
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => humanize(party.key)));
@@ -126,7 +93,6 @@ describe('api tests', () => {
 
   test('create party and item with child item.', async () => {
     const echo = await createECHO();
-    await echo.open();
 
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => humanize(party.key)));
@@ -168,7 +134,6 @@ describe('api tests', () => {
 
   test('create party, two items with child items, and then move child.', async () => {
     const echo = await createECHO();
-    await echo.open();
 
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => humanize(party.key)));
@@ -200,22 +165,20 @@ describe('api tests', () => {
   });
 
   test('cold start from replicated party', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
-    const feedStoreAdapter = new FeedStoreAdapter(feedStore);
+    const { echo, partyManager, feedStoreAdapter, identityManager } = await createTestInstance();
     await feedStoreAdapter.open();
 
-    const keyring = new Keyring();
-    const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const identityKey = await identityManager.keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    const partyKey = await identityManager.keyring.createKeyRecord({ type: KeyType.PARTY });
 
     const writableFeed = await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
-    const writableFeedKey = await keyring.addKeyRecord({
+    const writableFeedKey = await identityManager.keyring.addKeyRecord({
       publicKey: writableFeed.key,
       secretKey: writableFeed.secretKey,
       type: KeyType.FEED
     });
-    const genesisFeed = await feedStore.openFeed(createId(), { metadata: { partyKey: partyKey.publicKey } } as any);
-    const genesisFeedKey = await keyring.addKeyRecord({
+    const genesisFeed = await feedStoreAdapter.feedStore.openFeed(createId(), { metadata: { partyKey: partyKey.publicKey } } as any);
+    const genesisFeedKey = await identityManager.keyring.addKeyRecord({
       publicKey: genesisFeed.key,
       secretKey: genesisFeed.secretKey, // needed for party genesis message
       type: KeyType.FEED
@@ -223,8 +186,8 @@ describe('api tests', () => {
 
     const writeToGenesisFeed = pify(genesisFeed.append.bind(genesisFeed));
 
-    await writeToGenesisFeed({ halo: createPartyGenesisMessage(keyring, partyKey, genesisFeedKey, identityKey) });
-    await writeToGenesisFeed({ halo: createFeedAdmitMessage(keyring, partyKey.publicKey, writableFeedKey, [identityKey]) });
+    await writeToGenesisFeed({ halo: createPartyGenesisMessage(identityManager.keyring, partyKey, genesisFeedKey, identityKey) });
+    await writeToGenesisFeed({ halo: createFeedAdmitMessage(identityManager.keyring, partyKey.publicKey, writableFeedKey, [identityKey]) });
     await writeToGenesisFeed({
       echo: {
         itemId: createId(),
@@ -236,21 +199,13 @@ describe('api tests', () => {
     });
 
     log('Initializing database');
-    const modelFactory = new ModelFactory()
-      .registerModel(ObjectModel);
-
-    const identityManager = new IdentityManager(keyring);
-    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
-    const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
     await partyManager.open();
     await partyManager.createHalo();
     expect(identityManager.halo).toBeTruthy();
 
-    const database = new ECHO(partyManager);
-
-    await waitForCondition(async () => (await database.getParty(partyKey.publicKey)) !== undefined);
-    const party = await database.getParty(partyKey.publicKey);
+    await waitForCondition(async () => (await echo.getParty(partyKey.publicKey)) !== undefined);
+    const party = await echo.getParty(partyKey.publicKey);
     assert(party);
     log('Initialized party');
 
@@ -260,7 +215,6 @@ describe('api tests', () => {
 
   test('create party and items with props', async () => {
     const echo = await createECHO();
-    await echo.open();
 
     const party = await echo.createParty();
 

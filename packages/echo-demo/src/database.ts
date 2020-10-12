@@ -2,33 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import ram from 'random-access-memory';
+import { KeyType } from '@dxos/credentials';
+import { createTestInstance } from '@dxos/echo-db';
 
-import { Keyring, KeyType, KeyStore } from '@dxos/credentials';
-import { codec, ECHO, PartyManager, PartyFactory, FeedStoreAdapter, IdentityManager } from '@dxos/echo-db';
-import { FeedStore } from '@dxos/feed-store';
-import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
+export const createECHO = async (options = {}) => {
+  const { echo, identityManager, partyManager } = await createTestInstance(options);
 
-export const createECHO = async ({
-  storage = ram, keyStorage = undefined, swarmProvider = new SwarmProvider()
-} = {}) => {
-  const feedStore = new FeedStore(storage, { feedOptions: { valueEncoding: codec } });
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore);
-
-  const keystore = new KeyStore(keyStorage);
-  const keyring = new Keyring(keystore);
-  await keyring.load();
-  const identityManager = new IdentityManager(keyring);
-
-  const modelFactory = new ModelFactory()
-    .registerModel(ObjectModel);
-
-  const networkManager = new NetworkManager(feedStore, swarmProvider);
-  const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, networkManager);
-  const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
-
+  await identityManager.keyring.load();
   await partyManager.open();
 
   if (!identityManager.identityKey) {
@@ -36,7 +16,5 @@ export const createECHO = async ({
     await partyManager.createHalo();
   }
 
-  const echo = new ECHO(partyManager);
-
-  return { echo, keyring };
+  return { echo, keyring: identityManager.keyring };
 };

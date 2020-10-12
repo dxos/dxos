@@ -9,3 +9,4 @@ export * from './map';
 export * from './stream';
 export * from './raise';
 export * from './complex';
+export * from './range';

@@ -37,7 +37,7 @@
     "build": "lerna run build",
     "depcheck": "lerna run depcheck",
     "test": "lerna run test",
-    "lint": "lerna run lint",
+    "lint": "yarn workspaces run lint",
     "lint:fix": "lerna run lint -- --fix",
     "lint:staged": "lint-staged",
     "sort-package-json": "lerna exec npx sort-package-json",
