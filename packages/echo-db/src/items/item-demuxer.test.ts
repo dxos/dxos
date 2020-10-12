@@ -28,6 +28,7 @@ describe('item demxuer', () => {
       async (message: EchoEnvelope): Promise<IEchoStream> => ({
         meta: {
           feedKey,
+          identityKey: feedKey,
           seq: 0
         },
         data: message

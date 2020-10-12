@@ -104,6 +104,15 @@ describe('party-processor', () => {
       data: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey)
     };
     await partyProcessor.processMessage(genesisMessage);
+    const feedAdmit: IHaloStream = {
+      meta: {
+        feedKey: feedKey.publicKey,
+        seq: 0
+        // TODO(telackey): Should ownership data go here?
+      },
+      data: createFeedAdmitMessage(keyring, partyKey.publicKey, feedKey, identityKey)
+    };
+    await partyProcessor.processMessage(feedAdmit);
 
     const keyring2 = new Keyring();
     const identityKey2 = await keyring2.createKeyRecord({ type: KeyType.IDENTITY });
@@ -119,10 +128,9 @@ describe('party-processor', () => {
         [identityKey], null
       )
     };
-
     await partyProcessor.processMessage(keyAdmit);
 
-    const feedAdmit: IHaloStream = {
+    const feedAdmit2: IHaloStream = {
       meta: {
         feedKey: feedKey.publicKey,
         seq: 1
@@ -130,14 +138,15 @@ describe('party-processor', () => {
       },
       data: createFeedAdmitMessage(keyring2, partyKey.publicKey, feedKey2, identityKey2)
     };
-
-    await partyProcessor.processMessage(feedAdmit);
+    await partyProcessor.processMessage(feedAdmit2);
 
     expect(partyProcessor.feedKeys).toHaveLength(2);
     expect(partyProcessor.memberKeys).toHaveLength(2);
     expect(partyProcessor.feedKeys).toContainEqual(feedKey.publicKey);
     expect(partyProcessor.feedKeys).toContainEqual(feedKey2.publicKey);
     expect(partyProcessor.memberKeys).toContainEqual(identityKey.publicKey);
+    expect(partyProcessor.getFeedOwningIdentity(feedKey.publicKey)).toEqual(identityKey.publicKey);
+    expect(partyProcessor.getFeedOwningIdentity(feedKey2.publicKey)).toEqual(identityKey2.publicKey);
 
     log(partyProcessor.feedKeys);
   });

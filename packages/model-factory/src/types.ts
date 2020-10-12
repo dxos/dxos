@@ -3,7 +3,7 @@
 //
 
 import { Codec } from '@dxos/codec-experimental-runtime';
-import { FeedMeta, ItemID } from '@dxos/echo-protocol';
+import { MutationMeta, ItemID } from '@dxos/echo-protocol';
 
 //
 // Types
@@ -31,6 +31,6 @@ export type ModelConstructor<T> =
   (new (meta: ModelMeta, itemId: ItemID, writeStream?: NodeJS.WritableStream) => T) & { meta: ModelMeta };
 
 export type ModelMessage<T> = {
-  meta: FeedMeta,
+  meta: MutationMeta,
   mutation: T
 }

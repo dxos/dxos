@@ -51,8 +51,8 @@ export async function createTestInstance ({
     .registerModel(ObjectModel);
 
   const options = verboseLogging ? {
-    readLogger: (message: any) => { log('>>>', JSON.stringify(message, jsonReplacer, 2)); },
-    writeLogger: (message: any) => { log('<<<', JSON.stringify(message, jsonReplacer, 2)); }
+    readLogger: messageLogger('>>>'),
+    writeLogger: messageLogger('<<<')
   } : undefined;
 
   const networkManager = new NetworkManager(feedStore, swarmProvider);
@@ -73,6 +73,16 @@ export async function createTestInstance ({
   return { echo, partyManager, modelFactory, identityManager, feedStoreAdapter, feedStore };
 }
 
+export type Awaited<T> = T extends Promise<infer U> ? U : T;
+export type TestPeer = Awaited<ReturnType<typeof createTestInstance>>;
+
+export type WithTestMeta<T> = T & { testMeta: TestPeer }
+
+function addTestMeta<T> (obj: T, meta: TestPeer): WithTestMeta<T> {
+  (obj as any).testMeta = meta;
+  return obj as any;
+}
+
 /**
  * Invites a test peer to the party.
  * @returns Party instance on provided test instance.
@@ -88,7 +98,7 @@ export async function inviteTestPeer (party: Party, peer: ECHO): Promise<Party> 
  * Creates a number of test ECHO instances and a party that's shared between all of them.
  * @returns Party instances from each of the peers.
  */
-export async function createSharedTestParty (peerCount = 2) {
+export async function createSharedTestParty (peerCount = 2): Promise<WithTestMeta<Party>[]> {
   assert(peerCount >= 2);
 
   const peers = await Promise.all(range(peerCount).map(() => createTestInstance({ initialized: true })));
@@ -102,15 +112,22 @@ export async function createSharedTestParty (peerCount = 2) {
     return party;
   }));
 
-  return [mainParty, ...restParties];
+  return [mainParty, ...restParties].map((party, i) => addTestMeta(party, peers[i]));
 }
 
 /**
  * Creates a number of test ECHO instances and an item that's shared between all of them.
  * @returns Item instances from each of the peers.
  */
-export async function createModelTestBench<M extends Model<any>> (options: ItemCreationOptions<M> & { peerCount?: number}): Promise<Item<M>[]> {
+export async function createModelTestBench<M extends Model<any>> (options: ItemCreationOptions<M> & { peerCount?: number}): Promise<WithTestMeta<Item<M>>[]> {
   const parties = await createSharedTestParty(options.peerCount ?? 2);
+
+  for (const party of parties) {
+    const { modelFactory } = party.testMeta;
+    if (!modelFactory.hasModel(options.model.meta.type)) {
+      modelFactory.registerModel(options.model);
+    }
+  }
 
   const item = await parties[0].database.createItem(options);
   await Promise.all(parties.map(async party => {
@@ -120,5 +137,7 @@ export async function createModelTestBench<M extends Model<any>> (options: ItemC
     await party.database.queryItems().update.waitFor(() => !!party.database.getItem(item.id));
   }));
 
-  return parties.map(party => party.database.getItem(item.id)!);
+  return parties.map(party => party.database.getItem(item.id)!).map((item, i) => addTestMeta(item, parties[i].testMeta));
 }
+
+const messageLogger = (tag: string) => (message: any) => { log(tag, JSON.stringify(message, jsonReplacer, 2)); };

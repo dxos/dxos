@@ -29,6 +29,10 @@ export type FeedMeta = {
   seq: number;
 }
 
+export interface MutationMeta extends FeedMeta {
+  identityKey: PublicKey
+}
+
 /**
  * Hypercore message.
  * https://github.com/hypercore-protocol/hypercore
@@ -63,7 +67,7 @@ export interface IHaloStream {
 }
 
 export interface IEchoStream {
-  meta: FeedMeta;
+  meta: MutationMeta;
   data: EchoEnvelope;
 }
 

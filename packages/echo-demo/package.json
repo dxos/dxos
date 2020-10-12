@@ -21,7 +21,6 @@
     "lint": "eslint './src/**/*.ts'",
     "test": "jest --rootDir=./src --verbose --passWithNoTests",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
-    "posttest": "npm run lint",
     "prepublishOnly": "npm run test && npm run build",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },

@@ -15,7 +15,7 @@ import {
   createEnvelopeMessage,
   createIdentityInfoMessage,
   createKeyAdmitMessage,
-  createPartyGenesisMessage
+  createPartyGenesisMessage, createFeedAdmitMessage
 } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
 import { FeedKey, PartyKey } from '@dxos/echo-protocol';
@@ -90,6 +90,8 @@ export class PartyFactory {
         await party.processor.writeHaloMessage(createEnvelopeMessage(keyring, partyKey.publicKey, infoMessage, [identityKey]));
       }
     }
+
+    await party.processor.writeHaloMessage(createFeedAdmitMessage(keyring, partyKey.publicKey, feedKey, [identityKey]));
 
     // Create special properties item.
     assert(party.itemManager);

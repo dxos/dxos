@@ -24,7 +24,7 @@ describe('test model', () => {
     // Set mutation
     const { publicKey: feedKey } = createKeyPair();
 
-    model.processMessage({ feedKey, seq: 1 }, { key: 'title', value: 'DXOS' });
+    model.processMessage({ feedKey, seq: 1, identityKey: feedKey }, { key: 'title', value: 'DXOS' });
     expect(model.getProperty('title')).toBe('DXOS');
     expect(model.keys).toHaveLength(1);
   });
@@ -39,6 +39,7 @@ describe('test model', () => {
       async mutation => {
         const message: ModelMessage<TestItemMutation> = {
           meta: {
+            identityKey: feedKey,
             feedKey,
             seq
           },

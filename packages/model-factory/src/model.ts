@@ -6,7 +6,7 @@ import assert from 'assert';
 import pify from 'pify';
 
 import { Event } from '@dxos/async';
-import { FeedMeta, ItemID } from '@dxos/echo-protocol';
+import { ItemID, MutationMeta } from '@dxos/echo-protocol';
 import { createWritable } from '@dxos/util';
 
 import { ModelMessage, ModelMeta } from './types';
@@ -74,7 +74,7 @@ export abstract class Model<T, U = void> {
     await pify(this._writeStream.write.bind(this._writeStream))(mutation);
   }
 
-  async processMessage (meta: FeedMeta, message: T): Promise<void> {
+  async processMessage (meta: MutationMeta, message: T): Promise<void> {
     const modified = await this._processMessage(meta, message);
     if (modified) {
       this._modelUpdate.emit(this);
@@ -87,5 +87,5 @@ export abstract class Model<T, U = void> {
    * @param {Object} meta
    * @param {Object} message
    */
-  async abstract _processMessage (meta: FeedMeta, message: T): Promise<boolean>;
+  async abstract _processMessage (meta: MutationMeta, message: T): Promise<boolean>;
 }

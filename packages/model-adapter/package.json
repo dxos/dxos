@@ -27,7 +27,6 @@
     "coverage": "jest --coverage --verbose src",
     "lint": "eslint './src/**/*.ts'",
     "test": "jest --rootDir=./src --verbose --passWithNoTests",
-    "posttest": "npm run lint",
     "prepublishOnly": "npm run test && npm run build",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
@@ -46,12 +45,14 @@
     "@dxos/feed-store": "^1.2.0-beta.30",
     "@dxos/model-factory": "^0.2.0-dev",
     "@dxos/util": "^0.2.0-dev",
+    "@types/buffer-json": "^2.0.0",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/lodash": "^4.14.159",
     "@types/node": "^14.0.9",
     "@types/stream-buffers": "^3.0.2",
     "@types/through2": "^2.0.36",
+    "buffer-json": "^2.0.0",
     "debug": "^4.1.1",
     "hypercore": "^7.7.1",
     "js-data-structs": "^1.1.2",
@@ -60,6 +61,8 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
+    "@dxos/chess-core": "^1.0.0-beta.58",
+    "@dxos/echo-db": "^0.2.0-dev",
     "@dxos/eslint-plugin": "^1.0.5",
     "@dxos/text-model": "1.0.0-beta.28",
     "@types/jest": "^25.2.3",

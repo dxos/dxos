@@ -8,8 +8,8 @@ import pump from 'pump';
 import { Readable, Writable } from 'stream';
 
 import { Event } from '@dxos/async';
-import { createFeedMeta, EchoEnvelope, FeedBlock, FeedMessage } from '@dxos/echo-protocol';
-import { createLoggingTransform, createReadable, createTransform, jsonReplacer } from '@dxos/util';
+import { createFeedMeta, EchoEnvelope, FeedBlock, FeedMessage, IEchoStream } from '@dxos/echo-protocol';
+import { checkType, createLoggingTransform, createReadable, createTransform, jsonReplacer } from '@dxos/util';
 
 import { PartyProcessor } from './party-processor';
 
@@ -148,10 +148,14 @@ export class Pipeline {
             const { itemId } = message.echo;
             if (itemId) {
               assert(this._inboundEchoStream);
-              this._inboundEchoStream.push({
-                meta: createFeedMeta(block),
+              this._inboundEchoStream.push(checkType<IEchoStream>({
+                meta: {
+                  seq: block.seq,
+                  feedKey: block.key,
+                  identityKey: this._partyProcessor.getFeedOwningIdentity(block.key)
+                },
                 data: message.echo
-              });
+              }));
             }
           }
 

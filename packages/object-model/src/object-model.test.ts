@@ -6,6 +6,7 @@ import debug from 'debug';
 
 import { expectToThrow } from '@dxos/async';
 import { createKeyPair, createId } from '@dxos/crypto';
+import { MutationMeta } from '@dxos/echo-protocol';
 import { WritableArray } from '@dxos/util';
 
 import { ValueUtil } from './mutation';
@@ -51,7 +52,7 @@ describe('object model', () => {
 
     // Process.
     const { publicKey: feedKey } = createKeyPair();
-    const meta = { feedKey, seq: 0 };
+    const meta: MutationMeta = { feedKey, seq: 0, identityKey: feedKey };
     await model.processMessage(meta, buffer.objects[0]);
     await processed;
     expect(model.toObject()).toStrictEqual({
@@ -76,7 +77,7 @@ describe('object model', () => {
 
     // Process.
     const { publicKey: feedKey } = createKeyPair();
-    const meta = { feedKey, seq: 0 };
+    const meta: MutationMeta = { feedKey, seq: 0, identityKey: feedKey };
     await model.processMessage(meta, buffer.objects[0]);
     await processed;
     expect(model.toObject()).toStrictEqual({

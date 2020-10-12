@@ -4,6 +4,7 @@
 
 import { waitForCondition } from '@dxos/async';
 import { createKeyPair, createId } from '@dxos/crypto';
+import { MutationMeta } from '@dxos/echo-protocol';
 import { TextModel, TYPE_TEXT_MODEL_UPDATE } from '@dxos/text-model';
 import { WritableArray } from '@dxos/util';
 
@@ -34,7 +35,7 @@ describe('TextModel', () => {
     await waitForCondition(() => buffer1.objects.length > 0, 100);
 
     const { publicKey: feedKey } = createKeyPair();
-    const meta = { feedKey, seq: 0 };
+    const meta: MutationMeta = { feedKey, seq: 0, identityKey: feedKey };
     await model2.processMessage(meta, buffer1.objects[0]);
 
     expect(model2.model.textContent).toBe('INSERTED TEXT');

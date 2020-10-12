@@ -95,6 +95,13 @@ export class PartyProcessor {
     return this._stateMachine.getInfo(Buffer.from(publicKey));
   }
 
+  /**
+   * Returns IDENTITY public key of the feed owner.
+   */
+  getFeedOwningIdentity (feedKey: FeedKey): PublicKey {
+    return this._stateMachine.getAdmittedBy(feedKey);
+  }
+
   // TODO(burdon): Rename xxxProvider.
   getActiveFeedSet (): FeedSetProvider {
     return {
