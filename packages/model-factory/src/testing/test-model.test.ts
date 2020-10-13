@@ -3,7 +3,7 @@
 //
 
 import { createKeyPair, createId } from '@dxos/crypto';
-import { TestItemMutation } from '@dxos/echo-protocol';
+import { TestItemMutation, createMockFeedWriterFromStream } from '@dxos/echo-protocol';
 import { createTransform, latch } from '@dxos/util';
 
 import { ModelMessage } from '../types';
@@ -51,7 +51,7 @@ describe('test model', () => {
       });
 
     // Create a writeStream model.
-    const model = new TestModel(TestModel.meta, itemId, transform);
+    const model = new TestModel(TestModel.meta, itemId, createMockFeedWriterFromStream(transform));
 
     // Connect output to input processor.
     transform.pipe(model.processor);

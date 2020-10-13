@@ -3,14 +3,16 @@
 //
 
 import debug from 'debug';
+import { Feed } from 'hypercore';
 import ram from 'random-access-memory';
 
-import { KeyType } from '@dxos/credentials';
+import { waitForCondition } from '@dxos/async';
+import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId, createKeyPair } from '@dxos/crypto';
-import { codec, createIterator, IEchoStream, FeedSelector } from '@dxos/echo-protocol';
+import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
-import { createWritableFeedStream, jsonReplacer, createWritable, latch } from '@dxos/util';
+import { createWritable, createWritableFeedStream, jsonReplacer, latch, WritableArray } from '@dxos/util';
 
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
@@ -64,5 +66,45 @@ describe('pipeline', () => {
     }
 
     await counter;
+  });
+
+  test('writing', async () => {
+    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedReadStream = await createIterator(feedStore);
+    const feed: Feed = await feedStore.openFeed('test-feed');
+
+    const keyring = new Keyring();
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
+    const idenitityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+
+    const partyProcessor = new PartyProcessor(partyKey.publicKey);
+    const pipeline = new Pipeline(
+      partyProcessor,
+      feedReadStream,
+      createFeedWriter(feed)
+    );
+    await pipeline.open();
+
+    const writable = new WritableArray();
+    pipeline.inboundEchoStream!.pipe(writable);
+
+    await pipeline.outboundHaloStream!.write(createPartyGenesisMessage(keyring, partyKey, feedKey, idenitityKey));
+    await pipeline.outboundEchoStream!.write({
+      itemId: '123',
+      genesis: {
+        itemType: 'foo'
+      }
+    });
+
+    await waitForCondition(() => writable.objects.length === 1);
+
+    expect(partyProcessor.genesisRequired).toEqual(false);
+    expect((writable.objects[0] as any).data).toEqual({
+      itemId: '123',
+      genesis: {
+        itemType: 'foo'
+      }
+    });
   });
 });

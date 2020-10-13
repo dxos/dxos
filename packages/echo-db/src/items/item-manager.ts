@@ -4,13 +4,12 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import pify from 'pify';
 
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
-import { ItemID, ItemType, IEchoStream, PartyKey, EchoEnvelope } from '@dxos/echo-protocol';
-import { Model, ModelType, ModelFactory, ModelMessage } from '@dxos/model-factory';
-import { checkType, createTransform } from '@dxos/util';
+import { EchoEnvelope, FeedWriter, IEchoStream, ItemID, ItemType, mapFeedWriter, PartyKey } from '@dxos/echo-protocol';
+import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
+import { createTransform } from '@dxos/util';
 
 import { ResultSet } from '../result';
 import { Item } from './item';
@@ -36,7 +35,7 @@ export class ItemManager {
   // eslint-disable-next-line func-call-spacing
   private readonly _pendingItems = new Map<ItemID, (item: Item<any>) => void>();
 
-  private readonly _writeStream?: NodeJS.WritableStream;
+  private readonly _writeStream?: FeedWriter<EchoEnvelope>;
 
   /**
    * @param partyKey
@@ -47,15 +46,13 @@ export class ItemManager {
      private readonly _partyKey: PartyKey,
      private readonly _modelFactory: ModelFactory,
      private readonly _timeframeClock: TimeframeClock,
-     writeStream?: NodeJS.WritableStream
+     writeStream?: FeedWriter<EchoEnvelope>
   ) {
     if (writeStream) {
-      const stream = createTransform<EchoEnvelope, EchoEnvelope>(async message => ({
+      this._writeStream = mapFeedWriter(message => ({
         ...message,
         timeframe: this._timeframeClock.timeframe
-      }));
-      stream.pipe(writeStream);
-      this._writeStream = stream;
+      }), writeStream);
     }
   }
 
@@ -90,7 +87,7 @@ export class ItemManager {
 
     // Write Item Genesis block.
     log('Item Genesis:', itemId);
-    await pify(this._writeStream.write.bind(this._writeStream))(checkType<EchoEnvelope>({
+    await this._writeStream.write({
       itemId,
       genesis: {
         itemType,
@@ -98,7 +95,7 @@ export class ItemManager {
       },
       itemMutation: parentId ? { parentId } : undefined,
       mutation
-    }));
+    });
 
     // Unlocked by construct.
     log('Pending Item:', itemId);
@@ -154,12 +151,10 @@ export class ItemManager {
     //
     // Convert model-specific outbound mutation to outbound envelope message.
     //
-    const outboundTransform = createTransform<unknown, EchoEnvelope>(async (mutation) => {
-      return {
-        itemId,
-        mutation: mutationCodec.encode(mutation)
-      };
-    });
+    const outboundTransform = mapFeedWriter<unknown, EchoEnvelope>(mutation => ({
+      itemId,
+      mutation: mutationCodec.encode(mutation)
+    }), this._writeStream);
 
     // Create the model with the outbound stream.
     const model: Model<any> = this._modelFactory.createModel(modelType, itemId, outboundTransform);
@@ -167,7 +162,6 @@ export class ItemManager {
 
     // Connect the streams.
     readStream.pipe(inboundTransform).pipe(model.processor);
-    outboundTransform.pipe(this._writeStream);
 
     // Create the Item.
     const item = new Item(this._partyKey, itemId, itemType, model, this._writeStream, parent);

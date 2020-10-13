@@ -4,7 +4,7 @@
 
 import BJSON from 'buffer-json';
 
-import { ItemID, MutationMeta } from '@dxos/echo-protocol';
+import { FeedWriter, ItemID, MutationMeta } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, ModelMeta } from '@dxos/model-factory';
 
 import { schema } from './proto/gen';
@@ -42,7 +42,7 @@ export function createModelAdapter<T extends ClassicModel> (
 
     model = new InnerModelConstructor();
 
-    constructor (meta: ModelMeta, itemId: ItemID, writeStream?: NodeJS.WritableStream) {
+    constructor (meta: ModelMeta, itemId: ItemID, writeStream?: FeedWriter<Mutation>) {
       super(meta, itemId, writeStream);
 
       if (this.model.setAppendHandler) {

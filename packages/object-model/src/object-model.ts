@@ -51,7 +51,7 @@ export class ObjectModel extends Model<ObjectMutationSet> {
 
   // TODO(burdon): Create builder pattern (replace static methods).
   async setProperty (key: string, value: any) {
-    await this.write({
+    const receipt = await this.write({
       mutations: [
         {
           operation: ObjectMutation.Operation.SET,
@@ -60,26 +60,14 @@ export class ObjectModel extends Model<ObjectMutationSet> {
         }
       ]
     });
-
-    // Wait for the property to by updated so that getProperty will return the expected value.
-    // TODO(telackey): It would be better if we could check for a unique ID per mutation rather than the value.
-    const match = () => this.getProperty(key) === value;
-    if (!match()) {
-      await this._modelUpdate.waitFor(match);
-    }
+    await receipt.waitToBeProcessed();
   }
 
   async setProperties (properties: any) {
-    await this.write({
+    const receipt = await this.write({
       mutations: createMultiFieldMutationSet(properties)
     });
-
-    // Wait for the property to by updated so that getProperty will return the expected value.
-    // TODO(telackey): It would be better if we could check for a unique ID per mutation rather than the value.
-    const match = () => Object.entries(properties).every(([key, value]) => this.getProperty(key) === value);
-    if (!match()) {
-      await this._modelUpdate.waitFor(match);
-    }
+    await receipt.waitToBeProcessed();
   }
 
   async _processMessage (meta: FeedMeta, message: ObjectMutationSet) {

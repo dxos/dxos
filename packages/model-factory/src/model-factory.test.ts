@@ -3,7 +3,7 @@
 //
 
 import { createId, createKeyPair } from '@dxos/crypto';
-import { TestItemMutation } from '@dxos/echo-protocol';
+import { TestItemMutation, createMockFeedWriterFromStream } from '@dxos/echo-protocol';
 import { createTransform, latch } from '@dxos/util';
 
 import { ModelFactory } from './model-factory';
@@ -45,7 +45,7 @@ describe('model factory', () => {
 
     // Create model.
     const modelFactory = new ModelFactory().registerModel(TestModel);
-    const model = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, writeStream);
+    const model = modelFactory.createModel<TestModel>(TestModel.meta.type, itemId, createMockFeedWriterFromStream(writeStream));
     expect(model).toBeTruthy();
 
     // Update model.

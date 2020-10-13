@@ -17,6 +17,7 @@ import { createWritableFeedStream, latch } from '@dxos/util';
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { SecretProvider, SecretValidator } from '../invitations';
 import { Item } from '../items';
+import { messageLogger } from '../testing';
 import { IdentityManager } from './identity-manager';
 import { PartyFactory } from './party-factory';
 import { PartyManager } from './party-manager';
@@ -36,7 +37,10 @@ describe('Party manager', () => {
     }
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
+    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()), {
+      writeLogger: messageLogger('<<<'),
+      readLogger: messageLogger('>>>')
+    });
     const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
 
     if (open) {

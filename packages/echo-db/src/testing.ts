@@ -140,4 +140,4 @@ export async function createModelTestBench<M extends Model<any>> (options: ItemC
   return parties.map(party => party.database.getItem(item.id)!).map((item, i) => addTestMeta(item, parties[i].testMeta));
 }
 
-const messageLogger = (tag: string) => (message: any) => { log(tag, JSON.stringify(message, jsonReplacer, 2)); };
+export const messageLogger = (tag: string) => (message: any) => { log(tag, JSON.stringify(message, jsonReplacer, 2)); };

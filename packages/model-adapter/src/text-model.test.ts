@@ -4,7 +4,7 @@
 
 import { waitForCondition } from '@dxos/async';
 import { createKeyPair, createId } from '@dxos/crypto';
-import { MutationMeta } from '@dxos/echo-protocol';
+import { createMockFeedWriterFromStream, MutationMeta } from '@dxos/echo-protocol';
 import { TextModel, TYPE_TEXT_MODEL_UPDATE } from '@dxos/text-model';
 import { WritableArray } from '@dxos/util';
 
@@ -16,7 +16,7 @@ const TextModelAdapter = createModelAdapter<any>(TYPE_TEXT_MODEL_UPDATE, TextMod
 describe('TextModel', () => {
   test('local', async () => {
     const buffer = new WritableArray<Mutation>();
-    const model = new TextModelAdapter(TextModelAdapter.meta, createId(), buffer);
+    const model = new TextModelAdapter(TextModelAdapter.meta, createId(), createMockFeedWriterFromStream(buffer));
 
     model.model.insert(0, 'INSERTED TEXT');
     expect(model.model.textContent).toBe('INSERTED TEXT');
@@ -27,9 +27,9 @@ describe('TextModel', () => {
 
   test('Sync', async () => {
     const buffer1 = new WritableArray<Mutation>();
-    const model1 = new TextModelAdapter(TextModelAdapter.meta, createId(), buffer1);
+    const model1 = new TextModelAdapter(TextModelAdapter.meta, createId(), createMockFeedWriterFromStream(buffer1));
     const buffer2 = new WritableArray<Mutation>();
-    const model2 = new TextModelAdapter(TextModelAdapter.meta, createId(), buffer2);
+    const model2 = new TextModelAdapter(TextModelAdapter.meta, createId(), createMockFeedWriterFromStream(buffer2));
 
     model1.model.insert(0, 'INSERTED TEXT');
     await waitForCondition(() => buffer1.objects.length > 0, 100);

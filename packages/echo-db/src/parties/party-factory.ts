@@ -7,22 +7,19 @@ import debug from 'debug';
 
 import {
   Authenticator,
-  Keyring,
-  KeyHint,
-  KeyType,
   createAuthMessage,
   createDeviceInfoMessage,
   createEnvelopeMessage,
-  createIdentityInfoMessage,
+  createFeedAdmitMessage, createIdentityInfoMessage,
   createKeyAdmitMessage,
-  createPartyGenesisMessage, createFeedAdmitMessage
+  createPartyGenesisMessage, KeyHint, Keyring,
+  KeyType
 } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
-import { FeedKey, PartyKey } from '@dxos/echo-protocol';
+import { FeedKey, PartyKey, createFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { createWritableFeedStream } from '@dxos/util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { GreetingInitiator, InvitationDescriptor, SecretProvider } from '../invitations';
@@ -154,7 +151,7 @@ export class PartyFactory {
     }
 
     const iterator = await this._feedStore.createIterator(partyKey, createMessageSelector(partyProcessor, timeframeClock));
-    const feedWriteStream = createWritableFeedStream(feed);
+    const feedWriteStream = createFeedWriter(feed);
 
     const pipeline = new Pipeline(
       partyProcessor, iterator, feedWriteStream, this._options);

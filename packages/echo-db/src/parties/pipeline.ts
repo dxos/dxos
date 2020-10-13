@@ -4,12 +4,11 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import pump from 'pump';
-import { Readable, Writable } from 'stream';
+import { Readable } from 'stream';
 
 import { Event } from '@dxos/async';
-import { createFeedMeta, EchoEnvelope, FeedBlock, FeedMessage, IEchoStream } from '@dxos/echo-protocol';
-import { checkType, createLoggingTransform, createReadable, createTransform, jsonReplacer } from '@dxos/util';
+import { createFeedMeta, EchoEnvelope, FeedBlock, FeedMessage, HaloMessage, IEchoStream, FeedWriter, mapFeedWriter } from '@dxos/echo-protocol';
+import { checkType, createReadable, jsonReplacer } from '@dxos/util';
 
 import { PartyProcessor } from './party-processor';
 
@@ -19,7 +18,6 @@ interface Options {
 }
 
 const log = debug('dxos:echo:pipeline');
-const error = debug('dxos:echo:pipeline:error');
 
 /**
  * Manages the inbound and outbound message streams for an individual party.
@@ -39,7 +37,7 @@ export class Pipeline {
   /**
    * Stream for writing messages to this peer's writable feed.
    */
-  private readonly _feedWriteStream?: NodeJS.WritableStream;
+  private readonly _feedWriter?: FeedWriter<FeedMessage>;
 
   private readonly _options: Options;
 
@@ -51,13 +49,13 @@ export class Pipeline {
   /**
    * Messages to write into pipeline (e.g., mutations from model).
    */
-  private _outboundEchoStream: Writable | undefined;
+  private _outboundEchoStream: FeedWriter<EchoEnvelope> | undefined;
 
   // TODO(burdon): Pair with PartyProcessor.
   /**
    * Halo message stream to write into pipeline.
    */
-  private _outboundHaloStream: Writable | undefined;
+  private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
 
   /**
    * @param {PartyProcessor} partyProcessor - Processes HALO messages to update party state.
@@ -69,14 +67,14 @@ export class Pipeline {
   constructor (
     partyProcessor: PartyProcessor,
     feedReadStream: AsyncIterable<FeedBlock>,
-    feedWriteStream?: NodeJS.WritableStream,
+    feedWriter?: FeedWriter<FeedMessage>,
     options?: Options
   ) {
     assert(partyProcessor);
     assert(feedReadStream);
     this._partyProcessor = partyProcessor;
     this._messageIterator = feedReadStream;
-    this._feedWriteStream = feedWriteStream;
+    this._feedWriter = feedWriter;
     this._options = options || {};
   }
 
@@ -118,7 +116,7 @@ export class Pipeline {
    *       Transform(dxos.echo.IEchoEnvelope => dxos.IFeedMessage): update clock
    *         Feed
    */
-  async open (): Promise<[NodeJS.ReadableStream, NodeJS.WritableStream?]> {
+  async open (): Promise<[NodeJS.ReadableStream, FeedWriter<EchoEnvelope>?]> {
     const { readLogger, writeLogger } = this._options;
 
     this._inboundEchoStream = createReadable();
@@ -173,34 +171,14 @@ export class Pipeline {
     // Processes outbound messages (piped to the feed).
     // Sets the current timeframe.
     //
-    if (this._feedWriteStream) {
-      this._outboundEchoStream = createTransform<EchoEnvelope, FeedMessage>(async message => ({ echo: message }));
+    if (this._feedWriter) {
+      const loggingWriter = mapFeedWriter<FeedMessage, FeedMessage>(async msg => {
+        writeLogger?.(msg);
+        return msg;
+      }, this._feedWriter);
 
-      pump([
-        this._outboundEchoStream,
-        writeLogger ? createLoggingTransform(writeLogger) : undefined,
-        this._feedWriteStream
-      ].filter(Boolean) as any[], (err: Error | undefined) => {
-        // TODO(burdon): Handle error.
-        error('Outbound ECHO pipeline:', err || 'closed');
-        if (err) {
-          this._errors.emit(err);
-        }
-      });
-
-      this._outboundHaloStream = createTransform<unknown, FeedMessage>(async message => ({ halo: message }));
-
-      pump([
-        this._outboundHaloStream,
-        writeLogger ? createLoggingTransform(writeLogger) : undefined,
-        this._feedWriteStream
-      ].filter(Boolean) as any[], (err: Error | undefined) => {
-        // TODO(burdon): Handle error.
-        error('Outbound HALO pipeline:', err || 'closed');
-        if (err) {
-          this._errors.emit(err);
-        }
-      });
+      this._outboundEchoStream = mapFeedWriter<EchoEnvelope, FeedMessage>(async message => ({ echo: message }), loggingWriter);
+      this._outboundHaloStream = mapFeedWriter<unknown, FeedMessage>(async message => ({ halo: message }), loggingWriter);
     }
 
     return [
@@ -221,9 +199,6 @@ export class Pipeline {
       this._inboundEchoStream = undefined;
     }
 
-    if (this._outboundEchoStream) {
-      this._outboundEchoStream.destroy();
-      this._outboundEchoStream = undefined;
-    }
+    this._outboundEchoStream = undefined;
   }
 }

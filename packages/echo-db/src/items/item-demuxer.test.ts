@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { createId, createKeyPair } from '@dxos/crypto';
-import { EchoEnvelope, IEchoStream } from '@dxos/echo-protocol';
+import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream } from '@dxos/echo-protocol';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { createTransform, latch } from '@dxos/util';
 
@@ -36,7 +36,7 @@ describe('item demxuer', () => {
     );
 
     const timeframeClock = new TimeframeClock();
-    const itemManager = new ItemManager(partyKey, modelFactory, timeframeClock, writeStream);
+    const itemManager = new ItemManager(partyKey, modelFactory, timeframeClock, createMockFeedWriterFromStream(writeStream));
     const itemDemuxer = createItemDemuxer(itemManager, timeframeClock);
     writeStream.pipe(itemDemuxer);
 

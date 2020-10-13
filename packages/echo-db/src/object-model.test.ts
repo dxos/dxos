@@ -6,6 +6,8 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { createModelTestBench } from './testing';
 
+// TODO(marik-d): Move those to object-model package.
+
 test('create empty item', async () => {
   const [peer1, peer2] = await createModelTestBench({ model: ObjectModel });
   expect(peer1.id).toEqual(peer2.id);

@@ -3,12 +3,10 @@
 //
 
 import assert from 'assert';
-import pify from 'pify';
 
 import { Event } from '@dxos/async';
-import { EchoEnvelope, ItemID, ItemMutation, ItemType, PartyKey } from '@dxos/echo-protocol';
+import { EchoEnvelope, ItemID, ItemMutation, ItemType, PartyKey, FeedWriter } from '@dxos/echo-protocol';
 import { Model } from '@dxos/model-factory';
-import { checkType } from '@dxos/util';
 
 /**
  * A globally addressable data item.
@@ -20,7 +18,7 @@ export class Item<M extends Model<any>> {
   private readonly _itemId: ItemID;
   private readonly _itemType?: ItemType; // TODO(burdon): If optional, is this just a label (or "kind"?)
   private readonly _model: M;
-  private readonly _writeStream?: NodeJS.WritableStream;
+  private readonly _writeStream?: FeedWriter<EchoEnvelope>;
 
   // Parent item (or null if this item is a root item).
   private _parent: Item<any> | null = null;
@@ -41,7 +39,7 @@ export class Item<M extends Model<any>> {
     itemId: ItemID,
     itemType: ItemType | undefined,
     model: M,
-    writeStream?: NodeJS.WritableStream,
+    writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null
   ) {
     assert(partyKey);
@@ -106,12 +104,12 @@ export class Item<M extends Model<any>> {
 
     const waitForProcessing = this._onUpdate.waitFor(() => parentId === this._parent?.id);
 
-    await pify(this._writeStream.write.bind(this._writeStream))(checkType<EchoEnvelope>({
+    await this._writeStream.write({
       itemId: this._itemId,
       itemMutation: {
         parentId
       }
-    }));
+    });
 
     // It would be very surprising for item.parent still to reference the old parent just after calling item.setParent.
     // To prevent that unexpected result, we wait for the mutation written above to be processed.

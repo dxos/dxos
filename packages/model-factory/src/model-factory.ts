@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { ItemID } from '@dxos/echo-protocol';
+import { FeedWriter, ItemID } from '@dxos/echo-protocol';
 
 import { Model } from './model';
 import { ModelType, ModelMeta, ModelConstructor } from './types';
@@ -30,7 +30,7 @@ export class ModelFactory {
     return this;
   }
 
-  createModel<T extends Model<any>> (modelType: ModelType, itemId: ItemID, writeStream?: NodeJS.WritableStream): T {
+  createModel<T extends Model<any>> (modelType: ModelType, itemId: ItemID, writeStream?: FeedWriter<unknown>): T {
     assert(itemId);
     if (!this._models.has(modelType)) {
       throw new Error(`Invalid model type: ${modelType}`);
