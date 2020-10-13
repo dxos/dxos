@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo",
-  "version": "0.1.0",
+  "version": "1.0.0-alpha.33",
   "description": "Eventually Consistent Hierarchical Object Database.",
   "homepage": "https://github.com/dxos/echo#readme",
   "bugs": {
@@ -22,7 +22,8 @@
       "**/eslint-config-standard/**",
       "**/eslint-config-standard-jsx/**",
       "**/eslint-plugin-standard/**",
-      "**/standard-engine/**"
+      "**/standard-engine/**",
+      "**/@dxos/node-spawner/**"
     ]
   },
   "lint-staged": {
@@ -36,7 +37,7 @@
     "build": "lerna run build",
     "depcheck": "lerna run depcheck",
     "test": "lerna run test",
-    "lint": "lerna run lint",
+    "lint": "yarn workspaces run lint",
     "lint:fix": "lerna run lint -- --fix",
     "lint:staged": "lint-staged",
     "sort-package-json": "lerna exec npx sort-package-json",

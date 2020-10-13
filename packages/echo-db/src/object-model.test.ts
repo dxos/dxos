@@ -2,38 +2,24 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ObjectModel } from './object-model';
-import { dxos } from './proto/gen/echo';
+import { ObjectModel } from '@dxos/object-model';
 
-test('ObjectModel', async () => {
-  const TYPE_TEST_ECHO_OBJECT = 'wrn_dxos_org_test_echo_object';
-  const model = new ObjectModel();
+import { createModelTestBench } from './testing';
 
-  const waitForAppend = new Promise(resolve => {
-    let i = 0;
-    model.on('append', async (message: dxos.echo.IObjectMutation) => {
-      await model.onUpdate([message]);
-      i++;
-      if (i === 2) {
-        resolve();
-      }
-    });
-  });
+// TODO(marik-d): Move those to object-model package.
 
-  // this should be async, we are appending a message to a feed that's async
-  const itemId = model.createItem(TYPE_TEST_ECHO_OBJECT, { prop1: 'prop1value' });
-  // this should be async, we are appending a message to a feed that's async
-  model.updateItem(itemId, { prop2: 'prop2value' });
+test('create empty item', async () => {
+  const [peer1, peer2] = await createModelTestBench({ model: ObjectModel });
+  expect(peer1.id).toEqual(peer2.id);
 
-  await waitForAppend;
+  expect(peer1.model.toObject()).toEqual({});
+  expect(peer2.model.toObject()).toEqual({});
+});
 
-  const objects = model.getObjectsByType(TYPE_TEST_ECHO_OBJECT);
-  expect(objects.length).toBe(1);
-  const object = objects[0];
-  expect(object).toHaveProperty('properties');
-  expect(object.properties).toHaveProperty('prop1', 'prop1value');
-  expect(object.properties).toHaveProperty('prop2', 'prop2value');
+test('create item with props', async () => {
+  const [peer1, peer2] = await createModelTestBench({ model: ObjectModel, props: { foo: 'foo' } });
+  expect(peer1.id).toEqual(peer2.id);
 
-  // Check that getItem gives the same info.
-  expect(object).toEqual(model.getItem(itemId));
+  expect(peer1.model.toObject()).toEqual({ foo: 'foo' });
+  expect(peer2.model.toObject()).toEqual({ foo: 'foo' });
 });

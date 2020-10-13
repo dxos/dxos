@@ -1,0 +1,91 @@
+{
+  "name": "@dxos/echo-demo",
+  "version": "0.2.0-dev.1",
+  "description": "ECHO database demo app.",
+  "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/echo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/echo.git"
+  },
+  "license": "GPL-3.0",
+  "private": true,
+  "scripts": {
+    "build": "npm run clean && npm run build:ts",
+    "build:ts": "tsc",
+    "clean": "del-cli dist",
+    "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
+    "coverage": "jest --coverage --verbose src",
+    "lint": "eslint './src/**/*.ts'",
+    "test": "jest --rootDir=./src --verbose --passWithNoTests",
+    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
+    "prepublishOnly": "npm run test && npm run build",
+    "watch": "babel-watch src --out-dir ./dist --source-maps"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "jest": {
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@dxos/async": "^1.0.0-beta.5",
+    "@dxos/codec-protobuf": "^1.1.0-beta.0",
+    "@dxos/credentials": "^2.0.0",
+    "@dxos/crypto": "^1.0.0-beta.7",
+    "@dxos/echo-db": "^0.2.0-dev",
+    "@dxos/echo-protocol": "^0.2.0-dev",
+    "@dxos/feed-store": "^1.2.0-beta.30",
+    "@dxos/gem-core": "^1.0.0-beta.16",
+    "@dxos/gem-spore": "^1.0.0-beta.16",
+    "@dxos/model-factory": "^0.2.0-dev",
+    "@dxos/network-manager": "^1.0.0-beta.108",
+    "@dxos/object-model": "^0.2.0-dev",
+    "@dxos/random-access-multi-storage": "^1.1.0-beta.0",
+    "@dxos/util": "^0.2.0-dev",
+    "@material-ui/core": "^4.9.10",
+    "@material-ui/icons": "^4.9.1",
+    "@types/debug": "^4.1.1",
+    "@types/end-of-stream": "^1.4.0",
+    "@types/lodash": "^4.14.159",
+    "@types/node": "^14.0.9",
+    "@types/stream-buffers": "^3.0.2",
+    "@types/use-subscription": "^1.0.0",
+    "clsx": "^1.1.0",
+    "d3": "^5.9.2",
+    "debug": "^4.1.1",
+    "level-js": "^5.0.2",
+    "lodash.merge": "^4.6.2",
+    "random-access-memory": "^3.1.1",
+    "react-resize-aware": "^3.0.0",
+    "source-map-support": "^0.5.12",
+    "stream-buffers": "^3.0.2",
+    "use-subscription": "^1.4.1"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.11.5",
+    "@dxos/eslint-plugin": "^1.0.5",
+    "@storybook/addon-actions": "^6.0.19",
+    "@storybook/addon-knobs": "^6.0.21",
+    "@storybook/addon-links": "^6.0.19",
+    "@storybook/react": "^6.0.21",
+    "@types/jest": "^25.2.3",
+    "awesome-typescript-loader": "^5.2.1",
+    "babel-loader": "8.1.0",
+    "babel-plugin-add-module-exports": "^1.0.4",
+    "chance": "^1.1.6",
+    "del-cli": "^3.0.0",
+    "eslint-plugin-jest": "^24.0.2",
+    "jest": "^26.2.2",
+    "react-docgen-typescript-loader": "^3.7.2",
+    "tempy": "^0.6.0",
+    "ts-jest": "^26.1.4",
+    "typescript": "^4.0.2"
+  },
+  "eslintConfig": {
+    "extends": "plugin:@dxos/recomended"
+  }
+}

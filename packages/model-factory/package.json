@@ -1,8 +1,8 @@
 {
   "name": "@dxos/model-factory",
-  "version": "0.1.0",
-  "description": "Model factory.",
-  "homepage": "https://github.com/dxos/echo/tree/master/packages/model-factory#readme",
+  "version": "0.2.0-dev.1",
+  "description": "ECHO model factory.",
+  "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
     "url": "https://github.com/dxos/echo/issues"
   },
@@ -11,75 +11,60 @@
     "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "GPL-3.0",
-  "files": [
-    "dist",
-    "index.js"
-  ],
-  "main": "index.js",
-  "browser": "dist/index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "private": false,
   "scripts": {
-    "build": "npm run clean && npm run build:babel",
-    "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps",
+    "build": "npm run clean && npm run build:ts",
+    "build:ts": "tsc",
     "clean": "del-cli dist",
-    "lint": "eslint 'src/**/*.js'",
-    "prepublishOnly": "npm run build && npm run test",
-    "test": "jest --verbose --passWithNoTests src",
-    "posttest": "npm run lint"
+    "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
+    "coverage": "jest --coverage --verbose src",
+    "lint": "eslint './src/**/*.ts'",
+    "test": "jest --rootDir=./src --verbose --passWithNoTests",
+    "prepublishOnly": "npm run test && npm run build",
+    "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
   "browserslist": [
     "> 5%"
   ],
   "jest": {
+    "preset": "ts-jest/presets/default",
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/crypto": "^1.0.0-beta.1",
-    "@dxos/debug": "^1.0.0-beta.20",
-    "@dxos/feed-level-indexer": "^1.1.0-alpha.9",
-    "@dxos/metrics": "^1.0.0-beta.8",
-    "@dxos/protocol-network-generator": "^1.1.0-beta.2",
-    "charwise": "^3.0.1",
+    "@dxos/async": "^1.0.0-beta.8",
+    "@dxos/codec-protobuf": "^1.1.0-beta.0",
+    "@dxos/crypto": "^1.0.0-beta.7",
+    "@dxos/echo-protocol": "^0.2.0-dev",
+    "@dxos/feed-store": "^1.2.0-beta.30",
+    "@dxos/util": "^0.2.0-dev",
+    "@types/debug": "^4.1.1",
+    "@types/end-of-stream": "^1.4.0",
+    "@types/lodash": "^4.14.159",
+    "@types/node": "^14.0.9",
+    "@types/stream-buffers": "^3.0.2",
+    "@types/through2": "^2.0.36",
     "debug": "^4.1.1",
-    "end-of-stream": "^1.4.4",
-    "level-mem": "^5.0.1",
-    "lodash.debounce": "^4.0.8",
-    "monotonic-timestamp": "^0.0.9",
-    "multi-read-stream": "^2.0.0",
-    "p-limit": "^3.0.1",
-    "pump": "^3.0.0",
-    "signal-promise": "^1.0.3",
-    "source-map-support": "^0.5.12",
-    "through2": "^3.0.1"
+    "hypercore": "^7.7.1",
+    "js-data-structs": "^1.1.2",
+    "lodash.merge": "^4.6.2",
+    "protobufjs": "^6.9.0",
+    "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@babel/cli": "^7.7.0",
-    "@babel/core": "^7.4.5",
-    "@babel/plugin-proposal-export-default-from": "^7.5.2",
-    "@babel/preset-env": "^7.4.5",
-    "@dxos/async": "^1.0.0-beta.7",
     "@dxos/eslint-plugin": "^1.0.5",
-    "@dxos/feed-store": "^1.2.0-beta.21",
-    "@dxos/random-access-multi-storage": "^1.1.0-beta.3",
-    "babel-eslint": "^10.0.2",
-    "babel-jest": "^24.8.0",
-    "babel-plugin-add-module-exports": "^1.0.2",
-    "babel-plugin-inline-import": "^3.0.0",
-    "buffer-json-encoding": "^1.0.2",
-    "cpy-cli": "^2.0.0",
+    "@types/jest": "^25.2.3",
+    "chance": "^1.1.6",
     "del-cli": "^3.0.0",
-    "jest": "^24.5.0",
-    "pify": "^5.0.0",
-    "wait-for-expect": "^3.0.1"
-  },
-  "publishConfig": {
-    "access": "public"
+    "eslint-plugin-jest": "^24.0.2",
+    "jest": "^26.2.2",
+    "stream-buffers": "^3.0.2",
+    "ts-jest": "^26.1.4",
+    "typescript": "^4.0.2",
+    "wait-for-expect": "^3.0.2"
   },
   "eslintConfig": {
-    "extends": "plugin:@dxos/recomended",
-    "rules": {
-      "jest/no-test-callback": "off",
-      "jest/expect-expect": "off",
-      "@typescript-eslint/no-unused-vars": "off"
-    }
+    "extends": "plugin:@dxos/recomended"
   }
 }

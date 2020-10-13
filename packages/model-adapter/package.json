@@ -1,0 +1,84 @@
+{
+  "name": "@dxos/model-adapter",
+  "version": "0.2.0-dev.1",
+  "description": "Adapter to use models with the original API in ECHO 2",
+  "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/echo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/echo.git"
+  },
+  "license": "GPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "private": false,
+  "scripts": {
+    "build": "npm run clean && npm run build:protobuf && npm run build:ts",
+    "build:ts": "tsc",
+    "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/defs/adapter.proto -o src/proto/gen",
+    "clean": "del-cli dist",
+    "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
+    "coverage": "jest --coverage --verbose src",
+    "lint": "eslint './src/**/*.ts'",
+    "test": "jest --rootDir=./src --verbose --passWithNoTests",
+    "prepublishOnly": "npm run test && npm run build",
+    "watch": "babel-watch src --out-dir ./dist --source-maps"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "jest": {
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@dxos/async": "^1.0.0-beta.8",
+    "@dxos/codec-protobuf": "^1.1.0-beta.0",
+    "@dxos/crypto": "^1.0.0-beta.7",
+    "@dxos/echo-protocol": "^0.2.0-dev",
+    "@dxos/feed-store": "^1.2.0-beta.30",
+    "@dxos/model-factory": "^0.2.0-dev",
+    "@dxos/util": "^0.2.0-dev",
+    "@types/buffer-json": "^2.0.0",
+    "@types/debug": "^4.1.1",
+    "@types/end-of-stream": "^1.4.0",
+    "@types/lodash": "^4.14.159",
+    "@types/node": "^14.0.9",
+    "@types/stream-buffers": "^3.0.2",
+    "@types/through2": "^2.0.36",
+    "buffer-json": "^2.0.0",
+    "debug": "^4.1.1",
+    "hypercore": "^7.7.1",
+    "js-data-structs": "^1.1.2",
+    "lodash.merge": "^4.6.2",
+    "protobufjs": "^6.9.0",
+    "source-map-support": "^0.5.12"
+  },
+  "devDependencies": {
+    "@dxos/chess-core": "^1.0.0-beta.58",
+    "@dxos/echo-db": "^0.2.0-dev",
+    "@dxos/eslint-plugin": "^1.0.5",
+    "@dxos/text-model": "1.0.0-beta.28",
+    "@types/jest": "^25.2.3",
+    "chance": "^1.1.6",
+    "del-cli": "^3.0.0",
+    "eslint-plugin-jest": "^24.0.2",
+    "jest": "^26.2.2",
+    "stream-buffers": "^3.0.2",
+    "ts-jest": "^26.1.4",
+    "typescript": "^4.0.2",
+    "wait-for-expect": "^3.0.2"
+  },
+  "eslintConfig": {
+    "extends": "plugin:@dxos/recomended",
+    "ignorePatterns": [
+      "src/proto/gen/*"
+    ]
+  }
+}

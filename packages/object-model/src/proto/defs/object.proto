@@ -1,0 +1,57 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo.object;
+
+//
+// Object mutation messages.
+// https://developers.google.com/protocol-buffers/docs/proto#updating
+// https://developers.google.com/protocol-buffers/docs/proto3#json
+//
+
+message Value {
+  oneof Type {
+    bool      null                    = 1;    // Explicit null vs undefined.
+
+    bool      bool                    = 2;
+    int32     int                     = 3;
+    float     float                   = 4;
+    string    string                  = 5;
+
+    string    timestamp               = 10;   // https://en.wikipedia.org/wiki/Unix_time
+    string    datetime                = 11;   // https://en.wikipedia.org/wiki/ISO_8601 (e.g., "2019-10-25T18:48:16Z")
+    bytes     bytes                   = 12;
+
+    Object    object                  = 20;
+  }
+}
+
+message KeyValue {
+  string key                          = 1;
+  Value value                         = 2;
+}
+
+message Object {
+  repeated KeyValue properties        = 1;
+}
+
+message ObjectMutation {
+  enum Operation {
+    SET                               = 0;    // Default.
+    DELETE                            = 1;
+    ARRAY_PUSH                        = 2;
+    SET_ADD                           = 3;
+    SET_DELETE                        = 4;
+  }
+
+  Operation operation                 = 1;
+  string key                          = 2;
+  Value value                         = 3;
+}
+
+message ObjectMutationSet {
+  repeated ObjectMutation mutations   = 1;
+}
