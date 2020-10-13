@@ -9,7 +9,7 @@
     "lint": "eslint 'src/**/*.ts'"
   },
   "dependencies": {
-    "@dxos/credentials": "^0.2.8",
+    "@dxos/credentials": "^2.0.0",
     "@dxos/crypto": "^1.0.0-beta.7",
     "@dxos/echo-db": "^0.2.0-dev",
     "@dxos/model-factory": "^0.2.0-dev",
