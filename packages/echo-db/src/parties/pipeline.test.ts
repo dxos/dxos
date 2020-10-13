@@ -79,6 +79,10 @@ describe('pipeline', () => {
     const idenitityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
+    await partyProcessor.takeHints([{
+      type: KeyType.FEED,
+      publicKey: feedKey.publicKey
+    }]);
     const pipeline = new Pipeline(
       partyProcessor,
       feedReadStream,

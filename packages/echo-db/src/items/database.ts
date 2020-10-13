@@ -14,7 +14,7 @@ import { ItemFilter, ItemManager } from './item-manager';
 export interface ItemCreationOptions<M> {
   model: ModelConstructor<M>
   type?: ItemType
-  parrent?: ItemID
+  parent?: ItemID
   props?: any // TODO(marik-d): Type this better.
 }
 
@@ -34,7 +34,7 @@ export class Database {
    */
   // TODO(burdon): Get modelType from somewhere other than ObjectModel.meta.type.
   createItem <M extends Model<any>> (options: ItemCreationOptions<M>): Promise<Item<M>> {
-    return this._getItemManager().createItem(options.model.meta.type, options.type, options.parrent, options.props);
+    return this._getItemManager().createItem(options.model.meta.type, options.type, options.parent, options.props);
   }
 
   /**

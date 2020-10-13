@@ -11,3 +11,4 @@ export * from './raise';
 export * from './complex';
 export * from './range';
 export * from './types';
+export * from './key';

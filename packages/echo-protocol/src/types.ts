@@ -30,7 +30,7 @@ export type FeedMeta = {
 }
 
 export interface MutationMeta extends FeedMeta {
-  identityKey: PublicKey
+  memberKey: PublicKey
 }
 
 /**

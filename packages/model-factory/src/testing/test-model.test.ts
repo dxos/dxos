@@ -4,7 +4,7 @@
 
 import { createKeyPair, createId } from '@dxos/crypto';
 import { TestItemMutation, createMockFeedWriterFromStream } from '@dxos/echo-protocol';
-import { createTransform, latch } from '@dxos/util';
+import { createTransform, latch, zeroKey } from '@dxos/util';
 
 import { ModelMessage } from '../types';
 import { TestModel } from './test-model';
@@ -24,7 +24,7 @@ describe('test model', () => {
     // Set mutation
     const { publicKey: feedKey } = createKeyPair();
 
-    model.processMessage({ feedKey, seq: 1, identityKey: feedKey }, { key: 'title', value: 'DXOS' });
+    model.processMessage({ feedKey, seq: 1, memberKey: feedKey }, { key: 'title', value: 'DXOS' });
     expect(model.getProperty('title')).toBe('DXOS');
     expect(model.keys).toHaveLength(1);
   });
@@ -39,7 +39,7 @@ describe('test model', () => {
       async mutation => {
         const message: ModelMessage<TestItemMutation> = {
           meta: {
-            identityKey: feedKey,
+            memberKey: zeroKey(),
             feedKey,
             seq
           },

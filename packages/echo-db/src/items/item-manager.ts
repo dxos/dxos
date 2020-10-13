@@ -18,7 +18,8 @@ import { TimeframeClock } from './timeframe-clock';
 const log = debug('dxos:echo:item-manager');
 
 export interface ItemFilter {
-  type: ItemType | undefined
+  type?: ItemType | ItemType[]
+  parent?: ItemID | ItemID[]
 }
 
 /**
@@ -199,9 +200,27 @@ export class ItemManager {
    * Return matching items.
    * @param [filter]
    */
-  queryItems (filter?: ItemFilter): ResultSet<Item<any>> {
-    const { type } = filter || {};
+  queryItems (filter: ItemFilter = {}): ResultSet<Item<any>> {
     return new ResultSet<Item<any>>(this._itemUpdate.discardParameter(), () => Array.from(this._items.values())
-      .filter(item => !type || type === item.type));
+      .filter(item => matchesFilter(item, filter)));
+  }
+}
+
+function matchesFilter (item: Item<any>, filter: ItemFilter) {
+  if (filter.type && (!item.type || !equalsOrIncludes(item.type, filter.type))) {
+    return false;
+  }
+  if (filter.parent && (!item.parent || !equalsOrIncludes(item.parent.id, filter.parent))) {
+    return false;
+  }
+
+  return true;
+}
+
+function equalsOrIncludes<T> (value: T, expected: T | T[]) {
+  if (Array.isArray(expected)) {
+    return expected.includes(value);
+  } else {
+    return expected === value;
   }
 }

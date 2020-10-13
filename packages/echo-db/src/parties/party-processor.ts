@@ -95,9 +95,11 @@ export class PartyProcessor {
   }
 
   /**
-   * Returns IDENTITY public key of the feed owner.
+   * Returns public key of the member that admitted the specified feed.
    */
-  getFeedOwningIdentity (feedKey: FeedKey): PublicKey {
+  getFeedOwningMember (feedKey: FeedKey): PublicKey {
+    // TODO(marik-d): Commented out beacuse it breaks tests currently.
+    // assert(this._stateMachine.isMemberFeed(feedKey), 'Not a member feed');
     return this._stateMachine.getAdmittedBy(feedKey);
   }
 

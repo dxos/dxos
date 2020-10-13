@@ -44,7 +44,7 @@ export const createItemDemuxer = (itemManager: ItemManager, timeframeClock: Time
       itemStreams.set(itemId, itemStream);
 
       // Create item.
-      // TODO(marik-d): Investigate whether gensis message shoudl be able to set parrentId.
+      // TODO(marik-d): Investigate whether gensis message shoudl be able to set parentId.
       const item = await itemManager.constructItem(
         itemId,
         modelType,

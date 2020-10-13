@@ -150,7 +150,7 @@ export class Pipeline {
                 meta: {
                   seq: block.seq,
                   feedKey: block.key,
-                  identityKey: this._partyProcessor.getFeedOwningIdentity(block.key)
+                  memberKey: this._partyProcessor.getFeedOwningMember(block.key)
                 },
                 data: message.echo
               }));
@@ -162,7 +162,7 @@ export class Pipeline {
             log(`Skipping invalid message: ${JSON.stringify(message, jsonReplacer)}`);
           }
         } catch (err) {
-          log(`Error in message processing: ${err}`);
+          console.error(`Error in message processing: ${err}`);
         }
       }
     });

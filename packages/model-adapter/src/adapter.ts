@@ -62,7 +62,7 @@ export function createModelAdapter<T extends ClassicModel> (
         ...decoded,
         __meta: {
           credentials: {
-            member: meta.identityKey,
+            member: meta.memberKey,
             feed: meta.feedKey,
             party: Buffer.from('00'.repeat(32), 'hex') // TODO(marik-d): Use actual party key here.
           }

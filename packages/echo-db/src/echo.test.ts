@@ -126,7 +126,7 @@ describe('api tests', () => {
     expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
 
     const parent = await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/document' });
-    await party.database.createItem({ model: ObjectModel, parrent: parent.id });
+    await party.database.createItem({ model: ObjectModel, parent: parent.id });
 
     await updated;
     unsubscribe();
@@ -148,12 +148,12 @@ describe('api tests', () => {
     expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
 
     const parentA = await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/document' });
-    const childA = await party.database.createItem({ model: ObjectModel, parrent: parentA.id });
+    const childA = await party.database.createItem({ model: ObjectModel, parent: parentA.id });
     expect(parentA.children).toHaveLength(1);
     expect(parentA.children[0].id).toEqual(childA.id);
 
     const parentB = await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/document' });
-    const childB = await party.database.createItem({ model: ObjectModel, parrent: parentB.id });
+    const childB = await party.database.createItem({ model: ObjectModel, parent: parentB.id });
     expect(parentB.children).toHaveLength(1);
     expect(parentB.children[0].id).toEqual(childB.id);
 

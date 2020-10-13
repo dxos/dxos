@@ -32,7 +32,7 @@ describe('model factory', () => {
         objects.push(mutation);
         const out: ModelMessage<TestItemMutation> = {
           meta: {
-            identityKey: feedKey,
+            memberKey: feedKey,
             feedKey,
             seq: 1
           },
