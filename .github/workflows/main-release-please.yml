@@ -25,21 +25,20 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
       - name: Lerna Publish
         run: |
-          npm whoami
-          #git config --global user.email "npm@dxos.network"
-          #git config --global user.name "DXOS"
-          #yarn
-          #yarn build
-          #yarn lint
-          #yarn test
-          #git reset --hard
-          #yarn lerna version `echo "${{ steps.release.outputs.tag_name }}" | sed 's/^v//'`-alpha.0 --no-git-tag-version -y
-          #git commit -am "${{ steps.release.outputs.tag_name }}"-alpha.0
-          #git push
-          #git tag -f "${{ steps.release.outputs.tag_name }}"-alpha.0
-          #git push --tags -f
-          #git push --delete origin "${{ steps.release.outputs.tag_name }}"
-          #yarn lerna publish from-package --force-publish -y --dist-tag="alpha"
+          git config --global user.email "npm@dxos.network"
+          git config --global user.name "DXOS"
+          yarn
+          yarn build
+          yarn lint
+          yarn test
+          git reset --hard
+          yarn lerna version `echo "${{ steps.release.outputs.tag_name }}" | sed 's/^v//'`-alpha.0 --no-git-tag-version -y
+          git commit -am "${{ steps.release.outputs.tag_name }}"-alpha.0
+          git push
+          git tag -f "${{ steps.release.outputs.tag_name }}"-alpha.0
+          git push --tags -f
+          git push --delete origin "${{ steps.release.outputs.tag_name }}"
+          yarn lerna publish from-package --force-publish -y --dist-tag="alpha"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         if: ${{ steps.release.outputs.release_created }}
