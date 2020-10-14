@@ -26,20 +26,20 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
       - name: Build and Publish to NPM
         run: |
-          npm whoami
-          #git config --global user.email "npm@dxos.network"
-          #git config --global user.name "DXOS"
-          #yarn
-          #yarn build
-          #yarn lint
-          #yarn test
-          #git reset --hard
-          #yarn lerna version `echo "${{ steps.release.outputs.tag_name }}" | sed 's/^v//'` --no-git-tag-version -y
-          #git commit -am "${{ steps.release.outputs.tag_name }}"
-          #git push
-          #git tag -f "${{ steps.release.outputs.tag_name }}"
-          #git push --tags -f
-          #yarn lerna publish from-package --force-publish -y
+          #npm whoami
+          git config --global user.email "npm@dxos.network"
+          git config --global user.name "DXOS"
+          yarn
+          yarn build
+          yarn lint
+          yarn test
+          git reset --hard
+          yarn lerna version `echo "${{ steps.release.outputs.tag_name }}" | sed 's/^v//'` --no-git-tag-version -y
+          git commit -am "${{ steps.release.outputs.tag_name }}"
+          git push
+          git tag -f "${{ steps.release.outputs.tag_name }}"
+          git push --tags -f
+          yarn lerna publish from-package --force-publish -y
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         if: ${{ steps.release.outputs.release_created }}
