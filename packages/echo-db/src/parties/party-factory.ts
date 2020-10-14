@@ -154,7 +154,7 @@ export class PartyFactory {
     const feedWriteStream = createFeedWriter(feed);
 
     const pipeline = new Pipeline(
-      partyProcessor, iterator, feedWriteStream, this._options);
+      partyProcessor, iterator, timeframeClock, feedWriteStream, this._options);
 
     const replicator = new ReplicationAdapter(
       this._networkManager,

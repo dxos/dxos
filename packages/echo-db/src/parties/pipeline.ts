@@ -10,6 +10,7 @@ import { Event } from '@dxos/async';
 import { createFeedMeta, EchoEnvelope, FeedBlock, FeedMessage, HaloMessage, IEchoStream, FeedWriter, mapFeedWriter } from '@dxos/echo-protocol';
 import { checkType, createReadable, jsonReplacer } from '@dxos/util';
 
+import { TimeframeClock } from '../items/timeframe-clock';
 import { PartyProcessor } from './party-processor';
 
 interface Options {
@@ -25,21 +26,6 @@ const log = debug('dxos:echo:pipeline');
 // TODO(burdon): Requires major refactoring/simplification?
 export class Pipeline {
   private readonly _errors = new Event<Error>();
-
-  // TODO(burdon): Split (e.g., pass in Timeline and stream)?
-  private readonly _partyProcessor: PartyProcessor;
-
-  /**
-   * Iterator for messages comming from feeds.
-   */
-  private readonly _messageIterator: AsyncIterable<FeedBlock>;
-
-  /**
-   * Stream for writing messages to this peer's writable feed.
-   */
-  private readonly _feedWriter?: FeedWriter<FeedMessage>;
-
-  private readonly _options: Options;
 
   /**
    * Messages to be consumed from the pipeline (e.g., mutations to model).
@@ -58,25 +44,19 @@ export class Pipeline {
   private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
 
   /**
-   * @param {PartyProcessor} partyProcessor - Processes HALO messages to update party state.
-   * @param feedReadStream - Inbound messages from the feed store.
-   * @param [feedWriteStream] - Outbound messages to the writeStream feed.
-   * @param replicatorFactory
-   * @param [options]
+   * @param _partyProcessor Processes HALO messages to update party state.
+   * @param _feedReadStream Inbound messages from the feed store.
+   * @param _timeframeClock Tracks current echo timestamp.
+   * @param _feedWriter Outbound messages to the writeStream feed.
+   * @param _options
    */
   constructor (
-    partyProcessor: PartyProcessor,
-    feedReadStream: AsyncIterable<FeedBlock>,
-    feedWriter?: FeedWriter<FeedMessage>,
-    options?: Options
-  ) {
-    assert(partyProcessor);
-    assert(feedReadStream);
-    this._partyProcessor = partyProcessor;
-    this._messageIterator = feedReadStream;
-    this._feedWriter = feedWriter;
-    this._options = options || {};
-  }
+    private readonly _partyProcessor: PartyProcessor,
+    private readonly _feedReadStream: AsyncIterable<FeedBlock>,
+    private readonly _timeframeClock: TimeframeClock,
+    private readonly _feedWriter?: FeedWriter<FeedMessage>,
+    private readonly _options: Options = {}
+  ) {}
 
   get partyKey () {
     return this._partyProcessor.partyKey;
@@ -122,7 +102,7 @@ export class Pipeline {
     this._inboundEchoStream = createReadable();
 
     setImmediate(async () => {
-      for await (const block of this._messageIterator) {
+      for await (const block of this._feedReadStream) {
         readLogger?.(block as any);
 
         try {
@@ -142,6 +122,8 @@ export class Pipeline {
           // ECHO
           //
           if (message.echo) {
+            this._timeframeClock.updateTimeframe(block.key, block.seq);
+
             // Validate messge.
             const { itemId } = message.echo;
             if (itemId) {

@@ -28,6 +28,8 @@ export interface ItemFilter {
 export class ItemManager {
   private readonly _itemUpdate = new Event<Item<any>>();
 
+  private readonly _debouncedItemUpdate = debounceEvent(this._itemUpdate.discardParameter());
+
   // Map of active items.
   private readonly _items = new Map<ItemID, Item<any>>();
 
@@ -201,7 +203,7 @@ export class ItemManager {
    * @param [filter]
    */
   queryItems (filter: ItemFilter = {}): ResultSet<Item<any>> {
-    return new ResultSet<Item<any>>(this._itemUpdate.discardParameter(), () => Array.from(this._items.values())
+    return new ResultSet<Item<any>>(this._debouncedItemUpdate, () => Array.from(this._items.values())
       .filter(item => matchesFilter(item, filter)));
   }
 }
@@ -223,4 +225,25 @@ function equalsOrIncludes<T> (value: T, expected: T | T[]) {
   } else {
     return expected === value;
   }
+}
+
+/**
+ * Returns a new event that groups all of the updates emitted during single tick into a single event emission.
+ */
+function debounceEvent (event: Event): Event {
+  const debouncedEvent = new Event();
+
+  let firing = false;
+
+  debouncedEvent.addEffect(() => event.on(() => {
+    if (!firing) {
+      firing = true;
+      setTimeout(() => {
+        firing = false;
+        debouncedEvent.emit();
+      }, 0);
+    }
+  }));
+
+  return debouncedEvent;
 }

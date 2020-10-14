@@ -37,7 +37,7 @@ describe('item demxuer', () => {
 
     const timeframeClock = new TimeframeClock();
     const itemManager = new ItemManager(partyKey, modelFactory, timeframeClock, createMockFeedWriterFromStream(writeStream));
-    const itemDemuxer = createItemDemuxer(itemManager, timeframeClock);
+    const itemDemuxer = createItemDemuxer(itemManager);
     writeStream.pipe(itemDemuxer);
 
     //

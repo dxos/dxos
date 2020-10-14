@@ -14,6 +14,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
 import { createWritable, createWritableFeedStream, jsonReplacer, latch, WritableArray } from '@dxos/util';
 
+import { TimeframeClock } from '../items/timeframe-clock';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
 
@@ -39,7 +40,7 @@ describe('pipeline', () => {
       type: KeyType.FEED,
       publicKey: feed.key
     }]);
-    const pipeline = new Pipeline(partyProcessor, feedReadStream);
+    const pipeline = new Pipeline(partyProcessor, feedReadStream, new TimeframeClock());
     const [readStream] = await pipeline.open();
     expect(readStream).toBeTruthy();
 
@@ -86,6 +87,7 @@ describe('pipeline', () => {
     const pipeline = new Pipeline(
       partyProcessor,
       feedReadStream,
+      new TimeframeClock(),
       createFeedWriter(feed)
     );
     await pipeline.open();

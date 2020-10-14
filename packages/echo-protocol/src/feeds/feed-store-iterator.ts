@@ -29,6 +29,8 @@ export interface FeedSetProvider {
 export type MessageSelector = (candidates: FeedBlock[]) => number | undefined;
 export type FeedSelector = (descriptor: FeedDescriptor) => boolean;
 
+const STALL_TIMEOUT = 1000;
+
 /**
  * Creates an ordered stream.
  *
@@ -60,6 +62,10 @@ export async function createIterator (
     iterator.addFeedDescriptor(descriptor);
   });
 
+  iterator.stalled.on(candidates => {
+    console.warn(`Feed store reader stalled: no message candidates were accepted after ${STALL_TIMEOUT}ms timeout.\nCurrent candidates:`, candidates);
+  });
+
   return iterator;
 }
 
@@ -88,6 +94,8 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   private _messageCount = 0;
 
   private _destroyed = false;
+
+  public readonly stalled = new Event<FeedBlock[]>();
 
   constructor (
     private readonly _feedSelector: FeedSelector,
@@ -157,14 +165,21 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   }
 
   /**
+   * Returns all messages that are waiting to be read from each of the open feeds.
+   */
+  private _getMessageCandidates () {
+    const openFeeds = Array.from(this._openFeeds.values());
+    return openFeeds
+      .filter(feed => !feed.frozen && feed.sendQueue.length > 0)
+      .map(feed => feed.sendQueue[0]);
+  }
+
+  /**
    * @private
    */
   // TODO(burdon): Comment.
   private _popSendQueue () {
-    const openFeeds = Array.from(this._openFeeds.values());
-    const candidates = openFeeds
-      .filter(feed => !feed.frozen && feed.sendQueue.length > 0)
-      .map(feed => feed.sendQueue[0]);
+    const candidates = this._getMessageCandidates();
 
     if (candidates.length === 0) {
       return undefined;
@@ -210,12 +225,18 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   private async _waitForData () {
     this._pollFeeds();
 
-    // TODO(burdon): This should timeout.
     //   There is a (rare) potential race condition where one feed gets blocked on a message that is enqueue
     //   in a demuxed stream. Meanwhile the inbound queue dries up (or is deadlocked) so this trigger is not
     //   awoken. A timeout would enable the iterator to restart.
     //   NOTE: When implementing this mechanism be sure to maintain the comment above.
+    const timeoutId = setTimeout(() => {
+      const candidates = this._getMessageCandidates();
+      if (candidates.length > 0) {
+        this.stalled.emit(candidates);
+      }
+    }, STALL_TIMEOUT);
     await this._trigger.wait();
+    clearTimeout(timeoutId);
 
     log('Ready');
     this._trigger.reset(); // TODO(burdon): Reset atomically?
@@ -242,7 +263,6 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
         // TODO(burdon): Add feedKey (FeedMessage)?
         yield message;
       }
-
       await this._waitForData();
     }
   }
