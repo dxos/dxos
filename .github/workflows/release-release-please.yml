@@ -12,7 +12,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: node
-          package-name: '@dxos/sdk'
+          package-name: '@dxos/echo'
           default-branch: release
       # The logic below handles the npm publication:
       - uses: actions/checkout@v2
