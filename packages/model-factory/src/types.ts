@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Codec } from '@dxos/codec-experimental-runtime';
+import { Codec } from '@dxos/codec-protobuf';
 import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
 
 //

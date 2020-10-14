@@ -57,7 +57,7 @@ export const createFeedMeta = (block: IFeedGenericBlock<any>): FeedMeta => ({
 
 export type FeedBlock = IFeedGenericBlock<FeedMessage>;
 
-export type HaloMessage = unknown;
+export type HaloMessage = any;
 
 export interface IHaloStream {
   meta: FeedMeta;
