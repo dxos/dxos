@@ -1,8 +1,8 @@
 on:
   push:
     branches:
-      - release
-name: release - Publish to NPM on merged release PR
+      - main
+name: main - release-please
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -13,7 +13,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: node
           package-name: '@dxos/echo'
-          default-branch: release
       # The logic below handles the npm publication:
       - uses: actions/checkout@v2
         # these if statements ensure that a publication only occurs when
@@ -24,22 +23,23 @@ jobs:
           node-version: 12
           registry-url: 'https://registry.npmjs.org'
         if: ${{ steps.release.outputs.release_created }}
-      - name: Build and Publish to NPM
+      - name: Lerna Publish
         run: |
-          #npm whoami
-          git config --global user.email "npm@dxos.network"
-          git config --global user.name "DXOS"
-          yarn
-          yarn build
-          yarn lint
-          yarn test
-          git reset --hard
-          yarn lerna version `echo "${{ steps.release.outputs.tag_name }}" | sed 's/^v//'` --no-git-tag-version -y
-          git commit -am "${{ steps.release.outputs.tag_name }}"
-          git push
-          git tag -f "${{ steps.release.outputs.tag_name }}"
-          git push --tags -f
-          yarn lerna publish from-package --force-publish -y
+          npm whoami
+          #git config --global user.email "npm@dxos.network"
+          #git config --global user.name "DXOS"
+          #yarn
+          #yarn build
+          #yarn lint
+          #yarn test
+          #git reset --hard
+          #yarn lerna version `echo "${{ steps.release.outputs.tag_name }}" | sed 's/^v//'`-alpha.0 --no-git-tag-version -y
+          #git commit -am "${{ steps.release.outputs.tag_name }}"-alpha.0
+          #git push
+          #git tag -f "${{ steps.release.outputs.tag_name }}"-alpha.0
+          #git push --tags -f
+          #git push --delete origin "${{ steps.release.outputs.tag_name }}"
+          #yarn lerna publish from-package --force-publish -y --dist-tag="alpha"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         if: ${{ steps.release.outputs.release_created }}
