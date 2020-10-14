@@ -18,7 +18,6 @@ yarn build
 yarn test
 ```
 
-
 ### Publishing to npm
 
 To publish new versions of all public packages:
