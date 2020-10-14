@@ -80,5 +80,8 @@
     "ignorePatterns": [
       "src/proto/gen/*"
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

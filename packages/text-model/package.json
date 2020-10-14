@@ -66,5 +66,8 @@
   },
   "eslintConfig": {
     "extends": "plugin:@dxos/recomended"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
