@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@dxos/async": "^1.0.0-beta.5",
-    "@dxos/codec-protobuf": "^1.1.0-beta.0",
+    "@dxos/codec-protobuf": "^0.2.0",
     "@dxos/credentials": "^2.0.0",
     "@dxos/crypto": "^1.0.0-beta.7",
     "@dxos/echo-db": "^0.2.0-dev",
