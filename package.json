@@ -33,7 +33,6 @@
     "lint:staged"
   ],
   "scripts": {
-    "clean": "lerna run clean",
     "build": "lerna run build",
     "depcheck": "lerna run depcheck",
     "test": "lerna run test",

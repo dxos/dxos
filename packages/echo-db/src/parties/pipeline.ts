@@ -7,7 +7,8 @@ import debug from 'debug';
 import { Readable } from 'stream';
 
 import { Event } from '@dxos/async';
-import { createFeedMeta, EchoEnvelope, FeedBlock, FeedMessage, HaloMessage, IEchoStream, FeedWriter, mapFeedWriter } from '@dxos/echo-protocol';
+import { Message as HaloMessage } from '@dxos/credentials';
+import { createFeedMeta, EchoEnvelope, FeedBlock, FeedMessage, IEchoStream, FeedWriter, mapFeedWriter } from '@dxos/echo-protocol';
 import { checkType, createReadable, jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../items/timeframe-clock';
@@ -160,7 +161,7 @@ export class Pipeline {
       }, this._feedWriter);
 
       this._outboundEchoStream = mapFeedWriter<EchoEnvelope, FeedMessage>(async message => ({ echo: message }), loggingWriter);
-      this._outboundHaloStream = mapFeedWriter<unknown, FeedMessage>(async message => ({ halo: message }), loggingWriter);
+      this._outboundHaloStream = mapFeedWriter<HaloMessage, FeedMessage>(async message => ({ halo: message }), loggingWriter);
     }
 
     return [

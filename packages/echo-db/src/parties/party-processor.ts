@@ -11,10 +11,11 @@ import {
   KeyHint,
   KeyRecord,
   Party as PartyStateMachine,
-  PartyAuthenticator
+  PartyAuthenticator,
+  Message as HaloMessage
 } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
-import { FeedKey, FeedWriter, HaloMessage, IHaloStream, PartyKey, PublicKey, WriteReceipt } from '@dxos/echo-protocol';
+import { FeedKey, FeedWriter, IHaloStream, PartyKey, PublicKey, WriteReceipt } from '@dxos/echo-protocol';
 import { jsonReplacer } from '@dxos/util';
 
 const log = debug('dxos:echo:halo-party-processor');

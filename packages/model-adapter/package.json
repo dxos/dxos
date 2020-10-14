@@ -19,10 +19,8 @@
   ],
   "private": false,
   "scripts": {
-    "build": "npm run clean && npm run build:protobuf && npm run build:ts",
-    "build:ts": "tsc",
+    "build": "yarn build:protobuf && tsc --build",
     "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/defs/adapter.proto -o src/proto/gen",
-    "clean": "del-cli dist",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
     "lint": "eslint './src/**/*.ts'",

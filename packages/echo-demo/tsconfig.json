@@ -18,12 +18,13 @@
   },
   "include": [
     "src",
-    "src/**/*.js",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.d.ts",
-    "src/**/*.json",
     "stories",
-    "stories/**/*.tsx"
+  ],
+  "references": [
+    { "path": "../echo-db" },
+    { "path": "../echo-protocol" },
+    { "path": "../model-factory" },
+    { "path": "../object-model" },
+    { "path": "../util" }
   ]
 }

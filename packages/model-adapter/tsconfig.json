@@ -5,9 +5,11 @@
   },
   "include": [
     "src",
-    "src/**/*.js",
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.json"
+  ],
+  "references": [
+    { "path": "../echo-db" },
+    { "path": "../echo-protocol" },
+    { "path": "../model-factory" },
+    { "path": "../util" }
   ]
 }

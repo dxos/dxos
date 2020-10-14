@@ -5,9 +5,9 @@
   },
   "include": [
     "src",
-    "src/**/*.js",
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.json"
+  ],
+  "references": [
+    { "path": "../model-factory" },
+    { "path": "../util" }
   ]
 }

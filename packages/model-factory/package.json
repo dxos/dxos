@@ -15,9 +15,7 @@
   "types": "dist/src/index.d.ts",
   "private": false,
   "scripts": {
-    "build": "npm run clean && npm run build:ts",
-    "build:ts": "tsc",
-    "clean": "del-cli dist",
+    "build": "tsc --build",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
     "lint": "eslint './src/**/*.ts'",

@@ -15,9 +15,7 @@
   "types": "dist/src/index.d.ts",
   "private": false,
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
-    "clean": "del-cli dist",
+    "build": "tsc --build",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose src",
     "lint": "eslint './src/**/*.ts'",
