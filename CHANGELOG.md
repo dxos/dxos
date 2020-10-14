@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.0 (2020-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* Publish to NPM.
+
+### Features
+
+* Initial release-please ([087c595](https://www.github.com/dxos/echo/commit/087c595fea97751f809c853a72273beea3a37076))
+* Publish to NPM. ([50ded92](https://www.github.com/dxos/echo/commit/50ded92943df570faa02bb9e38f2d4a9eecb16f0))
+
+
+### Bug Fixes
+
+* Fix package name. ([0940235](https://www.github.com/dxos/echo/commit/0940235a49fb2846d92555c6f541349281c79f14))
+* Iterator stalling ([#234](https://www.github.com/dxos/echo/issues/234)) ([c502674](https://www.github.com/dxos/echo/commit/c502674b05b3c63603fab39eb5dcced6641e39b0))
+* Move release-please to main ([cd8071d](https://www.github.com/dxos/echo/commit/cd8071d7b4a8453ad2786e111d9fc90bcd47ad7d))
+* publishConfig for scoped packages. ([07a1103](https://www.github.com/dxos/echo/commit/07a11034da9481763319fc91a06d1db299a2387d))
+
+
+### Reverts
+
+* Revert "Publish to `dev` channel with `0-dev` preid" ([18d9f8a](https://www.github.com/dxos/echo/commit/18d9f8a188ae6139dedd784ede9420f3c0858f10))
+
 ## [Unreleased]
 
 ### Added
