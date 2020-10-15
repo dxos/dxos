@@ -40,7 +40,7 @@
     "lint": "yarn workspaces run lint && npm run lint:lockfile",
     "lint:fix": "lerna run lint -- --fix",
     "lint:staged": "lint-staged",
-    "lint:lockfile": "lockfile-lint --path yarn.lock --allowed-hosts yarn npm --validate-https",
+    "lint:lockfile": "lockfile-lint --path yarn.lock --allowed-hosts yarn npm codeload.github.com --validate-https",
     "sort-package-json": "lerna exec npx sort-package-json",
     "validate": "npm ls"
   },
@@ -53,7 +53,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "npm run lint:staged && npm run lint:lockfile"
     }
   }
 }
