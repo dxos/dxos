@@ -199,6 +199,19 @@ export class PartyFactory {
     const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
     const party = await this.addParty(partyKey, hints);
     await initiator.destroy();
+
+    // Copy our signed IdentityInfo into the new Party.
+    const infoMessage = this._identityManager.halo?.processor.infoMessages.get(this._identityManager.identityKey.key);
+    if (infoMessage) {
+      await party.processor.writeHaloMessage(createEnvelopeMessage(
+        this._identityManager.keyring,
+        partyKey,
+        infoMessage,
+        // TODO(telackey): For multi-device, this should be the Device KeyChain.
+        [this._identityManager.identityKey]
+      ));
+    }
+
     return party;
   }
 
