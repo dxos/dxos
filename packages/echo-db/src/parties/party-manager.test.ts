@@ -6,7 +6,16 @@ import debug from 'debug';
 import ram from 'random-access-memory';
 
 import { createPartyGenesisMessage, KeyType, Keyring } from '@dxos/credentials';
-import { keyToBuffer, randomBytes, sign, verify, SIGNATURE_LENGTH, createKeyPair, keyToString } from '@dxos/crypto';
+import {
+  keyToBuffer,
+  randomBytes,
+  sign,
+  verify,
+  SIGNATURE_LENGTH,
+  createKeyPair,
+  keyToString,
+  humanize
+} from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -19,6 +28,7 @@ import { SecretProvider, SecretValidator } from '../invitations';
 import { Item } from '../items';
 import { messageLogger } from '../testing';
 import { IdentityManager } from './identity-manager';
+import { Party } from './party';
 import { PartyFactory } from './party-factory';
 import { PartyManager } from './party-manager';
 
@@ -45,7 +55,7 @@ describe('Party manager', () => {
 
     if (open) {
       await partyManager.open();
-      await partyManager.createHalo();
+      await partyManager.createHalo({ identityDisplayName: humanize(identityManager.identityKey.publicKey) });
     }
 
     return { feedStore, partyManager, identityManager };
@@ -156,8 +166,8 @@ describe('Party manager', () => {
   });
 
   test('Join a party - PIN', async () => {
-    const { partyManager: partyManagerA } = await setup();
-    const { partyManager: partyManagerB } = await setup();
+    const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
+    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
     await partyManagerA.open();
     await partyManagerB.open();
 
@@ -206,11 +216,26 @@ describe('Party manager', () => {
 
     // Now wait to see it on B.
     await updated;
+
+    // Check Party membership and displayName.
+    for (const _party of [partyA, partyB]) {
+      const party = new Party(_party);
+      const members = party.queryMembers().value;
+      expect(members.length).toBe(2);
+      for (const member of members) {
+        if (identityManagerA.identityKey.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(humanize(identityManagerA.identityKey.publicKey));
+        }
+        if (identityManagerB.identityKey.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(humanize(identityManagerB.identityKey.publicKey));
+        }
+      }
+    }
   });
 
   test('Join a party - signature', async () => {
-    const { partyManager: partyManagerA } = await setup();
-    const { partyManager: partyManagerB } = await setup();
+    const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
+    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
     await partyManagerA.open();
     await partyManagerB.open();
 
@@ -271,5 +296,20 @@ describe('Party manager', () => {
 
     // Now wait to see it on B.
     await updated;
+
+    // Check Party membership and displayName.
+    for (const _party of [partyA, partyB]) {
+      const party = new Party(_party);
+      const members = party.queryMembers().value;
+      expect(members.length).toBe(2);
+      for (const member of members) {
+        if (identityManagerA.identityKey.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(humanize(identityManagerA.identityKey.publicKey));
+        }
+        if (identityManagerB.identityKey.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(humanize(identityManagerB.identityKey.publicKey));
+        }
+      }
+    }
   });
 });
