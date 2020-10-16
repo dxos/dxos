@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.1.1](https://www.github.com/dxos/echo/compare/v2.1.0...v2.1.1) (2020-10-16)
+
+
+### Bug Fixes
+
+* lockfile-lint ([31998db](https://www.github.com/dxos/echo/commit/31998db6f553db87e5efca5ec5d274e9d4b9a213))
+* lockfile-lint, add github ([d2cbf33](https://www.github.com/dxos/echo/commit/d2cbf33102c0e492be705516b150e545e743efea))
+* missing displayName ([#242](https://www.github.com/dxos/echo/issues/242)) ([038f87f](https://www.github.com/dxos/echo/commit/038f87fab4522214226d9e979104c10972fc7907))
+
 ## [2.1.0](https://www.github.com/dxos/echo/compare/v2.0.0...v2.1.0) (2020-10-14)
 
 
