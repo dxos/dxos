@@ -157,9 +157,9 @@ export class PartyInternal {
   /**
    * Returns a special Item that is used by the Party to manage its properties.
    */
-  async getPropertiestItem (): Promise<Item<ObjectModel>> {
+  getPropertiestItem (): Item<ObjectModel> {
     assert(this._itemManager);
-    const { value: items } = await this._itemManager?.queryItems({ type: PARTY_ITEM_TYPE });
+    const { value: items } = this._itemManager.queryItems({ type: PARTY_ITEM_TYPE });
     assert(items.length === 1);
     return items[0];
   }

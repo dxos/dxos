@@ -89,8 +89,8 @@ export class Party {
    * Returns a party property value.
    * @param key
    */
-  async getProperty (key: string): Promise<any> {
-    const item = await this._impl.getPropertiestItem();
+  getProperty (key: string): any {
+    const item = this._impl.getPropertiestItem();
     return item.model.getProperty(key);
   }
 
