@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 
+import { synchronized } from '@dxos/async';
 import { KeyRecord, Keyring } from '@dxos/credentials';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -77,6 +78,7 @@ export class PartyInternal {
   /**
    * Opens the pipeline and connects the streams.
    */
+  @synchronized
   async open () {
     if (this._itemManager) {
       return this;
@@ -106,6 +108,7 @@ export class PartyInternal {
   /**
    * Closes the pipeline and streams.
    */
+  @synchronized
   async close () {
     if (!this._itemManager) {
       return this;
