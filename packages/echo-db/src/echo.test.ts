@@ -169,6 +169,7 @@ describe('api tests', () => {
     await feedStoreAdapter.open();
 
     const identityKey = await identityManager.keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    await identityManager.keyring.createKeyRecord({ type: KeyType.DEVICE });
     const partyKey = await identityManager.keyring.createKeyRecord({ type: KeyType.PARTY });
 
     const writableFeed = await feedStoreAdapter.createWritableFeed(partyKey.publicKey);

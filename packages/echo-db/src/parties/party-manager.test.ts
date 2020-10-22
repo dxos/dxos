@@ -34,15 +34,19 @@ import { PartyManager } from './party-manager';
 
 const log = debug('dxos:echo:party-manager-test');
 
+jest.setTimeout(100000);
+
 describe('Party manager', () => {
-  const setup = async (open = true) => {
+  const setup = async (open = true, createIdentity = true) => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
     let identityManager;
     {
       const keyring = new Keyring();
-      await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      if (createIdentity) {
+        await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      }
       identityManager = new IdentityManager(keyring);
     }
 
@@ -55,7 +59,9 @@ describe('Party manager', () => {
 
     if (open) {
       await partyManager.open();
-      await partyManager.createHalo({ identityDisplayName: humanize(identityManager.identityKey.publicKey) });
+      if (createIdentity) {
+        await partyManager.createHalo({ identityDisplayName: humanize(identityManager.identityKey.publicKey) });
+      }
     }
 
     return { feedStore, partyManager, identityManager };
@@ -126,6 +132,7 @@ describe('Party manager', () => {
 
     const keyring = new Keyring();
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    await keyring.createKeyRecord({ type: KeyType.DEVICE });
     const identityManager = new IdentityManager(keyring);
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);

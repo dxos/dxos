@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { InvitationDescriptor } from './invitation-descriptor';
+import { Invitation } from '@dxos/credentials';
 
 /**
  * Provides a shared secret during an invitation process.
@@ -12,7 +12,7 @@ export type SecretProvider = (info: any) => Promise<Buffer>;
 /**
  * Validates the shared secret during an invitation process.
  */
-export type SecretValidator = (invitation: InvitationDescriptor, secret: Buffer) => Promise<boolean>;
+export type SecretValidator = (invitation: Invitation, secret: Buffer) => Promise<boolean>;
 
 /**
  * Defines a way for peers to authenticate each other through a side channel.

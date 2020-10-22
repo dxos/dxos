@@ -24,8 +24,31 @@ export class IdentityManager {
     return this._keyring;
   }
 
+  get identityGenesis () {
+    const { halo, identityKey } = this;
+    return halo && identityKey ? halo.processor.credentialMessages.get(identityKey.key) : undefined;
+  }
+
+  get identityInfo () {
+    const { halo, identityKey } = this;
+    return halo && identityKey ? halo.processor.infoMessages.get(identityKey.key) : undefined;
+  }
+
   get identityKey () {
     return this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
+  }
+
+  get deviceKey () {
+    return this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+  }
+
+  get deviceKeyChain () {
+    const { halo, deviceKey } = this;
+    return halo && deviceKey ? Keyring.buildKeyChain(
+      deviceKey.publicKey,
+      halo.processor.credentialMessages,
+      halo.processor.feedKeys
+    ) : undefined;
   }
 
   get initialized () {
@@ -34,9 +57,12 @@ export class IdentityManager {
 
   async initialize (halo: PartyInternal) {
     this._halo = halo;
-    // TODO(telackey): We should wait for the Device key too, once we have multi-device,
-    // and Identity/DeviceInfo messages if we make them mandatory.
-    // Wait for the Identity key to be processed; it will be the first one.
-    await waitForCondition(() => halo.processor.memberKeys.length);
+
+    // Wait for the minimum set of keys and messages we need for proper function.
+    await waitForCondition(() =>
+      halo.processor.memberKeys.length &&
+      this.identityGenesis &&
+      this.deviceKeyChain
+    );
   }
 }

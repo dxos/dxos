@@ -7,21 +7,20 @@ import debug from 'debug';
 
 import { waitForEvent } from '@dxos/async';
 import {
+  createEnvelopeMessage,
   createFeedAdmitMessage,
   createGreetingBeginMessage,
   createGreetingFinishMessage,
   createGreetingHandshakeMessage,
   createGreetingNotarizeMessage,
-  createKeyAdmitMessage,
   Greeter,
-  GreetingCommandPlugin,
-  KeyRecord,
-  Keyring
+  GreetingCommandPlugin
 } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 
+import { IdentityManager } from '../parties';
 import { SecretProvider } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
@@ -46,9 +45,8 @@ export class GreetingInitiator {
    */
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _keyring: Keyring,
+    private readonly _identityManager: IdentityManager,
     private readonly _feedInitializer: (partyKey: PartyKey) => Promise<any /* Keypair */>,
-    private readonly _identityKeypair: KeyRecord,
     private readonly _invitationDescriptor: InvitationDescriptor
   ) {
     assert(InvitationDescriptorType.INTERACTIVE === this._invitationDescriptor.type);
@@ -139,32 +137,21 @@ export class GreetingInitiator {
 
     const credentialMessages = [];
     // TODO(telackey): Restore HALO functionality.
-    // if (this._partyManager.isHalo(partyKey)) {
-    //   // For the Halo, add the DEVICE directly.
-    //   credentialMessages.push(
-    //     createKeyAdmitMessage(this._keyring, partyKey,
-    //       this._partyManager.identityManager.deviceManager.keyRecord,
-    //       [],
-    //       nonce)
-    //   );
-    //   // And Feed, signed for by the FEED and the DEVICE.
-    //   credentialMessages.push(
-    //     createFeedAdmitMessage(this._keyring, partyKey,
-    //       feedKey,
-    //       this._partyManager.identityManager.deviceManager.keyRecord,
-    //       nonce)
-    //   );
+    // if (this._isHalo(partyKey)) {
     // } else {
     // For any other Party, add the IDENTITY, signed by the DEVICE keychain, which links back to that IDENTITY.
-
-    // keyAdmitMessage: createKeyAdmitMessage(keyring, Buffer.from(party.key), identityKeyPair),
-    // feedAdmitMessage: createFeedAdmitMessage(keyring, Buffer.from(party.key), feedKeyPair, identityKeyPair)
     credentialMessages.push(
-      createKeyAdmitMessage(this._keyring, partyKey, this._identityKeypair, [], nonce)
+      createEnvelopeMessage(this._identityManager.keyring, partyKey,
+        this._identityManager.identityGenesis,
+        this._identityManager.deviceKeyChain,
+        nonce)
     );
     // And the Feed, signed for by the FEED and by the DEVICE keychain, as above.
     credentialMessages.push(
-      createFeedAdmitMessage(this._keyring, partyKey, feedKey, [this._identityKeypair], nonce)
+      createFeedAdmitMessage(this._identityManager.keyring, partyKey,
+        feedKey,
+        this._identityManager.deviceKeyChain,
+        nonce)
     );
     // }
 

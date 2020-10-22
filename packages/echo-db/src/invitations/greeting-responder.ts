@@ -10,15 +10,14 @@ import {
   admitsKeys,
   createEnvelopeMessage, Greeter,
   GreetingCommandPlugin,
-  KeyRecord,
   Keyring,
   KeyType
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
-import { PartyKey, PublicKey, SwarmKey } from '@dxos/echo-protocol';
+import { PublicKey, SwarmKey } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { PartyProcessor } from '../parties';
+import { IdentityManager, PartyProcessor } from '../parties';
 import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 
@@ -56,14 +55,12 @@ export class GreetingResponder {
   readonly connected = new Event<any>();
 
   constructor (
-    private readonly _keyring: Keyring,
+    private readonly _identityManager: IdentityManager,
     private readonly _networkManager: NetworkManager,
-    private readonly _partyProcessor: PartyProcessor,
-    private readonly _identityKeypair: KeyRecord,
-    private readonly _partyKey: PartyKey
+    private readonly _partyProcessor: PartyProcessor
   ) {
     this._greeter = new Greeter(
-      Buffer.from(this._partyKey),
+      Buffer.from(this._partyProcessor.partyKey),
       async (messages: any) => this._writeCredentialsToParty(messages),
       async () => this._gatherHints()
     );
@@ -119,7 +116,7 @@ export class GreetingResponder {
     }
 
     const invitation = this._greeter.createInvitation(
-      this._partyKey,
+      this._partyProcessor.partyKey,
       secretValidator,
       secretProvider,
       cleanup,
@@ -152,7 +149,7 @@ export class GreetingResponder {
     await this._networkManager.joinProtocolSwarm(Buffer.from(this._swarmKey),
       greetingProtocolProvider(this._swarmKey, this._swarmKey, [this._greeterPlugin]));
 
-    log(`Greeting for: ${keyToString(this._partyKey)} on swarmKey ${keyToString(this._swarmKey)}`);
+    log(`Greeting for: ${keyToString(this._partyProcessor.partyKey)} on swarmKey ${keyToString(this._swarmKey)}`);
 
     this._state = GreetingState.LISTENING;
     log('Listening');
@@ -211,7 +208,14 @@ export class GreetingResponder {
         return allKeys.find(value => value.equals(key));
       };
 
-      const envelope = createEnvelopeMessage(this._keyring, Buffer.from(this._partyKey), message, [this._identityKeypair], null);
+      const envelope = createEnvelopeMessage(
+        this._identityManager.keyring,
+        Buffer.from(this._partyProcessor.partyKey),
+        message,
+        [this._identityManager.deviceKeyChain],
+        null
+      );
+
       await this._partyProcessor.writeHaloMessage(envelope);
 
       // Wait for keys to be admitted.

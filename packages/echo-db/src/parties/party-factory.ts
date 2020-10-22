@@ -65,37 +65,58 @@ export class PartyFactory {
    * Create a new party with a new feed for it. Writes a party genensis message to this feed.
    */
   async createParty (): Promise<PartyInternal> {
-    assert(!this._options.readOnly);
-    const { keyring } = this._identityManager;
-    const identityKey = this._identityManager.identityKey;
+    assert(!this._options.readOnly, 'PartyFactory is read-only');
+    assert(this._identityManager.halo, 'HALO must exist');
+    assert(this._identityManager.identityGenesis, 'IdentityGenesis must exist');
+    assert(this._identityManager.deviceKeyChain, 'Device KeyChain must exist');
 
-    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const partyKey = await this._identityManager.keyring.createKeyRecord({ type: KeyType.PARTY });
     const { feedKey } = await this._initWritableFeed(partyKey.publicKey);
     const party = await this.constructParty(partyKey.publicKey);
 
     // Connect the pipeline.
     await party.open();
 
-    // TODO(burdon): Call party processor to write genesis, etc.
-    // TODO(marik-d): Wait for this message to be processed first
-    await party.processor.writeHaloMessage(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
+    // PartyGenesis (self-signed by Party)
+    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+      this._identityManager.keyring,
+      partyKey,
+      feedKey,
+      partyKey)
+    );
 
-    // TODO(telackey): Should we simply assert that the HALO exists?
-    if (this._identityManager.halo) {
-      const infoMessage = this._identityManager.halo.processor.infoMessages.get(identityKey.key);
-      if (infoMessage) {
-        await party.processor.writeHaloMessage(createEnvelopeMessage(keyring, partyKey.publicKey, infoMessage, [identityKey]));
-      }
+    // KeyAdmit (IdentityGenesis in an Envelope signed by Party)
+    await party.processor.writeHaloMessage(createEnvelopeMessage(
+      this._identityManager.keyring,
+      partyKey.publicKey,
+      this._identityManager.identityGenesis,
+      partyKey)
+    );
+
+    // FeedAdmit (signed by the Device KeyChain).
+    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+      this._identityManager.keyring,
+      partyKey.publicKey,
+      feedKey,
+      [this._identityManager.deviceKeyChain]
+    ));
+
+    if (this._identityManager.identityInfo) {
+      // IdentityInfo in an Envelope signed by the Device KeyChain
+      await party.processor.writeHaloMessage(createEnvelopeMessage(
+        this._identityManager.keyring,
+        partyKey.publicKey,
+        this._identityManager.identityInfo,
+        [this._identityManager.deviceKeyChain]
+      ));
     }
-
-    await party.processor.writeHaloMessage(createFeedAdmitMessage(keyring, partyKey.publicKey, feedKey, [identityKey]));
 
     // Create special properties item.
     assert(party.itemManager);
     await party.itemManager.createItem(ObjectModel.meta.type, PARTY_ITEM_TYPE);
 
     // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
-    await keyring.deleteSecretKey(partyKey);
+    await this._identityManager.keyring.deleteSecretKey(partyKey);
 
     return party;
   }
@@ -159,7 +180,7 @@ export class PartyFactory {
     const replicator = new ReplicationAdapter(
       this._networkManager,
       this._feedStore,
-      this._identityManager.identityKey.publicKey, // TODO(telackey): This should be the Device PublicKey.
+      this._identityManager.deviceKey.publicKey,
       partyKey,
       partyProcessor.getActiveFeedSet(),
       this._createCredentialsProvider(partyKey, feed?.key),
@@ -173,8 +194,7 @@ export class PartyFactory {
       this._modelFactory,
       partyProcessor,
       pipeline,
-      this._identityManager.keyring,
-      this._identityManager.identityKey,
+      this._identityManager,
       this._networkManager,
       replicator,
       timeframeClock
@@ -186,12 +206,11 @@ export class PartyFactory {
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<PartyInternal> {
     const initiator = new GreetingInitiator(
       this._networkManager,
-      this._identityManager.keyring,
+      this._identityManager,
       async partyKey => {
         const { feedKey } = await this._initWritableFeed(partyKey);
         return feedKey;
       },
-      this._identityManager.identityKey,
       invitationDescriptor
     );
 
@@ -207,8 +226,7 @@ export class PartyFactory {
         this._identityManager.keyring,
         partyKey,
         infoMessage,
-        // TODO(telackey): For multi-device, this should be the Device KeyChain.
-        [this._identityManager.identityKey]
+        [this._identityManager.deviceKeyChain]
       ));
     }
 
@@ -268,6 +286,9 @@ export class PartyFactory {
       );
     }
 
+    // Do no retain the Identity secret key after creation of the HALO.
+    await this._identityManager.keyring.deleteSecretKey(identityKey);
+
     return halo;
   }
 
@@ -277,7 +298,7 @@ export class PartyFactory {
         this._identityManager.keyring,
         Buffer.from(partyKey),
         this._identityManager.identityKey,
-        this._identityManager.identityKey, // TODO(telackey): This should be the Device KeyChain.
+        this._identityManager.deviceKeyChain,
         this._identityManager.keyring.getKey(feedKey)
       ))
     };

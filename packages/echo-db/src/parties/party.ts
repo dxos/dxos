@@ -47,13 +47,15 @@ export class Party {
   queryMembers (): ResultSet<PartyMember> {
     return new ResultSet(
       this._impl.processor.keyAdded.discardParameter(),
-      () => this._impl.processor.memberKeys.map((publicKey: PublicKey) => {
-        const displayName = this._impl.processor.getMemberInfo(publicKey)?.displayName;
-        return {
-          publicKey,
-          displayName
-        };
-      })
+      () => this._impl.processor.memberKeys
+        .filter(publicKey => Buffer.compare(this._impl.processor.partyKey, publicKey) !== 0)
+        .map((publicKey: PublicKey) => {
+          const displayName = this._impl.processor.getMemberInfo(publicKey)?.displayName;
+          return {
+            publicKey,
+            displayName
+          };
+        })
     );
   }
 

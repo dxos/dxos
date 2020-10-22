@@ -5,7 +5,6 @@
 import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
-import { KeyRecord, Keyring } from '@dxos/credentials';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -17,6 +16,7 @@ import {
 import { createItemDemuxer, Item, ItemManager } from '../items';
 import { TimeframeClock } from '../items/timeframe-clock';
 import { ReplicationAdapter } from '../replication';
+import { IdentityManager } from './identity-manager';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
 
@@ -42,8 +42,7 @@ export class PartyInternal {
     private readonly _modelFactory: ModelFactory,
     private readonly _partyProcessor: PartyProcessor,
     private readonly _pipeline: Pipeline,
-    private readonly _keyring: Keyring,
-    private readonly _identityKeypair: KeyRecord,
+    private readonly _identityManager: IdentityManager,
     private readonly _networkManager: NetworkManager,
     private readonly _replicator: ReplicationAdapter,
     private readonly _timeframeClock: TimeframeClock
@@ -51,8 +50,6 @@ export class PartyInternal {
     assert(this._modelFactory);
     assert(this._partyProcessor);
     assert(this._pipeline);
-    assert(this._keyring);
-    assert(this._identityKeypair);
   }
 
   get key (): PartyKey {
@@ -138,11 +135,9 @@ export class PartyInternal {
     assert(this._networkManager);
 
     const responder = new GreetingResponder(
-      this._keyring,
+      this._identityManager,
       this._networkManager,
-      this._partyProcessor,
-      this._identityKeypair, // TODO(burdon): Move to keyring?
-      this.key
+      this._partyProcessor
     );
 
     const { secretValidator, secretProvider } = authenticationDetails;
