@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "Eventually Consistent Hierarchical Object Database.",
   "homepage": "https://github.com/dxos/echo#readme",
   "bugs": {

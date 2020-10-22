@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0](https://www.github.com/dxos/echo/compare/v2.1.2...v2.2.0) (2020-10-22)
+
+
+### Features
+
+* Use Device KeyChains instead of Identity keys for signing. ([#253](https://www.github.com/dxos/echo/issues/253)) ([5d86454](https://www.github.com/dxos/echo/commit/5d8645420da7ca3e0a520539e965e1328aaef6f7))
+
+
+### Bug Fixes
+
+* Wait for party settings item to be loaded in party.open() ([9db398a](https://www.github.com/dxos/echo/commit/9db398a983a3dd6c3b30fc3a50d62ebc297b207a))
+
 ### [2.1.2](https://www.github.com/dxos/echo/compare/v2.1.1...v2.1.2) (2020-10-20)
 
 
