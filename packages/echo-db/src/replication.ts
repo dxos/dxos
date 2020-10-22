@@ -5,6 +5,7 @@
 import debug from 'debug';
 import hypercore from 'hypercore';
 
+import { synchronized } from '@dxos/async';
 import { AuthPlugin, Authenticator } from '@dxos/credentials';
 import { discoveryKey, keyToString } from '@dxos/crypto';
 import { FeedKey, PartyKey } from '@dxos/echo-protocol';
@@ -60,6 +61,7 @@ export class ReplicationAdapter {
     this._started = false;
   }
 
+  @synchronized
   private async _openFeed (key: FeedKey): Promise<hypercore.Feed> {
     return this._feedStore.getFeed(key) ?? await this._feedStore.createReadOnlyFeed(key, this._partyKey);
   }
