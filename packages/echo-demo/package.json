@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsc --build",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
-    "coverage": "jest --coverage --verbose src",
+    "coverage": "jest --coverage --verbose src --passWithNoTests",
     "lint": "eslint './src/**/*.ts'",
     "test": "jest --rootDir=./src --verbose --passWithNoTests",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",

@@ -36,6 +36,7 @@
   "scripts": {
     "build": "lerna run build",
     "depcheck": "lerna run depcheck",
+    "coverage": "lerna run coverage",
     "test": "lerna run test",
     "lint": "yarn workspaces run lint && npm run lint:lockfile",
     "lint:fix": "lerna run lint -- --fix",
