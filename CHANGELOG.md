@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0](https://www.github.com/dxos/echo/compare/v2.2.1...v2.3.0) (2020-10-23)
+
+
+### Features
+
+* Multi-device support (internally, no public API yet). ([#257](https://www.github.com/dxos/echo/issues/257)) ([8834adb](https://www.github.com/dxos/echo/commit/8834adbda37b3c9c55f4513dd05644747c108cca))
+
+
+### Bug Fixes
+
+* Update Party member ResultSet when IdentityInfo is updated. ([#261](https://www.github.com/dxos/echo/issues/261)) ([8c65a94](https://www.github.com/dxos/echo/commit/8c65a948549b686960aa73a804920617ff0501f7))
+
 ### [2.2.1](https://www.github.com/dxos/echo/compare/v2.2.0...v2.2.1) (2020-10-23)
 
 
