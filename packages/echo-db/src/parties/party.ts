@@ -46,7 +46,7 @@ export class Party {
 
   queryMembers (): ResultSet<PartyMember> {
     return new ResultSet(
-      this._impl.processor.keyAdded.discardParameter(),
+      this._impl.processor.keyOrInfoAdded.discardParameter(),
       () => this._impl.processor.memberKeys
         .filter(publicKey => Buffer.compare(this._impl.processor.partyKey, publicKey) !== 0)
         .map((publicKey: PublicKey) => {
