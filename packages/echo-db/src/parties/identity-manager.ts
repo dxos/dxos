@@ -38,6 +38,10 @@ export class IdentityManager {
     return this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
   }
 
+  get displayName () {
+    return this.identityInfo?.signed.payload.displayName;
+  }
+
   get deviceKey () {
     return this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   }

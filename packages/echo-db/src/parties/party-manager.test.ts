@@ -232,9 +232,11 @@ describe('Party manager', () => {
       for (const member of members) {
         if (identityManagerA.identityKey.publicKey.equals(member.publicKey)) {
           expect(member.displayName).toEqual(humanize(identityManagerA.identityKey.publicKey));
+          expect(member.displayName).toEqual(identityManagerA.displayName);
         }
         if (identityManagerB.identityKey.publicKey.equals(member.publicKey)) {
           expect(member.displayName).toEqual(humanize(identityManagerB.identityKey.publicKey));
+          expect(member.displayName).toEqual(identityManagerB.displayName);
         }
       }
     }
