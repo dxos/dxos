@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "2.2.0-alpha.0",
+  "version": "2.2.1-alpha.0",
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -35,8 +35,8 @@
     "@dxos/codec-protobuf": "^1.1.0-beta.0",
     "@dxos/crypto": "^1.0.0-beta.7",
     "@dxos/feed-store": "^1.2.0-beta.30",
-    "@dxos/model-factory": "^2.2.0-alpha.0",
-    "@dxos/util": "^2.2.0-alpha.0",
+    "@dxos/model-factory": "^2.2.1-alpha.0",
+    "@dxos/util": "^2.2.1-alpha.0",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/lodash": "^4.14.159",
