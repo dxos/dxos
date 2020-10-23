@@ -13,6 +13,7 @@ import {
   createGreetingFinishMessage,
   createGreetingHandshakeMessage,
   createGreetingNotarizeMessage,
+  createKeyAdmitMessage,
   Greeter,
   GreetingCommandPlugin
 } from '@dxos/credentials';
@@ -100,6 +101,8 @@ export class GreetingInitiator {
   async redeemInvitation (secretProvider: SecretProvider) {
     assert(this._state === GreetingState.CONNECTED);
     const { swarmKey } = this._invitationDescriptor;
+    const haloInvitation = !!this._invitationDescriptor.identityKey;
+
     const responderPeerId = swarmKey;
 
     //
@@ -136,24 +139,47 @@ export class GreetingInitiator {
     const feedKey = await this._feedInitializer(partyKey);
 
     const credentialMessages = [];
-    // TODO(telackey): Restore HALO functionality.
-    // if (this._isHalo(partyKey)) {
-    // } else {
-    // For any other Party, add the IDENTITY, signed by the DEVICE keychain, which links back to that IDENTITY.
-    credentialMessages.push(
-      createEnvelopeMessage(this._identityManager.keyring, partyKey,
-        this._identityManager.identityGenesis,
-        this._identityManager.deviceKeyChain,
-        nonce)
-    );
-    // And the Feed, signed for by the FEED and by the DEVICE keychain, as above.
-    credentialMessages.push(
-      createFeedAdmitMessage(this._identityManager.keyring, partyKey,
-        feedKey,
-        this._identityManager.deviceKeyChain,
-        nonce)
-    );
-    // }
+    if (haloInvitation) {
+      // For the HALO, add the DEVICE directly.
+      credentialMessages.push(
+        createKeyAdmitMessage(
+          this._identityManager.keyring,
+          partyKey,
+          this._identityManager.deviceKey,
+          [],
+          nonce)
+      );
+
+      // And Feed, signed for by the FEED and the DEVICE.
+      credentialMessages.push(
+        createFeedAdmitMessage(
+          this._identityManager.keyring,
+          partyKey,
+          feedKey,
+          this._identityManager.deviceKey,
+          nonce)
+      );
+    } else {
+      // For any other Party, add the IDENTITY, signed by the DEVICE keychain, which links back to that IDENTITY.
+      credentialMessages.push(
+        createEnvelopeMessage(
+          this._identityManager.keyring,
+          partyKey,
+          this._identityManager.identityGenesis,
+          this._identityManager.deviceKeyChain,
+          nonce)
+      );
+
+      // And the Feed, signed for by the FEED and by the DEVICE keychain, as above.
+      credentialMessages.push(
+        createFeedAdmitMessage(
+          this._identityManager.keyring,
+          partyKey,
+          feedKey,
+          this._identityManager.deviceKeyChain,
+          nonce)
+      );
+    }
 
     // Send the signed payload to the greeting responder.
     const notarizeResponse = await this._greeterPlugin.send(Buffer.from(responderPeerId),

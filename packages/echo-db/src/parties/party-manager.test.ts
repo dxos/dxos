@@ -24,7 +24,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { createWritableFeedStream, latch } from '@dxos/util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
-import { SecretProvider, SecretValidator } from '../invitations';
+import { InvitationDescriptor, SecretProvider, SecretValidator } from '../invitations';
 import { Item } from '../items';
 import { messageLogger } from '../testing';
 import { IdentityManager } from './identity-manager';
@@ -320,5 +320,52 @@ describe('Party manager', () => {
         }
       }
     }
+  });
+
+  test('Two devices', async () => {
+    const { identityManager: identityManagerA } = await setup(true, true);
+    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
+
+    expect(identityManagerA.halo).toBeDefined();
+    expect(identityManagerB.halo).not.toBeDefined();
+
+    const pinSecret = '0000';
+    const secretProvider: SecretProvider = async () => Buffer.from(pinSecret);
+    const secretValidator: SecretValidator = async (invitation, secret) =>
+      secret && secret.equals(invitation.secret);
+
+    // Issue the invitation on nodeA.
+    const invitation = await identityManagerA?.halo?.createInvitation({
+      secretValidator,
+      secretProvider
+    }) as InvitationDescriptor;
+
+    // And then redeem it on nodeB.
+    await partyManagerB.joinHalo(invitation, secretProvider);
+
+    expect(identityManagerA.halo).toBeDefined();
+    expect(identityManagerB.halo).toBeDefined();
+
+    let itemA: Item<any> | null = null;
+    const [updated, onUpdate] = latch();
+
+    // Subscribe to Item updates on B.
+    identityManagerB.halo?.itemManager?.queryItems({ type: 'wrn://dxos.org/item/test' })
+      .subscribe((result) => {
+        if (result.length) {
+          const [itemB] = result;
+          if (itemA && itemA.id === itemB.id) {
+            log(`B has ${result[0].id}`);
+            onUpdate();
+          }
+        }
+      });
+
+    // Create a new Item on A.
+    itemA = await identityManagerA.halo?.itemManager?.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/test') as Item<any>;
+    log(`A created ${itemA.id}`);
+
+    // Now wait to see it on B.
+    await updated;
   });
 });

@@ -146,7 +146,12 @@ export class PartyInternal {
     const swarmKey = await responder.start();
     const invitation = await responder.invite(secretValidator, secretProvider, onFinish, expiration);
 
-    return new InvitationDescriptor(InvitationDescriptorType.INTERACTIVE, swarmKey, invitation);
+    return new InvitationDescriptor(
+      InvitationDescriptorType.INTERACTIVE,
+      swarmKey,
+      invitation,
+      this.isHalo ? Buffer.from(this.key) : undefined
+    );
   }
 
   /**
@@ -157,5 +162,10 @@ export class PartyInternal {
     const { value: items } = this._itemManager.queryItems({ type: PARTY_ITEM_TYPE });
     assert(items.length === 1);
     return items[0];
+  }
+
+  get isHalo () {
+    // The PartyKey of the HALO is the Identity key.
+    return this._identityManager.identityKey.publicKey.equals(this.key);
   }
 }

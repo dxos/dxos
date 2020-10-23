@@ -204,6 +204,7 @@ export class PartyFactory {
   }
 
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<PartyInternal> {
+    const haloInvitation = !!invitationDescriptor.identityKey;
     const initiator = new GreetingInitiator(
       this._networkManager,
       this._identityManager,
@@ -219,15 +220,17 @@ export class PartyFactory {
     const party = await this.addParty(partyKey, hints);
     await initiator.destroy();
 
-    // Copy our signed IdentityInfo into the new Party.
-    const infoMessage = this._identityManager.halo?.processor.infoMessages.get(this._identityManager.identityKey.key);
-    if (infoMessage) {
-      await party.processor.writeHaloMessage(createEnvelopeMessage(
-        this._identityManager.keyring,
-        partyKey,
-        infoMessage,
-        [this._identityManager.deviceKeyChain]
-      ));
+    if (!haloInvitation) {
+      // Copy our signed IdentityInfo into the new Party.
+      const infoMessage = this._identityManager.halo?.processor.infoMessages.get(this._identityManager.identityKey.key);
+      if (infoMessage) {
+        await party.processor.writeHaloMessage(createEnvelopeMessage(
+          this._identityManager.keyring,
+          partyKey,
+          infoMessage,
+          [this._identityManager.deviceKeyChain]
+        ));
+      }
     }
 
     return party;
@@ -248,11 +251,32 @@ export class PartyFactory {
     return { feed, feedKey };
   }
 
+  async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
+    assert(!this._identityManager.identityKey, 'Identity key must NOT exist.');
+
+    log(`Admitting device with invitation: ${keyToString(invitationDescriptor.invitation)}`);
+
+    if (!this._identityManager.deviceKey) {
+      await this._identityManager.keyring.createKeyRecord({ type: KeyType.DEVICE });
+    }
+
+    await this._identityManager.keyring.addPublicKey({
+      type: KeyType.IDENTITY,
+      publicKey: invitationDescriptor.identityKey,
+      own: true,
+      trusted: true
+    });
+
+    return this.joinParty(invitationDescriptor, secretProvider);
+  }
+
   // TODO(telackey): Combine with createParty?
   async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
+    // Don't use identityManager.identityKey, because that doesn't check for the secretKey.
     const identityKey = this._identityManager.keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
     assert(identityKey, 'Identity key required.');
-    const deviceKey = this._identityManager.keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ??
+
+    const deviceKey = this._identityManager.deviceKey ??
       await this._identityManager.keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     // 1. Create a feed for the HALO.
@@ -298,7 +322,7 @@ export class PartyFactory {
         this._identityManager.keyring,
         Buffer.from(partyKey),
         this._identityManager.identityKey,
-        this._identityManager.deviceKeyChain,
+        this._identityManager.deviceKeyChain ?? this._identityManager.deviceKey,
         this._identityManager.keyring.getKey(feedKey)
       ))
     };

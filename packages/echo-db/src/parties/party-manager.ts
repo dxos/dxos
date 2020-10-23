@@ -84,7 +84,20 @@ export class PartyManager {
   }
 
   /**
-   * Creates a new party, writing its genesis block to the stream.
+   * Joins an existing Identity HALO.
+   */
+  @synchronized
+  async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
+    assert(this._opened, 'PartyManager is not open.');
+    assert(!this._identityManager.halo, 'HALO already exists.');
+
+    const halo = await this._partyFactory.joinHalo(invitationDescriptor, secretProvider);
+    await this._identityManager.initialize(halo);
+    return halo;
+  }
+
+  /**
+   * Creates the Identity HALO.
    */
   @synchronized
   async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
