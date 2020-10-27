@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0](https://www.github.com/dxos/echo/compare/v2.3.0...v2.4.0) (2020-10-27)
+
+
+### Features
+
+* Auto-join parties on other devices ([#264](https://www.github.com/dxos/echo/issues/264)) ([9cf413b](https://www.github.com/dxos/echo/commit/9cf413bc0262c842e1f3cd5c6311efac0bbe0ad5))
+
+
+### Bug Fixes
+
+* simplify readiness check ([#267](https://www.github.com/dxos/echo/issues/267)) ([cfdf6e7](https://www.github.com/dxos/echo/commit/cfdf6e7ff176d4d0e63cd90de8b2657fc14cd446))
+
 ## [2.3.0](https://www.github.com/dxos/echo/compare/v2.2.1...v2.3.0) (2020-10-23)
 
 
