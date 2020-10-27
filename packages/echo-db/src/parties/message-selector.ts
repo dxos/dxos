@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { getPartyCredentialMessageType, PartyCredential } from '@dxos/credentials';
+import { Keyring, getPartyCredentialMessageType, PartyCredential, admitsKeys } from '@dxos/credentials';
 import { MessageSelector } from '@dxos/echo-protocol';
 
 import { TimeframeClock } from '../items/timeframe-clock';
@@ -37,6 +37,15 @@ export function createMessageSelector (
           // TODO(telackey): Add check that this is for the right Party.
           if (getPartyCredentialMessageType(halo) === PartyCredential.Type.PARTY_GENESIS) {
             return i;
+          }
+        } else if (getPartyCredentialMessageType(halo) === PartyCredential.Type.FEED_ADMIT) {
+          if (admitsKeys(halo).find(key => key.equals(feedKey))) {
+            const signingKeys = Keyring.signingKeys(halo);
+            for (const signedBy of signingKeys) {
+              if (partyProcessor.isMemberKey(signedBy) || signedBy.equals(partyProcessor.partyKey)) {
+                return i;
+              }
+            }
           }
         }
       } else if (echo && feedAdmitted) {

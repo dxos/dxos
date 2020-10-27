@@ -16,7 +16,7 @@ import { SecretProvider } from '../invitations/common';
 import { InvitationDescriptor } from '../invitations/invitation-descriptor';
 import { IdentityManager } from './identity-manager';
 import { HaloCreationOptions, PartyFactory } from './party-factory';
-import { PartyInternal } from './party-internal';
+import { HALO_PARTY_DESCRIPTOR_TYPE, PartyInternal } from './party-internal';
 
 const log = debug('dxos:echo:party-manager');
 
@@ -92,7 +92,8 @@ export class PartyManager {
     assert(!this._identityManager.halo, 'HALO already exists.');
 
     const halo = await this._partyFactory.joinHalo(invitationDescriptor, secretProvider);
-    await this._identityManager.initialize(halo);
+    await this._setHalo(halo);
+
     return halo;
   }
 
@@ -105,7 +106,8 @@ export class PartyManager {
     assert(!this._identityManager.halo, 'HALO already exists.');
 
     const halo = await this._partyFactory.createHalo(options);
-    await this._identityManager.initialize(halo);
+    await this._setHalo(halo);
+
     return halo;
   }
 
@@ -167,6 +169,29 @@ export class PartyManager {
     this._parties.set(party.key, party);
     this.update.emit(party);
     return party;
+  }
+
+  // Only call from a @synchronized method.
+  private async _setHalo (halo: PartyInternal) {
+    assert(halo.itemManager, 'ItemManger is required');
+    await this._identityManager.initialize(halo);
+
+    const result = await halo.itemManager.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE });
+    result.subscribe(async (values) => {
+      for (const partyDesc of values) {
+        const partyKey = partyDesc.model.getProperty('publicKey');
+        if (!this._parties.has(partyKey)) {
+          log(`Auto-opening new Party from HALO: ${keyToString(partyKey)}`);
+          // It is possible to read the descriptor for a Party before loading our KeyChain.  If that happens
+          // we want to defer opening the Party until our KeyChain is ready.
+          await this._identityManager.deviceKeyChainAvailable();
+
+          // TODO(telackey): Fix ObjectModel's handling of arrays.
+          const hints = Object.values(partyDesc.model.getProperty('hints')) as KeyHint[];
+          await this.addParty(partyKey, hints);
+        }
+      }
+    });
   }
 
   private _isHalo (partyKey: PublicKey) {

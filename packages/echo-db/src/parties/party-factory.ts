@@ -27,7 +27,11 @@ import { TimeframeClock } from '../items/timeframe-clock';
 import { ReplicationAdapter } from '../replication';
 import { IdentityManager } from './identity-manager';
 import { createMessageSelector } from './message-selector';
-import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
+import {
+  PartyInternal,
+  PARTY_ITEM_TYPE,
+  HALO_PARTY_DESCRIPTOR_TYPE
+} from './party-internal';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
 
@@ -118,6 +122,8 @@ export class PartyFactory {
     // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
     await this._identityManager.keyring.deleteSecretKey(partyKey);
 
+    await this._recordPartyJoining(party);
+
     return party;
   }
 
@@ -141,7 +147,16 @@ export class PartyFactory {
 
     await party.open();
 
-    // TODO(marik-d): Refactor so it doesn't return a tuple
+    const isHalo = this._identityManager.identityKey.publicKey.equals(partyKey);
+
+    // Write the Feed genesis message.
+    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+      this._identityManager.keyring,
+      Buffer.from(partyKey),
+      feedKey,
+      [isHalo ? this._identityManager.deviceKey : this._identityManager.deviceKeyChain]
+    ));
+
     return party;
   }
 
@@ -231,6 +246,8 @@ export class PartyFactory {
           [this._identityManager.deviceKeyChain]
         ));
       }
+
+      await this._recordPartyJoining(party);
     }
 
     return party;
@@ -310,6 +327,10 @@ export class PartyFactory {
       );
     }
 
+    // Create special properties item.
+    assert(halo.itemManager);
+    await halo.itemManager.createItem(ObjectModel.meta.type, PARTY_ITEM_TYPE);
+
     // Do no retain the Identity secret key after creation of the HALO.
     await this._identityManager.keyring.deleteSecretKey(identityKey);
 
@@ -326,5 +347,28 @@ export class PartyFactory {
         this._identityManager.keyring.getKey(feedKey)
       ))
     };
+  }
+
+  private async _recordPartyJoining (party: PartyInternal) {
+    assert(this._identityManager.halo, 'HALO is required.');
+    assert(this._identityManager.halo.itemManager, 'ItemManager is required.');
+
+    const knownParties = await this._identityManager.halo.itemManager.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE }).value;
+    const partyDesc = knownParties.find(partyMarker => Buffer.compare(partyMarker.model.getProperty('publicKey'), party.key) === 0);
+    assert(!partyDesc, `Descriptor already exists for Party ${keyToString(party.key)}`);
+
+    await this._identityManager.halo.itemManager.createItem(
+      ObjectModel.meta.type,
+      HALO_PARTY_DESCRIPTOR_TYPE,
+      undefined,
+      {
+        publicKey: party.key,
+        subscribed: true,
+        hints: [
+          ...party.processor.memberKeys.map(publicKey => ({ publicKey })),
+          ...party.processor.feedKeys.map(publicKey => ({ publicKey, type: KeyType.FEED }))
+        ]
+      }
+    );
   }
 }

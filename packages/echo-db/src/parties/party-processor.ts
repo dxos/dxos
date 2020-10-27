@@ -87,7 +87,13 @@ export class PartyProcessor {
   }
 
   isFeedAdmitted (feedKey: FeedKey) {
+    // TODO(telackey): Make sure it is a feed.
     return this._stateMachine.credentialMessages.has(keyToString(feedKey));
+  }
+
+  isMemberKey (publicKey: PublicKey) {
+    // TODO(telackey): Make sure it is not a feed.
+    return this._stateMachine.credentialMessages.has(keyToString(publicKey));
   }
 
   getMemberInfo (publicKey: PublicKey) {
