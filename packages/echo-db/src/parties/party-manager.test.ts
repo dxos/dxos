@@ -389,7 +389,7 @@ describe('Party manager', () => {
       let itemA: Item<any> | null = null;
       const [updated, onUpdate] = latch();
 
-      // Subscribe to Item updates on B.
+      // Subscribe to Item updates on A.
       partyManagerA.parties[0].itemManager?.queryItems({ type: 'wrn://dxos.org/item/test' })
         .subscribe((result) => {
           if (result.length) {
@@ -401,10 +401,10 @@ describe('Party manager', () => {
           }
         });
 
-      // Create a new Item on A.
+      // Create a new Item on B.
       itemA = await partyManagerB.parties[0].itemManager?.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/test') as Item<any>;
 
-      // Now wait to see it on B.
+      // Now wait to see it on A.
       await updated;
     }
   });
