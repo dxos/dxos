@@ -182,9 +182,6 @@ export class PartyManager {
         const partyKey = partyDesc.model.getProperty('publicKey');
         if (!this._parties.has(partyKey)) {
           log(`Auto-opening new Party from HALO: ${keyToString(partyKey)}`);
-          // It is possible to read the descriptor for a Party before loading our KeyChain.  If that happens
-          // we want to defer opening the Party until our KeyChain is ready.
-          await this._identityManager.deviceKeyChainAvailable();
 
           // TODO(telackey): Fix ObjectModel's handling of arrays.
           const hints = Object.values(partyDesc.model.getProperty('hints')) as KeyHint[];

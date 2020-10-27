@@ -4,8 +4,8 @@
 
 import debug from 'debug';
 
-import { waitForCondition } from '@dxos/async';
-import { Keyring, KeyChain, KeyType, Filter } from '@dxos/credentials';
+import { Event, waitForCondition } from '@dxos/async';
+import { Keyring, KeyType, Filter } from '@dxos/credentials';
 
 import { PartyInternal } from './party-internal';
 
@@ -15,7 +15,9 @@ export class IdentityManager {
   // TODO(telackey): Party here is wrong, or at least incomplete. To build KeyChains and retrieve Identity "genesis"
   // messages, we need the PartyStateMachine, whether directly or indirectly.
   private _halo?: PartyInternal;
-  private _keyChainPromise?: Promise<KeyChain>;
+  private _initialized = false;
+
+  public readonly ready = new Event<Boolean>();
 
   constructor (
     private readonly _keyring: Keyring
@@ -67,7 +69,7 @@ export class IdentityManager {
   }
 
   get initialized () {
-    return !!this._halo;
+    return this._initialized;
   }
 
   async initialize (halo: PartyInternal) {
@@ -75,16 +77,13 @@ export class IdentityManager {
 
     // Wait for the minimum set of keys and messages we need for proper function.
     await waitForCondition(() =>
-      halo.processor.memberKeys.length &&
+      this._halo &&
+      this._halo.processor.memberKeys.length &&
       this.identityGenesis &&
       this.deviceKeyChain
     );
-  }
 
-  async deviceKeyChainAvailable () {
-    if (!this._keyChainPromise) {
-      this._keyChainPromise = this.deviceKeyChain ?? waitForCondition(() => this.deviceKeyChain);
-    }
-    return this._keyChainPromise;
+    this._initialized = true;
+    this.ready.emit(true);
   }
 }
