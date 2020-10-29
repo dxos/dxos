@@ -11,7 +11,7 @@ import { IHaloStream } from '@dxos/echo-protocol';
 
 import { PartyProcessor } from './party-processor';
 
-const log = debug('dxos:echo:party-processor:test');
+const log = debug('dxos:echo:parties:party-processor:test');
 
 describe('party-processor', () => {
   test('genesis', async () => {

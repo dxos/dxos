@@ -21,7 +21,7 @@ import { IdentityManager, PartyProcessor } from '../parties';
 import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 
-const log = debug('dxos:party-manager:greeting-responder');
+const log = debug('dxos:echo:invitations:greeting-responder');
 
 /**
  * GreetingResponder transitions through the following states:

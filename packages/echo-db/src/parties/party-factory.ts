@@ -10,10 +10,14 @@ import {
   createAuthMessage,
   createDeviceInfoMessage,
   createEnvelopeMessage,
-  createFeedAdmitMessage, createIdentityInfoMessage,
+  createFeedAdmitMessage,
+  createIdentityInfoMessage,
   createKeyAdmitMessage,
-  createPartyGenesisMessage, KeyHint, Keyring,
-  KeyType
+  createPartyGenesisMessage,
+  KeyHint,
+  Keyring,
+  KeyType,
+  keyPairFromSeedPhrase
 } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
 import { FeedKey, PartyKey, createFeedWriter } from '@dxos/echo-protocol';
@@ -23,6 +27,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { GreetingInitiator, InvitationDescriptor, SecretProvider } from '../invitations';
+import { HaloRecoveryInitiator } from '../invitations/halo-recovery-initiator';
 import { TimeframeClock } from '../items/timeframe-clock';
 import { ReplicationAdapter } from '../replication';
 import { IdentityManager } from './identity-manager';
@@ -49,7 +54,7 @@ interface Options {
   readOnly?: boolean;
 }
 
-const log = debug('dxos:echo:party-factory');
+const log = debug('dxos:echo:parties:party-factory');
 
 /**
  * Manages the lifecycle of parties.
@@ -193,9 +198,9 @@ export class PartyFactory {
       partyProcessor, iterator, timeframeClock, feedWriteStream, this._options);
 
     const replicator = new ReplicationAdapter(
+      this._identityManager,
       this._networkManager,
       this._feedStore,
-      this._identityManager.deviceKey.publicKey,
       partyKey,
       partyProcessor.getActiveFeedSet(),
       this._createCredentialsProvider(partyKey, feed?.key),
@@ -268,21 +273,59 @@ export class PartyFactory {
     return { feed, feedKey };
   }
 
+  async recoverHalo (seedPhrase: string) {
+    assert(!this._identityManager.halo, 'HALO already exists.');
+    assert(!this._identityManager.identityKey, 'Identity key already exists.');
+
+    const recoveredKeyPair = keyPairFromSeedPhrase(seedPhrase);
+    await this._identityManager.keyring.addKeyRecord({ ...recoveredKeyPair, type: KeyType.IDENTITY });
+
+    const recoverer = new HaloRecoveryInitiator(this._networkManager, this._identityManager);
+    await recoverer.connect();
+
+    const invitationDescriptor = await recoverer.claim();
+
+    // The secretProvider should provide an `Auth` message signed directly by the Identity key.
+    const secretProvider: SecretProvider = async (info) => Authenticator.encodePayload(
+      // The signed portion of the Auth message includes the ID and authNonce provided
+      // by "info". These values will be validated on the other end.
+      createAuthMessage(
+        this._identityManager.keyring,
+        info.id.value,
+        this._identityManager.identityKey,
+        this._identityManager.identityKey,
+        undefined,
+        info.authNonce.value)
+    );
+
+    return this._joinHalo(invitationDescriptor, secretProvider);
+  }
+
   async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
     assert(!this._identityManager.identityKey, 'Identity key must NOT exist.');
 
+    return this._joinHalo(invitationDescriptor, secretProvider);
+  }
+
+  private async _joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
     log(`Admitting device with invitation: ${keyToString(invitationDescriptor.invitation)}`);
+    assert(invitationDescriptor.identityKey);
+
+    if (!this._identityManager.identityKey) {
+      await this._identityManager.keyring.addPublicKey({
+        type: KeyType.IDENTITY,
+        publicKey: invitationDescriptor.identityKey,
+        own: true,
+        trusted: true
+      });
+    } else {
+      assert(this._identityManager.identityKey.publicKey.equals(invitationDescriptor.identityKey),
+        'Identity key must match invitation');
+    }
 
     if (!this._identityManager.deviceKey) {
       await this._identityManager.keyring.createKeyRecord({ type: KeyType.DEVICE });
     }
-
-    await this._identityManager.keyring.addPublicKey({
-      type: KeyType.IDENTITY,
-      publicKey: invitationDescriptor.identityKey,
-      own: true,
-      trusted: true
-    });
 
     return this.joinParty(invitationDescriptor, secretProvider);
   }

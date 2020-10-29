@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import debug from 'debug';
 import ram from 'random-access-memory';
 
-import { createPartyGenesisMessage, KeyType, Keyring } from '@dxos/credentials';
+import { createPartyGenesisMessage, KeyType, Keyring, generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import {
   keyToBuffer,
   randomBytes,
@@ -32,7 +33,7 @@ import { Party } from './party';
 import { PartyFactory } from './party-factory';
 import { PartyManager } from './party-manager';
 
-const log = debug('dxos:echo:party-manager-test');
+const log = debug('dxos:echo:parties:party-manager:test');
 
 jest.setTimeout(100000);
 
@@ -40,12 +41,15 @@ describe('Party manager', () => {
   const setup = async (open = true, createIdentity = true) => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
+    let seedPhrase;
 
     let identityManager;
     {
       const keyring = new Keyring();
       if (createIdentity) {
-        await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+        seedPhrase = generateSeedPhrase();
+        const keyPair = keyPairFromSeedPhrase(seedPhrase);
+        await keyring.addKeyRecord({ ...keyPair, type: KeyType.IDENTITY });
       }
       identityManager = new IdentityManager(keyring);
     }
@@ -64,7 +68,7 @@ describe('Party manager', () => {
       }
     }
 
-    return { feedStore, partyManager, identityManager };
+    return { feedStore, partyManager, identityManager, seedPhrase };
   };
 
   test('Created locally', async () => {
@@ -514,6 +518,83 @@ describe('Party manager', () => {
 
       item = await party.itemManager?.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/test') as Item<any>;
       await Promise.all(itemPromises);
+    }
+  });
+
+  test('Join new device to HALO by recovering from Identity seed phrase', async () => {
+    const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
+    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
+    assert(seedPhrase);
+
+    expect(identityManagerA.halo).toBeDefined();
+    expect(identityManagerB.halo).not.toBeDefined();
+
+    // And then redeem it on nodeB.
+    await partyManagerB.recoverHalo(seedPhrase);
+
+    expect(identityManagerA.halo).toBeDefined();
+    expect(identityManagerB.halo).toBeDefined();
+
+    {
+      let itemA: Item<any> | null = null;
+      const [updated, onUpdate] = latch();
+
+      // Subscribe to Item updates on B.
+      identityManagerB.halo?.itemManager?.queryItems({ type: 'wrn://dxos.org/item/test' })
+        .subscribe((result) => {
+          if (result.length) {
+            const [itemB] = result;
+            if (itemA && itemA.id === itemB.id) {
+              log(`B has ${result[0].id}`);
+              onUpdate();
+            }
+          }
+        });
+
+      // Create a new Item on A.
+      itemA = await identityManagerA.halo?.itemManager?.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/test') as Item<any>;
+      log(`A created ${itemA.id}`);
+
+      // Now wait to see it on B.
+      await updated;
+    }
+
+    // Now create a Party on A and make sure it gets opened on both A and B.
+    expect(partyManagerA.parties.length).toBe(0);
+    expect(partyManagerB.parties.length).toBe(0);
+
+    const [partyUpdated, onPartyUpdate] = latch();
+    partyManagerB.update.on(onPartyUpdate);
+
+    const partyA = await partyManagerA.createParty();
+    await partyA.open();
+    expect(partyManagerA.parties.length).toBe(1);
+
+    await partyUpdated;
+    expect(partyManagerB.parties.length).toBe(1);
+    expect(partyManagerA.parties[0].key).toEqual(partyManagerB.parties[0].key);
+
+    {
+      let itemA: Item<any> | null = null;
+      const [updated, onUpdate] = latch();
+
+      // Subscribe to Item updates on A.
+      partyManagerA.parties[0].itemManager?.queryItems({ type: 'wrn://dxos.org/item/test' })
+        .subscribe((result) => {
+          if (result.length) {
+            const [itemB] = result;
+            if (itemA && itemA.id === itemB.id) {
+              log(`B has ${result[0].id}`);
+              onUpdate();
+            }
+          }
+        });
+
+      // Create a new Item on B.
+      itemA = await partyManagerB.parties[0].itemManager?.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/test') as Item<any>;
+
+      // Now wait to see it on A.
+      await updated;
     }
   });
 });

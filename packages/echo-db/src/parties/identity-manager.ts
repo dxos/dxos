@@ -9,7 +9,7 @@ import { Keyring, KeyType, Filter } from '@dxos/credentials';
 
 import { PartyInternal } from './party-internal';
 
-const log = debug('dxos:echo:identity-manager');
+const log = debug('dxos:echo:parties:identity-manager');
 
 export class IdentityManager {
   // TODO(telackey): Party here is wrong, or at least incomplete. To build KeyChains and retrieve Identity "genesis"
