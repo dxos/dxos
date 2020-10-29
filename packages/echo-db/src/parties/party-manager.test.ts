@@ -36,8 +36,6 @@ import { PartyManager } from './party-manager';
 
 const log = debug('dxos:echo:parties:party-manager:test');
 
-jest.setTimeout(100000);
-
 describe('Party manager', () => {
   const setup = async (open = true, createIdentity = true) => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });

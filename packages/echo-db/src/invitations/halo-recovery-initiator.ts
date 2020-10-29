@@ -15,7 +15,7 @@ import {
   PartyInvitationClaimHandler,
   createGreetingClaimMessage
 } from '@dxos/credentials';
-import { keyToString, randomBytes } from '@dxos/crypto';
+import { keyToString, randomBytes, verify } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { IdentityManager } from '../parties';
@@ -38,6 +38,7 @@ const DEFAULT_TIMEOUT = 30000;
 export class HaloRecoveryInitiator {
   _state: GreetingState;
   _greeterPlugin?: GreetingCommandPlugin;
+  _peerId?: Buffer;
 
   constructor (
     private readonly _networkManager: NetworkManager,
@@ -58,20 +59,20 @@ export class HaloRecoveryInitiator {
     assert(this._state === GreetingState.INITIALIZED);
 
     // This is a temporary connection, there is no need to any special or permanent ID.
-    const localPeerId = randomBytes();
-    log('Local PeerId:', keyToString(localPeerId));
+    this._peerId = randomBytes();
+    log('Local PeerId:', keyToString(this._peerId));
 
     assert(this._identityManager.identityKey);
     const swarmKey = this._identityManager.identityKey.publicKey;
 
-    this._greeterPlugin = new GreetingCommandPlugin(localPeerId, noop);
+    this._greeterPlugin = new GreetingCommandPlugin(this._peerId, noop);
 
     log('Connecting');
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
       () => this._greeterPlugin?.peers.length, timeout);
 
     await this._networkManager.joinProtocolSwarm(swarmKey,
-      greetingProtocolProvider(swarmKey, localPeerId, [this._greeterPlugin]));
+      greetingProtocolProvider(swarmKey, this._peerId, [this._greeterPlugin]));
 
     await peerJoinedWaiter;
     log('Connected');
@@ -87,15 +88,22 @@ export class HaloRecoveryInitiator {
   async claim () {
     assert(this._state === GreetingState.CONNECTED);
     assert(this._greeterPlugin);
+    assert(this._peerId);
     assert(this._identityManager.identityKey);
 
     // Send to the first peer (any peer will do).
     const peer = this._greeterPlugin.peers[0];
     const { peerId: responderPeerId } = peer.getSession();
 
+    // Synthesize an "invitationId" which is the signature of both peerIds signed by our Identity key.
+    const signature = this._identityManager.keyring.rawSign(
+      Buffer.concat([this._peerId, responderPeerId]),
+      this._identityManager.identityKey
+    );
+
     // We expect to receive a new swarm/rendezvousKey to use for the full Greeting process.
     const claimResponse = await this._greeterPlugin.send(responderPeerId,
-      createGreetingClaimMessage(this._identityManager.identityKey.publicKey)) as ClaimResponse;
+      createGreetingClaimMessage(signature)) as ClaimResponse;
     const { id, rendezvousKey } = claimResponse;
     assert(id && rendezvousKey);
 
@@ -125,9 +133,16 @@ export class HaloRecoveryInitiator {
   }
 
   static createHaloInvitationClaimHandler (identityManager: IdentityManager) {
-    const claimHandler = new PartyInvitationClaimHandler(async () => {
+    const claimHandler = new PartyInvitationClaimHandler(async (invitationId: Buffer, remotePeerId: Buffer, peerId: Buffer) => {
       assert(identityManager.halo, 'HALO is required');
       assert(identityManager.identityKey);
+
+      // The invitationtId is the signature of both peerIds, signed by the Identity key.
+      const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationId, identityManager.identityKey.publicKey);
+      if (!ok) {
+        throw new Error(`Invalid invitation ${keyToString(invitationId)}`);
+      }
+
       // Create a Keyring containing only our own PublicKey. Only a message signed by the matching private key,
       // or a KeyChain which traces back to that key, will be verified.
       const keyring = new Keyring();

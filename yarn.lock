@@ -1145,9 +1145,9 @@
     uuid "^3.3.2"
 
 "@dxos/credentials@^2.0.0":
-  version "2.1.9"
-  resolved "https://registry.yarnpkg.com/@dxos/credentials/-/credentials-2.1.9.tgz#7a5cecbf39ec4a610791b9dbf1a12d17ae01ad48"
-  integrity sha512-J8F+ng/zmZc/p7UW3kp2pzffRJw+DWZqiTEPNaFGhMl6sHVoAHkIRSGQBBNDSwvdToH9i700FRuC69kWXazymg==
+  version "2.1.10"
+  resolved "https://registry.yarnpkg.com/@dxos/credentials/-/credentials-2.1.10.tgz#8966e12e5e0c73484e29d2a2ec429027a51999c0"
+  integrity sha512-p0z4IbT7FJ9hge34M/xlXEpAU63+SBa6Y97/eGXkFFT2oBIOO4VimOzcnt7nYmqVfANNbdIALkPAF8OnFTS1yw==
   dependencies:
     "@dxos/async" "^1.0.0-beta.8"
     "@dxos/codec-protobuf" "^0.2.0"
