@@ -2,4 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './spacetime';
+export * from './timeframe';

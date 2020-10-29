@@ -27,7 +27,9 @@ export const sink = (emitter: EventEmitter, event: string, count = 1) => {
 
   emitter.on(event, listener);
 
-  return new Promise(resolve => { resolver = resolve; });
+  return new Promise(resolve => {
+    resolver = resolve;
+  });
 };
 
 // TODO(marik-d): Use version from @dxos/async

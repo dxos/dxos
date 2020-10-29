@@ -27,6 +27,7 @@ import { createWritableFeedStream, latch } from '@dxos/util';
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { InvitationDescriptor, SecretProvider, SecretValidator } from '../invitations';
 import { Item } from '../items';
+import { SnapshotStore } from '../snapshot-store';
 import { messageLogger } from '../testing';
 import { IdentityManager } from './identity-manager';
 import { Party } from './party';
@@ -54,17 +55,25 @@ describe('Party manager', () => {
       identityManager = new IdentityManager(keyring);
     }
 
+    const snapshotStore = new SnapshotStore(ram);
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()), {
-      writeLogger: messageLogger('<<<'),
-      readLogger: messageLogger('>>>')
-    });
-    const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
+    const partyFactory = new PartyFactory(
+      identityManager,
+      feedStoreAdapter,
+      modelFactory,
+      new NetworkManager(feedStore, new SwarmProvider()),
+      snapshotStore,
+      {
+        writeLogger: messageLogger('<<<'),
+        readLogger: messageLogger('>>>')
+      }
+    );
+    const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory, snapshotStore);
 
     if (open) {
       await partyManager.open();
       if (createIdentity) {
-        await partyManager.createHalo({ identityDisplayName: humanize(identityManager.identityKey.publicKey) });
+        await partyManager.createHalo({ identityDisplayName: humanize(identityManager.identityKey!.publicKey) });
       }
     }
 
@@ -140,8 +149,9 @@ describe('Party manager', () => {
     const identityManager = new IdentityManager(keyring);
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()));
-    const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
+    const snapshotStore = new SnapshotStore(ram);
+    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(feedStore, new SwarmProvider()), snapshotStore);
+    const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory, snapshotStore);
 
     await feedStore.open();
 
@@ -234,12 +244,12 @@ describe('Party manager', () => {
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {
-        if (identityManagerA.identityKey.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(humanize(identityManagerA.identityKey.publicKey));
+        if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(humanize(identityManagerA.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityManagerA.displayName);
         }
-        if (identityManagerB.identityKey.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(humanize(identityManagerB.identityKey.publicKey));
+        if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(humanize(identityManagerB.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityManagerB.displayName);
         }
       }
@@ -316,11 +326,11 @@ describe('Party manager', () => {
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {
-        if (identityManagerA.identityKey.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(humanize(identityManagerA.identityKey.publicKey));
+        if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(humanize(identityManagerA.identityKey!.publicKey));
         }
-        if (identityManagerB.identityKey.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(humanize(identityManagerB.identityKey.publicKey));
+        if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(humanize(identityManagerB.identityKey!.publicKey));
         }
       }
     }

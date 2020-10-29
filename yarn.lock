@@ -1264,10 +1264,10 @@
     protobufjs "^6.8.8"
     source-map-support "^0.5.12"
 
-"@dxos/eslint-plugin@^1.0.5":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@dxos/eslint-plugin/-/eslint-plugin-1.0.6.tgz#93b117ddfcfad7927569212aa8c926dcd55880ba"
-  integrity sha512-7bi26uVN9hqXst4qXyfKJU3BshIe6hKnXAR0YFpXp2WH24rRTSRpNvOuYGt83itVqixfC2CP3LWmvE3wxBcj0w==
+"@dxos/eslint-plugin@^1.0.8":
+  version "1.0.8"
+  resolved "https://registry.npmjs.org/@dxos/eslint-plugin/-/eslint-plugin-1.0.8.tgz#8c233c78a314167d13978a1ad1b4f79aa5c41b4f"
+  integrity sha512-VjPgvcAqrXYB+OL4iMKHRvBSoB7k+pjDkhX04oNwmouwvaFUbbzOlTt+4TdPBZmBxEGSIKz04uX4t99EobuCiA==
   dependencies:
     "@rushstack/eslint-patch" "^1.0.3"
     "@typescript-eslint/eslint-plugin" "^3.10.1"
@@ -1535,19 +1535,26 @@
     signal-promise "^1.0.3"
     source-map-support "^0.5.12"
 
-"@dxos/random-access-multi-storage@^1.1.0-beta.0":
-  version "1.1.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@dxos/random-access-multi-storage/-/random-access-multi-storage-1.1.0-beta.0.tgz#b50967510e9a4bfab1dcb21a978acde3167e0004"
-  integrity sha512-TQYDdcdmBB2fCPznHzey+dlUrtSS3laP5HlQ09At+XvjFq19P0o57NuF9C1ETUcFH+dYvTmaGIZVs0CYoso0GA==
+"@dxos/random-access-chrome-file@^2.0.0-beta.0":
+  version "2.0.0-beta.3"
+  resolved "https://registry.npmjs.org/@dxos/random-access-chrome-file/-/random-access-chrome-file-2.0.0-beta.3.tgz#4fbfcfb3048452e1e39febfe509bcb5a7222948f"
+  integrity sha512-ItHpFY2hNBYpGboY/L/4nsSkREW5Hcdr1KPrQx5zqpe8FFTjpC9HmKGPiLlsTBr1fkcYLc+FOsG05QnojmYRlQ==
   dependencies:
+    mutexify "^1.3.0"
+    random-access-storage "^1.3.0"
+
+"@dxos/random-access-multi-storage@^1.1.0-beta.7":
+  version "1.1.0-beta.7"
+  resolved "https://registry.npmjs.org/@dxos/random-access-multi-storage/-/random-access-multi-storage-1.1.0-beta.7.tgz#9940269c6e554b3b3ea9e73264f1cfa4378b332b"
+  integrity sha512-m5vFPG4z5UjwmXjyZyhqnxsnS6HwZ6daCXCj79hfxthVRV70cKhw9hsnKiyeeUxgf7MF9ogfIbHD/I66OLpAYQ==
+  dependencies:
+    "@dxos/random-access-chrome-file" "^2.0.0-beta.0"
     del "^5.1.0"
     pify "^4.0.1"
-    random-access-chrome-file "^1.1.3"
     random-access-file "^2.1.3"
     random-access-idb "^1.2.1"
     random-access-memory "^3.1.1"
     random-access-web "^2.0.3"
-    source-map-support "^0.5.16"
 
 "@dxos/text-model@1.0.0-beta.28":
   version "1.0.0-beta.28"
@@ -3524,6 +3531,11 @@
   resolved "https://registry.yarnpkg.com/@tweenjs/tween.js/-/tween.js-18.6.4.tgz#40a3d0a93647124872dec8e0fd1bd5926695b6ca"
   integrity sha512-lB9lMjuqjtuJrx7/kOkqQBtllspPIN+96OvTCeJ2j5FEzinoAXTdAMFnDAQT1KVPRlnYfBrqxtqP66vDM40xxQ==
 
+"@types/abstract-leveldown@*":
+  version "5.0.1"
+  resolved "https://registry.npmjs.org/@types/abstract-leveldown/-/abstract-leveldown-5.0.1.tgz#3c7750d0186b954c7f2d2f6acc8c3c7ba0c3412e"
+  integrity sha512-wYxU3kp5zItbxKmeRYCEplS2MW7DzyBnxPGj+GJVHZEUZiK/nn5Ei1sUFgURDh+X051+zsGe28iud3oHjrYWQQ==
+
 "@types/anymatch@*":
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/@types/anymatch/-/anymatch-1.3.1.tgz#336badc1beecb9dacc38bea2cf32adf627a8421a"
@@ -3703,6 +3715,13 @@
   integrity sha512-ESuCu8Bk7jpTZ3YPdMW1+6wUj13F5N15vXfc7BuUAN0eCp0lrvVL9nzOTzoqvbRzXMciuqXr1KrHt3xQAhfwPA==
   dependencies:
     "@types/react" "*"
+
+"@types/memdown@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.npmjs.org/@types/memdown/-/memdown-3.0.0.tgz#2d909cb507afd341e3132d77dafa213347e47455"
+  integrity sha512-3VlN94b29j7/9XPGfy1kTPmyA5YfFiC0miQRpOCbCJOALy2ejM2IzgDB7fIBTYyf2isr1r8h3qbZmT/1RsCP9Q==
+  dependencies:
+    "@types/abstract-leveldown" "*"
 
 "@types/micromatch@^4.0.1":
   version "4.0.1"
@@ -12173,7 +12192,7 @@ media-typer@0.3.0:
 
 memdown@^5.0.0, memdown@^5.1.0:
   version "5.1.0"
-  resolved "https://registry.yarnpkg.com/memdown/-/memdown-5.1.0.tgz#608e91a9f10f37f5b5fe767667a8674129a833cb"
+  resolved "https://registry.npmjs.org/memdown/-/memdown-5.1.0.tgz#608e91a9f10f37f5b5fe767667a8674129a833cb"
   integrity sha512-B3J+UizMRAlEArDjWHTMmadet+UKwHd3UjMgGBkZcKAxAYVPS9o0Yeiha4qvz7iGiL2Sb3igUft6p7nbFWctpw==
   dependencies:
     abstract-leveldown "~6.2.1"
@@ -12650,7 +12669,7 @@ mute-stream@0.0.8, mute-stream@~0.0.4:
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.8.tgz#1630c42b2251ff81e2a283de96a5497ea92e5e0d"
   integrity sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
 
-mutexify@^1.2.0:
+mutexify@^1.2.0, mutexify@^1.3.0:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/mutexify/-/mutexify-1.3.1.tgz#634fa5092d8c72639fffa0f663f2716fcba7061b"
   integrity sha512-nU7mOEuaXiQIB/EgTIjYZJ7g8KqMm2D8l4qp+DqA4jxWOb/tnb1KEoqp+tlbdQIDIAiC1i7j7X/3yHDFXLxr9g==
@@ -14443,7 +14462,7 @@ ramda@^0.21.0:
   resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.21.0.tgz#a001abedb3ff61077d4ff1d577d44de77e8d0a35"
   integrity sha1-oAGr7bP/YQd9T/HVd9RN536NCjU=
 
-random-access-chrome-file@^1.1.2, random-access-chrome-file@^1.1.3:
+random-access-chrome-file@^1.1.2:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/random-access-chrome-file/-/random-access-chrome-file-1.1.4.tgz#059bdada8429203f284d9aa48b3c0f6819701fed"
   integrity sha512-xZW1BT26g+gl8AF1kC/oXX97jCMVoLIbf6yx4eVMwLgOddGhhkJygimnfERSEmhUKiGs3DTymNao6wf/P23Nkg==

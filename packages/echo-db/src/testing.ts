@@ -13,6 +13,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { Model, ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { Storage } from '@dxos/random-access-multi-storage';
 import { jsonReplacer, range } from '@dxos/util';
 
 import { ECHO } from './echo';
@@ -21,15 +22,20 @@ import { Item } from './items';
 import { ItemCreationOptions } from './items/database';
 import { IdentityManager, Party, PartyManager } from './parties';
 import { PartyFactory } from './parties/party-factory';
+import { SnapshotStore } from './snapshot-store';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 
 export interface TestOptions {
   verboseLogging?: boolean
   initialized?: boolean
+  feedStore?: FeedStore,
   storage?: any
+  keyStore?: KeyStore,
+  snapshotStorage?: Storage,
   keyStorage?: any
   swarmProvider?: SwarmProvider
+  snapshotInterval?: number
 }
 
 /**
@@ -38,26 +44,34 @@ export interface TestOptions {
 export async function createTestInstance ({
   verboseLogging = false,
   initialized = false,
+  feedStore: injectedFeedStore,
   storage = ram,
+  keyStore: injectedKeyStore,
   keyStorage = undefined,
-  swarmProvider = new SwarmProvider()
+  snapshotStorage = ram,
+  swarmProvider = new SwarmProvider(),
+  snapshotInterval
 }: TestOptions = {}) {
-  const feedStore = new FeedStore(storage, { feedOptions: { valueEncoding: codec } });
+  const feedStore = injectedFeedStore ?? new FeedStore(storage, { feedOptions: { valueEncoding: codec } });
   const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
-  const identityManager = new IdentityManager(new Keyring(new KeyStore(keyStorage)));
+  const keyStore = injectedKeyStore ?? new KeyStore(keyStorage);
+  const identityManager = new IdentityManager(new Keyring(keyStore));
 
   const modelFactory = new ModelFactory()
     .registerModel(ObjectModel);
 
-  const options = verboseLogging ? {
-    readLogger: messageLogger('>>>'),
-    writeLogger: messageLogger('<<<')
-  } : undefined;
+  const options = {
+    readLogger: verboseLogging ? messageLogger('>>>') : undefined,
+    writeLogger: verboseLogging ? messageLogger('<<<') : undefined,
+    snapshots: snapshotStorage !== ram,
+    snapshotInterval
+  };
 
   const networkManager = new NetworkManager(feedStore, swarmProvider);
-  const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, networkManager, options);
-  const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory);
+  const snapshotStore = new SnapshotStore(snapshotStorage);
+  const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, networkManager, snapshotStore, options);
+  const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory, snapshotStore);
 
   const echo = new ECHO(partyManager, options);
 
@@ -65,12 +79,12 @@ export async function createTestInstance ({
     await identityManager.keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     await partyManager.open();
-    await partyManager.createHalo({ identityDisplayName: humanize(identityManager.identityKey.publicKey) });
+    await partyManager.createHalo({ identityDisplayName: humanize(identityManager.identityKey!.publicKey) });
 
     await echo.open();
   }
 
-  return { echo, partyManager, modelFactory, identityManager, feedStoreAdapter, feedStore };
+  return { echo, partyManager, partyFactory, modelFactory, identityManager, feedStoreAdapter, feedStore, keyStore, snapshotStore };
 }
 
 export type Awaited<T> = T extends Promise<infer U> ? U : T;
@@ -140,4 +154,6 @@ export async function createModelTestBench<M extends Model<any>> (options: ItemC
   return parties.map(party => party.database.getItem(item.id)!).map((item, i) => addTestMeta(item, parties[i].testMeta));
 }
 
-export const messageLogger = (tag: string) => (message: any) => { log(tag, JSON.stringify(message, jsonReplacer, 2)); };
+export const messageLogger = (tag: string) => (message: any) => {
+  log(tag, JSON.stringify(message, jsonReplacer, 2));
+};

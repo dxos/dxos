@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import debug from 'debug';
 import hypercore from 'hypercore';
 
@@ -73,6 +74,8 @@ export class ReplicationAdapter {
   }
 
   private _createProtocol (channel: any) {
+    assert(this._identityManager.identityKey);
+    assert(this._identityManager.deviceKey);
     const isHalo = this._identityManager.identityKey.publicKey.equals(this._partyKey);
     const plugins = [];
 

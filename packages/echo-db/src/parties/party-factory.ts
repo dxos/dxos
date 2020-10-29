@@ -19,17 +19,19 @@ import {
   KeyType,
   keyPairFromSeedPhrase
 } from '@dxos/credentials';
-import { keyToString } from '@dxos/crypto';
-import { FeedKey, PartyKey, createFeedWriter } from '@dxos/echo-protocol';
+import { humanize, keyToString } from '@dxos/crypto';
+import { FeedKey, PartyKey, createFeedWriter, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { raise, timed } from '@dxos/util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { GreetingInitiator, InvitationDescriptor, SecretProvider } from '../invitations';
 import { HaloRecoveryInitiator } from '../invitations/halo-recovery-initiator';
 import { TimeframeClock } from '../items/timeframe-clock';
 import { ReplicationAdapter } from '../replication';
+import { SnapshotStore } from '../snapshot-store';
 import { IdentityManager } from './identity-manager';
 import { createMessageSelector } from './message-selector';
 import {
@@ -39,6 +41,7 @@ import {
 } from './party-internal';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
+import { makeAutomaticSnapshots } from './snapshot-maker';
 
 /**
  * Options allowed when creating the HALO.
@@ -52,7 +55,11 @@ interface Options {
   readLogger?: (msg: any) => void;
   writeLogger?: (msg: any) => void;
   readOnly?: boolean;
+  snapshots?: boolean;
+  snapshotInterval?: number;
 }
+
+const DEFAULT_SNAPSHOT_INTERVAL = 100; // every 100 messages
 
 const log = debug('dxos:echo:parties:party-factory');
 
@@ -67,12 +74,14 @@ export class PartyFactory {
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _modelFactory: ModelFactory,
     private readonly _networkManager: NetworkManager,
+    private readonly _snapshotStore: SnapshotStore,
     private readonly _options: Options = {}
-  ) {}
+  ) { }
 
   /**
    * Create a new party with a new feed for it. Writes a party genensis message to this feed.
    */
+  @timed(5000)
   async createParty (): Promise<PartyInternal> {
     assert(!this._options.readOnly, 'PartyFactory is read-only');
     assert(this._identityManager.halo, 'HALO must exist');
@@ -152,6 +161,7 @@ export class PartyFactory {
 
     await party.open();
 
+    assert(this._identityManager.identityKey, 'No identity key');
     const isHalo = this._identityManager.identityKey.publicKey.equals(partyKey);
 
     // Write the Feed genesis message.
@@ -170,7 +180,7 @@ export class PartyFactory {
    * @param partyKey
    * @param hints
    */
-  async constructParty (partyKey: PartyKey, hints: KeyHint[] = []) {
+  async constructParty (partyKey: PartyKey, hints: KeyHint[] = [], initialTimeframe?: Timeframe) {
     // TODO(burdon): Ensure that this node's feed (for this party) has been created first.
     //   I.e., what happens if remote feed is synchronized first triggering 'feed' event above.
     //   In this case create pipeline in read-only mode.
@@ -184,19 +194,20 @@ export class PartyFactory {
     // like we do above for the PartyGenesis message.
     //
 
-    const timeframeClock = new TimeframeClock();
+    const timeframeClock = new TimeframeClock(initialTimeframe);
 
     const partyProcessor = new PartyProcessor(partyKey);
     if (hints.length) {
       await partyProcessor.takeHints(hints);
     }
 
-    const iterator = await this._feedStore.createIterator(partyKey, createMessageSelector(partyProcessor, timeframeClock));
+    const iterator = await this._feedStore.createIterator(partyKey, createMessageSelector(partyProcessor, timeframeClock), initialTimeframe);
     const feedWriteStream = createFeedWriter(feed);
 
     const pipeline = new Pipeline(
       partyProcessor, iterator, timeframeClock, feedWriteStream, this._options);
 
+    assert(this._identityManager.deviceKey, 'No device key.');
     const replicator = new ReplicationAdapter(
       this._identityManager,
       this._networkManager,
@@ -219,7 +230,31 @@ export class PartyFactory {
       replicator,
       timeframeClock
     );
+
+    if (this._options.snapshots) {
+      makeAutomaticSnapshots(party, timeframeClock, this._snapshotStore, this._options.snapshotInterval ?? DEFAULT_SNAPSHOT_INTERVAL);
+    }
+
     log(`Constructed: ${party}`);
+    return party;
+  }
+
+  async constructPartyFromSnapshot (snapshot: PartySnapshot) {
+    assert(snapshot.partyKey);
+    log(`Constructing ${humanize(snapshot.partyKey)} from snapshot at ${JSON.stringify(snapshot.timeframe)}.`);
+
+    const party = await this.constructParty(snapshot.partyKey, [], snapshot.timeframe);
+    await party.open(); // TODO(marik-d): This shouldn't be required if we create item manager & item demuxer at the beginning.
+
+    assert(snapshot.halo);
+
+    await party.processor.restoreFromSnapshot(snapshot.halo);
+
+    assert(snapshot.database);
+    assert(party.itemDemuxer);
+
+    await party.itemDemuxer.restoreFromSnapshot(snapshot.database);
+
     return party;
   }
 
@@ -242,6 +277,7 @@ export class PartyFactory {
 
     if (!haloInvitation) {
       // Copy our signed IdentityInfo into the new Party.
+      assert(this._identityManager.identityKey, 'No identity key');
       const infoMessage = this._identityManager.halo?.processor.infoMessages.get(this._identityManager.identityKey.key);
       if (infoMessage) {
         await party.processor.writeHaloMessage(createEnvelopeMessage(
@@ -292,8 +328,8 @@ export class PartyFactory {
       createAuthMessage(
         this._identityManager.keyring,
         info.id.value,
-        this._identityManager.identityKey,
-        this._identityManager.identityKey,
+        this._identityManager.identityKey ?? raise(new Error('No identity key')),
+        this._identityManager.identityKey ?? raise(new Error('No identity key')),
         undefined,
         info.authNonce.value)
     );
@@ -385,13 +421,14 @@ export class PartyFactory {
       get: () => Authenticator.encodePayload(createAuthMessage(
         this._identityManager.keyring,
         Buffer.from(partyKey),
-        this._identityManager.identityKey,
+        this._identityManager.identityKey ?? raise(new Error('No identity key')),
         this._identityManager.deviceKeyChain ?? this._identityManager.deviceKey,
         this._identityManager.keyring.getKey(feedKey)
       ))
     };
   }
 
+  @timed(5000)
   private async _recordPartyJoining (party: PartyInternal) {
     assert(this._identityManager.halo, 'HALO is required.');
     assert(this._identityManager.halo.itemManager, 'ItemManager is required.');

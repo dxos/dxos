@@ -61,6 +61,7 @@ export class HaloRecoveryInitiator {
     const localPeerId = randomBytes();
     log('Local PeerId:', keyToString(localPeerId));
 
+    assert(this._identityManager.identityKey);
     const swarmKey = this._identityManager.identityKey.publicKey;
 
     this._greeterPlugin = new GreetingCommandPlugin(localPeerId, noop);
@@ -86,6 +87,7 @@ export class HaloRecoveryInitiator {
   async claim () {
     assert(this._state === GreetingState.CONNECTED);
     assert(this._greeterPlugin);
+    assert(this._identityManager.identityKey);
 
     // Send to the first peer (any peer will do).
     const peer = this._greeterPlugin.peers[0];
@@ -109,6 +111,7 @@ export class HaloRecoveryInitiator {
   }
 
   async disconnect () {
+    assert(this._identityManager.identityKey);
     const swarmKey = this._identityManager.identityKey.publicKey;
     await this._networkManager.leaveProtocolSwarm(swarmKey);
     this._state = GreetingState.DISCONNECTED;
@@ -124,6 +127,7 @@ export class HaloRecoveryInitiator {
   static createHaloInvitationClaimHandler (identityManager: IdentityManager) {
     const claimHandler = new PartyInvitationClaimHandler(async () => {
       assert(identityManager.halo, 'HALO is required');
+      assert(identityManager.identityKey);
       // Create a Keyring containing only our own PublicKey. Only a message signed by the matching private key,
       // or a KeyChain which traces back to that key, will be verified.
       const keyring = new Keyring();

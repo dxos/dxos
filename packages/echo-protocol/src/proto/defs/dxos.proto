@@ -6,10 +6,9 @@ syntax = "proto3";
 
 package dxos;
 
-import "google/protobuf/any.proto";
-
 import "echo.proto";
 import "testing.proto";
+import "snapshot.proto";
 
 //
 // Typescript Note:
@@ -31,15 +30,4 @@ message FeedMessage {
 //
 message CredentialsMessage {
   bytes data = 1;
-}
-
-//
-// TODO(burdon): Alternative to google/protobuf/any.proto
-// Compact form to represent system registrations (replacement to extensions).
-// https://developers.google.com/protocol-buffers/docs/proto3#any
-//
-message Any {
-  int32 type_code = 1;
-  string type_url = 2;
-  bytes value = 3;
 }

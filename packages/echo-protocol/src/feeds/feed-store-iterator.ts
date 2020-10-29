@@ -11,6 +11,7 @@ import { keyToString } from '@dxos/crypto';
 import { createBatchStream, FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { Trigger } from '@dxos/util';
 
+import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
 
 const log = debug('dxos:echo:feed-store-iterator');
@@ -35,21 +36,23 @@ const STALL_TIMEOUT = 1000;
  * Creates an ordered stream.
  *
  * @param feedStore
- * @param [feedSelector] - Filter for desired feeds.
- * @param [messageSelector] - Returns the index of the selected message candidate (or undefined).
+ * @param feedSelector Filter for desired feeds.
+ * @param messageSelector Returns the index of the selected message candidate (or undefined).
+ * @param skipTimeframe Feeds are read starting from the next message after this timeframe. Feeds not included in this timeframe are read from the beginning.
  * @readonly {NodeJS.ReadableStream} readStream stream.
  */
 export async function createIterator (
   feedStore: FeedStore,
   feedSelector: FeedSelector = () => true,
-  messageSelector: MessageSelector = () => 0
+  messageSelector: MessageSelector = () => 0,
+  skipTimeframe?: Timeframe
 ): Promise<FeedStoreIterator> {
   assert(!feedStore.closing && !feedStore.closed);
   if (!feedStore.opened) {
     await feedStore.open();
     await feedStore.ready();
   }
-  const iterator = new FeedStoreIterator(feedSelector, messageSelector);
+  const iterator = new FeedStoreIterator(feedSelector, messageSelector, skipTimeframe ?? new Timeframe());
 
   // TODO(burdon): Only add feeds that belong to party (or use feedSelector).
   const initialDescriptors = feedStore.getDescriptors().filter(descriptor => descriptor.opened);
@@ -97,9 +100,13 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
 
   public readonly stalled = new Event<FeedBlock[]>();
 
+  /**
+   * @param _skipTimeframe Feeds are read starting from the first message after this timeframe.
+   */
   constructor (
     private readonly _feedSelector: FeedSelector,
-    private readonly _messageSelector: MessageSelector
+    private readonly _messageSelector: MessageSelector,
+    private readonly _skipTimeframe: Timeframe
   ) {
     assert(_feedSelector);
     assert(_messageSelector);
@@ -148,20 +155,27 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
     // Get candidate snapshot since we will be mutating the collection.
     for (const descriptor of Array.from(this._candidateFeeds.values())) {
       if (this._feedSelector(descriptor)) {
-        const stream = new Readable({ objectMode: true })
-          .wrap(createBatchStream(descriptor.feed, { live: true }));
-
-        this._openFeeds.set(keyToString(descriptor.key), {
-          descriptor,
-          // TODO(burdon): stream[Symbol.asyncIterator] is not a function (in the browser).
-          iterator: stream[Symbol.asyncIterator](),
-          frozen: false,
-          sendQueue: []
-        });
-
+        this._startReadingFromFeed(descriptor);
         this._candidateFeeds.delete(descriptor);
       }
     }
+  }
+
+  private async _startReadingFromFeed (descriptor: FeedDescriptor) {
+    const frameSeq = this._skipTimeframe.get(descriptor.key);
+    const startIdx = frameSeq !== undefined ? frameSeq + 1 : 0;
+
+    log(`Starting reading from feed ${descriptor.key.toString('hex')} from sequence ${startIdx}`);
+
+    const stream = new Readable({ objectMode: true })
+      .wrap(createBatchStream(descriptor.feed, { live: true, start: startIdx }));
+
+    this._openFeeds.set(keyToString(descriptor.key), {
+      descriptor,
+      iterator: stream[Symbol.asyncIterator](),
+      frozen: false,
+      sendQueue: []
+    });
   }
 
   /**

@@ -10,7 +10,7 @@ import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { createTransform, latch } from '@dxos/util';
 
 import { Item } from './item';
-import { createItemDemuxer } from './item-demuxer';
+import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 import { TimeframeClock } from './timeframe-clock';
 
@@ -37,8 +37,8 @@ describe('item demxuer', () => {
 
     const timeframeClock = new TimeframeClock();
     const itemManager = new ItemManager(partyKey, modelFactory, timeframeClock, createMockFeedWriterFromStream(writeStream));
-    const itemDemuxer = createItemDemuxer(itemManager);
-    writeStream.pipe(itemDemuxer);
+    const itemDemuxer = new ItemDemuxer(itemManager);
+    writeStream.pipe(itemDemuxer.open());
 
     //
     // Query for items.

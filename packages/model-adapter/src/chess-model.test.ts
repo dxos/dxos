@@ -21,8 +21,8 @@ test('can play a chess game', async () => {
 
   player1.model.model.appendMessage(ChessModel.createGenesisMessage(
     'My Game',
-    player1.testMeta.identityManager.identityKey.publicKey,
-    player2.testMeta.identityManager.identityKey.publicKey
+    player1.testMeta.identityManager.identityKey!.publicKey,
+    player2.testMeta.identityManager.identityKey!.publicKey
   ));
   await waitForCondition(() => player1.model.model.isInitialized);
 

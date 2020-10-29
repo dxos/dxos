@@ -55,3 +55,7 @@ message ObjectMutation {
 message ObjectMutationSet {
   repeated ObjectMutation mutations   = 1;
 }
+
+message ObjectSnapshot {
+  Value root = 1;
+}

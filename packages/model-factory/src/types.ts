@@ -25,6 +25,8 @@ export type ModelMeta = {
    * @returns A mutation to be included in the same message as item creation, or null if no initialization is required.
    */
   getInitMutation? (props: any): Promise<any | null>
+
+  snapshotCodec?: Codec<any>
 }
 
 export type ModelConstructor<T> =

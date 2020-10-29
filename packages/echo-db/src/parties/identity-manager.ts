@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { Event, waitForCondition } from '@dxos/async';
-import { Keyring, KeyType, Filter } from '@dxos/credentials';
+import { Keyring, KeyType, Filter, KeyRecord } from '@dxos/credentials';
 
 import { PartyInternal } from './party-internal';
 
@@ -41,7 +41,7 @@ export class IdentityManager {
     return halo && identityKey ? halo.processor.infoMessages.get(identityKey.key) : undefined;
   }
 
-  get identityKey () {
+  get identityKey (): KeyRecord | undefined {
     return this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
   }
 
@@ -49,7 +49,7 @@ export class IdentityManager {
     return this.identityInfo?.signed.payload.displayName;
   }
 
-  get deviceKey () {
+  get deviceKey (): KeyRecord | undefined {
     return this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   }
 

@@ -6,7 +6,7 @@ import assert from 'assert';
 import { Feed } from 'hypercore';
 
 import { createId } from '@dxos/crypto';
-import { createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey } from '@dxos/echo-protocol';
+import { createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 
 /**
@@ -78,11 +78,12 @@ export class FeedStoreAdapter {
     return this._feedStore.openFeed(createId(), { key: Buffer.from(feedKey), metadata: { partyKey } } as any);
   }
 
-  createIterator (partyKey: PartyKey, messageSelector: MessageSelector): Promise<FeedStoreIterator> {
+  createIterator (partyKey: PartyKey, messageSelector: MessageSelector, initialTimeframe?: Timeframe): Promise<FeedStoreIterator> {
     return createIterator(
       this._feedStore,
       descriptor => descriptor.metadata.partyKey.equals(partyKey),
-      messageSelector
+      messageSelector,
+      initialTimeframe
     );
   }
 }

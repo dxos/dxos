@@ -131,7 +131,7 @@ export class ValueUtil {
     if (value[Type.OBJECT]) {
       const nestedObject = {};
       const { properties } = value[Type.OBJECT]!;
-      properties!.forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key!, value!));
+      (properties ?? []).forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key!, value!));
       object[key] = nestedObject;
       return object;
     }

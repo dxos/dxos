@@ -9,6 +9,7 @@ import pify from 'pify';
 import { waitForCondition } from '@dxos/async';
 import { createFeedAdmitMessage, createPartyGenesisMessage, KeyType } from '@dxos/credentials';
 import { createId, humanize } from '@dxos/crypto';
+import { Timeframe } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 import { latch } from '@dxos/util';
 
@@ -192,7 +193,7 @@ describe('api tests', () => {
     await writeToGenesisFeed({
       echo: {
         itemId: createId(),
-        timeframe: {},
+        timeframe: new Timeframe(),
         genesis: {
           modelType: ObjectModel.meta.type
         }

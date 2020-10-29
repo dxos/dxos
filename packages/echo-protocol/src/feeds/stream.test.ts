@@ -9,11 +9,12 @@ import ram from 'random-access-memory';
 import { Writable } from 'stream';
 import tempy from 'tempy';
 
-import { createId, keyToString } from '@dxos/crypto';
+import { createId, keyToString, randomBytes } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 import { createWritableFeedStream, latch, sink } from '@dxos/util';
 
-import { codec, createTestItemMutation } from '../proto';
+import { codec, createTestItemMutation, FeedMessage } from '../proto';
+import { Timeframe } from '../spacetime';
 import { FeedBlock } from '../types';
 
 const chance = new Chance(999);
@@ -132,5 +133,19 @@ describe('Stream tests', () => {
     }
 
     feedStore.close();
+  });
+
+  test('message serialization', () => {
+    const message: FeedMessage = {
+      echo: {
+        timeframe: new Timeframe([[randomBytes(), 23]]),
+        itemId: createId()
+      }
+    };
+
+    const serialized = codec.encode(message);
+    const decoded = codec.decode(serialized);
+
+    expect(decoded).toEqual(message);
   });
 });

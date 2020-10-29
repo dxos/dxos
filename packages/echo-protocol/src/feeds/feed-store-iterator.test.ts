@@ -14,7 +14,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ComplexMap, latch } from '@dxos/util';
 
 import { codec, createTestItemMutation, schema } from '../proto';
-import { FeedKeyMapper, Spacetime } from '../spacetime';
+import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
 import { createIterator, FeedSelector } from './feed-store-iterator';
 
@@ -26,8 +26,8 @@ debug.enable('dxos:echo:*');
 describe('feed store iterator', () => {
   test('test message order', async () => {
     const config = {
-      numFeeds: 5,
-      numMessages: 100
+      numFeeds: 2,
+      numMessages: 10
     };
 
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
@@ -37,22 +37,20 @@ describe('feed store iterator', () => {
     // Create the ordered feed stream.
     //
 
-    const spacetime = new Spacetime(new FeedKeyMapper('feedKey'));
-
     // Update when processed downstream.
-    let currentTimeframe = spacetime.createTimeframe();
+    let currentTimeframe = new Timeframe();
 
     // TODO(burdon): Factor out/generalize.
     // Select message based on timeframe.
     const messageSelector = (candidates: FeedBlock[]) => {
-      log('Current:', spacetime.stringify(currentTimeframe));
+      log('Current:', currentTimeframe);
 
       // Create list of allowed candidates.
       const next = candidates.map((candidate, i) => {
         assert(candidate.data?.echo?.timeframe);
         const { data: { echo: { timeframe } } } = candidate;
-        const dependencies = spacetime.dependencies(timeframe, currentTimeframe);
-        if (dependencies.frames?.length) {
+        const dependencies = Timeframe.dependencies(timeframe, currentTimeframe);
+        if (!dependencies.isEmpty()) {
           return;
         }
 
@@ -62,7 +60,7 @@ describe('feed store iterator', () => {
       // TODO(burdon): Create test for this (e.g., feed with depedencies hasn't synced yet).
       if (!next.length) {
         log('Waiting for dependencies...', candidates.map((candidate, i) => ({
-          i, timeframe: spacetime.stringify(candidate?.data?.echo?.timeframe)
+          i, timeframe: candidate?.data?.echo?.timeframe
         })));
         return undefined;
       }
@@ -97,7 +95,7 @@ describe('feed store iterator', () => {
       const feed = chance.pickone(Array.from(feeds.values()));
 
       // Create timeframe dependency.
-      const timeframe = spacetime.createTimeframe(Array.from(feeds.values())
+      const timeframe = new Timeframe(Array.from(feeds.values())
         .filter(f => f.key !== feed.key && f.length > 0)
         .map(f => [f.key, f.length - 1])
       );
@@ -109,7 +107,7 @@ describe('feed store iterator', () => {
 
       // Write data.
       await pify(feed.append.bind(feed))(message);
-      log('Write:', keyToString(feed.key), value, spacetime.stringify(timeframe));
+      log('Write:', keyToString(feed.key), value, timeframe);
     }
 
     //
@@ -128,13 +126,13 @@ describe('feed store iterator', () => {
 
         const { key, value: word } = schema.getCodecForType('dxos.echo.testing.TestItemMutation').decode(mutation);
         const i = parseInt(key!);
-        log('Read:', j, { i, word }, i === j, spacetime.stringify(timeframe));
+        log('Read:', j, { i, word }, i === j, timeframe);
 
         // Check order.
         expect(i).toBe(j);
 
         // Update timeframe for node.
-        currentTimeframe = spacetime.merge(currentTimeframe, spacetime.createTimeframe([[feedKey, seq]]));
+        currentTimeframe = Timeframe.merge(currentTimeframe, new Timeframe([[feedKey, seq]]));
 
         updateCounter();
         j++;
@@ -149,5 +147,36 @@ describe('feed store iterator', () => {
     // Test expected number of messages.
     expect(Array.from(feeds.values())
       .reduce((sum, feed: hypercore.Feed) => sum + feed.length, 0)).toBe(config.numMessages);
+  });
+
+  test('skipping initial messages', async () => {
+    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: schema.getCodecForType('dxos.echo.testing.TestItemMutation') } });
+    await feedStore.open();
+
+    const feed1 = await feedStore.openFeed('feed-1');
+    const feed2 = await feedStore.openFeed('feed-2');
+
+    await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '0' });
+    await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '1' });
+    await pify(feed2.append.bind(feed2))({ key: 'feed2', value: '0' });
+    await pify(feed2.append.bind(feed2))({ key: 'feed2', value: '1' });
+
+    const iterator = await createIterator(feedStore, undefined, undefined, new Timeframe([[feed1.key, 0]]));
+
+    const [counter, updateCounter] = latch(3);
+    const messages: any[] = [];
+    setImmediate(async () => {
+      for await (const message of iterator) {
+        messages.push(message.data);
+        updateCounter();
+      }
+    });
+    await counter;
+
+    expect(messages).toHaveLength(3);
+
+    expect(messages).toContainEqual({ key: 'feed1', value: '1' });
+    expect(messages).toContainEqual({ key: 'feed2', value: '0' });
+    expect(messages).toContainEqual({ key: 'feed2', value: '1' });
   });
 });

@@ -33,6 +33,7 @@ export const withSwarm = () => {
   const [database, setDatabase] = useState<ECHO>();
   const [keyring, setKeyring] = useState<Keyring>();
   const [storage] = useState(() => createStorage('dxos/echo-demo'));
+  const [snapshotStorage] = useState(() => createStorage('dxos/echo-demo/snapshots'));
 
   useEffect(() => {
     setImmediate(async () => {
@@ -40,7 +41,9 @@ export const withSwarm = () => {
         storage,
         keyStorage: leveljs('dxos/echo-demo/keystore'),
         // TODO(burdon): Move const to config.
-        swarmProvider: new SwarmProvider({ signal: 'wss://signal2.dxos.network/dxos/signal' })
+        swarmProvider: new SwarmProvider({ signal: 'wss://signal2.dxos.network/dxos/signal' }),
+        snapshotStorage,
+        snapshotInterval: 10,
       });
 
       log('Created:', String(database));
@@ -77,6 +80,7 @@ export const withSwarm = () => {
     localStorage.clear();
     await keyring.deleteAllKeyRecords();
     await storage.destroy();
+    await snapshotStorage.destroy();
     window.location.reload();
   }
 

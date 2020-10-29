@@ -18,7 +18,7 @@ export interface MutationWriteReceipt extends WriteReceipt {
  * Abstract base class for Models.
  * Models define a root message type, which is contained in the partent Item's message envelope.
  */
-export abstract class Model<T, U = void> {
+export abstract class Model<T> {
   protected readonly _modelUpdate = new Event<this>();
   private readonly _processor: NodeJS.WritableStream;
 
@@ -103,4 +103,13 @@ export abstract class Model<T, U = void> {
    * @param {Object} message
    */
   async abstract _processMessage (meta: MutationMeta, message: T): Promise<boolean>;
+
+  createSnapshot (): any {
+    throw new Error('This model does not support snapshots.');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async restoreFromSnapshot (snapshot: any): Promise<void> {
+    throw new Error('This model does not support snapshots');
+  }
 }

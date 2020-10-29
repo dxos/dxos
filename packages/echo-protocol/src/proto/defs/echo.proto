@@ -13,12 +13,11 @@ import "google/protobuf/any.proto";
 //
 
 // Vector timestamp used to order messages.
-message Timeframe {
+message TimeframeVector {
   message Frame {
-    // TODO(burdon): Remove (see below)?
-    bytes feedKey = 1;
+    // TODO(marik-d): Compress using numeric feed indexes.
     // TODO(burdon): Determine if admit DAG can be ordered. Requires party messages to be ordered (by lexical feed key).
-    int32 feedIndex = 2;
+    bytes feedKey = 1;
     int32 seq = 3;
   }
 
@@ -28,7 +27,7 @@ message Timeframe {
 // Wrapper for all ECHO messages.
 message EchoEnvelope {
   string itemId = 1;
-  Timeframe timeframe = 2;
+  TimeframeVector timeframe = 2;
 
   // Create item.
   ItemGenesis genesis = 10;

@@ -16,7 +16,8 @@ jobs:
         run: |
           git config --global user.email "npm@dxos.network"
           git config --global user.name "DXOS"
-          yarn
+          yarn install --frozen-lockfile
+          yarn lint:lockfile
           yarn lint
           yarn build
           yarn test

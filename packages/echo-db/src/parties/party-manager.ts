@@ -14,6 +14,7 @@ import { ComplexMap } from '@dxos/util';
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { SecretProvider } from '../invitations/common';
 import { InvitationDescriptor } from '../invitations/invitation-descriptor';
+import { SnapshotStore } from '../snapshot-store';
 import { IdentityManager } from './identity-manager';
 import { HaloCreationOptions, PartyFactory } from './party-factory';
 import { HALO_PARTY_DESCRIPTOR_TYPE, PartyInternal } from './party-internal';
@@ -37,7 +38,8 @@ export class PartyManager {
   constructor (
     private readonly _identityManager: IdentityManager,
     private readonly _feedStore: FeedStoreAdapter,
-    private readonly _partyFactory: PartyFactory
+    private readonly _partyFactory: PartyFactory,
+    private readonly _snapshotStore: SnapshotStore
   ) { }
 
   get parties (): PartyInternal[] {
@@ -50,12 +52,15 @@ export class PartyManager {
 
   @synchronized
   async open () {
-    if (this._opened) return;
+    if (this._opened) {
+      return;
+    }
     await this._feedStore.open();
 
     // Open the HALO first (if present).
     if (this._identityManager.identityKey) {
       if (this._feedStore.queryWritableFeed(this._identityManager.identityKey.publicKey)) {
+        // TODO(marik-d): Snapshots for halo party?
         const halo = await this._partyFactory.constructParty(this._identityManager.identityKey.publicKey);
         // Always open the HALO.
         await halo.open();
@@ -66,7 +71,15 @@ export class PartyManager {
     // Iterate descriptors and pre-create Party objects.
     for (const partyKey of this._feedStore.getPartyKeys()) {
       if (!this._parties.has(partyKey) && !this._isHalo(partyKey)) {
-        const party = await this._partyFactory.constructParty(partyKey);
+        let party: PartyInternal | undefined;
+
+        const snapshot = await this._snapshotStore.load(partyKey);
+        if (snapshot) {
+          party = await this._partyFactory.constructPartyFromSnapshot(snapshot);
+        } else {
+          party = await this._partyFactory.constructParty(partyKey);
+        }
+
         // TODO(telackey): Should parties be auto-opened?
         await party.open();
         this._parties.set(party.key, party);
@@ -211,6 +224,7 @@ export class PartyManager {
   }
 
   private _isHalo (partyKey: PublicKey) {
+    assert(this._identityManager.identityKey, 'No identity key');
     return Buffer.compare(partyKey, this._identityManager.identityKey.publicKey) === 0;
   }
 }
