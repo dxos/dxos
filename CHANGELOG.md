@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0](https://www.github.com/dxos/echo/compare/v2.4.0...v2.5.0) (2020-10-29)
+
+
+### Features
+
+* Allow joining the HALO using the recovery seed phrase. ([#275](https://www.github.com/dxos/echo/issues/275)) ([25abc5b](https://www.github.com/dxos/echo/commit/25abc5b6a0599c02f49cc5ebcde86d87079b2d9f))
+* Party snapshots ([#250](https://www.github.com/dxos/echo/issues/250)) ([abf6bf9](https://www.github.com/dxos/echo/commit/abf6bf95549c1283a062c94a78f753bddf2494e7))
+
 ## [2.4.0](https://www.github.com/dxos/echo/compare/v2.3.0...v2.4.0) (2020-10-27)
 
 
