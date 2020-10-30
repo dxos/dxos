@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.5.1](https://www.github.com/dxos/echo/compare/v2.5.0...v2.5.1) (2020-10-30)
+
+
+### Bug Fixes
+
+* Ignore processing of items with unknown models ([#283](https://www.github.com/dxos/echo/issues/283)) ([87505e2](https://www.github.com/dxos/echo/commit/87505e2fec7fb2f331ba301fdc68c25e390361b2))
+* Make HALO recovery a little more secure by checking signatures before creating the responder. ([#279](https://www.github.com/dxos/echo/issues/279)) ([2a54c3a](https://www.github.com/dxos/echo/commit/2a54c3ac84bd223e4a7126925ea4ab7972a006d0))
+
 ## [2.5.0](https://www.github.com/dxos/echo/compare/v2.4.0...v2.5.0) (2020-10-29)
 
 
