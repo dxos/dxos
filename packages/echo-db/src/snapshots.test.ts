@@ -78,6 +78,7 @@ test('restored party is identical to the source party', async () => {
   );
 
   const restoredPartyInternal = await partyFactory.constructPartyFromSnapshot(snapshot);
+  await restoredPartyInternal.open();
   const restoredParty = new Party(restoredPartyInternal);
 
   expect(restoredParty.isOpen).toBeTruthy();

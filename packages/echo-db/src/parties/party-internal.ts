@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
-import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
+import { DatabaseSnapshot, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -36,6 +36,11 @@ export class PartyInternal {
   private _itemManager: ItemManager | undefined;
   private _itemDemuxer: ItemDemuxer | undefined;
   private _inboundEchoStream: NodeJS.WritableStream | undefined;
+
+  /**
+   * Snapshot to be restored from when party.open() is called.
+   */
+  private _databaseSnapshot: DatabaseSnapshot | undefined;
 
   private _subscriptions: (() => void)[] = [];
 
@@ -109,6 +114,10 @@ export class PartyInternal {
 
     // TODO(burdon): Propagate errors.
     this._subscriptions.push(this._pipeline.errors.on(err => console.error(err)));
+
+    if (this._databaseSnapshot) {
+      await this.itemDemuxer!.restoreFromSnapshot(this._databaseSnapshot);
+    }
 
     return this;
   }
@@ -193,5 +202,14 @@ export class PartyInternal {
       database: this._itemDemuxer.createSnapshot(),
       halo: this._partyProcessor.makeSnapshot()
     };
+  }
+
+  async restoreFromSnapshot (snapshot: PartySnapshot) {
+    assert(snapshot.halo);
+    assert(snapshot.database);
+
+    await this.processor.restoreFromSnapshot(snapshot.halo);
+
+    this._databaseSnapshot = snapshot.database;
   }
 }
