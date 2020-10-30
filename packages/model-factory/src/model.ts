@@ -19,7 +19,7 @@ export interface MutationWriteReceipt extends WriteReceipt {
  * Models define a root message type, which is contained in the partent Item's message envelope.
  */
 export abstract class Model<T> {
-  protected readonly _modelUpdate = new Event<this>();
+  public readonly modelUpdate = new Event<this>();
   private readonly _processor: NodeJS.WritableStream;
 
   private readonly _meta: ModelMeta;
@@ -66,7 +66,7 @@ export abstract class Model<T> {
   }
 
   subscribe (listener: (result: this) => void) {
-    return this._modelUpdate.on(listener);
+    return this.modelUpdate.on(listener);
   }
 
   /**
@@ -92,7 +92,7 @@ export abstract class Model<T> {
   async processMessage (meta: MutationMeta, message: T): Promise<void> {
     const modified = await this._processMessage(meta, message);
     if (modified) {
-      this._modelUpdate.emit(this);
+      this.modelUpdate.emit(this);
     }
   }
 
