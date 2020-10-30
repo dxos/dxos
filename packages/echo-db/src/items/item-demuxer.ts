@@ -156,7 +156,19 @@ export class ItemDemuxer {
     const items = snapshot.items ?? [];
     log(`Restoring ${items.length} items from snapshot.`);
 
-    for (const item of sortItemsTopologically(items)) {
+    const knownItems = items.filter(item => {
+      assert(item.itemId);
+      assert(item.modelType);
+      if (!this._itemManager.isModelKnown(item.modelType)) {
+        console.warn(`Unknown model: '${item.modelType}'. Skipping item ${item.itemId}.`);
+        this._ignoredItems.add(item.itemId);
+        return false;
+      } else {
+        return true;
+      }
+    });
+
+    for (const item of sortItemsTopologically(knownItems)) {
       assert(item.itemId);
       assert(item.modelType);
       assert(item.model);

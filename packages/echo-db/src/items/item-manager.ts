@@ -140,7 +140,6 @@ export class ItemManager {
     initialMutations,
     modelSnapshot
   }: ItemConstructionOptions) {
-    assert(this._writeStream);
     assert(itemId);
     assert(modelType);
     assert(readStream);
@@ -172,7 +171,7 @@ export class ItemManager {
     //
     // Convert model-specific outbound mutation to outbound envelope message.
     //
-    const outboundTransform = mapFeedWriter<unknown, EchoEnvelope>(mutation => ({
+    const outboundTransform = this._writeStream && mapFeedWriter<unknown, EchoEnvelope>(mutation => ({
       itemId,
       mutation: modelMeta.mutation.encode(mutation)
     }), this._writeStream);

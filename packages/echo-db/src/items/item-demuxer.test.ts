@@ -130,3 +130,37 @@ it('ignores unknown models', async () => {
   expect(items).toHaveLength(1);
   expect(items[0].model).toBeInstanceOf(TestModel);
 });
+
+it('ignores unknown models on snapshot restore', async () => {
+  const modelFactory = new ModelFactory()
+    .registerModel(TestModel);
+
+  const timeframeClock = new TimeframeClock();
+  const itemManager = new ItemManager(randomBytes(), modelFactory, timeframeClock);
+  const itemDemuxer = new ItemDemuxer(itemManager);
+
+  await itemDemuxer.restoreFromSnapshot({
+    items: [
+      {
+        itemId: 'foo',
+        modelType: 'unknown model',
+        model: {
+          array: {
+            mutations: [
+              {
+                mutation: Buffer.from('abc'),
+                meta: {
+                  feedKey: randomBytes(),
+                  memberKey: randomBytes(),
+                  seq: 0
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  });
+
+  expect(itemManager.queryItems().value).toHaveLength(0);
+});
