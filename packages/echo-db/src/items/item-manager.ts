@@ -69,6 +69,10 @@ export class ItemManager {
     }
   }
 
+  isModelKnown (modelType: ModelType) {
+    return this._modelFactory.hasModel(modelType);
+  }
+
   /**
    * Creates an item and writes the genesis message.
    * @param {ModelType} modelType

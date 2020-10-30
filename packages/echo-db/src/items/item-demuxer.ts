@@ -32,6 +32,11 @@ export class ItemDemuxer {
 
   private readonly _itemStreams = new Map<ItemID, Readable>();
 
+  /**
+   * Items that have unknown model type and are ignored.
+   */
+  private readonly _ignoredItems = new Set<ItemID>();
+
   constructor (
     private readonly _itemManager: ItemManager,
     private readonly _options: ItemManagerOptions = {}
@@ -44,12 +49,22 @@ export class ItemDemuxer {
       const { data: { itemId, genesis, itemMutation, mutation }, meta } = message;
       assert(itemId);
 
+      if (this._ignoredItems.has(itemId)) {
+        return;
+      }
+
       //
       // New item.
       //
       if (genesis) {
         const { itemType, modelType } = genesis;
         assert(modelType);
+
+        if (!this._itemManager.isModelKnown(modelType)) {
+          console.warn(`Unknown model: '${modelType}'. Skipping item ${itemId}.`);
+          this._ignoredItems.add(itemId);
+          return;
+        }
 
         // Create inbound stream for item.
         const itemStream = createReadable<EchoEnvelope>();
