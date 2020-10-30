@@ -13,6 +13,10 @@
   "license": "GPL-3.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "private": false,
   "scripts": {
     "build": "yarn build:protobuf && tsc --build",
