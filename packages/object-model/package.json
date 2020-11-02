@@ -22,7 +22,7 @@
     "build": "yarn build:protobuf && tsc --build",
     "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/defs/object.proto -o src/proto/gen",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
-    "coverage": "jest --coverage --verbose src",
+    "coverage": "jest --coverage --verbose --rootDir=./src",
     "lint": "eslint './src/**/*.ts'",
     "test": "jest --rootDir=./src --verbose --passWithNoTests",
     "prepublishOnly": "npm run test && npm run build",

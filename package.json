@@ -36,8 +36,8 @@
   "scripts": {
     "build": "lerna run build",
     "depcheck": "lerna run depcheck",
-    "coverage": "lerna run coverage",
-    "test": "lerna run test",
+    "coverage": "yarn workspaces run coverage",
+    "test": "yarn workspaces run test",
     "lint": "yarn workspaces run lint",
     "lint:staged": "lint-staged",
     "lint:lockfile": "lockfile-lint --path yarn.lock --allowed-hosts yarn npm codeload.github.com --validate-https",
