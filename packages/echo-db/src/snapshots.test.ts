@@ -8,7 +8,6 @@ import debug from 'debug';
 import { randomBytes } from '@dxos/crypto';
 import { schema } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { ObjectModel, ValueUtil } from '@dxos/object-model';
 
 import { ItemDemuxer, ItemManager } from './items';
@@ -62,18 +61,20 @@ test('can produce & serialize a snapshot', async () => {
 });
 
 test('restored party is identical to the source party', async () => {
-  const { echo, identityManager, feedStoreAdapter, modelFactory, snapshotStore } = await createTestInstance({ initialized: true });
+  const { echo, identityManager, feedStoreAdapter, modelFactory, snapshotStore, networkManager } = await createTestInstance({ initialized: true });
   const party = await echo.createParty();
   const item = await party.database.createItem({ model: ObjectModel, props: { foo: 'foo' } });
   await item.model.setProperty('foo', 'bar');
 
   const snapshot = ((party as any)._impl as PartyInternal).createSnapshot();
 
+  await party.close(); // Close the original to avoid the shared networkManager trying to open the same Party twice.
+
   const partyFactory = new PartyFactory(
     identityManager,
     feedStoreAdapter,
     modelFactory,
-    new NetworkManager(feedStoreAdapter.feedStore, new SwarmProvider()), // recreating network manager to avoid "Already joined swarm" errors.
+    networkManager,
     snapshotStore
   );
 
