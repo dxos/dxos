@@ -21,6 +21,22 @@ export async function warnAfterTimeout<T> (timeout: number, context: string, bod
   }
 }
 
+/**
+ * A decorator that prints a warning to console if method execution time exceeds specified timeout.
+ *
+ * ```typescript
+ * class Foo {
+ *   @timed(5000)
+ *   async doStuff() {
+ *     // long task
+ *   }
+ * }
+ * ```
+ *
+ * This is useful for debugging code that might deadlock.
+ *
+ * @param timeout Timeout in milliseconds after which the warning is printed.
+ */
 export function timed (timeout: number) {
   return (
     target: any,
