@@ -20,9 +20,8 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: |
-        yarn install --frozen-lockfile
-        yarn lint:lockfile
-        yarn lint
-        yarn build
-        yarn coverage
+    - run: yarn install --frozen-lockfile
+    - run: yarn lint:lockfile
+    - run: yarn lint
+    - run: yarn build
+    - run: yarn coverage
