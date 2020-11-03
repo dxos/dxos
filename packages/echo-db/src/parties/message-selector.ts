@@ -24,34 +24,42 @@ export function createMessageSelector (
 ): MessageSelector {
   // TODO(telackey): Add KeyAdmit checks.
   return candidates => {
+    // We go over ECHO candidates here first because checking them is way less expensive then HALO ones.
     for (let i = 0; i < candidates.length; i++) {
-      const { key: feedKey, data: { halo, echo } } = candidates[i];
-      const feedAdmitted = partyProcessor.isFeedAdmitted(feedKey);
+      const { key: feedKey, data: { echo } } = candidates[i];
+      if (!echo) {
+        continue;
+      }
+      assert(echo.timeframe);
 
-      if (halo) {
-        if (feedAdmitted) {
+      if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(echo.timeframe)) {
+        return i;
+      }
+    }
+
+    for (let i = 0; i < candidates.length; i++) {
+      const { key: feedKey, data: { halo } } = candidates[i];
+      if (!halo) {
+        continue;
+      }
+
+      if (partyProcessor.isFeedAdmitted(feedKey)) {
+        return i;
+      }
+
+      if (partyProcessor.genesisRequired) {
+        // TODO(telackey): Add check that this is for the right Party.
+        if (getPartyCredentialMessageType(halo) === PartyCredential.Type.PARTY_GENESIS) {
           return i;
         }
-
-        if (partyProcessor.genesisRequired) {
-          // TODO(telackey): Add check that this is for the right Party.
-          if (getPartyCredentialMessageType(halo) === PartyCredential.Type.PARTY_GENESIS) {
-            return i;
-          }
-        } else if (getPartyCredentialMessageType(halo) === PartyCredential.Type.FEED_ADMIT) {
-          if (admitsKeys(halo).find(key => key.equals(feedKey))) {
-            const signingKeys = Keyring.signingKeys(halo);
-            for (const signedBy of signingKeys) {
-              if (partyProcessor.isMemberKey(signedBy) || signedBy.equals(partyProcessor.partyKey)) {
-                return i;
-              }
+      } else if (getPartyCredentialMessageType(halo) === PartyCredential.Type.FEED_ADMIT) {
+        if (admitsKeys(halo).find(key => key.equals(feedKey))) {
+          // TODO(marik-d): Calling `Keyring.signingKeys` is expensive. Is there any way to optimize/cache this?
+          for (const signedBy of Keyring.signingKeys(halo)) {
+            if (partyProcessor.isMemberKey(signedBy) || signedBy.equals(partyProcessor.partyKey)) {
+              return i;
             }
           }
-        }
-      } else if (echo && feedAdmitted) {
-        assert(echo.timeframe);
-        if (!timeframeClock.hasGaps(echo.timeframe)) {
-          return i;
         }
       }
     }
