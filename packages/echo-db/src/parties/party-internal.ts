@@ -13,7 +13,6 @@ import { timed } from '@dxos/util';
 import { InvitationManager } from '../invitations/invitation-manager';
 import { ItemDemuxer, Item, ItemManager } from '../items';
 import { TimeframeClock } from '../items/timeframe-clock';
-import { IdentityManager } from './identity-manager';
 import { PartyProcessor } from './party-processor';
 import { PartyProtocol } from './party-protocol';
 import { Pipeline } from './pipeline';
@@ -40,14 +39,10 @@ export class PartyInternal {
 
   private _subscriptions: (() => void)[] = [];
 
-  /**
-   * The Party is constructed by the `Database` object.
-   */
   constructor (
     private readonly _modelFactory: ModelFactory,
     private readonly _partyProcessor: PartyProcessor,
     private readonly _pipeline: Pipeline,
-    private readonly _identityManager: IdentityManager,
     private readonly _protocol: PartyProtocol,
     private readonly _timeframeClock: TimeframeClock,
     private readonly _invitationManager: InvitationManager
@@ -155,12 +150,6 @@ export class PartyInternal {
     const { value: items } = this._itemManager.queryItems({ type: PARTY_ITEM_TYPE });
     assert(items.length === 1);
     return items[0];
-  }
-
-  get isHalo () {
-    // The PartyKey of the HALO is the Identity key.
-    assert(this._identityManager.identityKey, 'No identity key');
-    return this._identityManager.identityKey.publicKey.equals(this.key);
   }
 
   /**

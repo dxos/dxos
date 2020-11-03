@@ -233,7 +233,6 @@ export class PartyFactory {
       this._modelFactory,
       partyProcessor,
       pipeline,
-      this._identityManager,
       protocol,
       timeframeClock,
       invitationManager
