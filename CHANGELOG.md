@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0](https://www.github.com/dxos/echo/compare/v2.5.2...v2.6.0) (2020-11-03)
+
+
+### Features
+
+* Offline Invitations ([#288](https://www.github.com/dxos/echo/issues/288)) ([cab99fb](https://www.github.com/dxos/echo/commit/cab99fb6c7eb76e7db8b28974a30a8e0481c7525))
+
+
+### Bug Fixes
+
+* Apply database snapshots only after party open ([53b101a](https://www.github.com/dxos/echo/commit/53b101a7f8575a375f986632f87f3f0f781159ae))
+* Ignore unknown models on snapshot restore ([cc13a44](https://www.github.com/dxos/echo/commit/cc13a441b0e0aecd875ffd8fc9a68dfe641677c0))
+* minor refactoring of function name for consistency ([b51be37](https://www.github.com/dxos/echo/commit/b51be37a30f1c26ecd96d32cd75e3fd143ece56a))
+* Optimize message selector ([cd42db1](https://www.github.com/dxos/echo/commit/cd42db196868445ab892338864fc6c7fd2e17c48))
+
 ### [2.5.2](https://www.github.com/dxos/echo/compare/v2.5.1...v2.5.2) (2020-10-30)
 
 
