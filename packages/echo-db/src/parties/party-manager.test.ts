@@ -26,12 +26,14 @@ import { createWritableFeedStream, latch } from '@dxos/util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { InvitationDescriptor, SecretProvider, SecretValidator } from '../invitations';
+import { OfflineInvitationClaimer } from '../invitations/offline-invitation-claimer';
 import { Item } from '../items';
 import { SnapshotStore } from '../snapshot-store';
 import { messageLogger } from '../testing';
 import { IdentityManager } from './identity-manager';
 import { Party } from './party';
 import { PartyFactory } from './party-factory';
+import { HALO_CONTACT_LIST_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
 
 const log = debug('dxos:echo:parties:party-manager:test');
@@ -604,5 +606,114 @@ describe('Party manager', () => {
       // Now wait to see it on A.
       await updated;
     }
+  });
+
+  test('Join a party - Offline', async () => {
+    const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
+    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
+    assert(identityManagerA.identityKey);
+    assert(identityManagerB.identityKey);
+
+    await partyManagerA.open();
+    await partyManagerB.open();
+
+    // Create the Party.
+    expect(partyManagerA.parties).toHaveLength(0);
+    const partyA = await partyManagerA.createParty();
+    expect(partyManagerA.parties).toHaveLength(1);
+    log(`Created ${keyToString(partyA.key)}`);
+
+    const invitationDescriptor = await partyA.createOfflineInvitation(identityManagerB.identityKey.publicKey);
+
+    // Redeem the invitation on B.
+    expect(partyManagerB.parties).toHaveLength(0);
+    const partyB = await partyManagerB.joinParty(invitationDescriptor,
+      OfflineInvitationClaimer.createSecretProvider(identityManagerB));
+    expect(partyB).toBeDefined();
+    log(`Joined ${keyToString(partyB.key)}`);
+
+    let itemA: Item<any> | null = null;
+    const [updated, onUpdate] = latch();
+
+    // Subscribe to Item updates on B.
+    partyB.itemManager?.queryItems({ type: 'wrn://dxos.org/item/test' })
+      .subscribe((result) => {
+        if (result.length) {
+          const [itemB] = result;
+          if (itemA && itemA.id === itemB.id) {
+            log(`B has ${result[0].id}`);
+            onUpdate();
+          }
+        }
+      });
+
+    // Create a new Item on A.
+    itemA = await partyA.itemManager?.createItem(ObjectModel.meta.type, 'wrn://dxos.org/item/test') as Item<any>;
+    log(`A created ${itemA.id}`);
+
+    // Now wait to see it on B.
+    await updated;
+
+    // Check Party membership and displayName.
+    for (const _party of [partyA, partyB]) {
+      const party = new Party(_party);
+      const members = party.queryMembers().value;
+      expect(members.length).toBe(2);
+      for (const member of members) {
+        if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(humanize(identityManagerA.identityKey!.publicKey));
+          expect(member.displayName).toEqual(identityManagerA.displayName);
+        }
+        if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(humanize(identityManagerB.identityKey!.publicKey));
+          expect(member.displayName).toEqual(identityManagerB.displayName);
+        }
+      }
+    }
+  });
+
+  test('Contacts', async () => {
+    const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
+    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
+    assert(identityManagerA.identityKey);
+    assert(identityManagerB.identityKey);
+
+    await partyManagerA.open();
+    await partyManagerB.open();
+
+    const [updatedA, onUpdateA] = latch();
+    const [updatedB, onUpdateB] = latch();
+
+    identityManagerA?.halo?.itemManager?.queryItems({ type: HALO_CONTACT_LIST_TYPE }).subscribe((value) => {
+      const [list] = value;
+      if (list && list.model.getProperty(identityManagerB?.identityKey?.key)) {
+        onUpdateA();
+      }
+    });
+
+    identityManagerB?.halo?.itemManager?.queryItems({ type: HALO_CONTACT_LIST_TYPE }).subscribe((value) => {
+      const [list] = value;
+      if (list && list.model.getProperty(identityManagerA?.identityKey?.key)) {
+        onUpdateB();
+      }
+    });
+
+    // Create the Party.
+    expect(partyManagerA.parties).toHaveLength(0);
+    const partyA = await partyManagerA.createParty();
+    expect(partyManagerA.parties).toHaveLength(1);
+    log(`Created ${keyToString(partyA.key)}`);
+
+    const invitationDescriptor = await partyA.createOfflineInvitation(identityManagerB.identityKey.publicKey);
+
+    // Redeem the invitation on B.
+    expect(partyManagerB.parties).toHaveLength(0);
+    const partyB = await partyManagerB.joinParty(invitationDescriptor,
+      OfflineInvitationClaimer.createSecretProvider(identityManagerB));
+    expect(partyB).toBeDefined();
+    log(`Joined ${keyToString(partyB.key)}`);
+
+    await updatedA;
+    await updatedB;
   });
 });

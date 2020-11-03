@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { Event, waitForCondition } from '@dxos/async';
-import { Keyring, KeyType, Filter, KeyRecord } from '@dxos/credentials';
+import { Keyring, KeyChain, KeyType, Filter, KeyRecord } from '@dxos/credentials';
 
 import { PartyInternal } from './party-internal';
 
@@ -16,6 +16,10 @@ export class IdentityManager {
   // messages, we need the PartyStateMachine, whether directly or indirectly.
   private _halo?: PartyInternal;
   private _initialized = false;
+
+  private _identityKey?: KeyRecord;
+  private _deviceKey?: KeyRecord;
+  private _deviceKeyChain?: KeyChain;
 
   public readonly ready = new Event<Boolean>();
 
@@ -42,7 +46,10 @@ export class IdentityManager {
   }
 
   get identityKey (): KeyRecord | undefined {
-    return this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
+    if (!this._identityKey) {
+      this._identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
+    }
+    return this._identityKey;
   }
 
   get displayName () {
@@ -50,22 +57,27 @@ export class IdentityManager {
   }
 
   get deviceKey (): KeyRecord | undefined {
-    return this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+    if (!this._deviceKey) {
+      this._deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+    }
+    return this._deviceKey;
   }
 
   get deviceKeyChain () {
-    const { halo, deviceKey } = this;
-    let keyChain;
-    try {
-      keyChain = halo && deviceKey ? Keyring.buildKeyChain(
-        deviceKey.publicKey,
-        halo.processor.credentialMessages,
-        halo.processor.feedKeys
-      ) : undefined;
-    } catch (e) {
-      log('Unable to locate device KeyChain.');
+    if (!this._deviceKeyChain) {
+      const { halo, deviceKey } = this;
+      try {
+        this._deviceKeyChain = halo && deviceKey ? Keyring.buildKeyChain(
+          deviceKey.publicKey,
+          halo.processor.credentialMessages,
+          halo.processor.feedKeys
+        ) : undefined;
+      } catch (e) {
+        log('Unable to locate device KeyChain.');
+      }
     }
-    return keyChain;
+
+    return this._deviceKeyChain;
   }
 
   get initialized () {

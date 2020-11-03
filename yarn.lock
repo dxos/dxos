@@ -1078,10 +1078,15 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@dxos/async@^1.0.0-beta.0", "@dxos/async@^1.0.0-beta.1", "@dxos/async@^1.0.0-beta.5", "@dxos/async@^1.0.0-beta.8":
+"@dxos/async@^1.0.0-beta.0", "@dxos/async@^1.0.0-beta.1":
   version "1.0.0-beta.9"
   resolved "https://registry.yarnpkg.com/@dxos/async/-/async-1.0.0-beta.9.tgz#8253b6a3b32738d89bb69b6e75bff695a2d591a1"
   integrity sha512-Vhjjcb3hYCIBR1mrOBvHgtYyXHk6yRvcK+sMx0/Ffos78eaMVyTRFchiZ4DrT0ZElr8xkO406utNjVdghthcbw==
+
+"@dxos/async@^1.0.0-beta.5", "@dxos/async@^1.0.0-beta.8":
+  version "1.0.0-beta.10"
+  resolved "https://registry.npmjs.org/@dxos/async/-/async-1.0.0-beta.10.tgz#a1247891cbdee3b84614c92d6790a7d7695e9260"
+  integrity sha512-U3f1afmdl8KNjK8y89E89G+Cd2l52+Wjww92hZ9IfiU6wOvNsNG9WRruAYCOoRpBMYaEv/QJq+UuLhgD5o8iSQ==
 
 "@dxos/chess-core@^1.0.0-beta.58":
   version "1.0.0-beta.58"

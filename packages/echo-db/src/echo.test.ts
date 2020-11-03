@@ -13,6 +13,7 @@ import { Timeframe } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 import { latch } from '@dxos/util';
 
+import { SecretProvider, SecretValidator } from './invitations';
 import { createTestInstance } from './testing';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
@@ -224,5 +225,48 @@ describe('api tests', () => {
 
     expect(item.model.getProperty('foo')).toEqual('bar');
     expect(item.model.getProperty('baz')).toEqual(123);
+  });
+
+  test('Contacts', async () => {
+    const echoA = await createECHO();
+    const echoB = await createECHO();
+
+    const partyA = await echoA.createParty();
+
+    const PIN = Buffer.from('0000');
+
+    // Create a validation function which tests the signature of a specific KeyPair.
+    const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
+
+    // And a provider for the secret.
+    // (We reuse the function here, but normally both the Inviter and Invitee would have their own SecretProvider.)
+    const secretProvider: SecretProvider = async () => PIN;
+
+    // Issue the invitation to the Party on A.
+    const invitationDescriptor = await partyA.createInvitation({ secretProvider, secretValidator });
+
+    const [updatedA, onUpdateA] = latch();
+    const [updatedB, onUpdateB] = latch();
+
+    echoA.queryContacts().subscribe((value) => {
+      if (value && value.length) {
+        onUpdateA();
+      }
+    });
+
+    echoB.queryContacts().subscribe((value) => {
+      if (value && value.length) {
+        onUpdateB();
+      }
+    });
+
+    // Redeem the invitation on B.
+    await echoB.joinParty(invitationDescriptor, secretProvider);
+
+    await updatedA;
+    await updatedB;
+
+    expect(echoA.queryContacts().value.length).toBe(1);
+    expect(echoB.queryContacts().value.length).toBe(1);
   });
 });

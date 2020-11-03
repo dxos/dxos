@@ -4,10 +4,11 @@
 
 import assert from 'assert';
 
+import { Event } from '@dxos/async';
 import { PartyKey } from '@dxos/echo-protocol';
 
 import { InvitationDescriptor, SecretProvider } from './invitations';
-import { PartyFilter, PartyManager, Party } from './parties';
+import { PartyFilter, PartyManager, Party, PartyMember, HALO_CONTACT_LIST_TYPE } from './parties';
 import { ResultSet } from './result';
 
 export interface Options {
@@ -15,6 +16,8 @@ export interface Options {
   readLogger?: (msg: any) => void;
   writeLogger?: (msg: any) => void;
 }
+
+export type Contact = PartyMember;
 
 /**
  * This is the root object for the ECHO database.
@@ -107,5 +110,29 @@ export class ECHO {
 
     const impl = await this._partyManager.joinParty(invitationDescriptor, secretProvider);
     return new Party(impl);
+  }
+
+  /**
+   * Query for contacts.  Contacts represent member keys across all known Parties.
+   */
+  queryContacts (): ResultSet<Contact> {
+    assert(this._partyManager.opened, 'Database not open.');
+    assert(this._partyManager.identityManager.halo, 'HALO required.');
+    assert(this._partyManager.identityManager.halo.itemManager, 'ItemManager required.');
+
+    const results = this._partyManager.identityManager.halo.itemManager.queryItems({ type: HALO_CONTACT_LIST_TYPE });
+
+    const getter = () => {
+      const [contactListItem] = results.value;
+      const contacts = contactListItem?.model.toObject();
+      return contacts ? Object.values(contacts) as Contact[] : [];
+    };
+
+    const event = new Event();
+    results.subscribe(() => {
+      event.emit();
+    });
+
+    return new ResultSet(event, getter);
   }
 }

@@ -78,7 +78,7 @@ export class GreetingInitiator {
     // Use the invitation ID as our peerId.
     // This is due to a bug in the protocol where the invitation id is omitted from the payload.
     // Therefore at present the greeter discovers the invitation id from session metadata, via the invitee's peer id.
-    // TODO(dboreham): invitation is actually invitationId.
+    // TODO(dboreham): invitation is actually invitationID.
     const localPeerId = invitation;
     log('Local PeerId:', keyToString(localPeerId));
     this._greeterPlugin = new GreetingCommandPlugin(localPeerId, (new Greeter()).createMessageHandler());

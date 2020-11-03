@@ -17,7 +17,9 @@ import { InvitationDescriptor } from '../invitations/invitation-descriptor';
 import { SnapshotStore } from '../snapshot-store';
 import { IdentityManager } from './identity-manager';
 import { HaloCreationOptions, PartyFactory } from './party-factory';
-import { HALO_PARTY_DESCRIPTOR_TYPE, PartyInternal } from './party-internal';
+import { HALO_CONTACT_LIST_TYPE, HALO_PARTY_DESCRIPTOR_TYPE, PartyInternal } from './party-internal';
+
+const CONTACT_DEBOUNCE_INTERVAL = 500;
 
 const log = debug('dxos:echo:parties:party-manager');
 
@@ -40,7 +42,11 @@ export class PartyManager {
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _partyFactory: PartyFactory,
     private readonly _snapshotStore: SnapshotStore
-  ) { }
+  ) {}
+
+  get identityManager () {
+    return this._identityManager;
+  }
 
   get parties (): PartyInternal[] {
     return Array.from(this._parties.values());
@@ -82,8 +88,7 @@ export class PartyManager {
 
         // TODO(telackey): Should parties be auto-opened?
         await party.open();
-        this._parties.set(party.key, party);
-        this.update.emit(party);
+        this._setParty(party);
       }
     }
 
@@ -157,8 +162,7 @@ export class PartyManager {
       await party.close();
       throw new Error(`Party already exists ${keyToString(party.key)}`); // TODO(marik-d): Handle this gracefully
     }
-    this._parties.set(party.key, party);
-    this.update.emit(party);
+    this._setParty(party);
     return party;
   }
 
@@ -182,8 +186,7 @@ export class PartyManager {
       await party.close();
       throw new Error(`Party already exists ${keyToString(party.key)}`); // TODO(marik-d): Handle this gracefully
     }
-    this._parties.set(party.key, party);
-    this.update.emit(party);
+    this._setParty(party);
   }
 
   @synchronized
@@ -198,8 +201,7 @@ export class PartyManager {
       await party.close();
       throw new Error(`Party already exists ${keyToString(party.key)}`); // TODO(marik-d): Handle this gracefully
     }
-    this._parties.set(party.key, party);
-    this.update.emit(party);
+    this._setParty(party);
     return party;
   }
 
@@ -221,6 +223,46 @@ export class PartyManager {
         }
       }
     });
+  }
+
+  private _setParty (party: PartyInternal) {
+    const debounced = party.processor.keyOrInfoAdded.debounce(CONTACT_DEBOUNCE_INTERVAL).discardParameter();
+    debounced.on(() => this._updateContactList(party));
+
+    this._parties.set(party.key, party);
+    this.update.emit(party);
+  }
+
+  private async _updateContactList (party: PartyInternal) {
+    const [contactListItem] = this._identityManager.halo?.itemManager?.queryItems({ type: HALO_CONTACT_LIST_TYPE }).value ?? [];
+    if (!contactListItem) {
+      return;
+    }
+
+    const contactList = contactListItem.model.toObject();
+
+    for (const publicKey of party.processor.memberKeys) {
+      // A key that represents either us or the Party itself is never a contact.
+      if (this._identityManager?.identityKey?.publicKey.equals(publicKey) || Buffer.compare(publicKey, party.key) === 0) {
+        continue;
+      }
+
+      const hexKey = keyToString(publicKey);
+      const contact = contactList[hexKey];
+      const memberInfo = party.processor.getMemberInfo(publicKey);
+
+      if (contact) {
+        if (memberInfo && contact.displayName !== memberInfo.displayName) {
+          log(`Updating contact ${hexKey} to ${memberInfo.displayName}`);
+          contact.displayName = memberInfo.displayName;
+          await contactListItem.model.setProperty(hexKey, memberInfo);
+        }
+      } else {
+        const displayName = memberInfo?.displayName ?? hexKey;
+        log(`Creating contact ${hexKey} to ${displayName}`);
+        await contactListItem.model.setProperty(hexKey, { publicKey, displayName });
+      }
+    }
   }
 
   private _isHalo (partyKey: PublicKey) {

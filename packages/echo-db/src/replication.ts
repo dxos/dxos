@@ -13,14 +13,15 @@ import {
   GreetingCommandPlugin
 } from '@dxos/credentials';
 import { discoveryKey, keyToString } from '@dxos/crypto';
-import { FeedKey, PartyKey } from '@dxos/echo-protocol';
+import { FeedKey } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
 import { FeedStoreAdapter } from './feed-store-adapter';
 import { HaloRecoveryInitiator } from './invitations/halo-recovery-initiator';
-import { FeedSetProvider, IdentityManager } from './parties';
+import { OfflineInvitationClaimer } from './invitations/offline-invitation-claimer';
+import { FeedSetProvider, IdentityManager, PartyInternal } from './parties';
 
 const log = debug('dxos:echo:replication-adapter');
 
@@ -29,6 +30,10 @@ export interface CredentialsProvider {
    * The credentials (eg, a serialized AuthMessage) as a bytes.
    */
   get(): Buffer
+}
+
+export interface PartyProvider {
+  get(): PartyInternal
 }
 
 /**
@@ -41,42 +46,48 @@ export class ReplicationAdapter {
     private readonly _identityManager: IdentityManager,
     private readonly _networkManager: NetworkManager,
     private readonly _feedStore: FeedStoreAdapter,
-    private readonly _partyKey: PartyKey,
+    private readonly _party: PartyProvider,
     private readonly _activeFeeds: FeedSetProvider,
     private readonly _credentials: CredentialsProvider,
     private readonly _authenticator: Authenticator
   ) {
   }
 
-  start (): void {
+  async start () {
     if (this._started) {
       return;
     }
     this._started = true;
 
-    log('Start', keyToString(this._partyKey));
-    this._networkManager.joinProtocolSwarm(Buffer.from(this._partyKey), ({ channel }: any) => this._createProtocol(channel));
+    const party = this._party.get();
+
+    log('Start', keyToString(party.key));
+    return this._networkManager.joinProtocolSwarm(Buffer.from(party.key), ({ channel }: any) => this._createProtocol(channel));
   }
 
-  stop (): void {
+  async stop () {
     if (!this._started) {
       return;
     }
-    log('Stop');
-
-    // TODO(marik-d): Not implmented.
     this._started = false;
+
+    const party = this._party.get();
+    log('Stop', keyToString(party.key));
+
+    return this._networkManager.leaveProtocolSwarm(Buffer.from(party.key));
   }
 
   @synchronized
   private async _openFeed (key: FeedKey): Promise<hypercore.Feed> {
-    return this._feedStore.getFeed(key) ?? await this._feedStore.createReadOnlyFeed(key, this._partyKey);
+    const party = this._party.get();
+    return this._feedStore.getFeed(key) ?? await this._feedStore.createReadOnlyFeed(key, party.key);
   }
 
   private _createProtocol (channel: any) {
     assert(this._identityManager.identityKey);
     assert(this._identityManager.deviceKey);
-    const isHalo = this._identityManager.identityKey.publicKey.equals(this._partyKey);
+    const party = this._party.get();
+    const isHalo = this._identityManager.identityKey.publicKey.equals(party.key);
     const plugins = [];
 
     // The Auth plugin must always come first.
@@ -94,6 +105,13 @@ export class ReplicationAdapter {
         new GreetingCommandPlugin(
           this._identityManager.deviceKey.publicKey,
           HaloRecoveryInitiator.createHaloInvitationClaimHandler(this._identityManager)
+        )
+      );
+    } else {
+      plugins.push(
+        new GreetingCommandPlugin(
+          this._identityManager.deviceKey.publicKey,
+          OfflineInvitationClaimer.makePartyInvitationClaimHandler(party)
         )
       );
     }
@@ -131,14 +149,15 @@ export class ReplicationAdapter {
       },
 
       discoveryToPublicKey: (dk: any) => {
-        if (!discoveryKey(this._partyKey).equals(dk)) {
+        const party = this._party.get();
+        if (!discoveryKey(party.key).equals(dk)) {
           return undefined;
         }
 
         // TODO(marik-d): Why does this do side effects.
         // TODO(burdon): Remove need for external closure (i.e., pass object to this callback).
-        protocol.setContext({ topic: keyToString(this._partyKey) });
-        return this._partyKey;
+        protocol.setContext({ topic: keyToString(party.key) });
+        return party.key;
       }
     })
       .setSession({

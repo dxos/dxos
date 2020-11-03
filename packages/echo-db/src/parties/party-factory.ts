@@ -27,8 +27,9 @@ import { ObjectModel } from '@dxos/object-model';
 import { raise, timed } from '@dxos/util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
-import { GreetingInitiator, InvitationDescriptor, SecretProvider } from '../invitations';
+import { GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, SecretProvider } from '../invitations';
 import { HaloRecoveryInitiator } from '../invitations/halo-recovery-initiator';
+import { OfflineInvitationClaimer } from '../invitations/offline-invitation-claimer';
 import { TimeframeClock } from '../items/timeframe-clock';
 import { ReplicationAdapter } from '../replication';
 import { SnapshotStore } from '../snapshot-store';
@@ -37,7 +38,7 @@ import { createMessageSelector } from './message-selector';
 import {
   PartyInternal,
   PARTY_ITEM_TYPE,
-  HALO_PARTY_DESCRIPTOR_TYPE
+  HALO_PARTY_DESCRIPTOR_TYPE, HALO_CONTACT_LIST_TYPE
 } from './party-internal';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
@@ -207,12 +208,23 @@ export class PartyFactory {
     const pipeline = new Pipeline(
       partyProcessor, iterator, timeframeClock, feedWriteStream, this._options);
 
+    // We need this reference inside the PartyProvider closure.
+    // eslint-disable-next-line prefer-const
+    let party: PartyInternal;
+
+    const partyProvider = {
+      get: () => {
+        assert(party);
+        return party;
+      }
+    };
+
     assert(this._identityManager.deviceKey, 'No device key.');
     const replicator = new ReplicationAdapter(
       this._identityManager,
       this._networkManager,
       this._feedStore,
-      partyKey,
+      partyProvider,
       partyProcessor.getActiveFeedSet(),
       this._createCredentialsProvider(partyKey, feed?.key),
       partyProcessor.authenticator
@@ -221,7 +233,7 @@ export class PartyFactory {
     //
     // Create the party.
     //
-    const party = new PartyInternal(
+    party = new PartyInternal(
       this._modelFactory,
       partyProcessor,
       pipeline,
@@ -250,6 +262,18 @@ export class PartyFactory {
 
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<PartyInternal> {
     const haloInvitation = !!invitationDescriptor.identityKey;
+    const originalInvitation = invitationDescriptor;
+
+    // Claim the offline invitation and convert it into an interactive invitation.
+    if (InvitationDescriptorType.OFFLINE_KEY === invitationDescriptor.type) {
+      const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, this._identityManager, invitationDescriptor);
+      await invitationClaimer.connect();
+      invitationDescriptor = await invitationClaimer.claim();
+      log(`Party invitation ${keyToString(originalInvitation.invitation)} triggered interactive Greeting`,
+        `at ${keyToString(invitationDescriptor.invitation)}`);
+      await invitationClaimer.destroy();
+    }
+
     const initiator = new GreetingInitiator(
       this._networkManager,
       this._identityManager,
@@ -311,20 +335,7 @@ export class PartyFactory {
 
     const invitationDescriptor = await recoverer.claim();
 
-    // The secretProvider should provide an `Auth` message signed directly by the Identity key.
-    const secretProvider: SecretProvider = async (info) => Authenticator.encodePayload(
-      // The signed portion of the Auth message includes the ID and authNonce provided
-      // by "info". These values will be validated on the other end.
-      createAuthMessage(
-        this._identityManager.keyring,
-        info.id.value,
-        this._identityManager.identityKey ?? raise(new Error('No identity key')),
-        this._identityManager.identityKey ?? raise(new Error('No identity key')),
-        undefined,
-        info.authNonce.value)
-    );
-
-    return this._joinHalo(invitationDescriptor, secretProvider);
+    return this._joinHalo(invitationDescriptor, recoverer.createSecretProvider());
   }
 
   async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
@@ -399,6 +410,7 @@ export class PartyFactory {
     // Create special properties item.
     assert(halo.itemManager);
     await halo.itemManager.createItem(ObjectModel.meta.type, PARTY_ITEM_TYPE);
+    await halo.itemManager.createItem(ObjectModel.meta.type, HALO_CONTACT_LIST_TYPE);
 
     // Do no retain the Identity secret key after creation of the HALO.
     await this._identityManager.keyring.deleteSecretKey(identityKey);
@@ -412,7 +424,7 @@ export class PartyFactory {
         this._identityManager.keyring,
         Buffer.from(partyKey),
         this._identityManager.identityKey ?? raise(new Error('No identity key')),
-        this._identityManager.deviceKeyChain ?? this._identityManager.deviceKey,
+        this._identityManager.deviceKeyChain ?? this._identityManager.deviceKey ?? raise(new Error('No device key')),
         this._identityManager.keyring.getKey(feedKey)
       ))
     };

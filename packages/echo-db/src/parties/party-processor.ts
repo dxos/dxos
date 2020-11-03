@@ -29,14 +29,13 @@ export interface FeedSetProvider {
  * Party processor for testing.
  */
 export class PartyProcessor {
+  private readonly _authenticator: Authenticator;
+  private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
+  private readonly _stateMachine: PartyStateMachine;
+
   protected readonly _feedAdded = new Event<FeedKey>()
 
-  private readonly _stateMachine: PartyStateMachine;
-  private readonly _authenticator: Authenticator;
-
   public readonly keyOrInfoAdded = new Event<PublicKey>();
-
-  private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
 
   /**
    * Used to generate halo snapshot.
@@ -121,6 +120,10 @@ export class PartyProcessor {
       get: () => this.feedKeys,
       added: this._feedAdded
     };
+  }
+
+  getOfflineInvitation (invitationID: Buffer) {
+    return this._stateMachine.getInvitation(invitationID);
   }
 
   async takeHints (hints: KeyHint[]) {

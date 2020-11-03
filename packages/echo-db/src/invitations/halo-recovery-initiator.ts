@@ -13,13 +13,15 @@ import {
   KeyType,
   GreetingCommandPlugin,
   PartyInvitationClaimHandler,
+  createAuthMessage,
   createGreetingClaimMessage
 } from '@dxos/credentials';
 import { keyToString, randomBytes, verify } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
+import { raise } from '@dxos/util';
 
 import { IdentityManager } from '../parties';
-import { SecretValidator } from './common';
+import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
@@ -95,7 +97,7 @@ export class HaloRecoveryInitiator {
     const peer = this._greeterPlugin.peers[0];
     const { peerId: responderPeerId } = peer.getSession();
 
-    // Synthesize an "invitationId" which is the signature of both peerIds signed by our Identity key.
+    // Synthesize an "invitationID" which is the signature of both peerIds signed by our Identity key.
     const signature = this._identityManager.keyring.rawSign(
       Buffer.concat([this._peerId, responderPeerId]),
       this._identityManager.identityKey
@@ -132,15 +134,31 @@ export class HaloRecoveryInitiator {
     log('Destroyed');
   }
 
+  // The secretProvider should provide an `Auth` message signed directly by the Identity key.
+  createSecretProvider () {
+    const provider: SecretProvider = async (info) => Authenticator.encodePayload(
+      // The signed portion of the Auth message includes the ID and authNonce provided
+      // by "info". These values will be validated on the other end.
+      createAuthMessage(
+        this._identityManager.keyring,
+        info.id.value,
+        this._identityManager.identityKey ?? raise(new Error('No identity key')),
+        this._identityManager.identityKey ?? raise(new Error('No identity key')),
+        undefined,
+        info.authNonce.value)
+    );
+    return provider;
+  }
+
   static createHaloInvitationClaimHandler (identityManager: IdentityManager) {
-    const claimHandler = new PartyInvitationClaimHandler(async (invitationId: Buffer, remotePeerId: Buffer, peerId: Buffer) => {
+    const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer, remotePeerId: Buffer, peerId: Buffer) => {
       assert(identityManager.halo, 'HALO is required');
       assert(identityManager.identityKey);
 
       // The invitationtId is the signature of both peerIds, signed by the Identity key.
-      const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationId, identityManager.identityKey.publicKey);
+      const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationID, identityManager.identityKey.publicKey);
       if (!ok) {
-        throw new Error(`Invalid invitation ${keyToString(invitationId)}`);
+        throw new Error(`Invalid invitation ${keyToString(invitationID)}`);
       }
 
       // Create a Keyring containing only our own PublicKey. Only a message signed by the matching private key,
