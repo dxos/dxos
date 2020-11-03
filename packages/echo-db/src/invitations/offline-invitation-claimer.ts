@@ -124,9 +124,9 @@ export class OfflineInvitationClaimer {
   /**
    * Create a function for handling PartyInvitation claims on the indicated Party. This is used by members
    * of the Party for responding to attempts to claim an Invitation which has been written to the Party.
-   * @param {Party} party
+   * @param {InvitationManager} invitationManager
    */
-  static makePartyInvitationClaimHandler (invitationManager: InvitationManager) {
+  static createOfflineInvitationClaimHandler (invitationManager: InvitationManager) {
     const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer) => {
       const invitationMessage = invitationManager.getOfflineInvitation(invitationID);
       if (!invitationMessage) {

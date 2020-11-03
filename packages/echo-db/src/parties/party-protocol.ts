@@ -109,7 +109,7 @@ export class PartyProtocol {
       plugins.push(
         new GreetingCommandPlugin(
           this._identityManager.deviceKey.publicKey,
-          OfflineInvitationClaimer.makePartyInvitationClaimHandler(this._invitationManager)
+          OfflineInvitationClaimer.createOfflineInvitationClaimHandler(this._invitationManager)
         )
       );
     }
