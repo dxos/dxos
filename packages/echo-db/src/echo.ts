@@ -8,7 +8,8 @@ import { Event } from '@dxos/async';
 import { PartyKey } from '@dxos/echo-protocol';
 
 import { InvitationDescriptor, SecretProvider } from './invitations';
-import { PartyFilter, PartyManager, Party, PartyMember, HALO_CONTACT_LIST_TYPE } from './parties';
+import { PartyFilter, PartyManager, Party, PartyMember } from './parties';
+import { HALO_CONTACT_LIST_TYPE } from './parties/halo-party';
 import { ResultSet } from './result';
 
 export interface Options {

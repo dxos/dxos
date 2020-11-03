@@ -20,11 +20,12 @@ import { keyToString, randomBytes } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 import { raise } from '@dxos/util';
 
-import { IdentityManager, PartyInternal } from '../parties';
+import { IdentityManager } from '../parties';
 import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
+import { InvitationManager } from './invitation-manager';
 
 const log = debug('dxos:party-manager:party-invitation-claimer');
 
@@ -125,9 +126,9 @@ export class OfflineInvitationClaimer {
    * of the Party for responding to attempts to claim an Invitation which has been written to the Party.
    * @param {Party} party
    */
-  static makePartyInvitationClaimHandler (party: PartyInternal) {
+  static makePartyInvitationClaimHandler (invitationManager: InvitationManager) {
     const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer) => {
-      const invitationMessage = party.processor.getOfflineInvitation(invitationID);
+      const invitationMessage = invitationManager.getOfflineInvitation(invitationID);
       if (!invitationMessage) {
         throw new Error(`Invalid invitation ${keyToString(invitationID)}`);
       }
@@ -153,7 +154,7 @@ export class OfflineInvitationClaimer {
           invitation.authNonce.equals(authMessage.signed.nonce);
       };
 
-      return party.createInvitation({ secretValidator }, { expiration: Date.now() + 60000 });
+      return invitationManager.createInvitation({ secretValidator }, { expiration: Date.now() + 60000 });
     });
 
     return claimHandler.createMessageHandler();

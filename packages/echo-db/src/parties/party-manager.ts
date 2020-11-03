@@ -17,7 +17,7 @@ import { InvitationDescriptor } from '../invitations/invitation-descriptor';
 import { SnapshotStore } from '../snapshot-store';
 import { IdentityManager } from './identity-manager';
 import { HaloCreationOptions, PartyFactory } from './party-factory';
-import { HALO_CONTACT_LIST_TYPE, HALO_PARTY_DESCRIPTOR_TYPE, PartyInternal } from './party-internal';
+import { PartyInternal } from './party-internal';
 
 const CONTACT_DEBOUNCE_INTERVAL = 500;
 
@@ -210,16 +210,11 @@ export class PartyManager {
     assert(halo.itemManager, 'ItemManger is required');
     await this._identityManager.initialize(halo);
 
-    const result = await halo.itemManager.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE });
-    result.subscribe(async (values) => {
+    this._identityManager.halo!.subscribeToJoinedPartyList(async values => {
       for (const partyDesc of values) {
-        const partyKey = partyDesc.model.getProperty('publicKey');
-        if (!this._parties.has(partyKey)) {
-          log(`Auto-opening new Party from HALO: ${keyToString(partyKey)}`);
-
-          // TODO(telackey): Fix ObjectModel's handling of arrays.
-          const hints = Object.values(partyDesc.model.getProperty('hints')) as KeyHint[];
-          await this.addParty(partyKey, hints);
+        if (!this._parties.has(partyDesc.partyKey)) {
+          log(`Auto-opening new Party from HALO: ${keyToString(partyDesc.partyKey)}`);
+          await this.addParty(partyDesc.partyKey, partyDesc.keyHints);
         }
       }
     });
@@ -234,12 +229,12 @@ export class PartyManager {
   }
 
   private async _updateContactList (party: PartyInternal) {
-    const [contactListItem] = this._identityManager.halo?.itemManager?.queryItems({ type: HALO_CONTACT_LIST_TYPE }).value ?? [];
+    const contactListItem = this._identityManager.halo?.getContactListItem();
     if (!contactListItem) {
       return;
     }
 
-    const contactList = contactListItem.model.toObject();
+    const contactList = contactListItem.model.toObject() as any;
 
     for (const publicKey of party.processor.memberKeys) {
       // A key that represents either us or the Party itself is never a contact.

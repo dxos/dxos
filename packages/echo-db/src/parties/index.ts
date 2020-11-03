@@ -10,3 +10,4 @@ export * from './pipeline';
 export * from './party-processor';
 export * from './party-factory';
 export * from './party';
+export * from './party-protocol';

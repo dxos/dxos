@@ -2,20 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import debug from 'debug';
 
 import { Event, waitForCondition } from '@dxos/async';
 import { Keyring, KeyChain, KeyType, Filter, KeyRecord } from '@dxos/credentials';
 
+import { HaloParty } from './halo-party';
 import { PartyInternal } from './party-internal';
 
 const log = debug('dxos:echo:parties:identity-manager');
 
 export class IdentityManager {
-  // TODO(telackey): Party here is wrong, or at least incomplete. To build KeyChains and retrieve Identity "genesis"
-  // messages, we need the PartyStateMachine, whether directly or indirectly.
-  private _halo?: PartyInternal;
-  private _initialized = false;
+  private _halo?: HaloParty;
 
   private _identityKey?: KeyRecord;
   private _deviceKey?: KeyRecord;
@@ -36,13 +35,11 @@ export class IdentityManager {
   }
 
   get identityGenesis () {
-    const { halo, identityKey } = this;
-    return halo && identityKey ? halo.processor.credentialMessages.get(identityKey.key) : undefined;
+    return this.halo?.identityGenesis;
   }
 
   get identityInfo () {
-    const { halo, identityKey } = this;
-    return halo && identityKey ? halo.processor.infoMessages.get(identityKey.key) : undefined;
+    return this.halo?.identityInfo;
   }
 
   get identityKey (): KeyRecord | undefined {
@@ -69,8 +66,8 @@ export class IdentityManager {
       try {
         this._deviceKeyChain = halo && deviceKey ? Keyring.buildKeyChain(
           deviceKey.publicKey,
-          halo.processor.credentialMessages,
-          halo.processor.feedKeys
+          halo.credentialMessages,
+          halo.feedKeys
         ) : undefined;
       } catch (e) {
         log('Unable to locate device KeyChain.');
@@ -81,21 +78,20 @@ export class IdentityManager {
   }
 
   get initialized () {
-    return this._initialized;
+    return !!this._halo;
   }
 
   async initialize (halo: PartyInternal) {
-    this._halo = halo;
+    assert(this._identityKey, 'No identity key');
+    this._halo = new HaloParty(halo, this._identityKey.publicKey);
 
     // Wait for the minimum set of keys and messages we need for proper function.
     await waitForCondition(() =>
-      this._halo &&
-      this._halo.processor.memberKeys.length &&
+      this._halo!.memberKeys.length &&
       this.identityGenesis &&
       this.deviceKeyChain
     );
 
-    this._initialized = true;
     this.ready.emit(true);
   }
 }

@@ -30,10 +30,10 @@ import { OfflineInvitationClaimer } from '../invitations/offline-invitation-clai
 import { Item } from '../items';
 import { SnapshotStore } from '../snapshot-store';
 import { messageLogger } from '../testing';
+import { HALO_CONTACT_LIST_TYPE } from './halo-party';
 import { IdentityManager } from './identity-manager';
 import { Party } from './party';
 import { PartyFactory } from './party-factory';
-import { HALO_CONTACT_LIST_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
 
 const log = debug('dxos:echo:parties:party-manager:test');
@@ -208,7 +208,7 @@ describe('Party manager', () => {
     const secretProvider: SecretProvider = async () => PIN;
 
     // Issue the invitation to the Party on A.
-    const invitationDescriptor = await partyA.createInvitation({ secretProvider, secretValidator });
+    const invitationDescriptor = await partyA.invitationManager.createInvitation({ secretProvider, secretValidator });
 
     // Redeem the invitation on B.
     expect(partyManagerB.parties).toHaveLength(0);
@@ -279,7 +279,7 @@ describe('Party manager', () => {
     };
 
     // Issue the invitation to the Party on A.
-    const invitationDescriptor = await partyA.createInvitation({ secretValidator });
+    const invitationDescriptor = await partyA.invitationManager.createInvitation({ secretValidator });
 
     // The "secret" is composed of the signature (fixed length) followed by the message (variable length).
     // The "secret" must be signed by the designated key.
@@ -349,7 +349,7 @@ describe('Party manager', () => {
       secret && secret.equals(invitation.secret);
 
     // Issue the invitation on nodeA.
-    const invitation = await identityManagerA?.halo?.createInvitation({
+    const invitation = await identityManagerA?.halo?.invitationManager.createInvitation({
       secretValidator,
       secretProvider
     }) as InvitationDescriptor;
@@ -442,7 +442,7 @@ describe('Party manager', () => {
 
     {
       // Issue the invitation on nodeA.
-      const invitation = await identityManagerA1?.halo?.createInvitation({
+      const invitation = await identityManagerA1?.halo?.invitationManager.createInvitation({
         secretValidator,
         secretProvider
       }) as InvitationDescriptor;
@@ -453,7 +453,7 @@ describe('Party manager', () => {
 
     {
       // Issue the invitation on node 1.
-      const invitation = await identityManagerB1?.halo?.createInvitation({
+      const invitation = await identityManagerB1?.halo?.invitationManager.createInvitation({
         secretValidator,
         secretProvider
       }) as InvitationDescriptor;
@@ -487,7 +487,7 @@ describe('Party manager', () => {
       const [partyUpdatedB, onPartyUpdateB] = latch();
       partyManagerB2.update.on(onPartyUpdateB);
 
-      const invitation = await partyA.createInvitation({ secretProvider, secretValidator });
+      const invitation = await partyA.invitationManager.createInvitation({ secretProvider, secretValidator });
       await partyManagerB1.joinParty(invitation, secretProvider);
 
       await partyUpdatedB;
@@ -623,7 +623,7 @@ describe('Party manager', () => {
     expect(partyManagerA.parties).toHaveLength(1);
     log(`Created ${keyToString(partyA.key)}`);
 
-    const invitationDescriptor = await partyA.createOfflineInvitation(identityManagerB.identityKey.publicKey);
+    const invitationDescriptor = await partyA.invitationManager.createOfflineInvitation(identityManagerB.identityKey.publicKey);
 
     // Redeem the invitation on B.
     expect(partyManagerB.parties).toHaveLength(0);
@@ -704,7 +704,7 @@ describe('Party manager', () => {
     expect(partyManagerA.parties).toHaveLength(1);
     log(`Created ${keyToString(partyA.key)}`);
 
-    const invitationDescriptor = await partyA.createOfflineInvitation(identityManagerB.identityKey.publicKey);
+    const invitationDescriptor = await partyA.invitationManager.createOfflineInvitation(identityManagerB.identityKey.publicKey);
 
     // Redeem the invitation on B.
     expect(partyManagerB.parties).toHaveLength(0);

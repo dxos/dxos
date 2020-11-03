@@ -5,27 +5,21 @@
 import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
-import { createPartyInvitationMessage } from '@dxos/credentials';
-import { DatabaseSnapshot, PartyKey, PartySnapshot, PublicKey } from '@dxos/echo-protocol';
+import { DatabaseSnapshot, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { timed } from '@dxos/util';
 
-import {
-  GreetingResponder, InvitationDescriptor, InvitationDescriptorType, InvitationAuthenticator, InvitationOptions
-} from '../invitations';
+import { InvitationManager } from '../invitations/invitation-manager';
 import { ItemDemuxer, Item, ItemManager } from '../items';
 import { TimeframeClock } from '../items/timeframe-clock';
-import { ReplicationAdapter } from '../replication';
 import { IdentityManager } from './identity-manager';
 import { PartyProcessor } from './party-processor';
+import { PartyProtocol } from './party-protocol';
 import { Pipeline } from './pipeline';
 
 // TODO(burdon): Format?
 export const PARTY_ITEM_TYPE = 'wrn://dxos.org/item/party';
-export const HALO_PARTY_DESCRIPTOR_TYPE = 'wrn://dxos.org/item/halo/party-descriptor';
-export const HALO_CONTACT_LIST_TYPE = 'wrn://dxos.org/item/halo/contact-list';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface PartyFilter {}
@@ -54,9 +48,9 @@ export class PartyInternal {
     private readonly _partyProcessor: PartyProcessor,
     private readonly _pipeline: Pipeline,
     private readonly _identityManager: IdentityManager,
-    private readonly _networkManager: NetworkManager,
-    private readonly _replicator: ReplicationAdapter,
-    private readonly _timeframeClock: TimeframeClock
+    private readonly _protocol: PartyProtocol,
+    private readonly _timeframeClock: TimeframeClock,
+    private readonly _invitationManager: InvitationManager
   ) {
     assert(this._modelFactory);
     assert(this._partyProcessor);
@@ -87,6 +81,10 @@ export class PartyInternal {
     return this._pipeline;
   }
 
+  get invitationManager () {
+    return this._invitationManager;
+  }
+
   /**
    * Opens the pipeline and connects the streams.
    */
@@ -112,7 +110,7 @@ export class PartyInternal {
     }
 
     // Replication.
-    await this._replicator.start();
+    await this._protocol.start();
 
     // TODO(burdon): Propagate errors.
     this._subscriptions.push(this._pipeline.errors.on(err => console.error(err)));
@@ -133,7 +131,7 @@ export class PartyInternal {
       return this;
     }
 
-    await this._replicator.stop();
+    await this._protocol.stop();
 
     // Disconnect the read stream.
     this._pipeline.inboundEchoStream?.unpipe(this._inboundEchoStream);
@@ -147,54 +145,6 @@ export class PartyInternal {
     this._subscriptions.forEach(cb => cb());
 
     return this;
-  }
-
-  async createOfflineInvitation (publicKey: PublicKey) {
-    assert(!this.isHalo, 'Offline invitations to HALO are not allowed.');
-    assert(this._identityManager.identityKey, 'Identity key is required.');
-    assert(this._identityManager.deviceKeyChain, 'Device keychain is required.');
-    assert(this._pipeline.outboundHaloStream);
-
-    const invitationMessage = createPartyInvitationMessage(
-      this._identityManager.keyring,
-      this.key,
-      publicKey,
-      this._identityManager.identityKey,
-      this._identityManager.deviceKeyChain
-    );
-    this._pipeline.outboundHaloStream.write(invitationMessage);
-
-    return new InvitationDescriptor(
-      InvitationDescriptorType.OFFLINE_KEY,
-      this.key,
-      invitationMessage.payload.signed.payload.id
-    );
-  }
-
-  /**
-   * Creates an invitation for a remote peer.
-   */
-  async createInvitation (authenticationDetails: InvitationAuthenticator, options: InvitationOptions = {}) {
-    assert(this._networkManager);
-
-    const responder = new GreetingResponder(
-      this._identityManager,
-      this._networkManager,
-      this._partyProcessor
-    );
-
-    const { secretValidator, secretProvider } = authenticationDetails;
-    const { onFinish, expiration } = options;
-
-    const swarmKey = await responder.start();
-    const invitation = await responder.invite(secretValidator, secretProvider, onFinish, expiration);
-
-    return new InvitationDescriptor(
-      InvitationDescriptorType.INTERACTIVE,
-      swarmKey,
-      invitation,
-      this.isHalo ? Buffer.from(this.key) : undefined
-    );
   }
 
   /**

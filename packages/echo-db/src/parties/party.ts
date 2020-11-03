@@ -103,6 +103,6 @@ export class Party {
    * Creates an invition for a remote peer.
    */
   async createInvitation (authenticationDetails: InvitationAuthenticator, options: InvitationOptions = {}) {
-    return this._impl.createInvitation(authenticationDetails, options);
+    return this._impl.invitationManager.createInvitation(authenticationDetails, options);
   }
 }

@@ -180,7 +180,7 @@ export class HaloRecoveryInitiator {
       };
 
       // TODO(telackey): Configure expiration?
-      return identityManager.halo.createInvitation({ secretValidator }, { expiration: Date.now() + 60000 });
+      return identityManager.halo.invitationManager.createInvitation({ secretValidator }, { expiration: Date.now() + 60000 });
     });
 
     return claimHandler.createMessageHandler();

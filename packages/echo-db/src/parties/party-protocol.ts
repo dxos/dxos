@@ -13,15 +13,17 @@ import {
   GreetingCommandPlugin
 } from '@dxos/credentials';
 import { discoveryKey, keyToString } from '@dxos/crypto';
-import { FeedKey } from '@dxos/echo-protocol';
+import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
-import { FeedStoreAdapter } from './feed-store-adapter';
-import { HaloRecoveryInitiator } from './invitations/halo-recovery-initiator';
-import { OfflineInvitationClaimer } from './invitations/offline-invitation-claimer';
-import { FeedSetProvider, IdentityManager, PartyInternal } from './parties';
+import { FeedStoreAdapter } from '../feed-store-adapter';
+import { HaloRecoveryInitiator } from '../invitations/halo-recovery-initiator';
+import { InvitationManager } from '../invitations/invitation-manager';
+import { OfflineInvitationClaimer } from '../invitations/offline-invitation-claimer';
+import { IdentityManager } from './identity-manager';
+import { PartyInternal } from './party-internal';
 
 const log = debug('dxos:echo:replication-adapter');
 
@@ -37,19 +39,20 @@ export interface PartyProvider {
 }
 
 /**
- * Joins a network swarm with replication protocol. Coordinates opening new feeds in the feed store.
+ * Joins a network swarm with replication protocol and offline invitation/halo recovery protocol.
  */
-export class ReplicationAdapter {
+export class PartyProtocol {
   private _started = false;
 
   constructor (
     private readonly _identityManager: IdentityManager,
     private readonly _networkManager: NetworkManager,
     private readonly _feedStore: FeedStoreAdapter,
-    private readonly _party: PartyProvider,
+    private readonly _partyKey: PartyKey,
     private readonly _activeFeeds: FeedSetProvider,
     private readonly _credentials: CredentialsProvider,
-    private readonly _authenticator: Authenticator
+    private readonly _authenticator: Authenticator,
+    private readonly _invitationManager: InvitationManager
   ) {
   }
 
@@ -59,10 +62,8 @@ export class ReplicationAdapter {
     }
     this._started = true;
 
-    const party = this._party.get();
-
-    log('Start', keyToString(party.key));
-    return this._networkManager.joinProtocolSwarm(Buffer.from(party.key), ({ channel }: any) => this._createProtocol(channel));
+    log('Start', keyToString(this._partyKey));
+    return this._networkManager.joinProtocolSwarm(Buffer.from(this._partyKey), ({ channel }: any) => this._createProtocol(channel));
   }
 
   async stop () {
@@ -71,23 +72,20 @@ export class ReplicationAdapter {
     }
     this._started = false;
 
-    const party = this._party.get();
-    log('Stop', keyToString(party.key));
+    log('Stop', keyToString(this._partyKey));
 
-    return this._networkManager.leaveProtocolSwarm(Buffer.from(party.key));
+    return this._networkManager.leaveProtocolSwarm(Buffer.from(this._partyKey));
   }
 
   @synchronized
   private async _openFeed (key: FeedKey): Promise<hypercore.Feed> {
-    const party = this._party.get();
-    return this._feedStore.getFeed(key) ?? await this._feedStore.createReadOnlyFeed(key, party.key);
+    return this._feedStore.getFeed(key) ?? await this._feedStore.createReadOnlyFeed(key, this._partyKey);
   }
 
   private _createProtocol (channel: any) {
     assert(this._identityManager.identityKey);
     assert(this._identityManager.deviceKey);
-    const party = this._party.get();
-    const isHalo = this._identityManager.identityKey.publicKey.equals(party.key);
+    const isHalo = this._identityManager.identityKey.publicKey.equals(this._partyKey);
     const plugins = [];
 
     // The Auth plugin must always come first.
@@ -111,7 +109,7 @@ export class ReplicationAdapter {
       plugins.push(
         new GreetingCommandPlugin(
           this._identityManager.deviceKey.publicKey,
-          OfflineInvitationClaimer.makePartyInvitationClaimHandler(party)
+          OfflineInvitationClaimer.makePartyInvitationClaimHandler(this._invitationManager)
         )
       );
     }
@@ -149,15 +147,14 @@ export class ReplicationAdapter {
       },
 
       discoveryToPublicKey: (dk: any) => {
-        const party = this._party.get();
-        if (!discoveryKey(party.key).equals(dk)) {
+        if (!discoveryKey(this._partyKey).equals(dk)) {
           return undefined;
         }
 
         // TODO(marik-d): Why does this do side effects.
         // TODO(burdon): Remove need for external closure (i.e., pass object to this callback).
-        protocol.setContext({ topic: keyToString(party.key) });
-        return party.key;
+        protocol.setContext({ topic: keyToString(this._partyKey) });
+        return this._partyKey;
       }
     })
       .setSession({
