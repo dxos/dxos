@@ -3,14 +3,23 @@
 //
 
 import assert from 'assert';
+import memdown from 'memdown';
 
 import { Event } from '@dxos/async';
-import { PartyKey } from '@dxos/echo-protocol';
+import { Keyring, KeyStore } from '@dxos/credentials';
+import { codec, PartyKey } from '@dxos/echo-protocol';
+import { FeedStore } from '@dxos/feed-store';
+import { ModelFactory } from '@dxos/model-factory';
+import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
+import { createStorage, Storage } from '@dxos/random-access-multi-storage';
 
+import { FeedStoreAdapter } from './feed-store-adapter';
 import { InvitationDescriptor, SecretProvider } from './invitations';
-import { PartyFilter, PartyManager, Party, PartyMember } from './parties';
+import { PartyFilter, PartyManager, Party, PartyMember, IdentityManager, PartyFactory } from './parties';
 import { HALO_CONTACT_LIST_TYPE } from './parties/halo-party';
 import { ResultSet } from './result';
+import { SnapshotStore } from './snapshot-store';
 
 export interface Options {
   readOnly?: false;
@@ -19,6 +28,41 @@ export interface Options {
 }
 
 export type Contact = PartyMember;
+
+/**
+ * Various options passed to `ECHO.create`.
+ */
+export interface EchoCreationOptions {
+  /**
+   * Storage used for feeds. Defaults to in-memory.
+   */
+  feedStorage?: Storage
+
+  /**
+   * Storage used for keys. Defaults to in-memory.
+   */
+  keyStorage?: any
+
+  /**
+   * Storage used for snapshots. Defaults to in-memory.
+   */
+  snapshotStorage?: Storage
+
+  /**
+   * Networking provider. Defaults to in-memory networking.
+   */
+  swarmProvider?: SwarmProvider,
+
+  /**
+   * Whether to save and load snapshots. Defaults to `true`.
+   */
+  snapshots?: boolean
+
+  /**
+   * Number of messages after which snapshot will be created. Defaults to 100.
+   */
+  snapshotInterval?: number
+}
 
 /**
  * This is the root object for the ECHO database.
@@ -33,6 +77,41 @@ export type Contact = PartyMember;
  * `Spactime` `Timeframe` (which implements a vector clock).
  */
 export class ECHO {
+  /**
+   * Creates a new instance of ECHO.
+   *
+   * Without any parameters will create an in-memory database.
+   */
+  static create ({
+    feedStorage = createStorage('temp/feeds', 'ram'),
+    keyStorage = memdown(),
+    snapshotStorage = createStorage('temp/snapshots', 'ram'),
+    swarmProvider = new SwarmProvider(),
+    snapshots = true,
+    snapshotInterval = 100
+  }: EchoCreationOptions = {}) {
+    const feedStore = new FeedStore(feedStorage, { feedOptions: { valueEncoding: codec } });
+    const feedStoreAdapter = new FeedStoreAdapter(feedStore);
+
+    const keyStore = new KeyStore(keyStorage);
+    const identityManager = new IdentityManager(new Keyring(keyStore));
+
+    const modelFactory = new ModelFactory()
+      .registerModel(ObjectModel);
+
+    const options = {
+      snapshots,
+      snapshotInterval
+    };
+
+    const networkManager = new NetworkManager(feedStore, swarmProvider);
+    const snapshotStore = new SnapshotStore(snapshotStorage);
+    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, networkManager, snapshotStore, options);
+    const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory, snapshotStore);
+
+    return new ECHO(partyManager);
+  }
+
   constructor (
     private readonly _partyManager: PartyManager,
     private readonly _options: Options = {}

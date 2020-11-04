@@ -13,6 +13,7 @@ import { Timeframe } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 import { latch } from '@dxos/util';
 
+import { ECHO } from './echo';
 import { SecretProvider, SecretValidator } from './invitations';
 import { createTestInstance } from './testing';
 
@@ -268,5 +269,13 @@ describe('api tests', () => {
 
     expect(echoA.queryContacts().value.length).toBe(1);
     expect(echoB.queryContacts().value.length).toBe(1);
+  });
+
+  it('open and close', async () => {
+    const echo = ECHO.create();
+
+    await echo.open();
+
+    await echo.close();
   });
 });
