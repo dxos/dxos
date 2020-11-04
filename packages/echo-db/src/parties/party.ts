@@ -100,9 +100,16 @@ export class Party {
   }
 
   /**
-   * Creates an invition for a remote peer.
+   * Creates an invitation for a remote peer.
    */
   async createInvitation (authenticationDetails: InvitationAuthenticator, options: InvitationOptions = {}) {
     return this._impl.invitationManager.createInvitation(authenticationDetails, options);
+  }
+
+  /**
+   * Creates an offline invitation for a known remote peer.
+   */
+  async createOfflineInvitation (publicKey: Uint8Array) {
+    return this._impl.invitationManager.createOfflineInvitation(publicKey);
   }
 }

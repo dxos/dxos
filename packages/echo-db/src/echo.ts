@@ -16,6 +16,7 @@ import { createStorage, Storage } from '@dxos/random-access-multi-storage';
 
 import { FeedStoreAdapter } from './feed-store-adapter';
 import { InvitationDescriptor, SecretProvider } from './invitations';
+import { OfflineInvitationClaimer } from './invitations/offline-invitation-claimer';
 import { PartyFilter, PartyManager, Party, PartyMember, IdentityManager, PartyFactory } from './parties';
 import { HALO_CONTACT_LIST_TYPE } from './parties/halo-party';
 import { ResultSet } from './result';
@@ -185,10 +186,12 @@ export class ECHO {
    * @param invitationDescriptor
    * @param secretProvider
    */
-  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<Party> {
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<Party> {
     assert(this._partyManager.opened, 'Database not open.');
 
-    const impl = await this._partyManager.joinParty(invitationDescriptor, secretProvider);
+    const actualSecretProvider = secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this._partyManager.identityManager);
+
+    const impl = await this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
     return new Party(impl);
   }
 
