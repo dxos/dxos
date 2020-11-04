@@ -193,6 +193,29 @@ export class ECHO {
   }
 
   /**
+   * Joins an existing Identity HALO by invitation.
+   */
+  async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
+    assert(this._partyManager.opened, 'Database not open.');
+    assert(!this._partyManager.identityManager.halo, 'HALO already exists.');
+
+    const impl = await this._partyManager.joinHalo(invitationDescriptor, secretProvider);
+    return new Party(impl);
+  }
+
+  /**
+   * Joins an existing Identity HALO from a recovery seed phrase.
+   */
+  async recoverHalo (seedPhrase: string) {
+    assert(this._partyManager.opened, 'Database not open.');
+    assert(!this._partyManager.identityManager.halo, 'HALO already exists.');
+    assert(!this._partyManager.identityManager.identityKey, 'Identity key already exists.');
+
+    const impl = await this._partyManager.recoverHalo(seedPhrase);
+    return new Party(impl);
+  }
+
+  /**
    * Query for contacts.  Contacts represent member keys across all known Parties.
    */
   queryContacts (): ResultSet<Contact> {
