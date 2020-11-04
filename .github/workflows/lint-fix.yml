@@ -1,0 +1,16 @@
+on:
+  workflow_dispatch
+
+name: Fix lint errors
+jobs:
+  lint-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - run: yarn install --frozen-lockfile
+      - run: git reset --hard
+      - run: yarn lint --fix
+      - run: git add -A
+      - run: git commit -m "Fix lint errors"
+      - run: git push
