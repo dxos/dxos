@@ -6,19 +6,21 @@ import assert from 'assert';
 import memdown from 'memdown';
 
 import { Event } from '@dxos/async';
-import { Keyring, KeyStore } from '@dxos/credentials';
-import { codec, PartyKey } from '@dxos/echo-protocol';
+import { KeyRecord, Keyring, KeyStore, KeyType } from '@dxos/credentials';
+import { humanize, KeyPair } from '@dxos/crypto';
+import { PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { createStorage, Storage } from '@dxos/random-access-multi-storage';
+import { Storage } from '@dxos/random-access-multi-storage';
 
 import { FeedStoreAdapter } from './feed-store-adapter';
 import { InvitationDescriptor, SecretProvider } from './invitations';
 import { OfflineInvitationClaimer } from './invitations/offline-invitation-claimer';
-import { PartyFilter, PartyManager, Party, PartyMember, IdentityManager, PartyFactory } from './parties';
+import { IdentityManager, Party, PartyFactory, PartyFilter, PartyManager, PartyMember } from './parties';
 import { HALO_CONTACT_LIST_TYPE } from './parties/halo-party';
+import { createRamStorage } from './persistant-ram-storage';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshot-store';
 
@@ -63,6 +65,9 @@ export interface EchoCreationOptions {
    * Number of messages after which snapshot will be created. Defaults to 100.
    */
   snapshotInterval?: number
+
+  readLogger?: (msg: any) => void;
+  writeLogger?: (msg: any) => void;
 }
 
 /**
@@ -78,61 +83,121 @@ export interface EchoCreationOptions {
  * `Spactime` `Timeframe` (which implements a vector clock).
  */
 export class ECHO {
+  private readonly _feedStore: FeedStoreAdapter;
+
+  private readonly _keyring: Keyring;
+
+  private readonly _identityManager: IdentityManager;
+
+  private readonly _snapshotStore: SnapshotStore;
+
+  private readonly _networkManager: NetworkManager;
+
+  private readonly _modelFactory: ModelFactory;
+
+  private readonly _partyManager: PartyManager;
+
   /**
    * Creates a new instance of ECHO.
    *
    * Without any parameters will create an in-memory database.
    */
-  static create ({
-    feedStorage = createStorage('temp/feeds', 'ram'),
+  constructor ({
+    feedStorage = createRamStorage(),
     keyStorage = memdown(),
-    snapshotStorage = createStorage('temp/snapshots', 'ram'),
+    snapshotStorage = createRamStorage(),
     swarmProvider = new SwarmProvider(),
     snapshots = true,
-    snapshotInterval = 100
+    snapshotInterval = 100,
+    readLogger,
+    writeLogger
   }: EchoCreationOptions = {}) {
-    const feedStore = new FeedStore(feedStorage, { feedOptions: { valueEncoding: codec } });
-    const feedStoreAdapter = new FeedStoreAdapter(feedStore);
+    this._feedStore = FeedStoreAdapter.create(feedStorage);
 
     const keyStore = new KeyStore(keyStorage);
-    const identityManager = new IdentityManager(new Keyring(keyStore));
+    this._keyring = new Keyring(keyStore);
+    this._identityManager = new IdentityManager(this._keyring);
 
-    const modelFactory = new ModelFactory()
+    this._modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
 
     const options = {
+      readLogger,
+      writeLogger,
       snapshots,
       snapshotInterval
     };
 
-    const networkManager = new NetworkManager(feedStore, swarmProvider);
-    const snapshotStore = new SnapshotStore(snapshotStorage);
-    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, networkManager, snapshotStore, options);
-    const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory, snapshotStore);
-
-    return new ECHO(partyManager);
+    this._networkManager = new NetworkManager(this._feedStore.feedStore, swarmProvider);
+    this._snapshotStore = new SnapshotStore(snapshotStorage);
+    const partyFactory = new PartyFactory(
+      this._identityManager,
+      this._feedStore,
+      this._modelFactory,
+      this._networkManager,
+      this._snapshotStore,
+      options
+    );
+    this._partyManager = new PartyManager(
+      this._identityManager,
+      this._feedStore,
+      partyFactory,
+      this._snapshotStore
+    );
   }
 
-  constructor (
-    private readonly _partyManager: PartyManager,
-    private readonly _options: Options = {}
-  ) {}
+  get isOpen () {
+    return this._partyManager.opened;
+  }
+
+  get identityKey (): KeyRecord | undefined {
+    return this._identityManager.identityKey;
+  }
+
+  get identityDisplayName (): string | undefined {
+    return this._identityManager.displayName;
+  }
+
+  get isHaloInitialized (): boolean {
+    return !!this._identityManager.halo;
+  }
+
+  get modelFactory (): ModelFactory {
+    return this._modelFactory;
+  }
+
+  /**
+   * For devtools.
+   */
+  get keyring (): Keyring {
+    return this._keyring;
+  }
+
+  /**
+   * For devtools.
+   */
+  get feedStore (): FeedStore {
+    return this._feedStore.feedStore;
+  }
+
+  /**
+   * For devtools.
+   */
+  get networkManager (): NetworkManager {
+    return this._networkManager;
+  }
 
   toString () {
     return `Database(${JSON.stringify({
-      parties: this._partyManager.parties.length,
-      options: Object.keys(this._options).length ? this._options : undefined
+      parties: this._partyManager.parties.length
     })})`;
-  }
-
-  get readOnly () {
-    return this._options.readOnly;
   }
 
   /**
    * Opens the pary and constructs the inbound/outbound mutation streams.
    */
   async open () {
+    await this._keyring.load();
     await this._partyManager.open();
   }
 
@@ -140,17 +205,56 @@ export class ECHO {
    * Closes the party and associated streams.
    */
   async close () {
+    await this._networkManager.close();
     await this._partyManager.close();
+  }
+
+  /**
+   * Removes all data and closes this ECHO instance.
+   */
+  async reset () {
+    if (this._feedStore.storage.destroy) {
+      await this._feedStore.storage.destroy();
+    }
+
+    await this._keyring.deleteAllKeyRecords();
+
+    await this._snapshotStore.clear();
+
+    await this.close();
+  }
+
+  /**
+   * Create Profile. Add Identity key if public and secret key are provided.
+   */
+  async createIdentity (keyPair: KeyPair) {
+    assert(keyPair.publicKey);
+    assert(keyPair.secretKey);
+
+    if (this._identityManager.identityKey) {
+      throw new Error('Identity key already exists. Call createProfile without a keypair to only create a halo party.');
+    }
+
+    await this._keyring.addKeyRecord({ ...keyPair, type: KeyType.IDENTITY });
+  }
+
+  async createHalo (displayName?: string) {
+    if (this._identityManager.halo) {
+      throw new Error('HALO party already exists');
+    }
+    if (!this._identityManager.identityKey) {
+      throw new Error('Cannot create HALO. Identity key not found.');
+    }
+
+    await this._partyManager.createHalo({
+      identityDisplayName: displayName || humanize(this._identityManager.identityKey.publicKey)
+    });
   }
 
   /**
    * Creates a new party.
    */
   async createParty (): Promise<Party> {
-    if (this._options.readOnly) {
-      throw new Error('Read-only.');
-    }
-
     await this.open();
 
     const impl = await this._partyManager.createParty();

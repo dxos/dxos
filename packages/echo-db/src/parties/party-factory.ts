@@ -182,9 +182,8 @@ export class PartyFactory {
    * @param hints
    */
   async constructParty (partyKey: PartyKey, hints: KeyHint[] = [], initialTimeframe?: Timeframe) {
-    // TODO(burdon): Ensure that this node's feed (for this party) has been created first.
-    //   I.e., what happens if remote feed is synchronized first triggering 'feed' event above.
-    //   In this case create pipeline in read-only mode.
+    // TODO(marik-d): Support read-only parties if this feed doesn't exist?
+    // TODO(marik-d): Verify that this feed is admitted.
     const feed = this._feedStore.queryWritableFeed(partyKey);
     assert(feed, `Feed not found for party: ${keyToString(partyKey)}`);
 
@@ -305,7 +304,7 @@ export class PartyFactory {
 
   // TODO(marik-d): Refactor this.
   private async _initWritableFeed (partyKey: PartyKey) {
-    const feed = await this._feedStore.queryWritableFeed(partyKey) ??
+    const feed = this._feedStore.queryWritableFeed(partyKey) ??
       await this._feedStore.createWritableFeed(partyKey);
 
     const feedKey = this._identityManager.keyring.getKey(feed.key) ??

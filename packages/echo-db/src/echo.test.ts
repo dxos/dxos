@@ -4,23 +4,20 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import pify from 'pify';
 
-import { waitForCondition } from '@dxos/async';
-import { createFeedAdmitMessage, createPartyGenesisMessage, KeyType } from '@dxos/credentials';
-import { createId, humanize } from '@dxos/crypto';
-import { Timeframe } from '@dxos/echo-protocol';
+import { sleep, waitForCondition } from '@dxos/async';
+import { createKeyPair, humanize } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { latch } from '@dxos/util';
 
 import { ECHO } from './echo';
 import { SecretProvider, SecretValidator } from './invitations';
-import { createTestInstance } from './testing';
+import { createTestInstance, inviteTestPeer } from './testing';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 
-const createECHO = async (verbose = true) => {
-  const { echo } = await createTestInstance({ verboseLogging: verbose, initialized: true });
+const createECHO = async () => {
+  const echo = await createTestInstance({ initialize: true });
   return echo;
 };
 
@@ -167,49 +164,36 @@ describe('api tests', () => {
     expect(parentB.children).toHaveLength(0);
   });
 
+  test('cold start with party', async () => {
+    const echo = await createECHO();
+    const party = await echo.createParty();
+
+    await echo.close();
+    await echo.open();
+
+    await waitForCondition(async () => (await echo.getParty(party.key)) !== undefined);
+    const party2 = await echo.getParty(party.key)!;
+
+    expect(party2.key).toEqual(party.key);
+    expect(party2.isOpen).toBe(true);
+  });
+
   test('cold start from replicated party', async () => {
-    const { echo, partyManager, feedStoreAdapter, identityManager } = await createTestInstance();
-    await feedStoreAdapter.open();
+    const echo1 = await createTestInstance({ initialize: true });
+    const echo2 = await createTestInstance({ initialize: true });
 
-    const identityKey = await identityManager.keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    await identityManager.keyring.createKeyRecord({ type: KeyType.DEVICE });
-    const partyKey = await identityManager.keyring.createKeyRecord({ type: KeyType.PARTY });
+    const party1 = await echo1.createParty();
+    await inviteTestPeer(party1, echo2);
 
-    const writableFeed = await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
-    const writableFeedKey = await identityManager.keyring.addKeyRecord({
-      publicKey: writableFeed.key,
-      secretKey: writableFeed.secretKey,
-      type: KeyType.FEED
-    });
-    const genesisFeed = await feedStoreAdapter.feedStore.openFeed(createId(), { metadata: { partyKey: partyKey.publicKey } } as any);
-    const genesisFeedKey = await identityManager.keyring.addKeyRecord({
-      publicKey: genesisFeed.key,
-      secretKey: genesisFeed.secretKey, // needed for party genesis message
-      type: KeyType.FEED
-    });
+    await sleep(1000); // TODO(marik-d): Figure out why this is needed.
 
-    const writeToGenesisFeed = pify(genesisFeed.append.bind(genesisFeed));
+    await echo1.close();
+    await echo2.close();
 
-    await writeToGenesisFeed({ halo: createPartyGenesisMessage(identityManager.keyring, partyKey, genesisFeedKey, identityKey) });
-    await writeToGenesisFeed({ halo: createFeedAdmitMessage(identityManager.keyring, partyKey.publicKey, writableFeedKey, [identityKey]) });
-    await writeToGenesisFeed({
-      echo: {
-        itemId: createId(),
-        timeframe: new Timeframe(),
-        genesis: {
-          modelType: ObjectModel.meta.type
-        }
-      }
-    });
+    await echo2.open();
+    await waitForCondition(async () => (await echo2.getParty(party1.key)) !== undefined);
 
-    log('Initializing database');
-
-    await partyManager.open();
-    await partyManager.createHalo();
-    expect(identityManager.halo).toBeTruthy();
-
-    await waitForCondition(async () => (await echo.getParty(partyKey.publicKey)) !== undefined);
-    const party = await echo.getParty(partyKey.publicKey);
+    const party = await echo2.getParty(party1.key);
     assert(party);
     log('Initialized party');
 
@@ -271,11 +255,39 @@ describe('api tests', () => {
     expect(echoB.queryContacts().value.length).toBe(1);
   });
 
-  it('open and close', async () => {
-    const echo = ECHO.create();
+  test('open and close', async () => {
+    const echo = new ECHO();
+    expect(echo.isOpen).toBe(false);
+    await echo.open();
+    expect(echo.isOpen).toBe(true);
+    await echo.close();
+    expect(echo.isOpen).toBe(false);
+  });
+
+  test('open and create profile', async () => {
+    const echo = new ECHO();
+    await echo.open();
+    await echo.createIdentity(createKeyPair());
+    await echo.createHalo();
+    expect(echo.identityKey).toBeDefined();
+  });
+
+  test('close and open again', async () => {
+    const echo = new ECHO();
+    await echo.open();
+    await echo.createIdentity(createKeyPair());
+    await echo.createHalo();
+    expect(echo.identityKey).toBeDefined();
+    await echo.close();
 
     await echo.open();
+    expect(echo.isOpen).toBe(true);
+    expect(echo.identityKey).toBeDefined();
+  });
 
-    await echo.close();
+  test('cant create party on closed echo', async () => {
+    const echo = new ECHO();
+
+    await expect(() => echo.createParty()).rejects.toBeDefined();
   });
 });

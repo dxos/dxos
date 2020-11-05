@@ -7,7 +7,7 @@ import assert from 'assert';
 import { FeedWriter, ItemID } from '@dxos/echo-protocol';
 
 import { Model } from './model';
-import { ModelType, ModelMeta, ModelConstructor } from './types';
+import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';
 
 /**
  * Creates Model instances from a registered collection of Model types.
@@ -23,9 +23,8 @@ export class ModelFactory {
   }
 
   registerModel (constructor: ModelConstructor<any>): this {
-    assert(constructor?.meta);
+    validateModelClass(constructor);
     const { meta } = constructor;
-    assert(meta.type && meta.mutation);
     this._models.set(meta.type, { meta, constructor });
     return this;
   }

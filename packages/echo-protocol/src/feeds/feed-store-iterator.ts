@@ -93,10 +93,15 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   private readonly _trigger = new Trigger();
   private readonly _generatorInstance = this._generator();
 
+  /**
+   * Trigger to wait for the iteration to stop in the close method;
+   */
+  private readonly _closeTrigger = new Trigger();
+
   // Needed for round-robin ordering.
   private _messageCount = 0;
 
-  private _destroyed = false;
+  private _closed = false;
 
   public readonly stalled = new Event<FeedBlock[]>();
 
@@ -123,13 +128,12 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   }
 
   /**
-   *
+   * Closes the iterator
    */
-  // TODO(burdon): Rename close?
-  // TODO(marik-d): Does this need to close the streams, or will they be garbage-collected automatically?
-  destroy () {
-    this._destroyed = true;
+  async close () {
+    this._closed = true;
     this._trigger.wake();
+    await this._closeTrigger.wait();
   }
 
   /**
@@ -261,8 +265,13 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
    */
   // TODO(burdon): Comment.
   async * _generator () {
-    while (!this._destroyed) {
+    while (true) {
       while (true) {
+        if (this._closed) {
+          this._closeTrigger.wake();
+          return;
+        }
+
         await this._reevaluateFeeds();
 
         // TODO(burdon): This always seems to be undefined.

@@ -34,11 +34,11 @@
     "lint:lockfile"
   ],
   "scripts": {
-    "build": "lerna run build",
-    "depcheck": "lerna run depcheck",
-    "coverage": "yarn workspaces run coverage",
-    "test": "yarn workspaces run test",
-    "lint": "yarn workspaces run lint",
+    "build": "wsrun -t build",
+    "depcheck": "wsrun depcheck",
+    "coverage": "wsrun -s coverage",
+    "test": "wsrun -s test",
+    "lint": "wsrun lint",
     "lint:staged": "lint-staged",
     "lint:lockfile": "lockfile-lint --path yarn.lock --allowed-hosts yarn npm codeload.github.com --validate-https",
     "sort-package-json": "lerna exec npx sort-package-json",
@@ -49,7 +49,8 @@
     "husky": "^4.2.5",
     "lerna": "^3.11.1",
     "lint-staged": "^8.1.0",
-    "lockfile-lint": "^4.3.7"
+    "lockfile-lint": "^4.3.7",
+    "wsrun": "^5.2.4"
   },
   "husky": {
     "hooks": {

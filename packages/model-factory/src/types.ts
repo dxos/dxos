@@ -36,3 +36,18 @@ export type ModelMessage<T> = {
   meta: MutationMeta,
   mutation: T
 }
+
+export function validateModelClass (model: any): asserts model is ModelConstructor<any> {
+  if (typeof model !== 'function') {
+    throw new TypeError('The model constructor you provided has an incorrect type. It is supposed to be a class with a static `meta` field.');
+  }
+  if (!model.meta) {
+    throw new TypeError('The model constructor you provided doesn\'t have a static `meta` field.');
+  }
+  if (!model.meta.type) {
+    throw new TypeError('The model constructor you provided does not have a type URL.');
+  }
+  if (!model.meta.mutation) {
+    throw new TypeError('The model constructor you provided does not have a mutation codec.');
+  }
+}

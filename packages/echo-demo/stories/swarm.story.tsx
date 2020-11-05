@@ -9,7 +9,7 @@ import useResizeAware from 'react-resize-aware';
 
 import { Button, TextField, Toolbar } from '@material-ui/core';
 
-import { createId, keyToString } from '@dxos/crypto';
+import { createId, createKeyPair, humanize, keyToString } from '@dxos/crypto';
 import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
@@ -31,24 +31,32 @@ export default {
 export const withSwarm = () => {
   const [id] = useState(createId());
   const [database, setDatabase] = useState<ECHO>();
-  const [keyring, setKeyring] = useState<Keyring>();
   const [storage] = useState(() => createStorage('dxos/echo-demo'));
   const [snapshotStorage] = useState(() => createStorage('dxos/echo-demo/snapshots'));
 
   useEffect(() => {
     setImmediate(async () => {
-      const { echo: database, keyring } = await createECHO({
-        storage,
-        keyStorage: leveljs('dxos/echo-demo/keystore'),
-        // TODO(burdon): Move const to config.
-        swarmProvider: new SwarmProvider({ signal: 'wss://signal2.dxos.network/dxos/signal' }),
-        snapshotStorage,
-        snapshotInterval: 10,
-      });
+      try {
+        const { echo } = await createECHO({
+          storage,
+          keyStorage: leveljs('dxos/echo-demo/keystore'),
+          // TODO(burdon): Move const to config.
+          swarmProvider: new SwarmProvider({ signal: 'wss://signal2.dxos.network/dxos/signal' }),
+          snapshotStorage,
+          snapshotInterval: 10,
+        });
+        log('Created:', String(echo));
 
-      log('Created:', String(database));
-      setDatabase(database);
-      setKeyring(keyring);
+        await echo.open();
+        setDatabase(echo);
+
+        if(!echo.identityKey) {
+          await echo.createIdentity(createKeyPair());
+          await echo.createHalo();
+        }
+      } catch(err) {
+        console.error(err)
+      }
     });
   }, []);
 
@@ -77,10 +85,7 @@ export const withSwarm = () => {
   }
 
   async function handleResetStorage() {
-    localStorage.clear();
-    await keyring.deleteAllKeyRecords();
-    await storage.destroy();
-    await snapshotStorage.destroy();
+    await database.reset();
     window.location.reload();
   }
 

@@ -18,12 +18,16 @@ yarn build
 yarn test
 ```
 
-### Publishing to npm
+```typescript
+const echo = new Echo();
 
-To publish new versions of all public packages:
+await echo.open();
+await echo.createIdentity(createKeyPair());
+await echo.createHalo('your display name');
 
-```bash
-yarn build
-yarn test
-yarn lerna publish --force-publish
+const party = await echo.createParty();
+
+const item = await party.database.createItem({ model: ObjectModel });
+
+await item.setProperty('foo', 'bar');
 ```

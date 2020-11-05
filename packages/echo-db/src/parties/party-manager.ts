@@ -9,7 +9,7 @@ import { Event, synchronized } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
 import { keyToString } from '@dxos/crypto';
 import { PartyKey, PublicKey } from '@dxos/echo-protocol';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, timed } from '@dxos/util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
 import { SecretProvider } from '../invitations/common';
@@ -57,6 +57,7 @@ export class PartyManager {
   }
 
   @synchronized
+  @timed(6000)
   async open () {
     if (this._opened) {
       return;
@@ -96,9 +97,17 @@ export class PartyManager {
   }
 
   @synchronized
+  @timed(6000)
   async close () {
-    await this._feedStore.close();
     this._opened = false;
+    for (const party of this.parties) {
+      await party.close();
+    }
+
+    await this._identityManager.halo?.close();
+
+    await this._feedStore.close();
+    this._parties.clear();
   }
 
   /**
@@ -211,6 +220,10 @@ export class PartyManager {
     await this._identityManager.initialize(halo);
 
     this._identityManager.halo!.subscribeToJoinedPartyList(async values => {
+      if (!this._opened) {
+        return;
+      }
+
       for (const partyDesc of values) {
         if (!this._parties.has(partyDesc.partyKey)) {
           log(`Auto-opening new Party from HALO: ${keyToString(partyDesc.partyKey)}`);
@@ -229,6 +242,12 @@ export class PartyManager {
   }
 
   private async _updateContactList (party: PartyInternal) {
+    // Prevent any updates after we closed ECHO.
+    // This will get re-run next time echo is loaded so we don't loose any data.
+    if (!this._opened) {
+      return;
+    }
+
     const contactListItem = this._identityManager.halo?.getContactListItem();
     if (!contactListItem) {
       return;

@@ -8,7 +8,7 @@ import { Readable } from 'stream';
 
 import { Event } from '@dxos/async';
 import { Message as HaloMessage } from '@dxos/credentials';
-import { createFeedMeta, EchoEnvelope, FeedBlock, FeedMessage, IEchoStream, FeedWriter, mapFeedWriter } from '@dxos/echo-protocol';
+import { createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter } from '@dxos/echo-protocol';
 import { checkType, createReadable, jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../items/timeframe-clock';
@@ -53,7 +53,7 @@ export class Pipeline {
    */
   constructor (
     private readonly _partyProcessor: PartyProcessor,
-    private readonly _feedReadStream: AsyncIterable<FeedBlock>,
+    private readonly _feedReadStream: FeedStoreIterator,
     private readonly _timeframeClock: TimeframeClock,
     private readonly _feedWriter?: FeedWriter<FeedMessage>,
     private readonly _options: Options = {}
@@ -102,6 +102,7 @@ export class Pipeline {
 
     this._inboundEchoStream = createReadable();
 
+    // This will exit cleanly once FeedStoreIterator is closed.
     setImmediate(async () => {
       for await (const block of this._feedReadStream) {
         readLogger?.(block as any);
@@ -145,7 +146,8 @@ export class Pipeline {
             log(`Skipping invalid message: ${JSON.stringify(message, jsonReplacer)}`);
           }
         } catch (err) {
-          console.error(`Error in message processing: ${err}`);
+          console.error('Error in message processing');
+          console.error(err);
         }
       }
     });
@@ -175,7 +177,7 @@ export class Pipeline {
    */
   // TODO(burdon): Create test that all streams are closed cleanly.
   async close () {
-    // TODO(marik-d): Add functinality to stop FeedStoreIterator.
+    await this._feedReadStream.close();
 
     if (this._inboundEchoStream) {
       this._inboundEchoStream.destroy();

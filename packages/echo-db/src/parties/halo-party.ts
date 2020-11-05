@@ -61,6 +61,10 @@ export class HaloParty {
     return this._party.itemManager;
   }
 
+  async close () {
+    await this._party.close();
+  }
+
   async recordPartyJoining (joinedParty: JoinedParty) {
     assert(this._party.itemManager, 'HALO not open');
     const knownParties = await this._party.itemManager.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE }).value;

@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { ItemID, ItemType } from '@dxos/echo-protocol';
-import { Model, ModelConstructor } from '@dxos/model-factory';
+import { Model, ModelConstructor, validateModelClass } from '@dxos/model-factory';
 
 import { ResultSet } from '../result';
 import { Item } from './item';
@@ -34,6 +34,20 @@ export class Database {
    */
   // TODO(burdon): Get modelType from somewhere other than ObjectModel.meta.type.
   createItem <M extends Model<any>> (options: ItemCreationOptions<M>): Promise<Item<M>> {
+    if (!options.model) {
+      throw new TypeError('You must specify the model for this item.');
+    }
+
+    validateModelClass(options.model);
+
+    if (options.type && typeof options.type !== 'string') {
+      throw new TypeError('Optional item type must be a string URL.');
+    }
+
+    if (options.parent && typeof options.parent !== 'string') {
+      throw new TypeError('Optional parent item id must be a string id of an existing item.');
+    }
+
     return this._getItemManager().createItem(options.model.meta.type, options.type, options.parent, options.props);
   }
 

@@ -117,8 +117,7 @@ export class ItemManager {
 
     // Unlocked by construct.
     log('Pending Item:', itemId);
-    // TODO(burdon): Type trigger.
-    return await (waitForCreation as any)();
+    return await waitForCreation();
   }
 
   /**
@@ -185,9 +184,6 @@ export class ItemManager {
 
     // Create the Item.
     const item = new Item(this._partyKey, itemId, itemType, modelMeta, model, this._writeStream, parent);
-    assert(!this._items.has(itemId));
-    this._items.set(itemId, item);
-    log('Constructed:', String(item));
 
     if (modelSnapshot) {
       assert(modelMeta.snapshotCodec, 'Model snapshot provided but the model does not support snapshots.');
@@ -199,6 +195,10 @@ export class ItemManager {
         await item.model.processMessage(mutation.meta, modelMeta.mutation.decode(mutation.mutation));
       }
     }
+
+    assert(!this._items.has(itemId));
+    this._items.set(itemId, item);
+    log('Constructed:', String(item));
 
     // Notify Item was udpated.
     // TODO(burdon): Update the item directly?

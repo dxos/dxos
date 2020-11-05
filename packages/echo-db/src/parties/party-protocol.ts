@@ -74,7 +74,7 @@ export class PartyProtocol {
 
     log('Stop', keyToString(this._partyKey));
 
-    return this._networkManager.leaveProtocolSwarm(Buffer.from(this._partyKey));
+    await this._networkManager.leaveProtocolSwarm(Buffer.from(this._partyKey));
   }
 
   @synchronized

@@ -3,11 +3,14 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 import pify from 'pify';
 
 import { keyToString } from '@dxos/crypto';
 import { schema, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { Storage } from '@dxos/random-access-multi-storage';
+
+const log = debug('dxos:snapshot-store');
 
 /**
  * Stores party snapshots. Takes any `random-access-storage` compatible backend.
@@ -16,11 +19,11 @@ import { Storage } from '@dxos/random-access-multi-storage';
  */
 export class SnapshotStore {
   constructor (
-    private readonly _backend: Storage
+    private readonly _storage: Storage
   ) {}
 
   async load (partyKey: PartyKey): Promise<PartySnapshot | undefined> {
-    const file = this._backend(keyToString(partyKey));
+    const file = this._storage(keyToString(partyKey));
 
     try {
       const { size } = await pify(file.stat.bind(file))();
@@ -43,7 +46,7 @@ export class SnapshotStore {
 
   async save (snapshot: PartySnapshot) {
     assert(snapshot.partyKey);
-    const file = this._backend(keyToString(snapshot.partyKey), { truncate: true, size: 0 });
+    const file = this._storage(keyToString(snapshot.partyKey), { truncate: true, size: 0 });
 
     try {
       const data = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').encode(snapshot);
@@ -51,5 +54,13 @@ export class SnapshotStore {
     } finally {
       await pify(file.close.bind(file))();
     }
+  }
+
+  /**
+   * Removes all data.
+   */
+  async clear () {
+    log('Clearing all snapshots..');
+    await this._storage.destroy();
   }
 }

@@ -4,37 +4,29 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import ram from 'random-access-memory';
 
-import { Keyring, KeyStore, KeyType } from '@dxos/credentials';
-import { humanize } from '@dxos/crypto';
-import { codec } from '@dxos/echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
-import { Model, ModelFactory } from '@dxos/model-factory';
-import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
+import { createKeyPair } from '@dxos/crypto';
+import { Model } from '@dxos/model-factory';
+import { SwarmProvider } from '@dxos/network-manager';
 import { Storage } from '@dxos/random-access-multi-storage';
 import { jsonReplacer, range } from '@dxos/util';
 
 import { ECHO } from './echo';
-import { FeedStoreAdapter } from './feed-store-adapter';
 import { Item } from './items';
 import { ItemCreationOptions } from './items/database';
-import { IdentityManager, Party, PartyManager } from './parties';
-import { PartyFactory } from './parties/party-factory';
-import { SnapshotStore } from './snapshot-store';
+import { Party } from './parties';
+import { createRamStorage } from './persistant-ram-storage';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 
 export interface TestOptions {
   verboseLogging?: boolean
-  initialized?: boolean
-  feedStore?: FeedStore,
+  initialize?: boolean
   storage?: any
-  keyStore?: KeyStore,
   snapshotStorage?: Storage,
   keyStorage?: any
   swarmProvider?: SwarmProvider
+  snapshots?: boolean,
   snapshotInterval?: number
 }
 
@@ -43,48 +35,36 @@ export interface TestOptions {
  */
 export async function createTestInstance ({
   verboseLogging = false,
-  initialized = false,
-  feedStore: injectedFeedStore,
-  storage = ram,
-  keyStore: injectedKeyStore,
+  initialize = false,
+  storage = createRamStorage(),
   keyStorage = undefined,
-  snapshotStorage = ram,
+  snapshotStorage = createRamStorage(),
   swarmProvider = new SwarmProvider(),
+  snapshots = true,
   snapshotInterval
 }: TestOptions = {}) {
-  const feedStore = injectedFeedStore ?? new FeedStore(storage, { feedOptions: { valueEncoding: codec } });
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore);
-
-  const keyStore = injectedKeyStore ?? new KeyStore(keyStorage);
-  const identityManager = new IdentityManager(new Keyring(keyStore));
-
-  const modelFactory = new ModelFactory()
-    .registerModel(ObjectModel);
-
-  const options = {
+  const echo = new ECHO({
+    feedStorage: storage,
+    keyStorage,
+    snapshotStorage,
+    snapshotInterval,
+    snapshots,
+    swarmProvider,
     readLogger: verboseLogging ? messageLogger('>>>') : undefined,
-    writeLogger: verboseLogging ? messageLogger('<<<') : undefined,
-    snapshots: snapshotStorage !== ram,
-    snapshotInterval
-  };
+    writeLogger: verboseLogging ? messageLogger('<<<') : undefined
+  });
 
-  const networkManager = new NetworkManager(feedStore, swarmProvider);
-  const snapshotStore = new SnapshotStore(snapshotStorage);
-  const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, networkManager, snapshotStore, options);
-  const partyManager = new PartyManager(identityManager, feedStoreAdapter, partyFactory, snapshotStore);
-
-  const echo = new ECHO(partyManager, options);
-
-  if (initialized) {
-    await identityManager.keyring.createKeyRecord({ type: KeyType.IDENTITY });
-
-    await partyManager.open();
-    await partyManager.createHalo({ identityDisplayName: humanize(identityManager.identityKey!.publicKey) });
-
+  if (initialize) {
     await echo.open();
+    if (!echo.identityKey) {
+      await echo.createIdentity(createKeyPair());
+    }
+    if (!echo.isHaloInitialized) {
+      await echo.createHalo();
+    }
   }
 
-  return { echo, partyManager, partyFactory, modelFactory, identityManager, feedStoreAdapter, feedStore, keyStore, snapshotStore, networkManager };
+  return echo;
 }
 
 export type Awaited<T> = T extends Promise<infer U> ? U : T;
@@ -115,13 +95,13 @@ export async function inviteTestPeer (party: Party, peer: ECHO): Promise<Party> 
 export async function createSharedTestParty (peerCount = 2): Promise<WithTestMeta<Party>[]> {
   assert(peerCount >= 2);
 
-  const peers = await Promise.all(range(peerCount).map(() => createTestInstance({ initialized: true })));
+  const peers = await Promise.all(range(peerCount).map(() => createTestInstance({ initialize: true })));
 
-  const mainParty = await peers[0].echo.createParty();
+  const mainParty = await peers[0].createParty();
   await mainParty.open();
 
   const restParties = await Promise.all(peers.slice(1).map(async peer => {
-    const party = await inviteTestPeer(mainParty, peer.echo);
+    const party = await inviteTestPeer(mainParty, peer);
     await party.open();
     return party;
   }));
