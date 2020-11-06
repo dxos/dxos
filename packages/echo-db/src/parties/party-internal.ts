@@ -23,6 +23,17 @@ export const PARTY_ITEM_TYPE = 'wrn://dxos.org/item/party';
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface PartyFilter {}
 
+export interface ActivationOptions {
+  global?: boolean;
+  device?: boolean;
+}
+
+export interface PartyActivator {
+  isActive(): boolean,
+  activate(options: ActivationOptions): Promise<void>;
+  deactivate(options: ActivationOptions): Promise<void>;
+}
+
 /**
  * A Party represents a shared dataset containing queryable Items that are constructed from an ordered stream
  * of mutations.
@@ -45,7 +56,8 @@ export class PartyInternal {
     private readonly _pipeline: Pipeline,
     private readonly _protocol: PartyProtocol,
     private readonly _timeframeClock: TimeframeClock,
-    private readonly _invitationManager: InvitationManager
+    private readonly _invitationManager: InvitationManager,
+    private readonly _activator: PartyActivator | undefined
   ) {
     assert(this._modelFactory);
     assert(this._partyProcessor);
@@ -140,6 +152,29 @@ export class PartyInternal {
     this._subscriptions.forEach(cb => cb());
 
     return this;
+  }
+
+  get isActive () {
+    assert(this._activator, 'PartyActivator required');
+    return this._activator.isActive;
+  }
+
+  async activate (options: ActivationOptions) {
+    assert(this._activator, 'PartyActivator required');
+    await this._activator.activate(options);
+
+    if (!this.isOpen) {
+      await this.open();
+    }
+  }
+
+  async deactivate (options: ActivationOptions) {
+    assert(this._activator, 'PartyActivator required');
+    await this._activator.deactivate(options);
+
+    if (this.isOpen) {
+      await this.close();
+    }
   }
 
   /**

@@ -83,7 +83,9 @@ export class IdentityManager {
 
   async initialize (halo: PartyInternal) {
     assert(this._identityKey, 'No identity key');
-    this._halo = new HaloParty(halo, this._identityKey.publicKey);
+    assert(this._deviceKey, 'No device key');
+
+    this._halo = new HaloParty(halo, this._identityKey.publicKey, this._deviceKey.publicKey);
 
     // Wait for the minimum set of keys and messages we need for proper function.
     await waitForCondition(() =>

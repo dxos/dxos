@@ -71,24 +71,25 @@ export class PartyManager {
         const halo = await this._partyFactory.constructParty(this._identityManager.identityKey.publicKey);
         // Always open the HALO.
         await halo.open();
-        await this._identityManager.initialize(halo);
+        await this._setHalo(halo);
       }
     }
+
+    // TODO(telackey): Does it make any sense to load other parties if we don't have an HALO?
 
     // Iterate descriptors and pre-create Party objects.
     for (const partyKey of this._feedStore.getPartyKeys()) {
       if (!this._parties.has(partyKey) && !this._isHalo(partyKey)) {
-        let party: PartyInternal | undefined;
-
         const snapshot = await this._snapshotStore.load(partyKey);
-        if (snapshot) {
-          party = await this._partyFactory.constructPartyFromSnapshot(snapshot);
-        } else {
-          party = await this._partyFactory.constructParty(partyKey);
+        const party = snapshot
+          ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
+          : await this._partyFactory.constructParty(partyKey);
+
+        const isActive = this._identityManager.halo?.isActive(partyKey) ?? true;
+        if (isActive) {
+          await party.open();
         }
 
-        // TODO(telackey): Should parties be auto-opened?
-        await party.open();
         this._setParty(party);
       }
     }
@@ -228,6 +229,23 @@ export class PartyManager {
         if (!this._parties.has(partyDesc.partyKey)) {
           log(`Auto-opening new Party from HALO: ${keyToString(partyDesc.partyKey)}`);
           await this.addParty(partyDesc.partyKey, partyDesc.keyHints);
+        }
+      }
+    });
+
+    this._identityManager.halo!.subscribeToPreferences(async () => {
+      for (const party of this._parties.values()) {
+        const shouldBeOpen = this._identityManager.halo?.isActive(party.key);
+        if (party.isOpen && !shouldBeOpen) {
+          log(`Auto-closing deactivated party ${keyToString(party.key)}`);
+
+          await party.close();
+          this.update.emit(party);
+        } else if (!party.isOpen && shouldBeOpen) {
+          log(`Auto-opening activated party ${keyToString(party.key)}`);
+
+          await party.open();
+          this.update.emit(party);
         }
       }
     });

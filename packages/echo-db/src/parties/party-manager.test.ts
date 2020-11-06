@@ -6,6 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import ram from 'random-access-memory';
 
+import { waitForCondition } from '@dxos/async';
 import { createPartyGenesisMessage, KeyType, Keyring, generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import {
   keyToBuffer,
@@ -96,8 +97,9 @@ describe('Party manager', () => {
     expect(party.isOpen).toBeTruthy();
 
     // The Party key is an inception key, so its secret should be destroyed immediately after use.
-    const partyKey = identityManager.keyring.getKey(party.key);
+    const partyKey = identityManager.keyring.getKey(Buffer.from(party.key));
     expect(partyKey).toBeDefined();
+    assert(partyKey);
     expect(identityManager.keyring.hasSecretKey(partyKey)).toBe(false);
 
     await update;
@@ -715,5 +717,63 @@ describe('Party manager', () => {
 
     await updatedA;
     await updatedB;
+  });
+
+  test('Deactivate Party - single device', async () => {
+    const { partyManager: partyManagerA } = await setup();
+    await partyManagerA.open();
+
+    const partyA = await partyManagerA.createParty();
+    const partyB = await partyManagerA.createParty();
+
+    expect(partyA.isOpen).toBe(true);
+    expect(partyB.isOpen).toBe(true);
+
+    await partyB.deactivate({ global: true });
+
+    expect(partyA.isOpen).toBe(true);
+    expect(partyB.isOpen).toBe(false);
+
+    await partyB.activate({ global: true });
+
+    expect(partyA.isOpen).toBe(true);
+    expect(partyB.isOpen).toBe(true);
+  });
+
+  test('Deactivate Party - multi device', async () => {
+    const { partyManager: partyManagerA, seedPhrase } = await setup(true, true);
+    const { partyManager: partyManagerB } = await setup(true, false);
+    assert(seedPhrase);
+
+    await partyManagerA.open();
+    await partyManagerB.open();
+
+    await partyManagerB.recoverHalo(seedPhrase);
+    await partyManagerA.createParty();
+
+    await waitForCondition(() => partyManagerB.parties.length, 500);
+
+    expect(partyManagerA.parties[0].isOpen).toBe(true);
+    expect(partyManagerB.parties[0].isOpen).toBe(true);
+
+    await partyManagerA.parties[0].deactivate({ device: true });
+    await waitForCondition(() => !partyManagerA.parties[0].isOpen);
+
+    expect(partyManagerA.parties[0].isOpen).toBe(false);
+    expect(partyManagerB.parties[0].isOpen).toBe(true);
+
+    await partyManagerA.parties[0].deactivate({ global: true });
+
+    await waitForCondition(() => !partyManagerB.parties[0].isOpen, 500);
+
+    expect(partyManagerA.parties[0].isOpen).toBe(false);
+    expect(partyManagerB.parties[0].isOpen).toBe(false);
+
+    await partyManagerA.parties[0].activate({ global: true });
+
+    await waitForCondition(() => partyManagerA.parties[0].isOpen && partyManagerB.parties[0].isOpen, 500);
+
+    expect(partyManagerA.parties[0].isOpen).toBe(true);
+    expect(partyManagerB.parties[0].isOpen).toBe(true);
   });
 });

@@ -8,7 +8,7 @@ import { PartyKey, PublicKey } from '@dxos/echo-protocol';
 import { InvitationAuthenticator, InvitationOptions } from '../invitations';
 import { Database } from '../items/database';
 import { ResultSet } from '../result';
-import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
+import { PartyInternal, PARTY_ITEM_TYPE, ActivationOptions } from './party-internal';
 
 export interface PartyMember {
   publicKey: PublicKey,
@@ -111,5 +111,30 @@ export class Party {
    */
   async createOfflineInvitation (publicKey: Uint8Array) {
     return this._impl.invitationManager.createOfflineInvitation(publicKey);
+  }
+
+  /**
+   * Is this Party eligible for automatic opening, processing, and replication?
+   */
+  get isActive () {
+    return this._impl.isActive;
+  }
+
+  /**
+   * Activate the Party for automatic opening, processing, and replication.
+   * The Party will be opened if it is currently closed.
+   * @param options
+   */
+  async activate (options: ActivationOptions) {
+    return this._impl.activate(options);
+  }
+
+  /**
+   * Deactivate the Party (ie, disable automatic opening, processing, and replication).
+   * The Party will be closed if it is currently open.
+   * @param options
+   */
+  async deactivate (options: ActivationOptions) {
+    return this._impl.deactivate(options);
   }
 }
