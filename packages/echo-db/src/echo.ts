@@ -274,7 +274,7 @@ export class ECHO {
    * @param {PartyKey} partyKey
    */
   getParty (partyKey: PartyKey): Party | undefined {
-    assert(this._partyManager.opened, 'Database not open.');
+    assert(this._partyManager.opened, 'ECHO not open.');
 
     const impl = this._partyManager.parties.find(party => Buffer.compare(party.key, partyKey) === 0);
     return impl && new Party(impl);
@@ -286,7 +286,7 @@ export class ECHO {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   queryParties (filter?: PartyFilter): ResultSet<Party> {
-    assert(this._partyManager.opened, 'Database not open.');
+    assert(this._partyManager.opened, 'ECHO not open.');
 
     return new ResultSet(this._partyManager.update.discardParameter(), () => this._partyManager.parties.map(impl => new Party(impl)));
   }
@@ -297,7 +297,7 @@ export class ECHO {
    * @param secretProvider
    */
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<Party> {
-    assert(this._partyManager.opened, 'Database not open.');
+    assert(this._partyManager.opened, 'ECHO not open.');
 
     const actualSecretProvider = secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this._partyManager.identityManager);
 
@@ -309,7 +309,7 @@ export class ECHO {
    * Joins an existing Identity HALO by invitation.
    */
   async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
-    assert(this._partyManager.opened, 'Database not open.');
+    assert(this._partyManager.opened, 'ECHO not open.');
     assert(!this._partyManager.identityManager.halo, 'HALO already exists.');
 
     const impl = await this._partyManager.joinHalo(invitationDescriptor, secretProvider);
@@ -320,7 +320,7 @@ export class ECHO {
    * Joins an existing Identity HALO from a recovery seed phrase.
    */
   async recoverHalo (seedPhrase: string) {
-    assert(this._partyManager.opened, 'Database not open.');
+    assert(this._partyManager.opened, 'ECHO not open.');
     assert(!this._partyManager.identityManager.halo, 'HALO already exists.');
     assert(!this._partyManager.identityManager.identityKey, 'Identity key already exists.');
 
@@ -332,7 +332,7 @@ export class ECHO {
    * Query for contacts.  Contacts represent member keys across all known Parties.
    */
   queryContacts (): ResultSet<Contact> {
-    assert(this._partyManager.opened, 'Database not open.');
+    assert(this._partyManager.opened, 'ECHO not open.');
     assert(this._partyManager.identityManager.halo, 'HALO required.');
 
     const results = this._partyManager.identityManager.halo.database.queryItems({ type: HALO_CONTACT_LIST_TYPE });
