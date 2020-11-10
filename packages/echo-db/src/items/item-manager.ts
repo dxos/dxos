@@ -4,22 +4,25 @@
 
 import assert from 'assert';
 import debug from 'debug';
+import pify from 'pify';
 
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
-import { EchoEnvelope, FeedWriter, IEchoStream, ItemID, ItemType, mapFeedWriter, PartyKey } from '@dxos/echo-protocol';
+import { EchoEnvelope, FeedWriter, IEchoStream, ItemID, ItemType, mapFeedWriter } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
 import { createTransform, timed } from '@dxos/util';
 
 import { ResultSet } from '../result';
 import { Item } from './item';
 import { TimeframeClock } from './timeframe-clock';
+import { UnknownModel } from './unknown-model';
 
 const log = debug('dxos:echo:item-manager');
 
 export interface ItemFilter {
   type?: ItemType | ItemType[]
   parent?: ItemID | ItemID[]
+  id?: ItemID | ItemID[]
 }
 
 export interface ItemConstructionOptions {
@@ -56,7 +59,6 @@ export class ItemManager {
    * @param writeStream Outbound `dxos.echo.IEchoEnvelope` mutation stream.
    */
   constructor (
-     private readonly _partyKey: PartyKey,
      private readonly _modelFactory: ModelFactory,
      private readonly _timeframeClock: TimeframeClock,
      writeStream?: FeedWriter<EchoEnvelope>
@@ -67,10 +69,6 @@ export class ItemManager {
         timeframe: this._timeframeClock.timeframe
       }), writeStream);
     }
-  }
-
-  isModelKnown (modelType: ModelType) {
-    return this._modelFactory.hasModel(modelType);
   }
 
   /**
@@ -183,11 +181,15 @@ export class ItemManager {
     readStream.pipe(inboundTransform).pipe(model.processor);
 
     // Create the Item.
-    const item = new Item(this._partyKey, itemId, itemType, modelMeta, model, this._writeStream, parent);
+    const item = new Item(itemId, itemType, modelMeta, model, this._writeStream, parent);
 
     if (modelSnapshot) {
-      assert(modelMeta.snapshotCodec, 'Model snapshot provided but the model does not support snapshots.');
-      await model.restoreFromSnapshot(modelMeta.snapshotCodec.decode(modelSnapshot));
+      if (model instanceof UnknownModel) {
+        model.snapshot = modelSnapshot;
+      } else {
+        assert(modelMeta.snapshotCodec, 'Model snapshot provided but the model does not support snapshots.');
+        await model.restoreFromSnapshot(modelMeta.snapshotCodec.decode(modelSnapshot));
+      }
     }
 
     if (initialMutations) {
@@ -200,14 +202,16 @@ export class ItemManager {
     this._items.set(itemId, item);
     log('Constructed:', String(item));
 
-    // Notify Item was udpated.
-    // TODO(burdon): Update the item directly?
-    this._itemUpdate.emit(item);
-
-    // TODO(telackey): Unsubscribe?
-    item.subscribe(() => {
+    if (!(item.model instanceof UnknownModel)) {
+      // Notify Item was udpated.
+      // TODO(burdon): Update the item directly?
       this._itemUpdate.emit(item);
-    });
+
+      // TODO(telackey): Unsubscribe?
+      item.subscribe(() => {
+        this._itemUpdate.emit(item);
+      });
+    }
 
     // Notify pending creates.
     this._pendingItems.get(itemId)?.(item);
@@ -228,7 +232,36 @@ export class ItemManager {
    */
   queryItems <M extends Model<any> = any> (filter: ItemFilter = {}): ResultSet<Item<M>> {
     return new ResultSet(this._debouncedItemUpdate, () => Array.from(this._items.values())
-      .filter(item => matchesFilter(item, filter)));
+      .filter(item => !(item.model instanceof UnknownModel) && matchesFilter(item, filter)));
+  }
+
+  getItemsWithUnknownModels (): Item<UnknownModel>[] {
+    return Array.from(this._items.values()).filter(item => item.model instanceof UnknownModel);
+  }
+
+  /**
+   * Reconstruct an item with an unknown model when that model becomes registered.
+   * New model instance is created and streams are reconnected.
+   */
+  async reconstructItemWithUnknownModel (itemId: ItemID, readStream: NodeJS.ReadableStream) {
+    const item = this._items.get(itemId);
+    assert(item);
+    assert(item.model instanceof UnknownModel);
+
+    console.log('reconstruct', itemId);
+
+    this._items.delete(itemId);
+    // Disconnect stream.
+    await pify(item.model.processor.end.bind(item.model.processor))();
+
+    await this.constructItem({
+      itemId,
+      itemType: item.type,
+      modelType: item.model.originalModelType,
+      readStream,
+      initialMutations: item.model.mutations,
+      modelSnapshot: item.model.snapshot
+    });
   }
 }
 
@@ -237,6 +270,9 @@ function matchesFilter (item: Item<any>, filter: ItemFilter) {
     return false;
   }
   if (filter.parent && (!item.parent || !equalsOrIncludes(item.parent.id, filter.parent))) {
+    return false;
+  }
+  if (filter.id && !equalsOrIncludes(item.id, filter.id)) {
     return false;
   }
 

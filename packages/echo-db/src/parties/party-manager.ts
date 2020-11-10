@@ -17,7 +17,7 @@ import { InvitationDescriptor } from '../invitations/invitation-descriptor';
 import { SnapshotStore } from '../snapshot-store';
 import { IdentityManager } from './identity-manager';
 import { HaloCreationOptions, PartyFactory } from './party-factory';
-import { PartyInternal } from './party-internal';
+import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 
 const CONTACT_DEBOUNCE_INTERVAL = 500;
 
@@ -36,6 +36,8 @@ export class PartyManager {
   // External event listener.
   // TODO(burdon): Wrap with subscribe.
   readonly update = new Event<PartyInternal>();
+
+  private readonly _subscriptions: (() => void)[] = [];
 
   constructor (
     private readonly _identityManager: IdentityManager,
@@ -88,6 +90,7 @@ export class PartyManager {
         const isActive = this._identityManager.halo?.isActive(partyKey) ?? true;
         if (isActive) {
           await party.open();
+          await party.database.waitForItem({ type: PARTY_ITEM_TYPE }); // TODO(marik-d): Might not be required if separately snapshot this item.
         }
 
         this._setParty(party);
@@ -101,6 +104,9 @@ export class PartyManager {
   @timed(6000)
   async close () {
     this._opened = false;
+
+    this._subscriptions.forEach(cb => cb());
+
     for (const party of this.parties) {
       await party.close();
     }
@@ -217,10 +223,9 @@ export class PartyManager {
 
   // Only call from a @synchronized method.
   private async _setHalo (halo: PartyInternal) {
-    assert(halo.itemManager, 'ItemManger is required');
     await this._identityManager.initialize(halo);
 
-    this._identityManager.halo!.subscribeToJoinedPartyList(async values => {
+    this._subscriptions.push(this._identityManager.halo!.subscribeToJoinedPartyList(async values => {
       if (!this._opened) {
         return;
       }
@@ -231,9 +236,9 @@ export class PartyManager {
           await this.addParty(partyDesc.partyKey, partyDesc.keyHints);
         }
       }
-    });
+    }));
 
-    this._identityManager.halo!.subscribeToPreferences(async () => {
+    this._subscriptions.push(this._identityManager.halo!.subscribeToPreferences(async () => {
       for (const party of this._parties.values()) {
         const shouldBeOpen = this._identityManager.halo?.isActive(party.key);
         if (party.isOpen && !shouldBeOpen) {
@@ -248,7 +253,7 @@ export class PartyManager {
           this.update.emit(party);
         }
       }
-    });
+    }));
   }
 
   private _setParty (party: PartyInternal) {

@@ -58,13 +58,12 @@ export class HaloParty {
     return this._party.processor.feedKeys;
   }
 
-  get invitationManager () {
-    return this._party.invitationManager;
+  get database () {
+    return this._party.database;
   }
 
-  get itemManager () {
-    assert(this._party.itemManager, 'HALO not open');
-    return this._party.itemManager;
+  get invitationManager () {
+    return this._party.invitationManager;
   }
 
   get preferences () {
@@ -79,21 +78,19 @@ export class HaloParty {
   }
 
   async recordPartyJoining (joinedParty: JoinedParty) {
-    assert(this._party.itemManager, 'HALO not open');
-    const knownParties = await this._party.itemManager.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE }).value;
+    const knownParties = await this._party.database.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE }).value;
     const partyDesc = knownParties.find(partyMarker => Buffer.compare(partyMarker.model.getProperty('publicKey'), joinedParty.partyKey) === 0);
     assert(!partyDesc, `Descriptor already exists for Party ${keyToString(joinedParty.partyKey)}`);
 
-    await this._party.itemManager.createItem(
-      ObjectModel.meta.type,
-      HALO_PARTY_DESCRIPTOR_TYPE,
-      undefined,
-      {
+    await this._party.database.createItem({
+      model: ObjectModel,
+      type: HALO_PARTY_DESCRIPTOR_TYPE,
+      props: {
         publicKey: joinedParty.partyKey,
         subscribed: true,
         hints: joinedParty.keyHints
       }
-    );
+    });
   }
 
   isActive (partyKey: PublicKey | Uint8Array) {
@@ -122,18 +119,18 @@ export class HaloParty {
   }
 
   getGlobalPreferences () {
-    const [globalItem] = this.itemManager.queryItems({ type: HALO_GENERAL_PREFERENCES_TYPE }).value;
+    const [globalItem] = this.database.queryItems({ type: HALO_GENERAL_PREFERENCES_TYPE }).value;
     return globalItem;
   }
 
   getDevicePreferences () {
-    const deviceItems = this.itemManager.queryItems({ type: HALO_DEVICE_PREFERENCES_TYPE }).value ?? [];
+    const deviceItems = this.database.queryItems({ type: HALO_DEVICE_PREFERENCES_TYPE }).value ?? [];
     return deviceItems.find(item => Buffer.compare(this._deviceKey, item.model.getProperty('publicKey')) === 0);
   }
 
   subscribeToPreferences (cb: (preferences: any) => void) {
-    const globalResults = this.itemManager.queryItems({ type: HALO_GENERAL_PREFERENCES_TYPE });
-    const deviceResults = this.itemManager.queryItems({ type: HALO_DEVICE_PREFERENCES_TYPE });
+    const globalResults = this.database.queryItems({ type: HALO_GENERAL_PREFERENCES_TYPE });
+    const deviceResults = this.database.queryItems({ type: HALO_DEVICE_PREFERENCES_TYPE });
 
     const event = new Event<any>();
 
@@ -164,7 +161,7 @@ export class HaloParty {
   }
 
   subscribeToJoinedPartyList (cb: (parties: JoinedParty[]) => void): () => void {
-    const result = this.itemManager.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE });
+    const result = this.database.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE });
     return result.subscribe(async (values) => {
       cb(values.map(partyDesc => ({
         partyKey: partyDesc.model.getProperty('publicKey'),
@@ -174,7 +171,7 @@ export class HaloParty {
   }
 
   getContactListItem (): Item<ObjectModel> | undefined {
-    return this.itemManager.queryItems({ type: HALO_CONTACT_LIST_TYPE }).value[0];
+    return this.database.queryItems({ type: HALO_CONTACT_LIST_TYPE }).value[0];
   }
 
   createPartyActivator (partyKey: PublicKey): PartyActivator {

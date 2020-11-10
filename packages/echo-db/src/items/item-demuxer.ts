@@ -7,11 +7,12 @@ import debug from 'debug';
 import { Readable } from 'stream';
 
 import { DatabaseSnapshot, EchoEnvelope, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot } from '@dxos/echo-protocol';
-import { Model, ModelMessage } from '@dxos/model-factory';
+import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { createReadable, createWritable, jsonReplacer, raise } from '@dxos/util';
 
 import { Item } from './item';
 import { ItemManager } from './item-manager';
+import { UnknownModel } from './unknown-model';
 
 const log = debug('dxos:echo:item-demuxer');
 
@@ -32,26 +33,28 @@ export class ItemDemuxer {
 
   private readonly _itemStreams = new Map<ItemID, Readable>();
 
-  /**
-   * Items that have unknown model type and are ignored.
-   */
-  private readonly _ignoredItems = new Set<ItemID>();
-
   constructor (
     private readonly _itemManager: ItemManager,
+    private readonly _modelFactory: ModelFactory,
     private readonly _options: ItemManagerOptions = {}
   ) {}
 
   open (): NodeJS.WritableStream {
+    this._modelFactory.registered.on(async model => {
+      console.log('regitered', model.meta.type);
+      for (const item of this._itemManager.getItemsWithUnknownModels()) {
+        console.log('unknown', item);
+        if (item.model.originalModelType === model.meta.type) {
+          await this._itemManager.reconstructItemWithUnknownModel(item.id, this._itemStreams.get(item.id)!);
+        }
+      }
+    });
+
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
     return createWritable<IEchoStream>(async (message: IEchoStream) => {
       log('Reading:', JSON.stringify(message, jsonReplacer));
       const { data: { itemId, genesis, itemMutation, mutation }, meta } = message;
       assert(itemId);
-
-      if (this._ignoredItems.has(itemId)) {
-        return;
-      }
 
       //
       // New item.
@@ -59,12 +62,6 @@ export class ItemDemuxer {
       if (genesis) {
         const { itemType, modelType } = genesis;
         assert(modelType);
-
-        if (!this._itemManager.isModelKnown(modelType)) {
-          console.warn(`Unknown model: '${modelType}'. Skipping item ${itemId}.`);
-          this._ignoredItems.add(itemId);
-          return;
-        }
 
         // Create inbound stream for item.
         const itemStream = createReadable<EchoEnvelope>();
@@ -74,11 +71,14 @@ export class ItemDemuxer {
         // TODO(marik-d): Investigate whether gensis message shoudl be able to set parentId.
         const item = await this._itemManager.constructItem({
           itemId,
-          modelType,
+          modelType: this._modelFactory.hasModel(modelType) ? modelType : UnknownModel.meta.type,
           itemType,
           readStream: itemStream,
           initialMutations: mutation ? [{ mutation, meta }] : undefined
         });
+        if (item.model instanceof UnknownModel) {
+          item.model.originalModelType = modelType;
+        }
         assert(item.id === itemId);
 
         if (this._options.snapshots) {
@@ -156,19 +156,7 @@ export class ItemDemuxer {
     const items = snapshot.items ?? [];
     log(`Restoring ${items.length} items from snapshot.`);
 
-    const knownItems = items.filter(item => {
-      assert(item.itemId);
-      assert(item.modelType);
-      if (!this._itemManager.isModelKnown(item.modelType)) {
-        console.warn(`Unknown model: '${item.modelType}'. Skipping item ${item.itemId}.`);
-        this._ignoredItems.add(item.itemId);
-        return false;
-      } else {
-        return true;
-      }
-    });
-
-    for (const item of sortItemsTopologically(knownItems)) {
+    for (const item of sortItemsTopologically(items)) {
       assert(item.itemId);
       assert(item.modelType);
       assert(item.model);
@@ -182,15 +170,18 @@ export class ItemDemuxer {
         this._modelMutations.set(item.itemId, item.model.array.mutations ?? []);
       }
 
-      await this._itemManager.constructItem({
+      const newItem = await this._itemManager.constructItem({
         itemId: item.itemId,
-        modelType: item.modelType,
+        modelType: this._modelFactory.hasModel(item.modelType) ? item.modelType : UnknownModel.meta.type,
         itemType: item.itemType,
         readStream: itemStream,
         parentId: item.parentId,
         initialMutations: item.model.array ? item.model.array.mutations : undefined,
         modelSnapshot: item.model.custom ? item.model.custom : undefined
       });
+      if (newItem.model instanceof UnknownModel) {
+        newItem.model.originalModelType = item.modelType;
+      }
     }
   }
 

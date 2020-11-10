@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 
+import { Event } from '@dxos/async';
 import { FeedWriter, ItemID } from '@dxos/echo-protocol';
 
 import { Model } from './model';
@@ -13,6 +14,8 @@ import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './ty
  * Creates Model instances from a registered collection of Model types.
  */
 export class ModelFactory {
+  readonly registered = new Event<ModelConstructor<any>>();
+
   private _models = new Map<ModelType, { meta: ModelMeta, constructor: ModelConstructor<any> }>();
 
   // TODO(burdon): Require version.
@@ -26,6 +29,7 @@ export class ModelFactory {
     validateModelClass(constructor);
     const { meta } = constructor;
     this._models.set(meta.type, { meta, constructor });
+    this.registered.emit(constructor);
     return this;
   }
 

@@ -11,7 +11,8 @@ import { ObjectModel } from '@dxos/object-model';
 import { timed } from '@dxos/util';
 
 import { InvitationManager } from '../invitations/invitation-manager';
-import { ItemDemuxer, Item, ItemManager } from '../items';
+import { Item } from '../items';
+import { Database } from '../items/database';
 import { TimeframeClock } from '../items/timeframe-clock';
 import { PartyProcessor } from './party-processor';
 import { PartyProtocol } from './party-protocol';
@@ -39,9 +40,7 @@ export interface PartyActivator {
  * of mutations.
  */
 export class PartyInternal {
-  private _itemManager: ItemManager | undefined;
-  private _itemDemuxer: ItemDemuxer | undefined;
-  private _inboundEchoStream: NodeJS.WritableStream | undefined;
+  private _database: Database | undefined;
 
   /**
    * Snapshot to be restored from when party.open() is called.
@@ -69,15 +68,12 @@ export class PartyInternal {
   }
 
   get isOpen (): boolean {
-    return !!this._itemManager;
+    return !!this._database;
   }
 
-  get itemManager () {
-    return this._itemManager;
-  }
-
-  get itemDemuxer () {
-    return this._itemDemuxer;
+  get database (): Database {
+    assert(this._database, 'Party not open.');
+    return this._database;
   }
 
   get processor () {
@@ -98,19 +94,21 @@ export class PartyInternal {
   @synchronized
   @timed(5000)
   async open () {
-    if (this._itemManager) {
+    if (this.isOpen) {
       return this;
     }
 
     // TODO(burdon): Support read-only parties.
     const [readStream, writeStream] = await this._pipeline.open();
 
-    // Connect to the downstream item demuxer.
-    this._itemManager = new ItemManager(this.key, this._modelFactory, this._timeframeClock, writeStream);
-    this._itemDemuxer = new ItemDemuxer(this._itemManager, { snapshots: true });
-
-    this._inboundEchoStream = this._itemDemuxer.open();
-    readStream.pipe(this._inboundEchoStream);
+    this._database = new Database(
+      this._modelFactory,
+      this._timeframeClock,
+      readStream,
+      writeStream ?? null,
+      this._databaseSnapshot
+    );
+    await this._database.init();
 
     if (this._pipeline.outboundHaloStream) {
       this._partyProcessor.setOutboundStream(this._pipeline.outboundHaloStream);
@@ -122,10 +120,6 @@ export class PartyInternal {
     // TODO(burdon): Propagate errors.
     this._subscriptions.push(this._pipeline.errors.on(err => console.error(err)));
 
-    if (this._databaseSnapshot) {
-      await this.itemDemuxer!.restoreFromSnapshot(this._databaseSnapshot);
-    }
-
     return this;
   }
 
@@ -134,17 +128,15 @@ export class PartyInternal {
    */
   @synchronized
   async close () {
-    if (!this._itemManager) {
+    if (!this.isOpen) {
       return this;
     }
 
     await this._protocol.stop();
 
     // Disconnect the read stream.
-    this._pipeline.inboundEchoStream?.unpipe(this._inboundEchoStream);
-
-    this._itemManager = undefined;
-    this._itemDemuxer = undefined;
+    await this._database!.destroy();
+    this._database = undefined;
 
     // TODO(burdon): Create test to ensure everything closes cleanly.
     await this._pipeline.close();
@@ -181,8 +173,7 @@ export class PartyInternal {
    * Returns a special Item that is used by the Party to manage its properties.
    */
   getPropertiestItem (): Item<ObjectModel> {
-    assert(this._itemManager);
-    const { value: items } = this._itemManager.queryItems({ type: PARTY_ITEM_TYPE });
+    const { value: items } = this.database.queryItems({ type: PARTY_ITEM_TYPE });
     assert(items.length === 1);
     return items[0];
   }
@@ -191,12 +182,11 @@ export class PartyInternal {
    * Create a snapshot of the current state.
    */
   createSnapshot (): PartySnapshot {
-    assert(this._itemDemuxer, 'Party not open.');
     return {
       partyKey: this.key,
       timeframe: this._timeframeClock.timeframe,
       timestamp: Date.now(),
-      database: this._itemDemuxer.createSnapshot(),
+      database: this.database.createSnapshot(),
       halo: this._partyProcessor.makeSnapshot()
     };
   }

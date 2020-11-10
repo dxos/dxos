@@ -6,7 +6,6 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { waitForCondition } from '@dxos/async';
-import { randomBytes } from '@dxos/crypto';
 import { schema } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ValueUtil } from '@dxos/object-model';
@@ -51,7 +50,7 @@ test('can produce & serialize a snapshot', async () => {
   const item = await party.database.createItem({ model: ObjectModel, props: { foo: 'foo' } });
   await item.model.setProperty('foo', 'bar');
 
-  const snapshot = ((party as any)._impl as PartyInternal).createSnapshot();
+  const snapshot = ((party as any)._internal as PartyInternal).createSnapshot();
 
   expect(snapshot.database?.items).toHaveLength(2);
   expect(snapshot.database?.items?.find(i => i.itemId === item.id)?.model?.custom).toBeDefined();
@@ -67,8 +66,9 @@ test('can produce & serialize a snapshot', async () => {
 
 describe('Database', () => {
   test('restore from empty snapshot', async () => {
-    const itemManager = new ItemManager(randomBytes(), new ModelFactory().registerModel(ObjectModel), new TimeframeClock());
-    const itemDemuxer = new ItemDemuxer(itemManager);
+    const modelFactory = new ModelFactory().registerModel(ObjectModel);
+    const itemManager = new ItemManager(modelFactory, new TimeframeClock());
+    const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
 
     await itemDemuxer.restoreFromSnapshot({});
   });

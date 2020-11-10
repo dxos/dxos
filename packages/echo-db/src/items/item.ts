@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { EchoEnvelope, ItemID, ItemMutation, ItemType, PartyKey, FeedWriter } from '@dxos/echo-protocol';
+import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
 import { Model, ModelMeta } from '@dxos/model-factory';
 
 /**
@@ -19,7 +19,6 @@ export class Item<M extends Model<any>> {
 
   /**
    * Items are constructed by a `Party` object.
-   * @param {PartyKey} partyKey
    * @param {ItemID} itemId - Addressable ID.
    * @param {ItemType} itemType - User defined type (WRN).
    * @param {Model} model - Data model (provided by `ModelFactory`).
@@ -27,7 +26,6 @@ export class Item<M extends Model<any>> {
    * @param {Item<any>} [parent] - Parent Item (if not a root Item).
    */
   constructor (
-    private readonly _partyKey: PartyKey,
     private readonly _itemId: ItemID,
     private readonly _itemType: ItemType | undefined,
     private readonly _modelMeta: ModelMeta,
@@ -43,10 +41,6 @@ export class Item<M extends Model<any>> {
 
   toString () {
     return `Item(${JSON.stringify({ itemId: this._itemId, parentId: this.parent?.id, itemType: this._itemType })})`;
-  }
-
-  get partyKey (): PartyKey {
-    return this._partyKey;
   }
 
   get id (): ItemID {
