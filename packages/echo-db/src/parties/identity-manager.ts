@@ -20,7 +20,7 @@ export class IdentityManager {
   private _deviceKey?: KeyRecord;
   private _deviceKeyChain?: KeyChain;
 
-  public readonly ready = new Event<Boolean>();
+  public readonly ready = new Event();
 
   constructor (
     private readonly _keyring: Keyring
@@ -94,6 +94,6 @@ export class IdentityManager {
       this.deviceKeyChain
     );
 
-    this.ready.emit(true);
+    this.ready.emit();
   }
 }

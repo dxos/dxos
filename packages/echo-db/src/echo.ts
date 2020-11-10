@@ -152,6 +152,10 @@ export class ECHO {
     return this._partyManager.opened;
   }
 
+  get identityReady () {
+    return this._identityManager.ready;
+  }
+
   get identityKey (): KeyRecord | undefined {
     return this._identityManager.identityKey;
   }
