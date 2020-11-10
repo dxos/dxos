@@ -14,7 +14,8 @@ import { Trigger } from '@dxos/util';
 import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
 
-const log = debug('dxos:echo:feed-store-iterator');
+const log = debug('dxos:echo:feed-store-iterator:log');
+const warn = debug('dxos:echo:feed-store-iterator:warn');
 
 // TODO(burdon): Redesign FeedStore:
 // - event handlers
@@ -66,7 +67,7 @@ export async function createIterator (
   });
 
   iterator.stalled.on(candidates => {
-    console.warn(`Feed store reader stalled: no message candidates were accepted after ${STALL_TIMEOUT}ms timeout.\nCurrent candidates:`, candidates);
+    warn(`Feed store reader stalled: no message candidates were accepted after ${STALL_TIMEOUT}ms timeout.\nCurrent candidates:`, candidates);
   });
 
   return iterator;
