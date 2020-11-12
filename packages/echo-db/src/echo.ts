@@ -267,6 +267,7 @@ export class ECHO {
     const impl = await this._partyManager.createParty();
     await impl.open();
 
+    // TODO(burdon): Don't create a new instance (maintain map).
     return new Party(impl);
   }
 
@@ -278,6 +279,7 @@ export class ECHO {
     assert(this._partyManager.opened, 'ECHO not open.');
 
     const impl = this._partyManager.parties.find(party => party.key.equals(partyKey));
+    // TODO(burdon): Don't create a new instance (maintain map).
     return impl && new Party(impl);
   }
 
