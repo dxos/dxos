@@ -3,6 +3,7 @@
 //
 
 import { codec, Message } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
 
 import { Timeframe } from '../spacetime';
 
@@ -14,12 +15,12 @@ export default {
   },
   'dxos.echo.TimeframeVector': {
     encode: (timeframe: Timeframe) => ({
-      frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey, seq }))
+      frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq }))
     }),
     decode: (vector: any) => new Timeframe(
       (vector.frames ?? [])
         .filter((frame: any) => frame.feedKey != null && frame.seq != null)
-        .map((frame: any) => [frame.feedKey, frame.seq])
+        .map((frame: any) => [PublicKey.from(frame.feedKey), frame.seq])
     )
   }
 };

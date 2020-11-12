@@ -53,7 +53,7 @@ describe('Feed tests:', () => {
     };
     const receipt = await writer.write(data);
 
-    expect(receipt.feedKey).toEqual(feed.key);
+    expect(receipt.feedKey.equals(feed.key)).toBe(true);
     expect(receipt.seq).toEqual(0);
 
     expect(feed.length).toEqual(1);

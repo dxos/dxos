@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { waitForEvent, noop } from '@dxos/async';
+import { waitForEvent } from '@dxos/async';
 import {
   Authenticator,
   ClaimResponse,
@@ -14,7 +14,8 @@ import {
   GreetingCommandPlugin,
   PartyInvitationClaimHandler,
   createAuthMessage,
-  createGreetingClaimMessage
+  createGreetingClaimMessage,
+  SignedMessage
 } from '@dxos/credentials';
 import { keyToString, randomBytes } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
@@ -65,7 +66,7 @@ export class OfflineInvitationClaimer {
     const localPeerId = randomBytes();
     log('Local PeerId:', keyToString(localPeerId));
 
-    this._greeterPlugin = new GreetingCommandPlugin(localPeerId, noop);
+    this._greeterPlugin = new GreetingCommandPlugin(localPeerId, async () => false);
 
     log('Connecting');
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
@@ -149,8 +150,8 @@ export class OfflineInvitationClaimer {
       const secretValidator: SecretValidator = async (invitation, secret) => {
         const { payload: authMessage } = Authenticator.decodePayload(secret);
 
-        return keyring.verify(authMessage) &&
-          Buffer.from(invitation.id, 'hex').equals(authMessage.signed.payload.partyKey) &&
+        return keyring.verify(<unknown>authMessage as SignedMessage) &&
+          invitation.id.equals(authMessage.signed.payload.partyKey) &&
           invitation.authNonce.equals(authMessage.signed.nonce);
       };
 
@@ -161,8 +162,8 @@ export class OfflineInvitationClaimer {
   }
 
   // The secretProvider should provide an `Auth` message signed directly by the Identity key.
-  static createSecretProvider (identityManager: IdentityManager) {
-    const provider: SecretProvider = async (info) => Authenticator.encodePayload(
+  static createSecretProvider (identityManager: IdentityManager): SecretProvider {
+    return async (info: any) => Buffer.from(Authenticator.encodePayload(
       // The signed portion of the Auth message includes the ID and authNonce provided
       // by "info". These values will be validated on the other end.
       createAuthMessage(
@@ -172,7 +173,6 @@ export class OfflineInvitationClaimer {
         identityManager.deviceKeyChain ?? raise(new Error('No device keychain')),
         undefined,
         info.authNonce.value)
-    );
-    return provider;
+    ));
   }
 }

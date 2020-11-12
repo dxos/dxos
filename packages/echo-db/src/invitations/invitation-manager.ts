@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { createPartyInvitationMessage } from '@dxos/credentials';
-import { PublicKey } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { IdentityManager, PartyProcessor } from '../parties';
@@ -45,7 +45,7 @@ export class InvitationManager {
 
     return new InvitationDescriptor(
       InvitationDescriptorType.OFFLINE_KEY,
-      this._partyProcessor.partyKey,
+      this._partyProcessor.partyKey.asBuffer(),
       invitationMessage.payload.signed.payload.id
     );
   }
@@ -72,7 +72,7 @@ export class InvitationManager {
       InvitationDescriptorType.INTERACTIVE,
       swarmKey,
       invitation,
-      this.isHalo ? Buffer.from(this._partyProcessor.partyKey) : undefined
+      this.isHalo ? this._partyProcessor.partyKey : undefined
     );
   }
 

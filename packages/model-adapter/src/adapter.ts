@@ -4,6 +4,7 @@
 
 import BJSON from 'buffer-json';
 
+import { PublicKey } from '@dxos/crypto';
 import { FeedWriter, ItemID, MutationMeta } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, ModelMeta } from '@dxos/model-factory';
 
@@ -62,13 +63,13 @@ export function createModelAdapter<T extends ClassicModel> (
         ...decoded,
         __meta: {
           credentials: {
-            member: meta.memberKey,
-            feed: meta.feedKey,
-            party: Buffer.from('00'.repeat(32), 'hex') // TODO(marik-d): Use actual party key here.
+            member: Buffer.from(meta.memberKey),
+            feed: Buffer.from(meta.feedKey),
+            party: Buffer.alloc(PublicKey.LENGTH, 0)
           }
         }
       };
-      this.model.processMessages([messageToProcess]);
+      await this.model.processMessages([messageToProcess]);
       return true;
     }
 

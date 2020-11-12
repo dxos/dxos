@@ -9,12 +9,12 @@ import { Event, waitForCondition } from '@dxos/async';
 import {
   admitsKeys,
   createEnvelopeMessage, Greeter,
-  GreetingCommandPlugin,
+  GreetingCommandPlugin, KeyHint,
   Keyring,
   KeyType
 } from '@dxos/credentials';
-import { keyToBuffer, keyToString, randomBytes } from '@dxos/crypto';
-import { PublicKey, SwarmKey } from '@dxos/echo-protocol';
+import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
+import { SwarmKey } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { IdentityManager, PartyProcessor } from '../parties';
@@ -60,12 +60,12 @@ export class GreetingResponder {
     private readonly _partyProcessor: PartyProcessor
   ) {
     this._greeter = new Greeter(
-      Buffer.from(this._partyProcessor.partyKey),
+      this._partyProcessor.partyKey,
       async (messages: any) => this._writeCredentialsToParty(messages),
       async () => this._gatherHints()
     );
 
-    this._greeterPlugin = new GreetingCommandPlugin(this._swarmKey, this._greeter.createMessageHandler());
+    this._greeterPlugin = new GreetingCommandPlugin(Buffer.from(this._swarmKey), this._greeter.createMessageHandler());
   }
 
   /**
@@ -125,7 +125,7 @@ export class GreetingResponder {
 
     // TODO(dboreham): Add tests for idempotence and transactional integrity over the greet flow.
     (this._greeterPlugin as any).once('peer:joined', (joinedPeerId: Buffer) => {
-      if (keyToString(joinedPeerId) === invitation.id) {
+      if (joinedPeerId.equals(invitation.id)) {
         log(`Initiator connected: ${keyToString(joinedPeerId)}`);
         this._state = GreetingState.CONNECTED;
         this.connected.emit(invitation.id);
@@ -134,7 +134,7 @@ export class GreetingResponder {
       }
     });
 
-    return keyToBuffer(invitation.id);
+    return invitation.id;
   }
 
   /**
@@ -149,7 +149,7 @@ export class GreetingResponder {
     await this._networkManager.joinProtocolSwarm(Buffer.from(this._swarmKey),
       greetingProtocolProvider(this._swarmKey, this._swarmKey, [this._greeterPlugin]));
 
-    log(`Greeting for: ${keyToString(this._partyProcessor.partyKey)} on swarmKey ${keyToString(this._swarmKey)}`);
+    log(`Greeting for: ${this._partyProcessor.partyKey.toHex()} on swarmKey ${keyToString(this._swarmKey)}`);
 
     this._state = GreetingState.LISTENING;
     log('Listening');
@@ -187,6 +187,7 @@ export class GreetingResponder {
    */
   async _writeCredentialsToParty (messages: any[]) {
     assert(this._state === GreetingState.CONNECTED);
+    assert(this._identityManager.deviceKeyChain);
 
     // These messages will be self-signed by keys not yet admitted to the Party,, so we cannot check
     // for a trusted key, only that the signatures are valid.
@@ -210,10 +211,9 @@ export class GreetingResponder {
 
       const envelope = createEnvelopeMessage(
         this._identityManager.keyring,
-        Buffer.from(this._partyProcessor.partyKey),
+        this._partyProcessor.partyKey,
         message,
-        [this._identityManager.deviceKeyChain],
-        null
+        [this._identityManager.deviceKeyChain]
       );
 
       await this._partyProcessor.writeHaloMessage(envelope);
@@ -232,22 +232,21 @@ export class GreetingResponder {
 
   /**
    * Callback to gather member key and feed "hints" for the Invitee.
-   * @return {KeyHint[]}
    * @private
    */
-  _gatherHints () {
+  _gatherHints (): KeyHint[] {
     assert(this._state === GreetingState.SUCCEEDED);
 
     const memberKeys = this._partyProcessor.memberKeys.map(publicKey => {
       return {
-        publicKey,
+        publicKey: publicKey.asUint8Array(),
         type: KeyType.UNKNOWN
       };
     });
 
     const memberFeeds = this._partyProcessor.feedKeys.map(publicKey => {
       return {
-        publicKey,
+        publicKey: publicKey.asUint8Array(),
         type: KeyType.FEED
       };
     });

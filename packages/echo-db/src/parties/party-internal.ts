@@ -183,7 +183,7 @@ export class PartyInternal {
    */
   createSnapshot (): PartySnapshot {
     return {
-      partyKey: this.key,
+      partyKey: this.key.asUint8Array(),
       timeframe: this._timeframeClock.timeframe,
       timestamp: Date.now(),
       database: this.database.createSnapshot(),

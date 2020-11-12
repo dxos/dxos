@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-// eslint-disable-next-line camelcase
 import { Message as HaloMessage } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
 
 import { EchoEnvelope, FeedMessage } from './proto';
 
@@ -16,9 +16,7 @@ import { EchoEnvelope, FeedMessage } from './proto';
 //  They are not different types of things, only distinct uses, and the same key may be used in more than one way
 //  (e.g., as both the IdentityKey for the user and as the PartyKey for their HALO).
 
-export type PublicKey = Uint8Array;
-
-export type SwarmKey = PublicKey;
+export type SwarmKey = Uint8Array;
 
 //
 // Feed
@@ -27,12 +25,12 @@ export type SwarmKey = PublicKey;
 export type FeedKey = PublicKey;
 
 export type FeedMeta = {
-  feedKey: FeedKey;
+  feedKey: Uint8Array;
   seq: number;
 }
 
 export interface MutationMeta extends FeedMeta {
-  memberKey: PublicKey
+  memberKey: Uint8Array
 }
 
 /**

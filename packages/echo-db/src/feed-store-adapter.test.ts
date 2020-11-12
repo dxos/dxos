@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { randomBytes } from '@dxos/crypto';
+import { randomBytes, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 
 import { FeedStoreAdapter } from './feed-store-adapter';
@@ -12,7 +12,7 @@ test('close and re-open', async () => {
   const feedStore = new FeedStoreAdapter(new FeedStore(createRamStorage()));
   await feedStore.open();
 
-  const partyKey = randomBytes();
+  const partyKey = PublicKey.from(randomBytes());
   await feedStore.createWritableFeed(partyKey);
   await feedStore.close();
   await feedStore.open();

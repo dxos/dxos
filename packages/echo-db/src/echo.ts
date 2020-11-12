@@ -7,7 +7,7 @@ import memdown from 'memdown';
 
 import { Event } from '@dxos/async';
 import { KeyRecord, Keyring, KeyStore, KeyType } from '@dxos/credentials';
-import { humanize, KeyPair } from '@dxos/crypto';
+import { KeyPair, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -234,14 +234,15 @@ export class ECHO {
    * Create Profile. Add Identity key if public and secret key are provided.
    */
   async createIdentity (keyPair: KeyPair) {
-    assert(keyPair.publicKey);
-    assert(keyPair.secretKey);
+    const { publicKey, secretKey } = keyPair;
+    assert(publicKey, 'Invalid publicKey');
+    assert(secretKey, 'Invalid secretKey');
 
     if (this._identityManager.identityKey) {
       throw new Error('Identity key already exists. Call createProfile without a keypair to only create a halo party.');
     }
 
-    await this._keyring.addKeyRecord({ ...keyPair, type: KeyType.IDENTITY });
+    await this._keyring.addKeyRecord({ secretKey, publicKey: PublicKey.from(publicKey), type: KeyType.IDENTITY });
   }
 
   async createHalo (displayName?: string) {
@@ -253,7 +254,7 @@ export class ECHO {
     }
 
     await this._partyManager.createHalo({
-      identityDisplayName: displayName || humanize(this._identityManager.identityKey.publicKey)
+      identityDisplayName: displayName || this._identityManager.identityKey.publicKey.humanize()
     });
   }
 
@@ -276,7 +277,7 @@ export class ECHO {
   getParty (partyKey: PartyKey): Party | undefined {
     assert(this._partyManager.opened, 'ECHO not open.');
 
-    const impl = this._partyManager.parties.find(party => Buffer.compare(party.key, partyKey) === 0);
+    const impl = this._partyManager.parties.find(party => party.key.equals(partyKey));
     return impl && new Party(impl);
   }
 

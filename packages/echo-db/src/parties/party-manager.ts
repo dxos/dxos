@@ -7,8 +7,8 @@ import debug from 'debug';
 
 import { Event, synchronized } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
-import { keyToString } from '@dxos/crypto';
-import { PartyKey, PublicKey } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/crypto';
+import { PartyKey } from '@dxos/echo-protocol';
 import { ComplexMap, timed } from '@dxos/util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
@@ -31,7 +31,7 @@ export class PartyManager {
   private _opened = false;
 
   // Map of parties by party key.
-  private readonly _parties = new ComplexMap<PublicKey, PartyInternal>(keyToString);
+  private readonly _parties = new ComplexMap<PublicKey, PartyInternal>(key => key.toHex());
 
   // External event listener.
   // TODO(burdon): Wrap with subscribe.
@@ -176,7 +176,7 @@ export class PartyManager {
 
     if (this._parties.has(party.key)) {
       await party.close();
-      throw new Error(`Party already exists ${keyToString(party.key)}`); // TODO(marik-d): Handle this gracefully
+      throw new Error(`Party already exists ${party.key.toHex()}`); // TODO(marik-d): Handle this gracefully
     }
     this._setParty(party);
     return party;
@@ -194,13 +194,13 @@ export class PartyManager {
     assert(this._opened, 'PartyManager is not open.');
     assert(this._identityManager.initialized, 'IdentityManager has not been initialized with the HALO.');
 
-    log(`Adding party partyKey=${keyToString(partyKey)} hints=${hints.length}`);
+    log(`Adding party partyKey=${partyKey.toHex()} hints=${hints.length}`);
     assert(!this._parties.has(partyKey));
     const party = await this._partyFactory.addParty(partyKey, hints);
 
     if (this._parties.has(party.key)) {
       await party.close();
-      throw new Error(`Party already exists ${keyToString(party.key)}`); // TODO(marik-d): Handle this gracefully
+      throw new Error(`Party already exists ${party.key.toHex()}`); // TODO(marik-d): Handle this gracefully
     }
     this._setParty(party);
   }
@@ -215,7 +215,7 @@ export class PartyManager {
 
     if (this._parties.has(party.key)) {
       await party.close();
-      throw new Error(`Party already exists ${keyToString(party.key)}`); // TODO(marik-d): Handle this gracefully
+      throw new Error(`Party already exists ${party.key.toHex()}`); // TODO(marik-d): Handle this gracefully
     }
     this._setParty(party);
     return party;
@@ -232,7 +232,7 @@ export class PartyManager {
 
       for (const partyDesc of values) {
         if (!this._parties.has(partyDesc.partyKey)) {
-          log(`Auto-opening new Party from HALO: ${keyToString(partyDesc.partyKey)}`);
+          log(`Auto-opening new Party from HALO: ${partyDesc.partyKey.toHex()}`);
           await this.addParty(partyDesc.partyKey, partyDesc.keyHints);
         }
       }
@@ -242,12 +242,12 @@ export class PartyManager {
       for (const party of this._parties.values()) {
         const shouldBeOpen = this._identityManager.halo?.isActive(party.key);
         if (party.isOpen && !shouldBeOpen) {
-          log(`Auto-closing deactivated party ${keyToString(party.key)}`);
+          log(`Auto-closing deactivated party ${party.key.toHex()}`);
 
           await party.close();
           this.update.emit(party);
         } else if (!party.isOpen && shouldBeOpen) {
-          log(`Auto-opening activated party ${keyToString(party.key)}`);
+          log(`Auto-opening activated party ${party.key.toHex()}`);
 
           await party.open();
           this.update.emit(party);
@@ -280,11 +280,11 @@ export class PartyManager {
 
     for (const publicKey of party.processor.memberKeys) {
       // A key that represents either us or the Party itself is never a contact.
-      if (this._identityManager?.identityKey?.publicKey.equals(publicKey) || Buffer.compare(publicKey, party.key) === 0) {
+      if (this._identityManager?.identityKey?.publicKey.equals(publicKey) || party.key.equals(publicKey)) {
         continue;
       }
 
-      const hexKey = keyToString(publicKey);
+      const hexKey = publicKey.toHex();
       const contact = contactList[hexKey];
       const memberInfo = party.processor.getMemberInfo(publicKey);
 
@@ -304,6 +304,6 @@ export class PartyManager {
 
   private _isHalo (partyKey: PublicKey) {
     assert(this._identityManager.identityKey, 'No identity key');
-    return Buffer.compare(partyKey, this._identityManager.identityKey.publicKey) === 0;
+    return partyKey.equals(this._identityManager.identityKey.publicKey);
   }
 }

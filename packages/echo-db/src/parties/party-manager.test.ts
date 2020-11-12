@@ -7,16 +7,22 @@ import debug from 'debug';
 import ram from 'random-access-memory';
 
 import { waitForCondition } from '@dxos/async';
-import { createPartyGenesisMessage, KeyType, Keyring, generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import {
-  keyToBuffer,
+  createPartyGenesisMessage,
+  KeyType,
+  Keyring,
+  generateSeedPhrase,
+  keyPairFromSeedPhrase,
+  SecretProvider,
+  SecretValidator
+} from '@dxos/credentials';
+import {
+  PublicKey,
+  createKeyPair,
   randomBytes,
   sign,
   verify,
-  SIGNATURE_LENGTH,
-  createKeyPair,
-  keyToString,
-  humanize
+  SIGNATURE_LENGTH
 } from '@dxos/crypto';
 import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
@@ -26,7 +32,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { checkType, createWritableFeedStream, latch } from '@dxos/util';
 
 import { FeedStoreAdapter } from '../feed-store-adapter';
-import { InvitationDescriptor, SecretProvider, SecretValidator } from '../invitations';
+import { InvitationDescriptor } from '../invitations';
 import { OfflineInvitationClaimer } from '../invitations/offline-invitation-claimer';
 import { Item } from '../items';
 import { SnapshotStore } from '../snapshot-store';
@@ -52,7 +58,11 @@ describe('Party manager', () => {
       if (createIdentity) {
         seedPhrase = generateSeedPhrase();
         const keyPair = keyPairFromSeedPhrase(seedPhrase);
-        await keyring.addKeyRecord({ ...keyPair, type: KeyType.IDENTITY });
+        await keyring.addKeyRecord({
+          publicKey: PublicKey.from(keyPair.publicKey),
+          secretKey: keyPair.secretKey,
+          type: KeyType.IDENTITY
+        });
       }
       identityManager = new IdentityManager(keyring);
     }
@@ -75,7 +85,7 @@ describe('Party manager', () => {
     if (open) {
       await partyManager.open();
       if (createIdentity) {
-        await partyManager.createHalo({ identityDisplayName: humanize(identityManager.identityKey!.publicKey) });
+        await partyManager.createHalo({ identityDisplayName: identityManager.identityKey!.publicKey.humanize() });
       }
     }
 
@@ -98,7 +108,7 @@ describe('Party manager', () => {
     expect(party.isOpen).toBeTruthy();
 
     // The Party key is an inception key, so its secret should be destroyed immediately after use.
-    const partyKey = identityManager.keyring.getKey(Buffer.from(party.key));
+    const partyKey = identityManager.keyring.getKey(party.key);
     expect(partyKey).toBeDefined();
     assert(partyKey);
     expect(identityManager.keyring.hasSecretKey(partyKey)).toBe(false);
@@ -126,7 +136,7 @@ describe('Party manager', () => {
     // TODO(burdon): Create multiple feeds.
     const feed = await feedStore.openFeed(partyKey.key, { metadata: { partyKey: partyKey.publicKey } } as any);
     const feedKey = await keyring.addKeyRecord({
-      publicKey: feed.key,
+      publicKey: PublicKey.from(feed.key),
       secretKey: feed.secretKey,
       type: KeyType.FEED
     });
@@ -134,7 +144,7 @@ describe('Party manager', () => {
     const feedStream = createWritableFeedStream(feed);
     feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
 
-    await partyManager.addParty(keyToBuffer(partyKey.key), [{
+    await partyManager.addParty(partyKey.publicKey, [{
       type: KeyType.FEED,
       publicKey: feed.key
     }]);
@@ -174,7 +184,7 @@ describe('Party manager', () => {
       const feed = await feedStore.openFeed(partyKey.key,
         { metadata: { partyKey: partyKey.publicKey, writable: true } } as any);
       const feedKey = await keyring.addKeyRecord({
-        publicKey: feed.key,
+        publicKey: PublicKey.from(feed.key),
         secretKey: feed.secretKey,
         type: KeyType.FEED
       });
@@ -211,7 +221,7 @@ describe('Party manager', () => {
     expect(partyManagerA.parties).toHaveLength(0);
     const partyA = await partyManagerA.createParty();
     expect(partyManagerA.parties).toHaveLength(1);
-    log(`Created ${keyToString(partyA.key)}`);
+    log(`Created ${partyA.key.toHex()}`);
 
     // Create a validation function which tests the signature of a specific KeyPair.
     const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
@@ -227,7 +237,7 @@ describe('Party manager', () => {
     expect(partyManagerB.parties).toHaveLength(0);
     const partyB = await partyManagerB.joinParty(invitationDescriptor, secretProvider);
     expect(partyB).toBeDefined();
-    log(`Joined ${keyToString(partyB.key)}`);
+    log(`Joined ${partyB.key.toHex()}`);
 
     let itemA: Item<any> | null = null;
     const [updated, onUpdate] = latch();
@@ -258,11 +268,11 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(humanize(identityManagerA.identityKey!.publicKey));
+          expect(member.displayName).toEqual(identityManagerA.identityKey!.publicKey.humanize());
           expect(member.displayName).toEqual(identityManagerA.displayName);
         }
         if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(humanize(identityManagerB.identityKey!.publicKey));
+          expect(member.displayName).toEqual(identityManagerB.identityKey!.publicKey.humanize());
           expect(member.displayName).toEqual(identityManagerB.displayName);
         }
       }
@@ -282,7 +292,7 @@ describe('Party manager', () => {
     expect(partyManagerA.parties).toHaveLength(0);
     const partyA = await partyManagerA.createParty();
     expect(partyManagerA.parties).toHaveLength(1);
-    log(`Created ${keyToString(partyA.key)}`);
+    log(`Created ${partyA.key.toHex()}`);
 
     // Create a validation function which tests the signature of a specific KeyPair.
     const secretValidator: SecretValidator = async (invitation, secret) => {
@@ -309,7 +319,7 @@ describe('Party manager', () => {
     expect(partyManagerB.parties).toHaveLength(0);
     const partyB = await partyManagerB.joinParty(invitationDescriptor, secretProvider);
     expect(partyB).toBeDefined();
-    log(`Joined ${keyToString(partyB.key)}`);
+    log(`Joined ${partyB.key.toHex()}`);
 
     let itemA: Item<any> | null = null;
     const [updated, onUpdate] = latch();
@@ -340,10 +350,10 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(humanize(identityManagerA.identityKey!.publicKey));
+          expect(member.displayName).toEqual(identityManagerA.identityKey!.publicKey.humanize());
         }
         if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(humanize(identityManagerB.identityKey!.publicKey));
+          expect(member.displayName).toEqual(identityManagerB.identityKey!.publicKey.humanize());
         }
       }
     }
@@ -359,7 +369,7 @@ describe('Party manager', () => {
     const pinSecret = '0000';
     const secretProvider: SecretProvider = async () => Buffer.from(pinSecret);
     const secretValidator: SecretValidator = async (invitation, secret) =>
-      secret && secret.equals(invitation.secret);
+      secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
 
     // Issue the invitation on nodeA.
     const invitation = await identityManagerA?.halo?.invitationManager.createInvitation({
@@ -451,7 +461,7 @@ describe('Party manager', () => {
     const pinSecret = '0000';
     const secretProvider: SecretProvider = async () => Buffer.from(pinSecret);
     const secretValidator: SecretValidator = async (invitation, secret) =>
-      secret && secret.equals(invitation.secret);
+      secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
 
     {
       // Issue the invitation on nodeA.
@@ -634,7 +644,7 @@ describe('Party manager', () => {
     expect(partyManagerA.parties).toHaveLength(0);
     const partyA = await partyManagerA.createParty();
     expect(partyManagerA.parties).toHaveLength(1);
-    log(`Created ${keyToString(partyA.key)}`);
+    log(`Created ${partyA.key.toHex()}`);
 
     const invitationDescriptor = await partyA.invitationManager.createOfflineInvitation(identityManagerB.identityKey.publicKey);
 
@@ -643,7 +653,7 @@ describe('Party manager', () => {
     const partyB = await partyManagerB.joinParty(invitationDescriptor,
       OfflineInvitationClaimer.createSecretProvider(identityManagerB));
     expect(partyB).toBeDefined();
-    log(`Joined ${keyToString(partyB.key)}`);
+    log(`Joined ${partyB.key.toHex()}`);
 
     let itemA: Item<any> | null = null;
     const [updated, onUpdate] = latch();
@@ -674,11 +684,11 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(humanize(identityManagerA.identityKey!.publicKey));
+          expect(member.displayName).toEqual(identityManagerA.identityKey!.publicKey.humanize());
           expect(member.displayName).toEqual(identityManagerA.displayName);
         }
         if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(humanize(identityManagerB.identityKey!.publicKey));
+          expect(member.displayName).toEqual(identityManagerB.identityKey!.publicKey.humanize());
           expect(member.displayName).toEqual(identityManagerB.displayName);
         }
       }
@@ -715,7 +725,7 @@ describe('Party manager', () => {
     expect(partyManagerA.parties).toHaveLength(0);
     const partyA = await partyManagerA.createParty();
     expect(partyManagerA.parties).toHaveLength(1);
-    log(`Created ${keyToString(partyA.key)}`);
+    log(`Created ${partyA.key.toHex()}`);
 
     const invitationDescriptor = await partyA.invitationManager.createOfflineInvitation(identityManagerB.identityKey.publicKey);
 
@@ -724,7 +734,7 @@ describe('Party manager', () => {
     const partyB = await partyManagerB.joinParty(invitationDescriptor,
       OfflineInvitationClaimer.createSecretProvider(identityManagerB));
     expect(partyB).toBeDefined();
-    log(`Joined ${keyToString(partyB.key)}`);
+    log(`Joined ${partyB.key.toHex()}`);
 
     await updatedA;
     await updatedB;

@@ -14,8 +14,8 @@ import {
   PartyAuthenticator,
   Message as HaloMessage
 } from '@dxos/credentials';
-import { keyToString } from '@dxos/crypto';
-import { FeedKey, FeedWriter, IHaloStream, PartyKey, HaloStateSnapshot, PublicKey, WriteReceipt } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/crypto';
+import { FeedKey, FeedWriter, IHaloStream, PartyKey, HaloStateSnapshot, WriteReceipt } from '@dxos/echo-protocol';
 import { jsonReplacer } from '@dxos/util';
 
 const log = debug('dxos:echo:parties:party-processor');
@@ -55,7 +55,7 @@ export class PartyProcessor {
 
     // TODO(marik-d): Use Event.wrap here.
     state.on('admit:feed', (keyRecord: any) => {
-      log(`Feed key admitted ${keyToString(keyRecord.publicKey)}`);
+      log(`Feed key admitted ${keyRecord.publicKey.toHex()}`);
       this._feedAdded.emit(keyRecord.publicKey);
     });
     state.on('admit:key', (keyRecord: KeyRecord) => this.keyOrInfoAdded.emit(keyRecord.publicKey));
@@ -66,11 +66,11 @@ export class PartyProcessor {
     return this._partyKey;
   }
 
-  get feedKeys () {
+  get feedKeys (): PublicKey[] {
     return this._stateMachine.memberFeeds;
   }
 
-  get memberKeys () {
+  get memberKeys (): PublicKey[] {
     return this._stateMachine.memberKeys;
   }
 
@@ -92,23 +92,23 @@ export class PartyProcessor {
 
   isFeedAdmitted (feedKey: FeedKey) {
     // TODO(telackey): Make sure it is a feed.
-    return this._stateMachine.credentialMessages.has(keyToString(feedKey));
+    return this._stateMachine.credentialMessages.has(feedKey.toHex());
   }
 
   isMemberKey (publicKey: PublicKey) {
     // TODO(telackey): Make sure it is not a feed.
-    return this._stateMachine.credentialMessages.has(keyToString(publicKey));
+    return this._stateMachine.credentialMessages.has(publicKey.toHex());
   }
 
   getMemberInfo (publicKey: PublicKey) {
     // TODO(telackey): Normalize PublicKey types in @dxos/credentials.
-    return this._stateMachine.getInfo(Buffer.from(publicKey));
+    return this._stateMachine.getInfo(publicKey);
   }
 
   /**
    * Returns public key of the member that admitted the specified feed.
    */
-  getFeedOwningMember (feedKey: FeedKey): PublicKey {
+  getFeedOwningMember (feedKey: FeedKey): PublicKey | undefined {
     // TODO(marik-d): Commented out beacuse it breaks tests currently.
     // assert(this._stateMachine.isMemberFeed(feedKey), 'Not a member feed');
     return this._stateMachine.getAdmittedBy(feedKey);

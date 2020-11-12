@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { waitForEvent, noop } from '@dxos/async';
+import { waitForEvent } from '@dxos/async';
 import {
   Authenticator,
   ClaimResponse,
@@ -14,7 +14,8 @@ import {
   GreetingCommandPlugin,
   PartyInvitationClaimHandler,
   createAuthMessage,
-  createGreetingClaimMessage
+  createGreetingClaimMessage,
+  SignedMessage
 } from '@dxos/credentials';
 import { keyToString, randomBytes, verify } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
@@ -65,9 +66,9 @@ export class HaloRecoveryInitiator {
     log('Local PeerId:', keyToString(this._peerId));
 
     assert(this._identityManager.identityKey);
-    const swarmKey = this._identityManager.identityKey.publicKey;
+    const swarmKey = this._identityManager.identityKey.publicKey.asBuffer();
 
-    this._greeterPlugin = new GreetingCommandPlugin(this._peerId, noop);
+    this._greeterPlugin = new GreetingCommandPlugin(this._peerId, async () => false);
 
     log('Connecting');
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
@@ -122,7 +123,7 @@ export class HaloRecoveryInitiator {
 
   async disconnect () {
     assert(this._identityManager.identityKey);
-    const swarmKey = this._identityManager.identityKey.publicKey;
+    const swarmKey = this._identityManager.identityKey.publicKey.asBuffer();
     await this._networkManager.leaveProtocolSwarm(swarmKey);
     this._state = GreetingState.DISCONNECTED;
   }
@@ -135,8 +136,8 @@ export class HaloRecoveryInitiator {
   }
 
   // The secretProvider should provide an `Auth` message signed directly by the Identity key.
-  createSecretProvider () {
-    const provider: SecretProvider = async (info) => Authenticator.encodePayload(
+  createSecretProvider (): SecretProvider {
+    return async (info: any) => Buffer.from(Authenticator.encodePayload(
       // The signed portion of the Auth message includes the ID and authNonce provided
       // by "info". These values will be validated on the other end.
       createAuthMessage(
@@ -146,8 +147,7 @@ export class HaloRecoveryInitiator {
         this._identityManager.identityKey ?? raise(new Error('No identity key')),
         undefined,
         info.authNonce.value)
-    );
-    return provider;
+    ));
   }
 
   static createHaloInvitationClaimHandler (identityManager: IdentityManager) {
@@ -156,7 +156,7 @@ export class HaloRecoveryInitiator {
       assert(identityManager.identityKey);
 
       // The invitationtId is the signature of both peerIds, signed by the Identity key.
-      const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationID, identityManager.identityKey.publicKey);
+      const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationID, identityManager.identityKey.publicKey.asBuffer());
       if (!ok) {
         throw new Error(`Invalid invitation ${keyToString(invitationID)}`);
       }
@@ -174,8 +174,8 @@ export class HaloRecoveryInitiator {
       const secretValidator: SecretValidator = async (invitation, secret) => {
         const { payload: authMessage } = Authenticator.decodePayload(secret);
 
-        return keyring.verify(authMessage) &&
-          Buffer.from(invitation.id, 'hex').equals(authMessage.signed.payload.partyKey) &&
+        return keyring.verify(<unknown>authMessage as SignedMessage) &&
+          invitation.id.equals(authMessage.signed.payload.partyKey) &&
           invitation.authNonce.equals(authMessage.signed.nonce);
       };
 

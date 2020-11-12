@@ -23,7 +23,7 @@ export class SnapshotStore {
   ) {}
 
   async load (partyKey: PartyKey): Promise<PartySnapshot | undefined> {
-    const file = this._storage(keyToString(partyKey));
+    const file = this._storage(partyKey.toHex());
 
     try {
       const { size } = await pify(file.stat.bind(file))();

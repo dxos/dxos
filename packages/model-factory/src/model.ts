@@ -83,7 +83,7 @@ export abstract class Model<T> {
       ...receipt,
       waitToBeProcessed: async () => {
         await this._messageProcessed.waitFor(meta =>
-          Buffer.compare(meta.feedKey, receipt.feedKey) === 0 && meta.seq === receipt.seq
+          receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
         );
       }
     };

@@ -9,13 +9,13 @@ import ram from 'random-access-memory';
 import { Writable } from 'stream';
 import tempy from 'tempy';
 
-import { createId, keyToString, randomBytes } from '@dxos/crypto';
+import { createId, keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 import { createWritableFeedStream, latch, sink } from '@dxos/util';
 
 import { codec, createTestItemMutation, FeedMessage } from '../proto';
 import { Timeframe } from '../spacetime';
-import { FeedBlock } from '../types';
+import { FeedBlock, FeedKey } from '../types';
 
 const chance = new Chance(999);
 
@@ -28,14 +28,14 @@ describe('Stream tests', () => {
   test('Opening and closing FeedStore', async () => {
     const directory = tempy.directory();
 
-    let feedKey;
+    let feedKey: FeedKey;
 
     {
       const feedStore = new FeedStore(directory, { feedOptions: { valueEncoding: codec } });
       await feedStore.open();
 
       const feed = await feedStore.openFeed('test-feed');
-      feedKey = feed.key;
+      feedKey = PublicKey.from(feed.key);
 
       const itemId = createId();
       await pify(feed.append.bind(feed))(createTestItemMutation(itemId, 'value', 'test'));
@@ -48,7 +48,7 @@ describe('Stream tests', () => {
       await feedStore.open();
 
       const feed = await feedStore.openFeed('test-feed');
-      expect(keyToString(feedKey)).toBe(keyToString(feed.key));
+      expect(feedKey.toHex()).toBe(keyToString(feed.key));
 
       const readStream = feedStore.createReadStream({ live: true });
       await sink(readStream, 'data', 1);
@@ -138,7 +138,7 @@ describe('Stream tests', () => {
   test('message serialization', () => {
     const message: FeedMessage = {
       echo: {
-        timeframe: new Timeframe([[randomBytes(), 23]]),
+        timeframe: new Timeframe([[PublicKey.from(randomBytes(PublicKey.LENGTH)), 23]]),
         itemId: createId()
       }
     };

@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { createId, createKeyPair, randomBytes } from '@dxos/crypto';
+import { createId, createKeyPair, PublicKey, randomBytes } from '@dxos/crypto';
 import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream } from '@dxos/echo-protocol';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -18,8 +18,11 @@ import { UnknownModel } from './unknown-model';
 
 const log = debug('dxos:echo:item-demuxer:test');
 
+const createPublicKey = () => PublicKey.from(createKeyPair().publicKey);
+
 test('set-up', async () => {
-  const { publicKey: feedKey } = createKeyPair();
+  const feedKey = createPublicKey();
+  const memberKey = createPublicKey();
 
   const modelFactory = new ModelFactory()
     .registerModel(TestModel)
@@ -28,8 +31,8 @@ test('set-up', async () => {
   const writeStream = createTransform<EchoEnvelope, IEchoStream>(
     async (message: EchoEnvelope): Promise<IEchoStream> => ({
       meta: {
-        feedKey,
-        memberKey: feedKey,
+        feedKey: feedKey.asUint8Array(),
+        memberKey: memberKey.asUint8Array(),
         seq: 0
       },
       data: message
@@ -104,8 +107,8 @@ it('ignores unknown models', async () => {
   const writeStream = createTransform<EchoEnvelope, IEchoStream>(
     async (message: EchoEnvelope): Promise<IEchoStream> => ({
       meta: {
-        feedKey: randomBytes(),
-        memberKey: randomBytes(),
+        feedKey: createPublicKey().asUint8Array(),
+        memberKey: createPublicKey().asUint8Array(),
         seq: 0
       },
       data: message
@@ -154,8 +157,8 @@ it('ignores unknown models on snapshot restore', async () => {
               {
                 mutation: Buffer.from('abc'),
                 meta: {
-                  feedKey: randomBytes(),
-                  memberKey: randomBytes(),
+                  feedKey: createPublicKey().asUint8Array(),
+                  memberKey: createPublicKey().asUint8Array(),
                   seq: 0
                 }
               }

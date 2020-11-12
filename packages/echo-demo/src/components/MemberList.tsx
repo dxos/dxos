@@ -14,7 +14,7 @@ export const MemberList = ({ party }: MemberListProps) => {
   return (
     <ul>
       {members.map(member => (
-        <li>{member.displayName ?? keyToString(member.publicKey)}</li>
+        <li>{member.displayName ?? member.publicKey.humanize()}</li>
       ))}
     </ul>
   )

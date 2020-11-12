@@ -5,6 +5,7 @@
 import { Feed } from 'hypercore';
 import pify from 'pify';
 
+import { PublicKey } from '@dxos/crypto';
 import { MaybePromise } from '@dxos/util';
 
 import { FeedKey } from '../types';
@@ -29,7 +30,7 @@ export function createFeedWriter<T> (feed: Feed): FeedWriter<T> {
     write: async message => {
       const seq = await pify(feed.append.bind(feed))(message);
       return {
-        feedKey: feed.key,
+        feedKey: PublicKey.from(feed.key),
         seq
       };
     }
@@ -41,7 +42,7 @@ export function createMockFeedWriterFromStream (strem: NodeJS.WritableStream): F
     write: async message => {
       await pify(strem.write.bind(strem))(message);
       return {
-        feedKey: Buffer.from('00'.repeat(32)),
+        feedKey: PublicKey.from(Buffer.alloc(PublicKey.LENGTH)),
         seq: 0
       };
     }

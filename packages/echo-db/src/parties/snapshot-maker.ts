@@ -4,8 +4,6 @@
 
 import debug from 'debug';
 
-import { humanize } from '@dxos/crypto';
-
 import { TimeframeClock } from '../items/timeframe-clock';
 import { SnapshotStore } from '../snapshot-store';
 import { PartyInternal } from './party-internal';
@@ -16,7 +14,7 @@ export function makeAutomaticSnapshots (party: PartyInternal, clock: TimeframeCl
   return clock.update.on(async timeframe => {
     const totalMessages = timeframe.totalMessages();
     if (totalMessages > 0 && totalMessages % interval === 0) {
-      log(`Saving snapshot of ${humanize(party.key)}...`);
+      log(`Saving snapshot of ${party.key.humanize()}...`);
       try {
         const snapshot = party.createSnapshot();
         await store.save(snapshot);

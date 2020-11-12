@@ -9,7 +9,7 @@ import hypercore from 'hypercore';
 import pify from 'pify';
 import ram from 'random-access-memory';
 
-import { createId, keyToString } from '@dxos/crypto';
+import { createId, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 import { ComplexMap, latch } from '@dxos/util';
 
@@ -69,22 +69,22 @@ describe('feed store iterator', () => {
       return next[0]?.i;
     };
 
-    const feedSelector: FeedSelector = descriptor => feeds.has(descriptor.key);
+    const feedSelector: FeedSelector = descriptor => feeds.has(PublicKey.from(descriptor.key));
     const readStream = await createIterator(feedStore, feedSelector, messageSelector);
 
     //
     // Create feeds.
     //
 
-    const feeds = new ComplexMap<FeedKey, hypercore.Feed>(keyToString);
+    const feeds = new ComplexMap<FeedKey, hypercore.Feed>(key => key.toHex());
     for await (const i of Array.from({ length: config.numFeeds }, (_, i) => i + 1)) {
       const feed = await feedStore.openFeed(`feed-${i}`);
-      feeds.set(feed.key, feed);
+      feeds.set(PublicKey.from(feed.key), feed);
     }
 
     log(JSON.stringify({
       config,
-      feeds: Array.from(feeds.keys()).map(feedKey => keyToString(feedKey))
+      feeds: Array.from(feeds.keys()).map(feedKey => feedKey.toHex())
     }, undefined, 2));
 
     //
@@ -97,7 +97,7 @@ describe('feed store iterator', () => {
       // Create timeframe dependency.
       const timeframe = new Timeframe(Array.from(feeds.values())
         .filter(f => f.key !== feed.key && f.length > 0)
-        .map(f => [f.key, f.length - 1])
+        .map(f => [PublicKey.from(f.key), f.length - 1])
       );
 
       // Create data.
@@ -132,7 +132,7 @@ describe('feed store iterator', () => {
         expect(i).toBe(j);
 
         // Update timeframe for node.
-        currentTimeframe = Timeframe.merge(currentTimeframe, new Timeframe([[feedKey, seq]]));
+        currentTimeframe = Timeframe.merge(currentTimeframe, new Timeframe([[PublicKey.from(feedKey), seq]]));
 
         updateCounter();
         j++;
@@ -161,7 +161,7 @@ describe('feed store iterator', () => {
     await pify(feed2.append.bind(feed2))({ key: 'feed2', value: '0' });
     await pify(feed2.append.bind(feed2))({ key: 'feed2', value: '1' });
 
-    const iterator = await createIterator(feedStore, undefined, undefined, new Timeframe([[feed1.key, 0]]));
+    const iterator = await createIterator(feedStore, undefined, undefined, new Timeframe([[PublicKey.from(feed1.key), 0]]));
 
     const [counter, updateCounter] = latch(3);
     const messages: any[] = [];

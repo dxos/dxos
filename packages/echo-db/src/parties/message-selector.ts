@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import { Keyring, getPartyCredentialMessageType, PartyCredential, admitsKeys } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
 import { MessageSelector } from '@dxos/echo-protocol';
 
 import { TimeframeClock } from '../items/timeframe-clock';
@@ -26,7 +27,8 @@ export function createMessageSelector (
   return candidates => {
     // We go over ECHO candidates here first because checking them is way less expensive then HALO ones.
     for (let i = 0; i < candidates.length; i++) {
-      const { key: feedKey, data: { echo } } = candidates[i];
+      const { data: { echo } } = candidates[i];
+      const feedKey = PublicKey.from(candidates[i].key);
       if (!echo) {
         continue;
       }
@@ -38,7 +40,8 @@ export function createMessageSelector (
     }
 
     for (let i = 0; i < candidates.length; i++) {
-      const { key: feedKey, data: { halo } } = candidates[i];
+      const { data: { halo } } = candidates[i];
+      const feedKey = PublicKey.from(candidates[i].key);
       if (!halo) {
         continue;
       }

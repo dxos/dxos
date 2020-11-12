@@ -8,6 +8,7 @@ import { Readable } from 'stream';
 
 import { Event } from '@dxos/async';
 import { Message as HaloMessage } from '@dxos/credentials';
+import { keyToString, PublicKey } from '@dxos/crypto';
 import { createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter } from '@dxos/echo-protocol';
 import { checkType, createReadable, jsonReplacer } from '@dxos/util';
 
@@ -124,7 +125,9 @@ export class Pipeline {
           // ECHO
           //
           if (message.echo) {
-            this._timeframeClock.updateTimeframe(block.key, block.seq);
+            this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
+            const memberKey = this._partyProcessor.getFeedOwningMember(PublicKey.from(block.key));
+            assert(memberKey, `Ownership of feed ${keyToString(block.key)} could not be determined.`);
 
             // Validate messge.
             const { itemId } = message.echo;
@@ -134,7 +137,7 @@ export class Pipeline {
                 meta: {
                   seq: block.seq,
                   feedKey: block.key,
-                  memberKey: this._partyProcessor.getFeedOwningMember(block.key)
+                  memberKey: memberKey.asUint8Array()
                 },
                 data: message.echo
               }));

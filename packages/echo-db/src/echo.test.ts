@@ -6,12 +6,12 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { sleep, waitForCondition } from '@dxos/async';
-import { createKeyPair, humanize } from '@dxos/crypto';
+import { SecretValidator, SecretProvider } from '@dxos/credentials';
+import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { latch } from '@dxos/util';
 
 import { ECHO } from './echo';
-import { SecretProvider, SecretValidator } from './invitations';
 import { createTestInstance, inviteTestPeer } from './testing';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
@@ -26,12 +26,12 @@ describe('api tests', () => {
     const echo = await createECHO();
 
     const parties = await echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => humanize(party.key)));
+    log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
     const [updated, onUpdate] = latch();
     const unsubscribe = parties.subscribe(async parties => {
-      log('Updated:', parties.map(party => humanize(party.key)));
+      log('Updated:', parties.map(party => party.key.humanize()));
       expect(parties).toHaveLength(1);
       parties.map(async party => {
         const value = await party.getProperty('title');
@@ -52,12 +52,12 @@ describe('api tests', () => {
     const echo = await createECHO();
 
     const parties = await echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => humanize(party.key)));
+    log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
     const [updated, onUpdate] = latch();
     const unsubscribe = parties.subscribe(async parties => {
-      log('Updated:', parties.map(party => humanize(party.key)));
+      log('Updated:', parties.map(party => party.key.humanize()));
 
       // TODO(burdon): Update currentybly called after all mutations below have completed?
       expect(parties).toHaveLength(1);
@@ -80,7 +80,7 @@ describe('api tests', () => {
     const members = party.queryMembers().value;
     expect(members.length).toBe(1);
     // Within this test, we use the humanized key as the name.
-    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
+    expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
     // TODO(burdon): Test item mutations.
     await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/document' });
@@ -95,12 +95,12 @@ describe('api tests', () => {
     const echo = await createECHO();
 
     const parties = await echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => humanize(party.key)));
+    log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
     const [updated, onUpdate] = latch();
     const unsubscribe = parties.subscribe(async parties => {
-      log('Updated:', parties.map(party => humanize(party.key)));
+      log('Updated:', parties.map(party => party.key.humanize()));
 
       expect(parties).toHaveLength(1);
       parties.map(async party => {
@@ -123,7 +123,7 @@ describe('api tests', () => {
     const members = party.queryMembers().value;
     expect(members.length).toBe(1);
     // Within this test, we use the humanized key as the name.
-    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
+    expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
     const parent = await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/document' });
     await party.database.createItem({ model: ObjectModel, parent: parent.id });
@@ -136,7 +136,7 @@ describe('api tests', () => {
     const echo = await createECHO();
 
     const parties = await echo.queryParties({ open: true });
-    log('Parties:', parties.value.map(party => humanize(party.key)));
+    log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
     const party = await echo.createParty();
@@ -145,7 +145,7 @@ describe('api tests', () => {
     const members = party.queryMembers().value;
     expect(members.length).toBe(1);
     // Within this test, we use the humanized key as the name.
-    expect(members[0].displayName).toEqual(humanize(members[0].publicKey));
+    expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
     const parentA = await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/document' });
     const childA = await party.database.createItem({ model: ObjectModel, parent: parentA.id });

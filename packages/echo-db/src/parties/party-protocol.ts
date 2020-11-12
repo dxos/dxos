@@ -62,8 +62,8 @@ export class PartyProtocol {
     }
     this._started = true;
 
-    log('Start', keyToString(this._partyKey));
-    return this._networkManager.joinProtocolSwarm(Buffer.from(this._partyKey), ({ channel }: any) => this._createProtocol(channel));
+    log('Start', this._partyKey.toHex());
+    return this._networkManager.joinProtocolSwarm(this._partyKey.asBuffer(), ({ channel }: any) => this._createProtocol(channel));
   }
 
   async stop () {
@@ -72,9 +72,9 @@ export class PartyProtocol {
     }
     this._started = false;
 
-    log('Stop', keyToString(this._partyKey));
+    log('Stop', this._partyKey.toHex());
 
-    await this._networkManager.leaveProtocolSwarm(Buffer.from(this._partyKey));
+    await this._networkManager.leaveProtocolSwarm(this._partyKey.asBuffer());
   }
 
   @synchronized
@@ -91,7 +91,7 @@ export class PartyProtocol {
     // The Auth plugin must always come first.
     plugins.push(
       new AuthPlugin(
-        this._identityManager.deviceKey.publicKey,
+        this._identityManager.deviceKey.publicKey.asBuffer(),
         this._authenticator,
         [Replicator.extension]
       )
@@ -101,14 +101,14 @@ export class PartyProtocol {
     if (isHalo) {
       plugins.push(
         new GreetingCommandPlugin(
-          this._identityManager.deviceKey.publicKey,
+          this._identityManager.deviceKey.publicKey.asBuffer(),
           HaloRecoveryInitiator.createHaloInvitationClaimHandler(this._identityManager)
         )
       );
     } else {
       plugins.push(
         new GreetingCommandPlugin(
-          this._identityManager.deviceKey.publicKey,
+          this._identityManager.deviceKey.publicKey.asBuffer(),
           OfflineInvitationClaimer.createOfflineInvitationClaimHandler(this._invitationManager)
         )
       );
@@ -126,7 +126,7 @@ export class PartyProtocol {
         },
 
         subscribe: (addFeedToReplicatedSet: (feed: any) => void) => this._activeFeeds.added.on(async (feedKey) => {
-          log(`add feed ${keyToString(feedKey)}`);
+          log(`add feed ${feedKey.toHex()}`);
           const feed = await this._openFeed(feedKey);
           addFeedToReplicatedSet({ discoveryKey: feed.discoveryKey });
         }),
@@ -135,7 +135,7 @@ export class PartyProtocol {
         replicate: async (remoteFeeds: any, info: any) => {
           // We can ignore remoteFeeds entirely, because the set of feeds we want to replicate is dictated by the Party.
           // TODO(telackey): why are we opening feeds? Necessary or belt/braces thinking, or because open party does it?
-          log(`replicate: peerId=${info.session.peerId.toString('hex')}, feeds=${this._activeFeeds.get().map(keyToString)}`);
+          log(`replicate: peerId=${info.session.peerId.toString('hex')}, feeds=${this._activeFeeds.get().map(key => key.toHex())}`);
           return Promise.all(this._activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
         }
       })
@@ -147,18 +147,18 @@ export class PartyProtocol {
       },
 
       discoveryToPublicKey: (dk: any) => {
-        if (!discoveryKey(this._partyKey).equals(dk)) {
+        if (!discoveryKey(this._partyKey.asBuffer()).equals(dk)) {
           return undefined;
         }
 
         // TODO(marik-d): Why does this do side effects.
         // TODO(burdon): Remove need for external closure (i.e., pass object to this callback).
-        protocol.setContext({ topic: keyToString(this._partyKey) });
-        return this._partyKey;
+        protocol.setContext({ topic: this._partyKey.toHex() });
+        return this._partyKey.asBuffer();
       }
     })
       .setSession({
-        peerId: this._identityManager.deviceKey.publicKey,
+        peerId: this._identityManager.deviceKey.publicKey.asBuffer(),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
         credentials: this._credentials.get().toString('base64')
       })

@@ -4,7 +4,6 @@
 
 import { inspect } from 'util';
 
-import { keyToString, humanize } from '@dxos/crypto';
 import { ComplexMap } from '@dxos/util';
 
 import { FeedKey } from '../types';
@@ -14,7 +13,7 @@ import { FeedKey } from '../types';
  * Describes how many messages have been processed.
  */
 export class Timeframe {
-  private readonly _frames = new ComplexMap<FeedKey, number>(keyToString);
+  private readonly _frames = new ComplexMap<FeedKey, number>(key => key.toHex());
 
   constructor (frames: [FeedKey, number][] = []) {
     for (const [key, seq] of frames) {
@@ -47,7 +46,8 @@ export class Timeframe {
    * @param keys
    */
   withoutKeys (keys: FeedKey[]): Timeframe {
-    return new Timeframe(this.frames().filter(([frameKey]) => keys.every(key => Buffer.compare(key, frameKey) !== 0)));
+    return new Timeframe(this.frames().filter(([frameKey]) => keys.every(key =>
+      Buffer.compare(key.asBuffer(), frameKey.asBuffer()) !== 0)));
   }
 
   /**
@@ -58,7 +58,7 @@ export class Timeframe {
   }
 
   toString () {
-    return `(${this.frames().map(([key, seq]) => `${humanize(key)} => ${seq}`).join(', ')})`;
+    return `(${this.frames().map(([key, seq]) => `${key.humanize()} => ${seq}`).join(', ')})`;
   }
 
   /**

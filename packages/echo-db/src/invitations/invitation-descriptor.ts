@@ -5,7 +5,7 @@
 import assert from 'assert';
 import stableStringify from 'json-stable-stringify';
 
-import { keyToBuffer, keyToString, ripemd160 } from '@dxos/crypto';
+import { keyToBuffer, keyToString, ripemd160, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 
 /**
@@ -43,7 +43,7 @@ export class InvitationDescriptor {
     const { hash, swarmKey, invitation, identityKey, type } = queryParameters;
 
     const descriptor = new InvitationDescriptor(type as InvitationDescriptorType, keyToBuffer(swarmKey),
-      keyToBuffer(invitation), (identityKey) ? keyToBuffer(identityKey) : undefined);
+      keyToBuffer(invitation), (identityKey) ? PublicKey.from(identityKey) : undefined);
 
     if (hash !== descriptor.hash) {
       throw new Error('Invalid hash.');
@@ -57,13 +57,13 @@ export class InvitationDescriptor {
     public readonly type: InvitationDescriptorType,
     public readonly swarmKey: SwarmKey,
     public readonly invitation: Buffer,
-    public readonly identityKey?: Buffer
+    public readonly identityKey?: PublicKey
   ) {
     assert(type);
     assert(Buffer.isBuffer(swarmKey));
     assert(Buffer.isBuffer(invitation));
     if (identityKey) {
-      assert(Buffer.isBuffer(identityKey));
+      PublicKey.assertValidPublicKey(identityKey);
     }
 
     this.type = type;
@@ -88,7 +88,7 @@ export class InvitationDescriptor {
     };
 
     if (this.identityKey) {
-      query.identityKey = keyToString(this.identityKey);
+      query.identityKey = this.identityKey.toHex();
     }
 
     query.hash = ripemd160(stableStringify(query));

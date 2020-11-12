@@ -15,9 +15,12 @@ import {
   createGreetingNotarizeMessage,
   createKeyAdmitMessage,
   Greeter,
-  GreetingCommandPlugin
+  GreetingCommandPlugin,
+  wrapMessage,
+  Message
 } from '@dxos/credentials';
-import { keyToString } from '@dxos/crypto';
+import { WithTypeUrl } from '@dxos/credentials/dist/es/proto/any';
+import { keyToString, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 
@@ -73,7 +76,7 @@ export class GreetingInitiator {
     // id in the invitation, as the greet swarm key. That is: greet swarm key, which is a unique key to serve
     // its purpose of uniquely identifying each greeter, is by convention also used as the peer id by the greeter
     // and so can be used here as the responder peer id in the greeting interaction.
-    const responderPeerId = swarmKey;
+    const responderPeerId = Buffer.from(swarmKey);
 
     // Use the invitation ID as our peerId.
     // This is due to a bug in the protocol where the invitation id is omitted from the payload.
@@ -103,7 +106,7 @@ export class GreetingInitiator {
     const { swarmKey } = this._invitationDescriptor;
     const haloInvitation = !!this._invitationDescriptor.identityKey;
 
-    const responderPeerId = swarmKey;
+    const responderPeerId = Buffer.from(swarmKey);
 
     //
     // The first step in redeeming the Invitation is the BEGIN command.
@@ -112,7 +115,7 @@ export class GreetingInitiator {
     //
 
     assert(this._greeterPlugin); // Neded because typechecker complains that `_greeterPlugin` can possibly be undefined.
-    const { info } = await this._greeterPlugin.send(Buffer.from(responderPeerId), createGreetingBeginMessage() as any) as any;
+    const { info } = await this._greeterPlugin.send(responderPeerId, createGreetingBeginMessage() as any) as any;
 
     //
     // The next step is the HANDSHAKE command, which allow us to exchange additional
@@ -122,10 +125,11 @@ export class GreetingInitiator {
     //
 
     log('Requesting secret...');
-    const secret = await secretProvider(info);
+    const secret = Buffer.from(await secretProvider(info));
     log('Received secret');
 
-    const handshakeResponse = await this._greeterPlugin.send(Buffer.from(responderPeerId), createGreetingHandshakeMessage(secret) as any) as any;
+    const handshakeResponse = await this._greeterPlugin.send(responderPeerId,
+      createGreetingHandshakeMessage(secret)) as any;
 
     //
     // The last step is the NOTARIZE command, where we submit our signed credentials to the Greeter.
@@ -134,12 +138,15 @@ export class GreetingInitiator {
     //
 
     // The result will include the partyKey and a nonce used when signing the response.
-    const { nonce, partyKey } = handshakeResponse;
+    const { nonce } = handshakeResponse;
+    const partyKey = PublicKey.from(handshakeResponse.partyKey);
 
     const feedKey = await this._feedInitializer(partyKey);
 
     const credentialMessages = [];
     if (haloInvitation) {
+      assert(this._identityManager.deviceKey, 'Device key required');
+
       // For the HALO, add the DEVICE directly.
       credentialMessages.push(
         createKeyAdmitMessage(
@@ -156,17 +163,20 @@ export class GreetingInitiator {
           this._identityManager.keyring,
           partyKey,
           feedKey,
-          this._identityManager.deviceKey,
+          [this._identityManager.deviceKey],
           nonce)
       );
     } else {
+      assert(this._identityManager.deviceKeyChain, 'Device key required');
+      assert(this._identityManager.identityGenesis, 'Identity genesis message required');
+
       // For any other Party, add the IDENTITY, signed by the DEVICE keychain, which links back to that IDENTITY.
       credentialMessages.push(
         createEnvelopeMessage(
           this._identityManager.keyring,
           partyKey,
-          this._identityManager.identityGenesis,
-          this._identityManager.deviceKeyChain,
+          wrapMessage(this._identityManager.identityGenesis),
+          [this._identityManager.deviceKeyChain],
           nonce)
       );
 
@@ -176,14 +186,14 @@ export class GreetingInitiator {
           this._identityManager.keyring,
           partyKey,
           feedKey,
-          this._identityManager.deviceKeyChain,
+          [this._identityManager.deviceKeyChain],
           nonce)
       );
     }
 
     // Send the signed payload to the greeting responder.
-    const notarizeResponse = await this._greeterPlugin.send(Buffer.from(responderPeerId),
-      createGreetingNotarizeMessage(secret, credentialMessages) as any) as any;
+    const notarizeResponse = await this._greeterPlugin.send(responderPeerId,
+      createGreetingNotarizeMessage(secret, credentialMessages as WithTypeUrl<Message>[]));
 
     //
     // We will receive back a collection of 'hints' of the keys and feeds that make up the Party.
@@ -191,7 +201,7 @@ export class GreetingInitiator {
     //
 
     // Tell the Greeter that we are done.
-    await this._greeterPlugin.send(Buffer.from(responderPeerId), createGreetingFinishMessage(secret) as any);
+    await this._greeterPlugin.send(responderPeerId, createGreetingFinishMessage(secret));
 
     await this.disconnect();
 

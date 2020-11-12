@@ -7,7 +7,7 @@ import debug from 'debug';
 import { Readable } from 'readable-stream';
 
 import { Event } from '@dxos/async';
-import { keyToString } from '@dxos/crypto';
+import { keyToString, PublicKey } from '@dxos/crypto';
 import { createBatchStream, FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { Trigger } from '@dxos/util';
 
@@ -167,7 +167,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   }
 
   private async _startReadingFromFeed (descriptor: FeedDescriptor) {
-    const frameSeq = this._skipTimeframe.get(descriptor.key);
+    const frameSeq = this._skipTimeframe.get(PublicKey.from(descriptor.key));
     const startIdx = frameSeq !== undefined ? frameSeq + 1 : 0;
 
     log(`Starting reading from feed ${descriptor.key.toString('hex')} from sequence ${startIdx}`);

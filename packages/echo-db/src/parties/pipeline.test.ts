@@ -8,7 +8,7 @@ import ram from 'random-access-memory';
 
 import { waitForCondition } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { createId, createKeyPair } from '@dxos/crypto';
+import { createId, PublicKey } from '@dxos/crypto';
 import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
@@ -34,12 +34,22 @@ describe('pipeline', () => {
     //
     // Create pipeline.
     //
-    const { publicKey: partyKey } = createKeyPair();
-    const partyProcessor = new PartyProcessor(partyKey);
-    await partyProcessor.takeHints([{
-      type: KeyType.FEED,
-      publicKey: feed.key
-    }]);
+    const keyring = new Keyring();
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    const feedKey = await keyring.addKeyRecord({
+      publicKey: PublicKey.from(feed.key),
+      secretKey: feed.secretKey,
+      type: KeyType.FEED
+    });
+    const partyProcessor = new PartyProcessor(partyKey.publicKey);
+    await partyProcessor.processMessage({
+      data: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey),
+      meta: {
+        feedKey: feedKey.publicKey.asBuffer(),
+        seq: 0
+      }
+    });
     const pipeline = new Pipeline(partyProcessor, feedReadStream, new TimeframeClock());
     const [readStream] = await pipeline.open();
     expect(readStream).toBeTruthy();
@@ -76,14 +86,14 @@ describe('pipeline', () => {
 
     const keyring = new Keyring();
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
-    const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
-    const idenitityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    const feedKey = await keyring.addKeyRecord({
+      publicKey: PublicKey.from(feed.key),
+      secretKey: feed.secretKey,
+      type: KeyType.FEED
+    });
 
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
-    await partyProcessor.takeHints([{
-      type: KeyType.FEED,
-      publicKey: feedKey.publicKey
-    }]);
     const pipeline = new Pipeline(
       partyProcessor,
       feedReadStream,
@@ -95,7 +105,9 @@ describe('pipeline', () => {
     const writable = new WritableArray();
     pipeline.inboundEchoStream!.pipe(writable);
 
-    await pipeline.outboundHaloStream!.write(createPartyGenesisMessage(keyring, partyKey, feedKey, idenitityKey));
+    await pipeline.outboundHaloStream!.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
+    await waitForCondition(() => !partyProcessor.genesisRequired);
+
     await pipeline.outboundEchoStream!.write({
       itemId: '123',
       genesis: {

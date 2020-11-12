@@ -8,8 +8,8 @@ import defaultsDeep from 'lodash/defaultsDeep';
 
 import { Event } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
-import { keyToString } from '@dxos/crypto';
-import { PartyKey, PublicKey } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/crypto';
+import { PartyKey } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Item } from '../items';
@@ -39,11 +39,11 @@ export class HaloParty {
   ) {}
 
   get identityGenesis () {
-    return this._party.processor.credentialMessages.get(keyToString(this._identityKey));
+    return this._party.processor.credentialMessages.get(this._identityKey.toHex());
   }
 
   get identityInfo () {
-    return this._party.processor.infoMessages.get(keyToString(this._identityKey));
+    return this._party.processor.infoMessages.get(this._identityKey.toHex());
   }
 
   get memberKeys () {
@@ -79,23 +79,23 @@ export class HaloParty {
 
   async recordPartyJoining (joinedParty: JoinedParty) {
     const knownParties = await this._party.database.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE }).value;
-    const partyDesc = knownParties.find(partyMarker => Buffer.compare(partyMarker.model.getProperty('publicKey'), joinedParty.partyKey) === 0);
-    assert(!partyDesc, `Descriptor already exists for Party ${keyToString(joinedParty.partyKey)}`);
+    const partyDesc = knownParties.find(partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')));
+    assert(!partyDesc, `Descriptor already exists for Party ${joinedParty.partyKey.toHex()}`);
 
     await this._party.database.createItem({
       model: ObjectModel,
       type: HALO_PARTY_DESCRIPTOR_TYPE,
       props: {
-        publicKey: joinedParty.partyKey,
+        publicKey: joinedParty.partyKey.asBuffer(),
         subscribed: true,
         hints: joinedParty.keyHints
       }
     });
   }
 
-  isActive (partyKey: PublicKey | Uint8Array) {
+  isActive (partyKey: PublicKey) {
     const { preferences } = this;
-    const partyPrefs = preferences[keyToString(partyKey)] ?? {};
+    const partyPrefs = preferences[partyKey.toHex()] ?? {};
     return partyPrefs.active || undefined === partyPrefs.active;
   }
 
@@ -112,10 +112,10 @@ export class HaloParty {
   }
 
   public async _setPartyPreference (preferences: Item<any>, partyKey: PublicKey, key: string, value: any) {
-    const path = keyToString(partyKey);
+    const path = partyKey.toHex();
     const partyPrefs = preferences.model.getProperty(path, {});
     partyPrefs[key] = value;
-    await preferences.model.setProperty(keyToString(partyKey), partyPrefs);
+    await preferences.model.setProperty(partyKey.toHex(), partyPrefs);
   }
 
   getGlobalPreferences () {
@@ -125,7 +125,7 @@ export class HaloParty {
 
   getDevicePreferences () {
     const deviceItems = this.database.queryItems({ type: HALO_DEVICE_PREFERENCES_TYPE }).value ?? [];
-    return deviceItems.find(item => Buffer.compare(this._deviceKey, item.model.getProperty('publicKey')) === 0);
+    return deviceItems.find(item => this._deviceKey.equals(item.model.getProperty('publicKey')));
   }
 
   subscribeToPreferences (cb: (preferences: any) => void) {
@@ -164,7 +164,7 @@ export class HaloParty {
     const result = this.database.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE });
     return result.subscribe(async (values) => {
       cb(values.map(partyDesc => ({
-        partyKey: partyDesc.model.getProperty('publicKey'),
+        partyKey: PublicKey.from(partyDesc.model.getProperty('publicKey')),
         keyHints: Object.values(partyDesc.model.getProperty('hints')) as KeyHint[]
       })));
     });

@@ -5,7 +5,6 @@
 import { createContext, useEffect, useContext, useState, useMemo } from 'react';
 import { useSubscription } from 'use-subscription';
 
-import { humanize, keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';
 import { ECHO, Party, Item, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
@@ -99,12 +98,12 @@ const createGraphData = (
 
   if (partyMap) {
     for (const { party, items } of partyMap.values()) {
-      const partyKey = keyToString(party.key);
+      const partyKey = party.key;
 
       data.nodes.push({
-        id: partyKey,
+        id: partyKey.toHex(),
         type: 'party',
-        title: `Party(${humanize(party.key)})`,
+        title: `Party(${party.key.humanize()})`,
         partyKey: party.key
       });
 
@@ -144,7 +143,7 @@ export const useGraphData = ({ id }) => {
 
   // TODO(burdon): For open parties only.
   useEffect(asyncEffect(async () => {
-    const partyMap = new ComplexMap<PartyKey, { party: Party, items: Item<any>[] }>(keyToString);
+    const partyMap = new ComplexMap<PartyKey, { party: Party, items: Item<any>[] }>(key => key.toHex());
 
     for (const party of parties) {
       // console.log(party, party.key);
@@ -193,5 +192,5 @@ export function useResultSet<T> (resultSet: ResultSet<T>): T[] {
 }
 
 export function usePartyMembers (party: Party) {
-  return useResultSet(useMemo(() => party.queryMembers(), [keyToString(party.key)]));
+  return useResultSet(useMemo(() => party.queryMembers(), [party.key.toHex()]));
 }
