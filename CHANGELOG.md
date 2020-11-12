@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.6.4](https://www.github.com/dxos/echo/compare/v2.6.3...v2.6.4) (2020-11-12)
+
+
+### Bug Fixes
+
+* Release identityReady event ([c9e3b59](https://www.github.com/dxos/echo/commit/c9e3b594e58f9494e948528b19633c119ba06853))
+
 ### [2.6.3](https://www.github.com/dxos/echo/compare/v2.6.2...v2.6.3) (2020-11-10)
 
 
