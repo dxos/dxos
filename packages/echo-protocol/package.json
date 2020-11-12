@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-protocol",
-  "version": "2.6.3-alpha.0",
+  "version": "2.6.4-alpha.0",
   "description": "ECHO protocol definitions and utilities.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -41,7 +41,7 @@
     "@dxos/credentials": "^2.0.0",
     "@dxos/crypto": "^1.0.0-beta.12",
     "@dxos/feed-store": "^1.2.0-beta.30",
-    "@dxos/util": "^2.6.3-alpha.0",
+    "@dxos/util": "^2.6.4-alpha.0",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/lodash": "^4.14.159",
