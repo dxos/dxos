@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/dxos/echo.git"
   },
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "private": false,
