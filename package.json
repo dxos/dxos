@@ -41,10 +41,12 @@
     "lint": "wsrun lint",
     "lint:staged": "lint-staged",
     "lint:lockfile": "lockfile-lint --path yarn.lock --allowed-hosts yarn npm codeload.github.com --validate-https",
+    "lint:version": "version-check",
     "sort-package-json": "lerna exec npx sort-package-json",
     "validate": "npm ls"
   },
   "devDependencies": {
+    "@dxos/version-check": "^0.1.5",
     "eslint": "^7.7.0",
     "husky": "^4.2.5",
     "lerna": "^3.11.1",
