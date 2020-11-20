@@ -9,7 +9,6 @@ import defaultsDeep from 'lodash/defaultsDeep';
 import { Event } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { PartyKey } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Item } from '../items';
@@ -24,7 +23,7 @@ export const HALO_DEVICE_PREFERENCES_TYPE = 'wrn://dxos.org/item/halo/device/pre
  * A record in HALO party representing a party that user is currently a member of.
  */
 export interface JoinedParty {
-  partyKey: PartyKey,
+  partyKey: PublicKey,
   keyHints: KeyHint[],
 }
 
@@ -88,7 +87,7 @@ export class HaloParty {
       props: {
         publicKey: joinedParty.partyKey.asBuffer(),
         subscribed: true,
-        hints: joinedParty.keyHints
+        hints: joinedParty.keyHints.map(hint => ({ ...hint, publicKey: hint.publicKey?.toHex() }))
       }
     });
   }
@@ -165,7 +164,10 @@ export class HaloParty {
     return result.subscribe(async (values) => {
       cb(values.map(partyDesc => ({
         partyKey: PublicKey.from(partyDesc.model.getProperty('publicKey')),
-        keyHints: Object.values(partyDesc.model.getProperty('hints')) as KeyHint[]
+        keyHints: Object.values(partyDesc.model.getProperty('hints')).map((hint: any) => ({
+          ...hint,
+          publicKey: PublicKey.from(hint.publicKey)
+        } as KeyHint))
       })));
     });
   }

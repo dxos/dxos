@@ -155,7 +155,7 @@ export class PartyFactory {
     const party = await this.constructParty(partyKey, [
       {
         type: feedKey.type,
-        publicKey: feedKey.publicKey.asUint8Array()
+        publicKey: feedKey.publicKey
       },
       ...hints
     ]);
@@ -451,8 +451,8 @@ export class PartyFactory {
     assert(this._identityManager.halo, 'HALO is required.');
 
     const keyHints: KeyHint[] = [
-      ...party.processor.memberKeys.map(publicKey => ({ publicKey: publicKey.asUint8Array(), type: KeyType.UNKNOWN })),
-      ...party.processor.feedKeys.map(publicKey => ({ publicKey: publicKey.asUint8Array(), type: KeyType.FEED }))
+      ...party.processor.memberKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.UNKNOWN })),
+      ...party.processor.feedKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.FEED }))
     ];
     await this._identityManager.halo.recordPartyJoining({
       partyKey: party.key,

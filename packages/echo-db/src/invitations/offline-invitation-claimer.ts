@@ -151,7 +151,7 @@ export class OfflineInvitationClaimer {
         const { payload: authMessage } = Authenticator.decodePayload(secret);
 
         return keyring.verify(<unknown>authMessage as SignedMessage) &&
-          invitation.id.equals(authMessage.signed.payload.partyKey) &&
+          authMessage.signed.payload.partyKey.equals(invitation.id) &&
           invitation.authNonce.equals(authMessage.signed.nonce);
       };
 

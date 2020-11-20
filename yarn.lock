@@ -1149,10 +1149,10 @@
     stream-to-array "^2.3.0"
     uuid "^3.3.2"
 
-"@dxos/credentials@^2.1.11-alpha.0":
-  version "2.1.11-alpha.0"
-  resolved "https://registry.yarnpkg.com/@dxos/credentials/-/credentials-2.1.11-alpha.0.tgz#3e687330f0998a36fd301707743034c0d2375c6d"
-  integrity sha512-AOMFCXur714Xq5ilPeEnBUkou4YOGcPFlE+tHTb7gu1efvD+MRf6etEegtK2mrBRMs2ygdGLzTruH8zu/BFHCA==
+"@dxos/credentials@^2.1.12-alpha.0":
+  version "2.1.12-alpha.0"
+  resolved "https://registry.yarnpkg.com/@dxos/credentials/-/credentials-2.1.12-alpha.0.tgz#19106f0579c2d239209b24dd38f3c59b842ae9a4"
+  integrity sha512-/nDlsIhpl/HwJn2TQcZZhdrKriB/erUGl+8lJP67rBeedK/ciNltUjqDa8Jw5xIB/Zpc9A3L35YCRZpaU1IFdg==
   dependencies:
     "@dxos/async" "^1.0.0-beta.10"
     "@dxos/codec-protobuf" "^0.2.0"

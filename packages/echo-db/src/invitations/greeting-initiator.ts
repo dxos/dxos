@@ -20,7 +20,7 @@ import {
   Message
 } from '@dxos/credentials';
 import { WithTypeUrl } from '@dxos/credentials/dist/es/proto/any';
-import { keyToString, PublicKey } from '@dxos/crypto';
+import { keyToString } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 
@@ -139,7 +139,7 @@ export class GreetingInitiator {
 
     // The result will include the partyKey and a nonce used when signing the response.
     const { nonce } = handshakeResponse;
-    const partyKey = PublicKey.from(handshakeResponse.partyKey);
+    const partyKey = handshakeResponse.partyKey;
 
     const feedKey = await this._feedInitializer(partyKey);
 

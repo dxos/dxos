@@ -239,14 +239,14 @@ export class GreetingResponder {
 
     const memberKeys = this._partyProcessor.memberKeys.map(publicKey => {
       return {
-        publicKey: publicKey.asUint8Array(),
+        publicKey,
         type: KeyType.UNKNOWN
       };
     });
 
     const memberFeeds = this._partyProcessor.feedKeys.map(publicKey => {
       return {
-        publicKey: publicKey.asUint8Array(),
+        publicKey,
         type: KeyType.FEED
       };
     });
