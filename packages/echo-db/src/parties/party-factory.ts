@@ -137,8 +137,6 @@ export class PartyFactory {
     // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
     await this._identityManager.keyring.deleteSecretKey(partyKey);
 
-    await this._recordPartyJoining(party);
-
     return party;
   }
 
@@ -301,8 +299,6 @@ export class PartyFactory {
           [this._identityManager.deviceKeyChain]
         ));
       }
-
-      await this._recordPartyJoining(party);
     }
 
     return party;
@@ -444,19 +440,5 @@ export class PartyFactory {
         this._identityManager.keyring.getKey(feedKey)
       )))
     };
-  }
-
-  @timed(5000)
-  private async _recordPartyJoining (party: PartyInternal) {
-    assert(this._identityManager.halo, 'HALO is required.');
-
-    const keyHints: KeyHint[] = [
-      ...party.processor.memberKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.UNKNOWN })),
-      ...party.processor.feedKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.FEED }))
-    ];
-    await this._identityManager.halo.recordPartyJoining({
-      partyKey: party.key,
-      keyHints
-    });
   }
 }

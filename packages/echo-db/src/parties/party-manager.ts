@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event, synchronized } from '@dxos/async';
-import { KeyHint } from '@dxos/credentials';
+import { KeyHint, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ComplexMap, timed } from '@dxos/util';
@@ -173,12 +173,12 @@ export class PartyManager {
     assert(this._identityManager.initialized, 'IdentityManager has not been initialized with the HALO.');
 
     const party = await this._partyFactory.createParty();
+    assert(!this._parties.has(party.key), 'Party already exists.');
 
-    if (this._parties.has(party.key)) {
-      await party.close();
-      throw new Error(`Party already exists ${party.key.toHex()}`); // TODO(marik-d): Handle this gracefully
-    }
     this._setParty(party);
+    await this._recordPartyJoining(party);
+    await this._updateContactList(party);
+
     return party;
   }
 
@@ -194,15 +194,19 @@ export class PartyManager {
     assert(this._opened, 'PartyManager is not open.');
     assert(this._identityManager.initialized, 'IdentityManager has not been initialized with the HALO.');
 
-    log(`Adding party partyKey=${partyKey.toHex()} hints=${hints.length}`);
-    assert(!this._parties.has(partyKey));
-    const party = await this._partyFactory.addParty(partyKey, hints);
-
-    if (this._parties.has(party.key)) {
-      await party.close();
-      throw new Error(`Party already exists ${party.key.toHex()}`); // TODO(marik-d): Handle this gracefully
+    // The caller should have checked if the Party existed before calling addParty, but that check
+    // is not within a single critical section, and so things may have changed. So we must perform that
+    // check again, here within the synchronized block.
+    if (this._parties.has(partyKey)) {
+      log(`Already had party partyKey=${partyKey.toHex()}`);
+      return this._parties.get(partyKey);
     }
+
+    log(`Adding party partyKey=${partyKey.toHex()} hints=${hints.length}`);
+    const party = await this._partyFactory.addParty(partyKey, hints);
     this._setParty(party);
+
+    return party;
   }
 
   @synchronized
@@ -211,13 +215,20 @@ export class PartyManager {
     assert(this._identityManager.initialized, 'IdentityManager has not been initialized with the HALO.');
 
     // TODO(marik-d): Somehow check that we don't already have this party
+    // TODO(telackey): ^^ We can check the PartyKey during the greeting flow.
     const party = await this._partyFactory.joinParty(invitationDescriptor, secretProvider);
+    await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
 
+    // TODO(telackey): This is wrong, as we'll just open both writable feeds of it next time causing confusion.
     if (this._parties.has(party.key)) {
       await party.close();
       throw new Error(`Party already exists ${party.key.toHex()}`); // TODO(marik-d): Handle this gracefully
     }
+
     this._setParty(party);
+    await this._recordPartyJoining(party);
+    await this._updateContactList(party);
+
     return party;
   }
 
@@ -305,5 +316,19 @@ export class PartyManager {
   private _isHalo (partyKey: PublicKey) {
     assert(this._identityManager.identityKey, 'No identity key');
     return partyKey.equals(this._identityManager.identityKey.publicKey);
+  }
+
+  @timed(5000)
+  private async _recordPartyJoining (party: PartyInternal) {
+    assert(this._identityManager.halo, 'HALO is required.');
+
+    const keyHints: KeyHint[] = [
+      ...party.processor.memberKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.UNKNOWN })),
+      ...party.processor.feedKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.FEED }))
+    ];
+    await this._identityManager.halo.recordPartyJoining({
+      partyKey: party.key,
+      keyHints
+    });
   }
 }

@@ -41,9 +41,7 @@ export class ItemDemuxer {
 
   open (): NodeJS.WritableStream {
     this._modelFactory.registered.on(async model => {
-      console.log('regitered', model.meta.type);
       for (const item of this._itemManager.getItemsWithUnknownModels()) {
-        console.log('unknown', item);
         if (item.model.originalModelType === model.meta.type) {
           await this._itemManager.reconstructItemWithUnknownModel(item.id, this._itemStreams.get(item.id)!);
         }

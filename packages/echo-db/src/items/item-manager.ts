@@ -248,8 +248,6 @@ export class ItemManager {
     assert(item);
     assert(item.model instanceof UnknownModel);
 
-    console.log('reconstruct', itemId);
-
     this._items.delete(itemId);
     // Disconnect stream.
     await pify(item.model.processor.end.bind(item.model.processor))();
