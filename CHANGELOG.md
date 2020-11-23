@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.6.5](https://www.github.com/dxos/echo/compare/v2.6.4...v2.6.5) (2020-11-23)
+
+
+### Bug Fixes
+
+* Add public entrypoint for creating halo invitation ([#330](https://www.github.com/dxos/echo/issues/330)) ([a19270d](https://www.github.com/dxos/echo/commit/a19270dfe95ecb327a2002b299aad80e7bba8768))
+* Different protobuf & async versions ([24a7d4a](https://www.github.com/dxos/echo/commit/24a7d4ae0e68885f40a31d08183d4fe3b27ee7cc))
+* Latest HALO ([#327](https://www.github.com/dxos/echo/issues/327)) ([80b6326](https://www.github.com/dxos/echo/commit/80b6326b03ccee5f70ed63133da3cd4b94ce5522))
+* latest halo and crypto ([#310](https://www.github.com/dxos/echo/issues/310)) ([e1a173d](https://www.github.com/dxos/echo/commit/e1a173dc708ce399c4528db2348ac7c6f8e9c448))
+
 ### [2.6.4](https://www.github.com/dxos/echo/compare/v2.6.3...v2.6.4) (2020-11-12)
 
 
