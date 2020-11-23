@@ -16,7 +16,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { Storage } from '@dxos/random-access-multi-storage';
 
 import { FeedStoreAdapter } from './feed-store-adapter';
-import { InvitationDescriptor, SecretProvider } from './invitations';
+import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions, SecretProvider } from './invitations';
 import { OfflineInvitationClaimer } from './invitations/offline-invitation-claimer';
 import { UnknownModel } from './items/unknown-model';
 import { IdentityManager, Party, PartyFactory, PartyFilter, PartyManager, PartyMember } from './parties';
@@ -306,6 +306,14 @@ export class ECHO {
 
     const impl = await this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
     return new Party(impl);
+  }
+
+  /**
+   * Create an invitation to an exiting Identity HALO.
+   */
+  async createHaloInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions) {
+    assert(this._identityManager.halo, 'Cannot create invitation because halo does not exists');
+    return this._identityManager.halo.invitationManager.createInvitation(authenticationDetails, options);
   }
 
   /**
