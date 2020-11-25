@@ -348,10 +348,13 @@ export class ECHO {
 
     const results = this._partyManager.identityManager.halo.database.queryItems({ type: HALO_CONTACT_LIST_TYPE });
 
-    const getter = () => {
+    const getter = (): Contact[] => {
       const [contactListItem] = results.value;
       const contacts = contactListItem?.model.toObject();
-      return contacts ? Object.values(contacts) as Contact[] : [];
+      return Object.values(contacts ?? {}).map((contact: any) => ({
+        publicKey: PublicKey.from(contact.publicKey._value),
+        displayName: contact.displayName
+      }));
     };
 
     const event = new Event();
