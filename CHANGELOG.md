@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.6.6](https://www.github.com/dxos/echo/compare/v2.6.5...v2.6.6) (2020-11-25)
+
+
+### Bug Fixes
+
+* Use PublicKey in Contacts getter ([#333](https://www.github.com/dxos/echo/issues/333)) ([da4ffae](https://www.github.com/dxos/echo/commit/da4ffae1d5c763a22b5e43a28500a7cd847100b9))
+
 ### [2.6.5](https://www.github.com/dxos/echo/compare/v2.6.4...v2.6.5) (2020-11-23)
 
 
