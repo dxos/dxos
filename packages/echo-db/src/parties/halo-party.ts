@@ -12,6 +12,7 @@ import { PublicKey } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 
 import { Item } from '../items';
+import { ResultSet } from '../result';
 import { PartyActivator, PartyInternal } from './party-internal';
 
 export const HALO_PARTY_DESCRIPTOR_TYPE = 'wrn://dxos.org/item/halo/party-descriptor';
@@ -160,16 +161,34 @@ export class HaloParty {
   }
 
   subscribeToJoinedPartyList (cb: (parties: JoinedParty[]) => void): () => void {
-    const result = this.database.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE });
-    return result.subscribe(async (values) => {
-      cb(values.map(partyDesc => ({
+    const converter = (partyDesc: Item<any>) => {
+      return {
         partyKey: PublicKey.from(partyDesc.model.getProperty('publicKey')),
         keyHints: Object.values(partyDesc.model.getProperty('hints')).map((hint: any) => ({
           ...hint,
           publicKey: PublicKey.from(hint.publicKey)
         } as KeyHint))
-      })));
-    });
+      };
+    };
+
+    const query = this.database.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE });
+
+    // Wrap the query event so we can have manual control.
+    const event = new Event();
+    query.update.on(() => event.emit());
+
+    const result = new ResultSet<JoinedParty>(
+      event,
+      () => query.value.map(converter)
+    );
+
+    const unsubscribe = result.subscribe(cb);
+
+    if (result.value.length) {
+      event.emit();
+    }
+
+    return unsubscribe;
   }
 
   getContactListItem (): Item<ObjectModel> | undefined {

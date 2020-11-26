@@ -366,6 +366,10 @@ describe('Party manager', () => {
     expect(identityManagerA.halo).toBeDefined();
     expect(identityManagerB.halo).not.toBeDefined();
 
+    expect(partyManagerA.parties.length).toBe(0);
+    await partyManagerA.createParty();
+    expect(partyManagerA.parties.length).toBe(1);
+
     const pinSecret = '0000';
     const secretProvider: SecretProvider = async () => Buffer.from(pinSecret);
     const secretValidator: SecretValidator = async (invitation, secret) =>
@@ -377,11 +381,18 @@ describe('Party manager', () => {
       secretProvider
     }) as InvitationDescriptor;
 
+    // Should not have any parties.
+    expect(partyManagerB.parties.length).toBe(0);
+
     // And then redeem it on nodeB.
     await partyManagerB.joinHalo(invitation, secretProvider);
 
     expect(identityManagerA.halo).toBeDefined();
     expect(identityManagerB.halo).toBeDefined();
+
+    // Check the initial party is opened.
+    await waitForCondition(() => partyManagerB.parties.length, 1000);
+    expect(partyManagerB.parties.length).toBe(1);
 
     {
       let itemA: Item<any> | null = null;
@@ -391,9 +402,8 @@ describe('Party manager', () => {
       identityManagerB.halo?.database.queryItems({ type: 'wrn://dxos.org/item/test' })
         .subscribe((result) => {
           if (result.length) {
-            const [itemB] = result;
-            if (itemA && itemA.id === itemB.id) {
-              log(`B has ${result[0].id}`);
+            if (itemA && result.find(item => item.id === itemA?.id)) {
+              log(`B has ${itemA.id}`);
               onUpdate();
             }
           }
@@ -407,20 +417,18 @@ describe('Party manager', () => {
       await updated;
     }
 
-    // Now create a Party on A and make sure it gets opened on both A and B.
-    expect(partyManagerA.parties.length).toBe(0);
-    expect(partyManagerB.parties.length).toBe(0);
-
     const [partyUpdated, onPartyUpdate] = latch();
     partyManagerB.update.on(onPartyUpdate);
 
-    const partyA = await partyManagerA.createParty();
-    await partyA.open();
-    expect(partyManagerA.parties.length).toBe(1);
+    // Now create a Party on A and make sure it gets opened on both A and B.
+    const partyA2 = await partyManagerA.createParty();
+    await partyA2.open();
+    expect(partyManagerA.parties.length).toBe(2);
 
     await partyUpdated;
-    expect(partyManagerB.parties.length).toBe(1);
+    expect(partyManagerB.parties.length).toBe(2);
     expect(partyManagerA.parties[0].key).toEqual(partyManagerB.parties[0].key);
+    expect(partyManagerA.parties[1].key).toEqual(partyManagerB.parties[1].key);
 
     {
       let itemA: Item<any> | null = null;
