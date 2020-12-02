@@ -751,21 +751,32 @@ describe('Party manager', () => {
     const { partyManager: partyManagerA } = await setup();
     await partyManagerA.open();
 
-    const partyA = await partyManagerA.createParty();
-    const partyB = await partyManagerA.createParty();
+    const partyA = new Party(await partyManagerA.createParty());
+    const partyB = new Party(await partyManagerA.createParty());
 
     expect(partyA.isOpen).toBe(true);
     expect(partyB.isOpen).toBe(true);
+
+    await partyA.setTitle('A');
+    await partyB.setTitle('B');
+    expect(partyA.title).toBe('A');
+    expect(partyB.title).toBe('B');
 
     await partyB.deactivate({ global: true });
 
     expect(partyA.isOpen).toBe(true);
     expect(partyB.isOpen).toBe(false);
 
+    expect(partyA.title).toBe('A');
+    expect(partyB.title).toBe('B');
+
     await partyB.activate({ global: true });
 
     expect(partyA.isOpen).toBe(true);
     expect(partyB.isOpen).toBe(true);
+
+    expect(partyA.title).toBe('A');
+    expect(partyB.title).toBe('B');
   });
 
   test('Deactivate Party - multi device', async () => {

@@ -28,23 +28,10 @@ describe('api tests', () => {
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
-    const [updated, onUpdate] = latch();
-    const unsubscribe = parties.subscribe(async parties => {
-      log('Updated:', parties.map(party => party.key.humanize()));
-      expect(parties).toHaveLength(1);
-      parties.map(async party => {
-        const value = await party.getProperty('title');
-        expect(value).toBe('DXOS');
-        onUpdate();
-      });
-    });
-
     const party = await echo.createParty();
     expect(party.isOpen).toBeTruthy();
-    await party.setProperty('title', 'DXOS');
-
-    await updated;
-    unsubscribe();
+    await party.setTitle('DXOS');
+    expect(party.title).toBe('DXOS');
   });
 
   test('create party and items.', async () => {
@@ -288,5 +275,15 @@ describe('api tests', () => {
     const echo = new ECHO();
 
     await expect(() => echo.createParty()).rejects.toBeDefined();
+  });
+
+  test('reset', async () => {
+    const echo = new ECHO();
+    await echo.open();
+    await echo.createIdentity(createKeyPair());
+    await echo.createHalo();
+    expect(echo.identityKey).toBeDefined();
+
+    return echo.reset();
   });
 });

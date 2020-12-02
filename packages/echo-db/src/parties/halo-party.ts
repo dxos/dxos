@@ -13,7 +13,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { Item } from '../items';
 import { ResultSet } from '../result';
-import { PartyActivator, PartyInternal } from './party-internal';
+import { PARTY_TITLE_PROPERTY, PartyActivator, PartyInternal } from './party-internal';
 
 export const HALO_PARTY_DESCRIPTOR_TYPE = 'wrn://dxos.org/item/halo/party-descriptor';
 export const HALO_CONTACT_LIST_TYPE = 'wrn://dxos.org/item/halo/contact-list';
@@ -99,16 +99,34 @@ export class HaloParty {
     return partyPrefs.active || undefined === partyPrefs.active;
   }
 
+  public getGlobalPartyPreference (partyKey: PublicKey, key: string) {
+    const item = this.getGlobalPreferences();
+    assert(item, 'Global preference item required.');
+    return this._getPartyPreference(item, partyKey, key);
+  }
+
   public async setGlobalPartyPreference (partyKey: PublicKey, key: string, value: any) {
     const item = this.getGlobalPreferences();
     assert(item, 'Global preference item required.');
     return this._setPartyPreference(item, partyKey, key, value);
   }
 
+  public getDevicePartyPreference (partyKey: PublicKey, key: string) {
+    const item = this.getDevicePreferences();
+    assert(item, 'Device preference item required.');
+    return this._getPartyPreference(item, partyKey, key);
+  }
+
   public async setDevicePartyPreference (partyKey: PublicKey, key: string, value: any) {
     const item = this.getDevicePreferences();
     assert(item, 'Device preference item required.');
     return this._setPartyPreference(item, partyKey, key, value);
+  }
+
+  public _getPartyPreference (preferences: Item<any>, partyKey: PublicKey, key: string) {
+    const path = partyKey.toHex();
+    const partyPrefs = preferences.model.getProperty(path, {});
+    return partyPrefs[key];
   }
 
   public async _setPartyPreference (preferences: Item<any>, partyKey: PublicKey, key: string, value: any) {
@@ -198,6 +216,8 @@ export class HaloParty {
   createPartyActivator (partyKey: PublicKey): PartyActivator {
     return {
       isActive: () => this.isActive(partyKey),
+      getLastKnownTitle: () => this.getGlobalPartyPreference(partyKey, PARTY_TITLE_PROPERTY),
+      setLastKnownTitle: (title: string) => this.setGlobalPartyPreference(partyKey, PARTY_TITLE_PROPERTY, title),
       activate: async ({ device, global }) => {
         if (global) {
           await this.setGlobalPartyPreference(partyKey, 'active', true);

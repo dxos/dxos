@@ -420,6 +420,7 @@ export class PartyFactory {
     }
 
     // Create special properties item.
+    await halo.database.createItem({ model: ObjectModel, type: PARTY_ITEM_TYPE });
     await halo.database.createItem({ model: ObjectModel, type: HALO_GENERAL_PREFERENCES_TYPE });
     await halo.database.createItem({ model: ObjectModel, type: HALO_CONTACT_LIST_TYPE });
     await halo.database.createItem({

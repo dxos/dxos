@@ -4,20 +4,20 @@
 
 import assert from 'assert';
 
-import { synchronized } from '@dxos/async';
+import { synchronized, Event } from '@dxos/async';
 import { DatabaseSnapshot, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { timed } from '@dxos/util';
 
 import { InvitationManager } from '../invitations';
-import { Database, Item, TimeframeClock } from '../items';
+import { Database, TimeframeClock } from '../items';
 import { PartyProcessor } from './party-processor';
 import { PartyProtocol } from './party-protocol';
 import { Pipeline } from './pipeline';
 
 // TODO(burdon): Format?
 export const PARTY_ITEM_TYPE = 'wrn://dxos.org/item/party';
+export const PARTY_TITLE_PROPERTY = 'title';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface PartyFilter {}
@@ -29,6 +29,8 @@ export interface ActivationOptions {
 
 export interface PartyActivator {
   isActive(): boolean,
+  getLastKnownTitle(): string,
+  setLastKnownTitle(title: string): Promise<void>,
   activate(options: ActivationOptions): Promise<void>;
   deactivate(options: ActivationOptions): Promise<void>;
 }
@@ -38,6 +40,8 @@ export interface PartyActivator {
  * of mutations.
  */
 export class PartyInternal {
+  public readonly update = new Event<void>();
+
   private _database: Database | undefined;
 
   /**
@@ -86,6 +90,16 @@ export class PartyInternal {
     return this._invitationManager;
   }
 
+  get title () {
+    return this._activator?.getLastKnownTitle();
+  }
+
+  async setTitle (title: string) {
+    const item = await this.getPropertiesItem();
+    await item.model.setProperty(PARTY_TITLE_PROPERTY, title);
+    await this._activator?.setLastKnownTitle(title);
+  }
+
   /**
    * Opens the pipeline and connects the streams.
    */
@@ -118,6 +132,10 @@ export class PartyInternal {
     // TODO(burdon): Propagate errors.
     this._subscriptions.push(this._pipeline.errors.on(err => console.error(err)));
 
+    // Issue an 'update' whenever the properties change.
+    this.database.queryItems({ type: PARTY_ITEM_TYPE }).update.on(() => this.update.emit());
+
+    this.update.emit();
     return this;
   }
 
@@ -141,6 +159,8 @@ export class PartyInternal {
 
     this._subscriptions.forEach(cb => cb());
 
+    this.update.emit();
+
     return this;
   }
 
@@ -155,6 +175,8 @@ export class PartyInternal {
 
     if (!this.isOpen) {
       await this.open();
+    } else {
+      this.update.emit();
     }
   }
 
@@ -164,22 +186,37 @@ export class PartyInternal {
 
     if (this.isOpen) {
       await this.close();
+    } else {
+      this.update.emit();
     }
   }
 
   /**
    * Returns a special Item that is used by the Party to manage its properties.
    */
-  getPropertiestItem (): Item<ObjectModel> {
+  async getPropertiesItem () {
+    assert(this.isOpen, 'Party not open.');
+
+    await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
     const { value: items } = this.database.queryItems({ type: PARTY_ITEM_TYPE });
-    assert(items.length === 1);
+    assert(items.length === 1, 'Party properties missing.');
     return items[0];
+  }
+
+  /**
+   * Get the ResultSet for the Properties Item query.
+   */
+  getPropertiesSet () {
+    assert(this.isOpen, 'Party not open.');
+    return this.database.queryItems({ type: PARTY_ITEM_TYPE });
   }
 
   /**
    * Create a snapshot of the current state.
    */
   createSnapshot (): PartySnapshot {
+    assert(this.isOpen, 'Party not open.');
+
     return {
       partyKey: this.key.asUint8Array(),
       timeframe: this._timeframeClock.timeframe,

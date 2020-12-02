@@ -2,17 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
+
 import { PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 
 import { InvitationAuthenticator, InvitationOptions } from '../invitations';
 import { ResultSet } from '../result';
-import { PartyInternal, PARTY_ITEM_TYPE, ActivationOptions } from './party-internal';
+import { PartyInternal, ActivationOptions } from './party-internal';
 
 export interface PartyMember {
   publicKey: PublicKey,
   displayName?: string
 }
+
+const log = debug('dxos:echo:party');
 
 /**
  * A Party represents a shared dataset containing queryable Items that are constructed from an ordered stream
@@ -27,6 +31,10 @@ export class Party {
     return `Party(${JSON.stringify({ key: this.key, open: this.isOpen })})`;
   }
 
+  get update () {
+    return this._internal.update;
+  }
+
   get key (): PartyKey {
     return this._internal.key;
   }
@@ -37,6 +45,14 @@ export class Party {
 
   get database () {
     return this._internal.database;
+  }
+
+  get title () {
+    return this._internal.title;
+  }
+
+  async setTitle (title: string) {
+    return this._internal.setTitle(title);
   }
 
   queryMembers (): ResultSet<PartyMember> {
@@ -59,8 +75,6 @@ export class Party {
    */
   async open () {
     await this._internal.open();
-
-    await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
   }
 
   /**
@@ -78,7 +92,7 @@ export class Party {
    * @param value
    */
   async setProperty (key: string, value: any): Promise<this> {
-    const item = await this._internal.getPropertiestItem();
+    const item = await this._internal.getPropertiesItem();
     await item.model.setProperty(key, value);
     return this;
   }
@@ -87,9 +101,15 @@ export class Party {
    * Returns a party property value.
    * @param key
    */
-  getProperty (key: string): any {
-    const item = this._internal.getPropertiestItem();
-    return item.model.getProperty(key);
+  getProperty (key: string) {
+    const resultSet = this._internal.getPropertiesSet();
+    if (resultSet.value.length) {
+      const [item] = resultSet.value;
+      return item.model.getProperty(key);
+    }
+
+    log(`No properties item to check for ${key}`);
+    return undefined;
   }
 
   /**

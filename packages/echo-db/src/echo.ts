@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 import memdown from 'memdown';
 
 import { Event } from '@dxos/async';
@@ -26,6 +27,14 @@ import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots/snapshot-store';
 import { FeedStoreAdapter } from './util/feed-store-adapter';
 import { createRamStorage } from './util/persistant-ram-storage';
+
+const log = debug('dxos:echo');
+
+export interface Options {
+  readOnly?: false;
+  readLogger?: (msg: any) => void;
+  writeLogger?: (msg: any) => void;
+}
 
 // TODO(burdon): Move?
 export type Contact = PartyMember;
@@ -206,31 +215,47 @@ export class ECHO {
    * Opens the pary and constructs the inbound/outbound mutation streams.
    */
   async open () {
-    await this._keyring.load();
-    await this._partyManager.open();
+    if (!this.isOpen) {
+      await this._keyring.load();
+      await this._partyManager.open();
+    }
   }
 
   /**
    * Closes the party and associated streams.
    */
   async close () {
-    await this._networkManager.close();
-    await this._partyManager.close();
+    if (this.isOpen) {
+      await this._networkManager.close();
+      await this._partyManager.close();
+    }
   }
 
   /**
    * Removes all data and closes this ECHO instance.
    */
   async reset () {
-    if (this._feedStore.storage.destroy) {
-      await this._feedStore.storage.destroy();
+    await this.close();
+
+    try {
+      if (this._feedStore.storage.destroy) {
+        await this._feedStore.storage.destroy();
+      }
+    } catch (err) {
+      log('Error clearing feed storage:', err);
     }
 
-    await this._keyring.deleteAllKeyRecords();
+    try {
+      await this._keyring.deleteAllKeyRecords();
+    } catch (err) {
+      log('Error clearing keyring:', err);
+    }
 
-    await this._snapshotStore.clear();
-
-    await this.close();
+    try {
+      await this._snapshotStore.clear();
+    } catch (err) {
+      log('Error clearing snapshot storage:', err);
+    }
   }
 
   /**
