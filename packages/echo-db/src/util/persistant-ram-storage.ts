@@ -5,8 +5,9 @@
 import { createStorage, File, Storage } from '@dxos/random-access-multi-storage';
 
 /**
- * A wrapper around RAM storage that preserves file data when closing and re-opening files
+ * A wrapper around RAM storage that preserves file data when closing and re-opening files.
  */
+// TODO(burdon): Factor out?
 export function createRamStorage (): Storage {
   const storage = createStorage('snapshots', 'ram');
   const files = new Map<string, File>();

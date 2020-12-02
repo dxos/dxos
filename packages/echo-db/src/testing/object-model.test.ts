@@ -4,9 +4,7 @@
 
 import { ObjectModel } from '@dxos/object-model';
 
-import { createModelTestBench } from './testing';
-
-// TODO(marik-d): Move those to object-model package.
+import { createModelTestBench } from './test-utils';
 
 test('create empty item', async () => {
   const [peer1, peer2] = await createModelTestBench({ model: ObjectModel });
@@ -17,9 +15,9 @@ test('create empty item', async () => {
 });
 
 test('create item with props', async () => {
-  const [peer1, peer2] = await createModelTestBench({ model: ObjectModel, props: { foo: 'foo' } });
+  const [peer1, peer2] = await createModelTestBench({ model: ObjectModel, props: { x: 100 } });
   expect(peer1.id).toEqual(peer2.id);
 
-  expect(peer1.model.toObject()).toEqual({ foo: 'foo' });
-  expect(peer2.model.toObject()).toEqual({ foo: 'foo' });
+  expect(peer1.model.toObject()).toEqual({ x: 100 });
+  expect(peer2.model.toObject()).toEqual({ x: 100 });
 });

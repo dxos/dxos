@@ -12,7 +12,7 @@ import { keyToString, PublicKey } from '@dxos/crypto';
 import { createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter } from '@dxos/echo-protocol';
 import { checkType, createReadable, jsonReplacer } from '@dxos/util';
 
-import { TimeframeClock } from '../items/timeframe-clock';
+import { TimeframeClock } from '../items';
 import { PartyProcessor } from './party-processor';
 
 interface Options {

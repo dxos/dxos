@@ -6,7 +6,9 @@ import assert from 'assert';
 import { Feed } from 'hypercore';
 
 import { createId, PublicKey } from '@dxos/crypto';
-import { codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe } from '@dxos/echo-protocol';
+import {
+  codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
+} from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { Storage } from '@dxos/random-access-multi-storage';
 

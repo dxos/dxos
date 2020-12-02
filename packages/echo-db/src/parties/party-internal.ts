@@ -10,10 +10,8 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { timed } from '@dxos/util';
 
-import { InvitationManager } from '../invitations/invitation-manager';
-import { Item } from '../items';
-import { Database } from '../items/database';
-import { TimeframeClock } from '../items/timeframe-clock';
+import { InvitationManager } from '../invitations';
+import { Database, Item, TimeframeClock } from '../items';
 import { PartyProcessor } from './party-processor';
 import { PartyProtocol } from './party-protocol';
 import { Pipeline } from './pipeline';

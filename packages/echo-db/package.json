@@ -1,7 +1,7 @@
 {
   "name": "@dxos/echo-db",
   "version": "2.6.7-alpha.0",
-  "description": "ECHO database monorepo.",
+  "description": "ECHO database.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
     "url": "https://github.com/dxos/echo/issues"

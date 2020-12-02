@@ -15,23 +15,22 @@ import { NetworkManager, SwarmProvider } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Storage } from '@dxos/random-access-multi-storage';
 
-import { FeedStoreAdapter } from './feed-store-adapter';
-import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions, SecretProvider } from './invitations';
-import { OfflineInvitationClaimer } from './invitations/offline-invitation-claimer';
-import { UnknownModel } from './items/unknown-model';
-import { IdentityManager, Party, PartyFactory, PartyFilter, PartyManager, PartyMember } from './parties';
-import { HALO_CONTACT_LIST_TYPE } from './parties/halo-party';
-import { createRamStorage } from './persistant-ram-storage';
+import {
+  InvitationAuthenticator, InvitationDescriptor, InvitationOptions, OfflineInvitationClaimer, SecretProvider
+} from './invitations';
+import { UnknownModel } from './items';
+import {
+  HALO_CONTACT_LIST_TYPE, IdentityManager, Party, PartyFactory, PartyFilter, PartyManager, PartyMember
+} from './parties';
 import { ResultSet } from './result';
-import { SnapshotStore } from './snapshot-store';
+import { SnapshotStore } from './snapshots/snapshot-store';
+import { FeedStoreAdapter } from './util/feed-store-adapter';
+import { createRamStorage } from './util/persistant-ram-storage';
 
-export interface Options {
-  readOnly?: false;
-  readLogger?: (msg: any) => void;
-  writeLogger?: (msg: any) => void;
-}
-
+// TODO(burdon): Move?
 export type Contact = PartyMember;
+
+// TODO(burdon): Create index.ts in each subfolder (no indirect imports).
 
 /**
  * Various options passed to `ECHO.create`.
@@ -132,6 +131,7 @@ export class ECHO {
 
     this._networkManager = new NetworkManager(this._feedStore.feedStore, swarmProvider);
     this._snapshotStore = new SnapshotStore(snapshotStorage);
+
     const partyFactory = new PartyFactory(
       this._identityManager,
       this._feedStore,
@@ -140,11 +140,12 @@ export class ECHO {
       this._snapshotStore,
       options
     );
+
     this._partyManager = new PartyManager(
       this._identityManager,
       this._feedStore,
-      partyFactory,
-      this._snapshotStore
+      this._snapshotStore,
+      partyFactory
     );
   }
 
@@ -156,16 +157,18 @@ export class ECHO {
     return this._identityManager.ready;
   }
 
+  // TODO(burdon): Different from 'identityReady'?
+  get isHaloInitialized (): boolean {
+    return !!this._identityManager.halo;
+  }
+
+  // TODO(burdon): Wrap up identity related methods?
   get identityKey (): KeyRecord | undefined {
     return this._identityManager.identityKey;
   }
 
   get identityDisplayName (): string | undefined {
     return this._identityManager.displayName;
-  }
-
-  get isHaloInitialized (): boolean {
-    return !!this._identityManager.halo;
   }
 
   get modelFactory (): ModelFactory {
@@ -239,6 +242,8 @@ export class ECHO {
     assert(secretKey, 'Invalid secretKey');
 
     if (this._identityManager.identityKey) {
+      // TODO(burdon): Bad API: Semantics change based on options.
+      // TODO(burdon): createProfile isn't party of this pakage.
       throw new Error('Identity key already exists. Call createProfile without a keypair to only create a halo party.');
     }
 
@@ -291,7 +296,9 @@ export class ECHO {
   queryParties (filter?: PartyFilter): ResultSet<Party> {
     assert(this._partyManager.opened, 'ECHO not open.');
 
-    return new ResultSet(this._partyManager.update.discardParameter(), () => this._partyManager.parties.map(impl => new Party(impl)));
+    return new ResultSet(
+      this._partyManager.update.discardParameter(), () => this._partyManager.parties.map(impl => new Party(impl))
+    );
   }
 
   /**
@@ -302,7 +309,8 @@ export class ECHO {
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<Party> {
     assert(this._partyManager.opened, 'ECHO not open.');
 
-    const actualSecretProvider = secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this._partyManager.identityManager);
+    const actualSecretProvider =
+      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this._partyManager.identityManager);
 
     const impl = await this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
     return new Party(impl);

@@ -14,21 +14,24 @@ import { Model, ModelMeta } from '@dxos/model-factory';
 export class Item<M extends Model<any>> {
   // Parent item (or null if this item is a root item).
   private _parent: Item<any> | null = null;
+
   private readonly _children = new Set<Item<any>>();
+
   private readonly _onUpdate = new Event<this>();
 
   /**
    * Items are constructed by a `Party` object.
-   * @param {ItemID} itemId - Addressable ID.
-   * @param {ItemType} itemType - User defined type (WRN).
-   * @param {Model} model - Data model (provided by `ModelFactory`).
-   * @param [writeStream] - Write stream if not read-only.
-   * @param {Item<any>} [parent] - Parent Item (if not a root Item).
+   * @param {ItemID} _itemId      - Addressable ID.
+   * @param {ItemType} _itemType  - User defined type (WRN).
+   * @param {Model} _modelMeta    - Data model metadata.
+   * @param {Model} _model        - Data model (provided by `ModelFactory`).
+   * @param [_writeStream]        - Write stream (if not read-only).
+   * @param {Item<any>} [parent]  - Parent Item (if not a root Item).
    */
   constructor (
     private readonly _itemId: ItemID,
     private readonly _itemType: ItemType | undefined,
-    private readonly _modelMeta: ModelMeta,
+    private readonly _modelMeta: ModelMeta, // TODO(burdon): Why is this not part of the Model interface?
     private readonly _model: M,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null

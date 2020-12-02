@@ -8,7 +8,7 @@ import { Keyring, getPartyCredentialMessageType, PartyCredential, admitsKeys } f
 import { PublicKey } from '@dxos/crypto';
 import { MessageSelector } from '@dxos/echo-protocol';
 
-import { TimeframeClock } from '../items/timeframe-clock';
+import { TimeframeClock } from '../items';
 import { PartyProcessor } from './party-processor';
 
 /**

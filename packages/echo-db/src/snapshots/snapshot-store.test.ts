@@ -5,7 +5,7 @@
 import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
 import { PartySnapshot } from '@dxos/echo-protocol';
 
-import { createRamStorage } from './persistant-ram-storage';
+import { createRamStorage } from '../util/persistant-ram-storage';
 import { SnapshotStore } from './snapshot-store';
 
 const createPublicKey = () => PublicKey.from(createKeyPair().publicKey);

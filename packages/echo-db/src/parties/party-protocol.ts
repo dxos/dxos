@@ -18,10 +18,10 @@ import { NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
-import { FeedStoreAdapter } from '../feed-store-adapter';
 import { HaloRecoveryInitiator } from '../invitations/halo-recovery-initiator';
 import { InvitationManager } from '../invitations/invitation-manager';
 import { OfflineInvitationClaimer } from '../invitations/offline-invitation-claimer';
+import { FeedStoreAdapter } from '../util/feed-store-adapter';
 import { IdentityManager } from './identity-manager';
 import { PartyInternal } from './party-internal';
 

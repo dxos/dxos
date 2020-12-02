@@ -27,24 +27,26 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { raise, timed } from '@dxos/util';
 
-import { FeedStoreAdapter } from '../feed-store-adapter';
-import { GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, SecretProvider } from '../invitations';
-import { HaloRecoveryInitiator } from '../invitations/halo-recovery-initiator';
-import { InvitationManager } from '../invitations/invitation-manager';
-import { OfflineInvitationClaimer } from '../invitations/offline-invitation-claimer';
-import { TimeframeClock } from '../items/timeframe-clock';
-import { SnapshotStore } from '../snapshot-store';
+import {
+  GreetingInitiator,
+  HaloRecoveryInitiator,
+  InvitationManager,
+  InvitationDescriptor,
+  InvitationDescriptorType,
+  OfflineInvitationClaimer,
+  SecretProvider
+} from '../invitations';
+import { TimeframeClock } from '../items';
+import { createAutomaticSnapshots } from '../snapshots/snapshot-generator';
+import { SnapshotStore } from '../snapshots/snapshot-store';
+import { FeedStoreAdapter } from '../util/feed-store-adapter';
 import { HALO_CONTACT_LIST_TYPE, HALO_DEVICE_PREFERENCES_TYPE, HALO_GENERAL_PREFERENCES_TYPE } from './halo-party';
 import { IdentityManager } from './identity-manager';
 import { createMessageSelector } from './message-selector';
-import {
-  PartyInternal,
-  PARTY_ITEM_TYPE
-} from './party-internal';
+import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 import { PartyProcessor } from './party-processor';
 import { PartyProtocol } from './party-protocol';
 import { Pipeline } from './pipeline';
-import { makeAutomaticSnapshots } from './snapshot-maker';
 
 /**
  * Options allowed when creating the HALO.
@@ -240,7 +242,9 @@ export class PartyFactory {
     );
 
     if (this._options.snapshots) {
-      makeAutomaticSnapshots(party, timeframeClock, this._snapshotStore, this._options.snapshotInterval ?? DEFAULT_SNAPSHOT_INTERVAL);
+      createAutomaticSnapshots(
+        party, timeframeClock, this._snapshotStore, this._options.snapshotInterval ?? DEFAULT_SNAPSHOT_INTERVAL
+      );
     }
 
     log(`Constructed: ${party}`);

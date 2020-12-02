@@ -18,8 +18,7 @@ export class ModelFactory {
 
   private _models = new Map<ModelType, { meta: ModelMeta, constructor: ModelConstructor<any> }>();
 
-  // TODO(burdon): Require version.
-
+  // TODO(burdon): Replace with getModel.
   hasModel (modelType: ModelType) {
     assert(modelType);
     return this._models.has(modelType);
@@ -49,6 +48,7 @@ export class ModelFactory {
     if (!this._models.has(modelType)) {
       throw new Error(`Invalid model type: ${modelType}`);
     }
+
     const { meta } = this._models.get(modelType)!;
     return meta;
   }

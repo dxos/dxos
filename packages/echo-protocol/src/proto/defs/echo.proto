@@ -9,10 +9,8 @@ package dxos.echo;
 import "google/protobuf/any.proto";
 
 //
-// ECHO
-//
-
 // Vector timestamp used to order messages.
+//
 message TimeframeVector {
   message Frame {
     // TODO(marik-d): Compress using numeric feed indexes.
@@ -24,7 +22,9 @@ message TimeframeVector {
   repeated Frame frames = 1;
 }
 
+//
 // Wrapper for all ECHO messages.
+//
 message EchoEnvelope {
   string itemId = 1;
   TimeframeVector timeframe = 2;
@@ -35,17 +35,22 @@ message EchoEnvelope {
   // Item system mutations.
   ItemMutation itemMutation = 11;
 
-  // User model mutations.
+  // Model-specific mutations.
   bytes mutation = 12;
 }
 
+//
 // Item creation.
+//
 message ItemGenesis {
   string itemType = 1;
   string modelType = 2;
   string modelVersion = 3;
 }
 
+//
+// Item mutation.
+//
 message ItemMutation {
   string parentId = 1;
 }

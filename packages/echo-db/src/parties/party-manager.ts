@@ -11,10 +11,10 @@ import { PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ComplexMap, timed } from '@dxos/util';
 
-import { FeedStoreAdapter } from '../feed-store-adapter';
 import { SecretProvider } from '../invitations/common';
 import { InvitationDescriptor } from '../invitations/invitation-descriptor';
-import { SnapshotStore } from '../snapshot-store';
+import { SnapshotStore } from '../snapshots/snapshot-store';
+import { FeedStoreAdapter } from '../util/feed-store-adapter';
 import { IdentityManager } from './identity-manager';
 import { HaloCreationOptions, PartyFactory } from './party-factory';
 import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
@@ -42,8 +42,8 @@ export class PartyManager {
   constructor (
     private readonly _identityManager: IdentityManager,
     private readonly _feedStore: FeedStoreAdapter,
-    private readonly _partyFactory: PartyFactory,
-    private readonly _snapshotStore: SnapshotStore
+    private readonly _snapshotStore: SnapshotStore,
+    private readonly _partyFactory: PartyFactory
   ) {}
 
   get identityManager () {
@@ -90,7 +90,8 @@ export class PartyManager {
         const isActive = this._identityManager.halo?.isActive(partyKey) ?? true;
         if (isActive) {
           await party.open();
-          await party.database.waitForItem({ type: PARTY_ITEM_TYPE }); // TODO(marik-d): Might not be required if separately snapshot this item.
+          // TODO(marik-d): Might not be required if separately snapshot this item.
+          await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
         }
 
         this._setParty(party);
@@ -326,6 +327,7 @@ export class PartyManager {
       ...party.processor.memberKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.UNKNOWN })),
       ...party.processor.feedKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.FEED }))
     ];
+
     await this._identityManager.halo.recordPartyJoining({
       partyKey: party.key,
       keyHints

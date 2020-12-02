@@ -73,12 +73,6 @@ export class ObjectModel extends Model<ObjectMutationSet> {
     await receipt.waitToBeProcessed();
   }
 
-  async _processMessage (meta: FeedMeta, message: ObjectMutationSet) {
-    log('processMessage', JSON.stringify({ meta, message }, jsonReplacer));
-    MutationUtil.applyMutationSet(this._object, message);
-    return true;
-  }
-
   createSnapshot () {
     return {
       root: ValueUtil.createMessage(this._object)
@@ -90,5 +84,11 @@ export class ObjectModel extends Model<ObjectMutationSet> {
     assert(snapshot.root);
     ValueUtil.applyValue(obj, 'root', snapshot.root);
     this._object = obj.root;
+  }
+
+  async _processMessage (meta: FeedMeta, message: ObjectMutationSet) {
+    log('processMessage', JSON.stringify({ meta, message }, jsonReplacer));
+    MutationUtil.applyMutationSet(this._object, message);
+    return true;
   }
 }

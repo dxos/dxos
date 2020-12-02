@@ -5,6 +5,9 @@
 import { Event } from '@dxos/async';
 import { FeedKey, Timeframe } from '@dxos/echo-protocol';
 
+/**
+ * Keeps state of the last timeframe that was processed by ECHO.
+ */
 export class TimeframeClock {
   readonly update = new Event<Timeframe>();
 
