@@ -5,6 +5,7 @@ name: Fix lint errors
 jobs:
   lint-fix:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1

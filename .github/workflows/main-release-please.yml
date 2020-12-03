@@ -6,6 +6,7 @@ name: main - release-please
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: dxos/release-please-action@v0.0.100
         id: release
