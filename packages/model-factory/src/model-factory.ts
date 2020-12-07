@@ -18,10 +18,13 @@ export class ModelFactory {
 
   private _models = new Map<ModelType, { meta: ModelMeta, constructor: ModelConstructor<any> }>();
 
-  // TODO(burdon): Replace with getModel.
   hasModel (modelType: ModelType) {
+    return this.getModel(modelType) !== undefined;
+  }
+
+  getModel (modelType: ModelType) {
     assert(modelType);
-    return this._models.has(modelType);
+    return this._models.get(modelType);
   }
 
   registerModel (constructor: ModelConstructor<any>): this {

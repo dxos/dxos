@@ -196,7 +196,7 @@ export class ItemDemuxer {
   }
 }
 
-function sortItemsTopologically (items: ItemSnapshot[]): ItemSnapshot[] {
+export function sortItemsTopologically (items: ItemSnapshot[]): ItemSnapshot[] {
   const snapshots: ItemSnapshot[] = [];
   const seenIds = new Set<ItemID>();
 
