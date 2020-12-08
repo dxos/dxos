@@ -279,7 +279,7 @@ export class PartyManager {
       }
     };
 
-    const titleUpdater = () => async () => {
+    const titleUpdater = async () => {
       try {
         await this._updatePartyTitle(party);
       } catch (e) {
