@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ObjectModel } from '@dxos/object-model';
+import { createModelTestBench } from '@dxos/echo-db';
 
-import { createModelTestBench } from './test-utils';
+import { ObjectModel } from './object-model';
 
 test('create empty item', async () => {
   const [peer1, peer2] = await createModelTestBench({ model: ObjectModel });
