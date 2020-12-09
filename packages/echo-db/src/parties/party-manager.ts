@@ -320,7 +320,7 @@ export class PartyManager {
     const storedTitle = this.identityManager.halo?.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY);
     if (storedTitle !== currentTitle) {
       log(`Updating stored name from ${storedTitle} to ${currentTitle} for Party ${party.key.toHex()}`);
-      await this.identityManager.halo?.setGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY, currentTitle);
+      await this.identityManager.halo?.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, currentTitle);
     }
   }
 

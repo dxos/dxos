@@ -105,10 +105,10 @@ export class HaloParty {
     return this._getPartyPreference(item, partyKey, key);
   }
 
-  public async setGlobalPartyPreference (partyKey: PublicKey, key: string, value: any) {
+  public async setGlobalPartyPreference (party: PartyInternal, key: string, value: any) {
     const item = this.getGlobalPreferences();
     assert(item, 'Global preference item required.');
-    return this._setPartyPreference(item, partyKey, key, value);
+    return this._setPartyPreference(item, party, key, value);
   }
 
   public getDevicePartyPreference (partyKey: PublicKey, key: string) {
@@ -117,10 +117,10 @@ export class HaloParty {
     return this._getPartyPreference(item, partyKey, key);
   }
 
-  public async setDevicePartyPreference (partyKey: PublicKey, key: string, value: any) {
+  public async setDevicePartyPreference (party: PartyInternal, key: string, value: any) {
     const item = this.getDevicePreferences();
     assert(item, 'Device preference item required.');
-    return this._setPartyPreference(item, partyKey, key, value);
+    return this._setPartyPreference(item, party, key, value);
   }
 
   public _getPartyPreference (preferences: Item<any>, partyKey: PublicKey, key: string) {
@@ -129,11 +129,12 @@ export class HaloParty {
     return partyPrefs[key];
   }
 
-  public async _setPartyPreference (preferences: Item<any>, partyKey: PublicKey, key: string, value: any) {
-    const path = partyKey.toHex();
+  public async _setPartyPreference (preferences: Item<any>, party: PartyInternal, key: string, value: any) {
+    const path = party.key.toHex();
     const partyPrefs = preferences.model.getProperty(path, {});
     partyPrefs[key] = value;
-    await preferences.model.setProperty(partyKey.toHex(), partyPrefs);
+    await preferences.model.setProperty(party.key.toHex(), partyPrefs);
+    party.update.emit();
   }
 
   getGlobalPreferences () {
@@ -213,25 +214,25 @@ export class HaloParty {
     return this.database.queryItems({ type: HALO_CONTACT_LIST_TYPE }).value[0];
   }
 
-  createPartyActivator (partyKey: PublicKey): PartyActivator {
+  createPartyActivator (party: PartyInternal): PartyActivator {
     return {
-      isActive: () => this.isActive(partyKey),
-      getLastKnownTitle: () => this.getGlobalPartyPreference(partyKey, PARTY_TITLE_PROPERTY),
-      setLastKnownTitle: (title: string) => this.setGlobalPartyPreference(partyKey, PARTY_TITLE_PROPERTY, title),
+      isActive: () => this.isActive(party.key),
+      getLastKnownTitle: () => this.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY),
+      setLastKnownTitle: (title: string) => this.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, title),
       activate: async ({ device, global }) => {
         if (global) {
-          await this.setGlobalPartyPreference(partyKey, 'active', true);
+          await this.setGlobalPartyPreference(party, 'active', true);
         }
-        if (device || (global && device === undefined && !this.isActive(partyKey))) {
-          await this.setDevicePartyPreference(partyKey, 'active', true);
+        if (device || (global && device === undefined && !this.isActive(party.key))) {
+          await this.setDevicePartyPreference(party, 'active', true);
         }
       },
       deactivate: async ({ device, global }) => {
         if (global) {
-          await this.setGlobalPartyPreference(partyKey, 'active', false);
+          await this.setGlobalPartyPreference(party, 'active', false);
         }
-        if (device || (global && device === undefined && this.isActive(partyKey))) {
-          await this.setDevicePartyPreference(partyKey, 'active', false);
+        if (device || (global && device === undefined && this.isActive(party.key))) {
+          await this.setDevicePartyPreference(party, 'active', false);
         }
       }
     };

@@ -779,6 +779,44 @@ describe('Party manager', () => {
     expect(partyB.title).toBe('B');
   });
 
+  test('Deactivate Party - retrieving items', async () => {
+    const { partyManager: partyManagerA } = await setup(true, true);
+
+    const partyA = new Party(await partyManagerA.createParty());
+
+    expect(partyA.isOpen).toBe(true);
+    expect(partyA.isActive()).toBe(true);
+
+    // --- Create an item ---
+
+    let itemA: Item<any> | null = null;
+    const [updated, onUpdate] = latch();
+
+    partyA.database.queryItems({ type: 'wrn://dxos.org/item/test' })
+      .subscribe((result) => {
+        if (result.length) {
+          const [receivedItem] = result;
+          if (itemA && itemA.id === receivedItem.id) {
+            onUpdate();
+          }
+        }
+      });
+
+    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/test' }) as Item<any>;
+    await updated; // wait to see the update
+
+    expect((await partyA.database.queryItems({ type: 'wrn://dxos.org/item/test' })).value.length).toEqual(1);
+
+    await partyA.deactivate({ global: true });
+    await partyA.activate({ global: true });
+
+    expect(partyA.isOpen).toBe(true);
+    expect(partyA.isActive()).toBe(true);
+
+    await waitForCondition(() => partyA.database.queryItems({ type: 'wrn://dxos.org/item/test' }).value.length > 0, 5000);
+    expect((await partyA.database.queryItems({ type: 'wrn://dxos.org/item/test' })).value.length).toEqual(1);
+  }, 10000);
+
   test('Deactivate Party - multi device', async () => {
     const { partyManager: partyManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB } = await setup(true, false);
@@ -815,4 +853,197 @@ describe('Party manager', () => {
     expect(partyManagerA.parties[0].isOpen).toBe(true);
     expect(partyManagerB.parties[0].isOpen).toBe(true);
   });
+
+  test('Deactivating and activating party.', async () => {
+    const { partyManager: partyManagerA } = await setup();
+    await partyManagerA.open();
+
+    const partyA = new Party(await partyManagerA.createParty());
+
+    expect(partyA.isOpen).toBe(true);
+    expect(partyA.isActive()).toBe(true);
+
+    await partyA.setTitle('A');
+    expect(partyA.title).toBe('A');
+    expect(partyA.getProperty('title')).toBe('A');
+
+    await partyA.deactivate({ global: true });
+
+    expect(partyA.isOpen).toBe(false);
+    expect(partyA.isActive()).toBe(false);
+
+    expect(partyA.title).toBe('A');
+
+    await partyA.activate({ global: true });
+
+    expect(partyA.isOpen).toBe(true);
+    expect(partyA.isActive()).toBe(true);
+
+    expect(partyA.title).toBe('A');
+    await waitForCondition(() => partyA.getProperty('title') === 'A', 4000);
+  });
+
+  test('Deactivating and activating party, setting properties after', async () => {
+    const { partyManager: partyManagerA } = await setup();
+    await partyManagerA.open();
+
+    const partyA = new Party(await partyManagerA.createParty());
+
+    expect(partyA.isOpen).toBe(true);
+    expect(partyA.isActive()).toBe(true);
+
+    await partyA.setTitle('A');
+    expect(partyA.title).toBe('A');
+
+    await partyA.deactivate({ global: true });
+
+    expect(partyA.isOpen).toBe(false);
+    expect(partyA.isActive()).toBe(false);
+
+    expect(partyA.title).toBe('A');
+
+    await partyA.activate({ global: true });
+
+    expect(partyA.isOpen).toBe(true);
+    expect(partyA.isActive()).toBe(true);
+    expect(partyA.title).toBe('A');
+
+    // The party at this point is open and activate (see expects above), however setTitle seems to be hanging forever
+    await partyA.setTitle('A2');
+    expect(partyA.title).toBe('A2');
+  });
+
+  test('Setting title propagates to other devices AND other party members', async () => {
+    const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true); // User creating the party
+    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false); // His other device, joined by device invitation
+    const { partyManager: partyManagerC, identityManager: identityManagerC } = await setup(true, false); // His other device, joined by seed phrase recovery
+    const { partyManager: partyManagerD } = await setup(true, true); // Another user in the party
+    assert(seedPhrase);
+
+    const partyA = new Party(await partyManagerA.createParty());
+    expect(partyA.isOpen).toBe(true);
+    expect(partyA.isActive()).toBe(true);
+
+    // --- B joins as another device of A, device invitation ---
+
+    const pinSecret = '0000';
+    const secretProviderDevice: SecretProvider = async () => Buffer.from(pinSecret);
+    const secretValidatorDevice: SecretValidator = async (invitation, secret) =>
+      secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
+
+    const invitation = await identityManagerA?.halo?.invitationManager.createInvitation({
+      secretValidator: secretValidatorDevice,
+      secretProvider: secretProviderDevice
+    }) as InvitationDescriptor;
+
+    expect(partyManagerB.parties.length).toBe(0);
+    await partyManagerB.joinHalo(invitation, secretProviderDevice);
+    expect(identityManagerB.halo).toBeDefined();
+    await waitForCondition(() => partyManagerB.parties.length, 1000);
+    expect(partyManagerB.parties.length).toBe(1);
+    const partyB = new Party(partyManagerB.parties[0]);
+
+    // --- C joins as another device of A, seed phrase recovery ---
+
+    await partyManagerC.recoverHalo(seedPhrase);
+    expect(identityManagerC.halo).toBeDefined();
+    await waitForCondition(() => partyManagerC.parties.length, 1000);
+    expect(partyManagerC.parties.length).toBe(1);
+    const partyC = new Party(partyManagerC.parties[0]);
+
+    // --- D joins as another member of the party ---
+
+    const PIN = Buffer.from('0000');
+
+    const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
+    const secretProvider: SecretProvider = async () => PIN;
+    const invitationDescriptor = await partyManagerA.parties[0].invitationManager.createInvitation({ secretProvider, secretValidator });
+    expect(partyManagerD.parties).toHaveLength(0);
+    const partyD = new Party(await partyManagerD.joinParty(invitationDescriptor, secretProvider));
+    expect(partyD).toBeDefined();
+    expect(partyManagerD.parties).toHaveLength(1);
+
+    // --- Checking propagation of title ---
+
+    expect(partyA.title).toBe(undefined);
+    expect(partyB.title).toBe(undefined);
+    expect(partyC.title).toBe(undefined);
+    expect(partyD.title).toBe(undefined);
+
+    await partyA.setTitle('Some name');
+
+    for (const _party of [partyA, partyB, partyC]) {
+      await waitForCondition(() => _party.getProperty('title') === 'Some name', 1000);
+      expect(_party.title).toEqual('Some name');
+    }
+
+    // For the other member of the party, title propagates correctly as well
+    await waitForCondition(() => partyD.getProperty('title') === 'Some name', 3000);
+    expect(partyD.title).toEqual('Some name'); // However this does not
+  });
+
+  // Note: The reason I wrote this test is because it does not seem to be working properly in Teamwork
+  // I don't seem to be receiving an update after which party.title holds correct value.
+  // https://github.com/dxos/teamwork/issues/496#issuecomment-739862830
+  // However it seems to be working fine in this test.
+  test('Party update event is emitted after the title is set', async () => {
+    const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
+    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
+    const { partyManager: partyManagerC, identityManager: identityManagerC } = await setup(true, false);
+    assert(seedPhrase);
+
+    const partyA = new Party(await partyManagerA.createParty());
+
+    // --- B joins as another device of A, device invitation ---
+
+    const pinSecret = '0000';
+    const secretProviderDevice: SecretProvider = async () => Buffer.from(pinSecret);
+    const secretValidatorDevice: SecretValidator = async (invitation, secret) =>
+      secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
+
+    const invitation = await identityManagerA?.halo?.invitationManager.createInvitation({
+      secretValidator: secretValidatorDevice,
+      secretProvider: secretProviderDevice
+    }) as InvitationDescriptor;
+
+    expect(partyManagerB.parties.length).toBe(0);
+    await partyManagerB.joinHalo(invitation, secretProviderDevice);
+    expect(identityManagerB.halo).toBeDefined();
+    await waitForCondition(() => partyManagerB.parties.length, 1000);
+    expect(partyManagerB.parties.length).toBe(1);
+    const partyB = new Party(partyManagerB.parties[0]);
+
+    // --- C joins as another device of A, seed phrase recovery ---
+
+    await partyManagerC.recoverHalo(seedPhrase);
+    expect(identityManagerC.halo).toBeDefined();
+    await waitForCondition(() => partyManagerC.parties.length, 1000);
+    expect(partyManagerC.parties.length).toBe(1);
+    const partyC = new Party(partyManagerC.parties[0]);
+
+    // --- Hooking to party updates ---
+
+    let titleInC = partyC.title;
+    partyC.update.on(() => {
+      titleInC = partyC.title;
+    });
+
+    let titleInB = partyB.title;
+    partyB.update.on(() => {
+      titleInB = partyB.title;
+    });
+
+    await partyA.setTitle('Some name');
+    expect(partyA.title).toEqual('Some name');
+
+    // The following should eventually be true after one of the updates
+    await waitForCondition(() => titleInC === 'Some name', 10000);
+    await waitForCondition(() => titleInB === 'Some name', 10000);
+
+    await partyA.setTitle('Another name');
+    expect(partyA.title).toEqual('Another name');
+
+    await waitForCondition(() => titleInC === 'Another name', 10000);
+    await waitForCondition(() => titleInB === 'Another name', 10000);
+  }, 20000);
 });

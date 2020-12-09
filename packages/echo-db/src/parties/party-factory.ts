@@ -6,8 +6,6 @@ import assert from 'assert';
 import debug from 'debug';
 
 import {
-  Authenticator,
-  createAuthMessage,
   createDeviceInfoMessage,
   createEnvelopeMessage,
   createFeedAdmitMessage,
@@ -21,32 +19,25 @@ import {
   wrapMessage
 } from '@dxos/credentials';
 import { humanize, keyToString, PublicKey } from '@dxos/crypto';
-import { FeedKey, PartyKey, createFeedWriter, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { raise, timed } from '@dxos/util';
+import { timed } from '@dxos/util';
 
 import {
   GreetingInitiator,
   HaloRecoveryInitiator,
-  InvitationManager,
   InvitationDescriptor,
   InvitationDescriptorType,
   OfflineInvitationClaimer,
   SecretProvider
 } from '../invitations';
-import { TimeframeClock } from '../items';
-import { createAutomaticSnapshots } from '../snapshots/snapshot-generator';
 import { SnapshotStore } from '../snapshots/snapshot-store';
 import { FeedStoreAdapter } from '../util/feed-store-adapter';
 import { HALO_CONTACT_LIST_TYPE, HALO_DEVICE_PREFERENCES_TYPE, HALO_GENERAL_PREFERENCES_TYPE } from './halo-party';
 import { IdentityManager } from './identity-manager';
-import { createMessageSelector } from './message-selector';
-import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
-import { PartyProcessor } from './party-processor';
-import { PartyProtocol } from './party-protocol';
-import { Pipeline } from './pipeline';
+import { PartyInternal, PARTY_ITEM_TYPE, PartyOptions } from './party-internal';
 
 /**
  * Options allowed when creating the HALO.
@@ -55,16 +46,6 @@ export interface HaloCreationOptions {
   identityDisplayName?: string,
   deviceDisplayName?: string
 }
-
-interface Options {
-  readLogger?: (msg: any) => void;
-  writeLogger?: (msg: any) => void;
-  readOnly?: boolean;
-  snapshots?: boolean;
-  snapshotInterval?: number;
-}
-
-const DEFAULT_SNAPSHOT_INTERVAL = 100; // every 100 messages
 
 const log = debug('dxos:echo:parties:party-factory');
 
@@ -79,7 +60,7 @@ export class PartyFactory {
     private readonly _modelFactory: ModelFactory,
     private readonly _networkManager: NetworkManager,
     private readonly _snapshotStore: SnapshotStore,
-    private readonly _options: Options = {}
+    private readonly _options: PartyOptions = {}
   ) { }
 
   /**
@@ -187,65 +168,22 @@ export class PartyFactory {
   async constructParty (partyKey: PartyKey, hints: KeyHint[] = [], initialTimeframe?: Timeframe) {
     // TODO(marik-d): Support read-only parties if this feed doesn't exist?
     // TODO(marik-d): Verify that this feed is admitted.
-    const feed = this._feedStore.queryWritableFeed(partyKey);
-    assert(feed, `Feed not found for party: ${partyKey.toHex()}`);
-
-    //
-    // Create the pipeline.
-    // TODO(telackey): To use HaloPartyProcessor here we cannot keep passing FeedKey[] arrays around, instead
-    // we need to use createFeedAdmitMessage to a write a properly signed message FeedAdmitMessage and write it,
-    // like we do above for the PartyGenesis message.
-    //
-
-    const timeframeClock = new TimeframeClock(initialTimeframe);
-
-    const partyProcessor = new PartyProcessor(partyKey);
-    if (hints.length) {
-      await partyProcessor.takeHints(hints);
-    }
-
-    const iterator = await this._feedStore.createIterator(partyKey, createMessageSelector(partyProcessor, timeframeClock), initialTimeframe);
-    const feedWriteStream = createFeedWriter(feed);
-
-    const pipeline = new Pipeline(
-      partyProcessor, iterator, timeframeClock, feedWriteStream, this._options);
-
-    const invitationManager = new InvitationManager(
-      partyProcessor,
-      this._identityManager,
-      this._networkManager
-    );
-
-    assert(this._identityManager.deviceKey, 'No device key.');
-    const protocol = new PartyProtocol(
-      this._identityManager,
-      this._networkManager,
-      this._feedStore,
-      partyKey,
-      partyProcessor.getActiveFeedSet(),
-      this._createCredentialsProvider(partyKey, PublicKey.from(feed?.key)),
-      partyProcessor.authenticator,
-      invitationManager
-    );
+    assert(this._feedStore.queryWritableFeed(partyKey), `Feed not found for party: ${partyKey.toHex()}`);
 
     //
     // Create the party.
     //
     const party = new PartyInternal(
+      partyKey,
+      this._identityManager,
+      this._feedStore,
       this._modelFactory,
-      partyProcessor,
-      pipeline,
-      protocol,
-      timeframeClock,
-      invitationManager,
-      this._identityManager.halo?.createPartyActivator(partyKey)
+      this._networkManager,
+      this._snapshotStore,
+      hints,
+      initialTimeframe,
+      this._options
     );
-
-    if (this._options.snapshots) {
-      createAutomaticSnapshots(
-        party, timeframeClock, this._snapshotStore, this._options.snapshotInterval ?? DEFAULT_SNAPSHOT_INTERVAL
-      );
-    }
 
     log(`Constructed: ${party}`);
     return party;
@@ -433,17 +371,5 @@ export class PartyFactory {
     await this._identityManager.keyring.deleteSecretKey(identityKey);
 
     return halo;
-  }
-
-  private _createCredentialsProvider (partyKey: PartyKey, feedKey: FeedKey) {
-    return {
-      get: () => Buffer.from(Authenticator.encodePayload(createAuthMessage(
-        this._identityManager.keyring,
-        partyKey,
-        this._identityManager.identityKey ?? raise(new Error('No identity key')),
-        this._identityManager.deviceKeyChain ?? this._identityManager.deviceKey ?? raise(new Error('No device key')),
-        this._identityManager.keyring.getKey(feedKey)
-      )))
-    };
   }
 }

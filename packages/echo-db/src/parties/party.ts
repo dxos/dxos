@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import debug from 'debug';
 
 import { PublicKey } from '@dxos/crypto';
@@ -56,6 +57,7 @@ export class Party {
   }
 
   queryMembers (): ResultSet<PartyMember> {
+    assert(this.isOpen, 'Party is not open.');
     return new ResultSet(
       this._internal.processor.keyOrInfoAdded.discardParameter(),
       () => this._internal.processor.memberKeys
