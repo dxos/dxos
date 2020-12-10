@@ -973,7 +973,7 @@ describe('Party manager', () => {
     await partyA.setTitle('Some name');
 
     for (const _party of [partyA, partyB, partyC]) {
-      await waitForCondition(() => _party.getProperty('title') === 'Some name', 1000);
+      await waitForCondition(() => _party.getProperty('title') === 'Some name', 3000);
       expect(_party.title).toEqual('Some name');
     }
 
