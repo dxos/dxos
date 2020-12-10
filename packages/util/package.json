@@ -33,7 +33,7 @@
   "dependencies": {
     "@dxos/async": "^1.0.0-beta.8",
     "@dxos/codec-protobuf": "^0.2.2",
-    "@dxos/crypto": "^1.0.5",
+    "@dxos/crypto": "1.0.7",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/lodash": "^4.14.159",
