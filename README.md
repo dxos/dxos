@@ -32,3 +32,4 @@ const item = await party.database.createItem({ model: ObjectModel });
 
 await item.setProperty('foo', 'bar');
 ```
+
