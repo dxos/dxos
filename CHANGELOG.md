@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.6.11](https://www.github.com/dxos/echo/compare/v2.6.10...v2.6.11) (2020-12-10)
+
+
+### Bug Fixes
+
+* bump ([8277706](https://www.github.com/dxos/echo/commit/8277706d293d36ea6e9a9ff2d23cdc6f4c23e06e))
+* give more time ([f81a73d](https://www.github.com/dxos/echo/commit/f81a73d70086efd6e0aba25212d2fc1b0b44d22b))
+
 ### [2.6.10](https://www.github.com/dxos/echo/compare/v2.6.9...v2.6.10) (2020-12-09)
 
 
