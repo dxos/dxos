@@ -20,9 +20,9 @@ import {
   Message
 } from '@dxos/credentials';
 import { WithTypeUrl } from '@dxos/credentials/dist/es/proto/any';
-import { keyToString } from '@dxos/crypto';
+import { keyToString, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
-import { NetworkManager } from '@dxos/network-manager';
+import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { IdentityManager } from '../parties';
 import { SecretProvider } from './common';
@@ -90,8 +90,12 @@ export class GreetingInitiator {
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
       (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId), timeout);
 
-    await this._networkManager.joinProtocolSwarm(Buffer.from(swarmKey),
-      greetingProtocolProvider(swarmKey, localPeerId, [this._greeterPlugin]));
+    await this._networkManager.joinProtocolSwarm({
+      topic: PublicKey.from(swarmKey),
+      protocol: greetingProtocolProvider(swarmKey, localPeerId, [this._greeterPlugin]),
+      peerId: PublicKey.from(localPeerId),
+      topology: new FullyConnectedTopology()
+    });
 
     await peerJoinedWaiter;
     log('Connected');
@@ -214,7 +218,7 @@ export class GreetingInitiator {
 
   async disconnect () {
     const { swarmKey } = this._invitationDescriptor;
-    await this._networkManager.leaveProtocolSwarm(Buffer.from(swarmKey));
+    await this._networkManager.leaveProtocolSwarm(PublicKey.from(swarmKey));
     this._state = GreetingState.DISCONNECTED;
   }
 

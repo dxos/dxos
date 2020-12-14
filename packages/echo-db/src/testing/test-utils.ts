@@ -7,7 +7,7 @@ import debug from 'debug';
 
 import { createKeyPair } from '@dxos/crypto';
 import { Model } from '@dxos/model-factory';
-import { SwarmProvider } from '@dxos/network-manager';
+import { NetworkManagerOptions } from '@dxos/network-manager/dist/network-manager';
 import { Storage } from '@dxos/random-access-multi-storage';
 import { jsonReplacer, range } from '@dxos/util';
 
@@ -32,7 +32,7 @@ export interface TestOptions {
   storage?: any
   snapshotStorage?: Storage,
   keyStorage?: any
-  swarmProvider?: SwarmProvider
+  networkManagerOptions?: NetworkManagerOptions
   snapshots?: boolean,
   snapshotInterval?: number
 }
@@ -46,7 +46,7 @@ export async function createTestInstance ({
   storage = createRamStorage(),
   keyStorage = undefined,
   snapshotStorage = createRamStorage(),
-  swarmProvider = new SwarmProvider(),
+  networkManagerOptions,
   snapshots = true,
   snapshotInterval
 }: TestOptions = {}) {
@@ -56,7 +56,7 @@ export async function createTestInstance ({
     snapshotStorage,
     snapshotInterval,
     snapshots,
-    swarmProvider,
+    networkManagerOptions,
     readLogger: verboseLogging ? messageLogger('>>>') : undefined,
     writeLogger: verboseLogging ? messageLogger('<<<') : undefined
   });

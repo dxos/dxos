@@ -15,7 +15,7 @@ import {
 } from '@dxos/credentials';
 import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
-import { NetworkManager } from '@dxos/network-manager';
+import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { IdentityManager, PartyProcessor } from '../parties';
 import { SecretProvider, SecretValidator } from './common';
@@ -146,8 +146,12 @@ export class GreetingResponder {
 
     // As the Greeter, use the topic as our peerId.
     // (For reasons why see detailed comment on greetClient).
-    await this._networkManager.joinProtocolSwarm(Buffer.from(this._swarmKey),
-      greetingProtocolProvider(this._swarmKey, this._swarmKey, [this._greeterPlugin]));
+    await this._networkManager.joinProtocolSwarm({
+      topic: PublicKey.from(this._swarmKey),
+      protocol: greetingProtocolProvider(this._swarmKey, this._swarmKey, [this._greeterPlugin]),
+      peerId: PublicKey.from(this._swarmKey),
+      topology: new FullyConnectedTopology()
+    });
 
     log(`Greeting for: ${this._partyProcessor.partyKey.toHex()} on swarmKey ${keyToString(this._swarmKey)}`);
 
@@ -162,7 +166,7 @@ export class GreetingResponder {
   async stop () {
     log('Stopping...');
     if (this._swarmKey) {
-      await this._networkManager.leaveProtocolSwarm(Buffer.from(this._swarmKey));
+      await this._networkManager.leaveProtocolSwarm(PublicKey.from(this._swarmKey));
     }
 
     this._state = GreetingState.STOPPED;

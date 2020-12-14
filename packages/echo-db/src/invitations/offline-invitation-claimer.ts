@@ -17,8 +17,8 @@ import {
   createGreetingClaimMessage,
   SignedMessage
 } from '@dxos/credentials';
-import { keyToString, randomBytes } from '@dxos/crypto';
-import { NetworkManager } from '@dxos/network-manager';
+import { keyToString, PublicKey, randomBytes } from '@dxos/crypto';
+import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { raise } from '@dxos/util';
 
 import { IdentityManager } from '../parties';
@@ -72,8 +72,12 @@ export class OfflineInvitationClaimer {
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
       () => this._greeterPlugin?.peers.length, timeout);
 
-    await this._networkManager.joinProtocolSwarm(Buffer.from(swarmKey),
-      greetingProtocolProvider(swarmKey, localPeerId, [this._greeterPlugin]));
+    await this._networkManager.joinProtocolSwarm({
+      topic: PublicKey.from(swarmKey),
+      protocol: greetingProtocolProvider(swarmKey, localPeerId, [this._greeterPlugin]),
+      peerId: PublicKey.from(localPeerId),
+      topology: new FullyConnectedTopology()
+    });
 
     await peerJoinedWaiter;
     log('Connected');
@@ -111,7 +115,7 @@ export class OfflineInvitationClaimer {
 
   async disconnect () {
     const { swarmKey } = this._invitationDescriptor;
-    await this._networkManager.leaveProtocolSwarm(Buffer.from(swarmKey));
+    await this._networkManager.leaveProtocolSwarm(PublicKey.from(swarmKey));
     this._state = GreetingState.DISCONNECTED;
   }
 

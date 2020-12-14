@@ -12,9 +12,9 @@ import {
   Authenticator,
   GreetingCommandPlugin
 } from '@dxos/credentials';
-import { discoveryKey, keyToString } from '@dxos/crypto';
+import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
-import { NetworkManager } from '@dxos/network-manager';
+import { MMSTTopology, NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
@@ -63,7 +63,12 @@ export class PartyProtocol {
     this._started = true;
 
     log('Start', this._partyKey.toHex());
-    return this._networkManager.joinProtocolSwarm(this._partyKey.asBuffer(), ({ channel }: any) => this._createProtocol(channel));
+    return this._networkManager.joinProtocolSwarm({
+      topic: this._partyKey,
+      protocol: ({ channel }: any) => this._createProtocol(channel),
+      peerId: PublicKey.random(), // TODO(marik-d): Should this be a specific peer id?
+      topology: new MMSTTopology()
+    });
   }
 
   async stop () {
@@ -74,7 +79,7 @@ export class PartyProtocol {
 
     log('Stop', this._partyKey.toHex());
 
-    await this._networkManager.leaveProtocolSwarm(this._partyKey.asBuffer());
+    await this._networkManager.leaveProtocolSwarm(this._partyKey);
   }
 
   @synchronized

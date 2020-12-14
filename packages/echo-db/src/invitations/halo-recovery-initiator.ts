@@ -17,8 +17,8 @@ import {
   createGreetingClaimMessage,
   SignedMessage
 } from '@dxos/credentials';
-import { keyToString, randomBytes, verify } from '@dxos/crypto';
-import { NetworkManager } from '@dxos/network-manager';
+import { keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
+import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { raise } from '@dxos/util';
 
 import { IdentityManager } from '../parties';
@@ -74,8 +74,12 @@ export class HaloRecoveryInitiator {
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
       () => this._greeterPlugin?.peers.length, timeout);
 
-    await this._networkManager.joinProtocolSwarm(swarmKey,
-      greetingProtocolProvider(swarmKey, this._peerId, [this._greeterPlugin]));
+    await this._networkManager.joinProtocolSwarm({
+      topic: PublicKey.from(swarmKey),
+      peerId: PublicKey.from(this._peerId),
+      protocol: greetingProtocolProvider(swarmKey, this._peerId, [this._greeterPlugin]),
+      topology: new FullyConnectedTopology()
+    });
 
     await peerJoinedWaiter;
     log('Connected');
@@ -124,7 +128,7 @@ export class HaloRecoveryInitiator {
   async disconnect () {
     assert(this._identityManager.identityKey);
     const swarmKey = this._identityManager.identityKey.publicKey.asBuffer();
-    await this._networkManager.leaveProtocolSwarm(swarmKey);
+    await this._networkManager.leaveProtocolSwarm(PublicKey.from(swarmKey));
     this._state = GreetingState.DISCONNECTED;
   }
 
