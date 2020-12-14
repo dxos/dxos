@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.6.12](https://www.github.com/dxos/echo/compare/v2.6.11...v2.6.12) (2020-12-14)
+
+
+### Bug Fixes
+
+* Upgrade network manager ([#354](https://www.github.com/dxos/echo/issues/354)) ([f540c79](https://www.github.com/dxos/echo/commit/f540c79f6787463f0fd2405a7098fc8e1390ea47))
+
 ### [2.6.11](https://www.github.com/dxos/echo/compare/v2.6.10...v2.6.11) (2020-12-10)
 
 
