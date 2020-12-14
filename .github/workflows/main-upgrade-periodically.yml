@@ -1,0 +1,23 @@
+on:
+ schedule:
+   - cron: '*/10 * * * *'
+
+name: Update packages
+jobs:
+ release:
+   name: Update npm packages
+   runs-on: ubuntu-latest
+   timeout-minutes: 5
+   steps:
+     - name: Update npm packages
+       uses: technote-space/create-pr-action@v2
+       with:
+         EXECUTE_COMMANDS: |
+           npx @dxos/version-check upgrade --scope @dxos
+           yarn install
+         COMMIT_MESSAGE: 'chore: update DXOS dependencies'
+         COMMIT_NAME: 'GitHub Actions'
+         COMMIT_EMAIL: 'example@example.com'
+         PR_BRANCH_NAME: 'chore-deps-update-${PR_ID}'
+         PR_TITLE: 'chore: update DXOS dependencies'
+         GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
