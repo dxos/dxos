@@ -453,7 +453,9 @@ describe('Party manager', () => {
     }
   });
 
-  test('Two users, two devices each', async () => {
+  // TODO(marik-d): Unskip.
+  // https://github.com/dxos/mesh/issues/36
+  test.skip('Two users, two devices each', async () => {
     const { partyManager: partyManagerA1, identityManager: identityManagerA1 } = await setup(true, true);
     const { partyManager: partyManagerA2, identityManager: identityManagerA2 } = await setup(true, false);
     const { partyManager: partyManagerB1, identityManager: identityManagerB1 } = await setup(true, true);
