@@ -40,7 +40,7 @@
     "@dxos/gem-core": "^1.0.0-beta.16",
     "@dxos/gem-spore": "^1.0.0-beta.16",
     "@dxos/model-factory": "^2.6.13-alpha.0",
-    "@dxos/network-manager": "1.0.0-beta.117",
+    "@dxos/network-manager": "1.0.0-beta.119",
     "@dxos/object-model": "^2.6.13-alpha.0",
     "@dxos/random-access-multi-storage": "^1.1.0-beta.7",
     "@dxos/util": "^2.6.13-alpha.0",

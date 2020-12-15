@@ -1269,15 +1269,15 @@
     lodash.set "^4.3.2"
     lodash.unset "^4.5.2"
 
-"@dxos/network-manager@1.0.0-beta.117":
-  version "1.0.0-beta.117"
-  resolved "https://registry.npmjs.org/@dxos/network-manager/-/network-manager-1.0.0-beta.117.tgz#3b8c1e6fbef72e15d8e8f39751a6ba7192748195"
-  integrity sha512-dIVBT4TxSPA+JddLT5pK9rBxsLb1KjmpL2S64fnBgr6UM0x/dlWCHAWDo1FuuGgvtRt11YmBwZccnH9POSiHJg==
+"@dxos/network-manager@1.0.0-beta.119":
+  version "1.0.0-beta.119"
+  resolved "https://registry.npmjs.org/@dxos/network-manager/-/network-manager-1.0.0-beta.119.tgz#2ca032fd5aa06897fc8aad0d7bef341ef70c3938"
+  integrity sha512-NV3YzlckVoHnU/Z523HDIl105uvX0yOReGeKutTeg0FbNUO6jXBF7ZdOFV93+gHCEKDwvUahuE7Wic3W9x5xrg==
   dependencies:
     "@dxos/async" "^1.0.2-alpha.0"
     "@dxos/crypto" "1.0.7"
     "@dxos/metrics" "^1.0.0-beta.6"
-    "@dxos/protocol" "^1.0.0-beta.117"
+    "@dxos/protocol" "^1.0.0-beta.119"
     "@dxos/util" "^2.4.0"
     "@geut/discovery-swarm-webrtc" "^4.0.1"
     "@types/mocha" "^8.0.4"
@@ -1330,10 +1330,10 @@
     signal-promise "^1.0.3"
     source-map-support "^0.5.12"
 
-"@dxos/protocol@^1.0.0-beta.117":
-  version "1.0.0-beta.117"
-  resolved "https://registry.npmjs.org/@dxos/protocol/-/protocol-1.0.0-beta.117.tgz#f8eeec4317d40b50d775e716a1f8f2b405ed3c05"
-  integrity sha512-mXa8XBlt4OhsUpA+EuZhW5yPdklCRsnSyS6IWNZ67r7DtNkzs5rW/mQrMxvg45fOr4Zc/Oo1doqpfWLi+q4W3g==
+"@dxos/protocol@^1.0.0-beta.119":
+  version "1.0.0-beta.119"
+  resolved "https://registry.npmjs.org/@dxos/protocol/-/protocol-1.0.0-beta.119.tgz#cae3133d6310916dd626881ad8d19a3ac5a565e2"
+  integrity sha512-FK2JjqepACntLFbI+ajh2k4BUZqmaUieWt+dDpk8j5Iyk/MB5gltX9LjO4kawcisPs8SrwydPMioLEJeKjFA/A==
   dependencies:
     "@dxos/codec-protobuf" "1.1.0-beta.10"
     assert "^2.0.0"
