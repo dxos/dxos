@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "2.6.13-alpha.0",
+  "version": "2.6.14-alpha.0",
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -37,8 +37,8 @@
   },
   "dependencies": {
     "@dxos/codec-protobuf": "^0.2.2",
-    "@dxos/echo-db": "^2.6.13-alpha.0",
-    "@dxos/model-factory": "^2.6.13-alpha.0",
+    "@dxos/echo-db": "^2.6.14-alpha.0",
+    "@dxos/model-factory": "^2.6.14-alpha.0",
     "@types/node": "^14.0.9",
     "yjs": "^13.4.1"
   },
