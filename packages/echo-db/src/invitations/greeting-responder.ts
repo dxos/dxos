@@ -18,7 +18,7 @@ import { SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { IdentityManager, PartyProcessor } from '../parties';
-import { SecretProvider, SecretValidator } from './common';
+import { InvitationOptions, SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 
 const log = debug('dxos:echo:invitations:greeting-responder');
@@ -88,21 +88,21 @@ export class GreetingResponder {
   async invite (
     secretValidator: SecretValidator,
     secretProvider?: SecretProvider,
-    onFinish?: () => void,
+    onFinish?: InvitationOptions['onFinish'],
     expiration?: number
   ): Promise<Buffer> {
     assert(secretValidator);
     assert(this._state === GreetingState.LISTENING);
 
     let timeout: NodeJS.Timeout;
-    const cleanup = async () => {
+    const cleanup = async (expired?: boolean) => {
       if (timeout) {
         clearTimeout(timeout);
       }
 
       if (onFinish) {
         try {
-          await onFinish();
+          await onFinish({ expired: expired === true });
         } catch (err) {
           log(err);
         }
@@ -112,7 +112,7 @@ export class GreetingResponder {
     };
 
     if (expiration) {
-      timeout = setTimeout(cleanup, expiration - Date.now());
+      timeout = setTimeout(() => cleanup(true), expiration - Date.now());
     }
 
     const invitation = this._greeter.createInvitation(
