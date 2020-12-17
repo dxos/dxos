@@ -31,9 +31,9 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/async": "^1.0.0-beta.8",
-    "@dxos/codec-protobuf": "^0.2.2",
-    "@dxos/crypto": "1.0.7",
+    "@dxos/async": "~1.0.0-beta.10",
+    "@dxos/codec-protobuf": "~1.1.1",
+    "@dxos/crypto": "~1.0.7",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/lodash": "^4.14.159",
@@ -48,7 +48,7 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "^1.0.8",
+    "@dxos/eslint-plugin": "~1.0.10",
     "@types/jest": "^25.2.3",
     "del-cli": "^3.0.0",
     "eslint-plugin-jest": "^24.0.2",

@@ -14,7 +14,6 @@ import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 import { createStorage } from '@dxos/random-access-multi-storage';
-import { SwarmProvider } from '@dxos/network-manager'
 import { Keyring } from '@dxos/credentials';
 
 import { createECHO, EchoContext, EchoGraph, usePartyMembers } from '../src';
@@ -41,7 +40,7 @@ export const withSwarm = () => {
           storage,
           keyStorage: leveljs('dxos/echo-demo/keystore'),
           // TODO(burdon): Move const to config.
-          swarmProvider: new SwarmProvider({ signal: 'wss://signal2.dxos.network/dxos/signal' }),
+          networkManagerOptions: { signal: 'wss://signal2.dxos.network/dxos/signal' },
           snapshotStorage,
           snapshotInterval: 10,
         });
