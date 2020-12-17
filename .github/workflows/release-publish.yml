@@ -24,7 +24,7 @@ jobs:
           yarn test
           git reset --hard
           VERSION=`cat package.json | grep '"version":' | awk '{ print $2 }' | sed 's/[",]//g'`
-          yarn lerna version $VERSION --no-git-tag-version -y
+          yarn lerna --exact version $VERSION --no-git-tag-version -y
           git commit -am "v$VERSION"
           git push
           git tag -f "v$VERSION"
