@@ -1,6 +1,7 @@
 on:
- schedule:
-   - cron: '*/10 * * * *'
+  workflow_dispatch:
+  schedule:
+    - cron: '*/10 * * * *'
 
 name: Upgrade DXOS dependencies
 jobs:
