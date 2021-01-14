@@ -3,4 +3,3 @@
 //
 
 export Hello from './Hello';
-export Legacy from './Legacy';

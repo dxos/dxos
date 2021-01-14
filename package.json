@@ -21,7 +21,6 @@
   },
   "scripts": {
     "build": "lerna run build",
-    "build:storybook": "lerna run build:storybook -- --quiet",
     "clean": "lerna run clean",
     "lint": "lerna run lint",
     "lint:fix": "lerna run lint -- --fix",

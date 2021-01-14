@@ -7,10 +7,10 @@ import { withKnobs } from '@storybook/addon-knobs';
 
 import { FullScreen } from '@dxos/gem-core';
 
-import { Hello, Legacy } from '../src';
+import { Hello } from '../src';
 
 export default {
-  title: 'Experimental',
+  title: 'Experimental:Hello',
   decorators: [withKnobs]
 };
 
@@ -18,14 +18,6 @@ export const withHello = () => {
   return (
     <FullScreen>
       <Hello />
-    </FullScreen>
-  );
-};
-
-export const withLegacy = () => {
-  return (
-    <FullScreen>
-      <Legacy />
     </FullScreen>
   );
 };

@@ -28,3 +28,13 @@ export const withCanvas = () => {
     </FullScreen>
   );
 };
+
+export const withReadOnly = () => {
+  const [objects] = useCanvasModel(data);
+
+  return (
+    <FullScreen>
+      <Canvas objects={objects} showToolbar={false} showPalette={false} />
+    </FullScreen>
+  );
+};

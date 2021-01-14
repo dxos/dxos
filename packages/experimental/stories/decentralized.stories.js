@@ -11,7 +11,7 @@ import { FullScreen } from '@dxos/gem-core';
 import { makeStyles } from '@material-ui/core/styles';
 
 export default {
-  title: 'Decentralized'
+  title: 'Experimental:Text'
 };
 
 const useStyles = makeStyles(() => ({

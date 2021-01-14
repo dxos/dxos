@@ -1,9 +1,6 @@
 # Graphical Elementary Modules
 
-Playground for visualization components.
-
-[![Netlify Status](https://api.netlify.com/api/v1/badges/41ea6a00-5167-472a-87fa-473758cc25f7/deploy-status)](https://app.netlify.com/sites/dxos-gem/deploys)
-
+[Chromatic Storybook](https://www.chromatic.com/library?appId=6000bc9133d715002117d459)
 
 ## Usage
 

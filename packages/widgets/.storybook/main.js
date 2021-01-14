@@ -3,6 +3,5 @@
 //
 
 module.exports = {
-  addons: ['@storybook/addon-knobs/register'],
-  stories: ['../stories/**/index.js']
+  stories: ['../stories/**/*.stories.js']
 };

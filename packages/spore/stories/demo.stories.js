@@ -136,7 +136,7 @@ export const withGridLayout = () => {
     <FullScreen>
       {resizeListener}
       <SVG width={width} height={height}>
-        <Grid grid={grid} showAxis={true} tickFormat="" />
+        <Grid grid={grid} showAxis={true} tickFormat='' />
         <Graph
           grid={grid}
           data={data}

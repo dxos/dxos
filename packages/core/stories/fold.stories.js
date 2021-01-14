@@ -11,7 +11,7 @@ import { FullScreen, SVG } from '../src/components';
 import { createPath } from '../src/util';
 
 export default {
-  title: 'Fold',
+  title: 'Logo:Mesh',
   decorators: [withKnobs]
 };
 

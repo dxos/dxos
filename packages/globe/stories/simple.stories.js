@@ -14,7 +14,7 @@ import TopologyData from '../data/110m.json';
 import { Globe } from '../src';
 
 export default {
-  title: 'Simple',
+  title: 'Globe-Simple',
   decorators: [withKnobs]
 };
 

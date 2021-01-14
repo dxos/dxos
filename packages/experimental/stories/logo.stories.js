@@ -9,7 +9,7 @@ import useResizeAware from 'react-resize-aware';
 import { FullScreen, SVG } from '@dxos/gem-core';
 
 export default {
-  title: 'Experimental'
+  title: 'Experimental:Logo'
 };
 
 /*

@@ -12,7 +12,7 @@ import { FullScreen, SVG } from '../src/components';
 import { PATH } from '../src/icons/Fold';
 
 export default {
-  title: 'Logo',
+  title: 'Logo:Spinner',
   decorators: [withKnobs]
 };
 
