@@ -162,8 +162,8 @@ export const withForceLayout = () => {
   const [drag] = useState(() => createSimulationDrag(layout.simulation));
   useEffect(() => {
     drag.on('click', ({ source: selected }) => {
-      setSelected(selected);
       log('Selected:', selected);
+      setSelected(selected.id);
     });
   }, [drag]);
 

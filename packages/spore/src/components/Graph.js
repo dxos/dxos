@@ -82,8 +82,14 @@ const Graph = (props) => {
     classes
   } = props;
   assert(layout);
-
   const clazzes = merge(useGraphStyles(), classes);
+
+  // TODO(burdon): Selection is stale.
+  // TODO(burdon): Highlight is stale while moving.
+  const s = useRef();
+  useEffect(() => {
+    s.current = selected;
+  }, [selected]);
 
   const guideGroup = useRef();
   const linkGroup = useRef();
@@ -98,12 +104,11 @@ const Graph = (props) => {
   }, [drag]);
 
   // Update layout.
-  // TODO(burdon): Selection not working.
   // NOTE: Called every time force update changes data (positions, etc.)
   useLayout(layout, grid, data, () => {
     guideProjector.update(grid, layout.data, { group: guideGroup.current });
-    nodeProjector.update(grid, layout.data, { group: nodeGroup.current, selected });
-    linkProjector.update(grid, layout.data, { group: linkGroup.current, selected });
+    nodeProjector.update(grid, layout.data, { group: nodeGroup.current, selected: s.current });
+    linkProjector.update(grid, layout.data, { group: linkGroup.current });
   }, [selected]);
 
   return (

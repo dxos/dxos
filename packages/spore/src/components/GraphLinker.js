@@ -14,11 +14,12 @@ import { useGraphStyles } from './Graph';
  * @param grid
  * @param drag
  * @param linkProjector
+ * @param onSelect
  * @param onUpdate
  * @returns {JSX.Element}
  * @constructor
  */
-export const GraphLinker = ({ grid, drag, linkProjector = new LinkProjector(), onUpdate }) => {
+export const GraphLinker = ({ grid, drag, linkProjector = new LinkProjector(), onSelect, onUpdate }) => {
   assert(grid);
   assert(drag);
   assert(onUpdate);
@@ -84,7 +85,7 @@ export const GraphLinker = ({ grid, drag, linkProjector = new LinkProjector(), o
     });
 
     drag.on('click', ({ source: { id } }) => {
-      console.log('click', id);
+      onSelect && onSelect(id);
     });
   }, [drag]);
 
