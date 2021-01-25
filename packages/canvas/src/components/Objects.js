@@ -77,7 +77,7 @@ const Objects = ({ grid, snap, objects, model, selected, onSelect = noop }) => {
   const drag = useRef();
   useEffect(() => {
     drag.current = createObjectDrag(layer.current, grid, snap, model, onSelect);
-  }, [grid, snap]);
+  }, [grid, snap, model]);
 
   const isSelected = objectId => selected && selected.ids.find(id => id === objectId);
 
