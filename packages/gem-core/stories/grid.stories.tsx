@@ -23,7 +23,7 @@ export const withGrid = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG debug={true} width={width} height={height}>
+      <SVG debug={true} width={width || 0} height={height || 0}>
         <Grid grid={grid} showAxis={true} showGrid={true} />
       </SVG>
     </FullScreen>
