@@ -2,7 +2,7 @@
   "name": "@dxos/gem-storybook",
   "version": "1.0.0-beta.25",
   "private": true,
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
   "author": "DXOS.org",
   "scripts": {
     "build-storybook": "build-storybook",

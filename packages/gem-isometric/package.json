@@ -1,0 +1,62 @@
+{
+  "name": "@dxos/gem-isometric",
+  "version": "1.0.0-beta.26",
+  "description": "Gem Isometric.",
+  "repository": "https://github.com/dxos/gem",
+  "license": "AGPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "npm run clean && tsc --build",
+    "clean": "rm -rf ./dist",
+    "lint": "eslint --format codeframe './src/**/*.ts'",
+    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
+    "test": "jest --rootDir ./src --verbose --passWithNoTests"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "eslintConfig": {
+    "extends": "plugin:@dxos/react"
+  },
+  "jest": {
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@dxos/gem-core": "^1.0.0-beta.26",
+    "@material-ui/core": "^4.9.10",
+    "clsx": "^1.1.0",
+    "d3": "^6.1.1",
+    "debug": "^4.1.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-resize-aware": "^3.0.0"
+  },
+  "devDependencies": {
+    "@dxos/eslint-plugin": "~1.0.10",
+    "@storybook/addon-knobs": "^6.1.14",
+    "@storybook/react": "^6.1.14",
+    "@types/d3": "^6.3.0",
+    "babel-loader": "^8.1.0",
+    "babel-plugin-add-module-exports": "^1.0.2",
+    "babel-plugin-inline-import": "^3.0.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-react": "^7.22.0",
+    "faker": "^4.1.0",
+    "jest": "^25.5.2",
+    "ts-jest": "^26.1.4",
+    "typescript": "^4.0.2"
+  },
+  "peerDependencies": {
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
