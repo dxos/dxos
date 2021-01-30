@@ -20,7 +20,7 @@ const useStyles = makeStyles(() => ({
  */
 const Grid = ({ data, delay = 0, grid = { x: 8, y: 8 }, padding = { x: 0, y: 0 } }) => {
   const classes = useStyles();
-  const group = useRef();
+  const group = useRef(null);
 
   useEffect(() => {
     const t = () => d3.transition()

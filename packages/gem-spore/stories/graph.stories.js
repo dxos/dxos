@@ -41,9 +41,10 @@ debug.enable('dxos:spore:*');
 const useDataButton = (generate, label='Refresh') => {
   const [data, setData, getData, updateData] = useObjectMutator({});
   useEffect(() => {
-    setTimeout(() => {
+    // TODO(burdon): Race condition bug (if <500ms).
+    // setTimeout(() => {
       setData(generate());
-    }, 200); // TODO(burdon): Race condition bug (if <500ms).
+    // }, 200);
   }, []);
 
   button(label, () => setData(generate()));
@@ -55,8 +56,7 @@ const useDataButton = (generate, label='Refresh') => {
  */
 export const withDrag = () => {
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
   const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 })));
   const [layout] = useState(() => new ForceLayout({ force: { links: { distance: 80 } } }));
@@ -69,8 +69,8 @@ export const withDrag = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
-        <Grid grid={grid} showAxis={false} showGrid={false} />
+      <SVG width={size.width} height={size.height}>
+        <Grid grid={grid} showAxis={true} showGrid={true} />
         <Markers />
 
         <GraphLinker

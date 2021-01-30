@@ -45,7 +45,7 @@ const useStyles = makeStyles(() => ({
 export const withLogo = () => {
   const classes = useStyles();
   const [resizeListener] = useResizeAware();
-  const text = useRef();
+  const text = useRef(null);
 
   // https://createwithflow.com
   // TODO(burdon): Set of elements.

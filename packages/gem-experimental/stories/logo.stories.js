@@ -95,8 +95,7 @@ const Logo = {
 
 export const withLogo = () => {
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const logo = useRef();
+  const logo = useRef(null);
 
   const scale = .2;
 

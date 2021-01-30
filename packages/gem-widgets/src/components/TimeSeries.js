@@ -47,10 +47,10 @@ const processData = (data, points, period) => {
  */
 const TimeSeries = ({ data = [], domain = [0, 10], width, height, barWidth = 10, period = 500 }) => {
   const classes = useStyles();
-  const group = useRef();
+  const group = useRef(null);
 
   // Update data reference.
-  const dataRef = useRef();
+  const dataRef = useRef(null);
   useEffect(() => {
     dataRef.current = data;
   }, [data]);

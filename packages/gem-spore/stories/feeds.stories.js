@@ -48,13 +48,13 @@ const useStyles = makeStyles({
   }
 });
 
+// TODO(burdon): Merge component with echo website (expand from center).
 export const withFeeds = () => {
   const classes = useStyles();
   const [resizeListener, size] = useResizeAware();
   const [options] = useState({ size: 32, margin: 15 });
-  const { width, height } = size;
-  const blockGroup = useRef();
-  const linkGroup = useRef();
+  const blockGroup = useRef(null);
+  const linkGroup = useRef(null);
 
   const layout = select('Layout', ['default', 'ordered', 'deps'], 'a');
 
@@ -170,7 +170,7 @@ export const withFeeds = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height} center={false}>
+      <SVG width={size.width} height={size.height} center={false}>
         <g ref={linkGroup} className={classes.feeds} />
         <g ref={blockGroup} className={classes.feeds} />
       </SVG>

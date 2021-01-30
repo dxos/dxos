@@ -9,7 +9,7 @@ import React, { useEffect, useRef } from 'react';
  * Grid renderer.
  */
 const Bar = ({ data, width, domain = [0, 100], delay = 0, barHeight = 16 }) => {
-  const group = useRef();
+  const group = useRef(null);
 
   useEffect(() => {
     const x = d3.scaleLinear()

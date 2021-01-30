@@ -162,7 +162,7 @@ const useStyles = makeStyles(() => ({
 
 const LayoutStory = () => {
   const classes = useStyles();
-  const group = useRef();
+  const group = useRef(null);
   const [resizeListener, { width, height }] = useResizeAware();
 
   const next = ({ width, height }) => {

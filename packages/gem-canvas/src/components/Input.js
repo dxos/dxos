@@ -32,7 +32,7 @@ const useStyles = makeStyles(() => ({
  */
 const Input = ({ grid, object, onUpdate, onEnter = () => {} }) => {
   const classes = useStyles();
-  const inputRef = useRef();
+  const inputRef = useRef(null);
 
   // Autofocus.
   useEffect(() => {

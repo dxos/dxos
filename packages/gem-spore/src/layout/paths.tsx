@@ -7,14 +7,14 @@ import React, { useEffect, useRef } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles({
   root: {},
-  arrow: ({ color = 'grey' }) => ({
+  arrow: ({ color = 'grey' }: { color?: string }) => ({
     fill: 'none',
     strokeWidth: 1,
     stroke: colors[color][500],
   })
-}));
+});
 
 /**
  * Markers include elements such as arrow-heads.
@@ -24,8 +24,8 @@ const useStyles = makeStyles(() => ({
  * @constructor
  */
 export const Markers = ({ arrowSize = 16 }) => {
-  const classes = useStyles();
-  const markers = useRef();
+  const classes = useStyles({});
+  const markers = useRef(null);
 
   // Arrows markers.
   useEffect(() => {
@@ -37,6 +37,13 @@ export const Markers = ({ arrowSize = 16 }) => {
   );
 };
 
+interface ArrowOptions {
+  arrowSize?: number;
+  classes?: {
+    arrow: any
+  }
+}
+
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker
  * https://www.dashingd3js.com/svg-paths-and-d3js
@@ -46,7 +53,7 @@ export const Markers = ({ arrowSize = 16 }) => {
  * @param classes
  * @return {function(*): null|undefined}
  */
-export const createArrowMarkers = ({ arrowSize = 16, classes } = {}) => group => {
+export const createArrowMarkers = ({ arrowSize = 16, classes }: ArrowOptions = {}) => group => {
   const n = arrowSize;
   const m = n * 2/3;
   const points = [[-n, -m], [0, 0], [-n, m]];
@@ -71,7 +78,7 @@ export const createArrowMarkers = ({ arrowSize = 16, classes } = {}) => group =>
         .attr('viewBox', d => d.viewbox)
         .append('path')
           .attr('d', d => d.path)
-          .attr('class', classes?.arrow);
+          .attr('class', classes.arrow);
 };
 
 /**
@@ -102,5 +109,5 @@ export const createPoints = (source, target, sourceSize, targetSize) => {
  * Convert datum (x, y) into SVG line.
  */
 export const lineGenerator = d3.line()
-  .x(d => d.x || 0)
-  .y(d => d.y || 0);
+  .x(d => (d as any).x || 0)
+  .y(d => (d as any).y || 0);

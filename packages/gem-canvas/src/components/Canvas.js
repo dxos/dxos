@@ -121,8 +121,8 @@ const Keys = ({ children, onAction }) => {
 const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true }) => {
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
-  const view = useRef();
-  const guides = useRef();
+  const view = useRef(null);
+  const guides = useRef(null);
 
   objects = objects || [];
 
@@ -147,7 +147,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
 
   const [options, setOptions] = useState({ zoom: 1, showAxis: false, showGrid: true });
   const { zoom, showAxis, showGrid } = options;
-  const grid = useGrid({ width, height, zoom });
+  const grid = useGrid({ width, height }, zoom);
   const clipboard = useRef(null);
 
   // TODO(burdon): Wrap.

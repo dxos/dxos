@@ -69,12 +69,12 @@ const useStyles = makeStyles({
  */
 const Objects = ({ grid, snap, objects, model, selected, onSelect = noop }) => {
   const classes = useStyles();
-  const layer = useRef();
+  const layer = useRef(null);
 
   // NOTE: Update order calling raise on update.
   objects.sort(({ properties: { order: a } }, { properties: { order: b } }) => a < b ? -1 : a > b ? 1 : 0).reverse();
 
-  const drag = useRef();
+  const drag = useRef(null);
   useEffect(() => {
     drag.current = createObjectDrag(layer.current, grid, snap, model, onSelect);
   }, [grid, snap, model]);

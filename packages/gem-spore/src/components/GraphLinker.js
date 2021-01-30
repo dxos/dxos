@@ -25,7 +25,7 @@ export const GraphLinker = ({ grid, drag, linkProjector = new LinkProjector(), o
   assert(onUpdate);
 
   const classes = useGraphStyles();
-  const guides = useRef();
+  const guides = useRef(null);
 
   useEffect(() => {
     drag.on('drag', ({ source, position, linking }) => {

@@ -47,25 +47,24 @@ interface GridOptions {
  * NOTE: Specify either a grid object, or width and height.
  */
 const Grid = ({ grid, showGrid = true, showAxis = false }: GridOptions) => {
+  const { size, scaleX, scaleY, ticks } = grid;
+
   const classes = useStyles();
 
-  const xAxisRef = useRef<any>();
-  const yAxisRef = useRef<any>();
-  const xGridRef = useRef<any>();
-  const yGridRef = useRef<any>();
-
-  const { size, scaleX, scaleY, ticks } = grid;
-  assert(grid.size);
+  const xAxisRef = useRef(null);
+  const yAxisRef = useRef(null);
+  const xGridRef = useRef(null);
+  const yGridRef = useRef(null);
 
   useEffect(() => {
     if (showAxis) {
       d3.select(xAxisRef.current)
         .call(d3.axisBottom(scaleX)
-          .ticks(ticks));
+          .ticks(ticks) as any);
 
       d3.select(yAxisRef.current)
         .call(d3.axisLeft(scaleY)
-          .ticks(ticks));
+          .ticks(ticks) as any);
     }
 
     // NOTE: Hack to use axis ticks to draw lines.
@@ -75,14 +74,14 @@ const Grid = ({ grid, showGrid = true, showAxis = false }: GridOptions) => {
         .call(d3.axisBottom(scaleX)
           .ticks(ticks)
           .tickSize(size.height)
-          .tickFormat(null));
+          .tickFormat(null) as any);
 
       d3.select(yGridRef.current)
         .attr('transform', `translate(${-size.width / 2}, 0)`)
         .call(d3.axisRight(scaleY)
           .ticks(ticks)
           .tickSize(size.width)
-          .tickFormat(null));
+          .tickFormat(null) as any);
     }
   }, [grid, showGrid, showAxis]);
 

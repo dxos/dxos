@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import React, {
   MutableRefObject,
-  ReactChild,
+  ReactNode,
   forwardRef,
   useEffect,
   useRef
@@ -15,7 +15,7 @@ import { isNull } from '../util';
 import { ForwardedRef } from 'react';
 
 interface SVGOptions {
-  children: ReactChild;
+  children: ReactNode;
   width: number;
   height: number;
   center?: boolean;

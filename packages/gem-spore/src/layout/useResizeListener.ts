@@ -7,12 +7,8 @@ import { useEffect, useRef } from 'react';
 
 /**
  * Throttle update on resize.
- *
- * @param update
- * @param size
- * @param options
  */
-export const useResize = (update, size, options = {}) => {
+export const useResizeListener = (update, size, options: { delay?: number } = {}) => {
   const { delay = 250 } = options;
   const currentSize = useRef(size);
 

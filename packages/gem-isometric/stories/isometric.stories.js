@@ -121,7 +121,7 @@ export default {
 const Component = () => {
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
-  const canvas = useRef();
+  const canvas = useRef(null);
   const [grid] = useState(new Dataset());
   const [generator] = useState(new Dataset());
   const daRef = useRef(0);

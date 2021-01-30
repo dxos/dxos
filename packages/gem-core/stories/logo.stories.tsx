@@ -17,6 +17,7 @@ export default {
 
 import { makeStyles } from '@material-ui/core';
 import { PATH } from '../src/icons/Fold';
+import { Point } from '../src/util';
 
 // https://www.w3.org/TR/SVG/propidx.html
 const useStyles = makeStyles(() => ({
@@ -35,7 +36,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 // TODO(burdon): Create mesh.
-const mesh = [];
+const mesh: any[] = [];
 for (let x = -10; x < 10; x++) {
   for (let y = -10; y < 10; y++) {
     mesh.push([
@@ -118,9 +119,8 @@ const points = [
 export const withFold = () => {
   const classes = useStyles();
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const meshGroup = useRef();
-  const logoGroup = useRef();
+  const meshGroup = useRef(null);
+  const logoGroup = useRef(null);
 
   useEffect(() => {
     if (size.width === null || size.height === null) {
@@ -134,10 +134,10 @@ export const withFold = () => {
       .selectAll('path')
       .data(mesh)
       .join('path')
-      .attr('d', d => createPath(d.map(({ x, y }) => ({ x: x * scale, y: y * scale }))));
+      .attr('d', d => createPath(d.map(({ x, y }: Point) => ({ x: x * scale, y: y * scale }))));
 
     let i = 0;
-    const render = i => {
+    const render = (i: number) => {
       d3
         .select(logoGroup.current)
         .selectAll('path')
@@ -145,7 +145,7 @@ export const withFold = () => {
         .join('path')
         .transition()
         .duration(500)
-        .attr('d', d => createPath(d.map(({ x, y }) => ({ x: x * scale, y: y * scale }))));
+        .attr('d', d => createPath(d.map(({ x, y }: Point) => ({ x: x * scale, y: y * scale }))));
     };
 
     render(i++);
@@ -162,7 +162,7 @@ export const withFold = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width || 0} height={size.height || 0}>
         <g ref={meshGroup} className={classes.mesh} />
         <g ref={logoGroup} className={classes.group} />
       </SVG>
@@ -172,9 +172,8 @@ export const withFold = () => {
 
 export const withLogo = () => {
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const group1 = useRef();
-  const group2 = useRef();
+  const group1 = useRef(null);
+  const group2 = useRef(null);
 
   useEffect(() => {
     if (size.width === null || size.height === null) {
@@ -184,27 +183,27 @@ export const withLogo = () => {
     // TODO(burdon): Import size.
 
     d3.select(group1.current)
-    .attr('transform', 'translate(-128, -128)')
-    .append('path')
-    .attr('d', PATH)
-    .attr('fill', '#EEEEEE');
+      .attr('transform', 'translate(-128, -128)')
+      .append('path')
+      .attr('d', PATH)
+      .attr('fill', '#EEEEEE');
 
     d3.select(group2.current)
-    .attr('transform-origin', '128 128')
-    .attr('transform', 'translate(-128, -128)')
-    .append('path')
-    .attr('d', PATH)
-    .attr('fill', '#333333');
+      .attr('transform-origin', '128 128')
+      .attr('transform', 'translate(-128, -128)')
+      .append('path')
+      .attr('d', PATH)
+      .attr('fill', '#333333');
 
     const i = d3.interval(() => {
       const deg = Math.random() * 360;
       d3.select(group2.current)
-      .transition()
-      .duration(500)
-      .attr('transform', `translate(-128, -128) rotate(${deg})`)
-      .transition()
-      .duration(500)
-      .attr('transform', 'translate(-128, -128) rotate(0)');
+        .transition()
+        .duration(500)
+        .attr('transform', `translate(-128, -128) rotate(${deg})`)
+        .transition()
+        .duration(500)
+        .attr('transform', 'translate(-128, -128) rotate(0)');
     }, 2000);
 
     return () => i.stop();
@@ -213,7 +212,7 @@ export const withLogo = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width || 0} height={size.height || 0}>
         <g ref={group1} />
         <g ref={group2} />
       </SVG>

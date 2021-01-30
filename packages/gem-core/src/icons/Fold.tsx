@@ -11,7 +11,7 @@ export const PATH = 'M252.498,3.661L250.207,0L127.996,76.278L5.793,0L3.493,3.661
  * Fold Logo
  * NOTE: In Affinity Designer resize (transform) then export with additional properties (flatten transforms).
  */
-const Fold = (props) => (
+const Fold = (props: any) => (
   <SvgIcon {...props} viewBox="0 0 256 256">
     <path d={PATH} />
   </SvgIcon>

@@ -2,7 +2,7 @@
 // Copyright 2018 DXOS.org
 //
 
-import React, { ReactChildren } from 'react';
+import React, { ReactNode } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -20,7 +20,7 @@ const useStyles = makeStyles(() => ({
 /**
  * Fullscreen container.
  */
-const FullScreen = ({ children }: { children: ReactChildren }) => {
+const FullScreen = ({ children }: { children: ReactNode }) => {
   const classes = useStyles();
 
   return (

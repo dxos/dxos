@@ -260,8 +260,8 @@ function generateBoids({ width, height }, config) {
 const map = array => array.reduce((map, value) => { map[value] = value; return map; }, {});
 
 export const withFlock = () => {
-  const canvas = useRef();
-  const offscreenCanvas = useRef();
+  const canvas = useRef(null);
+  const offscreenCanvas = useRef(null);
   const [resizeListener, { width, height }] = useResizeAware();
   const [obstacles, setObstacles] = useState([]);
   const [boids, setBoids] = useState([]);

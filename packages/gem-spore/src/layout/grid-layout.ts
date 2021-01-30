@@ -8,7 +8,6 @@ import { Layout } from './layout';
  * Layout nodes on the grid.
  */
 export class GridLayout extends Layout {
-
   _onUpdate (grid, data) {
     const { nodes = [], links = [] } = data;
     const { scaleX, scaleY } = grid;

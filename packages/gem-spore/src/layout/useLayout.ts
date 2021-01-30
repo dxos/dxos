@@ -5,7 +5,7 @@
 import assert from 'assert';
 import { useEffect } from 'react';
 
-import { useResize } from './useResize';
+import { useResizeListener } from './useResizeListener';
 
 /**
  * Creates an active layout.
@@ -44,7 +44,7 @@ export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
   // Update on resize (throttled).
   //
   const { size } = grid;
-  useResize(() => {
+  useResizeListener(() => {
     layout.update(grid, data);
   }, size);
 

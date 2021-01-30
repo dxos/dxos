@@ -2,9 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import get from 'lodash.get';
 import update from 'immutability-helper';
+import get from 'lodash/get';
 import { useRef, useState } from 'react';
+
+import { Graph } from './types';
+
+type ObjectMutator = [Graph, Function, Function, Function];
 
 /**
  * Returns a state object and setter, with addition live getter and updater (for the current up-to-date reference).
@@ -15,26 +19,27 @@ import { useRef, useState } from 'react';
  * @param {Object} [initalValue]
  * @return {{ Object, function, function, function }}
  */
-export const useObjectMutator = (initalValue = {}) => {
-  const [data, setData] = useState(initalValue);
-  const ref = useRef(data);
+export const useObjectMutator = (initalValue: Graph = { nodes: [], links: [] }) => {
+  const [data, setData] = useState<Graph>(initalValue);
+  const ref = useRef<Graph>(data);
+
   return [
 
     // Get data state (snapshot).
     data,
 
     // Update data state.
-    data => {
+    (data: any) => {
       ref.current = data;
       setData(ref.current);
     },
 
     // Getter (using the current reference).
-    key => !key ? ref.current : get(ref.current, key),
+    (key: string) => !key ? ref.current : get(ref.current, key),
 
     // Updater.
     // https://github.com/kolodny/immutability-helper
     // NOTE: Use $apply to update variable (e.g., push to potentially null object).
-    data => setData(ref.current = update(ref.current, data))
-  ];
+    (data: any) => setData(ref.current = update(ref.current, data))
+  ] as ObjectMutator;
 };

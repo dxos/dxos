@@ -2,28 +2,62 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as d3 from 'd3';
 import assert from 'assert';
+import * as d3 from 'd3';
+import { ScaleLinear } from 'd3-scale';
 import { useEffect, useState } from 'react';
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface Size {
+  width: number | null;
+  height: number | null;
+}
+
+export interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface GridProperties {
+  empty: () => boolean;
+  size: Size;
+  center: Point;
+  snap: (point:Point) => Point;
+  bounds: (p1: Point, p2: Point) => Bounds;
+  invert: (point: Point) => Point;
+  round: (point: Point) => Point;
+  project: (point: Point) => Point;
+  scaleX: any;
+  scaleY: any;
+  ticks: any;
+  zoom: any;
+  unit: any;
+}
 
 /**
  * @param width
  * @param height
  * @returns {boolean}
  */
-export const isNull = ({ width, height }) => (width === null || height === null);
+export const isNull = ({ width, height }: Size) => (width === null || height === null);
 
 /**
  * @param width
  * @param height
  * @returns {{x: number, y: number}}
  */
-export const getCenter = ({ width, height }) => ({ x: width / 2, y: height / 2});
+export const getCenter = ({ width, height }: Size) => ({ x: (width || 0) / 2, y: (height || 0) / 2 });
 
 /**
  * @returns {{ size, center, scaleX, scaleY, ticks, zoom }}
  */
-export const createGrid = ({ width, height, zoom = 1 }) => {
+export const createGrid = ({ width = 0, height = 0 }: Size, zoom = 1): GridProperties => {
   assert(zoom);
 
   // https://observablehq.com/@d3/d3-scalelinear
@@ -35,7 +69,7 @@ export const createGrid = ({ width, height, zoom = 1 }) => {
   const extent = 100 / zoom;
 
   // Ensure sqaure grid.
-  const max = Math.max(width, height);
+  const max = Math.max(width || 0, height || 0);
 
   // Depends on screen size.
   // TODO(burdon): Powers of two.
@@ -52,16 +86,16 @@ export const createGrid = ({ width, height, zoom = 1 }) => {
 
   // Calculate the size between ticks.
   // TODO(burdon): Better way to get this?
-  const interval = (scale, ticks) => {
+  const interval = (scale: ScaleLinear<any, any, any>, ticks: number) => {
     const values = scale.ticks(ticks);
     return Math.abs(values[0] - values[1]);
   };
 
   const unit = interval(scaleX, ticks);
 
-  const round = (value, unit) => Math.round(value / unit) * unit;
+  const round = (value: number, unit: number) => Math.round(value / unit) * unit;
 
-  const snapper = (value, scale) => scale(round(scale.invert(value), unit));
+  const snapper = (value: number, scale: ScaleLinear<any, any, any>) => scale(round(scale.invert(value), unit));
 
   return {
     //
@@ -104,12 +138,12 @@ export const createGrid = ({ width, height, zoom = 1 }) => {
   };
 };
 
-export const useGrid = ({ width, height, zoom = 1 }) => {
-  const [grid, setGrid] = useState(() => createGrid({ width, height, zoom }));
+export const useGrid = ({ width, height }: Size, zoom = 1) => {
+  const [grid, setGrid] = useState(() => createGrid({ width, height }, zoom));
 
   useEffect(() => {
-    setGrid(createGrid({ width, height, zoom }));
-  }, [zoom, width, height]);
+    setGrid(createGrid({ width, height }, zoom));
+  }, [width, height, zoom]);
 
   return grid;
 };

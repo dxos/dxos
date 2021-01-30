@@ -86,14 +86,14 @@ const Graph = (props) => {
 
   // TODO(burdon): Selection is stale.
   // TODO(burdon): Highlight is stale while moving.
-  const s = useRef();
+  const s = useRef(null);
   useEffect(() => {
     s.current = selected;
   }, [selected]);
 
-  const guideGroup = useRef();
-  const linkGroup = useRef();
-  const nodeGroup = useRef();
+  const guideGroup = useRef(null);
+  const linkGroup = useRef(null);
+  const nodeGroup = useRef(null);
 
   // Drag handler.
   useEffect(() => {
@@ -105,6 +105,7 @@ const Graph = (props) => {
 
   // Update layout.
   // NOTE: Called every time force update changes data (positions, etc.)
+  // TODO(burdon): Different pattern?
   useLayout(layout, grid, data, () => {
     guideProjector.update(grid, layout.data, { group: guideGroup.current });
     nodeProjector.update(grid, layout.data, { group: nodeGroup.current, selected: s.current });

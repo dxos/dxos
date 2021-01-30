@@ -18,12 +18,11 @@ export default {
 export const withGrid = () => {
   const [resizeListener, size] = useResizeAware();
   const grid = useGrid(size);
-  const { width, height } = size;
 
   return (
     <FullScreen>
       {resizeListener}
-      <SVG debug={true} width={width || 0} height={height || 0}>
+      <SVG debug={true} width={size.width || 0} height={size.height || 0}>
         <Grid grid={grid} showAxis={true} showGrid={true} />
       </SVG>
     </FullScreen>

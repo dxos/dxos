@@ -9,25 +9,24 @@ import { value } from '@dxos/gem-core';
 import { Layout } from './layout';
 
 /**
- * Layout nodes in random positions.
+ * Layout nodes around circle.
  */
-export class RandomLayout extends Layout {
-
+export class RadialLayout extends Layout {
   _onUpdate (grid, data) {
     const { nodes = [], links = [] } = data;
+
     const center = value(this._options.center)(grid);
     const radius = value(this._options.radius)(grid);
-    const nodeRadius = get(this._options, 'node.radius', grid.scaleX(5));
-    const { snap } = this._options;
 
-    const snapper = p => snap ? grid.snap(p) : p;
+    const nodeRadius =
+      value(get(this._options, 'node.radius') || Math.min(Math.PI * radius * 2 / nodes.length / 3, 32))();
+
+    const theta = Math.PI * 2 / nodes.length;
 
     this._setData({
-      nodes: nodes.map(node => Object.assign({}, node, {
-        ...snapper({
-          x: center.x + (Math.random() - .5) * radius,
-          y: center.y + (Math.random() - .5) * radius
-        }),
+      nodes: nodes.map((node, i) => Object.assign({}, node, {
+        x: center.x + Math.sin(theta * i) * radius,
+        y: center.y - Math.cos(theta * i) * radius,
         layout: {
           node: {
             radius: nodeRadius

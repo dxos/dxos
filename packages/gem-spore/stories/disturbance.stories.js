@@ -39,19 +39,18 @@ const poly = points => points.map(p => `${p.x},${p.y}`).join(' ');
 
 export const withAnomoly = () => {
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
   const points1 = useRef([...new Array(180)].map(() => 0));
   const points2 = useRef([...new Array(180)].map(() => 0));
   const points3 = useRef([...new Array(36)].map(() => 0));
 
-  const polygon1 = useRef();
-  const polygon2 = useRef();
-  const polygon3 = useRef();
+  const polygon1 = useRef(null);
+  const polygon2 = useRef(null);
+  const polygon3 = useRef(null);
 
-  const path = useRef();
-  const text = useRef();
+  const path = useRef(null);
+  const text = useRef(null);
 
   const fontSize = 24;
 
@@ -107,7 +106,7 @@ export const withAnomoly = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} showGrid={true} />
         <g>
           <polyline ref={polygon1} fill="#EEE" stroke="#FFF" opacity={.5} />

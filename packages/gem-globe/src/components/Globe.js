@@ -51,7 +51,7 @@ const defaultStyles = {
  */
 // eslint-disable-next-line react/display-name
 const Globe = forwardRef((props, canvas) => {
-  canvas = canvas || useRef();
+  canvas = canvas || useRef(null);
 
   const {
     projection = d3.geoOrthographic,
@@ -72,7 +72,7 @@ const Globe = forwardRef((props, canvas) => {
   // Features
   //
 
-  const layers = useRef();
+  const layers = useRef(null);
   useEffect(() => {
     layers.current = createLayers(topology, features, styles);
   }, [topology, features, styles ]);
@@ -81,7 +81,7 @@ const Globe = forwardRef((props, canvas) => {
   // Init.
   //
 
-  const geoPath = useRef();
+  const geoPath = useRef(null);
 
   // NOTE: The d3 projection object is a function, which cannot be used directly as a state object.
   const projectionRef = useRef(projection());

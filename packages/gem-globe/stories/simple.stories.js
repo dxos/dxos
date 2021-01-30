@@ -76,7 +76,7 @@ const useSpinner = (callback, delta = drift) => {
 };
 
 export const withSimpleGlobe = () => {
-  const canvas = useRef();
+  const canvas = useRef(null);
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
 
@@ -97,7 +97,7 @@ export const withSimpleGlobe = () => {
 };
 
 export const withFlatEarth = () => {
-  const canvas = useRef();
+  const canvas = useRef(null);
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
   const [rotation, setRotation] = useState(startingPoint);

@@ -10,10 +10,9 @@ import { Layout } from './layout';
  * Tree.
  */
 export class TreeLayout extends Layout {
-
   _onUpdate (grid, data) {
     const { center, size } = grid;
-    const r = size.height * .45;
+    const r = size.height * 0.45;
 
     // https://github.com/d3/d3-hierarchy#tree
     const tree = d3.tree().size([360, r]);

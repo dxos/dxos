@@ -7,6 +7,7 @@ import debug from 'debug';
 import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
+
 import { boolean, button, number, withKnobs } from '@storybook/addon-knobs';
 import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
@@ -70,12 +71,11 @@ const useDataButton = (generate, label='Refresh') => {
 export const withGrid = () => {
   const [resizeListener, size] = useResizeAware();
   const grid = useGrid(size);
-  const { width, height } = size;
 
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} showAxis={true} showGrid={true} />
       </SVG>
     </FullScreen>
@@ -88,12 +88,11 @@ export const withGrid = () => {
 export const withBoxProjector = () => {
   const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height, zoom: 1 });
+  const grid = useGrid(size, 1);
 
   const [data] = useDataButton(() => createGraph(faker.random.number(32), 8));
 
-  const nodes = useRef();
+  const nodes = useRef(null);
   const layout = new GridLayout();
   const projector = new BoxProjector();
 
@@ -104,7 +103,7 @@ export const withBoxProjector = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} showAxis={true} />
         <g ref={nodes} className={classes.nodes} />
       </SVG>
@@ -117,8 +116,7 @@ export const withBoxProjector = () => {
  */
 export const withGridLayout = () => {
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height, zoom: 1 });
+  const grid = useGrid(size);
 
   const [data] = useDataButton(() => createGraph(faker.random.number(32), 8));
 
@@ -135,7 +133,7 @@ export const withGridLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} showAxis={true} />
         <Graph
           grid={grid}
@@ -154,8 +152,7 @@ export const withGridLayout = () => {
  */
 export const withForceLayout = () => {
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
   const [layout] = useState(() => new ForceLayout());
   const [selected, setSelected] = useState();
@@ -175,7 +172,7 @@ export const withForceLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} />
         <Graph
           grid={grid}
@@ -194,8 +191,7 @@ export const withForceLayout = () => {
  */
 export const withClonedData = () => {
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
   const generate = () => {
     seed(123); // Same seed:
@@ -217,7 +213,7 @@ export const withClonedData = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Graph
           grid={grid}
           data={data}
@@ -233,8 +229,7 @@ export const withClonedData = () => {
  */
 export const withArrows = () => {
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
   const [data] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 4 })));
   const [layout] = useState(() => new ForceLayout());
@@ -246,7 +241,7 @@ export const withArrows = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} />
         <Markers arrowSize={16} />
         <Graph
@@ -286,8 +281,7 @@ const useCustomStyles = makeStyles(() => ({
 export const withCustomNodes = () => {
   const classes = useCustomStyles();
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
   const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 4 })));
   const [layout] = useState(() => new ForceLayout({
@@ -321,7 +315,7 @@ export const withCustomNodes = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} />
 
         <GraphLinker
@@ -350,8 +344,7 @@ export const withCustomNodes = () => {
  */
 export const withDrag = () => {
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
   const [data,,, updateData] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 3 })));
   const [layout] = useState(() => new ForceLayout({ force: { links: { distance: 80 } } }));
@@ -364,7 +357,7 @@ export const withDrag = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} />
         <Markers />
 
@@ -394,8 +387,7 @@ export const withDrag = () => {
 export const withMultipleForceLayouts = () => {
   const n = number('graphs', 3, { min: 1, max: 4 });
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
   const [agents, setAgents] = useState([]);
   useEffect(() => {
@@ -423,7 +415,7 @@ export const withMultipleForceLayouts = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         {agents.map(({ data, layout, drag }, i) => (
           <Graph
             key={i}
@@ -444,14 +436,13 @@ export const withMultipleForceLayouts = () => {
  */
 export const withDoubleForceLayouts = () => {
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
 
   const [data1,, getData1, updateData1] =
     useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 3 })), 'Left');
   const [data2,, getData2, updateData2] =
     useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 4 })), 'Right');
 
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
   const [layout1] = useState(() => new ForceLayout({
     center: grid => ({ x: grid.center.x - grid.scaleX(50), y: grid.center.y }),
   }));
@@ -518,7 +509,7 @@ export const withDoubleForceLayouts = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} showGrid={false} />
 
         <Graph
@@ -544,8 +535,7 @@ export const withDoubleForceLayouts = () => {
  */
 export const withDynamicLayout = () => {
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
   const [data] = useState(convertTreeToGraph(createTree({ minDepth: 1, maxDepth: 2 })));
   const [{ layout, drag }, setLayout] = useState({
@@ -582,7 +572,7 @@ export const withDynamicLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} />
 
         <Graph
@@ -602,9 +592,9 @@ export const withDynamicLayout = () => {
 export const withBullets = () => {
   const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
-  const guides = useRef();
+  const grid = useGrid(size);
+  const guides = useRef(null);
+
 
   const [data] = useDataButton(() => convertTreeToGraph(createTree({ minDepth: 2, maxDepth: 4 })));
   const [layout] = useState(() => new ForceLayout());
@@ -625,7 +615,7 @@ export const withBullets = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} />
         <Markers />
 
@@ -649,18 +639,17 @@ export const withBullets = () => {
 export const withTreeLayout = () => {
   const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
 
   const [data] = useDataButton(() => createTree({ minDepth: 2, maxDepth: 4, maxChildren: 4 }));
 
-  const links = useRef();
-  const nodes = useRef();
-  const guides = useRef();
+  const links = useRef(null);
+  const nodes = useRef(null);
+  const guides = useRef(null);
 
   const layout = new TreeLayout();
   const projector = new TreeProjector();
   const guideProjector = new GuideProjector();
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
   useLayout(layout, grid, data, () => {
     guideProjector.update(grid, layout.data, { group: guides.current });
     projector.update(grid, layout.data, {
@@ -673,7 +662,7 @@ export const withTreeLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <g className={classes.root}>
           <g ref={guides} className={classes.guides} />
           <g ref={links} className={classes.links} />
@@ -697,9 +686,9 @@ export const withMultipleLayouts = () => {
   const classes2 = useGraphStyles({ color: 'blue' });
   const classes3 = useGraphStyles({ color: 'green' });
 
-  const group1 = useRef();
-  const group2 = useRef();
-  const group3 = useRef();
+  const group1 = useRef(null);
+  const group2 = useRef(null);
+  const group3 = useRef(null);
 
   const [data1] = useState({ nodes: createItems(6) });
   const [data2] = useState({ nodes: createItems(12) });
@@ -744,12 +733,11 @@ export const withRandomLayout = () => {
   const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
   const [data, setData, getData, updateData] = useObjectMutator(createGraph(16));
-  const nodes = useRef();
+  const nodes = useRef(null);
   const snap = boolean('Snap', true);
 
   // TODO(burdon): Creates new grid on every data change.
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
   const layout = new RandomLayout({
     radius: grid => Math.min(grid.size.width, grid.size.height),
@@ -786,7 +774,7 @@ export const withRandomLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} />
         <g ref={nodes} className={classes.nodes} />
       </SVG>
@@ -801,10 +789,9 @@ export const withRadialLayout = () => {
   const classes = useGraphStyles();
   const [resizeListener, size] = useResizeAware();
   const [data, setData, getData, updateData] = useObjectMutator({ nodes: [] });
-  const nodes = useRef();
+  const nodes = useRef(null);
 
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
   const layout = new RadialLayout();
   const projector = new NodeProjector({ transition: d3.transition, node: { radius: 8 } });
@@ -838,7 +825,7 @@ export const withRadialLayout = () => {
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} />
         <g ref={nodes} className={classes.nodes} />
       </SVG>
@@ -851,7 +838,7 @@ export const withRadialLayout = () => {
  */
 export const withChangingLayout = () => {
   const [resizeListener, size] = useResizeAware();
-  const nodes = useRef();
+  const nodes = useRef(null);
 
   const nodeProjector = new NodeProjector({ transition: d3.transition, node: { radius: 8 } });
 
@@ -888,39 +875,41 @@ export const withChangingLayout = () => {
 
   const { data, start, stop } = useGraphGenerator();
   useEffect(start, []);
-  useEffect(() => {
-    if (data.nodes.length > 24) {
-      stop();
-    }
-  }, [data]);
+  // useEffect(() => {
+  //   if (data.nodes.length > 24) {
+  //     stop();
+  //   }
+  // }, [data]);
 
   //
   // Update layout.
   //
 
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
+  const grid = useGrid(size);
 
-  useLayout(layout, grid, data, () => {
-    projector.update(grid, layout.data, { group: nodes.current });
-  });
+  // useLayout(layout, grid, data, () => {
+  //   projector.update(grid, layout.data, { group: nodes.current });
+  // });
 
-  useEffect(() => {
-    const interval = d3.interval(() => {
-      if (layoutIndex === layouts.length - 1) {
-        setLayout(0);
-      } else {
-        setLayout(layoutIndex + 1);
-      }
-    }, 3000);
-
-    return () => interval.stop();
-  }, [layoutIndex]);
+  // useEffect(() => {
+  //   const interval = d3.interval(() => {
+  //     if (layoutIndex === layouts.length - 1) {
+  //       setLayout(0);
+  //     } else {
+  //       setLayout(layoutIndex + 1);
+  //     }
+  //   }, 3000);
+  //
+  //   return () => {
+  //     console.log('stop');
+  //     interval.stop();
+  //   }
+  // }, [layoutIndex]);
 
   return (
     <FullScreen>
       {resizeListener}
-      <SVG width={width} height={height}>
+      <SVG width={size.width} height={size.height}>
         <Grid grid={grid} />
         <g ref={nodes} className={classes.nodes} />
       </SVG>

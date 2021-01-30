@@ -11,4 +11,4 @@ export * from './tree-layout';
 
 export * from './paths';
 export * from './useLayout';
-export * from './useResize';
+export * from './useResizeListener';
