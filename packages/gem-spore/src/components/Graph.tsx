@@ -33,14 +33,14 @@ export const useGraphStyles = makeStyles(() => ({
       fill: colors[contrastColor][400]
     }
   },
-  links: ({ color = defaultColor }: { color: any }) => ({
+  links: ({ color = defaultColor }: { color?: any } = {}) => ({
     '& path.link': {
       fill: 'none',
       strokeWidth: 1,
       stroke: colors[color][500]
     }
   }),
-  nodes: ({ color = defaultColor }: { color: any }) => ({
+  nodes: ({ color = defaultColor }: { color?: any } = {}) => ({
     '& g.node rect': {
       strokeWidth: 1,
       stroke: colors[color][800],
@@ -82,7 +82,7 @@ const Graph = (props) => {
     classes
   } = props;
   assert(layout);
-  const clazzes = merge(useGraphStyles(), classes);
+  const clazzes = merge(useGraphStyles({}), classes);
 
   // TODO(burdon): Selection is stale.
   // TODO(burdon): Highlight is stale while moving.

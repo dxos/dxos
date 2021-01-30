@@ -24,7 +24,7 @@ export const GraphLinker = ({ grid, drag, linkProjector = new LinkProjector(), o
   assert(drag);
   assert(onUpdate);
 
-  const classes = useGraphStyles();
+  const classes = useGraphStyles({});
   const guides = useRef(null);
 
   useEffect(() => {

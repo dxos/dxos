@@ -54,6 +54,9 @@ export abstract class Layout extends EventEmitter {
     }
   }
 
+  /**
+   * Clear data structures.
+   */
   _onReset () {}
 
   /**

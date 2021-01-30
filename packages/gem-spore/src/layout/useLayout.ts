@@ -4,7 +4,6 @@
 
 import assert from 'assert';
 import { useEffect } from 'react';
-import { throttle } from 'throttle-debounce';
 
 import { GridProperties } from '@dxos/gem-core';
 
@@ -30,10 +29,10 @@ export const useLayout = (layout: Layout, grid: GridProperties, data = {}, rende
   // Update events.
   //
   useEffect(() => {
-    // TODO(burdon): Throttle delay?
-    const handleUpdate = throttle(5, true, () => {
+    // TODO(burdon): Throttle?
+    const handleUpdate = () => {
       render({ grid, layout, data });
-    });
+    };
 
     layout.on('update', handleUpdate);
     layout.reset();
