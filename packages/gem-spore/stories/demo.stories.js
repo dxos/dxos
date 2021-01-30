@@ -875,11 +875,11 @@ export const withChangingLayout = () => {
 
   const { data, start, stop } = useGraphGenerator();
   useEffect(start, []);
-  // useEffect(() => {
-  //   if (data.nodes.length > 24) {
-  //     stop();
-  //   }
-  // }, [data]);
+  useEffect(() => {
+    if (data.nodes.length > 24) {
+      stop();
+    }
+  }, [data]);
 
   //
   // Update layout.
@@ -887,24 +887,23 @@ export const withChangingLayout = () => {
 
   const grid = useGrid(size);
 
-  // useLayout(layout, grid, data, () => {
-  //   projector.update(grid, layout.data, { group: nodes.current });
-  // });
+  useLayout(layout, grid, data, () => {
+    projector.update(grid, layout.data, { group: nodes.current });
+  });
 
-  // useEffect(() => {
-  //   const interval = d3.interval(() => {
-  //     if (layoutIndex === layouts.length - 1) {
-  //       setLayout(0);
-  //     } else {
-  //       setLayout(layoutIndex + 1);
-  //     }
-  //   }, 3000);
-  //
-  //   return () => {
-  //     console.log('stop');
-  //     interval.stop();
-  //   }
-  // }, [layoutIndex]);
+  useEffect(() => {
+    const interval = d3.interval(() => {
+      if (layoutIndex === layouts.length - 1) {
+        setLayout(0);
+      } else {
+        setLayout(layoutIndex + 1);
+      }
+    }, 3000);
+
+    return () => {
+      interval.stop();
+    }
+  }, [layoutIndex]);
 
   return (
     <FullScreen>

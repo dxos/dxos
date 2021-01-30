@@ -33,14 +33,14 @@ export const useGraphStyles = makeStyles(() => ({
       fill: colors[contrastColor][400]
     }
   },
-  links: ({ color = defaultColor }) => ({
+  links: ({ color = defaultColor }: { color: any }) => ({
     '& path.link': {
       fill: 'none',
       strokeWidth: 1,
       stroke: colors[color][500]
     }
   }),
-  nodes: ({ color = defaultColor }) => ({
+  nodes: ({ color = defaultColor }: { color: any }) => ({
     '& g.node rect': {
       strokeWidth: 1,
       stroke: colors[color][800],
@@ -110,7 +110,7 @@ const Graph = (props) => {
     guideProjector.update(grid, layout.data, { group: guideGroup.current });
     nodeProjector.update(grid, layout.data, { group: nodeGroup.current, selected: s.current });
     linkProjector.update(grid, layout.data, { group: linkGroup.current });
-  }, [selected]);
+  }, [selected]); // TODO(burdon): Test selection updates layout.
 
   return (
     <g className={clazzes.root}>

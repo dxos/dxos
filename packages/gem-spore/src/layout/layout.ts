@@ -6,12 +6,17 @@ import assert from 'assert';
 import EventEmitter from 'events';
 import defaultsDeep from 'lodash.defaultsdeep';
 
+import { Graph, GridProperties } from '@dxos/gem-core';
+
 /**
  * Base class for layouts.
  */
-export class Layout extends EventEmitter {
+export abstract class Layout extends EventEmitter {
+  // TODO(burdon): Define structure.
   _data = {
-    guides: []
+    guides: [],
+    nodes: [],
+    links: []
   };
 
   _options: any;
@@ -53,13 +58,15 @@ export class Layout extends EventEmitter {
 
   /**
    * Compute the layout.
-   * @param grid
-   * @param data
-   * @private
    */
-  _onUpdate (grid, data) {}
+  // TODO(burdon): Define common data structure for all layouts?
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _onUpdate (grid: GridProperties, data: Graph) {}
 
-  _setData (data) {
+  /**
+   * Update data.
+   */
+  _setData (data: Graph) {
     const find = id => {
       assert(typeof id === 'string');
       const node = data.nodes.find(n => n.id === id);
@@ -67,7 +74,7 @@ export class Layout extends EventEmitter {
       return node;
     };
 
-    Object.assign(this.data, {
+    Object.assign(this._data, {
       nodes: data.nodes,
       links: data.links.map(({ id, source, target }) => ({
         id,

@@ -41,10 +41,7 @@ debug.enable('dxos:spore:*');
 const useDataButton = (generate, label='Refresh') => {
   const [data, setData, getData, updateData] = useObjectMutator({});
   useEffect(() => {
-    // TODO(burdon): Race condition bug (if <500ms).
-    // setTimeout(() => {
-      setData(generate());
-    // }, 200);
+    setData(generate());
   }, []);
 
   button(label, () => setData(generate()));
@@ -52,9 +49,9 @@ const useDataButton = (generate, label='Refresh') => {
 };
 
 /**
- * Drag.
+ * Graph.
  */
-export const withDrag = () => {
+export const withGraph = () => {
   const [resizeListener, size] = useResizeAware();
   const grid = useGrid(size);
 

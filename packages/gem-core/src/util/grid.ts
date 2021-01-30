@@ -24,6 +24,7 @@ export interface Bounds {
   height: number;
 }
 
+// TODO(burdon): Change to class.
 export interface GridProperties {
   empty: () => boolean;
   size: Size;

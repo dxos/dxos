@@ -4,7 +4,11 @@
 
 import assert from 'assert';
 import { useEffect } from 'react';
+import { throttle } from 'throttle-debounce';
 
+import { GridProperties } from '@dxos/gem-core';
+
+import { Layout } from './layout';
 import { useResizeListener } from './useResizeListener';
 
 /**
@@ -13,29 +17,30 @@ import { useResizeListener } from './useResizeListener';
  * @param {Object} layout
  * @param {Object} grid
  * @param {Object} data
- * @param {function} callback
+ * @param {function} render
  * @param [deps] - Additional dependencies to trigger update.
  */
-export const useLayout = (layout, grid, data = {}, callback, deps = []) => {
+export const useLayout = (layout: Layout, grid: GridProperties, data = {}, render: Function, deps = []) => {
   assert(layout);
   assert(grid);
   assert(data);
-  assert(callback);
+  assert(render);
 
   //
   // Update events.
   //
   useEffect(() => {
-    const onUpdate = () => {
-      callback({ grid, layout, data });
-    };
+    // TODO(burdon): Throttle delay?
+    const handleUpdate = throttle(5, true, () => {
+      render({ grid, layout, data });
+    });
 
-    layout.on('update', onUpdate);
+    layout.on('update', handleUpdate);
     layout.reset();
     layout.update(grid, data);
 
     return () => {
-      layout.off('update', onUpdate);
+      layout.off('update', handleUpdate);
       layout.reset();
     };
   }, [layout]);

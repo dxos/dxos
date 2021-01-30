@@ -4,7 +4,7 @@
 
 import * as d3 from 'd3';
 
-import { value } from '@dxos/gem-core';
+import { GridProperties, value } from '@dxos/gem-core';
 
 import { Layout } from './layout';
 
@@ -14,7 +14,6 @@ import { Layout } from './layout';
  * https://github.com/d3/d3-force
  */
 export class ForceLayout extends Layout {
-
   static defaults = {
     // https://github.com/d3/d3-force#simulation_alpha
     alphaDecay: 0.03,
@@ -22,7 +21,7 @@ export class ForceLayout extends Layout {
     // https://github.com/d3/d3-force#forces
     force: {
       center: {
-        strength: .2
+        strength: 0.2
       },
       radial: {
         radius: 200,
@@ -35,13 +34,7 @@ export class ForceLayout extends Layout {
         strength: 0.1
       },
       links: {
-        distance: 30,
-
-        // https://github.com/d3/d3-force#link_strength
-        strength: (link /*, i, links*/) => {
-          const count = () => 1;
-          return 1 / Math.min(count(link.source), count(link.target));
-        }
+        distance: 30
       }
     }
   }
@@ -87,7 +80,7 @@ export class ForceLayout extends Layout {
     // Set forces.
     // https://github.com/d3/d3-force#simulation_force
     const forces = this._createForces(grid, this.data);
-    Object.values(forces).forEach((value, key) => this._simulation.force(key, value));
+    Object.entries(forces).forEach(([key, value]) => this._simulation.force(key, value));
 
     // Restart the simulation.
     // https://github.com/d3/d3-force#simulation_restart
@@ -120,7 +113,7 @@ export class ForceLayout extends Layout {
     // Merge nodes.
     const current = this._simulation.nodes();
     const mergedNodes = nodes.map(node => {
-      const existing = current.find(n => n.id === node.id);
+      const existing = current.find(n => (n as any).id === node.id);
       if (existing) {
         // Preserve current force properties.
         // https://github.com/d3/d3-force#simulation_nodes
@@ -149,7 +142,7 @@ export class ForceLayout extends Layout {
     });
   }
 
-  _createForces (grid, data) {
+  _createForces (grid: GridProperties, data) {
     const { force } = this._options;
     const center = value(this._options.center)(grid);
 
@@ -175,9 +168,11 @@ export class ForceLayout extends Layout {
     if (force.links) {
       const { links = [] } = data;
       forces.links = d3.forceLink(links)
-        .id(d => d.id)
-        .distance(force.links.distance)
-        .strength(force.links.strength);
+        .distance(force.links.distance);
+
+      if (force.links.strength) {
+        force.links.strenth(force.links.strength);
+      }
     }
 
     /**
