@@ -13,7 +13,6 @@
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.10",
     "@storybook/addon-knobs": "^6.1.14",
-    "@storybook/react": "^6.1.14",
-    "faker": "^4.1.0"
+    "@storybook/react": "^6.1.14"
   }
 }
