@@ -24,13 +24,16 @@ const useStyles = makeStyles({
 
 const Console = () => {
   const classes = useStyles();
-  const [output, setOutput] = useState('scanning richburdon.com');
+  const [output, setOutput] = useState('Initializing...');
 
+  // TODO(burdon): Pluggable.
   const handleComplete = () => {
-    const interval = setInterval(() => {
-      const text = faker.lorem.sentence();
+    const timeout = setTimeout(() => {
+      const text = faker.lorem.sentence(8);
       setOutput(text);
     }, 1000);
+
+    return () => clearTimeout(timeout);
   }
 
   // https://pixeledpie.com/simple-react-console/index.html
