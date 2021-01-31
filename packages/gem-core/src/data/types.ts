@@ -3,18 +3,18 @@
 //
 
 // TODO(burdon): Migrate from echo-demo.
-export interface Node {
+export interface NodeType {
   id: string;
   title: string;
 }
 
-export interface Link {
+export interface LinkType {
   id: string;
   source: string;
   target: string;
 }
 
-export interface Graph {
-  nodes: Node[];
-  links: Link[];
+export interface GraphType {
+  nodes: NodeType[];
+  links: LinkType[];
 }

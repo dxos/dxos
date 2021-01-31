@@ -49,7 +49,7 @@ const useStyles = makeStyles({
 });
 
 // TODO(burdon): Merge component with echo website (expand from center).
-export const withFeeds = () => {
+export const Primary = () => {
   const classes = useStyles();
   const [resizeListener, size] = useResizeAware();
   const [options] = useState({ size: 32, margin: 15 });
@@ -134,11 +134,11 @@ export const withFeeds = () => {
     // Blocks.
     d3.select(blockGroup.current)
       .selectAll('rect')
-      .data(sortedBlocks, d => d.message.id)
+      .data(sortedBlocks, d => (d as any).message.id)
       .join('rect')
         // TODO(burdon): Set initial position.
         .transition()
-        .attr('class', d => `feed-${line[d.feed]}`)
+        .attr('class', d => `feed-${line[(d as any).feed]}`)
         .attr('x', d => center.x + x(d))
         .attr('y', d => center.y + y(d))
         .attr('width', size)
@@ -151,11 +151,11 @@ export const withFeeds = () => {
     // Links.
     d3.select(linkGroup.current)
       .selectAll('path')
-      .data(sortedBlocks, d => d.message.id)
+      .data(sortedBlocks, d => (d as any).message.id)
       .join('path')
         .transition()
         .attr('d', d => {
-          const depends = map.get(d.message.depends);
+          const depends = map.get((d as any).message.depends);
           if (depends/* && layout !== 'default'*/) {
             // TODO(burdon): If default layout then depend on previous.
             return lineGenerator([

@@ -32,7 +32,7 @@ const useStyles = makeStyles(() => ({
 
 interface GridOptions {
   grid: any; // TODO(burdon): Type.
-  showGrid: boolean;
+  showGrid?: boolean;
   showAxis?: boolean;
   tickFormat?: string;
 }

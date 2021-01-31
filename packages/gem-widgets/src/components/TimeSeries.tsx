@@ -1,5 +1,5 @@
 //
-// Copyright 2018 DxOS
+// Copyright 2018 DXOS.org
 //
 
 import * as d3 from 'd3';
@@ -18,7 +18,7 @@ const useStyles = makeStyles(() => ({
 /**
  * Map time series to histogram.
  */
-const processData = (data, points, period) => {
+const processData = (data, points: number, period: number) => {
 
   // Quantize time.
   // TODO(burdon): Timezone?
@@ -29,11 +29,16 @@ const processData = (data, points, period) => {
 
   // Create histogram of time buckets.
   // TODO(burdon): To be renamed bins?
+  // @ts-ignore
   const bins = d3.histogram()
+    // @ts-ignore
     .domain(x.domain())
+    // @ts-ignore
     .thresholds(x.ticks(points))
+    // @ts-ignore
     .value((d, i, data) => data[i].ts)(data);
 
+  // @ts-ignore
   return bins.map(d => {
     return {
       id: d.x0.getTime(),
@@ -85,8 +90,8 @@ const TimeSeries = ({ data = [], domain = [0, 10], width, height, barWidth = 10,
           .join('rect')
             .attr('x', (d, i) => x(i + offsetTime + 2))
             .attr('width', () => barWidth - 2)
-            .attr('y', d => height - y(d.value))
-            .attr('height', d => y(d.value))
+            .attr('y', d => height - y((d as any).value))
+            .attr('height', d => y((d as any).value))
 
           // Scroll.
           .transition()

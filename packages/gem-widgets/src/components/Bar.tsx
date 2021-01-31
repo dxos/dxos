@@ -45,13 +45,13 @@ const Bar = ({ data, width, domain = [0, 100], delay = 0, barHeight = 16 }) => {
         .attr('x', ({ x }) => x)
         .attr('y', ({ y }) => y)
         .attr('height', ({ height }) => height)
-        .transition(t)
+        .transition(t as any)
         .attr('width', ({ width }) => width);
 
   }, [data, barHeight]);
 
   return (
-    <svg ref={group}/>
+    <svg ref={group} />
   );
 };
 

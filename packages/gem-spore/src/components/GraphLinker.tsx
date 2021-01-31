@@ -2,27 +2,26 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import React, { useEffect, useRef } from 'react';
 
-import { createItem, createLink } from '@dxos/gem-core';
+import { createItem, createLink, GridProperties } from '@dxos/gem-core';
 
 import { LinkProjector } from '../projector';
 import { useGraphStyles } from './Graph';
 
+interface GraphLinkerProperties {
+  grid: GridProperties;
+  drag: any; // TODO(burdon): Type.
+  linkProjector?: LinkProjector;
+  onSelect?: Function;
+  onUpdate?: Function;
+}
+
 /**
- * @param grid
- * @param drag
- * @param linkProjector
- * @param onSelect
- * @param onUpdate
- * @returns {JSX.Element}
- * @constructor
+ * Util to create links by dragging.
  */
-export const GraphLinker = ({ grid, drag, linkProjector = new LinkProjector(), onSelect, onUpdate }) => {
-  assert(grid);
-  assert(drag);
-  assert(onUpdate);
+export const GraphLinker = (props: GraphLinkerProperties) => {
+  const { grid, drag, linkProjector = new LinkProjector(), onSelect, onUpdate } = props;
 
   const classes = useGraphStyles({});
   const guides = useRef(null);

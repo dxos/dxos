@@ -1,5 +1,5 @@
 //
-// Copyright 2018 DxOS
+// Copyright 2018 DXOS.org
 //
 
 import React, { useState, useEffect } from 'react';
@@ -8,12 +8,23 @@ import useResizeAware from 'react-resize-aware';
 
 import { SVG } from '@dxos/gem-core';
 
-import { TimeSeries } from '../src';
+import TimeSeries from './TimeSeries';
+
+export default {
+  title: 'TimeSeries',
+  component: TimeSeries
+};
 
 /**
  * Test time-series data generator.
  */
 class Generator {
+  _min: number;
+  _delta: number;
+  _running: boolean;
+  _onUpdate: Function;
+  _data: any[];
+  _timeout: any;
 
   constructor(min = 1000, delta = 0) {
     this._min = min;
@@ -65,7 +76,7 @@ class Generator {
 }
 
 const useStyles = makeStyles(() => ({
-  root: ({ height }) => ({
+  root: ({ height }: { height: number }) => ({
     position: 'fixed',
     display: 'flex',
     left: 0,
@@ -77,7 +88,7 @@ const useStyles = makeStyles(() => ({
   })
 }));
 
-const TimeSeriesStory = () => {
+export const Primary = () => {
   const barHeight = 80;
   const classes = useStyles({ height: barHeight });
   const [resizeListener, { width, height }] = useResizeAware();
@@ -101,5 +112,3 @@ const TimeSeriesStory = () => {
     </div>
   );
 };
-
-export default TimeSeriesStory;

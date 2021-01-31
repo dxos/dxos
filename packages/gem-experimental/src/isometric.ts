@@ -6,6 +6,14 @@
  * https://observablehq.com/@mbostock/isometric-iii
  */
 export class Isometric {
+  // TODO(burdon): Types.
+  _context: any;
+  _moveTo: any;
+  _lineTo: any;
+  _closePath: any;
+  _matrix: any;
+  _matrixes: any[];
+  _projection: any;
 
   constructor(context) {
     this._context = context;

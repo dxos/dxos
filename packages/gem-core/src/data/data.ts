@@ -8,13 +8,13 @@ import debug from 'debug';
 import faker from 'faker';
 import { useEffect, useRef } from 'react';
 
-import { Graph, Node } from './types';
+import { GraphType, NodeType } from './types';
 import { useObjectMutator } from './useObjectMutator';
 
 const log = debug('spore:testing');
 
 export interface TreeNode {
-  node: Node;
+  node: NodeType;
   children?: TreeNode[];
 }
 
@@ -28,7 +28,7 @@ export const createItem = () => ({
 
 export const createItems = (n = 0) => [...new Array(n)].map(createItem);
 
-export const createLink = (source: Node, target: Node) => ({
+export const createLink = (source: NodeType, target: NodeType) => ({
   id: `${source.id}_${target.id}`,
   source: source.id,
   target: target.id
@@ -50,7 +50,7 @@ export const createTree = ({ minDepth = 2, maxDepth = 2, maxChildren = 8 } = {})
 };
 
 export const convertTreeToGraph = (root: TreeNode) => {
-  const graph: Graph = {
+  const graph: GraphType = {
     nodes: [],
     links: []
   };
@@ -94,7 +94,7 @@ export const createGraph = (numNodes = 0, numLinks = 0) => {
 /**
  * Delete nodes and related links.
  */
-export const deleteNodes = (graph: Graph, ids: string[]) => {
+export const deleteNodes = (graph: GraphType, ids: string[]) => {
   graph.nodes = graph.nodes
     .filter(({ id }) => ids.indexOf(id) === -1);
 
@@ -105,7 +105,7 @@ export const deleteNodes = (graph: Graph, ids: string[]) => {
 /**
  * Test data set generator and mutator.
  */
-export const useGraphGenerator = (options: { data?: Graph } = {}) => {
+export const useGraphGenerator = (options: { data?: GraphType } = {}) => {
   const [data, setData,, updateData] = useObjectMutator(options.data || { nodes: [], links: [] });
 
   const interval = useRef<Timer | null>(null);
@@ -122,7 +122,7 @@ export const useGraphGenerator = (options: { data?: Graph } = {}) => {
       },
       links: Object.assign({}, parent && {
         $push: [
-          createLink(parent as Node, item)
+          createLink(parent as NodeType, item)
         ]
       })
     });

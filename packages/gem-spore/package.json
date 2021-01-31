@@ -33,7 +33,6 @@
     "lodash.merge": "^4.6.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-force-graph": "^1.33.1",
     "react-hotkeys": "^2.0.0",
     "react-resize-aware": "^3.0.0",
     "throttle-debounce": "^3.0.1"

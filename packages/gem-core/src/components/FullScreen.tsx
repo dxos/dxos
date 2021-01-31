@@ -1,5 +1,5 @@
 //
-// Copyright 2018 DXOS.org
+// Copyright 2018 DXOS.org.org
 //
 
 import React, { ReactNode } from 'react';

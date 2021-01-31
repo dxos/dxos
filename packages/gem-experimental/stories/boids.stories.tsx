@@ -259,7 +259,7 @@ function generateBoids({ width, height }, config) {
 
 const map = array => array.reduce((map, value) => { map[value] = value; return map; }, {});
 
-export const withFlock = () => {
+export const Flock = () => {
   const canvas = useRef(null);
   const offscreenCanvas = useRef(null);
   const [resizeListener, { width, height }] = useResizeAware();

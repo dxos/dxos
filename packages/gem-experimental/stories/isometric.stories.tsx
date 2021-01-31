@@ -9,8 +9,13 @@ import useResizeAware from 'react-resize-aware';
 import { makeStyles } from '@material-ui/core/styles';
 import grey from '@material-ui/core/colors/grey';
 
+import { FullScreen } from '@dxos/gem-core';
+
 import { Isometric, drawCube } from '../src';
-import { FullScreen } from '@dxos/gem-core/src';
+
+export default {
+  title: 'Isometric'
+};
 
 const useStyles = makeStyles({
   root: {},
@@ -114,10 +119,6 @@ const paint = (canvas, grid, generator) => {
   context.restore();
 };
 
-export default {
-  title: 'Isometric'
-};
-
 const Component = () => {
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
@@ -173,7 +174,7 @@ const Component = () => {
   )
 };
 
-export const withField = () => {
+export const Field = () => {
   return (
     <FullScreen>
       <Component />

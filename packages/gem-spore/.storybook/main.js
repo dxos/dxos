@@ -1,8 +1,8 @@
 //
-// Copyright 2018 DxOS
+// Copyright 2018 DXOS.org
 //
 
 module.exports = {
   addons: ['@storybook/addon-knobs'],
-  stories: ['../stories/**/*.stories.js']
+  stories: ['../stories/**/*.stories.tsx']
 };

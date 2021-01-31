@@ -9,14 +9,14 @@ import faker from 'faker';
 import { createGraph } from '@dxos/gem-core';
 
 export default {
-  title: '3D'
+  title: 'ForceGraph'
 };
 
 /**
  * https://www.npmjs.com/package/react-force-graph
  * @param distance
  */
-export const use3D = ({ distance = 1000 }) => {
+export const Primary = ({ distance = 1000 }) => {
   const graph = useRef(null);
   const [data] = useState(() => createGraph(faker.random.number(64), faker.random.number(64)));
 

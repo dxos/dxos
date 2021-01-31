@@ -1,5 +1,5 @@
 //
-// Copyright 2018 DxOS
+// Copyright 2018 DXOS.org
 //
 
 module.exports = {

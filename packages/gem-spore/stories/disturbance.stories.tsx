@@ -11,14 +11,14 @@ import {
   useGrid,
   FullScreen,
   Grid,
-  SVG
+  SVG, Point
 } from '@dxos/gem-core';
 
 export default {
   title: 'Disturbance'
 };
 
-const transform = (data, r, m = 1) => {
+const transform = (data, r, m = 1): Point[] => {
   const delta = (2 * Math.PI) / data.length;
   const points = data.map((d, i) => {
     const a = i * delta;
@@ -37,7 +37,7 @@ const rand = p => Math.min(1, Math.max(0, p + (Math.random() - .5) * .1));
 
 const poly = points => points.map(p => `${p.x},${p.y}`).join(' ');
 
-export const withAnomoly = () => {
+export const Primary = () => {
   const [resizeListener, size] = useResizeAware();
   const grid = useGrid(size);
 

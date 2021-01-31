@@ -1,5 +1,5 @@
 //
-// Copyright 2018 DxOS
+// Copyright 2018 DXOS.org
 //
 
 const d3 = Object.assign({}, require('d3'), require('d3-inertia'));

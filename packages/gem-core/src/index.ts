@@ -3,5 +3,6 @@
 //
 
 export * from './components';
+export * from './icons';
 export * from './data';
 export * from './util';

@@ -10,8 +10,10 @@ import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
 
-import { useLayout } from '../layout';
-import { GuideProjector, LinkProjector, NodeProjector } from '../projector';
+import { GraphType, GridProperties } from '@dxos/gem-core';
+
+import { Layout, useLayout } from '../layout';
+import { GuideProjector, LinkProjector, NodeProjector, Projector } from '../projector';
 
 // TODO(burdon): Use theme.
 const defaultColor = 'grey';
@@ -66,14 +68,26 @@ export const useGraphStyles = makeStyles(() => ({
   })
 }));
 
+export interface GraphProps {
+  data: GraphType;
+  grid: GridProperties;
+  drag?: any; // TODO(burdon): Type?
+  selected?: any; // TODO(burdon): Type?
+  layout: Layout;
+  guideProjector?: Projector;
+  linkProjector?: Projector;
+  nodeProjector?: Projector;
+  classes?: any;
+}
+
 /**
  * Graph compoent supports different layouts.
  */
-const Graph = (props) => {
+const Graph = (props: GraphProps) => {
   const {
     data = {},
-    selected,
     grid,
+    selected,
     drag,
     layout,
     guideProjector = new GuideProjector(),

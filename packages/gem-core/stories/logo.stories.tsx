@@ -16,8 +16,8 @@ export default {
 };
 
 import { makeStyles } from '@material-ui/core';
-import { PATH } from '../src/icons/Fold';
-import { Point } from '../src/util';
+
+import { Point, FoldData } from '../src';
 
 // https://www.w3.org/TR/SVG/propidx.html
 const useStyles = makeStyles(() => ({
@@ -185,14 +185,14 @@ export const withLogo = () => {
     d3.select(group1.current)
       .attr('transform', 'translate(-128, -128)')
       .append('path')
-      .attr('d', PATH)
+      .attr('d', FoldData)
       .attr('fill', '#EEEEEE');
 
     d3.select(group2.current)
       .attr('transform-origin', '128 128')
       .attr('transform', 'translate(-128, -128)')
       .append('path')
-      .attr('d', PATH)
+      .attr('d', FoldData)
       .attr('fill', '#333333');
 
     const i = d3.interval(() => {

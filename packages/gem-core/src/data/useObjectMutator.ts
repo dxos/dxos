@@ -6,9 +6,9 @@ import update from 'immutability-helper';
 import get from 'lodash/get';
 import { useRef, useState } from 'react';
 
-import { Graph } from './types';
+import { GraphType } from './types';
 
-type ObjectMutator = [Graph, Function, Function, Function];
+export type ObjectMutator = [GraphType, Function, Function, Function];
 
 /**
  * Returns a state object and setter, with addition live getter and updater (for the current up-to-date reference).
@@ -19,9 +19,9 @@ type ObjectMutator = [Graph, Function, Function, Function];
  * @param {Object} [initalValue]
  * @return {{ Object, function, function, function }}
  */
-export const useObjectMutator = (initalValue: Graph = { nodes: [], links: [] }) => {
-  const [data, setData] = useState<Graph>(initalValue);
-  const ref = useRef<Graph>(data);
+export const useObjectMutator = (initalValue: GraphType = { nodes: [], links: [] }) => {
+  const [data, setData] = useState<GraphType>(initalValue);
+  const ref = useRef<GraphType>(data);
 
   return [
 

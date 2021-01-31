@@ -1,5 +1,5 @@
 //
-// Copyright 2018 DxOS
+// Copyright 2018 DXOS.org
 //
 
 import times from 'lodash.times';
@@ -11,10 +11,15 @@ import blueGrey from '@material-ui/core/colors/blueGrey';
 
 import { SVG } from '@dxos/gem-core';
 
-import { Bar } from '../src';
+import Bar from './Bar';
+
+export default {
+  title: 'Bar',
+  component: Bar
+};
 
 const useStyles = makeStyles(() => ({
-  root: ({ width }) => ({
+  root: ({ width }: { width: number }) => ({
     display: 'flex',
     width,
     height: 80,
@@ -37,7 +42,7 @@ const domain = [0, 100];
 const rand = (min, max) => (max ? min : 0) + Math.floor(Math.random() * (max ? max - min : min));
 const generate = () => times(5, id => ({ id, values: [ rand(50, 100), rand(0, 50) ] }));
 
-const BarStory = () => {
+export const Primary = () => {
   const max = 400;
   const delay = 3000;
   const classes = useStyles({ width: max });
@@ -61,5 +66,3 @@ const BarStory = () => {
     </div>
   );
 };
-
-export default BarStory;

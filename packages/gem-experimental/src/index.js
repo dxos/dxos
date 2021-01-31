@@ -3,3 +3,5 @@
 //
 
 export * from './components';
+export * from './isometric';
+export * from './shapes';
