@@ -2,7 +2,7 @@
   "name": "@dxos/gem",
   "version": "1.0.0-beta.1",
   "private": true,
-  "description": "UX",
+  "description": "Graphical Elemental Modules",
   "keywords": [],
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -12,8 +12,8 @@
     "type": "git",
     "url": "git+https://github.com/dxos/gem.git"
   },
-  "license": "AGPLv3",
-  "author": "DxOS.org",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "workspaces": {
     "packages": [
       "packages/*"
@@ -22,7 +22,7 @@
   "scripts": {
     "build": "lerna run build",
     "clean": "lerna run clean",
-    "lint": "lerna run lint",
+    "lint": "wsrun lint",
     "lint:fix": "lerna run lint -- --fix",
     "lint:staged": "lint-staged",
     "sort-package-json": "lerna exec npx sort-package-json",
@@ -32,22 +32,13 @@
     "lint:staged"
   ],
   "lint-staged": {
-    "*.js": "eslint --ignore-path .eslintignore"
+    "*.ts": "eslint --cache --fix"
   },
   "devDependencies": {
-    "babel-eslint": "^10.0.3",
-    "eslint": "^6.7.2",
-    "eslint-config-airbnb": "^18.0.0",
-    "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-jsdoc": "^21.0.0",
-    "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-react": "^7.17.0",
+    "eslint": "^7.7.0",
     "lerna": "^3.19.0",
     "lint-staged": "^9.5.0",
-    "pre-commit": "^1.2.2"
-  },
-  "dependencies": {
-    "semistandard": "^14.2.2",
-    "window": "^4.2.7"
+    "pre-commit": "^1.2.2",
+    "wsrun": "^5.2.4"
   }
 }

@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "es2019"
+    ]
+  },
+  "include": [
+    "src",
+    "stories"
+  ],
+  "exclude": [
+    "/node_modules/",
+    "/dist/"
+  ]
+}

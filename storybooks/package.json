@@ -2,18 +2,17 @@
   "name": "@dxos/gem-storybook",
   "version": "1.0.0-beta.25",
   "private": true,
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
   "author": "DXOS.org",
   "scripts": {
     "build-storybook": "build-storybook",
-    "chromatic": "npx chromatic --project-token faangy98zwn",
+    "chromatic": "npx chromatic --project-token faangy98zwn --auto-accept-changes",
     "lint": "eslint 'stories/**/*.{js,jsx,ts,tsx}'",
     "storybook": "start-storybook -p 9001 -c .storybook --ci"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.10",
     "@storybook/addon-knobs": "^6.1.14",
-    "@storybook/react": "^6.1.14",
-    "faker": "^4.1.0"
+    "@storybook/react": "^6.1.14"
   }
 }
