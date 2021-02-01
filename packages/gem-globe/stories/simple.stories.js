@@ -80,7 +80,7 @@ export const Primary = () => {
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
 
-  return (o
+  return (
     <div className={classes.root}>
       {resizeListener}
       <Globe
