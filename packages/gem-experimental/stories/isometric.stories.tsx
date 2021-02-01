@@ -174,7 +174,7 @@ const Component = () => {
   )
 };
 
-export const Field = () => {
+export const Primary = () => {
   return (
     <FullScreen>
       <Component />

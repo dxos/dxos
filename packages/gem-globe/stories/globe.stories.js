@@ -286,7 +286,7 @@ const locations = {
   }
 };
 
-export const withGlobe = () => {
+export const Primary = () => {
   const canvas = useRef(null);
   const classes = useStyles();
   const [features,, featuresRef, updateFeatures] = useObjectMutator({ points: [], lines: [] });

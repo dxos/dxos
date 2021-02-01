@@ -75,12 +75,12 @@ const useSpinner = (callback, delta = drift) => {
   return [start, stop];
 };
 
-export const withSimpleGlobe = () => {
+export const Primary = () => {
   const canvas = useRef(null);
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
 
-  return (
+  return (o
     <div className={classes.root}>
       {resizeListener}
       <Globe
@@ -96,7 +96,7 @@ export const withSimpleGlobe = () => {
   );
 };
 
-export const withFlatEarth = () => {
+export const Flat = () => {
   const canvas = useRef(null);
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();

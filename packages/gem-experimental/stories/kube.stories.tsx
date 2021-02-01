@@ -4,210 +4,12 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
-import * as THREE from 'three';
+
+import { Kube } from '../src';
 
 export default {
   title: 'KUBE'
 };
-
-/**
- * KUBE
- * https://threejs.org/examples/?q=webgl#webgl_buffergeometry_drawrange
- */
-class Kube {
-  _config;
-  _group;
-  _const;
-  _particlesData = [];
-  _camera;
-  _scene;
-  _renderer;
-  _positions;
-  _colors;
-  _particles;
-  _pointCloud;
-  _particlePositions;
-  _linesMesh;
-
-  constructor (config) {
-    this._config = config;
-  }
-
-  init (container) {
-    const { maxParticleCount, particleCount, radius } = this._config;
-
-    this._camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 4000);
-    this._camera.position.z = 1750;
-
-    this._group = new THREE.Group();
-    this._scene = new THREE.Scene();
-    this._scene.add(this._group);
-
-    const helper = new THREE.BoxHelper(new THREE.Mesh(new THREE.BoxGeometry(radius, radius, radius)));
-    (helper.material as any).color.setHex(0x101010);
-    (helper.material as any).blending = THREE.AdditiveBlending;
-    (helper.material as any).transparent = true;
-    this._group.add(helper);
-
-    const segments = maxParticleCount * maxParticleCount;
-    this._positions = new Float32Array(segments * 3);
-    this._colors = new Float32Array(segments * 3);
-
-    const pMaterial = new THREE.PointsMaterial({
-      color: 0xFFFFFF,
-      size: 3,
-      blending: THREE.AdditiveBlending,
-      transparent: true,
-      sizeAttenuation: false
-    });
-
-    this._particles = new THREE.BufferGeometry();
-    this._particlePositions = new Float32Array(maxParticleCount * 3);
-
-    for (let i = 0; i < maxParticleCount; i++) {
-      const x = Math.random() * radius - radius / 2;
-      const y = Math.random() * radius - radius / 2;
-      const z = Math.random() * radius - radius / 2;
-
-      this._particlePositions[i * 3] = x;
-      this._particlePositions[i * 3 + 1] = y;
-      this._particlePositions[i * 3 + 2] = z;
-
-      this._particlesData.push({
-        velocity: new THREE.Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2),
-        numConnections: 0
-      });
-    }
-
-    this._particles.setDrawRange(0, particleCount);
-    this._particles.setAttribute('position',
-      new THREE.BufferAttribute(this._particlePositions, 3).setUsage(THREE.DynamicDrawUsage));
-
-    this._pointCloud = new THREE.Points(this._particles, pMaterial);
-    this._group.add(this._pointCloud);
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(this._positions, 3).setUsage(THREE.DynamicDrawUsage));
-    geometry.setAttribute('color', new THREE.BufferAttribute(this._colors, 3).setUsage(THREE.DynamicDrawUsage));
-    geometry.computeBoundingSphere();
-    geometry.setDrawRange(0, 0);
-
-    const material = new THREE.LineBasicMaterial({
-      vertexColors: true,
-      blending: THREE.AdditiveBlending,
-      transparent: true
-    });
-
-    this._linesMesh = new THREE.LineSegments(geometry, material);
-    this._group.add(this._linesMesh);
-
-    this._renderer = new THREE.WebGLRenderer({ antialias: true });
-    this._renderer.setPixelRatio(window.devicePixelRatio);
-    this._renderer.setSize(window.innerWidth, window.innerHeight);
-    this._renderer.outputEncoding = THREE.sRGBEncoding;
-
-    container.appendChild(this._renderer.domElement);
-
-    return this;
-  }
-
-  animate () {
-    const { effectController, particleCount, radius } = this._config;
-
-    let vertexpos = 0;
-    let colorpos = 0;
-    let numConnected = 0;
-
-    for (let i = 0; i < particleCount; i++) {
-      this._particlesData[i].numConnections = 0;
-    }
-
-    for (let i = 0; i < particleCount; i++) {
-      // get the particle
-      const particleData = this._particlesData[i];
-
-      this._particlePositions[i * 3] += particleData.velocity.x;
-      this._particlePositions[i * 3 + 1] += particleData.velocity.y;
-      this._particlePositions[i * 3 + 2] += particleData.velocity.z;
-
-      const rHalf = radius / 2;
-
-      if (this._particlePositions[i * 3 + 1] < -rHalf || this._particlePositions[i * 3 + 1] > rHalf) {
-        particleData.velocity.y = -particleData.velocity.y;
-      }
-
-      if (this._particlePositions[i * 3] < -rHalf || this._particlePositions[i * 3] > rHalf) {
-        particleData.velocity.x = -particleData.velocity.x;
-      }
-
-      if (this._particlePositions[i * 3 + 2] < -rHalf || this._particlePositions[i * 3 + 2] > rHalf) {
-        particleData.velocity.z = -particleData.velocity.z;
-      }
-
-      if (effectController.limitConnections && particleData.numConnections >= effectController.maxConnections) {
-        continue;
-      }
-
-      // Check collision
-      for (let j = i + 1; j < particleCount; j++) {
-        const particleDataB = this._particlesData[j];
-        if (effectController.limitConnections && particleDataB.numConnections >= effectController.maxConnections) {
-          continue;
-        }
-
-        const dx = this._particlePositions[i * 3] - this._particlePositions[j * 3];
-        const dy = this._particlePositions[i * 3 + 1] - this._particlePositions[j * 3 + 1];
-        const dz = this._particlePositions[i * 3 + 2] - this._particlePositions[j * 3 + 2];
-        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-        if (dist < effectController.minDistance) {
-          particleData.numConnections++;
-          particleDataB.numConnections++;
-
-          const alpha = 1.0 - dist / effectController.minDistance;
-
-          this._positions[vertexpos++] = this._particlePositions[i * 3];
-          this._positions[vertexpos++] = this._particlePositions[i * 3 + 1];
-          this._positions[vertexpos++] = this._particlePositions[i * 3 + 2];
-
-          this._positions[vertexpos++] = this._particlePositions[j * 3];
-          this._positions[vertexpos++] = this._particlePositions[j * 3 + 1];
-          this._positions[vertexpos++] = this._particlePositions[j * 3 + 2];
-
-          this._colors[colorpos++] = alpha;
-          this._colors[colorpos++] = alpha;
-          this._colors[colorpos++] = alpha;
-
-          this._colors[colorpos++] = alpha;
-          this._colors[colorpos++] = alpha;
-          this._colors[colorpos++] = alpha;
-
-          numConnected++;
-        }
-      }
-    }
-
-    this._linesMesh.geometry.setDrawRange(0, numConnected * 2);
-    this._linesMesh.geometry.attributes.position.needsUpdate = true;
-    this._linesMesh.geometry.attributes.color.needsUpdate = true;
-
-    this._pointCloud.geometry.attributes.position.needsUpdate = true;
-
-    requestAnimationFrame(() => this.animate());
-
-    this.render();
-
-    return this;
-  }
-
-  render () {
-    const time = Date.now() * 0.001;
-    this._group.rotation.y = time * 0.1;
-    this._renderer.render(this._scene, this._camera);
-
-    return this;
-  }
-}
 
 export const Primary = () => {
   const [resizeListener, size] = useResizeAware();
@@ -217,19 +19,15 @@ export const Primary = () => {
   useEffect(() => {
     const kube = new Kube({
       radius: 800,
-      maxParticleCount: 800,
+      maxParticleCount: 600,
       particleCount: 400,
-      effectController: {
-        showDots: true,
-        showLines: true,
-        minDistance: 150,
-        limitConnections: false,
-        maxConnections: 20,
-        particleCount: 500
-      }
+      minDistance: 150,
+      maxConnections: 20,
+      showLines: true,
+      limitConnections: false
     });
 
-    // TODO(burdon): Terminate.
+    // TODO(burdon): Deregister.
     kube.init(container.current).animate();
 
     setKube(kube);
@@ -237,10 +35,7 @@ export const Primary = () => {
 
   useEffect(() => {
     if (kube) {
-      kube._camera.aspect = size.width / size.height;
-      kube._camera.updateProjectionMatrix();
-
-      kube._renderer.setSize(size.width, size.height);
+      kube.setSize(size.width, size.height);
     }
   }, [kube, size])
 

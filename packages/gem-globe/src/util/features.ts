@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org.org
 //
 
-const d3 = Object.assign({}, require('d3'));
 import * as topojson from 'topojson';
 
 import { circle, line } from './path';
+
+const d3 = Object.assign({}, require('d3'));
 
 /**
  * Create rendering layers.
@@ -58,7 +59,7 @@ export const createLayers = (topology, features, styles) => {
         path: {
           type: 'GeometryCollection',
           geometries: lines.map(({ source, target }) => line(source, target))
-        },
+        }
       },
       {
         styles: styles.point,

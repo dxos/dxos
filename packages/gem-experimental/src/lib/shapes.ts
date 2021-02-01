@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-export function drawSquare(iso, angle, x, y, z) {
+export function drawSquare (iso, angle, x, y, z) {
   if ((angle %= Math.PI / 2) < 0) {
     angle += Math.PI / 2;
   }
@@ -18,13 +18,13 @@ export function drawSquare(iso, angle, x, y, z) {
   iso.lineTo(+0.5, -0.5, -0.5);
   iso.closePath();
   iso.context.fill();
-  iso.context.lineWidth = .5;
+  iso.context.lineWidth = 0.5;
   iso.context.stroke();
 
   iso.restore();
 }
 
-export function drawCube(iso, angle, x, y, z, h = 1) {
+export function drawCube (iso, angle, x, y, z, h = 1) {
   if ((angle %= Math.PI / 2) < 0) {
     angle += Math.PI / 2;
   }
