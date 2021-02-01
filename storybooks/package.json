@@ -6,7 +6,7 @@
   "author": "DXOS.org",
   "scripts": {
     "build-storybook": "build-storybook",
-    "chromatic": "npx chromatic --project-token faangy98zwn",
+    "chromatic": "npx chromatic --project-token faangy98zwn --auto-accept-changes",
     "lint": "eslint 'stories/**/*.{js,jsx,ts,tsx}'",
     "storybook": "start-storybook -p 9001 -c .storybook --ci"
   },

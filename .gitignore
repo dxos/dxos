@@ -67,6 +67,8 @@ typings/
 # Pycharm
 .idea/workspace.xml
 
+build/
 dist/
 out/
+storybook-static/
 
