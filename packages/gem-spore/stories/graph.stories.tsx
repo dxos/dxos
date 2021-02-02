@@ -12,6 +12,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import * as colors from '@material-ui/core/colors';
 
 import {
+  NodeType,
   FullScreen,
   Grid,
   SVG,
@@ -21,24 +22,22 @@ import {
   createTree,
   seed,
   useGraphGenerator,
-  useGrid,
-  useObjectMutator,
-  ObjectMutator,
-  NodeType,
+  useGrid
 } from '@dxos/gem-core';
 
 import {
   BulletLinkProjector,
-  createSimulationDrag,
   ForceLayout,
   Graph,
   GraphLinker,
   GridLayout,
-  LinkProjector,
   Markers,
+  LinkProjector,
   NodeProjector,
+  createSimulationDrag,
   useGraphStyles,
 } from '../src';
+import { useDataButton } from './util';
 
 export default {
   title: 'Graph',
@@ -47,16 +46,6 @@ export default {
 
 const log = debug('dxos:spore:demo');
 debug.enable('dxos:spore:*');
-
-//
-// Actions
-//
-
-const useDataButton = (generate, label='Refresh') => {
-  const [data, setData, getData, updateData] = useObjectMutator(generate());
-  button(label, () => setData(generate()));
-  return [data, setData, getData, updateData] as ObjectMutator;
-};
 
 /**
  * Graph.

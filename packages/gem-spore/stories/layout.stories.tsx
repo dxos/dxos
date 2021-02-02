@@ -8,7 +8,7 @@ import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 
-import { boolean, button, withKnobs } from '@storybook/addon-knobs';
+import { boolean, withKnobs } from '@storybook/addon-knobs';
 
 import {
   FullScreen,
@@ -19,14 +19,12 @@ import {
   createTree,
   useGraphGenerator,
   useGrid,
-  useObjectMutator,
-  ObjectMutator
+  useObjectMutator
 } from '@dxos/gem-core';
 
 import {
   BoxProjector,
   ForceLayout,
-  Graph,
   GridLayout,
   GuideProjector,
   NodeProjector,
@@ -37,6 +35,7 @@ import {
   useGraphStyles,
   useLayout,
 } from '../src';
+import { useDataButton } from './util';
 
 export default {
   title: 'Layout',
@@ -45,16 +44,6 @@ export default {
 
 const log = debug('dxos:spore:demo');
 debug.enable('dxos:spore:*');
-
-//
-// Actions
-//
-
-const useDataButton = (generate, label='Refresh') => {
-  const [data, setData, getData, updateData] = useObjectMutator(generate());
-  button(label, () => setData(generate()));
-  return [data, setData, getData, updateData] as ObjectMutator;
-};
 
 /**
  * Grid component.
@@ -257,7 +246,7 @@ export const Random = () => {
 export const Radial = () => {
   const classes = useGraphStyles({});
   const [resizeListener, size] = useResizeAware();
-  const [data, setData, getData, updateData] = useObjectMutator();
+  const [data, setData, getData, updateData] = useObjectMutator(undefined);
   const nodes = useRef(null);
 
   const grid = useGrid(size);

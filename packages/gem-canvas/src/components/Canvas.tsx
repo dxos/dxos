@@ -110,6 +110,13 @@ const Keys = ({ children, onAction }) => {
   );
 };
 
+export interface CanvasProperties {
+  objects: any[];
+  model?: any; // TODO(burdon): Type.
+  showToolbar?: boolean;
+  showPalette?: boolean;
+}
+
 /**
  * Canvas application.
  *
@@ -118,7 +125,7 @@ const Keys = ({ children, onAction }) => {
  * @param {boolean} [showToolbar]
  * @param {boolean} [showPalette]
  */
-const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true }) => {
+const Canvas = ({ objects = [], model = undefined, showToolbar = true, showPalette = true }: CanvasProperties) => {
   const classes = useStyles();
   const [resizeListener, { width, height }] = useResizeAware();
   const view = useRef(null);
@@ -126,7 +133,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
 
   objects = objects || [];
 
-  // TODO(burdon): Read-only if model is null.
+  // TODO(burdon): Read-only if model is undefined.
   // TODO(burdon): Closures are stale if model property changes.
   const modelRef = useRef(model);
   useEffect(() => {
@@ -151,7 +158,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
   const clipboard = useRef(null);
 
   // TODO(burdon): Wrap.
-  const [tool = 'select', setTool] = useState();
+  const [tool = 'select', setTool] = useState(undefined);
   const toolRef = useRef(tool);
   useEffect(() => { toolRef.current = tool; }, [tool]);
 
@@ -176,7 +183,7 @@ const Canvas = ({ objects = [], model, showToolbar = true, showPalette = true })
       if (properties) {
         modelRef.current.createObject(properties);
         setSelected({ ids: [ properties.id ] });
-        setTool();
+        setTool(undefined);
       } else {
         setSelected(null);
       }

@@ -4,6 +4,17 @@
 
 import * as d3 from 'd3';
 
+export interface Handle {
+  id: string;
+  type: string;
+  index?: number;
+  properties: {
+    handleX?: number;
+    handleY?: number;
+    cursor?: string;
+  }
+}
+
 /**
  * Creates the control elements.
  * @param group
@@ -11,22 +22,23 @@ import * as d3 from 'd3';
  */
 export const createController = (group, classes) => {
 
+  // TODO(burdon): Move to properties (like object).
   // https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
   const handles = [
-    { id: 'TL', type: 'handle-bounds', handleX: -1, handleY:  1, cursor: 'nwse-resize' },
-    { id: 'L',  type: 'handle-bounds', handleX: -1, handleY:  0, cursor: 'ew-resize' },
-    { id: 'BL', type: 'handle-bounds', handleX: -1, handleY: -1, cursor: 'nesw-resize' },
+    { id: 'TL', type: 'handle-bounds', properties: { handleX: -1, handleY:  1, cursor: 'nwse-resize' } },
+    { id: 'L',  type: 'handle-bounds', properties: { handleX: -1, handleY:  0, cursor: 'ew-resize' } },
+    { id: 'BL', type: 'handle-bounds', properties: { handleX: -1, handleY: -1, cursor: 'nesw-resize' } },
 
-    { id: 'T',  type: 'handle-bounds', handleX:  0, handleY:  1, cursor: 'ns-resize' },
-    { id: 'B',  type: 'handle-bounds', handleX:  0, handleY: -1, cursor: 'ns-resize' },
+    { id: 'T',  type: 'handle-bounds', properties: { handleX:  0, handleY:  1, cursor: 'ns-resize' } },
+    { id: 'B',  type: 'handle-bounds', properties: { handleX:  0, handleY: -1, cursor: 'ns-resize' } },
 
-    { id: 'TR', type: 'handle-bounds', handleX:  1, handleY:  1, cursor: 'nesw-resize' },
-    { id: 'R',  type: 'handle-bounds', handleX:  1, handleY:  0, cursor: 'ew-resize' },
-    { id: 'BR', type: 'handle-bounds', handleX:  1, handleY: -1, cursor: 'nwse-resize' }
+    { id: 'TR', type: 'handle-bounds', properties: { handleX:  1, handleY:  1, cursor: 'nesw-resize' } },
+    { id: 'R',  type: 'handle-bounds', properties: { handleX:  1, handleY:  0, cursor: 'ew-resize' } },
+    { id: 'BR', type: 'handle-bounds', properties: { handleX:  1, handleY: -1, cursor: 'nwse-resize' } }
   ];
 
   // Handles.
-  const { properties: { type } } = group.datum();
+  const { properties: { type, points } } = group.datum();
   switch (type) {
     case 'path': {
       // Handle group.
@@ -45,7 +57,7 @@ export const createController = (group, classes) => {
         .data(handles, d => d.id)
         .join('circle')
           .attr('class', classes.handle)
-          .style('cursor', ({ cursor }) => cursor);
+          .style('cursor', ({ properties: { cursor } }) => cursor);
     }
   }
 };
@@ -63,12 +75,14 @@ export const updateController = (group, grid, drag, { width, height }, classes) 
 
   const { properties: { type } } = group.datum();
   switch (type) {
+    //
+    // Control handle for each point.
+    //
     case 'path': {
-      // Control handle for each point.
       const { properties: { points } } = group.datum();
       group.select('g')
         .selectAll(`circle.${classes.handle}`)
-          .data(points.map(point => ({ type: 'handle-point', ...point })))
+          .data(points.map((point, i) => ({ id: i, index: i, type: 'handle-point', ...point })))
           .join(group => group.append('circle')
             .attr('class', classes.handle)
             .attr('r', handleSize))
@@ -79,17 +93,23 @@ export const updateController = (group, grid, drag, { width, height }, classes) 
       break;
     }
 
+    //
+    // Bounding box for shapes.
+    //
+    case 'ellipse':
+    case 'rect':
     default: {
-      // Bounding box.
       group.select('rect')
         .attr('x', 0)
         .attr('y', height)
         .attr('width', width)
         .attr('height', Math.abs(height));
 
+      //
       // Handles.
+      //
       group.selectAll(`g circle.${classes.handle}`)
-        .each(({ handleX, handleY }, i, nodes) => {
+        .each(({ properties: { handleX, handleY } }, i, nodes) => {
           d3.select(nodes[i])
             .call(drag)
             .attr('cx', (handleX + 1) * (width / 2))

@@ -52,7 +52,7 @@ const useStyles = makeStyles(() => ({
 /**
  * Main toolbar.
  */
-const Toolbar = ({ tool, snap, onAction = () => {} }) => {
+const Toolbar = ({ tool, snap, onAction = (_: string) => {} }) => {
   const classes = useStyles();
 
   // https://material.io/resources/icons/?style=outline
@@ -100,7 +100,7 @@ const Toolbar = ({ tool, snap, onAction = () => {} }) => {
   return (
     <MuiToolbar variant="dense" className={classes.toolbar}>
       {
-        groups.map(({ items }, i) => (
+        groups.map(({ items }: { items: any[] }, i) => (
           <div key={i}>
             {
               items.map(({ id, icon: Icon, className = id => clsx(id === tool && classes.selected) }) => (

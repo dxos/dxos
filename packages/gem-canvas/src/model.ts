@@ -6,19 +6,40 @@ import assert from 'assert';
 import debug from 'debug';
 import faker from 'faker';
 
-import { useObjectMutator } from '@dxos/gem-core';
+import { ObjectMutator, useObjectMutator } from '@dxos/gem-core';
 
 const log = debug('gem:canvas:model');
 
 // TODO(burdon): Only update records on end of drag (e.g., commit). Separate memory model and stored model?
 // TODO(burdon): Support multiple objects.
 
+export interface ObjectProperties {
+  type: string;
+  bounds?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }
+  points?: {
+    x: number;
+    y: number;
+  }[]
+}
+
+export interface ObjectType {
+  id: string;
+  type: string;
+  properties: ObjectProperties;
+}
+
 /**
  * @param {Object} properties
  * @return {{ id:string , properties: Object }}
  */
-const createObject = (properties) => ({
+const createObject = (properties: ObjectProperties): ObjectType => ({
   id: faker.random.uuid(),
+  type: 'object',
   properties,
 });
 
@@ -26,13 +47,13 @@ const createObject = (properties) => ({
  * Canvas model.
  * @param {Object[]} data - Initial data set.
  */
-export const useCanvasModel = (data = []) => {
-  const [objects,, getObjects, updateObjects] = useObjectMutator(data.map(properties => createObject(properties)));
+export const useCanvasModel = (data = []): [any[], any] => {
+  const [objects,, getObjects, updateObjects] = useObjectMutator<any[]>(data.map(properties => createObject(properties)));
 
   let mutations = null;
 
+  // TODO(burdon): Class.
   const model = {
-
     begin: () => {
       console.log('BEGIN');
       mutations = [];

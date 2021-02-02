@@ -6,22 +6,18 @@ import update from 'immutability-helper';
 import get from 'lodash/get';
 import { useRef, useState } from 'react';
 
-import { GraphType } from './types';
-
-export type ObjectMutator = [GraphType, Function, Function, Function];
+export type ObjectMutator<T> = [T, Function, Function, Function];
 
 /**
  * Returns a state object and setter, with addition live getter and updater (for the current up-to-date reference).
- * Regular state hooks return values that are stale within callbacks.
  *
  * https://reactjs.org/docs/hooks-faq.html#why-am-i-seeing-stale-props-or-state-inside-my-function
- *
- * @param {Object} [initalValue]
- * @return {{ Object, function, function, function }}
  */
-export const useObjectMutator = (initalValue: GraphType = { nodes: [], links: [] }) => {
-  const [data, setData] = useState<GraphType>(initalValue);
-  const ref = useRef<GraphType>(data);
+export const useObjectMutator = <T>(initalValue: T) => {
+  const [data, setData] = useState<T>(initalValue);
+
+  // Required since state is frozen within callbacks.
+  const ref = useRef<T>(data);
 
   return [
 
@@ -41,5 +37,5 @@ export const useObjectMutator = (initalValue: GraphType = { nodes: [], links: []
     // https://github.com/kolodny/immutability-helper
     // NOTE: Use $apply to update variable (e.g., push to potentially null object).
     (data: any) => setData(ref.current = update(ref.current, data))
-  ] as ObjectMutator;
+  ] as ObjectMutator<T>;
 };

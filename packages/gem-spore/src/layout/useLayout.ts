@@ -5,7 +5,7 @@
 import assert from 'assert';
 import { useEffect } from 'react';
 
-import { GridProperties } from '@dxos/gem-core';
+import { GridType } from '@dxos/gem-core';
 
 import { Layout } from './layout';
 import { useResizeListener } from './useResizeListener';
@@ -19,7 +19,7 @@ import { useResizeListener } from './useResizeListener';
  * @param {function} render
  * @param [deps] - Additional dependencies to trigger update.
  */
-export const useLayout = (layout: Layout, grid: GridProperties, data = {}, render: Function, deps = []) => {
+export const useLayout = (layout: Layout, grid: GridType, data = {}, render: Function, deps = []) => {
   assert(layout);
   assert(grid);
   assert(data);

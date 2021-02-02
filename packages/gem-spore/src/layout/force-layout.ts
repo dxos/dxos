@@ -4,7 +4,7 @@
 
 import * as d3 from 'd3';
 
-import { GridProperties, value } from '@dxos/gem-core';
+import { GridType, value } from '@dxos/gem-core';
 
 import { Layout } from './layout';
 
@@ -142,7 +142,7 @@ export class ForceLayout extends Layout {
     });
   }
 
-  _createForces (grid: GridProperties, data) {
+  _createForces (grid: GridType, data) {
     const { force } = this._options;
     const center = value(this._options.center)(grid);
 

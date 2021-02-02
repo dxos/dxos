@@ -25,7 +25,7 @@ export interface Bounds {
 }
 
 // TODO(burdon): Change to class.
-export interface GridProperties {
+export interface GridType {
   empty: () => boolean;
   size: Size;
   center: Point;
@@ -58,7 +58,7 @@ export const getCenter = ({ width, height }: Size) => ({ x: (width || 0) / 2, y:
 /**
  * @returns {{ size, center, scaleX, scaleY, ticks, zoom }}
  */
-export const createGrid = ({ width = 0, height = 0 }: Size, zoom = 1): GridProperties => {
+export const createGrid = ({ width = 0, height = 0 }: Size, zoom = 1): GridType => {
   assert(zoom);
 
   // https://observablehq.com/@d3/d3-scalelinear

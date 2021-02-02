@@ -4,13 +4,13 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { createItem, createLink, GridProperties } from '@dxos/gem-core';
+import { createItem, createLink, GridType } from '@dxos/gem-core';
 
 import { LinkProjector } from '../projector';
 import { useGraphStyles } from './Graph';
 
 interface GraphLinkerProperties {
-  grid: GridProperties;
+  grid: GridType;
   drag: any; // TODO(burdon): Type.
   linkProjector?: LinkProjector;
   onSelect?: Function;

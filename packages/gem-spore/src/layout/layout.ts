@@ -6,7 +6,7 @@ import assert from 'assert';
 import EventEmitter from 'events';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { Graph, GridProperties } from '@dxos/gem-core';
+import { GraphType, GridType } from '@dxos/gem-core';
 
 /**
  * Base class for layouts.
@@ -64,12 +64,12 @@ export abstract class Layout extends EventEmitter {
    */
   // TODO(burdon): Define common data structure for all layouts?
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _onUpdate (grid: GridProperties, data: Graph) {}
+  _onUpdate (grid: GridType, data: GraphType) {}
 
   /**
    * Update data.
    */
-  _setData (data: Graph) {
+  _setData (data: GraphType) {
     const find = id => {
       assert(typeof id === 'string');
       const node = data.nodes.find(n => n.id === id);
