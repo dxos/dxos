@@ -13,7 +13,10 @@ export default {
 export const Primary = () => {
   return (
     <div>
-      <Kube config={{ minDistance: 120 }} />
+      <Kube config={{
+        particleCount: 200,
+        maxParticleCount: 300
+      }} />
     </div>
   );
 };

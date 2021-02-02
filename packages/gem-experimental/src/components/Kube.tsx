@@ -37,6 +37,7 @@ class KubeRenderer {
 
   constructor (config) {
     this._config = config;
+    this._config.particleCount = Math.min(this._config.particleCount, this._config.maxParticleCount);
   }
 
   init (container) {
