@@ -1,9 +1,9 @@
 //
 // Copyright 2020 DXOS.org
-// https://jeromeetienne.github.io/threex.terrain/examples/vendor/three.js/examples/js/SimplexNoise.js
+// https://jeromeetienne.github.io/threex.terrain/examples/vendor/three.js/examples/js/_SimplexNoise.js
 //
 // Ported from Stefan Gustavson's java implementation
-// http://staffwww.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
+// http://staffwww.itn.liu.se/~stegu/_SimplexNoise/_SimplexNoise.pdf
 // Read Stefan's excellent paper for details on how this code works.
 //
 // Sean McCullough banksean@gmail.com
@@ -16,7 +16,7 @@
  * You can pass in a random number generator object if you like.
  * It is assumed to have a random() method.
  */
-export const SimplexNoise = (r) => {
+function _SimplexNoise (r) {
   if (r === undefined) {
     r = Math;
   }
@@ -57,21 +57,21 @@ export const SimplexNoise = (r) => {
     [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0],
     [2, 0, 1, 3], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [3, 0, 1, 2], [3, 0, 2, 1], [0, 0, 0, 0], [3, 1, 2, 0],
     [2, 1, 0, 3], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [3, 1, 0, 2], [0, 0, 0, 0], [3, 2, 0, 1], [3, 2, 1, 0]];
-};
+}
 
-SimplexNoise.prototype.dot = function (g, x, y) {
+_SimplexNoise.prototype.dot = function (g, x, y) {
   return g[0] * x + g[1] * y;
 };
 
-SimplexNoise.prototype.dot3 = function (g, x, y, z) {
+_SimplexNoise.prototype.dot3 = function (g, x, y, z) {
   return g[0] * x + g[1] * y + g[2] * z;
 };
 
-SimplexNoise.prototype.dot4 = function (g, x, y, z, w) {
+_SimplexNoise.prototype.dot4 = function (g, x, y, z, w) {
   return g[0] * x + g[1] * y + g[2] * z + g[3] * w;
 };
 
-SimplexNoise.prototype.noise = function (xin, yin) {
+_SimplexNoise.prototype.noise = function (xin, yin) {
   let n0, n1, n2; // Noise contributions from the three corners
   // Skew the input space to determine which simplex cell we're in
   const F2 = 0.5 * (Math.sqrt(3.0) - 1.0);
@@ -136,7 +136,7 @@ SimplexNoise.prototype.noise = function (xin, yin) {
 };
 
 // 3D simplex noise
-SimplexNoise.prototype.noise3d = function (xin, yin, zin) {
+_SimplexNoise.prototype.noise3d = function (xin, yin, zin) {
   let n0, n1, n2, n3; // Noise contributions from the four corners
   // Skew the input space to determine which simplex cell we're in
   const F3 = 1.0 / 3.0;
@@ -263,7 +263,7 @@ SimplexNoise.prototype.noise3d = function (xin, yin, zin) {
 };
 
 // 4D simplex noise
-SimplexNoise.prototype.noise4d = function (x, y, z, w) {
+_SimplexNoise.prototype.noise4d = function (x, y, z, w) {
   // For faster and easier lookups
   const grad4 = this.grad4;
   const simplex = this.simplex;
@@ -392,3 +392,5 @@ SimplexNoise.prototype.noise4d = function (x, y, z, w) {
   // Sum up and scale the result to cover the range [-1,1]
   return 27.0 * (n0 + n1 + n2 + n3 + n4);
 };
+
+export const SimplexNoise = _SimplexNoise;

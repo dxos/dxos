@@ -2,14 +2,25 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import useResizeAware from 'react-resize-aware';
+
+export const defaultConfig = {
+  radius: 800,
+  maxParticleCount: 600,
+  particleCount: 400,
+  minDistance: 150,
+  maxConnections: 20,
+  showLines: true,
+  limitConnections: false
+};
 
 /**
  * KUBE
  * https://threejs.org/examples/?q=webgl#webgl_buffergeometry_drawrange
  */
-class Kube {
+class KubeRenderer {
   _config;
   _group;
   _particlesData = [];
@@ -22,6 +33,7 @@ class Kube {
   _pointCloud;
   _particlePositions;
   _linesMesh;
+  _running = false;
 
   constructor (config) {
     this._config = config;
@@ -196,10 +208,7 @@ class Kube {
 
     this._pointCloud.geometry.attributes.position.needsUpdate = true;
 
-    requestAnimationFrame(() => this.animate());
-
     this.render();
-
     return this;
   }
 
@@ -207,9 +216,53 @@ class Kube {
     const time = Date.now() * 0.001;
     this._group.rotation.y = time * 0.1;
     this._renderer.render(this._scene, this._camera);
+    return this;
+  }
 
+  start () {
+    this._running = true;
+
+    const render = () => {
+      this.animate();
+      if (this._running) {
+        requestAnimationFrame(render);
+      }
+    }
+
+    render();
+    return this;
+  }
+
+  stop () {
+    this._running = false;
     return this;
   }
 }
+
+export const Kube = ({ config = defaultConfig }) => {
+  const [resizeListener, size] = useResizeAware();
+  const container = useRef(null);
+  const [kube, setKube] = useState(null);
+
+  useEffect(() => {
+    const kube = new KubeRenderer(config).init(container.current).start();
+    setKube(kube);
+
+    return () => kube.stop();
+  }, []);
+
+  useEffect(() => {
+    if (kube) {
+      kube.setSize(size.width, size.height);
+    }
+  }, [kube, size])
+
+  return (
+    <div>
+      {resizeListener}
+      <div ref={container} />
+    </div>
+  );
+};
 
 export default Kube;
