@@ -1,19 +1,24 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "allowJs": true,
+    "composite": true,
+    "esModuleInterop": true,
     "jsx": "react",
     "lib": [
       "DOM",
-      "es2019"
-    ]
+      "ESNext"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "target": "ES2018",
+    "removeComments": false
   },
   "include": [
     "src",
-    "stories"
-  ],
-  "exclude": [
-    "/node_modules/",
-    "/dist/"
+    "stories",
   ]
 }
