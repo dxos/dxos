@@ -7,13 +7,13 @@ import React from 'react';
 import { Kube } from '../src';
 
 export default {
-  title: 'KUBE'
+  title: 'Kube'
 };
 
 export const Primary = () => {
   return (
     <div>
-      <Kube />
+      <Kube config={{ minDistance: 120 }} />
     </div>
   );
 };

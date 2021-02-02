@@ -8,12 +8,12 @@ import useResizeAware from 'react-resize-aware';
 
 export const defaultConfig = {
   radius: 800,
-  maxParticleCount: 600,
-  particleCount: 400,
   minDistance: 150,
-  maxConnections: 20,
-  showLines: true,
-  limitConnections: false
+  particleCount: 400,
+  maxParticleCount: 600,
+  maxConnections: 20, // TODO(burdon): Seems ignored?
+  limitConnections: false,
+  showLines: true
 };
 
 /**
@@ -239,13 +239,14 @@ class KubeRenderer {
   }
 }
 
-export const Kube = ({ config = defaultConfig }) => {
+export const Kube = ({ config = {} }) => {
   const [resizeListener, size] = useResizeAware();
   const container = useRef(null);
   const [kube, setKube] = useState(null);
 
   useEffect(() => {
-    const kube = new KubeRenderer(config).init(container.current).start();
+    const kube = new KubeRenderer(Object.assign({}, defaultConfig, config));
+    kube.init(container.current).start();
     setKube(kube);
 
     return () => kube.stop();
