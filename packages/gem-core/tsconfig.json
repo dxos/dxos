@@ -2,6 +2,7 @@
   "compilerOptions": {
     "allowJs": true,
     "composite": true,
+    "declaration": true,
     "esModuleInterop": true,
     "jsx": "react",
     "lib": [
@@ -11,11 +12,11 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "./dist",
+    "removeComments": false,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "target": "ES2018",
-    "removeComments": false
+    "target": "ES2018"
   },
   "include": [
     "src",

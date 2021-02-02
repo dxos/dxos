@@ -4,5 +4,5 @@
 
 export * from './isometric';
 export * from './shapes';
-export * from './SimpleNoise';
+export * from './SimplexNoise';
 export * from './THREEx';

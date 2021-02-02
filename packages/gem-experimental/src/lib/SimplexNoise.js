@@ -16,7 +16,7 @@
  * You can pass in a random number generator object if you like.
  * It is assumed to have a random() method.
  */
-export const SimplexNoise = function (r) {
+export const SimplexNoise = (r) => {
   if (r === undefined) {
     r = Math;
   }

@@ -4,7 +4,7 @@
 //
 
 import * as THREE from 'three';
-import { SimplexNoise } from './SimpleNoise';
+import { SimplexNoise } from './SimplexNoise';
 
 export const THREEx = {};
 
