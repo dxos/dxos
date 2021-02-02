@@ -1,9 +1,10 @@
 {
   "name": "@dxos/gem-experimental",
-  "version": "1.0.0-beta.29",
+  "version": "1.0.0-beta.30",
   "description": "GEM experimental components.",
   "repository": "https://github.com/dxos/gem",
   "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
