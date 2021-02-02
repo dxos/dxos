@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-globe",
-  "version": "1.0.0-beta.27",
+  "version": "1.0.0-beta.28",
   "description": "Gem Globe.",
   "repository": "https://github.com/dxos/gem",
   "license": "AGPL-3.0",
@@ -21,7 +21,7 @@
     "extends": "plugin:@dxos/react"
   },
   "dependencies": {
-    "@dxos/gem-core": "^1.0.0-beta.27",
+    "@dxos/gem-core": "^1.0.0-beta.28",
     "@material-ui/core": "^4.9.10",
     "clsx": "^1.1.0",
     "d3": "^6.1.1",

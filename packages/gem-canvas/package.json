@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-canvas",
-  "version": "1.0.0-beta.27",
+  "version": "1.0.0-beta.28",
   "description": "GEM Canvas.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -28,7 +28,7 @@
     "extends": "plugin:@dxos/react"
   },
   "dependencies": {
-    "@dxos/gem-core": "^1.0.0-beta.27",
+    "@dxos/gem-core": "^1.0.0-beta.28",
     "@material-ui/core": "^4.9.10",
     "@material-ui/icons": "^4.9.1",
     "clsx": "^1.1.0",
