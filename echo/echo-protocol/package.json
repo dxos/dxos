@@ -19,13 +19,10 @@
   ],
   "private": false,
   "scripts": {
-    "build": "heft build --clean",
+    "build": "pnpm run build:protobuf && heft test 2>&1",
     "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/defs/dxos.proto -s src/proto/substitutions.ts -o src/proto/gen",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
-    "coverage": "jest --coverage --verbose --rootDir=./src",
-    "lint": "eslint --format codeframe './src/**/*.ts'",
-    "prepublishOnly": "npm run test && npm run build",
-    "watch": "babel-watch src --out-dir ./dist --source-maps"
+    "coverage": "jest --coverage --verbose --rootDir=./src"
   },
   "browserslist": [
     "> 5%"
@@ -69,12 +66,6 @@
     "pify": "~5.0.0",
     "random-access-memory": "~3.1.2",
     "tempy": "~1.0.1"
-  },
-  "eslintConfig": {
-    "extends": "plugin:@dxos/recomended",
-    "ignorePatterns": [
-      "src/proto/gen/*"
-    ]
   },
   "publishConfig": {
     "access": "public"
