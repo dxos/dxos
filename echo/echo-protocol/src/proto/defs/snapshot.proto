@@ -1,0 +1,82 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo.snapshot;
+
+import "echo.proto";
+
+//
+// Snapshots define full party state at a given point in time.
+// They must have enough information to be able to recover the party state without reading the feed messages.
+//
+// Each snapshot is identified by a party key and a timeframe.
+// The timeframe defines the set of feed messages that have already been processed.
+// When loading from the snapshot, application would skip all of the feed messages up to (and including) the provided timeframe.
+//
+
+message PartySnapshot {
+  bytes partyKey = 1;
+  TimeframeVector timeframe = 2;
+
+  // Unix timestamp of the snapshot creation time. For information purposes only.
+  int32 timestamp = 3;
+
+  HaloStateSnapshot halo = 11;
+  DatabaseSnapshot database = 12;
+}
+
+message DatabaseSnapshot {
+  repeated ItemSnapshot items = 1;
+}
+
+// For now we just store and replay a list of all halo messages as thier number is expected to be relatively low.
+message HaloStateSnapshot {
+  repeated dxos.CredentialsMessage messages = 1;
+}
+
+message ItemSnapshot {
+  string itemId = 1;
+
+  string itemType = 2;
+  string modelType = 3;
+  string modelVersion = 4;
+
+  string parentId = 5;
+
+  // TODO(burdon): = 10 (make room for other meta?)
+  ModelSnapshot model = 6;
+}
+
+message ModelSnapshot {
+  oneof snapshot {
+    // Encoding is defined by model.
+    bytes custom = 1;
+
+    // Fallback to storing array of mutations.
+    ModelMutationArray array = 2;
+  }
+}
+
+message ModelMutationArray {
+  repeated ModelMutation mutations = 1;
+}
+
+message ModelMutation {
+  // TODO(burdon): Remove required.
+  // Encoded model mutation, format is defined by model's codec.
+  required bytes mutation = 1;
+  required ModelMutationMeta meta = 2;
+}
+
+message ModelMutationMeta {
+  // TODO(burdon): Remove required.
+  required bytes feedKey = 1;
+  required int32 seq = 2;
+  required bytes memberKey = 3;
+}
+
+
+

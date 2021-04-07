@@ -1,0 +1,33 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos;
+
+import "echo.proto";
+import "testing.proto";
+import "snapshot.proto";
+
+//
+// Typescript Note:
+// Use the interface name in code (e.g., IFeedEvenlope) and the concrete class name in the __type_url reference.
+//
+
+//
+// Outer message type decoded by Codec.
+//
+message FeedMessage {
+  CredentialsMessage halo = 1;
+  dxos.echo.EchoEnvelope echo = 2;
+}
+
+// 
+// A container for dxos.credentials.Message
+//
+// TODO(marik-d): Figure out how to import a protobuf type from @dxos/credentials package.
+//
+message CredentialsMessage {
+  bytes data = 1;
+}

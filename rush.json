@@ -380,6 +380,10 @@
     {
       "packageName": "@dxos/util",
       "projectFolder": "echo/util"
+    },
+    {
+      "packageName": "@dxos/echo-protocol",
+      "projectFolder": "echo/echo-protocol"
     }
     // {
     //   /**
