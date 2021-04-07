@@ -62,7 +62,7 @@
      * The default value is false to avoid legacy compatibility issues.
      * It is strongly recommended to set strictPeerDependencies=true.
      */
-    // "strictPeerDependencies": true,
+    "strictPeerDependencies": true,
 
     /**
      * Configures the strategy used to select versions during installation.
@@ -147,7 +147,7 @@
    * version. In those cases, you will need to add an entry to the "allowedAlternativeVersions"
    * section of the common-versions.json.
    */
-  // "ensureConsistentVersions": true,
+  "ensureConsistentVersions": true,
 
   /**
    * Large monorepos can become intimidating for newcomers if project folder paths don't follow
@@ -278,13 +278,13 @@
      * your PR branch, and in this situation "rush change" will also automatically invoke "git fetch"
      * to retrieve the latest activity for the remote master branch.
      */
-    // "url": "https://github.com/microsoft/rush-example",
+    "url": "https://github.com/dxos/protocols",
 
     /**
      * The default branch name. This tells "rush change" which remote branch to compare against.
      * The default value is "master"
      */
-    // "defaultBranch": "master",
+    "defaultBranch": "main",
 
     /**
      * The default remote. This tells "rush change" which remote to compare against if the remote URL is
