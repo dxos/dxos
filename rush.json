@@ -384,6 +384,10 @@
     {
       "packageName": "@dxos/echo-protocol",
       "projectFolder": "echo/echo-protocol"
+    },
+    {
+      "packageName": "@dxos/model-factory",
+      "projectFolder": "echo/model-factory"
     }
     // {
     //   /**
