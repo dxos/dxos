@@ -64,4 +64,10 @@ common/temp/
 common/autoinstallers/*/.npmrc
 **/.rush/temp/
 
+# Build outputs
 dist
+lib
+
+# Heft
+*/*/.heft/build-cache/**
+*/*/.heft/temp/**

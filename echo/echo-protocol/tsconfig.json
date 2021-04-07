@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "lib",
     "allowJs": true,
     "composite": true,
     "declarationMap": true,
@@ -15,7 +15,8 @@
     "sourceMap": true,
     "strict": true,
     "target": "ES2018",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "types": ["heft-jest", "node"]
   },
   "include": [
     "src",
