@@ -55,7 +55,8 @@
     "jest": "^26.2.2",
     "stream-buffers": "^3.0.2",
     "ts-jest": "^26.1.4",
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.2",
+    "eslint": "^7.7.0"
   },
   "eslintConfig": {
     "extends": "plugin:@dxos/recomended"
