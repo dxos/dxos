@@ -11,15 +11,11 @@
     "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "AGPL-3.0",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "private": false,
   "scripts": {
-    "build": "tsc --build && pnpm run lint && pnpm run test",
-    "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
-    "coverage": "jest --coverage --verbose --rootDir=./src",
-    "lint": "eslint --format codeframe './src/**/*.ts'",
-    "test": "jest --rootDir=./src --verbose --passWithNoTests 2>&1"
+    "build": "heft test 2>&1"
   },
   "browserslist": [
     "> 5%"
@@ -46,6 +42,9 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
+    "@dxos/node-library-rig": "*",
+    "@rushstack/heft": "~0.26.0",
+    "@types/heft-jest": "~1.0.2",
     "@dxos/eslint-plugin": "~1.0.10",
     "@types/jest": "^25.2.3",
     "del-cli": "^3.0.0",

@@ -11,8 +11,8 @@
     "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "AGPL-3.0",
-  "main": "lib/src/index.js",
-  "types": "lib/src/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
     "lib",
     "src"
@@ -20,8 +20,7 @@
   "private": false,
   "scripts": {
     "build": "pnpm run build:protobuf && heft test 2>&1",
-    "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/defs/dxos.proto -s src/proto/substitutions.ts -o src/proto/gen",
-    "coverage": "jest --coverage --verbose --rootDir=./src"
+    "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/defs/dxos.proto -s src/proto/substitutions.ts -o src/proto/gen"
   },
   "browserslist": [
     "> 5%"
