@@ -1,6 +1,6 @@
-// TODO(marik-d): Move this to a rig package
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "composite": true,
     "declarationMap": true,
@@ -9,6 +9,7 @@
       "ESNext"
     ],
     "module": "commonjs",
+    "outDir": "dist",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -16,6 +17,5 @@
     "strict": true,
     "target": "ES2018",
     "experimentalDecorators": true
-  },
-  "include": ["**/src"]
+  }
 }

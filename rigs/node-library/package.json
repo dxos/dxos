@@ -1,0 +1,18 @@
+{
+  "name": "@dxos/node-library-rig",
+  "version": "0.1.0",
+  "license": "AGPL-3.0",
+  "scripts": {
+    "build": ""
+  },
+  "dependencies": {
+    "eslint": "^7.7.0",
+    "typescript": "^4.0.2"
+  },
+  "peerDependencies": {
+    "@rushstack/heft": "^0.28.1"
+  },
+  "devDependencies": {
+    "@rushstack/heft": "~0.26.0"
+  }
+}

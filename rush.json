@@ -396,6 +396,10 @@
     {
       "packageName": "@dxos/echo-db",
       "projectFolder": "echo/echo-db"
+    },
+    {
+      "packageName": "@dxos/node-library-rig",
+      "projectFolder": "rigs/node-library"
     }
     // {
     //   /**
