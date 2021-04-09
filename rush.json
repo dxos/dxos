@@ -388,6 +388,14 @@
     {
       "packageName": "@dxos/model-factory",
       "projectFolder": "echo/model-factory"
+    },
+    {
+      "packageName": "@dxos/object-model",
+      "projectFolder": "echo/object-model"
+    },
+    {
+      "packageName": "@dxos/echo-db",
+      "projectFolder": "echo/echo-db"
     }
     // {
     //   /**
