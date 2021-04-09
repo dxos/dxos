@@ -3,8 +3,8 @@
 //
 
 import assert from 'assert';
-import Chance from 'chance';
 import debug from 'debug';
+import faker from 'faker';
 import hypercore from 'hypercore';
 import pify from 'pify';
 import ram from 'random-access-memory';
@@ -18,10 +18,10 @@ import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
 import { createIterator, FeedSelector } from './feed-store-iterator';
 
-const chance = new Chance(999);
-
 const log = debug('dxos:echo:feed-store-iterator:test');
 debug.enable('dxos:echo:*');
+
+faker.seed(1);
 
 describe('feed store iterator', () => {
   test('test message order', async () => {
@@ -70,7 +70,7 @@ describe('feed store iterator', () => {
     };
 
     const feedSelector: FeedSelector = descriptor => feeds.has(PublicKey.from(descriptor.key));
-    const readStream = await createIterator(feedStore, feedSelector, messageSelector);
+    const iterator = await createIterator(feedStore, feedSelector, messageSelector);
 
     //
     // Create feeds.
@@ -92,7 +92,7 @@ describe('feed store iterator', () => {
     // TODO(burdon): Randomly create items.
     //
     for (let i = 0; i < config.numMessages; i++) {
-      const feed = chance.pickone(Array.from(feeds.values()));
+      const feed = faker.random.arrayElement(Array.from(feeds.values()));
 
       // Create timeframe dependency.
       const timeframe = new Timeframe(Array.from(feeds.values())
@@ -101,7 +101,7 @@ describe('feed store iterator', () => {
       );
 
       // Create data.
-      const word = chance.word();
+      const word = faker.lorem.word();
       const value = { i, word };
       const message = createTestItemMutation(createId(), String(i), word, timeframe);
 
@@ -110,13 +110,15 @@ describe('feed store iterator', () => {
       log('Write:', keyToString(feed.key), value, timeframe);
     }
 
+    return;
+
     //
     // Consume iterator.
     //
     let j = 0;
     const [counter, updateCounter] = latch(config.numMessages);
     setImmediate(async () => {
-      for await (const message of readStream) {
+      for await (const message of iterator) {
         assert(message.data?.echo?.mutation);
 
         const { key: feedKey, seq, data: { echo: { itemId, timeframe, mutation } } } = message;
@@ -139,10 +141,9 @@ describe('feed store iterator', () => {
       }
     });
 
-    //
-    // Tests
-    //
     await counter;
+    await iterator.close();
+    await feedStore.close();
 
     // Test expected number of messages.
     expect(Array.from(feeds.values())
@@ -150,7 +151,12 @@ describe('feed store iterator', () => {
   });
 
   test('skipping initial messages', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: schema.getCodecForType('dxos.echo.testing.TestItemMutation') } });
+    const feedStore = new FeedStore(ram, {
+      feedOptions: {
+        valueEncoding: schema.getCodecForType('dxos.echo.testing.TestItemMutation')
+      }
+    });
+
     await feedStore.open();
 
     const feed1 = await feedStore.openFeed('feed-1');
@@ -161,7 +167,8 @@ describe('feed store iterator', () => {
     await pify(feed2.append.bind(feed2))({ key: 'feed2', value: '0' });
     await pify(feed2.append.bind(feed2))({ key: 'feed2', value: '1' });
 
-    const iterator = await createIterator(feedStore, undefined, undefined, new Timeframe([[PublicKey.from(feed1.key), 0]]));
+    const timeframe = new Timeframe([[PublicKey.from(feed1.key), 0]]);
+    const iterator = await createIterator(feedStore, undefined, undefined, timeframe);
 
     const [counter, updateCounter] = latch(3);
     const messages: any[] = [];
@@ -171,7 +178,10 @@ describe('feed store iterator', () => {
         updateCounter();
       }
     });
+
     await counter;
+    await iterator.close();
+    await feedStore.close();
 
     expect(messages).toHaveLength(3);
 

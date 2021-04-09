@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import Chance from 'chance';
+import faker from 'faker';
 import pify from 'pify';
 import ram from 'random-access-memory';
 import { Writable } from 'stream';
@@ -17,7 +17,7 @@ import { codec, createTestItemMutation, FeedMessage } from '../proto';
 import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
 
-const chance = new Chance(999);
+faker.seed(1);
 
 //
 // Streams: https://devhints.io/nodejs-stream
@@ -109,7 +109,7 @@ describe('Stream tests', () => {
     const count = new Map();
     for (let i = 0; i < config.numBlocks; i++) {
       // Randomly create items.
-      const { path, feed } = chance.pickone(descriptors);
+      const { path, feed } = faker.random.arrayElement(descriptors);
       count.set(path, (count.get(path) ?? 0) + 1);
       const itemId = createId();
       await feed.append(createTestItemMutation(itemId, 'value', String(i)));

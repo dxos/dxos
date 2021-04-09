@@ -52,8 +52,7 @@
     "@dxos/eslint-plugin": "~1.0.10",
     "@dxos/protobuf-compiler": "~1.1.1",
     "@types/jest": "^25.2.3",
-    "chance": "^1.1.6",
-    "del-cli": "^3.0.0",
+    "faker": "^5.1.0",
     "jest": "^26.2.2",
     "stream-buffers": "^3.0.2",
     "ts-jest": "^26.1.4",
@@ -64,7 +63,8 @@
     "@types/heft-jest": "~1.0.2",
     "pify": "~5.0.0",
     "random-access-memory": "~3.1.2",
-    "tempy": "~1.0.1"
+    "tempy": "~1.0.1",
+    "@types/faker": "~5.5.1"
   },
   "publishConfig": {
     "access": "public"

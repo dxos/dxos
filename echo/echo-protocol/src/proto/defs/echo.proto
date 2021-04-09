@@ -46,6 +46,12 @@ message ItemGenesis {
   string itemType = 1;
   string modelType = 2;
   string modelVersion = 3;
+  LinkData link = 4;
+}
+
+message LinkData {
+  string source = 1;
+  string target = 2;
 }
 
 //

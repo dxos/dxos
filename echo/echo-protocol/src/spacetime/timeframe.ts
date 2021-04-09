@@ -82,6 +82,7 @@ export class Timeframe {
         }
       }
     }
+
     return result;
   }
 
@@ -102,6 +103,7 @@ export class Timeframe {
         result.set(key, seq);
       }
     }
+
     return result;
   }
 }

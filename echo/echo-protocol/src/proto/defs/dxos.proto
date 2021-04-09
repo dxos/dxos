@@ -9,6 +9,7 @@ package dxos;
 import "echo.proto";
 import "testing.proto";
 import "snapshot.proto";
+import "remote.proto";
 
 //
 // Typescript Note:

@@ -1,0 +1,25 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo.remote;
+
+import "echo.proto";
+import "snapshot.proto";
+
+// Message from server to client.
+message ServerMessage {
+  oneof msg {
+    DatabaseSnapshot snapshot = 1;
+    EchoEnvelope update = 2;
+  }
+}
+
+// Message from client to server.
+message ClientMessage {
+  oneof msg {
+    EchoEnvelope mutation = 1;
+  }
+}
