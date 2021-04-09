@@ -11,13 +11,14 @@ const noopCodec: Codec<Uint8Array> = {
 };
 
 /**
- * Is instantiated for items that have non-registered type WRNs.
- *
- * In case the original model gets registered with model factory later, this model holds enough information to instantiate that model on-the-fly.
+ * Is instantiated for items that have unregistered types.
+ * In case the original model gets registered with model factory later,
+ * this model holds enough information to instantiate that model on-the-fly.
  */
-export class UnknownModel extends Model<Uint8Array> {
+// TODO(burdon): Optional. Set as null and ignore messages for items that have unregistered models?
+export class DefaultModel extends Model<Uint8Array> {
   static meta: ModelMeta = {
-    type: 'wrn://protocol.dxos.org/model/unknown',
+    type: 'dxn://dxos/model/default',
     mutation: noopCodec
   };
 

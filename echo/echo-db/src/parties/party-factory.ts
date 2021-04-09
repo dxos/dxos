@@ -33,8 +33,8 @@ import {
   OfflineInvitationClaimer,
   SecretProvider
 } from '../invitations';
-import { SnapshotStore } from '../snapshots/snapshot-store';
-import { FeedStoreAdapter } from '../util/feed-store-adapter';
+import { SnapshotStore } from '../snapshots';
+import { FeedStoreAdapter } from '../util';
 import { HALO_CONTACT_LIST_TYPE, HALO_DEVICE_PREFERENCES_TYPE, HALO_GENERAL_PREFERENCES_TYPE } from './halo-party';
 import { IdentityManager } from './identity-manager';
 import { PartyInternal, PARTY_ITEM_TYPE, PartyOptions } from './party-internal';

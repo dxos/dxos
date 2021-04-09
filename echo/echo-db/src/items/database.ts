@@ -2,20 +2,33 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 import { synchronized } from '@dxos/async';
 import { EchoEnvelope, FeedWriter, ItemID, ItemType, DatabaseSnapshot } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, validateModelClass, ModelFactory } from '@dxos/model-factory';
+import { ObjectModel } from '@dxos/object-model';
 
 import { ResultSet } from '../result';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemFilter, ItemManager } from './item-manager';
+import { Link } from './link';
+import { Selection, SelectFilter } from './selection';
 import { TimeframeClock } from './timeframe-clock';
 
 export interface ItemCreationOptions<M> {
   model: ModelConstructor<M>
   type?: ItemType
   parent?: ItemID
+  props?: any // TODO(marik-d): Type this better.
+}
+
+export interface LinkCreationOptions<M, L extends Model<any>, R extends Model<any>> {
+  model?: ModelConstructor<M>
+  type?: ItemType
+  source: Item<L>
+  target: Item<R>
   props?: any // TODO(marik-d): Type this better.
 }
 
@@ -32,6 +45,7 @@ enum State {
 export class Database {
   private readonly _itemManager: ItemManager;
   private readonly _itemDemuxer: ItemDemuxer;
+
   private _itemDemuxerInboundStream: NodeJS.WritableStream | undefined;
 
   private _state = State.INITIAL;
@@ -46,7 +60,7 @@ export class Database {
     private readonly _outboundStream: FeedWriter<EchoEnvelope> | null,
     private readonly _snapshot?: DatabaseSnapshot
   ) {
-    this._itemManager = new ItemManager(this._modelFactory, this._timeframeClock, this._outboundStream ?? undefined);
+    this._itemManager = new ItemManager(this._modelFactory, this._outboundStream ?? undefined);
     this._itemDemuxer = new ItemDemuxer(this._itemManager, this._modelFactory, { snapshots: true });
   }
 
@@ -87,13 +101,13 @@ export class Database {
     this._assertInitialized();
 
     if (!options.model) {
-      throw new TypeError('You must specify the model for this item.');
+      throw new TypeError('Missing model class.');
     }
 
     validateModelClass(options.model);
 
     if (options.type && typeof options.type !== 'string') {
-      throw new TypeError('Optional item type must be a string URL.');
+      throw new TypeError('Invalid type.');
     }
 
     if (options.parent && typeof options.parent !== 'string') {
@@ -103,13 +117,27 @@ export class Database {
     return this._itemManager.createItem(options.model.meta.type, options.type, options.parent, options.props);
   }
 
-  /**
-   * Queries for a set of Items matching the optional filter.
-   * @param filter
-   */
-  queryItems (filter?: ItemFilter): ResultSet<Item<any>> {
+  createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>> (
+    options: LinkCreationOptions<M, S, T>
+  ): Promise<Link<M, S, T>> {
     this._assertInitialized();
-    return this._itemManager.queryItems(filter);
+
+    const model = options.model ?? ObjectModel;
+    if (!model) {
+      throw new TypeError('Missing model class.');
+    }
+
+    validateModelClass(model);
+
+    if (options.type && typeof options.type !== 'string') {
+      throw new TypeError('Invalid type.');
+    }
+
+    assert(options.source instanceof Item);
+    assert(options.target instanceof Item);
+
+    return this._itemManager
+      .createLink(model.meta.type, options.type, options.source.id, options.target.id, options.props);
   }
 
   /**
@@ -132,6 +160,27 @@ export class Database {
       const [item] = await query.update.waitFor(items => items.length > 0);
       return item;
     }
+  }
+
+  /**
+   * Queries for a set of Items matching the optional filter.
+   * @param filter
+   * @deprecated Use the select method.
+   */
+  // TODO(burdon): Replace `ResultSet` with select.
+  queryItems (filter?: ItemFilter): ResultSet<Item<any>> {
+    this._assertInitialized();
+    return this._itemManager.queryItems(filter);
+  }
+
+  /**
+   * Returns a selection context, which can be used to traverse the object graph.
+   * @param [filter] {SelectFilter}
+   */
+  select (filter?: SelectFilter | undefined): Selection<any> {
+    const result = this._itemManager.queryItems({});
+    const selection = new Selection(() => result.value, result.update.discardParameter());
+    return filter ? selection.filter(filter) : selection;
   }
 
   createSnapshot () {

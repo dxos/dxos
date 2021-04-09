@@ -5,7 +5,7 @@
 import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
 import { PartySnapshot } from '@dxos/echo-protocol';
 
-import { createRamStorage } from '../util/persistant-ram-storage';
+import { createRamStorage } from '../util';
 import { SnapshotStore } from './snapshot-store';
 
 const createPublicKey = () => PublicKey.from(createKeyPair().publicKey);
@@ -24,7 +24,7 @@ test('in-memory', async () => {
     database: {
       items: [{
         itemId: createId(),
-        itemType: 'foo'
+        itemType: 'dxn://example/test'
       }]
     }
   };

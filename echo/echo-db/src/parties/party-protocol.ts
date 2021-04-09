@@ -16,12 +16,11 @@ import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
 import { MMSTTopology, NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
+import { Presence } from '@dxos/protocol-plugin-presence';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
-import { HaloRecoveryInitiator } from '../invitations/halo-recovery-initiator';
-import { InvitationManager } from '../invitations/invitation-manager';
-import { OfflineInvitationClaimer } from '../invitations/offline-invitation-claimer';
-import { FeedStoreAdapter } from '../util/feed-store-adapter';
+import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
+import { FeedStoreAdapter } from '../util';
 import { IdentityManager } from './identity-manager';
 import { PartyInternal } from './party-internal';
 
@@ -42,6 +41,10 @@ export interface PartyProvider {
  * Joins a network swarm with replication protocol and offline invitation/halo recovery protocol.
  */
 export class PartyProtocol {
+  private readonly _peerId = PublicKey.random(); // TODO(marik-d): Should this be a specific peer id?
+
+  private readonly _presence = new Presence(this._peerId.asBuffer())
+
   private _started = false;
 
   constructor (
@@ -66,8 +69,10 @@ export class PartyProtocol {
     return this._networkManager.joinProtocolSwarm({
       topic: this._partyKey,
       protocol: ({ channel }: any) => this._createProtocol(channel),
-      peerId: PublicKey.random(), // TODO(marik-d): Should this be a specific peer id?
-      topology: new MMSTTopology({ originateConnections: 4, maxPeers: 10, sampleSize: 20 })
+      peerId: this._peerId,
+      topology: new MMSTTopology({ originateConnections: 4, maxPeers: 10, sampleSize: 20 }),
+      label: `Party protocol swarm for ${this._partyKey}`,
+      presence: this._presence
     });
   }
 
@@ -145,6 +150,8 @@ export class PartyProtocol {
         }
       })
     );
+
+    plugins.push(this._presence);
 
     const protocol = new Protocol({
       streamOptions: {

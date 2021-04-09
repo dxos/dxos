@@ -150,7 +150,8 @@ export class GreetingResponder {
       topic: PublicKey.from(this._swarmKey),
       protocol: greetingProtocolProvider(this._swarmKey, this._swarmKey, [this._greeterPlugin]),
       peerId: PublicKey.from(this._swarmKey),
-      topology: new FullyConnectedTopology()
+      topology: new FullyConnectedTopology(),
+      label: 'Greeting responder'
     });
 
     log(`Greeting for: ${this._partyProcessor.partyKey.toHex()} on swarmKey ${keyToString(this._swarmKey)}`);

@@ -14,9 +14,8 @@ import { timed, raise } from '@dxos/util';
 
 import { InvitationManager } from '../invitations';
 import { Database, TimeframeClock } from '../items';
-import { createAutomaticSnapshots } from '../snapshots/snapshot-generator';
-import { SnapshotStore } from '../snapshots/snapshot-store';
-import { FeedStoreAdapter } from '../util/feed-store-adapter';
+import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
+import { FeedStoreAdapter } from '../util';
 import { IdentityManager } from './identity-manager';
 import { createMessageSelector } from './message-selector';
 import { PartyProcessor } from './party-processor';
@@ -25,7 +24,7 @@ import { Pipeline } from './pipeline';
 
 // TODO(burdon): Format?
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // every 100 messages
-export const PARTY_ITEM_TYPE = 'wrn://dxos.org/item/party';
+export const PARTY_ITEM_TYPE = 'dxn://dxos/item/party';
 export const PARTY_TITLE_PROPERTY = 'title';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -149,8 +148,10 @@ export class PartyInternal {
       }
     }
 
+    // TODO(burdon): Close.
     const iterator = await this._feedStore.createIterator(this._partyKey,
       createMessageSelector(this._partyProcessor, this._timeframeClock), this._initialTimeframe);
+
     const feedWriteStream = createFeedWriter(feed);
 
     this._pipeline = new Pipeline(

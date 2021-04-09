@@ -7,6 +7,7 @@ dependencies:
   '@dxos/feed-store': 1.2.0-beta.30
   '@dxos/network-manager': 1.0.8_ws@7.4.4
   '@dxos/protobuf-compiler': 1.1.1
+  '@dxos/protocol-plugin-presence': 1.1.0-beta.21
   '@dxos/protocol-plugin-replicator': 1.0.8
   '@dxos/random-access-multi-storage': 1.1.0-beta.8
   '@rush-temp/echo-db': 'file:projects/echo-db.tgz'
@@ -15,7 +16,6 @@ dependencies:
   '@rush-temp/object-model': 'file:projects/object-model.tgz'
   '@rush-temp/util': 'file:projects/util.tgz'
   '@rushstack/heft': 0.26.0_debug@4.3.1
-  '@types/crypto-js': 3.1.47
   '@types/debug': 4.1.5
   '@types/end-of-stream': 1.4.0
   '@types/faker': 5.5.1
@@ -30,7 +30,6 @@ dependencies:
   '@types/stream-buffers': 3.0.3
   '@types/through2': 2.0.36
   chance: 1.1.7
-  crypto-js: 4.0.0
   debug: 4.3.1
   del-cli: 3.0.1
   eslint: 7.23.0
@@ -42,11 +41,9 @@ dependencies:
   js-data-structs: 1.1.3
   json-stable-stringify: 1.0.1
   lodash.merge: 4.6.2
-  memdown: 5.1.0
   minisearch: 3.0.2
   pify: 5.0.0
   protobufjs: 6.10.2
-  pump: 3.0.0
   random-access-memory: 3.1.2
   readable-stream: 3.6.0
   source-map-support: 0.5.19
@@ -388,6 +385,16 @@ packages:
     dev: false
     resolution:
       integrity: sha512-d9UgIaLbmuYHP24WASQX8OI1GJbJVy2021VqczIuDF0m3C5tHIqC7yr75L5eC4BAalEQoPGYcpWnzgD6ZpjiBw==
+  /@dxos/broadcast/1.0.0-beta.11:
+    dependencies:
+      '@dxos/codec-protobuf': 1.1.0-beta.11
+      debug: 4.3.1
+      nanoresource-promise: 2.0.0
+      source-map-support: 0.5.19
+      tiny-lru: 7.0.6
+    dev: false
+    resolution:
+      integrity: sha512-3EYET2GxFdl2/s3OqNmL27wMPLDoyt9hasdBuwpGCytGNud8XHtfbXI03UJsNSVMZqPkBH1H2HGs4IDO5iig2w==
   /@dxos/codec-protobuf/1.1.0-beta.10:
     dependencies:
       assert: 2.0.0
@@ -398,6 +405,15 @@ packages:
     dev: false
     resolution:
       integrity: sha512-4EZg4kpvNZQ9s1ufs2TXP/ReYE/riB5t6+yJYI+ZHDtEXRPVtgoreSzZyiSMboPTG3fqanH0pe4lW6nuBzwiiA==
+  /@dxos/codec-protobuf/1.1.0-beta.11:
+    dependencies:
+      assert: 2.0.0
+      buffer: 5.7.1
+      lodash.merge: 4.6.2
+      protobufjs: 6.10.2
+    dev: false
+    resolution:
+      integrity: sha512-8TlF1BrGSymjcKnvrbFJA1WS3PwTofhbXSTe38f4ydyghBSqZ52u8fVC7v1vxLrOHtST+irqG+T8zzAFGCuWRg==
   /@dxos/codec-protobuf/1.1.1:
     dependencies:
       protobufjs: 6.10.2
@@ -609,6 +625,20 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-orBGNmK/qUxRC35c9o6Rs/stJBohbHrcai3GzYuvhNrqq9TGScvnFpejVULv4ROaoFlZCGiWyhPG2RAtd7taew==
+  /@dxos/protocol-plugin-presence/1.1.0-beta.21:
+    dependencies:
+      '@dxos/broadcast': 1.0.0-beta.11
+      '@dxos/codec-protobuf': 1.1.0-beta.10
+      '@dxos/protocol': 1.1.0-beta.21
+      buffer-json-encoding: 1.0.2
+      debug: 4.3.1
+      ngraph.graph: 19.1.0
+      p-limit: 3.1.0
+      queue-microtask: 1.2.3
+      source-map-support: 0.5.19
+    dev: false
+    resolution:
+      integrity: sha512-AodMxY4u3TWpNYS5Kf4zbHauMyOmIpEfF4swbc3pFli0lyEvhEp4rODj2yaK7RDi+U0N4q5/yyviiDHEflRstA==
   /@dxos/protocol-plugin-replicator/1.0.8:
     dependencies:
       '@dxos/codec-protobuf': 1.1.0-beta.10
@@ -7862,6 +7892,16 @@ packages:
     dev: false
     resolution:
       integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==
+  /ngraph.events/1.2.1:
+    dev: false
+    resolution:
+      integrity: sha512-D4C+nXH/RFxioGXQdHu8ELDtC6EaCiNsZtih0IvyGN81OZSUby4jXoJ5+RNWasfsd0FnKxxpAROyUMzw64QNsw==
+  /ngraph.graph/19.1.0:
+    dependencies:
+      ngraph.events: 1.2.1
+    dev: false
+    resolution:
+      integrity: sha512-9cws84qfPkrYa7BaBtT+KgZfLXrd6pNL9Gl5Do+MBO/0Hm6rOM7qK78MZaO1uEoIK6p2pgUs6lu29zn/6tP59w==
   /nice-try/1.0.5:
     dev: false
     resolution:
@@ -8259,6 +8299,14 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==
+  /p-limit/3.1.0:
+    dependencies:
+      yocto-queue: 0.1.0
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-TYOanM3wGwNGsZN2cVTYPArw454xnXj5qmWF1bEoAc4+cU/ol7GVh7odevjp1FNHduHc3KZMcFduxU5Xc6uJRQ==
   /p-locate/2.0.0:
     dependencies:
       p-limit: 1.3.0
@@ -10254,6 +10302,12 @@ packages:
     dev: false
     resolution:
       integrity: sha1-QFQRqOfmM5/mTbmiNN4R3DHgK9Q=
+  /tiny-lru/7.0.6:
+    dev: false
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-zNYO0Kvgn5rXzWpL0y3RS09sMK67eGaQj9805jlK9G6pSadfriTczzLHFXa/xcW4mIRfmlB9HyQ/+SgL0V1uow==
   /tmpl/1.0.4:
     dev: false
     resolution:
@@ -11203,6 +11257,12 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-aePbxDmcYW++PaqBsJ+HYUFwCdv4LVvdnhBy78E57PIor8/OVvhMrADFFEDh8DHDFRv/O9i3lPhsENjO7QX0+A==
+  /yocto-queue/0.1.0:
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
   /z-schema/3.18.4:
     dependencies:
       lodash.get: 4.4.2
@@ -11224,6 +11284,7 @@ packages:
       '@dxos/feed-store': 1.2.0-beta.30
       '@dxos/network-manager': 1.0.8_ws@7.4.4
       '@dxos/object-model': 2.6.22
+      '@dxos/protocol-plugin-presence': 1.1.0-beta.21
       '@dxos/protocol-plugin-replicator': 1.0.8
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
       '@types/crypto-js': 3.1.47
@@ -11260,7 +11321,7 @@ packages:
     dev: false
     name: '@rush-temp/echo-db'
     resolution:
-      integrity: sha512-lJBMqvP54P+iOW+R/dd7sJra3AnhOlCZxFDcTPigmXIsvETBtbjYDWmlM115AUVutffmBQ8c8MfAm2Qd+kc2+Q==
+      integrity: sha512-c2kd8oKlDArp/HsLrPyQnAnkCsdt+0bCwjj4nqpgStZaG5AkKpcIm9qtZsMLsBf16MILheAPzTP2+3eXlLt3jA==
       tarball: 'file:projects/echo-db.tgz'
     version: 0.0.0
   'file:projects/echo-protocol.tgz':
@@ -11422,9 +11483,10 @@ specifiers:
   '@dxos/crypto': ~1.0.7
   '@dxos/eslint-plugin': ~1.0.10
   '@dxos/feed-store': ~1.2.0-beta.30
-  '@dxos/network-manager': ~1.0.4
+  '@dxos/network-manager': ~1.0.6
   '@dxos/protobuf-compiler': ~1.1.1
-  '@dxos/protocol-plugin-replicator': ~1.0.4
+  '@dxos/protocol-plugin-presence': ~1.1.0-beta.21
+  '@dxos/protocol-plugin-replicator': ~1.0.6
   '@dxos/random-access-multi-storage': ~1.1.0-beta.8
   '@rush-temp/echo-db': 'file:./projects/echo-db.tgz'
   '@rush-temp/echo-protocol': 'file:./projects/echo-protocol.tgz'
@@ -11432,7 +11494,6 @@ specifiers:
   '@rush-temp/object-model': 'file:./projects/object-model.tgz'
   '@rush-temp/util': 'file:./projects/util.tgz'
   '@rushstack/heft': ~0.26.0
-  '@types/crypto-js': ^3.1.47
   '@types/debug': ^4.1.1
   '@types/end-of-stream': ^1.4.0
   '@types/faker': ~5.5.1
@@ -11447,7 +11508,6 @@ specifiers:
   '@types/stream-buffers': ^3.0.2
   '@types/through2': ^2.0.36
   chance: ^1.1.6
-  crypto-js: ^4.0.0
   debug: ^4.1.1
   del-cli: ^3.0.0
   eslint: ^7.7.0
@@ -11459,11 +11519,9 @@ specifiers:
   js-data-structs: ^1.1.2
   json-stable-stringify: ^1.0.1
   lodash.merge: ^4.6.2
-  memdown: ^5.1.0
   minisearch: ^3.0.2
   pify: ~5.0.0
   protobufjs: ^6.9.0
-  pump: ^3.0.0
   random-access-memory: ~3.1.2
   readable-stream: ^3.6.0
   source-map-support: ^0.5.12

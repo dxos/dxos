@@ -13,21 +13,20 @@ import { PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { NetworkManagerOptions } from '@dxos/network-manager/dist/network-manager';
+import { NetworkManagerOptions } from '@dxos/network-manager/dist/network-manager'; // TODO(burdon): Dist.
 import { ObjectModel } from '@dxos/object-model';
 import { Storage } from '@dxos/random-access-multi-storage';
 
 import {
   InvitationAuthenticator, InvitationDescriptor, InvitationOptions, OfflineInvitationClaimer, SecretProvider
 } from './invitations';
-import { UnknownModel } from './items';
+import { DefaultModel } from './items';
 import {
-  HALO_CONTACT_LIST_TYPE, IdentityManager, Party, PartyFactory, PartyFilter, PartyManager, PartyMember
+  HALO_CONTACT_LIST_TYPE, IdentityManager, OpenProgress, Party, PartyFactory, PartyFilter, PartyManager, PartyMember
 } from './parties';
 import { ResultSet } from './result';
-import { SnapshotStore } from './snapshots/snapshot-store';
-import { FeedStoreAdapter } from './util/feed-store-adapter';
-import { createRamStorage } from './util/persistant-ram-storage';
+import { SnapshotStore } from './snapshots';
+import { FeedStoreAdapter, createRamStorage } from './util';
 
 const log = debug('dxos:echo');
 
@@ -130,7 +129,7 @@ export class ECHO {
 
     this._modelFactory = new ModelFactory()
       .registerModel(ObjectModel)
-      .registerModel(UnknownModel);
+      .registerModel(DefaultModel);
 
     const options = {
       readLogger,
@@ -213,13 +212,12 @@ export class ECHO {
   }
 
   /**
-   * Opens the pary and constructs the inbound/outbound mutation streams.
+   * Opens the party and constructs the inbound/outbound mutation streams.
    */
-  async open () {
+  async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     if (!this.isOpen) {
-      await this._networkManager.start();
       await this._keyring.load();
-      await this._partyManager.open();
+      await this._partyManager.open(onProgressCallback);
     }
   }
 

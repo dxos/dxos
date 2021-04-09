@@ -7,4 +7,5 @@ export * from './item';
 export * from './item-demuxer';
 export * from './item-manager';
 export * from './timeframe-clock';
-export * from './unknown-model';
+export * from './default-model';
+export * from './selection';

@@ -9,7 +9,6 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 
 import { ItemManager } from './item-manager';
-import { TimeframeClock } from './timeframe-clock';
 
 describe('items', () => {
   test('item construction', async () => {
@@ -18,7 +17,7 @@ describe('items', () => {
     const feed = await feedStore.openFeed('test-feed');
 
     const modelFactory = new ModelFactory();
-    const itemManager = new ItemManager(modelFactory, new TimeframeClock(), createFeedWriter(feed));
+    const itemManager = new ItemManager(modelFactory, createFeedWriter(feed));
     expect(itemManager).toBeTruthy();
   });
 });

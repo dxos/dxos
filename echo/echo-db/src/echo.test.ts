@@ -12,18 +12,13 @@ import { ObjectModel } from '@dxos/object-model';
 import { latch } from '@dxos/util';
 
 import { ECHO } from './echo';
-import { createTestInstance, inviteTestPeer } from './testing/test-utils';
+import { createTestInstance, inviteTestPeer } from './util';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 
-const createInstance = async () => {
-  return await createTestInstance({ initialize: true });
-};
-
 describe('api tests', () => {
   test('create party and update properties.', async () => {
-    const echo = await createInstance();
-
+    const echo = await createTestInstance({ initialize: true });
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
@@ -35,8 +30,7 @@ describe('api tests', () => {
   });
 
   test('create party and items.', async () => {
-    const echo = await createInstance();
-
+    const echo = await createTestInstance({ initialize: true });
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
@@ -54,7 +48,7 @@ describe('api tests', () => {
         });
 
         // TODO(burdon): Check item mutations.
-        const result = await party.database.queryItems({ type: 'wrn://dxos.org/item/document' });
+        const result = await party.database.queryItems({ type: 'dxn://dxos/item/document' });
         expect(result.value).toHaveLength(2);
         onUpdate();
       });
@@ -69,16 +63,16 @@ describe('api tests', () => {
     expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
     // TODO(burdon): Test item mutations.
-    await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/document' });
-    await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/document' });
-    await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/kanban' });
+    await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/document' });
+    await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/document' });
+    await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/kanban' });
 
     await updated;
     unsubscribe();
   });
 
   test('create party and item with child item.', async () => {
-    const echo = await createInstance();
+    const echo = await createTestInstance({ initialize: true });
 
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
@@ -95,7 +89,7 @@ describe('api tests', () => {
           log('Item:', String(item));
         });
 
-        const { first: item } = await party.database.queryItems({ type: 'wrn://dxos.org/item/document' });
+        const { first: item } = await party.database.queryItems({ type: 'dxn://dxos/item/document' });
         expect(item.children).toHaveLength(1);
         expect(item.children[0].type).toBe(undefined);
         // TODO(burdon): Test parent.
@@ -111,7 +105,7 @@ describe('api tests', () => {
     // Within this test, we use the humanized key as the name.
     expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
-    const parent = await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/document' });
+    const parent = await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/document' });
     await party.database.createItem({ model: ObjectModel, parent: parent.id });
 
     await updated;
@@ -119,7 +113,7 @@ describe('api tests', () => {
   });
 
   test('create party, two items with child items, and then move child.', async () => {
-    const echo = await createInstance();
+    const echo = await createTestInstance({ initialize: true });
 
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
@@ -133,12 +127,12 @@ describe('api tests', () => {
     // Within this test, we use the humanized key as the name.
     expect(members[0].displayName).toEqual(members[0].publicKey.humanize());
 
-    const parentA = await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/document' });
+    const parentA = await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/document' });
     const childA = await party.database.createItem({ model: ObjectModel, parent: parentA.id });
     expect(parentA.children).toHaveLength(1);
     expect(parentA.children[0].id).toEqual(childA.id);
 
-    const parentB = await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/document' });
+    const parentB = await party.database.createItem({ model: ObjectModel, type: 'dxn://dxos/item/document' });
     const childB = await party.database.createItem({ model: ObjectModel, parent: parentB.id });
     expect(parentB.children).toHaveLength(1);
     expect(parentB.children[0].id).toEqual(childB.id);
@@ -151,7 +145,7 @@ describe('api tests', () => {
   });
 
   test('cold start with party', async () => {
-    const echo = await createInstance();
+    const echo = await createTestInstance({ initialize: true });
     const party = await echo.createParty();
 
     await echo.close();
@@ -185,10 +179,11 @@ describe('api tests', () => {
 
     const items = await party.database.queryItems();
     await waitForCondition(() => items.value.length > 0);
+    expect(items.value.length).toBeGreaterThan(0);
   });
 
   test('create party and items with props', async () => {
-    const echo = await createInstance();
+    const echo = await createTestInstance({ initialize: true });
 
     const party = await echo.createParty();
 
@@ -199,8 +194,8 @@ describe('api tests', () => {
   });
 
   test('Contacts', async () => {
-    const echoA = await createInstance();
-    const echoB = await createInstance();
+    const echoA = await createTestInstance({ initialize: true });
+    const echoB = await createTestInstance({ initialize: true });
 
     const partyA = await echoA.createParty();
 

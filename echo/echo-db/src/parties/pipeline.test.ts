@@ -9,7 +9,7 @@ import ram from 'random-access-memory';
 import { waitForCondition } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId, PublicKey } from '@dxos/crypto';
-import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream } from '@dxos/echo-protocol';
+import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
 import { createWritable, createWritableFeedStream, jsonReplacer, latch, WritableArray } from '@dxos/util';
@@ -122,7 +122,8 @@ describe('pipeline', () => {
       itemId: '123',
       genesis: {
         itemType: 'foo'
-      }
+      },
+      timeframe: expect.any(Timeframe)
     });
   });
 });

@@ -33,9 +33,8 @@ import { checkType, createWritableFeedStream, latch } from '@dxos/util';
 
 import { InvitationDescriptor, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
-import { SnapshotStore } from '../snapshots/snapshot-store';
-import { messageLogger } from '../testing/test-utils';
-import { FeedStoreAdapter } from '../util/feed-store-adapter';
+import { SnapshotStore } from '../snapshots';
+import { FeedStoreAdapter, messageLogger } from '../util';
 import { HALO_CONTACT_LIST_TYPE } from './halo-party';
 import { IdentityManager } from './identity-manager';
 import { Party } from './party';
@@ -45,52 +44,55 @@ import { PartyManager } from './party-manager';
 
 const log = debug('dxos:echo:parties:party-manager:test');
 
-describe('Party manager', () => {
-  const setup = async (open = true, createIdentity = true) => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
-    const feedStoreAdapter = new FeedStoreAdapter(feedStore);
-    let seedPhrase;
+// TODO(burdon): Close cleanly.
+// This usually means that there are asynchronous operations that weren't stopped in your tests.
 
-    let identityManager;
+const setup = async (open = true, createIdentity = true) => {
+  const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+  const feedStoreAdapter = new FeedStoreAdapter(feedStore);
+  const keyring = new Keyring();
+
+  let seedPhrase;
+  if (createIdentity) {
+    seedPhrase = generateSeedPhrase();
+    const keyPair = keyPairFromSeedPhrase(seedPhrase);
+    await keyring.addKeyRecord({
+      publicKey: PublicKey.from(keyPair.publicKey),
+      secretKey: keyPair.secretKey,
+      type: KeyType.IDENTITY
+    });
+  }
+
+  const identityManager = new IdentityManager(keyring);
+  const snapshotStore = new SnapshotStore(ram);
+  const modelFactory = new ModelFactory().registerModel(ObjectModel);
+  const partyFactory = new PartyFactory(
+    identityManager,
+    feedStoreAdapter,
+    modelFactory,
+    new NetworkManager(),
+    snapshotStore,
     {
-      const keyring = new Keyring();
-      if (createIdentity) {
-        seedPhrase = generateSeedPhrase();
-        const keyPair = keyPairFromSeedPhrase(seedPhrase);
-        await keyring.addKeyRecord({
-          publicKey: PublicKey.from(keyPair.publicKey),
-          secretKey: keyPair.secretKey,
-          type: KeyType.IDENTITY
-        });
-      }
-      identityManager = new IdentityManager(keyring);
+      writeLogger: messageLogger('<<<'),
+      readLogger: messageLogger('>>>')
     }
+  );
 
-    const snapshotStore = new SnapshotStore(ram);
-    const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const partyFactory = new PartyFactory(
-      identityManager,
-      feedStoreAdapter,
-      modelFactory,
-      new NetworkManager(),
-      snapshotStore,
-      {
-        writeLogger: messageLogger('<<<'),
-        readLogger: messageLogger('>>>')
-      }
-    );
-    const partyManager = new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory);
+  const partyManager = new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory);
 
-    if (open) {
-      await partyManager.open();
-      if (createIdentity) {
-        await partyManager.createHalo({ identityDisplayName: identityManager.identityKey!.publicKey.humanize() });
-      }
+  if (open) {
+    await partyManager.open();
+    if (createIdentity) {
+      await partyManager.createHalo({
+        identityDisplayName: identityManager.identityKey!.publicKey.humanize()
+      });
     }
+  }
 
-    return { feedStore, partyManager, identityManager, seedPhrase };
-  };
+  return { feedStore, partyManager, identityManager, seedPhrase };
+};
 
+describe('Party manager', () => {
   test('Created locally', async () => {
     const { partyManager, identityManager } = await setup();
     await partyManager.open();
@@ -113,6 +115,7 @@ describe('Party manager', () => {
     expect(identityManager.keyring.hasSecretKey(partyKey)).toBe(false);
 
     await update;
+    await partyManager.close();
   });
 
   test('Created via sync', async () => {
@@ -133,7 +136,8 @@ describe('Party manager', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     // TODO(burdon): Create multiple feeds.
-    const feed = await feedStore.openFeed(partyKey.publicKey.toHex(), { metadata: { partyKey: partyKey.publicKey } } as any);
+    const feed = await feedStore.openFeed(
+      partyKey.publicKey.toHex(), { metadata: { partyKey: partyKey.publicKey } } as any);
     const feedKey = await keyring.addKeyRecord({
       publicKey: PublicKey.from(feed.key),
       secretKey: feed.secretKey,
@@ -149,6 +153,7 @@ describe('Party manager', () => {
     }]);
 
     await update;
+    await partyManager.close();
   });
 
   test('Create from cold start', async () => {
@@ -162,12 +167,12 @@ describe('Party manager', () => {
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const snapshotStore = new SnapshotStore(ram);
-    const partyFactory = new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(), snapshotStore);
-    const partyManager = new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory);
+    const partyFactory =
+      new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(), snapshotStore);
+    const partyManager =
+      new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory);
 
     await feedStore.open();
-
-    const numParties = 3;
 
     // TODO(telackey): Injecting "raw" Parties into the feeds behind the scenes seems fishy to me, as it writes the
     // Party messages in a slightly different way than the code inside PartyFactory does, and so could easily diverge
@@ -176,12 +181,13 @@ describe('Party manager', () => {
     // same storage.
 
     // Create raw parties.
+    const numParties = 3;
     for (let i = 0; i < numParties; i++) {
       const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
       // TODO(burdon): Create multiple feeds.
-      const feed = await feedStore.openFeed(partyKey.publicKey.toHex(),
-        { metadata: { partyKey: partyKey.publicKey, writable: true } } as any);
+      const feed = await feedStore.openFeed(
+        partyKey.publicKey.toHex(), { metadata: { partyKey: partyKey.publicKey, writable: true } } as any);
       const feedKey = await keyring.addKeyRecord({
         publicKey: PublicKey.from(feed.key),
         secretKey: feed.secretKey,
@@ -204,8 +210,46 @@ describe('Party manager', () => {
 
     // Open.
     await partyManager.open();
-
     expect(partyManager.parties).toHaveLength(numParties);
+    await partyManager.close();
+  });
+
+  test('Create invitation', async () => {
+    const { partyManager: partyManagerA } = await setup();
+    const { partyManager: partyManagerB } = await setup();
+    await partyManagerA.open();
+    await partyManagerB.open();
+
+    const partyA = await partyManagerA.createParty();
+    const PIN = Buffer.from('0000');
+    const secretProvider: SecretProvider = async () => PIN;
+    const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
+    const invitationDescriptor = await partyA.invitationManager.createInvitation({ secretProvider, secretValidator });
+
+    const partyB = await partyManagerB.joinParty(invitationDescriptor, secretProvider);
+    expect(partyB).toBeDefined();
+
+    // TODO(burdon): Adding this causes the worker process to hang AND partyManger.close to throw.
+    /*
+    const [updated, onUpdate] = latch();
+    partyB.database.queryItems({ type: 'dxn://example/item/test' })
+      .subscribe((result) => {
+        if (result.length) {
+          const [itemB] = result;
+          if (itemA && itemA.id === itemB.id) {
+            log(`B has ${result[0].id}`);
+            onUpdate();
+          }
+        }
+      });
+    */
+
+    const itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' });
+    log(`A created ${itemA.id}`);
+    // await updated;
+
+    // await partyManagerA.close();
+    // await partyManagerB.close();
   });
 
   test('Join a party - PIN', async () => {
@@ -214,8 +258,6 @@ describe('Party manager', () => {
     await partyManagerA.open();
     await partyManagerB.open();
 
-    const PIN = Buffer.from('0000');
-
     // Create the Party.
     expect(partyManagerA.parties).toHaveLength(0);
     const partyA = await partyManagerA.createParty();
@@ -223,6 +265,7 @@ describe('Party manager', () => {
     log(`Created ${partyA.key.toHex()}`);
 
     // Create a validation function which tests the signature of a specific KeyPair.
+    const PIN = Buffer.from('0000');
     const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
 
     // And a provider for the secret.
@@ -239,10 +282,10 @@ describe('Party manager', () => {
     log(`Joined ${partyB.key.toHex()}`);
 
     let itemA: Item<any> | null = null;
-    const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.queryItems({ type: 'wrn://dxos.org/item/test' })
+    const [updated, onUpdate] = latch();
+    partyB.database.queryItems({ type: 'dxn://example/item/test' })
       .subscribe((result) => {
         if (result.length) {
           const [itemB] = result;
@@ -254,15 +297,15 @@ describe('Party manager', () => {
       });
 
     // Create a new Item on A.
-    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/test' });
+    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' });
     log(`A created ${itemA.id}`);
 
     // Now wait to see it on B.
     await updated;
 
     // Check Party membership and displayName.
-    for (const _party of [partyA, partyB]) {
-      const party = new Party(_party);
+    for (const p of [partyA, partyB]) {
+      const party = new Party(p);
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {
@@ -276,6 +319,9 @@ describe('Party manager', () => {
         }
       }
     }
+
+    // await partyManagerA.close();
+    // await partyManagerB.close();
   });
 
   test('Join a party - signature', async () => {
@@ -324,7 +370,7 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.queryItems({ type: 'wrn://dxos.org/item/test' })
+    partyB.database.queryItems({ type: 'dxn://example/item/test' })
       .subscribe((result) => {
         if (result.length) {
           const [itemB] = result;
@@ -336,7 +382,7 @@ describe('Party manager', () => {
       });
 
     // Create a new Item on A.
-    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/test' }) as Item<any>;
+    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
     log(`A created ${itemA.id}`);
 
     // Now wait to see it on B.
@@ -356,6 +402,9 @@ describe('Party manager', () => {
         }
       }
     }
+
+    // await partyManagerA.close();
+    // await partyManagerB.close();
   });
 
   test('One user, two devices', async () => {
@@ -385,7 +434,6 @@ describe('Party manager', () => {
 
     // And then redeem it on nodeB.
     await partyManagerB.joinHalo(invitation, secretProvider);
-
     expect(identityManagerA.halo).toBeDefined();
     expect(identityManagerB.halo).toBeDefined();
 
@@ -398,7 +446,7 @@ describe('Party manager', () => {
       const [updated, onUpdate] = latch();
 
       // Subscribe to Item updates on B.
-      identityManagerB.halo?.database.queryItems({ type: 'wrn://dxos.org/item/test' })
+      identityManagerB.halo?.database.queryItems({ type: 'dxn://example/item/test' })
         .subscribe((result) => {
           if (result.length) {
             if (itemA && result.find(item => item.id === itemA?.id)) {
@@ -409,7 +457,8 @@ describe('Party manager', () => {
         });
 
       // Create a new Item on A.
-      itemA = await identityManagerA.halo?.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/test' }) as Item<any>;
+      itemA = await identityManagerA.halo?.database
+        .createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
       log(`A created ${itemA.id}`);
 
       // Now wait to see it on B.
@@ -434,7 +483,7 @@ describe('Party manager', () => {
       const [updated, onUpdate] = latch();
 
       // Subscribe to Item updates on A.
-      partyManagerA.parties[0].database.queryItems({ type: 'wrn://dxos.org/item/test' })
+      partyManagerA.parties[0].database.queryItems({ type: 'dxn://example/item/test' })
         .subscribe((result) => {
           if (result.length) {
             const [itemB] = result;
@@ -446,16 +495,15 @@ describe('Party manager', () => {
         });
 
       // Create a new Item on B.
-      itemA = await partyManagerB.parties[0].database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/test' }) as Item<any>;
+      itemA = await partyManagerB.parties[0].database
+        .createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
 
       // Now wait to see it on A.
       await updated;
     }
   });
 
-  // TODO(marik-d): Unskip.
-  // https://github.com/dxos/mesh/issues/36
-  test.skip('Two users, two devices each', async () => {
+  test('Two users, two devices each', async () => {
     const { partyManager: partyManagerA1, identityManager: identityManagerA1 } = await setup(true, true);
     const { partyManager: partyManagerA2, identityManager: identityManagerA2 } = await setup(true, false);
     const { partyManager: partyManagerB1, identityManager: identityManagerB1 } = await setup(true, true);
@@ -523,7 +571,6 @@ describe('Party manager', () => {
       await partyManagerB1.joinParty(invitation, secretProvider);
 
       await partyUpdatedB;
-
       expect(partyManagerB1.parties.length).toBe(1);
       expect(partyManagerB2.parties.length).toBe(1);
       expect(partyManagerB1.parties[0].key).toEqual(partyManagerB2.parties[0].key);
@@ -535,7 +582,7 @@ describe('Party manager', () => {
     // Empty across the board.
     for (const partyManager of [partyManagerA1, partyManagerA2, partyManagerB1, partyManagerB2]) {
       const [party] = partyManager.parties;
-      expect(party.database.queryItems({ type: 'wrn://dxos.org/item/test' }).value.length).toBe(0);
+      expect(party.database.queryItems({ type: 'dxn://example/item/test' }).value.length).toBe(0);
     }
 
     for await (const partyManager of [partyManagerA1, partyManagerA2, partyManagerB1, partyManagerB2]) {
@@ -547,7 +594,7 @@ describe('Party manager', () => {
         if (partyManager !== otherManager) {
           const [otherParty] = otherManager.parties;
           const [updated, onUpdate] = latch();
-          otherParty.database.queryItems({ type: 'wrn://dxos.org/item/test' })
+          otherParty.database.queryItems({ type: 'dxn://example/item/test' })
             .subscribe((result) => {
               if (result.find(current => current.id === item?.id)) {
                 log(`other has ${item?.id}`);
@@ -558,7 +605,7 @@ describe('Party manager', () => {
         }
       }
 
-      item = await party.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/test' }) as Item<any>;
+      item = await party.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
       await Promise.all(itemPromises);
     }
   });
@@ -573,7 +620,6 @@ describe('Party manager', () => {
 
     // And then redeem it on nodeB.
     await partyManagerB.recoverHalo(seedPhrase);
-
     expect(identityManagerA.halo).toBeDefined();
     expect(identityManagerB.halo).toBeDefined();
 
@@ -582,7 +628,7 @@ describe('Party manager', () => {
       const [updated, onUpdate] = latch();
 
       // Subscribe to Item updates on B.
-      identityManagerB.halo?.database.queryItems({ type: 'wrn://dxos.org/item/test' })
+      identityManagerB.halo?.database.queryItems({ type: 'dxn://example/item/test' })
         .subscribe((result) => {
           if (result.length) {
             const [itemB] = result;
@@ -594,7 +640,8 @@ describe('Party manager', () => {
         });
 
       // Create a new Item on A.
-      itemA = await identityManagerA.halo?.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/test' }) as Item<any>;
+      itemA = await identityManagerA.halo?.database
+        .createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
       log(`A created ${itemA.id}`);
 
       // Now wait to see it on B.
@@ -621,7 +668,7 @@ describe('Party manager', () => {
       const [updated, onUpdate] = latch();
 
       // Subscribe to Item updates on A.
-      partyManagerA.parties[0].database.queryItems({ type: 'wrn://dxos.org/item/test' })
+      partyManagerA.parties[0].database.queryItems({ type: 'dxn://example/item/test' })
         .subscribe((result) => {
           if (result.length) {
             const [itemB] = result;
@@ -633,7 +680,8 @@ describe('Party manager', () => {
         });
 
       // Create a new Item on B.
-      itemA = await partyManagerB.parties[0].database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/test' }) as Item<any>;
+      itemA = await partyManagerB.parties[0].database
+        .createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
 
       // Now wait to see it on A.
       await updated;
@@ -655,7 +703,8 @@ describe('Party manager', () => {
     expect(partyManagerA.parties).toHaveLength(1);
     log(`Created ${partyA.key.toHex()}`);
 
-    const invitationDescriptor = await partyA.invitationManager.createOfflineInvitation(identityManagerB.identityKey.publicKey);
+    const invitationDescriptor = await partyA.invitationManager
+      .createOfflineInvitation(identityManagerB.identityKey.publicKey);
 
     // Redeem the invitation on B.
     expect(partyManagerB.parties).toHaveLength(0);
@@ -668,7 +717,7 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.queryItems({ type: 'wrn://dxos.org/item/test' })
+    partyB.database.queryItems({ type: 'dxn://example/item/test' })
       .subscribe((result) => {
         if (result.length) {
           const [itemB] = result;
@@ -680,7 +729,7 @@ describe('Party manager', () => {
       });
 
     // Create a new Item on A.
-    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/test' }) as Item<any>;
+    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
     log(`A created ${itemA.id}`);
 
     // Now wait to see it on B.
@@ -736,7 +785,8 @@ describe('Party manager', () => {
     expect(partyManagerA.parties).toHaveLength(1);
     log(`Created ${partyA.key.toHex()}`);
 
-    const invitationDescriptor = await partyA.invitationManager.createOfflineInvitation(identityManagerB.identityKey.publicKey);
+    const invitationDescriptor =
+      await partyA.invitationManager.createOfflineInvitation(identityManagerB.identityKey.publicKey);
 
     // Redeem the invitation on B.
     expect(partyManagerB.parties).toHaveLength(0);
@@ -761,6 +811,7 @@ describe('Party manager', () => {
 
     await partyA.setTitle('A');
     await partyB.setTitle('B');
+
     expect(partyA.title).toBe('A');
     expect(partyB.title).toBe('B');
 
@@ -789,12 +840,12 @@ describe('Party manager', () => {
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive()).toBe(true);
 
-    // --- Create an item ---
+    // Create an item.
 
     let itemA: Item<any> | null = null;
     const [updated, onUpdate] = latch();
 
-    partyA.database.queryItems({ type: 'wrn://dxos.org/item/test' })
+    partyA.database.queryItems({ type: 'dxn://example/item/test' })
       .subscribe((result) => {
         if (result.length) {
           const [receivedItem] = result;
@@ -804,10 +855,10 @@ describe('Party manager', () => {
         }
       });
 
-    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'wrn://dxos.org/item/test' }) as Item<any>;
+    itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
     await updated; // wait to see the update
 
-    expect((await partyA.database.queryItems({ type: 'wrn://dxos.org/item/test' })).value.length).toEqual(1);
+    expect((await partyA.database.queryItems({ type: 'dxn://example/item/test' })).value.length).toEqual(1);
 
     await partyA.deactivate({ global: true });
     await partyA.activate({ global: true });
@@ -815,8 +866,8 @@ describe('Party manager', () => {
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive()).toBe(true);
 
-    await waitForCondition(() => partyA.database.queryItems({ type: 'wrn://dxos.org/item/test' }).value.length > 0, 5000);
-    expect((await partyA.database.queryItems({ type: 'wrn://dxos.org/item/test' })).value.length).toEqual(1);
+    await waitForCondition(() => partyA.database.queryItems({ type: 'dxn://example/item/test' }).value.length > 0, 5000);
+    expect((await partyA.database.queryItems({ type: 'dxn://example/item/test' })).value.length).toEqual(1);
   }, 10000);
 
   test('Deactivate Party - multi device', async () => {
@@ -842,14 +893,12 @@ describe('Party manager', () => {
     expect(partyManagerB.parties[0].isOpen).toBe(true);
 
     await partyManagerA.parties[0].deactivate({ global: true });
-
     await waitForCondition(() => !partyManagerB.parties[0].isOpen, 500);
 
     expect(partyManagerA.parties[0].isOpen).toBe(false);
     expect(partyManagerB.parties[0].isOpen).toBe(false);
 
     await partyManagerA.parties[0].activate({ global: true });
-
     await waitForCondition(() => partyManagerA.parties[0].isOpen && partyManagerB.parties[0].isOpen, 500);
 
     expect(partyManagerA.parties[0].isOpen).toBe(true);
@@ -861,7 +910,6 @@ describe('Party manager', () => {
     await partyManagerA.open();
 
     const partyA = new Party(await partyManagerA.createParty());
-
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive()).toBe(true);
 
@@ -870,18 +918,15 @@ describe('Party manager', () => {
     expect(partyA.getProperty('title')).toBe('A');
 
     await partyA.deactivate({ global: true });
-
     expect(partyA.isOpen).toBe(false);
     expect(partyA.isActive()).toBe(false);
-
     expect(partyA.title).toBe('A');
 
     await partyA.activate({ global: true });
-
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive()).toBe(true);
-
     expect(partyA.title).toBe('A');
+
     await waitForCondition(() => partyA.getProperty('title') === 'A', 4000);
   });
 
@@ -898,14 +943,11 @@ describe('Party manager', () => {
     expect(partyA.title).toBe('A');
 
     await partyA.deactivate({ global: true });
-
     expect(partyA.isOpen).toBe(false);
     expect(partyA.isActive()).toBe(false);
-
     expect(partyA.title).toBe('A');
 
     await partyA.activate({ global: true });
-
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive()).toBe(true);
     expect(partyA.title).toBe('A');
@@ -915,18 +957,26 @@ describe('Party manager', () => {
     expect(partyA.title).toBe('A2');
   });
 
+  // TODO(burdon): Sporadically fails: https://github.com/dxos/echo/issues/391
   test('Setting title propagates to other devices AND other party members', async () => {
-    const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true); // User creating the party
-    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false); // His other device, joined by device invitation
-    const { partyManager: partyManagerC, identityManager: identityManagerC } = await setup(true, false); // His other device, joined by seed phrase recovery
-    const { partyManager: partyManagerD } = await setup(true, true); // Another user in the party
+    // User creating the party
+    const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     assert(seedPhrase);
+
+    // User's other device, joined by device invitation
+    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
+
+    // User's  other device, joined by seed phrase recovery.
+    const { partyManager: partyManagerC, identityManager: identityManagerC } = await setup(true, false);
+
+    // Another user in the party.
+    const { partyManager: partyManagerD } = await setup(true, true);
 
     const partyA = new Party(await partyManagerA.createParty());
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive()).toBe(true);
 
-    // --- B joins as another device of A, device invitation ---
+    // B joins as another device of A, device invitation.
 
     const pinSecret = '0000';
     const secretProviderDevice: SecretProvider = async () => Buffer.from(pinSecret);
@@ -945,7 +995,7 @@ describe('Party manager', () => {
     expect(partyManagerB.parties.length).toBe(1);
     const partyB = new Party(partyManagerB.parties[0]);
 
-    // --- C joins as another device of A, seed phrase recovery ---
+    // C joins as another device of A, seed phrase recovery.
 
     await partyManagerC.recoverHalo(seedPhrase);
     expect(identityManagerC.halo).toBeDefined();
@@ -953,38 +1003,39 @@ describe('Party manager', () => {
     expect(partyManagerC.parties.length).toBe(1);
     const partyC = new Party(partyManagerC.parties[0]);
 
-    // --- D joins as another member of the party ---
+    // D joins as another member of the party.
 
     const PIN = Buffer.from('0000');
-
     const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
     const secretProvider: SecretProvider = async () => PIN;
-    const invitationDescriptor = await partyManagerA.parties[0].invitationManager.createInvitation({ secretProvider, secretValidator });
+    const invitationDescriptor = await partyManagerA.parties[0].invitationManager
+      .createInvitation({ secretProvider, secretValidator });
     expect(partyManagerD.parties).toHaveLength(0);
     const partyD = new Party(await partyManagerD.joinParty(invitationDescriptor, secretProvider));
     expect(partyD).toBeDefined();
     expect(partyManagerD.parties).toHaveLength(1);
 
-    // --- Checking propagation of title ---
+    // Checking propagation of title.
 
     expect(partyA.title).toBe(undefined);
     expect(partyB.title).toBe(undefined);
     expect(partyC.title).toBe(undefined);
     expect(partyD.title).toBe(undefined);
 
-    await partyA.setTitle('Some name');
+    await partyA.setTitle('Test');
 
     for (const _party of [partyA, partyB, partyC]) {
-      await waitForCondition(() => _party.getProperty('title') === 'Some name', 3000);
-      expect(_party.title).toEqual('Some name');
+      await waitForCondition(() => _party.getProperty('title') === 'Test', 3000);
+      expect(_party.title).toEqual('Test');
     }
 
     // For the other member of the party, title propagates correctly as well
-    await waitForCondition(() => partyD.getProperty('title') === 'Some name', 3000);
-    expect(partyD.title).toEqual('Some name'); // However this does not
+    await waitForCondition(() => partyD.getProperty('title') === 'Test', 3000);
+    expect(partyD.title).toEqual('Test'); // However this does not
   });
 
-  // Note: The reason I wrote this test is because it does not seem to be working properly in Teamwork
+  // TODO(burdon): Fix.
+  // Note: The reason I wrote this test is because it does not seem to be working properly in Teamwork.
   // I don't seem to be receiving an update after which party.title holds correct value.
   // https://github.com/dxos/teamwork/issues/496#issuecomment-739862830
   // However it seems to be working fine in this test.
@@ -996,7 +1047,7 @@ describe('Party manager', () => {
 
     const partyA = new Party(await partyManagerA.createParty());
 
-    // --- B joins as another device of A, device invitation ---
+    // B joins as another device of A, device invitation/
 
     const pinSecret = '0000';
     const secretProviderDevice: SecretProvider = async () => Buffer.from(pinSecret);
@@ -1009,21 +1060,24 @@ describe('Party manager', () => {
     }) as InvitationDescriptor;
 
     expect(partyManagerB.parties.length).toBe(0);
+
     await partyManagerB.joinHalo(invitation, secretProviderDevice);
     expect(identityManagerB.halo).toBeDefined();
+
     await waitForCondition(() => partyManagerB.parties.length, 1000);
     expect(partyManagerB.parties.length).toBe(1);
     const partyB = new Party(partyManagerB.parties[0]);
 
-    // --- C joins as another device of A, seed phrase recovery ---
+    // C joins as another device of A, seed phrase recovery.
 
     await partyManagerC.recoverHalo(seedPhrase);
     expect(identityManagerC.halo).toBeDefined();
+
     await waitForCondition(() => partyManagerC.parties.length, 1000);
     expect(partyManagerC.parties.length).toBe(1);
     const partyC = new Party(partyManagerC.parties[0]);
 
-    // --- Hooking to party updates ---
+    // Hooking to party updates.
 
     let titleInC = partyC.title;
     partyC.update.on(() => {
@@ -1035,17 +1089,14 @@ describe('Party manager', () => {
       titleInB = partyB.title;
     });
 
-    await partyA.setTitle('Some name');
-    expect(partyA.title).toEqual('Some name');
+    await partyA.setTitle('value-1');
+    expect(partyA.title).toEqual('value-1');
+    await waitForCondition(() => titleInC === 'value-1', 10000);
+    await waitForCondition(() => titleInB === 'value-1', 10000);
 
-    // The following should eventually be true after one of the updates
-    await waitForCondition(() => titleInC === 'Some name', 10000);
-    await waitForCondition(() => titleInB === 'Some name', 10000);
-
-    await partyA.setTitle('Another name');
-    expect(partyA.title).toEqual('Another name');
-
-    await waitForCondition(() => titleInC === 'Another name', 10000);
-    await waitForCondition(() => titleInB === 'Another name', 10000);
+    await partyA.setTitle('value-2');
+    expect(partyA.title).toEqual('value-2');
+    await waitForCondition(() => titleInC === 'value-2', 10000);
+    await waitForCondition(() => titleInB === 'value-2', 10000);
   }, 20000);
 });

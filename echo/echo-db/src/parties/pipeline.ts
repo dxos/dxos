@@ -47,14 +47,14 @@ export class Pipeline {
 
   /**
    * @param _partyProcessor Processes HALO messages to update party state.
-   * @param _feedReadStream Inbound messages from the feed store.
+   * @param _feedStorIterator Inbound messages from the feed store.
    * @param _timeframeClock Tracks current echo timestamp.
    * @param _feedWriter Outbound messages to the writeStream feed.
    * @param _options
    */
   constructor (
     private readonly _partyProcessor: PartyProcessor,
-    private readonly _feedReadStream: FeedStoreIterator,
+    private readonly _feedStorIterator: FeedStoreIterator,
     private readonly _timeframeClock: TimeframeClock,
     private readonly _feedWriter?: FeedWriter<FeedMessage>,
     private readonly _options: Options = {}
@@ -105,7 +105,7 @@ export class Pipeline {
 
     // This will exit cleanly once FeedStoreIterator is closed.
     setImmediate(async () => {
-      for await (const block of this._feedReadStream) {
+      for await (const block of this._feedStorIterator) {
         readLogger?.(block as any);
 
         try {
@@ -165,7 +165,12 @@ export class Pipeline {
         return msg;
       }, this._feedWriter);
 
-      this._outboundEchoStream = mapFeedWriter<EchoEnvelope, FeedMessage>(async message => ({ echo: message }), loggingWriter);
+      this._outboundEchoStream = mapFeedWriter<EchoEnvelope, FeedMessage>(async message => ({
+        echo: {
+          ...message,
+          timeframe: this._timeframeClock.timeframe
+        }
+      }), loggingWriter);
       this._outboundHaloStream = mapFeedWriter<HaloMessage, FeedMessage>(async message => ({ halo: message }), loggingWriter);
     }
 
@@ -180,7 +185,7 @@ export class Pipeline {
    */
   // TODO(burdon): Create test that all streams are closed cleanly.
   async close () {
-    await this._feedReadStream.close();
+    await this._feedStorIterator.close();
 
     if (this._inboundEchoStream) {
       this._inboundEchoStream.destroy();

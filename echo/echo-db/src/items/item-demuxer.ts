@@ -10,9 +10,9 @@ import { DatabaseSnapshot, EchoEnvelope, IEchoStream, ItemID, ItemSnapshot, Mode
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { createReadable, createWritable, jsonReplacer, raise } from '@dxos/util';
 
+import { DefaultModel } from './default-model';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
-import { UnknownModel } from './unknown-model';
 
 const log = debug('dxos:echo:item-demuxer');
 
@@ -41,9 +41,9 @@ export class ItemDemuxer {
 
   open (): NodeJS.WritableStream {
     this._modelFactory.registered.on(async model => {
-      for (const item of this._itemManager.getItemsWithUnknownModels()) {
+      for (const item of this._itemManager.getItemsWithDefaultModels()) {
         if (item.model.originalModelType === model.meta.type) {
-          await this._itemManager.reconstructItemWithUnknownModel(item.id, this._itemStreams.get(item.id)!);
+          await this._itemManager.reconstructItemWithDefaultModel(item.id, this._itemStreams.get(item.id)!);
         }
       }
     });
@@ -69,12 +69,13 @@ export class ItemDemuxer {
         // TODO(marik-d): Investigate whether gensis message shoudl be able to set parentId.
         const item = await this._itemManager.constructItem({
           itemId,
-          modelType: this._modelFactory.hasModel(modelType) ? modelType : UnknownModel.meta.type,
+          modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
           itemType,
           readStream: itemStream,
-          initialMutations: mutation ? [{ mutation, meta }] : undefined
+          initialMutations: mutation ? [{ mutation, meta }] : undefined,
+          link: genesis.link
         });
-        if (item.model instanceof UnknownModel) {
+        if (item.model instanceof DefaultModel) {
           item.model.originalModelType = modelType;
         }
         assert(item.id === itemId);
@@ -170,14 +171,15 @@ export class ItemDemuxer {
 
       const newItem = await this._itemManager.constructItem({
         itemId: item.itemId,
-        modelType: this._modelFactory.hasModel(item.modelType) ? item.modelType : UnknownModel.meta.type,
+        modelType: this._modelFactory.hasModel(item.modelType) ? item.modelType : DefaultModel.meta.type,
         itemType: item.itemType,
         readStream: itemStream,
         parentId: item.parentId,
         initialMutations: item.model.array ? item.model.array.mutations : undefined,
         modelSnapshot: item.model.custom ? item.model.custom : undefined
       });
-      if (newItem.model instanceof UnknownModel) {
+
+      if (newItem.model instanceof DefaultModel) {
         newItem.model.originalModelType = item.modelType;
       }
     }

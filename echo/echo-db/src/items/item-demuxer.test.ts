@@ -10,11 +10,10 @@ import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { checkType, createTransform, latch } from '@dxos/util';
 
+import { DefaultModel } from './default-model';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { TimeframeClock } from './timeframe-clock';
-import { UnknownModel } from './unknown-model';
 
 const log = debug('dxos:echo:item-demuxer:test');
 
@@ -26,7 +25,7 @@ test('set-up', async () => {
 
   const modelFactory = new ModelFactory()
     .registerModel(TestModel)
-    .registerModel(UnknownModel);
+    .registerModel(DefaultModel);
 
   const writeStream = createTransform<EchoEnvelope, IEchoStream>(
     async (message: EchoEnvelope): Promise<IEchoStream> => ({
@@ -39,8 +38,7 @@ test('set-up', async () => {
     })
   );
 
-  const timeframeClock = new TimeframeClock();
-  const itemManager = new ItemManager(modelFactory, timeframeClock, createMockFeedWriterFromStream(writeStream));
+  const itemManager = new ItemManager(modelFactory, createMockFeedWriterFromStream(writeStream));
   const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
   writeStream.pipe(itemDemuxer.open());
 
@@ -59,7 +57,7 @@ test('set-up', async () => {
   const message: EchoEnvelope = {
     itemId,
     genesis: {
-      itemType: 'wrn://dxos.org/item/test',
+      itemType: 'dxn://dxos/item/test',
       modelType: TestModel.meta.type
     }
   };
@@ -102,7 +100,7 @@ test('set-up', async () => {
 it('ignores unknown models', async () => {
   const modelFactory = new ModelFactory()
     .registerModel(TestModel)
-    .registerModel(UnknownModel);
+    .registerModel(DefaultModel);
 
   const writeStream = createTransform<EchoEnvelope, IEchoStream>(
     async (message: EchoEnvelope): Promise<IEchoStream> => ({
@@ -114,8 +112,7 @@ it('ignores unknown models', async () => {
       data: message
     })
   );
-  const timeframeClock = new TimeframeClock();
-  const itemManager = new ItemManager(modelFactory, timeframeClock, createMockFeedWriterFromStream(writeStream));
+  const itemManager = new ItemManager(modelFactory, createMockFeedWriterFromStream(writeStream));
   const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
   writeStream.pipe(itemDemuxer.open());
 
@@ -140,10 +137,9 @@ it('ignores unknown models', async () => {
 it('ignores unknown models on snapshot restore', async () => {
   const modelFactory = new ModelFactory()
     .registerModel(TestModel)
-    .registerModel(UnknownModel);
+    .registerModel(DefaultModel);
 
-  const timeframeClock = new TimeframeClock();
-  const itemManager = new ItemManager(modelFactory, timeframeClock);
+  const itemManager = new ItemManager(modelFactory);
   const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
 
   await itemDemuxer.restoreFromSnapshot({
@@ -175,7 +171,7 @@ it('ignores unknown models on snapshot restore', async () => {
 it('models can be registered after item was already created', async () => {
   const modelFactory = new ModelFactory()
     .registerModel(ObjectModel)
-    .registerModel(UnknownModel);
+    .registerModel(DefaultModel);
 
   const writeStream = createTransform<EchoEnvelope, IEchoStream>(
     async (message: EchoEnvelope): Promise<IEchoStream> => ({
@@ -187,8 +183,7 @@ it('models can be registered after item was already created', async () => {
       data: message
     })
   );
-  const timeframeClock = new TimeframeClock();
-  const itemManager = new ItemManager(modelFactory, timeframeClock, createMockFeedWriterFromStream(writeStream));
+  const itemManager = new ItemManager(modelFactory, createMockFeedWriterFromStream(writeStream));
   const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
   writeStream.pipe(itemDemuxer.open());
 

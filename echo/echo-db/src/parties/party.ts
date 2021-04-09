@@ -44,6 +44,13 @@ export class Party {
     return this._internal.isOpen;
   }
 
+  /**
+   * Is this Party eligible for automatic opening, processing, and replication?
+   */
+  get isActive () {
+    return this._internal.isActive;
+  }
+
   get database () {
     return this._internal.database;
   }
@@ -54,22 +61,6 @@ export class Party {
 
   async setTitle (title: string) {
     return this._internal.setTitle(title);
-  }
-
-  queryMembers (): ResultSet<PartyMember> {
-    assert(this.isOpen, 'Party is not open.');
-    return new ResultSet(
-      this._internal.processor.keyOrInfoAdded.discardParameter(),
-      () => this._internal.processor.memberKeys
-        .filter(publicKey => !this._internal.processor.partyKey.equals(publicKey))
-        .map((publicKey: PublicKey) => {
-          const displayName = this._internal.processor.getMemberInfo(publicKey)?.displayName;
-          return {
-            publicKey,
-            displayName
-          };
-        })
-    );
   }
 
   /**
@@ -115,6 +106,25 @@ export class Party {
   }
 
   /**
+   * Get all party members.
+   */
+  queryMembers (): ResultSet<PartyMember> {
+    assert(this.isOpen, 'Party is not open.');
+    return new ResultSet(
+      this._internal.processor.keyOrInfoAdded.discardParameter(),
+      () => this._internal.processor.memberKeys
+        .filter(publicKey => !this._internal.processor.partyKey.equals(publicKey))
+        .map((publicKey: PublicKey) => {
+          const displayName = this._internal.processor.getMemberInfo(publicKey)?.displayName;
+          return {
+            publicKey,
+            displayName
+          };
+        })
+    );
+  }
+
+  /**
    * Creates an invitation for a remote peer.
    */
   async createInvitation (authenticationDetails: InvitationAuthenticator, options: InvitationOptions = {}) {
@@ -126,13 +136,6 @@ export class Party {
    */
   async createOfflineInvitation (publicKey: PublicKey) {
     return this._internal.invitationManager.createOfflineInvitation(publicKey);
-  }
-
-  /**
-   * Is this Party eligible for automatic opening, processing, and replication?
-   */
-  get isActive () {
-    return this._internal.isActive;
   }
 
   /**

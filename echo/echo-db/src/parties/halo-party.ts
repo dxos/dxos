@@ -15,10 +15,10 @@ import { Item } from '../items';
 import { ResultSet } from '../result';
 import { PARTY_TITLE_PROPERTY, PartyActivator, PartyInternal } from './party-internal';
 
-export const HALO_PARTY_DESCRIPTOR_TYPE = 'wrn://dxos.org/item/halo/party-descriptor';
-export const HALO_CONTACT_LIST_TYPE = 'wrn://dxos.org/item/halo/contact-list';
-export const HALO_GENERAL_PREFERENCES_TYPE = 'wrn://dxos.org/item/halo/preferences';
-export const HALO_DEVICE_PREFERENCES_TYPE = 'wrn://dxos.org/item/halo/device/preferences';
+export const HALO_PARTY_DESCRIPTOR_TYPE = 'dxn://dxos/item/halo/party-descriptor';
+export const HALO_CONTACT_LIST_TYPE = 'dxn://dxos/item/halo/contact-list';
+export const HALO_GENERAL_PREFERENCES_TYPE = 'dxn://dxos/item/halo/preferences';
+export const HALO_DEVICE_PREFERENCES_TYPE = 'dxn://dxos/item/halo/device/preferences';
 
 /**
  * A record in HALO party representing a party that user is currently a member of.

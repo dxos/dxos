@@ -2,53 +2,67 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 
 import { waitForCondition } from '@dxos/async';
-import { schema } from '@dxos/echo-protocol';
+import { schema, ItemID, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ValueUtil } from '@dxos/object-model';
 
-import { ItemDemuxer, ItemManager, TimeframeClock } from '../items';
+import { ItemDemuxer, ItemManager } from '../items';
 import { PartyInternal } from '../parties';
-import { createTestInstance } from '../testing/test-utils';
+import { createTestInstance } from '../util';
 
 const log = debug('dxos:snapshot:test');
 
 jest.setTimeout(10000);
 
+// TODO(burdon): Remove "foo", etc. from tests.
+
 test('loading large party', async () => {
   const echo = await createTestInstance({ initialize: true });
-  const party1 = await echo.createParty();
-  const item1 = await party1.database.createItem({ model: ObjectModel });
-  for (let i = 0; i < 1_000; i++) {
-    item1.model.setProperty('foo', i);
-  }
-  await item1.model.setProperty('foo', 'done');
 
-  await echo.close();
+  let partyKey: PartyKey;
+  let itemId: ItemID;
+  {
+    const party = await echo.createParty();
+    partyKey = party.key;
+
+    const item = await party.database.createItem({ model: ObjectModel });
+    itemId = item.id;
+    for (let i = 0; i < 1_000; i++) {
+      item.model.setProperty('foo', i);
+    }
+    await item.model.setProperty('foo', 'done');
+
+    await echo.close();
+  }
 
   const startTime = Date.now();
+  {
+    await echo.open();
+    const party = echo.getParty(partyKey);
+    await party!.open();
 
-  await echo.open();
-  const party2 = echo.getParty(party1.key);
-  assert(party2);
-  await party2.open();
+    await waitForCondition(() => {
+      const item = party!.database.getItem(itemId);
+      return item!.model.getProperty('foo') === 'done';
+    });
 
-  await waitForCondition(() => {
-    const item = party2!.database.getItem(item1.id);
-    return item?.model.getProperty('foo') === 'done';
-  });
+    await echo.close();
+  }
+
   log(`Load took ${Date.now() - startTime}ms`);
+  expect(echo.isOpen).toBe(false);
 });
 
-test('can produce & serialize a snapshot', async () => {
+test('produce & serialize a snapshot', async () => {
   const echo = await createTestInstance({ initialize: true });
   const party = await echo.createParty();
   const item = await party.database.createItem({ model: ObjectModel, props: { foo: 'foo' } });
   await item.model.setProperty('foo', 'bar');
 
+  // TODO(burdon): Avoid using internals?
   const snapshot = ((party as any)._internal as PartyInternal).createSnapshot();
 
   expect(snapshot.database?.items).toHaveLength(2);
@@ -59,16 +73,18 @@ test('can produce & serialize a snapshot', async () => {
   expect(snapshot.timeframe?.size()).toBe(1);
 
   const serialized = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').encode(snapshot);
-
   expect(serialized instanceof Uint8Array).toBeTruthy();
+
+  await echo.close();
+  expect(echo.isOpen).toBe(false);
 });
 
-describe('Database', () => {
-  test('restore from empty snapshot', async () => {
-    const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const itemManager = new ItemManager(modelFactory, new TimeframeClock());
-    const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
+test('restore from empty snapshot', async () => {
+  const modelFactory = new ModelFactory().registerModel(ObjectModel);
+  const itemManager = new ItemManager(modelFactory);
+  const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
 
-    await itemDemuxer.restoreFromSnapshot({});
-  });
+  // TODO(burdon): Test.
+  await itemDemuxer.restoreFromSnapshot({});
+  expect(true).toBeTruthy();
 });
