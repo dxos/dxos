@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
 
 export interface Codec<T> {
@@ -17,7 +19,9 @@ export type ModelType = string;
 
 export type ModelMeta = {
   type: ModelType,
-  mutation: Codec<any> // TODO(marik-d): Specify generic type param here to match model's expected message type
+
+  // TODO(marik-d): Specify generic type param here to match model's expected message type
+  mutation: Codec<any>
 
   /**
    * A way to initialize the model upon item creation.
@@ -28,13 +32,14 @@ export type ModelMeta = {
    * @param props User-defined props required for initialization. Forwarded from `database.createItem` call.
    * @returns A mutation to be included in the same message as item creation, or null if no initialization is required.
    */
+  // TODO(burdon): Remove from meta.
   getInitMutation? (props: any): Promise<any | null>
 
   snapshotCodec?: Codec<any>
 }
 
-export type ModelConstructor<T> =
-  (new (meta: ModelMeta, itemId: ItemID, writeStream?: FeedWriter<any>) => T) & { meta: ModelMeta };
+export type ModelConstructor<T> = (new (meta: ModelMeta, itemId: ItemID, writeStream?: FeedWriter<any>) => T) &
+  { meta: ModelMeta };
 
 export type ModelMessage<T> = {
   meta: MutationMeta,
@@ -42,16 +47,15 @@ export type ModelMessage<T> = {
 }
 
 export function validateModelClass (model: any): asserts model is ModelConstructor<any> {
-  if (typeof model !== 'function') {
-    throw new TypeError('The model constructor you provided has an incorrect type. It is supposed to be a class with a static `meta` field.');
-  }
+  assert(typeof model === 'function');
+  // TODO(burdon): Convert to assert (too verbose).
   if (!model.meta) {
-    throw new TypeError('The model constructor you provided doesn\'t have a static `meta` field.');
+    throw new TypeError('Invalid model: missing static `meta` field.');
   }
   if (!model.meta.type) {
-    throw new TypeError('The model constructor you provided does not have a type URL.');
+    throw new TypeError('Invalid model: missing type URL.');
   }
   if (!model.meta.mutation) {
-    throw new TypeError('The model constructor you provided does not have a mutation codec.');
+    throw new TypeError('Invalid model: missing mutation codec.');
   }
 }

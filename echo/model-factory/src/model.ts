@@ -69,6 +69,24 @@ export abstract class Model<T> {
     return this.modelUpdate.on(listener);
   }
 
+  async processMessage (meta: MutationMeta, message: T): Promise<void> {
+    const modified = await this._processMessage(meta, message);
+    if (modified) {
+      this.modelUpdate.emit(this);
+    }
+  }
+
+  createSnapshot (): any {
+    throw new Error('This model does not support snapshots.');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async restoreFromSnapshot (snapshot: any): Promise<void> {
+    throw new Error('This model does not support snapshots');
+  }
+
+  // TODO(burdon): Update public, private, protected.
+
   /**
    * Writes the raw mutation to the output stream.
    * @param mutation
@@ -89,13 +107,6 @@ export abstract class Model<T> {
     };
   }
 
-  async processMessage (meta: MutationMeta, message: T): Promise<void> {
-    const modified = await this._processMessage(meta, message);
-    if (modified) {
-      this.modelUpdate.emit(this);
-    }
-  }
-
   /**
    * Process the message.
    * @abstract
@@ -103,13 +114,4 @@ export abstract class Model<T> {
    * @param {Object} message
    */
   abstract _processMessage (meta: MutationMeta, message: T): Promise<boolean>;
-
-  createSnapshot (): any {
-    throw new Error('This model does not support snapshots.');
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async restoreFromSnapshot (snapshot: any): Promise<void> {
-    throw new Error('This model does not support snapshots');
-  }
 }
