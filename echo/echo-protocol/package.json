@@ -21,7 +21,6 @@
   "scripts": {
     "build": "pnpm run build:protobuf && heft test 2>&1",
     "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/defs/dxos.proto -s src/proto/substitutions.ts -o src/proto/gen",
-    "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose --rootDir=./src"
   },
   "browserslist": [

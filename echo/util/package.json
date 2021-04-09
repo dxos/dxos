@@ -15,13 +15,11 @@
   "types": "dist/src/index.d.ts",
   "private": false,
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build && pnpm run lint && pnpm run test",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose --rootDir=./src",
     "lint": "eslint --format codeframe './src/**/*.ts'",
-    "test": "jest --rootDir=./src --verbose --passWithNoTests",
-    "prepublishOnly": "npm run test && npm run build",
-    "watch": "babel-watch src --out-dir ./dist --source-maps"
+    "test": "jest --rootDir=./src --verbose --passWithNoTests 2>&1"
   },
   "browserslist": [
     "> 5%"
