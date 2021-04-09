@@ -29,7 +29,10 @@
   ],
   "jest": {
     "preset": "ts-jest/presets/default",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "jest-expect-message"
+    ]
   },
   "dependencies": {
     "@dxos/async": "~1.0.0-beta.10",
@@ -50,14 +53,17 @@
     "js-data-structs": "^1.1.2",
     "lodash.merge": "^4.6.2",
     "protobufjs": "^6.9.0",
-    "source-map-support": "^0.5.12"
+    "source-map-support": "^0.5.12",
+    "minisearch": "^3.0.2"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.10",
     "@dxos/protobuf-compiler": "~1.1.1",
+    "@types/jest-expect-message": "^1.0.3",
     "@types/jest": "^25.2.3",
     "eslint": "^7.7.0",
     "chance": "^1.1.6",
+    "jest-expect-message": "^1.0.2",
     "del-cli": "^3.0.0",
     "eslint-plugin-jest": "^24.0.2",
     "jest": "^26.2.2",
@@ -65,6 +71,9 @@
     "ts-jest": "^26.1.4",
     "typescript": "^4.0.2",
     "wait-for-expect": "^3.0.2"
+  },
+  "peerDependencies": {
+    "@dxos/echo-db": "*"
   },
   "eslintConfig": {
     "extends": "plugin:@dxos/recomended",

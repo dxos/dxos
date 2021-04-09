@@ -2,7 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ValueUtil } from './mutation';
+import { MutationUtil, ValueUtil } from './mutation';
+import { ObjectMutation } from './proto';
 
 test('ValueUtil', () => {
   {
@@ -114,4 +115,110 @@ test('ValueUtil bytes', () => {
     const object = ValueUtil.applyValue({}, 'data', ValueUtil.createMessage(Buffer.from('World')));
     expect(object.data).toEqual(Buffer.from('World'));
   }
+});
+
+test('MutationUtil', () => {
+  const data1 = MutationUtil.applyMutationSet({}, {
+    mutations: [
+      {
+        operation: ObjectMutation.Operation.SET,
+        key: 'name',
+        value: {
+          string: 'DXOS'
+        }
+      },
+      {
+        operation: ObjectMutation.Operation.SET_ADD,
+        key: 'labels',
+        value: {
+          string: 'red'
+        }
+      },
+      {
+        operation: ObjectMutation.Operation.SET_ADD,
+        key: 'labels',
+        value: {
+          string: 'green'
+        }
+      },
+      {
+        operation: ObjectMutation.Operation.ARRAY_PUSH,
+        key: 'contact',
+        value: {
+          object: {
+            properties: [
+              {
+                key: 'email',
+                value: {
+                  string: 'admin@dxos.org'
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        operation: ObjectMutation.Operation.ARRAY_PUSH,
+        key: 'contact',
+        value: {
+          object: {
+            properties: [
+              {
+                key: 'email',
+                value: {
+                  string: 'info@dxos.org'
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  });
+
+  expect(data1).toEqual({
+    name: 'DXOS',
+    labels: [
+      'red',
+      'green'
+    ],
+    contact: [
+      {
+        email: 'admin@dxos.org'
+      },
+      {
+        email: 'info@dxos.org'
+      }
+    ]
+  });
+
+  const data2 = MutationUtil.applyMutationSet(data1, {
+    mutations: [
+      {
+        operation: ObjectMutation.Operation.DELETE,
+        key: 'contact'
+      },
+      {
+        operation: ObjectMutation.Operation.SET_ADD,
+        key: 'labels',
+        value: {
+          string: 'green'
+        }
+      },
+      {
+        operation: ObjectMutation.Operation.SET_DELETE,
+        key: 'labels',
+        value: {
+          string: 'red'
+        }
+      }
+    ]
+  });
+
+  expect(data2).toEqual({
+    name: 'DXOS',
+    labels: [
+      'green'
+    ]
+  });
 });

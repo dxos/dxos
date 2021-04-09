@@ -21,6 +21,7 @@ dependencies:
   '@types/faker': 5.5.1
   '@types/heft-jest': 1.0.2
   '@types/jest': 25.2.3
+  '@types/jest-expect-message': 1.0.3
   '@types/json-stable-stringify': 1.0.32
   '@types/lodash': 4.14.168
   '@types/memdown': 3.0.0
@@ -37,10 +38,12 @@ dependencies:
   faker: 5.5.3
   hypercore: 7.7.1
   jest: 26.6.3
+  jest-expect-message: 1.0.2
   js-data-structs: 1.1.3
   json-stable-stringify: 1.0.1
   lodash.merge: 4.6.2
   memdown: 5.1.0
+  minisearch: 3.0.2
   pify: 5.0.0
   protobufjs: 6.10.2
   pump: 3.0.0
@@ -1453,6 +1456,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-nwKNbvnwJ2/mndE9ItP/zc2TCzw6uuodnF4EHYWD+gCQDVBuRQL5UzbZD0/ezy1iKsFU2ZQiDqg4M9dN4+wZgA==
+  /@types/jest-expect-message/1.0.3:
+    dependencies:
+      '@types/jest': 25.2.3
+    dev: false
+    resolution:
+      integrity: sha512-sp70Lc8POkOcXHEcLERpX/7B/BtQiqIYz3AvC9ZMNKSaiDttr8hKvz9DljIn7N6WJi3ioVoTtB1utDAX46oPlg==
   /@types/jest/25.2.3:
     dependencies:
       jest-diff: 25.5.0
@@ -6264,6 +6273,10 @@ packages:
       node: '>= 10.14.2'
     resolution:
       integrity: sha512-zhtMio3Exty18dy8ee8eJ9kjnRyZC1N4C1Nt/VShN1apyXc8rWGtJ9lI7vqiWcyyXS4BVSEn9lxAM2D+07/Tag==
+  /jest-expect-message/1.0.2:
+    dev: false
+    resolution:
+      integrity: sha512-WFiXMgwS2lOqQZt1iJMI/hOXpUm32X+ApsuzYcQpW5m16Pv6/Gd9kgC+Q+Q1YVNU04kYcAOv9NXMnjg6kKUy6Q==
   /jest-get-type/25.2.6:
     dev: false
     engines:
@@ -7638,6 +7651,10 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-Mgd2GdMVzY+x3IJ+oHnVM+KG3lA5c8tnabyJKmHSaG2kAGpudxuOf8ToDkhumF7UzME7DecbQE9uOZhNm7PuJg==
+  /minisearch/3.0.2:
+    dev: false
+    resolution:
+      integrity: sha512-7rTrJEzovKNi5LSwiIr5aCfJNNo6Lk4O9HTVzjFTMdp+dSr6UisUnEqdwj4rBgNcAcaWW5ClpXnpgTurv8PGqA==
   /minizlib/2.1.2:
     dependencies:
       minipass: 3.1.3
@@ -11323,7 +11340,7 @@ packages:
     dev: false
     name: '@rush-temp/model-factory'
     resolution:
-      integrity: sha512-2ge4LNt038I72mt+LHMglp1dCIbW85UILsjIs6OE8d9AmAblCBbTgw6sOETejqJL+3UvruUXzEK8SPapIQMGqg==
+      integrity: sha512-wHFcuWWqNKYClmwg2X9RMZ4HI0TjddD3ujFRkl/+/Yn4wca+NYTqPsRTQps3amhGTtDTxO/pPV3SqbRIlw6rAw==
       tarball: 'file:projects/model-factory.tgz'
     version: 0.0.0
   'file:projects/object-model.tgz':
@@ -11337,6 +11354,7 @@ packages:
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/jest': 25.2.3
+      '@types/jest-expect-message': 1.0.3
       '@types/lodash': 4.14.168
       '@types/node': 14.14.37
       '@types/stream-buffers': 3.0.3
@@ -11348,8 +11366,10 @@ packages:
       eslint-plugin-jest: 24.3.4_eslint@7.23.0+typescript@4.2.3
       hypercore: 7.7.1
       jest: 26.6.3
+      jest-expect-message: 1.0.2
       js-data-structs: 1.1.3
       lodash.merge: 4.6.2
+      minisearch: 3.0.2
       protobufjs: 6.10.2
       source-map-support: 0.5.19
       stream-buffers: 3.0.2
@@ -11359,7 +11379,7 @@ packages:
     dev: false
     name: '@rush-temp/object-model'
     resolution:
-      integrity: sha512-s/lNfSpyCsASXhgbb6TR+jYX6DwRktEm+pA5BH2FarAIDy7ZmYQAHe6iR9fy7WC6iMYhQaLaDJWk7wetecEEsA==
+      integrity: sha512-rJ3bdLtoqD1EPkbn9gA4fH2MqD79wWOdGBJyHJ4K2o+f+s6xwYmn/b46fc64IqPst7VqptJflXT+SIP2PQRxPQ==
       tarball: 'file:projects/object-model.tgz'
     version: 0.0.0
   'file:projects/util.tgz':
@@ -11418,6 +11438,7 @@ specifiers:
   '@types/faker': ~5.5.1
   '@types/heft-jest': ~1.0.2
   '@types/jest': ^25.2.3
+  '@types/jest-expect-message': ^1.0.3
   '@types/json-stable-stringify': ^1.0.32
   '@types/lodash': ^4.14.159
   '@types/memdown': ^3.0.0
@@ -11434,10 +11455,12 @@ specifiers:
   faker: ^5.1.0
   hypercore: ^7.7.1
   jest: ^26.2.2
+  jest-expect-message: ^1.0.2
   js-data-structs: ^1.1.2
   json-stable-stringify: ^1.0.1
   lodash.merge: ^4.6.2
   memdown: ^5.1.0
+  minisearch: ^3.0.2
   pify: ~5.0.0
   protobufjs: ^6.9.0
   pump: ^3.0.0

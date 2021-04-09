@@ -21,9 +21,10 @@ const log = debug('dxos:echo:object-model');
  */
 export class ObjectModel extends Model<ObjectMutationSet> {
   static meta: ModelMeta = {
-    type: 'wrn://protocol.dxos.org/model/object',
+    type: 'dxn://dxos/model/object',
     mutation: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
 
+    // TODO(burdon): Remove.
     async getInitMutation (obj: any): Promise<ObjectMutationSet> {
       return {
         mutations: createMultiFieldMutationSet(obj)
@@ -69,6 +70,45 @@ export class ObjectModel extends Model<ObjectMutationSet> {
   async setProperties (properties: any) {
     const receipt = await this.write({
       mutations: createMultiFieldMutationSet(properties)
+    });
+    await receipt.waitToBeProcessed();
+  }
+
+  async addToSet (key: string, value: any) {
+    const receipt = await this.write({
+      mutations: [
+        {
+          operation: ObjectMutation.Operation.SET_ADD,
+          key,
+          value: ValueUtil.createMessage(value)
+        }
+      ]
+    });
+    await receipt.waitToBeProcessed();
+  }
+
+  async removeFromSet (key: string, value: any) {
+    const receipt = await this.write({
+      mutations: [
+        {
+          operation: ObjectMutation.Operation.SET_DELETE,
+          key,
+          value: ValueUtil.createMessage(value)
+        }
+      ]
+    });
+    await receipt.waitToBeProcessed();
+  }
+
+  async pushToArray (key: string, value: any) {
+    const receipt = await this.write({
+      mutations: [
+        {
+          operation: ObjectMutation.Operation.ARRAY_PUSH,
+          key,
+          value: ValueUtil.createMessage(value)
+        }
+      ]
     });
     await receipt.waitToBeProcessed();
   }

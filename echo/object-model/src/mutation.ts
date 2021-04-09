@@ -6,7 +6,7 @@
 
 import assert from 'assert';
 
-import { KeyValue, ObjectMutation, ObjectMutationSet, Value } from './proto';
+import { KeyValue, ObjectMutation, ObjectMutationSet, Object, Value } from './proto';
 
 /**
  * @typedef {Object} Value
@@ -83,6 +83,23 @@ export class ValueUtil {
     }
   }
 
+  static valueOf (value: Value): any {
+    if (value.object !== undefined) {
+      return ValueUtil.getObjectValue(value.object);
+    }
+
+    if (value.array !== undefined) {
+      return value.array.values!.map(value => ValueUtil.valueOf(value));
+    }
+
+    const type = SCALAR_TYPES.find(type => value[type] !== undefined);
+    if (type) {
+      return value[type];
+    }
+
+    return undefined;
+  }
+
   static bytes (value: Uint8Array): Value {
     return { [Type.BYTES]: value };
   }
@@ -115,6 +132,26 @@ export class ValueUtil {
     };
   }
 
+  // TODO(burdon): Refactor.
+  static getObjectValue (value: Object) {
+    const nestedObject = {};
+    const { properties } = value!;
+    (properties ?? []).forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key!, value!));
+    return nestedObject;
+  }
+
+  static getScalarValue (value: Value) {
+    const type = SCALAR_TYPES.find(field => value[field] !== undefined);
+    if (type) {
+      return value[type];
+    }
+  }
+
+  static applyKeyValue (object: any, keyValue: KeyValue) {
+    const { key, value } = keyValue;
+    return ValueUtil.applyValue(object, key!, value!);
+  }
+
   static applyValue (object: any, key: string, value: Value) {
     assert(object);
     assert(key);
@@ -129,22 +166,21 @@ export class ValueUtil {
 
     // Apply object properties.
     if (value[Type.OBJECT]) {
-      const nestedObject = {};
-      const { properties } = value[Type.OBJECT]!;
-      (properties ?? []).forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key!, value!));
-      object[key] = nestedObject;
+      object[key] = ValueUtil.getObjectValue(value[Type.OBJECT]!);
       return object;
     }
 
-    // Apply scalar.s
-    const field = SCALAR_TYPES.find(field => value[field] !== undefined);
-    if (field) {
-      object[key] = value[field];
+    // Apply scalars.
+    const scalar = ValueUtil.getScalarValue(value);
+    if (scalar !== undefined) {
+      object[key] = scalar;
       return object;
     }
 
     // Apply object.
-    throw new Error(`Unhandled value: ${JSON.stringify(value)}`);
+    // TODO(burdon): Throw or unset?
+    // throw new Error(`Unhandled value: ${JSON.stringify(value)}`);
+    delete object[key];
   }
 }
 
@@ -160,11 +196,37 @@ export class MutationUtil {
   }
 
   static applyMutation (object: any, mutation: ObjectMutation) {
+    assert(object);
     const { operation = ObjectMutation.Operation.SET, key, value } = mutation;
     switch (operation) {
-      // TODO(burdon): Namespace conflict when imported into echo-db.
-      case 0: { // protocol.dxos.echo.object.ObjectMutation.Operation.SET: {
+      case ObjectMutation.Operation.SET: {
         ValueUtil.applyValue(object, key!, value!);
+        break;
+      }
+
+      case ObjectMutation.Operation.DELETE: {
+        delete object[key!];
+        break;
+      }
+
+      case ObjectMutation.Operation.ARRAY_PUSH: {
+        const values = object[key!] || [];
+        values.push(ValueUtil.valueOf(value!));
+        object[key!] = values;
+        break;
+      }
+
+      case ObjectMutation.Operation.SET_ADD: {
+        const set = new Set(object[key!] || []);
+        set.add(ValueUtil.valueOf(value!));
+        object[key!] = Array.from(set.values());
+        break;
+      }
+
+      case ObjectMutation.Operation.SET_DELETE: {
+        const set = new Set(object[key!] || []);
+        set.delete(ValueUtil.valueOf(value!));
+        object[key!] = Array.from(set.values());
         break;
       }
 
@@ -172,6 +234,7 @@ export class MutationUtil {
       default:
         throw new Error(`Operation not implemented: ${operation}`);
     }
+
     return object;
   }
 }
