@@ -15,7 +15,7 @@
   "types": "dist/src/index.d.ts",
   "private": false,
   "scripts": {
-    "build": "tsc --build && pnpm run lint && pnpm run test",
+    "build": "tsc && pnpm run lint && pnpm run test",
     "lint": "eslint --format codeframe './src/**/*.ts'",
     "test": "jest --rootDir=./src --verbose --passWithNoTests --testTimeout=10000 2>&1"
   },
