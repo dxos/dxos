@@ -2,9 +2,9 @@ import { codec, Message } from "@dxos/credentials";
 import { PublicKey } from "@dxos/crypto";
 import { Timeframe } from "../../../spacetime";
 import * as dxos from "../dxos";
-import * as dxos_echo_remote from "./echo/remote";
 import * as dxos_echo_testing from "./echo/testing";
 import * as dxos_echo_snapshot from "./echo/snapshot";
+import * as dxos_echo_remote from "./echo/remote";
 import * as google_protobuf from "../google/protobuf";
 export interface TimeframeVector {
     frames?: TimeframeVector.Frame[];

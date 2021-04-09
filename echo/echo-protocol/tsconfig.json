@@ -1,21 +1,6 @@
 {
+  "extends": "../../rigs/node-library/profiles/default/tsconfig-base.json",
   "compilerOptions": {
-    "outDir": "lib",
-    "allowJs": true,
-    "composite": true,
-    "declarationMap": true,
-    "esModuleInterop": true,
-    "lib": [
-      "ESNext"
-    ],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "sourceMap": true,
-    "strict": true,
-    "target": "ES2018",
-    "experimentalDecorators": true,
     "types": ["heft-jest", "node"]
   },
   "include": [
