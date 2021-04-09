@@ -7,6 +7,11 @@
 
 ## Using Rush stack
 
+Installing Rush:
+```
+npm install -g @microsoft/rush
+```
+
 1. Install dependencies
 
 ```
