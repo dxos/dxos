@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@dxos/node-library-rig": "*",
-    "@rushstack/heft": "~0.26.0",
+    "@rushstack/heft": "~0.28.1",
     "@types/heft-jest": "~1.0.2",
     "@dxos/eslint-plugin": "~1.0.10",
     "@types/jest": "^25.2.3",
