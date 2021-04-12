@@ -2,10 +2,10 @@ import { Schema as CodecSchema } from "@dxos/codec-protobuf";
 import { PublicKey } from "@dxos/crypto";
 import { SecretKey } from "../../../keys";
 import { DecodedAny } from "../../any";
-import * as dxos_credentials_auth from "./credentials/auth";
-import * as dxos_credentials_greet from "./credentials/greet";
 import * as dxos_credentials_identity from "./credentials/identity";
+import * as dxos_credentials_greet from "./credentials/greet";
 import * as dxos_credentials_keys from "./credentials/keys";
+import * as dxos_credentials_auth from "./credentials/auth";
 import * as dxos_credentials_party from "./credentials/party";
 import * as google_protobuf from "../google/protobuf";
 export interface Message {
