@@ -204,6 +204,6 @@ test('Basic queries', () => {
 
   results.forEach((result, i) => {
     // eslint-disable-next-line jest/valid-expect
-    expect(result, `Query failed: ${JSON.stringify(queries[i])}`).toEqual(expected[i]);
+    expect(result).toEqual(expected[i]);
   });
 });

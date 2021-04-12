@@ -19,21 +19,12 @@
   ],
   "private": false,
   "scripts": {
-    "build": "yarn build:protobuf && tsc --build && pnpm run lint && pnpm run test",
-    "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/defs/object.proto -o src/proto/gen",
-    "lint": "eslint --format codeframe './src/**/*.ts'",
-    "test": "jest --rootDir=./src --verbose --passWithNoTests 2>&1"
+    "build": "yarn build:protobuf && heft test 2>&1",
+    "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/defs/object.proto -o src/proto/gen"
   },
   "browserslist": [
     "> 5%"
   ],
-  "jest": {
-    "preset": "ts-jest/presets/default",
-    "testEnvironment": "node",
-    "setupFilesAfterEnv": [
-      "jest-expect-message"
-    ]
-  },
   "dependencies": {
     "@dxos/async": "~1.0.0-beta.10",
     "@dxos/codec-protobuf": "~1.1.1",
@@ -57,10 +48,12 @@
     "minisearch": "^3.0.2"
   },
   "devDependencies": {
+    "@rushstack/heft": "~0.28.1",
+    "@dxos/node-library-rig": "*",
+    "@types/heft-jest": "~1.0.2",
     "@dxos/eslint-plugin": "~1.0.10",
     "@dxos/protobuf-compiler": "~1.1.1",
     "@types/jest-expect-message": "^1.0.3",
-    "@types/jest": "^25.2.3",
     "eslint": "^7.7.0",
     "chance": "^1.1.6",
     "jest-expect-message": "^1.0.2",
@@ -71,15 +64,6 @@
     "ts-jest": "^26.1.4",
     "typescript": "^4.0.2",
     "wait-for-expect": "^3.0.2"
-  },
-  "peerDependencies": {
-    "@dxos/echo-db": "*"
-  },
-  "eslintConfig": {
-    "extends": "plugin:@dxos/recomended",
-    "ignorePatterns": [
-      "src/proto/gen/*"
-    ]
   },
   "publishConfig": {
     "access": "public"

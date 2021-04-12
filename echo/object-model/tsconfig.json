@@ -1,15 +1,10 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../rigs/node-library/profiles/default/tsconfig-base.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "lib",
+    "types": ["heft-jest", "node"]
   },
   "include": [
     "src",
-  ],
-  "exclude": [
-    // Since we have a circular dependency where echo-db depends on object-model
-    // and object-model tests depend on echo-db, we have to ignore tests here so that the workspace can build.
-    // These tests are still typechecked when they are run.
-    "src/**/*.test.ts"
   ]
 }

@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+// This file is not compiled or run because it introduces a circular dependency on echo-db
+
 import { createModelTestBench } from '@dxos/echo-db';
 
 import { ObjectModel } from './object-model';
