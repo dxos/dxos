@@ -33,6 +33,7 @@
     "@dxos/protocol-plugin-replicator": "~1.0.8",
     "@dxos/protocol-plugin-presence": "~1.1.0-beta.21",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
+    "@dxos/protocol": "~1.0.8",
     "@dxos/util": "^2.6.17",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
