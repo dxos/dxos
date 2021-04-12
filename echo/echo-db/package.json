@@ -55,6 +55,8 @@
     "@dxos/eslint-plugin": "~1.0.10",
     "@types/jest": "^26.0.7",
     "@types/memdown": "^3.0.0",
+    "memdown": "^5.1.0",
+    "lodash": "4.17.21",
     "jest": "^26.2.2",
     "tempy": "~1.0.1",
     "ts-jest": "^26.1.4",

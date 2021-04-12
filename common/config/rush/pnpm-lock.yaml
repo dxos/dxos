@@ -1,7 +1,6 @@
 dependencies:
   '@dxos/async': 1.0.0
   '@dxos/codec-protobuf': 1.1.1
-  '@dxos/credentials': 2.1.16-alpha.0
   '@dxos/crypto': 1.0.7
   '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
   '@dxos/feed-store': 1.2.0-beta.30
@@ -57,6 +56,7 @@ dependencies:
   json-stable-stringify: 1.0.1
   leveldown: 5.6.0
   levelup: 4.4.0
+  lodash: 4.17.21
   lodash.defaultsdeep: 4.6.1
   lodash.get: 4.4.2
   lodash.isobject: 3.0.2
@@ -9216,6 +9216,7 @@ packages:
       '@types/levelup': 4.3.1
       '@types/lodash.matches': 4.6.6
       '@types/memdown': 3.0.0
+      '@types/node': 14.14.37
       '@types/pify': 3.0.2
       '@types/pump': 1.1.1
       '@types/stream-to-array': 2.3.0
@@ -9256,7 +9257,7 @@ packages:
     dev: false
     name: '@rush-temp/credentials'
     resolution:
-      integrity: sha512-WQ7wvTb0nw+w/w4Pj2nTORI2QbxxvnXY9lrneRVBhngvZ17y+gQMbrQR+ix6hd86dGD+9B09eHqkGGOja2y18Q==
+      integrity: sha512-11/5GWZnEFocGhvLSZLFAsedzNJtBNaQ2GF5wq2d+errN0GgxKVEF971PJ6sxZzTL0864zUVTWPOLXwict/nRw==
       tarball: 'file:projects/credentials.tgz'
     version: 0.0.0
   'file:projects/echo-db.tgz':
@@ -9292,6 +9293,7 @@ packages:
       jest: 26.6.3
       js-data-structs: 1.1.3
       json-stable-stringify: 1.0.1
+      lodash: 4.17.21
       lodash.merge: 4.6.2
       memdown: 5.1.0
       pify: 5.0.0
@@ -9308,7 +9310,7 @@ packages:
     dev: false
     name: '@rush-temp/echo-db'
     resolution:
-      integrity: sha512-Ct8aF5Khro8FK9wg532U5kH6H5yUl/6oStR399lGE7Mx/cirMEOz+tbiSnMJGiZfZ0Cre5L9MERxOZpU7Uq1pQ==
+      integrity: sha512-DaT2xDLFFggbCU84KzCKhtUwUn5kgQGyIxG7KVV/7HEFyL8YO/7ETURRL47/Z6JtbybZpPlcorwl74l61KFarw==
       tarball: 'file:projects/echo-db.tgz'
     version: 0.0.0
   'file:projects/echo-protocol.tgz':
@@ -9353,7 +9355,7 @@ packages:
     dev: false
     name: '@rush-temp/echo-protocol'
     resolution:
-      integrity: sha512-5RRUtMKWaGQpt/naAVNgmU26fm6A4sGOKqfAM0rnoeKV2ugTMNEr7TBcsqA0Ja0TcOSaNDUIrhk2vI+Sxvp7Mg==
+      integrity: sha512-Uqg3ZGIPde2aiwsBbxOPzBL2hCBFZr6gvCwwHStZ9Z/qXgm/HWVeUqpOjC/T9ow2vrl2qNLUzVOsdWr1x8ywnw==
       tarball: 'file:projects/echo-protocol.tgz'
     version: 0.0.0
   'file:projects/model-factory.tgz':
@@ -9483,7 +9485,6 @@ registry: ''
 specifiers:
   '@dxos/async': ~1.0.0-beta.10
   '@dxos/codec-protobuf': ~1.1.1
-  '@dxos/credentials': ~2.1.16-alpha.0
   '@dxos/crypto': ~1.0.7
   '@dxos/eslint-plugin': ~1.0.10
   '@dxos/feed-store': ~1.2.0-beta.30
@@ -9539,6 +9540,7 @@ specifiers:
   json-stable-stringify: ^1.0.1
   leveldown: ^5.4.1
   levelup: ^4.3.2
+  lodash: 4.17.21
   lodash.defaultsdeep: ^4.6.1
   lodash.get: ^4.4.2
   lodash.isobject: ^3.0.2
