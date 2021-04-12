@@ -13,6 +13,6 @@
     "@rushstack/heft": "^0.28.1"
   },
   "devDependencies": {
-    "@rushstack/heft": "~0.26.0"
+    "@rushstack/heft": "~0.28.1"
   }
 }

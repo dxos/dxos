@@ -55,3 +55,19 @@ When merging monorepos it's best practice to add packages one by one, starting f
 4. Put the entire package lifecycle in the `build` script. it might look like `"build": "tsc && pnpm run lint && pnpm run test`. Look for examples in other packages.
 5. Make sure that package builds.
 6. (optional) Refactor to use Heft and rig packages.
+
+### Package configuration with heft
+
+A rigged package config consists of:
+
+* `config/rig.json` file that points to the rig package.
+* `tsconfig.json` that extends the tsconfig from the rig package but also specifies the out dir.
+* `.eslintrc.js` that extends the .eslintrc.js from the rig package.
+
+Rigged package should specify it's build script as:
+
+```
+"build": "heft test 2>&1"`
+```
+
+This will build the package with typescript, run eslint, and test with jest.
