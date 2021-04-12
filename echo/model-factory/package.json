@@ -11,23 +11,15 @@
     "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "AGPL-3.0",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "private": false,
   "scripts": {
-    "build": "tsc && pnpm run lint && pnpm run test",
-    "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
-    "coverage": "jest --coverage --verbose --rootDir=./src",
-    "lint": "eslint --format codeframe './src/**/*.ts'",
-    "test": "jest --rootDir=./src --verbose --passWithNoTests 2>&1"
+    "build": "heft test 2>&1"
   },
   "browserslist": [
     "> 5%"
   ],
-  "jest": {
-    "preset": "ts-jest/presets/default",
-    "testEnvironment": "node"
-  },
   "dependencies": {
     "@dxos/async": "~1.0.0-beta.10",
     "@dxos/codec-protobuf": "~1.1.1",
@@ -49,8 +41,9 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.10",
-    "@types/jest": "^25.2.3",
+    "@rushstack/heft": "~0.28.1",
+    "@dxos/node-library-rig": "*",
+    "@types/heft-jest": "~1.0.2",
     "eslint-plugin-jest": "^24.0.2",
     "jest": "^26.2.2",
     "stream-buffers": "^3.0.2",
@@ -58,9 +51,6 @@
     "typescript": "^4.0.2",
     "wait-for-expect": "^3.0.2",
     "eslint": "^7.7.0"
-  },
-  "eslintConfig": {
-    "extends": "plugin:@dxos/recomended"
   },
   "publishConfig": {
     "access": "public"
