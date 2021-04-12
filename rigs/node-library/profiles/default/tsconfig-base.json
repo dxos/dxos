@@ -9,7 +9,6 @@
       "ESNext"
     ],
     "module": "commonjs",
-    "outDir": "../../../../lib",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "skipLibCheck": true,
