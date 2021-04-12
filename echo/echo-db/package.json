@@ -11,8 +11,8 @@
     "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "AGPL-3.0",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "private": false,
   "scripts": {
     "build": "heft test 2>&1"
