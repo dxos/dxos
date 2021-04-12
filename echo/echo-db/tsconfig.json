@@ -1,7 +1,8 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../rigs/node-library/profiles/default/tsconfig-base.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "lib",
+    "types": ["heft-jest", "node"]
   },
   "include": [
     "src",
