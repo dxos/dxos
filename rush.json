@@ -398,6 +398,10 @@
       "projectFolder": "echo/echo-db"
     },
     {
+      "packageName": "@dxos/credentials",
+      "projectFolder": "halo/credentials"
+    },
+    {
       "packageName": "@dxos/node-library-rig",
       "projectFolder": "rigs/node-library"
     }
