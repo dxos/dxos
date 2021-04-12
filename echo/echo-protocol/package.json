@@ -28,7 +28,7 @@
   "dependencies": {
     "@dxos/async": "~1.0.0-beta.10",
     "@dxos/codec-protobuf": "~1.1.1",
-    "@dxos/credentials": "~2.1.16-alpha.0",
+    "@dxos/credentials": "~2.6.17",
     "@dxos/crypto": "~1.0.7",
     "@dxos/feed-store": "~1.2.0-beta.30",
     "@dxos/util": "^2.6.17",
@@ -51,7 +51,7 @@
     "@dxos/node-library-rig": "*",
     "@dxos/eslint-plugin": "~1.0.10",
     "@dxos/protobuf-compiler": "~1.1.1",
-    "@types/jest": "^25.2.3",
+    "@types/jest": "^26.0.7",
     "faker": "^5.1.0",
     "jest": "^26.2.2",
     "stream-buffers": "^3.0.2",
