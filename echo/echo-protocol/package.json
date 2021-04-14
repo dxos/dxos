@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "*",
+    "@types/jest": "^26.0.7",
     "faker": "^5.1.0",
     "stream-buffers": "^3.0.2",
     "wait-for-expect": "^3.0.2",
