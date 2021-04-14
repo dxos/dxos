@@ -16,6 +16,7 @@ dependencies:
   '@rush-temp/model-factory': 'file:projects/model-factory.tgz'
   '@rush-temp/node-library-rig': 'file:projects/node-library-rig.tgz'
   '@rush-temp/object-model': 'file:projects/object-model.tgz'
+  '@rush-temp/toolchain-node-library': 'file:projects/toolchain-node-library.tgz'
   '@rush-temp/util': 'file:projects/util.tgz'
   '@types/debug': 4.1.5
   '@types/encoding-down': 5.0.0
@@ -9270,6 +9271,7 @@ packages:
       '@dxos/feed-store': 1.2.0-beta.30
       '@dxos/network-manager': 1.0.8_ws@7.4.4
       '@dxos/object-model': 2.6.22
+      '@dxos/protocol': 1.0.8
       '@dxos/protocol-plugin-presence': 1.1.0-beta.21
       '@dxos/protocol-plugin-replicator': 1.0.8
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
@@ -9310,7 +9312,7 @@ packages:
     dev: false
     name: '@rush-temp/echo-db'
     resolution:
-      integrity: sha512-DaT2xDLFFggbCU84KzCKhtUwUn5kgQGyIxG7KVV/7HEFyL8YO/7ETURRL47/Z6JtbybZpPlcorwl74l61KFarw==
+      integrity: sha512-+X/TqtqMI2/G+yIXFx1rTQhGUcJ5jDhcGwLlI7zvv81uOkpUR8jRlt2jDx1wvxTkW5hlmlzF3oWPGPuemKLU4w==
       tarball: 'file:projects/echo-db.tgz'
     version: 0.0.0
   'file:projects/echo-protocol.tgz':
@@ -9355,7 +9357,7 @@ packages:
     dev: false
     name: '@rush-temp/echo-protocol'
     resolution:
-      integrity: sha512-Uqg3ZGIPde2aiwsBbxOPzBL2hCBFZr6gvCwwHStZ9Z/qXgm/HWVeUqpOjC/T9ow2vrl2qNLUzVOsdWr1x8ywnw==
+      integrity: sha512-Ff6lz4QuUZwgb/SLdScdZEXz/czpuYFkjQ6/TY0DUjERM68yM6Vf6un+9HFXBVvtLtlbRqIjgIW888mclZDZFg==
       tarball: 'file:projects/echo-protocol.tgz'
     version: 0.0.0
   'file:projects/model-factory.tgz':
@@ -9433,6 +9435,7 @@ packages:
       jest: 26.6.3
       jest-expect-message: 1.0.2
       js-data-structs: 1.1.3
+      lodash: 4.17.21
       lodash.merge: 4.6.2
       minisearch: 3.0.2
       protobufjs: 6.10.2
@@ -9444,8 +9447,23 @@ packages:
     dev: false
     name: '@rush-temp/object-model'
     resolution:
-      integrity: sha512-xCbKaB1Wz+RJFFm9k23FIOLm3waNpnZox7bsn7M4drqBU3+cXojwACCwn0ar4auUr6690P0J1regcUoFAiyk1A==
+      integrity: sha512-LM4SO7ePm8y7qCHZdla8tt/P9QVArm4YPnM6hWp769TpoUFZclNgr3ImjosaCmt2WyVm55FIqK/mamKjrga4Qg==
       tarball: 'file:projects/object-model.tgz'
+    version: 0.0.0
+  'file:projects/toolchain-node-library.tgz':
+    dependencies:
+      '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
+      '@dxos/protobuf-compiler': 1.1.1
+      '@types/jest': 26.0.22
+      eslint: 7.23.0
+      jest: 26.6.3
+      ts-jest: 26.5.4_jest@26.6.3+typescript@4.2.3
+      typescript: 4.2.3
+    dev: false
+    name: '@rush-temp/toolchain-node-library'
+    resolution:
+      integrity: sha512-6pRYXjblNKDxgJhvtX8GLfiROmvzpMehlJmBmF6SAIfFEhJEGi5857FIykj/Z8FG1QJ3PX2exPugj23nK5ZQQQ==
+      tarball: 'file:projects/toolchain-node-library.tgz'
     version: 0.0.0
   'file:projects/util.tgz':
     dependencies:
@@ -9500,6 +9518,7 @@ specifiers:
   '@rush-temp/model-factory': 'file:./projects/model-factory.tgz'
   '@rush-temp/node-library-rig': 'file:./projects/node-library-rig.tgz'
   '@rush-temp/object-model': 'file:./projects/object-model.tgz'
+  '@rush-temp/toolchain-node-library': 'file:./projects/toolchain-node-library.tgz'
   '@rush-temp/util': 'file:./projects/util.tgz'
   '@types/debug': ^4.1.1
   '@types/encoding-down': ^5.0.0
