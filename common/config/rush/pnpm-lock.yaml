@@ -18,6 +18,7 @@ dependencies:
   '@rush-temp/protobuf-compiler': 'file:projects/protobuf-compiler.tgz'
   '@rush-temp/util': 'file:projects/util.tgz_ts-node@9.1.1'
   '@types/argparse': 2.0.5
+  '@types/assert': 1.5.4
   '@types/debug': 4.1.5
   '@types/encoding-down': 5.0.0
   '@types/end-of-stream': 1.4.0
@@ -39,6 +40,7 @@ dependencies:
   '@types/stream-to-array': 2.3.0
   '@types/through2': 2.0.36
   argparse: 2.0.1
+  assert: 2.0.0
   bip39: 3.0.3
   buffer-json-encoding: 1.0.2
   chalk: 4.1.0
@@ -1250,6 +1252,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-m0CQ4TzFW+JdAN875vqqNO7H92jnN9hrH0bxEjJStePjfSfBDNgIlH+ieZQvBH9CuSPguFpjEzXcJHqV+fJqOQ==
+  /@types/assert/1.5.4:
+    dev: false
+    resolution:
+      integrity: sha512-CaFVW21Ulu0J9sUaEWJjwmhkDkeoxa4fniVSERzZC13sU9v8NNM2lMlkfZZv60j47D+qDt0Lyo8skVP3CTXUdA==
   /@types/babel__core/7.1.14:
     dependencies:
       '@babel/parser': 7.13.13
@@ -9008,6 +9014,8 @@ packages:
   'file:projects/codec-protobuf.tgz':
     dependencies:
       '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
+      '@types/assert': 1.5.4
+      assert: 2.0.0
       eslint: 7.23.0
       protobufjs: 6.10.2
       ts-node: 9.1.1_typescript@4.2.3
@@ -9015,7 +9023,7 @@ packages:
     dev: false
     name: '@rush-temp/codec-protobuf'
     resolution:
-      integrity: sha512-PDK+vOmOuJ517Vin1NyqbiigNrSqnDXy7wsR/9hoRlZQEqkcjxDXKB7+FyiLf0mTx5SgRZsagQ5MNKmuJFHy1A==
+      integrity: sha512-GcAoNIdBuVPlpsqpnrUFbbf3hWMIzTDG0YTC4ERzvMY+R86+fsiMmMyxamm5aamW1vcT4KdA+gRKxBhWpKyw5Q==
       tarball: 'file:projects/codec-protobuf.tgz'
     version: 0.0.0
   'file:projects/credentials.tgz_ts-node@9.1.1':
@@ -9333,6 +9341,7 @@ specifiers:
   '@rush-temp/protobuf-compiler': 'file:./projects/protobuf-compiler.tgz'
   '@rush-temp/util': 'file:./projects/util.tgz'
   '@types/argparse': ^2.0.0
+  '@types/assert': ^1.5.4
   '@types/debug': ^4.1.1
   '@types/encoding-down': ^5.0.0
   '@types/end-of-stream': ^1.4.0
@@ -9354,6 +9363,7 @@ specifiers:
   '@types/stream-to-array': ^2.3.0
   '@types/through2': ^2.0.36
   argparse: ^2.0.1
+  assert: ^2.0.0
   bip39: ^3.0.2
   buffer-json-encoding: ^1.0.2
   chalk: ^4.1.0

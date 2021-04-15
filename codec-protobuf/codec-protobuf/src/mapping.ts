@@ -30,7 +30,9 @@ export function createMappingDescriptors (substitutions: Substitutions): Bidirec
 export function mapMessage (type: protobufjs.Type, substitutions: MapingDescriptors, obj: any, extraArgs: any[]) {
   const res: any = {};
   for (const field of type.fieldsArray) {
-    if (!(field.name in obj)) continue;
+    if (!(field.name in obj)) {
+      continue;
+    }
     res[field.name] = mapField(field, substitutions, obj[field.name], extraArgs);
   }
   return res;
