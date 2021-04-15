@@ -142,7 +142,7 @@ export function createTypeDictinary (root: protobufjs.NamespaceBase) {
     undefined,
     undefined,
     Array.from(getRegisteredTypes(root))
-    // sort here by type.fullName
+      .sort((b, a) => b.fullName.localeCompare(a.fullName))
       .map(type => f.createPropertySignature(
         undefined,
         f.createStringLiteral(normalizeFullyQualifiedName(type.fullName)),
