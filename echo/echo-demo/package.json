@@ -13,10 +13,10 @@
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build && pnpm run lint && pnpm run test 2>&1",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose  --rootDir=./src --passWithNoTests",
-    "lint": "eslint --format codeframe './src/**/*.ts'",
+    "lint": "eslint --format codeframe './{src,test}/**/*.ts'",
     "test": "jest --rootDir=./src --verbose --passWithNoTests",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "prepublishOnly": "npm run test && npm run build",
@@ -86,7 +86,8 @@
     "react": "^16.8.0",
     "react-dom": "^16.8.0",
     "ts-loader": "~8.1.0",
-    "webpack": "4.44.2"
+    "webpack": "4.44.2",
+    "eslint": "^7.7.0"
   },
   "eslintConfig": {
     "extends": "plugin:@dxos/recomended"
