@@ -13,6 +13,8 @@ jobs:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - run: git status
       - run: git log
       - run: git branch -v
