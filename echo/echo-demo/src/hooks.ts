@@ -9,7 +9,7 @@ import { truncateString } from '@dxos/debug';
 import { ECHO, Party, Item, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 
-import { ComplexMap } from '../../util/dist/src';
+import { ComplexMap } from '../../util';
 
 //
 // SDK Prototype.
