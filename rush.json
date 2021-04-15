@@ -378,6 +378,14 @@
    */
   "projects": [
     {
+      "packageName": "@dxos/codec-protobuf",
+      "projectFolder": "codec-protobuf/codec-protobuf"
+    },
+    {
+      "packageName": "@dxos/protobuf-compiler",
+      "projectFolder": "codec-protobuf/protobuf-compiler"
+    },
+    {
       "packageName": "@dxos/util",
       "projectFolder": "echo/util"
     },

@@ -3,7 +3,7 @@
   "version": "1.1.1",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "pnpm run gen && pnpn run test && pnpm run lint && tsc",
     "gen": "ts-node src/main.ts test/schema.proto test/another.proto -s test/substitutions.ts -o test/gen",
     "test": "yarn gen && jest",
     "lint": "eslint 'src/**/*.ts'"
@@ -16,13 +16,13 @@
     "src"
   ],
   "devDependencies": {
-    "@dxos/codec-protobuf": "^1.1.1",
-    "@dxos/eslint-plugin": "^1.0.5",
+    "@dxos/codec-protobuf": "*",
+    "@dxos/eslint-plugin": "~1.0.10",
     "@types/argparse": "^2.0.0",
     "@types/read-pkg": "^5.1.0",
-    "eslint": "^7.10.0",
-    "jest": "^26.4.2",
-    "ts-jest": "^26.3.0",
+    "eslint": "^7.7.0",
+    "jest": "^26.2.2",
+    "ts-jest": "^26.1.4",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.2"
   },
