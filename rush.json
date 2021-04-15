@@ -406,6 +406,10 @@
       "projectFolder": "echo/echo-db"
     },
     {
+      "packageName": "@dxos/echo-demo",
+      "projectFolder": "echo/echo-demo"
+    },
+    {
       "packageName": "@dxos/credentials",
       "projectFolder": "halo/credentials"
     },
