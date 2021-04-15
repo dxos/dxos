@@ -92,7 +92,7 @@ const setup = async (open = true, createIdentity = true) => {
   return { feedStore, partyManager, identityManager, seedPhrase };
 };
 
-describe('Party manager', () => {
+describe.skip('Party manager', () => {
   test('Created locally', async () => {
     const { partyManager, identityManager } = await setup();
     await partyManager.open();
