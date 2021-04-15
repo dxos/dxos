@@ -1,0 +1,51 @@
+{
+  "name": "@dxos/protobuf-compiler",
+  "version": "1.1.1",
+  "license": "MIT",
+  "scripts": {
+    "build": "pnpm run gen && tsc && pnpm run lint && jest 2>&1",
+    "gen": "ts-node src/main.ts test/schema.proto test/another.proto -s test/substitutions.ts -o test/gen",
+    "test": "pnpm run gen && jest",
+    "lint": "eslint 'src/**/*.ts'"
+  },
+  "bin": {
+    "build-protobuf": "./bin/main.js"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "devDependencies": {
+    "@dxos/codec-protobuf": "*",
+    "@dxos/eslint-plugin": "~1.0.10",
+    "@types/argparse": "^2.0.0",
+    "@types/read-pkg": "^5.1.0",
+    "eslint": "^7.7.0",
+    "jest": "^26.2.2",
+    "ts-jest": "^26.1.4",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.2",
+    "@types/node": "^14.0.9",
+    "@types/jest": "^26.0.7"
+  },
+  "jest": {
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node",
+    "modulePathIgnorePatterns": [
+      "test/gen",
+      "dist"
+    ]
+  },
+  "dependencies": {
+    "argparse": "^2.0.1",
+    "chalk": "^4.1.0",
+    "read-pkg": "^5.2.0",
+    "protobufjs": "^6.9.0"
+  },
+  "eslintConfig": {
+    "extends": "plugin:@dxos/recomended"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
