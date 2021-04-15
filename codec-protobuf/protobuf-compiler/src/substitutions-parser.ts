@@ -41,7 +41,9 @@ const parseConfigHost: ts.ParseConfigFileHost = {
 
 function getTsCompilerOptions (searchPath: string): ts.CompilerOptions {
   const configFileName = ts.findConfigFile(searchPath, ts.sys.fileExists);
-  if (!configFileName) return {};
+  if (!configFileName) {
+    return {};
+  }
   const configJson = ts.readJsonConfigFile(configFileName, path => readFileSync(path, { encoding: 'utf-8' }));
   const basePath = dirname(configFileName);
   const config = ts.parseJsonSourceFileConfigFileContent(configJson, parseConfigHost, basePath, undefined, configFileName);
