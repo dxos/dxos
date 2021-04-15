@@ -10,9 +10,9 @@ DXOS developer framework
 
 ## Using Rush stack
 
-Installing Rush:
+Installing Rush and pnpm:
 ```
-npm install -g @microsoft/rush
+npm install -g @microsoft/rush pnpm
 ```
 
 1. Install dependencies
