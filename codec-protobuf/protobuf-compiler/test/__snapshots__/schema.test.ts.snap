@@ -1,0 +1,148 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`definitions 1`] = `
+"dxos/test/another.ts:
+import { MyKey } from \\"../../../my-key\\";
+import { MyInterfaceSubstitution } from \\"../../../my-interface\\";
+import { Schema as CodecSchema } from \\"@dxos/codec-protobuf\\";
+import { DecodedAny } from \\"../../../any\\";
+import * as dxos_test from \\"../test\\";
+import * as dxos_test_any from \\"./any\\";
+import * as google_protobuf from \\"../../google/protobuf\\";
+export interface AnotherMessage {
+}
+
+dxos/test/any.ts:
+import { MyKey } from \\"../../../my-key\\";
+import { MyInterfaceSubstitution } from \\"../../../my-interface\\";
+import { Schema as CodecSchema } from \\"@dxos/codec-protobuf\\";
+import { DecodedAny } from \\"../../../any\\";
+import * as dxos_test from \\"../test\\";
+import * as dxos_test_another from \\"./another\\";
+import * as google_protobuf from \\"../../google/protobuf\\";
+export interface Any {
+    bar?: number;
+}
+
+dxos/test.ts:
+import { MyKey } from \\"../../my-key\\";
+import { MyInterfaceSubstitution } from \\"../../my-interface\\";
+import { Schema as CodecSchema } from \\"@dxos/codec-protobuf\\";
+import { DecodedAny } from \\"../../any\\";
+import * as dxos_test_another from \\"./test/another\\";
+import * as dxos_test_any from \\"./test/any\\";
+import * as google_protobuf from \\"../google/protobuf\\";
+export interface Key {
+    data: Uint8Array;
+}
+export interface Any {
+    foo?: string;
+}
+export interface Scalars {
+    doubleField?: number;
+    floatField?: number;
+    int32Field?: number;
+    int64Field?: number;
+    uint32Field?: number;
+    uint64Field?: number;
+    sint32Field?: number;
+    sint64Field?: number;
+    fixed32Field?: number;
+    fixed64Field?: number;
+    sfixed32Field?: number;
+    sfixed64Field?: number;
+    boolField?: boolean;
+    stringField?: string;
+    bytesField?: Uint8Array;
+}
+export interface ComplexFields {
+    repeatedField?: MyKey[];
+    requiredField: MyKey;
+    mappedField?: Partial<Record<string, MyKey>>;
+    inner?: ComplexFields.Inner;
+    myAny?: Any;
+    googleAny?: DecodedAny;
+    importedAny?: dxos_test_any.Any;
+}
+export namespace ComplexFields {
+    export interface Inner {
+        foo?: string;
+        bar?: ComplexFields.InnerEnum;
+    }
+    export enum InnerEnum {
+        FOO = 1,
+        BAR = 2
+    }
+}
+export interface Outer {
+    inner?: ComplexFields.Inner;
+}
+export namespace Outer {
+    export interface Inner {
+        inner?: ComplexFields.InnerEnum;
+    }
+}
+export enum TaskType {
+    IN_PROGRESS = 1,
+    COMPLETED = 2
+}
+export interface Task {
+    id?: string;
+    title?: string;
+    key: MyKey;
+    type: TaskType;
+    googleAny?: DecodedAny;
+}
+export interface TaskList {
+    tasks?: Task[];
+}
+export interface SubstitutedByInterface {
+    foo?: string;
+}
+
+google/protobuf.ts:
+import { MyKey } from \\"../../my-key\\";
+import { MyInterfaceSubstitution } from \\"../../my-interface\\";
+import { Schema as CodecSchema } from \\"@dxos/codec-protobuf\\";
+import { DecodedAny } from \\"../../any\\";
+import * as dxos_test from \\"../dxos/test\\";
+import * as dxos_test_another from \\"../dxos/test/another\\";
+import * as dxos_test_any from \\"../dxos/test/any\\";
+export interface Any {
+    type_url?: string;
+    value?: Uint8Array;
+}
+
+index.ts:
+import { Schema } from \\"@dxos/codec-protobuf\\";
+import substitutions from \\"../substitutions\\";
+import { MyKey } from \\"../my-key\\";
+import { MyInterfaceSubstitution } from \\"../my-interface\\";
+import { Schema as CodecSchema } from \\"@dxos/codec-protobuf\\";
+import { DecodedAny } from \\"../any\\";
+import * as dxos_test from \\"./dxos/test\\";
+import * as dxos_test_another from \\"./dxos/test/another\\";
+import * as dxos_test_any from \\"./dxos/test/any\\";
+import * as google_protobuf from \\"./google/protobuf\\";
+export interface TYPES {
+    \\"dxos.test.Key\\": dxos_test.Key;
+    \\"dxos.test.Any\\": dxos_test.Any;
+    \\"dxos.test.Scalars\\": dxos_test.Scalars;
+    \\"dxos.test.ComplexFields\\": dxos_test.ComplexFields;
+    \\"dxos.test.ComplexFields.Inner\\": dxos_test.ComplexFields.Inner;
+    \\"dxos.test.ComplexFields.InnerEnum\\": dxos_test.ComplexFields.InnerEnum;
+    \\"dxos.test.Outer\\": dxos_test.Outer;
+    \\"dxos.test.Outer.Inner\\": dxos_test.Outer.Inner;
+    \\"dxos.test.TaskType\\": dxos_test.TaskType;
+    \\"dxos.test.Task\\": dxos_test.Task;
+    \\"dxos.test.TaskList\\": dxos_test.TaskList;
+    \\"dxos.test.SubstitutedByInterface\\": dxos_test.SubstitutedByInterface;
+    \\"dxos.test.another.AnotherMessage\\": dxos_test_another.AnotherMessage;
+    \\"dxos.test.any.Any\\": dxos_test_any.Any;
+    \\"google.protobuf.Any\\": google_protobuf.Any;
+}
+export const schemaJson = JSON.parse(\\"{\\\\\\"nested\\\\\\":{\\\\\\"dxos\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"test\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"Key\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"data\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"Scalars\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"doubleField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"double\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"floatField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"float\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"int32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"int64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int64\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"uint32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint32\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"uint64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint64\\\\\\",\\\\\\"id\\\\\\":6},\\\\\\"sint32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sint32\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"sint64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sint64\\\\\\",\\\\\\"id\\\\\\":8},\\\\\\"fixed32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"fixed32\\\\\\",\\\\\\"id\\\\\\":9},\\\\\\"fixed64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"fixed64\\\\\\",\\\\\\"id\\\\\\":10},\\\\\\"sfixed32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sfixed32\\\\\\",\\\\\\"id\\\\\\":11},\\\\\\"sfixed64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sfixed64\\\\\\",\\\\\\"id\\\\\\":12},\\\\\\"boolField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":13},\\\\\\"stringField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":14},\\\\\\"bytesField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":15}}},\\\\\\"ComplexFields\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"repeatedField\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":16},\\\\\\"requiredField\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":17},\\\\\\"mappedField\\\\\\":{\\\\\\"keyType\\\\\\":\\\\\\"string\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":18},\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Inner\\\\\\",\\\\\\"id\\\\\\":19},\\\\\\"myAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Any\\\\\\",\\\\\\"id\\\\\\":20},\\\\\\"googleAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Any\\\\\\",\\\\\\"id\\\\\\":21},\\\\\\"importedAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"dxos.test.any.Any\\\\\\",\\\\\\"id\\\\\\":22}},\\\\\\"nested\\\\\\":{\\\\\\"Inner\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"bar\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"InnerEnum\\\\\\",\\\\\\"id\\\\\\":2}}},\\\\\\"InnerEnum\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"FOO\\\\\\":1,\\\\\\"BAR\\\\\\":2}}}},\\\\\\"Outer\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ComplexFields.Inner\\\\\\",\\\\\\"id\\\\\\":1}},\\\\\\"nested\\\\\\":{\\\\\\"Inner\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ComplexFields.InnerEnum\\\\\\",\\\\\\"id\\\\\\":1}}}}},\\\\\\"TaskType\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"IN_PROGRESS\\\\\\":1,\\\\\\"COMPLETED\\\\\\":2}},\\\\\\"Task\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"id\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"title\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"key\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"type\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"TaskType\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"googleAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Any\\\\\\",\\\\\\"id\\\\\\":5}}},\\\\\\"TaskList\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"tasks\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Task\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"SubstitutedByInterface\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"another\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"AnotherMessage\\\\\\":{\\\\\\"fields\\\\\\":{}}}},\\\\\\"any\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"bar\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1}}}}}}}}},\\\\\\"google\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"protobuf\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"type_url\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"value\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":2}}}}}}}}}\\");
+export const schema = Schema.fromJson<TYPES>(schemaJson, substitutions);
+
+"
+`;
