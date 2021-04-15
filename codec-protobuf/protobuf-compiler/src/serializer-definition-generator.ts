@@ -38,7 +38,7 @@ export function createSerializerDefinition (substitutionsModule: ModuleSpecifier
         ts.factory.createCallExpression(
           ts.factory.createPropertyAccessExpression(ts.factory.createIdentifier('JSON'), 'parse'),
           undefined,
-          [ts.factory.createStringLiteral(JSON.stringify(root.toJSON()))]
+          [ts.factory.createStringLiteral(JSON.stringify(postprocessProtobufJson(root.toJSON())))]
         )
       )
     ], ts.NodeFlags.Const)
@@ -63,5 +63,25 @@ export function createSerializerDefinition (substitutionsModule: ModuleSpecifier
   return {
     imports: substitutionsImport ? [schemaImport, substitutionsImport] : [schemaImport],
     exports: [schemaJsonExport, schemaExport]
+  };
+}
+
+interface ProtobufJson {
+  nested?: Record<string, ProtobufJson>
+  [K: string]: any
+}
+
+function postprocessProtobufJson (protobufJson: ProtobufJson): ProtobufJson {
+  if (!protobufJson.nested) {
+    return protobufJson;
+  }
+
+  const newNested = Object.fromEntries(Object.entries(protobufJson.nested)
+    .sort((b, a) => b[0].localeCompare(a[0]))
+    .map(([key, value]) => [key, postprocessProtobufJson(value)]));
+
+  return {
+    ...protobufJson,
+    nested: newNested
   };
 }

@@ -40,7 +40,7 @@ export async function compileSchema (substitutionsModule: ModuleSpecifier | unde
 
     const otherNamespaceImports = Array.from(namespaces.keys())
       .filter(ns => ns !== namespace)
-      .sort()
+      .sort((b, a) => b.localeCompare(a))
       .map(ns => f.createImportDeclaration(
         [],
         [],
@@ -77,6 +77,7 @@ export async function compileSchema (substitutionsModule: ModuleSpecifier | unde
   ));
 
   const otherNamespaceImports = Array.from(namespaces.keys())
+    .sort((b, a) => b.localeCompare(a))
     .map(ns => f.createImportDeclaration(
       [],
       [],
