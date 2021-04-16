@@ -29,10 +29,10 @@
     "debug": "^4.1.1",
     "ngraph.graph": "^19.0.1",
     "p-limit": "^3.0.2",
-    "queue-microtask": "^1.1.2",
-    "source-map-support": "^0.5.12"
+    "queue-microtask": "^1.1.2"
   },
   "devDependencies": {
+    "@dxos/toolchain-node-library": "*",
     "@dxos/protobuf-compiler": "*",
     "@dxos/protocol-network-generator": "1.0.8",
     "wait-for-expect": "^3.0.2"
