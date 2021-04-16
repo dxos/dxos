@@ -3,7 +3,7 @@
 //
 
 import chalk from 'chalk';
-import { spawnSync } from 'child_process';
+import { spawnSync, SpawnSyncOptionsWithBufferEncoding } from 'child_process';
 import * as fs from 'fs';
 import { sync as glob } from 'glob';
 import { join } from 'path';
@@ -12,10 +12,10 @@ import yargs from 'yargs';
 
 const selfDir = pkgDir(__dirname)!;
 
-function execTool (name: string, args: string[] = []) {
+function execTool (name: string, args: string[] = [], opts?: SpawnSyncOptionsWithBufferEncoding) {
   const before = Date.now();
 
-  const child = spawnSync(`${selfDir}/node_modules/.bin/${name}`, args, { stdio: 'inherit' });
+  const child = spawnSync(`${selfDir}/node_modules/.bin/${name}`, args, { stdio: 'inherit', ...opts });
   if (child.status !== 0) {
     process.stderr.write(chalk`{red error}: ${name} exited with code ${child.status}\n`);
     process.exit(child.status ?? 1);
@@ -87,7 +87,9 @@ yargs(process.argv.slice(2))
         execTool('eslint', ['--config', join(selfDir, '.eslintrc.js'), '{src,test}/**/*.{js,ts,jsx,tsx}']);
 
         console.log(chalk.bold`\jest`);
-        execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests', '--rootDir', pkgDir]);
+        execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests', '--rootDir', pkgDir], {
+          stdio: ['inherit', 'inherit', process.stdout]
+        });
       }
 
       console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
