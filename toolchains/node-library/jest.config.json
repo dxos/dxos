@@ -1,5 +1,5 @@
 {
-  "testMatch": ["{src,test}/**/*.test.{js,ts}"],
+  "testMatch": ["<rootDir>/{src,test}/**/*.test.{js,ts}"],
   "preset": "ts-jest/presets/js-with-ts",
   "testEnvironment": "node"
 }

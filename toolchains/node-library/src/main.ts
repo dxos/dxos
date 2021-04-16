@@ -59,11 +59,11 @@ yargs(process.argv.slice(2))
       const packageJson = JSON.parse(fs.readFileSync(join(getPackageDir(), 'package.json'), 'utf-8'));
 
       if (packageJson.jest) {
-        process.stderr.write(chalk`{yellow warn}: jest config in package.json is ignored`);
+        process.stderr.write(chalk`{yellow warn}: jest config in package.json is ignored\n`);
       }
 
       if (packageJson.eslintConfig) {
-        process.stderr.write(chalk`{yellow warn}: eslint config in package.json is ignored`);
+        process.stderr.write(chalk`{yellow warn}: eslint config in package.json is ignored\n`);
       }
 
       const protoFiles = glob('src/proto/**/*.proto', { cwd: pkgDir });
@@ -87,7 +87,7 @@ yargs(process.argv.slice(2))
         execTool('eslint', ['--config', join(selfDir, '.eslintrc.js'), '{src,test}/**/*.{js,ts,jsx,tsx}']);
 
         console.log(chalk.bold`\jest`);
-        execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests']);
+        execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests', '--rootDir', pkgDir]);
       }
 
       console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
@@ -99,6 +99,15 @@ yargs(process.argv.slice(2))
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
     ({ _ }) => {
       execTool('eslint', ['--config', join(selfDir, '.eslintrc.js'), '{src,test}/**/*.{js,ts,jsx,tsx}', ..._.slice(1).map(String)]);
+    }
+  )
+  .command(
+    'test',
+    'run tests',
+    yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
+    ({ _ }) => {
+      const pkgDir = getPackageDir();
+      execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests', '--rootDir', pkgDir, ..._.slice(1).map(String)]);
     }
   )
   .command<{ command: string }>(

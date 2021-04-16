@@ -7,8 +7,6 @@ import debug from 'debug';
 import eos from 'end-of-stream';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 
-import { Schema, anySubstitutions } from '@dxos/codec-protobuf';
-
 import {
   ERR_PROTOCOL_STREAM_CLOSED,
   ERR_EXTENSION_INIT_FAILED,
@@ -18,7 +16,7 @@ import {
   ERR_EXTENSION_RESPONSE_FAILED,
   ERR_EXTENSION_RESPONSE_TIMEOUT
 } from './errors';
-import schema from './schema.json';
+import { schema } from './proto/gen';
 import { keyToHuman } from './utils';
 
 const { NMSG_ERR_TIMEOUT } = nanomessageErrors;
@@ -74,11 +72,21 @@ export class Extension extends Nanomessage {
 
     this._name = name;
 
-    this.codec = Schema.fromJson(schema, anySubstitutions)
-      .getCodecForType('dxos.protocol.Message');
+    const codec = schema.getCodecForType('dxos.protocol.Message');
 
     if (userSchema) {
-      this.codec.addJson(userSchema);
+      codec.addJson(userSchema);
+    }
+
+    console.log(schema)
+
+    this.codec = {
+      encode: msg => {
+        return Buffer.from(codec.encode(msg))
+      },
+      decode: msg => {
+        const decoded = codec.decode(msg)
+      },
     }
 
     this.codec.encode.bind(this.codec);
