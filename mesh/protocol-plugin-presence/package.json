@@ -18,7 +18,7 @@
   "main": "index.js",
   "browser": "dist/index.js",
   "scripts": {
-    "build": "pnpm run clean && pnpm run build:protobuf && pnpm run build:babel && pnpm run test",
+    "build": "toolchain build",
     "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps",
     "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/schema.proto -o src/proto/gen && cpy src/proto/schema.json dist",
     "clean": "del-cli dist",
