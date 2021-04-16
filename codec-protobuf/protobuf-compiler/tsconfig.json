@@ -14,8 +14,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ES2018",
-    "types": ["node", "jest"]
+    "target": "ES2018"
   },
   "include": [
     "src"
