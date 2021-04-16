@@ -2,10 +2,14 @@
 // Copyright 2019 DxOS.
 //
 
+//
+// Copyright 2021 DXOS.org
+//
+
 import crypto from 'crypto';
-import waitForExpect from 'wait-for-expect';
 import debug from 'debug';
 import path from 'ngraph.path';
+import waitForExpect from 'wait-for-expect';
 
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';

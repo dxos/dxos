@@ -15,23 +15,11 @@
     "dist",
     "index.js"
   ],
-  "main": "index.js",
-  "browser": "dist/index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
-    "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps",
-    "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/schema.proto -o src/proto/gen && cpy src/proto/schema.json dist",
-    "clean": "del-cli dist",
-    "coverage": "pnpm test -- --coverage",
-    "coveralls": "pnpm run coverage && cat ./coverage/lcov.info | coveralls",
-    "prepublishOnly": "pnpm run build && pnpm run test",
-    "test": "jest --verbose --passWithNoTests src 2>&1"
-  },
-  "browserslist": [
-    "> 5%"
-  ],
-  "jest": {
-    "testEnvironment": "node"
+    "lint": "toolchain lint"
   },
   "dependencies": {
     "@dxos/broadcast": "~1.0.0-beta.11",
@@ -46,24 +34,8 @@
   },
   "devDependencies": {
     "@dxos/protobuf-compiler": "*",
-    "uglify-js": "^3.7.7",
-    "@babel/cli": "^7.7.0",
-    "@babel/core": "~7.13.15",
-    "@babel/plugin-proposal-class-properties": "^7.7.4",
-    "@babel/plugin-proposal-export-default-from": "^7.5.2",
-    "@babel/preset-env": "^7.4.5",
     "@dxos/protocol-network-generator": "1.0.8",
-    "babel-eslint": "^10.0.2",
-    "babel-jest": "^24.8.0",
-    "babel-plugin-add-module-exports": "^1.0.4",
-    "babel-plugin-inline-import": "^3.0.0",
-    "coveralls": "^3.0.7",
-    "cpy-cli": "^2.0.0",
-    "del-cli": "^3.0.0",
-    "jest": "^26.2.2",
-    "ngraph.path": "^1.2.0",
-    "wait-for-expect": "^3.0.2",
-    "estraverse": "^5.1.0"
+    "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"

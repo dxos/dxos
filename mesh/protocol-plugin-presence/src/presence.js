@@ -2,16 +2,20 @@
 // Copyright 2019 DxOS.
 //
 
+//
+// Copyright 2021 DXOS.org
+//
+
+import bufferJson from 'buffer-json-encoding';
+import debug from 'debug';
 import { EventEmitter } from 'events';
 import createGraph from 'ngraph.graph';
-import debug from 'debug';
-import queueMicrotask from 'queue-microtask';
-import bufferJson from 'buffer-json-encoding';
 import pLimit from 'p-limit';
+import queueMicrotask from 'queue-microtask';
 
-import { Extension } from '@dxos/protocol';
 import { Broadcast } from '@dxos/broadcast';
 import { Codec } from '@dxos/codec-protobuf';
+import { Extension } from '@dxos/protocol';
 
 import schema from './proto/schema.json';
 
@@ -119,14 +123,20 @@ export class Presence extends EventEmitter {
       let graphUpdated = false;
 
       changes.forEach(({ changeType, node, link }) => {
-        if (changeType === 'update') return;
+        if (changeType === 'update') {
+          return;
+        }
 
         graphUpdated = true;
 
         const type = changeType === 'add' ? 'joined' : 'left';
 
-        if (node) this.emit(`peer:${type}`, Buffer.from(node.id, 'hex'));
-        if (link) this.emit(`connection:${type}`, Buffer.from(link.fromId, 'hex'), Buffer.from(link.toId, 'hex'));
+        if (node) {
+          this.emit(`peer:${type}`, Buffer.from(node.id, 'hex'));
+        }
+        if (link) {
+          this.emit(`connection:${type}`, Buffer.from(link.fromId, 'hex'), Buffer.from(link.toId, 'hex'));
+        }
       });
 
       if (graphUpdated) {
@@ -167,7 +177,9 @@ export class Presence extends EventEmitter {
 
     this._broadcast.on('packet', packet => {
       packet = this._codec.decode(packet.data);
-      if (packet.metadata) packet.metadata = bufferJson.decode(packet.metadata);
+      if (packet.metadata) {
+        packet.metadata = bufferJson.decode(packet.metadata);
+      }
       this.emit('remote-ping', packet);
     });
     this._broadcast.on('lookup-error', err => console.warn(err));
@@ -185,8 +197,12 @@ export class Presence extends EventEmitter {
     const localPeerId = this._peerId.toString('hex');
     this._graph.beginUpdate();
     this._graph.forEachNode((node) => {
-      if (node.id === localPeerId) return;
-      if (this._neighbors.has(node.id)) return;
+      if (node.id === localPeerId) {
+        return;
+      }
+      if (this._neighbors.has(node.id)) {
+        return;
+      }
 
       if ((now - node.data.lastUpdate) > this._peerTimeout) {
         this._deleteNode(node.id);
@@ -231,7 +247,9 @@ export class Presence extends EventEmitter {
   _removePeer (protocol) {
     console.assert(protocol);
     const session = protocol.getSession();
-    if (!session || !session.peerId) return;
+    if (!session || !session.peerId) {
+      return;
+    }
 
     const { peerId } = session;
     const peerIdHex = peerId.toString('hex');
@@ -247,7 +265,9 @@ export class Presence extends EventEmitter {
     // We clear the._graph graph.
     const localPeerId = this._peerId.toString('hex');
     this._graph.forEachNode((node) => {
-      if (node.id === localPeerId) return;
+      if (node.id === localPeerId) {
+        return;
+      }
       this._deleteNode(node.id);
     });
   }
