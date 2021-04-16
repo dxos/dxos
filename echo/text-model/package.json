@@ -40,9 +40,11 @@
     "@dxos/echo-db": "*",
     "@dxos/model-factory": "*",
     "@types/node": "^14.0.9",
-    "yjs": "^13.4.1"
+    "yjs": "^13.4.1",
+    "protobufjs": "^6.9.0"
   },
   "devDependencies": {
+    "@dxos/protobuf-compiler": "*",
     "@dxos/eslint-plugin": "~1.0.10",
     "@types/jest": "^26.0.7",
     "jest": "^26.2.2",
