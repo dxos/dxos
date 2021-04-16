@@ -20,7 +20,7 @@ dependencies:
   '@rush-temp/echo-db': 'file:projects/echo-db.tgz_ts-node@9.1.1'
   '@rush-temp/echo-demo': 'file:projects/echo-demo.tgz_ts-node@9.1.1+ws@7.4.4'
   '@rush-temp/echo-protocol': 'file:projects/echo-protocol.tgz_ts-node@9.1.1'
-  '@rush-temp/echo-testing': 'file:projects/echo-testing.tgz_eslint@7.23.0+ts-node@9.1.1'
+  '@rush-temp/echo-testing': 'file:projects/echo-testing.tgz_ts-node@9.1.1'
   '@rush-temp/model-factory': 'file:projects/model-factory.tgz_ts-node@9.1.1'
   '@rush-temp/node-library-rig': 'file:projects/node-library-rig.tgz'
   '@rush-temp/object-model': 'file:projects/object-model.tgz_ts-node@9.1.1'
@@ -77,6 +77,7 @@ dependencies:
   hypercore-crypto: 1.0.0
   hypercore-protocol: 6.12.0
   hypertrie: 3.8.0
+  immutability-helper: 3.1.1
   jest: 26.6.3_ts-node@9.1.1
   jest-expect-message: 1.0.2
   js-data-structs: 1.1.3
@@ -17100,6 +17101,7 @@ packages:
       eslint: 7.23.0
       eslint-plugin-jest: 24.3.4_eslint@7.23.0+typescript@4.2.3
       eslint-plugin-react: 7.23.2_eslint@7.23.0
+      immutability-helper: 3.1.1
       jest: 26.6.3_ts-node@9.1.1
       level-js: 5.0.2
       lodash.merge: 4.6.2
@@ -17123,7 +17125,7 @@ packages:
       ts-node: '*'
       ws: '*'
     resolution:
-      integrity: sha512-5k4WbJqepukYOIUCyD5xtWpZdRi7gLIZ1JiPZY3TgeQ+C2qmbJ4+z+4vuBxzogAcrI8P2zGDnDhczCcXoGfdUw==
+      integrity: sha512-4s5EIm9MM6eUMqtgWvRJTKuL5aDbs4jECMkOgBUBtoK8kY12VMFD4Eq0048xn3WPc2NnAiBDU9SgJMA+RlVdyA==
       tarball: 'file:projects/echo-demo.tgz'
     version: 0.0.0
   'file:projects/echo-protocol.tgz_ts-node@9.1.1':
@@ -17169,7 +17171,7 @@ packages:
       integrity: sha512-WOYdykLc+TX6kNauMr760nTYUnM2yEPAxfjo1jB9TbgY9imrdZhtroQZPthrrYgVWp0pe84tRd/K6KLRxC9/pQ==
       tarball: 'file:projects/echo-protocol.tgz'
     version: 0.0.0
-  'file:projects/echo-testing.tgz_eslint@7.23.0+ts-node@9.1.1':
+  'file:projects/echo-testing.tgz_ts-node@9.1.1':
     dependencies:
       '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
       '@types/debug': 4.1.5
@@ -17177,6 +17179,7 @@ packages:
       '@types/jest': 26.0.22
       '@types/lodash': 4.14.168
       debug: 4.3.1
+      eslint: 7.23.0
       eslint-plugin-jest: 24.3.4_eslint@7.23.0+typescript@4.2.3
       faker: 5.5.3
       jest: 26.6.3_ts-node@9.1.1
@@ -17189,10 +17192,9 @@ packages:
     id: 'file:projects/echo-testing.tgz'
     name: '@rush-temp/echo-testing'
     peerDependencies:
-      eslint: '*'
       ts-node: '*'
     resolution:
-      integrity: sha512-WHycO3OQ/t8xCOxXDQ+dNmKH7pqY28g8GuF8a3oYk3RSNZR9cjsxs+FqLM7K8bAR3q2ucRuqOAfZvM5SXyuQmg==
+      integrity: sha512-bUwhpEEt1pESHrn1kYr6IM52yqxnk2T+Aexn+2zUk40hlQ5h0gS3JdiZnFlPwiuwUFNiKPvxXkxisiI+T8I9Rg==
       tarball: 'file:projects/echo-testing.tgz'
     version: 0.0.0
   'file:projects/model-factory.tgz_ts-node@9.1.1':
@@ -17419,6 +17421,7 @@ specifiers:
   hypercore-crypto: ^1.0.0
   hypercore-protocol: ^6.11.1
   hypertrie: ^3.8.0
+  immutability-helper: ^3.0.2
   jest: ^26.2.2
   jest-expect-message: ^1.0.2
   js-data-structs: ^1.1.2

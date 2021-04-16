@@ -13,7 +13,7 @@ interface MemberListProps {
 }
 
 const MemberList = ({ party }: MemberListProps) => {
-  const members = usePartyMembers(party);
+  const members: any[] = usePartyMembers(party);
 
   return (
     <ul>
