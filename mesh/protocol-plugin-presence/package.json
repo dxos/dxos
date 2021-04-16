@@ -45,8 +45,6 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "semver": "^7.1.2",
-    "jsdoc": "^3.6.3",
     "@dxos/protobuf-compiler": "*",
     "uglify-js": "^3.7.7",
     "@babel/cli": "^7.7.0",
