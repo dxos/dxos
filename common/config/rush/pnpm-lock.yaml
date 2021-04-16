@@ -25,7 +25,7 @@ dependencies:
   '@rush-temp/object-model': 'file:projects/object-model.tgz_ts-node@9.1.1'
   '@rush-temp/protobuf-compiler': 'file:projects/protobuf-compiler.tgz'
   '@rush-temp/protocol': 'file:projects/protocol.tgz_ts-node@9.1.1'
-  '@rush-temp/toolchain-node-library': 'file:projects/toolchain-node-library.tgz_ts-node@9.1.1'
+  '@rush-temp/toolchain-node-library': 'file:projects/toolchain-node-library.tgz'
   '@rush-temp/util': 'file:projects/util.tgz_ts-node@9.1.1'
   '@storybook/addon-actions': 6.2.8_react-dom@16.14.0+react@16.14.0
   '@storybook/addon-knobs': 6.2.8_react-dom@16.14.0+react@16.14.0
@@ -37,6 +37,7 @@ dependencies:
   '@types/encoding-down': 5.0.0
   '@types/end-of-stream': 1.4.0
   '@types/faker': 5.5.1
+  '@types/glob': 7.1.3
   '@types/heft-jest': 1.0.2
   '@types/jest': 26.0.22
   '@types/jest-expect-message': 1.0.3
@@ -54,6 +55,7 @@ dependencies:
   '@types/stream-to-array': 2.3.0
   '@types/through2': 2.0.36
   '@types/use-subscription': 1.0.0
+  '@types/yargs': 16.0.1
   argparse: 2.0.1
   assert: 2.0.0
   babel-loader: 8.1.0_79516e198329395a81a2c5a62f1af14a
@@ -76,6 +78,7 @@ dependencies:
   eslint-plugin-jest: 24.3.4_eslint@7.23.0+typescript@4.2.3
   eslint-plugin-react: 7.23.2_eslint@7.23.0
   faker: 5.5.3
+  glob: 7.1.6
   humanhash: 1.0.4
   hypercore: 7.7.1
   hypercore-crypto: 1.0.0
@@ -106,6 +109,7 @@ dependencies:
   ngraph.path: 1.3.1
   performance-now: 2.1.0
   pify: 5.0.0
+  pkg-dir: 5.0.0
   protobufjs: 6.10.2
   pump: 3.0.0
   queue-microtask: 1.2.3
@@ -130,6 +134,7 @@ dependencies:
   wait-for-expect: 3.0.2
   webpack: 4.44.2_webpack@4.44.2
   ws: 7.4.4
+  yargs: 16.2.0
 lockfileVersion: 5.1
 packages:
   /@actions/core/1.2.7:
@@ -1504,10 +1509,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-8yoPxp86GvPBTWBSnbOYwcPouml2G2V3tyFNZXqhPaZ7EfDFKUSWdoN4wzqJ/FdGWbc/vaMBPdx9ufGXgqeh/A==
-  /@dxos/async/1.0.0-beta.10:
-    dev: false
-    resolution:
-      integrity: sha512-U3f1afmdl8KNjK8y89E89G+Cd2l52+Wjww92hZ9IfiU6wOvNsNG9WRruAYCOoRpBMYaEv/QJq+UuLhgD5o8iSQ==
   /@dxos/async/1.0.2-alpha.0:
     dev: false
     resolution:
@@ -1547,47 +1548,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-z2VDf5sqBG/0fNEYC1bYmsaiGBP3gaQ6BKodHvLHkUgFImxszAzbjdBVm7waXqQU19CXKkahKTbfrjtLKLzdZQ==
-  /@dxos/credentials/2.1.16-alpha.0:
-    dependencies:
-      '@dxos/async': 1.0.0-beta.10
-      '@dxos/codec-protobuf': 1.1.1
-      '@dxos/crypto': 1.0.7
-      '@dxos/feed-store': 1.2.0-beta.30
-      '@dxos/protocol': 1.1.0-beta.21
-      '@types/debug': 4.1.5
-      '@types/end-of-stream': 1.4.0
-      '@types/pify': 3.0.2
-      '@types/pump': 1.1.1
-      bip39: 3.0.3
-      buffer-json-encoding: 1.0.2
-      crypto-js: 3.3.0
-      debug: 4.3.1
-      encoding-down: 6.3.0
-      end-of-stream: 1.4.4
-      hypercore-crypto: 1.0.0
-      hypercore-protocol: 6.12.0
-      hypertrie: 3.8.0
-      json-stable-stringify: 1.0.1
-      leveldown: 5.6.0
-      levelup: 4.4.0
-      lodash.defaultsdeep: 4.6.1
-      lodash.get: 4.4.2
-      lodash.isobject: 3.0.2
-      lodash.isplainobject: 4.0.6
-      lodash.mapvalues: 4.6.0
-      lodash.matches: 4.6.0
-      memdown: 5.1.0
-      moment: 2.29.1
-      performance-now: 2.1.0
-      pump: 3.0.0
-      queue-microtask: 1.2.3
-      random-access-memory: 3.1.2
-      source-map-support: 0.5.19
-      stream-to-array: 2.3.0
-      uuid: 3.4.0
-    dev: false
-    resolution:
-      integrity: sha512-cD2aYP/W7lm0bkzEwWGzzO+rd2gPdGExCKvoymJ2corhX40hY+ywZOMnBrx1OL08+k/bR5pDkfzyasfRoVmryQ==
   /@dxos/crypto/1.0.7:
     dependencies:
       crypto-js: 3.3.0
@@ -1712,15 +1672,6 @@ packages:
       ws: '*'
     resolution:
       integrity: sha512-Guyy3gsXjf7g5CXPyLgUdslNyPq9GUn2G96xX7aefS+wBj6HaCDzKTeSffvMkH3k0X1dATcGKbZt2k8CyiPsog==
-  /@dxos/protobuf-compiler/1.1.1:
-    dependencies:
-      argparse: 2.0.1
-      chalk: 4.1.0
-      read-pkg: 5.2.0
-    dev: false
-    hasBin: true
-    resolution:
-      integrity: sha512-orBGNmK/qUxRC35c9o6Rs/stJBohbHrcai3GzYuvhNrqq9TGScvnFpejVULv4ROaoFlZCGiWyhPG2RAtd7taew==
   /@dxos/protocol-plugin-presence/1.1.0-beta.21:
     dependencies:
       '@dxos/broadcast': 1.0.0-beta.11
@@ -2013,41 +1964,6 @@ packages:
       node: '>= 8.3'
     resolution:
       integrity: sha512-h1x9WSVV0+TKVtATGjyQIMJENs8aF6eUjnCoi4jyRemYZmekLr8EJOGQqTWEX8W6SbZ6Skesy9pGXrKeAolUJw==
-  /@jest/core/26.6.3:
-    dependencies:
-      '@jest/console': 26.6.2
-      '@jest/reporters': 26.6.2
-      '@jest/test-result': 26.6.2
-      '@jest/transform': 26.6.2
-      '@jest/types': 26.6.2
-      '@types/node': 14.14.37
-      ansi-escapes: 4.3.2
-      chalk: 4.1.0
-      exit: 0.1.2
-      graceful-fs: 4.2.6
-      jest-changed-files: 26.6.2
-      jest-config: 26.6.3
-      jest-haste-map: 26.6.2
-      jest-message-util: 26.6.2
-      jest-regex-util: 26.0.0
-      jest-resolve: 26.6.2_jest-resolve@26.6.2
-      jest-resolve-dependencies: 26.6.3
-      jest-runner: 26.6.3
-      jest-runtime: 26.6.3
-      jest-snapshot: 26.6.2
-      jest-util: 26.6.2
-      jest-validate: 26.6.2
-      jest-watcher: 26.6.2
-      micromatch: 4.0.2
-      p-each-series: 2.2.0
-      rimraf: 3.0.2
-      slash: 3.0.0
-      strip-ansi: 6.0.0
-    dev: false
-    engines:
-      node: '>= 10.14.2'
-    resolution:
-      integrity: sha512-xvV1kKbhfUqFVuZ8Cyo+JPpipAHHAV3kcDBftiduK8EICXmTFddryy3P7NfZt8Pv37rA9nEJBKCCkglCPt/Xjw==
   /@jest/core/26.6.3_ts-node@9.1.1:
     dependencies:
       '@jest/console': 26.6.2
@@ -2270,20 +2186,6 @@ packages:
       node: '>= 8.3'
     resolution:
       integrity: sha512-pTJGEkSeg1EkCO2YWq6hbFvKNXk8ejqlxiOg1jBNLnWrgXOkdY6UmqZpwGFXNnRt9B8nO1uWMzLLZ4eCmhkPNA==
-  /@jest/test-sequencer/26.6.3:
-    dependencies:
-      '@jest/test-result': 26.6.2
-      graceful-fs: 4.2.6
-      jest-haste-map: 26.6.2
-      jest-runner: 26.6.3
-      jest-runtime: 26.6.3
-    dev: false
-    engines:
-      node: '>= 10.14.2'
-    peerDependencies:
-      ts-node: '*'
-    resolution:
-      integrity: sha512-YHlVIjP5nfEyjlrSr8t/YdNfU/1XEt7c5b4OxcXCjyRhjzLYu/rO69/WHPuYcbCWkz8kAeZVZp2N2+IOLLEPGw==
   /@jest/test-sequencer/26.6.3_ts-node@9.1.1:
     dependencies:
       '@jest/test-result': 26.6.2
@@ -4165,6 +4067,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-kQ5JNTrbDv3Rp5X2n/iUu37IJBDU2gsZ5R/g1/KHOOEc5IKfUFjXT6DENPGduh08I/pamwtEq4oul7gUqKTQDQ==
+  /@types/yargs/16.0.1:
+    dependencies:
+      '@types/yargs-parser': 20.2.0
+    dev: false
+    resolution:
+      integrity: sha512-x4HABGLyzr5hKUzBC9dvjciOTm11WVH1NWonNjGgxapnTHu5SWUqyqn0zQ6Re0yQU0lsQ6ztLCoMAKDGZflyxA==
   /@typescript-eslint/eslint-plugin/3.10.1_8cc22adb2d453ed4022cff6b4c15db4d:
     dependencies:
       '@typescript-eslint/experimental-utils': 3.10.1_eslint@7.23.0+typescript@4.2.3
@@ -10382,27 +10290,6 @@ packages:
       node: '>= 10.14.2'
     resolution:
       integrity: sha512-fDS7szLcY9sCtIip8Fjry9oGf3I2ht/QT21bAHm5Dmf0mD4X3ReNUf17y+bO6fR8WgbIZTlbyG1ak/53cbRzKQ==
-  /jest-cli/26.6.3:
-    dependencies:
-      '@jest/core': 26.6.3
-      '@jest/test-result': 26.6.2
-      '@jest/types': 26.6.2
-      chalk: 4.1.0
-      exit: 0.1.2
-      graceful-fs: 4.2.6
-      import-local: 3.0.2
-      is-ci: 2.0.0
-      jest-config: 26.6.3
-      jest-util: 26.6.2
-      jest-validate: 26.6.2
-      prompts: 2.4.1
-      yargs: 15.4.1
-    dev: false
-    engines:
-      node: '>= 10.14.2'
-    hasBin: true
-    resolution:
-      integrity: sha512-GF9noBSa9t08pSyl3CY4frMrqp+aQXFGFkf5hEPbh/pIUFYWMK6ZLTfbmadxJVcJrdRoChlWQsA2VkJcDFK8hg==
   /jest-cli/26.6.3_ts-node@9.1.1:
     dependencies:
       '@jest/core': 26.6.3_ts-node@9.1.1
@@ -10452,36 +10339,6 @@ packages:
       node: '>= 8.3'
     resolution:
       integrity: sha512-SZwR91SwcdK6bz7Gco8qL7YY2sx8tFJYzvg216DLihTWf+LKY/DoJXpM9nTzYakSyfblbqeU48p/p7Jzy05Atg==
-  /jest-config/26.6.3:
-    dependencies:
-      '@babel/core': 7.13.14_@babel+core@7.13.14
-      '@jest/test-sequencer': 26.6.3
-      '@jest/types': 26.6.2
-      babel-jest: 26.6.3_@babel+core@7.13.14
-      chalk: 4.1.0
-      deepmerge: 4.2.2
-      glob: 7.1.6
-      graceful-fs: 4.2.6
-      jest-environment-jsdom: 26.6.2
-      jest-environment-node: 26.6.2
-      jest-get-type: 26.3.0
-      jest-jasmine2: 26.6.3
-      jest-regex-util: 26.0.0
-      jest-resolve: 26.6.2_jest-resolve@26.6.2
-      jest-util: 26.6.2
-      jest-validate: 26.6.2
-      micromatch: 4.0.2
-      pretty-format: 26.6.2
-    dev: false
-    engines:
-      node: '>= 10.14.2'
-    peerDependencies:
-      ts-node: '>=9.0.0'
-    peerDependenciesMeta:
-      ts-node:
-        optional: true
-    resolution:
-      integrity: sha512-t5qdIj/bCj2j7NFVHb2nFB4aUdfucDn3JRKgrZnplb8nieAirAzRSHP8uDEd+qV6ygzg9Pz4YG7UTJf94LPSyg==
   /jest-config/26.6.3_ts-node@9.1.1:
     dependencies:
       '@babel/core': 7.13.14_@babel+core@7.13.14
@@ -10711,33 +10568,6 @@ packages:
       node: '>= 8.3'
     resolution:
       integrity: sha512-9acbWEfbmS8UpdcfqnDO+uBUgKa/9hcRh983IHdM+pKmJPL77G0sWAAK0V0kr5LK3a8cSBfkFSoncXwQlRZfkQ==
-  /jest-jasmine2/26.6.3:
-    dependencies:
-      '@babel/traverse': 7.13.13
-      '@jest/environment': 26.6.2
-      '@jest/source-map': 26.6.2
-      '@jest/test-result': 26.6.2
-      '@jest/types': 26.6.2
-      '@types/node': 14.14.37
-      chalk: 4.1.0
-      co: 4.6.0
-      expect: 26.6.2
-      is-generator-fn: 2.1.0
-      jest-each: 26.6.2
-      jest-matcher-utils: 26.6.2
-      jest-message-util: 26.6.2
-      jest-runtime: 26.6.3
-      jest-snapshot: 26.6.2
-      jest-util: 26.6.2
-      pretty-format: 26.6.2
-      throat: 5.0.0
-    dev: false
-    engines:
-      node: '>= 10.14.2'
-    peerDependencies:
-      ts-node: '*'
-    resolution:
-      integrity: sha512-kPKUrQtc8aYwBV7CqBg5pu+tmYXlvFlSFYn18ev4gPFtrRzB15N2gW/Roew3187q2w2eHuu0MU9TJz6w0/nPEg==
   /jest-jasmine2/26.6.3_ts-node@9.1.1:
     dependencies:
       '@babel/traverse': 7.13.13
@@ -10972,35 +10802,6 @@ packages:
       node: '>= 8.3'
     resolution:
       integrity: sha512-V/2R7fKZo6blP8E9BL9vJ8aTU4TH2beuqGNxHbxi6t14XzTb+x90B3FRgdvuHm41GY8ch4xxvf0ATH4hdpjTqg==
-  /jest-runner/26.6.3:
-    dependencies:
-      '@jest/console': 26.6.2
-      '@jest/environment': 26.6.2
-      '@jest/test-result': 26.6.2
-      '@jest/types': 26.6.2
-      '@types/node': 14.14.37
-      chalk: 4.1.0
-      emittery: 0.7.2
-      exit: 0.1.2
-      graceful-fs: 4.2.6
-      jest-config: 26.6.3
-      jest-docblock: 26.0.0
-      jest-haste-map: 26.6.2
-      jest-leak-detector: 26.6.2
-      jest-message-util: 26.6.2
-      jest-resolve: 26.6.2_jest-resolve@26.6.2
-      jest-runtime: 26.6.3
-      jest-util: 26.6.2
-      jest-worker: 26.6.2
-      source-map-support: 0.5.19
-      throat: 5.0.0
-    dev: false
-    engines:
-      node: '>= 10.14.2'
-    peerDependencies:
-      ts-node: '*'
-    resolution:
-      integrity: sha512-atgKpRHnaA2OvByG/HpGA4g6CSPS/1LK0jK3gATJAoptC1ojltpmVlYC3TYgdmGp+GLuhzpH30Gvs36szSL2JQ==
   /jest-runner/26.6.3_ts-node@9.1.1:
     dependencies:
       '@jest/console': 26.6.2
@@ -11064,43 +10865,6 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-RWTt8LeWh3GvjYtASH2eezkc8AehVoWKK20udV6n3/gC87wlTbE1kIA+opCvNWyyPeBs6ptYsc6nyHUb1GlUVQ==
-  /jest-runtime/26.6.3:
-    dependencies:
-      '@jest/console': 26.6.2
-      '@jest/environment': 26.6.2
-      '@jest/fake-timers': 26.6.2
-      '@jest/globals': 26.6.2
-      '@jest/source-map': 26.6.2
-      '@jest/test-result': 26.6.2
-      '@jest/transform': 26.6.2
-      '@jest/types': 26.6.2
-      '@types/yargs': 15.0.13
-      chalk: 4.1.0
-      cjs-module-lexer: 0.6.0
-      collect-v8-coverage: 1.0.1
-      exit: 0.1.2
-      glob: 7.1.6
-      graceful-fs: 4.2.6
-      jest-config: 26.6.3
-      jest-haste-map: 26.6.2
-      jest-message-util: 26.6.2
-      jest-mock: 26.6.2
-      jest-regex-util: 26.0.0
-      jest-resolve: 26.6.2_jest-resolve@26.6.2
-      jest-snapshot: 26.6.2
-      jest-util: 26.6.2
-      jest-validate: 26.6.2
-      slash: 3.0.0
-      strip-bom: 4.0.0
-      yargs: 15.4.1
-    dev: false
-    engines:
-      node: '>= 10.14.2'
-    hasBin: true
-    peerDependencies:
-      ts-node: '*'
-    resolution:
-      integrity: sha512-lrzyR3N8sacTAMeonbqpnSka1dHNux2uk0qqDXVkMv2c/A3wYnvQ4EXuI013Y6+gSKSCxdaczvf4HF0mVXHRdw==
   /jest-runtime/26.6.3_ts-node@9.1.1:
     dependencies:
       '@jest/console': 26.6.2
@@ -11318,17 +11082,6 @@ packages:
       node: '>= 10.13.0'
     resolution:
       integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==
-  /jest/26.6.3:
-    dependencies:
-      '@jest/core': 26.6.3
-      import-local: 3.0.2
-      jest-cli: 26.6.3
-    dev: false
-    engines:
-      node: '>= 10.14.2'
-    hasBin: true
-    resolution:
-      integrity: sha512-lGS5PXGAzR4RF7V5+XObhqz2KZIDUA1yD0DG6pBVmy10eh0ZIXQImRuzocsI/N2XZ1GrLFwTS27In2i2jlpq1Q==
   /jest/26.6.3_ts-node@9.1.1:
     dependencies:
       '@jest/core': 26.6.3_ts-node@9.1.1
@@ -17571,30 +17324,20 @@ packages:
   'file:projects/echo-protocol.tgz':
     dependencies:
       '@dxos/async': 1.0.0
-      '@dxos/codec-protobuf': 1.1.1
-      '@dxos/credentials': 2.1.16-alpha.0
       '@dxos/crypto': 1.0.7
-      '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
       '@dxos/feed-store': 1.2.0-beta.30
-      '@dxos/protobuf-compiler': 1.1.1
-      '@rushstack/heft': 0.28.1
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/faker': 5.5.1
-      '@types/heft-jest': 1.0.2
       '@types/jest': 26.0.22
       '@types/lodash': 4.14.168
       '@types/node': 14.14.37
       '@types/readable-stream': 2.3.9
       '@types/stream-buffers': 3.0.3
       '@types/through2': 2.0.36
-      chance: 1.1.7
       debug: 4.3.1
-      del-cli: 3.0.1
-      eslint: 7.23.0
       faker: 5.5.3
       hypercore: 7.7.1
-      jest: 26.6.3
       js-data-structs: 1.1.3
       lodash.merge: 4.6.2
       pify: 5.0.0
@@ -17604,8 +17347,6 @@ packages:
       source-map-support: 0.5.19
       stream-buffers: 3.0.2
       tempy: 1.0.1
-      ts-jest: 26.5.4_jest@26.6.3+typescript@4.2.3
-      typescript: 4.2.3
       wait-for-expect: 3.0.2
     dev: false
     name: '@rush-temp/echo-protocol'
@@ -17780,20 +17521,25 @@ packages:
       integrity: sha512-vNZyCIfqatvMuPdqaWEDlYP1sBFhfvu4CRzkMzZSZRPSQz9QyV1jPIN8GBKIc5+sue+Uhgm4fDf+9OPmluR8cQ==
       tarball: 'file:projects/protocol.tgz'
     version: 0.0.0
-  'file:projects/toolchain-node-library.tgz_ts-node@9.1.1':
+  'file:projects/toolchain-node-library.tgz':
     dependencies:
       '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
+      '@types/glob': 7.1.3
+      '@types/node': 14.14.37
+      '@types/yargs': 16.0.1
+      chalk: 4.1.0
       eslint: 7.23.0
+      glob: 7.1.6
       jest: 26.6.3_ts-node@9.1.1
+      pkg-dir: 5.0.0
       ts-jest: 26.5.4_jest@26.6.3+typescript@4.2.3
+      ts-node: 9.1.1_typescript@4.2.3
       typescript: 4.2.3
+      yargs: 16.2.0
     dev: false
-    id: 'file:projects/toolchain-node-library.tgz'
     name: '@rush-temp/toolchain-node-library'
-    peerDependencies:
-      ts-node: '*'
     resolution:
-      integrity: sha512-hc+YRyy6G0K+NQoqKn5LSddVLmdPjdFYjkY61TNvVcMspWIVFdQvYV+Jqv6jXlM2UG6pGtD49sjlCnbGC9xFRA==
+      integrity: sha512-u7Xr9RP9qrw/2n8V+5GOCoWz/gEO89U4quwUlBXDhwvXG2GBn+/s1fQanoVIWpqcAR7vRRhqqUuSBSnwLAcBaw==
       tarball: 'file:projects/toolchain-node-library.tgz'
     version: 0.0.0
   'file:projects/util.tgz_ts-node@9.1.1':
@@ -17871,6 +17617,7 @@ specifiers:
   '@types/encoding-down': ^5.0.0
   '@types/end-of-stream': ^1.4.0
   '@types/faker': ~5.5.1
+  '@types/glob': ~7.1.3
   '@types/heft-jest': ~1.0.2
   '@types/jest': ^26.0.7
   '@types/jest-expect-message': ^1.0.3
@@ -17888,6 +17635,7 @@ specifiers:
   '@types/stream-to-array': ^2.3.0
   '@types/through2': ^2.0.36
   '@types/use-subscription': ^1.0.0
+  '@types/yargs': ~16.0.1
   argparse: ^2.0.1
   assert: ^2.0.0
   babel-loader: 8.1.0
@@ -17910,6 +17658,7 @@ specifiers:
   eslint-plugin-jest: ^24.0.2
   eslint-plugin-react: ^7.22.0
   faker: ^5.1.0
+  glob: ~7.1.6
   humanhash: ^1.0.4
   hypercore: ^7.7.1
   hypercore-crypto: ^1.0.0
@@ -17940,6 +17689,7 @@ specifiers:
   ngraph.path: ^1.2.0
   performance-now: ^2.1.0
   pify: ~5.0.0
+  pkg-dir: ~5.0.0
   protobufjs: ^6.9.0
   pump: ^3.0.0
   queue-microtask: ^1.1.2
@@ -17964,3 +17714,4 @@ specifiers:
   wait-for-expect: ^3.0.2
   webpack: 4.44.2
   ws: ^7.4.4
+  yargs: ~16.2.0
