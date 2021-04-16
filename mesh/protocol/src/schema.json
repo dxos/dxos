@@ -1,0 +1,72 @@
+{
+  "nested": {
+    "dxos": {
+      "nested": {
+        "protocol": {
+          "nested": {
+            "Message": {
+              "fields": {
+                "nmId": {
+                  "type": "string",
+                  "id": 1
+                },
+                "nmResponse": {
+                  "type": "bool",
+                  "id": 2
+                },
+                "nmEphemeral": {
+                  "type": "bool",
+                  "id": 3
+                },
+                "nmData": {
+                  "type": "google.protobuf.Any",
+                  "id": 4
+                }
+              }
+            },
+            "Error": {
+              "fields": {
+                "code": {
+                  "type": "string",
+                  "id": 1
+                },
+                "message": {
+                  "type": "string",
+                  "id": 2
+                }
+              }
+            },
+            "Buffer": {
+              "fields": {
+                "data": {
+                  "type": "bytes",
+                  "id": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "google": {
+      "nested": {
+        "protobuf": {
+          "nested": {
+            "Any": {
+              "fields": {
+                "type_url": {
+                  "type": "string",
+                  "id": 1
+                },
+                "value": {
+                  "type": "bytes",
+                  "id": 2
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

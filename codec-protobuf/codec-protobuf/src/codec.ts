@@ -37,6 +37,13 @@ export class Schema<T> {
     const type = this._typesRoot.lookupType(typeName);
     return new Codec(type, this._mapping, this);
   }
+
+  /**
+   * Dynamically add new definitions to this schema.
+   */
+  addJson (schema: any) {
+    this._typesRoot.addJSON(schema);
+  }
 }
 
 export class Codec<T = any> {
@@ -54,5 +61,12 @@ export class Codec<T = any> {
   decode (data: Uint8Array): T {
     const obj = this._type.toObject(this._type.decode(data));
     return mapMessage(this._type, this._mapping.decode, obj, [this._schema]);
+  }
+
+  /**
+   * Dynamically add new definitions to this codec. Mutates the underlying schema.
+   */
+  addJson (schema: any) {
+    this._schema.addJson(schema);
   }
 }
