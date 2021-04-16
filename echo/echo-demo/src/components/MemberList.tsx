@@ -1,15 +1,19 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 import React from 'react'
 
-import { Party } from "@dxos/echo-db";
-import { usePartyMembers } from "../hooks";
-import { keyToString } from '@dxos/crypto';
+import { Party } from '@dxos/echo-db';
 
-export interface MemberListProps {
+import { usePartyMembers } from '../hooks';
+
+interface MemberListProps {
   party: Party
 }
 
-export const MemberList = ({ party }: MemberListProps) => {
-  const members: any[] = usePartyMembers(party);
+const MemberList = ({ party }: MemberListProps) => {
+  const members = usePartyMembers(party);
 
   return (
     <ul>
@@ -17,5 +21,7 @@ export const MemberList = ({ party }: MemberListProps) => {
         <li>{member.displayName ?? member.publicKey.humanize()}</li>
       ))}
     </ul>
-  )
-}
+  );
+};
+
+export default MemberList;
