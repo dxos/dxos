@@ -60,7 +60,8 @@
     "del-cli": "^3.0.0",
     "jest": "^26.2.2",
     "ngraph.path": "^1.2.0",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "estraverse": "^5.1.0"
   },
   "publishConfig": {
     "access": "public"
