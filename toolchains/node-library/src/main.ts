@@ -43,6 +43,16 @@ function execCommand (command: string, args: string[]) {
   }
 }
 
+function execLint (additionalArgs: string[] = []) {
+  execTool('eslint', ['--config', join(selfDir, '.eslintrc.js'), '{src,test}/**/*.{js,ts,jsx,tsx}', ...additionalArgs]);
+}
+
+function execJest (pkgDir: string, additionalArgs: string[] = []) {
+  execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests', '--rootDir', pkgDir, ...additionalArgs], {
+    stdio: ['inherit', 'inherit', process.stdout]
+  });
+}
+
 // eslint-disable-next-line no-unused-expressions
 yargs(process.argv.slice(2))
   .command<{ light?: boolean }>(
@@ -84,12 +94,10 @@ yargs(process.argv.slice(2))
 
       if (!light) {
         console.log(chalk.bold`\neslint`);
-        execTool('eslint', ['--config', join(selfDir, '.eslintrc.js'), '{src,test}/**/*.{js,ts,jsx,tsx}']);
+        execLint();
 
         console.log(chalk.bold`\jest`);
-        execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests', '--rootDir', pkgDir], {
-          stdio: ['inherit', 'inherit', process.stdout]
-        });
+        execJest(pkgDir);
       }
 
       console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
@@ -100,7 +108,7 @@ yargs(process.argv.slice(2))
     'run linter',
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
     ({ _ }) => {
-      execTool('eslint', ['--config', join(selfDir, '.eslintrc.js'), '{src,test}/**/*.{js,ts,jsx,tsx}', ..._.slice(1).map(String)]);
+      execLint(_.slice(1).map(String));
     }
   )
   .command(
@@ -109,7 +117,7 @@ yargs(process.argv.slice(2))
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
     ({ _ }) => {
       const pkgDir = getPackageDir();
-      execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests', '--rootDir', pkgDir, ..._.slice(1).map(String)]);
+      execJest(pkgDir, _.slice(1).map(String));
     }
   )
   .command<{ command: string }>(
