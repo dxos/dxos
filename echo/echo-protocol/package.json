@@ -11,19 +11,15 @@
     "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "AGPL-3.0",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
-    "lib",
+    "dist",
     "src"
   ],
-  "private": false,
   "scripts": {
     "build": "toolchain build"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@dxos/async": "~1.0.0-beta.10",
     "@dxos/codec-protobuf": "*",
