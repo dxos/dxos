@@ -63,7 +63,8 @@
     "react-resize-aware": "^3.0.0",
     "source-map-support": "^0.5.12",
     "stream-buffers": "^3.0.2",
-    "use-subscription": "^1.4.1"
+    "use-subscription": "^1.4.1",
+    "immutability-helper": "^3.0.2"
   },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.11.5",
