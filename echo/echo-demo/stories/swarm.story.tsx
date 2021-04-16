@@ -2,59 +2,58 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug'
+import debug from 'debug';
 import leveljs from 'level-js';
 import React, { useEffect, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 
 import { Button, TextField, Toolbar } from '@material-ui/core';
 
-import { createId, createKeyPair, humanize, keyToString } from '@dxos/crypto';
-import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
+import { createId, createKeyPair } from '@dxos/crypto';
+import { ECHO, InvitationDescriptor, createTestInstance } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 import { createStorage } from '@dxos/random-access-multi-storage';
-import { Keyring } from '@dxos/credentials';
 
-import { createECHO, EchoContext, EchoGraph, usePartyMembers } from '../src';
-import { MemberList } from '../src/components/MemberList';
+import { EchoContext, EchoGraph, MemberList } from '../src';
 
-const log = debug('dxos:echo:demo');
-debug.enable('dxos:*');
+const log = debug('dxos:echo:story');
+
+debug.enable('dxos:echo:story:*, dxos:*:error');
 
 export default {
-  title: 'Demo',
+  title: 'Swarm',
   decorators: []
 };
 
-export const withSwarm = () => {
+export const withSwarm = ({ signal = 'wss://signal2.dxos.network/dxos/signal' }) => {
   const [id] = useState(createId());
-  const [database, setDatabase] = useState<ECHO>();
+  const [echo, setEcho] = useState<ECHO>();
   const [storage] = useState(() => createStorage('dxos/echo-demo'));
   const [snapshotStorage] = useState(() => createStorage('dxos/echo-demo/snapshots'));
 
   useEffect(() => {
     setImmediate(async () => {
       try {
-        const { echo } = await createECHO({
+        const echo = await createTestInstance({
           storage,
           keyStorage: leveljs('dxos/echo-demo/keystore'),
           // TODO(burdon): Move const to config.
-          networkManagerOptions: { signal: 'wss://signal2.dxos.network/dxos/signal' },
+          networkManagerOptions: { signal: [signal] },
           snapshotStorage,
-          snapshotInterval: 10,
+          snapshotInterval: 10
         });
+
         log('Created:', String(echo));
-
         await echo.open();
-        setDatabase(echo);
+        setEcho(echo);
 
-        if(!echo.identityKey) {
+        if (!echo.identityKey) {
           await echo.createIdentity(createKeyPair());
           await echo.createHalo();
         }
-      } catch(err) {
-        console.error(err)
+      } catch (err) {
+        console.error(err);
       }
     });
   }, []);
@@ -67,28 +66,28 @@ export const withSwarm = () => {
 
   // Click to invite.
   const handleInvite = async (node) => {
-    const party = await database.getParty(node.partyKey);
+    const party = await echo.getParty(node.partyKey);
     const invitation = await party.createInvitation({
       secretProvider: async () => Buffer.from('0000'),
-      secretValidator: async () => true,
+      secretValidator: async () => true
     });
 
     setInvitation(JSON.stringify(invitation.toQueryParameters()));
   };
 
-  async function handleJoin() {
+  async function handleJoin () {
     log('handleJoin', invitation);
-    const party = await database.joinParty(
+    const party = await echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));
     await party.open();
   }
 
-  async function handleResetStorage() {
-    await database.reset();
+  async function handleResetStorage () {
+    await echo.reset();
     window.location.reload();
   }
 
-  const activeParty = database?.queryParties().value[0]
+  const activeParty = echo?.queryParties().value[0];
 
   return (
     <FullScreen>
@@ -109,15 +108,15 @@ export const withSwarm = () => {
           </div>
         </Toolbar>
 
-        {activeParty && <MemberList party={database.queryParties().first} />}
+        {activeParty && <MemberList party={echo.queryParties().first} />}
 
         <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
           {resizeListener}
           <SVG width={width} height={height}>
             <Markers />
 
-            {database && (
-              <EchoContext.Provider key={id} value={{ database }}>
+            {echo && (
+              <EchoContext.Provider key={id} value={{ echo }}>
                 <EchoGraph
                   id={id}
                   grid={grid}
