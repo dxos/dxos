@@ -96,6 +96,7 @@ dependencies:
   jest: 26.6.3_ts-node@9.1.1
   jest-expect-message: 1.0.2
   js-data-structs: 1.1.3
+  jsdoc: 3.6.6
   json-stable-stringify: 1.0.1
   level-js: 5.0.2
   leveldown: 5.6.0
@@ -129,6 +130,7 @@ dependencies:
   react-resize-aware: 3.1.0_react@16.14.0
   read-pkg: 5.2.0
   readable-stream: 3.6.0
+  semver: 7.3.5
   signal-promise: 1.0.3
   source-map-support: 0.5.19
   stream-buffers: 3.0.2
@@ -138,6 +140,7 @@ dependencies:
   ts-loader: 8.1.0_typescript@4.2.3+webpack@4.44.2
   ts-node: 9.1.1_typescript@4.2.3
   typescript: 4.2.3
+  uglify-js: 3.13.4
   use-subscription: 1.5.1_react@16.14.0
   uuid: 3.4.0
   wait-for-expect: 3.0.2
@@ -6013,6 +6016,14 @@ packages:
     dev: false
     resolution:
       integrity: sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
+  /catharsis/0.8.11:
+    dependencies:
+      lodash: 4.17.21
+    dev: false
+    engines:
+      node: '>= 8'
+    resolution:
+      integrity: sha512-a+xUyMV7hD1BrDQA/3iPV7oc+6W26BgVJO05PGEoatMyIuPScQKsde6i3YorWX1qs+AZjnJ18NqdKoCtKiNh1g==
   /chalk/1.1.3:
     dependencies:
       ansi-styles: 2.2.1
@@ -7818,6 +7829,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-f2LZMYl1Fzu7YSBKg+RoROelpOaNrcGmE9AZubeDfrCEia483oW4MI4VyFd5VNHIgQ/7qm1I0wUHK1eJnn2y2w==
+  /entities/2.0.3:
+    dev: false
+    resolution:
+      integrity: sha512-MyoZ0jgnLvB2X3Lg5HqpFmn1kybDiIfEQmKzTb5apr51Rb+T3KdmMiqa70T+bhGnyv7bQ6WMj2QMHpGMmlrUYQ==
   /entities/2.2.0:
     dev: false
     resolution:
@@ -11440,10 +11455,38 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==
+  /js2xmlparser/4.0.1:
+    dependencies:
+      xmlcreate: 2.0.3
+    dev: false
+    resolution:
+      integrity: sha512-KrPTolcw6RocpYjdC7pL7v62e55q7qOMHvLX1UCLc5AAS8qeJ6nukarEJAF2KL2PZxlbGueEbINqZR2bDe/gUw==
   /jsbn/0.1.1:
     dev: false
     resolution:
       integrity: sha1-peZUwuWi3rXyAdls77yoDA7y9RM=
+  /jsdoc/3.6.6:
+    dependencies:
+      '@babel/parser': 7.13.15
+      bluebird: 3.7.2
+      catharsis: 0.8.11
+      escape-string-regexp: 2.0.0
+      js2xmlparser: 4.0.1
+      klaw: 3.0.0
+      markdown-it: 10.0.0
+      markdown-it-anchor: 5.3.0_markdown-it@10.0.0
+      marked: 0.8.2
+      mkdirp: 1.0.4
+      requizzle: 0.2.3
+      strip-json-comments: 3.1.1
+      taffydb: 2.6.2
+      underscore: 1.10.2
+    dev: false
+    engines:
+      node: '>=8.15.0'
+    hasBin: true
+    resolution:
+      integrity: sha512-znR99e1BHeyEkSvgDDpX0sTiTu+8aQyDl9DawrkOGZTTW8hv0deIFXx87114zJ7gRaDZKVQD/4tr1ifmJp9xhQ==
   /jsdom/15.2.1:
     dependencies:
       abab: 2.0.5
@@ -11746,6 +11789,12 @@ packages:
       graceful-fs: 4.2.6
     resolution:
       integrity: sha1-QIhDO0azsbolnXh4XY6W9zugJDk=
+  /klaw/3.0.0:
+    dependencies:
+      graceful-fs: 4.2.6
+    dev: false
+    resolution:
+      integrity: sha512-0Fo5oir+O9jnXu5EefYbVK+mHMBeEVEy2cmctR1O1NECcCkPRreJKrS6Qt/j3KC2C148Dfo9i3pCmCMsdqGr0g==
   /kleur/3.0.3:
     dev: false
     engines:
@@ -11889,6 +11938,12 @@ packages:
     dev: false
     resolution:
       integrity: sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
+  /linkify-it/2.2.0:
+    dependencies:
+      uc.micro: 1.0.6
+    dev: false
+    resolution:
+      integrity: sha512-GnAl/knGn+i1U/wjBz3akz2stz+HrHLsxMwHQGofCDfPvlf+gDKN58UtfmUquTY4/MXeE2x7k19KQmeoZi94Iw==
   /listr-silent-renderer/1.1.1:
     dev: false
     engines:
@@ -12277,6 +12332,25 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-7Nyo8TFE5mDxtb1B8S80edmN+48=
+  /markdown-it-anchor/5.3.0_markdown-it@10.0.0:
+    dependencies:
+      markdown-it: 10.0.0
+    dev: false
+    peerDependencies:
+      markdown-it: '*'
+    resolution:
+      integrity: sha512-/V1MnLL/rgJ3jkMWo84UR+K+jF1cxNG1a+KwqeXqTIJ+jtA8aWSHuigx8lTzauiIjBDbwF3NcWQMotd0Dm39jA==
+  /markdown-it/10.0.0:
+    dependencies:
+      argparse: 1.0.10
+      entities: 2.0.3
+      linkify-it: 2.2.0
+      mdurl: 1.0.1
+      uc.micro: 1.0.6
+    dev: false
+    hasBin: true
+    resolution:
+      integrity: sha512-YWOP1j7UbDNz+TumYP1kpwnP0aEa711cJjrAQrzd0UXlbJfc5aAq0F/PZHjiioqDC1NKgvIMX+o+9Bk7yuM2dg==
   /markdown-to-jsx/6.11.4_react@16.14.0:
     dependencies:
       prop-types: 15.7.2
@@ -12299,6 +12373,13 @@ packages:
       react: '>= 0.14.0'
     resolution:
       integrity: sha512-O8DMCl32V34RrD+ZHxcAPc2+kYytuDIoQYjY36RVdsLK7uHjgNVvFec4yv0X6LgB4YEZgSvK5QtFi5YVqEpoMA==
+  /marked/0.8.2:
+    dev: false
+    engines:
+      node: '>= 8.16.2'
+    hasBin: true
+    resolution:
+      integrity: sha512-EGwzEeCcLniFX51DhTpmTom+dSA/MG/OBUDjnWtHbEnjAH180VzUeAw+oE4+Zv+CoYBWyRlYOTR0N8SO9R1PVw==
   /md5.js/1.3.5:
     dependencies:
       hash-base: 3.1.0
@@ -12307,6 +12388,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-xitP+WxNPcTTOgnTJcrhM0xvdPepipPSf3I8EIpGKeFLjt3PlJLIDG3u8EX53ZIubkb+5U2+3rELYpEhHhzdkg==
+  /mdurl/1.0.1:
+    dev: false
+    resolution:
+      integrity: sha1-/oWy7HWlkDfyrf7BAP1sYBdhFS4=
   /media-typer/0.3.0:
     dev: false
     engines:
@@ -15009,6 +15094,12 @@ packages:
     dev: false
     resolution:
       integrity: sha1-urQQqxruLz9Vt5MXRR3TQodk5vM=
+  /requizzle/0.2.3:
+    dependencies:
+      lodash: 4.17.21
+    dev: false
+    resolution:
+      integrity: sha512-YanoyJjykPxGHii0fZP0uUPEXpvqfBDxWV7s6GKAiiOsiqhX6vHNyW3Qzdmqp/iq/ExbhaGbVrjB4ruEVSM4GQ==
   /resolve-cwd/3.0.0:
     dependencies:
       resolve-from: 5.0.0
@@ -16075,6 +16166,10 @@ packages:
       node: '>=10.0.0'
     resolution:
       integrity: sha512-F3cLs9a3hL1Z7N4+EkSscsel3z55XT950AvB05bwayrNg5T1/gykXtigioTAjbltvbMSJvvhFCbnf6mX+ntnJQ==
+  /taffydb/2.6.2:
+    dev: false
+    resolution:
+      integrity: sha1-fLy2S1oUG2ou/CxdLGe04VCyomg=
   /tapable/1.1.3:
     dev: false
     engines:
@@ -16651,6 +16746,17 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-qOcYwxaByStAWrBf4x0fibwZvMRG+r4cQoTjbPtUlrWjBHbmCAww1i448U0GJ+3cNNEtebDteo/cHOR3xJ4wEw==
+  /uc.micro/1.0.6:
+    dev: false
+    resolution:
+      integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==
+  /uglify-js/3.13.4:
+    dev: false
+    engines:
+      node: '>=0.8.0'
+    hasBin: true
+    resolution:
+      integrity: sha512-kv7fCkIXyQIilD5/yQy8O+uagsYIOt5cZvs890W40/e/rvjMSzJw81o9Bg0tkURxzZBROtDQhW2LFjOGoK3RZw==
   /uint64be/2.0.2:
     dependencies:
       buffer-alloc: 1.2.0
@@ -16666,6 +16772,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-tZU/3NqK3dA5gpE1KtyiJUrEB0lxnGkMFHptJ7q6ewdZ8s12QrODwNbhIJStmJkd1QDXa1NRA8aF2A1zk/Ypyw==
+  /underscore/1.10.2:
+    dev: false
+    resolution:
+      integrity: sha512-N4P+Q/BuyuEKFJ43B9gYuOj4TQUHXX+j2FqguVOpjkssLUUrnJofCcBccJSCoeturDoZU6GorDTHSvUDlSQbTg==
   /unfetch/4.2.0:
     dev: false
     resolution:
@@ -17388,6 +17498,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==
+  /xmlcreate/2.0.3:
+    dev: false
+    resolution:
+      integrity: sha512-HgS+X6zAztGa9zIK3Y3LXuJes33Lz9x+YyTxgrkIdabu2vqcGOWwdfCpf1hWLRrd553wd4QCDf6BBO6FfdsRiQ==
   /xor-distance/2.0.0:
     dev: false
     resolution:
@@ -17930,11 +18044,14 @@ packages:
       del-cli: 3.0.1
       estraverse: 5.2.0
       jest: 26.6.3_ts-node@9.1.1
+      jsdoc: 3.6.6
       ngraph.graph: 19.1.0
       ngraph.path: 1.3.1
       p-limit: 3.1.0
       queue-microtask: 1.2.3
+      semver: 7.3.5
       source-map-support: 0.5.19
+      uglify-js: 3.13.4
       wait-for-expect: 3.0.2
     dev: false
     id: 'file:projects/protocol-plugin-presence.tgz'
@@ -17943,7 +18060,7 @@ packages:
       eslint: '*'
       ts-node: '*'
     resolution:
-      integrity: sha512-A3MGAaCASh/5UStfUQObbP8OzZsLuwzQ77GZPAVCdEW7mTn1kbFKvIhDAS+RDwwuUhbH/vgcCpYq8t9YR8zaiA==
+      integrity: sha512-lJ0IBfpywhCywQABxqsNHXYydj+1qvCThDmAMjG37pOoUgvWZIr4xoe2EpfcgX5VZZUODoRwtIRUEzRsIVvYiw==
       tarball: 'file:projects/protocol-plugin-presence.tgz'
     version: 0.0.0
   'file:projects/protocol.tgz_ts-node@9.1.1':
@@ -18132,6 +18249,7 @@ specifiers:
   jest: ^26.2.2
   jest-expect-message: ^1.0.2
   js-data-structs: ^1.1.2
+  jsdoc: ^3.6.3
   json-stable-stringify: ^1.0.1
   level-js: ^5.0.2
   leveldown: ^5.4.1
@@ -18165,6 +18283,7 @@ specifiers:
   react-resize-aware: ^3.0.0
   read-pkg: ^5.2.0
   readable-stream: ^3.6.0
+  semver: ^7.1.2
   signal-promise: ^1.0.3
   source-map-support: ^0.5.12
   stream-buffers: ^3.0.2
@@ -18174,6 +18293,7 @@ specifiers:
   ts-loader: ~8.1.0
   ts-node: ^9.0.0
   typescript: ^4.0.2
+  uglify-js: ^3.7.7
   use-subscription: ^1.4.1
   uuid: ^3.3.2
   wait-for-expect: ^3.0.2
