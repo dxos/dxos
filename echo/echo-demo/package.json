@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-demo",
-  "version": "2.6.17",
+  "version": "2.6.22",
   "description": "ECHO database demo app.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -37,6 +37,7 @@
     "@dxos/crypto": "~1.0.7",
     "@dxos/echo-db": "^2.6.17",
     "@dxos/echo-protocol": "^2.6.17",
+    "@dxos/echo-testing": "^2.6.22",
     "@dxos/feed-store": "~1.2.0-beta.30",
     "@dxos/gem-core": "~1.0.0-beta.25",
     "@dxos/gem-spore": "~1.0.0-beta.25",
@@ -78,6 +79,8 @@
     "chance": "^1.1.6",
     "del-cli": "^3.0.0",
     "eslint-plugin-jest": "^24.0.2",
+    "chromatic": "^5.6.0",
+    "eslint-plugin-react": "^7.22.0",
     "jest": "^26.2.2",
     "react-docgen-typescript-loader": "^3.7.2",
     "tempy": "~1.0.1",
@@ -91,7 +94,7 @@
     "eslint": "^7.7.0"
   },
   "eslintConfig": {
-    "extends": "plugin:@dxos/recomended"
+    "extends": "plugin:@dxos/react"
   },
   "publishConfig": {
     "access": "public"
