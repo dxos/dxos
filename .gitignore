@@ -73,4 +73,4 @@ lib
 */*/.heft/temp/**
 
 storybook-static
-gen
+**/gen

@@ -19,14 +19,14 @@
   "browser": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rushx clean && rushx build:protobuf && tsc && rushx lint && rushx test",
+    "build": "toolchain build",
+    "test": "toolchain test",
     "build:protobuf": "build-protobuf src/proto/schema.proto -o src/proto/gen",
     "clean": "del-cli dist",
     "coverage": "npm test -- --coverage",
     "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls",
     "lint": "eslint 'src/**/*.{js,ts}'",
-    "prepublishOnly": "npm run build && npm run test",
-    "test": "jest --verbose --passWithNoTests src 2>&1"
+    "prepublishOnly": "npm run build && npm run test"
   },
   "browserslist": [
     "> 5%"
@@ -50,6 +50,7 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
+    "@dxos/toolchain-node-library": "*",
     "@dxos/protobuf-compiler": "*",
     "@dxos/eslint-plugin": "~1.0.10",
     "coveralls": "^3.0.7",
