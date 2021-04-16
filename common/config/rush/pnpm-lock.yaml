@@ -2,6 +2,7 @@ dependencies:
   '@babel/core': 7.13.15_@babel+core@7.13.15
   '@babel/plugin-transform-runtime': 7.13.15_@babel+core@7.13.15
   '@dxos/async': 1.0.0
+  '@dxos/broadcast': 1.0.0-beta.11
   '@dxos/crypto': 1.0.7
   '@dxos/debug': 1.0.0-beta.78
   '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
@@ -9,6 +10,7 @@ dependencies:
   '@dxos/gem-core': 1.0.0-beta.33
   '@dxos/gem-spore': 1.0.0-beta.33
   '@dxos/network-manager': 1.0.8_ws@7.4.4
+  '@dxos/protocol-network-generator': 1.0.8
   '@dxos/protocol-plugin-presence': 1.1.0-beta.21
   '@dxos/protocol-plugin-replicator': 1.0.8
   '@dxos/random-access-multi-storage': 1.1.0-beta.8
@@ -25,6 +27,7 @@ dependencies:
   '@rush-temp/object-model': 'file:projects/object-model.tgz_ts-node@9.1.1'
   '@rush-temp/protobuf-compiler': 'file:projects/protobuf-compiler.tgz'
   '@rush-temp/protocol': 'file:projects/protocol.tgz_ts-node@9.1.1'
+  '@rush-temp/protocol-plugin-presence': 'file:projects/protocol-plugin-presence.tgz'
   '@rush-temp/text-model': 'file:projects/text-model.tgz_ts-node@9.1.1'
   '@rush-temp/toolchain-node-library': 'file:projects/toolchain-node-library.tgz'
   '@rush-temp/util': 'file:projects/util.tgz'
@@ -107,7 +110,9 @@ dependencies:
   nanoerror: 1.2.1
   nanomessage: 5.4.0
   nanoresource-promise: 2.0.0
+  ngraph.graph: 19.1.0
   ngraph.path: 1.3.1
+  p-limit: 3.1.0
   performance-now: 2.1.0
   pify: 5.0.0
   pkg-dir: 5.0.0
@@ -1652,6 +1657,16 @@ packages:
     dev: false
     resolution:
       integrity: sha512-ZVLAYJHPKgjJFh3pn52MC90MhkUGnbADFtFT5bQwondI5c5Dv9TVelfL5PoJ/WN5jPNRzxxXCa/tMdwjI2b5xw==
+  /@dxos/network-generator/1.0.0-beta.3:
+    dependencies:
+      debug: 4.3.1
+      end-of-stream: 1.4.4
+      ngraph.generators: 18.0.1
+      ngraph.graph: 19.1.0
+      source-map-support: 0.5.19
+    dev: false
+    resolution:
+      integrity: sha512-1LLLa1mCuXOd4+Lg38vucE7S6s7cl/ToELWfo9Ql1r+gucxFxHFsDNiz68b/LmqVApr1Nk0/srOyXKQP42hBOw==
   /@dxos/network-manager/1.0.8_ws@7.4.4:
     dependencies:
       '@dxos/async': 1.0.2-alpha.0
@@ -1674,6 +1689,16 @@ packages:
       ws: '*'
     resolution:
       integrity: sha512-Guyy3gsXjf7g5CXPyLgUdslNyPq9GUn2G96xX7aefS+wBj6HaCDzKTeSffvMkH3k0X1dATcGKbZt2k8CyiPsog==
+  /@dxos/protocol-network-generator/1.0.8:
+    dependencies:
+      '@dxos/network-generator': 1.0.0-beta.3
+      debug: 4.3.1
+      p-event: 4.2.0
+      pump: 3.0.0
+      source-map-support: 0.5.19
+    dev: false
+    resolution:
+      integrity: sha512-KlA/gC8eHrPr6vd31P0Q/+vKmIrNr5atYAqpFpF3lvwcii1ru3EALhcnQTwgii3qry9P+tEVZuYBhFrtqDMwbw==
   /@dxos/protocol-plugin-presence/1.1.0-beta.21:
     dependencies:
       '@dxos/broadcast': 1.0.0-beta.11
@@ -12521,10 +12546,27 @@ packages:
     dev: false
     resolution:
       integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==
+  /ngraph.events/0.0.3:
+    dev: false
+    resolution:
+      integrity: sha1-OPVTFvPSB61jH/lPZiLKjywOh9A=
   /ngraph.events/1.2.1:
     dev: false
     resolution:
       integrity: sha512-D4C+nXH/RFxioGXQdHu8ELDtC6EaCiNsZtih0IvyGN81OZSUby4jXoJ5+RNWasfsd0FnKxxpAROyUMzw64QNsw==
+  /ngraph.generators/18.0.1:
+    dependencies:
+      ngraph.graph: 18.0.0
+      ngraph.random: 0.1.0
+    dev: false
+    resolution:
+      integrity: sha512-RWV1k6nt/ZyufFfkHpeamTC9f/V4SHZFyuRxhfaA7l5CUrpy7Cm+ERBZMv2Ij273wzvTy4DNHLTGY2ZgBdCvDw==
+  /ngraph.graph/18.0.0:
+    dependencies:
+      ngraph.events: 0.0.3
+    dev: false
+    resolution:
+      integrity: sha512-HH39PulrZrFIcO6Qw4Ts3aYqPauAV/6p2lbbtPiFZoUDAASLtfnfg4wtXohy0ZE9Ik51wUgWaZ+FfyKk/SRlzQ==
   /ngraph.graph/19.1.0:
     dependencies:
       ngraph.events: 1.2.1
@@ -12535,6 +12577,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-A78BGNCDo/uMApMx9QRqtSOheV4wMrgxitOVR2+0ZdbTfgzd70IN2WjuSXUFbNh7T2o0fPebPB2AFx39IvP8Gw==
+  /ngraph.random/0.1.0:
+    dev: false
+    resolution:
+      integrity: sha1-G26Vc1KeCAZ32m/6CYeQ12oJSKk=
   /nice-try/1.0.5:
     dev: false
     resolution:
@@ -17510,6 +17556,23 @@ packages:
       integrity: sha512-X0iMJt1FKwxFyaAm9YLHNE+Y066Luwf3WGNdqpq32GZCc9hCuyI+JR5RviXHG06Tnx+QITCxsUi6MnAhaNh7/Q==
       tarball: 'file:projects/protobuf-compiler.tgz'
     version: 0.0.0
+  'file:projects/protocol-plugin-presence.tgz':
+    dependencies:
+      '@dxos/broadcast': 1.0.0-beta.11
+      '@dxos/protocol-network-generator': 1.0.8
+      buffer-json-encoding: 1.0.2
+      debug: 4.3.1
+      ngraph.graph: 19.1.0
+      p-limit: 3.1.0
+      queue-microtask: 1.2.3
+      source-map-support: 0.5.19
+      wait-for-expect: 3.0.2
+    dev: false
+    name: '@rush-temp/protocol-plugin-presence'
+    resolution:
+      integrity: sha512-9SrNIFyHZ7rX/bTUtbRWbBcP+RaKOaTa53KLDtsrDMv+qHubyxIo/7sD0WkAr6nbrA5N/BxScUHwDsk+XTcPPA==
+      tarball: 'file:projects/protocol-plugin-presence.tgz'
+    version: 0.0.0
   'file:projects/protocol.tgz_ts-node@9.1.1':
     dependencies:
       '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
@@ -17612,6 +17675,7 @@ specifiers:
   '@babel/core': ~7.13.15
   '@babel/plugin-transform-runtime': ^7.11.5
   '@dxos/async': ~1.0.0-beta.10
+  '@dxos/broadcast': ~1.0.0-beta.11
   '@dxos/crypto': ~1.0.7
   '@dxos/debug': ~1.0.0-beta.73
   '@dxos/eslint-plugin': ~1.0.10
@@ -17619,6 +17683,7 @@ specifiers:
   '@dxos/gem-core': ~1.0.0-beta.25
   '@dxos/gem-spore': ~1.0.0-beta.25
   '@dxos/network-manager': ~1.0.6
+  '@dxos/protocol-network-generator': 1.0.8
   '@dxos/protocol-plugin-presence': ~1.1.0-beta.21
   '@dxos/protocol-plugin-replicator': ~1.0.8
   '@dxos/random-access-multi-storage': ~1.1.0-beta.8
@@ -17635,6 +17700,7 @@ specifiers:
   '@rush-temp/object-model': 'file:./projects/object-model.tgz'
   '@rush-temp/protobuf-compiler': 'file:./projects/protobuf-compiler.tgz'
   '@rush-temp/protocol': 'file:./projects/protocol.tgz'
+  '@rush-temp/protocol-plugin-presence': 'file:./projects/protocol-plugin-presence.tgz'
   '@rush-temp/text-model': 'file:./projects/text-model.tgz'
   '@rush-temp/toolchain-node-library': 'file:./projects/toolchain-node-library.tgz'
   '@rush-temp/util': 'file:./projects/util.tgz'
@@ -17717,7 +17783,9 @@ specifiers:
   nanoerror: ^1.2.1
   nanomessage: ^5.4.0
   nanoresource-promise: ^2.0.0
+  ngraph.graph: ^19.0.1
   ngraph.path: ^1.2.0
+  p-limit: ^3.0.2
   performance-now: ^2.1.0
   pify: ~5.0.0
   pkg-dir: ~5.0.0

@@ -1,0 +1,47 @@
+{
+  "nested": {
+    "dxos": {
+      "nested": {
+        "protocol": {
+          "nested": {
+            "presence": {
+              "nested": {
+                "Alive": {
+                  "fields": {
+                    "peerId": {
+                      "type": "bytes",
+                      "id": 1
+                    },
+                    "connections": {
+                      "rule": "repeated",
+                      "type": "Connection",
+                      "id": 2
+                    },
+                    "metadata": {
+                      "type": "bytes",
+                      "id": 3
+                    }
+                  },
+                  "nested": {
+                    "Connection": {
+                      "fields": {
+                        "peerId": {
+                          "type": "bytes",
+                          "id": 1
+                        },
+                        "initiator": {
+                          "type": "bool",
+                          "id": 2
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
