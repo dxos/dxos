@@ -406,6 +406,10 @@
       "projectFolder": "echo/echo-db"
     },
     {
+      "packageName": "@dxos/echo-testing",
+      "projectFolder": "echo/echo-testing"
+    },
+    {
       "packageName": "@dxos/echo-demo",
       "projectFolder": "echo/echo-demo"
     },
