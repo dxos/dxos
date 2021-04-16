@@ -18,7 +18,8 @@
     "src"
   ],
   "scripts": {
-    "build": "toolchain build"
+    "build": "toolchain build",
+    "lint": "toolchain lint"
   },
   "dependencies": {
     "@dxos/async": "~1.0.0-beta.10",
