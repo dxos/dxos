@@ -48,7 +48,7 @@ function execLint (additionalArgs: string[] = []) {
 }
 
 function execJest (pkgDir: string, additionalArgs: string[] = []) {
-  execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests', '--rootDir', pkgDir, ...additionalArgs, '2>&1'], {
+  execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests', '--rootDir', pkgDir, ...additionalArgs], {
     stdio: ['inherit', 'inherit', process.stdout]
   });
 }

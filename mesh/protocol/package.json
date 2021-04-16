@@ -20,7 +20,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "toolchain build",
-    "test": "toolchain test",
+    "test": "toolchain test 2>&1",
     "build:protobuf": "build-protobuf src/proto/schema.proto -o src/proto/gen",
     "clean": "del-cli dist",
     "coverage": "npm test -- --coverage",
