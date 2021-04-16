@@ -19,7 +19,7 @@
   "browser": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "toolchain build",
+    "build": "toolchain build 2>&1",
     "test": "toolchain test 2>&1",
     "build:protobuf": "build-protobuf src/proto/schema.proto -o src/proto/gen",
     "clean": "del-cli dist",
