@@ -9,7 +9,6 @@
     ],
     "module": "commonjs",
     "moduleResolution": "node",
-    "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
