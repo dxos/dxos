@@ -428,6 +428,10 @@
     {
       "packageName": "@dxos/protocol",
       "projectFolder": "mesh/protocol"
+    },
+    {
+      "packageName": "@dxos/text-model",
+      "projectFolder": "echo/text-model"
     }
     // {
     //   /**

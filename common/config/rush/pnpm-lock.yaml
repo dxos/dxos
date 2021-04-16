@@ -25,8 +25,9 @@ dependencies:
   '@rush-temp/object-model': 'file:projects/object-model.tgz_ts-node@9.1.1'
   '@rush-temp/protobuf-compiler': 'file:projects/protobuf-compiler.tgz'
   '@rush-temp/protocol': 'file:projects/protocol.tgz_ts-node@9.1.1'
+  '@rush-temp/text-model': 'file:projects/text-model.tgz_ts-node@9.1.1'
   '@rush-temp/toolchain-node-library': 'file:projects/toolchain-node-library.tgz'
-  '@rush-temp/util': 'file:projects/util.tgz_ts-node@9.1.1'
+  '@rush-temp/util': 'file:projects/util.tgz'
   '@storybook/addon-actions': 6.2.8_react-dom@16.14.0+react@16.14.0
   '@storybook/addon-knobs': 6.2.8_react-dom@16.14.0+react@16.14.0
   '@storybook/addon-links': 6.2.8_react-dom@16.14.0+react@16.14.0
@@ -135,6 +136,7 @@ dependencies:
   webpack: 4.44.2_webpack@4.44.2
   ws: 7.4.4
   yargs: 16.2.0
+  yjs: 13.5.5
 lockfileVersion: 5.1
 packages:
   /@actions/core/1.2.7:
@@ -10203,6 +10205,10 @@ packages:
       ws: '*'
     resolution:
       integrity: sha512-BhBvN2MBpWTaSHdWRb/bwdZJ1WaehQ2L1KngkCkfLUGF0mAWAT1sQUQacEmQ0jXkFw/czDXPNQSL5u2/Krsz1w==
+  /isomorphic.js/0.2.4:
+    dev: false
+    resolution:
+      integrity: sha512-Y4NjZceAwaPXctwsHgNsmfuPxR8lJ3f8X7QTAkhltrX4oGIv+eTlgHLXn4tWysC9zGTi929gapnPp+8F8cg7nA==
   /isstream/0.1.2:
     dev: false
     resolution:
@@ -11556,6 +11562,14 @@ packages:
       node: '>= 0.8.0'
     resolution:
       integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==
+  /lib0/0.2.41:
+    dependencies:
+      isomorphic.js: 0.2.4
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-lZ0I6N81tIDgoPIlUTRhb6mNjPsG5BXIbaK/UbtjakcYnfR+O64bKtIrLXDDnfd7nAo4vpGeZ0mPzbTsNTREcg==
   /lines-and-columns/1.1.6:
     dev: false
     resolution:
@@ -17111,6 +17125,13 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-fTiQP6WbDAh5QZAVdbMQkecZoahnbOjClTQhzv74WX5h2Uaidj1isf9FDes11TKtsZ0/ZVfZsqZ+O3x6aLERHQ==
+  /yjs/13.5.5:
+    dependencies:
+      lib0: 0.2.41
+    dev: false
+    requiresBuild: true
+    resolution:
+      integrity: sha512-sbE4G+bSP0jw71aJ9Hqi5UxOTy8JGkObIaCSpY6krRoNqssPCWq05rqV9PQcuMqcrHD3twzko92fVaF1S3id/Q==
   /yn/3.1.1:
     dev: false
     engines:
@@ -17254,7 +17275,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-s4CHhOKsCnzZcs6FsJUxcgZAcgs+YLjesTC+ilFQ+Tz2VIyPC4y54cEOa+SYji/Ic2YPZxEB3TpoMHCxEj67Iw==
+      integrity: sha512-xtDX/cz3MV7iYAgr/3bSFTEyUUBK3oktzfyhnP2tEEu3Sq9CWlFmrgr045i9VZ7G0GnA7JNC4SEbjJEzkZZYHQ==
       tarball: 'file:projects/echo-db.tgz'
     version: 0.0.0
   'file:projects/echo-demo.tgz_ts-node@9.1.1+ws@7.4.4':
@@ -17318,7 +17339,7 @@ packages:
       ts-node: '*'
       ws: '*'
     resolution:
-      integrity: sha512-4s5EIm9MM6eUMqtgWvRJTKuL5aDbs4jECMkOgBUBtoK8kY12VMFD4Eq0048xn3WPc2NnAiBDU9SgJMA+RlVdyA==
+      integrity: sha512-OnABVGvRKBaq1IVrmUwhDz8KawPKMkYbvoDGSFE0XhZgR7sU5xM5mTpwj2baRyFuvnBl3xfqX0u7m/f4lBJrhQ==
       tarball: 'file:projects/echo-demo.tgz'
     version: 0.0.0
   'file:projects/echo-protocol.tgz':
@@ -17377,7 +17398,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-bUwhpEEt1pESHrn1kYr6IM52yqxnk2T+Aexn+2zUk40hlQ5h0gS3JdiZnFlPwiuwUFNiKPvxXkxisiI+T8I9Rg==
+      integrity: sha512-9ziizSGRgC2JOicBSEg9ud5anM3NwPF7BnwG02P9nCmqAbScgzPI3Ejrswx8QzDqvHJMMHa0jEtef7G+nMwVkA==
       tarball: 'file:projects/echo-testing.tgz'
     version: 0.0.0
   'file:projects/model-factory.tgz_ts-node@9.1.1':
@@ -17464,7 +17485,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-8ZN1fPojPvvIu4a+KW1oyfP0TqW24RP+x91uSErrdBD4hoTvtTqLit64SQM7faqGpC0gfa1kg6QuBkX5rkME4w==
+      integrity: sha512-73EkWryubxieAYm4wRnjYkxJFoyd1iJzPShs3NUFgI8LvNljyW9yuDFILAgdIV3dv80JPrQav/+qi+bAu+05tQ==
       tarball: 'file:projects/object-model.tgz'
     version: 0.0.0
   'file:projects/protobuf-compiler.tgz':
@@ -17521,6 +17542,26 @@ packages:
       integrity: sha512-vNZyCIfqatvMuPdqaWEDlYP1sBFhfvu4CRzkMzZSZRPSQz9QyV1jPIN8GBKIc5+sue+Uhgm4fDf+9OPmluR8cQ==
       tarball: 'file:projects/protocol.tgz'
     version: 0.0.0
+  'file:projects/text-model.tgz_ts-node@9.1.1':
+    dependencies:
+      '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
+      '@types/jest': 26.0.22
+      '@types/node': 14.14.37
+      eslint: 7.23.0
+      jest: 26.6.3_ts-node@9.1.1
+      protobufjs: 6.10.2
+      ts-jest: 26.5.4_jest@26.6.3+typescript@4.2.3
+      typescript: 4.2.3
+      yjs: 13.5.5
+    dev: false
+    id: 'file:projects/text-model.tgz'
+    name: '@rush-temp/text-model'
+    peerDependencies:
+      ts-node: '*'
+    resolution:
+      integrity: sha512-SslgwKQ1bfRPEusMhEBPKWPqSPWmpoYEowdY9NfY8wFsLd7XqRxGI5AzSDyDGW+rUPP+H5sxh73ae/rlrGyEhQ==
+      tarball: 'file:projects/text-model.tgz'
+    version: 0.0.0
   'file:projects/toolchain-node-library.tgz':
     dependencies:
       '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
@@ -17542,39 +17583,28 @@ packages:
       integrity: sha512-u7Xr9RP9qrw/2n8V+5GOCoWz/gEO89U4quwUlBXDhwvXG2GBn+/s1fQanoVIWpqcAR7vRRhqqUuSBSnwLAcBaw==
       tarball: 'file:projects/toolchain-node-library.tgz'
     version: 0.0.0
-  'file:projects/util.tgz_ts-node@9.1.1':
+  'file:projects/util.tgz':
     dependencies:
       '@dxos/async': 1.0.0
       '@dxos/crypto': 1.0.7
-      '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
-      '@rushstack/heft': 0.28.1
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
-      '@types/heft-jest': 1.0.2
       '@types/jest': 26.0.22
       '@types/lodash': 4.14.168
       '@types/node': 14.14.37
       '@types/stream-buffers': 3.0.3
       '@types/through2': 2.0.36
       debug: 4.3.1
-      eslint: 7.23.0
-      eslint-plugin-jest: 24.3.4_eslint@7.23.0+typescript@4.2.3
       hypercore: 7.7.1
-      jest: 26.6.3_ts-node@9.1.1
       js-data-structs: 1.1.3
       lodash.merge: 4.6.2
       protobufjs: 6.10.2
       source-map-support: 0.5.19
       stream-buffers: 3.0.2
-      ts-jest: 26.5.4_jest@26.6.3+typescript@4.2.3
-      typescript: 4.2.3
     dev: false
-    id: 'file:projects/util.tgz'
     name: '@rush-temp/util'
-    peerDependencies:
-      ts-node: '*'
     resolution:
-      integrity: sha512-4ob5qQmLE9iec13Eb5sxrfOdttG7UdxLfoRA/96+jwHmWW35WoYzPpu9mVOnVtj3smZ9AWjQ6xHd/dGPxsy0Jg==
+      integrity: sha512-LECDTLzzx3ht7Z8B1/MPBrmLPd+RJV4qMF5Tj3N+suHRRBXcLK+GCNYh/52OAKuG7KhwqgG1KekxiLr68mbRTA==
       tarball: 'file:projects/util.tgz'
     version: 0.0.0
 registry: ''
@@ -17605,6 +17635,7 @@ specifiers:
   '@rush-temp/object-model': 'file:./projects/object-model.tgz'
   '@rush-temp/protobuf-compiler': 'file:./projects/protobuf-compiler.tgz'
   '@rush-temp/protocol': 'file:./projects/protocol.tgz'
+  '@rush-temp/text-model': 'file:./projects/text-model.tgz'
   '@rush-temp/toolchain-node-library': 'file:./projects/toolchain-node-library.tgz'
   '@rush-temp/util': 'file:./projects/util.tgz'
   '@storybook/addon-actions': ^6.0.19
@@ -17715,3 +17746,4 @@ specifiers:
   webpack: 4.44.2
   ws: ^7.4.4
   yargs: ~16.2.0
+  yjs: ^13.4.1

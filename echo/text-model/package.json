@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/echo-testing",
+  "name": "@dxos/text-model",
   "version": "2.6.22",
-  "description": "ECHO testing utils.",
+  "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
     "url": "https://github.com/dxos/echo/issues"
@@ -13,13 +13,18 @@
   "license": "AGPL-3.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "private": false,
   "scripts": {
-    "build": "tsc && pnpm run lint && pnpm run test 2>&1",
+    "build": "pnpm run build:protobuf && tsc && pnpm run lint && pnpm run test 2>&1",
+    "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/text-model.proto -o src/proto/gen",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
-    "coverage": "jest --coverage --rootDir=./src --verbose --passWithNoTests",
+    "coverage": "jest --coverage --rootDir=./src --verbose --passWithNoTests --forceExit",
     "lint": "eslint --format codeframe './src/**/*.ts'",
-    "test": "jest --rootDir=./src --verbose --passWithNoTests",
+    "test": "jest --rootDir=./src --verbose --passWithNoTests --forceExit",
     "prepublishOnly": "npm run test && npm run build",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
@@ -31,29 +36,28 @@
     "testEnvironment": "node"
   },
   "dependencies": {
+    "@dxos/codec-protobuf": "*",
     "@dxos/echo-db": "*",
+    "@dxos/model-factory": "*",
     "@dxos/echo-protocol": "^2.6.17",
-    "@dxos/object-model": "^2.6.17",
-    "debug": "^4.1.1",
-    "faker": "^5.1.0",
-    "js-data-structs": "^1.1.2",
-    "source-map-support": "^0.5.12"
+    "@types/node": "^14.0.9",
+    "yjs": "^13.4.1",
+    "protobufjs": "^6.9.0"
   },
   "devDependencies": {
+    "@dxos/protobuf-compiler": "*",
     "@dxos/eslint-plugin": "~1.0.10",
-    "@types/debug": "^4.1.1",
-    "@types/faker": "~5.5.1",
     "@types/jest": "^26.0.7",
-    "@types/lodash": "^4.14.159",
-    "eslint-plugin-jest": "^24.0.2",
     "jest": "^26.2.2",
     "ts-jest": "^26.1.4",
     "typescript": "^4.0.2",
-    "wait-for-expect": "^3.0.2",
     "eslint": "^7.7.0"
   },
   "eslintConfig": {
-    "extends": "plugin:@dxos/recomended"
+    "extends": "plugin:@dxos/recomended",
+    "ignorePatterns": [
+      "src/proto/gen/*"
+    ]
   },
   "publishConfig": {
     "access": "public"
