@@ -18,13 +18,13 @@
   "main": "index.js",
   "browser": "dist/index.js",
   "scripts": {
-    "build": "npm run clean && npm run build:protobuf && npm run build:babel",
+    "build": "pnpm run clean && pnpm run build:protobuf && pnpm run build:babel",
     "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps",
     "build:protobuf": "pbjs -t json src/schema.proto -o src/schema.json && cpy src/schema.json dist",
     "clean": "del-cli dist",
-    "coverage": "npm test -- --coverage",
-    "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls",
-    "prepublishOnly": "npm run build && npm run test",
+    "coverage": "pnpm test -- --coverage",
+    "coveralls": "pnpm run coverage && cat ./coverage/lcov.info | coveralls",
+    "prepublishOnly": "pnpm run build && pnpm run test",
     "test": "jest --verbose --passWithNoTests src"
   },
   "browserslist": [
@@ -45,7 +45,7 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@babel/cli": "~7.13.15",
+    "@babel/cli": "^7.7.0",
     "@babel/core": "~7.13.15",
     "@babel/plugin-proposal-class-properties": "^7.7.4",
     "@babel/plugin-proposal-export-default-from": "^7.5.2",
