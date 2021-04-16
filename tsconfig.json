@@ -1,4 +1,3 @@
-// TODO(marik-d): Move this to a rig package
 {
   "compilerOptions": {
     "allowJs": true,

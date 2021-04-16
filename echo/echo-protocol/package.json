@@ -11,20 +11,16 @@
     "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "AGPL-3.0",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
-    "lib",
+    "dist",
     "src"
   ],
-  "private": false,
   "scripts": {
-    "build": "pnpm run build:protobuf && heft test 2>&1",
-    "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/defs/dxos.proto -s src/proto/substitutions.ts -o src/proto/gen"
+    "build": "toolchain build",
+    "lint": "toolchain lint"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@dxos/async": "~1.0.0-beta.10",
     "@dxos/codec-protobuf": "*",
@@ -48,19 +44,11 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/node-library-rig": "*",
-    "@dxos/eslint-plugin": "~1.0.10",
-    "@dxos/protobuf-compiler": "*",
+    "@dxos/toolchain-node-library": "*",
     "@types/jest": "^26.0.7",
     "faker": "^5.1.0",
-    "jest": "^26.2.2",
     "stream-buffers": "^3.0.2",
-    "ts-jest": "^26.1.4",
-    "typescript": "^4.0.2",
     "wait-for-expect": "^3.0.2",
-    "eslint": "^7.7.0",
-    "@rushstack/heft": "~0.28.1",
-    "@types/heft-jest": "~1.0.2",
     "pify": "~5.0.0",
     "random-access-memory": "~3.1.2",
     "tempy": "~1.0.1",

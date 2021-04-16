@@ -24,16 +24,16 @@ dependencies:
   '@rush-temp/credentials': 'file:projects/credentials.tgz_ts-node@9.1.1'
   '@rush-temp/echo-db': 'file:projects/echo-db.tgz_ts-node@9.1.1'
   '@rush-temp/echo-demo': 'file:projects/echo-demo.tgz_ts-node@9.1.1+ws@7.4.4'
-  '@rush-temp/echo-protocol': 'file:projects/echo-protocol.tgz_ts-node@9.1.1'
+  '@rush-temp/echo-protocol': 'file:projects/echo-protocol.tgz'
   '@rush-temp/echo-testing': 'file:projects/echo-testing.tgz_ts-node@9.1.1'
   '@rush-temp/model-factory': 'file:projects/model-factory.tgz_ts-node@9.1.1'
   '@rush-temp/node-library-rig': 'file:projects/node-library-rig.tgz'
   '@rush-temp/object-model': 'file:projects/object-model.tgz_ts-node@9.1.1'
   '@rush-temp/protobuf-compiler': 'file:projects/protobuf-compiler.tgz'
   '@rush-temp/protocol': 'file:projects/protocol.tgz_ts-node@9.1.1'
-  '@rush-temp/protocol-plugin-presence': 'file:projects/protocol-plugin-presence.tgz_eslint@7.23.0+ts-node@9.1.1'
   '@rush-temp/text-model': 'file:projects/text-model.tgz_ts-node@9.1.1'
-  '@rush-temp/util': 'file:projects/util.tgz_ts-node@9.1.1'
+  '@rush-temp/toolchain-node-library': 'file:projects/toolchain-node-library.tgz'
+  '@rush-temp/util': 'file:projects/util.tgz'
   '@storybook/addon-actions': 6.2.8_react-dom@16.14.0+react@16.14.0
   '@storybook/addon-knobs': 6.2.8_react-dom@16.14.0+react@16.14.0
   '@storybook/addon-links': 6.2.8_react-dom@16.14.0+react@16.14.0
@@ -44,6 +44,7 @@ dependencies:
   '@types/encoding-down': 5.0.0
   '@types/end-of-stream': 1.4.0
   '@types/faker': 5.5.1
+  '@types/glob': 7.1.3
   '@types/heft-jest': 1.0.2
   '@types/jest': 26.0.22
   '@types/jest-expect-message': 1.0.3
@@ -61,6 +62,7 @@ dependencies:
   '@types/stream-to-array': 2.3.0
   '@types/through2': 2.0.36
   '@types/use-subscription': 1.0.0
+  '@types/yargs': 16.0.1
   argparse: 2.0.1
   assert: 2.0.0
   babel-eslint: 10.1.0_eslint@7.23.0
@@ -87,6 +89,7 @@ dependencies:
   eslint-plugin-react: 7.23.2_eslint@7.23.0
   estraverse: 5.2.0
   faker: 5.5.3
+  glob: 7.1.6
   humanhash: 1.0.4
   hypercore: 7.7.1
   hypercore-crypto: 1.0.0
@@ -120,6 +123,7 @@ dependencies:
   p-limit: 3.1.0
   performance-now: 2.1.0
   pify: 5.0.0
+  pkg-dir: 5.0.0
   protobufjs: 6.10.2
   pump: 3.0.0
   queue-microtask: 1.2.3
@@ -146,6 +150,7 @@ dependencies:
   wait-for-expect: 3.0.2
   webpack: 4.44.2_webpack@4.44.2
   ws: 7.4.4
+  yargs: 16.2.0
   yjs: 13.5.5
 lockfileVersion: 5.1
 packages:
@@ -1640,7 +1645,7 @@ packages:
       '@material-ui/core': 4.11.3_react-dom@16.14.0+react@16.14.0
       '@types/d3': 6.3.0
       clsx: 1.1.1
-      d3: 6.6.2
+      d3: 6.7.0
       debug: 4.3.1
       faker: 4.1.0
       immutability-helper: 3.1.1
@@ -1655,7 +1660,7 @@ packages:
       '@dxos/gem-core': 1.0.0-beta.33
       '@material-ui/core': 4.11.3_react-dom@16.14.0+react@16.14.0
       clsx: 1.1.1
-      d3: 6.6.2
+      d3: 6.7.0
       debug: 4.3.1
       faker: 4.1.0
       immutability-helper: 3.1.1
@@ -4215,6 +4220,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-kQ5JNTrbDv3Rp5X2n/iUu37IJBDU2gsZ5R/g1/KHOOEc5IKfUFjXT6DENPGduh08I/pamwtEq4oul7gUqKTQDQ==
+  /@types/yargs/16.0.1:
+    dependencies:
+      '@types/yargs-parser': 20.2.0
+    dev: false
+    resolution:
+      integrity: sha512-x4HABGLyzr5hKUzBC9dvjciOTm11WVH1NWonNjGgxapnTHu5SWUqyqn0zQ6Re0yQU0lsQ6ztLCoMAKDGZflyxA==
   /@typescript-eslint/eslint-plugin/3.10.1_8cc22adb2d453ed4022cff6b4c15db4d:
     dependencies:
       '@typescript-eslint/experimental-utils': 3.10.1_eslint@7.23.0+typescript@4.2.3
@@ -6705,7 +6716,7 @@ packages:
       icss-utils: 4.1.1
       loader-utils: 1.4.0
       normalize-path: 3.0.0
-      postcss: 7.0.35
+      postcss: 7.0.32
       postcss-modules-extract-imports: 2.0.0
       postcss-modules-local-by-default: 3.0.3
       postcss-modules-scope: 2.2.0
@@ -7066,7 +7077,7 @@ packages:
     dev: false
     resolution:
       integrity: sha512-LbeEvGgIb8UMcAa0EATLNX0lelKWGYDQiPdHj+gLblGVhGLyNbaCn3EvrJf0A3Y/uOOU5aD6MTh5ZFCdEwGiCw==
-  /d3-scale/3.2.4:
+  /d3-scale/3.3.0:
     dependencies:
       d3-array: 2.12.1
       d3-format: 2.0.0
@@ -7075,7 +7086,7 @@ packages:
       d3-time-format: 3.0.0
     dev: false
     resolution:
-      integrity: sha512-PG6gtpbPCFqKbvdBEswQcJcTzHC8VEd/XzezF5e68KlkT4/ggELw/nR1tv863jY6ufKTvDlzCMZvhe06codbbA==
+      integrity: sha512-1JGp44NQCt5d1g+Yy+GeOnZP7xHo0ii8zsQp6PGzd+C1/dl0KGsp9A7Mxwp+1D1o4unbTTxVdU/ZOIEBoeZPbQ==
   /d3-selection/1.4.2:
     dev: false
     resolution:
@@ -7210,7 +7221,7 @@ packages:
     dev: false
     resolution:
       integrity: sha512-4PL5hHaHwX4m7Zr1UapXW23apo6pexCgdetdJ5kTmADpG/7T9Gkxw0M0tf/pjoB63ezCCm0u5UaFYy2aMt0Mcw==
-  /d3/6.6.2:
+  /d3/6.7.0:
     dependencies:
       d3-array: 2.12.1
       d3-axis: 2.1.0
@@ -7233,7 +7244,7 @@ packages:
       d3-polygon: 2.0.0
       d3-quadtree: 2.0.0
       d3-random: 2.2.2
-      d3-scale: 3.2.4
+      d3-scale: 3.3.0
       d3-scale-chromatic: 2.0.0
       d3-selection: 2.0.0
       d3-shape: 2.1.0
@@ -7244,7 +7255,7 @@ packages:
       d3-zoom: 2.0.0
     dev: false
     resolution:
-      integrity: sha512-wvC9cZe05bUCo00VFKXLQJWmWhGv0U43Qv0gn+tkl144S7bV22E80Gnp06BEuJVuwVfa6+S8UOfl8H9Ru/cmgA==
+      integrity: sha512-hNHRhe+yCDLUG6Q2LwvR/WdNFPOJQ5VWqsJcwIYVeI401+d2/rrCjxSXkiAdIlpx7/73eApFB4Olsmh3YN7a6g==
   /dashdash/1.14.1:
     dependencies:
       assert-plus: 1.0.0
@@ -17678,7 +17689,6 @@ packages:
       '@dxos/crypto': 1.0.7
       '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
       '@dxos/feed-store': 1.2.0-beta.30
-      '@dxos/protocol': 1.0.8
       '@dxos/protocol-plugin-replicator': 1.0.8
       '@rushstack/heft': 0.28.1
       '@types/debug': 4.1.5
@@ -17744,7 +17754,6 @@ packages:
       '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
       '@dxos/feed-store': 1.2.0-beta.30
       '@dxos/network-manager': 1.0.8_ws@7.4.4
-      '@dxos/protocol': 1.0.8
       '@dxos/protocol-plugin-presence': 1.1.0-beta.21
       '@dxos/protocol-plugin-replicator': 1.0.8
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
@@ -17846,17 +17855,14 @@ packages:
       integrity: sha512-OnABVGvRKBaq1IVrmUwhDz8KawPKMkYbvoDGSFE0XhZgR7sU5xM5mTpwj2baRyFuvnBl3xfqX0u7m/f4lBJrhQ==
       tarball: 'file:projects/echo-demo.tgz'
     version: 0.0.0
-  'file:projects/echo-protocol.tgz_ts-node@9.1.1':
+  'file:projects/echo-protocol.tgz':
     dependencies:
       '@dxos/async': 1.0.0
       '@dxos/crypto': 1.0.7
-      '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
       '@dxos/feed-store': 1.2.0-beta.30
-      '@rushstack/heft': 0.28.1
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/faker': 5.5.1
-      '@types/heft-jest': 1.0.2
       '@types/jest': 26.0.22
       '@types/lodash': 4.14.168
       '@types/node': 14.14.37
@@ -17864,10 +17870,8 @@ packages:
       '@types/stream-buffers': 3.0.3
       '@types/through2': 2.0.36
       debug: 4.3.1
-      eslint: 7.23.0
       faker: 5.5.3
       hypercore: 7.7.1
-      jest: 26.6.3_ts-node@9.1.1
       js-data-structs: 1.1.3
       lodash.merge: 4.6.2
       pify: 5.0.0
@@ -17877,16 +17881,11 @@ packages:
       source-map-support: 0.5.19
       stream-buffers: 3.0.2
       tempy: 1.0.1
-      ts-jest: 26.5.4_jest@26.6.3+typescript@4.2.3
-      typescript: 4.2.3
       wait-for-expect: 3.0.2
     dev: false
-    id: 'file:projects/echo-protocol.tgz'
     name: '@rush-temp/echo-protocol'
-    peerDependencies:
-      ts-node: '*'
     resolution:
-      integrity: sha512-WOYdykLc+TX6kNauMr760nTYUnM2yEPAxfjo1jB9TbgY9imrdZhtroQZPthrrYgVWp0pe84tRd/K6KLRxC9/pQ==
+      integrity: sha512-TX/3ImMIThXyHHHEQqw9NcE5LaqXc9CWvfrN2AKyFGndZv5o1SrahGDDMPJZaGj+bagOIIQ6nxPjTmvYanVOvA==
       tarball: 'file:projects/echo-protocol.tgz'
     version: 0.0.0
   'file:projects/echo-testing.tgz_ts-node@9.1.1':
@@ -18115,39 +18114,49 @@ packages:
       integrity: sha512-SslgwKQ1bfRPEusMhEBPKWPqSPWmpoYEowdY9NfY8wFsLd7XqRxGI5AzSDyDGW+rUPP+H5sxh73ae/rlrGyEhQ==
       tarball: 'file:projects/text-model.tgz'
     version: 0.0.0
-  'file:projects/util.tgz_ts-node@9.1.1':
+  'file:projects/toolchain-node-library.tgz':
+    dependencies:
+      '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
+      '@types/glob': 7.1.3
+      '@types/node': 14.14.37
+      '@types/yargs': 16.0.1
+      chalk: 4.1.0
+      eslint: 7.23.0
+      glob: 7.1.6
+      jest: 26.6.3_ts-node@9.1.1
+      pkg-dir: 5.0.0
+      ts-jest: 26.5.4_jest@26.6.3+typescript@4.2.3
+      ts-node: 9.1.1_typescript@4.2.3
+      typescript: 4.2.3
+      yargs: 16.2.0
+    dev: false
+    name: '@rush-temp/toolchain-node-library'
+    resolution:
+      integrity: sha512-u7Xr9RP9qrw/2n8V+5GOCoWz/gEO89U4quwUlBXDhwvXG2GBn+/s1fQanoVIWpqcAR7vRRhqqUuSBSnwLAcBaw==
+      tarball: 'file:projects/toolchain-node-library.tgz'
+    version: 0.0.0
+  'file:projects/util.tgz':
     dependencies:
       '@dxos/async': 1.0.0
       '@dxos/crypto': 1.0.7
-      '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
-      '@rushstack/heft': 0.28.1
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
-      '@types/heft-jest': 1.0.2
       '@types/jest': 26.0.22
       '@types/lodash': 4.14.168
       '@types/node': 14.14.37
       '@types/stream-buffers': 3.0.3
       '@types/through2': 2.0.36
       debug: 4.3.1
-      eslint: 7.23.0
-      eslint-plugin-jest: 24.3.4_eslint@7.23.0+typescript@4.2.3
       hypercore: 7.7.1
-      jest: 26.6.3_ts-node@9.1.1
       js-data-structs: 1.1.3
       lodash.merge: 4.6.2
       protobufjs: 6.10.2
       source-map-support: 0.5.19
       stream-buffers: 3.0.2
-      ts-jest: 26.5.4_jest@26.6.3+typescript@4.2.3
-      typescript: 4.2.3
     dev: false
-    id: 'file:projects/util.tgz'
     name: '@rush-temp/util'
-    peerDependencies:
-      ts-node: '*'
     resolution:
-      integrity: sha512-4ob5qQmLE9iec13Eb5sxrfOdttG7UdxLfoRA/96+jwHmWW35WoYzPpu9mVOnVtj3smZ9AWjQ6xHd/dGPxsy0Jg==
+      integrity: sha512-LECDTLzzx3ht7Z8B1/MPBrmLPd+RJV4qMF5Tj3N+suHRRBXcLK+GCNYh/52OAKuG7KhwqgG1KekxiLr68mbRTA==
       tarball: 'file:projects/util.tgz'
     version: 0.0.0
 registry: ''
@@ -18186,6 +18195,7 @@ specifiers:
   '@rush-temp/protocol': 'file:./projects/protocol.tgz'
   '@rush-temp/protocol-plugin-presence': 'file:./projects/protocol-plugin-presence.tgz'
   '@rush-temp/text-model': 'file:./projects/text-model.tgz'
+  '@rush-temp/toolchain-node-library': 'file:./projects/toolchain-node-library.tgz'
   '@rush-temp/util': 'file:./projects/util.tgz'
   '@storybook/addon-actions': ^6.0.19
   '@storybook/addon-knobs': ^6.0.21
@@ -18197,6 +18207,7 @@ specifiers:
   '@types/encoding-down': ^5.0.0
   '@types/end-of-stream': ^1.4.0
   '@types/faker': ~5.5.1
+  '@types/glob': ~7.1.3
   '@types/heft-jest': ~1.0.2
   '@types/jest': ^26.0.7
   '@types/jest-expect-message': ^1.0.3
@@ -18214,6 +18225,7 @@ specifiers:
   '@types/stream-to-array': ^2.3.0
   '@types/through2': ^2.0.36
   '@types/use-subscription': ^1.0.0
+  '@types/yargs': ~16.0.1
   argparse: ^2.0.1
   assert: ^2.0.0
   babel-eslint: ^10.0.2
@@ -18240,6 +18252,7 @@ specifiers:
   eslint-plugin-react: ^7.22.0
   estraverse: ^5.1.0
   faker: ^5.1.0
+  glob: ~7.1.6
   humanhash: ^1.0.4
   hypercore: ^7.7.1
   hypercore-crypto: ^1.0.0
@@ -18273,6 +18286,7 @@ specifiers:
   p-limit: ^3.0.2
   performance-now: ^2.1.0
   pify: ~5.0.0
+  pkg-dir: ~5.0.0
   protobufjs: ^6.9.0
   pump: ^3.0.0
   queue-microtask: ^1.1.2
@@ -18299,4 +18313,5 @@ specifiers:
   wait-for-expect: ^3.0.2
   webpack: 4.44.2
   ws: ^7.4.4
+  yargs: ~16.2.0
   yjs: ^13.4.1
