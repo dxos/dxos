@@ -13,7 +13,8 @@
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
-    "build": "tsc --build && pnpm run lint && pnpm run test 2>&1",
+    "build": "tsc --noEmit && pnpm run lint && pnpm run test 2>&1",
+    "build-storybook": "build-storybook",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose  --rootDir=./src --passWithNoTests",
     "lint": "eslint --format codeframe './{src,test}/**/*.ts'",
