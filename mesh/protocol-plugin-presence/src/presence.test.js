@@ -48,7 +48,7 @@ function links (graph) {
   return links;
 }
 
-test('presence', async () => {
+test.skip('presence', async () => {
   const waitOneWayMessage = {};
   waitOneWayMessage.promise = new Promise((resolve) => {
     waitOneWayMessage.resolve = resolve;
