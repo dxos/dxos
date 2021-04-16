@@ -87,7 +87,7 @@ yargs(process.argv.slice(2))
         execTool('eslint', ['--config', join(selfDir, '.eslintrc.js'), '{src,test}/**/*.{js,ts,jsx,tsx}']);
 
         console.log(chalk.bold`\jest`);
-        execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests']);
+        execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests', '--rootDir', pkgDir]);
       }
 
       console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
