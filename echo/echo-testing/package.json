@@ -31,9 +31,9 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/echo-db": "^2.6.22",
-    "@dxos/echo-protocol": "^2.6.22",
-    "@dxos/object-model": "^2.6.22",
+    "@dxos/echo-db": "^2.6.17",
+    "@dxos/echo-protocol": "^2.6.17",
+    "@dxos/object-model": "^2.6.17",
     "debug": "^4.1.1",
     "faker": "^5.1.0",
     "js-data-structs": "^1.1.2",
@@ -42,8 +42,8 @@
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.10",
     "@types/debug": "^4.1.1",
-    "@types/faker": "^5.1.5",
-    "@types/jest": "^25.2.3",
+    "@types/faker": "~5.5.1",
+    "@types/jest": "^26.0.7",
     "@types/lodash": "^4.14.159",
     "eslint-plugin-jest": "^24.0.2",
     "jest": "^26.2.2",
