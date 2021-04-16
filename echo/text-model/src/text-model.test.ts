@@ -7,7 +7,7 @@ import { createModelTestBench } from '@dxos/echo-db';
 import { TextModel } from './text-model';
 
 describe('TextModel', () => {
-  test('insert', async () => {
+  test.skip('insert', async () => {
     const { peers, items: [item1, item2] } = await createModelTestBench({ model: TextModel });
 
     item1.model.insert(0, 'Hello World!');
@@ -28,7 +28,7 @@ describe('TextModel', () => {
     // }
   });
 
-  test('snapshot', async () => {
+  test.skip('snapshot', async () => {
     const { peers, items: [item1, item2] } = await createModelTestBench({ model: TextModel });
 
     item1.model.insert(0, 'Hello World!');
