@@ -25,6 +25,7 @@ dependencies:
   '@rush-temp/object-model': 'file:projects/object-model.tgz_ts-node@9.1.1'
   '@rush-temp/protobuf-compiler': 'file:projects/protobuf-compiler.tgz'
   '@rush-temp/protocol': 'file:projects/protocol.tgz_ts-node@9.1.1'
+  '@rush-temp/text-model': 'file:projects/text-model.tgz_eslint@7.23.0+ts-node@9.1.1'
   '@rush-temp/util': 'file:projects/util.tgz_ts-node@9.1.1'
   '@storybook/addon-actions': 6.2.8_react-dom@16.14.0+react@16.14.0
   '@storybook/addon-knobs': 6.2.8_react-dom@16.14.0+react@16.14.0
@@ -129,6 +130,7 @@ dependencies:
   wait-for-expect: 3.0.2
   webpack: 4.44.2_webpack@4.44.2
   ws: 7.4.4
+  yjs: 13.5.5
 lockfileVersion: 5.1
 packages:
   /@actions/core/1.2.7:
@@ -10191,6 +10193,10 @@ packages:
       ws: '*'
     resolution:
       integrity: sha512-BhBvN2MBpWTaSHdWRb/bwdZJ1WaehQ2L1KngkCkfLUGF0mAWAT1sQUQacEmQ0jXkFw/czDXPNQSL5u2/Krsz1w==
+  /isomorphic.js/0.2.4:
+    dev: false
+    resolution:
+      integrity: sha512-Y4NjZceAwaPXctwsHgNsmfuPxR8lJ3f8X7QTAkhltrX4oGIv+eTlgHLXn4tWysC9zGTi929gapnPp+8F8cg7nA==
   /isstream/0.1.2:
     dev: false
     resolution:
@@ -11544,6 +11550,14 @@ packages:
       node: '>= 0.8.0'
     resolution:
       integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==
+  /lib0/0.2.41:
+    dependencies:
+      isomorphic.js: 0.2.4
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-lZ0I6N81tIDgoPIlUTRhb6mNjPsG5BXIbaK/UbtjakcYnfR+O64bKtIrLXDDnfd7nAo4vpGeZ0mPzbTsNTREcg==
   /lines-and-columns/1.1.6:
     dev: false
     resolution:
@@ -17099,6 +17113,13 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-fTiQP6WbDAh5QZAVdbMQkecZoahnbOjClTQhzv74WX5h2Uaidj1isf9FDes11TKtsZ0/ZVfZsqZ+O3x6aLERHQ==
+  /yjs/13.5.5:
+    dependencies:
+      lib0: 0.2.41
+    dev: false
+    requiresBuild: true
+    resolution:
+      integrity: sha512-sbE4G+bSP0jw71aJ9Hqi5UxOTy8JGkObIaCSpY6krRoNqssPCWq05rqV9PQcuMqcrHD3twzko92fVaF1S3id/Q==
   /yn/3.1.1:
     dev: false
     engines:
@@ -17521,6 +17542,25 @@ packages:
       integrity: sha512-vNZyCIfqatvMuPdqaWEDlYP1sBFhfvu4CRzkMzZSZRPSQz9QyV1jPIN8GBKIc5+sue+Uhgm4fDf+9OPmluR8cQ==
       tarball: 'file:projects/protocol.tgz'
     version: 0.0.0
+  'file:projects/text-model.tgz_eslint@7.23.0+ts-node@9.1.1':
+    dependencies:
+      '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
+      '@types/jest': 26.0.22
+      '@types/node': 14.14.37
+      jest: 26.6.3_ts-node@9.1.1
+      ts-jest: 26.5.4_jest@26.6.3+typescript@4.2.3
+      typescript: 4.2.3
+      yjs: 13.5.5
+    dev: false
+    id: 'file:projects/text-model.tgz'
+    name: '@rush-temp/text-model'
+    peerDependencies:
+      eslint: '*'
+      ts-node: '*'
+    resolution:
+      integrity: sha512-sabkrrmI6tSs4AOM1tA3YGvhOKLL2BnktkfctL+4yJYXTQ0j2HAOQ69KjmtqzIJ8zCWd3n9IYXdWq5s+xPUyOg==
+      tarball: 'file:projects/text-model.tgz'
+    version: 0.0.0
   'file:projects/util.tgz_ts-node@9.1.1':
     dependencies:
       '@dxos/async': 1.0.0
@@ -17584,6 +17624,7 @@ specifiers:
   '@rush-temp/object-model': 'file:./projects/object-model.tgz'
   '@rush-temp/protobuf-compiler': 'file:./projects/protobuf-compiler.tgz'
   '@rush-temp/protocol': 'file:./projects/protocol.tgz'
+  '@rush-temp/text-model': 'file:./projects/text-model.tgz'
   '@rush-temp/util': 'file:./projects/util.tgz'
   '@storybook/addon-actions': ^6.0.19
   '@storybook/addon-knobs': ^6.0.21
@@ -17688,3 +17729,4 @@ specifiers:
   wait-for-expect: ^3.0.2
   webpack: 4.44.2
   ws: ^7.4.4
+  yjs: ^13.4.1
