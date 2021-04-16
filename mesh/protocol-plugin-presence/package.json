@@ -20,7 +20,7 @@
   "scripts": {
     "build": "pnpm run clean && pnpm run build:protobuf && pnpm run build:babel",
     "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps",
-    "build:protobuf": "pbjs -t json src/schema.proto -o src/schema.json && cpy src/schema.json dist",
+    "build:protobuf": "mkdir -p src/proto/gen && build-protobuf src/proto/schema.proto -o src/proto/gen && cpy src/proto/schema.json dist",
     "clean": "del-cli dist",
     "coverage": "pnpm test -- --coverage",
     "coveralls": "pnpm run coverage && cat ./coverage/lcov.info | coveralls",
@@ -47,6 +47,7 @@
   "devDependencies": {
     "semver": "^7.1.2",
     "jsdoc": "^3.6.3",
+    "@dxos/protobuf-compiler": "*",
     "uglify-js": "^3.7.7",
     "@babel/cli": "^7.7.0",
     "@babel/core": "~7.13.15",

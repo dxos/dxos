@@ -13,7 +13,7 @@ import { Extension } from '@dxos/protocol';
 import { Broadcast } from '@dxos/broadcast';
 import { Codec } from '@dxos/codec-protobuf';
 
-import schema from './schema.json';
+import schema from './proto/schema.json';
 
 const log = debug('presence');
 
