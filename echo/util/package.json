@@ -11,15 +11,16 @@
     "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "AGPL-3.0",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "private": false,
-  "scripts": {
-    "build": "heft test 2>&1"
-  },
-  "browserslist": [
-    "> 5%"
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
   ],
+  "scripts": {
+    "build": "toolchain build",
+    "lint": "toolchain lint"
+  },
   "dependencies": {
     "@dxos/async": "~1.0.0-beta.10",
     "@dxos/codec-protobuf": "*",
@@ -38,17 +39,9 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/node-library-rig": "*",
-    "@rushstack/heft": "~0.28.1",
-    "@types/heft-jest": "~1.0.2",
-    "@dxos/eslint-plugin": "~1.0.10",
+    "@dxos/toolchain-node-library": "*",
     "@types/jest": "^26.0.7",
-    "eslint-plugin-jest": "^24.0.2",
-    "jest": "^26.2.2",
-    "stream-buffers": "^3.0.2",
-    "ts-jest": "^26.1.4",
-    "typescript": "^4.0.2",
-    "eslint": "^7.7.0"
+    "stream-buffers": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"
