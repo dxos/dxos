@@ -59,11 +59,11 @@ yargs(process.argv.slice(2))
       const packageJson = JSON.parse(fs.readFileSync(join(getPackageDir(), 'package.json'), 'utf-8'));
 
       if (packageJson.jest) {
-        process.stderr.write(chalk`{orange warn}: jest config in package.json is ignored`);
+        process.stderr.write(chalk`{yellow warn}: jest config in package.json is ignored`);
       }
 
       if (packageJson.eslintConfig) {
-        process.stderr.write(chalk`{orange warn}: eslint config in package.json is ignored`);
+        process.stderr.write(chalk`{yellow warn}: eslint config in package.json is ignored`);
       }
 
       const protoFiles = glob('src/proto/**/*.proto', { cwd: pkgDir });
