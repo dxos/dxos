@@ -1,0 +1,33 @@
+{
+  "name": "@dxos/codec-protobuf",
+  "version": "1.1.1",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "license": "MIT",
+  "scripts": {
+    "build": "pnpm run test && pnpm run lint && tsc",
+    "test": "echo No tests",
+    "lint": "eslint 'src/**/*.ts'"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "devDependencies": {
+    "@dxos/eslint-plugin": "~1.0.10",
+    "@types/assert": "^1.5.4",
+    "eslint": "^7.7.0",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.2"
+  },
+  "dependencies": {
+    "assert": "^2.0.0",
+    "protobufjs": "^6.9.0"
+  },
+  "eslintConfig": {
+    "extends": "plugin:@dxos/recomended"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -121,7 +121,7 @@
    * Specify a SemVer range to ensure developers use a Node.js version that is appropriate
    * for your repo.
    */
-  "nodeSupportedVersionRange": ">=12.13.0 <13.0.0",
+  "nodeSupportedVersionRange": ">=12.17.0 <13.0.0",
 
   /**
    * Odd-numbered major versions of Node.js are experimental.  Even-numbered releases
@@ -378,6 +378,14 @@
    */
   "projects": [
     {
+      "packageName": "@dxos/codec-protobuf",
+      "projectFolder": "codec-protobuf/codec-protobuf"
+    },
+    {
+      "packageName": "@dxos/protobuf-compiler",
+      "projectFolder": "codec-protobuf/protobuf-compiler"
+    },
+    {
       "packageName": "@dxos/util",
       "projectFolder": "echo/util"
     },
@@ -398,6 +406,14 @@
       "projectFolder": "echo/echo-db"
     },
     {
+      "packageName": "@dxos/echo-testing",
+      "projectFolder": "echo/echo-testing"
+    },
+    {
+      "packageName": "@dxos/echo-demo",
+      "projectFolder": "echo/echo-demo"
+    },
+    {
       "packageName": "@dxos/credentials",
       "projectFolder": "halo/credentials"
     },
@@ -408,6 +424,10 @@
     {
       "packageName": "@dxos/toolchain-node-library",
       "projectFolder": "toolchains/node-library"
+    },
+    {
+      "packageName": "@dxos/protocol",
+      "projectFolder": "mesh/protocol"
     }
     // {
     //   /**

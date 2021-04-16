@@ -22,8 +22,8 @@
   ],
   "dependencies": {
     "@dxos/async": "~1.0.0-beta.10",
-    "@dxos/codec-protobuf": "~1.1.1",
-    "@dxos/credentials": "~2.6.17",
+    "@dxos/codec-protobuf": "*",
+    "@dxos/credentials": "*",
     "@dxos/crypto": "~1.0.7",
     "@dxos/echo-protocol": "^2.6.17",
     "@dxos/feed-store": "~1.2.0-beta.30",

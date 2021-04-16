@@ -8,15 +8,22 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [12.17]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - run: git status
+      - run: git log
+      - run: git branch -v
+      - run: git diff origin/main...HEAD
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - run: npm install -g pnpm # TODO: rush comes with pnpm so we should make this step not required.
       - name: Check package versions
         run: node common/scripts/install-run-rush.js change -v
       - name: Install dependencies

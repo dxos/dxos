@@ -1,0 +1,103 @@
+{
+  "name": "@dxos/echo-demo",
+  "version": "2.6.22",
+  "description": "ECHO database demo app.",
+  "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/echo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/echo.git"
+  },
+  "license": "AGPL-3.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc --noEmit && pnpm run lint && pnpm run test 2>&1",
+    "build-storybook": "build-storybook",
+    "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
+    "coverage": "jest --coverage --verbose  --rootDir=./src --passWithNoTests",
+    "lint": "eslint --format codeframe './{src,test}/**/*.ts'",
+    "test": "jest --rootDir=./src --verbose --passWithNoTests",
+    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
+    "prepublishOnly": "npm run test && npm run build",
+    "watch": "babel-watch src --out-dir ./dist --source-maps"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "jest": {
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@dxos/async": "~1.0.0-beta.10",
+    "@dxos/codec-protobuf": "*",
+    "@dxos/credentials": "*",
+    "@dxos/crypto": "~1.0.7",
+    "@dxos/echo-db": "^2.6.17",
+    "@dxos/echo-protocol": "^2.6.17",
+    "@dxos/echo-testing": "^2.6.22",
+    "@dxos/feed-store": "~1.2.0-beta.30",
+    "@dxos/gem-core": "~1.0.0-beta.25",
+    "@dxos/gem-spore": "~1.0.0-beta.25",
+    "@dxos/model-factory": "^2.6.17",
+    "@dxos/network-manager": "~1.0.6",
+    "@dxos/object-model": "^2.6.17",
+    "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
+    "@dxos/util": "^2.6.17",
+    "@material-ui/core": "^4.9.10",
+    "@material-ui/icons": "^4.9.1",
+    "@types/debug": "^4.1.1",
+    "@types/end-of-stream": "^1.4.0",
+    "@types/lodash": "^4.14.159",
+    "@types/node": "^14.0.9",
+    "@types/stream-buffers": "^3.0.2",
+    "@types/use-subscription": "^1.0.0",
+    "clsx": "^1.1.0",
+    "d3": "^5.9.2",
+    "debug": "^4.1.1",
+    "level-js": "^5.0.2",
+    "lodash.merge": "^4.6.2",
+    "random-access-memory": "~3.1.2",
+    "react-resize-aware": "^3.0.0",
+    "source-map-support": "^0.5.12",
+    "stream-buffers": "^3.0.2",
+    "use-subscription": "^1.4.1",
+    "immutability-helper": "^3.0.2"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.11.5",
+    "@dxos/debug": "~1.0.0-beta.73",
+    "@dxos/eslint-plugin": "~1.0.10",
+    "@storybook/addon-actions": "^6.0.19",
+    "@storybook/addon-knobs": "^6.0.21",
+    "@storybook/addon-links": "^6.0.19",
+    "@storybook/react": "^6.0.21",
+    "@types/jest": "^26.0.7",
+    "babel-loader": "8.1.0",
+    "babel-plugin-add-module-exports": "^1.0.4",
+    "chance": "^1.1.6",
+    "del-cli": "^3.0.0",
+    "eslint-plugin-jest": "^24.0.2",
+    "chromatic": "^5.6.0",
+    "eslint-plugin-react": "^7.22.0",
+    "jest": "^26.2.2",
+    "react-docgen-typescript-loader": "^3.7.2",
+    "tempy": "~1.0.1",
+    "ts-jest": "^26.1.4",
+    "typescript": "^4.0.2",
+    "@babel/core": "~7.13.15",
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0",
+    "ts-loader": "~8.1.0",
+    "webpack": "4.44.2",
+    "eslint": "^7.7.0"
+  },
+  "eslintConfig": {
+    "extends": "plugin:@dxos/react"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
