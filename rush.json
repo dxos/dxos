@@ -432,6 +432,10 @@
     {
       "packageName": "@dxos/text-model",
       "projectFolder": "echo/text-model"
+    },
+    {
+      "packageName": "@dxos/protocol-plugin-presence",
+      "projectFolder": "mesh/protocol-plugin-presence"
     }
     // {
     //   /**
