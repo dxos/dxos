@@ -5,7 +5,7 @@
   "types": "dist/src/index.d.ts",
   "license": "MIT",
   "scripts": {
-    "build": "tsc && pnpm run lint && pnpm run test",
+    "build": "tsc && pnpm run lint && pnpm run test && true",
     "test": "echo No tests",
     "lint": "eslint 'src/**/*.ts'"
   },

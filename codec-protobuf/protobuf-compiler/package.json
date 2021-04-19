@@ -3,7 +3,7 @@
   "version": "1.1.1",
   "license": "MIT",
   "scripts": {
-    "build": "pnpm run gen && tsc && pnpm run lint && jest 2>&1",
+    "build": "pnpm run gen && tsc && pnpm run lint && jest 2>&1 && true",
     "gen": "ts-node src/main.ts test/schema.proto test/another.proto -s test/substitutions.ts -o test/gen",
     "test": "pnpm run gen && jest",
     "lint": "eslint 'src/**/*.ts'"
