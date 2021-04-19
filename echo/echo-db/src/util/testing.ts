@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { createKeyPair } from '@dxos/crypto';
-import { NetworkManagerOptions } from '@dxos/network-manager/dist/network-manager'; // TODO(burdon): Dist.
+import { NetworkManagerOptions } from '@dxos/network-manager';
 import { Storage } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
