@@ -15,25 +15,12 @@
     "dist",
     "index.js"
   ],
-  "main": "dist/index.js",
-  "browser": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "rushx clean && rushx build:protobuf && tsc && rushx lint && rushx test",
-    "build:protobuf": "build-protobuf src/proto/schema.proto -o src/proto/gen",
-    "clean": "del-cli dist",
-    "coverage": "npm test -- --coverage",
-    "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls",
-    "lint": "eslint 'src/**/*.{js,ts}'",
-    "prepublishOnly": "npm run build && npm run test",
-    "test": "jest --verbose --passWithNoTests src 2>&1"
-  },
-  "browserslist": [
-    "> 5%"
-  ],
-  "jest": {
-    "preset": "ts-jest/presets/js-with-ts",
-    "testEnvironment": "node"
+    "build": "toolchain build",
+    "test": "toolchain test",
+    "lint": "toolchain lint"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "*",
@@ -50,26 +37,11 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/protobuf-compiler": "*",
-    "@dxos/eslint-plugin": "~1.0.10",
-    "coveralls": "^3.0.7",
-    "cpy-cli": "^2.0.0",
-    "del-cli": "^3.0.0",
-    "eslint": "^7.7.0",
-    "jest": "^26.2.2",
+    "@dxos/toolchain-node-library": "*",
     "pump": "^3.0.0",
-    "ts-jest": "^26.1.4",
-    "typescript": "^4.0.2",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "eslintConfig": {
-    "extends": "plugin:@dxos/recomended",
-    "ignorePatterns": [
-      "src/proto/gen/*"
-    ]
-  },
-  "gitHead": "7e81301054ee0f7d0adf3c0710d1c3d60a5d93f8"
+  }
 }
