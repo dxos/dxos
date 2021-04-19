@@ -24,7 +24,7 @@
   "dependencies": {
     "@dxos/broadcast": "~1.0.0-beta.11",
     "@dxos/codec-protobuf": "*",
-    "@dxos/protocol": "~1.0.8",
+    "@dxos/protocol": "*",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.1.1",
     "ngraph.graph": "^19.0.1",

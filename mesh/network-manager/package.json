@@ -1,0 +1,48 @@
+{
+  "name": "@dxos/network-manager",
+  "version": "1.0.8",
+  "description": "Network Manager",
+  "license": "GPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "toolchain build",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "dependencies": {
+    "@dxos/async": "~1.0.2-alpha.0",
+    "@dxos/crypto": "~1.0.7",
+    "@dxos/metrics": "~1.0.0-beta.9",
+    "@dxos/protocol": "*",
+    "@dxos/util": "*",
+    "@types/simple-peer": "^9.6.1",
+    "@types/ws": "^7.4.0",
+    "assert": "^2.0.0",
+    "debug": "^4.1.1",
+    "isomorphic-ws": "^4.0.1",
+    "nanomessage-rpc": "^3.0.0",
+    "simple-peer": "^9.9.3",
+    "wrtc": "^0.4.6",
+    "xor-distance": "^2.0.0"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "*",
+    "@dxos/feed-store": "~1.2.0-beta.30",
+    "@types/jest": "^26.0.7",
+    "ngraph.path": "^1.3.1",
+    "random-access-memory": "~3.1.2",
+    "wait-for-expect": "^3.0.2",
+    "earljs": "~0.1.10",
+    "@types/node": "^14.0.9",
+    "@types/debug": "^4.1.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

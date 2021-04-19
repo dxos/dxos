@@ -436,6 +436,10 @@
     {
       "packageName": "@dxos/protocol-plugin-presence",
       "projectFolder": "mesh/protocol-plugin-presence"
+    },
+    {
+      "packageName": "@dxos/network-manager",
+      "projectFolder": "mesh/network-manager"
     }
     // {
     //   /**
