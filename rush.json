@@ -440,6 +440,10 @@
     {
       "packageName": "@dxos/network-manager",
       "projectFolder": "mesh/network-manager"
+    },
+    {
+      "packageName": "@dxos/network-devtools",
+      "projectFolder": "mesh/network-devtools"
     }
     // {
     //   /**

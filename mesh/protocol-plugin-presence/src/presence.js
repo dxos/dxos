@@ -14,7 +14,7 @@ import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
 import { Broadcast } from '@dxos/broadcast';
-import { Codec } from '@dxos/codec-protobuf';
+import { anySubstitutions, Schema } from '@dxos/codec-protobuf';
 import { Extension } from '@dxos/protocol';
 
 import schema from './proto/schema.json';
@@ -29,7 +29,7 @@ export class Presence extends EventEmitter {
 
   /**
    * @constructor
-   * @param {string} peerId
+   * @param {Buffer} peerId
    * @param {Object} options
    */
   constructor (peerId, options = {}) {
@@ -41,9 +41,9 @@ export class Presence extends EventEmitter {
 
     this._peerId = peerId;
     this._peerTimeout = peerTimeout;
-    this._codec = new Codec('dxos.protocol.presence.Alive')
-      .addJson(JSON.parse(schema))
-      .build();
+    this._codec = Schema.fromJson(schema, anySubstitutions)
+      .getCodecForType('dxos.protocol.presence.Alive');
+
     this._neighbors = new Map();
     this._metadata = metadata;
     this._limit = pLimit(1);

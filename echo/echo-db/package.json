@@ -32,7 +32,7 @@
     "@dxos/network-manager": "~1.0.6",
     "@dxos/object-model": "^2.6.17",
     "@dxos/protocol-plugin-replicator": "~1.0.8",
-    "@dxos/protocol-plugin-presence": "~1.1.0-beta.21",
+    "@dxos/protocol-plugin-presence": "1.0.8",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
     "@dxos/protocol": "*",
     "@dxos/util": "*",
