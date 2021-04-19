@@ -5,7 +5,7 @@
   "types": "dist/src/index.d.ts",
   "license": "MIT",
   "scripts": {
-    "build": "pnpm run test && pnpm run lint && tsc",
+    "build": "tsc && pnpm run lint && pnpm run test && true",
     "test": "echo No tests",
     "lint": "eslint 'src/**/*.ts'"
   },
@@ -15,6 +15,7 @@
   ],
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.10",
+    "@types/node": "^14.0.9",
     "@types/assert": "^1.5.4",
     "eslint": "^7.7.0",
     "ts-node": "^9.0.0",
