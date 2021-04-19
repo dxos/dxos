@@ -8,6 +8,12 @@ module.exports = {
       {
         args: 'none'
       }
+    ],
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: ['**/dist']
+      }
     ]
   },
   ignorePatterns: [
