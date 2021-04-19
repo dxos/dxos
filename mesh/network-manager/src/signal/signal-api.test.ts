@@ -77,7 +77,7 @@ describe('SignalApi', () => {
     }, 4_000);
   }, 5_000);
 
-  test('join across multiple signal servers', async () => {
+  test.skip('join across multiple signal servers', async () => {
     api = new SignalApi('wss://apollo1.kube.moon.dxos.network/dxos/signal', (async () => {}) as any, async () => {});
     const api2 = new SignalApi('wss://apollo2.kube.moon.dxos.network/dxos/signal', (async () => {}) as any, async () => {});
     afterTest(() => api.close());
