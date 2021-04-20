@@ -62,7 +62,7 @@ export class Replicator extends EventEmitter {
    */
   createExtension () {
     return new Extension(Replicator.extension, {
-      schema: JSON.parse(schema),
+      schema,
       timeout: this._options.timeout
     })
       .on('error', err => this.emit(err))

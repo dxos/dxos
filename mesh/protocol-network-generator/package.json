@@ -22,7 +22,7 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
-    "@dxos/network-generator": "*",
+    "@dxos/network-generator": "~1.0.0-beta.3",
     "debug": "^4.1.1",
     "p-event": "^4.2.0",
     "pump": "^3.0.0",
