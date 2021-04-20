@@ -10,9 +10,7 @@ dependencies:
   '@dxos/gem-core': 1.0.0-beta.33_@types+react@17.0.3
   '@dxos/gem-spore': 1.0.0-beta.33_@types+react@17.0.3
   '@dxos/metrics': 1.0.0-beta.9
-  '@dxos/protocol-network-generator': 1.0.8
-  '@dxos/protocol-plugin-presence': 1.1.0-beta.21
-  '@dxos/protocol-plugin-replicator': 1.0.8
+  '@dxos/network-generator': 1.0.0-beta.3
   '@dxos/random-access-multi-storage': 1.1.0-beta.8
   '@geut/discovery-swarm-webrtc': 4.2.2
   '@material-ui/core': 4.11.3_95b31b552f3447dade270cc6d44b57dd
@@ -24,13 +22,16 @@ dependencies:
   '@rush-temp/echo-protocol': 'file:projects/echo-protocol.tgz'
   '@rush-temp/echo-testing': 'file:projects/echo-testing.tgz'
   '@rush-temp/model-factory': 'file:projects/model-factory.tgz'
-  '@rush-temp/network-devtools': 'file:projects/network-devtools.tgz_359aa4bdb1973a3f989ebee7701ba344'
+  '@rush-temp/network-devtools': 'file:projects/network-devtools.tgz_79516e198329395a81a2c5a62f1af14a'
   '@rush-temp/network-manager': 'file:projects/network-manager.tgz_typescript@4.2.3+ws@7.4.4'
   '@rush-temp/node-library-rig': 'file:projects/node-library-rig.tgz'
   '@rush-temp/object-model': 'file:projects/object-model.tgz_ts-node@9.1.1'
   '@rush-temp/protobuf-compiler': 'file:projects/protobuf-compiler.tgz'
   '@rush-temp/protocol': 'file:projects/protocol.tgz'
+  '@rush-temp/protocol-network-generator': 'file:projects/protocol-network-generator.tgz_ts-node@9.1.1'
+  '@rush-temp/protocol-plugin-messenger': 'file:projects/protocol-plugin-messenger.tgz_ts-node@9.1.1'
   '@rush-temp/protocol-plugin-presence': 'file:projects/protocol-plugin-presence.tgz'
+  '@rush-temp/protocol-plugin-replicator': 'file:projects/protocol-plugin-replicator.tgz_ts-node@9.1.1'
   '@rush-temp/text-model': 'file:projects/text-model.tgz'
   '@rush-temp/toolchain-node-library': 'file:projects/toolchain-node-library.tgz'
   '@rush-temp/util': 'file:projects/util.tgz'
@@ -77,6 +78,8 @@ dependencies:
   chance: 1.1.7
   chromatic: 5.6.2
   clsx: 1.1.1
+  coveralls: 3.1.0
+  cpy-cli: 2.0.0
   crypto-js: 3.3.0
   d3: 5.16.0
   debug: 4.3.1
@@ -120,6 +123,7 @@ dependencies:
   nanoresource-promise: 2.0.0
   ngraph.graph: 19.1.0
   ngraph.path: 1.3.1
+  p-event: 4.2.0
   p-limit: 3.1.0
   performance-now: 2.1.0
   pify: 5.0.0
@@ -136,7 +140,6 @@ dependencies:
   readable-stream: 3.6.0
   signal-promise: 1.0.3
   simple-peer: 9.10.0
-  source-map-support: 0.5.19
   stream-buffers: 3.0.2
   stream-to-array: 2.3.0
   tempy: 1.0.1
@@ -5917,6 +5920,16 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-MIvur/3ygRkFHvodkyITyRuPkuc=
+  /camelcase-keys/4.2.0:
+    dependencies:
+      camelcase: 4.1.0
+      map-obj: 2.0.0
+      quick-lru: 1.1.0
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-oqpfsa9oh1glnDLBQUJteJI7m3c=
   /camelcase-keys/6.2.2:
     dependencies:
       camelcase: 5.3.1
@@ -5933,6 +5946,12 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-fB0W1nmhu+WcoCys7PsBHiAfWh8=
+  /camelcase/4.1.0:
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-1UVjW+HjPFQmScaRc+Xeas+uNN0=
   /camelcase/5.3.1:
     dev: false
     engines:
@@ -6476,6 +6495,31 @@ packages:
     dev: false
     resolution:
       integrity: sha1-q6bFgzvkENRbHso+bVg4RM5oLHc=
+  /coveralls/3.1.0:
+    dependencies:
+      js-yaml: 3.14.1
+      lcov-parse: 1.0.0
+      log-driver: 1.2.7
+      minimist: 1.2.5
+      request: 2.88.2
+    dev: false
+    engines:
+      node: '>=6'
+    hasBin: true
+    resolution:
+      integrity: sha512-sHxOu2ELzW8/NC1UP5XVLbZDzO4S3VxfFye3XYCznopHy02YjNkHcj5bKaVw2O7hVaBdBjEdQGpie4II1mWhuQ==
+  /cp-file/6.2.0:
+    dependencies:
+      graceful-fs: 4.2.6
+      make-dir: 2.1.0
+      nested-error-stacks: 2.1.0
+      pify: 4.0.1
+      safe-buffer: 5.2.1
+    dev: false
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-fmvV4caBnofhPe8kOcitBwSn2f39QLjnAnGq3gO9dfd75mUytzKNZB1hde6QHunW2Rt+OwuBOMc3i1tNElbszA==
   /cp-file/7.0.0:
     dependencies:
       graceful-fs: 4.2.6
@@ -6487,6 +6531,27 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-0Cbj7gyvFVApzpK/uhCtQ/9kE9UnYpxMzaq5nQQC/Dh4iaj5fxp7iEFIullrYwzj8nf0qnsI1Qsx34hAeAebvw==
+  /cpy-cli/2.0.0:
+    dependencies:
+      cpy: 7.3.0
+      meow: 5.0.0
+    dev: false
+    engines:
+      node: '>=6'
+    hasBin: true
+    resolution:
+      integrity: sha512-LzrtY3lBWvFZcw4lXgkEbbDUd7y78juC3C5l7gj3UyezMEZF0Be9fjCVLN1HoZAzdMDeC3KHehWpHBJvgVAPkw==
+  /cpy/7.3.0:
+    dependencies:
+      arrify: 1.0.1
+      cp-file: 6.2.0
+      globby: 9.2.0
+      nested-error-stacks: 2.1.0
+    dev: false
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-auvDu6h/J+cO1uqV40ymL/VoPM0+qPpNGaNttTzkYVXO/+GeynuyAK/MwFcWgU/P82ezcZw7RaN34CIIWajKLA==
   /cpy/8.1.2:
     dependencies:
       arrify: 2.0.1
@@ -11616,6 +11681,11 @@ packages:
       yarn: '>=1.0.0'
     resolution:
       integrity: sha512-prXSYk799h3GY3iOWnC6ZigYzMPjxN2svgjJ9shk7oMadSNX3wXy0B6F32PMJv7qtMnrIbUxoEHzbutvxR2LBQ==
+  /lcov-parse/1.0.0:
+    dev: false
+    hasBin: true
+    resolution:
+      integrity: sha1-6w1GtUER68VhrLTECO+TY73I9+A=
   /level-codec/9.0.2:
     dependencies:
       buffer: 5.7.1
@@ -11800,6 +11870,17 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-eUfkIUmvgNaWy/eXvKq8/h/inKg=
+  /load-json-file/4.0.0:
+    dependencies:
+      graceful-fs: 4.2.6
+      parse-json: 4.0.0
+      pify: 3.0.0
+      strip-bom: 3.0.0
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-L19Fq5HjMhYjT9U62rZo607AmTs=
   /loader-runner/2.4.0:
     dev: false
     engines:
@@ -11932,6 +12013,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
+  /log-driver/1.2.7:
+    dev: false
+    engines:
+      node: '>=0.8.6'
+    resolution:
+      integrity: sha512-U7KCmLdqsGHBLeWqYlFA0V0Sl6P08EE1ZrmA9cxjUE0WVqT9qnyVDPz1kzpFEP0jdJuFnasWIfSd7fsaNXkpbg==
   /log-symbols/1.0.2:
     dependencies:
       chalk: 1.1.3
@@ -12071,6 +12158,12 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-2TPOuSBdgr3PSIb2dCvcK03qFG0=
+  /map-obj/2.0.0:
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-plzSkIepJZi4eRJXpSPgISIqwfk=
   /map-obj/4.2.1:
     dev: false
     engines:
@@ -12193,6 +12286,22 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-cstmi0JSKCkKu/qFaJJYcwioAfs=
+  /meow/5.0.0:
+    dependencies:
+      camelcase-keys: 4.2.0
+      decamelize-keys: 1.1.0
+      loud-rejection: 1.6.0
+      minimist-options: 3.0.2
+      normalize-package-data: 2.5.0
+      read-pkg-up: 3.0.0
+      redent: 2.0.0
+      trim-newlines: 2.0.0
+      yargs-parser: 10.1.0
+    dev: false
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-CbTqYU17ABaLefO8vCU153ZZlprKYWDljcndKKDCFcYQITzWCXZAVk4QMFZPgvzrnUQ3uItnIE/LoUOwrT15Ig==
   /meow/6.1.1:
     dependencies:
       '@types/minimist': 1.2.1
@@ -12364,6 +12473,15 @@ packages:
     dev: false
     resolution:
       integrity: sha512-yJHVQEhyqPLUTgt9B83PXu6W3rx4MvvHvSUvToogpwoGDOUQ+yDrR0HRot+yOCdCO7u4hX3pWft6kWBBcqh0UA==
+  /minimist-options/3.0.2:
+    dependencies:
+      arrify: 1.0.1
+      is-plain-obj: 1.1.0
+    dev: false
+    engines:
+      node: '>= 4'
+    resolution:
+      integrity: sha512-FyBrT/d0d4+uiZRbqznPXqw3IpZZG3gl3wKWiX784FycUKVwBt0uLBFkQrtE4tZOrgo78nZp2jnKz3L65T5LdQ==
   /minimist-options/4.1.0:
     dependencies:
       arrify: 1.0.1
@@ -13316,6 +13434,15 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-9ID0BDTvgHQfhGkJn43qGPVaTck=
+  /parse-json/4.0.0:
+    dependencies:
+      error-ex: 1.3.2
+      json-parse-better-errors: 1.0.2
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-vjX1Qlvh9/bHRxhPmKeIy5lHfuA=
   /parse-json/5.2.0:
     dependencies:
       '@babel/code-frame': 7.12.13
@@ -14013,6 +14140,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-dy1yjycmn9blucmJLXOfZDx1ikZJUi6E8bBZLnhPG5gBrVhHXx2xVyqqgKBubVNEXmx51dBACMHpoMQK/N/AXQ==
+  /quick-lru/1.1.0:
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-Q2CxfGETatOAeDl/8RQW4Ybc+7g=
   /quick-lru/4.0.1:
     dev: false
     engines:
@@ -14490,6 +14623,15 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-a3KoBImE4MQeeVEP1en6mbO1Sb4=
+  /read-pkg-up/3.0.0:
+    dependencies:
+      find-up: 2.1.0
+      read-pkg: 3.0.0
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-PtSWaF26D4/hGNBpHcUfSh/5bwc=
   /read-pkg-up/7.0.1:
     dependencies:
       find-up: 4.1.0
@@ -14520,6 +14662,16 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-jvHAYjxqbbDcZxPEv6xGMysjaPg=
+  /read-pkg/3.0.0:
+    dependencies:
+      load-json-file: 4.0.0
+      normalize-package-data: 2.5.0
+      path-type: 3.0.0
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-nLxoaXj+5l0WwA4rGcI3/Pbjg4k=
   /read-pkg/5.2.0:
     dependencies:
       '@types/normalize-package-data': 2.4.0
@@ -14599,6 +14751,15 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-z5Fqsf1fHxbfsggi3W7H9zDCr94=
+  /redent/2.0.0:
+    dependencies:
+      indent-string: 3.2.0
+      strip-indent: 2.0.0
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-wbIAe0LVfrE4kHmzyDM2OdXhzKo=
   /redent/3.0.0:
     dependencies:
       indent-string: 4.0.0
@@ -15791,6 +15952,12 @@ packages:
     hasBin: true
     resolution:
       integrity: sha1-DHlipq3vp7vUrDZkYKY4VSrhoKI=
+  /strip-indent/2.0.0:
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-XvjbKV0B5u1sv3qrlpmNeCJSe2g=
   /strip-indent/3.0.0:
     dependencies:
       min-indent: 1.0.1
@@ -16212,6 +16379,12 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-WIeWa7WCpFA6QetST301ARgVphM=
+  /trim-newlines/2.0.0:
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-tAPQuRvlDDMd/EuC7s6yLD3hbSA=
   /trim-newlines/3.0.0:
     dev: false
     engines:
@@ -17233,6 +17406,12 @@ packages:
       node: '>= 6'
     resolution:
       integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==
+  /yargs-parser/10.1.0:
+    dependencies:
+      camelcase: 4.1.0
+    dev: false
+    resolution:
+      integrity: sha512-VCIyR1wJoEBZUqk5PA+oOBF6ypbwh5aNB3I50guxAL/quggdfs4TtNHQrSazFA3fYZ+tEqfs0zIGlv0c/rgjbQ==
   /yargs-parser/13.1.2:
     dependencies:
       camelcase: 5.3.1
@@ -17419,7 +17598,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-6cCLxpxTrreUhwETH2+SmFKJcxfQYHPEeQNLc65eMbDY/f0mSrCwQcVqLOLX1+CKeqKklIQ7/ljXRmDDCwyxuw==
+      integrity: sha512-bYo9Rc/fH99aw5ZMHvp3GcCKLXODHmk3el1irXdZKpNha9jKPgLQnEifo/NuDwWDvq9TpBWc9tJrbCE5ucvs1A==
       tarball: 'file:projects/credentials.tgz'
     version: 0.0.0
   'file:projects/echo-db.tgz':
@@ -17452,7 +17631,7 @@ packages:
     dev: false
     name: '@rush-temp/echo-db'
     resolution:
-      integrity: sha512-z5bPDAYhzT6zM6bs7DbDz+2Nvxnymi1f96gi8O9vO5pz6gz+wU5TAyxiNG2fIjnSilhAY55XXOjRVR14xCfUpQ==
+      integrity: sha512-C30OWUR9nLifERjXFBFpyzbVBs7d83fUaSlDiEgbgaRuweN/X9q9WT6wTX0ZTA6mOEzgvypncaBoj8DRgrNCWQ==
       tarball: 'file:projects/echo-db.tgz'
     version: 0.0.0
   'file:projects/echo-demo.tgz_e59c694fd5222a7d48540d604d06d39c':
@@ -17515,7 +17694,7 @@ packages:
       '@types/react': '*'
       ts-node: '*'
     resolution:
-      integrity: sha512-LLbTu91suLTMjbHeEljqBeagXiTRdw9PYv9/Kk0eLoz7MihkrmVJJnNmbq/YQ3CKFmSwTKmYrSc4UGj9CXgibg==
+      integrity: sha512-rUxTcgs4W57sKmYzdhvX3kY4loDnE9xPSY6MoOKxfKCStM4i0d2kgbAMsJ4vrwyp872J+3TdtVo7etlIcjoFlQ==
       tarball: 'file:projects/echo-demo.tgz'
     version: 0.0.0
   'file:projects/echo-protocol.tgz':
@@ -17548,7 +17727,7 @@ packages:
     dev: false
     name: '@rush-temp/echo-protocol'
     resolution:
-      integrity: sha512-Ez8fdS+TktPge0x2bjsvvoQvihdKyO0jeu0ehFYoljlEmaTVa3CDAGqIwkUEqsMZFBi6VbPQNgoQTZfRylpKCw==
+      integrity: sha512-9udVhmrMsODEgjwQuJ+zZMQ9ySlVN/KgHTdbCdbnGKhKaEyDenUv9az/HNuXd7XbrDe2Dsh5Rvt5yPNdSHRCiQ==
       tarball: 'file:projects/echo-protocol.tgz'
     version: 0.0.0
   'file:projects/echo-testing.tgz':
@@ -17590,12 +17769,13 @@ packages:
     dev: false
     name: '@rush-temp/model-factory'
     resolution:
-      integrity: sha512-LkjmkOFnKXjYITR9xHxiFX3h8AE7BYf6//S2bunDFDC0zEDEewzrJQMi/sZvnTCbTyzvugmihBSP0cEE3WEHuw==
+      integrity: sha512-y2aDDJEsEBmQ/JGIVgwa85KL/HIXR93VDSr69qm0je6MvBbhXsLhv/ku+Mb8A2wNqV2hWtSEBAHVhqEQUDscJw==
       tarball: 'file:projects/model-factory.tgz'
     version: 0.0.0
-  'file:projects/network-devtools.tgz_359aa4bdb1973a3f989ebee7701ba344':
+  'file:projects/network-devtools.tgz_79516e198329395a81a2c5a62f1af14a':
     dependencies:
       '@babel/plugin-transform-runtime': 7.13.15_@babel+core@7.13.15
+      '@dxos/crypto': 1.0.7
       '@dxos/eslint-plugin': 1.0.10_eslint@7.23.0+typescript@4.2.3
       '@dxos/gem-core': 1.0.0-beta.33_@types+react@17.0.3
       '@dxos/gem-spore': 1.0.0-beta.33_@types+react@17.0.3
@@ -17606,6 +17786,7 @@ packages:
       '@storybook/react': 6.2.8_ac61eeb5246fad7dc14492236c3cf183
       '@types/react': 17.0.3
       '@wirelineio/discovery-swarm-memory': 0.2.17
+      eslint: 7.23.0
       eslint-plugin-react: 7.23.2_eslint@7.23.0
       react: 16.12.0
       react-docgen-typescript-loader: 3.7.2_typescript@4.2.3+webpack@4.44.2
@@ -17618,10 +17799,9 @@ packages:
     name: '@rush-temp/network-devtools'
     peerDependencies:
       '@babel/core': '*'
-      eslint: '*'
       webpack: '*'
     resolution:
-      integrity: sha512-6ZRQDNFNlGySh/RU1musc1wmOSOgEZG3dOrV4mM3M/63L/Op1lhGgOTyNsTGdGE5W9M7u/5PAJpAGIB7fdkrRA==
+      integrity: sha512-+V9fMOq9maPruUabR0MN2wjFgESZgf7dELy31a2fRhc3XaVP3scZyTld3XnoQEOB4v6ufvjLBUgOump+ywF37Q==
       tarball: 'file:projects/network-devtools.tgz'
     version: 0.0.0
   'file:projects/network-manager.tgz_typescript@4.2.3+ws@7.4.4':
@@ -17653,7 +17833,7 @@ packages:
       typescript: '*'
       ws: '*'
     resolution:
-      integrity: sha512-BfIZvPtYqHqTMkbnPYY0HWFDNtFqikSX56/N9XYMmREwLx9Z9wVPD0ZraVzaUYvUKm72ghR9x7EC8uDfWnvyAQ==
+      integrity: sha512-eKQkddreo5ZPZlHEqIuRBUmhtm7+ZxhxQ5snw8ygQbToJHuKbEQ0Ctq4RDj5ZYDW3wfKXz38IvjfWPEVvv4JaQ==
       tarball: 'file:projects/network-manager.tgz'
     version: 0.0.0
   'file:projects/node-library-rig.tgz':
@@ -17706,7 +17886,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-+uti8i0TaDqYrZWi+cv3xbafH3gsn819D9q3/K6s7huu1rNuPYwNvPgJ5D/ade+IxxYTjDnssN2DMWIaagHbig==
+      integrity: sha512-TjgUU7nb0AT+rfWbeLrsJ08rz6G9wJiAmf9M9IFJxQxtYemJTcnHqsOfKfcwzF8Y9NC+BcCPg6NBNuuBlhcguA==
       tarball: 'file:projects/object-model.tgz'
     version: 0.0.0
   'file:projects/protobuf-compiler.tgz':
@@ -17731,6 +17911,44 @@ packages:
       integrity: sha512-X0iMJt1FKwxFyaAm9YLHNE+Y066Luwf3WGNdqpq32GZCc9hCuyI+JR5RviXHG06Tnx+QITCxsUi6MnAhaNh7/Q==
       tarball: 'file:projects/protobuf-compiler.tgz'
     version: 0.0.0
+  'file:projects/protocol-network-generator.tgz_ts-node@9.1.1':
+    dependencies:
+      '@dxos/network-generator': 1.0.0-beta.3
+      coveralls: 3.1.0
+      cpy-cli: 2.0.0
+      debug: 4.3.1
+      del-cli: 3.0.1
+      jest: 26.6.3_ts-node@9.1.1
+      p-event: 4.2.0
+      pump: 3.0.0
+      wait-for-expect: 3.0.2
+    dev: false
+    id: 'file:projects/protocol-network-generator.tgz'
+    name: '@rush-temp/protocol-network-generator'
+    peerDependencies:
+      ts-node: '*'
+    resolution:
+      integrity: sha512-4IFWORkxVW+pt2Hpbl5KIt0SAWuI2tr4KOZRI0x6Ex16Bp8bZOQXNVcxuvfbprRD9FHF8wTlZMmvOdal5NL11A==
+      tarball: 'file:projects/protocol-network-generator.tgz'
+    version: 0.0.0
+  'file:projects/protocol-plugin-messenger.tgz_ts-node@9.1.1':
+    dependencies:
+      '@dxos/broadcast': 1.0.0-beta.11
+      coveralls: 3.1.0
+      cpy-cli: 2.0.0
+      debug: 4.3.1
+      del-cli: 3.0.1
+      jest: 26.6.3_ts-node@9.1.1
+      wait-for-expect: 3.0.2
+    dev: false
+    id: 'file:projects/protocol-plugin-messenger.tgz'
+    name: '@rush-temp/protocol-plugin-messenger'
+    peerDependencies:
+      ts-node: '*'
+    resolution:
+      integrity: sha512-2ha3w+zv+2M1yJ91FPmtm5Y4fVNLZLDId1UMjql2u8VGvheN+rjeZrZdGvANB5DcXXdiNdep3AHplzTzt/op0A==
+      tarball: 'file:projects/protocol-plugin-messenger.tgz'
+    version: 0.0.0
   'file:projects/protocol-plugin-presence.tgz':
     dependencies:
       '@dxos/broadcast': 1.0.0-beta.11
@@ -17745,8 +17963,31 @@ packages:
     dev: false
     name: '@rush-temp/protocol-plugin-presence'
     resolution:
-      integrity: sha512-ZfVklTGOjObRlq8suavZF0uTtmZXvvWsPY0PCeF1aFOni495lvXHZiqtBJKzFP6gO9RHoKDJwUaLiPil9QSpWw==
+      integrity: sha512-KQSGAZ5R80WJUhPXusQ695LLa4OHFuo8Kqpmvea21l3iCZ5nQVs0QSQf5BH82skz2VG0CNQ/Rk0kWnWQ/jsGKA==
       tarball: 'file:projects/protocol-plugin-presence.tgz'
+    version: 0.0.0
+  'file:projects/protocol-plugin-replicator.tgz_ts-node@9.1.1':
+    dependencies:
+      '@dxos/crypto': 1.0.7
+      '@dxos/feed-store': 1.2.0-beta.30
+      buffer-json-encoding: 1.0.2
+      coveralls: 3.1.0
+      cpy-cli: 2.0.0
+      debug: 4.3.1
+      del-cli: 3.0.1
+      end-of-stream: 1.4.4
+      jest: 26.6.3_ts-node@9.1.1
+      pify: 5.0.0
+      random-access-memory: 3.1.2
+      wait-for-expect: 3.0.2
+    dev: false
+    id: 'file:projects/protocol-plugin-replicator.tgz'
+    name: '@rush-temp/protocol-plugin-replicator'
+    peerDependencies:
+      ts-node: '*'
+    resolution:
+      integrity: sha512-K2zTDhFIWsnXAxMhTRtaGVhrpwrWxUj/QZtynDnZMSjlsnvCHYv7ptD25aVvTD0VbZ2EdZO9HgQHXbGxrKCNdw==
+      tarball: 'file:projects/protocol-plugin-replicator.tgz'
     version: 0.0.0
   'file:projects/protocol.tgz':
     dependencies:
@@ -17766,7 +18007,7 @@ packages:
     dev: false
     name: '@rush-temp/protocol'
     resolution:
-      integrity: sha512-w6N0SDSgUQyFfPokkOudoAUPJ7GH2cB6WcASwUviu++A/J0VMRdSNSS0o74eFybrYJ4T5jIlUFpZcjBzzdww2w==
+      integrity: sha512-/xd+a/Uuan7zs09mbbLfpW88mgExK3+ak4TBmaQhbw/ZHffr0TQuuuMTqRvbqhRzY5NqLZPBa5103gnZbb7aWA==
       tarball: 'file:projects/protocol.tgz'
     version: 0.0.0
   'file:projects/text-model.tgz':
@@ -17823,7 +18064,7 @@ packages:
     dev: false
     name: '@rush-temp/util'
     resolution:
-      integrity: sha512-LtEGeIJ5x2bAfJ/L/kyuHhzYLP9vdhXngJ5igauDkb22JPQO2r7CqTooBrPC2VHeX4U5HXu+unDhbraukh3elg==
+      integrity: sha512-SQc1wJsniFEwxJ144zIjuBMSBnNVxbBGH8b3ZFDai0rLLnqJwmjGkU/7Q/6EaALSADLeihQPK9dEA5tSaQi/ng==
       tarball: 'file:projects/util.tgz'
     version: 0.0.0
 registry: ''
@@ -17839,9 +18080,7 @@ specifiers:
   '@dxos/gem-core': ~1.0.0-beta.25
   '@dxos/gem-spore': ~1.0.0-beta.25
   '@dxos/metrics': ~1.0.0-beta.9
-  '@dxos/protocol-network-generator': 1.0.8
-  '@dxos/protocol-plugin-presence': ~1.1.0-beta.21
-  '@dxos/protocol-plugin-replicator': ~1.0.8
+  '@dxos/network-generator': '*'
   '@dxos/random-access-multi-storage': ~1.1.0-beta.8
   '@geut/discovery-swarm-webrtc': ^4.0.2
   '@material-ui/core': ^4.9.10
@@ -17859,7 +18098,10 @@ specifiers:
   '@rush-temp/object-model': 'file:./projects/object-model.tgz'
   '@rush-temp/protobuf-compiler': 'file:./projects/protobuf-compiler.tgz'
   '@rush-temp/protocol': 'file:./projects/protocol.tgz'
+  '@rush-temp/protocol-network-generator': 'file:./projects/protocol-network-generator.tgz'
+  '@rush-temp/protocol-plugin-messenger': 'file:./projects/protocol-plugin-messenger.tgz'
   '@rush-temp/protocol-plugin-presence': 'file:./projects/protocol-plugin-presence.tgz'
+  '@rush-temp/protocol-plugin-replicator': 'file:./projects/protocol-plugin-replicator.tgz'
   '@rush-temp/text-model': 'file:./projects/text-model.tgz'
   '@rush-temp/toolchain-node-library': 'file:./projects/toolchain-node-library.tgz'
   '@rush-temp/util': 'file:./projects/util.tgz'
@@ -17906,6 +18148,8 @@ specifiers:
   chance: ^1.1.6
   chromatic: ^5.6.0
   clsx: ^1.1.0
+  coveralls: ^3.0.7
+  cpy-cli: ^2.0.0
   crypto-js: ^3.1.9-1
   d3: ^5.9.2
   debug: ^4.1.1
@@ -17949,6 +18193,7 @@ specifiers:
   nanoresource-promise: ^2.0.0
   ngraph.graph: ^19.0.1
   ngraph.path: ^1.3.1
+  p-event: ^4.2.0
   p-limit: ^3.0.2
   performance-now: ^2.1.0
   pify: ~5.0.0
@@ -17965,7 +18210,6 @@ specifiers:
   readable-stream: ^3.6.0
   signal-promise: ^1.0.3
   simple-peer: ^9.9.3
-  source-map-support: ^0.5.12
   stream-buffers: ^3.0.2
   stream-to-array: ^2.3.0
   tempy: ~1.0.1
