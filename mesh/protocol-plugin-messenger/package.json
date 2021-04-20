@@ -1,0 +1,64 @@
+{
+  "name": "@dxos/protocol-plugin-messenger",
+  "version": "1.0.8",
+  "description": "Protocol plugin messenger.",
+  "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-messenger#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/protocol/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/protocol.git"
+  },
+  "license": "GPL-3.0",
+  "files": [
+    "dist",
+    "index.js"
+  ],
+  "main": "index.js",
+  "browser": "dist/index.js",
+  "scripts": {
+    "build": "npm run clean && npm run build:protobuf && npm run build:babel",
+    "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps",
+    "build:protobuf": "pbjs -t json src/schema.proto -o src/schema.json && cpy src/schema.json dist",
+    "clean": "del-cli dist",
+    "coverage": "npm test -- --coverage",
+    "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls",
+    "prepublishOnly": "npm run build && npm run test",
+    "test": "jest --verbose --passWithNoTests src"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@dxos/broadcast": "~1.0.0-beta.11",
+    "@dxos/codec-protobuf": "1.1.0-beta.10",
+    "@dxos/protocol": "1.0.8",
+    "debug": "^4.1.1",
+    "source-map-support": "^0.5.12"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.7.0",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-class-properties": "^7.7.4",
+    "@babel/plugin-proposal-export-default-from": "^7.5.2",
+    "@babel/preset-env": "^7.4.5",
+    "@dxos/protocol-network-generator": "1.0.8",
+    "babel-eslint": "^10.0.2",
+    "babel-jest": "^24.8.0",
+    "babel-plugin-add-module-exports": "^1.0.2",
+    "babel-plugin-inline-import": "^3.0.0",
+    "coveralls": "^3.0.7",
+    "cpy-cli": "^2.0.0",
+    "del-cli": "^3.0.0",
+    "jest": "^26.6.3",
+    "wait-for-expect": "^3.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "7e81301054ee0f7d0adf3c0710d1c3d60a5d93f8"
+}

@@ -1,0 +1,28 @@
+{
+  "nested": {
+    "dxos": {
+      "nested": {
+        "protocol": {
+          "nested": {
+            "messenger": {
+              "nested": {
+                "Message": {
+                  "fields": {
+                    "type": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "payload": {
+                      "type": "bytes",
+                      "id": 2
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
