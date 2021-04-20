@@ -23,12 +23,12 @@
   },
   "dependencies": {
     "@dxos/broadcast": "~1.0.0-beta.11",
-    "@dxos/codec-protobuf": "1.1.0-beta.10",
+    "@dxos/codec-protobuf": "*",
     "@dxos/protocol": "1.0.8",
     "debug": "^4.1.1"
   },
   "devDependencies": {
-    "@dxos/protocol-network-generator": "1.0.8",
+    "@dxos/protocol-network-generator": "*",
     "coveralls": "^3.0.7",
     "cpy-cli": "^2.0.0",
     "del-cli": "^3.0.0",
