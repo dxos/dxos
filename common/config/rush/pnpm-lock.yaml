@@ -140,6 +140,7 @@ dependencies:
   readable-stream: 3.6.0
   signal-promise: 1.0.3
   simple-peer: 9.10.0
+  source-map-support: 0.5.19
   stream-buffers: 3.0.2
   stream-to-array: 2.3.0
   tempy: 1.0.1
@@ -17598,7 +17599,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-bYo9Rc/fH99aw5ZMHvp3GcCKLXODHmk3el1irXdZKpNha9jKPgLQnEifo/NuDwWDvq9TpBWc9tJrbCE5ucvs1A==
+      integrity: sha512-Gqqh4+S1TlEw6gDHH5OBFFb4ndYip7kLvcldFNJ88ErivW3+UCQ9gOdU/ziTJxQYTNc7GOEeRfn+IKSNQqTMwQ==
       tarball: 'file:projects/credentials.tgz'
     version: 0.0.0
   'file:projects/echo-db.tgz':
@@ -17694,7 +17695,7 @@ packages:
       '@types/react': '*'
       ts-node: '*'
     resolution:
-      integrity: sha512-rUxTcgs4W57sKmYzdhvX3kY4loDnE9xPSY6MoOKxfKCStM4i0d2kgbAMsJ4vrwyp872J+3TdtVo7etlIcjoFlQ==
+      integrity: sha512-LLbTu91suLTMjbHeEljqBeagXiTRdw9PYv9/Kk0eLoz7MihkrmVJJnNmbq/YQ3CKFmSwTKmYrSc4UGj9CXgibg==
       tarball: 'file:projects/echo-demo.tgz'
     version: 0.0.0
   'file:projects/echo-protocol.tgz':
@@ -17727,7 +17728,7 @@ packages:
     dev: false
     name: '@rush-temp/echo-protocol'
     resolution:
-      integrity: sha512-9udVhmrMsODEgjwQuJ+zZMQ9ySlVN/KgHTdbCdbnGKhKaEyDenUv9az/HNuXd7XbrDe2Dsh5Rvt5yPNdSHRCiQ==
+      integrity: sha512-Ez8fdS+TktPge0x2bjsvvoQvihdKyO0jeu0ehFYoljlEmaTVa3CDAGqIwkUEqsMZFBi6VbPQNgoQTZfRylpKCw==
       tarball: 'file:projects/echo-protocol.tgz'
     version: 0.0.0
   'file:projects/echo-testing.tgz':
@@ -17769,7 +17770,7 @@ packages:
     dev: false
     name: '@rush-temp/model-factory'
     resolution:
-      integrity: sha512-y2aDDJEsEBmQ/JGIVgwa85KL/HIXR93VDSr69qm0je6MvBbhXsLhv/ku+Mb8A2wNqV2hWtSEBAHVhqEQUDscJw==
+      integrity: sha512-LkjmkOFnKXjYITR9xHxiFX3h8AE7BYf6//S2bunDFDC0zEDEewzrJQMi/sZvnTCbTyzvugmihBSP0cEE3WEHuw==
       tarball: 'file:projects/model-factory.tgz'
     version: 0.0.0
   'file:projects/network-devtools.tgz_79516e198329395a81a2c5a62f1af14a':
@@ -17886,7 +17887,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-TjgUU7nb0AT+rfWbeLrsJ08rz6G9wJiAmf9M9IFJxQxtYemJTcnHqsOfKfcwzF8Y9NC+BcCPg6NBNuuBlhcguA==
+      integrity: sha512-+uti8i0TaDqYrZWi+cv3xbafH3gsn819D9q3/K6s7huu1rNuPYwNvPgJ5D/ade+IxxYTjDnssN2DMWIaagHbig==
       tarball: 'file:projects/object-model.tgz'
     version: 0.0.0
   'file:projects/protobuf-compiler.tgz':
@@ -17921,6 +17922,7 @@ packages:
       jest: 26.6.3_ts-node@9.1.1
       p-event: 4.2.0
       pump: 3.0.0
+      source-map-support: 0.5.19
       wait-for-expect: 3.0.2
     dev: false
     id: 'file:projects/protocol-network-generator.tgz'
@@ -17928,7 +17930,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-C+usf34z2qDz+dAYZoSTOrd5Czkc6a3slSq5G3Xtd8fKcvgbWQNOSR148glRQiUsZ26LYxA01X9ab8SJy0BbhA==
+      integrity: sha512-jzwBWipF59n1nsZaXvvPA7TOYpolwCUYwg66YRuC3RY9AcUX9xSDlZwKFCQetdal+TynjVXBRHhKv9EVWOHjvA==
       tarball: 'file:projects/protocol-network-generator.tgz'
     version: 0.0.0
   'file:projects/protocol-plugin-messenger.tgz_ts-node@9.1.1':
@@ -17939,6 +17941,7 @@ packages:
       debug: 4.3.1
       del-cli: 3.0.1
       jest: 26.6.3_ts-node@9.1.1
+      source-map-support: 0.5.19
       wait-for-expect: 3.0.2
     dev: false
     id: 'file:projects/protocol-plugin-messenger.tgz'
@@ -17946,7 +17949,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-pR7aB/opeNKVaWG/Jni5jCKaB3wbV/tfcSUcN7fOiqmV9mBxzc7a4jF5/8UrlYYzMi/EFDEvA2Wzl7zXwPLvwA==
+      integrity: sha512-9pjI3Ef67lbi9VcLhRQtaXMSQZPAwCnIDMD4Vqij31BqKKWlT3Ep9V7tZDGv9k/jFmbgKZzRA04tQKVujPy9JQ==
       tarball: 'file:projects/protocol-plugin-messenger.tgz'
     version: 0.0.0
   'file:projects/protocol-plugin-presence.tgz':
@@ -17979,6 +17982,7 @@ packages:
       jest: 26.6.3_ts-node@9.1.1
       pify: 5.0.0
       random-access-memory: 3.1.2
+      source-map-support: 0.5.19
       wait-for-expect: 3.0.2
     dev: false
     id: 'file:projects/protocol-plugin-replicator.tgz'
@@ -17986,7 +17990,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-xApIl/r+0n/vBj9wVV9RSbVtW4I2rJn1WhK0HssJo26A2fp+QsEkRmviy0IolicJzIiPQpqXPv8wgvdQHVU42Q==
+      integrity: sha512-IDlaXGUxxpWa5fld0rT//mIBH0Tjd1dTUadSDmPyon4tT70aMUZc3o1IgipwYziMSlzUapwDD5eplodrqLk+CA==
       tarball: 'file:projects/protocol-plugin-replicator.tgz'
     version: 0.0.0
   'file:projects/protocol.tgz':
@@ -18007,7 +18011,7 @@ packages:
     dev: false
     name: '@rush-temp/protocol'
     resolution:
-      integrity: sha512-/xd+a/Uuan7zs09mbbLfpW88mgExK3+ak4TBmaQhbw/ZHffr0TQuuuMTqRvbqhRzY5NqLZPBa5103gnZbb7aWA==
+      integrity: sha512-w6N0SDSgUQyFfPokkOudoAUPJ7GH2cB6WcASwUviu++A/J0VMRdSNSS0o74eFybrYJ4T5jIlUFpZcjBzzdww2w==
       tarball: 'file:projects/protocol.tgz'
     version: 0.0.0
   'file:projects/text-model.tgz':
@@ -18064,7 +18068,7 @@ packages:
     dev: false
     name: '@rush-temp/util'
     resolution:
-      integrity: sha512-SQc1wJsniFEwxJ144zIjuBMSBnNVxbBGH8b3ZFDai0rLLnqJwmjGkU/7Q/6EaALSADLeihQPK9dEA5tSaQi/ng==
+      integrity: sha512-LtEGeIJ5x2bAfJ/L/kyuHhzYLP9vdhXngJ5igauDkb22JPQO2r7CqTooBrPC2VHeX4U5HXu+unDhbraukh3elg==
       tarball: 'file:projects/util.tgz'
     version: 0.0.0
 registry: ''
@@ -18210,6 +18214,7 @@ specifiers:
   readable-stream: ^3.6.0
   signal-promise: ^1.0.3
   simple-peer: ^9.9.3
+  source-map-support: ^0.5.12
   stream-buffers: ^3.0.2
   stream-to-array: ^2.3.0
   tempy: ~1.0.1

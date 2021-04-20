@@ -25,7 +25,8 @@
     "@dxos/broadcast": "~1.0.0-beta.11",
     "@dxos/codec-protobuf": "*",
     "@dxos/protocol": "*",
-    "debug": "^4.1.1"
+    "debug": "^4.1.1",
+    "source-map-support": "^0.5.12"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "*",

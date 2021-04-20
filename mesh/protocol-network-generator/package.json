@@ -25,7 +25,8 @@
     "@dxos/network-generator": "*",
     "debug": "^4.1.1",
     "p-event": "^4.2.0",
-    "pump": "^3.0.0"
+    "pump": "^3.0.0",
+    "source-map-support": "^0.5.12"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "*",
