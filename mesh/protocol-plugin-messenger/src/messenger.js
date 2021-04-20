@@ -71,7 +71,7 @@ export class Messenger extends EventEmitter {
     });
 
     this._codec = new Codec('dxos.protocol.messenger.Message')
-      .addJson(require('./schema.json')) // eslint-disable-line @typescript-eslint/no-var-requires
+      .addJson(require('./proto/schema.json')) // eslint-disable-line @typescript-eslint/no-var-requires
       .build();
 
     this._broadcast.run();
