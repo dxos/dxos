@@ -378,6 +378,14 @@
    */
   "projects": [
     {
+      "packageName": "@dxos/client",
+      "projectFolder": "sdk/client"
+    },
+    {
+      "packageName": "@dxos/react-client",
+      "projectFolder": "sdk/react-client"
+    },
+    {
       "packageName": "@dxos/codec-protobuf",
       "projectFolder": "codec-protobuf/codec-protobuf"
     },
