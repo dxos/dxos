@@ -15,23 +15,11 @@
     "dist",
     "index.js"
   ],
-  "main": "index.js",
-  "browser": "dist/index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "npm run clean && npm run build:protobuf && npm run build:babel",
-    "build:babel": "babel ./src --out-dir ./dist --ignore \"**/*.test.js\" --source-maps",
-    "build:protobuf": "pbjs -t json src/schema.proto -o src/schema.json && cpy src/schema.json dist",
-    "clean": "del-cli dist",
-    "coverage": "npm test -- --coverage",
-    "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls",
-    "prepublishOnly": "npm run build && npm run test",
-    "test": "jest --verbose --passWithNoTests src"
-  },
-  "browserslist": [
-    "> 5%"
-  ],
-  "jest": {
-    "testEnvironment": "node"
+    "build": "toolchain build",
+    "lint": "toolchain lint"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "1.1.0-beta.10",
