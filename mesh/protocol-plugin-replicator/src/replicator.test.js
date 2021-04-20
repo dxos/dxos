@@ -2,16 +2,18 @@
 // Copyright 2019 DxOS.
 //
 
+//
+// Copyright 2021 DXOS.org
+//
+
 import crypto from 'crypto';
-
-import ram from 'random-access-memory';
-import pify from 'pify';
-import waitForExpect from 'wait-for-expect';
 import eos from 'end-of-stream';
+import pify from 'pify';
+import ram from 'random-access-memory';
+import waitForExpect from 'wait-for-expect';
 
-import { FeedStore } from '@dxos/feed-store';
 import { discoveryKey } from '@dxos/crypto';
-
+import { FeedStore } from '@dxos/feed-store';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 
@@ -78,7 +80,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   };
 });
 
-describe('test data replication in a balanced network graph of 15 peers', () => {
+describe.skip('test data replication in a balanced network graph of 15 peers', () => {
   const topic = crypto.randomBytes(32);
   let network;
 

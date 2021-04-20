@@ -2,14 +2,18 @@
 // Copyright 2019 DxOS.
 //
 
-import { EventEmitter } from 'events';
+//
+// Copyright 2021 DXOS.org
+//
+
 import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
+import { EventEmitter } from 'events';
 
 import { Extension } from '@dxos/protocol';
 
 import { Peer } from './peer';
-import schema from './schema.json';
+import schema from './proto/schema.json';
 
 // const log = debug('dxos.replicator');
 

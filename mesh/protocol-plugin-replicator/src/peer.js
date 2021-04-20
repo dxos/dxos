@@ -2,8 +2,12 @@
 // Copyright 2019 DxOS.
 //
 
-import { EventEmitter } from 'events';
+//
+// Copyright 2021 DXOS.org
+//
+
 import debug from 'debug';
+import { EventEmitter } from 'events';
 
 const log = debug('dxos.replicator.peer');
 

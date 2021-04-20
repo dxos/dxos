@@ -38,7 +38,7 @@ const generator = new ProtocolNetworkGenerator((topic, peerId) => {
   };
 });
 
-describe('test peer chat in a network graph of 15 peers', () => {
+describe.skip('test peer chat in a network graph of 15 peers', () => {
   test('feed synchronization', async () => {
     const topic = crypto.randomBytes(32);
 
