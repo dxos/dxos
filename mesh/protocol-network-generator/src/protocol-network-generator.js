@@ -1,15 +1,14 @@
 //
-// Copyright 2019 DxOS.
+// Copyright 2021 DXOS.org
 //
 
 import assert from 'assert';
 import { EventEmitter } from 'events';
-
-import pump from 'pump';
 import pEvent from 'p-event';
+import pump from 'pump';
 
-import { getProtocolFromStream } from '@dxos/protocol';
 import { NetworkGenerator, topologies } from '@dxos/network-generator';
+import { getProtocolFromStream } from '@dxos/protocol';
 
 /**
  * @typedef {Object} Peer

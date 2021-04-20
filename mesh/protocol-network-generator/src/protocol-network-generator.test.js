@@ -1,9 +1,11 @@
 //
-// Copyright 2019 DxOS.
+// Copyright 2021 DXOS.org
 //
 
 import crypto from 'crypto';
+
 import { Protocol } from '@dxos/protocol';
+
 import { ProtocolNetworkGenerator } from './protocol-network-generator';
 
 test('basic generator', async () => {

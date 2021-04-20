@@ -1,9 +1,8 @@
 //
-// Copyright 2019 DxOS.
+// Copyright 2021 DXOS.org
 //
 
 import crypto from 'crypto';
-
 import waitForExpect from 'wait-for-expect';
 
 import { Protocol } from '@dxos/protocol';

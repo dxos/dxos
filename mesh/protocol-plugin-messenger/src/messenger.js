@@ -1,12 +1,12 @@
 //
-// Copyright 2019 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-import { EventEmitter } from 'events';
 import assert from 'assert';
+import { EventEmitter } from 'events';
 
-import { Codec } from '@dxos/codec-protobuf';
 import { Broadcast } from '@dxos/broadcast';
+import { Codec } from '@dxos/codec-protobuf';
 import { Extension } from '@dxos/protocol';
 
 /**
@@ -71,7 +71,7 @@ export class Messenger extends EventEmitter {
     });
 
     this._codec = new Codec('dxos.protocol.messenger.Message')
-      .addJson(require('./schema.json'))
+      .addJson(require('./schema.json')) // eslint-disable-line @typescript-eslint/no-var-requires
       .build();
 
     this._broadcast.run();
@@ -163,7 +163,9 @@ export class Messenger extends EventEmitter {
    */
   _addPeer (protocol) {
     const session = protocol.getSession();
-    if (!session.peerId) throw new Error('missing peerId');
+    if (!session.peerId) {
+      throw new Error('missing peerId');
+    }
 
     const idStr = session.peerId.toString('hex');
 
@@ -183,7 +185,9 @@ export class Messenger extends EventEmitter {
    */
   _removePeer (protocol) {
     const session = protocol.getSession();
-    if (!session.peerId) return;
+    if (!session.peerId) {
+      return;
+    }
 
     const idStr = session.peerId.toString('hex');
 
@@ -193,7 +197,9 @@ export class Messenger extends EventEmitter {
     }
 
     peer.protocols.delete(protocol);
-    if (peer.protocols.size === 0) this._peers.delete(idStr);
+    if (peer.protocols.size === 0) {
+      this._peers.delete(idStr);
+    }
     this.emit('peer:left', session.peerId);
   }
 }
