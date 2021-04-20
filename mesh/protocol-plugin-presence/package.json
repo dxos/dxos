@@ -34,7 +34,7 @@
   "devDependencies": {
     "@dxos/toolchain-node-library": "*",
     "@dxos/protobuf-compiler": "*",
-    "@dxos/protocol-network-generator": "1.0.8",
+    "@dxos/protocol-network-generator": "*",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
