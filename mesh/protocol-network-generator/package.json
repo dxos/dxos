@@ -28,6 +28,7 @@
     "pump": "^3.0.0"
   },
   "devDependencies": {
+    "@dxos/toolchain-node-library": "*",
     "@dxos/protocol": "*",
     "coveralls": "^3.0.7",
     "cpy-cli": "^2.0.0",

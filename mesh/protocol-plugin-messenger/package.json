@@ -28,6 +28,7 @@
     "debug": "^4.1.1"
   },
   "devDependencies": {
+    "@dxos/toolchain-node-library": "*",
     "@dxos/protocol-network-generator": "*",
     "coveralls": "^3.0.7",
     "cpy-cli": "^2.0.0",

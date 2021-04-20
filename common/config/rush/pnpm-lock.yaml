@@ -17928,7 +17928,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-4IFWORkxVW+pt2Hpbl5KIt0SAWuI2tr4KOZRI0x6Ex16Bp8bZOQXNVcxuvfbprRD9FHF8wTlZMmvOdal5NL11A==
+      integrity: sha512-C+usf34z2qDz+dAYZoSTOrd5Czkc6a3slSq5G3Xtd8fKcvgbWQNOSR148glRQiUsZ26LYxA01X9ab8SJy0BbhA==
       tarball: 'file:projects/protocol-network-generator.tgz'
     version: 0.0.0
   'file:projects/protocol-plugin-messenger.tgz_ts-node@9.1.1':
@@ -17946,7 +17946,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-2ha3w+zv+2M1yJ91FPmtm5Y4fVNLZLDId1UMjql2u8VGvheN+rjeZrZdGvANB5DcXXdiNdep3AHplzTzt/op0A==
+      integrity: sha512-pR7aB/opeNKVaWG/Jni5jCKaB3wbV/tfcSUcN7fOiqmV9mBxzc7a4jF5/8UrlYYzMi/EFDEvA2Wzl7zXwPLvwA==
       tarball: 'file:projects/protocol-plugin-messenger.tgz'
     version: 0.0.0
   'file:projects/protocol-plugin-presence.tgz':
@@ -17986,7 +17986,7 @@ packages:
     peerDependencies:
       ts-node: '*'
     resolution:
-      integrity: sha512-K2zTDhFIWsnXAxMhTRtaGVhrpwrWxUj/QZtynDnZMSjlsnvCHYv7ptD25aVvTD0VbZ2EdZO9HgQHXbGxrKCNdw==
+      integrity: sha512-xApIl/r+0n/vBj9wVV9RSbVtW4I2rJn1WhK0HssJo26A2fp+QsEkRmviy0IolicJzIiPQpqXPv8wgvdQHVU42Q==
       tarball: 'file:projects/protocol-plugin-replicator.tgz'
     version: 0.0.0
   'file:projects/protocol.tgz':
