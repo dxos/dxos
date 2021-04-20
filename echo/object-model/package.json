@@ -41,7 +41,7 @@
     "js-data-structs": "^1.1.2",
     "lodash.merge": "^4.6.2",
     "lodash": "4.17.21",
-    "protobufjs": "^6.9.0"
+    "protobufjs": "^6.9.0",
     "minisearch": "^3.0.2"
   },
   "devDependencies": {
