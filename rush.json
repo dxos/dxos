@@ -382,6 +382,10 @@
       "projectFolder": "sdk/client"
     },
     {
+      "packageName": "@dxos/react-ux",
+      "projectFolder": "sdk/react-ux"
+    },
+    {
       "packageName": "@dxos/react-client",
       "projectFolder": "sdk/react-client"
     },
