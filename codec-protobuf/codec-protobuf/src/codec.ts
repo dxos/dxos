@@ -42,7 +42,10 @@ export class Schema<T> {
    * Dynamically add new definitions to this schema.
    */
   addJson (schema: any) {
-    this._typesRoot.addJSON(schema);
+    if (!schema.nested) {
+      throw new Error('Invalid schema: missing nested object');
+    }
+    this._typesRoot.addJSON(schema.nested);
   }
 }
 

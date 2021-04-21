@@ -5,8 +5,8 @@
   "types": "dist/src/index.d.ts",
   "license": "MIT",
   "scripts": {
-    "build": "tsc && pnpm run lint && pnpm run test && true",
-    "test": "echo No tests",
+    "build": "tsc && pnpm run lint && pnpm run test 2>&1 && true",
+    "test": "jest",
     "lint": "eslint 'src/**/*.ts'"
   },
   "files": [
@@ -19,11 +19,22 @@
     "@types/assert": "^1.5.4",
     "eslint": "^7.7.0",
     "ts-node": "^9.0.0",
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.2",
+    "@types/jest": "^26.0.7",
+    "jest": "^26.2.2",
+    "ts-jest": "^26.1.4"
   },
   "dependencies": {
     "assert": "^2.0.0",
     "protobufjs": "^6.9.0"
+  },
+  "jest": {
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node",
+    "modulePathIgnorePatterns": [
+      "test/gen",
+      "dist"
+    ]
   },
   "eslintConfig": {
     "extends": "plugin:@dxos/recomended"
