@@ -47,7 +47,6 @@
     "@testing-library/react-hooks": "^3.4.2",
     "@types/jest": "^26.0.7",
     "@types/level-js": "^4.0.1",
-    "awesome-typescript-loader": "^5.2.1",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^25.1.0",
     "babel-loader": "8.1.0",

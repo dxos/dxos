@@ -34,7 +34,7 @@
     "del": "^5.1.0",
     "end-of-stream": "^1.4.1",
     "hypertrie": "^3.8.0",
-    "jsondown": "dxos/jsondown",
+    "jsondown": "dxos/jsondown#main",
     "level-js": "^5.0.2",
     "lodash.debounce": "^4.0.8",
     "lodash.defaults": "^4.2.0",
@@ -66,7 +66,9 @@
     "tempy": "~1.0.1",
     "ts-jest": "^26.1.4",
     "typescript": "^4.0.2",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "abstract-leveldown": "~7.0.0",
+    "ts-loader": "~8.1.0"
   },
   "files": [
     "dist",
