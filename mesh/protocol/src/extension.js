@@ -81,6 +81,11 @@ export class Extension extends Nanomessage {
       this.codec.addJson(userSchema);
     }
 
+    console.log({
+      name,
+      codec: JSON.stringify(this.codec._schema._typesRoot.toJSON())
+    })
+
     this.codec.encode.bind(this.codec);
     this.codec.decode.bind(this.codec);
     this.on('error', err => log(err));

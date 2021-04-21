@@ -80,7 +80,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   };
 });
 
-describe.skip('test data replication in a balanced network graph of 15 peers', () => {
+describe('test data replication in a balanced network graph of 15 peers', () => {
   const topic = crypto.randomBytes(32);
   let network;
 
