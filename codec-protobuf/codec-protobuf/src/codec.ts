@@ -2,7 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import protobufjs from 'protobufjs';
+import merge from 'lodash.merge';
+import protobufjs, { Root } from 'protobufjs';
 
 import { Substitutions } from './common';
 import { BidirectionalMapingDescriptors, createMappingDescriptors, mapMessage } from './mapping';
@@ -16,7 +17,7 @@ export class Schema<T> {
   private readonly _mapping: BidirectionalMapingDescriptors;
 
   constructor (
-    private readonly _typesRoot: protobufjs.Root,
+    private _typesRoot: protobufjs.Root,
     substitutions: Substitutions
   ) {
     this._mapping = createMappingDescriptors(substitutions);
@@ -45,7 +46,7 @@ export class Schema<T> {
     if (!schema.nested) {
       throw new Error('Invalid schema: missing nested object');
     }
-    this._typesRoot.addJSON(schema.nested);
+    this._typesRoot = Root.fromJSON(merge(this._typesRoot.toJSON(), schema));
   }
 }
 
