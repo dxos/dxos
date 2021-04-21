@@ -21,6 +21,7 @@
     "@material-ui/styles": "^4.9.10",
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.55",
+    "@material-ui/utils": "4.11.2",
     "clsx": "^1.1.0",
     "lodash.isplainobject": "^4.0.6",
     "@types/react": "^17.0.0",
