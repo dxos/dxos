@@ -35,7 +35,8 @@
     "@dxos/protocol-plugin-presence": "1.0.8"
   },
   "peerDependencies": {
-    "@dxos/react-ux": "*"
+    "@dxos/react-ux": "*",
+    "react": "*"
   },
   "eslintConfig": {
     "extends": "plugin:@dxos/react",
