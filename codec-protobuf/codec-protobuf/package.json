@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc && pnpm run lint && pnpm run test 2>&1 && true",
     "test": "jest",
-    "lint": "eslint 'src/**/*.ts'"
+    "lint": "eslint '{src,test}/**/*.ts'"
   },
   "files": [
     "dist",

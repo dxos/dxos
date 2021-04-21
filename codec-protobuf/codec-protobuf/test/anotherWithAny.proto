@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package dxos.test.anotherWithAny;
+
+import "google/protobuf/any.proto";
+
+message AnotherMessageWithAny {
+  google.protobuf.Any payload = 1;
+}
