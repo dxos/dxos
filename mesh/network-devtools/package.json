@@ -19,7 +19,7 @@
     "react-dom": "16.12.0",
     "react": "16.13.0",
     "typescript": "^4.0.2",
-    "@dxos/react-ux": "2.7.44",
+    "@dxos/react-ux": "*",
     "eslint": "^7.7.0"
   },
   "dependencies": {
