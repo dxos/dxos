@@ -15,7 +15,8 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - run: |
+      - name: Check, install and build
+        run: |
           \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
           
           # Check package versions
