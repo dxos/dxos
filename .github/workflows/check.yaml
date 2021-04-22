@@ -6,21 +6,12 @@ jobs:
   check:
     runs-on: [self-hosted]
     timeout-minutes: 15
-    strategy:
-      matrix:
-        node-version: [12.17]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - run: apt-get install -y pkg-config libsecret-1-dev
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      - run: npm install -g pnpm # TODO: rush comes with pnpm so we should make this step not required.
       - name: Check package versions
         run: node common/scripts/install-run-rush.js change -v
       - name: Install dependencies
