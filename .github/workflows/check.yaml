@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
       - run: printenv
-      - run: source /root/.bashrc && nvm use ${{ matrix.node-version }}
+      - run: \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
       - name: Check package versions
         run: node common/scripts/install-run-rush.js change -v
       - name: Install dependencies
