@@ -6,12 +6,16 @@ jobs:
   check:
     runs-on: [self-hosted]
     timeout-minutes: 15
+    strategy:
+      matrix:
+        node-version: [12.17]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - run: nvm use ${{ matrix.node-version }}
       - name: Check package versions
         run: node common/scripts/install-run-rush.js change -v
       - name: Install dependencies
