@@ -7,9 +7,8 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && pnpm run lint && pnpm run test 2>&1 && true",
     "build:watch": "tsc --watch",
-    "clean": "rm -rf dist",
     "lint": "eslint '{src,tests}/**/*.{ts,js,tsx,jsx}'",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "test": "jest --rootDir ./tests --verbose --runInBand"
