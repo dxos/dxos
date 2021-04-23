@@ -460,6 +460,14 @@
     {
       "packageName": "@dxos/network-devtools",
       "projectFolder": "mesh/network-devtools"
+    },
+    {
+      "packageName": "@dxos/async",
+      "projectFolder": "misc/async"
+    },
+    {
+      "packageName": "@dxos/crypto",
+      "projectFolder": "misc/crypto"
     }
     // {
     //   /**

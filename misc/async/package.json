@@ -1,0 +1,31 @@
+{
+  "name": "@dxos/async",
+  "version": "1.0.0-alpha.0",
+  "description": "Basic async utils",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "toolchain build",
+    "test": "toolchain test",
+    "lint": "toolchain lint"
+  },
+  "license": "AGPL-3.0",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/jest": "^26.0.10",
+    "@typescript-eslint/eslint-plugin": "^3.9.0",
+    "@typescript-eslint/parser": "^3.9.0",
+    "coveralls": "^3.0.7",
+    "jest": "^26.4.2",
+    "lockfile-lint": "^4.3.7",
+    "semistandard": "^14.2.0",
+    "ts-jest": "^26.2.0",
+    "typescript": "^3.9.7"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
