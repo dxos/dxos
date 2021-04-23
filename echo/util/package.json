@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@dxos/async": "~1.0.2-alpha.0",
-    "@dxos/codec-protobuf": "*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "~1.0.7",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
@@ -39,7 +39,7 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "*",
+    "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
     "stream-buffers": "^3.0.2"
   },

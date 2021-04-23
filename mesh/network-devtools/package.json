@@ -9,6 +9,7 @@
     "build": "tsc && pnpm run lint && true"
   },
   "devDependencies": {
+    "@babel/core": "~7.13.15",
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@dxos/eslint-plugin": "~1.0.10",
     "@storybook/addon-knobs": "^6.0.21",
@@ -20,19 +21,20 @@
     "typescript": "^4.0.2",
     "@dxos/react-ux": "~2.7.43-alpha.0",
     "react": "16.12.0",
-    "eslint": "^7.7.0"
+    "eslint": "^7.7.0",
+    "webpack": "4.44.2"
   },
   "dependencies": {
     "@dxos/gem-core": "~1.0.0-beta.25",
     "@dxos/gem-spore": "~1.0.0-beta.25",
-    "@dxos/network-manager": "~1.0.6",
+    "@dxos/network-manager": "workspace:~1.0.6",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
     "@material-ui/core": "^4.9.10",
     "@types/react": "^17.0.0",
     "@wirelineio/discovery-swarm-memory": "^0.2.17",
     "react-resize-aware": "^3.0.0",
     "@dxos/crypto": "~1.0.7",
-    "@dxos/protocol-plugin-presence": "1.0.8"
+    "@dxos/protocol-plugin-presence": "workspace:*"
   },
   "peerDependencies": {
     "@dxos/react-ux": "*"

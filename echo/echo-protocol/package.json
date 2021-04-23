@@ -23,11 +23,11 @@
   },
   "dependencies": {
     "@dxos/async": "~1.0.2-alpha.0",
-    "@dxos/codec-protobuf": "*",
-    "@dxos/credentials": "*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "~1.0.7",
     "@dxos/feed-store": "~1.2.0-beta.30",
-    "@dxos/util": "*",
+    "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/lodash": "^4.14.159",
@@ -44,7 +44,7 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "*",
+    "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
     "faker": "^5.1.0",
     "stream-buffers": "^3.0.2",
