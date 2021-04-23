@@ -25,6 +25,7 @@
     "@dxos/protocol-plugin-replicator": "~1.0.8",
     "@dxos/registry-client": "~1.1.1",
     "@dxos/util": "*",
+    "@dxos/echo-protocol": "^2.6.17",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
@@ -50,7 +51,8 @@
     "pumpify": "^2.0.1",
     "queue-microtask": "^1.1.2",
     "through2": "^3.0.1",
-    "wrtc": "^0.4.6"
+    "wrtc": "^0.4.6",
+    "@wirelineio/registry-client": "~1.1.0-beta.3"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "*",
@@ -61,6 +63,7 @@
     "random-access-memory": "~3.1.2",
     "wait-for-expect": "^3.0.2",
     "abstract-leveldown": "~7.0.0",
+    "@types/level-js": "~4.0.1"
   },
   "files": [
     "dist",

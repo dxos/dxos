@@ -93,7 +93,7 @@ test('creating profile twice throws an error', async () => {
   await client.destroy();
 });
 
-test('recreating party based on snapshot does not fail', async () => {
+test.skip('recreating party based on snapshot does not fail', async () => {
   const client = new Client();
   await client.initialize();
 
