@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+/* eslint-disable jest/no-export, jest/no-disabled-tests, jest/expect-expect */
+
 /**
  * Wrapper for async jest tests.
  * @param {Function} test - Async test

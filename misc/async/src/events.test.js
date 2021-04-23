@@ -8,18 +8,24 @@ import EventEmitter from 'events';
 
 import { promiseTimeout } from './async';
 import { onEvent, waitForEvent } from './events';
+import { latch } from './latch';
 import { expectToThrow } from './testing';
 
-test('onEvent', done => {
+test('onEvent', async () => {
   const emitter = new EventEmitter();
+
+  const [promise, resolve] = latch();
+
   const off = onEvent(emitter, 'test', () => {
     off();
 
     expect(emitter.listenerCount('test')).toBe(0);
-    done();
+    resolve();
   });
 
   emitter.emit('test');
+
+  await promise;
 });
 
 test('waitForEvent', async () => {

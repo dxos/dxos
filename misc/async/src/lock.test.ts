@@ -33,6 +33,7 @@ describe('Lock', () => {
     const events = [];
     const lock = new Lock();
 
+    // eslint-disable-next-line jest/valid-expect-in-promise
     const p1 = lock.executeSynchronized(async () => {
       events.push('lock1');
       await sleep(10);
@@ -41,6 +42,7 @@ describe('Lock', () => {
       events.push('p1 resolve');
     });
 
+    // eslint-disable-next-line jest/valid-expect-in-promise
     const p2 = lock.executeSynchronized(async () => {
       events.push('lock3');
     }).then(() => {
