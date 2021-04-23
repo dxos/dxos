@@ -23,16 +23,16 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
-    "@dxos/codec-protobuf": "*",
-    "@dxos/echo-db": "*",
-    "@dxos/model-factory": "*",
-    "@dxos/echo-protocol": "^2.6.17",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/model-factory": "workspace:*",
+    "@dxos/echo-protocol": "workspace:^2.6.17",
     "@types/node": "^14.0.9",
     "yjs": "^13.4.1",
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "*",
+    "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7"
   },
   "publishConfig": {

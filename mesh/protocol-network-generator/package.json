@@ -28,8 +28,8 @@
     "pump": "^3.0.0"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "*",
-    "@dxos/protocol": "*",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocol": "workspace:*",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@dxos/eslint-plugin": "~1.0.10",
-    "@dxos/protobuf-compiler": "*",
+    "@dxos/protobuf-compiler": "workspace:*",
     "jest": "^26.2.2",
     "ts-jest": "^26.1.4",
     "typescript": "^4.0.2",
