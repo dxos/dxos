@@ -15,10 +15,10 @@
     "test": "jest --rootDir ./src --verbose --passWithNoTests --runInBand"
   },
   "dependencies": {
-    "@dxos/async": "~1.0.2-alpha.0",
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "~1.0.7",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "~1.0.0-beta.73",
     "@dxos/echo-db": "workspace:*",
     "@dxos/metrics": "~1.0.0-beta.9",
