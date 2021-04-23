@@ -1,0 +1,59 @@
+{
+  "name": "@dxos/react-ux",
+  "version": "2.9.0",
+  "description": "React components",
+  "keywords": [],
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "build": "tsc && pnpm run lint && pnpm run test 2>&1 && true",
+    "build:watch": "tsc --watch",
+    "lint": "eslint '{src,tests}/**/*.{ts,js,tsx,jsx}'",
+    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
+    "test": "jest --rootDir ./tests --verbose --runInBand"
+  },
+  "dependencies": {
+    "@dxos/crypto": "~1.0.7",
+    "@dxos/debug": "~1.0.0-beta.73",
+    "@material-ui/core": "^4.9.10",
+    "@material-ui/styles": "^4.9.10",
+    "@material-ui/icons": "^4.9.1",
+    "@material-ui/lab": "^4.0.0-alpha.55",
+    "@material-ui/utils": "4.11.2",
+    "clsx": "^1.1.0",
+    "lodash.isplainobject": "^4.0.6",
+    "@types/react": "^17.0.0",
+    "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "webpack": "4.44.2",
+    "@babel/core": "~7.13.15",
+    "@dxos/eslint-plugin": "~1.0.10",
+    "@storybook/addon-actions": "^6.0.19",
+    "@storybook/addon-knobs": "^6.0.21",
+    "@storybook/react": "^6.0.21",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.0.4",
+    "@types/jest": "^26.0.7",
+    "eslint": "^7.7.0",
+    "jest": "^26.2.2",
+    "react": "16.13.1",
+    "react-dom": "16.12.0",
+    "ts-jest": "^26.1.4",
+    "typescript": "^4.0.2"
+  },
+  "peerDependencies": {
+    "react": "*"
+  },
+  "eslintConfig": {
+    "extends": "plugin:@dxos/react",
+    "rules": {
+      "react/prop-types": "off",
+      "react/display-name": "off"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
