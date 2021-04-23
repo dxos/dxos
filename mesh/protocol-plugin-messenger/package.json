@@ -23,14 +23,14 @@
   },
   "dependencies": {
     "@dxos/broadcast": "~1.0.0-beta.11",
-    "@dxos/codec-protobuf": "*",
-    "@dxos/protocol": "*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/protocol": "workspace:*",
     "debug": "^4.1.1",
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "*",
-    "@dxos/protocol-network-generator": "*",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protocol-network-generator": "workspace:*",
     "coveralls": "^3.0.7",
     "cpy-cli": "^2.0.0",
     "del-cli": "^3.0.0",

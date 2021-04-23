@@ -23,7 +23,7 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
-    "@dxos/codec-protobuf": "*",
+    "@dxos/codec-protobuf": "workspace:*",
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.1.1",
@@ -37,7 +37,7 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "*",
+    "@dxos/toolchain-node-library": "workspace:*",
     "pump": "^3.0.0",
     "wait-for-expect": "^3.0.2"
   },

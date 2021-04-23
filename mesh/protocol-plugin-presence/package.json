@@ -23,8 +23,8 @@
   },
   "dependencies": {
     "@dxos/broadcast": "~1.0.0-beta.11",
-    "@dxos/codec-protobuf": "*",
-    "@dxos/protocol": "*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/protocol": "workspace:*",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.1.1",
     "ngraph.graph": "^19.0.1",
@@ -32,9 +32,9 @@
     "queue-microtask": "^1.1.2"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "*",
-    "@dxos/protobuf-compiler": "*",
-    "@dxos/protocol-network-generator": "*",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/protobuf-compiler": "workspace:*",
+    "@dxos/protocol-network-generator": "workspace:*",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

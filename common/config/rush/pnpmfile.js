@@ -29,8 +29,12 @@ module.exports = {
 function readPackage(packageJson, context) {
 
   if (packageJson.name === 'wrtc') {
+    // The package got renamed
     delete packageJson.dependencies['node-pre-gyp']
-    packageJson.dependencies['@mapbox/node-pre-gyp'] = "1.0.3"
+    packageJson.dependencies['@mapbox/node-pre-gyp'] = '1.0.3'
+  } else if(packageJson.name === 'ts-essentials') {
+    // This peer dependency is not required at runtime
+    delete packageJson.peerDependencies['typescript']
   }
 
   return packageJson;
