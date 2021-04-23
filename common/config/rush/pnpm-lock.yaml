@@ -52,6 +52,7 @@ dependencies:
   '@types/jest': 26.0.22
   '@types/jest-expect-message': 1.0.3
   '@types/json-stable-stringify': 1.0.32
+  '@types/level-js': 4.0.1
   '@types/levelup': 4.3.1
   '@types/lodash': 4.14.168
   '@types/lodash.defaultsdeep': 4.6.6
@@ -71,6 +72,7 @@ dependencies:
   '@types/ws': 7.4.1
   '@types/yargs': 16.0.1
   '@wirelineio/discovery-swarm-memory': 0.2.17
+  '@wirelineio/registry-client': 1.1.0-beta.3
   abstract-leveldown: 7.0.0
   argparse: 2.0.1
   assert: 2.0.0
@@ -4053,6 +4055,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-SWYkVJylo1dqblkhrr7UtmsQh4wdZA9bV1y3QJSywMPSqGfW0p1w37N1EayZtKbg1dGReIIQEEOtxk4wZvGrWQ==
+  /@types/level-js/4.0.1:
+    dependencies:
+      '@types/abstract-leveldown': 5.0.1
+    dev: false
+    resolution:
+      integrity: sha512-WA8Zt0RUYVWT1lhyHnT0okmMY1m5MjxC8PvpUn9ojZaU+KNsTy3A2KBHaKtjttCN+o1h7K/eQlSjM20bDraeHA==
   /@types/levelup/4.3.1:
     dependencies:
       '@types/abstract-leveldown': 5.0.1
@@ -4677,6 +4685,32 @@ packages:
     dev: false
     resolution:
       integrity: sha512-lTfeMuA0NsPFkm2/1j4lIEi4oNSWzYQI3/I1+Z9WrWYfZLcpBh8oAzBI93XjpiacAK1/cP61jC34hKbDXIWc1w==
+  /@wirelineio/registry-client/1.1.0-beta.3:
+    dependencies:
+      '@babel/runtime': 7.13.10
+      '@graphql-tools/schema': 6.2.4_graphql@15.5.0
+      '@wirelineio/wns-schema': 0.3.2
+      bech32: 1.1.4
+      bip32: 2.0.6
+      bip39: 2.6.0
+      canonical-json: 0.0.4
+      cids: 0.7.5
+      debug: 4.3.1
+      graphql: 15.5.0
+      graphql.js: 0.6.7
+      hdkey: 1.1.2
+      is-url: 1.2.4
+      js-sha256: 0.9.0
+      jsonschema: 1.4.0
+      lodash.get: 4.4.2
+      lodash.isequal: 4.5.0
+      lodash.set: 4.3.2
+      multihashing-async: 0.8.2
+      ripemd160: 2.0.2
+      secp256k1: 3.8.0
+    dev: false
+    resolution:
+      integrity: sha512-TEXw/RJUJlVMDih/+I4ogILRdAr/XqcOb6+4Y/pCBrUf/BvifG4Spl0JGof+iQmJih4HcM/G/VXz1QF4pTvcPw==
   /@wirelineio/wns-schema/0.3.2:
     dev: false
     resolution:
@@ -17949,8 +17983,10 @@ packages:
       '@dxos/registry-client': 1.1.2
       '@geut/discovery-swarm-webrtc': 4.2.2
       '@types/jest': 26.0.22
+      '@types/level-js': 4.0.1
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/memdown': 3.0.0
+      '@wirelineio/registry-client': 1.1.0-beta.3
       abstract-leveldown: 7.0.0
       assert: 2.0.0
       buffer-json-encoding: 1.0.2
@@ -17982,7 +18018,7 @@ packages:
     dev: false
     name: '@rush-temp/client'
     resolution:
-      integrity: sha512-cUCap7+suqmkFfvC6S4InCwaxrB73gWzZJs0uVo2TvrCKPjOY5Pf2YZ1IZQwc54PiaQZHRVyjfHsfbwJSIseHg==
+      integrity: sha512-6vsFWL4amEPC3uRKx7PKW7QrSanaMQ58/qT6NUGb14CexcMlNHyTm1lHYDVmVlHYXMr9t99a3GjJRTH+eanKMg==
       tarball: 'file:projects/client.tgz'
     version: 0.0.0
   'file:projects/codec-protobuf.tgz':
@@ -18542,6 +18578,7 @@ packages:
     peerDependencies:
       abstract-leveldown: '*'
     resolution:
+      registry: 'https://registry.npmjs.org/'
       tarball: 'https://codeload.github.com/dxos/jsondown/tar.gz/0bec0436f00973e7f2528115c72a5ab96dc45576'
     version: 1.0.0
 registry: ''
@@ -18599,6 +18636,7 @@ specifiers:
   '@types/jest': ^26.0.7
   '@types/jest-expect-message': ^1.0.3
   '@types/json-stable-stringify': ^1.0.32
+  '@types/level-js': ~4.0.1
   '@types/levelup': ^4.3.0
   '@types/lodash': ^4.14.159
   '@types/lodash.defaultsdeep': ^4.6.6
@@ -18618,6 +18656,7 @@ specifiers:
   '@types/ws': ^7.4.0
   '@types/yargs': ~16.0.1
   '@wirelineio/discovery-swarm-memory': ^0.2.17
+  '@wirelineio/registry-client': ~1.1.0-beta.3
   abstract-leveldown: ~7.0.0
   argparse: ^2.0.1
   assert: ^2.0.0
