@@ -29,7 +29,10 @@
     "react-display-name": "^0.2.5",
     "react-router-dom": "^5.1.2",
     "use-deep-compare-effect": "^1.3.0",
-    "@material-ui/core": "^4.9.10"
+    "@material-ui/core": "^4.9.10",
+    "@dxos/object-model": "workspace:^2.6.17",
+    "debug": "^4.1.1",
+    "@types/debug": "^4.1.1"
   },
   "devDependencies": {
     "webpack": "4.44.2",
@@ -46,7 +49,7 @@
     "@storybook/addon-actions": "^6.0.19",
     "@storybook/addon-knobs": "^6.0.21",
     "@storybook/react": "^6.0.21",
-    "@testing-library/react-hooks": "^3.4.2",
+    "@testing-library/react-hooks": "5.1.2",
     "@types/jest": "^26.0.7",
     "@types/level-js": "~4.0.1",
     "babel-eslint": "^10.1.0",
@@ -57,12 +60,14 @@
     "eslint-plugin-react": "^7.22.0",
     "jest": "^26.2.2",
     "level-js": "^5.0.2",
-    "react": "16.13.0",
+    "react": "16.13.1",
     "react-docgen-typescript-loader": "^3.7.2",
     "react-dom": "16.12.0",
     "react-test-renderer": "16.12.0",
     "ts-jest": "^26.1.4",
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.2",
+    "@types/react": "^17.0.0",
+    "@testing-library/react": "^11.0.4"
   },
   "peerDependencies": {
     "react": "*"
