@@ -438,6 +438,18 @@
       "projectFolder": "mesh/protocol-plugin-presence"
     },
     {
+      "packageName": "@dxos/protocol-network-generator",
+      "projectFolder": "mesh/protocol-network-generator"
+    },
+    {
+      "packageName": "@dxos/protocol-plugin-messenger",
+      "projectFolder": "mesh/protocol-plugin-messenger"
+    },
+    {
+      "packageName": "@dxos/protocol-plugin-replicator",
+      "projectFolder": "mesh/protocol-plugin-replicator"
+    },
+    {
       "packageName": "@dxos/network-manager",
       "projectFolder": "mesh/network-manager"
     },
