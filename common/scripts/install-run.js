@@ -80,7 +80,8 @@ function _parsePackageSpecifier(rawPackageSpecifier) {
  * IMPORTANT: THIS CODE SHOULD BE KEPT UP TO DATE WITH Utilities.copyAndTrimNpmrcFile()
  */
 function _copyAndTrimNpmrcFile(sourceNpmrcPath, targetNpmrcPath) {
-    console.log(`Copying ${sourceNpmrcPath} --> ${targetNpmrcPath}`); // Verbose
+    console.log(`Transforming ${sourceNpmrcPath}`); // Verbose
+    console.log(`  --> "${targetNpmrcPath}"`);
     let npmrcFileLines = fs.readFileSync(sourceNpmrcPath).toString().split('\n');
     npmrcFileLines = npmrcFileLines.map((line) => (line || '').trim());
     const resultLines = [];
