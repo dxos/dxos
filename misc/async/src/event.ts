@@ -159,7 +159,9 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    */
   async * [Symbol.asyncIterator] (): AsyncIterator<T> {
     while (true) {
-      yield await new Promise(resolve => { this.once(resolve); });
+      yield await new Promise(resolve => {
+        this.once(resolve);
+      });
     }
   }
 

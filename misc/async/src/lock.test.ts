@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Lock, synchronized } from './lock';
 import { sleep } from './async';
+import { Lock, synchronized } from './lock';
 
 describe('Lock', () => {
   test('single execution', async () => {
@@ -37,11 +37,15 @@ describe('Lock', () => {
       events.push('lock1');
       await sleep(10);
       events.push('lock2');
-    }).then(() => { events.push('p1 resolve'); });
+    }).then(() => {
+      events.push('p1 resolve');
+    });
 
     const p2 = lock.executeSynchronized(async () => {
       events.push('lock3');
-    }).then(() => { events.push('p2 resolve'); });
+    }).then(() => {
+      events.push('p2 resolve');
+    });
 
     await p1;
     await p2;
@@ -65,7 +69,9 @@ describe('Lock', () => {
     });
 
     let resolved = false;
-    promise.then(() => { resolved = true; });
+    promise.then(() => {
+      resolved = true;
+    });
 
     await sleep(10);
 
@@ -80,14 +86,22 @@ describe('Lock', () => {
     const p1 = lock.executeSynchronized(async () => {
       throw new Error();
     }).then(
-      () => { p1Status = 'resolved'; },
-      () => { p1Status = 'rejected'; }
+      () => {
+        p1Status = 'resolved';
+      },
+      () => {
+        p1Status = 'rejected';
+      }
     );
 
     const p2 = lock.executeSynchronized(async () => { /* noop */ })
       .then(
-        () => { p2Status = 'resolved'; },
-        () => { p2Status = 'rejected'; }
+        () => {
+          p2Status = 'resolved';
+        },
+        () => {
+          p2Status = 'rejected';
+        }
       );
 
     await p1;

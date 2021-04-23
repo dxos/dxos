@@ -20,7 +20,9 @@
     "hypercore-crypto": "^1.0.0"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*"
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/node": "^14.0.9",
+    "@types/jest": "^26.0.7"
   },
   "publishConfig": {
     "access": "public"

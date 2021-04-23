@@ -4,8 +4,8 @@
 
 // dxos-testing-browser
 
-import { Event } from './event';
 import { sleep } from './async';
+import { Event } from './event';
 
 test('Event.debounce', async () => {
   const event = new Event<boolean>();

@@ -894,8 +894,12 @@ importers:
   ../../misc/async:
     devDependencies:
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@types/jest': 26.0.22
+      '@types/node': 14.14.41
     specifiers:
       '@dxos/toolchain-node-library': workspace:*
+      '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
   ../../misc/crypto:
     dependencies:
       crypto-js: 3.3.0
@@ -903,8 +907,12 @@ importers:
       hypercore-crypto: 1.0.0
     devDependencies:
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@types/jest': 26.0.22
+      '@types/node': 14.14.41
     specifiers:
       '@dxos/toolchain-node-library': workspace:*
+      '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
       crypto-js: ^3.1.9-1
       humanhash: ^1.0.4
       hypercore-crypto: ^1.0.0
