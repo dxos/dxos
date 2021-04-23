@@ -31,10 +31,10 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/async": "~1.0.2-alpha.0",
+    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "~1.0.7",
+    "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:^2.6.17",
     "@dxos/echo-testing": "workspace:^2.6.22",

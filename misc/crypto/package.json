@@ -20,10 +20,7 @@
     "hypercore-crypto": "^1.0.0"
   },
   "devDependencies": {
-    "eslint": "^7.12.1",
-    "jest": "^26.4.0",
-    "ts-jest": "^26.2.0",
-    "typescript": "^4.0.0"
+    "@dxos/toolchain-node-library": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
