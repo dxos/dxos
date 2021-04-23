@@ -23,7 +23,7 @@ jobs:
           node common/scripts/install-run-rush.js change -v
           
           # Install dependencies
-          node common/scripts/install-run-rush.js install --no-link
+          node common/scripts/install-run-rush.js install
           
           # Link dependencies
           node common/scripts/install-run-rush.js link
