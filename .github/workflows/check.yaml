@@ -4,7 +4,7 @@ on:
 name: check
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted]
     timeout-minutes: 15
     strategy:
       matrix:
@@ -15,20 +15,18 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - run: git status
-      - run: git log
-      - run: git branch -v
-      - run: git diff origin/main...HEAD
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      - run: npm install -g pnpm # TODO: rush comes with pnpm so we should make this step not required.
-      - name: Check package versions
-        run: node common/scripts/install-run-rush.js change -v
-      - name: Install dependencies
-        run: node common/scripts/install-run-rush.js install --no-link
-      - name: Link dependencies
-        run: node common/scripts/install-run-rush.js link
-      - name: Build
-        run: node common/scripts/install-run-rush.js rebuild --verbose
+      - name: Check, install and build
+        run: |
+          \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
+          
+          # Check package versions
+          node common/scripts/install-run-rush.js change -v
+          
+          # Install dependencies
+          node common/scripts/install-run-rush.js install --no-link
+          
+          # Link dependencies
+          node common/scripts/install-run-rush.js link
+          
+          # Build
+          node common/scripts/install-run-rush.js rebuild --verbose

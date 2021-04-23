@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/protocol-plugin-presence",
+  "name": "@dxos/protocol-network-generator",
   "version": "1.0.8",
-  "description": "Protocol plugin presence.",
-  "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-presence#readme",
+  "description": "Protocol network generator.",
+  "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-network-generator#readme",
   "bugs": {
     "url": "https://github.com/dxos/protocol/issues"
   },
@@ -22,19 +22,14 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
-    "@dxos/broadcast": "~1.0.0-beta.11",
-    "@dxos/codec-protobuf": "*",
-    "@dxos/protocol": "*",
-    "buffer-json-encoding": "^1.0.2",
+    "@dxos/network-generator": "~1.0.0-beta.3",
     "debug": "^4.1.1",
-    "ngraph.graph": "^19.0.1",
-    "p-limit": "^3.0.2",
-    "queue-microtask": "^1.1.2"
+    "p-event": "^4.2.0",
+    "pump": "^3.0.0"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "*",
-    "@dxos/protobuf-compiler": "*",
-    "@dxos/protocol-network-generator": "*",
+    "@dxos/protocol": "*",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
