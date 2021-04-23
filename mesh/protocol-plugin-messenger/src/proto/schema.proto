@@ -1,0 +1,12 @@
+//
+// Copyright 2019 DxOS.
+//
+
+syntax = "proto3";
+
+package dxos.protocol.messenger;
+
+message Message {
+  string type = 1;
+  bytes payload = 2;
+}

@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/protocol-plugin-presence",
+  "name": "@dxos/protocol-plugin-messenger",
   "version": "1.0.8",
-  "description": "Protocol plugin presence.",
-  "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-presence#readme",
+  "description": "Protocol plugin messenger.",
+  "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-messenger#readme",
   "bugs": {
     "url": "https://github.com/dxos/protocol/issues"
   },
@@ -25,16 +25,16 @@
     "@dxos/broadcast": "~1.0.0-beta.11",
     "@dxos/codec-protobuf": "*",
     "@dxos/protocol": "*",
-    "buffer-json-encoding": "^1.0.2",
     "debug": "^4.1.1",
-    "ngraph.graph": "^19.0.1",
-    "p-limit": "^3.0.2",
-    "queue-microtask": "^1.1.2"
+    "source-map-support": "^0.5.12"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "*",
-    "@dxos/protobuf-compiler": "*",
     "@dxos/protocol-network-generator": "*",
+    "coveralls": "^3.0.7",
+    "cpy-cli": "^2.0.0",
+    "del-cli": "^3.0.0",
+    "jest": "^26.2.2",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
