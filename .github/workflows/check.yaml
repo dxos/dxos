@@ -25,8 +25,5 @@ jobs:
           # Install dependencies
           node common/scripts/install-run-rush.js install
           
-          # Link dependencies
-          node common/scripts/install-run-rush.js link
-          
           # Build
           node common/scripts/install-run-rush.js rebuild --verbose
