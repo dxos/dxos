@@ -19,7 +19,6 @@
     "@dxos/codec-protobuf": "*",
     "@dxos/eslint-plugin": "~1.0.10",
     "@types/argparse": "^2.0.0",
-    "@types/read-pkg": "^5.1.0",
     "eslint": "^7.7.0",
     "jest": "^26.2.2",
     "ts-jest": "^26.1.4",
