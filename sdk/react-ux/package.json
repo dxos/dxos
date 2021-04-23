@@ -43,8 +43,7 @@
     "ts-jest": "^26.1.4"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-dom": "*"
+    "react": "*"
   },
   "eslintConfig": {
     "extends": "plugin:@dxos/react",
