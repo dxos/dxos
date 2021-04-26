@@ -1,20 +1,6 @@
 {
-  "compilerOptions": {
-    "declaration": true,
-    "sourceMap": true,
-    "declarationMap": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "strict": true,
-    "module": "commonjs",
-    "target": "ES2018",
-    "outDir": "dist"
-  },
+  "extends": "../../tsconfig.json",
   "include": [
     "src"
-  ],
-  "exclude": [
-    "node_modules"
   ]
 }

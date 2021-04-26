@@ -1,17 +1,7 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "allowJs": true,
-    "declaration": true,
-    "sourceMap": true,
-    "declarationMap": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "strict": true,
-    "module": "commonjs",
-    "target": "ES2018",
-    "outDir": "dist"
   },
   "include": [
     "src"

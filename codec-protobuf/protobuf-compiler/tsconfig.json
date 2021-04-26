@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "allowJs": true,
     "composite": true,
@@ -7,7 +8,6 @@
     "lib": [
       "ESNext"
     ],
-    "outDir": "dist",
     "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
