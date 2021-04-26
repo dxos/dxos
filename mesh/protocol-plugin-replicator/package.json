@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "@dxos/crypto": "~1.0.7",
+    "@dxos/crypto": "workspace:*",
     "@dxos/feed-store": "~1.2.0-beta.30",
     "@dxos/protocol-network-generator": "workspace:*",
     "coveralls": "^3.0.7",

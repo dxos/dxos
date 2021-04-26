@@ -22,9 +22,9 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
-    "@dxos/async": "~1.0.2-alpha.0",
+    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/crypto": "~1.0.7",
+    "@dxos/crypto": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/lodash": "^4.14.159",
