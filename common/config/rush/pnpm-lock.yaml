@@ -181,6 +181,7 @@ importers:
       '@storybook/addon-links': 6.2.9_react-dom@16.12.0+react@16.13.1
       '@storybook/react': 6.2.9_f0d610380627ebadccaeed89a9ed9d71
       '@types/jest': 26.0.22
+      '@types/level-js': 4.0.1
       '@types/react': 17.0.3
       babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
       babel-plugin-add-module-exports: 1.0.4
@@ -228,6 +229,7 @@ importers:
       '@types/debug': ^4.1.1
       '@types/end-of-stream': ^1.4.0
       '@types/jest': ^26.0.7
+      '@types/level-js': ~4.0.1
       '@types/lodash': ^4.14.159
       '@types/node': ^14.0.9
       '@types/react': ^17.0.0

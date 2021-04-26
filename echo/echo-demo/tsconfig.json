@@ -7,7 +7,9 @@
       "ESNext"
     ],
     "removeComments": false,
-    "outDir": "dist"
+    "outDir": "dist",
+    "noEmit": true,
+    "strict": false
   },
   "include": [
     "src",
