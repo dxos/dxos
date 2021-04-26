@@ -24,3 +24,6 @@ export const anySubstitutions = {
     }
   }
 };
+
+// eslint-disable-next-line camelcase
+export type WithTypeUrl<T extends {}> = T & { __type_url: string };

@@ -7,7 +7,7 @@ import HumanHasher from 'humanhash';
 
 const hasher = new HumanHasher();
 
-export function keyToHuman (key, prefix) {
+export function keyToHuman (key: Buffer, prefix?: string) {
   assert(Buffer.isBuffer(key));
 
   const name = hasher.humanize(key.toString('hex'));

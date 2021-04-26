@@ -7,15 +7,24 @@ import Signal from 'signal-promise';
 import { ERR_PROTOCOL_INIT_INVALID } from './errors';
 import { Extension } from './extension';
 
+export interface ExtensionInitOptions {
+  timeout?: number
+}
+
 export class ExtensionInit extends Extension {
-  constructor (options = {}) {
+  private _timeout?: number;
+  private _remoteInit: boolean | null = null;
+  private _remoteSignal: any;
+  public data: any;
+
+  constructor (options: ExtensionInitOptions = {}) {
     super('dxos.protocol.init', options);
 
     this._timeout = options.timeout;
     this._remoteInit = null;
     this._remoteSignal = new Signal();
 
-    this.setMessageHandler((protocol, message) => {
+    this.setMessageHandler(async (protocol, message) => {
       const { data } = message;
 
       if (data.toString() === 'continue') {
@@ -29,7 +38,7 @@ export class ExtensionInit extends Extension {
       this._remoteSignal.notify();
     });
 
-    this.setCloseHandler(() => {
+    this.setCloseHandler(async () => {
       this._remoteInit = false;
       this._remoteSignal.notify();
     });
