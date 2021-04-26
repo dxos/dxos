@@ -4,11 +4,12 @@
     "jsx": "react",
     "lib": [
       "DOM"
-    ]
+    ],
+    "rootDir": "src",
+    "outDir": "dist"
   },
   "include": [
-    "src",
-    "tests"
+    "src"
   ],
   "references": [
     { "path": "../client" }

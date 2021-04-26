@@ -3,6 +3,10 @@
   "include": [
     "src",
   ],
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
   "references": [
     { "path": "../model-factory" },
     { "path": "../util" }

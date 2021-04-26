@@ -6,7 +6,9 @@
       "DOM",
       "ESNext"
     ],
-    "removeComments": false
+    "removeComments": false,
+    "rootDir": "src",
+    "outDir": "dist"
   },
   "include": [
     "src",

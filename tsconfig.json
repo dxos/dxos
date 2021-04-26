@@ -16,8 +16,7 @@
     "strict": true,
     "target": "ES2018",
     "experimentalDecorators": true,
-    "outDir": "dist",
   },
   "include": [],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }
