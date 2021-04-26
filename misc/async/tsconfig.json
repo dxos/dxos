@@ -11,7 +11,7 @@
     "strict": true,
     "module": "commonjs",
     "target": "ES2018",
-    "outDir": "dist/es"
+    "outDir": "dist"
   },
   "include": [
     "src"
