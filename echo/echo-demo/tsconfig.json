@@ -7,7 +7,6 @@
     ],
     "removeComments": false,
     "outDir": "dist",
-    "noEmit": true,
     "strict": false
   },
   "include": [
