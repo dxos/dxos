@@ -17,7 +17,10 @@ export const ERR_EXTENSION_CLOSE_FAILED = nanoerror('ERR_EXTENSION_CLOSE_FAILED'
 export const ERR_EXTENSION_RESPONSE_TIMEOUT = nanoerror('ERR_EXTENSION_RESPONSE_TIMEOUT', '%s');
 
 export class ERR_EXTENSION_RESPONSE_FAILED extends nanoerror('ERR_EXTENSION_RESPONSE_FAILED', '[responseCode: %s] [message: %s]') {
-  constructor (responseCode, message) {
+  public _responseCode: string;
+  public _responseMessage: string;
+
+  constructor (responseCode: string, message: string) {
     super(responseCode, message);
 
     this._responseCode = responseCode;
