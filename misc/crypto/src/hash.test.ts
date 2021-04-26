@@ -1,7 +1,3 @@
-//
-// Copyright 2020 DxOS.
-//
-
 // dxos-testing-browser
 
 //
