@@ -761,11 +761,15 @@ importers:
       source-map-support: 0.5.19
     devDependencies:
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@types/assert': 1.5.4
+      '@types/node': 14.14.41
       pump: 3.0.0
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/assert': ^1.5.4
+      '@types/node': ^14.0.9
       assert: ^2.0.0
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1

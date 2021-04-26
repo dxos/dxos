@@ -39,7 +39,9 @@
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
     "pump": "^3.0.0",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "@types/assert": "^1.5.4",
+    "@types/node": "^14.0.9"
   },
   "publishConfig": {
     "access": "public"
