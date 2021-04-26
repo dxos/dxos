@@ -346,7 +346,7 @@ export class Extension extends Nanomessage {
       message = Buffer.from(message);
     }
 
-    assert(Buffer.isBuffer(message));
+    assert(message == null || Buffer.isBuffer(message));
     return { __type_url: 'dxos.protocol.Buffer', data: message };
   }
 }
