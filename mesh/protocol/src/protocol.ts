@@ -6,7 +6,7 @@ import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
 import eos from 'end-of-stream';
-import protocol, { Stream } from 'hypercore-protocol';
+import protocol from 'hypercore-protocol';
 import { NanoresourcePromise } from 'nanoresource-promise/emitter';
 
 import type { Codec } from '@dxos/codec-protobuf';
@@ -56,21 +56,21 @@ export interface ProtocolOptions {
  * Wraps a hypercore-protocol object.
  */
 export class Protocol extends NanoresourcePromise {
-	public _discoveryToPublicKey: any;
-	public _streamOptions: any;
-	public _initTimeout: any;
-	public _extensionInit: any;
-	public _init: any;
-	public _connected: any;
-	public _handshakes: any;
-	public emit: any;
-	public on: any;
-	public _initiator: any;
-	public _discoveryKey: any;
-	public open: any;
-	public close: any;
-	public discoveryToPublicKey: any;
-	public initTimeout: any;
+  public _discoveryToPublicKey: any;
+  public _streamOptions: any;
+  public _initTimeout: any;
+  public _extensionInit: any;
+  public _init: any;
+  public _connected: any;
+  public _handshakes: any;
+  public emit: any;
+  public on: any;
+  public _initiator: any;
+  public _discoveryKey: any;
+  public open: any;
+  public close: any;
+  public discoveryToPublicKey: any;
+  public initTimeout: any;
 
   /**
    * Protocol extensions.

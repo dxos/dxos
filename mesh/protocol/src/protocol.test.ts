@@ -79,8 +79,8 @@ test('basic', async () => {
       }))
     .init(topic);
 
-  // protocol1.on('error', err => console.log('protocol1', err));
-  // protocol2.on('error', err => console.log('protocol2', err));
+  protocol1.on('error', (err: any) => console.log('protocol1', err));
+  protocol2.on('error', (err: any) => console.log('protocol2', err));
 
   protocol1.setHandshakeHandler(async (protocol) => {
     expect(onInit).toHaveBeenCalledTimes(2);

@@ -7,7 +7,7 @@ import debug from 'debug';
 import eos from 'end-of-stream';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 
-import { Schema, anySubstitutions } from '@dxos/codec-protobuf';
+import { Schema, anySubstitutions, WithTypeUrl } from '@dxos/codec-protobuf';
 
 import {
   ERR_PROTOCOL_STREAM_CLOSED,
@@ -52,19 +52,19 @@ export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<
  * Events: "send", "receive", "error"
  */
 export class Extension extends Nanomessage {
-	public _name: any;
-	public codec: any;
-	public on: any;
-	public open: any;
-	public request: any;
-	public close: any;
-	public emit: any;
-	public userSchema: any;
-	public nmOptions: any;
+  public _name: any;
+  public codec: any;
+  public on: any;
+  public open: any;
+  public request: any;
+  public close: any;
+  public emit: any;
+  public userSchema: any;
+  public nmOptions: any;
 
   private _protocol: Protocol | null = null;
 
-	private _initHandler: InitHandler | null = null;
+  private _initHandler: InitHandler | null = null;
 
   /**
    * Handshake handler.
@@ -274,8 +274,7 @@ export class Extension extends Nanomessage {
   }
 
   // Nanomesssage interface
-
-  async _open () {
+  private async _open () {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -289,7 +288,7 @@ export class Extension extends Nanomessage {
     await super._open();
   }
 
-  async _close () {
+  private async _close () {
     try {
       await super._close();
       if (this._closeHandler) {
@@ -301,7 +300,7 @@ export class Extension extends Nanomessage {
     }
   }
 
-  _subscribe (next: (msg: any) => Promise<void>) {
+  private _subscribe (next: (msg: any) => Promise<void>) {
     this.on('extension-message', async (message: any) => {
       try {
         await next(message);
@@ -311,7 +310,7 @@ export class Extension extends Nanomessage {
     });
   }
 
-  _send (chunk: Buffer) {
+  private _send (chunk: Buffer) {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       return;
@@ -338,7 +337,7 @@ export class Extension extends Nanomessage {
     }
   }
 
-  _buildMessage (message: Buffer | Record<string, any>): proto.Buffer & { __type_url: string } {
+  private _buildMessage (message: Buffer | Record<string, any>): WithTypeUrl<proto.Buffer> {
     if (!Buffer.isBuffer(message) && typeof message === 'object' && message.__type_url) {
       return message as any;
     }
