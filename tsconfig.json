@@ -2,6 +2,7 @@
   "compilerOptions": {
     "allowJs": true,
     "composite": true,
+    "incremental": true,
     "declarationMap": true,
     "esModuleInterop": true,
     "lib": [
@@ -15,7 +16,7 @@
     "strict": true,
     "target": "ES2018",
     "experimentalDecorators": true,
-    "outDir": "dist"
+    "outDir": "dist",
   },
   "include": [],
   "exclude": ["node_modules"]
