@@ -4,7 +4,6 @@
     "src",
   ],
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "dist"
   },
   "references": [

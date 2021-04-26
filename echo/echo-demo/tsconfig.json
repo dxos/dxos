@@ -7,7 +7,6 @@
       "ESNext"
     ],
     "removeComments": false,
-    "rootDir": "src",
     "outDir": "dist"
   },
   "include": [

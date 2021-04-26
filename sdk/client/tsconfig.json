@@ -4,7 +4,6 @@
     "lib": [
       "DOM"
     ],
-    "rootDir": "src",
     "outDir": "dist"
   },
   "include": [
