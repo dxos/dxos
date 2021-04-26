@@ -13,15 +13,9 @@
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
-    "build": "tsc && pnpm run lint && pnpm run test 2>&1 && true",
-    "build-storybook": "build-storybook",
-    "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
-    "coverage": "jest --coverage --verbose  --rootDir=./src --passWithNoTests",
-    "lint": "eslint --format codeframe './{src,test}/**/*.ts'",
-    "test": "jest --rootDir=./src --verbose --passWithNoTests",
-    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
-    "prepublishOnly": "npm run test && npm run build",
-    "watch": "babel-watch src --out-dir ./dist --source-maps"
+    "build": "toolchain build",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
   },
   "browserslist": [
     "> 5%"
@@ -67,6 +61,7 @@
     "immutability-helper": "^3.0.2"
   },
   "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@dxos/debug": "~1.0.0-beta.73",
     "@dxos/eslint-plugin": "~1.0.10",
