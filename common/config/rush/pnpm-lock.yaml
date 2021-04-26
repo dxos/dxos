@@ -564,6 +564,7 @@ importers:
       '@dxos/node-library-rig': link:../../rigs/node-library
       '@dxos/protobuf-compiler': link:../../codec-protobuf/protobuf-compiler
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
+      '@dxos/toolchain-node-library': link:../../toolchains/node-library
       '@rushstack/heft': 0.28.5
       '@types/encoding-down': 5.0.0
       '@types/heft-jest': 1.0.2
@@ -591,6 +592,7 @@ importers:
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:~1.0.8
+      '@dxos/toolchain-node-library': workspace:*
       '@rushstack/heft': ~0.28.1
       '@types/debug': ^4.1.1
       '@types/encoding-down': ^5.0.0
@@ -1168,6 +1170,7 @@ importers:
       '@testing-library/jest-dom': 5.12.0
       '@testing-library/react': 11.2.6_react-dom@16.12.0+react@16.13.1
       '@types/jest': 26.0.22
+      '@types/node': 14.14.41
       eslint: 7.24.0
       jest: 26.6.3
       react: 16.13.1
@@ -1191,6 +1194,7 @@ importers:
       '@testing-library/jest-dom': ^5.11.4
       '@testing-library/react': ^11.0.4
       '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
       '@types/react': ^17.0.0
       clsx: ^1.1.0
       eslint: ^7.7.0

@@ -3,7 +3,8 @@
   "compilerOptions": {
     "jsx": "react",
     "lib": [
-      "DOM"
+      "DOM",
+      "ES6"
     ],
     "outDir": "dist"
   },
