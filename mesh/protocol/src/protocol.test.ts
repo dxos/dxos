@@ -15,7 +15,7 @@ debug.enable('test,protocol');
 
 jest.setTimeout(10 * 1000);
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 test('basic', async () => {
   expect.assertions(9);
@@ -23,7 +23,7 @@ test('basic', async () => {
   const bufferExtension = 'buffer';
   const timeout = 1000;
 
-  const waitOneWayMessage = {};
+  const waitOneWayMessage: any = {};
   waitOneWayMessage.promise = new Promise((resolve) => {
     waitOneWayMessage.resolve = resolve;
   });
@@ -35,7 +35,7 @@ test('basic', async () => {
     .setSession({ user: 'user1' })
     .setExtension(
       new Extension(bufferExtension, { timeout })
-        .setInitHandler(() => {
+        .setInitHandler(async () => {
           onInit();
         })
     )
@@ -43,7 +43,7 @@ test('basic', async () => {
 
   const protocol2 = new Protocol()
     .setSession({ user: 'user2' })
-    .setHandshakeHandler(() => {
+    .setHandshakeHandler(async () => {
       expect(onInit).toHaveBeenCalledTimes(2);
     })
     .setExtension(new Extension(bufferExtension, { timeout })
@@ -85,9 +85,9 @@ test('basic', async () => {
   protocol1.setHandshakeHandler(async (protocol) => {
     expect(onInit).toHaveBeenCalledTimes(2);
 
-    const bufferMessages = protocol.getExtension(bufferExtension);
+    const bufferMessages = protocol.getExtension(bufferExtension)!;
 
-    bufferMessages.on('error', (err) => {
+    bufferMessages.on('error', (err: any) => {
       log('Error: %o', err);
     });
 
@@ -127,7 +127,7 @@ test('basic', async () => {
     protocol1.stream.destroy();
   });
 
-  return new Promise(resolve => pump(protocol1.stream, protocol2.stream, protocol1.stream, () => {
+  return new Promise<void>(resolve => pump(protocol1.stream, protocol2.stream, protocol1.stream, () => {
     resolve();
   }));
 });
@@ -137,7 +137,7 @@ test('protocol init error', async () => {
 
   const bufferExtension = 'buffer';
 
-  const waitOneWayMessage = {};
+  const waitOneWayMessage: any = {};
   waitOneWayMessage.promise = new Promise((resolve) => {
     waitOneWayMessage.resolve = resolve;
   });
@@ -145,9 +145,9 @@ test('protocol init error', async () => {
   const topic = crypto.randomBytes(32);
   const onHandshake = jest.fn();
 
-  const protocol = (name, error) => new Protocol()
+  const protocol = (name: string, error?: any) => new Protocol()
     .setContext({ name })
-    .setHandshakeHandler(() => {
+    .setHandshakeHandler(async () => {
       onHandshake();
     })
     .setExtension(
@@ -164,7 +164,7 @@ test('protocol init error', async () => {
   const protocol1 = protocol('protocol1');
   const protocol2 = protocol('protocol2', new Error('big error'));
 
-  return new Promise(resolve => pump(protocol1.stream, protocol2.stream, protocol1.stream, () => {
+  return new Promise<void>(resolve => pump(protocol1.stream, protocol2.stream, protocol1.stream, () => {
     expect(onHandshake).not.toHaveBeenCalled();
     resolve();
   }));

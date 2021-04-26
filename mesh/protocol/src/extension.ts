@@ -18,6 +18,8 @@ import {
   ERR_EXTENSION_RESPONSE_FAILED,
   ERR_EXTENSION_RESPONSE_TIMEOUT
 } from './errors';
+import * as proto from './proto/gen/dxos/protocol';
+import { Protocol } from './protocol';
 import schema from './schema.json';
 import { keyToHuman } from './utils';
 
@@ -25,52 +27,75 @@ const { NMSG_ERR_TIMEOUT } = nanomessageErrors;
 
 const log = debug('dxos:protocol:extension');
 
+export interface ExtensionOptions {
+  /**
+   * Protobuf schema json.
+   */
+  schema?: Record<string, any>
+
+  [key: string]: any;
+}
+
+export type InitHandler = (protocol: Protocol) => Promise<void>;
+
+export type HandshakeHandler = (protocol: Protocol) => Promise<void>;
+
+export type CloseHandler = (protocol: Protocol) => Promise<void>
+
+export type MessageHandler = (protocol: Protocol, message: any) => Promise<any>
+
+export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<void>
+
 /**
  * Reliable message passing via using Dat protocol extensions.
  *
  * Events: "send", "receive", "error"
  */
 export class Extension extends Nanomessage {
-  /**
-   * @type {Protocol}
-   */
-  _protocol = null;
+	public _name: any;
+	public codec: any;
+	public on: any;
+	public open: any;
+	public request: any;
+	public close: any;
+	public emit: any;
+	public userSchema: any;
+	public nmOptions: any;
+
+  private _protocol: Protocol | null = null;
+
+	private _initHandler: InitHandler | null = null;
 
   /**
    * Handshake handler.
-   * @type {Function<{protocol}>}
    */
-  _handshakeHandler = null;
+  private _handshakeHandler: HandshakeHandler | null = null;
 
   /**
    * Close handler.
-   * @type {Function<{protocol}>}
    */
-  _closeHandler = null;
+  private _closeHandler: CloseHandler | null = null;
 
   /**
    * Message handler.
    * @type {Function<{protocol, message}>}
    */
-  _messageHandler = null;
+  private _messageHandler: MessageHandler | null = null;
 
   /**
    * Feed handler.
-   * @type {Function<{protocol, discoveryKey}>}
    */
-  _feedHandler = null;
+  private _feedHandler: FeedHandler | null = null;
 
   /**
    * @param {string} name
    * @param {Object} options
    * @param {Number} options.timeout
    */
-  constructor (name, options = {}) {
-    assert(typeof name === 'string' && name.length > 0, 'name is required.');
-
-    const { schema: userSchema, ...nmOptions } = options;
-
+  constructor (name: string, { schema: userSchema, ...nmOptions }: ExtensionOptions = {}) {
     super(nmOptions);
+
+    assert(typeof name === 'string' && name.length > 0, 'name is required.');
 
     this._name = name;
 
@@ -83,14 +108,14 @@ export class Extension extends Nanomessage {
 
     this.codec.encode.bind(this.codec);
     this.codec.decode.bind(this.codec);
-    this.on('error', err => log(err));
+    this.on('error', (err: any) => log(err));
   }
 
   get name () {
     return this._name;
   }
 
-  setInitHandler (initHandler) {
+  setInitHandler (initHandler: InitHandler) {
     this._initHandler = initHandler;
     return this;
   }
@@ -100,7 +125,7 @@ export class Extension extends Nanomessage {
    * @param {Function<{protocol}>} handshakeHandler - Async handshake handler.
    * @returns {Extension}
    */
-  setHandshakeHandler (handshakeHandler) {
+  setHandshakeHandler (handshakeHandler: HandshakeHandler) {
     this._handshakeHandler = handshakeHandler;
 
     return this;
@@ -111,7 +136,7 @@ export class Extension extends Nanomessage {
    * @param {Function<{protocol}>} closeHandler - Close handler.
    * @returns {Extension}
    */
-  setCloseHandler (closeHandler) {
+  setCloseHandler (closeHandler: CloseHandler) {
     this._closeHandler = closeHandler;
 
     return this;
@@ -122,7 +147,7 @@ export class Extension extends Nanomessage {
    * @param {Function<{protocol, message}>} messageHandler - Async message handler.
    * @returns {Extension}
    */
-  setMessageHandler (messageHandler) {
+  setMessageHandler (messageHandler: MessageHandler) {
     this._messageHandler = messageHandler;
 
     return this;
@@ -133,7 +158,7 @@ export class Extension extends Nanomessage {
    * @param {Function<{protocol, discoveryKey}>} feedHandler - Async feed handler.
    * @returns {Extension}
    */
-  setFeedHandler (feedHandler) {
+  setFeedHandler (feedHandler: FeedHandler) {
     this._feedHandler = feedHandler;
 
     return this;
@@ -144,7 +169,7 @@ export class Extension extends Nanomessage {
    *
    * @param {Protocol} protocol
    */
-  async openWithProtocol (protocol) {
+  async openWithProtocol (protocol: Protocol) {
     assert(!this._protocol);
     log(`init[${this._name}]: ${keyToHuman(protocol.id)}`);
 
@@ -156,6 +181,8 @@ export class Extension extends Nanomessage {
   async onInit () {
     try {
       await this.open();
+
+      assert(this._protocol);
       if (this._protocol.stream.destroyed) {
         throw new ERR_PROTOCOL_STREAM_CLOSED();
       }
@@ -174,6 +201,7 @@ export class Extension extends Nanomessage {
   async onHandshake () {
     try {
       await this.open();
+      assert(this._protocol);
       if (this._protocol.stream.destroyed) {
         throw new ERR_PROTOCOL_STREAM_CLOSED();
       }
@@ -191,9 +219,10 @@ export class Extension extends Nanomessage {
    *
    * @param {Buffer} discoveryKey
    */
-  async onFeed (discoveryKey) {
+  async onFeed (discoveryKey: Buffer) {
     try {
       await this.open();
+      assert(this._protocol);
       if (this._protocol.stream.destroyed) {
         throw new ERR_PROTOCOL_STREAM_CLOSED();
       }
@@ -213,7 +242,8 @@ export class Extension extends Nanomessage {
    * @param {Boolean} options.oneway
    * @returns {Promise<Object>} Response from peer.
    */
-  async send (message, options = {}) {
+  async send (message: Buffer | Record<string, any>, options: { oneway?: boolean } = {}) {
+    assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
     }
@@ -246,10 +276,12 @@ export class Extension extends Nanomessage {
   // Nanomesssage interface
 
   async _open () {
+    assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
     }
 
+    assert(this._protocol);
     eos(this._protocol.stream, () => {
       this.close();
     });
@@ -261,6 +293,7 @@ export class Extension extends Nanomessage {
     try {
       await super._close();
       if (this._closeHandler) {
+        assert(this._protocol);
         await this._closeHandler(this._protocol);
       }
     } catch (err) {
@@ -268,8 +301,8 @@ export class Extension extends Nanomessage {
     }
   }
 
-  _subscribe (next) {
-    this.on('extension-message', async message => {
+  _subscribe (next: (msg: any) => Promise<void>) {
+    this.on('extension-message', async (message: any) => {
       try {
         await next(message);
       } catch (err) {
@@ -278,17 +311,19 @@ export class Extension extends Nanomessage {
     });
   }
 
-  _send (chunk) {
+  _send (chunk: Buffer) {
+    assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       return;
     }
     this._protocol.feed.extension(this._name, chunk);
   }
 
-  async _onMessage (msg) {
+  async _onMessage (msg: any) {
     try {
       await this.open();
       if (this._messageHandler) {
+        assert(this._protocol);
         const result = await this._messageHandler(this._protocol, msg);
         return this._buildMessage(result);
       }
@@ -303,15 +338,16 @@ export class Extension extends Nanomessage {
     }
   }
 
-  _buildMessage (message) {
+  _buildMessage (message: Buffer | Record<string, any>): proto.Buffer & { __type_url: string } {
     if (!Buffer.isBuffer(message) && typeof message === 'object' && message.__type_url) {
-      return message;
+      return message as any;
     }
 
     if (typeof message === 'string') {
       message = Buffer.from(message);
     }
 
+    assert(Buffer.isBuffer(message));
     return { __type_url: 'dxos.protocol.Buffer', data: message };
   }
 }
