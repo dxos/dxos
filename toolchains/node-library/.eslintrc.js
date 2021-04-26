@@ -1,5 +1,5 @@
 module.exports = {
-  extends: 'plugin:@dxos/recomended',
+  extends: 'plugin:@dxos/react',
   rules: { // TODO(marik-d): Move them to DXOS eslint config
     'import/export': 'off',
     '@typescript-eslint/no-namespace': 'off',

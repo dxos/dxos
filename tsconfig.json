@@ -8,6 +8,7 @@
     "lib": [
       "ESNext"
     ],
+    "jsx": "react",
     "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
