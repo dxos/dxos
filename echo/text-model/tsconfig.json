@@ -1,11 +1,11 @@
 {
   "extends": "../../tsconfig.json",
-  "include": [
-    "src",
-  ],
   "compilerOptions": {
     "outDir": "dist"
   },
+  "include": [
+    "src",
+  ],
   "references": [
     { "path": "../model-factory" },
     { "path": "../util" }

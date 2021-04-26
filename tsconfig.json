@@ -15,7 +15,7 @@
     "sourceMap": true,
     "strict": true,
     "target": "ES2018",
-    "experimentalDecorators": true,
+    "experimentalDecorators": true
   },
   "include": [],
   "exclude": ["node_modules", "dist"]
