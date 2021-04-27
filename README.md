@@ -8,20 +8,25 @@ DXOS developer framework
 
 * SDK
 
-## Using Rush stack
+## Getting started
 
-Installing Rush and pnpm:
+1. Install node `v12.20.0`
+
+2. Installing Rush and pnpm:
 ```
 npm install -g @microsoft/rush pnpm
 ```
 
-1. Install dependencies
+3. Make sure you are logged in to NPM (`npm whoami`) and have access to `dxos` org on NPM.
+
+
+4. Install dependencies:
 
 ```
 rush update
 ```
 
-2. Build package
+5. Build packages:
 
 ```
 rush build
