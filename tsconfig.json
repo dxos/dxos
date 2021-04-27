@@ -8,6 +8,7 @@
     "lib": [
       "ESNext"
     ],
+    "types": ["jest", "node"],
     "jsx": "react",
     "module": "commonjs",
     "moduleResolution": "node",
