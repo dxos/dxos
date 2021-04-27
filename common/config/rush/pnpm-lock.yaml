@@ -178,6 +178,7 @@ importers:
       '@storybook/addon-actions': 6.2.9_react-dom@16.12.0+react@16.13.1
       '@storybook/addon-knobs': 6.2.9_react-dom@16.12.0+react@16.13.1
       '@storybook/addon-links': 6.2.9_react-dom@16.12.0+react@16.13.1
+      '@storybook/preset-typescript': 3.0.0_a9caab86bc0de26b15d2ad71fbcd1108
       '@storybook/react': 6.2.9_6b42e4110f82f038e535a6dcec427a0c
       '@types/level-js': 4.0.1
       babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
@@ -216,6 +217,7 @@ importers:
       '@storybook/addon-actions': ^6.0.19
       '@storybook/addon-knobs': ^6.0.21
       '@storybook/addon-links': ^6.0.19
+      '@storybook/preset-typescript': ~3.0.0
       '@storybook/react': ^6.0.21
       '@types/debug': ^4.1.1
       '@types/end-of-stream': ^1.4.0
@@ -4877,6 +4879,17 @@ packages:
     dev: true
     resolution:
       integrity: sha512-USTLkZze5gkel8MYCujSRBVIrUQ3YPBrLOx7GNk/0wttvVtlzWXAq9eLbQ4p/NicGxP+3T7KPEMVV//g+yubpw==
+  /@storybook/node-logger/5.3.21:
+    dependencies:
+      '@types/npmlog': 4.1.2
+      chalk: 3.0.0
+      core-js: 3.11.0
+      npmlog: 4.1.2
+      pretty-hrtime: 1.0.3
+      regenerator-runtime: 0.13.7
+    dev: true
+    resolution:
+      integrity: sha512-8xibncy873JXePCK5MC0qem1MKtWI1Lc4hv6rwURSwYpZtkO7yElay3XAFGUSfz8qFJkoDBmMTxBR3fp4Dln7g==
   /@storybook/node-logger/6.2.9:
     dependencies:
       '@types/npmlog': 4.1.2
@@ -4887,6 +4900,20 @@ packages:
     dev: true
     resolution:
       integrity: sha512-ryRBChWZf1A5hOVONErJZosS25IdMweoMVFAUAcj91iC0ynoSA6YL2jmoE71jQchxEXEgkDeRkX9lR/GlqFGZQ==
+  /@storybook/preset-typescript/3.0.0_a9caab86bc0de26b15d2ad71fbcd1108:
+    dependencies:
+      '@babel/preset-typescript': 7.13.0_@babel+core@7.13.16
+      '@storybook/node-logger': 5.3.21
+      '@types/babel__core': 7.1.14
+      babel-preset-typescript-vue: 1.1.1_@babel+core@7.13.16
+      fork-ts-checker-webpack-plugin: 4.1.6
+      typescript: 4.2.4
+    dev: true
+    peerDependencies:
+      '@babel/core': '*'
+      typescript: '>=3.4'
+    resolution:
+      integrity: sha512-tEbFWg5h/8SPfSCNXPxyqY418704K14q5H/xb9t0ARMXK3kZPTkKqKvdTvYg3UEKBBYbc+GA57UWaL+9b+DbDg==
   /@storybook/react/6.2.9_6b42e4110f82f038e535a6dcec427a0c:
     dependencies:
       '@babel/core': 7.13.16
@@ -6357,7 +6384,6 @@ packages:
     resolution:
       integrity: sha1-w7M6te42DYbg5ijwRorn7yfWVN8=
   /ansi-regex/3.0.0:
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -6986,6 +7012,20 @@ packages:
       '@babel/core': ^7.0.0
     resolution:
       integrity: sha512-YvdtlVm9t3k777c5NPQIv6cxFFFapys25HiUmuSgHwIZhfifweR5c5Sf5nwE3MAbfu327CYSvps8Yx6ANLyleQ==
+  /babel-preset-typescript-vue/1.1.1_@babel+core@7.13.16:
+    dependencies:
+      '@babel/core': 7.13.16
+      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/plugin-transform-typescript': 7.13.0_@babel+core@7.13.16
+      '@babel/preset-typescript': 7.13.0_@babel+core@7.13.16
+      vue-template-compiler: 2.6.12
+    dev: true
+    engines:
+      node: '>=8.0.0'
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    resolution:
+      integrity: sha512-wXeR7Y4xCsRUEdm4t4qlpv4wnxolS6jU0c7P2E6zJRWeG1sR0e6NL7DRN0tNuUwkUt0PU8bqVo4vzoA2VEuxnw==
   /balanced-match/1.0.2:
     resolution:
       integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
@@ -8823,6 +8863,10 @@ packages:
     dev: true
     resolution:
       integrity: sha1-+v1Ej3IRXvHitzkVWukvK+bCjdE=
+  /de-indent/1.0.2:
+    dev: true
+    resolution:
+      integrity: sha1-sgOOhG3DO6pXlhKNCAS0VbjB4h0=
   /debug/2.6.9:
     dependencies:
       ms: 2.0.0
@@ -10342,7 +10386,7 @@ packages:
       integrity: sha1-+8cfDEGt6zf5bFd60e1C2P2sypE=
   /fork-ts-checker-webpack-plugin/4.1.6:
     dependencies:
-      '@babel/code-frame': 7.10.4
+      '@babel/code-frame': 7.12.13
       chalk: 2.4.2
       micromatch: 3.1.10
       minimatch: 3.0.4
@@ -11593,7 +11637,6 @@ packages:
     resolution:
       integrity: sha1-754xOG8DGn8NZDr4L95QxFfvAMs=
   /is-fullwidth-code-point/2.0.0:
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -17362,7 +17405,6 @@ packages:
     dependencies:
       is-fullwidth-code-point: 2.0.0
       strip-ansi: 4.0.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -17450,7 +17492,6 @@ packages:
   /strip-ansi/4.0.0:
     dependencies:
       ansi-regex: 3.0.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -18548,6 +18589,13 @@ packages:
     dev: true
     resolution:
       integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==
+  /vue-template-compiler/2.6.12:
+    dependencies:
+      de-indent: 1.0.2
+      he: 1.2.0
+    dev: true
+    resolution:
+      integrity: sha512-OzzZ52zS41YUbkCBfdXShQTe69j1gQDZ9HIX8miuC9C3rBCk9wIRjLiZZLrmX9V+Ftq/YEyv1JaVr5Y/hNtByg==
   /w3c-hr-time/1.0.2:
     dependencies:
       browser-process-hrtime: 1.0.0
@@ -18786,7 +18834,7 @@ packages:
       integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==
   /wide-align/1.1.3:
     dependencies:
-      string-width: 1.0.2
+      string-width: 2.1.1
     resolution:
       integrity: sha512-QGkOQc8XL6Bt5PwnsExKBPuMKBxnGxWWW3fU55Xt4feHozMUhdUMaBCk290qpm/wG5u/RSKzwdAC4i51YigihA==
   /widest-line/3.1.0:
