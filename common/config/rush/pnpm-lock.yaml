@@ -1011,6 +1011,7 @@ importers:
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
       '@material-ui/core': 4.11.3_705485a86473ed5500268f6a4ba6978c
       '@types/debug': 4.1.5
+      assert: 2.0.0
       debug: 4.3.1
       level-js: 5.0.2
       memdown: 5.1.0
@@ -1083,6 +1084,7 @@ importers:
       '@types/node': ^14.0.9
       '@types/react': ^17.0.0
       '@types/testing-library__jest-dom': ~5.9.5
+      assert: ^2.0.0
       babel-eslint: ^10.1.0
       babel-jest: ^25.1.0
       babel-loader: 8.1.0

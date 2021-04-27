@@ -32,7 +32,8 @@
     "@material-ui/core": "^4.9.10",
     "@dxos/object-model": "workspace:^2.6.17",
     "debug": "^4.1.1",
-    "@types/debug": "^4.1.1"
+    "@types/debug": "^4.1.1",
+    "assert": "^2.0.0"
   },
   "devDependencies": {
     "webpack": "4.44.2",
