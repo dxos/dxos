@@ -2,12 +2,23 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
+    "jsx": "react",
     "lib": [
       "DOM"
-    ]
+    ],
+    "types": [
+      "node",
+      "jest",
+      "@types/testing-library__jest-dom"
+    ],
+    "rootDirs": ["./src", "./stories", "./.storybook"]
   },
   "include": [
     "src",
     "stories"
   ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

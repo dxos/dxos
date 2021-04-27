@@ -537,6 +537,7 @@ importers:
       stream-to-array: 2.3.0
       uuid: 3.4.0
     devDependencies:
+      '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
       '@types/encoding-down': 5.0.0
       '@types/jest': 26.0.22
@@ -554,6 +555,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/feed-store': ~1.2.0-beta.30
       '@dxos/protocol': workspace:*
+      '@dxos/protocol-plugin-replicator': workspace:~1.0.8
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.1
       '@types/encoding-down': ^5.0.0
@@ -1033,7 +1035,9 @@ importers:
       '@testing-library/react-hooks': 5.1.2_9a686fc8807a2bb376a9c9d354d872c4
       '@types/jest': 26.0.22
       '@types/level-js': 4.0.1
+      '@types/node': 14.14.41
       '@types/react': 17.0.3
+      '@types/testing-library__jest-dom': 5.9.5
       babel-eslint: 10.1.0_eslint@7.24.0
       babel-jest: 25.5.1_@babel+core@7.13.16
       babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
@@ -1076,7 +1080,9 @@ importers:
       '@types/debug': ^4.1.1
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
+      '@types/node': ^14.0.9
       '@types/react': ^17.0.0
+      '@types/testing-library__jest-dom': ~5.9.5
       babel-eslint: ^10.1.0
       babel-jest: ^25.1.0
       babel-loader: 8.1.0
