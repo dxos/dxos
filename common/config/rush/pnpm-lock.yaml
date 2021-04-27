@@ -754,11 +754,13 @@ importers:
     devDependencies:
       '@dxos/protocol': link:../protocol
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@types/node': 14.14.41
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/network-generator': ~1.0.0-beta.3
       '@dxos/protocol': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/node': ^14.0.9
       debug: ^4.1.1
       p-event: ^4.2.0
       pump: ^3.0.0
