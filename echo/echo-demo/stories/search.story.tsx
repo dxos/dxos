@@ -3,8 +3,9 @@
 //
 
 import React, { useState } from 'react';
+import faker from 'faker';
 
-import { Chip, IconButton, Toolbar, Typography } from '@material-ui/core';
+import { Chip, Fab, IconButton, Toolbar, Typography, List, ListItem, ListItemIcon, ListItemText, TextField, Button } from '@material-ui/core';
 import grey from '@material-ui/core/colors/grey';
 import { makeStyles } from '@material-ui/core/styles';
 import GraphIcon from '@material-ui/icons/BubbleChart';
@@ -15,13 +16,16 @@ import ListIcon from '@material-ui/icons/Reorder';
 import CardIcon from '@material-ui/icons/ViewComfy';
 import GridIcon from '@material-ui/icons/ViewModule';
 import ProjectIcon from '@material-ui/icons/WorkOutline';
+import AddIcon from '@material-ui/icons/Add';
 
-import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, LINK_PROJECT, LINK_EMPLOYEE } from '@dxos/echo-testing';
+
+import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, LINK_PROJECT, LINK_EMPLOYEE, labels } from '@dxos/echo-testing';
 
 import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
   useGenerator, useSelection, graphSelector, searchSelector
 } from '../src';
+import { ObjectModel } from '@dxos/object-model';
 
 export default {
   title: 'Search'
@@ -82,6 +86,14 @@ const useStyles = makeStyles(theme => ({
       paddingRight: 6,
       fontSize: 12
     }
+  },
+  fab: {
+    margin: 0,
+    top: 'auto',
+    right: 20,
+    bottom: 20,
+    left: 'auto',
+    position: 'fixed',
   }
 }));
 
@@ -210,6 +222,23 @@ export const withSearch = () => {
     </IconButton>
   );
 
+  const [showAdd, setShowAdd] = useState(false);
+  const [orgName, setOrgName] = useState('');
+
+  async function handleAdd() {
+    await generator.database.createItem({
+      model: ObjectModel,
+      type: OBJECT_ORG,
+      props: {
+        name: orgName,
+        description: faker.lorem.sentence(),
+        labels: faker.random.arrayElements(labels, faker.random.number({ min: 0, max: 3 }))
+      },
+    })
+    setShowAdd(false)
+    setOrgName('')
+  }
+
   // TODO(burdon): Show/hide components to maintain state (and test subscriptions). Show for first time on select.
   return (
     <div className={classes.root}>
@@ -222,6 +251,17 @@ export const withSearch = () => {
           <ViewButton view={VIEW_GRAPH} icon={GraphIcon} />
         </div>
       </Toolbar>
+
+      {showAdd && (
+        <ListItem>
+          <ListItemIcon>
+            <OrgIcon />
+          </ListItemIcon>
+          <TextField id="org-name" label="Org name" value={orgName} onChange={e => setOrgName(e.currentTarget.value)}/>
+          <Button color="primary" onClick={handleAdd}>Add</Button>
+          <Button color="secondary" onClick={() => setShowAdd(false)}>Cancel</Button>
+        </ListItem>
+      )}
 
       <div className={classes.content}>
         {view === VIEW_LIST && (
@@ -259,6 +299,10 @@ export const withSearch = () => {
           </>
         )}
       </div>
+
+      <Fab className={classes.fab} color="primary" aria-label="add" onClick={() => setShowAdd(true)}>
+        <AddIcon />
+      </Fab>
     </div>
   );
 };
