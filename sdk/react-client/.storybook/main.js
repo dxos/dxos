@@ -20,7 +20,7 @@ module.exports = {
         },
       ],
     });
-    config.resolve.extensions.push('.ts', '.tsx');
+    config.resolve.extensions.push('.ts', '.tsx', 'js', 'jsx');
     return config;
   },
 };

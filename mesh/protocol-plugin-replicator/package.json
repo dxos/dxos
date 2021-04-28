@@ -26,8 +26,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protocol": "workspace:*",
     "buffer-json-encoding": "^1.0.2",
-    "debug": "^4.1.1",
-    "source-map-support": "^0.5.12"
+    "debug": "^4.1.1"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

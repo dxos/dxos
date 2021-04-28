@@ -1,18 +1,14 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "jsx": "react",
     "lib": [
-      "DOM"
-    ]
+      "DOM",
+      "ES6"
+    ],
+    "outDir": "dist"
   },
   "include": [
-    "src",
-    "tests"
-  ],
-  "exclude": [
-    "/node_modules/"
+    "src"
   ],
   "references": [
     { "path": "../client" }
