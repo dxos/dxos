@@ -430,10 +430,6 @@
       "projectFolder": "halo/credentials"
     },
     {
-      "packageName": "@dxos/node-library-rig",
-      "projectFolder": "rigs/node-library"
-    },
-    {
       "packageName": "@dxos/toolchain-node-library",
       "projectFolder": "toolchains/node-library"
     },
