@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { createTestInstance, InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
@@ -17,10 +17,10 @@ const createInstance = () => createTestInstance({
 
 export const useGenerator = () => {
   const [generator, setGenerator] = useState<Generator | undefined>();
-  const [party, setParty] = useState<Party | undefined>()
+  const [party, setParty] = useState<Party | undefined>();
 
-  async function generate(config = {}) {
-    const echo = await createInstance()
+  async function generate (config = {}) {
+    const echo = await createInstance();
     const party = await echo.createParty();
     const generator = new Generator(party.database, { seed: 1 });
     await generator.generate(config);
@@ -28,8 +28,8 @@ export const useGenerator = () => {
     setParty(party);
   }
 
-  async function join(invitation: string) {
-    const echo = await createInstance()
+  async function join (invitation: string) {
+    const echo = await createInstance();
     const party = await echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));
     await party.open();

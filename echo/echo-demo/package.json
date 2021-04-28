@@ -17,7 +17,7 @@
     "build-storybook": "build-storybook",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose  --rootDir=./src --passWithNoTests",
-    "lint": "eslint --format codeframe './{src,test}/**/*.ts'",
+    "lint": "eslint --format codeframe './{src,test,stories}/**/*.ts'",
     "test": "jest --rootDir=./src --verbose --passWithNoTests",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "prepublishOnly": "npm run test && npm run build",
