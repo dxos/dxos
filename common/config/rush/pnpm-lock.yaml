@@ -187,7 +187,7 @@ importers:
       chromatic: 5.6.2
       del-cli: 3.0.1
       eslint: 7.24.0
-      eslint-plugin-jest: 24.3.5_eslint@7.24.0+typescript@4.2.4
+      eslint-plugin-jest: 24.3.6_eslint@7.24.0+typescript@4.2.4
       eslint-plugin-react: 7.23.2_eslint@7.24.0
       jest: 26.6.3
       react: 16.13.1
@@ -280,7 +280,6 @@ importers:
       lodash.merge: 4.6.2
       protobufjs: 6.10.2
       readable-stream: 3.6.0
-      source-map-support: 0.5.19
     devDependencies:
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
       '@types/faker': 5.5.3
@@ -317,7 +316,6 @@ importers:
       protobufjs: ^6.9.0
       random-access-memory: ~3.1.2
       readable-stream: ^3.6.0
-      source-map-support: ^0.5.12
       stream-buffers: ^3.0.2
       tempy: ~1.0.1
       wait-for-expect: ^3.0.2
@@ -368,7 +366,6 @@ importers:
       js-data-structs: 1.1.3
       lodash.merge: 4.6.2
       protobufjs: 6.10.2
-      source-map-support: 0.5.19
     devDependencies:
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
       '@types/jest': 26.0.22
@@ -394,7 +391,6 @@ importers:
       js-data-structs: ^1.1.2
       lodash.merge: ^4.6.2
       protobufjs: ^6.9.0
-      source-map-support: ^0.5.12
       stream-buffers: ^3.0.2
       wait-for-expect: ^3.0.2
   ../../echo/object-model:
@@ -419,7 +415,6 @@ importers:
       lodash.merge: 4.6.2
       minisearch: 3.0.2
       protobufjs: 6.10.2
-      source-map-support: 0.5.19
     devDependencies:
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
       '@types/jest': 26.0.22
@@ -456,7 +451,6 @@ importers:
       lodash.merge: ^4.6.2
       minisearch: ^3.0.2
       protobufjs: ^6.9.0
-      source-map-support: ^0.5.12
       stream-buffers: ^3.0.2
       wait-for-expect: ^3.0.2
   ../../echo/text-model:
@@ -497,7 +491,6 @@ importers:
       js-data-structs: 1.1.3
       lodash.merge: 4.6.2
       protobufjs: 6.10.2
-      source-map-support: 0.5.19
     devDependencies:
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
       '@types/jest': 26.0.22
@@ -519,7 +512,6 @@ importers:
       js-data-structs: ^1.1.2
       lodash.merge: ^4.6.2
       protobufjs: ^6.9.0
-      source-map-support: ^0.5.12
       stream-buffers: ^3.0.2
   ../../halo/credentials:
     dependencies:
@@ -556,17 +548,12 @@ importers:
       pump: 3.0.0
       queue-microtask: 1.2.3
       random-access-memory: 3.1.2
-      source-map-support: 0.5.19
       stream-to-array: 2.3.0
       uuid: 3.4.0
     devDependencies:
-      '@dxos/eslint-plugin': 1.0.10_eslint@7.24.0+typescript@4.2.4
-      '@dxos/node-library-rig': link:../../rigs/node-library
-      '@dxos/protobuf-compiler': link:../../codec-protobuf/protobuf-compiler
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
-      '@rushstack/heft': 0.28.5
+      '@dxos/toolchain-node-library': link:../../toolchains/node-library
       '@types/encoding-down': 5.0.0
-      '@types/heft-jest': 1.0.2
       '@types/jest': 26.0.22
       '@types/json-stable-stringify': 1.0.32
       '@types/levelup': 4.3.1
@@ -574,28 +561,19 @@ importers:
       '@types/memdown': 3.0.0
       '@types/node': 14.14.41
       '@types/stream-to-array': 2.3.0
-      eslint: 7.24.0
-      jest: 26.6.3
       ngraph.path: 1.3.1
-      protobufjs: 6.10.2
-      ts-jest: 26.5.5_jest@26.6.3+typescript@4.2.4
-      typescript: 4.2.4
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
-      '@dxos/eslint-plugin': ~1.0.10
       '@dxos/feed-store': ~1.2.0-beta.30
-      '@dxos/node-library-rig': workspace:*
-      '@dxos/protobuf-compiler': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:~1.0.8
-      '@rushstack/heft': ~0.28.1
+      '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.1
       '@types/encoding-down': ^5.0.0
       '@types/end-of-stream': ^1.4.0
-      '@types/heft-jest': ~1.0.2
       '@types/jest': ^26.0.7
       '@types/json-stable-stringify': ^1.0.32
       '@types/levelup': ^4.3.0
@@ -611,11 +589,9 @@ importers:
       debug: ^4.1.1
       encoding-down: ^6.3.0
       end-of-stream: ^1.4.1
-      eslint: ^7.7.0
       hypercore-crypto: ^1.0.0
       hypercore-protocol: ^6.11.1
       hypertrie: ^3.8.0
-      jest: ^26.2.2
       json-stable-stringify: ^1.0.1
       leveldown: ^5.4.1
       levelup: ^4.3.2
@@ -629,14 +605,10 @@ importers:
       moment: ^2.24.0
       ngraph.path: ^1.3.1
       performance-now: ^2.1.0
-      protobufjs: ^6.9.0
       pump: ^3.0.0
       queue-microtask: ^1.1.2
       random-access-memory: ~3.1.2
-      source-map-support: ^0.5.12
       stream-to-array: ^2.3.0
-      ts-jest: ^26.1.4
-      typescript: ^4.0.2
       uuid: ^3.3.2
       wait-for-expect: ^3.0.2
   ../../mesh/network-devtools:
@@ -758,7 +730,6 @@ importers:
       nanomessage: 5.4.0
       nanoresource-promise: 2.0.0
       signal-promise: 1.0.3
-      source-map-support: 0.5.19
     devDependencies:
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
       '@types/assert': 1.5.4
@@ -789,7 +760,6 @@ importers:
       nanoresource-promise: ^2.0.0
       pump: ^3.0.0
       signal-promise: ^1.0.3
-      source-map-support: ^0.5.12
       wait-for-expect: ^3.0.2
   ../../mesh/protocol-network-generator:
     dependencies:
@@ -800,11 +770,13 @@ importers:
     devDependencies:
       '@dxos/protocol': link:../protocol
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@types/node': 14.14.41
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/network-generator': ~1.0.0-beta.3
       '@dxos/protocol': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/node': ^14.0.9
       debug: ^4.1.1
       p-event: ^4.2.0
       pump: ^3.0.0
@@ -815,7 +787,6 @@ importers:
       '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
       '@dxos/protocol': link:../protocol
       debug: 4.3.1
-      source-map-support: 0.5.19
     devDependencies:
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/toolchain-node-library': link:../../toolchains/node-library
@@ -835,7 +806,6 @@ importers:
       debug: ^4.1.1
       del-cli: ^3.0.0
       jest: ^26.2.2
-      source-map-support: ^0.5.12
       wait-for-expect: ^3.0.2
   ../../mesh/protocol-plugin-presence:
     dependencies:
@@ -871,7 +841,6 @@ importers:
       '@dxos/protocol': link:../protocol
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
-      source-map-support: 0.5.19
     devDependencies:
       '@dxos/crypto': link:../../misc/crypto
       '@dxos/feed-store': 1.2.0-beta.30
@@ -901,7 +870,6 @@ importers:
       jest: ^26.2.2
       pify: ~5.0.0
       random-access-memory: ~3.1.2
-      source-map-support: ^0.5.12
       wait-for-expect: ^3.0.2
   ../../misc/async:
     devDependencies:
@@ -1057,6 +1025,7 @@ importers:
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
       '@material-ui/core': 4.11.3_705485a86473ed5500268f6a4ba6978c
       '@types/debug': 4.1.5
+      assert: 2.0.0
       debug: 4.3.1
       level-js: 5.0.2
       memdown: 5.1.0
@@ -1081,7 +1050,9 @@ importers:
       '@testing-library/react-hooks': 5.1.2_9a686fc8807a2bb376a9c9d354d872c4
       '@types/jest': 26.0.22
       '@types/level-js': 4.0.1
+      '@types/node': 14.14.41
       '@types/react': 17.0.3
+      '@types/testing-library__jest-dom': 5.9.5
       babel-eslint: 10.1.0_eslint@7.24.0
       babel-jest: 25.5.1_@babel+core@7.13.16
       babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
@@ -1124,7 +1095,10 @@ importers:
       '@types/debug': ^4.1.1
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
+      '@types/node': ^14.0.9
       '@types/react': ^17.0.0
+      '@types/testing-library__jest-dom': ~5.9.5
+      assert: ^2.0.0
       babel-eslint: ^10.1.0
       babel-jest: ^25.1.0
       babel-loader: 8.1.0
@@ -1168,6 +1142,7 @@ importers:
       '@testing-library/jest-dom': 5.12.0
       '@testing-library/react': 11.2.6_react-dom@16.12.0+react@16.13.1
       '@types/jest': 26.0.22
+      '@types/node': 14.14.41
       eslint: 7.24.0
       jest: 26.6.3
       react: 16.13.1
@@ -1191,6 +1166,7 @@ importers:
       '@testing-library/jest-dom': ^5.11.4
       '@testing-library/react': ^11.0.4
       '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
       '@types/react': ^17.0.0
       clsx: ^1.1.0
       eslint: ^7.7.0
@@ -1217,12 +1193,14 @@ importers:
       yargs: 16.2.0
     devDependencies:
       '@types/glob': 7.1.3
+      '@types/jest': 26.0.22
       '@types/node': 14.14.41
       ts-node: 9.1.1_typescript@4.2.4
     specifiers:
       '@dxos/eslint-plugin': ~1.0.10
       '@dxos/protobuf-compiler': workspace:*
       '@types/glob': ~7.1.3
+      '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
       '@types/yargs': ~16.0.1
       chalk: ^4.1.0
@@ -3909,36 +3887,46 @@ packages:
     resolution:
       integrity: sha512-VZMYa7+fXHdwIq1TDhSXoVmSPEGM/aa+6Aiq3nVVJ9bXr24zScr+NlKFKC3iPljA7ho/GAZr+d2jOf5GIRC30Q==
   /@protobufjs/aspromise/1.1.2:
+    dev: false
     resolution:
       integrity: sha1-m4sMxmPWaafY9vXQiToU00jzD78=
   /@protobufjs/base64/1.1.2:
+    dev: false
     resolution:
       integrity: sha512-AZkcAA5vnN/v4PDqKyMR5lx7hZttPDgClv83E//FMNhR2TMcLUhfRUBHCmSl0oi9zMgDDqRUJkSxO3wm85+XLg==
   /@protobufjs/codegen/2.0.4:
+    dev: false
     resolution:
       integrity: sha512-YyFaikqM5sH0ziFZCN3xDC7zeGaB/d0IUb9CATugHWbd1FRFwWwt4ld4OYMPWu5a3Xe01mGAULCdqhMlPl29Jg==
   /@protobufjs/eventemitter/1.1.0:
+    dev: false
     resolution:
       integrity: sha1-NVy8mLr61ZePntCV85diHx0Ga3A=
   /@protobufjs/fetch/1.1.0:
     dependencies:
       '@protobufjs/aspromise': 1.1.2
       '@protobufjs/inquire': 1.1.0
+    dev: false
     resolution:
       integrity: sha1-upn7WYYUr2VwDBYZ/wbUVLDYTEU=
   /@protobufjs/float/1.0.2:
+    dev: false
     resolution:
       integrity: sha1-Xp4avctz/Ap8uLKR33jIy9l7h9E=
   /@protobufjs/inquire/1.1.0:
+    dev: false
     resolution:
       integrity: sha1-/yAOPnzyQp4tyvwRQIKOjMY48Ik=
   /@protobufjs/path/1.1.2:
+    dev: false
     resolution:
       integrity: sha1-bMKyDFya1q0NzP0hynZz2Nf79o0=
   /@protobufjs/pool/1.1.0:
+    dev: false
     resolution:
       integrity: sha1-Cf0V8tbTq/qbZbw2ZQbWrXhG/1Q=
   /@protobufjs/utf8/1.1.0:
+    dev: false
     resolution:
       integrity: sha1-p3c2C1s5oaLlEG+OhY8v0tBgxXA=
   /@reach/router/1.3.4_react-dom@16.12.0+react@16.13.1:
@@ -5497,12 +5485,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-viwwrB+6xGzw+G1eWpF9geV3fnsDgXqHG+cqgiHrvQfDUW5hzhCyV7Sy3UJxhfRFBsgky2SSW33qi/YrIkjX5Q==
-  /@types/heft-jest/1.0.2:
-    dependencies:
-      '@types/jest': 26.0.22
-    dev: true
-    resolution:
-      integrity: sha512-HabX0JO8Pk+a3gTm2DQwTMrfZjqP6VxDnn8kIXAP6uZbmy4bkKuFRi9T9BV9K6LhwHrmcgq5kk2YikYHy4LJeg==
   /@types/html-minifier-terser/5.1.1:
     dev: true
     resolution:
@@ -5592,6 +5574,7 @@ packages:
     resolution:
       integrity: sha512-oVfRvqHV/V6D1yifJbVRU3TMp8OT6o6BG+U9MkwuJ3U8/CsDHvalRpsxBqivn71ztOFZBTfJMvETbqHiaNSj7Q==
   /@types/long/4.0.1:
+    dev: false
     resolution:
       integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==
   /@types/markdown-to-jsx/6.11.3:
@@ -5639,6 +5622,7 @@ packages:
     resolution:
       integrity: sha512-Exw4yUWMBXM3X+8oqzJNRqZSwUAaS4+7NdvHqQuFi/d+synz++xmX3QIf+BFqneW8N31R8Ky+sikfZUXq07ggQ==
   /@types/node/13.13.50:
+    dev: false
     resolution:
       integrity: sha512-y7kkh+hX/0jZNxMyBR/6asG0QMSaPSzgeVK63dhWHl4QAXCQB8lExXmzLL6SzmOgKHydtawpMnNhlDbv7DXPEA==
   /@types/node/14.14.41:
@@ -6448,7 +6432,6 @@ packages:
     resolution:
       integrity: sha1-w7M6te42DYbg5ijwRorn7yfWVN8=
   /ansi-regex/3.0.0:
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -9757,7 +9740,7 @@ packages:
       typescript: '*'
     resolution:
       integrity: sha512-+6BGQt85OREevBDWCvhqj1yYA4+BFK4XnRZSGJionuEYmcglMZYLNNBBemwzbqUAckURaHdJSBcjHPyrtypZOw==
-  /eslint-plugin-jest/24.3.5_eslint@7.24.0+typescript@4.2.4:
+  /eslint-plugin-jest/24.3.6_eslint@7.24.0+typescript@4.2.4:
     dependencies:
       '@typescript-eslint/experimental-utils': 4.22.0_eslint@7.24.0+typescript@4.2.4
       eslint: 7.24.0
@@ -9772,7 +9755,7 @@ packages:
       '@typescript-eslint/eslint-plugin':
         optional: true
     resolution:
-      integrity: sha512-XG4rtxYDuJykuqhsOqokYIR84/C8pRihRtEpVskYLbIIKGwPNW2ySxdctuVzETZE+MbF/e7wmsnbNVpzM0rDug==
+      integrity: sha512-WOVH4TIaBLIeCX576rLcOgjNXqP+jNlCiEmRgFTfQtJ52DpwnIQKAVGlGPAN7CZ33bW6eNfHD6s8ZbEUTQubJg==
   /eslint-plugin-node/11.1.0_eslint@7.24.0:
     dependencies:
       eslint: 7.24.0
@@ -10449,7 +10432,7 @@ packages:
       integrity: sha1-+8cfDEGt6zf5bFd60e1C2P2sypE=
   /fork-ts-checker-webpack-plugin/4.1.6:
     dependencies:
-      '@babel/code-frame': 7.10.4
+      '@babel/code-frame': 7.12.13
       chalk: 2.4.2
       micromatch: 3.1.10
       minimatch: 3.0.4
@@ -11700,7 +11683,6 @@ packages:
     resolution:
       integrity: sha1-754xOG8DGn8NZDr4L95QxFfvAMs=
   /is-fullwidth-code-point/2.0.0:
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -13707,6 +13689,7 @@ packages:
     resolution:
       integrity: sha512-h4hmjAvHTmd+25JSwrtTIuwbKdwg5NzZVRMLn9saij4SZaepCrTCxPr35H/3bjwfMJtN+t3CX8672UIkglz28A==
   /long/4.0.0:
+    dev: false
     resolution:
       integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==
   /loose-envify/1.4.0:
@@ -15668,6 +15651,7 @@ packages:
       '@types/long': 4.0.1
       '@types/node': 13.13.50
       long: 4.0.0
+    dev: false
     hasBin: true
     requiresBuild: true
     resolution:
@@ -17467,7 +17451,6 @@ packages:
     dependencies:
       is-fullwidth-code-point: 2.0.0
       strip-ansi: 4.0.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -17555,7 +17538,6 @@ packages:
   /strip-ansi/4.0.0:
     dependencies:
       ansi-regex: 3.0.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -18891,7 +18873,7 @@ packages:
       integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==
   /wide-align/1.1.3:
     dependencies:
-      string-width: 1.0.2
+      string-width: 2.1.1
     resolution:
       integrity: sha512-QGkOQc8XL6Bt5PwnsExKBPuMKBxnGxWWW3fU55Xt4feHozMUhdUMaBCk290qpm/wG5u/RSKzwdAC4i51YigihA==
   /widest-line/3.1.0:

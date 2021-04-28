@@ -40,8 +40,7 @@
     "js-data-structs": "^1.1.2",
     "lodash.merge": "^4.6.2",
     "protobufjs": "^6.9.0",
-    "readable-stream": "^3.6.0",
-    "source-map-support": "^0.5.12"
+    "readable-stream": "^3.6.0"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
