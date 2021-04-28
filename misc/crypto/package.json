@@ -2,18 +2,18 @@
   "name": "@dxos/crypto",
   "version": "1.0.7-alpha.0",
   "description": "Basic crypto key utils",
+  "license": "GPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
     "test": "toolchain test",
     "lint": "toolchain lint"
   },
-  "license": "GPL-3.0",
   "dependencies": {
     "crypto-js": "^3.1.9-1",
     "humanhash": "^1.0.4",
@@ -21,8 +21,8 @@
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/node": "^14.0.9",
-    "@types/jest": "^26.0.7"
+    "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.9"
   },
   "publishConfig": {
     "access": "public"

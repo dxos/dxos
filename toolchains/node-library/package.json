@@ -11,20 +11,20 @@
   "dependencies": {
     "@dxos/eslint-plugin": "~1.0.10",
     "@dxos/protobuf-compiler": "workspace:*",
-    "jest": "^26.2.2",
-    "ts-jest": "^26.1.4",
-    "typescript": "^4.0.2",
-    "eslint": "^7.7.0",
-    "yargs": "~16.2.0",
     "@types/yargs": "~16.0.1",
     "chalk": "^4.1.0",
+    "eslint": "^7.7.0",
+    "glob": "~7.1.6",
+    "jest": "^26.2.2",
     "pkg-dir": "~5.0.0",
-    "glob": "~7.1.6"
+    "ts-jest": "^26.1.4",
+    "typescript": "^4.0.2",
+    "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "ts-node": "^9.0.0",
-    "@types/node": "^14.0.9",
     "@types/glob": "~7.1.3",
-    "@types/jest": "^26.0.7"
+    "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.9",
+    "ts-node": "^9.0.0"
   }
 }

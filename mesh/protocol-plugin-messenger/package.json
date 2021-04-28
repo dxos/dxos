@@ -11,12 +11,12 @@
     "url": "git+https://github.com/dxos/protocol.git"
   },
   "license": "GPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "index.js"
   ],
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
     "lint": "toolchain lint"
@@ -28,8 +28,8 @@
     "debug": "^4.1.1"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
+    "@dxos/toolchain-node-library": "workspace:*",
     "coveralls": "^3.0.7",
     "cpy-cli": "^2.0.0",
     "del-cli": "^3.0.0",
