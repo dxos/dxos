@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import * as colors from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
@@ -157,11 +157,15 @@ const Component = ({ generator }) => {
 };
 
 export const withLinks = () => {
-  const generator = useGenerator({
-    numOrgs: 4,
-    numPeople: 16,
-    numProjects: 6
-  });
+  const {generator, generate} = useGenerator();
+
+  useEffect(() => {
+    generate({
+      numOrgs: 4,
+      numPeople: 16,
+      numProjects: 6
+    })
+  }, [])
 
   if (!generator) {
     return null;

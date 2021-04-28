@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import faker from 'faker';
 
-import { Chip, Fab, IconButton, Toolbar, Typography, List, ListItem, ListItemIcon, ListItemText, TextField, Button } from '@material-ui/core';
+import { Chip, Fab, IconButton, Toolbar, Typography, List, ListItem, ListItemIcon, ListItemText, TextField, Button, Grid } from '@material-ui/core';
 import grey from '@material-ui/core/colors/grey';
 import { makeStyles } from '@material-ui/core/styles';
 import GraphIcon from '@material-ui/icons/BubbleChart';
@@ -199,12 +199,20 @@ const cardAdapter = (classes): CardAdapter => ({
 
 export const withSearch = () => {
   const classes = useStyles();
-  const generator = useGenerator({
-    numOrgs: 10,
-    numPeople: 20,
-    numProjects: 20,
-    numTasks: 30
-  });
+  const {generator, generate, join} = useGenerator();
+
+  const handleGenerate = () => {
+    generate({
+      numOrgs: 4,
+      numPeople: 16,
+      numProjects: 6
+    });
+  }
+
+  const handleJoin = () => {
+    join('abc123');
+  }
+
   const [search, setSearch] = useState(undefined);
   const items = useSelection(generator && generator.database.select(), searchSelector(search), [search]);
   // TODO(burdon): Use subset.
@@ -237,6 +245,17 @@ export const withSearch = () => {
     })
     setShowAdd(false)
     setOrgName('')
+  }
+
+  if(!generator) {
+    return (
+      <div className={classes.root}>
+        <Grid direction="row" alignItems="center" justify="center">
+          <Button color="primary" onClick={handleGenerate}>Generate</Button>
+          <Button color="primary" onClick={handleJoin}>Join</Button>
+        </Grid>
+      </div>
+    )
   }
 
   // TODO(burdon): Show/hide components to maintain state (and test subscriptions). Show for first time on select.
