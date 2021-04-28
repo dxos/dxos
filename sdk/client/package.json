@@ -5,6 +5,10 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "toolchain build",
     "lint": "toolchain lint",
@@ -16,6 +20,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "~1.0.0-beta.73",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-protocol": "workspace:^2.6.17",
     "@dxos/feed-store": "~1.2.0-beta.30",
     "@dxos/metrics": "~1.0.0-beta.9",
     "@dxos/model-factory": "workspace:*",
@@ -25,8 +30,8 @@
     "@dxos/protocol-plugin-replicator": "workspace:~1.0.8",
     "@dxos/registry-client": "~1.1.1",
     "@dxos/util": "workspace:*",
-    "@dxos/echo-protocol": "workspace:^2.6.17",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
+    "@wirelineio/registry-client": "~1.1.0-beta.3",
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "canonicalize": "^1.0.1",
@@ -51,24 +56,19 @@
     "pumpify": "^2.0.1",
     "queue-microtask": "^1.1.2",
     "through2": "^3.0.1",
-    "wrtc": "^0.4.6",
-    "@wirelineio/registry-client": "~1.1.0-beta.3"
+    "wrtc": "^0.4.6"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
+    "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
+    "@types/level-js": "~4.0.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/memdown": "^3.0.0",
-    "random-access-memory": "~3.1.2",
-    "wait-for-expect": "^3.0.2",
     "abstract-leveldown": "~7.0.0",
-    "@types/level-js": "~4.0.1"
+    "random-access-memory": "~3.1.2",
+    "wait-for-expect": "^3.0.2"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
   "publishConfig": {
     "access": "public"
   }

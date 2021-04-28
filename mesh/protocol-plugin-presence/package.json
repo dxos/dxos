@@ -11,12 +11,12 @@
     "url": "git+https://github.com/dxos/protocol.git"
   },
   "license": "GPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "index.js"
   ],
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
     "lint": "toolchain lint"
@@ -32,9 +32,9 @@
     "queue-microtask": "^1.1.2"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
+    "@dxos/toolchain-node-library": "workspace:*",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

@@ -1,6 +1,7 @@
 {
   "name": "@dxos/echo-demo",
   "version": "2.6.22",
+  "private": true,
   "description": "ECHO database demo app.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -11,7 +12,6 @@
     "url": "git+https://github.com/dxos/echo.git"
   },
   "license": "AGPL-3.0",
-  "private": true,
   "scripts": {
     "build": "tsc --noEmit && pnpm run lint && pnpm run test 2>&1 && true",
     "build-storybook": "build-storybook",
@@ -26,6 +26,9 @@
   "browserslist": [
     "> 5%"
   ],
+  "eslintConfig": {
+    "extends": "plugin:@dxos/react"
+  },
   "jest": {
     "preset": "ts-jest/presets/default",
     "testEnvironment": "node"
@@ -57,16 +60,17 @@
     "clsx": "^1.1.0",
     "d3": "^5.9.2",
     "debug": "^4.1.1",
+    "immutability-helper": "^3.0.2",
     "level-js": "^5.0.2",
     "lodash.merge": "^4.6.2",
     "random-access-memory": "~3.1.2",
     "react-resize-aware": "^3.0.0",
     "source-map-support": "^0.5.12",
     "stream-buffers": "^3.0.2",
-    "use-subscription": "^1.4.1",
-    "immutability-helper": "^3.0.2"
+    "use-subscription": "^1.4.1"
   },
   "devDependencies": {
+    "@babel/core": "~7.13.15",
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@dxos/debug": "~1.0.0-beta.73",
     "@dxos/eslint-plugin": "~1.0.10",
@@ -74,29 +78,25 @@
     "@storybook/addon-knobs": "^6.0.21",
     "@storybook/addon-links": "^6.0.19",
     "@storybook/react": "^6.0.21",
+    "@types/faker": "~5.5.1",
     "@types/jest": "^26.0.7",
     "babel-loader": "8.1.0",
     "babel-plugin-add-module-exports": "^1.0.4",
     "chance": "^1.1.6",
-    "del-cli": "^3.0.0",
-    "eslint-plugin-jest": "^24.0.2",
     "chromatic": "^5.6.0",
+    "del-cli": "^3.0.0",
+    "eslint": "^7.7.0",
+    "eslint-plugin-jest": "^24.0.2",
     "eslint-plugin-react": "^7.22.0",
     "jest": "^26.2.2",
+    "react": "16.13.1",
     "react-docgen-typescript-loader": "^3.7.2",
+    "react-dom": "16.12.0",
     "tempy": "~1.0.1",
     "ts-jest": "^26.1.4",
-    "typescript": "^4.0.2",
-    "@babel/core": "~7.13.15",
-    "react": "16.13.1",
-    "react-dom": "16.12.0",
     "ts-loader": "~8.1.0",
-    "webpack": "4.44.2",
-    "eslint": "^7.7.0",
-    "@types/faker": "~5.5.1"
-  },
-  "eslintConfig": {
-    "extends": "plugin:@dxos/react"
+    "typescript": "^4.0.2",
+    "webpack": "4.44.2"
   },
   "publishConfig": {
     "access": "public"
