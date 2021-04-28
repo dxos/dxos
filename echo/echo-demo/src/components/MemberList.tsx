@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react'
+import React from 'react';
 
 import { Party } from '@dxos/echo-db';
 
@@ -18,7 +18,7 @@ const MemberList = ({ party }: MemberListProps) => {
   return (
     <ul>
       {members.map(member => (
-        <li>{member.displayName ?? member.publicKey.humanize()}</li>
+        <li key={member.publicKey.humanize()}>{member.displayName ?? member.publicKey.humanize()}</li>
       ))}
     </ul>
   );

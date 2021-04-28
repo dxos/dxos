@@ -2,12 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
 import faker from 'faker';
+import React, { useState } from 'react';
 
-import { Chip, Fab, IconButton, Toolbar, Typography, List, ListItem, ListItemIcon, ListItemText, TextField, Button, Grid, Paper } from '@material-ui/core';
+import { Chip, Fab, IconButton, Toolbar, Typography, ListItem, ListItemIcon, TextField, Button, Grid, Paper } from '@material-ui/core';
 import grey from '@material-ui/core/colors/grey';
 import { makeStyles } from '@material-ui/core/styles';
+import AddIcon from '@material-ui/icons/Add';
 import GraphIcon from '@material-ui/icons/BubbleChart';
 import OrgIcon from '@material-ui/icons/Business';
 import DefaultIcon from '@material-ui/icons/CheckBoxOutlineBlank';
@@ -16,16 +17,14 @@ import ListIcon from '@material-ui/icons/Reorder';
 import CardIcon from '@material-ui/icons/ViewComfy';
 import GridIcon from '@material-ui/icons/ViewModule';
 import ProjectIcon from '@material-ui/icons/WorkOutline';
-import AddIcon from '@material-ui/icons/Add';
-
 
 import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, LINK_PROJECT, LINK_EMPLOYEE, labels } from '@dxos/echo-testing';
+import { ObjectModel } from '@dxos/object-model';
 
 import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
   useGenerator, useSelection, graphSelector, searchSelector
 } from '../src';
-import { ObjectModel } from '@dxos/object-model';
 
 export default {
   title: 'Search'
@@ -93,7 +92,7 @@ const useStyles = makeStyles(theme => ({
     right: 20,
     bottom: 20,
     left: 'auto',
-    position: 'fixed',
+    position: 'fixed'
   },
   paper: {
     width: 300,
@@ -101,7 +100,7 @@ const useStyles = makeStyles(theme => ({
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-evenly'
-  },
+  }
 }));
 
 const VIEW_LIST = 1;
@@ -206,7 +205,7 @@ const cardAdapter = (classes): CardAdapter => ({
 
 export const withSearch = () => {
   const classes = useStyles();
-  const {generator, party, generate, join} = useGenerator();
+  const { generator, party, generate, join } = useGenerator();
 
   const handleGenerate = () => {
     generate({
@@ -214,9 +213,7 @@ export const withSearch = () => {
       numPeople: 16,
       numProjects: 6
     });
-  }
-
-  
+  };
 
   const [search, setSearch] = useState(undefined);
   const items = useSelection(generator && generator.database.select(), searchSelector(search), [search]);
@@ -239,7 +236,7 @@ export const withSearch = () => {
   const [orgName, setOrgName] = useState('');
   const [invitationCode, setInvitationCode] = useState('');
 
-  async function handleAdd() {
+  async function handleAdd () {
     await generator.database.createItem({
       model: ObjectModel,
       type: OBJECT_ORG,
@@ -247,15 +244,15 @@ export const withSearch = () => {
         name: orgName,
         description: faker.lorem.sentence(),
         labels: faker.random.arrayElements(labels, faker.random.number({ min: 0, max: 3 }))
-      },
-    })
-    setShowAdd(false)
-    setOrgName('')
+      }
+    });
+    setShowAdd(false);
+    setOrgName('');
   }
 
   const handleJoin = () => {
     join(invitationCode);
-  }
+  };
 
   const handleCopyInvite = async () => {
     const invitation = await party.createInvitation({
@@ -264,9 +261,9 @@ export const withSearch = () => {
     });
 
     await navigator.clipboard.writeText(JSON.stringify(invitation.toQueryParameters()));
-  }
+  };
 
-  if(!generator) {
+  if (!generator) {
     return (
       <Grid container direction="row" justify="space-evenly" spacing={0}>
         <Grid item xs={3} spacing={3}>
@@ -281,7 +278,7 @@ export const withSearch = () => {
           </Paper>
         </Grid>
       </Grid>
-    )
+    );
   }
 
   // TODO(burdon): Show/hide components to maintain state (and test subscriptions). Show for first time on select.

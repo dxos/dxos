@@ -157,15 +157,15 @@ const Component = ({ generator }) => {
 };
 
 export const withLinks = () => {
-  const {generator, generate} = useGenerator();
+  const { generator, generate } = useGenerator();
 
   useEffect(() => {
     generate({
       numOrgs: 4,
       numPeople: 16,
       numProjects: 6
-    })
-  }, [])
+    });
+  }, []);
 
   if (!generator) {
     return null;
