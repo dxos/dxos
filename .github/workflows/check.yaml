@@ -50,4 +50,7 @@ jobs:
           node common/scripts/install-run-rush.js install
           
           # Build
-          node common/scripts/install-run-rush.js rebuild --verbose
+          node common/scripts/install-run-rush.js build --to @dxos/echo-demo
+
+          # Build storybook
+          cd echo/echo-demo && pnpm build-storybook
