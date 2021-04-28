@@ -2,29 +2,40 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { createTestInstance } from '@dxos/echo-db';
+import { createTestInstance, InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
 
-export const useGenerator = (config = {}) => {
+const createInstance = () => createTestInstance({
+  initialize: true,
+  networkManagerOptions: {
+    signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal'],
+    ice: [{ urls: 'turn:apollo1.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }]
+  }
+});
+
+export const useGenerator = () => {
   const [generator, setGenerator] = useState<Generator | undefined>();
+  const [party, setParty] = useState<Party | undefined>();
 
-  useEffect(() => {
-    setImmediate(async () => {
-      const echo = await createTestInstance({ initialize: true });
-      const party = await echo.createParty();
-      setGenerator(new Generator(party.database, { seed: 1 }));
-    });
-  }, []);
+  async function generate (config = {}) {
+    const echo = await createInstance();
+    const party = await echo.createParty();
+    const generator = new Generator(party.database, { seed: 1 });
+    await generator.generate(config);
+    setGenerator(generator);
+    setParty(party);
+  }
 
-  useEffect(() => {
-    if (generator) {
-      setImmediate(async () => {
-        await generator.generate(config);
-      });
-    }
-  }, [generator]);
+  async function join (invitation: string) {
+    const echo = await createInstance();
+    const party = await echo.joinParty(
+      InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));
+    await party.open();
+    setGenerator(new Generator(party.database, { seed: 1 }));
+    setParty(party);
+  }
 
-  return generator;
+  return { generator, party, generate, join };
 };

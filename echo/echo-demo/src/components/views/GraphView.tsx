@@ -16,7 +16,7 @@ import {
   ForceLayout,
   LinkProjector,
   NodeProjector,
-  Markers,
+  Markers
 } from '@dxos/gem-spore';
 
 // TODO(burdon): Create container.

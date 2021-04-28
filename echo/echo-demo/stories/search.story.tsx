@@ -2,11 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
+import faker from 'faker';
 import React, { useState } from 'react';
 
-import { Chip, IconButton, Toolbar, Typography } from '@material-ui/core';
+import { Chip, Fab, IconButton, Toolbar, Typography, ListItem, ListItemIcon, TextField, Button, Grid, Paper } from '@material-ui/core';
 import grey from '@material-ui/core/colors/grey';
 import { makeStyles } from '@material-ui/core/styles';
+import AddIcon from '@material-ui/icons/Add';
 import GraphIcon from '@material-ui/icons/BubbleChart';
 import OrgIcon from '@material-ui/icons/Business';
 import DefaultIcon from '@material-ui/icons/CheckBoxOutlineBlank';
@@ -16,7 +18,8 @@ import CardIcon from '@material-ui/icons/ViewComfy';
 import GridIcon from '@material-ui/icons/ViewModule';
 import ProjectIcon from '@material-ui/icons/WorkOutline';
 
-import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, LINK_PROJECT, LINK_EMPLOYEE } from '@dxos/echo-testing';
+import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, LINK_PROJECT, LINK_EMPLOYEE, labels } from '@dxos/echo-testing';
+import { ObjectModel } from '@dxos/object-model';
 
 import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
@@ -82,6 +85,21 @@ const useStyles = makeStyles(theme => ({
       paddingRight: 6,
       fontSize: 12
     }
+  },
+  fab: {
+    margin: 0,
+    top: 'auto',
+    right: 20,
+    bottom: 20,
+    left: 'auto',
+    position: 'fixed'
+  },
+  paper: {
+    width: 300,
+    height: 400,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-evenly'
   }
 }));
 
@@ -187,12 +205,16 @@ const cardAdapter = (classes): CardAdapter => ({
 
 export const withSearch = () => {
   const classes = useStyles();
-  const generator = useGenerator({
-    numOrgs: 10,
-    numPeople: 20,
-    numProjects: 20,
-    numTasks: 30
-  });
+  const { generator, party, generate, join } = useGenerator();
+
+  const handleGenerate = () => {
+    generate({
+      numOrgs: 4,
+      numPeople: 16,
+      numProjects: 6
+    });
+  };
+
   const [search, setSearch] = useState(undefined);
   const items = useSelection(generator && generator.database.select(), searchSelector(search), [search]);
   // TODO(burdon): Use subset.
@@ -210,6 +232,55 @@ export const withSearch = () => {
     </IconButton>
   );
 
+  const [showAdd, setShowAdd] = useState(false);
+  const [orgName, setOrgName] = useState('');
+  const [invitationCode, setInvitationCode] = useState('');
+
+  async function handleAdd () {
+    await generator.database.createItem({
+      model: ObjectModel,
+      type: OBJECT_ORG,
+      props: {
+        name: orgName,
+        description: faker.lorem.sentence(),
+        labels: faker.random.arrayElements(labels, faker.random.number({ min: 0, max: 3 }))
+      }
+    });
+    setShowAdd(false);
+    setOrgName('');
+  }
+
+  const handleJoin = () => {
+    join(invitationCode);
+  };
+
+  const handleCopyInvite = async () => {
+    const invitation = await party.createInvitation({
+      secretProvider: async () => Buffer.from('0000'),
+      secretValidator: async () => true
+    });
+
+    await navigator.clipboard.writeText(JSON.stringify(invitation.toQueryParameters()));
+  };
+
+  if (!generator) {
+    return (
+      <Grid container direction="row" justify="space-evenly" spacing={0}>
+        <Grid item xs={3} spacing={3}>
+          <Paper className={classes.paper}>
+            <Button color="primary" onClick={handleGenerate}>Generate</Button>
+          </Paper>
+        </Grid>
+        <Grid item xs={3} spacing={3}>
+          <Paper className={classes.paper}>
+            <TextField value={invitationCode} onChange={e => setInvitationCode(e.target.value)} label="Invitation"/>
+            <Button color="primary" onClick={handleJoin}>Join</Button>
+          </Paper>
+        </Grid>
+      </Grid>
+    );
+  }
+
   // TODO(burdon): Show/hide components to maintain state (and test subscriptions). Show for first time on select.
   return (
     <div className={classes.root}>
@@ -221,7 +292,19 @@ export const withSearch = () => {
           <ViewButton view={VIEW_GRID} icon={GridIcon} />
           <ViewButton view={VIEW_GRAPH} icon={GraphIcon} />
         </div>
+        <Button onClick={handleCopyInvite}>Copy invite</Button>
       </Toolbar>
+
+      {showAdd && (
+        <ListItem>
+          <ListItemIcon>
+            <OrgIcon />
+          </ListItemIcon>
+          <TextField id="org-name" label="Org name" value={orgName} onChange={e => setOrgName(e.currentTarget.value)}/>
+          <Button color="primary" onClick={handleAdd}>Add</Button>
+          <Button color="secondary" onClick={() => setShowAdd(false)}>Cancel</Button>
+        </ListItem>
+      )}
 
       <div className={classes.content}>
         {view === VIEW_LIST && (
@@ -259,6 +342,10 @@ export const withSearch = () => {
           </>
         )}
       </div>
+
+      <Fab className={classes.fab} color="primary" aria-label="add" onClick={() => setShowAdd(true)}>
+        <AddIcon />
+      </Fab>
     </div>
   );
 };
