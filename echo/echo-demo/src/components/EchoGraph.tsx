@@ -3,9 +3,8 @@
 //
 
 import React, { useEffect, useRef, useState } from 'react';
-
-import * as colors from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
+import * as colors from '@material-ui/core/colors';
 
 import { ECHO } from '@dxos/echo-db';
 import {
@@ -14,7 +13,7 @@ import {
   Graph,
   ForceLayout,
   LinkProjector,
-  NodeProjector
+  NodeProjector,
 } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
 
@@ -24,18 +23,18 @@ import { useEcho, useGraphData } from '../hooks';
 const useCustomStyles = makeStyles(() => ({
   nodes: {
     '& g.node.database circle': {
-      fill: colors.blue[400]
+      fill: colors['blue'][400]
     },
     '& g.node.party circle': {
-      fill: colors.red[400]
+      fill: colors['red'][400]
     },
     '& g.node.item circle': {
-      fill: colors.grey[400]
+      fill: colors['grey'][400]
     },
     '& g.node text': {
       fontFamily: 'sans-serif',
       fontWeight: 100
-    }
+    },
   }
 }));
 
@@ -52,7 +51,7 @@ const createLayout = ({ echo, grid, guides, delta, linkProjector, handleSelect }
   const layout = new ForceLayout({
     center: {
       x: grid.center.x + delta.x,
-      y: grid.center.y + delta.y
+      y: grid.center.y + delta.y,
     },
     initializer: (d, center) => {
       const { type } = d;
@@ -96,7 +95,7 @@ const createLayout = ({ echo, grid, guides, delta, linkProjector, handleSelect }
 
     const data = {
       links: [
-        { id: 'guide-link', source, target: { id: 'guide-link-target', ...position } }
+        { id: 'guide-link', source, target: { id: 'guide-link-target', ...position } },
       ]
     };
 
@@ -124,7 +123,7 @@ const createLayout = ({ echo, grid, guides, delta, linkProjector, handleSelect }
 
         case 'item': {
           const party = await echo.getParty(source.partyKey);
-          await party.database.createItem({ model: ObjectModel, parent: source.id });
+          const item = await party.database.createItem({ model: ObjectModel, parent: source.id });
           break;
         }
       }
@@ -189,7 +188,7 @@ const EchoGraph = (
   };
 
   const echo = useEcho();
-  const [, setSelected] = useState();
+  const [selected, setSelected] = useState();
   const [{ layout, drag }, setLayout] = useState(() => createLayout({
     echo, delta, grid, guides: guides.current, linkProjector, handleSelect
   }));
