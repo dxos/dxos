@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
+import React from 'react';
+
+import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles(() => ({
   root: {

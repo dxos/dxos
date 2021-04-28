@@ -2,7 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, {useState} from 'react';
+import React, { useState } from 'react';
+
 import { IconButton, InputAdornment, TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import ClearIcon from '@material-ui/icons/Clear';
@@ -24,7 +25,7 @@ const SearchBar = ({ classes = {}, onUpdate = console.log }) => {
 
   const handleSearch = () => {
     onUpdate(text);
-  }
+  };
 
   const handleCancel = () => {
     setText('');

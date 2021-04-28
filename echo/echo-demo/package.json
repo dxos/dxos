@@ -17,7 +17,7 @@
     "build-storybook": "build-storybook",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose  --rootDir=./src --passWithNoTests",
-    "lint": "eslint --format codeframe './{src,test}/**/*.ts'",
+    "lint": "eslint --format codeframe './{src,test,stories}/**/*.{ts,tsx}'",
     "test": "jest --rootDir=./src --verbose --passWithNoTests",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "prepublishOnly": "npm run test && npm run build",
@@ -92,7 +92,8 @@
     "react-dom": "16.12.0",
     "ts-loader": "~8.1.0",
     "webpack": "4.44.2",
-    "eslint": "^7.7.0"
+    "eslint": "^7.7.0",
+    "@types/faker": "~5.5.1"
   },
   "eslintConfig": {
     "extends": "plugin:@dxos/react"
