@@ -2,17 +2,17 @@
   "name": "@dxos/async",
   "version": "1.0.0-alpha.0",
   "description": "Basic async utils",
+  "license": "AGPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist"
   ],
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
     "test": "toolchain test",
     "lint": "toolchain lint"
   },
-  "license": "AGPL-3.0",
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",

@@ -1,6 +1,7 @@
 {
   "name": "@dxos/object-model",
   "version": "2.6.17",
+  "private": false,
   "description": "ECHO object model.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -17,7 +18,6 @@
     "src",
     "dist"
   ],
-  "private": false,
   "scripts": {
     "build": "toolchain build",
     "lint": "toolchain lint"
@@ -39,18 +39,18 @@
     "debug": "^4.1.1",
     "hypercore": "^7.7.1",
     "js-data-structs": "^1.1.2",
-    "lodash.merge": "^4.6.2",
     "lodash": "4.17.21",
-    "protobufjs": "^6.9.0",
-    "minisearch": "^3.0.2"
+    "lodash.merge": "^4.6.2",
+    "minisearch": "^3.0.2",
+    "protobufjs": "^6.9.0"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/jest-expect-message": "^1.0.3",
     "@types/jest": "^26.0.7",
+    "@types/jest-expect-message": "^1.0.3",
     "chance": "^1.1.6",
-    "jest-expect-message": "^1.0.2",
     "jest": "^26.2.2",
+    "jest-expect-message": "^1.0.2",
     "stream-buffers": "^3.0.2",
     "wait-for-expect": "^3.0.2"
   },

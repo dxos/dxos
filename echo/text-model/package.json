@@ -1,6 +1,7 @@
 {
   "name": "@dxos/text-model",
   "version": "2.6.22",
+  "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -17,7 +18,6 @@
     "dist",
     "src"
   ],
-  "private": false,
   "scripts": {
     "build": "toolchain build",
     "lint": "toolchain lint"
@@ -25,11 +25,11 @@
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/model-factory": "workspace:*",
     "@dxos/echo-protocol": "workspace:^2.6.17",
+    "@dxos/model-factory": "workspace:*",
     "@types/node": "^14.0.9",
-    "yjs": "^13.4.1",
-    "protobufjs": "^6.9.0"
+    "protobufjs": "^6.9.0",
+    "yjs": "^13.4.1"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

@@ -76,3 +76,9 @@ Rigged package should specify it's build script as:
 ```
 
 This will build the package with typescript, run eslint, and test with jest.
+
+### Sorting `package.json`
+
+```
+npx @sfomin/for-each-package -n "@dxos/*" "npx sort-package-json"
+```
