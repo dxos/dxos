@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import faker from 'faker';
 
-import { Chip, Fab, IconButton, Toolbar, Typography, List, ListItem, ListItemIcon, ListItemText, TextField, Button, Grid } from '@material-ui/core';
+import { Chip, Fab, IconButton, Toolbar, Typography, List, ListItem, ListItemIcon, ListItemText, TextField, Button, Grid, Paper } from '@material-ui/core';
 import grey from '@material-ui/core/colors/grey';
 import { makeStyles } from '@material-ui/core/styles';
 import GraphIcon from '@material-ui/icons/BubbleChart';
@@ -94,7 +94,14 @@ const useStyles = makeStyles(theme => ({
     bottom: 20,
     left: 'auto',
     position: 'fixed',
-  }
+  },
+  paper: {
+    width: 300,
+    height: 400,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-evenly'
+  },
 }));
 
 const VIEW_LIST = 1;
@@ -199,7 +206,7 @@ const cardAdapter = (classes): CardAdapter => ({
 
 export const withSearch = () => {
   const classes = useStyles();
-  const {generator, generate, join} = useGenerator();
+  const {generator, party, generate, join} = useGenerator();
 
   const handleGenerate = () => {
     generate({
@@ -209,9 +216,7 @@ export const withSearch = () => {
     });
   }
 
-  const handleJoin = () => {
-    join('abc123');
-  }
+  
 
   const [search, setSearch] = useState(undefined);
   const items = useSelection(generator && generator.database.select(), searchSelector(search), [search]);
@@ -232,6 +237,7 @@ export const withSearch = () => {
 
   const [showAdd, setShowAdd] = useState(false);
   const [orgName, setOrgName] = useState('');
+  const [invitationCode, setInvitationCode] = useState('');
 
   async function handleAdd() {
     await generator.database.createItem({
@@ -247,14 +253,34 @@ export const withSearch = () => {
     setOrgName('')
   }
 
+  const handleJoin = () => {
+    join(invitationCode);
+  }
+
+  const handleCopyInvite = async () => {
+    const invitation = await party.createInvitation({
+      secretProvider: async () => Buffer.from('0000'),
+      secretValidator: async () => true
+    });
+
+    await navigator.clipboard.writeText(JSON.stringify(invitation.toQueryParameters()));
+  }
+
   if(!generator) {
     return (
-      <div className={classes.root}>
-        <Grid direction="row" alignItems="center" justify="center">
-          <Button color="primary" onClick={handleGenerate}>Generate</Button>
-          <Button color="primary" onClick={handleJoin}>Join</Button>
+      <Grid container direction="row" justify="space-evenly" spacing={0}>
+        <Grid item xs={3} spacing={3}>
+          <Paper className={classes.paper}>
+            <Button color="primary" onClick={handleGenerate}>Generate</Button>
+          </Paper>
         </Grid>
-      </div>
+        <Grid item xs={3} spacing={3}>
+          <Paper className={classes.paper}>
+            <TextField value={invitationCode} onChange={e => setInvitationCode(e.target.value)} label="Invitation"/>
+            <Button color="primary" onClick={handleJoin}>Join</Button>
+          </Paper>
+        </Grid>
+      </Grid>
     )
   }
 
@@ -269,6 +295,7 @@ export const withSearch = () => {
           <ViewButton view={VIEW_GRID} icon={GridIcon} />
           <ViewButton view={VIEW_GRAPH} icon={GraphIcon} />
         </div>
+        <Button onClick={handleCopyInvite}>Copy invite</Button>
       </Toolbar>
 
       {showAdd && (
