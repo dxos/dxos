@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import {
   Button,
   Chip,
+  CircularProgress,
   Dialog, DialogActions,
   DialogContent,
   DialogTitle,
@@ -211,8 +212,7 @@ const cardAdapter = (classes): CardAdapter => ({
 
 const Home = ({ onCreate, onJoin }) => {
   const [invitationCode, setInvitationCode] = useState('');
-
-  // TODO(burdon): Show joining status.
+  const [inProgress, setInProgress] = useState(false);
 
   return (
     <Dialog open={true} fullWidth maxWidth='sm'>
@@ -228,18 +228,26 @@ const Home = ({ onCreate, onJoin }) => {
         />
       </DialogContent>
       <DialogActions>
+        {inProgress && <CircularProgress />}
         <Button
           color='secondary'
           variant='contained'
-          onClick={() => onJoin(invitationCode)}
-          disabled={!invitationCode}
+          onClick={() => {
+            setInProgress(true);
+            onJoin(invitationCode);
+          }}
+          disabled={!invitationCode || inProgress}
         >
           Join Party
         </Button>
         <Button
           color='primary'
           variant='contained'
-          onClick={onCreate}
+          onClick={() => {
+            setInProgress(true);
+            onCreate();
+          }}
+          disabled={inProgress}
         >
           Create Party
         </Button>
