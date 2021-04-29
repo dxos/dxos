@@ -199,8 +199,6 @@ const EchoGraph = (
     }));
   }, [delta.x, delta.y]);
 
-  console.log('>>>', data);
-
   return (
     <g>
       <g ref={guides} className={classes.links} />

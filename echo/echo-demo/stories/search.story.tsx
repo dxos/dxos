@@ -262,7 +262,6 @@ const Main = ({ party, generator }) => {
   const [search, setSearch] = useState(undefined);
   const items = useSelection(generator.database.select(), searchSelector(search), [search]);
   // TODO(burdon): Use subset.
-  // console.log(items);
   // const data = useSelection(items && new Selection(items, new Event()), graphSelector);
   const data = useSelection(generator.database.select(), graphSelector(itemAdapter));
   const [selected, setSelected] = useState();
