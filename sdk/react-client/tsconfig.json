@@ -19,4 +19,7 @@
     "src",
     "stories",
   ],
+  "references": [
+    {"path": "../client"}
+  ]
 }
