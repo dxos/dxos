@@ -3,7 +3,7 @@
 //
 
 import update from 'immutability-helper';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useResizeAware from 'react-resize-aware';
 
 import { makeStyles } from '@material-ui/core/styles';
@@ -65,7 +65,11 @@ const GraphView = ({
   const [layout] = useState(() => new ForceLayout());
   const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey' }));
 
-  drag.on('click', ({ source }) => onSelect(source.id));
+  useEffect(() => {
+    const handler = ({ source }) => onSelect(source.id);
+    drag.on('click', handler);
+    return () => drag.off('click', handler);
+  }, [drag])
 
   return (
     <div className={clazzes.root}>
