@@ -12,9 +12,9 @@ import { createId, createKeyPair } from '@dxos/crypto';
 import { ECHO, InvitationDescriptor, createTestInstance } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
-import { createStorage } from '@dxos/random-access-multi-storage';
 
 import { EchoContext, EchoGraph, MemberList } from '../src';
+import { createItemStorage, createSnapshotStorage, onlineConfig } from '../src/config/config';
 
 const log = debug('dxos:echo:story');
 
@@ -24,27 +24,21 @@ export default {
   title: 'Swarm'
 };
 
-// TODO(burdon): Standardize config; Use default or local server? Add docs.
-const config = {
-  signal: 'wss://signal2.dxos.network/dxos/signal' // TODO(burdon): Not working.
-};
-
 export const Primary = () => {
   const [id] = useState(createId());
   const [echo, setEcho] = useState<ECHO>();
-  const [storage] = useState(() => createStorage('dxos/echo-demo'));
-  const [snapshotStorage] = useState(() => createStorage('dxos/echo-demo/snapshots'));
+  const [storage] = useState(createItemStorage);
+  const [snapshotStorage] = useState(createSnapshotStorage);
 
   useEffect(() => {
     setImmediate(async () => {
       try {
         const echo = await createTestInstance({
+          ...onlineConfig,
           storage,
           // keyStorage: leveljs('dxos/echo-demo/keystore'),
           // TODO(burdon): Move const to config.
-          networkManagerOptions: { signal: [config.signal] },
-          snapshotStorage,
-          snapshotInterval: 10
+          snapshotStorage
         });
 
         log('Created:', String(echo));
