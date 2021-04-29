@@ -239,7 +239,7 @@ const Home = ({ onCreate, onJoin }) => {
             setError(undefined);
             try {
               await onJoin(invitationCode);
-            } catch(error) {
+            } catch (error) {
               setError(error);
             } finally {
               setInProgress(false);
