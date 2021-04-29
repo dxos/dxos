@@ -69,7 +69,7 @@ const GraphView = ({
     const handler = ({ source }) => onSelect(source.id);
     drag.on('click', handler);
     return () => drag.off('click', handler);
-  }, [drag])
+  }, [drag]);
 
   return (
     <div className={clazzes.root}>

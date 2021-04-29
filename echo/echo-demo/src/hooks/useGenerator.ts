@@ -4,17 +4,10 @@
 
 import { useState } from 'react';
 
-import { createTestInstance, InvitationDescriptor, Party } from '@dxos/echo-db';
+import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
 
-// TODO(burdon): Factor out config.
-const createInstance = () => createTestInstance({
-  initialize: true,
-  networkManagerOptions: {
-    signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal'],
-    ice: [{ urls: 'turn:apollo1.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }]
-  }
-});
+import { createOnlineInstance } from '../config/config';
 
 // TODO(burdon): Break apart.
 export const useGenerator = () => {
@@ -22,7 +15,7 @@ export const useGenerator = () => {
   const [generator, setGenerator] = useState<Generator | undefined>();
 
   const createParty = async (config = {}) => {
-    const echo = await createInstance();
+    const echo = await createOnlineInstance();
 
     const party = await echo.createParty();
 
@@ -35,7 +28,7 @@ export const useGenerator = () => {
 
   const joinParty = async (invitation: string) => {
     console.debug('Joining...');
-    const echo = await createInstance();
+    const echo = await createOnlineInstance();
 
     const party = await echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));

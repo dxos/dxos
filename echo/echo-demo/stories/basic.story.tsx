@@ -11,11 +11,11 @@ import { blueGrey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
 import { createId } from '@dxos/crypto';
-import { createTestInstance } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 
 import { EchoContext, EchoGraph, useEcho } from '../src';
+import { createOfflineInstance } from '../src/config/config';
 
 const log = debug('dxos:echo:story');
 
@@ -55,7 +55,7 @@ export const Primary = () => {
       setImmediate(async () => {
         const newPeers = await Promise.all([...new Array(n - peers.length)].map(async () => {
           const id = createId();
-          const echo = await createTestInstance({ initialize: true });
+          const echo = await createOfflineInstance();
           console.debug('Created:', String(echo));
           return { id, echo };
         }));
