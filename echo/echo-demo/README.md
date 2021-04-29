@@ -22,7 +22,13 @@ npx @dxos/signal
 
 2. Use the signal server with storybooks
 
-Edit the `.env` file, leaving the following `STORYBOOK_SIGNAL` variable uncommented:
+First, copy the environment file example:
+
+```bash
+cp .env.example .env
+```
+
+Next, edit the `.env` file, leaving the following `STORYBOOK_SIGNAL` variable uncommented:
 
 ```bash
 STORYBOOK_SIGNAL="ws://localhost:4000"
