@@ -56,7 +56,7 @@ export const Primary = () => {
         const newPeers = await Promise.all([...new Array(n - peers.length)].map(async () => {
           const id = createId();
           const echo = await createTestInstance({ initialize: true });
-          console.log('Created:', String(echo));
+          console.debug('Created:', String(echo));
           return { id, echo };
         }));
 

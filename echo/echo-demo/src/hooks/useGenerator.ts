@@ -34,13 +34,13 @@ export const useGenerator = () => {
   };
 
   const joinParty = async (invitation: string) => {
-    console.log('Joining...');
+    console.debug('Joining...');
     const echo = await createInstance();
 
     const party = await echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));
     await party.open();
-    console.log('Open', party);
+    console.debug('Open', party);
 
     setGenerator(new Generator(party.database, { seed: 1 }));
     setParty(party);
