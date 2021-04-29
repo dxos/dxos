@@ -236,6 +236,7 @@ const Home = ({ onCreate, onJoin }) => {
           variant='contained'
           onClick={async () => {
             setInProgress(true);
+            setError(undefined);
             try {
               await onJoin(invitationCode);
             } catch(error) {
