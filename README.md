@@ -12,21 +12,24 @@ DXOS developer framework
 
 1. Install node `v12.20.0`
 
-2. Installing Rush and pnpm:
+1. Install Rush and pnpm to manage the monorepo:
 ```
 npm install -g @microsoft/rush pnpm
 ```
 
-3. Make sure you are logged in to NPM (`npm whoami`) and have access to `dxos` org on NPM.
+### Development
 
+1. The project currently uses private NPM packages.
+Make sure you have access to the [`dxos`](https://www.npmjs.com/org/dxos) NPM org
+and that you are logged in to NPM (check via `npm whoami`, otherwise `npm login`).
 
-4. Install dependencies:
+2. To install dependencies:
 
 ```
 rush update
 ```
 
-5. Build packages:
+3. To build packages:
 
 ```
 rush build

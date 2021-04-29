@@ -129,13 +129,6 @@ const Component = ({ generator }) => {
     }
   };
 
-  console.log(data);
-  // TODO(burdon): Graph disappears.
-  // events.js:46 MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 click listeners added. Use emitter.setMaxListeners() to increase limit
-  //     at _addListener (http://localhost:9001/vendors~main.715b4af2c7d2bbf95f53.bundle.js:178465:15)
-  //     at EventEmitter.addListener (http://localhost:9001/vendors~main.715b4af2c7d2bbf95f53.bundle.js:178481:10)
-  //     at GraphView (http://localhost:9001/main.715b4af2c7d2bbf95f53.bundle.js:10824:8)
-
   return (
     <div className={classes.root}>
       <div className={classes.items}>
@@ -156,14 +149,16 @@ const Component = ({ generator }) => {
   );
 };
 
-export const withLinks = () => {
-  const { generator, generate } = useGenerator();
+export const Primary = () => {
+  const { generator, createParty } = useGenerator();
 
   useEffect(() => {
-    generate({
-      numOrgs: 4,
-      numPeople: 16,
-      numProjects: 6
+    setImmediate(async () => {
+      await createParty({
+        numOrgs: 4,
+        numPeople: 16,
+        numProjects: 6
+      });
     });
   }, []);
 
