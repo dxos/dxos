@@ -199,7 +199,7 @@ const EchoGraph = (
     }));
   }, [delta.x, delta.y]);
 
-  console.log('>>>', data)
+  console.log('>>>', data);
 
   return (
     <g>

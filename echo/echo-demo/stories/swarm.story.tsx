@@ -3,7 +3,6 @@
 //
 
 import debug from 'debug';
-import leveljs from 'level-js';
 import React, { useEffect, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 
