@@ -213,6 +213,7 @@ const cardAdapter = (classes): CardAdapter => ({
 const Home = ({ onCreate, onJoin }) => {
   const [invitationCode, setInvitationCode] = useState('');
   const [inProgress, setInProgress] = useState(false);
+  const [error, setError] = useState<Error | undefined>(undefined);
 
   return (
     <Dialog open={true} fullWidth maxWidth='sm'>
@@ -228,13 +229,20 @@ const Home = ({ onCreate, onJoin }) => {
         />
       </DialogContent>
       <DialogActions>
+        {error && <p>{String(error)}</p>}
         {inProgress && <CircularProgress />}
         <Button
           color='secondary'
           variant='contained'
-          onClick={() => {
+          onClick={async () => {
             setInProgress(true);
-            onJoin(invitationCode);
+            try {
+              await onJoin(invitationCode);
+            } catch(error) {
+              setError(error);
+            } finally {
+              setInProgress(false);
+            }
           }}
           disabled={!invitationCode || inProgress}
         >
