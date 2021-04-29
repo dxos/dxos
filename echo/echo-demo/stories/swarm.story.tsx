@@ -3,7 +3,6 @@
 //
 
 import debug from 'debug';
-import leveljs from 'level-js';
 import React, { useEffect, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 
@@ -13,35 +12,33 @@ import { createId, createKeyPair } from '@dxos/crypto';
 import { ECHO, InvitationDescriptor, createTestInstance } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
-import { createStorage } from '@dxos/random-access-multi-storage';
 
 import { EchoContext, EchoGraph, MemberList } from '../src';
+import { createItemStorage, createSnapshotStorage, onlineConfig } from '../src/config/config';
 
 const log = debug('dxos:echo:story');
 
 debug.enable('dxos:echo:story:*, dxos:*:error');
 
 export default {
-  title: 'Swarm',
-  decorators: []
+  title: 'Swarm'
 };
 
-export const withSwarm = ({ signal = 'wss://signal2.dxos.network/dxos/signal' }) => {
+export const Primary = () => {
   const [id] = useState(createId());
   const [echo, setEcho] = useState<ECHO>();
-  const [storage] = useState(() => createStorage('dxos/echo-demo'));
-  const [snapshotStorage] = useState(() => createStorage('dxos/echo-demo/snapshots'));
+  const [storage] = useState(createItemStorage);
+  const [snapshotStorage] = useState(createSnapshotStorage);
 
   useEffect(() => {
     setImmediate(async () => {
       try {
         const echo = await createTestInstance({
+          ...onlineConfig,
           storage,
-          keyStorage: leveljs('dxos/echo-demo/keystore'),
+          // keyStorage: leveljs('dxos/echo-demo/keystore'),
           // TODO(burdon): Move const to config.
-          networkManagerOptions: { signal: [signal] },
-          snapshotStorage,
-          snapshotInterval: 10
+          snapshotStorage
         });
 
         log('Created:', String(echo));
@@ -99,7 +96,7 @@ export const withSwarm = ({ signal = 'wss://signal2.dxos.network/dxos/signal' })
             inputProps={{ spellCheck: false }}
             multiline={true}
             rows={3}
-            value={invitation}
+            value={invitation || ''}
             onChange={event => setInvitation((event.currentTarget as any).value)}
           />
           <div>

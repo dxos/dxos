@@ -19,7 +19,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const SearchBar = ({ classes = {}, onUpdate = console.log }) => {
+const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
   const clazzes = { ...useStyles(), ...classes };
   const [text, setText] = useState('');
 
