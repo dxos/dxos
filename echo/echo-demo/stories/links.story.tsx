@@ -156,14 +156,16 @@ const Component = ({ generator }) => {
   );
 };
 
-export const withLinks = () => {
-  const { generator, generate } = useGenerator();
+export const Primary = () => {
+  const { generator, createParty } = useGenerator();
 
   useEffect(() => {
-    generate({
-      numOrgs: 4,
-      numPeople: 16,
-      numProjects: 6
+    setImmediate(async () => {
+      await createParty({
+        numOrgs: 4,
+        numPeople: 16,
+        numProjects: 6
+      });
     });
   }, []);
 

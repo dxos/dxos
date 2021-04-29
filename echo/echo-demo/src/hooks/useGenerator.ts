@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { createTestInstance, InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
 
+// TODO(burdon): Factor out config.
 const createInstance = () => createTestInstance({
   initialize: true,
   networkManagerOptions: {
@@ -15,27 +16,35 @@ const createInstance = () => createTestInstance({
   }
 });
 
+// TODO(burdon): Break apart.
 export const useGenerator = () => {
-  const [generator, setGenerator] = useState<Generator | undefined>();
   const [party, setParty] = useState<Party | undefined>();
+  const [generator, setGenerator] = useState<Generator | undefined>();
 
-  async function generate (config = {}) {
+  const createParty = async (config = {}) => {
     const echo = await createInstance();
+
     const party = await echo.createParty();
+
     const generator = new Generator(party.database, { seed: 1 });
     await generator.generate(config);
+
     setGenerator(generator);
     setParty(party);
-  }
+  };
 
-  async function join (invitation: string) {
+  const joinParty = async (invitation: string) => {
+    console.log('Joining...');
     const echo = await createInstance();
+
     const party = await echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));
     await party.open();
+    console.log('Open', party);
+
     setGenerator(new Generator(party.database, { seed: 1 }));
     setParty(party);
-  }
+  };
 
-  return { generator, party, generate, join };
+  return { party, generator, createParty, joinParty };
 };

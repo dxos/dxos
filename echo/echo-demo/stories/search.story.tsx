@@ -5,7 +5,20 @@
 import faker from 'faker';
 import React, { useState } from 'react';
 
-import { Chip, Fab, IconButton, Toolbar, Typography, ListItem, ListItemIcon, TextField, Button, Grid, Paper } from '@material-ui/core';
+import {
+  Button,
+  Chip,
+  Dialog, DialogActions,
+  DialogContent,
+  DialogTitle,
+  Fab,
+  IconButton,
+  ListItem,
+  ListItemIcon,
+  TextField,
+  Toolbar,
+  Typography
+} from '@material-ui/core';
 import grey from '@material-ui/core/colors/grey';
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
@@ -93,13 +106,6 @@ const useStyles = makeStyles(theme => ({
     bottom: 20,
     left: 'auto',
     position: 'fixed'
-  },
-  paper: {
-    width: 300,
-    height: 400,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-evenly'
   }
 }));
 
@@ -203,24 +209,54 @@ const cardAdapter = (classes): CardAdapter => ({
   }
 });
 
-export const withSearch = () => {
-  const classes = useStyles();
-  const { generator, party, generate, join } = useGenerator();
+const Home = ({ onCreate, onJoin }) => {
+  const [invitationCode, setInvitationCode] = useState('');
 
-  const handleGenerate = () => {
-    generate({
-      numOrgs: 4,
-      numPeople: 16,
-      numProjects: 6
-    });
-  };
+  // TODO(burdon): Show joining status.
+
+  return (
+    <Dialog open={true} fullWidth maxWidth='sm'>
+      <DialogTitle>Demo</DialogTitle>
+      <DialogContent>
+        <TextField
+          fullWidth
+          value={invitationCode}
+          onChange={e => setInvitationCode(e.target.value)}
+          variant='outlined'
+          label='Invitation code'
+          spellCheck={false}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button
+          color='secondary'
+          variant='contained'
+          onClick={() => onJoin(invitationCode)}
+          disabled={!invitationCode}
+        >
+          Join Party
+        </Button>
+        <Button
+          color='primary'
+          variant='contained'
+          onClick={onCreate}
+        >
+          Create Party
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+const Main = ({ party, generator }) => {
+  const classes = useStyles();
 
   const [search, setSearch] = useState(undefined);
-  const items = useSelection(generator && generator.database.select(), searchSelector(search), [search]);
+  const items = useSelection(generator.database.select(), searchSelector(search), [search]);
   // TODO(burdon): Use subset.
   // console.log(items);
   // const data = useSelection(items && new Selection(items, new Event()), graphSelector);
-  const data = useSelection(generator && generator.database.select(), graphSelector(itemAdapter));
+  const data = useSelection(generator.database.select(), graphSelector(itemAdapter));
   const [selected, setSelected] = useState();
   const [view, setView] = useState(VIEW_LIST);
 
@@ -234,7 +270,6 @@ export const withSearch = () => {
 
   const [showAdd, setShowAdd] = useState(false);
   const [orgName, setOrgName] = useState('');
-  const [invitationCode, setInvitationCode] = useState('');
 
   async function handleAdd () {
     await generator.database.createItem({
@@ -250,10 +285,6 @@ export const withSearch = () => {
     setOrgName('');
   }
 
-  const handleJoin = () => {
-    join(invitationCode);
-  };
-
   const handleCopyInvite = async () => {
     const invitation = await party.createInvitation({
       secretProvider: async () => Buffer.from('0000'),
@@ -262,24 +293,6 @@ export const withSearch = () => {
 
     await navigator.clipboard.writeText(JSON.stringify(invitation.toQueryParameters()));
   };
-
-  if (!generator) {
-    return (
-      <Grid container direction="row" justify="space-evenly" spacing={0}>
-        <Grid item xs={3} spacing={3}>
-          <Paper className={classes.paper}>
-            <Button color="primary" onClick={handleGenerate}>Generate</Button>
-          </Paper>
-        </Grid>
-        <Grid item xs={3} spacing={3}>
-          <Paper className={classes.paper}>
-            <TextField value={invitationCode} onChange={e => setInvitationCode(e.target.value)} label="Invitation"/>
-            <Button color="primary" onClick={handleJoin}>Join</Button>
-          </Paper>
-        </Grid>
-      </Grid>
-    );
-  }
 
   // TODO(burdon): Show/hide components to maintain state (and test subscriptions). Show for first time on select.
   return (
@@ -300,9 +313,9 @@ export const withSearch = () => {
           <ListItemIcon>
             <OrgIcon />
           </ListItemIcon>
-          <TextField id="org-name" label="Org name" value={orgName} onChange={e => setOrgName(e.currentTarget.value)}/>
-          <Button color="primary" onClick={handleAdd}>Add</Button>
-          <Button color="secondary" onClick={() => setShowAdd(false)}>Cancel</Button>
+          <TextField id='org-name' label='Org name' value={orgName} onChange={e => setOrgName(e.currentTarget.value)}/>
+          <Button color='primary' onClick={handleAdd}>Add</Button>
+          <Button color='secondary' onClick={() => setShowAdd(false)}>Cancel</Button>
         </ListItem>
       )}
 
@@ -343,9 +356,37 @@ export const withSearch = () => {
         )}
       </div>
 
-      <Fab className={classes.fab} color="primary" aria-label="add" onClick={() => setShowAdd(true)}>
+      <Fab className={classes.fab} color='primary' aria-label='add' onClick={() => setShowAdd(true)}>
         <AddIcon />
       </Fab>
     </div>
+  );
+};
+
+// TOOD(burdon): Implement router.
+
+export const Primary = () => {
+  const { party, generator, createParty, joinParty } = useGenerator();
+
+  const handleCreate = async () => {
+    await createParty({
+      numOrgs: 4,
+      numPeople: 16,
+      numProjects: 6
+    });
+  };
+
+  const handleJoin = async (invitationCode) => {
+    await joinParty(invitationCode);
+  };
+
+  if (party) {
+    return (
+      <Main party={party} generator={generator} />
+    );
+  }
+
+  return (
+    <Home onCreate={handleCreate} onJoin={handleJoin} />
   );
 };

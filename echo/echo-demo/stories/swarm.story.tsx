@@ -22,11 +22,15 @@ const log = debug('dxos:echo:story');
 debug.enable('dxos:echo:story:*, dxos:*:error');
 
 export default {
-  title: 'Swarm',
-  decorators: []
+  title: 'Swarm'
 };
 
-export const withSwarm = ({ signal = 'wss://signal2.dxos.network/dxos/signal' }) => {
+// TODO(burdon): Standardize config; Use default or local server? Add docs.
+const config = {
+  signal: 'wss://signal2.dxos.network/dxos/signal' // TODO(burdon): Not working.
+};
+
+export const Primary = () => {
   const [id] = useState(createId());
   const [echo, setEcho] = useState<ECHO>();
   const [storage] = useState(() => createStorage('dxos/echo-demo'));
@@ -37,9 +41,9 @@ export const withSwarm = ({ signal = 'wss://signal2.dxos.network/dxos/signal' })
       try {
         const echo = await createTestInstance({
           storage,
-          keyStorage: leveljs('dxos/echo-demo/keystore'),
+          // keyStorage: leveljs('dxos/echo-demo/keystore'),
           // TODO(burdon): Move const to config.
-          networkManagerOptions: { signal: [signal] },
+          networkManagerOptions: { signal: [config.signal] },
           snapshotStorage,
           snapshotInterval: 10
         });
@@ -99,7 +103,7 @@ export const withSwarm = ({ signal = 'wss://signal2.dxos.network/dxos/signal' })
             inputProps={{ spellCheck: false }}
             multiline={true}
             rows={3}
-            value={invitation}
+            value={invitation || ''}
             onChange={event => setInvitation((event.currentTarget as any).value)}
           />
           <div>

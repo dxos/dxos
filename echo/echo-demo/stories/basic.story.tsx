@@ -22,7 +22,7 @@ const log = debug('dxos:echo:story');
 debug.enable('dxos:echo:story:*, dxos:*:error');
 
 export default {
-  title: 'Demo',
+  title: 'Basic',
   decorators: [withKnobs]
 };
 
@@ -46,7 +46,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-export const withDatabase = () => {
+export const Primary = () => {
   const n = number('Datatbases', 1, { min: 1, max: 8 });
 
   const [peers, setPeers] = useState([]);
