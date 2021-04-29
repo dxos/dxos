@@ -12,6 +12,7 @@
     "lint": "eslint '{src,stories}/**/*.{ts,tsx,js}'",
     "prepublishOnly": "npm run build && npm run test",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
+    "build-storybook": "build-storybook",
     "test": "jest --rootDir ./src --verbose --passWithNoTests --runInBand"
   },
   "eslintConfig": {

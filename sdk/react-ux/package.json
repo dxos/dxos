@@ -11,6 +11,7 @@
     "build:watch": "tsc --watch",
     "lint": "eslint '{src,tests}/**/*.{ts,js,tsx,jsx}'",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
+    "build-storybook": "build-storybook",
     "test": "jest --rootDir ./tests --verbose --runInBand"
   },
   "eslintConfig": {
