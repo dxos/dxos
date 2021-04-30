@@ -10,16 +10,15 @@ import { Protocol } from '@dxos/protocol';
 import { ComplexMap } from '@dxos/util';
 
 import { SignalApi } from '../signal';
-import { Connection } from './connection';
-import { WebrtcConnection } from './webrtc-connection';
+import { Connection, ConnectionState, ConnectionFactory } from './connection';
 
 const log = debug('dxos:network-manager:swarm:in-memory-connection');
 
 export class InMemoryConnection implements Connection {
-  stateChanged = new Event<WebrtcConnection.State>();
+  stateChanged = new Event<ConnectionState>();
   closed = new Event<void>();
 
-  state: WebrtcConnection.State = WebrtcConnection.State.WAITING_FOR_CONNECTION;
+  state: ConnectionState = ConnectionState.WAITING_FOR_CONNECTION;
 
   _remoteConnection?: InMemoryConnection;
 
@@ -35,9 +34,9 @@ export class InMemoryConnection implements Connection {
       log(`Connecting to existing connection topic=${_topic} peerId=${_ownId} remoteId=${_remoteId}`);
       const stream = _protocol.stream as any;
       stream.pipe(this._remoteConnection._protocol.stream).pipe(stream);
-      this.state = WebrtcConnection.State.CONNECTED;
+      this.state = ConnectionState.CONNECTED;
       this.stateChanged.emit(this.state);
-      this._remoteConnection.state = WebrtcConnection.State.CONNECTED;
+      this._remoteConnection.state = ConnectionState.CONNECTED;
       this._remoteConnection.stateChanged.emit(this._remoteConnection.state);
     } else {
       log(`Registering connection topic=${_topic} peerId=${_ownId} remoteId=${_remoteId}`);
@@ -65,9 +64,9 @@ export class InMemoryConnection implements Connection {
     if (this._remoteConnection) {
       const stream = this._protocol.stream as any;
       stream.unpipe(this._remoteConnection._protocol.stream).unpipe(stream);
-      this.state = WebrtcConnection.State.CLOSED;
+      this.state = ConnectionState.CLOSED;
       this.stateChanged.emit(this.state);
-      this._remoteConnection.state = WebrtcConnection.State.CLOSED;
+      this._remoteConnection.state = ConnectionState.CLOSED;
       this._remoteConnection.stateChanged.emit(this._remoteConnection.state);
       this._remoteConnection.close();
       this._remoteConnection = undefined;
@@ -76,3 +75,11 @@ export class InMemoryConnection implements Connection {
 }
 
 const connections = new ComplexMap<[topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey], InMemoryConnection>(([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex());
+
+export const inMemoryConnectionFactory: ConnectionFactory = opts => new InMemoryConnection(
+  opts.ownId,
+  opts.remoteId,
+  opts.sessionId,
+  opts.topic,
+  opts.protocol
+);

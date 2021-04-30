@@ -8,12 +8,20 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ComplexMap } from '@dxos/util';
 
+import { ConnectionState } from './swarm/connection';
 import { Swarm } from './swarm/swarm';
-import { WebrtcConnection } from './swarm/webrtc-connection';
 
-export interface PeerState {
+/**
+ * State of the connection to the remote peer with additional info derived from network mapping.
+ */
+export type PeerState = ConnectionState | 'INDIRECTLY_CONNECTED' | 'ME'
+
+/**
+ * Information about remote peer, directly or indirectly connected.
+ */
+export interface PeerInfo {
   id: PublicKey
-  state: WebrtcConnection.State | 'INDIRECTLY_CONNECTED' | 'ME'
+  state: PeerState,
   connections: PublicKey[]
 }
 
@@ -26,13 +34,13 @@ export class SwarmMapper {
 
   private readonly _connectionSubscriptions = new ComplexMap<PublicKey, Unsubscribe>(x => x.toHex());
 
-  private readonly _peers = new ComplexMap<PublicKey, PeerState>(x => x.toHex());
+  private readonly _peers = new ComplexMap<PublicKey, PeerInfo>(x => x.toHex());
 
-  get peers (): PeerState[] {
+  get peers (): PeerInfo[] {
     return Array.from(this._peers.values());
   }
 
-  readonly mapUpdated = new Event<PeerState[]>();
+  readonly mapUpdated = new Event<PeerInfo[]>();
 
   constructor (
     private readonly _swarm: Swarm,

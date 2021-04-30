@@ -12,7 +12,9 @@ import { ComplexMap } from '@dxos/util';
 
 import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager } from './signal';
 import { SwarmMapper } from './swarm-mapper';
+import { inMemoryConnectionFactory } from './swarm/in-memory-connection';
 import { Swarm } from './swarm/swarm';
+import { createWebRtcConnectionFactory } from './swarm/webrtc-connection';
 import { Topology } from './topology/topology';
 
 export type ProtocolProvider = (opts: { channel: Buffer }) => Protocol;
@@ -87,9 +89,8 @@ export class NetworkManager {
       () => {
         this._signal.lookup(topic);
       },
-      this._signal instanceof InMemorySignalManager,
-      options.label,
-      { iceServers: this._ice }
+      this._signal instanceof InMemorySignalManager ? inMemoryConnectionFactory : createWebRtcConnectionFactory({ iceServers: this._ice }),
+      options.label
     );
     this._swarms.set(topic, swarm);
     this._signal.join(topic, peerId);

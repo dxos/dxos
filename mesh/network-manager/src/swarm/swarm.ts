@@ -12,9 +12,7 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 import { ProtocolProvider } from '../network-manager';
 import { SignalApi } from '../signal';
 import { SwarmController, Topology } from '../topology/topology';
-import { Connection } from './connection';
-import { InMemoryConnection } from './in-memory-connection';
-import { WebrtcConnection } from './webrtc-connection';
+import { Connection, ConnectionState, ConnectionFactory } from './connection';
 
 const log = debug('dxos:network-manager:swarm');
 
@@ -57,9 +55,8 @@ export class Swarm {
     private readonly _sendOffer: (message: SignalApi.SignalMessage) => Promise<SignalApi.Answer>,
     private readonly _sendSignal: (message: SignalApi.SignalMessage) => Promise<void>,
     private readonly _lookup: () => void,
-    private readonly _inMemory: boolean,
-    private readonly _label: string | undefined,
-    private readonly _webrtcConfig?: any
+    private readonly _connectionFactory: ConnectionFactory,
+    private readonly _label: string | undefined
   ) {
     _topology.init(this._getSwarmController());
   }
@@ -209,31 +206,26 @@ export class Swarm {
   private _createConnection (initiator: boolean, remoteId: PublicKey, sessionId: PublicKey) {
     log(`Create connection topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
     assert(!this._connections.has(remoteId), 'Peer already connected');
-    const connection: Connection = this._inMemory
-      ? new InMemoryConnection(
-        this._ownPeerId,
-        remoteId,
-        sessionId,
-        this._topic,
-        this._protocol({ channel: discoveryKey(this._topic) })
-      )
-      : new WebrtcConnection(
-        initiator,
-        this._protocol({ channel: discoveryKey(this._topic) }),
-        this._ownPeerId,
-        remoteId,
-        sessionId,
-        this._topic,
-        msg => this._sendSignal(msg),
-        this._webrtcConfig
-      );
+
+    const connection = this._connectionFactory({
+      initiator,
+
+      ownId: this._ownPeerId,
+      remoteId,
+      sessionId,
+      topic: this._topic,
+
+      protocol: this._protocol({ channel: discoveryKey(this._topic) }),
+      sendSignal: msg => this._sendSignal(msg)
+    });
+
     this._connections.set(remoteId, connection);
     this.connectionAdded.emit(connection);
 
-    if (connection.state === WebrtcConnection.State.CONNECTED) {
+    if (connection.state === ConnectionState.CONNECTED) {
       this.connected.emit(remoteId);
     } else {
-      connection.stateChanged.waitFor(s => s === WebrtcConnection.State.CONNECTED).then(() => this.connected.emit(remoteId));
+      connection.stateChanged.waitFor(s => s === ConnectionState.CONNECTED).then(() => this.connected.emit(remoteId));
     }
 
     connection.closed.once(() => {
