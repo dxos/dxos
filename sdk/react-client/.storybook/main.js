@@ -8,8 +8,12 @@ module.exports = {
   stories: ['../stories/**/*.{tsx,jsx}'],
   addons: ['@storybook/addon-actions', '@storybook/addon-links', '@storybook/addon-knobs'],
   webpackFinal: async config => {
-    config.plugins.push(new ForkTsCheckerWebpackPlugin())
-    console.log(config)
+    // The version shipped with storybook is outdated so we are using our own.
+    config.plugins.push(new ForkTsCheckerWebpackPlugin({
+      typescript: {
+        typescriptPath: require.resolve('typescript')
+      }
+    }))
     return config;
   },
   typescript: {

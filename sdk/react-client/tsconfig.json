@@ -17,7 +17,11 @@
     "declarationMap": true,
     "composite": true,
     "target": "ES2018",
-    "removeComments": false
+    "removeComments": false,
+    // Have to specify typings explicitly here because fork-ts-checker-webpack-plugin can't find them automatically with PNPM.
+    "types": [
+      "jest"
+    ]
   },
   "include": [
     "src",
