@@ -44,7 +44,7 @@ export class NetworkManager {
   }
 
   constructor (options: NetworkManagerOptions = {}) {
-    this._ice = options.ice;
+    this._ice = options.ice ?? [];
 
     const onOffer = async (msg: SignalApi.SignalMessage) => (await this._swarms.get(msg.topic)?.onOffer(msg)) ?? { accept: false };
 
