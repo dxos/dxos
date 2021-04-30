@@ -36,6 +36,8 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
