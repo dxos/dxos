@@ -99,7 +99,7 @@ export class WebrtcConnection implements Connection {
   }
 
   signal (msg: SignalApi.SignalMessage) {
-    assert(this._peer);
+    assert(this._peer, 'Connection not ready to accept signals.');
     if (!msg.sessionId.equals(this._sessionId)) {
       log('Dropping signal for incorrect session id.');
       return;

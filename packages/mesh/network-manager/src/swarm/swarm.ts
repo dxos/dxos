@@ -121,7 +121,7 @@ export class Swarm {
 
   async onSignal (message: SignalApi.SignalMessage): Promise<void> {
     log(`Signal ${this._topic} ${JSON.stringify(message)}`);
-    assert(message.remoteId.equals(this._ownPeerId));
+    assert(message.remoteId.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.remoteId}`);
     assert(message.topic.equals(this._topic));
     const connection = this._connections.get(message.id);
     if (!connection) {
