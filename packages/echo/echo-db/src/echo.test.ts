@@ -193,7 +193,7 @@ describe('api tests', () => {
     expect(item.model.getProperty('baz')).toEqual(123);
   });
 
-  test.skip('Contacts', async () => {
+  test('Contacts', async () => {
     const echoA = await createTestInstance({ initialize: true });
     const echoB = await createTestInstance({ initialize: true });
 
