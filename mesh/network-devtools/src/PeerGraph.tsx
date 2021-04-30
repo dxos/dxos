@@ -9,10 +9,10 @@ import { makeStyles, colors } from '@material-ui/core';
 import { PublicKey } from '@dxos/crypto';
 import { SVG, useGrid, Grid } from '@dxos/gem-core';
 import { createSimulationDrag, ForceLayout, Graph, NodeProjector } from '@dxos/gem-spore';
-import { PeerState } from '@dxos/network-manager';
+import { PeerInfo } from '@dxos/network-manager';
 
 export interface PeerGraphProps {
-  peers: PeerState[]
+  peers: PeerInfo[]
   size: { width: number | null, height: number | null }
   onClick?: (id: PublicKey) => void
 }
@@ -37,7 +37,7 @@ export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
 
   const [data, setData] = useState<any>({ nodes: [], links: [] });
 
-  function buildGraph (peers: PeerState[]) {
+  function buildGraph (peers: PeerInfo[]) {
     const nodes: any[] = []; const links: any[] = [];
     for (const peer of peers) {
       nodes.push({

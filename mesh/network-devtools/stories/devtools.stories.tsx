@@ -6,7 +6,7 @@ import { select } from '@storybook/addon-knobs';
 import React, { useState, useEffect } from 'react';
 import { FullScreen } from '@dxos/gem-core';
 import useResizeAware from 'react-resize-aware';
-import { FullyConnectedTopology, Swarm, MMSTTopology, StarTopology, NetworkManager, PeerState, SignalApi, SignalManager, SwarmMapper, transportProtocolProvider } from '@dxos/network-manager'
+import { FullyConnectedTopology, Swarm, MMSTTopology, StarTopology, NetworkManager, SignalApi, SignalManager, SwarmMapper, transportProtocolProvider, PeerInfo } from '@dxos/network-manager'
 import { PublicKey } from '@dxos/crypto';
 import { Presence } from '@dxos/protocol-plugin-presence'
 import { PeerGraph } from '../src/PeerGraph';
@@ -65,7 +65,7 @@ const GraphDemo = ({ topic, topology }: { topic: PublicKey, topology: () => Topo
     peer && peer.networkManager.leaveProtocolSwarm(topic);
   };
 
-  const [peerMap, setPeerMap] = useState<PeerState[]>([]);
+  const [peerMap, setPeerMap] = useState<PeerInfo[]>([]);
   useEffect(() => {
     controlPeer?.map.mapUpdated.on(peers => {
       setPeerMap(peers);

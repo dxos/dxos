@@ -11,7 +11,7 @@ import { Protocol } from '@dxos/protocol';
 
 import { FullyConnectedTopology } from '../topology/fully-connected-topology';
 import { Swarm } from './swarm';
-import { WebrtcConnection } from './webrtc-connection';
+import { createWebRtcConnectionFactory, WebrtcConnection } from './webrtc-connection';
 
 describe('Swarm', () => {
   let topic: PublicKey;
@@ -38,7 +38,7 @@ describe('Swarm', () => {
         await swarm2.onSignal(msg);
       },
       () => {},
-      false,
+      createWebRtcConnectionFactory(),
       undefined
     );
     swarm2 = new Swarm(
@@ -55,7 +55,7 @@ describe('Swarm', () => {
         await swarm1.onSignal(msg);
       },
       () => {},
-      false,
+      createWebRtcConnectionFactory(),
       undefined
     );
   });

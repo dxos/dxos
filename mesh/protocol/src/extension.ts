@@ -255,7 +255,7 @@ export class Extension extends Nanomessage {
       const response = await this.request(this._buildMessage(message));
 
       if (response && response.code && response.message) {
-        throw new ERR_EXTENSION_RESPONSE_FAILED(response.code, response.message);
+        throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, response.code, response.message);
       }
 
       return { response };
@@ -268,7 +268,7 @@ export class Extension extends Nanomessage {
         throw ERR_EXTENSION_RESPONSE_TIMEOUT.from(err);
       }
 
-      throw new ERR_EXTENSION_RESPONSE_FAILED(err.code || 'Error', err.message);
+      throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
     }
   }
 
@@ -327,7 +327,7 @@ export class Extension extends Nanomessage {
       }
     } catch (err) {
       this.emit('error', err);
-      const responseError = new ERR_EXTENSION_RESPONSE_FAILED(err.code || 'Error', err.message);
+      const responseError = new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
       return {
         __type_url: 'dxos.protocol.Error',
         code: responseError.responseCode,

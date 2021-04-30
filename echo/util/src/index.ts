@@ -13,3 +13,4 @@ export * from './range';
 export * from './types';
 export * from './key';
 export * from './timeout-warning';
+export * from './stack-trace';
