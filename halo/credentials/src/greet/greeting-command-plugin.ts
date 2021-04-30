@@ -9,8 +9,9 @@ import assert from 'assert';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 
+import { WithTypeUrl } from '@dxos/codec-protobuf';
 import { keyToString } from '@dxos/crypto';
-import { Extension, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
+import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/protocol';
 
 import { wrapMessage } from '../party';
 import { codec, Command } from '../proto';
@@ -19,7 +20,6 @@ import { ERR_GREET_GENERAL } from './error-codes';
 
 const log = debug('dxos:creds:greet:plugin'); // eslint-disable-line @typescript-eslint/no-unused-vars
 
-const EXTENSION_NAME = 'dxos.credentials.greeting';
 const DEFAULT_TIMEOUT = 30000;
 
 export type GreetingCommandMessageHandler = (message: any, remotePeerId: Buffer, peerId: Buffer) => Promise<any>;
@@ -43,6 +43,8 @@ const getPeerId = (protocol: any) => {
  * @event GreetingCommandPlugin#'peer:exited' - Peer exits swarm
  */
 export class GreetingCommandPlugin extends EventEmitter {
+  public static EXTENSION_NAME = 'dxos.credentials.greeting';
+
   _peerId: Buffer;
   _peerMessageHandler: GreetingCommandMessageHandler;
   _peers: Map<string, any>;
@@ -76,7 +78,7 @@ export class GreetingCommandPlugin extends EventEmitter {
    * @return {Extension}
    */
   createExtension (timeout = DEFAULT_TIMEOUT) {
-    return new Extension(EXTENSION_NAME, { binary: true, timeout })
+    return new Extension(GreetingCommandPlugin.EXTENSION_NAME, { binary: true, timeout })
       .setMessageHandler(this._receive.bind(this))
       .setHandshakeHandler(this._addPeer.bind(this))
       .setCloseHandler(this._removePeer.bind(this));
@@ -88,7 +90,7 @@ export class GreetingCommandPlugin extends EventEmitter {
    * @param {Command} message Message to send, request message in a request/response interaction with peer.
    * @return {Object} Message received from peer in response to our request.
    */
-  async send (peerId: PeerId, message: Command) {
+  async send (peerId: PeerId, message: WithTypeUrl<Command>) {
     assert(Buffer.isBuffer(peerId));
     assert(message);
     // Only the FINISH command does not require a response.
@@ -110,7 +112,7 @@ export class GreetingCommandPlugin extends EventEmitter {
     // peerId is a Buffer, but here we only need its string form.
     const peerIdStr = keyToString(peerId);
     const peer = this._peers.get(peerIdStr);
-    const extension = peer.getExtension(EXTENSION_NAME);
+    const extension = peer.getExtension(GreetingCommandPlugin.EXTENSION_NAME);
 
     log('Sent request to %s: %o', peerIdStr, message);
 
@@ -157,7 +159,7 @@ export class GreetingCommandPlugin extends EventEmitter {
    */
   async _receive (protocol: any, data: any) {
     if (!this._peerMessageHandler) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_GENERAL, 'Missing message handler.');
+      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_GENERAL, 'Missing message handler.');
     }
 
     const peerId = getPeerId(protocol);
@@ -175,7 +177,7 @@ export class GreetingCommandPlugin extends EventEmitter {
     log('No response to %s', peerIdStr);
   }
 
-  _addPeer (protocol: any) {
+  async _addPeer (protocol: Protocol) {
     const peerId = getPeerId(protocol);
     assert(Buffer.isBuffer(peerId), 'peerId missing');
     const peerIdStr = peerId.toString('hex');
@@ -188,12 +190,8 @@ export class GreetingCommandPlugin extends EventEmitter {
     this.emit('peer:joined', peerId);
   }
 
-  _removePeer (protocol: any, error: Error | any) {
+  async _removePeer (protocol: Protocol) {
     const peerId = getPeerId(protocol);
-
-    if (error) {
-      log('ERROR: peer:exited', error);
-    }
 
     if (peerId) {
       assert(Buffer.isBuffer(peerId), 'peerId is not a Buffer');
