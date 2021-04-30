@@ -2,25 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
-const path = require('path');
-
 module.exports = {
-  stories: ['../stories/**/*.{jsx,js,tsx}'],
-  addons: ['@storybook/addon-actions', '@storybook/addon-knobs'],
-  webpackFinal: async config => {
-    config.module.rules.push({
-      test: /\.(ts|tsx)$/,
-      use: [
-        {
-          loader: require.resolve('ts-loader'),
-        },
-        // Optional
-        {
-          loader: require.resolve('react-docgen-typescript-loader'),
-        },
-      ],
-    });
-    config.resolve.extensions.push('.ts', '.tsx', 'js', 'jsx');
-    return config;
+  stories: ['../stories/**/*.{tsx,jsx}'],
+  addons: ['@storybook/addon-actions', '@storybook/addon-links', '@storybook/addon-knobs'],
+  typescript: {
+    check: false,
+    // checkOptions: {
+    //   typescript: {
+    //     typescriptPath: require.resolve('typescript')
+    //     // mode: 'write-references'
+    //   }
+    // },
+    reactDocgen: 'react-docgen-typescript',
+    reactDocgenTypescriptOptions: {
+      shouldExtractLiteralValuesFromEnum: true,
+      propFilter: (prop) => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),
+    },
   },
 };
