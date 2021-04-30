@@ -10,12 +10,12 @@ export const offlineConfig: TestOptions = {
   snapshotInterval: 10
 };
 
-// TODO(burdon): Use default or local server? Add docs.
+const DEFAULT_SIGNAL = 'wss://apollo1.kube.moon.dxos.network/dxos/signal';
+
 export const onlineConfig: TestOptions = {
   ...offlineConfig,
   networkManagerOptions: {
-    signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal'],
-    ice: [{ urls: 'turn:apollo1.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }]
+    signal: [process.env.STORYBOOK_SIGNAL ?? DEFAULT_SIGNAL]
   }
 };
 
