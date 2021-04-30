@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { ErrorStream, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 
@@ -15,6 +15,8 @@ export interface Connection {
   stateChanged: Event<ConnectionState>;
 
   closed: Event;
+
+  errors: ErrorStream;
 
   remoteId: PublicKey
 
@@ -33,10 +35,29 @@ export interface Connection {
  * State machine for each connection.
  */
 export enum ConnectionState {
-  WAITING_FOR_ANSWER = 'WAITING_FOR_ANSWER',
+  /**
+   * Initial state. Connection is registered but no attempt to connect to the remote peer has been performed. Might mean that we are waiting for the answer signal from the remote peer.
+   */
+  INITIAL = 'INITIAL',
+
+  /**
+   * Originating a connection.
+   */
   INITIATING_CONNECTION = 'INITIATING_CONNECTION',
+
+  /**
+   * Waiting for a connection to be originated from the remote peer.
+   */
   WAITING_FOR_CONNECTION = 'WAITING_FOR_CONNECTION',
+
+  /**
+   * Connection is established.
+   */
   CONNECTED = 'CONNECTED',
+
+  /**
+   * Connection closed.
+   */
   CLOSED = 'CLOSED',
 }
 

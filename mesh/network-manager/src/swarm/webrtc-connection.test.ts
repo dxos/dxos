@@ -14,7 +14,7 @@ import { afterTest } from '../testutils';
 import { ConnectionState } from './connection';
 import { WebrtcConnection } from './webrtc-connection';
 
-describe('Connection', () => {
+describe('WebrtcConnection', () => {
   // This doesn't clean up correctly and crashes with SIGSEGV at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
     const connection = new WebrtcConnection(
@@ -26,7 +26,7 @@ describe('Connection', () => {
       PublicKey.random(),
       async msg => {}
     );
-    expect(connection.state).toEqual(ConnectionState.WAITING_FOR_ANSWER);
+    expect(connection.state).toEqual(ConnectionState.INITIAL);
 
     connection.connect();
 
@@ -59,6 +59,7 @@ describe('Connection', () => {
       }
     );
     afterTest(() => connection1.close());
+    afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
     const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
@@ -75,6 +76,7 @@ describe('Connection', () => {
       }
     );
     afterTest(() => connection2.close());
+    afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
     connection1.connect();
     connection2.connect();

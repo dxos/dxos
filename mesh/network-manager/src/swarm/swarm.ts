@@ -218,6 +218,7 @@ export class Swarm {
       protocol: this._protocol({ channel: discoveryKey(this._topic) }),
       sendSignal: msg => this._sendSignal(msg)
     });
+    // TODO(marik-d): Handle errors.
 
     this._connections.set(remoteId, connection);
     this.connectionAdded.emit(connection);

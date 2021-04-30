@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { getStackTrace } from './stack-trace';
+
 /**
  * Prints a warning to console if the action takes longer then specified timeout. No errors are thrown.
  *
@@ -48,12 +50,4 @@ export function timed (timeout: number) {
       return warnAfterTimeout(timeout, `${target.constructor.name}.${propertyName}`, () => method.apply(this, args));
     };
   };
-}
-
-function getStackTrace () {
-  try {
-    throw new Error();
-  } catch (err) {
-    return err.stack.split('\n').slice(1).join('\n');
-  }
 }

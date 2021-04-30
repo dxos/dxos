@@ -7,7 +7,7 @@ import debug from 'debug';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 import wrtc from 'wrtc';
 
-import { Event } from '@dxos/async';
+import { ErrorStream, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 
@@ -20,12 +20,14 @@ const log = debug('dxos:network-manager:swarm:connection');
  * Wrapper around simple-peer. Tracks peer state.
  */
 export class WebrtcConnection implements Connection {
-  private _state: ConnectionState;
+  private _state: ConnectionState = ConnectionState.INITIAL;
   private _peer?: SimplePeer;
 
   readonly stateChanged = new Event<ConnectionState>();
 
   readonly closed = new Event();
+
+  readonly errors = new ErrorStream();
 
   constructor (
     private readonly _initiator: boolean,
@@ -37,8 +39,7 @@ export class WebrtcConnection implements Connection {
     private readonly _sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>,
     private readonly _webrtcConfig?: any
   ) {
-    this._state = ConnectionState.WAITING_FOR_ANSWER;
-    log(`Created connection ${this._ownId} -> ${this._remoteId} initiator=${this._initiator}`);
+    log(`Created WebRTC connection ${this._ownId} -> ${this._remoteId} initiator=${this._initiator}`);
   }
 
   get remoteId () {
@@ -76,8 +77,7 @@ export class WebrtcConnection implements Connection {
           data
         });
       } catch (err) {
-        // TODO(marik-d): Error handling.
-        console.error(err);
+        this.errors.raise(err);
       }
     });
     this._peer.on('connect', () => {
@@ -85,14 +85,10 @@ export class WebrtcConnection implements Connection {
       this._state = ConnectionState.CONNECTED;
       this.stateChanged.emit(this._state);
 
-      const stream = this._protocol.stream as any as NodeJS.ReadWriteStream;
+      const stream = this._protocol.stream as NodeJS.ReadWriteStream;
       stream.pipe(this._peer!).pipe(stream);
     });
-    this._peer.on('error', err => {
-      // TODO(marik-d): Error handling.
-      console.error('peer error');
-      console.error(err);
-    });
+    this._peer.on('error', err => this.errors.raise(err));
     this._peer.on('close', () => {
       log(`Connection closed ${this._ownId} -> ${this._remoteId}`);
       this._state = ConnectionState.CLOSED;
@@ -134,7 +130,7 @@ export class WebrtcConnection implements Connection {
   private async _closeStream () {
     await (this._protocol as any).close();
 
-    const stream = this._protocol.stream as any as NodeJS.ReadWriteStream;
+    const stream = this._protocol.stream as NodeJS.ReadWriteStream;
     stream.unpipe(this._peer).unpipe(stream);
   }
 }
