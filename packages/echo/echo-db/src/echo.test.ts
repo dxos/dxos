@@ -158,7 +158,7 @@ describe('api tests', () => {
     expect(party2.isOpen).toBe(true);
   });
 
-  test.skip('cold start from replicated party', async () => {
+  test('cold start from replicated party', async () => {
     const echo1 = await createTestInstance({ initialize: true });
     const echo2 = await createTestInstance({ initialize: true });
 
@@ -193,7 +193,7 @@ describe('api tests', () => {
     expect(item.model.getProperty('baz')).toEqual(123);
   });
 
-  test.skip('Contacts', async () => {
+  test('Contacts', async () => {
     const echoA = await createTestInstance({ initialize: true });
     const echoB = await createTestInstance({ initialize: true });
 

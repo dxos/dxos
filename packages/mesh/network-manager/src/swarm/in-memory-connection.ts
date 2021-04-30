@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import debug from 'debug';
 
 import { ErrorStream, Event } from '@dxos/async';
@@ -33,7 +34,7 @@ export class InMemoryConnection implements Connection {
     private readonly _topic: PublicKey,
     private readonly _protocol: Protocol
   ) {
-    log(`Created in-memort connection ${this._ownId} -> ${this._remoteId}`);
+    log(`Created in-memory connection ${this._ownId} -> ${this._remoteId}`);
   }
 
   get remoteId (): PublicKey {
@@ -45,7 +46,11 @@ export class InMemoryConnection implements Connection {
   }
 
   connect () {
+    assert(this.state === ConnectionState.INITIAL, 'Invalid state');
+
     log(`Registering connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
+
+    assert(!InMemoryConnection._connections.has([this._topic, this._ownId, this._remoteId]), 'Duplicate in-memory connection');
     InMemoryConnection._connections.set([this._topic, this._ownId, this._remoteId], this);
 
     this._remoteConnection = InMemoryConnection._connections.get([this._topic, this._remoteId, this._ownId]);
@@ -65,13 +70,26 @@ export class InMemoryConnection implements Connection {
   }
 
   async close (): Promise<void> {
+    if (this.state === ConnectionState.CLOSED) {
+      return;
+    }
+
+    log(`Closing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
+
+    InMemoryConnection._connections.delete([this._topic, this._ownId, this._remoteId]);
+
+    this.state = ConnectionState.CLOSED;
+    this.stateChanged.emit(this.state);
+
     if (this._remoteConnection) {
+      InMemoryConnection._connections.delete([this._topic, this._remoteId, this._ownId]);
+
       const stream = this._protocol.stream;
       stream.unpipe(this._remoteConnection._protocol.stream).unpipe(stream);
-      this.state = ConnectionState.CLOSED;
-      this.stateChanged.emit(this.state);
+
       this._remoteConnection.state = ConnectionState.CLOSED;
       this._remoteConnection.stateChanged.emit(this._remoteConnection.state);
+
       this._remoteConnection.close();
       this._remoteConnection = undefined;
     }
