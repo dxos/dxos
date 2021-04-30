@@ -252,7 +252,7 @@ describe('Party manager', () => {
     // await partyManagerB.close();
   });
 
-  test.skip('Join a party - PIN', async () => {
+  test('Join a party - PIN', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
     await partyManagerA.open();
@@ -324,7 +324,7 @@ describe('Party manager', () => {
     // await partyManagerB.close();
   });
 
-  test.skip('Join a party - signature', async () => {
+  test('Join a party - signature', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
     await partyManagerA.open();
@@ -407,7 +407,7 @@ describe('Party manager', () => {
     // await partyManagerB.close();
   });
 
-  test.skip('One user, two devices', async () => {
+  test('One user, two devices', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup(true, true);
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
 
@@ -503,7 +503,7 @@ describe('Party manager', () => {
     }
   });
 
-  test.skip('Two users, two devices each', async () => {
+  test('Two users, two devices each', async () => {
     const { partyManager: partyManagerA1, identityManager: identityManagerA1 } = await setup(true, true);
     const { partyManager: partyManagerA2, identityManager: identityManagerA2 } = await setup(true, false);
     const { partyManager: partyManagerB1, identityManager: identityManagerB1 } = await setup(true, true);
@@ -610,7 +610,7 @@ describe('Party manager', () => {
     }
   });
 
-  test.skip('Join new device to HALO by recovering from Identity seed phrase', async () => {
+  test('Join new device to HALO by recovering from Identity seed phrase', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
     assert(seedPhrase);
@@ -688,7 +688,7 @@ describe('Party manager', () => {
     }
   });
 
-  test.skip('Join a party - Offline', async () => {
+  test('Join a party - Offline', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
     assert(identityManagerA.identityKey);
@@ -753,7 +753,7 @@ describe('Party manager', () => {
     }
   });
 
-  test.skip('Contacts', async () => {
+  test('Contacts', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
     assert(identityManagerA.identityKey);
@@ -799,7 +799,7 @@ describe('Party manager', () => {
     await updatedB;
   });
 
-  test.skip('Deactivate Party - single device', async () => {
+  test('Deactivate Party - single device', async () => {
     const { partyManager: partyManagerA } = await setup();
     await partyManagerA.open();
 
@@ -832,7 +832,7 @@ describe('Party manager', () => {
     expect(partyB.title).toBe('B');
   });
 
-  test.skip('Deactivate Party - retrieving items', async () => {
+  test('Deactivate Party - retrieving items', async () => {
     const { partyManager: partyManagerA } = await setup(true, true);
 
     const partyA = new Party(await partyManagerA.createParty());
@@ -870,7 +870,7 @@ describe('Party manager', () => {
     expect((await partyA.database.queryItems({ type: 'dxn://example/item/test' })).value.length).toEqual(1);
   }, 10000);
 
-  test.skip('Deactivate Party - multi device', async () => {
+  test('Deactivate Party - multi device', async () => {
     const { partyManager: partyManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB } = await setup(true, false);
     assert(seedPhrase);
@@ -958,7 +958,7 @@ describe('Party manager', () => {
   });
 
   // TODO(burdon): Sporadically fails: https://github.com/dxos/echo/issues/391
-  test.skip('Setting title propagates to other devices AND other party members', async () => {
+  test('Setting title propagates to other devices AND other party members', async () => {
     // User creating the party
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     assert(seedPhrase);
@@ -1039,7 +1039,7 @@ describe('Party manager', () => {
   // I don't seem to be receiving an update after which party.title holds correct value.
   // https://github.com/dxos/teamwork/issues/496#issuecomment-739862830
   // However it seems to be working fine in this test.
-  test.skip('Party update event is emitted after the title is set', async () => {
+  test('Party update event is emitted after the title is set', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
     const { partyManager: partyManagerC, identityManager: identityManagerC } = await setup(true, false);
