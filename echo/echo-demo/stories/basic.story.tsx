@@ -11,18 +11,18 @@ import { blueGrey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
 import { createId } from '@dxos/crypto';
-import { createTestInstance } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 
 import { EchoContext, EchoGraph, useEcho } from '../src';
+import { createOfflineInstance } from '../src/config/config';
 
 const log = debug('dxos:echo:story');
 
 debug.enable('dxos:echo:story:*, dxos:*:error');
 
 export default {
-  title: 'Demo',
+  title: 'Basic',
   decorators: [withKnobs]
 };
 
@@ -46,7 +46,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-export const withDatabase = () => {
+export const Primary = () => {
   const n = number('Datatbases', 1, { min: 1, max: 8 });
 
   const [peers, setPeers] = useState([]);
@@ -55,8 +55,8 @@ export const withDatabase = () => {
       setImmediate(async () => {
         const newPeers = await Promise.all([...new Array(n - peers.length)].map(async () => {
           const id = createId();
-          const echo = await createTestInstance({ initialize: true });
-          console.log('Created:', String(echo));
+          const echo = await createOfflineInstance();
+          console.debug('Created:', String(echo));
           return { id, echo };
         }));
 
