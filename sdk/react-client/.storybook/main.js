@@ -2,17 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+
 module.exports = {
   stories: ['../stories/**/*.{tsx,jsx}'],
   addons: ['@storybook/addon-actions', '@storybook/addon-links', '@storybook/addon-knobs'],
+  webpackFinal: async config => {
+    config.plugins.push(new ForkTsCheckerWebpackPlugin())
+    console.log(config)
+    return config;
+  },
   typescript: {
     check: false,
-    // checkOptions: {
-    //   typescript: {
-    //     typescriptPath: require.resolve('typescript')
-    //     // mode: 'write-references'
-    //   }
-    // },
     reactDocgen: 'react-docgen-typescript',
     reactDocgenTypescriptOptions: {
       shouldExtractLiteralValuesFromEnum: true,
