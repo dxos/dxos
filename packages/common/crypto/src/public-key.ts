@@ -108,14 +108,14 @@ export class PublicKey {
    * Same as `PublicKey.humanize()`.
    */
   toString (): string {
-    return this.humanize();
+    return this.toHex();
   }
 
   /**
    * Same as `PublicKey.humanize()`.
    */
   toJson () {
-    return this.humanize();
+    return this.toHex();
   }
 
   /**

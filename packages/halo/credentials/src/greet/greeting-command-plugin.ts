@@ -112,6 +112,7 @@ export class GreetingCommandPlugin extends EventEmitter {
     // peerId is a Buffer, but here we only need its string form.
     const peerIdStr = keyToString(peerId);
     const peer = this._peers.get(peerIdStr);
+    assert(peer, `Peer not connected: ${peerIdStr}`);
     const extension = peer.getExtension(GreetingCommandPlugin.EXTENSION_NAME);
 
     log('Sent request to %s: %o', peerIdStr, message);

@@ -22,6 +22,7 @@ const log = debug('dxos:network-manager:swarm:connection');
 export class WebrtcConnection implements Connection {
   private _state: ConnectionState = ConnectionState.INITIAL;
   private _peer?: SimplePeer;
+  private _bufferedSignals: SignalApi.SignalMessage[] = [];
 
   readonly stateChanged = new Event<ConnectionState>();
 
@@ -59,6 +60,8 @@ export class WebrtcConnection implements Connection {
   }
 
   connect () {
+    assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
+
     this._state = this._initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION;
     this.stateChanged.emit(this._state);
     log(`Creating webrtc connection topic=${this._topic} ownId=${this._ownId} remoteId=${this._remoteId} initiator=${this._initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
@@ -96,10 +99,13 @@ export class WebrtcConnection implements Connection {
       this._closeStream();
       this.closed.emit();
     });
+
+    for(const signal of this._bufferedSignals) {
+      this._peer.signal(signal.data);
+    }
   }
 
   signal (msg: SignalApi.SignalMessage) {
-    assert(this._peer, 'Connection not ready to accept signals.');
     if (!msg.sessionId.equals(this._sessionId)) {
       log('Dropping signal for incorrect session id.');
       return;
@@ -109,6 +115,14 @@ export class WebrtcConnection implements Connection {
     }
     assert(msg.id.equals(this._remoteId));
     assert(msg.remoteId.equals(this._ownId));
+
+    if(this._state == ConnectionState.INITIAL) {
+      log(`${this._ownId} buffered signal from ${this._remoteId}: ${msg.data.type}`);
+      this._bufferedSignals.push(msg);
+      return;
+    }
+
+    assert(this._peer, 'Connection not ready to accept signals.');
     log(`${this._ownId} received signal from ${this._remoteId}: ${msg.data.type}`);
     this._peer.signal(msg.data);
   }

@@ -214,7 +214,7 @@ describe('Party manager', () => {
     await partyManager.close();
   });
 
-  test.skip('Create invitation', async () => {
+  test('Create invitation', async () => {
     const { partyManager: partyManagerA } = await setup();
     const { partyManager: partyManagerB } = await setup();
     await partyManagerA.open();
