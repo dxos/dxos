@@ -4,12 +4,13 @@
 
 import React, { useState, useEffect } from 'react';
 
+import { CircularProgress } from '@material-ui/core';
+
 import { Client } from '@dxos/client';
-import { ClientProvider, useClient, useItems, useParties, useProfile } from '@dxos/react-client';
 import { createKeyPair } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-import { CircularProgress } from '@material-ui/core';
+import { ClientProvider, useClient, useItems, useParties, useProfile } from '@dxos/react-client';
 
 const ClientConsumer = () => {
   const client = useClient();
@@ -58,14 +59,14 @@ export const InMemory = () => {
   }, []);
 
   if (!client) {
-    return <CircularProgress />
+    return <CircularProgress />;
   }
 
   return (
     <ClientProvider client={client}>
       <ClientConsumer />
     </ClientProvider>
-  )
+  );
 };
 
 export const Persistent = () => {
@@ -86,12 +87,12 @@ export const Persistent = () => {
   }, []);
 
   if (!client) {
-    return <CircularProgress />
+    return <CircularProgress />;
   }
 
   return (
     <ClientProvider client={client}>
       <ClientConsumer />
     </ClientProvider>
-  )
+  );
 };
