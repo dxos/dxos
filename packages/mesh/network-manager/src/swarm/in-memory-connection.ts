@@ -66,13 +66,13 @@ export class InMemoryConnection implements Connection {
 
   async close (): Promise<void> {
     InMemoryConnection._connections.delete([this._topic, this._ownId, this._remoteId]);
-    
+
     this.state = ConnectionState.CLOSED;
     this.stateChanged.emit(this.state);
 
     if (this._remoteConnection) {
       InMemoryConnection._connections.delete([this._topic, this._remoteId, this._ownId]);
-      
+
       const stream = this._protocol.stream;
       stream.unpipe(this._remoteConnection._protocol.stream).unpipe(stream);
 

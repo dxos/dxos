@@ -9,10 +9,10 @@ import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 
+import { afterTest } from '../testutils';
 import { FullyConnectedTopology } from '../topology/fully-connected-topology';
 import { Swarm } from './swarm';
 import { createWebRtcConnectionFactory, WebrtcConnection } from './webrtc-connection';
-import { afterTest } from '../testutils';
 
 const setup = () => {
   const topic = PublicKey.random();
@@ -52,14 +52,14 @@ const setup = () => {
     createWebRtcConnectionFactory(),
     undefined
   );
-  afterTest(() => swarm1.destroy())
-  afterTest(() => swarm2.destroy())
+  afterTest(() => swarm1.destroy());
+  afterTest(() => swarm2.destroy());
 
-  return { swarm1, swarm2, peerId1, peerId2 }
-}
+  return { swarm1, swarm2, peerId1, peerId2 };
+};
 
 test('connects two peers in a swarm', async () => {
-  const { swarm1, swarm2, peerId1, peerId2 } = setup()
+  const { swarm1, swarm2, peerId1, peerId2 } = setup();
 
   expect(swarm1.connections.length).toEqual(0);
   expect(swarm2.connections.length).toEqual(0);
@@ -84,8 +84,8 @@ test('connects two peers in a swarm', async () => {
   });
 });
 
-test.only('two peers try to originate connections to each other simultaneously', async () => {
-  const { swarm1, swarm2, peerId1, peerId2 } = setup()
+test('two peers try to originate connections to each other simultaneously', async () => {
+  const { swarm1, swarm2, peerId1, peerId2 } = setup();
 
   expect(swarm1.connections.length).toEqual(0);
   expect(swarm2.connections.length).toEqual(0);
@@ -100,7 +100,7 @@ test.only('two peers try to originate connections to each other simultaneously',
 }, 5_000);
 
 test('second peer discovered after delat', async () => {
-  const { swarm1, swarm2, peerId1, peerId2 } = setup()
+  const { swarm1, swarm2, peerId1, peerId2 } = setup();
 
   expect(swarm1.connections.length).toEqual(0);
   expect(swarm2.connections.length).toEqual(0);
