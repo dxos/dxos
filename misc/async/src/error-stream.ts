@@ -36,8 +36,8 @@ export class ErrorStream {
     }
   }
 
-  pipeTo(receiver: ErrorStream) {
-    this.handle(error => receiver.raise(error))
+  pipeTo (receiver: ErrorStream) {
+    this.handle(error => receiver.raise(error));
   }
 
   private _unhandledError (error: Error) {
