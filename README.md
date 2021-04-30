@@ -41,7 +41,7 @@ rush build
 ```
 cd package/directory
 
-rush add [--dev] -p <package name>
+rush add [--dev] -p <package name> --make-consistent
 ```
 
 ### Running scripts in individual packages
