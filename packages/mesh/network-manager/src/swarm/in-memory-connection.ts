@@ -33,7 +33,7 @@ export class InMemoryConnection implements Connection {
     private readonly _topic: PublicKey,
     private readonly _protocol: Protocol
   ) {
-    log(`Created in-memort connection ${this._ownId} -> ${this._remoteId}`);
+    log(`Created in-memory connection ${this._ownId} -> ${this._remoteId}`);
   }
 
   get remoteId (): PublicKey {
@@ -65,13 +65,20 @@ export class InMemoryConnection implements Connection {
   }
 
   async close (): Promise<void> {
+    InMemoryConnection._connections.delete([this._topic, this._ownId, this._remoteId]);
+    
+    this.state = ConnectionState.CLOSED;
+    this.stateChanged.emit(this.state);
+
     if (this._remoteConnection) {
+      InMemoryConnection._connections.delete([this._topic, this._remoteId, this._ownId]);
+      
       const stream = this._protocol.stream;
       stream.unpipe(this._remoteConnection._protocol.stream).unpipe(stream);
-      this.state = ConnectionState.CLOSED;
-      this.stateChanged.emit(this.state);
+
       this._remoteConnection.state = ConnectionState.CLOSED;
       this._remoteConnection.stateChanged.emit(this._remoteConnection.state);
+
       this._remoteConnection.close();
       this._remoteConnection = undefined;
     }
