@@ -36,7 +36,8 @@
     "react": "16.13.1",
     "react-dom": "16.12.0",
     "typescript": "^4.0.2",
-    "@dxos/toolchain-node-library": "workspace:*"
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/jest": "^26.0.7"
   },
   "peerDependencies": {
     "react": "*"
