@@ -121,7 +121,7 @@
    * Specify a SemVer range to ensure developers use a Node.js version that is appropriate
    * for your repo.
    */
-  "nodeSupportedVersionRange": ">=12.17.0 <=16.0.0",
+  "nodeSupportedVersionRange": ">=12.17.0 <13.0.0 || 16.0.0",
 
   /**
    * Odd-numbered major versions of Node.js are experimental.  Even-numbered releases
@@ -284,7 +284,7 @@
      * The default branch name. This tells "rush change" which remote branch to compare against.
      * The default value is "master"
      */
-    "defaultBranch": "main"
+    "defaultBranch": "main",
 
     /**
      * The default remote. This tells "rush change" which remote to compare against if the remote URL is
