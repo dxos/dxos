@@ -19,7 +19,8 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "lint": "toolchain lint"
+    "lint": "toolchain lint",
+    "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
