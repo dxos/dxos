@@ -5,26 +5,24 @@
 import debug from 'debug';
 import pump from 'pump';
 
-import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
+import { trigger } from '@dxos/async';
+import { keyToString, randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 
 import { Keyring } from '../keys';
 import { createKeyAdmitMessage } from '../party';
-import { Command, KeyType } from '../proto';
+import { Command, KeyType, Message } from '../proto';
 import { Greeter } from './greeter';
 import { GreetingCommandPlugin } from './greeting-command-plugin';
+import { SecretProvider, SecretValidator } from './invitation';
 
 const log = debug('dxos:creds:greet');
 
 /**
  * Create the Greeter with Plugin and Protocol.
- * @param targetPartyKey
  */
-const createGreeter = async (targetPartyKey) => {
-  let outerResolve;
-  const writePromise = new Promise((resolve) => {
-    outerResolve = resolve;
-  });
+const createGreeter = async (targetPartyKey: PublicKeyLike) => {
+  const [writePromise, outerResolve] = trigger<Message[]>();
 
   const hints = [
     { publicKey: PublicKey.from(randomBytes(32)), type: KeyType.IDENTITY },
@@ -35,8 +33,11 @@ const createGreeter = async (targetPartyKey) => {
 
   const greeter = new Greeter(
     targetPartyKey,
-    messages => outerResolve(messages),
-    () => hints
+    async messages => {
+      outerResolve(messages);
+      return messages;
+    },
+    async () => hints
   );
 
   const peerId = randomBytes(32);
@@ -51,21 +52,19 @@ const createGreeter = async (targetPartyKey) => {
     .setExtension(plugin.createExtension())
     .init(peerId);
 
-  return { greeter, rendezvousKey: peerId, plugin, protocol, writePromise, hints };
+  return { greeter, rendezvousKey: peerId, plugin, protocol, writePromise: writePromise(), hints };
 };
 
 /**
  * Create the Invitee with Plugin and Protocol.
- * @param {Buffer} rendezvousKey
- * @param {Buffer} invitationId
  */
-const createInvitee = async (rendezvousKey, invitationId) => {
+const createInvitee = async (rendezvousKey: Buffer, invitationId: Buffer) => {
   const peerId = invitationId;
 
   const invitee = new Greeter();
   const plugin = new GreetingCommandPlugin(peerId, invitee.createMessageHandler());
 
-  const connectionPromise = new Promise(resolve => {
+  const connectionPromise = new Promise<void>(resolve => {
     plugin.on('peer:joined', (peerId) => {
       if (peerId && keyToString(peerId) === keyToString(rendezvousKey)) {
         log(`${keyToString(peerId)} connected.`);
@@ -89,10 +88,8 @@ const createInvitee = async (rendezvousKey, invitationId) => {
 
 /**
  * Connect two Protocols together.
- * @param {Protocol} source
- * @param {Protocol} target
  */
-const connect = (source, target) => {
+const connect = (source: Protocol, target: Protocol) => {
   return pump(source.stream, target.stream, source.stream);
 };
 
@@ -100,8 +97,8 @@ test('Greeting Flow using GreetingCommandPlugin', async () => {
   const targetPartyKey = PublicKey.from(randomBytes(32));
   const secret = '0000';
 
-  const secretProvider = async () => Buffer.from(secret);
-  const secretValidator = async (invitation, secret) => secret && secret.equals(invitation.secret);
+  const secretProvider: SecretProvider = async () => Buffer.from(secret);
+  const secretValidator: SecretValidator = async (invitation, secret) => !!secret && !!invitation.secret && secret.equals(invitation.secret);
 
   const {
     protocol: greeterProtocol, greeter, rendezvousKey, hints, writePromise
@@ -132,7 +129,7 @@ test('Greeting Flow using GreetingCommandPlugin', async () => {
     const command = {
       __type_url: 'dxos.credentials.greet.Command',
       command: Command.Type.HANDSHAKE,
-      secret: await secretProvider(),
+      secret: await secretProvider({}),
       params: []
     };
 
@@ -148,7 +145,7 @@ test('Greeting Flow using GreetingCommandPlugin', async () => {
     const command = {
       __type_url: 'dxos.credentials.greet.Command',
       command: Command.Type.NOTARIZE,
-      secret: await secretProvider(),
+      secret: await secretProvider({}),
       params: [
         createKeyAdmitMessage(keyring,
           partyKey,
@@ -171,6 +168,6 @@ test('Greeting Flow using GreetingCommandPlugin', async () => {
   await plugin.send(rendezvousKey, {
     __type_url: 'dxos.credentials.greet.Command',
     command: Command.Type.FINISH,
-    secret: await secretProvider()
+    secret: await secretProvider({})
   });
 });

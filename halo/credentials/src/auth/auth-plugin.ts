@@ -96,7 +96,7 @@ export class AuthPlugin extends EventEmitter {
       }
 
       protocol.stream.destroy();
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_AUTH_REJECTED, 'Authentication rejected: no credentials.');
+      throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, ERR_AUTH_REJECTED, 'Authentication rejected: no credentials.');
     }
 
     let wrappedCredentials;
@@ -106,7 +106,7 @@ export class AuthPlugin extends EventEmitter {
       wrappedCredentials = codec.decode(Buffer.from(credentials, 'base64'));
     } catch (err) {
       protocol.stream.destroy();
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_AUTH_GENERAL, err);
+      throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, ERR_AUTH_GENERAL, err);
     }
 
     // Unwrap from root message.
@@ -116,7 +116,7 @@ export class AuthPlugin extends EventEmitter {
     const { payload: { deviceKey: credsPeerId } } = payload?.signed || {};
     if (!sessionPeerId || !credsPeerId || !credsPeerId.equals(sessionPeerId)) {
       protocol.stream.destroy();
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_AUTH_REJECTED, 'Authentication rejected: bad peerId.');
+      throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, ERR_AUTH_REJECTED, 'Authentication rejected: bad peerId.');
     }
 
     // TODO(telackey): The signed credentials ought to contain verifiable information for both ends, eg,
@@ -128,7 +128,7 @@ export class AuthPlugin extends EventEmitter {
     const authenticated = await this._authenticator.authenticate(payload);
     if (!authenticated) {
       protocol.stream.destroy();
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_AUTH_REJECTED, 'Authentication rejected: bad credentials.');
+      throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, ERR_AUTH_REJECTED, 'Authentication rejected: bad credentials.');
     }
 
     // Success!

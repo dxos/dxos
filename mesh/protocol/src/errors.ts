@@ -16,22 +16,12 @@ export const ERR_EXTENSION_FEED_FAILED = nanoerror('ERR_EXTENSION_FEED_FAILED', 
 export const ERR_EXTENSION_CLOSE_FAILED = nanoerror('ERR_EXTENSION_CLOSE_FAILED', 'extension close failed: %s');
 export const ERR_EXTENSION_RESPONSE_TIMEOUT = nanoerror('ERR_EXTENSION_RESPONSE_TIMEOUT', '%s');
 
-export class ERR_EXTENSION_RESPONSE_FAILED extends nanoerror('ERR_EXTENSION_RESPONSE_FAILED', '[responseCode: %s] [message: %s]') {
-  public _responseCode: string;
-  public _responseMessage: string;
-
-  constructor (responseCode: string, message: string) {
-    super(responseCode, message);
-
-    this._responseCode = responseCode;
-    this._responseMessage = message;
-  }
-
-  get responseCode () {
-    return this._responseCode;
-  }
-
-  get responseMessage () {
-    return this._responseMessage;
+export class ERR_EXTENSION_RESPONSE_FAILED extends nanoerror('ERR_EXTENSION_RESPONSE_FAILED', '[extension: %s] [responseCode: %s] [message: %s]') {
+  constructor (
+    public readonly extension: string,
+    public readonly responseCode: string,
+    public readonly responseMessage: string
+  ) {
+    super(extension, responseCode, responseMessage);
   }
 }

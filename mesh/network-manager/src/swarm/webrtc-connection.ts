@@ -7,12 +7,12 @@ import debug from 'debug';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 import wrtc from 'wrtc';
 
-import { Event } from '@dxos/async';
+import { ErrorStream, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 
 import { SignalApi } from '../signal';
-import { Connection } from './connection';
+import { Connection, ConnectionState, ConnectionFactory } from './connection';
 
 const log = debug('dxos:network-manager:swarm:connection');
 
@@ -20,12 +20,14 @@ const log = debug('dxos:network-manager:swarm:connection');
  * Wrapper around simple-peer. Tracks peer state.
  */
 export class WebrtcConnection implements Connection {
-  private _state: WebrtcConnection.State;
+  private _state: ConnectionState = ConnectionState.INITIAL;
   private _peer?: SimplePeer;
 
-  readonly stateChanged = new Event<WebrtcConnection.State>();
+  readonly stateChanged = new Event<ConnectionState>();
 
   readonly closed = new Event();
+
+  readonly errors = new ErrorStream();
 
   constructor (
     private readonly _initiator: boolean,
@@ -37,8 +39,7 @@ export class WebrtcConnection implements Connection {
     private readonly _sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>,
     private readonly _webrtcConfig?: any
   ) {
-    this._state = WebrtcConnection.State.WAITING_FOR_ANSWER;
-    log(`Created connection ${this._ownId} -> ${this._remoteId} initiator=${this._initiator}`);
+    log(`Created WebRTC connection ${this._ownId} -> ${this._remoteId} initiator=${this._initiator}`);
   }
 
   get remoteId () {
@@ -58,7 +59,7 @@ export class WebrtcConnection implements Connection {
   }
 
   connect () {
-    this._state = this._initiator ? WebrtcConnection.State.INITIATING_CONNECTION : WebrtcConnection.State.WAITING_FOR_CONNECTION;
+    this._state = this._initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION;
     this.stateChanged.emit(this._state);
     log(`Creating webrtc connection topic=${this._topic} ownId=${this._ownId} remoteId=${this._remoteId} initiator=${this._initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
     this._peer = new SimplePeerConstructor({
@@ -76,26 +77,21 @@ export class WebrtcConnection implements Connection {
           data
         });
       } catch (err) {
-        // TODO(marik-d): Error handling.
-        console.error(err);
+        this.errors.raise(err);
       }
     });
     this._peer.on('connect', () => {
       log(`Connection established ${this._ownId} -> ${this._remoteId}`);
-      this._state = WebrtcConnection.State.CONNECTED;
+      this._state = ConnectionState.CONNECTED;
       this.stateChanged.emit(this._state);
 
-      const stream = this._protocol.stream as any as NodeJS.ReadWriteStream;
+      const stream = this._protocol.stream as NodeJS.ReadWriteStream;
       stream.pipe(this._peer!).pipe(stream);
     });
-    this._peer.on('error', err => {
-      // TODO(marik-d): Error handling.
-      console.error('peer error');
-      console.error(err);
-    });
+    this._peer.on('error', err => this.errors.raise(err));
     this._peer.on('close', () => {
       log(`Connection closed ${this._ownId} -> ${this._remoteId}`);
-      this._state = WebrtcConnection.State.CLOSED;
+      this._state = ConnectionState.CLOSED;
       this.stateChanged.emit(this._state);
       this._closeStream();
       this.closed.emit();
@@ -108,7 +104,7 @@ export class WebrtcConnection implements Connection {
       log('Dropping signal for incorrect session id.');
       return;
     }
-    if (msg.data.type === 'offer' && this._state === WebrtcConnection.State.INITIATING_CONNECTION) {
+    if (msg.data.type === 'offer' && this._state === ConnectionState.INITIATING_CONNECTION) {
       throw new Error('Invalid state: Cannot send offer to an initiating peer.');
     }
     assert(msg.id.equals(this._remoteId));
@@ -118,7 +114,7 @@ export class WebrtcConnection implements Connection {
   }
 
   async close () {
-    this._state = WebrtcConnection.State.CLOSED;
+    this._state = ConnectionState.CLOSED;
     this.stateChanged.emit(this._state);
     if (!this._peer) {
       return;
@@ -134,17 +130,20 @@ export class WebrtcConnection implements Connection {
   private async _closeStream () {
     await (this._protocol as any).close();
 
-    const stream = this._protocol.stream as any as NodeJS.ReadWriteStream;
+    const stream = this._protocol.stream as NodeJS.ReadWriteStream;
     stream.unpipe(this._peer).unpipe(stream);
   }
 }
 
-export namespace WebrtcConnection {
-  export enum State {
-    WAITING_FOR_ANSWER = 'WAITING_FOR_ANSWER',
-    INITIATING_CONNECTION = 'INITIATING_CONNECTION',
-    WAITING_FOR_CONNECTION = 'WAITING_FOR_CONNECTION',
-    CONNECTED = 'CONNECTED',
-    CLOSED = 'CLOSED',
-  }
+export function createWebRtcConnectionFactory (webrtcConfig?: any): ConnectionFactory {
+  return opts => new WebrtcConnection(
+    opts.initiator,
+    opts.protocol,
+    opts.ownId,
+    opts.remoteId,
+    opts.sessionId,
+    opts.topic,
+    opts.sendSignal,
+    webrtcConfig
+  );
 }

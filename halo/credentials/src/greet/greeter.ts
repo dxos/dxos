@@ -21,6 +21,7 @@ import {
   ERR_GREET_INVALID_SIGNATURE,
   ERR_GREET_INVALID_STATE
 } from './error-codes';
+import { GreetingCommandPlugin } from './greeting-command-plugin';
 import { Invitation, InvitationOnFinish, SecretProvider, SecretValidator } from './invitation';
 
 const log = debug('dxos:creds:greet');
@@ -73,7 +74,7 @@ export class Greeter {
     onFinish?: InvitationOnFinish,
     expiration?: number) {
     if (!this._partyKey!.equals(partyKey)) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_PARTY, `Invalid partyKey: ${partyKey}`);
+      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_PARTY, `Invalid partyKey: ${partyKey}`);
     }
 
     const invitation = new Invitation(partyKey, secretValidator, secretProvider, onFinish, expiration);
@@ -117,7 +118,7 @@ export class Greeter {
     assert(Buffer.isBuffer(secret));
     const invitation = await this._getInvitation(invitationId, secret);
     if (!invitation) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_INVITATION, 'Invalid invitation');
+      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_INVITATION, 'Invalid invitation');
     }
 
     switch (command) {
@@ -135,7 +136,7 @@ export class Greeter {
       }
 
       default:
-        throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_COMMAND, `Invalid command: ${command}`);
+        throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_COMMAND, `Invalid command: ${command}`);
     }
   }
 
@@ -149,20 +150,20 @@ export class Greeter {
   async _getInvitation (invitationId: Buffer, secret: Buffer) {
     const invitation = this._invitations.get(invitationId.toString('hex'));
     if (!invitation) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_INVITATION, `${invitationId} not found`);
+      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_INVITATION, `${invitationId} not found`);
     }
 
     if (!invitation.live) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_STATE, `${invitationId} dead`);
+      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_STATE, `${invitationId} dead`);
     }
 
     if (!invitation.began) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_STATE, `${invitationId} not begun`);
+      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_STATE, `${invitationId} not begun`);
     }
 
     const valid = await invitation.validate(secret);
     if (!valid) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_INVITATION, `${invitationId} invalid`);
+      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_INVITATION, `${invitationId} invalid`);
     }
 
     log('Auth valid for:', invitationId);
@@ -182,7 +183,7 @@ export class Greeter {
   async _handleBegin (invitationId: Buffer) {
     const invitation = this._invitations.get(invitationId.toString('hex'));
     if (!invitation || !invitation.live || invitation.began || invitation.secret) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_STATE, 'Invalid invitation or out-of-order command sequence.');
+      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_STATE, 'Invalid invitation or out-of-order command sequence.');
     }
 
     // Mark it as having been presented and do any actions required
@@ -206,7 +207,7 @@ export class Greeter {
 
   async _handleHandshake (invitation: Invitation) {
     if (!invitation.began || invitation.handshook) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_STATE, 'Out-of-order command sequence.');
+      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_STATE, 'Out-of-order command sequence.');
     }
 
     await invitation.handshake();
@@ -219,26 +220,26 @@ export class Greeter {
 
   async _handleNotarize (invitation: Invitation, params: any[]) {
     if (!invitation.handshook || invitation.notarized) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_STATE, 'Out-of-order command sequence.');
+      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_STATE, 'Out-of-order command sequence.');
     }
 
     for await (const message of params) {
       // Every message needs to have our nonce inside it.
       if (!message.payload.signed.nonce.equals(invitation.nonce)) {
-        throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_NONCE, `Invalid nonce: ${message.payload.signed.nonce.toString('hex')}`);
+        throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_NONCE, `Invalid nonce: ${message.payload.signed.nonce.toString('hex')}`);
       }
 
       // Only FEED_ADMIT and KEY_ADMIT messages are valid.
       const messageType = getPartyCredentialMessageType(message);
       if (messageType !== PartyCredential.Type.KEY_ADMIT && messageType !== PartyCredential.Type.FEED_ADMIT) {
-        throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_MSG_TYPE, `Invalid type: ${messageType}`);
+        throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_MSG_TYPE, `Invalid type: ${messageType}`);
       }
 
       // The signature needs to check out, but we cannot check for an already trusted key, since these messages
       // will all be self-signed.
       const verified = Keyring.validateSignatures(message.payload);
       if (!verified) {
-        throw new ERR_EXTENSION_RESPONSE_FAILED(ERR_GREET_INVALID_SIGNATURE, 'Invalid signature');
+        throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_SIGNATURE, 'Invalid signature');
       }
     }
 
