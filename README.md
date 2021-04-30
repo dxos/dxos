@@ -85,3 +85,12 @@ This will build the package with typescript, run eslint, and test with jest.
 ```
 npx @sfomin/for-each-package -n "@dxos/*" "npx sort-package-json"
 ```
+
+### Upgrading packages across the monorepo
+
+```
+ncu --deep -u '<PACKAGE>'
+
+# e.g.
+ncu --deep -u '@storybook/*'
+```

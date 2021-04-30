@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
@@ -48,6 +49,7 @@
     "@dxos/network-manager": "workspace:~1.0.6",
     "@dxos/object-model": "workspace:^2.6.17",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
+    "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@material-ui/core": "^4.9.10",
     "@material-ui/icons": "^4.9.1",
