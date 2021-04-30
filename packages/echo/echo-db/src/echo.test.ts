@@ -158,7 +158,7 @@ describe('api tests', () => {
     expect(party2.isOpen).toBe(true);
   });
 
-  test.skip('cold start from replicated party', async () => {
+  test('cold start from replicated party', async () => {
     const echo1 = await createTestInstance({ initialize: true });
     const echo2 = await createTestInstance({ initialize: true });
 
