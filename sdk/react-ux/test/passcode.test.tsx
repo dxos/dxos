@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 //
 // Copyright 2020 DXOS.org
 //
@@ -16,7 +20,7 @@ const props = {
 };
 
 describe('Passcode', () => {
-  test('Renders the component', async () => {
+  test('Renders the component', () => {
     render(
       <Passcode
         {...props}

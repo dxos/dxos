@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 //
 // Copyright 2020 DXOS.org
 //
@@ -8,7 +12,7 @@ import React from 'react';
 import DeleteConfirmation from '../src/components/DeleteConfirmation';
 
 describe('DeleteConfirmation', () => {
-  test('Renders the component', async () => {
+  test('Renders the component', () => {
     render(
       <DeleteConfirmation
         isDeleted={true}
