@@ -1,0 +1,21 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    // Have to specify typings explicitly here because fork-ts-checker-webpack-plugin can't find them automatically with PNPM.
+    "types": [
+      "jest"
+    ]
+  },
+  "include": [
+    "src",
+    "stories",
+  ],
+  "references": [
+    {"path": "../client"}
+  ]
+}

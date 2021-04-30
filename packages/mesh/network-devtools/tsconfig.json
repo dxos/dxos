@@ -1,0 +1,13 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": [
+      "DOM"
+    ]
+  },
+  "include": [
+    "src",
+    "stories"
+  ]
+}

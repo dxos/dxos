@@ -1,7 +1,16 @@
 importers:
   .:
     specifiers: {}
-  ../../codec-protobuf/codec-protobuf:
+  ../../packages/common/async:
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/jest': 26.0.22
+      '@types/node': 14.14.41
+    specifiers:
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
+  ../../packages/common/codec-protobuf:
     dependencies:
       assert: 2.0.0
       lodash.merge: 4.6.2
@@ -31,7 +40,23 @@ importers:
       ts-jest: ^26.1.4
       ts-node: ^9.0.0
       typescript: ^4.0.2
-  ../../codec-protobuf/protobuf-compiler:
+  ../../packages/common/crypto:
+    dependencies:
+      crypto-js: 3.3.0
+      humanhash: 1.0.4
+      hypercore-crypto: 1.0.0
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/jest': 26.0.22
+      '@types/node': 14.14.41
+    specifiers:
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
+      crypto-js: ^3.1.9-1
+      humanhash: ^1.0.4
+      hypercore-crypto: ^1.0.0
+  ../../packages/common/protobuf-compiler:
     dependencies:
       argparse: 2.0.1
       chalk: 4.1.1
@@ -63,12 +88,50 @@ importers:
       ts-jest: ^26.1.4
       ts-node: ^9.0.0
       typescript: ^4.0.2
-  ../../echo/echo-db:
+  ../../packages/common/util:
     dependencies:
-      '@dxos/async': link:../../misc/async
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
+      '@dxos/async': link:../async
+      '@dxos/codec-protobuf': link:../codec-protobuf
+      '@dxos/crypto': link:../crypto
+      '@types/debug': 4.1.5
+      '@types/end-of-stream': 1.4.0
+      '@types/lodash': 4.14.168
+      '@types/node': 14.14.41
+      '@types/stream-buffers': 3.0.3
+      '@types/through2': 2.0.36
+      debug: 4.3.1
+      hypercore: 7.7.1
+      js-data-structs: 1.1.3
+      lodash.merge: 4.6.2
+      protobufjs: 6.10.2
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/jest': 26.0.22
+      stream-buffers: 3.0.2
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/debug': ^4.1.1
+      '@types/end-of-stream': ^1.4.0
+      '@types/jest': ^26.0.7
+      '@types/lodash': ^4.14.159
+      '@types/node': ^14.0.9
+      '@types/stream-buffers': ^3.0.2
+      '@types/through2': ^2.0.36
+      debug: ^4.1.1
+      hypercore: ^7.7.1
+      js-data-structs: ^1.1.2
+      lodash.merge: ^4.6.2
+      protobufjs: ^6.9.0
+      stream-buffers: ^3.0.2
+  ../../packages/echo/echo-db:
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/feed-store': 1.2.0-beta.30
       '@dxos/model-factory': link:../model-factory
@@ -78,7 +141,7 @@ importers:
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
-      '@dxos/util': link:../util
+      '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/json-stable-stringify': 1.0.32
@@ -93,7 +156,7 @@ importers:
       protobufjs: 6.10.2
       random-access-memory: 3.1.2
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.22
       '@types/memdown': 3.0.0
       lodash: 4.17.21
@@ -135,12 +198,13 @@ importers:
       random-access-memory: ~3.1.2
       tempy: ~1.0.1
       ws: ^7.4.4
-  ../../echo/echo-demo:
+  ../../packages/echo/echo-demo:
     dependencies:
-      '@dxos/async': link:../../misc/async
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../echo-db
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/echo-testing': link:../echo-testing
@@ -151,7 +215,8 @@ importers:
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../object-model
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
-      '@dxos/util': link:../util
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/util': link:../../common/util
       '@material-ui/core': 4.11.3_react-dom@16.12.0+react@16.13.1
       '@material-ui/icons': 4.11.2_ee57a48221c5b499789a08920fdc5d3f
       '@types/debug': 4.1.5
@@ -190,7 +255,6 @@ importers:
       eslint: 7.24.0
       eslint-plugin-jest: 24.3.6_eslint@7.24.0+typescript@4.2.4
       eslint-plugin-react: 7.23.2_eslint@7.24.0
-      fork-ts-checker-webpack-plugin: 6.2.5
       jest: 26.6.3
       react: 16.13.1
       react-docgen-typescript-loader: 3.7.2_typescript@4.2.4+webpack@4.44.2
@@ -204,6 +268,7 @@ importers:
       '@babel/core': ~7.13.15
       '@babel/plugin-transform-runtime': ^7.11.5
       '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
@@ -219,6 +284,7 @@ importers:
       '@dxos/network-manager': workspace:~1.0.6
       '@dxos/object-model': workspace:^2.6.17
       '@dxos/random-access-multi-storage': ~1.1.0-beta.8
+      '@dxos/react-client': workspace:*
       '@dxos/util': workspace:*
       '@material-ui/core': ^4.9.10
       '@material-ui/icons': ^4.9.1
@@ -245,7 +311,6 @@ importers:
       eslint: ^7.7.0
       eslint-plugin-jest: ^24.0.2
       eslint-plugin-react: ^7.22.0
-      fork-ts-checker-webpack-plugin: ~6.2.5
       immutability-helper: ^3.0.2
       jest: ^26.2.2
       level-js: ^5.0.2
@@ -263,14 +328,14 @@ importers:
       typescript: ^4.0.2
       use-subscription: ^1.4.1
       webpack: 4.44.2
-  ../../echo/echo-protocol:
+  ../../packages/echo/echo-protocol:
     dependencies:
-      '@dxos/async': link:../../misc/async
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
+      '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/feed-store': 1.2.0-beta.30
-      '@dxos/util': link:../util
+      '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/lodash': 4.14.168
@@ -285,7 +350,7 @@ importers:
       protobufjs: 6.10.2
       readable-stream: 3.6.0
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/faker': 5.5.3
       '@types/jest': 26.0.22
       faker: 5.5.3
@@ -323,7 +388,7 @@ importers:
       stream-buffers: ^3.0.2
       tempy: ~1.0.1
       wait-for-expect: ^3.0.2
-  ../../echo/echo-testing:
+  ../../packages/echo/echo-testing:
     dependencies:
       '@dxos/echo-db': link:../echo-db
       '@dxos/echo-protocol': link:../echo-protocol
@@ -332,7 +397,7 @@ importers:
       faker: 5.5.3
       js-data-structs: 1.1.3
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/debug': 4.1.5
       '@types/faker': 5.5.3
       '@types/jest': 26.0.22
@@ -351,14 +416,14 @@ importers:
       faker: ^5.1.0
       js-data-structs: ^1.1.2
       wait-for-expect: ^3.0.2
-  ../../echo/model-factory:
+  ../../packages/echo/model-factory:
     dependencies:
-      '@dxos/async': link:../../misc/async
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/feed-store': 1.2.0-beta.30
-      '@dxos/util': link:../util
+      '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/lodash': 4.14.168
@@ -371,7 +436,7 @@ importers:
       lodash.merge: 4.6.2
       protobufjs: 6.10.2
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.22
       stream-buffers: 3.0.2
       wait-for-expect: 3.0.2
@@ -397,15 +462,15 @@ importers:
       protobufjs: ^6.9.0
       stream-buffers: ^3.0.2
       wait-for-expect: ^3.0.2
-  ../../echo/object-model:
+  ../../packages/echo/object-model:
     dependencies:
-      '@dxos/async': link:../../misc/async
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/feed-store': 1.2.0-beta.30
       '@dxos/model-factory': link:../model-factory
-      '@dxos/util': link:../util
+      '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/lodash': 4.14.168
@@ -420,7 +485,7 @@ importers:
       minisearch: 3.0.2
       protobufjs: 6.10.2
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.22
       '@types/jest-expect-message': 1.0.3
       chance: 1.1.7
@@ -457,9 +522,9 @@ importers:
       protobufjs: ^6.9.0
       stream-buffers: ^3.0.2
       wait-for-expect: ^3.0.2
-  ../../echo/text-model:
+  ../../packages/echo/text-model:
     dependencies:
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/echo-db': link:../echo-db
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
@@ -467,7 +532,7 @@ importers:
       protobufjs: 6.10.2
       yjs: 13.5.5
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.22
     specifiers:
       '@dxos/codec-protobuf': workspace:*
@@ -479,49 +544,11 @@ importers:
       '@types/node': ^14.0.9
       protobufjs: ^6.9.0
       yjs: ^13.4.1
-  ../../echo/util:
+  ../../packages/halo/credentials:
     dependencies:
-      '@dxos/async': link:../../misc/async
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
-      '@dxos/crypto': link:../../misc/crypto
-      '@types/debug': 4.1.5
-      '@types/end-of-stream': 1.4.0
-      '@types/lodash': 4.14.168
-      '@types/node': 14.14.41
-      '@types/stream-buffers': 3.0.3
-      '@types/through2': 2.0.36
-      debug: 4.3.1
-      hypercore: 7.7.1
-      js-data-structs: 1.1.3
-      lodash.merge: 4.6.2
-      protobufjs: 6.10.2
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
-      '@types/jest': 26.0.22
-      stream-buffers: 3.0.2
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.1
-      '@types/end-of-stream': ^1.4.0
-      '@types/jest': ^26.0.7
-      '@types/lodash': ^4.14.159
-      '@types/node': ^14.0.9
-      '@types/stream-buffers': ^3.0.2
-      '@types/through2': ^2.0.36
-      debug: ^4.1.1
-      hypercore: ^7.7.1
-      js-data-structs: ^1.1.2
-      lodash.merge: ^4.6.2
-      protobufjs: ^6.9.0
-      stream-buffers: ^3.0.2
-  ../../halo/credentials:
-    dependencies:
-      '@dxos/async': link:../../misc/async
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/feed-store': 1.2.0-beta.30
       '@dxos/protocol': link:../../mesh/protocol
       '@types/debug': 4.1.5
@@ -556,7 +583,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/encoding-down': 5.0.0
       '@types/jest': 26.0.22
       '@types/json-stable-stringify': 1.0.32
@@ -615,9 +642,9 @@ importers:
       stream-to-array: ^2.3.0
       uuid: ^3.3.2
       wait-for-expect: ^3.0.2
-  ../../mesh/network-devtools:
+  ../../packages/mesh/network-devtools:
     dependencies:
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/gem-core': 1.0.0-beta.33_@types+react@17.0.3
       '@dxos/gem-spore': 1.0.0-beta.33_@types+react@17.0.3
       '@dxos/network-manager': link:../network-manager
@@ -667,14 +694,14 @@ importers:
       ts-loader: ~8.1.0
       typescript: ^4.0.2
       webpack: 4.44.2
-  ../../mesh/network-manager:
+  ../../packages/mesh/network-manager:
     dependencies:
-      '@dxos/async': link:../../misc/async
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/async': link:../../common/async
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/metrics': 1.0.0-beta.9
       '@dxos/protocol': link:../protocol
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
-      '@dxos/util': link:../../echo/util
+      '@dxos/util': link:../../common/util
       '@types/simple-peer': 9.6.2
       '@types/ws': 7.4.1
       assert: 2.0.0
@@ -687,7 +714,7 @@ importers:
       xor-distance: 2.0.0
     devDependencies:
       '@dxos/feed-store': 1.2.0-beta.30
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/debug': 4.1.5
       '@types/jest': 26.0.22
       '@types/node': 14.14.41
@@ -721,9 +748,9 @@ importers:
       wrtc: ^0.4.6
       ws: ^7.4.4
       xor-distance: ^2.0.0
-  ../../mesh/protocol:
+  ../../packages/mesh/protocol:
     dependencies:
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
@@ -735,7 +762,7 @@ importers:
       nanoresource-promise: 2.0.0
       signal-promise: 1.0.3
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/assert': 1.5.4
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
@@ -765,7 +792,7 @@ importers:
       pump: ^3.0.0
       signal-promise: ^1.0.3
       wait-for-expect: ^3.0.2
-  ../../mesh/protocol-network-generator:
+  ../../packages/mesh/protocol-network-generator:
     dependencies:
       '@dxos/network-generator': 1.0.0-beta.3
       debug: 4.3.1
@@ -773,7 +800,7 @@ importers:
       pump: 3.0.0
     devDependencies:
       '@dxos/protocol': link:../protocol
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/node': 14.14.41
       wait-for-expect: 3.0.2
     specifiers:
@@ -785,15 +812,15 @@ importers:
       p-event: ^4.2.0
       pump: ^3.0.0
       wait-for-expect: ^3.0.2
-  ../../mesh/protocol-plugin-messenger:
+  ../../packages/mesh/protocol-plugin-messenger:
     dependencies:
       '@dxos/broadcast': 1.0.0-beta.11
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/protocol': link:../protocol
       debug: 4.3.1
     devDependencies:
       '@dxos/protocol-network-generator': link:../protocol-network-generator
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       coveralls: 3.1.0
       cpy-cli: 2.0.0
       del-cli: 3.0.1
@@ -811,10 +838,10 @@ importers:
       del-cli: ^3.0.0
       jest: ^26.2.2
       wait-for-expect: ^3.0.2
-  ../../mesh/protocol-plugin-presence:
+  ../../packages/mesh/protocol-plugin-presence:
     dependencies:
       '@dxos/broadcast': 1.0.0-beta.11
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/protocol': link:../protocol
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
@@ -822,9 +849,9 @@ importers:
       p-limit: 3.1.0
       queue-microtask: 1.2.3
     devDependencies:
-      '@dxos/protobuf-compiler': link:../../codec-protobuf/protobuf-compiler
+      '@dxos/protobuf-compiler': link:../../common/protobuf-compiler
       '@dxos/protocol-network-generator': link:../protocol-network-generator
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/broadcast': ~1.0.0-beta.11
@@ -839,17 +866,17 @@ importers:
       p-limit: ^3.0.2
       queue-microtask: ^1.1.2
       wait-for-expect: ^3.0.2
-  ../../mesh/protocol-plugin-replicator:
+  ../../packages/mesh/protocol-plugin-replicator:
     dependencies:
-      '@dxos/codec-protobuf': link:../../codec-protobuf/codec-protobuf
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/protocol': link:../protocol
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
     devDependencies:
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/feed-store': 1.2.0-beta.30
       '@dxos/protocol-network-generator': link:../protocol-network-generator
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       coveralls: 3.1.0
       cpy-cli: 2.0.0
       del-cli: 3.0.1
@@ -875,36 +902,11 @@ importers:
       pify: ~5.0.0
       random-access-memory: ~3.1.2
       wait-for-expect: ^3.0.2
-  ../../misc/async:
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
-      '@types/jest': 26.0.22
-      '@types/node': 14.14.41
-    specifiers:
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/jest': ^26.0.7
-      '@types/node': ^14.0.9
-  ../../misc/crypto:
+  ../../packages/sdk/client:
     dependencies:
-      crypto-js: 3.3.0
-      humanhash: 1.0.4
-      hypercore-crypto: 1.0.0
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
-      '@types/jest': 26.0.22
-      '@types/node': 14.14.41
-    specifiers:
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/jest': ^26.0.7
-      '@types/node': ^14.0.9
-      crypto-js: ^3.1.9-1
-      humanhash: ^1.0.4
-      hypercore-crypto: ^1.0.0
-  ../../sdk/client:
-    dependencies:
-      '@dxos/async': link:../../misc/async
+      '@dxos/async': link:../../common/async
       '@dxos/credentials': link:../../halo/credentials
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': 1.0.0-beta.78
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
@@ -916,7 +918,7 @@ importers:
       '@dxos/protocol': link:../../mesh/protocol
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
       '@dxos/registry-client': 1.1.2
-      '@dxos/util': link:../../echo/util
+      '@dxos/util': link:../../common/util
       '@geut/discovery-swarm-webrtc': 4.3.0
       '@wirelineio/registry-client': 1.1.0-beta.3
       assert: 2.0.0
@@ -946,7 +948,7 @@ importers:
       wrtc: 0.4.7
     devDependencies:
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.22
       '@types/level-js': 4.0.1
       '@types/lodash.defaultsdeep': 4.6.6
@@ -1006,12 +1008,12 @@ importers:
       through2: ^3.0.1
       wait-for-expect: ^3.0.2
       wrtc: ^0.4.6
-  ../../sdk/react-client:
+  ../../packages/sdk/react-client:
     dependencies:
-      '@dxos/async': link:../../misc/async
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
       '@dxos/credentials': link:../../halo/credentials
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': 1.0.0-beta.78
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/metrics': 1.0.0-beta.9
@@ -1036,7 +1038,7 @@ importers:
       '@babel/preset-env': 7.13.15_@babel+core@7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
       '@dxos/eslint-plugin': 1.0.10_eslint@7.24.0+typescript@4.2.4
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@storybook/addon-actions': 6.2.9_705485a86473ed5500268f6a4ba6978c
       '@storybook/addon-knobs': 6.2.9_705485a86473ed5500268f6a4ba6978c
       '@storybook/react': 6.2.9_f0d610380627ebadccaeed89a9ed9d71
@@ -1116,9 +1118,9 @@ importers:
       typescript: ^4.0.2
       use-deep-compare-effect: ^1.3.0
       webpack: 4.44.2
-  ../../sdk/react-ux:
+  ../../packages/sdk/react-ux:
     dependencies:
-      '@dxos/crypto': link:../../misc/crypto
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': 1.0.0-beta.78
       '@material-ui/core': 4.11.3_705485a86473ed5500268f6a4ba6978c
       '@material-ui/icons': 4.11.2_abdc0134c954bf0596607132fa77c47f
@@ -1131,7 +1133,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/toolchain-node-library': link:../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@storybook/addon-actions': 6.2.9_705485a86473ed5500268f6a4ba6978c
       '@storybook/addon-knobs': 6.2.9_705485a86473ed5500268f6a4ba6978c
       '@storybook/react': 6.2.9_f0d610380627ebadccaeed89a9ed9d71
@@ -1169,7 +1171,7 @@ importers:
   ../../toolchains/node-library:
     dependencies:
       '@dxos/eslint-plugin': 1.0.10_eslint@7.24.0+typescript@4.2.4
-      '@dxos/protobuf-compiler': link:../../codec-protobuf/protobuf-compiler
+      '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@types/yargs': 16.0.1
       chalk: 4.1.1
       eslint: 7.24.0

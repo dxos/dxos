@@ -172,8 +172,8 @@
    * To remove these restrictions, you could set projectFolderMinDepth=1
    * and set projectFolderMaxDepth to a large number.
    */
-  // "projectFolderMinDepth": 2,
-  // "projectFolderMaxDepth": 2,
+  "projectFolderMinDepth": 1,
+  "projectFolderMaxDepth": 5,
 
   /**
    * Today the npmjs.com registry enforces fairly strict naming rules for packages, but in the early
@@ -284,7 +284,7 @@
      * The default branch name. This tells "rush change" which remote branch to compare against.
      * The default value is "master"
      */
-    "defaultBranch": "main",
+    "defaultBranch": "main"
 
     /**
      * The default remote. This tells "rush change" which remote to compare against if the remote URL is
@@ -379,55 +379,55 @@
   "projects": [
     {
       "packageName": "@dxos/client",
-      "projectFolder": "sdk/client"
+      "projectFolder": "packages/sdk/client"
     },
     {
       "packageName": "@dxos/react-ux",
-      "projectFolder": "sdk/react-ux"
+      "projectFolder": "packages/sdk/react-ux"
     },
     {
       "packageName": "@dxos/react-client",
-      "projectFolder": "sdk/react-client"
+      "projectFolder": "packages/sdk/react-client"
     },
     {
       "packageName": "@dxos/codec-protobuf",
-      "projectFolder": "codec-protobuf/codec-protobuf"
+      "projectFolder": "packages/common/codec-protobuf"
     },
     {
       "packageName": "@dxos/protobuf-compiler",
-      "projectFolder": "codec-protobuf/protobuf-compiler"
+      "projectFolder": "packages/common/protobuf-compiler"
     },
     {
       "packageName": "@dxos/util",
-      "projectFolder": "echo/util"
+      "projectFolder": "packages/common/util"
     },
     {
       "packageName": "@dxos/echo-protocol",
-      "projectFolder": "echo/echo-protocol"
+      "projectFolder": "packages/echo/echo-protocol"
     },
     {
       "packageName": "@dxos/model-factory",
-      "projectFolder": "echo/model-factory"
+      "projectFolder": "packages/echo/model-factory"
     },
     {
       "packageName": "@dxos/object-model",
-      "projectFolder": "echo/object-model"
+      "projectFolder": "packages/echo/object-model"
     },
     {
       "packageName": "@dxos/echo-db",
-      "projectFolder": "echo/echo-db"
+      "projectFolder": "packages/echo/echo-db"
     },
     {
       "packageName": "@dxos/echo-testing",
-      "projectFolder": "echo/echo-testing"
+      "projectFolder": "packages/echo/echo-testing"
     },
     {
       "packageName": "@dxos/echo-demo",
-      "projectFolder": "echo/echo-demo"
+      "projectFolder": "packages/echo/echo-demo"
     },
     {
       "packageName": "@dxos/credentials",
-      "projectFolder": "halo/credentials"
+      "projectFolder": "packages/halo/credentials"
     },
     {
       "packageName": "@dxos/toolchain-node-library",
@@ -435,43 +435,43 @@
     },
     {
       "packageName": "@dxos/protocol",
-      "projectFolder": "mesh/protocol"
+      "projectFolder": "packages/mesh/protocol"
     },
     {
       "packageName": "@dxos/text-model",
-      "projectFolder": "echo/text-model"
+      "projectFolder": "packages/echo/text-model"
     },
     {
       "packageName": "@dxos/protocol-plugin-presence",
-      "projectFolder": "mesh/protocol-plugin-presence"
+      "projectFolder": "packages/mesh/protocol-plugin-presence"
     },
     {
       "packageName": "@dxos/protocol-network-generator",
-      "projectFolder": "mesh/protocol-network-generator"
+      "projectFolder": "packages/mesh/protocol-network-generator"
     },
     {
       "packageName": "@dxos/protocol-plugin-messenger",
-      "projectFolder": "mesh/protocol-plugin-messenger"
+      "projectFolder": "packages/mesh/protocol-plugin-messenger"
     },
     {
       "packageName": "@dxos/protocol-plugin-replicator",
-      "projectFolder": "mesh/protocol-plugin-replicator"
+      "projectFolder": "packages/mesh/protocol-plugin-replicator"
     },
     {
       "packageName": "@dxos/network-manager",
-      "projectFolder": "mesh/network-manager"
+      "projectFolder": "packages/mesh/network-manager"
     },
     {
       "packageName": "@dxos/network-devtools",
-      "projectFolder": "mesh/network-devtools"
+      "projectFolder": "packages/mesh/network-devtools"
     },
     {
       "packageName": "@dxos/async",
-      "projectFolder": "misc/async"
+      "projectFolder": "packages/common/async"
     },
     {
       "packageName": "@dxos/crypto",
-      "projectFolder": "misc/crypto"
+      "projectFolder": "packages/common/crypto"
     }
     // {
     //   /**
