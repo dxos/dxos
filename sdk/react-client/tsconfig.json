@@ -1,25 +1,21 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "allowJs": true,
     "outDir": "dist",
-    "jsx": "react",
     "lib": [
-      "DOM"
+      "DOM",
+      "ESNext"
     ],
+    // Have to specify typings explicitly here because fork-ts-checker-webpack-plugin can't find them automatically with PNPM.
     "types": [
-      "node",
-      "jest",
-      "@types/testing-library__jest-dom"
-    ],
-    "rootDirs": ["./src", "./stories", "./.storybook"]
+      "jest"
+    ]
   },
   "include": [
     "src",
-    "stories"
+    "stories",
   ],
-  "exclude": [
-    "node_modules",
-    "dist"
+  "references": [
+    {"path": "../client"}
   ]
 }

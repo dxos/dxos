@@ -12,6 +12,7 @@
     "lint": "eslint '{src,stories}/**/*.{ts,tsx,js}'",
     "prepublishOnly": "npm run build && npm run test",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
+    "build-storybook": "build-storybook",
     "test": "jest --rootDir ./src --verbose --passWithNoTests --runInBand"
   },
   "eslintConfig": {
@@ -49,9 +50,9 @@
     "@dxos/eslint-plugin": "~1.0.10",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
     "@dxos/toolchain-node-library": "workspace:*",
-    "@storybook/addon-actions": "^6.0.19",
-    "@storybook/addon-knobs": "^6.0.21",
-    "@storybook/react": "^6.0.21",
+    "@storybook/addon-actions": "^6.2.9",
+    "@storybook/addon-knobs": "^6.2.9",
+    "@storybook/react": "^6.2.9",
     "@testing-library/react": "^11.0.4",
     "@testing-library/react-hooks": "5.1.2",
     "@types/jest": "^26.0.7",
@@ -73,7 +74,8 @@
     "react-test-renderer": "16.12.0",
     "ts-jest": "^26.1.4",
     "typescript": "^4.0.2",
-    "webpack": "4.44.2"
+    "webpack": "4.44.2",
+    "fork-ts-checker-webpack-plugin": "~6.2.5"
   },
   "peerDependencies": {
     "react": "*"

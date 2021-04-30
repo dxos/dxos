@@ -10,7 +10,8 @@
     "build": "toolchain build",
     "lint": "toolchain lint",
     "test": "toolchain test",
-    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci"
+    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
+    "build-storybook": "build-storybook"
   },
   "dependencies": {
     "@dxos/crypto": "workspace:*",
@@ -27,9 +28,9 @@
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
-    "@storybook/addon-actions": "^6.0.19",
-    "@storybook/addon-knobs": "^6.0.21",
-    "@storybook/react": "^6.0.21",
+    "@storybook/addon-actions": "^6.2.9",
+    "@storybook/addon-knobs": "^6.2.9",
+    "@storybook/react": "^6.2.9",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.0.4",
     "@types/node": "^14.0.9",
