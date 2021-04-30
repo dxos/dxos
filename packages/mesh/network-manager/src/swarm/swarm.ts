@@ -112,7 +112,7 @@ export class Swarm {
 
     let accept = false;
     if (await this._topology.onOffer(remoteId)) {
-      if(!this._connections.has(remoteId)) { // Connection might have been already established.
+      if (!this._connections.has(remoteId)) { // Connection might have been already established.
         const connection = this._createConnection(false, message.id, message.sessionId);
         connection.connect();
         accept = true;
@@ -191,12 +191,12 @@ export class Swarm {
       data: {}
     })
       .then(answer => {
-        log(`Received answer: ${JSON.stringify(answer)} topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId}`)
-        if(connection.state !== ConnectionState.INITIAL) {
-          log(`Ignoring answer`)
+        log(`Received answer: ${JSON.stringify(answer)} topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId}`);
+        if (connection.state !== ConnectionState.INITIAL) {
+          log('Ignoring answer');
           return;
         }
-        
+
         if (answer.accept) {
           connection.connect();
         } else {

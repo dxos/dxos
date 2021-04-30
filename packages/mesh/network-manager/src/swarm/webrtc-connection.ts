@@ -100,7 +100,7 @@ export class WebrtcConnection implements Connection {
       this.closed.emit();
     });
 
-    for(const signal of this._bufferedSignals) {
+    for (const signal of this._bufferedSignals) {
       this._peer.signal(signal.data);
     }
   }
@@ -116,7 +116,7 @@ export class WebrtcConnection implements Connection {
     assert(msg.id.equals(this._remoteId));
     assert(msg.remoteId.equals(this._ownId));
 
-    if(this._state == ConnectionState.INITIAL) {
+    if (this._state === ConnectionState.INITIAL) {
       log(`${this._ownId} buffered signal from ${this._remoteId}: ${msg.data.type}`);
       this._bufferedSignals.push(msg);
       return;

@@ -70,7 +70,9 @@ export class InMemoryConnection implements Connection {
   }
 
   async close (): Promise<void> {
-    if(this.state === ConnectionState.CLOSED) return;
+    if (this.state === ConnectionState.CLOSED) {
+      return;
+    }
 
     log(`Closing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
 
