@@ -5,7 +5,7 @@
 import { expect, mockFn } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
-import { Event, sleep } from '@dxos/async';
+import { Event, latch, sleep, trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 
@@ -14,6 +14,7 @@ import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protoco
 import { FullyConnectedTopology } from './topology/fully-connected-topology';
 import { StarTopology } from './topology/star-topology';
 import { Topology } from './topology/topology';
+import { ComplexMap, range } from '@dxos/util';
 
 interface CreatePeerOptions {
   topic: PublicKey
@@ -189,5 +190,41 @@ describe('Network manager', () => {
         expect(mockReceiveB).toHaveBeenCalledWith([expect.a(Protocol), 'Foo B']);
       });
     });
+
+    test.only('large amount of peers and connections', async () => {
+      const numTopics = 5;
+      const peersPerTopic = 5;
+
+      await Promise.all(range(numTopics).map(async () => {
+        const topic = PublicKey.random()
+
+        await Promise.all(range(peersPerTopic).map(async () => {
+          const peerId = PublicKey.random()
+          const { plugin } = await createPeer({ topic, peerId, inMemory: true });
+
+          const [done, pongReceived] = latch(peersPerTopic - 1)
+
+          plugin.on('connect', async (protocol: Protocol) => {
+            const remoteId = PublicKey.from(protocol.getSession().peerId);
+
+            plugin.send(remoteId.asBuffer(), 'ping')
+          })
+
+          plugin.on('receive', (protocol, data) => {
+            const remoteId = PublicKey.from(protocol.getSession().peerId);
+
+            if(data === 'ping') {
+              plugin.send(remoteId.asBuffer(), 'pong')
+            } else if(data === 'pong') {
+              pongReceived()
+            } else {
+              throw new Error(`Invalid message: ${data}`)
+            }
+          })
+
+          await done
+        }))
+      }))
+    })
   });
 });
