@@ -11,8 +11,8 @@ import { range } from '@dxos/util';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { afterTest } from '../testutils';
-import { ConnectionState } from './connection';
-import { InMemoryConnection } from './in-memory-connection';
+import { InMemoryTransport } from './in-memory-transport';
+import { TransportState } from './transport';
 
 function createPair () {
   const topic = PublicKey.random();
@@ -22,7 +22,7 @@ function createPair () {
 
   const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
   const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
-  const connection1 = new InMemoryConnection(
+  const connection1 = new InMemoryTransport(
     peer1Id,
     peer2Id,
     sessionId,
@@ -34,7 +34,7 @@ function createPair () {
 
   const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
   const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
-  const connection2 = new InMemoryConnection(
+  const connection2 = new InMemoryTransport(
     peer2Id,
     peer1Id,
     sessionId,
@@ -52,8 +52,8 @@ function createPair () {
 test('establish connection and send data through with protocol', async () => {
   const { connection1, connection2, plugin1, plugin2, peer1Id } = createPair();
 
-  expect(connection1.state).toEqual(ConnectionState.CONNECTED);
-  expect(connection2.state).toEqual(ConnectionState.CONNECTED);
+  expect(connection1.state).toEqual(TransportState.CONNECTED);
+  expect(connection2.state).toEqual(TransportState.CONNECTED);
 
   const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
   plugin1.on('receive', mockReceive);
@@ -71,8 +71,8 @@ test('10 pairs of peers connecting at the same time', async () => {
   await Promise.all(range(10).map(async () => {
     const { connection1, connection2, plugin1, plugin2, peer1Id } = createPair();
 
-    expect(connection1.state).toEqual(ConnectionState.CONNECTED);
-    expect(connection2.state).toEqual(ConnectionState.CONNECTED);
+    expect(connection1.state).toEqual(TransportState.CONNECTED);
+    expect(connection2.state).toEqual(TransportState.CONNECTED);
 
     const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
     plugin1.on('receive', mockReceive);

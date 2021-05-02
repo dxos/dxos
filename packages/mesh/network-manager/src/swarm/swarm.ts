@@ -12,7 +12,7 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 import { ProtocolProvider } from '../network-manager';
 import { SignalApi } from '../signal';
 import { SwarmController, Topology } from '../topology/topology';
-import { Connection, ConnectionState, ConnectionFactory } from './connection';
+import { Transport, TransportState, TransportFactory } from '../transport/transport';
 
 const log = debug('dxos:network-manager:swarm');
 
@@ -22,7 +22,7 @@ const log = debug('dxos:network-manager:swarm');
  * Routes signal events and maintains swarm topology.
  */
 export class Swarm {
-  private readonly _connections = new ComplexMap<PublicKey, Connection>(x => x.toHex());
+  private readonly _connections = new ComplexMap<PublicKey, Transport>(x => x.toHex());
 
   private readonly _discoveredPeers = new ComplexSet<PublicKey>(x => x.toHex());
 
@@ -35,12 +35,12 @@ export class Swarm {
   /**
    * New connection to a peer is started.
    */
-  readonly connectionAdded = new Event<Connection>();
+  readonly connectionAdded = new Event<Transport>();
 
   /**
    * Connection to a peer is dropped.
    */
-  readonly connectionRemoved = new Event<Connection>();
+  readonly connectionRemoved = new Event<Transport>();
 
   /**
    * Connection is established to a new peer.
@@ -55,7 +55,7 @@ export class Swarm {
     private readonly _sendOffer: (message: SignalApi.SignalMessage) => Promise<SignalApi.Answer>,
     private readonly _sendSignal: (message: SignalApi.SignalMessage) => Promise<void>,
     private readonly _lookup: () => void,
-    private readonly _connectionFactory: ConnectionFactory,
+    private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
     log(`Creating swarm topic=${_topic} peerId=${_ownPeerId}`);
@@ -192,7 +192,7 @@ export class Swarm {
     })
       .then(answer => {
         log(`Received answer: ${JSON.stringify(answer)} topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId}`);
-        if (connection.state !== ConnectionState.INITIAL) {
+        if (connection.state !== TransportState.INITIAL) {
           log('Ignoring answer');
           return;
         }
@@ -216,7 +216,7 @@ export class Swarm {
     log(`Create connection topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
     assert(!this._connections.has(remoteId), 'Peer already connected');
 
-    const connection = this._connectionFactory({
+    const connection = this._transportFactory({
       initiator,
 
       ownId: this._ownPeerId,
@@ -232,10 +232,10 @@ export class Swarm {
     this._connections.set(remoteId, connection);
     this.connectionAdded.emit(connection);
 
-    if (connection.state === ConnectionState.CONNECTED) {
+    if (connection.state === TransportState.CONNECTED) {
       this.connected.emit(remoteId);
     } else {
-      connection.stateChanged.waitFor(s => s === ConnectionState.CONNECTED).then(() => this.connected.emit(remoteId));
+      connection.stateChanged.waitFor(s => s === TransportState.CONNECTED).then(() => this.connected.emit(remoteId));
     }
 
     connection.closed.once(() => {

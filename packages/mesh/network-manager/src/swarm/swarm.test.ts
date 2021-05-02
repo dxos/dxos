@@ -11,8 +11,8 @@ import { Protocol } from '@dxos/protocol';
 
 import { afterTest } from '../testutils';
 import { FullyConnectedTopology } from '../topology/fully-connected-topology';
+import { createWebRtcTransportFactory, WebrtcTransport } from '../transport/webrtc-transport';
 import { Swarm } from './swarm';
-import { createWebRtcConnectionFactory, WebrtcConnection } from './webrtc-connection';
 
 const setup = () => {
   const topic = PublicKey.random();
@@ -32,7 +32,7 @@ const setup = () => {
       await swarm2.onSignal(msg);
     },
     () => {},
-    createWebRtcConnectionFactory(),
+    createWebRtcTransportFactory(),
     undefined
   );
   const swarm2: Swarm = new Swarm(
@@ -49,7 +49,7 @@ const setup = () => {
       await swarm1.onSignal(msg);
     },
     () => {},
-    createWebRtcConnectionFactory(),
+    createWebRtcTransportFactory(),
     undefined
   );
   afterTest(() => swarm1.destroy());
@@ -75,10 +75,10 @@ test('connects two peers in a swarm', async () => {
   const swarm1Connection = swarm1.connections[0];
   const swarm2Connection = swarm2.connections[0];
   const onData = mockFn<(data: Buffer) => void>().returns(undefined);
-  (swarm2Connection as WebrtcConnection).peer!.on('data', onData);
+  (swarm2Connection as WebrtcTransport).peer!.on('data', onData);
 
   const data = Buffer.from('1234');
-  (swarm1Connection as WebrtcConnection).peer!.send(data);
+  (swarm1Connection as WebrtcTransport).peer!.send(data);
   await waitForExpect(() => {
     expect(onData).toHaveBeenCalledWith([data]);
   });
@@ -117,10 +117,10 @@ test('second peer discovered after delat', async () => {
   const swarm1Connection = swarm1.connections[0];
   const swarm2Connection = swarm2.connections[0];
   const onData = mockFn<(data: Buffer) => void>().returns(undefined);
-  (swarm2Connection as WebrtcConnection).peer!.on('data', onData);
+  (swarm2Connection as WebrtcTransport).peer!.on('data', onData);
 
   const data = Buffer.from('1234');
-  (swarm1Connection as WebrtcConnection).peer!.send(data);
+  (swarm1Connection as WebrtcTransport).peer!.send(data);
   await waitForExpect(() => {
     expect(onData).toHaveBeenCalledWith([data]);
   });

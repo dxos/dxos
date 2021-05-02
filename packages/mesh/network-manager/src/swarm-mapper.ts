@@ -8,13 +8,13 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionState } from './swarm/connection';
 import { Swarm } from './swarm/swarm';
+import { TransportState } from './transport/transport';
 
 /**
  * State of the connection to the remote peer with additional info derived from network mapping.
  */
-export type PeerState = ConnectionState | 'INDIRECTLY_CONNECTED' | 'ME'
+export type PeerState = TransportState | 'INDIRECTLY_CONNECTED' | 'ME'
 
 /**
  * Information about remote peer, directly or indirectly connected.

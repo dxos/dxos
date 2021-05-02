@@ -11,21 +11,21 @@ import { Protocol } from '@dxos/protocol';
 import { ComplexMap } from '@dxos/util';
 
 import { SignalApi } from '../signal';
-import { Connection, ConnectionState, ConnectionFactory } from './connection';
+import { Transport, TransportState, TransportFactory } from './transport';
 
 const log = debug('dxos:network-manager:swarm:in-memory-connection');
 
-export class InMemoryConnection implements Connection {
-  private static readonly _connections = new ComplexMap<[topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey], InMemoryConnection>(([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex());
+export class InMemoryTransport implements Transport {
+  private static readonly _connections = new ComplexMap<[topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey], InMemoryTransport>(([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex());
 
-  public readonly stateChanged = new Event<ConnectionState>();
+  public readonly stateChanged = new Event<TransportState>();
   public readonly closed = new Event<void>();
 
   public readonly errors = new ErrorStream();
 
-  public state: ConnectionState = ConnectionState.INITIAL;
+  public state: TransportState = TransportState.INITIAL;
 
-  private _remoteConnection?: InMemoryConnection;
+  private _remoteConnection?: InMemoryTransport;
 
   constructor (
     private readonly _ownId: PublicKey,
@@ -46,21 +46,21 @@ export class InMemoryConnection implements Connection {
   }
 
   connect () {
-    assert(this.state === ConnectionState.INITIAL, 'Invalid state');
+    assert(this.state === TransportState.INITIAL, 'Invalid state');
 
     log(`Registering connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
 
-    assert(!InMemoryConnection._connections.has([this._topic, this._ownId, this._remoteId]), 'Duplicate in-memory connection');
-    InMemoryConnection._connections.set([this._topic, this._ownId, this._remoteId], this);
+    assert(!InMemoryTransport._connections.has([this._topic, this._ownId, this._remoteId]), 'Duplicate in-memory connection');
+    InMemoryTransport._connections.set([this._topic, this._ownId, this._remoteId], this);
 
-    this._remoteConnection = InMemoryConnection._connections.get([this._topic, this._remoteId, this._ownId]);
+    this._remoteConnection = InMemoryTransport._connections.get([this._topic, this._remoteId, this._ownId]);
     if (this._remoteConnection) {
       log(`Connecting to existing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
       this._protocol.stream.pipe(this._remoteConnection._protocol.stream).pipe(this._protocol.stream);
 
-      this.state = ConnectionState.CONNECTED;
+      this.state = TransportState.CONNECTED;
       this.stateChanged.emit(this.state);
-      this._remoteConnection.state = ConnectionState.CONNECTED;
+      this._remoteConnection.state = TransportState.CONNECTED;
       this._remoteConnection.stateChanged.emit(this._remoteConnection.state);
     }
   }
@@ -70,24 +70,24 @@ export class InMemoryConnection implements Connection {
   }
 
   async close (): Promise<void> {
-    if (this.state === ConnectionState.CLOSED) {
+    if (this.state === TransportState.CLOSED) {
       return;
     }
 
     log(`Closing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
 
-    InMemoryConnection._connections.delete([this._topic, this._ownId, this._remoteId]);
+    InMemoryTransport._connections.delete([this._topic, this._ownId, this._remoteId]);
 
-    this.state = ConnectionState.CLOSED;
+    this.state = TransportState.CLOSED;
     this.stateChanged.emit(this.state);
 
     if (this._remoteConnection) {
-      InMemoryConnection._connections.delete([this._topic, this._remoteId, this._ownId]);
+      InMemoryTransport._connections.delete([this._topic, this._remoteId, this._ownId]);
 
       const stream = this._protocol.stream;
       stream.unpipe(this._remoteConnection._protocol.stream).unpipe(stream);
 
-      this._remoteConnection.state = ConnectionState.CLOSED;
+      this._remoteConnection.state = TransportState.CLOSED;
       this._remoteConnection.stateChanged.emit(this._remoteConnection.state);
 
       this._remoteConnection.close();
@@ -96,7 +96,7 @@ export class InMemoryConnection implements Connection {
   }
 }
 
-export const inMemoryConnectionFactory: ConnectionFactory = opts => new InMemoryConnection(
+export const inMemoryTransportFactory: TransportFactory = opts => new InMemoryTransport(
   opts.ownId,
   opts.remoteId,
   opts.sessionId,

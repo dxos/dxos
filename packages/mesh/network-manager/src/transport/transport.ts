@@ -11,8 +11,8 @@ import { SignalApi } from '../signal';
 /**
  * Abstraction over a P2P connection transport. Currently either WebRTC or in-memory.
  */
-export interface Connection {
-  stateChanged: Event<ConnectionState>;
+export interface Transport {
+  stateChanged: Event<TransportState>;
 
   closed: Event;
 
@@ -22,7 +22,7 @@ export interface Connection {
 
   sessionId: PublicKey
 
-  state: ConnectionState;
+  state: TransportState;
 
   connect(): void;
 
@@ -34,7 +34,7 @@ export interface Connection {
 /**
  * State machine for each connection.
  */
-export enum ConnectionState {
+export enum TransportState {
   /**
    * Initial state. Connection is registered but no attempt to connect to the remote peer has been performed. Might mean that we are waiting for the answer signal from the remote peer.
    */
@@ -61,7 +61,7 @@ export enum ConnectionState {
   CLOSED = 'CLOSED',
 }
 
-export interface ConnectionOptions {
+export interface TransportOptions {
   /**
    * Did local node initiate this connection.
    */
@@ -83,4 +83,4 @@ export interface ConnectionOptions {
   sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>,
 }
 
-export type ConnectionFactory = (options: ConnectionOptions) => Connection;
+export type TransportFactory = (options: TransportOptions) => Transport;

@@ -11,13 +11,13 @@ import { Protocol } from '@dxos/protocol';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { afterTest } from '../testutils';
-import { ConnectionState } from './connection';
-import { WebrtcConnection } from './webrtc-connection';
+import { TransportState } from './transport';
+import { WebrtcTransport } from './webrtc-transport';
 
 describe('WebrtcConnection', () => {
   // This doesn't clean up correctly and crashes with SIGSEGV at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
-    const connection = new WebrtcConnection(
+    const connection = new WebrtcTransport(
       true,
       new Protocol(),
       PublicKey.random(),
@@ -26,16 +26,16 @@ describe('WebrtcConnection', () => {
       PublicKey.random(),
       async msg => {}
     );
-    expect(connection.state).toEqual(ConnectionState.INITIAL);
+    expect(connection.state).toEqual(TransportState.INITIAL);
 
     connection.connect();
 
-    expect(connection.state).toEqual(ConnectionState.INITIATING_CONNECTION);
+    expect(connection.state).toEqual(TransportState.INITIATING_CONNECTION);
 
     await sleep(10); // Let simple-peer process events
     await connection.close();
 
-    expect(connection.state).toEqual(ConnectionState.CLOSED);
+    expect(connection.state).toEqual(TransportState.CLOSED);
   });
 
   test('establish connection and send data through with protocol', async () => {
@@ -46,7 +46,7 @@ describe('WebrtcConnection', () => {
 
     const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
     const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
-    const connection1 = new WebrtcConnection(
+    const connection1 = new WebrtcTransport(
       true,
       protocolProvider1({ channel: discoveryKey(topic) }),
       peer1Id,
@@ -63,7 +63,7 @@ describe('WebrtcConnection', () => {
 
     const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
     const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
-    const connection2 = new WebrtcConnection(
+    const connection2 = new WebrtcTransport(
       false,
       protocolProvider2({ channel: discoveryKey(topic) }),
       peer2Id,
@@ -81,12 +81,12 @@ describe('WebrtcConnection', () => {
     connection1.connect();
     connection2.connect();
 
-    expect(connection1.state).toEqual(ConnectionState.INITIATING_CONNECTION);
-    expect(connection2.state).toEqual(ConnectionState.WAITING_FOR_CONNECTION);
+    expect(connection1.state).toEqual(TransportState.INITIATING_CONNECTION);
+    expect(connection2.state).toEqual(TransportState.WAITING_FOR_CONNECTION);
 
     await Promise.all([
-      connection1.stateChanged.waitFor(s => s === ConnectionState.CONNECTED),
-      connection2.stateChanged.waitFor(s => s === ConnectionState.CONNECTED)
+      connection1.stateChanged.waitFor(s => s === TransportState.CONNECTED),
+      connection2.stateChanged.waitFor(s => s === TransportState.CONNECTED)
     ]);
 
     const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
