@@ -46,7 +46,7 @@ export const useParties = (): Party[] => {
 };
 
 /**
- * Get items for pary.
+ * Get items for party.
  * @param partyKey
  */
 export const useItems = ({ partyKey }): Item<any>[] => {
