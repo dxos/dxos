@@ -6,6 +6,7 @@ export * from './authenticator';
 export * from './client';
 export * from './config';
 export * from './contacts';
+export * from './echo-selection';
 export * from './items';
 export * from './invite';
 export * from './model';
