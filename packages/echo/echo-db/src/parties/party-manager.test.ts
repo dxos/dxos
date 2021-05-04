@@ -880,7 +880,7 @@ describe('Party manager', () => {
     await partyManagerB.recoverHalo(seedPhrase);
     await partyManagerA.createParty();
 
-    await waitForCondition(() => partyManagerB.parties.length, 500);
+    await waitForCondition(() => partyManagerB.parties.length, 1000);
 
     expect(partyManagerA.parties[0].isOpen).toBe(true);
     expect(partyManagerB.parties[0].isOpen).toBe(true);
@@ -892,13 +892,13 @@ describe('Party manager', () => {
     expect(partyManagerB.parties[0].isOpen).toBe(true);
 
     await partyManagerA.parties[0].deactivate({ global: true });
-    await waitForCondition(() => !partyManagerB.parties[0].isOpen, 500);
+    await waitForCondition(() => !partyManagerB.parties[0].isOpen, 1000);
 
     expect(partyManagerA.parties[0].isOpen).toBe(false);
     expect(partyManagerB.parties[0].isOpen).toBe(false);
 
     await partyManagerA.parties[0].activate({ global: true });
-    await waitForCondition(() => partyManagerA.parties[0].isOpen && partyManagerB.parties[0].isOpen, 500);
+    await waitForCondition(() => partyManagerA.parties[0].isOpen && partyManagerB.parties[0].isOpen, 1000);
 
     expect(partyManagerA.parties[0].isOpen).toBe(true);
     expect(partyManagerB.parties[0].isOpen).toBe(true);
@@ -1097,5 +1097,5 @@ describe('Party manager', () => {
     expect(partyA.title).toEqual('value-2');
     await waitForCondition(() => titleInC === 'value-2', 10000);
     await waitForCondition(() => titleInB === 'value-2', 10000);
-  }, 20000);
+  });
 });
