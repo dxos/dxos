@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { PublicKey } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 
-import { useClient } from './client';
+import { useClient } from '../client';
 
 /**
  * Get party.

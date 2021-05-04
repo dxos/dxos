@@ -29,21 +29,7 @@ export const useEcho = (): ECHO => {
 /**
  * Get parties.
  */
-export const useParties = (): Party[] => {
-  const { echo } = useContext(EchoContext);
-  const [parties, setParties] = useState<Party[]>([]);
 
-  useEffect(asyncEffect(async () => {
-    const result = await echo.queryParties();
-    setParties(result.value);
-
-    return result.subscribe(() => {
-      setParties(result.value);
-    });
-  }), [echo]);
-
-  return parties;
-};
 
 /**
  * Get items for party.
