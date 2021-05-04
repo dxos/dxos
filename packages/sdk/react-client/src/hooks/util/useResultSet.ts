@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ResultSet } from "@dxos/echo-db";
-import { useMemo } from "react";
+import { useMemo } from 'react';
 import { useSubscription } from 'use-subscription';
 
+import { ResultSet } from '@dxos/echo-db';
 
 export function useResultSet<T> (resultSet: ResultSet<T>): T[] {
   return useSubscription(useMemo(() => ({
