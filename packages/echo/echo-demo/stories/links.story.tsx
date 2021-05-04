@@ -9,14 +9,14 @@ import * as colors from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
 import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK } from '@dxos/echo-testing';
+import { useSelection } from '@dxos/react-client';
 
 import {
   ItemAdapter,
   DebugItemList,
   GraphView,
   graphSelector,
-  useGenerator,
-  useSelection
+  useGenerator
 } from '../src';
 
 export default {
