@@ -6,7 +6,7 @@
 
 import assert from 'assert';
 
-import { expectToThrow } from '@dxos/async';
+import { expectToThrow } from '@dxos/util';
 import { createKeyPair, keyToString, randomBytes, verify, PublicKey } from '@dxos/crypto';
 
 import { KeyType, schema } from '../proto';

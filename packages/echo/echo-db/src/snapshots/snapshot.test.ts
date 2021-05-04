@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { waitForCondition } from '@dxos/async';
+import { waitForCondition } from '@dxos/util';
 import { schema, ItemID, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ValueUtil } from '@dxos/object-model';

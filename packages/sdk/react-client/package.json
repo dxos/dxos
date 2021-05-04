@@ -19,7 +19,7 @@
     "extends": "plugin:@dxos/react"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",

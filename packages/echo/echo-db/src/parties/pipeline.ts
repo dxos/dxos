@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import { Readable } from 'stream';
 
-import { Event } from '@dxos/async';
+import { Event } from '@dxos/util';
 import { Message as HaloMessage } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter } from '@dxos/echo-protocol';

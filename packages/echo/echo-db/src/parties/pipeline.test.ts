@@ -6,7 +6,7 @@ import debug from 'debug';
 import { Feed } from 'hypercore';
 import ram from 'random-access-memory';
 
-import { waitForCondition } from '@dxos/async';
+import { waitForCondition } from '@dxos/util';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId, PublicKey } from '@dxos/crypto';
 import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream, Timeframe } from '@dxos/echo-protocol';

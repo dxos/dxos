@@ -3,13 +3,14 @@
 //
 
 // dxos-testing-browser
+/* eslint-disable jest/expect-expect, import/order */
 
 import EventEmitter from 'events';
 
-import { promiseTimeout } from './async';
-import { onEvent, waitForEvent } from './events';
-import { latch } from './latch';
+import { promiseTimeout } from '../src/async';
 import { expectToThrow } from './testing';
+import { onEvent, waitForEvent } from '../src/events';
+import { latch } from '../src/latch';
 
 test('onEvent', async () => {
   const emitter = new EventEmitter();

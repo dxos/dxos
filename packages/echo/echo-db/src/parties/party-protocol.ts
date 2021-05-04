@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import hypercore from 'hypercore';
 
-import { synchronized } from '@dxos/async';
+import { synchronized } from '@dxos/util';
 import {
   AuthPlugin,
   Authenticator,

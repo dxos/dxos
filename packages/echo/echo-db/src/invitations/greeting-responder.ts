@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Event, waitForCondition } from '@dxos/async';
+import { Event, waitForCondition } from '@dxos/util';
 import {
   admitsKeys,
   createEnvelopeMessage, Greeter,

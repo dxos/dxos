@@ -6,7 +6,7 @@ import assert from 'assert';
 import stableStringify from 'json-stable-stringify';
 import defaultsDeep from 'lodash/defaultsDeep';
 
-import { Event } from '@dxos/async';
+import { Event } from '@dxos/util';
 import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';

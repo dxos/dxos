@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { synchronized } from '@dxos/async';
+import { synchronized } from '@dxos/util';
 import { EchoEnvelope, FeedWriter, ItemID, ItemType, DatabaseSnapshot } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, validateModelClass, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';

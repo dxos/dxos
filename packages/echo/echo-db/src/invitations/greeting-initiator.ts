@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { waitForEvent } from '@dxos/async';
+import { waitForEvent } from '@dxos/util';
 import {
   createEnvelopeMessage,
   createFeedAdmitMessage,

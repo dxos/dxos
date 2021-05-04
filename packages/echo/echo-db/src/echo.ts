@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import memdown from 'memdown';
 
-import { Event } from '@dxos/async';
+import { Event } from '@dxos/util';
 import { KeyRecord, Keyring, KeyStore, KeyType } from '@dxos/credentials';
 import { KeyPair, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';

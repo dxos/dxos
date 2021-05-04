@@ -5,7 +5,7 @@
 import assert from 'assert';
 import { useEffect, useState, useMemo } from 'react';
 
-import { trigger } from '@dxos/async';
+import { trigger } from '@dxos/util';
 import { generatePasscode } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';

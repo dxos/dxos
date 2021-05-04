@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { Event } from '@dxos/async';
+import { Event } from '@dxos/util';
 import { PublicKey } from '@dxos/crypto';
 import { ComplexMap } from '@dxos/util';
 

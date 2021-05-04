@@ -5,7 +5,7 @@
 import debug from 'debug';
 import pump from 'pump';
 
-import { trigger } from '@dxos/async';
+import { trigger } from '@dxos/util';
 import { keyToString, randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 

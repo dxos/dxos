@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { Event } from '@dxos/async';
+import { Event } from '@dxos/util';
 import { FeedWriter, ItemID } from '@dxos/echo-protocol';
 
 import { Model } from './model';

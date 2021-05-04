@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { Event } from '@dxos/async';
+import { Event } from '@dxos/util';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 

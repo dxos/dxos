@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event } from '@dxos/util';
 import { FeedKey, Timeframe } from '@dxos/echo-protocol';
 
 /**

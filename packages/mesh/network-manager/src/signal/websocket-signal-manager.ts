@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/util';
 import { PublicKey } from '@dxos/crypto';
 import { ComplexMap } from '@dxos/util';
 

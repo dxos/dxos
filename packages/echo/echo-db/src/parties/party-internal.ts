@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { synchronized, Event } from '@dxos/async';
+import { synchronized, Event } from '@dxos/util';
 import { KeyHint, createAuthMessage, Authenticator } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol';

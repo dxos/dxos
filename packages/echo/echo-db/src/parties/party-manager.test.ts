@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import ram from 'random-access-memory';
 
-import { waitForCondition } from '@dxos/async';
+import { waitForCondition } from '@dxos/util';
 import {
   createPartyGenesisMessage,
   KeyType,

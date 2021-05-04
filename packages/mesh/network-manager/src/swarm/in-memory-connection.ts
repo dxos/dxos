@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { ErrorStream, Event } from '@dxos/async';
+import { ErrorStream, Event } from '@dxos/util';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 import { ComplexMap } from '@dxos/util';

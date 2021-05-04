@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import pify from 'pify';
 
-import { Event, trigger } from '@dxos/async';
+import { Event, trigger } from '@dxos/util';
 import { createId } from '@dxos/crypto';
 import { EchoEnvelope, FeedWriter, IEchoStream, ItemID, ItemType, LinkData, mapFeedWriter } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';

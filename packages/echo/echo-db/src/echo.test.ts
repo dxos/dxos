@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { sleep, waitForCondition } from '@dxos/async';
+import { sleep, waitForCondition } from '@dxos/util';
 import { SecretValidator, SecretProvider } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';

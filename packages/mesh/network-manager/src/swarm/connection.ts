@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ErrorStream, Event } from '@dxos/async';
+import { ErrorStream, Event } from '@dxos/util';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 

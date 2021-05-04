@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import { Readable } from 'readable-stream';
 
-import { Event } from '@dxos/async';
+import { Event } from '@dxos/util';
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { createBatchStream, FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { Trigger } from '@dxos/util';

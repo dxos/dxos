@@ -7,7 +7,7 @@ import jsondown from 'jsondown';
 import leveljs from 'level-js';
 import memdown from 'memdown';
 
-import { synchronized } from '@dxos/async';
+import { synchronized } from '@dxos/util';
 import { Keyring } from '@dxos/credentials';
 import { humanize, PublicKey } from '@dxos/crypto';
 import * as debug from '@dxos/debug';

@@ -4,9 +4,9 @@
 
 // dxos-testing-browser
 
-import { sleep, promiseTimeout, timeout, waitForCondition } from './async';
+import { sleep, promiseTimeout, timeout, waitForCondition } from '../src/async';
+import { trigger } from '../src/trigger';
 import { expectToThrow } from './testing';
-import { trigger } from './trigger';
 
 test('sleep', async () => {
   const now = Date.now();

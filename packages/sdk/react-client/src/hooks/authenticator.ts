@@ -4,7 +4,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 
-import { trigger } from '@dxos/async';
+import { trigger } from '@dxos/util';
 import { InvitationDescriptor } from '@dxos/echo-db';
 
 import { useClient } from './client';
