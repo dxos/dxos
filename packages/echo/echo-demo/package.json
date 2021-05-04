@@ -14,7 +14,7 @@
   "license": "AGPL-3.0",
   "scripts": {
     "build": "tsc --noEmit && pnpm run lint && pnpm run test 2>&1 && true",
-    "build-storybook": "build-storybook",
+    "build-storybook": "build-storybook --quiet",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose  --rootDir=./src --passWithNoTests",
     "lint": "eslint --format codeframe './{src,test,stories}/**/*.{ts,tsx}'",

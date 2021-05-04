@@ -11,7 +11,7 @@
     "lint": "toolchain lint",
     "test": "toolchain test",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook --quiet"
   },
   "dependencies": {
     "@dxos/crypto": "workspace:*",
