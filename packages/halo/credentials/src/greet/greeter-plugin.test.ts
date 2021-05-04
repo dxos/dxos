@@ -5,9 +5,9 @@
 import debug from 'debug';
 import pump from 'pump';
 
-import { trigger } from '@dxos/async';
 import { keyToString, randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
+import { trigger } from '@dxos/util';
 
 import { Keyring } from '../keys';
 import { createKeyAdmitMessage } from '../party';

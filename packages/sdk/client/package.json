@@ -15,7 +15,7 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "~1.0.0-beta.73",

@@ -6,7 +6,7 @@
 
 import debug from 'debug';
 
-import { expectToThrow } from '@dxos/async';
+import { expectToThrow } from '@dxos/util';
 
 import { createIdentityInfoMessage } from '../identity/identity-message';
 import { Filter, Keyring } from '../keys';

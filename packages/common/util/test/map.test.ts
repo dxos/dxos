@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { LazyMap } from './map';
+import { LazyMap } from '../src/map';
 
 describe('map', () => {
   test('set', () => {

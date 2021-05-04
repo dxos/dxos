@@ -23,7 +23,7 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-protocol": "workspace:^2.6.17",

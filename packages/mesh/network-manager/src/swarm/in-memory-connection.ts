@@ -5,10 +5,9 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { ErrorStream, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, ErrorStream, Event } from '@dxos/util';
 
 import { SignalApi } from '../signal';
 import { Connection, ConnectionState, ConnectionFactory } from './connection';
