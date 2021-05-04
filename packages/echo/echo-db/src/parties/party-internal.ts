@@ -4,13 +4,12 @@
 
 import assert from 'assert';
 
-import { synchronized, Event } from '@dxos/util';
 import { KeyHint, createAuthMessage, Authenticator } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { timed, raise } from '@dxos/util';
+import { synchronized, Event, timed, raise } from '@dxos/util';
 
 import { InvitationManager } from '../invitations';
 import { Database, TimeframeClock } from '../items';

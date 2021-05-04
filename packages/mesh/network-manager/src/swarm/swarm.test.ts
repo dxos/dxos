@@ -5,9 +5,9 @@
 import { expect, mockFn } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
-import { sleep } from '@dxos/util';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
+import { sleep } from '@dxos/util';
 
 import { afterTest } from '../testutils';
 import { FullyConnectedTopology } from '../topology/fully-connected-topology';

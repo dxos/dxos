@@ -5,9 +5,8 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Event } from '@dxos/util';
 import { discoveryKey, PublicKey } from '@dxos/crypto';
-import { ComplexMap, ComplexSet } from '@dxos/util';
+import { ComplexMap, ComplexSet, Event } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
 import { SignalApi } from '../signal';

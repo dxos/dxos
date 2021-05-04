@@ -4,8 +4,8 @@
 
 import assert from 'assert';
 
-import { Event } from '@dxos/util';
 import { FeedWriter, ItemID } from '@dxos/echo-protocol';
+import { Event } from '@dxos/util';
 
 import { Model } from './model';
 import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';

@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/util';
 import { PublicKey } from '@dxos/crypto';
+import { Event } from '@dxos/util';
 
 import { SignalApi } from './signal-api';
 

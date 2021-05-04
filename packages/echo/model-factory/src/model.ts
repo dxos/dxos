@@ -4,9 +4,8 @@
 
 import assert from 'assert';
 
-import { Event } from '@dxos/util';
 import { FeedWriter, ItemID, MutationMeta, WriteReceipt } from '@dxos/echo-protocol';
-import { createWritable } from '@dxos/util';
+import { Event, createWritable } from '@dxos/util';
 
 import { ModelMessage, ModelMeta } from './types';
 

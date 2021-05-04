@@ -7,9 +7,9 @@ import debug from 'debug';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 import wrtc from 'wrtc';
 
-import { ErrorStream, Event } from '@dxos/util';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
+import { ErrorStream, Event } from '@dxos/util';
 
 import { SignalApi } from '../signal';
 import { Connection, ConnectionState, ConnectionFactory } from './connection';

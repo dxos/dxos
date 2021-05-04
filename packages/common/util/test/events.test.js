@@ -8,7 +8,7 @@
 import EventEmitter from 'events';
 
 import { promiseTimeout } from '../src/async';
-import { expectToThrow } from './testing';
+import { expectToThrow } from '../src/testing';
 import { onEvent, waitForEvent } from '../src/events';
 import { latch } from '../src/latch';
 

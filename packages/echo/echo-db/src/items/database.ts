@@ -4,10 +4,10 @@
 
 import assert from 'assert';
 
-import { synchronized } from '@dxos/util';
 import { EchoEnvelope, FeedWriter, ItemID, ItemType, DatabaseSnapshot } from '@dxos/echo-protocol';
 import { Model, ModelConstructor, validateModelClass, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { synchronized } from '@dxos/util';
 
 import { ResultSet } from '../result';
 import { Item } from './item';

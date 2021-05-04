@@ -22,3 +22,4 @@ export * from './latch';
 export * from './sink';
 export * from './lock';
 export * from './error-stream';
+export * from './testing';
