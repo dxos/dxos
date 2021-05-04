@@ -7,10 +7,10 @@
 
 import EventEmitter from 'events';
 
-import { promiseTimeout } from '../src/async';
+import { promiseTimeout } from '../src/async/async';
 import { expectToThrow } from '../src/testing';
-import { onEvent, waitForEvent } from '../src/events';
-import { latch } from '../src/latch';
+import { onEvent, waitForEvent } from '../src/async/events';
+import { latch } from '../src/async/latch';
 
 test('onEvent', async () => {
   const emitter = new EventEmitter();
