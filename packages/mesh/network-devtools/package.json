@@ -25,7 +25,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/gem-core": "~1.0.0-beta.25",
     "@dxos/gem-spore": "~1.0.0-beta.25",
-    "@dxos/network-manager": "workspace:~1.0.6",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/react-ux": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.2",

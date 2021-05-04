@@ -46,7 +46,7 @@
     "@dxos/gem-core": "~1.0.0-beta.25",
     "@dxos/gem-spore": "~1.0.0-beta.25",
     "@dxos/model-factory": "workspace:*",
-    "@dxos/network-manager": "workspace:~1.0.6",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:^2.6.17",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
     "@dxos/react-client": "workspace:*",
