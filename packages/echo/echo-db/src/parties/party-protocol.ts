@@ -6,7 +6,6 @@ import assert from 'assert';
 import debug from 'debug';
 import hypercore from 'hypercore';
 
-import { synchronized } from '@dxos/async';
 import {
   AuthPlugin,
   Authenticator,
@@ -18,6 +17,7 @@ import { MMSTTopology, NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
 import { Presence } from '@dxos/protocol-plugin-presence';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
+import { synchronized } from '@dxos/util';
 
 import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
 import { FeedStoreAdapter } from '../util';

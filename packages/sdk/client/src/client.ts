@@ -7,7 +7,6 @@ import jsondown from 'jsondown';
 import leveljs from 'level-js';
 import memdown from 'memdown';
 
-import { synchronized } from '@dxos/async';
 import { Keyring } from '@dxos/credentials';
 import { humanize, PublicKey } from '@dxos/crypto';
 import * as debug from '@dxos/debug';
@@ -18,7 +17,7 @@ import { ModelConstructor } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ValueUtil } from '@dxos/object-model';
 import { createStorage } from '@dxos/random-access-multi-storage';
-import { raise } from '@dxos/util';
+import { synchronized, raise } from '@dxos/util';
 import { Registry } from '@wirelineio/registry-client';
 
 import { DevtoolsContext } from './devtools-context';

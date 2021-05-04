@@ -6,11 +6,10 @@ import assert from 'assert';
 import debug from 'debug';
 import unionWith from 'lodash/unionWith';
 
-import { Event, synchronized } from '@dxos/async';
 import { KeyHint, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
-import { ComplexMap, timed } from '@dxos/util';
+import { Event, synchronized, ComplexMap, timed } from '@dxos/util';
 
 import { SecretProvider, InvitationDescriptor } from '../invitations';
 import { SnapshotStore } from '../snapshots';

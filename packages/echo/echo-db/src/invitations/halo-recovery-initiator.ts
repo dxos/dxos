@@ -5,7 +5,6 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { waitForEvent } from '@dxos/async';
 import {
   Authenticator,
   ClaimResponse,
@@ -19,7 +18,7 @@ import {
 } from '@dxos/credentials';
 import { keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
-import { raise } from '@dxos/util';
+import { waitForEvent, raise } from '@dxos/util';
 
 import { IdentityManager } from '../parties';
 import { SecretProvider, SecretValidator } from './common';

@@ -19,10 +19,10 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "lint": "toolchain lint"
+    "lint": "toolchain lint",
+    "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@types/debug": "^4.1.1",

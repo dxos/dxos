@@ -5,7 +5,6 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { waitForEvent } from '@dxos/async';
 import {
   createEnvelopeMessage,
   createFeedAdmitMessage,
@@ -23,6 +22,7 @@ import {
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
+import { waitForEvent } from '@dxos/util';
 
 import { IdentityManager } from '../parties';
 import { SecretProvider } from './common';

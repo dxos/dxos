@@ -5,7 +5,6 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Event } from '@dxos/async';
 import {
   Authenticator,
   KeyHint,
@@ -16,7 +15,7 @@ import {
 } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedWriter, IHaloStream, PartyKey, HaloStateSnapshot, WriteReceipt } from '@dxos/echo-protocol';
-import { jsonReplacer } from '@dxos/util';
+import { Event, jsonReplacer } from '@dxos/util';
 
 const log = debug('dxos:echo:parties:party-processor');
 

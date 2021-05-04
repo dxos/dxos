@@ -23,7 +23,6 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",

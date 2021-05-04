@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
 import { Model, ModelMeta } from '@dxos/model-factory';
+import { Event } from '@dxos/util';
 
 import type { Link } from './link';
 import { Selection } from './selection';

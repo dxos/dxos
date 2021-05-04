@@ -5,11 +5,10 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { sleep, waitForCondition } from '@dxos/async';
 import { SecretValidator, SecretProvider } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
-import { latch } from '@dxos/util';
+import { sleep, waitForCondition, latch } from '@dxos/util';
 
 import { ECHO } from './echo';
 import { createTestInstance, inviteTestPeer } from './util';
