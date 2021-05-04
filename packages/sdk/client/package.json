@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "2.9.0",
+  "version": "2.10.0",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -29,7 +29,6 @@
     "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-replicator": "workspace:~1.0.8",
     "@dxos/registry-client": "~1.1.1",
-    "@dxos/util": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
     "@wirelineio/registry-client": "~1.1.0-beta.3",
     "assert": "^2.0.0",
