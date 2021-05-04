@@ -6,7 +6,8 @@
     "toolchain": "./main.js"
   },
   "scripts": {
-    "build": "ts-node src/main.ts build"
+    "build": "ts-node src/main.ts build",
+    "lint": "ts-node src/main.ts lint"
   },
   "dependencies": {
     "@dxos/eslint-plugin": "~1.0.10",
