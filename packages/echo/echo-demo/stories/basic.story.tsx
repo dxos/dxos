@@ -15,7 +15,7 @@ import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 
 import { EchoContext, EchoGraph, useEcho } from '../src';
-import { createOfflineInstance } from '../src/config/config';
+import { createOfflineInstance, offlineConfig } from '../src/config/config';
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
@@ -59,7 +59,7 @@ export const Primary = () => {
       setImmediate(async () => {
         const newPeers = await Promise.all([...new Array(n - peers.length)].map(async () => {
           const id = createId();
-          const client = new Client();
+          const client = new Client(offlineConfig);
           await client.initialize();
           const keypair = createKeyPair();
           await client.createProfile({ ...keypair, username: 'test-user' });
@@ -165,8 +165,8 @@ const Test = ({ peers }: {peers: Peer[]}) => {
 
           // TODO(burdon): Does context change?
           return (
-            <ClientProvider client={client}>
-              <EchoContext.Provider key={id} value={{ echo: client.echo }}>
+            <ClientProvider client={client} key={id}>
+              <EchoContext.Provider value={{ echo: client.echo }}>
                 <EchoGraph
                   id={id}
                   grid={grid}
