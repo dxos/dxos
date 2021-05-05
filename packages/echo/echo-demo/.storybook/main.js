@@ -2,26 +2,25 @@
 // Copyright 2020 DXOS.org
 //
 
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const path = require('path');
 
 module.exports = {
-  stories: ['../stories/**/*.{tsx,jsx}'],
+  stories: ['../stories/**/*.jsx', '../stories/**/*.tsx'],
   addons: ['@storybook/addon-actions', '@storybook/addon-links', '@storybook/addon-knobs'],
   webpackFinal: async config => {
-    // The version shipped with storybook is outdated so we are using our own.
-    config.plugins.push(new ForkTsCheckerWebpackPlugin({
-      typescript: {
-        typescriptPath: require.resolve('typescript')
-      }
-    }))
+    config.module.rules.push({
+      test: /\.(ts|tsx)$/,
+      use: [
+        {
+          loader: require.resolve('ts-loader'),
+        },
+        // Optional
+        {
+          loader: require.resolve('react-docgen-typescript-loader'),
+        },
+      ],
+    });
+    config.resolve.extensions.push('.ts', '.tsx');
     return config;
-  },
-  typescript: {
-    check: false,
-    reactDocgen: 'react-docgen-typescript',
-    reactDocgenTypescriptOptions: {
-      shouldExtractLiteralValuesFromEnum: true,
-      propFilter: (prop) => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),
-    },
   },
 };
