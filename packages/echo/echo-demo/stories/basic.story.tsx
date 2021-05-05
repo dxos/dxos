@@ -16,6 +16,8 @@ import { Markers } from '@dxos/gem-spore';
 
 import { EchoContext, EchoGraph, useEcho } from '../src';
 import { createOfflineInstance } from '../src/config/config';
+import { Client } from '@dxos/client';
+import { ClientProvider } from '@dxos/react-client';
 
 const log = debug('dxos:echo:story');
 
@@ -46,18 +48,21 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
+type Peer = {id: string, client: Client}
+
 export const Primary = () => {
   const n = number('Databases', 1, { min: 1, max: 8 });
 
-  const [peers, setPeers] = useState([]);
+  const [peers, setPeers] = useState<Peer[]>([] as Peer[]);
   useEffect(() => {
     if (n > peers.length) {
       setImmediate(async () => {
         const newPeers = await Promise.all([...new Array(n - peers.length)].map(async () => {
           const id = createId();
-          const echo = await createOfflineInstance();
-          console.debug('Created:', String(echo));
-          return { id, echo };
+          const client = new Client();
+          await client.initialize();
+          const newPeer: Peer = { id, client };
+          return newPeer;
         }));
 
         setPeers([...peers, ...newPeers]);
@@ -97,7 +102,7 @@ const Info = () => {
   );
 };
 
-const Test = ({ peers }) => {
+const Test = ({ peers }: {peers: Peer[]}) => {
   const classes = useStyles();
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
@@ -117,7 +122,7 @@ const Test = ({ peers }) => {
         });
         log('Invitation request:', invitation);
 
-        const remoteParty = await other.database.joinParty(invitation, () => Buffer.from('0000'));
+        const remoteParty = await other.client.echo.joinParty(invitation, async () => Buffer.from('0000'));
         await remoteParty.open();
         log('Invited Party:', String(remoteParty));
 
@@ -149,7 +154,7 @@ const Test = ({ peers }) => {
         <Markers />
 
         {peers.map((peer, i) => {
-          const { id, echo } = peer;
+          const { id, client } = peer;
           const delta = (peers.length === 1) ? { x: 0, y: 0 } : {
             x: Math.sin(i * da + da / 2) * scale.x,
             y: Math.cos(i * da + da / 2) * scale.y
@@ -157,26 +162,30 @@ const Test = ({ peers }) => {
 
           // TODO(burdon): Does context change?
           return (
-            <EchoContext.Provider key={id} value={{ echo }}>
-              <EchoGraph
-                id={id}
-                grid={grid}
-                delta={delta}
-                radius={radius}
-                onSelect={node => node.type === 'party' && handleInvite(peer, node)}
-              />
-            </EchoContext.Provider>
+            <ClientProvider client={client}>
+              <EchoContext.Provider key={id} value={{ echo: client.echo }}>
+                <EchoGraph
+                  id={id}
+                  grid={grid}
+                  delta={delta}
+                  radius={radius}
+                  onSelect={node => node.type === 'party' && handleInvite(peer, node)}
+                />
+              </EchoContext.Provider>
+            </ClientProvider>
           );
         })}
       </SVG>
 
       <div className={classes.info}>
         {peers.map((peer) => {
-          const { id, echo } = peer;
+          const { id, client } = peer;
           return (
-            <EchoContext.Provider key={id} value={{ echo }}>
-              <Info />
-            </EchoContext.Provider>
+            <ClientProvider client={client}>
+              <EchoContext.Provider key={id} value={{ echo: client.echo }}>
+                <Info />
+              </EchoContext.Provider>
+            </ClientProvider>
           );
         })}
       </div>
