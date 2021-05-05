@@ -10,9 +10,9 @@ import { PartyKey } from '@dxos/echo-protocol';
 import {
   OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK, LINK_EMPLOYEE, LINK_PROJECT
 } from '@dxos/echo-testing';
+import { useParties } from '@dxos/react-client';
 import { ComplexMap } from '@dxos/util';
 
-import { useParties } from './useEcho';
 import { asyncEffect, liftCallback } from './util';
 
 // TODO(burdon): Move to @dxos/gem.

@@ -94,3 +94,15 @@ ncu --deep -u '<PACKAGE>'
 # e.g.
 ncu --deep -u '@storybook/*'
 ```
+
+### Troubleshooting Storybooks
+
+1. `Cannot GET /"` when running `rushx storybook`
+
+Solution:
+
+```bash
+rushx storybook--no-manager-cache
+```
+
+[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)

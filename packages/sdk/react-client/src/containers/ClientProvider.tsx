@@ -5,7 +5,7 @@
 import React, { ReactNode, useEffect } from 'react';
 
 import { Client } from '../../../client';
-import { ClientContext } from '../hooks/context';
+import { ClientContext } from '../hooks/client/context';
 
 export interface ClientProviderProps {
   client: Client

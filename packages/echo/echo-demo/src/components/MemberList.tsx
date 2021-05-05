@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { Party } from '@dxos/echo-db';
-
-import { usePartyMembers } from '../hooks';
+import { usePartyMembers } from '@dxos/react-client';
 
 interface MemberListProps {
   party: Party

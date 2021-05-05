@@ -7,7 +7,7 @@ import useDeepCompareEffect from 'use-deep-compare-effect';
 
 import { PublicKey } from '@dxos/crypto';
 
-import { useClient } from './client';
+import { useClient } from '../client';
 
 export interface UseItemsProps {
   partyKey: PublicKey

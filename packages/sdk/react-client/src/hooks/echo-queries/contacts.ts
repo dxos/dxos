@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { PartyMember } from '@dxos/echo-db';
 
-import { useClient } from './client';
+import { useClient } from '../client';
 
 /**
  * Returns an Array of all known Contacts across all Parties.
