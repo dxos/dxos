@@ -1,6 +1,6 @@
 {
   "name": "@dxos/util",
-  "version": "2.6.17",
+  "version": "2.10.0",
   "description": "Utilities to be moved to other repos.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
