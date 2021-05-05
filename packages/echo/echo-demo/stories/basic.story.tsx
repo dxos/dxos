@@ -10,14 +10,14 @@ import useResizeAware from 'react-resize-aware';
 import { blueGrey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { createId, createKeyPair } from '@dxos/crypto';
+import { Client } from '@dxos/client';
+import { createId } from '@dxos/crypto';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
+import { ClientProvider } from '@dxos/react-client';
 
 import { EchoContext, EchoGraph, useEcho } from '../src';
-import { createOfflineInstance, offlineConfig } from '../src/config/config';
-import { Client } from '@dxos/client';
-import { ClientProvider } from '@dxos/react-client';
+import { createClient, offlineConfig } from '../src/config/config';
 
 const log = debug('dxos:echo:story');
 
@@ -59,11 +59,7 @@ export const Primary = () => {
       setImmediate(async () => {
         const newPeers = await Promise.all([...new Array(n - peers.length)].map(async () => {
           const id = createId();
-          const client = new Client(offlineConfig);
-          await client.initialize();
-          const keypair = createKeyPair();
-          await client.createProfile({ ...keypair, username: 'test-user' });
-          await client.echo.open();
+          const client = await createClient(offlineConfig);
           const newPeer: Peer = { id, client };
           return newPeer;
         }));
