@@ -47,7 +47,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 export const Primary = () => {
-  const n = number('Datatbases', 1, { min: 1, max: 8 });
+  const n = number('Databases', 1, { min: 1, max: 8 });
 
   const [peers, setPeers] = useState([]);
   useEffect(() => {
