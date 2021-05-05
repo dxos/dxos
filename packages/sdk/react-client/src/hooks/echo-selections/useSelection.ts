@@ -13,12 +13,11 @@ import { Selection } from '@dxos/echo-db';
  * @param selector Callback to generate data from the source selection.
  * @param [deps] Array of values that trigger the selector when changed.
  */
-// TODO(burdon): Factor out (echo-hooks?)
 export function useSelection<T> (
   selection: Selection<any> | undefined,
   selector: (selection: Selection<any>) => T,
   deps: readonly any[] = []
-): T {
+): T | undefined {
   const [data, setData] = useState(() => selection && selector(selection));
 
   // Subscribe to mutation events from source.

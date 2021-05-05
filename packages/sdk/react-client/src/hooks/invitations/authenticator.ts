@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { trigger } from '@dxos/util';
 
-import { useClient } from './client';
+import { useClient } from '../client';
 
 /**
  * Handles the invitation handshake.

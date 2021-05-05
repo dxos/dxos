@@ -13,7 +13,7 @@ import debug, { logs } from '@dxos/debug';
 import metrics from '@dxos/metrics';
 import { createStorage } from '@dxos/random-access-multi-storage';
 
-import { ClientContext } from '../hooks/context';
+import { ClientContext } from '../hooks/client/context';
 
 const { error } = logs('react-client:Provider');
 

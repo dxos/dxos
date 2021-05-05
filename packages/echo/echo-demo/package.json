@@ -14,7 +14,7 @@
   "license": "AGPL-3.0",
   "scripts": {
     "build": "tsc --noEmit && pnpm run lint && pnpm run test 2>&1 && true",
-    "build-storybook": "build-storybook",
+    "build-storybook": "build-storybook --quiet",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose  --rootDir=./src --passWithNoTests",
     "lint": "eslint --format codeframe './{src,test,stories}/**/*.{ts,tsx}'",
@@ -57,7 +57,6 @@
     "@types/lodash": "^4.14.159",
     "@types/node": "^14.0.9",
     "@types/stream-buffers": "^3.0.2",
-    "@types/use-subscription": "^1.0.0",
     "clsx": "^1.1.0",
     "d3": "^5.9.2",
     "debug": "^4.1.1",
@@ -67,8 +66,7 @@
     "random-access-memory": "~3.1.2",
     "react-resize-aware": "^3.0.0",
     "source-map-support": "^0.5.12",
-    "stream-buffers": "^3.0.2",
-    "use-subscription": "^1.4.1"
+    "stream-buffers": "^3.0.2"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",

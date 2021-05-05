@@ -2,11 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useMemo } from 'react';
-import { useSubscription } from 'use-subscription';
-
-import { ResultSet } from '@dxos/echo-db';
-
 /**
  * Turn array of callbacks into a single callback that calls them all.
  * @param callbacks
@@ -23,11 +18,4 @@ export function asyncEffect (fun: () => Promise<(() => void) | undefined>): () =
     const promise = fun();
     return () => promise.then(cb => cb?.());
   };
-}
-
-export function useResultSet<T> (resultSet: ResultSet<T>): T[] {
-  return useSubscription(useMemo(() => ({
-    getCurrentValue: () => resultSet.value,
-    subscribe: cb => resultSet.subscribe(cb)
-  }), [resultSet]));
 }

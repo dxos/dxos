@@ -34,10 +34,11 @@ import ProjectIcon from '@material-ui/icons/WorkOutline';
 
 import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, LINK_PROJECT, LINK_EMPLOYEE, labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
+import { useSelection, searchSelector } from '@dxos/react-client';
 
 import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
-  useGenerator, useSelection, graphSelector, searchSelector
+  useGenerator, graphSelector
 } from '../src';
 
 export default {

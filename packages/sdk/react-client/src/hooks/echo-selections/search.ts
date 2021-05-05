@@ -3,8 +3,8 @@
 //
 
 // TODO(burdon): Create index.
-export const searchSelector = search => selection => {
-  const match = (pattern, text) => {
+export const searchSelector = (search: any) => (selection: any) => {
+  const match = (pattern: any, text: any) => {
     if (!pattern) {
       return true;
     }
@@ -18,7 +18,7 @@ export const searchSelector = search => selection => {
   };
 
   // TODO(burdon): Use selection to filter.
-  return selection.items.filter(item => {
+  return selection.items.filter((item: any) => {
     // TODO(burdon): Filter types.
     if (item.type.indexOf('example') === -1) {
       return false;

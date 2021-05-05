@@ -4,7 +4,7 @@
 
 import { useContext } from 'react';
 
-import { raise } from '../util';
+import { raise } from '../../util';
 import { ClientContext } from './context';
 
 export const useConfig = () => {

@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { trigger } from '@dxos/util';
 
-import { useClient } from './client';
+import { useClient } from '../client';
 
 const encodeInvitation = (invitation) => btoa(JSON.stringify(invitation.toQueryParameters()));
 const decodeInvitation = (code) => InvitationDescriptor.fromQueryParameters(JSON.parse(atob(code)));
