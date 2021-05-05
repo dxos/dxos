@@ -10,7 +10,7 @@ import useResizeAware from 'react-resize-aware';
 import { blueGrey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { createId } from '@dxos/crypto';
+import { createId, createKeyPair } from '@dxos/crypto';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 
@@ -61,6 +61,9 @@ export const Primary = () => {
           const id = createId();
           const client = new Client();
           await client.initialize();
+          const keypair = createKeyPair();
+          await client.createProfile({ ...keypair, username: 'test-user' });
+          await client.echo.open();
           const newPeer: Peer = { id, client };
           return newPeer;
         }));
@@ -181,7 +184,7 @@ const Test = ({ peers }: {peers: Peer[]}) => {
         {peers.map((peer) => {
           const { id, client } = peer;
           return (
-            <ClientProvider client={client}>
+            <ClientProvider client={client} key={id}>
               <EchoContext.Provider key={id} value={{ echo: client.echo }}>
                 <Info />
               </EchoContext.Provider>
