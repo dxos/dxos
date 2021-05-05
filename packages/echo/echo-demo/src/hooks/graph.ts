@@ -6,11 +6,11 @@ import { useEffect, useState } from 'react';
 
 import { truncateString } from '@dxos/debug';
 import { Party, Item } from '@dxos/echo-db';
-import { useParties } from '@dxos/react-client';
 import { PartyKey } from '@dxos/echo-protocol';
 import {
   OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK, LINK_EMPLOYEE, LINK_PROJECT
 } from '@dxos/echo-testing';
+import { useParties } from '@dxos/react-client';
 import { ComplexMap } from '@dxos/util';
 
 import { asyncEffect, liftCallback } from './util';

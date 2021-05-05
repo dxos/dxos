@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 
-import { useClient } from '../client';
+import { useClient } from './useClient';
 
 export const useProfile = () => {
   const client = useClient();
