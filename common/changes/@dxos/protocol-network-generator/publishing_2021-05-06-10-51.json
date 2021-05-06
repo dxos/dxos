@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "packageName": "@dxos/protocol-network-generator",
+      "comment": "",
+      "type": "none"
+    }
+  ],
+  "packageName": "@dxos/protocol-network-generator",
+  "email": "przemek@ethworks.io"
+}
