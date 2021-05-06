@@ -367,7 +367,7 @@ const Main = ({ party, generator }) => {
               </div>
             )}
             <GraphView
-              data={data}
+              data={data ?? {nodes: [], links: []}}
               onSelect={id => setSelected(items.find(item => item.id === id))}
             />
           </>

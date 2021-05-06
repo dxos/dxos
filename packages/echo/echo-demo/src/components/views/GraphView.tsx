@@ -18,6 +18,7 @@ import {
   NodeProjector,
   Markers
 } from '@dxos/gem-spore';
+import { GraphData } from '../../models';
 
 // TODO(burdon): Create container.
 const useStyles = makeStyles(() => ({
@@ -28,25 +29,8 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-// TODO(burdon): Move to gem.
-interface Node {
-  id: string
-  title: string | undefined
-}
-
-interface Link {
-  id: string
-  source: Node | string
-  target: Node | string
-}
-
-interface Data {
-  nodes: Node[]
-  links: Link[]
-}
-
 interface LinksGraphProps {
-  data: Data,
+  data: GraphData,
   onCreate?: Function,
   onSelect?: Function,
   classes?: any,

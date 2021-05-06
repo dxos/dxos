@@ -14,26 +14,7 @@ import { useParties } from '@dxos/react-client';
 import { ComplexMap } from '@dxos/util';
 
 import { asyncEffect, liftCallback } from './util';
-import { PublicKey } from '@dxos/crypto';
-
-interface Node {
-  id: string,
-  type: string,
-  title: string
-  partyKey?: PublicKey | null
-}
-
-interface Link {
-  id: string,
-  source: string | PublicKey,
-  target: string | PublicKey
-}
-
-// TODO(burdon): Move to @dxos/gem.
-interface GraphData {
-  nodes: Node[],
-  links: Link[]
-}
+import { GraphData, Link, Node } from '../models';
 
 export const graphSelector = adapter => selection => {
   const nodes = [] as Node[];
