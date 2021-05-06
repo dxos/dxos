@@ -49,7 +49,7 @@ export const ItemCard = ({ adapter, item }: { adapter: CardAdapter, item: any })
   const classes = useStyles();
 
   const title = adapter.primary(item);
-  const description = adapter.secondary(item);
+  const description = adapter.secondary?.(item);
   const slices = adapter.slices(item);
 
   return (

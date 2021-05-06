@@ -123,10 +123,10 @@ const Component = ({ generator }: {generator: Generator}) => {
   const handleCreate = (data: GraphData) => {
     if (data.nodes.length) {
       const { source } = data.links[0];
-      generator.createItem(source);
+      generator.createItem(source.toString());
     } else {
       const { source, target } = data.links[0];
-      generator.linkItem(source, target);
+      generator.linkItem(source.toString(), target.toString());
     }
   };
 

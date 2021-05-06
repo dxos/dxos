@@ -16,14 +16,14 @@ import { ComplexMap } from '@dxos/util';
 import { GraphData, Link, Node } from '../models';
 import { asyncEffect, liftCallback } from './util';
 
-export const graphSelector = adapter => selection => {
+export const graphSelector = (adapter: any) => (selection: any) => {
   const nodes = [] as Node[];
   const links = [] as Link[];
 
   selection
     .filter({ type: OBJECT_ORG })
     .each((item: Item<any>) => nodes.push({ id: item.id, type: OBJECT_ORG, title: adapter.primary(item) }))
-    .call(selection => {
+    .call((selection: any) => {
       selection.links({ type: LINK_PROJECT })
         .each(link => {
           nodes.push({ id: link.target.id, type: OBJECT_PROJECT, title: adapter.primary(link.target) });
