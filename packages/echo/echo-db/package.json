@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.10.0",
+  "version": "2.10.1-beta",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -26,11 +26,11 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/echo-protocol": "workspace:^2.6.17",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/feed-store": "~1.2.0-beta.30",
     "@dxos/model-factory": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/object-model": "workspace:^2.6.17",
+    "@dxos/object-model": "workspace:*",
     "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/protocol-plugin-replicator": "workspace:*",

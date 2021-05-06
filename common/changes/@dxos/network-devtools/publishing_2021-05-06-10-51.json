@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "packageName": "@dxos/network-devtools",
+      "comment": "",
+      "type": "none"
+    }
+  ],
+  "packageName": "@dxos/network-devtools",
+  "email": "przemek@ethworks.io"
+}
