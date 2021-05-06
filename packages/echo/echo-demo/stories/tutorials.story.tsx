@@ -4,12 +4,14 @@
 
 import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
-import { ClientProvider, useClient, useParties, useParty, useProfile } from '@dxos/react-client';
+import { ClientProvider, useClient, useItems, useParties, useParty, useProfile } from '@dxos/react-client';
 import { Button } from '@material-ui/core';
 import { withKnobs } from '@storybook/addon-knobs';
 import React, {useState, useEffect} from 'react';
 import faker from 'faker';
 import { ClientInitializer } from './ClientInitializer';
+import { Party } from '@dxos/echo-db';
+import { ObjectModel } from '@dxos/object-model';
 
 export default {
   title: 'Tutorials',
@@ -35,14 +37,23 @@ const Stage1Consumer = () => {
   )
 }
 
-const Stage2Consumer = () => {
+const PartyTitle = ({party}: {party: Party}) => {
+  return <>{party.title ?? party.key.toHex()}</>
+}
+
+const PartyItemCount = ({party}: {party: Party}) => {
+  const items = useItems({partyKey: party.key})
+  return <><PartyTitle party={party}/> has {items.length} items.</>
+}
+
+interface Stage2ConsumerProps {
+  PartyDetails?: ({party: Party}) => JSX.Element
+} 
+
+const Stage2Consumer = ({PartyDetails = PartyTitle}: Stage2ConsumerProps) => {
   const client = useClient();
   const profile = useProfile();
   const parties = useParties()
-
-  const handleCreateProfile = async () => {
-    await client.createProfile({...createKeyPair(), username: faker.name.firstName()})
-  }
 
   const handleCreateParty = async () => {
     const party = await client.echo.createParty();
@@ -50,21 +61,38 @@ const Stage2Consumer = () => {
   }
 
   if (!profile?.username) {
-    return (
-      <Button variant="contained" onClick={handleCreateProfile}>Create profile</Button>
-    )
+    return null;
   }
   
   return (<>
-    <p>Welcome, {profile.username}</p>
     {parties?.length ? (
       <ul>
         {parties.map(party => (
-          <li key={party.key.toHex()}>{party.title ?? party.key.toHex()}</li>
+          <li key={party.key.toHex()}><PartyDetails party={party}/></li>
         ))}
       </ul>
     ) : null}
     <Button variant="contained" onClick={handleCreateParty}>Create party</Button>
+  </>)
+}
+
+const Stage3Consumer = () => {
+  const parties = useParties();
+
+  const handleCreateItem = async (party: Party) => {
+    await party.database.createItem({model: ObjectModel})
+  }
+
+  return (<>
+    <ul>
+    {parties?.map(party => (<>
+      <li>
+        {party.title ?? party.key.toHex()}
+        <Button variant="text" onClick={() => handleCreateItem(party)}>Add item</Button>
+      </li>
+    </>))}
+    </ul>
+    
   </>)
 }
 
@@ -81,6 +109,7 @@ export const Stage2 = () => {
   return (<>
     <h3>Creates a party</h3>
     <ClientInitializer>
+      <Stage1Consumer/>
       <Stage2Consumer/>
     </ClientInitializer>
   </>);
@@ -89,6 +118,10 @@ export const Stage2 = () => {
 export const Stage3 = () => {
   return (<>
     <h3>Adds items to parties</h3>
-    <div>Stage3</div>
+    <ClientInitializer>
+      <Stage1Consumer/>
+      <Stage2Consumer PartyDetails={PartyItemCount}/>
+      <Stage3Consumer />
+    </ClientInitializer>
   </>);
 };
