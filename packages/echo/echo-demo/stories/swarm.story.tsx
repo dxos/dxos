@@ -63,7 +63,7 @@ export const Primary = () => {
   }, []);
 
   if (!echo) {
-    return <CircularProgress />
+    return <CircularProgress />;
   }
 
   // Click to invite.
@@ -75,7 +75,7 @@ export const Primary = () => {
     const party = await echo.getParty(node.partyKey);
     if (!party) {
       console.warn(`Party not found: ${node.partyKey.toString()}`);
-      return
+      return;
     }
     const invitation = await party.createInvitation({
       secretProvider: async () => Buffer.from('0000'),
@@ -88,18 +88,18 @@ export const Primary = () => {
   const handleJoin = async () => {
     log('handleJoin', invitation);
     if (!invitation) {
-      console.warn('Cannot join party without invitation.')
+      console.warn('Cannot join party without invitation.');
       return;
     }
     const party = await echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));
     await party.open();
-  }
+  };
 
   const handleResetStorage = async () => {
     await echo.reset();
     window.location.reload();
-  }
+  };
 
   const activeParty = echo.queryParties().value[0];
 

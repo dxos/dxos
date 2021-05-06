@@ -6,6 +6,7 @@ import React from 'react';
 
 import { List, ListItem, ListItemIcon, ListItemText } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+
 import { Item } from '@dxos/echo-db';
 
 const useStyles = makeStyles(() => ({

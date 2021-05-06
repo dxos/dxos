@@ -15,7 +15,7 @@ import {
 } from '@material-ui/core';
 import { grey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
-import { Item } from '@dxos/echo-db';
+
 import { ItemAdapter } from './ListView';
 
 const useStyles = makeStyles(() => ({
