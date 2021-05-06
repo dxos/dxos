@@ -26,7 +26,7 @@
     "@dxos/util": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/echo-protocol": "workspace:^2.6.17",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/feed-store": "~1.2.0-beta.30",
     "@dxos/model-factory": "workspace:*",
     "@types/debug": "^4.1.1",

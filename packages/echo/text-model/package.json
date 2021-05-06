@@ -25,7 +25,7 @@
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-protocol": "workspace:^2.6.17",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@types/node": "^14.0.9",
     "protobufjs": "^6.9.0",
