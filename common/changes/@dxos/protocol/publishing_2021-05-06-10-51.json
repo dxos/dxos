@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "packageName": "@dxos/protocol",
+      "comment": "",
+      "type": "none"
+    }
+  ],
+  "packageName": "@dxos/protocol",
+  "email": "przemek@ethworks.io"
+}

@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "packageName": "@dxos/protobuf-compiler",
+      "comment": "",
+      "type": "none"
+    }
+  ],
+  "packageName": "@dxos/protobuf-compiler",
+  "email": "przemek@ethworks.io"
+}
