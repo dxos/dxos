@@ -15,6 +15,7 @@ import {
 } from '@material-ui/core';
 import { grey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
+import { Item } from '@dxos/echo-db';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -40,11 +41,11 @@ const useStyles = makeStyles(() => ({
 }));
 
 export interface CardAdapter {
-  key: (any) => string
-  primary: (any) => string
-  secondary: (any) => string
-  icon?: (any) => any // TODO(burdon): Type.
-  slices: (any) => any[] | void
+  key: (key: any) => string
+  primary: (value: any) => string
+  secondary: (value: any) => string
+  icon?: React.FunctionComponent<{item: Item<any>}>,
+  slices: (value: any) => any[] | void
 }
 
 export const ItemCard = ({ adapter, item }: { adapter: CardAdapter, item: any }) => {
