@@ -379,43 +379,63 @@
   "projects": [
     {
       "packageName": "@dxos/client",
-      "projectFolder": "packages/sdk/client"
+      "projectFolder": "packages/sdk/client",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/react-ux",
-      "projectFolder": "packages/sdk/react-ux"
+      "projectFolder": "packages/sdk/react-ux",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/react-client",
-      "projectFolder": "packages/sdk/react-client"
+      "projectFolder": "packages/sdk/react-client",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/codec-protobuf",
-      "projectFolder": "packages/common/codec-protobuf"
+      "projectFolder": "packages/common/codec-protobuf",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/protobuf-compiler",
-      "projectFolder": "packages/common/protobuf-compiler"
+      "projectFolder": "packages/common/protobuf-compiler",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/util",
-      "projectFolder": "packages/common/util"
+      "projectFolder": "packages/common/util",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/echo-protocol",
-      "projectFolder": "packages/echo/echo-protocol"
+      "projectFolder": "packages/echo/echo-protocol",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/model-factory",
-      "projectFolder": "packages/echo/model-factory"
+      "projectFolder": "packages/echo/model-factory",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/object-model",
-      "projectFolder": "packages/echo/object-model"
+      "projectFolder": "packages/echo/object-model",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/echo-db",
-      "projectFolder": "packages/echo/echo-db"
+      "projectFolder": "packages/echo/echo-db",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/echo-testing",
@@ -427,7 +447,9 @@
     },
     {
       "packageName": "@dxos/credentials",
-      "projectFolder": "packages/halo/credentials"
+      "projectFolder": "packages/halo/credentials",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/toolchain-node-library",
@@ -435,39 +457,57 @@
     },
     {
       "packageName": "@dxos/protocol",
-      "projectFolder": "packages/mesh/protocol"
+      "projectFolder": "packages/mesh/protocol",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/text-model",
-      "projectFolder": "packages/echo/text-model"
+      "projectFolder": "packages/echo/text-model",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/protocol-plugin-presence",
-      "projectFolder": "packages/mesh/protocol-plugin-presence"
+      "projectFolder": "packages/mesh/protocol-plugin-presence",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/protocol-network-generator",
-      "projectFolder": "packages/mesh/protocol-network-generator"
+      "projectFolder": "packages/mesh/protocol-network-generator",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/protocol-plugin-messenger",
-      "projectFolder": "packages/mesh/protocol-plugin-messenger"
+      "projectFolder": "packages/mesh/protocol-plugin-messenger",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/protocol-plugin-replicator",
-      "projectFolder": "packages/mesh/protocol-plugin-replicator"
+      "projectFolder": "packages/mesh/protocol-plugin-replicator",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/network-manager",
-      "projectFolder": "packages/mesh/network-manager"
+      "projectFolder": "packages/mesh/network-manager",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/network-devtools",
-      "projectFolder": "packages/mesh/network-devtools"
+      "projectFolder": "packages/mesh/network-devtools",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/crypto",
-      "projectFolder": "packages/common/crypto"
+      "projectFolder": "packages/common/crypto",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     }
     // {
     //   /**

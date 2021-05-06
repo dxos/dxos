@@ -15,7 +15,6 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/util": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "~1.0.0-beta.73",
@@ -29,6 +28,7 @@
     "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-replicator": "workspace:*",
     "@dxos/registry-client": "~1.1.1",
+    "@dxos/util": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
     "@wirelineio/registry-client": "~1.1.0-beta.3",
     "assert": "^2.0.0",
