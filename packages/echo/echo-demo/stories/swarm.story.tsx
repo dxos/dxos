@@ -27,11 +27,15 @@ export default {
 
 export const Primary = () => {
   const [id] = useState(createId());
+  const [invitation, setInvitation] = useState<string | undefined>(undefined);
   const [echo, setEcho] = useState<ECHO>();
   const [storage] = useState(createItemStorage);
   const [snapshotStorage] = useState(createSnapshotStorage);
 
   const [resizeListener, size] = useResizeAware();
+  const { width, height } = size;
+  const grid = useGrid({ width, height });
+  const radius = Math.min(grid.size.width, grid.size.height) / 3;
 
   useEffect(() => {
     setImmediate(async () => {
@@ -62,14 +66,17 @@ export const Primary = () => {
     return <CircularProgress />
   }
 
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
-  const radius = Math.min(grid.size.width, grid.size.height) / 3;
-  const [invitation, setInvitation] = useState(null);
-
   // Click to invite.
   const handleInvite = async (node: Node) => {
+    if (!node.partyKey) {
+      console.warn('Cannot invite to node without party key');
+      return;
+    }
     const party = await echo.getParty(node.partyKey);
+    if (!party) {
+      console.warn(`Party not found: ${node.partyKey.toString()}`);
+      return
+    }
     const invitation = await party.createInvitation({
       secretProvider: async () => Buffer.from('0000'),
       secretValidator: async () => true
@@ -78,19 +85,23 @@ export const Primary = () => {
     setInvitation(JSON.stringify(invitation.toQueryParameters()));
   };
 
-  async function handleJoin () {
+  const handleJoin = async () => {
     log('handleJoin', invitation);
+    if (!invitation) {
+      console.warn('Cannot join party without invitation.')
+      return;
+    }
     const party = await echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));
     await party.open();
   }
 
-  async function handleResetStorage () {
+  const handleResetStorage = async () => {
     await echo.reset();
     window.location.reload();
   }
 
-  const activeParty = echo?.queryParties().value[0];
+  const activeParty = echo.queryParties().value[0];
 
   return (
     <FullScreen>

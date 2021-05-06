@@ -214,7 +214,7 @@ const cardAdapter = (classes: ReturnType<typeof useStyles>): CardAdapter => ({
 
 interface HomeProps {
   onCreate: () => void,
-  onJoin: () => void
+  onJoin: (invitationCode: string) => void
 }
 
 const Home = ({ onCreate, onJoin }: HomeProps) => {
@@ -281,7 +281,7 @@ const Main = ({ party, generator }: MainProps) => {
   const classes = useStyles();
 
   const [search, setSearch] = useState<string | undefined>(undefined);
-  const items = useSelection(generator.database.select(), searchSelector(search), [search]);
+  const items: any[] = useSelection(generator.database.select(), searchSelector(search), [search]);
   // TODO(burdon): Use subset.
   // const data = useSelection(items && new Selection(items, new Event()), graphSelector);
   const data = useSelection(generator.database.select(), graphSelector(itemAdapter));
@@ -404,11 +404,11 @@ export const Primary = () => {
     });
   };
 
-  const handleJoin = async (invitationCode) => {
+  const handleJoin = async (invitationCode: string) => {
     await joinParty(invitationCode);
   };
 
-  if (party) {
+  if (party && generator) {
     return (
       <Main party={party} generator={generator} />
     );
