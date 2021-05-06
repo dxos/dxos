@@ -1,0 +1,17 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": [
+      "DOM"
+    ]
+  },
+  "types": ["jest", "node"],
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    { "path": "../protocol-plugin-bot" }
+  ]
+}

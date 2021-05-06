@@ -524,6 +524,12 @@
       "projectFolder": "packages/bot/protocol-plugin-bot",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/botkit",
+      "projectFolder": "packages/bot/botkit",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     }
     // {
     //   /**
