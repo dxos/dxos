@@ -32,10 +32,10 @@ jobs:
         git config --global user.email "npm@dxos.network"
         git config --global user.name "DXOS"
 
-        "/root/.nvm/nvm.sh" && nvm use
+        \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
 
         # Bump version
-        rush version --bump
+        node common/scripts/install-run-rush.js version --bump
 
         # Publish
-        rush publish --publish --target-branch main --npm-auth-token ${NPM_TOKEN} --include-all
+        node common/scripts/install-run-rush.js publish --publish --target-branch main --npm-auth-token ${NPM_TOKEN} --include-all
