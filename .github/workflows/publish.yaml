@@ -38,4 +38,4 @@ jobs:
         node common/scripts/install-run-rush.js version --bump
 
         # Publish
-        node common/scripts/install-run-rush.js publish --publish --target-branch main --npm-auth-token ${NPM_TOKEN} --include-all
+        node common/scripts/install-run-rush.js publish --publish --target-branch rush-publish --npm-auth-token ${NPM_TOKEN} --include-all
