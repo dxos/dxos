@@ -14,20 +14,34 @@ import { useParties } from '@dxos/react-client';
 import { ComplexMap } from '@dxos/util';
 
 import { asyncEffect, liftCallback } from './util';
+import { PublicKey } from '@dxos/crypto';
+
+interface Node {
+  id: string,
+  type: string,
+  title: string
+  partyKey?: PublicKey | null
+}
+
+interface Link {
+  id: string,
+  source: string | PublicKey,
+  target: string | PublicKey
+}
 
 // TODO(burdon): Move to @dxos/gem.
 interface GraphData {
-  nodes: any[],
-  links: any[]
+  nodes: Node[],
+  links: Link[]
 }
 
 export const graphSelector = adapter => selection => {
-  const nodes = [];
-  const links = [];
+  const nodes = [] as Node[];
+  const links = [] as Link[];
 
   selection
     .filter({ type: OBJECT_ORG })
-    .each(item => nodes.push({ id: item.id, type: OBJECT_ORG, title: adapter.primary(item) }))
+    .each((item: Item<any>) => nodes.push({ id: item.id, type: OBJECT_ORG, title: adapter.primary(item) }))
     .call(selection => {
       selection.links({ type: LINK_PROJECT })
         .each(link => {
@@ -50,10 +64,10 @@ export const graphSelector = adapter => selection => {
 };
 
 const createGraphData = (
-  id, partyMap: ComplexMap<PartyKey, { party: Party, items: Item<any>[] }> = undefined
+  id, partyMap?: ComplexMap<PartyKey, { party: Party, items: Item<any>[] }>
 ) => {
   const rootId = `__root_${id}__`;
-  const data = {
+  const data: {nodes: Node[], links: Link[]} = {
     nodes: [
       {
         id: rootId,

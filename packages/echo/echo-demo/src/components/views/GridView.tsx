@@ -42,7 +42,7 @@ const GridView = ({ adapter, items = [] }: GridViewProps) => {
     <Box className={classes.root}>
       {items.map((item) => {
         const title = adapter.primary(item);
-        const description = adapter.secondary(item);
+        const description = adapter.secondary?.(item);
 
         return (
           <Box key={item.id} className={classes.card}>

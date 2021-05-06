@@ -40,6 +40,7 @@ import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
   useGenerator, graphSelector
 } from '../src';
+import { Item } from '@dxos/echo-db';
 
 export default {
   title: 'Search'
@@ -148,7 +149,7 @@ const cardAdapter = (classes): CardAdapter => ({
     const labels = item.model.getProperty('labels') || {};
 
     // Sublist.
-    const List = ({ items, title }) => (
+    const List = ({ items, title }: {items: Item<any>[], title?: string}) => (
       <div className={classes.sublist}>
         <Typography variant='caption' className={classes.subheader}>{title}</Typography>
         <table>
@@ -175,13 +176,13 @@ const cardAdapter = (classes): CardAdapter => ({
       return (
         <div className={classes.chips}>
           {Object.values(labels).map((label, i) => (
-            <Chip key={i} label={label} className={classes.chip} />
+            <Chip key={i} label={String(label)} className={classes.chip} />
           ))}
         </div>
       );
     };
 
-    const slices = [];
+    const slices = [] as JSX.Element[];
     switch (item.type) {
       case OBJECT_ORG: {
         const projects = item.select().links({ type: LINK_PROJECT }).target().items;

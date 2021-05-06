@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import React from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
+import { Item } from '@dxos/echo-db';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -27,7 +28,7 @@ const useStyles = makeStyles(() => ({
 /**
  * Items panel.
  */
-const DebugItemList = ({ items = [] }) => {
+const DebugItemList = ({ items = [] }: {items?: Item<any>[]}) => {
   const classes = useStyles();
   if (!items.length) {
     return null;
@@ -54,7 +55,7 @@ const DebugItemList = ({ items = [] }) => {
         <tbody>
           {items.sort(sorter).map(item => (
             <tr key={item.id}>
-              <td className={item.type.split('/').pop()}>
+              <td className={item.type?.split('/').pop()}>
                 {item.type}
               </td>
               <td>

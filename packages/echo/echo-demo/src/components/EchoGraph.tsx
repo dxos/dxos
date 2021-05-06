@@ -117,13 +117,19 @@ const createLayout = ({ echo, grid, guides, delta, linkProjector, handleSelect }
 
         case 'party': {
           const party = await echo.getParty(source.partyKey);
-          await party.database.createItem({ model: ObjectModel });
+          if (!party) {
+            console.warn(`Attempted to create item for a party "${source.partyKey.toHex()}" that has not been found`)
+          }
+          await party?.database.createItem({ model: ObjectModel });
           break;
         }
 
         case 'item': {
           const party = await echo.getParty(source.partyKey);
-          await party.database.createItem({ model: ObjectModel, parent: source.id });
+          if (!party) {
+            console.warn(`Attempted to create item for a party "${source.partyKey.toHex()}" that has not been found`)
+          }
+          await party?.database.createItem({ model: ObjectModel, parent: source.id });
           break;
         }
       }

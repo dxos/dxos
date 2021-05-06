@@ -13,7 +13,8 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "target": "ES2018",
-    "removeComments": false
+    "removeComments": false,
+    "strictNullChecks": true
   },
   "include": [
     "src",
