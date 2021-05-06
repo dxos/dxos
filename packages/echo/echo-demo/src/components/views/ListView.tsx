@@ -6,6 +6,7 @@ import React from 'react';
 
 import { List, ListItem, ListItemIcon, ListItemText } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import { Item } from '@dxos/echo-db';
 
 const useStyles = makeStyles(() => ({
   root: {},
@@ -16,10 +17,10 @@ const useStyles = makeStyles(() => ({
 }));
 
 export interface ItemAdapter {
-  key: (any) => string
-  primary: (any) => string
-  secondary?: (any) => string
-  icon?: (any) => any // TODO(burdon): Type.
+  key: (key: any) => string
+  primary: (value: any) => string
+  secondary: (value: any) => string
+  icon?: React.FunctionComponent<{item: Item<any>}>,
 }
 
 export interface ListViewProps {
