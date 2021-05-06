@@ -16,6 +16,8 @@ import {
 import { grey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
+import { ItemAdapter } from './ListView';
+
 const useStyles = makeStyles(() => ({
   root: {
     display: 'flex'
@@ -39,19 +41,15 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-export interface CardAdapter {
-  key: (any) => string
-  primary: (any) => string
-  secondary: (any) => string
-  icon?: (any) => any // TODO(burdon): Type.
-  slices: (any) => any[] | void
+export interface CardAdapter extends ItemAdapter {
+  slices: (value: any) => any[] | void
 }
 
 export const ItemCard = ({ adapter, item }: { adapter: CardAdapter, item: any }) => {
   const classes = useStyles();
 
   const title = adapter.primary(item);
-  const description = adapter.secondary(item);
+  const description = adapter.secondary?.(item);
   const slices = adapter.slices(item);
 
   return (

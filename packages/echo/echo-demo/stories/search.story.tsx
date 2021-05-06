@@ -32,7 +32,8 @@ import CardIcon from '@material-ui/icons/ViewComfy';
 import GridIcon from '@material-ui/icons/ViewModule';
 import ProjectIcon from '@material-ui/icons/WorkOutline';
 
-import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, LINK_PROJECT, LINK_EMPLOYEE, labels } from '@dxos/echo-testing';
+import { Item, Party } from '@dxos/echo-db';
+import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, LINK_PROJECT, LINK_EMPLOYEE, labels, Generator } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
 import { useSelection, searchSelector } from '@dxos/react-client';
 
@@ -122,8 +123,8 @@ const icons = {
   [OBJECT_PROJECT]: ProjectIcon
 };
 
-const Icon = ({ item: { type } }) => {
-  const Icon = icons[type] || DefaultIcon;
+const Icon = ({ item: { type } }: {item: Item<any>}) => {
+  const Icon = (icons as any)[type ?? ''] || DefaultIcon;
   if (!Icon) {
     return null;
   }
@@ -138,7 +139,7 @@ const itemAdapter: ItemAdapter = {
   icon: Icon
 };
 
-const cardAdapter = (classes): CardAdapter => ({
+const cardAdapter = (classes: ReturnType<typeof useStyles>): CardAdapter => ({
   key: item => item.id,
   primary: item => item.model.getProperty('name'),
   secondary: item => item.model.getProperty('description'),
@@ -148,7 +149,7 @@ const cardAdapter = (classes): CardAdapter => ({
     const labels = item.model.getProperty('labels') || {};
 
     // Sublist.
-    const List = ({ items, title }) => (
+    const List = ({ items, title }: {items: Item<any>[], title?: string}) => (
       <div className={classes.sublist}>
         <Typography variant='caption' className={classes.subheader}>{title}</Typography>
         <table>
@@ -171,7 +172,7 @@ const cardAdapter = (classes): CardAdapter => ({
     );
 
     // TODO(burdon): Add/remove labels.
-    const Labels = ({ labels }) => {
+    const Labels = ({ labels }: {labels: string[]}) => {
       return (
         <div className={classes.chips}>
           {Object.values(labels).map((label, i) => (
@@ -181,7 +182,7 @@ const cardAdapter = (classes): CardAdapter => ({
       );
     };
 
-    const slices = [];
+    const slices = [] as JSX.Element[];
     switch (item.type) {
       case OBJECT_ORG: {
         const projects = item.select().links({ type: LINK_PROJECT }).target().items;
@@ -211,7 +212,12 @@ const cardAdapter = (classes): CardAdapter => ({
   }
 });
 
-const Home = ({ onCreate, onJoin }) => {
+interface HomeProps {
+  onCreate: () => void,
+  onJoin: (invitationCode: string) => void
+}
+
+const Home = ({ onCreate, onJoin }: HomeProps) => {
   const [invitationCode, setInvitationCode] = useState('');
   const [inProgress, setInProgress] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -266,20 +272,25 @@ const Home = ({ onCreate, onJoin }) => {
   );
 };
 
-const Main = ({ party, generator }) => {
+interface MainProps {
+  party: Party,
+  generator: Generator
+}
+
+const Main = ({ party, generator }: MainProps) => {
   const classes = useStyles();
 
-  const [search, setSearch] = useState(undefined);
-  const items = useSelection(generator.database.select(), searchSelector(search), [search]);
+  const [search, setSearch] = useState<string | undefined>(undefined);
+  const items: any[] = useSelection(generator.database.select(), searchSelector(search), [search]);
   // TODO(burdon): Use subset.
   // const data = useSelection(items && new Selection(items, new Event()), graphSelector);
   const data = useSelection(generator.database.select(), graphSelector(itemAdapter));
   const [selected, setSelected] = useState();
   const [view, setView] = useState(VIEW_LIST);
 
-  const handleUpdate = text => setSearch(text.toLowerCase());
+  const handleUpdate = (text: string) => setSearch(text.toLowerCase());
 
-  const ViewButton = ({ view: type, icon: Icon }) => (
+  const ViewButton = ({ view: type, icon: Icon }: {view: number, icon: React.FunctionComponent}) => (
     <IconButton color={type === view ? 'primary' : 'default'} size='small' onClick={() => setView(type)}>
       <Icon />
     </IconButton>
@@ -366,8 +377,8 @@ const Main = ({ party, generator }) => {
               </div>
             )}
             <GraphView
-              data={data}
-              onSelect={id => setSelected(items.find(item => item.id === id))}
+              data={data ?? { nodes: [], links: [] }}
+              onSelect={(id: string) => setSelected(items.find(item => item.id === id))}
             />
           </>
         )}
@@ -393,11 +404,11 @@ export const Primary = () => {
     });
   };
 
-  const handleJoin = async (invitationCode) => {
+  const handleJoin = async (invitationCode: string) => {
     await joinParty(invitationCode);
   };
 
-  if (party) {
+  if (party && generator) {
     return (
       <Main party={party} generator={generator} />
     );

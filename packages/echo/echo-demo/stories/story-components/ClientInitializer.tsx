@@ -2,14 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 
 import { CircularProgress } from '@material-ui/core';
 
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
-export const ClientInitializer = ({ children }) => {
+export const ClientInitializer = ({ children }: {children?: ReactNode}) => {
   const [client, setClient] = useState<Client | undefined>();
 
   useEffect(() => {

@@ -12,12 +12,14 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import { Client } from '@dxos/client';
 import { createId } from '@dxos/crypto';
+import { ECHO } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 import { ClientProvider } from '@dxos/react-client';
 
 import { EchoContext, EchoGraph, useEcho } from '../src';
 import { createClient, offlineConfig } from '../src/config/config';
+import { Node } from '../src/models';
 
 const log = debug('dxos:echo:story');
 
@@ -48,7 +50,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-type Peer = {id: string, client: Client}
+type Peer = {id: string, client: Client, database: ECHO}
 
 export const Primary = () => {
   const n = number('Databases', 1, { min: 1, max: 8 });
@@ -60,7 +62,7 @@ export const Primary = () => {
         const newPeers = await Promise.all([...new Array(n - peers.length)].map(async () => {
           const id = createId();
           const client = await createClient(offlineConfig);
-          const newPeer: Peer = { id, client };
+          const newPeer: Peer = { id, client, database: client.echo };
           return newPeer;
         }));
 
@@ -83,7 +85,7 @@ const Info = () => {
   const echo = useEcho();
   const [info, setInfo] = useState(String(echo));
   useEffect(() => {
-    let unsubscribe;
+    let unsubscribe: Function;
     setImmediate(async () => {
       const result = await echo.queryParties();
       unsubscribe = result.subscribe(() => {
@@ -108,16 +110,24 @@ const Test = ({ peers }: {peers: Peer[]}) => {
   const grid = useGrid({ width, height });
 
   // Click to invite.
-  const handleInvite = async (peer, node) => {
+  const handleInvite = async (peer: Peer, node: Node) => {
+    if (!node.partyKey) {
+      console.warn('Cannot invite to a node without a party key');
+      return;
+    }
     const party = await peer.database.getParty(node.partyKey);
+    if (!party) {
+      console.warn(`Party not found: ${node.partyKey.toString()}`);
+      return;
+    }
     await Promise.all(peers.map(async other => {
       if (peer.id !== other.id) {
         log(`Inviting ${peer.id} => ${other.id} [${String(party)}]`);
 
         // Invite party.
         const invitation = await party.createInvitation({
-          secretProvider: () => Buffer.from('0000'),
-          secretValidator: () => true
+          secretProvider: async () => Buffer.from('0000'),
+          secretValidator: async () => true
         });
         log('Invitation request:', invitation);
 
@@ -168,7 +178,7 @@ const Test = ({ peers }: {peers: Peer[]}) => {
                   grid={grid}
                   delta={delta}
                   radius={radius}
-                  onSelect={node => node.type === 'party' && handleInvite(peer, node)}
+                  onSelect={(node: Node) => node.type === 'party' && handleInvite(peer, node)}
                 />
               </EchoContext.Provider>
             </ClientProvider>
