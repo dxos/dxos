@@ -17,8 +17,7 @@
     "sourceMap": true,
     "target": "ES2018",
     "removeComments": false,
-    "strictNullChecks": true,
-    "noImplicitAny": true
+    "strict": true
   },
   "include": [
     "src",
