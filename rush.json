@@ -518,6 +518,12 @@
       "projectFolder": "packages/common/crypto",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/protocol-plugin-bot",
+      "projectFolder": "packages/bot/protocol-plugin-bot",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     }
     // {
     //   /**
