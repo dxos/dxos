@@ -31,12 +31,12 @@ jobs:
         cd packages/echo/echo-demo && pnpm build-storybook && cd -
         cd packages/sdk/react-ux && pnpm build-storybook && cd -
         cd packages/sdk/react-client && pnpm build-storybook && cd -
-  - name: Publish
-    run:  |
-      "/root/.nvm/nvm.sh" && nvm use
+    - name: Publish
+      run:  |
+        "/root/.nvm/nvm.sh" && nvm use
 
-      # Bump version
-      rush version --bump
+        # Bump version
+        rush version --bump
 
-      # Publish
-      rush publish --publish --target-branch testing-publish-ci --npm-auth-token ${NPM_TOKEN} --include-all
+        # Publish
+        rush publish --publish --target-branch testing-publish-ci --npm-auth-token ${NPM_TOKEN} --include-all
