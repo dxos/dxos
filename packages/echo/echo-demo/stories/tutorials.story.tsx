@@ -13,7 +13,7 @@ import { Party } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import { useClient, useItems, useParties, useProfile } from '@dxos/react-client';
 
-import { ClientInitializer } from './ClientInitializer';
+import { ClientInitializer } from './story-components/ClientInitializer';
 
 export default {
   title: 'Tutorials',
