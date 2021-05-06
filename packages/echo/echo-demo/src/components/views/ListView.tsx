@@ -19,7 +19,7 @@ const useStyles = makeStyles(() => ({
 export interface ItemAdapter {
   key: (key: any) => string
   primary: (value: any) => string
-  secondary: (value: any) => string
+  secondary?: (value: any) => string
   icon?: React.FunctionComponent<{item: Item<any>}>,
 }
 
@@ -42,7 +42,7 @@ const ListView = ({ adapter, items = [] }: ListViewProps) => {
           )}
           <ListItemText
             primary={adapter.primary(item)}
-            secondary={adapter.secondary && adapter.secondary(item)}
+            secondary={adapter.secondary?.(item)}
           />
         </ListItem>
       ))}
