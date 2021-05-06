@@ -118,7 +118,7 @@ const createLayout = ({ echo, grid, guides, delta, linkProjector, handleSelect }
         case 'party': {
           const party = await echo.getParty(source.partyKey);
           if (!party) {
-            console.warn(`Attempted to create item for a party "${source.partyKey.toHex()}" that has not been found`)
+            console.warn(`Attempted to create item for a party "${source.partyKey.toHex()}" that has not been found`);
           }
           await party?.database.createItem({ model: ObjectModel });
           break;
@@ -127,7 +127,7 @@ const createLayout = ({ echo, grid, guides, delta, linkProjector, handleSelect }
         case 'item': {
           const party = await echo.getParty(source.partyKey);
           if (!party) {
-            console.warn(`Attempted to create item for a party "${source.partyKey.toHex()}" that has not been found`)
+            console.warn(`Attempted to create item for a party "${source.partyKey.toHex()}" that has not been found`);
           }
           await party?.database.createItem({ model: ObjectModel, parent: source.id });
           break;

@@ -32,6 +32,7 @@ import CardIcon from '@material-ui/icons/ViewComfy';
 import GridIcon from '@material-ui/icons/ViewModule';
 import ProjectIcon from '@material-ui/icons/WorkOutline';
 
+import { Item } from '@dxos/echo-db';
 import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, LINK_PROJECT, LINK_EMPLOYEE, labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
 import { useSelection, searchSelector } from '@dxos/react-client';
@@ -40,7 +41,6 @@ import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
   useGenerator, graphSelector
 } from '../src';
-import { Item } from '@dxos/echo-db';
 
 export default {
   title: 'Search'
@@ -367,7 +367,7 @@ const Main = ({ party, generator }) => {
               </div>
             )}
             <GraphView
-              data={data ?? {nodes: [], links: []}}
+              data={data ?? { nodes: [], links: [] }}
               onSelect={id => setSelected(items.find(item => item.id === id))}
             />
           </>

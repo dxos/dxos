@@ -13,8 +13,8 @@ import {
 import { useParties } from '@dxos/react-client';
 import { ComplexMap } from '@dxos/util';
 
-import { asyncEffect, liftCallback } from './util';
 import { GraphData, Link, Node } from '../models';
+import { asyncEffect, liftCallback } from './util';
 
 export const graphSelector = adapter => selection => {
   const nodes = [] as Node[];

@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import React from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
+
 import { Item } from '@dxos/echo-db';
 
 const useStyles = makeStyles(() => ({

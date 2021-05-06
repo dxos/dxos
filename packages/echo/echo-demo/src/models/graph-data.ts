@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { PublicKey } from "@dxos/crypto";
+import { PublicKey } from '@dxos/crypto';
 
 export interface Node {
   id: string,
@@ -22,4 +22,3 @@ export interface GraphData {
   nodes: Node[],
   links: Link[]
 }
-

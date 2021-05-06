@@ -18,6 +18,7 @@ import {
   NodeProjector,
   Markers
 } from '@dxos/gem-spore';
+
 import { GraphData } from '../../models';
 
 // TODO(burdon): Create container.

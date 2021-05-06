@@ -141,7 +141,7 @@ const Component = ({ generator }) => {
 
       <GraphView
         classes={graphClasses}
-        data={data ?? {nodes: [], links: []}}
+        data={data ?? { nodes: [], links: [] }}
         propertyAdapter={propertyAdapter}
         onCreate={handleCreate}
       />
