@@ -29,6 +29,9 @@ jobs:
         node common/scripts/install-run-rush.js rebuild --verbose
     - name: Publish
       run:  |
+        git config --global user.email "npm@dxos.network"
+        git config --global user.name "DXOS"
+
         "/root/.nvm/nvm.sh" && nvm use
 
         # Bump version
