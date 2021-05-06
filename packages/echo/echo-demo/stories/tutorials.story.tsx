@@ -49,7 +49,7 @@ const PartyItemCount = ({ party }: {party: Party}) => {
 };
 
 interface Stage2ConsumerProps {
-  PartyDetails?: ({ party: Party }) => JSX.Element
+  PartyDetails?: ({ party }: {party: Party}) => JSX.Element
 }
 
 const Stage2Consumer = ({ PartyDetails = PartyTitle }: Stage2ConsumerProps) => {

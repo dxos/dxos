@@ -6,7 +6,7 @@ import debug from 'debug';
 import React, { useEffect, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 
-import { Button, TextField, Toolbar } from '@material-ui/core';
+import { Button, CircularProgress, TextField, Toolbar } from '@material-ui/core';
 
 import { createId, createKeyPair } from '@dxos/crypto';
 import { ECHO, InvitationDescriptor, createTestInstance } from '@dxos/echo-db';
@@ -15,6 +15,7 @@ import { Markers } from '@dxos/gem-spore';
 
 import { EchoContext, EchoGraph, MemberList } from '../src';
 import { createItemStorage, createSnapshotStorage, onlineConfig } from '../src/config/config';
+import { Node } from '../src/models';
 
 const log = debug('dxos:echo:story');
 
@@ -29,6 +30,8 @@ export const Primary = () => {
   const [echo, setEcho] = useState<ECHO>();
   const [storage] = useState(createItemStorage);
   const [snapshotStorage] = useState(createSnapshotStorage);
+
+  const [resizeListener, size] = useResizeAware();
 
   useEffect(() => {
     setImmediate(async () => {
@@ -55,14 +58,17 @@ export const Primary = () => {
     });
   }, []);
 
-  const [resizeListener, size] = useResizeAware();
+  if (!echo) {
+    return <CircularProgress />
+  }
+
   const { width, height } = size;
   const grid = useGrid({ width, height });
   const radius = Math.min(grid.size.width, grid.size.height) / 3;
   const [invitation, setInvitation] = useState(null);
 
   // Click to invite.
-  const handleInvite = async (node) => {
+  const handleInvite = async (node: Node) => {
     const party = await echo.getParty(node.partyKey);
     const invitation = await party.createInvitation({
       secretProvider: async () => Buffer.from('0000'),
@@ -118,7 +124,7 @@ export const Primary = () => {
                   id={id}
                   grid={grid}
                   radius={radius}
-                  onSelect={node => node.type === 'party' && handleInvite(node)}
+                  onSelect={(node: Node) => node.type === 'party' && handleInvite(node)}
                 />
               </EchoContext.Provider>
             )}

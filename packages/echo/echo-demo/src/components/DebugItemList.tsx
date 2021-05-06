@@ -35,9 +35,9 @@ const DebugItemList = ({ items = [] }: {items?: Item<any>[]}) => {
     return null;
   }
 
-  const sorter = (a, b) => {
-    const ta = a.type;
-    const tb = b.type;
+  const sorter = (a: Item<any>, b: Item<any>) => {
+    const ta = a.type ?? '';
+    const tb = b.type ?? '';
     return ta < tb ? -1 : tb > ta ? 1 : 0;
   };
 

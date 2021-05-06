@@ -7,6 +7,9 @@
       "DOM",
       "ESNext"
     ],
+    "types": [
+      "node"
+    ],
     "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -14,7 +17,8 @@
     "sourceMap": true,
     "target": "ES2018",
     "removeComments": false,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "noImplicitAny": true
   },
   "include": [
     "src",
