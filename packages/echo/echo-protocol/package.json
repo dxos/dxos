@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-protocol",
-  "version": "2.10.0",
+  "version": "2.10.1-beta",
   "description": "ECHO protocol definitions and utilities.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
