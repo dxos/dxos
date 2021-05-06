@@ -39,4 +39,4 @@ name: publish
         rush version --bump
 
         # Publish
-        rush publish --publish --target-branch publishing --npm-auth-token ${NPM_TOKEN} --include-all
+        rush publish --publish --target-branch testing-publish-ci --npm-auth-token ${NPM_TOKEN} --include-all
