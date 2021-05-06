@@ -16,11 +16,11 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/util": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/metrics": "~1.0.0-beta.9",
     "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@types/simple-peer": "^9.6.1",
     "@types/ws": "^7.4.0",
     "assert": "^2.0.0",

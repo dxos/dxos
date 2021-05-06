@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "packageName": "@dxos/react-client",
+      "comment": "",
+      "type": "none"
+    }
+  ],
+  "packageName": "@dxos/react-client",
+  "email": "przemek@ethworks.io"
+}

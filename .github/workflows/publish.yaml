@@ -1,0 +1,41 @@
+on: 
+  workflow_dispatch:
+
+name: publish
+jobs:
+  publish:
+    runs-on: [self-hosted]
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        node-version: [16.0]
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Check, install and build
+      run: |
+        \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
+        
+        # Check package versions
+        node common/scripts/install-run-rush.js change -v
+        
+        # Install dependencies
+        node common/scripts/install-run-rush.js install
+        
+        # Build
+        node common/scripts/install-run-rush.js rebuild --verbose
+    - name: Publish
+      run:  |
+        git config --global user.email "npm@dxos.network"
+        git config --global user.name "DXOS"
+
+        "/root/.nvm/nvm.sh" && nvm use
+
+        # Bump version
+        rush version --bump
+
+        # Publish
+        rush publish --publish --target-branch main --npm-auth-token ${NPM_TOKEN} --include-all
