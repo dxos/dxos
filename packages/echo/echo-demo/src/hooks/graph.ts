@@ -13,47 +13,42 @@ import {
 import { useParties } from '@dxos/react-client';
 import { ComplexMap } from '@dxos/util';
 
+import { GraphData, Link, Node } from '../models';
 import { asyncEffect, liftCallback } from './util';
 
-// TODO(burdon): Move to @dxos/gem.
-interface GraphData {
-  nodes: any[],
-  links: any[]
-}
-
-export const graphSelector = adapter => selection => {
-  const nodes = [];
-  const links = [];
+export const graphSelector = (adapter: any) => (selection: any) => {
+  const nodes = [] as Node[];
+  const links = [] as Link[];
 
   selection
     .filter({ type: OBJECT_ORG })
-    .each(item => nodes.push({ id: item.id, type: OBJECT_ORG, title: adapter.primary(item) }))
-    .call(selection => {
+    .each((item: Item<any>) => nodes.push({ id: item.id, type: OBJECT_ORG, title: adapter.primary(item) }))
+    .call((selection: any) => {
       selection.links({ type: LINK_PROJECT })
-        .each(link => {
+        .each((link: any) => {
           nodes.push({ id: link.target.id, type: OBJECT_PROJECT, title: adapter.primary(link.target) });
           links.push({ id: link.id, source: link.source.id, target: link.target.id });
         })
         .target()
         .children()
-        .each(item => {
+        .each((item: any) => {
           nodes.push({ id: item.id, type: OBJECT_TASK, title: adapter.primary(item) });
           links.push({ id: `${item.parent.id}-${item.id}`, source: item.parent.id, target: item.id });
         });
     })
     .links({ type: LINK_EMPLOYEE })
-    .each(link => links.push({ id: link.id, source: link.source.id, target: link.target.id }))
+    .each((link: any) => links.push({ id: link.id, source: link.source.id, target: link.target.id }))
     .target()
-    .each(item => nodes.push({ id: item.id, type: OBJECT_PERSON, title: adapter.primary(item) }));
+    .each((item: any) => nodes.push({ id: item.id, type: OBJECT_PERSON, title: adapter.primary(item) }));
 
   return { nodes, links };
 };
 
 const createGraphData = (
-  id, partyMap: ComplexMap<PartyKey, { party: Party, items: Item<any>[] }> = undefined
+  id: string, partyMap?: ComplexMap<PartyKey, { party: Party, items: Item<any>[] }>
 ) => {
   const rootId = `__root_${id}__`;
-  const data = {
+  const data: {nodes: Node[], links: Link[]} = {
     nodes: [
       {
         id: rootId,
@@ -106,7 +101,7 @@ const createGraphData = (
 /**
  * Generate GEM graph data.
  */
-export const useGraphData = ({ id }) => {
+export const useGraphData = ({ id }: {id: string}) => {
   const [data, setData] = useState<GraphData>(createGraphData(id));
   const parties = useParties();
 

@@ -10,12 +10,15 @@ interface Context {
   echo: ECHO
 }
 
-export const EchoContext = createContext<Context>(null);
+export const EchoContext = createContext<Context | undefined>(undefined);
 
 /**
  * Get ECHO instance.
  */
 export const useEcho = (): ECHO => {
-  const { echo } = useContext(EchoContext);
-  return echo;
+  const context = useContext(EchoContext);
+  if (!context) {
+    throw new Error('useEcho used outside EchoContext');
+  }
+  return context.echo;
 };

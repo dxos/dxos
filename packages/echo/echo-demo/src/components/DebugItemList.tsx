@@ -7,6 +7,8 @@ import React from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 
+import { Item } from '@dxos/echo-db';
+
 const useStyles = makeStyles(() => ({
   root: {
     backgroundColor: 'white',
@@ -27,15 +29,15 @@ const useStyles = makeStyles(() => ({
 /**
  * Items panel.
  */
-const DebugItemList = ({ items = [] }) => {
+const DebugItemList = ({ items = [] }: {items?: Item<any>[]}) => {
   const classes = useStyles();
   if (!items.length) {
     return null;
   }
 
-  const sorter = (a, b) => {
-    const ta = a.type;
-    const tb = b.type;
+  const sorter = (a: Item<any>, b: Item<any>) => {
+    const ta = a.type ?? '';
+    const tb = b.type ?? '';
     return ta < tb ? -1 : tb > ta ? 1 : 0;
   };
 
@@ -54,7 +56,7 @@ const DebugItemList = ({ items = [] }) => {
         <tbody>
           {items.sort(sorter).map(item => (
             <tr key={item.id}>
-              <td className={item.type.split('/').pop()}>
+              <td className={item.type?.split('/').pop()}>
                 {item.type}
               </td>
               <td>

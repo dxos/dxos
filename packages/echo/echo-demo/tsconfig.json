@@ -7,13 +7,17 @@
       "DOM",
       "ESNext"
     ],
+    "types": [
+      "node"
+    ],
     "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
     "target": "ES2018",
-    "removeComments": false
+    "removeComments": false,
+    "strict": true
   },
   "include": [
     "src",

@@ -6,7 +6,7 @@ import debug from 'debug';
 import React, { useEffect, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 
-import { Button, TextField, Toolbar } from '@material-ui/core';
+import { Button, CircularProgress, TextField, Toolbar } from '@material-ui/core';
 
 import { createId, createKeyPair } from '@dxos/crypto';
 import { ECHO, InvitationDescriptor, createTestInstance } from '@dxos/echo-db';
@@ -15,6 +15,7 @@ import { Markers } from '@dxos/gem-spore';
 
 import { EchoContext, EchoGraph, MemberList } from '../src';
 import { createItemStorage, createSnapshotStorage, onlineConfig } from '../src/config/config';
+import { Node } from '../src/models';
 
 const log = debug('dxos:echo:story');
 
@@ -26,9 +27,15 @@ export default {
 
 export const Primary = () => {
   const [id] = useState(createId());
+  const [invitation, setInvitation] = useState<string | undefined>(undefined);
   const [echo, setEcho] = useState<ECHO>();
   const [storage] = useState(createItemStorage);
   const [snapshotStorage] = useState(createSnapshotStorage);
+
+  const [resizeListener, size] = useResizeAware();
+  const { width, height } = size;
+  const grid = useGrid({ width, height });
+  const radius = Math.min(grid.size.width, grid.size.height) / 3;
 
   useEffect(() => {
     setImmediate(async () => {
@@ -55,15 +62,21 @@ export const Primary = () => {
     });
   }, []);
 
-  const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-  const grid = useGrid({ width, height });
-  const radius = Math.min(grid.size.width, grid.size.height) / 3;
-  const [invitation, setInvitation] = useState(null);
+  if (!echo) {
+    return <CircularProgress />;
+  }
 
   // Click to invite.
-  const handleInvite = async (node) => {
+  const handleInvite = async (node: Node) => {
+    if (!node.partyKey) {
+      console.warn('Cannot invite to node without party key');
+      return;
+    }
     const party = await echo.getParty(node.partyKey);
+    if (!party) {
+      console.warn(`Party not found: ${node.partyKey.toString()}`);
+      return;
+    }
     const invitation = await party.createInvitation({
       secretProvider: async () => Buffer.from('0000'),
       secretValidator: async () => true
@@ -72,19 +85,23 @@ export const Primary = () => {
     setInvitation(JSON.stringify(invitation.toQueryParameters()));
   };
 
-  async function handleJoin () {
+  const handleJoin = async () => {
     log('handleJoin', invitation);
+    if (!invitation) {
+      console.warn('Cannot join party without invitation.');
+      return;
+    }
     const party = await echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));
     await party.open();
-  }
+  };
 
-  async function handleResetStorage () {
+  const handleResetStorage = async () => {
     await echo.reset();
     window.location.reload();
-  }
+  };
 
-  const activeParty = echo?.queryParties().value[0];
+  const activeParty = echo.queryParties().value[0];
 
   return (
     <FullScreen>
@@ -118,7 +135,7 @@ export const Primary = () => {
                   id={id}
                   grid={grid}
                   radius={radius}
-                  onSelect={node => node.type === 'party' && handleInvite(node)}
+                  onSelect={(node: Node) => node.type === 'party' && handleInvite(node)}
                 />
               </EchoContext.Provider>
             )}

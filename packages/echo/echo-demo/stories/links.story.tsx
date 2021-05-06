@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 import * as colors from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK } from '@dxos/echo-testing';
+import { Generator, OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK } from '@dxos/echo-testing';
 import { useSelection } from '@dxos/react-client';
 
 import {
@@ -18,6 +18,7 @@ import {
   graphSelector,
   useGenerator
 } from '../src';
+import { GraphData, Node } from '../src/models';
 
 export default {
   title: 'Links',
@@ -97,7 +98,7 @@ const useGraphStyles = makeStyles(() => ({
   }
 }));
 
-const propertyAdapter = (node) => ({
+const propertyAdapter = (node: Node) => ({
   class: node.type.split('/').pop(),
   radius: {
     [OBJECT_ORG]: 16,
@@ -112,20 +113,20 @@ const itemAdapter: ItemAdapter = {
   primary: item => item.model.getProperty('name')
 };
 
-const Component = ({ generator }) => {
+const Component = ({ generator }: {generator: Generator}) => {
   const classes = useStyles();
   const graphClasses = useGraphStyles();
 
   const data = useSelection(generator.database.select(), graphSelector(itemAdapter));
   const items = useSelection(generator.database.select(), selection => selection.items);
 
-  const handleCreate = data => {
+  const handleCreate = (data: GraphData) => {
     if (data.nodes.length) {
       const { source } = data.links[0];
-      generator.createItem(source);
+      generator.createItem(source.toString());
     } else {
       const { source, target } = data.links[0];
-      generator.linkItem(source, target);
+      generator.linkItem(source.toString(), target.toString());
     }
   };
 
@@ -141,7 +142,7 @@ const Component = ({ generator }) => {
 
       <GraphView
         classes={graphClasses}
-        data={data}
+        data={data ?? { nodes: [], links: [] }}
         propertyAdapter={propertyAdapter}
         onCreate={handleCreate}
       />

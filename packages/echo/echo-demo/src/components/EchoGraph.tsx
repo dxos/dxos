@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as colors from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { ECHO } from '@dxos/echo-db';
+import { ECHO, Item } from '@dxos/echo-db';
 import {
   createSimulationDrag,
   useGraphStyles,
@@ -54,7 +54,7 @@ const createLayout = ({ echo, grid, guides, delta, linkProjector, handleSelect }
       x: grid.center.x + delta.x,
       y: grid.center.y + delta.y
     },
-    initializer: (d, center) => {
+    initializer: (d: Item<any>, center: any) => {
       const { type } = d;
       if (type === 'database') {
         return {
@@ -85,11 +85,11 @@ const createLayout = ({ echo, grid, guides, delta, linkProjector, handleSelect }
 
   const drag = createSimulationDrag(layout.simulation, { link: 'metaKey' });
 
-  drag.on('click', ({ source }) => {
+  drag.on('click', ({ source }: any) => {
     handleSelect(source);
   });
 
-  drag.on('drag', ({ source, position, linking }) => {
+  drag.on('drag', ({ source, position, linking }: any) => {
     if (!linking) {
       return;
     }
@@ -103,7 +103,7 @@ const createLayout = ({ echo, grid, guides, delta, linkProjector, handleSelect }
     linkProjector.update(grid, data, { group: guides });
   });
 
-  drag.on('end', ({ source, linking }) => {
+  drag.on('end', ({ source, linking }: any) => {
     if (!linking) {
       return;
     }
@@ -117,13 +117,19 @@ const createLayout = ({ echo, grid, guides, delta, linkProjector, handleSelect }
 
         case 'party': {
           const party = await echo.getParty(source.partyKey);
-          await party.database.createItem({ model: ObjectModel });
+          if (!party) {
+            console.warn(`Attempted to create item for a party "${source.partyKey.toHex()}" that has not been found`);
+          }
+          await party?.database.createItem({ model: ObjectModel });
           break;
         }
 
         case 'item': {
           const party = await echo.getParty(source.partyKey);
-          await party.database.createItem({ model: ObjectModel, parent: source.id });
+          if (!party) {
+            console.warn(`Attempted to create item for a party "${source.partyKey.toHex()}" that has not been found`);
+          }
+          await party?.database.createItem({ model: ObjectModel, parent: source.id });
           break;
         }
       }
@@ -169,7 +175,7 @@ const EchoGraph = (
         radius: 16,
         showLabels: true,
         // TODO(burdon): Properties on node directly (e.g., radius, class). Arrows use radius.
-        propertyAdapter: ({ type }) => ({
+        propertyAdapter: ({ type }: {type: 'database' | 'party' | 'item'}) => ({
           class: type,
           radius: {
             database: 20,
@@ -182,7 +188,7 @@ const EchoGraph = (
     linkProjector: new LinkProjector({ nodeRadius: 16, showArrows: true })
   });
 
-  const handleSelect = source => {
+  const handleSelect = (source: any) => {
     setSelected(source.id);
     onSelect && onSelect(source);
   };
@@ -201,7 +207,7 @@ const EchoGraph = (
 
   return (
     <g>
-      <g ref={guides} className={classes.links} />
+      <g ref={guides as any} className={classes.links} />
 
       <Graph
         grid={grid}

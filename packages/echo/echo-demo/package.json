@@ -79,6 +79,7 @@
     "@storybook/react": "^6.2.9",
     "@types/faker": "~5.5.1",
     "@types/jest": "^26.0.7",
+    "@types/react": "^17.0.0",
     "babel-loader": "8.1.0",
     "babel-plugin-add-module-exports": "^1.0.4",
     "chance": "^1.1.6",

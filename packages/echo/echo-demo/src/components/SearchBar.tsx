@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { IconButton, InputAdornment, TextField } from '@material-ui/core';
+import { IconButton, InputAdornment, TextField, TextFieldProps } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import ClearIcon from '@material-ui/icons/Clear';
 import SearchIcon from '@material-ui/icons/Search';
@@ -32,7 +32,7 @@ const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
     onUpdate('');
   };
 
-  const handleKeyDown = ev => {
+  const handleKeyDown: TextFieldProps['onKeyUp'] = ev => {
     switch (ev.key) {
       case 'Escape': {
         handleCancel();

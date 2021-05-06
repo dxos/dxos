@@ -19,6 +19,8 @@ import {
   Markers
 } from '@dxos/gem-spore';
 
+import { GraphData } from '../../models';
+
 // TODO(burdon): Create container.
 const useStyles = makeStyles(() => ({
   root: {
@@ -28,25 +30,8 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-// TODO(burdon): Move to gem.
-interface Node {
-  id: string
-  title: string | undefined
-}
-
-interface Link {
-  id: string
-  source: Node | string
-  target: Node | string
-}
-
-interface Data {
-  nodes: Node[]
-  links: Link[]
-}
-
 interface LinksGraphProps {
-  data: Data,
+  data: GraphData,
   onCreate?: Function,
   onSelect?: Function,
   classes?: any,
@@ -66,7 +51,7 @@ const GraphView = ({
   const [drag] = useState(() => createSimulationDrag(layout.simulation, { link: 'metaKey' }));
 
   useEffect(() => {
-    const handler = ({ source }) => onSelect(source.id);
+    const handler = ({ source }: any) => onSelect(source.id);
     drag.on('click', handler);
     return () => drag.off('click', handler);
   }, [drag]);
@@ -79,7 +64,7 @@ const GraphView = ({
         <GraphLinker
           grid={grid}
           drag={drag}
-          onUpdate={mutations => onCreate((update({ nodes: [], links: [] }, mutations)))}
+          onUpdate={(mutations: any) => onCreate((update({ nodes: [], links: [] }, mutations)))}
         />
         <Graph
           grid={grid}
