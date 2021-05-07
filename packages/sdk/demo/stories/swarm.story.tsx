@@ -8,7 +8,7 @@ import useResizeAware from 'react-resize-aware';
 
 import { Button, TextField, Toolbar } from '@material-ui/core';
 
-import { createId, createKeyPair } from '@dxos/crypto';
+import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
@@ -27,7 +27,7 @@ export default {
 };
 
 export const Primary = () => (
-  <ClientInitializer>
+  <ClientInitializer config={{ swarm: { signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal']}}}>
     <Story/>
   </ClientInitializer>
 )
@@ -56,7 +56,7 @@ const Story = () => {
       console.warn('Cannot invite to node without party key');
       return;
     }
-    const party = await client.echo.getParty(node.partyKey);
+    const party = await client.echo.getParty(PublicKey.from(node.partyKey));
     if (!party) {
       console.warn(`Party not found: ${node.partyKey.toString()}`);
       return;

@@ -6,15 +6,20 @@ import React, { useState, useEffect, ReactNode } from 'react';
 
 import { CircularProgress } from '@material-ui/core';
 
-import { Client } from '@dxos/client';
+import { Client, ClientConfig } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
-export const ClientInitializer = ({ children }: {children?: ReactNode}) => {
+export interface ClientInitializerProps {
+  config?: ClientConfig
+  children?: ReactNode
+}
+
+export const ClientInitializer = ({ children, config }: ClientInitializerProps) => {
   const [client, setClient] = useState<Client | undefined>();
 
   useEffect(() => {
     setImmediate(async () => {
-      const client = new Client();
+      const client = new Client(config);
       await client.initialize();
       setClient(client);
     });
