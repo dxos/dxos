@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "packageName": "@dxos/echo-db",
+      "comment": "",
+      "type": "none"
+    }
+  ],
+  "packageName": "@dxos/echo-db",
+  "email": "npm@dxos.network"
+}
