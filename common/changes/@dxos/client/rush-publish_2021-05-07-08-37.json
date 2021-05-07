@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "packageName": "@dxos/client",
+      "comment": "",
+      "type": "none"
+    }
+  ],
+  "packageName": "@dxos/client",
+  "email": "npm@dxos.network"
+}
