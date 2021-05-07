@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 
 import { createClient } from '@dxos/client';
 import { Keyring, KeyStore } from '@dxos/credentials';
-import debug, { logs } from '@dxos/debug';
+import { logs } from '@dxos/debug';
 import metrics from '@dxos/metrics';
 import { createStorage } from '@dxos/random-access-multi-storage';
 
