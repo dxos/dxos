@@ -2,10 +2,12 @@
 // Copyright 2019 DXOS.org
 //
 
-import ram from 'random-access-memory';
+/* eslint-disable jest/no-test-callback */
+
 import crypto from 'hypercore-crypto';
-import tempy from 'tempy';
 import pify from 'pify';
+import ram from 'random-access-memory';
+import tempy from 'tempy';
 
 import FeedDescriptor from './feed-descriptor';
 
@@ -145,7 +147,9 @@ describe('FeedDescriptor', () => {
       hypercore: () => ({
         opened: true,
         on () {},
-        ready (cb) { cb(); },
+        ready (cb) {
+          cb();
+        },
         close () {
           throw new Error('close error');
         }

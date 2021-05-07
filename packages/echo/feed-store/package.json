@@ -19,13 +19,12 @@
     "index.js"
   ],
   "scripts": {
-    "build": "npm run clean && npm run build:tsc",
-    "build:tsc": "tsc",
-    "benchmark": "npm run build && npm run benchmark:node && npm run benchmark:browser",
+    "build": "toolchain build",
+    "lint": "toolchain lint",
+    "test": "toolchain test",
+    "benchmark": "pnpm run build && pnpm run benchmark:node && pnpm run benchmark:browser",
     "benchmark:node": "del-cli .benchmark && node benchmark.js",
-    "benchmark:browser": "browser-runner benchmark.js --timeout 0",
-    "clean": "del-cli dist",
-    "test": "jest --verbose --passWithNoTests"
+    "benchmark:browser": "browser-runner benchmark.js --timeout 0"
   },
   "dependencies": {
     "buffer-json-encoding": "^1.0.2",
@@ -51,16 +50,11 @@
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
     "@dxos/browser-runner": "^1.0.0-beta.8",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
-    "@typescript-eslint/parser": "^3.8.0",
-    "del-cli": "^3.0.0",
     "end-of-stream-promise": "^1.0.0",
-    "eslint": "^7.7.0",
-    "jest": "^26.2.2",
     "random-access-memory": "~3.1.2",
     "tempy": "~1.0.1",
-    "ts-jest": "^26.1.4",
-    "typescript": "^4.0.2",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "@types/node": "^14.0.9"
   },
   "publishConfig": {
     "access": "public"
