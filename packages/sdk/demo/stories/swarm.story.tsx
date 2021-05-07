@@ -13,7 +13,7 @@ import { InvitationDescriptor } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 
-import { EchoContext, EchoGraph, MemberList } from '../src';
+import { EchoGraph, MemberList } from '../src';
 import { Node } from '../src/models';
 import { ClientInitializer } from './story-components/ClientInitializer';
 import { useClient } from '@dxos/react-client';
@@ -113,14 +113,12 @@ const Story = () => {
           <SVG width={width} height={height}>
             <Markers />
 
-            <EchoContext.Provider key={id} value={{ echo: client.echo }}>
-              <EchoGraph
-                id={id}
-                grid={grid}
-                radius={radius}
-                onSelect={(node: Node) => node.type === 'party' && handleInvite(node)}
-              />
-            </EchoContext.Provider>
+            <EchoGraph
+              id={id}
+              grid={grid}
+              radius={radius}
+              onSelect={(node: Node) => node.type === 'party' && handleInvite(node)}
+            />
           </SVG>
         </div>
       </div>
