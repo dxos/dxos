@@ -1,6 +1,6 @@
 {
   "name": "@dxos/botkit",
-  "version": "2.10.1-beta.4",
+  "version": "2.10.2",
   "description": "Botkit",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -63,6 +63,6 @@
     "typescript": "^4.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }
