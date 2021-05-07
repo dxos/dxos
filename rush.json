@@ -446,6 +446,10 @@
       "projectFolder": "packages/sdk/demo"
     },
     {
+      "packageName": "@dxos/feed-store",
+      "projectFolder": "packages/echo/feed-store"
+    },
+    {
       "packageName": "@dxos/credentials",
       "projectFolder": "packages/halo/credentials",
       "shouldPublish": true,
