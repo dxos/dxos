@@ -9,7 +9,7 @@ import { EventEmitter } from 'events';
 import { Extension } from '@dxos/protocol';
 
 import { Peer } from './peer';
-import { schema } from './proto/gen';
+import { schemaJson } from './proto/gen';
 
 // const log = debug('dxos.replicator');
 
@@ -58,7 +58,7 @@ export class Replicator extends EventEmitter {
    */
   createExtension () {
     return new Extension(Replicator.extension, {
-      schema,
+      schema: schemaJson,
       timeout: this._options.timeout
     })
       .on('error', err => this.emit(err))
