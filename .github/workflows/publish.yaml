@@ -35,7 +35,7 @@ jobs:
         \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
 
         # Bump version
-        node common/scripts/install-run-rush.js version --bump
+        node common/scripts/install-run-rush.js version --bump --target-branch rush-publish
 
         # Publish
-        node common/scripts/install-run-rush.js publish --publish --target-branch rush-publish --include-all
+        node common/scripts/install-run-rush.js publish --publish --include-all
