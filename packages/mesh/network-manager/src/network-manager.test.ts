@@ -45,7 +45,7 @@ describe('Network manager', () => {
     };
   };
 
-  test('two peers connect to each other', async () => {
+  test.skip('two peers connect to each other', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -114,7 +114,7 @@ describe('Network manager', () => {
   }, 10_000);
 
   describe('StarTopology', () => {
-    test('two peers connect to each other', async () => {
+    test.skip('two peers connect to each other', async () => {
       const topic = PublicKey.random();
       const peer1Id = PublicKey.random();
       const peer2Id = PublicKey.random();
@@ -136,7 +136,7 @@ describe('Network manager', () => {
   });
 
   describe('in-memory', () => {
-    test('two peers connect to each other', async () => {
+    test.skip('two peers connect to each other', async () => {
       const topic = PublicKey.random();
       const peer1Id = PublicKey.random();
       const peer2Id = PublicKey.random();
