@@ -42,7 +42,7 @@
      *
      * Valid values are: "prerelease", "release", "minor", "patch", "major"
      */
-    "nextBump": "prerelease"
+    "nextBump": "minor"
   
     /**
      * (Optional) If specified, all packages in the set share a common CHANGELOG.md file.

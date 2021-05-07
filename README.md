@@ -106,3 +106,11 @@ rushx storybook--no-manager-cache
 ```
 
 [Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
+
+### Publishing packages
+
+To publish all packages you need to bump all versions:
+```bash
+  rush version --bump --target-branch <YOUR_CURRENT_BRANCH> --suffix '-beta'
+```
+This will create a new commit with all packages' versions bumped up on your current branch. When the branch gets merged to main, changes will automatically get published to NPM.

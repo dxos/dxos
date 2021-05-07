@@ -1,5 +1,7 @@
 on: 
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 name: publish
 jobs:
@@ -29,13 +31,7 @@ jobs:
         node common/scripts/install-run-rush.js build --light --verbose 
     - name: Publish
       run:  |
-        git config --global user.email "npm@dxos.network"
-        git config --global user.name "DXOS"
-
         \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
-
-        # Bump version
-        node common/scripts/install-run-rush.js version --bump --target-branch main
 
         # Publish
         node common/scripts/install-run-rush.js publish --publish --include-all
