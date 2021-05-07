@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "2.10.1-beta.4",
+  "version": "2.10.2",
   "description": "Network Manager",
   "license": "GPL-3.0",
   "main": "dist/src/index.js",
@@ -44,6 +44,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }
