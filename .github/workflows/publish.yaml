@@ -26,7 +26,7 @@ jobs:
         node common/scripts/install-run-rush.js install
         
         # Build
-        node common/scripts/install-run-rush.js rebuild --verbose
+        node common/scripts/install-run-rush.js build --light --verbose 
     - name: Publish
       run:  |
         git config --global user.email "npm@dxos.network"
@@ -38,4 +38,4 @@ jobs:
         node common/scripts/install-run-rush.js version --bump
 
         # Publish
-        node common/scripts/install-run-rush.js publish --publish --target-branch rush-publish --npm-auth-token ${NPM_TOKEN} --include-all
+        node common/scripts/install-run-rush.js publish --publish --target-branch rush-publish --include-all
