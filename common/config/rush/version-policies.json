@@ -33,7 +33,7 @@
      * in the current branch.  When bumping versions, Rush uses this to determine the next version.
      * (The "version" field in package.json is NOT considered.)
      */
-    "version": "2.10.1-beta",
+    "version": "2.10.1-beta.4",
   
     /**
      * (Required) The type of bump that will be performed when publishing the next release.
@@ -42,7 +42,7 @@
      *
      * Valid values are: "prerelease", "release", "minor", "patch", "major"
      */
-    "nextBump": "patch"
+    "nextBump": "prerelease"
   
     /**
      * (Optional) If specified, all packages in the set share a common CHANGELOG.md file.

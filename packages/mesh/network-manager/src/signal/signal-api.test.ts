@@ -11,7 +11,7 @@ import { sleep } from '@dxos/util';
 import { afterTest } from '../testutils';
 import { SignalApi } from './signal-api';
 
-describe('SignalApi', () => {
+describe.skip('SignalApi', () => {
   let topic: PublicKey;
   let peer1: PublicKey;
   let peer2: PublicKey;

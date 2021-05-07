@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "packageName": "@dxos/echo-protocol",
+      "comment": "",
+      "type": "none"
+    }
+  ],
+  "packageName": "@dxos/echo-protocol",
+  "email": "npm@dxos.network"
+}

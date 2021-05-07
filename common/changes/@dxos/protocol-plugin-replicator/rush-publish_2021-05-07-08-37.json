@@ -1,0 +1,11 @@
+{
+  "changes": [
+    {
+      "packageName": "@dxos/protocol-plugin-replicator",
+      "comment": "",
+      "type": "none"
+    }
+  ],
+  "packageName": "@dxos/protocol-plugin-replicator",
+  "email": "npm@dxos.network"
+}
