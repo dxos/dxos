@@ -9,6 +9,8 @@ import { Broadcast } from '@dxos/broadcast';
 import { Codec } from '@dxos/codec-protobuf';
 import { Extension } from '@dxos/protocol';
 
+import { schema } from './proto/gen';
+
 /**
  * Peer chat.
  */
@@ -71,7 +73,7 @@ export class Messenger extends EventEmitter {
     });
 
     this._codec = new Codec('dxos.protocol.messenger.Message')
-      .addJson(require('./proto/schema.json')) // eslint-disable-line @typescript-eslint/no-var-requires
+      .addJson(schema)
       .build();
 
     this._broadcast.run();

@@ -9,7 +9,7 @@ import { EventEmitter } from 'events';
 import { Extension } from '@dxos/protocol';
 
 import { Peer } from './peer';
-import schema from './proto/schema.json';
+import { schema } from './proto/gen';
 
 // const log = debug('dxos.replicator');
 
