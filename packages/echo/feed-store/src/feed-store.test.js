@@ -411,7 +411,7 @@ describe('FeedStore', () => {
     });
   });
 
-  test.skip('createReadStream [live=true]', async () => {
+  test('createReadStream [live=true]', async () => {
     const feedStore = await FeedStore.create(ram, { feedOptions: { valueEncoding: 'utf-8' } });
 
     const [feed1, feed2, feed3] = await generateStreamData(feedStore);
