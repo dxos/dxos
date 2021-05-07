@@ -1,11 +1,12 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
 import crypto from 'crypto';
 import { PassThrough } from 'stream';
-import { NetworkGenerator } from './network-generator';
 import waitForExpect from 'wait-for-expect';
+
+import { NetworkGenerator } from './network-generator';
 
 const genericTest = async network => {
   expect(network.peers[0]).toHaveProperty('name');

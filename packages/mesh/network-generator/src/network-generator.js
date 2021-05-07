@@ -1,15 +1,14 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-import { EventEmitter } from 'events';
-import { PassThrough } from 'stream';
 import assert from 'assert';
 import crypto from 'crypto';
-
-import createGraph from 'ngraph.graph';
-import graphGenerators from 'ngraph.generators';
 import eos from 'end-of-stream';
+import { EventEmitter } from 'events';
+import graphGenerators from 'ngraph.generators';
+import createGraph from 'ngraph.graph';
+import { PassThrough } from 'stream';
 
 /**
  * @typedef {Object} Peer
@@ -80,7 +79,9 @@ export class Network extends EventEmitter {
     this._graph = createGraph();
     this._graph.on('changed', (changes) => {
       changes.forEach(async ({ changeType, node, link }) => {
-        if (changeType === 'update') return;
+        if (changeType === 'update') {
+          return;
+        }
         const type = changeType === 'add' ? 'added' : 'deleted';
         const ev = `${node ? 'peer' : 'connection'}-${type}`;
         this.emit(ev, node ? await node.data : await link.data);
@@ -320,7 +321,7 @@ export class NetworkGenerator extends EventEmitter {
   constructor (options = {}) {
     super();
 
-    const self = this;
+    const self = this; // eslint-disable-line
     const generator = graphGenerators.factory(() => {
       const idGenerator = new IdGenerator();
 
