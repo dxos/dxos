@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-bot",
-  "version": "2.10.1-beta",
+  "version": "2.10.1-beta.4",
   "description": "Protocol plugin for managing the life-cycle of bots.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-bot#readme",
   "bugs": {
@@ -32,7 +32,7 @@
     "debug": "^4.1.1"
   },
   "devDependencies": {
-    "@dxos/feed-store": "~1.2.0-beta.30",
+    "@dxos/feed-store": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
