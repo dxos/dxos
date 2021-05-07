@@ -532,6 +532,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/botkit-client",
+      "projectFolder": "packages/bot/botkit-client",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/bot",
       "projectFolder": "packages/bot/bot",
       "shouldPublish": true,
