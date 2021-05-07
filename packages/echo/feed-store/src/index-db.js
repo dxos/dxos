@@ -3,7 +3,6 @@
 //
 
 import assert from 'assert';
-
 import pify from 'pify';
 
 /**

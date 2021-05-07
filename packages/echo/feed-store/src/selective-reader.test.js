@@ -5,6 +5,7 @@
 import pify from 'pify';
 import ram from 'random-access-memory';
 import waitForExpect from 'wait-for-expect';
+
 import { FeedStore } from './feed-store';
 
 function append (feed, message) {
@@ -52,8 +53,8 @@ describe('SelectiveReader', () => {
 
     // only feed1 messages should be here at this point
     await waitForExpect(async () => {
-      expect(messages.length === MESSAGE_COUNT);
-      expect(messages.every(msg => msg.data.startsWith('feed1')));
+      expect(messages.length === MESSAGE_COUNT).toBe(true);
+      expect(messages.every(msg => msg.data.startsWith('feed1'))).toBe(true);
     });
 
     await append(feed1, 'allow-/feed2');
@@ -86,8 +87,8 @@ describe('SelectiveReader', () => {
 
     // only feed1 messages should be here at this point
     await waitForExpect(async () => {
-      expect(messages.length === MESSAGE_COUNT);
-      expect(messages.every(msg => msg.data.startsWith('feed1')));
+      expect(messages.length === MESSAGE_COUNT).toBe(true);
+      expect(messages.every(msg => msg.data.startsWith('feed1'))).toBe(true);
     });
 
     const feed = await feedStore.openFeed('/feed3');

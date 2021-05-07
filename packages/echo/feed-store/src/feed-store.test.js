@@ -2,12 +2,14 @@
 // Copyright 2019 DXOS.org
 //
 
-import hypertrie from 'hypertrie';
-import tempy from 'tempy';
-import ram from 'random-access-memory';
-import hypercore from 'hypercore';
-import pify from 'pify';
+/* eslint-disable jest/no-test-callback */
+
 import eos from 'end-of-stream-promise';
+import hypercore from 'hypercore';
+import hypertrie from 'hypertrie';
+import pify from 'pify';
+import ram from 'random-access-memory';
+import tempy from 'tempy';
 
 import { FeedStore } from './feed-store';
 
@@ -269,7 +271,9 @@ describe('FeedStore', () => {
     const feedStore = await FeedStore.create(ram, {
       hypercore: () => ({
         opened: true,
-        ready (cb) { cb(); },
+        ready (cb) {
+          cb();
+        },
         on () {},
         close () {
           throw new Error('close error');
@@ -486,7 +490,9 @@ describe('FeedStore', () => {
     const done = new Promise(resolve => {
       stream.on('data', (msg) => {
         messages.push(msg.data);
-        if (messages.length === 6) resolve();
+        if (messages.length === 6) {
+          resolve();
+        }
       });
     });
 
