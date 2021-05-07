@@ -3,20 +3,20 @@
 //
 
 import debug from 'debug';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 
 import { Button, TextField, Toolbar } from '@material-ui/core';
 
-import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
+import { createId, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
+import { useClient } from '@dxos/react-client';
 
 import { EchoGraph, MemberList } from '../src';
 import { Node } from '../src/models';
 import { ClientInitializer } from './story-components/ClientInitializer';
-import { useClient } from '@dxos/react-client';
 
 const log = debug('dxos:echo:story');
 
@@ -27,15 +27,15 @@ export default {
 };
 
 export const Primary = () => (
-  <ClientInitializer initProfile config={{ swarm: { signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal']}}}>
+  <ClientInitializer initProfile config={{ swarm: { signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal'] } }}>
     <Story/>
   </ClientInitializer>
-)
+);
 
 const Story = () => {
   const [id] = useState(createId());
   const [invitation, setInvitation] = useState<string | undefined>(undefined);
-  const client = useClient()
+  const client = useClient();
 
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;

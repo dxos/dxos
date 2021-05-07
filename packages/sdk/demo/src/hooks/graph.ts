@@ -53,7 +53,7 @@ const createGraphData = (
       {
         id: rootId,
         type: 'database',
-        title: `ECHO(${id})`,
+        title: `ECHO(${id})`
       }
     ],
     links: []
@@ -67,7 +67,7 @@ const createGraphData = (
         id: partyKey.toHex(),
         type: 'party',
         title: `Party(${party.key.humanize()})`,
-        partyKey: party.key.toHex(),
+        partyKey: party.key.toHex()
       });
 
       data.links.push({

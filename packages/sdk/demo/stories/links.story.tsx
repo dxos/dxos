@@ -174,8 +174,7 @@ const Story = () => {
 };
 
 export const Primary = () => (
-  <ClientInitializer initProfile config={{ swarm: { signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal']}}}>
+  <ClientInitializer initProfile config={{ swarm: { signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal'] } }}>
     <Story />
   </ClientInitializer>
-)
-
+);

@@ -17,9 +17,9 @@ import {
   NodeProjector
 } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
+import { useClient } from '@dxos/react-client';
 
 import { useGraphData } from '../hooks';
-import { useClient } from '@dxos/react-client';
 
 // TODO(burdon): Merge styles.
 const useCustomStyles = makeStyles(() => ({

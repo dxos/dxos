@@ -7,8 +7,8 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { CircularProgress } from '@material-ui/core';
 
 import { Client, ClientConfig } from '@dxos/client';
-import { ClientProvider } from '@dxos/react-client';
 import { createKeyPair } from '@dxos/crypto';
+import { ClientProvider } from '@dxos/react-client';
 
 export interface ClientInitializerProps {
   config?: ClientConfig
@@ -25,7 +25,7 @@ export const ClientInitializer = ({ children, config, initProfile }: ClientIniti
       await client.initialize();
 
       if (initProfile && !client.getProfile()) {
-        client.createProfile(createKeyPair())
+        client.createProfile(createKeyPair());
       }
 
       setClient(client);
