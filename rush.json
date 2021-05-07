@@ -442,6 +442,10 @@
       "projectFolder": "packages/echo/echo-testing"
     },
     {
+      "packageName": "@dxos/feed-store",
+      "projectFolder": "packages/echo/feed-store"
+    },
+    {
       "packageName": "@dxos/echo-demo",
       "projectFolder": "packages/echo/echo-demo"
     },

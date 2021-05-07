@@ -19,9 +19,6 @@ jobs:
         run: |
           \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
           
-          # Check package versions
-          node common/scripts/install-run-rush.js change -v
-          
           # Install dependencies
           node common/scripts/install-run-rush.js install
           
