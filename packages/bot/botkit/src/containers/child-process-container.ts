@@ -56,12 +56,12 @@ export abstract class ChildProcessContainer implements BotContainer {
 
     const { command, args, env: childEnv } = this._getCommand(installDirectory, spawnOptions);
 
-    const wireEnv = {
-      WIRE_BOT_CONTROL_TOPIC: keyToString(this._controlTopic),
-      WIRE_BOT_UID: botId,
-      WIRE_BOT_NAME: name,
-      WIRE_BOT_CWD: storageDirectory,
-      WIRE_BOT_RESTARTED: 'false' // TODO(marik-d): Remove.
+    const dxEnv = {
+      DX_BOT_CONTROL_TOPIC: keyToString(this._controlTopic),
+      DX_BOT_UID: botId,
+      DX_BOT_NAME: name,
+      DX_BOT_CWD: storageDirectory,
+      DX_BOT_RESTARTED: 'false' // TODO(marik-d): Remove.
     };
 
     const childOptions: SpawnOptions = {
@@ -69,7 +69,7 @@ export abstract class ChildProcessContainer implements BotContainer {
         ...process.env,
         NODE_OPTIONS: '',
         ...childEnv,
-        ...wireEnv
+        ...dxEnv
       },
 
       cwd: storageDirectory,
@@ -90,7 +90,7 @@ export abstract class ChildProcessContainer implements BotContainer {
     //   timeState.lastActive = moment.utc();
     // });
 
-    log(`Spawned bot: ${JSON.stringify({ pid: botProcess.pid, command, args, wireEnv, cwd: storageDirectory })}`);
+    log(`Spawned bot: ${JSON.stringify({ pid: botProcess.pid, command, args, dxEnv, cwd: storageDirectory })}`);
 
     botProcess.stdout!.on('data', (data) => {
       logBot[botProcess.pid](`${data}`);

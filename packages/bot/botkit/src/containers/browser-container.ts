@@ -39,15 +39,15 @@ export class BrowserContainer implements BotContainer {
     const { botId, name, installDirectory } = botInfo;
     const botFilePath = path.join(installDirectory, 'main.js');
 
-    const wireEnv = {
+    const dxEnv = {
       ...process.env,
       NODE_OPTIONS: '',
-      WIRE_BOT_CONTROL_TOPIC: keyToString(this._controlTopic),
-      WIRE_BOT_UID: botId,
-      WIRE_BOT_NAME: name,
-      WIRE_BOT_CWD: '/dxos/bot',
-      WIRE_BOT_RESTARTED: false, // TODO(marik-d): Remove.
-      WIRE_BOT_PERSISTENT: 'false' // Storage is currently broken
+      DX_BOT_CONTROL_TOPIC: keyToString(this._controlTopic),
+      DX_BOT_UID: botId,
+      DX_BOT_NAME: name,
+      DX_BOT_CWD: '/dxos/bot',
+      DX_BOT_RESTARTED: false, // TODO(marik-d): Remove.
+      DX_BOT_PERSISTENT: 'false' // Storage is currently broken
     };
 
     log('Creating context');
@@ -65,10 +65,10 @@ export class BrowserContainer implements BotContainer {
 
     log('Navigating to index.html');
     await page.goto(`file:${path.join(path.dirname(findPkgJson({ cwd: __dirname })!), 'res/browser-test.html')}`);
-    log('Injecting env', wireEnv);
-    await page.evaluate((wireEnv) => {
-      ((window.process as any) ||= {}).env = wireEnv;
-    }, wireEnv);
+    log('Injecting env', dxEnv);
+    await page.evaluate((dxEnv) => {
+      ((window.process as any) ||= {}).env = dxEnv;
+    }, dxEnv);
     log(`Injecting script ${botFilePath}`);
     await page.addScriptTag({ path: botFilePath });
   }
