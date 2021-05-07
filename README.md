@@ -124,6 +124,6 @@ In order to publish **non-breaking changes**, bump the patch version:
 In order to publish **non-breaking changes**, bump the minor version:
 
 ```bash
-  rush version --bump --target-branch <YOUR_CURRENT_BRANCH> --override-bump 'minor'
+  rush version --bump --target-branch <YOUR_CURRENT_BRANCH> --override-bump minor
 ```
 This will create a new commit with all packages' versions bumped up on your current branch. When the branch gets merged to main, changes will automatically get published to NPM.
