@@ -19,10 +19,11 @@
   ],
   "scripts": {
     "build": "toolchain build",
+    "test": "toolchain test",
     "lint": "toolchain lint"
   },
   "dependencies": {
-    "@dxos/network-generator": "~1.0.0-beta.3",
+    "@dxos/network-generator": "workspace:*",
     "debug": "^4.1.1",
     "p-event": "^4.2.0",
     "pump": "^3.0.0"
