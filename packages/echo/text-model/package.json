@@ -36,6 +36,6 @@
     "@types/jest": "^26.0.7"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

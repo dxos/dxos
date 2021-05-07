@@ -44,6 +44,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

@@ -60,6 +60,6 @@
     "ws": "^7.4.4"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }
