@@ -27,7 +27,7 @@ export default {
 };
 
 export const Primary = () => (
-  <ClientInitializer config={{ swarm: { signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal']}}}>
+  <ClientInitializer initProfile config={{ swarm: { signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal']}}}>
     <Story/>
   </ClientInitializer>
 )
@@ -36,14 +36,6 @@ const Story = () => {
   const [id] = useState(createId());
   const [invitation, setInvitation] = useState<string | undefined>(undefined);
   const client = useClient()
-
-  useEffect(() => {
-    setImmediate(async () => {
-      if (!client.getProfile()) {
-        client.createProfile(createKeyPair())
-      }
-    })
-  }, [])
 
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;

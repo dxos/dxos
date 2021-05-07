@@ -19,6 +19,7 @@ import {
   useGenerator
 } from '../src';
 import { GraphData, Node } from '../src/models';
+import { ClientInitializer } from './story-components/ClientInitializer';
 
 export default {
   title: 'Links',
@@ -150,7 +151,7 @@ const Component = ({ generator }: {generator: Generator}) => {
   );
 };
 
-export const Primary = () => {
+const Story = () => {
   const { generator, createParty } = useGenerator();
 
   useEffect(() => {
@@ -171,3 +172,10 @@ export const Primary = () => {
     <Component generator={generator} />
   );
 };
+
+export const Primary = () => (
+  <ClientInitializer initProfile config={{ swarm: { signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal']}}}>
+    <Story />
+  </ClientInitializer>
+)
+

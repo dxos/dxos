@@ -35,12 +35,13 @@ import ProjectIcon from '@material-ui/icons/WorkOutline';
 import { Item, Party } from '@dxos/echo-db';
 import { OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, LINK_PROJECT, LINK_EMPLOYEE, labels, Generator } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
-import { useSelection, searchSelector } from '@dxos/react-client';
+import { useSelection, searchSelector, useClient } from '@dxos/react-client';
 
 import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
   useGenerator, graphSelector
 } from '../src';
+import { ClientInitializer } from './story-components/ClientInitializer';
 
 export default {
   title: 'Search'
@@ -393,7 +394,7 @@ const Main = ({ party, generator }: MainProps) => {
 
 // TOOD(burdon): Implement router.
 
-export const Primary = () => {
+const Story = () => {
   const { party, generator, createParty, joinParty } = useGenerator();
 
   const handleCreate = async () => {
@@ -418,3 +419,9 @@ export const Primary = () => {
     <Home onCreate={handleCreate} onJoin={handleJoin} />
   );
 };
+
+export const Primary = () => (
+  <ClientInitializer initProfile config={{ swarm: { signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal']}}}>
+    <Story />
+  </ClientInitializer>
+)
