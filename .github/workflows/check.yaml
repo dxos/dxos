@@ -1,5 +1,7 @@
 on:
   push:
+    branchess-ignore:
+      - main
 
 name: check
 jobs:

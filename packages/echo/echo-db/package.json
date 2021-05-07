@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.10.1-beta.4",
+  "version": "2.10.2",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -60,6 +60,6 @@
     "ws": "^7.4.4"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }
