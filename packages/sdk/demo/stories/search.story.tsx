@@ -41,6 +41,7 @@ import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
   useGenerator, graphSelector
 } from '../src';
+import { ONLINE_CONFIG } from '../src/config';
 import { ClientInitializer } from './story-components/ClientInitializer';
 
 export default {
@@ -421,7 +422,7 @@ const Story = () => {
 };
 
 export const Primary = () => (
-  <ClientInitializer initProfile config={{ swarm: { signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal'] } }}>
+  <ClientInitializer initProfile config={ONLINE_CONFIG}>
     <Story />
   </ClientInitializer>
 );

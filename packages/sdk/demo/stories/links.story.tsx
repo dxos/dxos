@@ -18,6 +18,7 @@ import {
   graphSelector,
   useGenerator
 } from '../src';
+import { ONLINE_CONFIG } from '../src/config';
 import { GraphData, Node } from '../src/models';
 import { ClientInitializer } from './story-components/ClientInitializer';
 
@@ -174,7 +175,7 @@ const Story = () => {
 };
 
 export const Primary = () => (
-  <ClientInitializer initProfile config={{ swarm: { signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal'] } }}>
+  <ClientInitializer initProfile config={ONLINE_CONFIG}>
     <Story />
   </ClientInitializer>
 );
