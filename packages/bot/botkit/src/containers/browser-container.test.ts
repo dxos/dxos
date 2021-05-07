@@ -11,7 +11,7 @@ import { BotInfo } from '../bot-manager';
 import { BROWSER_ENV } from '../env';
 import { BrowserContainer } from './browser-container';
 
-test('Start & stop bot', async () => {
+test.skip('Start & stop bot', async () => {
   const container = new BrowserContainer();
   await container.start({ controlTopic: randomBytes() });
 
