@@ -51,7 +51,14 @@ function execLint (additionalArgs: string[] = []) {
 }
 
 function execJest (pkgDir: string, additionalArgs: string[] = []) {
-  execTool('jest', ['--config', join(selfDir, 'jest.config.json'), '--passWithNoTests', '--rootDir', pkgDir, ...additionalArgs], {
+  const packageJson = JSON.parse(fs.readFileSync(join(pkgDir, 'package.json'), 'utf-8'));
+  const isReactLib = !!(
+    packageJson.dependencies?.['@testing-library/react'] ??
+    packageJson.devDependencies?.['@testing-library/react'] ??
+    packageJson.peerDependencies?.['@testing-library/react']
+  );
+  const config = isReactLib ? join(selfDir, 'jest.config.react.json') : join(selfDir, 'jest.config.json');
+  execTool('jest', ['--config', config, '--passWithNoTests', '--rootDir', pkgDir, ...additionalArgs], {
     stdio: ['inherit', 'inherit', process.stdout]
   });
 }
