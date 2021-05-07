@@ -508,6 +508,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/network-generator",
+      "projectFolder": "packages/mesh/network-generator",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/crypto",
       "projectFolder": "packages/common/crypto",
       "shouldPublish": true,

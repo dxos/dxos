@@ -1,0 +1,40 @@
+{
+  "name": "@dxos/network-generator",
+  "version": "2.10.1-beta.4",
+  "description": "Network generator.",
+  "homepage": "https://github.com/dxos/network-generator#readme",
+  "license": "GPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "index.js",
+    "src",
+    "README.md"
+  ],
+  "bugs": {
+    "url": "https://github.com/dxos/network-generator/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/network-generator.git"
+  },
+  "scripts": {
+    "build": "toolchain build",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "debug": "^4.1.1",
+    "end-of-stream": "^1.4.1",
+    "ngraph.generators": "^18.0.1",
+    "ngraph.graph": "^19.0.1"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
+    "wait-for-expect": "^3.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

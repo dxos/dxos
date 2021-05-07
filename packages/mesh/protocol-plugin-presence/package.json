@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
+    "test": "toolchain test",
     "lint": "toolchain lint"
   },
   "dependencies": {
