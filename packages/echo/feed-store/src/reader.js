@@ -3,10 +3,10 @@
 //
 
 import assert from 'assert';
+import eos from 'end-of-stream';
 import multi from 'multi-read-stream';
 import pump from 'pump';
 import through from 'through2';
-import eos from 'end-of-stream';
 
 import createBatchStream from './create-batch-stream';
 
@@ -73,7 +73,9 @@ export default class Reader {
   async addInitialFeedStreams (descriptors) {
     const validFeeds = await Promise.all(descriptors.map(async descriptor => {
       const streamOptions = await this._getFeedStreamOptions(descriptor);
-      if (!streamOptions) return null;
+      if (!streamOptions) {
+        return null;
+      }
 
       const feedKey = descriptor.key.toString('hex');
 
@@ -137,7 +139,9 @@ export default class Reader {
   _checkFeedSync (feed, seq, sync) {
     const feedKey = feed.key.toString('hex');
     this._state[feedKey] = seq;
-    if (this.sync) return;
+    if (this.sync) {
+      return;
+    }
     if (sync && this._feedsToSync.has(feedKey)) {
       this._initialState[feedKey] = seq;
       this._feedsToSync.delete(feedKey);

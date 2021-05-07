@@ -2,13 +2,12 @@
 // Copyright 2019 DXOS.org
 //
 
-import path from 'path';
 import assert from 'assert';
-
 import defaultHypercore from 'hypercore';
 import crypto from 'hypercore-crypto';
-import raf from 'random-access-file';
+import path from 'path';
 import pify from 'pify';
+import raf from 'random-access-file';
 import sodium from 'sodium-universal';
 
 import Locker from './locker';
