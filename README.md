@@ -110,7 +110,16 @@ rushx storybook--no-manager-cache
 ### Publishing packages
 
 To publish all packages you need to bump all versions:
+To bump patch version use:
 ```bash
-  rush version --bump --target-branch <YOUR_CURRENT_BRANCH> --suffix '-beta'
+  rush version --bump --target-branch <YOUR_CURRENT_BRANCH>
+```
+To bump minor version use:
+```bash
+  rush version --bump --target-branch <YOUR_CURRENT_BRANCH> --override-bump 'minor'
+```
+To bump major version use:
+```bash
+  rush version --bump --target-branch <YOUR_CURRENT_BRANCH> --override-bump 'major'
 ```
 This will create a new commit with all packages' versions bumped up on your current branch. When the branch gets merged to main, changes will automatically get published to NPM.
