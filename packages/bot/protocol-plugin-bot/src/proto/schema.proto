@@ -1,0 +1,153 @@
+//
+// Copyright 2020 DxOS.
+//
+
+syntax = "proto3";
+
+package dxos.protocol.bot;
+
+import "google/protobuf/any.proto";
+
+message Message {
+  google.protobuf.Any message = 1;
+}
+
+message SpawnOptions {
+  string id = 1;
+  string name = 2;
+  string env = 3;
+  string ipfsCID = 4;
+  string ipfsEndpoint = 5;
+  string botPath = 6;
+}
+
+// Command to spawn a bot.
+message Spawn {
+  // Bot WRN (e.g. wrn://example/bot/chess).
+  string botName = 1;
+  SpawnOptions options = 2;
+}
+
+message SpawnAndInvite {
+  string botName = 1;
+  SpawnOptions options = 2;
+
+  // Topic the bot should swarm on to connect to peers (e.g. cd719a79f016e7de5250784e6db684d46589c3731a91a313810dc236bc8d8fe9).
+  string topic = 3;
+  string invitation = 4;
+}
+
+message SpawnResponse {
+  string botId = 1;
+  string error = 2;
+}
+
+// Command to invite bot to a party.
+message Invite {
+  // Bot Id.
+  string botId = 1;
+
+  // Topic the bot should swarm on to connect to peers (e.g. cd719a79f016e7de5250784e6db684d46589c3731a91a313810dc236bc8d8fe9).
+  string topic = 2;
+
+  // Options used to create the model (e.g. '{"type":"testing.item.Task","listId":"list-tasks"}').
+  // TODO(egorgripasov): Move to typed sub message.
+  string modelOptions = 3;
+
+  // Invitation for the case of credentials usage.
+  string invitation = 4;
+}
+
+message CommandResponse {
+  string status = 1;
+  string error = 2;
+  google.protobuf.Any options = 10;
+}
+
+// Command to obtain BotFactory status.
+message GetStatus {
+  // Any options (not used yet).
+  google.protobuf.Any options = 1;
+}
+
+message Manage {
+  string botId = 1;
+  string command = 2;
+  google.protobuf.Any options = 10;
+}
+
+message Reset {
+  bool source = 1;
+  // Any options (not used yet).
+  google.protobuf.Any options = 10;
+}
+
+message Stop {
+  string errorCode = 1;
+  google.protobuf.Any options = 10;
+}
+
+message Status {
+
+  message Bot {
+    string id = 1;
+    string type = 2;
+    string botId = 3;
+    string started = 4;
+    string lastActive = 5;
+    bool stopped = 6;
+    repeated string parties = 7;
+    string recordName = 8;
+  }
+
+  string version = 1;
+  string uptime = 2;
+  string platform = 3;
+  // Running bots.
+  repeated Bot bots = 10;
+}
+
+//
+// Communication with bot.
+//
+
+message SignChallenge {
+  bytes message = 1;
+}
+
+message SignChallengeResponse {
+  bytes signature = 1;
+}
+
+message ConfirmConnection {
+  string botId = 1;
+}
+
+message InvitationMessage {
+
+  message Invitation {
+    string swarmKey = 1;
+    string invitation = 2;
+    string hash = 3;
+    string type = 4;
+  }
+
+  Invitation invitation = 1;
+  string topic = 2;
+}
+
+message BotCommand {
+  string botId = 1;
+  bytes command = 2;
+}
+
+message BotCommandResponse {
+  bytes data = 1;
+  string error = 2;
+}
+
+message BotEvent {
+  string botId = 1;
+  string type = 2;
+  bytes data = 3;
+}
