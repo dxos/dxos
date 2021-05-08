@@ -27,6 +27,7 @@ const Test = () => {
   );
 };
 
+// TODO(burdon): Merge with echo-demo.
 const PartyView = ({ party }: { party: Party }) => {
   const items = useItems({ partyKey: party.key }) as any;
 

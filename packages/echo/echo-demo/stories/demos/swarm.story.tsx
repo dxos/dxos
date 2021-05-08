@@ -13,16 +13,17 @@ import { ECHO, InvitationDescriptor, createTestInstance } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 
-import { EchoContext, EchoGraph, MemberList } from '../src';
-import { createItemStorage, createSnapshotStorage, onlineConfig } from '../src/config/config';
-import { Node } from '../src/models';
+import {
+  EchoContext, EchoGraph, MemberList, Node,
+  createItemStorage, createSnapshotStorage, onlineConfig
+} from '../../src';
 
 const log = debug('dxos:echo:story');
 
 debug.enable('dxos:echo:story:*, dxos:*:error');
 
 export default {
-  title: 'Swarm'
+  title: 'Demos/Swarm'
 };
 
 export const Primary = () => {

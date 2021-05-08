@@ -10,7 +10,7 @@ import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
 import { useClient } from '../hooks';
-import { ClientProvider } from './ClientProvider';
+import ClientProvider from './ClientProvider';
 
 const TestComponent = () => {
   const client = useClient();

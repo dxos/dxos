@@ -5,7 +5,6 @@
 import React from 'react';
 
 import {
-  Button,
   Card,
   CardActions,
   CardContent,
@@ -16,7 +15,7 @@ import {
 import { grey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { ItemAdapter } from './ListView';
+import { ItemAdapter } from './adapter';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -41,16 +40,17 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-export interface CardAdapter extends ItemAdapter {
-  slices: (value: any) => any[] | void
-}
-
-export const ItemCard = ({ adapter, item }: { adapter: CardAdapter, item: any }) => {
+export const ItemCard = ({ adapter, item }: { adapter: ItemAdapter, item: any }) => {
   const classes = useStyles();
 
   const title = adapter.primary(item);
   const description = adapter.secondary?.(item);
-  const slices = adapter.slices(item);
+
+  // Type-specific content.
+  const slices = adapter.slices && adapter?.slices(item);
+
+  // Type-specific actions.
+  const actions = adapter.actions ? adapter.actions(item) : [];
 
   return (
     <Card classes={{ root: classes.card }}>
@@ -62,7 +62,7 @@ export const ItemCard = ({ adapter, item }: { adapter: CardAdapter, item: any })
       />
       <CardContent classes={{ root: classes.cardContent }}>
         {description && (
-          <Typography component="p" className={classes.description}>
+          <Typography component='p' className={classes.description}>
             {description}
           </Typography>
         )}
@@ -71,16 +71,14 @@ export const ItemCard = ({ adapter, item }: { adapter: CardAdapter, item: any })
         ))}
       </CardContent>
       <CardActions>
-        <Button size="small" color="primary">
-          Info
-        </Button>
+        {actions}
       </CardActions>
     </Card>
   );
 };
 
 export interface CardViewProps {
-  adapter: CardAdapter
+  adapter: ItemAdapter
   items: any[]
 }
 
