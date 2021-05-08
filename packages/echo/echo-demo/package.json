@@ -50,6 +50,7 @@
     "@dxos/object-model": "workspace:*",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ux": "workspace:*",
     "@material-ui/core": "^4.9.10",
     "@material-ui/icons": "^4.9.1",
     "@types/debug": "^4.1.1",

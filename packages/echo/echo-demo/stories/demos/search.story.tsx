@@ -40,10 +40,10 @@ import { useSelection, searchSelector } from '@dxos/react-client';
 import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
   useGenerator, graphSelector
-} from '../src';
+} from '../../src';
 
 export default {
-  title: 'Search'
+  title: 'Demos/Search'
 };
 
 const useStyles = makeStyles(theme => ({

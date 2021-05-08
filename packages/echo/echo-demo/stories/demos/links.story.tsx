@@ -12,17 +12,17 @@ import { Generator, OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK } fro
 import { useSelection } from '@dxos/react-client';
 
 import {
+  Node,
   ItemAdapter,
   DebugItemList,
+  GraphData,
   GraphView,
   graphSelector,
   useGenerator
-} from '../src';
-import { GraphData, Node } from '../src/models';
+} from '../../src';
 
 export default {
-  title: 'Links',
-  decorators: []
+  title: 'Demos/Links'
 };
 
 debug.enable('dxos:echo:story:*, dxos:*:error');

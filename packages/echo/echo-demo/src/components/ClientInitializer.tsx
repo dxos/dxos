@@ -30,3 +30,5 @@ export const ClientInitializer = ({ children }: {children?: ReactNode}) => {
     </ClientProvider>
   );
 };
+
+export default ClientInitializer;

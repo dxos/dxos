@@ -13,10 +13,10 @@ import { Party } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import { useClient, useItems, useParties, useProfile } from '@dxos/react-client';
 
-import { ClientInitializer } from './story-components/ClientInitializer';
+import { ClientInitializer } from '../../src';
 
 export default {
-  title: 'Tutorials',
+  title: 'Tutorials/Refactor',
   decorators: [withKnobs]
 };
 
@@ -45,7 +45,11 @@ const PartyTitle = ({ party }: {party: Party}) => {
 
 const PartyItemCount = ({ party }: {party: Party}) => {
   const items = useItems({ partyKey: party.key });
-  return <><PartyTitle party={party}/> has {items.length} items.</>;
+  return (
+    <>
+      <PartyTitle party={party}/> has {items.length} items.
+    </>
+  );
 };
 
 interface Stage2ConsumerProps {
@@ -66,16 +70,18 @@ const Stage2Consumer = ({ PartyDetails = PartyTitle }: Stage2ConsumerProps) => {
     return null;
   }
 
-  return (<>
-    {parties?.length ? (
-      <ul>
-        {parties.map(party => (
-          <li key={party.key.toHex()}><PartyDetails party={party}/></li>
-        ))}
-      </ul>
-    ) : null}
-    <Button variant="contained" onClick={handleCreateParty}>Create party</Button>
-  </>);
+  return (
+    <>
+      {parties?.length ? (
+        <ul>
+          {parties.map(party => (
+            <li key={party.key.toHex()}><PartyDetails party={party}/></li>
+          ))}
+        </ul>
+      ) : null}
+      <Button variant="contained" onClick={handleCreateParty}>Create party</Button>
+    </>
+  );
 };
 
 const Stage3Consumer = () => {
@@ -85,45 +91,52 @@ const Stage3Consumer = () => {
     await party.database.createItem({ model: ObjectModel });
   };
 
-  return (<>
-    <ul>
-      {parties?.map(party => (<>
-        <li>
-          {party.title ?? party.key.toHex()}
-          <Button variant="text" onClick={() => handleCreateItem(party)}>Add item</Button>
-        </li>
-      </>))}
-    </ul>
-
-  </>);
+  return (
+    <>
+      <ul>
+        {parties?.map(party => (<>
+          <li>
+            {party.title ?? party.key.toHex()}
+            <Button variant="text" onClick={() => handleCreateItem(party)}>Add item</Button>
+          </li>
+        </>))}
+      </ul>
+    </>
+  );
 };
 
 export const Stage1 = () => {
-  return (<>
-    <h3>Uses Client</h3>
-    <ClientInitializer>
-      <Stage1Consumer/>
-    </ClientInitializer>
-  </>);
+  return (
+    <>
+      <h3>Uses Client</h3>
+      <ClientInitializer>
+        <Stage1Consumer/>
+      </ClientInitializer>
+    </>
+  );
 };
 
 export const Stage2 = () => {
-  return (<>
-    <h3>Creates a party</h3>
-    <ClientInitializer>
-      <Stage1Consumer/>
-      <Stage2Consumer/>
-    </ClientInitializer>
-  </>);
+  return (
+    <>
+      <h3>Creates a party</h3>
+      <ClientInitializer>
+        <Stage1Consumer/>
+        <Stage2Consumer/>
+      </ClientInitializer>
+    </>
+  );
 };
 
 export const Stage3 = () => {
-  return (<>
-    <h3>Adds items to parties</h3>
-    <ClientInitializer>
-      <Stage1Consumer/>
-      <Stage2Consumer PartyDetails={PartyItemCount}/>
-      <Stage3Consumer />
-    </ClientInitializer>
-  </>);
+  return (
+    <>
+      <h3>Adds items to parties</h3>
+      <ClientInitializer>
+        <Stage1Consumer/>
+        <Stage2Consumer PartyDetails={PartyItemCount}/>
+        <Stage3Consumer />
+      </ClientInitializer>
+    </>
+  );
 };

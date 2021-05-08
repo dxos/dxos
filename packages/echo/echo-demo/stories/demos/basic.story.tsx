@@ -17,16 +17,16 @@ import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 import { ClientProvider } from '@dxos/react-client';
 
-import { EchoContext, EchoGraph, useEcho } from '../src';
-import { createClient, offlineConfig } from '../src/config/config';
-import { Node } from '../src/models';
+import {
+  EchoContext, EchoGraph, useEcho, createClient, offlineConfig, Node
+} from '../../src';
 
 const log = debug('dxos:echo:story');
 
 debug.enable('dxos:echo:story:*, dxos:*:error');
 
 export default {
-  title: 'Basic',
+  title: 'Demos/Basic',
   decorators: [withKnobs]
 };
 

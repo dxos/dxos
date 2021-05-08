@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
 
-import { createOnlineInstance } from '../config/config';
+import { createOnlineInstance } from '../config';
 
 // TODO(burdon): Break apart.
 export const useGenerator = () => {

@@ -7,12 +7,14 @@ import { createKeyPair } from '@dxos/crypto';
 import { createTestInstance, TestOptions } from '@dxos/echo-db';
 import { createStorage } from '@dxos/random-access-multi-storage';
 
+// TODO(burdon): Read all config from config files.
+const DEFAULT_SIGNAL = 'wss://apollo1.kube.moon.dxos.network/dxos/signal';
+
+// TODO(burdon): Replace with generator: createConfig({ online: false })
 export const offlineConfig: TestOptions = {
   initialize: true,
   snapshotInterval: 10
 };
-
-const DEFAULT_SIGNAL = 'wss://apollo1.kube.moon.dxos.network/dxos/signal';
 
 export const onlineConfig: TestOptions = {
   ...offlineConfig,
