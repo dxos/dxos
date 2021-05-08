@@ -49,11 +49,8 @@ import { useSelection, searchSelector } from '@dxos/react-client';
 import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
   useGenerator, graphSelector
-} from '../../src';
-
-export default {
-  title: 'Demos/Search'
-};
+} from '../../../src';
+import ToggleGroup from './ToggleGroup';
 
 const useStyles = makeStyles(theme => ({
   // TODO(burdon): Container.
@@ -225,19 +222,6 @@ const cardAdapter = (classes: ReturnType<typeof useStyles>): CardAdapter => ({
   }
 });
 
-// TODO(burdon): Use ToggleButton, ToggleButtonGroup (react 5; currently incompatible with storybook).
-const ToggleGroup = ({ type, onChange }: { type: string, onChange: (key: string) => void }) => {
-  return (
-    <div>
-      {Object.entries(TYPES).map(([key, Icon]) => (
-        <IconButton key={key} disabled={key === type} onClick={() => onChange(key)}>
-          <Icon />
-        </IconButton>
-      ))}
-    </div>
-  );
-};
-
 interface ItemDialogProperties {
   open: boolean
   handleCreate?: ({ type, name }: { type: string, name: string }) => void
@@ -263,7 +247,7 @@ const ItemDialog = ({ open, handleCreate, handleClose }: ItemDialogProperties) =
       <DialogContent>
         <Box m={2} flexDirection='column'>
           <div className={classes.field}>
-            <ToggleGroup type={type} onChange={type => setType(type)} />
+            <ToggleGroup types={TYPES} type={type} onChange={type => setType(type)} />
           </div>
 
           <TextField
@@ -505,4 +489,9 @@ export const Primary = () => {
   return (
     <Home onCreate={handleCreate} onJoin={handleJoin} />
   );
+};
+
+export default {
+  title: 'Demos/Search',
+  component: Primary
 };
