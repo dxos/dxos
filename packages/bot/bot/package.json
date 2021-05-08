@@ -12,14 +12,13 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/async": "~1.0.2-alpha.0",
     "@dxos/client": "workspace:*",
     "@dxos/config": "~1.0.0-beta.74",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-bot": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "assert": "^2.0.0",
@@ -29,6 +28,7 @@
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.10",
+    "@dxos/toolchain-node-library": "workspace:*",
     "jest": "^26.2.2",
     "ts-jest": "^26.1.4",
     "typescript": "^4.0.2"

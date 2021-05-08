@@ -52,12 +52,12 @@ export const timeout = (f, timeout = 0) => new Promise((resolve, reject) => {
  * @param {Number} timeout
  * @returns {Promise<unknown>}
  */
-export const promiseTimeout = (promise, timeout) => {
+export const promiseTimeout = (promise, timeout, error) => {
   let cancelTimeout;
 
   const timeoutPromise = new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
-      reject(new Error(`Timed out in ${timeout} ms.`));
+      reject(error || new Error(`Timed out in ${timeout} ms.`));
     }, timeout);
 
     cancelTimeout = () => {

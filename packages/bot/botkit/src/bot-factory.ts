@@ -5,7 +5,6 @@
 import assert from 'assert';
 import { sync as readPackageJson } from 'read-pkg-up';
 
-import { waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { keyToBuffer, keyToString, PublicKey, sign } from '@dxos/crypto';
 import { StarTopology, transportProtocolProvider } from '@dxos/network-manager';
@@ -28,6 +27,7 @@ import {
   Invite,
   SpawnOptions
 } from '@dxos/protocol-plugin-bot';
+import { waitForCondition } from '@dxos/util';
 
 import { BotManager } from './bot-manager';
 import { getClientConfig } from './config';

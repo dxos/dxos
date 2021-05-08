@@ -6,7 +6,6 @@ import assert from 'assert';
 import { EventEmitter } from 'events';
 import { keyPair } from 'hypercore-crypto';
 
-import { waitForCondition } from '@dxos/async';
 import { keyToBuffer, PublicKey } from '@dxos/crypto';
 import { logs } from '@dxos/debug';
 import { NetworkManager, StarTopology, transportProtocolProvider } from '@dxos/network-manager';
@@ -23,6 +22,7 @@ import {
   SpawnOptions,
   BotCommandResponse
 } from '@dxos/protocol-plugin-bot';
+import { waitForCondition } from '@dxos/util';
 
 const { log } = logs('dxos:botkit-client');
 

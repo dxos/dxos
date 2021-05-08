@@ -7,8 +7,8 @@ import path from 'path';
 import { sync as findPkgJson } from 'pkg-up';
 import playwright from 'playwright';
 
-import { Event } from '@dxos/async';
 import { keyToString } from '@dxos/crypto';
+import { Event } from '@dxos/util';
 
 import { BotId, BotInfo } from '../bot-manager';
 import { logBot } from '../log';

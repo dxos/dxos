@@ -7,7 +7,6 @@ import debug from 'debug';
 import { EventEmitter } from 'events';
 import { join } from 'path';
 
-import { runWithTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { randomBytes, keyToBuffer, keyToString, createKeyPair, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
@@ -23,6 +22,7 @@ import {
   Message,
   InvitationMessage
 } from '@dxos/protocol-plugin-bot';
+import { promiseTimeout } from '@dxos/util';
 
 import { getClientConfig } from './config';
 
@@ -201,26 +201,24 @@ export class Bot extends EventEmitter {
   }
 
   async _connectToControlTopic () {
-    await runWithTimeout(async () => {
-      const promise = new Promise<void>(resolve => {
-        // TODO(egorgripasov): Factor out.
-        this._plugin.on('peer:joined', (peerId: Buffer) => {
-          if (peerId.equals(this._botFactoryPeerKey)) {
-            log('Bot factory peer connected');
-            resolve();
-          }
-        });
+    const promise = new Promise<void>(resolve => {
+      // TODO(egorgripasov): Factor out.
+      this._plugin.on('peer:joined', (peerId: Buffer) => {
+        if (peerId.equals(this._botFactoryPeerKey)) {
+          log('Bot factory peer connected');
+          resolve();
+        }
       });
+    });
 
-      this._leaveControlSwarm = await this._client!.networkManager.joinProtocolSwarm({
-        topic: PublicKey.from(this._controlTopic),
-        protocol: transportProtocolProvider(this._controlTopic, this._controlPeerKey, this._plugin),
-        peerId: PublicKey.from(this._controlPeerKey),
-        topology: new StarTopology(PublicKey.from(this._botFactoryPeerKey))
-      });
+    this._leaveControlSwarm = await this._client!.networkManager.joinProtocolSwarm({
+      topic: PublicKey.from(this._controlTopic),
+      protocol: transportProtocolProvider(this._controlTopic, this._controlPeerKey, this._plugin),
+      peerId: PublicKey.from(this._controlPeerKey),
+      topology: new StarTopology(PublicKey.from(this._botFactoryPeerKey))
+    });
 
-      await promise;
-    }, CONNECT_TIMEOUT, new Error(`Bot failed to connect to control topic: Timed out in ${CONNECT_TIMEOUT} ms.`));
+    await promiseTimeout(promise, CONNECT_TIMEOUT, new Error(`Bot failed to connect to control topic: Timed out in ${CONNECT_TIMEOUT} ms.`));
   }
 
   async _startHeartbeat () {
