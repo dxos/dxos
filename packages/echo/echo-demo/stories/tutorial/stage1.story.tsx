@@ -8,10 +8,8 @@ import React from 'react';
 import { Button, Toolbar } from '@material-ui/core';
 
 import { createKeyPair } from '@dxos/crypto';
-import { useClient, useProfile } from '@dxos/react-client';
+import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-ux';
-
-import { ClientInitializer } from '../../src';
 
 /**
  * Create the user's HALO profile.
@@ -29,7 +27,7 @@ export const Stage1 = () => {
     return (
       <>
         <Toolbar>
-          <Button disabled={!!profile} onClick={handleCreateProfile}>Create HALO</Button>
+          <Button variant='contained' disabled={!!profile} onClick={handleCreateProfile}>Create HALO</Button>
         </Toolbar>
         <JsonTreeView data={profile} />
       </>

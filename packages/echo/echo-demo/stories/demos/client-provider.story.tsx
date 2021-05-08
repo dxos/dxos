@@ -3,14 +3,13 @@
 //
 
 import * as faker from 'faker';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
-import { Box, Button, Grid, LinearProgress, Toolbar } from '@material-ui/core';
+import { Box, Button, Grid, Toolbar } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
-import { ClientProvider, useClient, useParties, useProfile } from '@dxos/react-client';
+import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-ux';
 
 import { PartyCard } from '../../src';
@@ -48,12 +47,8 @@ const ClientConsumer = () => {
   return (
     <Box className={classes.root}>
       <Toolbar variant='dense' disableGutters={true}>
-        {!profile && (
-          <Button onClick={handleCreateProfile}>Create profile</Button>
-        )}
-        {profile && (
-          <Button onClick={handleCreateParty}>Create party</Button>
-        )}
+        <Button variant='contained' disabled={!!profile} onClick={handleCreateProfile}>Create profile</Button>
+        <Button disabled={!profile} onClick={handleCreateParty}>Create party</Button>
       </Toolbar>
       <Box m={2}>
         <JsonTreeView data={client.config} />
@@ -72,30 +67,12 @@ const ClientConsumer = () => {
   );
 };
 
-const Provider = (config: any | undefined) => {
-  const [client, setClient] = useState<Client | undefined>();
-
-  useEffect(() => {
-    setImmediate(async () => {
-      const client = new Client(config);
-      await client.initialize();
-      setClient(client);
-    });
-  }, []);
-
-  if (!client) {
-    return <LinearProgress />;
-  }
-
-  return (
-    <ClientProvider client={client}>
-      <ClientConsumer />
-    </ClientProvider>
-  );
-};
-
 export const Memory = () => {
-  return <Provider />;
+  return (
+    <ClientInitializer>
+      <ClientConsumer />
+    </ClientInitializer>
+  );
 };
 
 export const Persistent = () => {
@@ -107,5 +84,9 @@ export const Persistent = () => {
     snapshotInterval: 10
   };
 
-  return <Provider config={config}/>;
+  return (
+    <ClientInitializer config={async () => config}>
+      <ClientConsumer />
+    </ClientInitializer>
+  );
 };

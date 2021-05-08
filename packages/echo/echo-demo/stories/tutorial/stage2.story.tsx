@@ -9,9 +9,7 @@ import { Button, List, ListItem, Toolbar } from '@material-ui/core';
 
 import { createKeyPair } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
-import { useClient, useParties, useProfile } from '@dxos/react-client';
-
-import { ClientInitializer } from '../../src';
+import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
 
 export default {
   title: 'Tutorials/Stage 2'
@@ -40,7 +38,7 @@ export const Stage2 = () => {
     return (
       <>
         <Toolbar>
-          <Button disabled={!!profile} onClick={handleCreateProfile}>Create HALO</Button>
+          <Button variant='contained' disabled={!!profile} onClick={handleCreateProfile}>Create HALO</Button>
           <Button disabled={!profile} onClick={handleCreateParty}>Create Party</Button>
         </Toolbar>
         <List>
