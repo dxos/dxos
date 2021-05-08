@@ -9,6 +9,7 @@ import { CircularProgress } from '@material-ui/core';
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
+// TODO(burdon): Move to SDK or extend ClientProvider with config.
 export const ClientInitializer = ({ children }: {children?: ReactNode}) => {
   const [client, setClient] = useState<Client | undefined>();
 

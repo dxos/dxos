@@ -2,33 +2,49 @@
 // Copyright 2021 DXOS.org
 //
 
+import faker from 'faker';
 import React from 'react';
 
-import { Box, Typography } from '@material-ui/core';
+import { Button, Toolbar } from '@material-ui/core';
 
-// TODO(burdon): Rename ClientProvider?
+import { createKeyPair } from '@dxos/crypto';
+import { useClient, useProfile } from '@dxos/react-client';
+import { JsonTreeView } from '@dxos/react-ux';
+
 import { ClientInitializer } from '../../src';
 
-export default {
-  title: 'Tutorials/Stage 1'
-};
-
-// TODO(burdon): Use storybook extensions to create documentation.
-// TODO(burdon): Reuse components from demo/client provider (party cards).
-
-// 1 profile
-// 2 party
-// 3 party items
-
 /**
- * Creates a user profile.
+ * Create the user's HALO profile.
  */
 export const Stage1 = () => {
+  const App = () => {
+    const client = useClient();
+    const profile = useProfile();
+
+    const handleCreateProfile = async () => {
+      // TODO(burdon): Default keyPair?
+      await client.createProfile({ ...createKeyPair(), username: faker.name.firstName() });
+    };
+
+    return (
+      <>
+        <Toolbar>
+          <Button disabled={!!profile} onClick={handleCreateProfile}>Create HALO</Button>
+        </Toolbar>
+        <JsonTreeView data={profile} />
+      </>
+    );
+  };
+
+  // TODO(burdon): Must not hide ClientInitializer in tutorial (magic).
   return (
-    <Box>
-      <ClientInitializer>
-        <Typography>Stage 1</Typography>
-      </ClientInitializer>
-    </Box>
+    <ClientInitializer>
+      <App />
+    </ClientInitializer>
   );
+};
+
+export default {
+  title: 'Tutorials/Stage 1',
+  component: Stage1
 };

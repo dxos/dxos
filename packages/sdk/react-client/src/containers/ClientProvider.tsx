@@ -4,8 +4,9 @@
 
 import React, { ReactNode, useEffect } from 'react';
 
-import { Client } from '../../../client';
-import { ClientContext } from '../hooks/client/context';
+import { Client } from '@dxos/client';
+
+import { ClientContext } from '../hooks';
 
 export interface ClientProviderProps {
   client: Client
