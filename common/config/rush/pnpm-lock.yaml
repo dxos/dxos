@@ -3,14 +3,13 @@ importers:
     specifiers: {}
   ../../packages/bot/bot:
     dependencies:
-      '@dxos/async': 1.0.2-alpha.0
       '@dxos/client': link:../../sdk/client
       '@dxos/config': 1.0.0-beta.74
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       '@types/lodash.defaultsdeep': 4.6.6
       assert: 2.0.0
@@ -19,11 +18,11 @@ importers:
       lodash.defaultsdeep: 4.6.1
     devDependencies:
       '@dxos/eslint-plugin': 1.0.10_eslint@7.24.0+typescript@4.2.4
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       jest: 26.6.3
       ts-jest: 26.5.5_jest@26.6.3+typescript@4.2.4
       typescript: 4.2.4
     specifiers:
-      '@dxos/async': ~1.0.2-alpha.0
       '@dxos/client': workspace:*
       '@dxos/config': ~1.0.0-beta.74
       '@dxos/crypto': workspace:*
@@ -32,6 +31,7 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-bot': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
       '@types/lodash.defaultsdeep': ^4.6.6
       assert: ^2.0.0
@@ -43,7 +43,6 @@ importers:
       typescript: ^4.0.2
   ../../packages/bot/botkit:
     dependencies:
-      '@dxos/async': 1.0.2-alpha.0
       '@dxos/client': link:../../sdk/client
       '@dxos/config': 1.0.0-beta.74
       '@dxos/credentials': link:../../halo/credentials
@@ -51,6 +50,7 @@ importers:
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
+      '@dxos/util': link:../../common/util
       '@types/chance': 1.1.1
       '@types/debug': 4.1.5
       '@types/download': 6.2.4
@@ -91,7 +91,6 @@ importers:
       ts-jest: 26.5.5_jest@26.6.3+typescript@4.2.4
       typescript: 4.2.4
     specifiers:
-      '@dxos/async': ~1.0.2-alpha.0
       '@dxos/client': workspace:*
       '@dxos/config': ~1.0.0-beta.74
       '@dxos/credentials': workspace:*
@@ -101,6 +100,7 @@ importers:
       '@dxos/protocol-plugin-bot': workspace:*
       '@dxos/random-access-multi-storage': ~1.1.0-beta.8
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
       '@types/chance': ^1.1.0
       '@types/debug': ^4.1.1
       '@types/download': ^6.2.4
@@ -139,11 +139,11 @@ importers:
       uuidv4: ^6.0.2
   ../../packages/bot/botkit-client:
     dependencies:
-      '@dxos/async': 1.0.2-alpha.0
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': 1.0.0-beta.78
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
+      '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.1
       hypercore-crypto: 1.0.0
@@ -154,13 +154,13 @@ importers:
       jest: 26.6.3
       typescript: 4.2.4
     specifiers:
-      '@dxos/async': ~1.0.2-alpha.0
       '@dxos/crypto': workspace:*
       '@dxos/debug': ~1.0.0-beta.73
       '@dxos/eslint-plugin': ~1.0.10
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-bot': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
       assert: ^2.0.0
       debug: ^4.1.1
       eslint: ^7.7.0
@@ -179,15 +179,12 @@ importers:
       '@dxos/protobuf-compiler': link:../../common/protobuf-compiler
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.22
+      '@types/node': 14.14.41
       coveralls: 3.1.0
       cpy-cli: 2.0.0
       del-cli: 3.0.1
-      eslint: 7.24.0
-      jest: 26.6.3
       ngraph.generators: 18.0.1
       pump: 3.0.0
-      ts-jest: 26.5.5_jest@26.6.3+typescript@4.2.4
-      typescript: 4.2.4
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/broadcast': ~1.0.0-beta.11
@@ -198,16 +195,13 @@ importers:
       '@dxos/protocol': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
       coveralls: ^3.0.7
       cpy-cli: ^2.0.0
       debug: ^4.1.1
       del-cli: ^3.0.0
-      eslint: ^7.7.0
-      jest: ^26.2.2
       ngraph.generators: ^18.0.1
       pump: ^3.0.0
-      ts-jest: ^26.1.4
-      typescript: ^4.0.2
       wait-for-expect: ^3.0.2
   ../../packages/common/codec-protobuf:
     dependencies:
@@ -2701,10 +2695,6 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-v9kIhKwjeZThiWrLmj0y17CWoyddASLj9O2yvbZkbvw/N3rWOYy9zkV66ursAoVr0mV15bL8g0c4QZUE6cdDoQ==
-  /@dxos/async/1.0.2-alpha.0:
-    dev: false
-    resolution:
-      integrity: sha512-d9UgIaLbmuYHP24WASQX8OI1GJbJVy2021VqczIuDF0m3C5tHIqC7yr75L5eC4BAalEQoPGYcpWnzgD6ZpjiBw==
   /@dxos/benchmark-suite/1.0.0-beta.3:
     dependencies:
       browser-process-hrtime: 1.0.0
