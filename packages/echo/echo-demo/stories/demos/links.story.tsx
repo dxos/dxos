@@ -151,6 +151,7 @@ const Component = ({ generator }: {generator: Generator}) => {
 };
 
 export const Primary = () => {
+  // TODO(burdon): Remove this and use search demo pattern.
   const { generator, createParty } = useGenerator();
 
   useEffect(() => {

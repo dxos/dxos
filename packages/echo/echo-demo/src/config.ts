@@ -7,7 +7,7 @@ import { createKeyPair } from '@dxos/crypto';
 import { createTestInstance, TestOptions } from '@dxos/echo-db';
 import { createStorage } from '@dxos/random-access-multi-storage';
 
-// TODO(burdon): Read all config from config files.
+// TODO(burdon): Read all config from YML files.
 const DEFAULT_SIGNAL = 'wss://apollo1.kube.moon.dxos.network/dxos/signal';
 
 // TODO(burdon): Replace with generator: createConfig({ online: false })
@@ -23,6 +23,7 @@ export const onlineConfig: TestOptions = {
   }
 };
 
+// TODO(burdon): Remove these and use client API directly.
 export const createOfflineInstance = () => createTestInstance(offlineConfig);
 export const createOnlineInstance = () => createTestInstance(onlineConfig);
 
@@ -32,6 +33,7 @@ export const createSnapshotStorage = () => createStorage('dxos/echo-demo/snapsho
 export const createClient = async (config?: ClientConfig) => {
   const client = new Client(config);
   await client.initialize();
+
   const keypair = createKeyPair();
   await client.createProfile({ ...keypair, username: 'test-user' });
   await client.echo.open();

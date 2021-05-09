@@ -19,10 +19,7 @@ import CardIcon from '@material-ui/icons/ViewComfy';
 import GridIcon from '@material-ui/icons/ViewModule';
 
 import { Party } from '@dxos/echo-db';
-import {
-  labels,
-  Generator
-} from '@dxos/echo-testing';
+import { labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
 import { useSelection, searchSelector } from '@dxos/react-client';
 
@@ -78,24 +75,23 @@ const VIEW_GRID = 3;
 const VIEW_GRAPH = 4;
 
 interface MainProps {
-  party: Party,
-  generator: Generator
+  party: Party
 }
 
 // TODO(burdon): Factor out.
-const Main = ({ party, generator }: MainProps) => {
+const Main = ({ party }: MainProps) => {
   const classes = useStyles();
 
-  const [adapter] = useState(createAdapter(generator.database));
+  const [adapter] = useState(createAdapter(party.database));
   const [search, setSearch] = useState<string | undefined>(undefined);
-  const items: any[] = useSelection(generator.database.select(), searchSelector(search), [search]);
+  const items: any[] = useSelection(party.database.select(), searchSelector(search), [search]);
   if (adapter.sort) {
     items.sort(adapter.sort);
   }
 
   // TODO(burdon): Use subset.
   // const data = useSelection(items && new Selection(items, new Event()), graphSelector);
-  const data = useSelection(generator.database.select(), graphSelector(adapter));
+  const data = useSelection(party.database.select(), graphSelector(adapter));
   const [selected, setSelected] = useState();
   const [view, setView] = useState(VIEW_LIST);
 
@@ -111,7 +107,7 @@ const Main = ({ party, generator }: MainProps) => {
 
   // TODO(burdon): Reconcile with adapter.
   const handleCreate = async ({ type, name }: { type: string, name: string }) => {
-    const item = await generator.database.createItem({
+    const item = await party.database.createItem({
       model: ObjectModel,
       type,
       props: {

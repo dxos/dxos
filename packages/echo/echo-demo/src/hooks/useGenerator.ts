@@ -9,14 +9,16 @@ import { Generator } from '@dxos/echo-testing';
 
 import { createOnlineInstance } from '../config';
 
-// TODO(burdon): Break apart.
+/**
+ * This is a poor abstraction -- remove it with util functions.
+ * @deprecated
+ */
 export const useGenerator = () => {
   const [party, setParty] = useState<Party | undefined>();
   const [generator, setGenerator] = useState<Generator | undefined>();
 
   const createParty = async (config = {}) => {
     const echo = await createOnlineInstance();
-
     const party = await echo.createParty();
 
     const generator = new Generator(party.database, { seed: 1 });
@@ -27,17 +29,15 @@ export const useGenerator = () => {
   };
 
   const joinParty = async (invitation: string) => {
-    console.debug('Joining...');
     const echo = await createOnlineInstance();
-
     const party = await echo.joinParty(
-      InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));
+      InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000')
+    );
     await party.open();
-    console.debug('Open', party);
 
     setGenerator(new Generator(party.database, { seed: 1 }));
     setParty(party);
   };
 
-  return { party, generator, createParty, joinParty };
+  return { party, database: generator?.database, generator, createParty, joinParty };
 };
