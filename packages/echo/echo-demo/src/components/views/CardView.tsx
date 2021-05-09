@@ -5,7 +5,6 @@
 import React from 'react';
 
 import {
-  Button,
   Card,
   CardActions,
   CardContent,
@@ -46,9 +45,12 @@ export const ItemCard = ({ adapter, item }: { adapter: ItemAdapter, item: any })
 
   const title = adapter.primary(item);
   const description = adapter.secondary?.(item);
+
+  // Type-specific content.
   const slices = adapter.slices && adapter?.slices(item);
 
-  // TODO(burdon): Use adapter to configure create buttons.
+  // Type-specific actions.
+  const actions = adapter.actions ? adapter.actions(item) : [];
 
   return (
     <Card classes={{ root: classes.card }}>
@@ -69,9 +71,7 @@ export const ItemCard = ({ adapter, item }: { adapter: ItemAdapter, item: any })
         ))}
       </CardContent>
       <CardActions>
-        <Button size='small' color='primary'>
-          Create
-        </Button>
+        {actions}
       </CardActions>
     </Card>
   );

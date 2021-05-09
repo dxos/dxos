@@ -2,16 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import faker from 'faker';
+import React, { useState } from 'react';
 
-import { Chip, Typography } from '@material-ui/core';
+import { Chip, IconButton, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import AddIcon from '@material-ui/icons/Add';
 import OrgIcon from '@material-ui/icons/Business';
 import DefaultIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import PersonIcon from '@material-ui/icons/PersonOutline';
 import ProjectIcon from '@material-ui/icons/WorkOutline';
 
-import { Item } from '@dxos/echo-db';
+import { Database, Item } from '@dxos/echo-db';
 import {
   OBJECT_ORG,
   OBJECT_PERSON,
@@ -20,8 +22,9 @@ import {
   LINK_PROJECT,
   LINK_EMPLOYEE
 } from '@dxos/echo-testing';
+import { ObjectModel } from '@dxos/object-model';
 
-import { ItemAdapter } from '../../../src';
+import { CreateItemCallback, ItemProperties, ItemAdapter, ItemDialog } from '../../../src';
 
 export const TYPES = {
   [OBJECT_ORG]: OrgIcon,
@@ -67,81 +70,172 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export const adapter: ItemAdapter = {
-  key: item => item.id,
-  primary: item => item.model.getProperty('name'),
-  secondary: item => item.model.getProperty('description'),
-  icon: Icon,
-  slices: item => {
-    // TODO(burdon): Default value in getter.
-    const labels = item.model.getProperty('labels') || {};
+interface ListProperties {
+  type: string
+  items: Item<any>[]
+  title?: string
+  handleCreate?: CreateItemCallback
+}
 
-    // Sublist.
-    const List = ({ items, title }: { items: Item<any>[], title?: string }) => {
-      const classes = useStyles();
-
-      return (
-        <div className={classes.sublist}>
-          <Typography variant="caption" className={classes.subheader}>{title}</Typography>
-          <table>
-            <tbody>
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td>
-                    <Typography variant="body2">&#x2022;</Typography>
-                  </td>
-                  <td>
-                    <Typography variant="body2">
-                      {item.model.getProperty('name')}
-                    </Typography>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    };
-
-    // TODO(burdon): Add/remove labels.
-    const Labels = ({ labels }: { labels: string[] }) => {
-      const classes = useStyles();
-
-      return (
-        <div className={classes.chips}>
-          {Object.values(labels).map((label, i) => (
-            <Chip key={i} label={label} className={classes.chip}/>
-          ))}
-        </div>
-      );
-    };
-
-    const slices = [] as JSX.Element[];
-    switch (item.type) {
-      case OBJECT_ORG: {
-        const projects = item.select().links({ type: LINK_PROJECT }).target().items;
-        if (projects.length !== 0) {
-          slices.push(<List items={projects} title="Projects"/>);
-        }
-
-        const employees = item.select().links({ type: LINK_EMPLOYEE }).target().items;
-        if (employees.length !== 0) {
-          slices.push(<List items={employees} title="Employees"/>);
-        }
-        break;
+export const createAdapter = (database: Database) => {
+  // Create sub-item.
+  const handleCreate = (parent?: Item<any>, linkType?: string) => async ({ type, name }: ItemProperties) => {
+    const item = await database.createItem({
+      model: ObjectModel,
+      type,
+      props: {
+        name: name,
+        description: faker.lorem.sentence()
       }
+    });
 
-      case OBJECT_PROJECT: {
-        const tasks = item.select().children().items;
-        if (tasks.length !== 0) {
-          slices.push(<List items={tasks} title="Tasks"/>);
-        }
-        break;
-      }
+    // Create link.
+    if (parent && linkType) {
+      await database.createLink({
+        type: linkType, source: parent, target: item
+      });
     }
 
-    slices.push(<Labels labels={labels}/>);
+    return item;
+  };
 
-    return slices;
-  }
+  const adapter: ItemAdapter = {
+    key: item => item.id,
+
+    icon: Icon,
+
+    primary: item => item.model.getProperty('name'),
+
+    secondary: item => item.model.getProperty('description'),
+
+    sort: (a, b) => {
+      const getType = (type?: string) => {
+        const TYPE_ORDER = {
+          [OBJECT_ORG]: 1,
+          [OBJECT_PERSON]: 2,
+          [OBJECT_PROJECT]: 3,
+          [OBJECT_TASK]: 4
+        };
+
+        return (type && TYPE_ORDER[type as keyof typeof TYPE_ORDER]) || Infinity;
+      };
+
+      const order = getType(a.type) < getType(b.type) ? -1 : getType(a.type) > getType(b.type) ? 1 : 0;
+      if (order !== 0) {
+        return order;
+      }
+
+      const titleA = a.model.getProperty('name').toLowerCase();
+      const titleB = b.model.getProperty('name').toLowerCase();
+      return titleA < titleB ? -1 : titleA > titleB ? 1 : 0;
+    },
+
+    slices: item => {
+      // TODO(burdon): Default value in getter.
+      const labels = item.model.getProperty('labels') || {};
+
+      // Sublist.
+      const List = ({ type, items, title, handleCreate }: ListProperties) => {
+        const classes = useStyles();
+        const [showDialog, setDialog] = useState(false);
+
+        return (
+          <div className={classes.sublist}>
+            <Typography variant='caption' className={classes.subheader}>{title}</Typography>
+            <table>
+              <tbody>
+                {items.map(item => (
+                  <tr key={item.id}>
+                    <td>
+                      <Typography variant='body2'>&#x2022;</Typography>
+                    </td>
+                    <td>
+                      <Typography variant='body2'>
+                        {item.model.getProperty('name')}
+                      </Typography>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {handleCreate && (
+              <>
+                <IconButton size='small' onClick={() => setDialog(true)}>
+                  <AddIcon/>
+                </IconButton>
+
+                <ItemDialog
+                  open={showDialog}
+                  type={type}
+                  types={TYPES}
+                  handleCreate={handleCreate}
+                  handleClose={() => setDialog(false)}
+                />
+              </>
+            )}
+          </div>
+        );
+      };
+
+      // TODO(burdon): Add/remove labels.
+      const Labels = ({ labels }: { labels: string[] }) => {
+        const classes = useStyles();
+
+        return (
+          <div className={classes.chips}>
+            {Object.values(labels).map((label, i) => (
+              <Chip key={i} label={label} className={classes.chip}/>
+            ))}
+          </div>
+        );
+      };
+
+      const slices = [] as JSX.Element[];
+      switch (item.type) {
+        case OBJECT_ORG: {
+          const projects = item.select().links({ type: LINK_PROJECT }).target().items;
+          slices.push(
+            <List
+              type={OBJECT_PROJECT}
+              items={projects}
+              title='Projects'
+              handleCreate={handleCreate(item, LINK_PROJECT)}
+            />
+          );
+
+          const employees = item.select().links({ type: LINK_EMPLOYEE }).target().items;
+          if (employees.length !== 0) {
+            slices.push(
+              <List
+                type={OBJECT_PERSON}
+                items={employees}
+                title='Employees'
+              />
+            );
+          }
+          break;
+        }
+
+        case OBJECT_PROJECT: {
+          const tasks = item.select().children().items;
+          if (tasks.length !== 0) {
+            slices.push(
+              <List
+                type={OBJECT_TASK}
+                items={tasks}
+                title='Tasks'
+              />);
+          }
+          break;
+        }
+      }
+
+      slices.push(<Labels labels={labels}/>);
+
+      return slices;
+    }
+  };
+
+  return adapter;
 };
