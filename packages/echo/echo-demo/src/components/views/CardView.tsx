@@ -16,7 +16,7 @@ import {
 import { grey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { ItemAdapter } from './ListView';
+import { ItemAdapter } from './adapter';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -41,16 +41,14 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-export interface CardAdapter extends ItemAdapter {
-  slices: (value: any) => any[] | void
-}
-
-export const ItemCard = ({ adapter, item }: { adapter: CardAdapter, item: any }) => {
+export const ItemCard = ({ adapter, item }: { adapter: ItemAdapter, item: any }) => {
   const classes = useStyles();
 
   const title = adapter.primary(item);
   const description = adapter.secondary?.(item);
-  const slices = adapter.slices(item);
+  const slices = adapter.slices && adapter?.slices(item);
+
+  // TODO(burdon): Use adapter to configure create buttons.
 
   return (
     <Card classes={{ root: classes.card }}>
@@ -62,7 +60,7 @@ export const ItemCard = ({ adapter, item }: { adapter: CardAdapter, item: any })
       />
       <CardContent classes={{ root: classes.cardContent }}>
         {description && (
-          <Typography component="p" className={classes.description}>
+          <Typography component='p' className={classes.description}>
             {description}
           </Typography>
         )}
@@ -71,8 +69,8 @@ export const ItemCard = ({ adapter, item }: { adapter: CardAdapter, item: any })
         ))}
       </CardContent>
       <CardActions>
-        <Button size="small" color="primary">
-          Info
+        <Button size='small' color='primary'>
+          Create
         </Button>
       </CardActions>
     </Card>
@@ -80,7 +78,7 @@ export const ItemCard = ({ adapter, item }: { adapter: CardAdapter, item: any })
 };
 
 export interface CardViewProps {
-  adapter: CardAdapter
+  adapter: ItemAdapter
   items: any[]
 }
 

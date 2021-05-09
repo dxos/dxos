@@ -6,9 +6,7 @@ import faker from 'faker';
 import React, { useState } from 'react';
 
 import {
-  Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -20,37 +18,30 @@ import {
   Toolbar,
   Typography
 } from '@material-ui/core';
-import grey from '@material-ui/core/colors/grey';
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import GraphIcon from '@material-ui/icons/BubbleChart';
-import OrgIcon from '@material-ui/icons/Business';
-import DefaultIcon from '@material-ui/icons/CheckBoxOutlineBlank';
-import PersonIcon from '@material-ui/icons/PersonOutline';
 import ListIcon from '@material-ui/icons/Reorder';
 import CardIcon from '@material-ui/icons/ViewComfy';
 import GridIcon from '@material-ui/icons/ViewModule';
-import ProjectIcon from '@material-ui/icons/WorkOutline';
 
-import { Item, Party } from '@dxos/echo-db';
+import { Party } from '@dxos/echo-db';
 import {
   OBJECT_ORG,
   OBJECT_PERSON,
   OBJECT_PROJECT,
-  LINK_PROJECT,
-  LINK_EMPLOYEE,
+  OBJECT_TASK,
   labels,
-  Generator,
-  OBJECT_TASK
+  Generator
 } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
 import { useSelection, searchSelector } from '@dxos/react-client';
 
 import {
-  CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
+  CardView, GraphView, ListView, GridView, SearchBar, ItemCard, ItemDialog,
   useGenerator, graphSelector
 } from '../../../src';
-import ToggleGroup from './ToggleGroup';
+import { adapter, TYPES } from './adapter';
 
 const useStyles = makeStyles(theme => ({
   // TODO(burdon): Container.
@@ -60,7 +51,7 @@ const useStyles = makeStyles(theme => ({
     flexDirection: 'column',
     overflow: 'hidden',
     height: '100vh',
-    backgroundColor: grey[50]
+    backgroundColor: theme.palette.grey[50]
   },
   toolbar: {
     display: 'flex',
@@ -79,45 +70,17 @@ const useStyles = makeStyles(theme => ({
     overflow: 'auto',
     margin: theme.spacing(1)
   },
-  sublist: {
-    marginTop: theme.spacing(1),
-    '& table': {
-      tableLayout: 'fixed',
-      borderCollapse: 'collapse',
-      borderSpacing: 0
-    }
-  },
-  subheader: {
-    color: theme.palette.info.dark
-  },
   card: {
     position: 'absolute',
     zIndex: 100
   },
-  chips: {
-    marginTop: theme.spacing(2)
-  },
-  chip: {
-    height: 20,
-    padding: 2,
-    marginRight: 4,
-    borderRadius: 6,
-    '& span': {
-      paddingLeft: 6,
-      paddingRight: 6,
-      fontSize: 12
-    }
-  },
   fab: {
     margin: 0,
     top: 'auto',
-    right: 20,
-    bottom: 20,
+    right: theme.spacing(2),
+    bottom: theme.spacing(2),
     left: 'auto',
     position: 'fixed'
-  },
-  field: {
-    marginBottom: theme.spacing(2)
   }
 }));
 
@@ -126,153 +89,12 @@ const VIEW_CARDS = 2;
 const VIEW_GRID = 3;
 const VIEW_GRAPH = 4;
 
-const TYPES = {
-  [OBJECT_ORG]: OrgIcon,
-  [OBJECT_PERSON]: PersonIcon,
-  [OBJECT_PROJECT]: ProjectIcon,
-  [OBJECT_TASK]: DefaultIcon
-};
-
-const Icon = ({ item: { type } }: {item: Item<any>}) => {
-  const Icon = (TYPES as any)[type ?? ''] || DefaultIcon;
-  if (!Icon) {
-    return null;
-  }
-
-  return <Icon />;
-};
-
-const itemAdapter: ItemAdapter = {
-  key: item => item.id,
-  primary: item => item.model.getProperty('name'),
-  secondary: item => item.model.getProperty('description'),
-  icon: Icon
-};
-
-const cardAdapter = (classes: ReturnType<typeof useStyles>): CardAdapter => ({
-  key: item => item.id,
-  primary: item => item.model.getProperty('name'),
-  secondary: item => item.model.getProperty('description'),
-  icon: Icon,
-  slices: item => {
-    // TODO(burdon): Default value in getter.
-    const labels = item.model.getProperty('labels') || {};
-
-    // Sublist.
-    const List = ({ items, title }: {items: Item<any>[], title?: string}) => (
-      <div className={classes.sublist}>
-        <Typography variant='caption' className={classes.subheader}>{title}</Typography>
-        <table>
-          <tbody>
-            {items.map(item => (
-              <tr key={item.id} >
-                <td>
-                  <Typography variant='body2'>&#x2022;</Typography>
-                </td>
-                <td>
-                  <Typography variant='body2'>
-                    {item.model.getProperty('name')}
-                  </Typography>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-
-    // TODO(burdon): Add/remove labels.
-    const Labels = ({ labels }: {labels: string[]}) => {
-      return (
-        <div className={classes.chips}>
-          {Object.values(labels).map((label, i) => (
-            <Chip key={i} label={label} className={classes.chip} />
-          ))}
-        </div>
-      );
-    };
-
-    const slices = [] as JSX.Element[];
-    switch (item.type) {
-      case OBJECT_ORG: {
-        const projects = item.select().links({ type: LINK_PROJECT }).target().items;
-        if (projects.length !== 0) {
-          slices.push(<List items={projects} title='Projects' />);
-        }
-
-        const employees = item.select().links({ type: LINK_EMPLOYEE }).target().items;
-        if (employees.length !== 0) {
-          slices.push(<List items={employees} title='Employees' />);
-        }
-        break;
-      }
-
-      case OBJECT_PROJECT: {
-        const tasks = item.select().children().items;
-        if (tasks.length !== 0) {
-          slices.push(<List items={tasks} title='Tasks' />);
-        }
-        break;
-      }
-    }
-
-    slices.push(<Labels labels={labels} />);
-
-    return slices;
-  }
-});
-
-interface ItemDialogProperties {
-  open: boolean
-  handleCreate?: ({ type, name }: { type: string, name: string }) => void
-  handleClose?: () => void
-}
-
-// TODO(burdon): Use in card view (with links).
-const ItemDialog = ({ open, handleCreate, handleClose }: ItemDialogProperties) => {
-  const classes = useStyles();
-  const [type, setType] = useState(OBJECT_ORG);
-  const [name, setName] = useState('');
-
-  const handleCreateItem = () => {
-    if (handleCreate && name.trim().length) {
-      handleCreate({ type, name });
-      setName('');
-    }
-  };
-
-  return (
-    <Dialog open={open} fullWidth maxWidth='sm'>
-      <DialogTitle>Create Item</DialogTitle>
-      <DialogContent>
-        <Box m={2} flexDirection='column'>
-          <div className={classes.field}>
-            <ToggleGroup types={TYPES} type={type} onChange={type => setType(type)} />
-          </div>
-
-          <TextField
-            autoFocus
-            fullWidth
-            label='Name'
-            value={name}
-            onChange={event => setName(event.currentTarget.value)}
-            variant='outlined'
-          />
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button color='primary' variant='contained' onClick={handleCreateItem}>Create</Button>
-        <Button color='secondary' onClick={handleClose}>Cancel</Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
-
 interface HomeProps {
   onCreate: () => void,
   onJoin: (invitationCode: string) => void
 }
 
+// TODO(burdon): Factor out.
 const Home = ({ onCreate, onJoin }: HomeProps) => {
   const [invitationCode, setInvitationCode] = useState('');
   const [inProgress, setInProgress] = useState(false);
@@ -337,6 +159,7 @@ interface MainProps {
   generator: Generator
 }
 
+// TODO(burdon): Factor out.
 const Main = ({ party, generator }: MainProps) => {
   const classes = useStyles();
 
@@ -344,7 +167,7 @@ const Main = ({ party, generator }: MainProps) => {
   const items: any[] = useSelection(generator.database.select(), searchSelector(search), [search]);
   // TODO(burdon): Use subset.
   // const data = useSelection(items && new Selection(items, new Event()), graphSelector);
-  const data = useSelection(generator.database.select(), graphSelector(itemAdapter));
+  const data = useSelection(generator.database.select(), graphSelector(adapter));
   const [selected, setSelected] = useState();
   const [view, setView] = useState(VIEW_LIST);
 
@@ -381,6 +204,7 @@ const Main = ({ party, generator }: MainProps) => {
     await navigator.clipboard.writeText(JSON.stringify(invitation.toQueryParameters()));
   };
 
+  // TODO(burdon): Move into adapter?
   items.sort((a, b) => {
     const getType = (type: string) => {
       const TYPE_ORDER = {
@@ -420,19 +244,19 @@ const Main = ({ party, generator }: MainProps) => {
       <div className={classes.content}>
         {view === VIEW_LIST && (
           <ListView
-            adapter={itemAdapter}
+            adapter={adapter}
             items={items}
           />
         )}
         {view === VIEW_CARDS && (
           <CardView
-            adapter={cardAdapter(classes)}
+            adapter={adapter}
             items={items}
           />
         )}
         {view === VIEW_GRID && (
           <GridView
-            adapter={itemAdapter}
+            adapter={adapter}
             items={items}
           />
         )}
@@ -441,7 +265,7 @@ const Main = ({ party, generator }: MainProps) => {
             {selected && (
               <div className={classes.card}>
                 <ItemCard
-                  adapter={cardAdapter(classes)}
+                  adapter={adapter}
                   item={selected}
                 />
               </div>
@@ -454,7 +278,12 @@ const Main = ({ party, generator }: MainProps) => {
         )}
       </div>
 
-      <ItemDialog open={showCreate} handleCreate={handleCreate} handleClose={() => setShowCreate(false)} />
+      <ItemDialog
+        open={showCreate}
+        types={TYPES}
+        handleCreate={handleCreate}
+        handleClose={() => setShowCreate(false)}
+      />
 
       <Fab className={classes.fab} color='primary' aria-label='add' onClick={() => setShowCreate(true)}>
         <AddIcon />
