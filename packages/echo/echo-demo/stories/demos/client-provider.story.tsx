@@ -15,7 +15,8 @@ import { JsonTreeView } from '@dxos/react-ux';
 import { PartyCard } from '../../src';
 
 export default {
-  title: 'Demos/ClientProvider'
+  title: 'Demos/ClientInitializer',
+  component: ClientInitializer
 };
 
 const useStyles = makeStyles(theme => ({
@@ -24,21 +25,22 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ClientConsumer = () => {
+const Demo = () => {
   const classes = useStyles();
   const client = useClient();
   const profile = useProfile();
   const parties = useParties();
 
-  const handleCreateProfile = () => {
-    client.createProfile({
+  const handleCreateProfile = async () => {
+    await client.createProfile({
       ...createKeyPair(),
       username: faker.internet.userName()
     });
   };
 
-  const handleCreateParty = () => {
-    client.createParty();
+  const handleCreateParty = async () => {
+    const party = await client.createParty();
+    await party.setTitle(faker.company.companyName());
   };
 
   // TODO(burdon): Contains a property called config!
@@ -67,14 +69,20 @@ const ClientConsumer = () => {
   );
 };
 
+/**
+ * In-memory HALO.
+ */
 export const Memory = () => {
   return (
     <ClientInitializer>
-      <ClientConsumer />
+      <Demo />
     </ClientInitializer>
   );
 };
 
+/**
+ * Browser storage HALO.
+ */
 export const Persistent = () => {
   const config = {
     storage: {
@@ -86,7 +94,7 @@ export const Persistent = () => {
 
   return (
     <ClientInitializer config={async () => config}>
-      <ClientConsumer />
+      <Demo />
     </ClientInitializer>
   );
 };

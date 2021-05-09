@@ -12,10 +12,6 @@ import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/reac
 
 import { PartyCard } from '../../src';
 
-export default {
-  title: 'Tutorials/Stage 3'
-};
-
 /**
  * Create the user's HALO profile, then create parties with items.
  */
@@ -59,4 +55,9 @@ export const Stage3 = () => {
       <App />
     </ClientInitializer>
   );
+};
+
+export default {
+  title: 'Tutorials/Stage 3',
+  component: Stage3
 };

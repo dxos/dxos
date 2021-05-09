@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import clsx from 'clsx';
 import * as faker from 'faker';
 import React from 'react';
 
@@ -47,7 +46,7 @@ const PartyCard = ({ party }: { party: Party }) => {
       />
       <CardContent>
         {items.map((item: any) => (
-          <Typography className={clsx(classes.ellipsis, classes.key)} key={item.id}>
+          <Typography key={item.id}>
             {item.model.getProperty('title')}
           </Typography>
         ))}

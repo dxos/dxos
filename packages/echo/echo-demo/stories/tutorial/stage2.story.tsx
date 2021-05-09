@@ -11,10 +11,6 @@ import { createKeyPair } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
 
-export default {
-  title: 'Tutorials/Stage 2'
-};
-
 /**
  * Create the user's HALO profile, then create parties.
  */
@@ -55,4 +51,9 @@ export const Stage2 = () => {
       <App />
     </ClientInitializer>
   );
+};
+
+export default {
+  title: 'Tutorials/Stage 2',
+  component: Stage2
 };
