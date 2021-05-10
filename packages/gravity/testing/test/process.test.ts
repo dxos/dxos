@@ -1,3 +1,7 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 import processExists from 'process-exists';
 import psTree from 'pstree.remy';
 import { promisify } from 'util';

@@ -1,3 +1,7 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 import { MessengerModel } from '@dxos/messenger-model';
 
 import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../src/orchestrator';

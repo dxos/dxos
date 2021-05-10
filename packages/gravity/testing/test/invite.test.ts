@@ -1,7 +1,11 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 import { MessengerModel } from '@dxos/messenger-model';
 import { waitForCondition } from '@dxos/util';
 
-import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../src/orchestrator';
+import { /* BROWSER_ENV, NODE_ENV, */ Orchestrator } from '../src/orchestrator';
 
 jest.setTimeout(100 * 1000);
 
@@ -20,8 +24,8 @@ test.skip('invite two agents to a party', async () => {
   await agent1.sendCommand({ type: 'append' });
   await agent2.sendCommand({ type: 'append' });
 
-  await waitForCondition(async () => (await agent1.sendCommand({ type: 'get-all' })).length === 2)
-  await waitForCondition(async () => (await agent2.sendCommand({ type: 'get-all' })).length === 2)
+  await waitForCondition(async () => (await agent1.sendCommand({ type: 'get-all' })).length === 2);
+  await waitForCondition(async () => (await agent2.sendCommand({ type: 'get-all' })).length === 2);
 
   const messages1 = await agent1.sendCommand({ type: 'get-all' });
   const messages2 = await agent2.sendCommand({ type: 'get-all' });

@@ -9,8 +9,7 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "lint": "semistandard",
-    "prepublishOnly": "npm run build && npm run test",
+    "lint": "toolchain lint",
     "test": "jest --rootDir ./test --passWithNoTests --verbose --forceExit"
   },
   "jest": {
@@ -63,6 +62,7 @@
     "@babel/plugin-proposal-class-properties": "^7.12.1",
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@babel/preset-env": "^7.12.7",
+    "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/tar": "^4.0.4",
     "babel-plugin-add-module-exports": "^1.0.4",

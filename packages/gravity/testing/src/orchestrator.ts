@@ -2,25 +2,24 @@
 // Copyright 2020 DXOS.org
 //
 
-import { spawn, ChildProcess } from 'child_process';
+import assert from 'assert';
+import { spawn } from 'child_process';
 import debug from 'debug';
 import path from 'path';
 import ram from 'random-access-memory';
 import kill from 'tree-kill';
 
-import { promiseTimeout } from '@dxos/util';
 import { BotFactoryClient } from '@dxos/botkit-client';
 import { Client } from '@dxos/client';
+import { Invitation } from '@dxos/credentials';
 import { SIGNATURE_LENGTH, keyToBuffer, createKeyPair, keyToString, verify, sha256 } from '@dxos/crypto';
+import { Party } from '@dxos/echo-db';
+import { SpawnOptions } from '@dxos/protocol-plugin-bot';
+import { promiseTimeout } from '@dxos/util';
 
 import { Agent } from './agent';
 import { CONFIG, FACTORY_OUT_DIR } from './config';
 import { buildAndPublishBot } from './distributor';
-import { Party } from '@dxos/echo-db';
-import assert from 'assert';
-
-import { SpawnOptions } from '@dxos/protocol-plugin-bot';
-import { Invitation } from '@dxos/credentials';
 
 const log = debug('dxos:testing');
 
@@ -96,7 +95,7 @@ export class Orchestrator {
 
   async startAgent (options: SpawnOptions) {
     const { env = NODE_ENV, botPath, ...rest } = options;
-    
+
     assert(botPath);
     if (this._localRun) {
       options = {
@@ -138,7 +137,7 @@ export class Orchestrator {
   async _startBotFactory (): Promise<any> {
     const doStart = async (): Promise<any> => {
       const { publicKey, secretKey } = createKeyPair();
-  
+
       const topic = keyToString(publicKey);
 
       const env = {
@@ -165,13 +164,13 @@ export class Orchestrator {
             resolve();
           }
         });
-      });;
+      });
 
       return {
         topic,
         process: factory
-      }
-    }
+      };
+    };
 
     return promiseTimeout(doStart(), FACTORY_START_TIMEOUT, new Error(`Failed to start bot factory: Timed out in ${FACTORY_START_TIMEOUT} ms.`));
   }

@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { BotFactoryClient } from '@dxos/botkit-client';
 import assert from 'assert';
+
+import { BotFactoryClient } from '@dxos/botkit-client';
 
 export class Agent {
   _botId: string;

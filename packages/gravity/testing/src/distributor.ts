@@ -2,15 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import fs from 'fs-extra';
-import path from 'path';
-import webpack from 'webpack';
-import tar from 'tar';
-import fetch from 'node-fetch';
 import debug from 'debug';
+import fs from 'fs-extra';
+import fetch from 'node-fetch';
+import path from 'path';
+import tar from 'tar';
+import webpack from 'webpack';
 
 import { createId } from '@dxos/crypto';
-import assert from 'assert';
 
 const BUILD_PATH = './out/builds/';
 
