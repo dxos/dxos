@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ModelMeta, Model } from '@dxos/model-factory';
 import { MutationMeta } from '@dxos/echo-protocol';
-import debug from 'debug';
+import { ModelMeta, Model } from '@dxos/model-factory';
 
 import { Message, schema } from './proto';
 
@@ -16,7 +15,7 @@ export class MessengerModel extends Model<Message> {
 
   private readonly _messages: Message[] = [];
 
-  get messages() {
+  get messages () {
     return this._messages;
   }
 
@@ -26,7 +25,7 @@ export class MessengerModel extends Model<Message> {
     return true;
   }
 
-  async sendMessage(message: Pick<Message, 'text' | 'sender'>) {
+  async sendMessage (message: Pick<Message, 'text' | 'sender'>) {
     const receipt = await this.write({
       text: message.text,
       timestamp: Date.now().toString(),
