@@ -2,11 +2,11 @@
 // Copyright 2019 DXOS.org
 //
 
-import { EventEmitter } from 'events';
 import assert from 'assert';
-import hypertrie from 'hypertrie';
 import jsonBuffer from 'buffer-json-encoding';
+import { EventEmitter } from 'events';
 import defaultHypercore from 'hypercore';
+import hypertrie from 'hypertrie';
 import nanoresource from 'nanoresource-promise';
 import pEvent from 'p-event';
 

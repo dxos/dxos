@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "2.10.1-beta.4",
+  "version": "2.10.2",
   "description": "React client API",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -79,6 +79,6 @@
     "react": "*"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

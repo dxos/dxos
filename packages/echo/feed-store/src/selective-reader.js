@@ -3,6 +3,7 @@
 //
 
 import { Readable } from 'stream';
+
 import createBatchStream from './create-batch-stream';
 
 /**
@@ -31,7 +32,9 @@ export default class SelectiveReader extends Readable {
   }
 
   _resetDataLock () {
-    this._hasData = new Promise(resolve => { this._wakeUpReader = resolve; });
+    this._hasData = new Promise(resolve => {
+      this._wakeUpReader = resolve;
+    });
   }
 
   async _read () {
@@ -48,7 +51,9 @@ export default class SelectiveReader extends Readable {
       for (const feed of this._feeds.values()) {
         if (feed.buffer.length === 0) {
           const messages = feed.stream.read();
-          if (!messages) continue;
+          if (!messages) {
+            continue;
+          }
           feed.buffer.push(...messages);
         }
 

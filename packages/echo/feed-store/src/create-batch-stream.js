@@ -25,16 +25,27 @@ export default function createBatchStream (feed, opts = {}) {
   return streamFrom.obj(read).on('end', cleanup).on('close', cleanup);
 
   function read (size, cb) {
-    if (!feed.opened) return open(size, cb);
-    if (!feed.readable) return cb(new Error('Feed is closed'));
+    if (!feed.opened) {
+      return open(size, cb);
+    }
+    if (!feed.readable) {
+      return cb(new Error('Feed is closed'));
+    }
 
     if (first) {
       if (end === -1) {
-        if (live) end = Infinity;
-        else if (snapshot) end = feed.length;
-        if (start > end) return cb(null, null);
+        if (live) {
+          end = Infinity;
+        } else if (snapshot) {
+          end = feed.length;
+        }
+        if (start > end) {
+          return cb(null, null);
+        }
       }
-      if (opts.tail) start = feed.length;
+      if (opts.tail) {
+        start = feed.length;
+      }
       firstSyncEnd = end === Infinity ? feed.length : end;
       first = false;
     }
@@ -46,7 +57,9 @@ export default function createBatchStream (feed, opts = {}) {
     if (batch === 1) {
       seq = setStart(start + 1);
       feed.get(seq, opts, (err, data) => {
-        if (err) return cb(err);
+        if (err) {
+          return cb(err);
+        }
         cb(null, [buildMessage(data)]);
       });
       return;
@@ -61,7 +74,9 @@ export default function createBatchStream (feed, opts = {}) {
     if (!feed.downloaded(start, batchEnd)) {
       seq = setStart(start + 1);
       feed.get(seq, opts, (err, data) => {
-        if (err) return cb(err);
+        if (err) {
+          return cb(err);
+        }
         cb(null, [buildMessage(data)]);
       });
       return;
@@ -95,14 +110,18 @@ export default function createBatchStream (feed, opts = {}) {
   }
 
   function cleanup () {
-    if (!range) return;
+    if (!range) {
+      return;
+    }
     feed.undownload(range);
     range = null;
   }
 
   function open (size, cb) {
     feed.ready(function (err) {
-      if (err) return cb(err);
+      if (err) {
+        return cb(err);
+      }
       read(size, cb);
     });
   }

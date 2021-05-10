@@ -1,0 +1,11 @@
+{
+  "bot": {
+    "botSpec": null,
+    "invitation": null,
+    "localDev": false,
+    "ipc": {
+      "portFrom": 3250,
+      "portTo": 3350
+    }
+  }
+}
