@@ -378,6 +378,12 @@
    */
   "projects": [
     {
+      "packageName": "@dxos/wallet-extension",
+      "projectFolder": "packages/sdk/wallet-extension",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/client",
       "projectFolder": "packages/sdk/client",
       "shouldPublish": true,

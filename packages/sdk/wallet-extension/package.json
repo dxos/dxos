@@ -1,0 +1,24 @@
+{
+  "name": "@dxos/wallet-extension",
+  "version": "2.10.2",
+  "description": "DXOS Wallet Extension",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "start": "snowpack dev",
+    "build": "INLINE_RUNTIME_CHUNK=false snowpack build"
+  },
+  "devDependencies": {
+    "@snowpack/plugin-webpack": "^2.3.1",
+    "@types/chrome": "^0.0.137",
+    "@types/react": "^17.0.5",
+    "@types/react-dom": "^17.0.3",
+    "snowpack": "^3.3.7",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
+}
