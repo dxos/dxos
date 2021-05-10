@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import path from 'path';
+
 import { MessengerModel } from '@dxos/messenger-model';
 
 import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../src/orchestrator';
@@ -15,7 +17,7 @@ test('local source', async () => {
 
   await orchestrator.start();
 
-  const agent = await orchestrator.startAgent({ botPath: './src/test-agent.js' });
+  const agent = await orchestrator.startAgent({ botPath: path.join(__dirname, '../src/test-agent.js') });
 
   await orchestrator.party.database.createItem({ model: MessengerModel, type: 'dxos.org/type/testing/object' });
 
