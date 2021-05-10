@@ -8,7 +8,10 @@ import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
 import { useClient } from '@dxos/react-client';
 
-// TODO(burdon): Break apart.
+/**
+ * This is a poor abstraction -- remove it with util functions.
+ * @deprecated
+ */
 export const useGenerator = () => {
   const client = useClient();
 
@@ -26,10 +29,9 @@ export const useGenerator = () => {
   };
 
   const joinParty = async (invitation: string) => {
-    console.debug('Joining...');
-
     const party = await client.echo.joinParty(
-      InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));
+      InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000')
+    );
     await party.open();
     console.debug('Open', party);
 
@@ -37,5 +39,5 @@ export const useGenerator = () => {
     setParty(party);
   };
 
-  return { party, generator, createParty, joinParty };
+  return { party, database: generator?.database, generator, createParty, joinParty };
 };

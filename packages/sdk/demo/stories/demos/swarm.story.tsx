@@ -14,17 +14,17 @@ import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
 import { useClient } from '@dxos/react-client';
 
-import { EchoGraph, MemberList } from '../src';
-import { ONLINE_CONFIG } from '../src/config';
-import { Node } from '../src/models';
-import { ClientInitializer } from './story-components/ClientInitializer';
+import { EchoGraph, MemberList } from '../../src';
+import { ONLINE_CONFIG } from '../../src/config';
+import { Node } from '../../src/models';
+import { ClientInitializer } from '../story-components/ClientInitializer';
 
 const log = debug('dxos:echo:story');
 
 debug.enable('dxos:echo:story:*, dxos:*:error');
 
 export default {
-  title: 'Swarm'
+  title: 'Demos/Swarm'
 };
 
 export const Primary = () => (

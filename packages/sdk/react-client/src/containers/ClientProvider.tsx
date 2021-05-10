@@ -15,7 +15,7 @@ export interface ClientProviderProps {
 /**
  * Client provider container.
  */
-export const ClientProvider = ({ client, children }: ClientProviderProps) => {
+const ClientProvider = ({ client, children }: ClientProviderProps) => {
   useEffect(() => {
     (window as any).__DXOS__ = client.getDevtoolsContext();
   }, []);
@@ -26,3 +26,5 @@ export const ClientProvider = ({ client, children }: ClientProviderProps) => {
     </ClientContext.Provider>
   );
 };
+
+export default ClientProvider;
