@@ -548,6 +548,10 @@
       "projectFolder": "packages/bot/bot",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/testing",
+      "projectFolder": "packages/gravity/testing"
     }
     // {
     //   /**
