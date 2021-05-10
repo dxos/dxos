@@ -6,7 +6,7 @@ import { Schema } from './codec';
 
 export const anySubstitutions = {
   'google.protobuf.Any': {
-    encode: (value: any, schema: Schema<any>): any => {
+    encode: (value: WithTypeUrl<{}>, schema: Schema<any>): any => {
       const codec = schema.tryGetCodecForType(value.__type_url);
       const data = codec.encode(value);
       return {
@@ -14,7 +14,7 @@ export const anySubstitutions = {
         value: data
       };
     },
-    decode: (value: any, schema: Schema<any>): any => {
+    decode: (value: any, schema: Schema<any>): WithTypeUrl<any> => {
       const codec = schema.tryGetCodecForType(value.type_url);
       const data = codec.decode(value.value);
       return {

@@ -229,6 +229,7 @@ importers:
       chalk: 4.1.1
       protobufjs: 6.10.2
       read-pkg: 5.2.0
+      ts-morph: 10.0.2
     devDependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/eslint-plugin': 1.0.10_eslint@7.24.0+typescript@4.2.4
@@ -253,6 +254,7 @@ importers:
       protobufjs: ^6.9.0
       read-pkg: ^5.2.0
       ts-jest: ^26.1.4
+      ts-morph: ~10.0.2
       ts-node: ^9.0.0
       typescript: ^4.0.2
   ../../packages/common/util:
@@ -4559,6 +4561,15 @@ packages:
       react-dom: '*'
     resolution:
       integrity: sha512-TXMCg0jT8xmuU8BkKMtp8l7Z50Ykew5WNX8UoIKTaLFwKkP2+1YDhOLA2Ga3wY4x29jyntk7EWfum0kjlYiSjQ==
+  /@ts-morph/common/0.9.1:
+    dependencies:
+      fast-glob: 3.2.5
+      minimatch: 3.0.4
+      mkdirp: 1.0.4
+      path-browserify: 1.0.1
+    dev: false
+    resolution:
+      integrity: sha512-NkSf6P5cPxzgOuhGOK6AZgGq1M5C3EoicEVfXfqnJ0ntmA3lHDs6hzdh61zmO22b6FMpbq/m2Sj9JNqeiLEmBw==
   /@types/abstract-leveldown/5.0.1:
     dev: true
     resolution:
@@ -7274,6 +7285,10 @@ packages:
       node: '>= 0.12.0'
     resolution:
       integrity: sha1-bqa989hTrlTMuOR7+gvz+QMfsYQ=
+  /code-block-writer/10.1.1:
+    dev: false
+    resolution:
+      integrity: sha512-67ueh2IRGst/51p0n6FvPrnRjAGHY5F8xdjkgrYE7DDzpJe6qA07RYQ9VcoUeo5ATOjSOiWpSL3SWBRRbempMw==
   /code-point-at/1.1.0:
     engines:
       node: '>=0.10.0'
@@ -14206,6 +14221,10 @@ packages:
   /path-browserify/0.0.1:
     resolution:
       integrity: sha512-BapA40NHICOS+USX9SN4tyhq+A2RrN/Ws5F0Z5aMHDp98Fl86lX8Oti8B7uN93L4Ifv4fHOEA+pQw87gmMO/lQ==
+  /path-browserify/1.0.1:
+    dev: false
+    resolution:
+      integrity: sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g==
   /path-dirname/1.0.2:
     resolution:
       integrity: sha1-zDPSTVJeCZpTiMAzbG4yuRYGCeA=
@@ -17105,6 +17124,13 @@ packages:
       webpack: '*'
     resolution:
       integrity: sha512-YiQipGGAFj2zBfqLhp28yUvPP9jUGqHxRzrGYuc82Z2wM27YIHbElXiaZDc93c3x0mz4zvBmS6q/DgExpdj37A==
+  /ts-morph/10.0.2:
+    dependencies:
+      '@ts-morph/common': 0.9.1
+      code-block-writer: 10.1.1
+    dev: false
+    resolution:
+      integrity: sha512-TVuIfEqtr9dW25K3Jajqpqx7t/zLRFxKu2rXQZSDjTm4MO4lfmuj1hn8WEryjeDDBFcNOCi+yOmYUYR4HucrAg==
   /ts-node/9.1.1_typescript@4.2.4:
     dependencies:
       arg: 4.1.3
