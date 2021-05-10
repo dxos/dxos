@@ -1,16 +1,17 @@
 on:
   push:
-    branchess-ignore:
+    branches-ignore:
       - main
 
 name: check
 jobs:
   check:
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 15
     strategy:
       matrix:
-        node-version: [12.17, 16.0]
+        node-version: [12.17]
+        # node-version: [12.17, 16.0]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
@@ -19,7 +20,7 @@ jobs:
           fetch-depth: 0
       - name: Check, install and build
         run: |
-          \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
+          \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
           
           # Install dependencies
           node common/scripts/install-run-rush.js install
