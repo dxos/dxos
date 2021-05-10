@@ -20,7 +20,7 @@ const f = ts.factory;
 registerResolver();
 
 export async function compileSchema (substitutionsModule: ModuleSpecifier | undefined, protoFiles: string[], outDirPath: string) {
-  const { imports, substitutions } = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : { imports: [], substitutions: {} };
+  const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
   logger.logParsedSubstitutions(substitutions);
 
   const root = await protobufjs.load(protoFiles);
@@ -31,12 +31,13 @@ export async function compileSchema (substitutionsModule: ModuleSpecifier | unde
     const declarations: ts.Statement[] = Array.from(createDeclarations(types, substitutions));
     const outFile = join(outDirPath, getFileNameForNamespace(namespace));
 
-    const importDeclarations = imports.map(decriptor => f.createImportDeclaration(
+    const substitutionsIdentifier = ts.factory.createIdentifier('substitutions');
+    const substitutionsImport = substitutionsModule && ts.factory.createImportDeclaration(
       [],
       [],
-      decriptor.clause,
-      ts.factory.createStringLiteral(decriptor.module.importSpecifier(dirname(outFile)))
-    ));
+      ts.factory.createImportClause(false, substitutionsIdentifier, undefined),
+      ts.factory.createStringLiteral(substitutionsModule.importSpecifier(dirname(outFile)))
+    );
 
     const otherNamespaceImports = Array.from(namespaces.keys())
       .filter(ns => ns !== namespace)
@@ -50,7 +51,7 @@ export async function compileSchema (substitutionsModule: ModuleSpecifier | unde
 
     const generatedSourceFile = ts.factory.createSourceFile(
       [
-        ...importDeclarations,
+        ...(substitutionsImport ? [substitutionsImport] : []),
         ...otherNamespaceImports,
         ...declarations
       ],
@@ -69,13 +70,6 @@ export async function compileSchema (substitutionsModule: ModuleSpecifier | unde
 
   const { imports: schemaImports, exports: schemaExports } = createSerializerDefinition(substitutionsModule, root, outDirPath);
 
-  const importDeclarations = imports.map(decriptor => ts.factory.createImportDeclaration(
-    [],
-    [],
-    decriptor.clause,
-    ts.factory.createStringLiteral(decriptor.module.importSpecifier(outDirPath))
-  ));
-
   const otherNamespaceImports = Array.from(namespaces.keys())
     .sort((b, a) => b.localeCompare(a))
     .map(ns => f.createImportDeclaration(
@@ -88,7 +82,6 @@ export async function compileSchema (substitutionsModule: ModuleSpecifier | unde
   const generatedSourceFile = ts.factory.createSourceFile(
     [
       ...schemaImports,
-      ...importDeclarations,
       ...otherNamespaceImports,
       createTypeDictinary(root),
       ...schemaExports
