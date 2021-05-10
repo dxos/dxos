@@ -438,6 +438,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/messenger-model",
+      "projectFolder": "packages/echo/messenger-model",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/echo-db",
       "projectFolder": "packages/echo/echo-db",
       "shouldPublish": true,

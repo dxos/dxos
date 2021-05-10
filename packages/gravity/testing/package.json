@@ -25,7 +25,7 @@
     "@dxos/config": "~1.0.0-beta.74",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/messenger-model": "~1.2.0-alpha.56",
+    "@dxos/messenger-model": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/protocol-plugin-bot": "workspace:*",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
