@@ -7,7 +7,7 @@
   "main": "dist/src/index.js",
   "scripts": {
     "start": "snowpack dev",
-    "build": "snowpack build"
+    "build": "snowpack build; true"
   },
   "devDependencies": {
     "@snowpack/plugin-webpack": "^2.3.1",
