@@ -99,12 +99,6 @@ export class NetworkManager {
     return () => this.leaveProtocolSwarm(topic);
   }
 
-  foo() {
-    const swarm: Swarm = null as any;
-
-    return swarm.connections
-  }
-
   async leaveProtocolSwarm (topic: PublicKey) {
     log(`Join ${topic}`);
 
