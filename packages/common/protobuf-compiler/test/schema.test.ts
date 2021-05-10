@@ -15,7 +15,7 @@ test('encode and decode', async () => {
         key: new MyKey(Buffer.from('foo')),
         type: TaskType.COMPLETED,
         googleAny: {
-          typeUrl: 'dxos.test.SubstitutedByInterface',
+          __type_url: 'dxos.test.SubstitutedByInterface',
           foo: 'foo',
         }
       },
@@ -55,7 +55,7 @@ test('complex fields round trip', () => {
       foo: 'foo'
     },
     googleAny: {
-      typeUrl: 'dxos.test.Task',
+      __type_url: 'dxos.test.Task',
       id: 'baz',
       title: 'Baz',
       key: new MyKey(Buffer.from('foo')),
