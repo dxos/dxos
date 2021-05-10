@@ -1393,7 +1393,7 @@ importers:
       react-dom: 16.12.0
       typescript: ^4.0.2
       uuid: ^3.3.2
-  ../../packages/sdk/wallet-extension:
+  ../../packages/wallet/extension:
     dependencies:
       react: 16.13.1
       react-dom: 16.12.0_react@16.13.1
