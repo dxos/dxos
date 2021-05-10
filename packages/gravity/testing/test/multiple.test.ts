@@ -5,7 +5,7 @@ import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../src/orchestrator';
 
 jest.setTimeout(100_000);
 
-test('multiple agents', async () => {
+test.skip('multiple agents', async () => {
   const numAgents = 5;
   const numMessages = 10;
 
@@ -26,7 +26,7 @@ test('multiple agents', async () => {
     }
   }));
 
-  await Promise.all(agents.map(agent => new Promise((resolve, reject) => {
+  await Promise.all(agents.map(agent => new Promise<void>((resolve, reject) => {
     const timeoutId = setTimeout(async () => {
       try {
         const messages = await agent.sendCommand({ type: 'get-all' });

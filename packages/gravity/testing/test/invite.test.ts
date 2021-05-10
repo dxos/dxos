@@ -5,7 +5,7 @@ import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../src/orchestrator';
 
 jest.setTimeout(100 * 1000);
 
-test('invite two agents to a party', async () => {
+test.skip('invite two agents to a party', async () => {
   const orchestrator = new Orchestrator({ local: true });
 
   orchestrator.client.registerModel(MessengerModel);

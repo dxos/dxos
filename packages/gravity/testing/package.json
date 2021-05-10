@@ -19,6 +19,7 @@
     "globalTeardown": "<rootDir>/../src/teardown.ts"
   },
   "dependencies": {
+    "@dxos/bot": "workspace:*",
     "@dxos/botkit": "workspace:*",
     "@dxos/botkit-client":"workspace:*",
     "@dxos/client": "workspace:*",
@@ -62,9 +63,11 @@
     "@babel/plugin-proposal-class-properties": "^7.12.1",
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@babel/preset-env": "^7.12.7",
+    "@types/jest": "^26.0.7",
     "@types/tar": "^4.0.4",
     "babel-plugin-add-module-exports": "^1.0.4",
     "babel-plugin-inline-import": "^3.0.0",
+    "babel-watch": "7.0.0",
     "esbuild": "^0.8.11",
     "jest": "^26.2.2",
     "playwright-chromium": "^1.7.0",

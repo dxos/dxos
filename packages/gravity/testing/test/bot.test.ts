@@ -25,7 +25,7 @@ test('local source', async () => {
   await orchestrator.destroy();
 });
 
-test('remote source', async () => {
+test.skip('remote source', async () => {
   const orchestrator = new Orchestrator({ local: false });
 
   orchestrator.client.registerModel(MessengerModel);
@@ -41,7 +41,7 @@ test('remote source', async () => {
   await orchestrator.destroy();
 });
 
-test('browser', async () => {
+test.skip('browser', async () => {
   const orchestrator = new Orchestrator({ local: false });
 
   orchestrator.client.registerModel(MessengerModel);
