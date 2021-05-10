@@ -8,7 +8,7 @@ import { Box, Typography } from '@material-ui/core';
 import { teal } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { ItemAdapter } from './ListView';
+import { ItemAdapter } from './adapter';
 
 const useStyles = makeStyles(theme => ({
   root: {

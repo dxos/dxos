@@ -86,7 +86,7 @@ const TreeItem = ({
 }: {
   className?: string,
   nodeId: string,
-  size: string,
+  size: string | undefined,
   label: string,
   value?: any,
   children?: React.ReactNode
@@ -111,21 +111,23 @@ const TreeItem = ({
   );
 };
 
+interface JsonTreeViewProperties {
+  className?: string
+  data?: any
+  depth?: number
+  onSelect?: () => void
+  root?: string
+  size?: string
+}
+
 const JsonTreeView = ({
-  className,
+  className = undefined,
   data = {},
   depth = Infinity,
-  onSelect,
+  onSelect = () => {},
   root,
   size
-}: {
-  className?: string,
-  data: any,
-  depth: number,
-  onSelect: () => void,
-  root: string,
-  size: string
-}) => {
+}: JsonTreeViewProperties) => {
   const classes = useStyles({ fontSize: size });
   if (!data) {
     data = {};
@@ -191,7 +193,7 @@ const JsonTreeView = ({
       expanded={expanded}
       selected={[]}
     >
-      {renderNode(data, root)}
+      {renderNode(data, root || '')}
     </MuiTreeView>
   );
 };

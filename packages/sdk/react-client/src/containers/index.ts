@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import ClientContextProvider from './ClientContextProvider';
-export { ClientContextProvider };
-
-export * from './ClientProvider';
+export { default as ClientContextProvider } from './ClientContextProvider';
+export { default as ClientInitializer } from './ClientInitializer';
+export { default as ClientProvider } from './ClientProvider';

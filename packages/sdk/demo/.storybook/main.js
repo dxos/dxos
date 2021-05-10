@@ -6,7 +6,7 @@ const path = require('path');
 
 module.exports = {
   stories: ['../stories/**/*.jsx', '../stories/**/*.tsx'],
-  addons: ['@storybook/addon-actions', '@storybook/addon-links', '@storybook/addon-knobs'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-links', '@storybook/addon-knobs'],
   webpackFinal: async config => {
     config.module.rules.push({
       test: /\.(ts|tsx)$/,
@@ -17,7 +17,7 @@ module.exports = {
         // Optional
         {
           loader: require.resolve('react-docgen-typescript-loader'),
-        },
+        }
       ],
     });
     config.resolve.extensions.push('.ts', '.tsx');
