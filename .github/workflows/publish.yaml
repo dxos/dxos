@@ -6,7 +6,7 @@ on:
 name: publish
 jobs:
   publish:
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 15
     strategy:
       matrix:
@@ -19,7 +19,8 @@ jobs:
         fetch-depth: 0
     - name: Check, install and build
       run: |
-        \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
+        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+        npm install -g @microsoft/rush pnpm
         
         # Install dependencies
         node common/scripts/install-run-rush.js install
@@ -28,7 +29,8 @@ jobs:
         node common/scripts/install-run-rush.js build --light --verbose 
     - name: Publish
       run:  |
-        \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
+        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+        npm install -g @microsoft/rush pnpm
 
         # Publish
         node common/scripts/install-run-rush.js publish --publish --include-all
