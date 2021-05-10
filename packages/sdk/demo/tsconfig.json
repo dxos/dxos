@@ -24,10 +24,10 @@
     "stories",
   ],
   "references": [
-    { "path": "../echo-db" },
-    { "path": "../echo-protocol" },
-    { "path": "../model-factory" },
-    { "path": "../object-model" },
+    { "path": "../../echo/echo-db" },
+    { "path": "../../echo/echo-protocol" },
+    { "path": "../../echo/model-factory" },
+    { "path": "../../echo/object-model" },
     { "path": "../../common/util" },
     { "path": "../../sdk/react-client" }
   ]

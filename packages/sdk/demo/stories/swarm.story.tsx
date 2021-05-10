@@ -3,19 +3,21 @@
 //
 
 import debug from 'debug';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 
-import { Button, CircularProgress, TextField, Toolbar } from '@material-ui/core';
+import { Button, TextField, Toolbar } from '@material-ui/core';
 
-import { createId, createKeyPair } from '@dxos/crypto';
-import { ECHO, InvitationDescriptor, createTestInstance } from '@dxos/echo-db';
+import { createId, PublicKey } from '@dxos/crypto';
+import { InvitationDescriptor } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
+import { useClient } from '@dxos/react-client';
 
-import { EchoContext, EchoGraph, MemberList } from '../src';
-import { createItemStorage, createSnapshotStorage, onlineConfig } from '../src/config/config';
+import { EchoGraph, MemberList } from '../src';
+import { ONLINE_CONFIG } from '../src/config';
 import { Node } from '../src/models';
+import { ClientInitializer } from './story-components/ClientInitializer';
 
 const log = debug('dxos:echo:story');
 
@@ -25,46 +27,21 @@ export default {
   title: 'Swarm'
 };
 
-export const Primary = () => {
+export const Primary = () => (
+  <ClientInitializer initProfile config={ONLINE_CONFIG}>
+    <Story/>
+  </ClientInitializer>
+);
+
+const Story = () => {
   const [id] = useState(createId());
   const [invitation, setInvitation] = useState<string | undefined>(undefined);
-  const [echo, setEcho] = useState<ECHO>();
-  const [storage] = useState(createItemStorage);
-  const [snapshotStorage] = useState(createSnapshotStorage);
+  const client = useClient();
 
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
   const grid = useGrid({ width, height });
   const radius = Math.min(grid.size.width, grid.size.height) / 3;
-
-  useEffect(() => {
-    setImmediate(async () => {
-      try {
-        const echo = await createTestInstance({
-          ...onlineConfig,
-          storage,
-          // keyStorage: leveljs('dxos/echo-demo/keystore'),
-          // TODO(burdon): Move const to config.
-          snapshotStorage
-        });
-
-        log('Created:', String(echo));
-        await echo.open();
-        setEcho(echo);
-
-        if (!echo.identityKey) {
-          await echo.createIdentity(createKeyPair());
-          await echo.createHalo();
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    });
-  }, []);
-
-  if (!echo) {
-    return <CircularProgress />;
-  }
 
   // Click to invite.
   const handleInvite = async (node: Node) => {
@@ -72,7 +49,7 @@ export const Primary = () => {
       console.warn('Cannot invite to node without party key');
       return;
     }
-    const party = await echo.getParty(node.partyKey);
+    const party = await client.echo.getParty(PublicKey.from(node.partyKey));
     if (!party) {
       console.warn(`Party not found: ${node.partyKey.toString()}`);
       return;
@@ -91,17 +68,17 @@ export const Primary = () => {
       console.warn('Cannot join party without invitation.');
       return;
     }
-    const party = await echo.joinParty(
+    const party = await client.echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000'));
     await party.open();
   };
 
   const handleResetStorage = async () => {
-    await echo.reset();
+    await client.reset();
     window.location.reload();
   };
 
-  const activeParty = echo.queryParties().value[0];
+  const activeParty = client.echo.queryParties().value[0];
 
   return (
     <FullScreen>
@@ -122,23 +99,19 @@ export const Primary = () => {
           </div>
         </Toolbar>
 
-        {activeParty && <MemberList party={echo.queryParties().first} />}
+        {activeParty && <MemberList party={client.echo.queryParties().first} />}
 
         <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
           {resizeListener}
           <SVG width={width} height={height}>
             <Markers />
 
-            {echo && (
-              <EchoContext.Provider key={id} value={{ echo }}>
-                <EchoGraph
-                  id={id}
-                  grid={grid}
-                  radius={radius}
-                  onSelect={(node: Node) => node.type === 'party' && handleInvite(node)}
-                />
-              </EchoContext.Provider>
-            )}
+            <EchoGraph
+              id={id}
+              grid={grid}
+              radius={radius}
+              onSelect={(node: Node) => node.type === 'party' && handleInvite(node)}
+            />
           </SVG>
         </div>
       </div>

@@ -442,12 +442,12 @@
       "projectFolder": "packages/echo/echo-testing"
     },
     {
-      "packageName": "@dxos/feed-store",
-      "projectFolder": "packages/echo/feed-store"
+      "packageName": "@dxos/demo",
+      "projectFolder": "packages/sdk/demo"
     },
     {
-      "packageName": "@dxos/echo-demo",
-      "projectFolder": "packages/echo/echo-demo"
+      "packageName": "@dxos/feed-store",
+      "projectFolder": "packages/echo/feed-store"
     },
     {
       "packageName": "@dxos/credentials",
