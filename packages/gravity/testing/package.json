@@ -8,14 +8,9 @@
   "main": "dist/src/index.js",
   "private": true,
   "scripts": {
-    "build": "tsc",
+    "build": "toolchain build",
     "lint": "toolchain lint",
-    "test": "jest --rootDir ./test --passWithNoTests --verbose --forceExit"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "preset": "ts-jest/presets/default",
-    "globalTeardown": "<rootDir>/../src/teardown.ts"
+    "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/bot": "workspace:*",
