@@ -1,3 +1,5 @@
+declare var chrome;
+
 const filesInDirectory = dir => new Promise (resolve =>
   dir.createReader ().readEntries (entries =>
       Promise.all (entries.filter (e => e.name[0] !== '.').map (e =>
@@ -26,7 +28,7 @@ const watchChanges = (dir, lastTimestamp) => {
 
 chrome.management.getSelf (self => {
   if (self.installType === 'development') {
-      chrome.runtime.getPackageDirectoryEntry (dir => watchChanges (dir))
+      chrome.runtime.getPackageDirectoryEntry (dir => watchChanges (dir, null))
       chrome.tabs.query ({ active: true, lastFocusedWindow: true }, tabs => { // NB: see https://github.com/xpl/crx-hotreload/issues/5
           if (tabs[0]) {
               chrome.tabs.reload (tabs[0].id)
