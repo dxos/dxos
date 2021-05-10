@@ -19,11 +19,11 @@ import {
   wrapMessage
 } from '@dxos/credentials';
 import { humanize, keyToString, PublicKey } from '@dxos/crypto';
+import { timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { timed } from '@dxos/util';
 
 import {
   GreetingInitiator,

@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { checkType } from '@dxos/debug';
 import { FeedMeta, schema, TestItemMutation } from '@dxos/echo-protocol';
-import { checkType } from '@dxos/util';
 
 import { Model } from '../model';
 import { ModelMeta } from '../types';

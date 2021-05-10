@@ -4,11 +4,13 @@
 
 import debug from 'debug';
 
+import { latch } from '@dxos/async';
 import { createId, createKeyPair, PublicKey, randomBytes } from '@dxos/crypto';
+import { checkType } from '@dxos/debug';
 import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream } from '@dxos/echo-protocol';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { checkType, createTransform, latch } from '@dxos/util';
+import { createTransform } from '@dxos/util';
 
 import { DefaultModel } from './default-model';
 import { Item } from './item';

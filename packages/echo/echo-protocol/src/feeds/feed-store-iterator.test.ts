@@ -9,9 +9,10 @@ import hypercore from 'hypercore';
 import pify from 'pify';
 import ram from 'random-access-memory';
 
+import { latch } from '@dxos/async';
 import { createId, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
-import { ComplexMap, latch } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { codec, createTestItemMutation, schema } from '../proto';
 import { Timeframe } from '../spacetime';

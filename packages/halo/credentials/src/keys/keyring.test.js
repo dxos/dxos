@@ -7,7 +7,7 @@
 import assert from 'assert';
 
 import { createKeyPair, keyToString, randomBytes, verify, PublicKey } from '@dxos/crypto';
-import { expectToThrow } from '@dxos/util';
+import { expectToThrow } from '@dxos/debug';
 
 import { KeyType, schema } from '../proto';
 import { Filter } from './filter';

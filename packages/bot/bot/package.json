@@ -2,7 +2,6 @@
   "name": "@dxos/bot",
   "version": "2.10.2",
   "description": "Botkit",
-  "keywords": [],
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -12,6 +11,7 @@
     "test": "toolchain test"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "~1.0.0-beta.74",
     "@dxos/crypto": "workspace:*",

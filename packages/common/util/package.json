@@ -1,14 +1,13 @@
 {
   "name": "@dxos/util",
   "version": "2.10.2",
-  "description": "Utilities to be moved to other repos.",
-  "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
+  "description": "Temporary bucket for misc functions, which should graduate into separate packages.",
   "bugs": {
-    "url": "https://github.com/dxos/echo/issues"
+    "url": "'https://github.com/dxos/protocols/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dxos/echo.git"
+    "url": "git+https://github.com/dxos/protocols.git"
   },
   "license": "AGPL-3.0",
   "main": "dist/src/index.js",
@@ -24,6 +23,7 @@
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",

@@ -5,8 +5,8 @@
 import debug from 'debug';
 import { SignalData } from 'simple-peer';
 
+import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { Event } from '@dxos/util';
 
 import { WebsocketRpc } from './websocket-rpc';
 

@@ -7,8 +7,10 @@ import jsondown from 'jsondown';
 import leveljs from 'level-js';
 import memdown from 'memdown';
 
-import { Keyring } from '@dxos/credentials';
+import { synchronized } from '@dxos/async';
+import { Invitation, Keyring } from '@dxos/credentials';
 import { humanize, PublicKey } from '@dxos/crypto';
+import { raise } from '@dxos/debug';
 import * as debug from '@dxos/debug';
 import { ECHO, InvitationOptions, OpenProgress, SecretProvider, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
@@ -17,7 +19,6 @@ import { ModelConstructor } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ValueUtil } from '@dxos/object-model';
 import { createStorage } from '@dxos/random-access-multi-storage';
-import { synchronized, raise } from '@dxos/util';
 import { Registry } from '@wirelineio/registry-client';
 
 import { DevtoolsContext } from './devtools-context';
@@ -330,19 +331,21 @@ export class Client {
     const party = await this.echo.getParty(partyKey) ?? raise(new Error(`Party not found: ${partyKey.toString()}`));
     return party.createInvitation({
       // TODO(marik-d): Probably an error here.
-      secretValidator: async (invitation, secret) => secret && secret.equals((invitation as any).secret),
+      secretValidator:
+        async (invitation: Invitation, secret: Buffer) => secret && secret.equals((invitation as any).secret),
       secretProvider
     },
     options);
   }
 
   /**
-   * @param {Buffer} partyKey Party publicKey
-   * @param {Buffer} recipientKey Recipient publicKey
+   * @param {PublicKey} partyKey Party publicKey
+   * @param {PublicKey} recipientKey Recipient publicKey
    */
   // TODO(burdon): Move to party.
   async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
-    const party = await this.echo.getParty(partyKey) ?? raise(new Error(`Party not found: ${humanize(partyKey.toString())}`));
+    const party =
+      await this.echo.getParty(partyKey) ?? raise(new Error(`Party not found: ${humanize(partyKey.toString())}`));
     return party.createOfflineInvitation(recipientKey);
   }
 

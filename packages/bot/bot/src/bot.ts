@@ -7,6 +7,7 @@ import debug from 'debug';
 import { EventEmitter } from 'events';
 import { join } from 'path';
 
+import { promiseTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { randomBytes, keyToBuffer, keyToString, createKeyPair, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
@@ -22,7 +23,6 @@ import {
   Message,
   InvitationMessage
 } from '@dxos/protocol-plugin-bot';
-import { promiseTimeout } from '@dxos/util';
 
 import { getClientConfig } from './config';
 

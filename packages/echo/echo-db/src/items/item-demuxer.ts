@@ -6,9 +6,12 @@ import assert from 'assert';
 import debug from 'debug';
 import { Readable } from 'stream';
 
-import { DatabaseSnapshot, EchoEnvelope, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot } from '@dxos/echo-protocol';
+import { raise } from '@dxos/debug';
+import {
+  DatabaseSnapshot, EchoEnvelope, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
+} from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
-import { createReadable, createWritable, jsonReplacer, raise } from '@dxos/util';
+import { createReadable, createWritable, jsonReplacer } from '@dxos/util';
 
 import { DefaultModel } from './default-model';
 import { Item } from './item';

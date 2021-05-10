@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@dxos/crypto": "workspace:*",
-    "@dxos/debug": "~1.0.0-beta.73",
+    "@dxos/debug": "workspace:*",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",

@@ -14,6 +14,10 @@ import { afterTest } from '../testutils';
 import { ConnectionState } from './connection';
 import { InMemoryConnection } from './in-memory-connection';
 
+// TODO(burdon): Flaky test.
+//     Cannot log after tests are done. Did you forget to wait for something async in your test?
+//     Attempted to log "Ignoring unsupported ICE candidate.".
+
 function createPair () {
   const topic = PublicKey.random();
   const peer1Id = PublicKey.random();

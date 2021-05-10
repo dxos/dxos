@@ -5,9 +5,10 @@
 import { expect, mockFn } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
+import { Event, latch, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
-import { Event, latch, sleep, range } from '@dxos/util';
+import { range } from '@dxos/util';
 
 import { NetworkManager } from './network-manager';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';

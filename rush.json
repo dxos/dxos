@@ -214,7 +214,7 @@
   //     "tools",      // non-shipping projects that are part of the developer toolchain
   //     "prototypes"  // experiments that should mostly be ignored by the review process
   //   ],
-  // 
+  //
   //   /**
   //    * A list of NPM package scopes that will be excluded from review.
   //    * We recommend to exclude TypeScript typings (the "@types" scope), because
@@ -343,7 +343,7 @@
     //    * The folder name for this variant.
     //    */
     //   "variantName": "old-sdk",
-    // 
+    //
     //   /**
     //    * An informative description
     //    */
@@ -377,6 +377,61 @@
    * 3. It's useful to have a centralized inventory of all projects and their important metadata.
    */
   "projects": [
+
+    //
+    // toolchains
+    //
+
+    {
+      "packageName": "@dxos/toolchain-node-library",
+      "projectFolder": "toolchains/node-library"
+    },
+
+    //
+    // common
+    //
+
+    {
+      "packageName": "@dxos/async",
+      "projectFolder": "packages/common/async",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/codec-protobuf",
+      "projectFolder": "packages/common/codec-protobuf",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/debug",
+      "projectFolder": "packages/common/debug",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/protobuf-compiler",
+      "projectFolder": "packages/common/protobuf-compiler",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/util",
+      "projectFolder": "packages/common/util",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/crypto",
+      "projectFolder": "packages/common/crypto",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+
+    //
+    // sdk
+    //
+
     {
       "packageName": "@dxos/client",
       "projectFolder": "packages/sdk/client",
@@ -395,24 +450,11 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
-    {
-      "packageName": "@dxos/codec-protobuf",
-      "projectFolder": "packages/common/codec-protobuf",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/protobuf-compiler",
-      "projectFolder": "packages/common/protobuf-compiler",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/util",
-      "projectFolder": "packages/common/util",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
+
+    //
+    // echo
+    //
+
     {
       "packageName": "@dxos/echo-protocol",
       "projectFolder": "packages/echo/echo-protocol",
@@ -450,24 +492,30 @@
       "projectFolder": "packages/echo/echo-demo"
     },
     {
+      "packageName": "@dxos/text-model",
+      "projectFolder": "packages/echo/text-model",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+
+    //
+    // halo
+    //
+
+    {
       "packageName": "@dxos/credentials",
       "projectFolder": "packages/halo/credentials",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
-    {
-      "packageName": "@dxos/toolchain-node-library",
-      "projectFolder": "toolchains/node-library"
-    },
+
+    //
+    // mesh
+    //
+
     {
       "packageName": "@dxos/protocol",
       "projectFolder": "packages/mesh/protocol",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/text-model",
-      "projectFolder": "packages/echo/text-model",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
@@ -513,12 +561,11 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
-    {
-      "packageName": "@dxos/crypto",
-      "projectFolder": "packages/common/crypto",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
+
+    //
+    // bot
+    //
+
     {
       "packageName": "@dxos/protocol-plugin-bot",
       "projectFolder": "packages/bot/protocol-plugin-bot",
@@ -543,24 +590,25 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     }
+
     // {
     //   /**
     //    * The NPM package name of the project (must match package.json)
     //    */
     //   "packageName": "my-app",
-    // 
+    //
     //   /**
     //    * The path to the project folder, relative to the rush.json config file.
     //    */
     //   "projectFolder": "apps/my-app",
-    // 
+    //
     //   /**
     //    * An optional category for usage in the "browser-approved-packages.json"
     //    * and "nonbrowser-approved-packages.json" files.  The value must be one of the
     //    * strings from the "reviewCategories" defined above.
     //    */
     //   "reviewCategory": "production",
-    // 
+    //
     //   /**
     //    * A list of local projects that appear as devDependencies for this project, but cannot be
     //    * locally linked because it would create a cyclic dependency; instead, the last published
@@ -569,20 +617,20 @@
     //   "cyclicDependencyProjects": [
     //     // "my-toolchain"
     //   ],
-    // 
+    //
     //   /**
     //    * If true, then this project will be ignored by the "rush check" command.
     //    * The default value is false.
     //    */
     //   // "skipRushCheck": false,
-    // 
+    //
     //   /**
     //    * A flag indicating that changes to this project will be published to npm, which affects
     //    * the Rush change and publish workflows. The default value is false.
     //    * NOTE: "versionPolicyName" and "shouldPublish" are alternatives; you cannot specify them both.
     //    */
     //   // "shouldPublish": false,
-    // 
+    //
     //   /**
     //    * An optional version policy associated with the project.  Version policies are defined
     //    * in "version-policies.json" file.  See the "rush publish" documentation for more info.
@@ -590,13 +638,13 @@
     //    */
     //   // "versionPolicyName": ""
     // },
-    // 
+    //
     // {
     //   "packageName": "my-controls",
     //   "projectFolder": "libraries/my-controls",
     //   "reviewCategory": "production"
     // },
-    // 
+    //
     // {
     //   "packageName": "my-toolchain",
     //   "projectFolder": "tools/my-toolchain",

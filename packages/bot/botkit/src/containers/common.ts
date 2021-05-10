@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ReadOnlyEvent } from '@dxos/util';
+import { ReadOnlyEvent } from '@dxos/async';
 
 import { BotId, BotInfo } from '../bot-manager';
 
