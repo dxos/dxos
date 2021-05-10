@@ -135,8 +135,8 @@ export class Orchestrator {
     // await this._client.destroy();
   }
 
-  async _startBotFactory (): Promise<{ topic: string, process: ChildProcess }> {
-    const doStart = async () => {
+  async _startBotFactory (): Promise<any> {
+    const doStart = async (): Promise<any> => {
       const { publicKey, secretKey } = createKeyPair();
   
       const topic = keyToString(publicKey);
@@ -158,7 +158,7 @@ export class Orchestrator {
       factory.stderr.pipe(process.stderr);
       factory.stdout.pipe(process.stdout);
 
-      await new Promise(resolve => {
+      await new Promise<void>(resolve => {
         factory.stdout.on('data', (data: Buffer) => {
           if (/"started":true/.test(data.toString())) {
             log('Bot Factory started.');
