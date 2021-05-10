@@ -1,0 +1,81 @@
+{
+  "DX_SIGNAL_ENDPOINT": {
+    "path": "services.signal.server"
+  },
+  "DX_ICE_ENDPOINTS": {
+    "path": "services.ice",
+    "type": "json"
+  },
+  "DX_WNS_ENDPOINT": {
+    "path": "services.wns.server"
+  },
+  "DX_WNS_USER_KEY": {
+    "path": "services.wns.userKey"
+  },
+  "DX_WNS_BOND_ID": {
+    "path": "services.wns.bondId"
+  },
+  "DX_WNS_CHAIN_ID": {
+    "path": "services.wns.chainId"
+  },
+  "DX_IPFS_SERVER": {
+    "path": "services.ipfs.server"
+  },
+  "DX_IPFS_GATEWAY": {
+    "path": "services.ipfs.gateway"
+  },
+  "DX_IPC_PORT": {
+    "path": "bot.ipc.port",
+    "type": "number"
+  },
+  "DX_IPC_PORT_FROM": {
+    "path": "bot.ipc.portFrom",
+    "type": "number"
+  },
+  "DX_IPC_PORT_TO": {
+    "path": "bot.ipc.portTo",
+    "type": "number"
+  },
+  "DX_BOT_UID": {
+    "path": "bot.uid"
+  },
+  "DX_BOT_NAME": {
+    "path": "bot.name"
+  },
+  "DX_BOT_CWD": {
+    "path": "bot.cwd"
+  },
+  "DX_BOT_RESTARTED": {
+    "path": "bot.restarted",
+    "type": "boolean"
+  },
+  "DX_BOT_RESET": {
+    "path": "bot.reset",
+    "type": "boolean"
+  },
+  "DX_BOT_PEER_ID": {
+    "path": "bot.peerId"
+  },
+  "DX_BOT_TOPIC": {
+    "path": "bot.topic"
+  },
+  "DX_BOT_SECRET_KEY": {
+    "path": "bot.secretKey"
+  },
+  "DX_BOT_LOCAL_DEV": {
+    "path": "bot.localDev",
+    "type": "boolean"
+  },
+  "DX_BOT_IPC_SERVER": {
+    "path": "bot.ipc.serverId"
+  },
+  "DX_CLI_NODE_PATH": {
+    "path": "cli.nodePath"
+  },
+  "DX_BOT_CONTROL_TOPIC": {
+    "path": "bot.controlTopic"
+  },
+  "DX_BOT_DUMP_FILE": {
+    "path": "bot.dumpFile"
+  }
+}

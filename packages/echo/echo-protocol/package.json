@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-protocol",
-  "version": "2.10.1-beta.4",
+  "version": "2.10.2",
   "description": "ECHO protocol definitions and utilities.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -25,7 +25,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/feed-store": "~1.2.0-beta.30",
+    "@dxos/feed-store": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
@@ -53,6 +53,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "2.10.1-beta.4",
+  "version": "2.10.2",
   "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
@@ -36,6 +36,6 @@
     "@types/jest": "^26.0.7"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

@@ -77,3 +77,4 @@ storybook-static
 
 .idea/workspace.xml
 
+**/out/bots/*

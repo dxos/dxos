@@ -43,7 +43,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-testing": "workspace:*",
-    "@dxos/feed-store": "~1.2.0-beta.30",
+    "@dxos/feed-store": "workspace:*",
     "@dxos/gem-core": "~1.0.0-beta.25",
     "@dxos/gem-spore": "~1.0.0-beta.25",
     "@dxos/model-factory": "workspace:*",
@@ -101,6 +101,6 @@
     "webpack": "4.44.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

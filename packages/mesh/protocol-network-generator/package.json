@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-network-generator",
-  "version": "2.10.1-beta.4",
+  "version": "2.10.2",
   "description": "Protocol network generator.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-network-generator#readme",
   "bugs": {
@@ -35,6 +35,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

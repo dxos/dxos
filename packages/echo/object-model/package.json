@@ -1,6 +1,6 @@
 {
   "name": "@dxos/object-model",
-  "version": "2.10.1-beta.4",
+  "version": "2.10.2",
   "private": false,
   "description": "ECHO object model.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
@@ -26,7 +26,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/feed-store": "~1.2.0-beta.30",
+    "@dxos/feed-store": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
@@ -54,6 +54,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

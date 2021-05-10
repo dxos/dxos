@@ -442,6 +442,10 @@
       "projectFolder": "packages/echo/echo-testing"
     },
     {
+      "packageName": "@dxos/feed-store",
+      "projectFolder": "packages/echo/feed-store"
+    },
+    {
       "packageName": "@dxos/echo-demo",
       "projectFolder": "packages/echo/echo-demo"
     },
@@ -512,6 +516,30 @@
     {
       "packageName": "@dxos/crypto",
       "projectFolder": "packages/common/crypto",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/protocol-plugin-bot",
+      "projectFolder": "packages/bot/protocol-plugin-bot",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/botkit",
+      "projectFolder": "packages/bot/botkit",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/botkit-client",
+      "projectFolder": "packages/bot/botkit-client",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/bot",
+      "projectFolder": "packages/bot/bot",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     }
