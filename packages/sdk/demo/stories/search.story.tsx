@@ -41,6 +41,8 @@ import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, CardAdapter, ItemAdapter,
   useGenerator, graphSelector
 } from '../src';
+import { ONLINE_CONFIG } from '../src/config';
+import { ClientInitializer } from './story-components/ClientInitializer';
 
 export default {
   title: 'Search'
@@ -393,7 +395,7 @@ const Main = ({ party, generator }: MainProps) => {
 
 // TOOD(burdon): Implement router.
 
-export const Primary = () => {
+const Story = () => {
   const { party, generator, createParty, joinParty } = useGenerator();
 
   const handleCreate = async () => {
@@ -418,3 +420,9 @@ export const Primary = () => {
     <Home onCreate={handleCreate} onJoin={handleJoin} />
   );
 };
+
+export const Primary = () => (
+  <ClientInitializer initProfile config={ONLINE_CONFIG}>
+    <Story />
+  </ClientInitializer>
+);

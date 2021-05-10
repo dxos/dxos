@@ -6,16 +6,28 @@ import React, { useState, useEffect, ReactNode } from 'react';
 
 import { CircularProgress } from '@material-ui/core';
 
-import { Client } from '@dxos/client';
+import { Client, ClientConfig } from '@dxos/client';
+import { createKeyPair } from '@dxos/crypto';
 import { ClientProvider } from '@dxos/react-client';
 
-export const ClientInitializer = ({ children }: {children?: ReactNode}) => {
+export interface ClientInitializerProps {
+  config?: ClientConfig
+  children?: ReactNode
+  initProfile?: boolean
+}
+
+export const ClientInitializer = ({ children, config, initProfile }: ClientInitializerProps) => {
   const [client, setClient] = useState<Client | undefined>();
 
   useEffect(() => {
     setImmediate(async () => {
-      const client = new Client();
+      const client = new Client(config);
       await client.initialize();
+
+      if (initProfile && !client.getProfile()) {
+        client.createProfile(createKeyPair());
+      }
+
       setClient(client);
     });
   }, []);

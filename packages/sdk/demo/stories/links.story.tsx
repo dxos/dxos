@@ -18,7 +18,9 @@ import {
   graphSelector,
   useGenerator
 } from '../src';
+import { ONLINE_CONFIG } from '../src/config';
 import { GraphData, Node } from '../src/models';
+import { ClientInitializer } from './story-components/ClientInitializer';
 
 export default {
   title: 'Links',
@@ -150,7 +152,7 @@ const Component = ({ generator }: {generator: Generator}) => {
   );
 };
 
-export const Primary = () => {
+const Story = () => {
   const { generator, createParty } = useGenerator();
 
   useEffect(() => {
@@ -171,3 +173,9 @@ export const Primary = () => {
     <Component generator={generator} />
   );
 };
+
+export const Primary = () => (
+  <ClientInitializer initProfile config={ONLINE_CONFIG}>
+    <Story />
+  </ClientInitializer>
+);

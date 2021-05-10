@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/echo-demo",
+  "name": "@dxos/demo",
   "version": "2.10.1-beta",
   "private": true,
   "description": "ECHO database demo app.",

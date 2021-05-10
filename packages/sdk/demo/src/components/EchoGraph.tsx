@@ -17,8 +17,9 @@ import {
   NodeProjector
 } from '@dxos/gem-spore';
 import { ObjectModel } from '@dxos/object-model';
+import { useClient } from '@dxos/react-client';
 
-import { useEcho, useGraphData } from '../hooks';
+import { useGraphData } from '../hooks';
 
 // TODO(burdon): Merge styles.
 const useCustomStyles = makeStyles(() => ({
@@ -193,7 +194,7 @@ const EchoGraph = (
     onSelect && onSelect(source);
   };
 
-  const echo = useEcho();
+  const { echo } = useClient();
   const [, setSelected] = useState();
   const [{ layout, drag }, setLayout] = useState(() => createLayout({
     echo, delta, grid, guides: guides.current, linkProjector, handleSelect
