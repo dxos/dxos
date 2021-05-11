@@ -1,10 +1,10 @@
 //
-// Copyright 2020 DXOS.
+// Copyright 2021 DXOS.org
 //
 
-import { resolve } from 'path';
 import fs from 'fs';
 import yaml from 'js-yaml';
+import { resolve } from 'path';
 import { DefinePlugin, NormalModuleReplacementPlugin } from 'webpack';
 
 import { mapFromKeyValues } from './config';

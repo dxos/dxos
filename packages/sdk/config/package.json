@@ -11,14 +11,9 @@
     "ConfigPlugin.js"
   ],
   "scripts": {
-    "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\" --source-maps inline",
-    "build:watch": "babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\" --source-maps inline --watch",
-    "clean": "del-cli dist",
-    "coverage": "npm test -- --coverage",
-    "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls",
+    "build": "toolchain build",
     "lint": "toolchain lint",
-    "prepublishOnly": "npm run build && npm run test",
-    "test": "jest --rootDir ./src --verbose --passWithNoTests --no-cache"
+    "test": "jest --rootDir ./src --verbose --passWithNoTests --no-cach"
   },
   "dependencies": {
     "@babel/runtime": "^7.10.4",
@@ -27,7 +22,8 @@
     "js-yaml": "^3.13.1",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
-    "lodash.set": "^4.3.2"
+    "lodash.set": "^4.3.2",
+    "node-fetch": "~2.6.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

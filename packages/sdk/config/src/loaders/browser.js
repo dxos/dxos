@@ -1,10 +1,12 @@
 //
-// Copyright 2020 DXOS.
+// Copyright 2021 DXOS.org
 //
 
 /* THIS FILE WILL BE LOADED BY CONTEXT REPLACEMENT PLUGIN IN BROWSER ENVS */
 
 /* global __DXOS_CONFIG__ __CONFIG_DYNAMICS__ __CONFIG_ENVS__ __CONFIG_DEFAULTS__ */
+
+import { fetch } from 'node-fetch';
 
 const CONFIG_ENDPOINT = '/config/config.json';
 

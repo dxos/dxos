@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DXOS.
+// Copyright 2021 DXOS.org
 //
 
 export * from './config';

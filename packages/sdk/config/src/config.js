@@ -1,11 +1,11 @@
 //
-// Copyright 2020 DXOS.
+// Copyright 2021 DXOS.org
 //
 
+import { boolean } from 'boolean';
 import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
 import set from 'lodash.set';
-import { boolean } from 'boolean';
 
 /**
  * Maps the given objects onto a flattend set of (key x values).

@@ -1,13 +1,10 @@
 //
-// Copyright 2020 DXOS.
+// Copyright 2021 DXOS.org
 //
 
-import yaml from 'js-yaml';
-
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
-
-import defaults from './testing/test.yml';
-import envmap from './testing/env_map.yml';
+import envmap from './testing/env_map';
+import defaults from './testing/test';
 
 test('Empty config', () => {
   const config = new Config();
@@ -21,7 +18,7 @@ test('Basic config', () => {
     client: {
       tag: 'testing'
     }
-  }, yaml.load(defaults));
+  }, defaults);
 
   expect(config.values).toEqual({
     client: {
@@ -39,7 +36,7 @@ test('Mapping', () => {
     client: {
       tag: 'testing'
     }
-  }, mapFromKeyValues(yaml.load(envmap), process.env));
+  }, mapFromKeyValues(envmap, process.env));
 
   expect(config.values).toEqual({
     client: {
@@ -51,7 +48,7 @@ test('Mapping', () => {
     }
   });
 
-  const values = mapToKeyValues(yaml.load(envmap), config.values);
+  const values = mapToKeyValues(envmap, config.values);
 
   expect(values).toEqual({
     TEST_CLIENT_ID: 900,
@@ -65,9 +62,9 @@ test('mapToKeyValuesping', () => {
     client: {
       tag: 'testing'
     }
-  }, yaml.load(defaults));
+  }, defaults);
 
-  const values = mapToKeyValues(yaml.load(envmap), config.values);
+  const values = mapToKeyValues(envmap, config.values);
 
   expect(values).toEqual({
     TEST_CLIENT_ID: 123,

@@ -1,7 +1,0 @@
-#
-# Test values
-#
-
-client:
-  id: 123
-  tag: "xyz"
