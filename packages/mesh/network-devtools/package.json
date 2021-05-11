@@ -46,7 +46,7 @@
     "react-docgen-typescript-loader": "^3.7.2",
     "react-dom": "^16.14.0",
     "ts-loader": "~8.1.0",
-    "typescript": "^4.0.2",
+    "typescript": "^4.2.4",
     "webpack": "4.44.2"
   },
   "peerDependencies": {
