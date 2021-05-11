@@ -3,9 +3,10 @@
   "version": "2.10.2",
   "description": "Config utilities",
   "keywords": [],
-  "license": "AGPLv3",
+  "license": "AGPL-3.0",
   "author": "DxOS.org",
-  "main": "dist/es/index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "ConfigPlugin.js"
@@ -13,7 +14,7 @@
   "scripts": {
     "build": "toolchain build",
     "lint": "toolchain lint",
-    "test": "jest --rootDir ./src --verbose --passWithNoTests --no-cach"
+    "test": "toolchain test"
   },
   "dependencies": {
     "@babel/runtime": "^7.10.4",
