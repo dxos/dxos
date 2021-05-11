@@ -8,10 +8,10 @@ import { LOCAL_BOT_MAIN_FILE } from '../source-manager';
 import { CommandInfo, ChildProcessContainer } from './child-process-container';
 
 // Command to spawn to run a bot in local development mode.
-const LOCAL_BOT_RUN_COMMAND = 'yarn';
+const LOCAL_BOT_RUN_COMMAND = 'npx';
 
 // Fixed arguments to pass to LOCAL_BOT_RUN_COMMAND.
-const LOCAL_BOT_RUN_ARGS = ['--silent', 'babel-watch', '--use-polling'];
+const LOCAL_BOT_RUN_ARGS = ['babel-node'];
 
 /**
  * Local Bot Container; Used for running bots locally as a node process.
