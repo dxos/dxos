@@ -1,15 +1,14 @@
+//
+// Copyright 2021 DXOS.org
+//
+
 import React, { useState, useEffect } from 'react';
 import { hot } from 'react-hot-loader';
-import logo from '@assets/images/dxos.png';
-import {createKeyPair} from '@dxos/crypto'
-import {ClientProvider} from '@dxos/react-client'
-import {Client} from '@dxos/client'
-import Home from './Home';
 
-type Props = {
-  title: string;
-  version: string;
-};
+import { Client } from '@dxos/client';
+import { ClientProvider } from '@dxos/react-client';
+
+import Home from './Home';
 
 const Application = () => {
   const [client, setClient] = useState<Client | undefined>();
@@ -23,12 +22,12 @@ const Application = () => {
   }, []);
 
   if (!client) {
-    return <p>'Loading...'</p>
+    return <p>Loading...</p>;
   }
 
   return (
     <ClientProvider client={client}>
-      <Home/>
+      <Home />
     </ClientProvider>
   );
 };

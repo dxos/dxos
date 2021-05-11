@@ -1,6 +1,11 @@
+//
+// Copyright 2021 DXOS.org
+//
+
 import React from 'react';
-import {createKeyPair} from '@dxos/crypto'
-import {useClient, useProfile} from '@dxos/react-client'
+
+import { createKeyPair } from '@dxos/crypto';
+import { useClient, useProfile } from '@dxos/react-client';
 
 export const Home = () => {
   const client = useClient();

@@ -17,10 +17,11 @@ module.exports = {
     },
   },
   stats: 'errors-warnings',
+  devtool: 'cheap-module-source-map',
   optimization: {
-    minimize: true,
+    minimize: false,
     sideEffects: true,
-    concatenateModules: true,
+    concatenateModules: false,
     runtimeChunk: 'single',
     splitChunks: {
       chunks: 'all',
