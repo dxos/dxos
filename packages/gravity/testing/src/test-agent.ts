@@ -15,24 +15,24 @@ const log = debug('dxos:testing:test-agent');
 
 class TestAgent extends Bot {
   /** @type {Item<MessengerModel>} */
-  _item;
+  _item:any;
 
-  constructor (config, options) {
+  constructor (config:any, options:any) {
     super(config, options);
 
     this.on('party', partyKey => {
-      this._item = this._client.echo.getParty(partyKey).database.queryItems({ type: ITEM_TYPE }).value[0];
-      this._client.echo.getParty(partyKey).database.queryItems({ type: ITEM_TYPE }).subscribe(items => {
+      this._item = this._client!.echo!.getParty(partyKey)!.database.queryItems({ type: ITEM_TYPE }).value[0];
+      this._client!.echo!.getParty(partyKey)!.database.queryItems({ type: ITEM_TYPE }).subscribe(items => {
         this._item = items[0];
       });
     });
   }
 
   async _preInit () {
-    this._client.registerModel(MessengerModel);
+    this._client!.registerModel(MessengerModel);
   }
 
-  async botCommandHandler (command) {
+  async botCommandHandler (command:any) {
     log('Received command', JSON.stringify(command));
     await waitForCondition(() => !!this._item);
     switch (command.type) {
@@ -49,4 +49,4 @@ class TestAgent extends Bot {
   }
 }
 
-new TestAgent(getConfig()).start();
+new TestAgent(getConfig(), {}).start();

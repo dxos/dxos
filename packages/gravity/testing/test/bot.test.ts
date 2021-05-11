@@ -17,7 +17,7 @@ test('local source', async () => {
 
   await orchestrator.start();
 
-  const agent = await orchestrator.startAgent({ botPath: path.join(__dirname, '../src/test-agent.mjs') });
+  const agent = await orchestrator.startAgent({ botPath: path.join(__dirname, '../src/test-agent.ts') });
 
   await orchestrator.party.database.createItem({ model: MessengerModel, type: 'dxos.org/type/testing/object' });
 

@@ -52,6 +52,7 @@
     "read-pkg-up": "^7.0.1",
     "tar": "^6.0.5",
     "tree-kill": "^1.2.2",
+    "ts-node": "^9.0.0",
     "webpack": "4.44.2"
   },
   "devDependencies": {

@@ -11,7 +11,7 @@ import { CommandInfo, ChildProcessContainer } from './child-process-container';
 const LOCAL_BOT_RUN_COMMAND = 'npx';
 
 // Fixed arguments to pass to LOCAL_BOT_RUN_COMMAND.
-const LOCAL_BOT_RUN_ARGS = ['babel-node'];
+const LOCAL_BOT_RUN_ARGS = ['ts-node'];
 
 /**
  * Local Bot Container; Used for running bots locally as a node process.
