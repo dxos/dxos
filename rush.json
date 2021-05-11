@@ -390,6 +390,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/config",
+      "projectFolder": "packages/sdk/config",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/react-ux",
       "projectFolder": "packages/sdk/react-ux",
       "shouldPublish": true,
