@@ -24,6 +24,19 @@ function getFieldType (field: protobufjs.Field, subs: SubstitutionsMap): ts.Type
   }
 }
 
+function createSubstitutionsReference (type: string): ts.TypeNode {
+  return f.createTypeReferenceNode(
+    f.createIdentifier('ReturnType'),
+    [f.createIndexedAccessTypeNode(
+      f.createIndexedAccessTypeNode(
+        f.createTypeQueryNode(f.createIdentifier('substitutions')),
+        f.createLiteralTypeNode(f.createStringLiteral(type))
+      ),
+      f.createLiteralTypeNode(f.createStringLiteral('decode'))
+    )]
+  );
+}
+
 function getScalarType (field: protobufjs.Field, subs: SubstitutionsMap): ts.TypeNode {
   switch (field.type) {
     case 'double': return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
@@ -46,7 +59,7 @@ function getScalarType (field: protobufjs.Field, subs: SubstitutionsMap): ts.Typ
         field.resolve();
       }
       if (field.resolvedType && subs[field.resolvedType.fullName.slice(1)]) {
-        return subs[field.resolvedType.fullName.slice(1)]!.typeNode;
+        return createSubstitutionsReference(field.resolvedType.fullName.slice(1));
       }
       if (field.resolvedType) {
         assert(field.message);

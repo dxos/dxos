@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-presence",
-  "version": "1.0.8",
+  "version": "2.10.2",
   "description": "Protocol plugin presence.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-presence#readme",
   "bugs": {
@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
+    "test": "toolchain test",
     "lint": "toolchain lint"
   },
   "dependencies": {
@@ -38,6 +39,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

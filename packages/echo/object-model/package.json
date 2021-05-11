@@ -1,6 +1,6 @@
 {
   "name": "@dxos/object-model",
-  "version": "2.6.17",
+  "version": "2.10.2",
   "private": false,
   "description": "ECHO object model.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
@@ -23,11 +23,10 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/echo-protocol": "workspace:^2.6.17",
-    "@dxos/feed-store": "~1.2.0-beta.30",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/feed-store": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
@@ -49,12 +48,12 @@
     "@types/jest": "^26.0.7",
     "@types/jest-expect-message": "^1.0.3",
     "chance": "^1.1.6",
-    "jest": "^26.2.2",
+    "jest": "^26.6.3",
     "jest-expect-message": "^1.0.2",
     "stream-buffers": "^3.0.2",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

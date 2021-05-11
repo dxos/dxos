@@ -1,6 +1,6 @@
 {
   "name": "@dxos/model-factory",
-  "version": "2.6.17",
+  "version": "2.10.2",
   "description": "ECHO model factory.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -18,11 +18,10 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/echo-protocol": "workspace:^2.6.17",
-    "@dxos/feed-store": "~1.2.0-beta.30",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/feed-store": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
@@ -43,6 +42,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

@@ -1,0 +1,47 @@
+{
+  "name": "@dxos/protocol-plugin-bot",
+  "version": "2.10.2",
+  "description": "Protocol plugin for managing the life-cycle of bots.",
+  "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-bot#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/protocol/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/protocol.git"
+  },
+  "license": "GPL-3.0",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "toolchain build",
+    "lint": "toolchain lint"
+  },
+  "dependencies": {
+    "@dxos/broadcast": "~1.0.0-beta.11",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/protocol": "workspace:*",
+    "debug": "^4.1.1"
+  },
+  "devDependencies": {
+    "@dxos/feed-store": "workspace:*",
+    "@dxos/protobuf-compiler": "workspace:*",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.9",
+    "coveralls": "^3.0.7",
+    "cpy-cli": "^2.0.0",
+    "del-cli": "^3.0.0",
+    "ngraph.generators": "^18.0.1",
+    "pump": "^3.0.0",
+    "wait-for-expect": "^3.0.2"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

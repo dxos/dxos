@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol",
-  "version": "1.0.8",
+  "version": "2.10.2",
   "description": "Protocol.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol#readme",
   "bugs": {
@@ -47,6 +47,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

@@ -4,9 +4,8 @@
 
 import debug from 'debug';
 
-import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, Event } from '@dxos/util';
 
 import { Swarm } from './swarm/swarm';
 import { TransportState } from './transport/transport';

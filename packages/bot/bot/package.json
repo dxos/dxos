@@ -1,0 +1,35 @@
+{
+  "name": "@dxos/bot",
+  "version": "2.10.2",
+  "description": "Botkit",
+  "keywords": [],
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "toolchain build",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "~1.0.0-beta.74",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
+    "@dxos/protocol-plugin-bot": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@types/debug": "^4.1.1",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "assert": "^2.0.0",
+    "debug": "^4.1.1",
+    "eslint": "^7.7.0",
+    "lodash.defaultsdeep": "^4.6.1"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

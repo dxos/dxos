@@ -67,6 +67,7 @@ common/autoinstallers/*/.npmrc
 # Build outputs
 dist
 lib
+build
 
 # Heft
 */*/.heft/build-cache/**
@@ -77,3 +78,4 @@ storybook-static
 
 .idea/workspace.xml
 
+**/out/bots/*

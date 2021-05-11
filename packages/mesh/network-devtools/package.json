@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-devtools",
-  "version": "1.0.8",
+  "version": "2.10.2",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
@@ -25,12 +25,12 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/gem-core": "~1.0.0-beta.25",
     "@dxos/gem-spore": "~1.0.0-beta.25",
-    "@dxos/network-manager": "workspace:~1.0.6",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/react-ux": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
-    "@material-ui/core": "^4.9.10",
-    "@types/react": "^17.0.0",
+    "@material-ui/core": "^4.11.4",
+    "@types/react": "^16.14.0",
     "@wirelineio/discovery-swarm-memory": "^0.2.17",
     "react-resize-aware": "^3.0.0"
   },
@@ -42,9 +42,9 @@
     "@storybook/react": "^6.2.9",
     "eslint": "^7.7.0",
     "eslint-plugin-react": "^7.22.0",
-    "react": "16.13.1",
+    "react": "^16.14.0",
     "react-docgen-typescript-loader": "^3.7.2",
-    "react-dom": "16.12.0",
+    "react-dom": "^16.14.0",
     "ts-loader": "~8.1.0",
     "typescript": "^4.0.2",
     "webpack": "4.44.2",
@@ -54,6 +54,6 @@
     "react": "*"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

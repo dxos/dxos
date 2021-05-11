@@ -1,10 +1,12 @@
 on:
   push:
+    branches-ignore:
+      - main
 
 name: check
 jobs:
   check:
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 15
     strategy:
       matrix:
@@ -17,10 +19,8 @@ jobs:
           fetch-depth: 0
       - name: Check, install and build
         run: |
-          \. "/root/.nvm/nvm.sh" && nvm use ${{ matrix.node-version }}
-          
-          # Check package versions
-          node common/scripts/install-run-rush.js change -v
+          \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+          npm install -g @microsoft/rush pnpm
           
           # Install dependencies
           node common/scripts/install-run-rush.js install

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-messenger",
-  "version": "1.0.8",
+  "version": "2.10.2",
   "description": "Protocol plugin messenger.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-messenger#readme",
   "bugs": {
@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
+    "test": "toolchain test",
     "lint": "toolchain lint"
   },
   "dependencies": {
@@ -33,10 +34,10 @@
     "coveralls": "^3.0.7",
     "cpy-cli": "^2.0.0",
     "del-cli": "^3.0.0",
-    "jest": "^26.2.2",
+    "jest": "^26.6.3",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

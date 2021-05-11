@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "types": [
+      "node"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "target": "ES2018",
+    "removeComments": false,
+    "strict": true
+  },
+  "include": [
+    "src",
+    "stories",
+  ],
+  "references": [
+    { "path": "../../echo/echo-db" },
+    { "path": "../../echo/echo-protocol" },
+    { "path": "../../echo/model-factory" },
+    { "path": "../../echo/object-model" },
+    { "path": "../../common/util" },
+    { "path": "../../sdk/react-client" }
+  ]
+}

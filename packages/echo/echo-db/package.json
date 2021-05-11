@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.6.17",
+  "version": "2.10.2",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -23,18 +23,17 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/echo-protocol": "workspace:^2.6.17",
-    "@dxos/feed-store": "~1.2.0-beta.30",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/feed-store": "workspace:*",
     "@dxos/model-factory": "workspace:*",
-    "@dxos/network-manager": "workspace:~1.0.6",
-    "@dxos/object-model": "workspace:^2.6.17",
+    "@dxos/network-manager": "workspace:*",
+    "@dxos/object-model": "workspace:*",
     "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
-    "@dxos/protocol-plugin-replicator": "workspace:~1.0.8",
+    "@dxos/protocol-plugin-replicator": "workspace:*",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
@@ -61,6 +60,6 @@
     "ws": "^7.4.4"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

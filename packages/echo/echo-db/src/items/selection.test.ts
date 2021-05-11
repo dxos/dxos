@@ -4,9 +4,9 @@
 
 import assert from 'assert';
 
-import { Event } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
+import { Event } from '@dxos/util';
 
 import { Item } from './item';
 import { Link } from './link';

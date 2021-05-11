@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { Event, ReadOnlyEvent } from '@dxos/async';
+import { Event, ReadOnlyEvent } from '@dxos/util';
 
 /**
  * Reactive query results.

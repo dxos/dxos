@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-testing",
-  "version": "2.6.22",
+  "version": "2.10.1-beta",
   "description": "ECHO testing utils.",
   "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
   "bugs": {
@@ -19,8 +19,8 @@
   },
   "dependencies": {
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-protocol": "workspace:^2.6.17",
-    "@dxos/object-model": "workspace:^2.6.17",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/object-model": "workspace:*",
     "debug": "^4.1.1",
     "faker": "^5.1.0",
     "js-data-structs": "^1.1.2"
@@ -34,6 +34,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "restricted"
   }
 }

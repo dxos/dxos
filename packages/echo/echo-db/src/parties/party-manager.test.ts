@@ -6,7 +6,6 @@ import assert from 'assert';
 import debug from 'debug';
 import ram from 'random-access-memory';
 
-import { waitForCondition } from '@dxos/async';
 import {
   createPartyGenesisMessage,
   KeyType,
@@ -29,7 +28,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { checkType, createWritableFeedStream, latch } from '@dxos/util';
+import { waitForCondition, checkType, createWritableFeedStream, latch } from '@dxos/util';
 
 import { InvitationDescriptor, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
@@ -881,7 +880,7 @@ describe('Party manager', () => {
     await partyManagerB.recoverHalo(seedPhrase);
     await partyManagerA.createParty();
 
-    await waitForCondition(() => partyManagerB.parties.length, 500);
+    await waitForCondition(() => partyManagerB.parties.length, 1000);
 
     expect(partyManagerA.parties[0].isOpen).toBe(true);
     expect(partyManagerB.parties[0].isOpen).toBe(true);
@@ -893,13 +892,13 @@ describe('Party manager', () => {
     expect(partyManagerB.parties[0].isOpen).toBe(true);
 
     await partyManagerA.parties[0].deactivate({ global: true });
-    await waitForCondition(() => !partyManagerB.parties[0].isOpen, 500);
+    await waitForCondition(() => !partyManagerB.parties[0].isOpen, 1000);
 
     expect(partyManagerA.parties[0].isOpen).toBe(false);
     expect(partyManagerB.parties[0].isOpen).toBe(false);
 
     await partyManagerA.parties[0].activate({ global: true });
-    await waitForCondition(() => partyManagerA.parties[0].isOpen && partyManagerB.parties[0].isOpen, 500);
+    await waitForCondition(() => partyManagerA.parties[0].isOpen && partyManagerB.parties[0].isOpen, 1000);
 
     expect(partyManagerA.parties[0].isOpen).toBe(true);
     expect(partyManagerB.parties[0].isOpen).toBe(true);
@@ -1098,5 +1097,5 @@ describe('Party manager', () => {
     expect(partyA.title).toEqual('value-2');
     await waitForCondition(() => titleInC === 'value-2', 10000);
     await waitForCondition(() => titleInB === 'value-2', 10000);
-  }, 20000);
+  });
 });

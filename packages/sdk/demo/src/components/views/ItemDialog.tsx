@@ -1,0 +1,93 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+import React, { useState } from 'react';
+
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField
+} from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
+
+import { Item } from '@dxos/echo-db';
+
+import ToggleGroup from '../ToggleGroup';
+
+const useStyles = makeStyles(theme => ({
+  field: {
+    marginBottom: theme.spacing(2)
+  }
+}));
+
+export interface TypeMap {
+  [key: string]: Function;
+}
+
+export interface ItemProperties {
+  type: string
+  name: string
+}
+
+export declare type CreateItemCallback = ({ type, name }: ItemProperties) => Promise<Item<any>>;
+
+interface ItemDialogProperties {
+  open: boolean
+  type?: string
+  types: TypeMap
+  handleCreate?: CreateItemCallback
+  handleClose?: () => void
+}
+
+/**
+ * Creates a new typed item.
+ */
+const ItemDialog = ({
+  open, type: initialType, types, handleCreate, handleClose
+}: ItemDialogProperties) => {
+  const classes = useStyles();
+  const [type, setType] = useState(initialType || Object.keys(types)[0]);
+  const [name, setName] = useState('');
+
+  const handleCreateItem = async () => {
+    if (handleCreate && name.trim().length) {
+      await handleCreate({ type, name });
+      setName('');
+    }
+  };
+
+  return (
+    <Dialog open={open} fullWidth maxWidth='sm'>
+      <DialogTitle>Create Item</DialogTitle>
+      <DialogContent>
+        <Box m={2} flexDirection='column'>
+          {!initialType && (
+            <div className={classes.field}>
+              <ToggleGroup types={types} type={type} onChange={type => setType(type)} />
+            </div>
+          )}
+
+          <TextField
+            autoFocus
+            fullWidth
+            label='Name'
+            value={name}
+            onChange={event => setName(event.currentTarget.value)}
+            variant='outlined'
+          />
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button color='primary' variant='contained' onClick={handleCreateItem}>Create</Button>
+        <Button color='secondary' onClick={handleClose}>Cancel</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+export default ItemDialog;

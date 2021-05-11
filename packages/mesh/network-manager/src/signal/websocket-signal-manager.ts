@@ -5,9 +5,8 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, Event, synchronized } from '@dxos/util';
 
 import { SignalManager } from './interface';
 import { SignalApi } from './signal-api';

@@ -2,10 +2,7 @@
 
 exports[`definitions 1`] = `
 "dxos/test/another.ts:
-import { MyKey } from \\"../../../my-key\\";
-import { MyInterfaceSubstitution } from \\"../../../my-interface\\";
-import { Schema as CodecSchema } from \\"@dxos/codec-protobuf\\";
-import { DecodedAny } from \\"../../../any\\";
+import substitutions from \\"../../../substitutions\\";
 import * as dxos_test from \\"../test\\";
 import * as dxos_test_any from \\"./any\\";
 import * as google_protobuf from \\"../../google/protobuf\\";
@@ -13,10 +10,7 @@ export interface AnotherMessage {
 }
 
 dxos/test/any.ts:
-import { MyKey } from \\"../../../my-key\\";
-import { MyInterfaceSubstitution } from \\"../../../my-interface\\";
-import { Schema as CodecSchema } from \\"@dxos/codec-protobuf\\";
-import { DecodedAny } from \\"../../../any\\";
+import substitutions from \\"../../../substitutions\\";
 import * as dxos_test from \\"../test\\";
 import * as dxos_test_another from \\"./another\\";
 import * as google_protobuf from \\"../../google/protobuf\\";
@@ -25,10 +19,7 @@ export interface Any {
 }
 
 dxos/test.ts:
-import { MyKey } from \\"../../my-key\\";
-import { MyInterfaceSubstitution } from \\"../../my-interface\\";
-import { Schema as CodecSchema } from \\"@dxos/codec-protobuf\\";
-import { DecodedAny } from \\"../../any\\";
+import substitutions from \\"../../substitutions\\";
 import * as dxos_test_another from \\"./test/another\\";
 import * as dxos_test_any from \\"./test/any\\";
 import * as google_protobuf from \\"../google/protobuf\\";
@@ -56,12 +47,12 @@ export interface Scalars {
     bytesField?: Uint8Array;
 }
 export interface ComplexFields {
-    repeatedField?: MyKey[];
-    requiredField: MyKey;
-    mappedField?: Partial<Record<string, MyKey>>;
+    repeatedField?: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>[];
+    requiredField: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>;
+    mappedField?: Partial<Record<string, ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>>>;
     inner?: ComplexFields.Inner;
     myAny?: Any;
-    googleAny?: DecodedAny;
+    googleAny?: ReturnType<typeof substitutions[\\"google.protobuf.Any\\"][\\"decode\\"]>;
     importedAny?: dxos_test_any.Any;
 }
 export namespace ComplexFields {
@@ -89,9 +80,9 @@ export enum TaskType {
 export interface Task {
     id?: string;
     title?: string;
-    key: MyKey;
+    key: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>;
     type: TaskType;
-    googleAny?: DecodedAny;
+    googleAny?: ReturnType<typeof substitutions[\\"google.protobuf.Any\\"][\\"decode\\"]>;
 }
 export interface TaskList {
     tasks?: Task[];
@@ -101,10 +92,7 @@ export interface SubstitutedByInterface {
 }
 
 google/protobuf.ts:
-import { MyKey } from \\"../../my-key\\";
-import { MyInterfaceSubstitution } from \\"../../my-interface\\";
-import { Schema as CodecSchema } from \\"@dxos/codec-protobuf\\";
-import { DecodedAny } from \\"../../any\\";
+import substitutions from \\"../../substitutions\\";
 import * as dxos_test from \\"../dxos/test\\";
 import * as dxos_test_another from \\"../dxos/test/another\\";
 import * as dxos_test_any from \\"../dxos/test/any\\";
@@ -116,10 +104,6 @@ export interface Any {
 index.ts:
 import { Schema } from \\"@dxos/codec-protobuf\\";
 import substitutions from \\"../substitutions\\";
-import { MyKey } from \\"../my-key\\";
-import { MyInterfaceSubstitution } from \\"../my-interface\\";
-import { Schema as CodecSchema } from \\"@dxos/codec-protobuf\\";
-import { DecodedAny } from \\"../any\\";
 import * as dxos_test from \\"./dxos/test\\";
 import * as dxos_test_another from \\"./dxos/test/another\\";
 import * as dxos_test_any from \\"./dxos/test/any\\";
