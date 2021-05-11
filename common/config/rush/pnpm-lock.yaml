@@ -466,6 +466,7 @@ importers:
       pify: 5.0.0
       pump: 3.0.0
       random-access-file: 2.2.0
+      sodium-universal: 3.0.4
       source-map-support: 0.5.19
       through2: 3.0.2
     devDependencies:
@@ -501,6 +502,7 @@ importers:
       pump: ^3.0.0
       random-access-file: ^2.1.0
       random-access-memory: ~3.1.2
+      sodium-universal: ~3.0.4
       source-map-support: ^0.5.12
       tempy: ~1.0.1
       through2: ^3.0.1
@@ -1397,12 +1399,15 @@ importers:
       uuid: ^3.3.2
   ../../packages/wallet/extension:
     dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/react-client': link:../../sdk/react-client
       '@hot-loader/react-dom': 16.13.0_react@16.14.0
-      '@types/node': 14.14.41
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/node': 14.14.41
       '@types/react': 16.14.6
       '@types/react-dom': 17.0.3
       '@types/webpack-env': 1.16.0
@@ -1421,6 +1426,9 @@ importers:
       webpack-cli: 4.7.0_b24347012da62a72aee59d51298aa452
       webpack-dev-server: 3.11.2_webpack-cli@4.7.0+webpack@4.44.2
     specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/react-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@hot-loader/react-dom': 16.13.0
       '@types/node': ^14.0.9
@@ -7437,6 +7445,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-vlNK021QdI7PNeiUh/lKkC/mNHHfV0m/Ad5JoI0TYtlBnJAslM/JIkm/tGC88bkLIwO6OQ5uV6ztS6kVAtCDlg==
+  /chacha20-universal/1.0.4:
+    dependencies:
+      nanoassert: 2.0.0
+    dev: false
+    resolution:
+      integrity: sha512-/IOxdWWNa7nRabfe7+oF+jVkGjlr2xUL4J8l/OvzZhj+c9RpMqoo3Dq+5nU1j/BflRV4BKnaQ4+4oH1yBpQG1Q==
   /chalk/1.1.3:
     dependencies:
       ansi-styles: 2.2.1
@@ -14395,6 +14409,10 @@ packages:
     dev: false
     resolution:
       integrity: sha1-TzFS4JVA/eKMdvRLGbvNHVpCR40=
+  /nanoassert/2.0.0:
+    dev: false
+    resolution:
+      integrity: sha512-7vO7n28+aYO4J+8w96AzhmU8G+Y/xpPDJz/se19ICsqj/momRbb9mh9ZUtkoJ5X3nTnPdhEJyc0qnM6yAsHBaA==
   /nanocustomassert/1.0.0:
     dev: false
     resolution:
@@ -14579,7 +14597,6 @@ packages:
   /node-gyp-build/4.2.3:
     dev: false
     hasBin: true
-    optional: true
     resolution:
       integrity: sha512-MN6ZpzmfNCRM+3t57PTJHgHyw/h4OWnZ6mR8P5j/uZtqQr46RRuDE/P+g3n0YR/AiYXeWixZZzaip77gdICfRg==
   /node-int64/0.4.0:
@@ -17171,6 +17188,30 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-QMEp5B7cftE7APOjk5Y6xgrbWu+WkLVQwk8JNjZ8nKRciZaByEW6MubieAiToS7+dwvrjGhH8jRXz3MVd0AYqQ==
+  /sha256-universal/1.1.2:
+    dependencies:
+      sha256-wasm: 2.2.1
+    dev: false
+    resolution:
+      integrity: sha512-sheCCiEJve+8rS/fgCaXax8SpXrLzPipCvp0+VDXXjDEHw2DdYqV2PdHVNMNWZrQ3fiQjaor4rQCzYdr3g7TIA==
+  /sha256-wasm/2.2.1:
+    dependencies:
+      nanoassert: 2.0.0
+    dev: false
+    resolution:
+      integrity: sha512-OkqDgOpo86LzdWlpYVC/MfcQ1jytfR/wxPsGFJTWeEIyLaJg4spZTNQ40vuhYsLNDFidxqvMGae6u9VirkgqqA==
+  /sha512-universal/1.1.2:
+    dependencies:
+      sha512-wasm: 2.3.1
+    dev: false
+    resolution:
+      integrity: sha512-QGS+eFX3ycFiRl5TxIxWv5ltAYXaLpnUeLMJpnEVIB7dEI/7pw3X0kYe3msuE4XaHERReuqDKBYRrCiQsqlESQ==
+  /sha512-wasm/2.3.1:
+    dependencies:
+      nanoassert: 2.0.0
+    dev: false
+    resolution:
+      integrity: sha512-YxBYNsaHzTJh5gmk6AbD5aAvXktHy5LsjqbaEVdL60XslC4C7U23w2Mt8g+UDcvidr/K9aFZy3V71Y86Ech27A==
   /shallow-clone/3.0.1:
     dependencies:
       kind-of: 6.0.3
@@ -17385,6 +17426,18 @@ packages:
     dev: false
     resolution:
       integrity: sha512-Uk+JpqHEbzsEmiMxwL7TB/ndhMEpc52KdReYXXSIX2oRFPaI7ZDlDImF8KbkFWbYl9BJRtc82AZ/kNf4/0n9KA==
+  /sodium-javascript/0.7.3:
+    dependencies:
+      blake2b: 2.1.3
+      chacha20-universal: 1.0.4
+      nanoassert: 2.0.0
+      sha256-universal: 1.1.2
+      sha512-universal: 1.1.2
+      siphash24: 1.1.1
+      xsalsa20: 1.1.0
+    dev: false
+    resolution:
+      integrity: sha512-J2Zzj61bo41oBO4yEM9hTaNo3J98AcmFctjRg3D7+0A5cXdB1jlQOHV1qo2NavDU3BpqCfxdHW5UXCv565zh6Q==
   /sodium-native/2.4.9:
     dependencies:
       ini: 1.3.8
@@ -17395,6 +17448,14 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-mbkiyA2clyfwAyOFIzMvsV6ny2KrKEIhFVASJxWfsmgfUEymgLIS2MLHHcGIQMkrcKhPErRaMR5Dzv0EEn+BWg==
+  /sodium-native/3.2.1:
+    dependencies:
+      ini: 1.3.8
+      node-gyp-build: 4.2.3
+    dev: false
+    requiresBuild: true
+    resolution:
+      integrity: sha512-EgDZ/Z7PxL2kCasKk7wnRkV8W9kvwuIlHuHXAxkQm3FF0MgVsjyLBXGjSRGhjE6u7rhSpk3KaMfFM23bfMysIQ==
   /sodium-universal/2.0.0:
     dependencies:
       sodium-javascript: 0.5.6
@@ -17403,6 +17464,21 @@ packages:
       sodium-native: 2.4.9
     resolution:
       integrity: sha512-csdVyakzHJRyCevY4aZC2Eacda8paf+4nmRGF2N7KxCLKY2Ajn72JsExaQlJQ2BiXJncp44p3T+b80cU+2TTsg==
+  /sodium-universal/3.0.4:
+    dependencies:
+      blake2b: 2.1.3
+      chacha20-universal: 1.0.4
+      nanoassert: 2.0.0
+      resolve: 1.20.0
+      sha256-universal: 1.1.2
+      sha512-universal: 1.1.2
+      siphash24: 1.1.1
+      sodium-javascript: 0.7.3
+      sodium-native: 3.2.1
+      xsalsa20: 1.1.0
+    dev: false
+    resolution:
+      integrity: sha512-WnBQ0GDo/82shKQHZBZT9h4q4miCtxkbzcwVLsCBPWNq4qbq8BXhKICt9nPwQAsJ43ct/rF61FKu4t0druUBug==
   /sort-keys-length/1.0.1:
     dependencies:
       sort-keys: 1.1.2
@@ -18357,7 +18433,7 @@ packages:
       micromatch: 4.0.4
       semver: 7.3.5
       typescript: 4.2.4
-      webpack: 4.44.2_webpack-cli@4.7.0
+      webpack: 4.44.2
     dev: true
     engines:
       node: '>=10.0.0'

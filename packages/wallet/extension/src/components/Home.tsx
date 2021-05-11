@@ -1,9 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { hot } from 'react-hot-loader';
-import logo from '@assets/images/dxos.png';
+import React from 'react';
 import {createKeyPair} from '@dxos/crypto'
-import {ClientProvider, useClient, useProfile} from '@dxos/react-client'
-import {Client} from '@dxos/client'
+import {useClient, useProfile} from '@dxos/react-client'
 
 export const Home = () => {
   const client = useClient();
@@ -16,7 +13,7 @@ export const Home = () => {
   return (
     <>
       <button disabled={!!profile} onClick={handleCreateProfile}>Create HALO</button>
-      {!!profile && <p>{JSON.stringify(profile)}</p>}
+      {!!profile && <p>Welcome, {profile.username}</p>}
     </>
   );
 };
