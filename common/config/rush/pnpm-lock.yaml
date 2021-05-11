@@ -1406,6 +1406,7 @@ importers:
       '@types/react': 16.14.6
       '@types/react-dom': 17.0.3
       '@types/webpack-env': 1.16.0
+      copy-webpack-plugin: 5.1.2_webpack@4.44.2
       cross-env: 7.0.3
       css-loader: 5.2.4_webpack@4.44.2
       file-loader: 6.2.0_webpack@4.44.2
@@ -1426,6 +1427,7 @@ importers:
       '@types/react': ^16.14.0
       '@types/react-dom': ^17.0.2
       '@types/webpack-env': ^1.16.0
+      copy-webpack-plugin: 5.1.2
       cross-env: ^7.0.3
       css-loader: ^5.2.4
       file-loader: ^6.2.0
@@ -7942,6 +7944,28 @@ packages:
     dev: true
     resolution:
       integrity: sha512-i13qo6kIHTTpCm8/Wup+0b1mVWETvu2kIMzKoK8FpkLkFxlt0znUAHcMzox+T8sPlqtZXq3CulEjQHsYiGFJUw==
+  /copy-webpack-plugin/5.1.2_webpack@4.44.2:
+    dependencies:
+      cacache: 12.0.4
+      find-cache-dir: 2.1.0
+      glob-parent: 3.1.0
+      globby: 7.1.1
+      is-glob: 4.0.1
+      loader-utils: 1.4.0
+      minimatch: 3.0.4
+      normalize-path: 3.0.0
+      p-limit: 2.3.0
+      schema-utils: 1.0.0
+      serialize-javascript: 4.0.0
+      webpack: 4.44.2_webpack-cli@4.7.0
+      webpack-log: 2.0.0
+    dev: true
+    engines:
+      node: '>= 6.9.0'
+    peerDependencies:
+      webpack: ^4.0.0 || ^5.0.0
+    resolution:
+      integrity: sha512-Uh7crJAco3AjBvgAy9Z75CjK8IG+gxaErro71THQ+vv/bl4HaQcpkexAY8KVW/T6D2W2IRr+couF/knIRkZMIQ==
   /core-js-compat/3.11.0:
     dependencies:
       browserslist: 4.16.5
@@ -10943,6 +10967,19 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-9abXDoOV4hyFj7BInWTfAkJNUGw=
+  /globby/7.1.1:
+    dependencies:
+      array-union: 1.0.2
+      dir-glob: 2.2.2
+      glob: 7.1.6
+      ignore: 3.3.10
+      pify: 3.0.0
+      slash: 1.0.0
+    dev: true
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-+yzP+UAfhgCUXfral0QMypcrhoA=
   /globby/9.2.0:
     dependencies:
       '@types/glob': 7.1.3
@@ -11586,6 +11623,10 @@ packages:
   /iferr/0.1.5:
     resolution:
       integrity: sha1-xg7taebY/bazEEofy8ocGS3FtQE=
+  /ignore/3.3.10:
+    dev: true
+    resolution:
+      integrity: sha512-Pgs951kaMm5GXP7MOvxERINe3gsaVjUWFm+UZPSq9xYriQAksyhg0csnS0KXSNRD5NmNdapXEpjxG49+AKh/ug==
   /ignore/4.0.6:
     engines:
       node: '>= 4'
@@ -17226,6 +17267,12 @@ packages:
   /sisteransi/1.0.5:
     resolution:
       integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==
+  /slash/1.0.0:
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-xB8vbDn8FtHNF61LXYlhFK5HDVU=
   /slash/2.0.0:
     engines:
       node: '>=6'
