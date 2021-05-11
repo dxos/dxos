@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { hot } from 'react-hot-loader';
 import logo from '@assets/images/dxos.png';
-import './Application.less';
 
 type Props = {
   title: string;
