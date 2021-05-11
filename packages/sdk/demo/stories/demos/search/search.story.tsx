@@ -6,17 +6,18 @@ import React, { useState } from 'react';
 
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
+import { useClient, ClientInitializer, ProfileInitializer } from '@dxos/react-client';
 
-import { createOnlineInstance } from '../../../src';
+import { ONLINE_CONFIG } from '../../../src';
 import Home from './Home';
 import Main from './Main';
 
-export const Primary = () => {
+const Story = () => {
+  const client = useClient();
   const [party, setParty] = useState<Party>();
 
   const handleCreateParty = async () => {
-    const echo = await createOnlineInstance(); // TODO(burdon): Clean-up API.
-    const party = await echo.createParty();
+    const party = await client.echo.createParty();
 
     // Generate test data.
     const generator = new Generator(party.database, { seed: 1 });
@@ -30,8 +31,7 @@ export const Primary = () => {
   };
 
   const handleJoinParty = async (invitationCode: string) => {
-    const echo = await createOnlineInstance();
-    const party = await echo.joinParty(
+    const party = await client.echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitationCode)), async () => Buffer.from('0000')
     );
     await party.open();
@@ -49,6 +49,14 @@ export const Primary = () => {
     <Home onCreate={handleCreateParty} onJoin={handleJoinParty} />
   );
 };
+
+export const Primary = () => (
+  <ClientInitializer config={ONLINE_CONFIG}>
+    <ProfileInitializer>
+      <Story />
+    </ProfileInitializer>
+  </ClientInitializer>
+);
 
 export default {
   title: 'Demos/Search',

@@ -9,7 +9,7 @@ import * as colors from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 
 import { Generator, OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK } from '@dxos/echo-testing';
-import { useSelection } from '@dxos/react-client';
+import { ClientInitializer, ProfileInitializer, useSelection } from '@dxos/react-client';
 
 import {
   Node,
@@ -18,7 +18,8 @@ import {
   GraphData,
   GraphView,
   graphSelector,
-  useGenerator
+  useGenerator,
+  ONLINE_CONFIG
 } from '../../src';
 
 export default {
@@ -150,8 +151,7 @@ const Component = ({ generator }: {generator: Generator}) => {
   );
 };
 
-export const Primary = () => {
-  // TODO(burdon): Remove this and use search demo pattern.
+const Story = () => {
   const { generator, createParty } = useGenerator();
 
   useEffect(() => {
@@ -172,3 +172,11 @@ export const Primary = () => {
     <Component generator={generator} />
   );
 };
+
+export const Primary = () => (
+  <ClientInitializer config={ONLINE_CONFIG}>
+    <ProfileInitializer>
+      <Story />
+    </ProfileInitializer>
+  </ClientInitializer>
+);

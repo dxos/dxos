@@ -6,28 +6,26 @@ import React, { useState, useEffect, ReactNode } from 'react';
 
 import { LinearProgress } from '@material-ui/core';
 
-import { Client } from '@dxos/client';
+import { Client, ClientConfig } from '@dxos/client';
 
 import ClientProvider from './ClientProvider';
 
 interface ClientInitializerProperties {
   children?: ReactNode
-  config?: any
+  config?: ClientConfig | Function
 }
 
 /**
- * Root component initializes and provides a client instance given a config object or generator.
- * @param children
- * @param config
- * @constructor
+ * Initializes and provides a client instance given a config object or generator.
  */
-export const ClientInitializer = ({ children, config = {} }: ClientInitializerProperties) => {
+const ClientInitializer = ({ children, config = {} }: ClientInitializerProperties) => {
   const [client, setClient] = useState<Client | undefined>();
 
   useEffect(() => {
     setImmediate(async () => {
       const client = new Client(typeof config === 'function' ? await config() : config);
       await client.initialize();
+
       setClient(client);
     });
   }, []);

@@ -26,7 +26,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const Demo = () => {
-  const classes = useStyles();
+  const classes = useStylegms();
   const client = useClient();
   const profile = useProfile();
   const parties = useParties();

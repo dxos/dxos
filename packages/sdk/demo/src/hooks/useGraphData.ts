@@ -53,8 +53,7 @@ const createGraphData = (
       {
         id: rootId,
         type: 'database',
-        title: `ECHO(${id})`,
-        partyKey: null
+        title: `ECHO(${id})`
       }
     ],
     links: []
@@ -68,13 +67,13 @@ const createGraphData = (
         id: partyKey.toHex(),
         type: 'party',
         title: `Party(${party.key.humanize()})`,
-        partyKey: party.key
+        partyKey: party.key.toHex()
       });
 
       data.links.push({
         id: `${rootId}-${partyKey}`,
         source: rootId,
-        target: partyKey
+        target: partyKey.toHex()
       });
 
       items.forEach(item => {
@@ -82,10 +81,10 @@ const createGraphData = (
           id: item.id,
           type: 'item',
           title: `Item(${truncateString(item.id, 3)})`,
-          partyKey: party.key
+          partyKey: party.key.toHex()
         });
 
-        const id = item.parent ? item.parent.id : partyKey;
+        const id = item.parent ? item.parent.id : partyKey.toHex();
         data.links.push({
           id: `${id}-${item.id}`,
           source: id,

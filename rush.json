@@ -121,7 +121,7 @@
    * Specify a SemVer range to ensure developers use a Node.js version that is appropriate
    * for your repo.
    */
-  "nodeSupportedVersionRange": ">=12.17.0 <13.0.0 || 16.0.0",
+  "nodeSupportedVersionRange": ">=12.17.0 <13.0.0 || >=16.0.0",
 
   /**
    * Odd-numbered major versions of Node.js are experimental.  Even-numbered releases
@@ -378,6 +378,66 @@
    */
   "projects": [
 
+    // {
+    //   /**
+    //    * The NPM package name of the project (must match package.json)
+    //    */
+    //   "packageName": "my-app",
+    //
+    //   /**
+    //    * The path to the project folder, relative to the rush.json config file.
+    //    */
+    //   "projectFolder": "apps/my-app",
+    //
+    //   /**
+    //    * An optional category for usage in the "browser-approved-packages.json"
+    //    * and "nonbrowser-approved-packages.json" files.  The value must be one of the
+    //    * strings from the "reviewCategories" defined above.
+    //    */
+    //   "reviewCategory": "production",
+    //
+    //   /**
+    //    * A list of local projects that appear as devDependencies for this project, but cannot be
+    //    * locally linked because it would create a cyclic dependency; instead, the last published
+    //    * version will be installed in the Common folder.
+    //    */
+    //   "cyclicDependencyProjects": [
+    //     // "my-toolchain"
+    //   ],
+    //
+    //   /**
+    //    * If true, then this project will be ignored by the "rush check" command.
+    //    * The default value is false.
+    //    */
+    //   // "skipRushCheck": false,
+    //
+    //   /**
+    //    * A flag indicating that changes to this project will be published to npm, which affects
+    //    * the Rush change and publish workflows. The default value is false.
+    //    * NOTE: "versionPolicyName" and "shouldPublish" are alternatives; you cannot specify them both.
+    //    */
+    //   // "shouldPublish": false,
+    //
+    //   /**
+    //    * An optional version policy associated with the project.  Version policies are defined
+    //    * in "version-policies.json" file.  See the "rush publish" documentation for more info.
+    //    * NOTE: "versionPolicyName" and "shouldPublish" are alternatives; you cannot specify them both.
+    //    */
+    //   // "versionPolicyName": ""
+    // },
+    //
+    // {
+    //   "packageName": "my-controls",
+    //   "projectFolder": "libraries/my-controls",
+    //   "reviewCategory": "production"
+    // },
+    //
+    // {
+    //   "packageName": "my-toolchain",
+    //   "projectFolder": "tools/my-toolchain",
+    //   "reviewCategory": "tools"
+    // }
+
     //
     // toolchains
     //
@@ -484,12 +544,12 @@
       "projectFolder": "packages/echo/echo-testing"
     },
     {
-      "packageName": "@dxos/feed-store",
-      "projectFolder": "packages/echo/feed-store"
+      "packageName": "@dxos/demo",
+      "projectFolder": "packages/sdk/demo"
     },
     {
-      "packageName": "@dxos/echo-demo",
-      "projectFolder": "packages/echo/echo-demo"
+      "packageName": "@dxos/feed-store",
+      "projectFolder": "packages/echo/feed-store"
     },
     {
       "packageName": "@dxos/text-model",
@@ -589,66 +649,17 @@
       "projectFolder": "packages/bot/bot",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
-    }
+    },
 
-    // {
-    //   /**
-    //    * The NPM package name of the project (must match package.json)
-    //    */
-    //   "packageName": "my-app",
     //
-    //   /**
-    //    * The path to the project folder, relative to the rush.json config file.
-    //    */
-    //   "projectFolder": "apps/my-app",
+    // wallet
     //
-    //   /**
-    //    * An optional category for usage in the "browser-approved-packages.json"
-    //    * and "nonbrowser-approved-packages.json" files.  The value must be one of the
-    //    * strings from the "reviewCategories" defined above.
-    //    */
-    //   "reviewCategory": "production",
-    //
-    //   /**
-    //    * A list of local projects that appear as devDependencies for this project, but cannot be
-    //    * locally linked because it would create a cyclic dependency; instead, the last published
-    //    * version will be installed in the Common folder.
-    //    */
-    //   "cyclicDependencyProjects": [
-    //     // "my-toolchain"
-    //   ],
-    //
-    //   /**
-    //    * If true, then this project will be ignored by the "rush check" command.
-    //    * The default value is false.
-    //    */
-    //   // "skipRushCheck": false,
-    //
-    //   /**
-    //    * A flag indicating that changes to this project will be published to npm, which affects
-    //    * the Rush change and publish workflows. The default value is false.
-    //    * NOTE: "versionPolicyName" and "shouldPublish" are alternatives; you cannot specify them both.
-    //    */
-    //   // "shouldPublish": false,
-    //
-    //   /**
-    //    * An optional version policy associated with the project.  Version policies are defined
-    //    * in "version-policies.json" file.  See the "rush publish" documentation for more info.
-    //    * NOTE: "versionPolicyName" and "shouldPublish" are alternatives; you cannot specify them both.
-    //    */
-    //   // "versionPolicyName": ""
-    // },
-    //
-    // {
-    //   "packageName": "my-controls",
-    //   "projectFolder": "libraries/my-controls",
-    //   "reviewCategory": "production"
-    // },
-    //
-    // {
-    //   "packageName": "my-toolchain",
-    //   "projectFolder": "tools/my-toolchain",
-    //   "reviewCategory": "tools"
-    // }
+
+    {
+      "packageName": "@dxos/wallet-extension",
+      "projectFolder": "packages/wallet/extension",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
+    }
   ]
 }

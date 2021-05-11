@@ -6,20 +6,20 @@ import { useState } from 'react';
 
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
-
-import { createOnlineInstance } from '../config';
+import { useClient } from '@dxos/react-client';
 
 /**
  * This is a poor abstraction -- remove it with util functions.
  * @deprecated
  */
 export const useGenerator = () => {
+  const client = useClient();
+
   const [party, setParty] = useState<Party | undefined>();
   const [generator, setGenerator] = useState<Generator | undefined>();
 
   const createParty = async (config = {}) => {
-    const echo = await createOnlineInstance();
-    const party = await echo.createParty();
+    const party = await client.echo.createParty();
 
     const generator = new Generator(party.database, { seed: 1 });
     await generator.generate(config);
@@ -29,8 +29,7 @@ export const useGenerator = () => {
   };
 
   const joinParty = async (invitation: string) => {
-    const echo = await createOnlineInstance();
-    const party = await echo.joinParty(
+    const party = await client.echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000')
     );
     await party.open();
