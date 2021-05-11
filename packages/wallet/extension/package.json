@@ -4,7 +4,7 @@
   "description": "DXOS Wallet EXTENSION",
   "scripts": {
     "start": "cross-env NODE_ENV=development webpack serve --config tools/webpack/webpack.config.dev.js",
-    "build": "cross-env NODE_ENV=production webpack --config tools/webpack/webpack.config.prod.js",
+    "build": "cross-env NODE_ENV=production webpack --config tools/webpack/webpack.config.prod.js && true",
     "lint": "toolchain lint"
   },
   "devDependencies": {
