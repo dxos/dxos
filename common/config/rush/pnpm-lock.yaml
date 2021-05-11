@@ -505,6 +505,26 @@ importers:
       tempy: ~1.0.1
       through2: ^3.0.1
       wait-for-expect: ^3.0.2
+  ../../packages/echo/messenger-model:
+    dependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/echo-protocol': link:../echo-protocol
+      '@dxos/model-factory': link:../model-factory
+      '@dxos/util': link:../../common/util
+      '@types/debug': 4.1.5
+      debug: 4.3.1
+    devDependencies:
+      '@dxos/protobuf-compiler': link:../../common/protobuf-compiler
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/echo-protocol': workspace:*
+      '@dxos/model-factory': workspace:*
+      '@dxos/protobuf-compiler': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.1
+      debug: ^4.1.1
   ../../packages/echo/model-factory:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -629,6 +649,108 @@ importers:
       '@types/node': ^14.0.9
       protobufjs: ^6.9.0
       yjs: ^13.4.1
+  ../../packages/gravity/testing:
+    dependencies:
+      '@dxos/bot': link:../../bot/bot
+      '@dxos/botkit': link:../../bot/botkit
+      '@dxos/botkit-client': link:../../bot/botkit-client
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': 1.0.0-beta.74
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/messenger-model': link:../../echo/messenger-model
+      '@dxos/model-factory': link:../../echo/model-factory
+      '@dxos/protocol-plugin-bot': link:../../bot/protocol-plugin-bot
+      '@dxos/random-access-multi-storage': 1.1.0-beta.8
+      '@dxos/util': link:../../common/util
+      '@types/debug': 4.1.5
+      '@types/fs-extra': 9.0.11
+      '@types/node-fetch': 2.5.10
+      '@types/webpack': 4.41.27
+      assert: 2.0.0
+      chance: 1.1.7
+      debug: 4.3.1
+      download: 7.1.0
+      fs-extra: 8.1.0
+      hypercore-crypto: 1.0.0
+      js-yaml: 3.14.1
+      lodash.defaults: 4.2.0
+      lodash.defaultsdeep: 4.6.1
+      lodash.get: 4.4.2
+      lodash.isempty: 4.4.0
+      memdown: 5.1.0
+      moment: 2.29.1
+      node-fetch: 2.6.1
+      node-libs-browser: 2.2.1
+      node-watch: 0.6.4
+      random-access-memory: 3.1.2
+      read-pkg-up: 7.0.1
+      tar: 6.1.0
+      tree-kill: 1.2.2
+      ts-node: 9.1.1_typescript@4.2.4
+      webpack: 4.44.2
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/jest': 26.0.22
+      '@types/tar': 4.0.4
+      esbuild: 0.8.57
+      jest: 26.6.3_ts-node@9.1.1
+      playwright-chromium: 1.10.0
+      process-exists: 4.0.0
+      pstree.remy: 1.1.8
+      ts-jest: 26.5.6_jest@26.6.3+typescript@4.2.4
+      typescript: 4.2.4
+    specifiers:
+      '@dxos/bot': workspace:*
+      '@dxos/botkit': workspace:*
+      '@dxos/botkit-client': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/config': ~1.0.0-beta.74
+      '@dxos/credentials': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/messenger-model': workspace:*
+      '@dxos/model-factory': workspace:*
+      '@dxos/protocol-plugin-bot': workspace:*
+      '@dxos/random-access-multi-storage': ~1.1.0-beta.8
+      '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.1
+      '@types/fs-extra': ^9.0.4
+      '@types/jest': ^26.0.7
+      '@types/node-fetch': ^2.5.10
+      '@types/tar': ^4.0.4
+      '@types/webpack': ^4.41.27
+      assert: ^2.0.0
+      chance: ^1.1.6
+      debug: ^4.1.1
+      download: ^7.1.0
+      esbuild: ^0.8.11
+      fs-extra: ^8.1.0
+      hypercore-crypto: ^1.0.0
+      jest: ^26.6.3
+      js-yaml: ^3.13.1
+      lodash.defaults: ^4.2.0
+      lodash.defaultsdeep: ^4.6.1
+      lodash.get: ^4.4.2
+      lodash.isempty: ^4.4.0
+      memdown: ^5.1.0
+      moment: ^2.24.0
+      node-fetch: ^2.6.0
+      node-libs-browser: ^2.2.1
+      node-watch: ^0.6.4
+      playwright-chromium: ^1.7.0
+      process-exists: ^4.0.0
+      pstree.remy: ^1.1.8
+      random-access-memory: ~3.1.2
+      read-pkg-up: ^7.0.1
+      tar: ^6.0.5
+      tree-kill: ^1.2.2
+      ts-jest: ^26.5.6
+      ts-node: ^9.1.1
+      typescript: ^4.2.4
+      webpack: 4.44.2
   ../../packages/halo/credentials:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -4931,7 +5053,6 @@ packages:
     resolution:
       integrity: sha512-wYxU3kp5zItbxKmeRYCEplS2MW7DzyBnxPGj+GJVHZEUZiK/nn5Ei1sUFgURDh+X051+zsGe28iud3oHjrYWQQ==
   /@types/anymatch/1.3.1:
-    dev: true
     resolution:
       integrity: sha512-/+CRPXpBDpo2RK9C68N3b2cOvO0Cf5B9aPijHsoDQTHivnGSObdOF2BRQOYjojWTDy6nQvMjmqRXIxH55VjxxA==
   /@types/argparse/2.0.5:
@@ -5398,11 +5519,16 @@ packages:
     dev: true
     resolution:
       integrity: sha512-fZQQafSREFyuZcdWFAExYjBiCL7AUCdgsk80iO0q4yihYYdcIiH28CcuPTGFgLOCC8RlW49GSQxdHwZP+I7CNg==
+  /@types/minipass/2.2.0:
+    dependencies:
+      '@types/node': 14.14.41
+    dev: true
+    resolution:
+      integrity: sha512-wuzZksN4w4kyfoOv/dlpov4NOunwutLA/q7uc00xU02ZyUY+aoM5PWIXEKBMnm0NHd4a+N71BMjq+x7+2Af1fg==
   /@types/node-fetch/2.5.10:
     dependencies:
       '@types/node': 14.14.41
       form-data: 3.0.1
-    dev: true
     resolution:
       integrity: sha512-IpkX0AasN44hgEad0gEF/V6EgR5n69VEqPEgnmoM8GsIGro3PowbWs4tR6IhxUTyPLpOn+fiGG6nrQhcmoCuIQ==
   /@types/node/10.12.18:
@@ -5528,7 +5654,6 @@ packages:
     resolution:
       integrity: sha512-FirllZ8397Qo8LfAgD4UuMgIOQmP1zdcP2eFNRDpaFDGQs42j2XxKOcTcvYZjXHv4HD7hgoNXzjB6iiEspKniw==
   /@types/source-list-map/0.1.2:
-    dev: true
     resolution:
       integrity: sha512-K5K+yml8LTo9bWJI/rECfIPrGgxdpeNbj+d53lwN4QjW1MCwlkhUms+gtdzigTeUyBr09+u8BwOIY3MXvHdcsA==
   /@types/stack-utils/2.0.0:
@@ -5547,9 +5672,15 @@ packages:
     resolution:
       integrity: sha512-s8Y6/EV1LPn9fDlJKSlD8r+14hWXVDn+wPAGwWRzTUq/4MqdoQNEzQxP6Jq91qvFYxR3OlFAPXcv6ToplnAgFQ==
   /@types/tapable/1.0.7:
-    dev: true
     resolution:
       integrity: sha512-0VBprVqfgFD7Ehb2vd8Lh9TG3jP98gvr8rgehQqzztZNI7o8zS8Ad4jyZneKELphpuE212D8J70LnSNQSyO6bQ==
+  /@types/tar/4.0.4:
+    dependencies:
+      '@types/minipass': 2.2.0
+      '@types/node': 14.14.41
+    dev: true
+    resolution:
+      integrity: sha512-0Xv+xcmkTsOZdIF4yCnd7RkOOyfyqPaqJ7RZFKnwdxfDbkN3eAAE9sHl8zJFqBz4VhxolW9EErbjR1oyH7jK2A==
   /@types/testing-library__jest-dom/5.9.5:
     dependencies:
       '@types/jest': 26.0.22
@@ -5565,7 +5696,6 @@ packages:
   /@types/uglify-js/3.13.0:
     dependencies:
       source-map: 0.6.1
-    dev: true
     resolution:
       integrity: sha512-EGkrJD5Uy+Pg0NUR8uA4bJ5WMfljyad0G+784vLCNUkD+QwOJXUbBYExXfVGf7YtyzdQp3L/XMYcliB987kL5Q==
   /@types/unist/2.0.3:
@@ -5589,7 +5719,6 @@ packages:
       '@types/node': 14.14.41
       '@types/source-list-map': 0.1.2
       source-map: 0.7.3
-    dev: true
     resolution:
       integrity: sha512-LXn/oYIpBeucgP1EIJbKQ2/4ZmpvRl+dlrFdX7+94SKRUV3Evy3FsfMZY318vGhkWUS5MPhtOM3w1/hCOAOXcg==
   /@types/webpack/4.41.27:
@@ -5600,7 +5729,6 @@ packages:
       '@types/uglify-js': 3.13.0
       '@types/webpack-sources': 2.1.0
       source-map: 0.6.1
-    dev: true
     resolution:
       integrity: sha512-wK/oi5gcHi72VMTbOaQ70VcDxSQ1uX8S2tukBK9ARuGXrYM/+u4ou73roc7trXDNmCxCoerE8zruQqX/wuHszA==
   /@types/ws/7.4.1:
@@ -6303,7 +6431,6 @@ packages:
     resolution:
       integrity: sha512-5hYdAkZlcG8tOLujVDTgCT+uPX0VnpAH28gWsLfzpXYm7wP6mp5Q/gYyR7YQ0cKVJcXJnl3j2kpBan13PtQf6w==
   /arg/4.1.3:
-    dev: true
     resolution:
       integrity: sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA==
   /argparse/1.0.10:
@@ -8162,7 +8289,6 @@ packages:
     resolution:
       integrity: sha512-dNldIoSuNSvlTJ7slIKC/ZFGKexBMBrrcc+TTe1NdmROnaASuLPvqpwj9v4XS4uXZ8+YPu0sNmShX2rXI5LNsw==
   /create-require/1.1.1:
-    dev: true
     resolution:
       integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==
   /cross-spawn/6.0.5:
@@ -9219,7 +9345,6 @@ packages:
     resolution:
       integrity: sha512-Mv/TDa3nZ9sbc5soK+OoA74BsS3mL37yixCvUAQkiuA4Wz6YtwP/K47n2rv2ovzHZvoiQeA5FTQOschKkEwB0Q==
   /diff/4.0.2:
-    dev: true
     engines:
       node: '>=0.3.1'
     resolution:
@@ -9740,6 +9865,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-NJ6Yn3FuDinBaBRWl/q5X/s4koRHBrgKAu+yGI6JCBeiu3qrcbJhwT2GeR/EXVfylRk8dpQVJoLEFhK+Mu31NA==
+  /esbuild/0.8.57:
+    dev: true
+    hasBin: true
+    requiresBuild: true
+    resolution:
+      integrity: sha512-j02SFrUwFTRUqiY0Kjplwjm1psuzO1d6AjaXKuOR9hrY0HuPsT6sV42B6myW34h1q4CRy+Y3g4RU/cGJeI/nNA==
   /esbuild/0.9.7:
     dev: true
     hasBin: true
@@ -10649,7 +10780,6 @@ packages:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       mime-types: 2.1.30
-    dev: true
     engines:
       node: '>= 6'
     resolution:
@@ -13062,7 +13192,6 @@ packages:
     resolution:
       integrity: sha512-lGS5PXGAzR4RF7V5+XObhqz2KZIDUA1yD0DG6pBVmy10eh0ZIXQImRuzocsI/N2XZ1GrLFwTS27In2i2jlpq1Q==
   /jpeg-js/0.4.3:
-    dev: false
     resolution:
       integrity: sha512-ru1HWKek8octvUHFHvE5ZzQ1yAsJmIvRdGWvSoKV52XKyuyYA437QWDttXT8eZXDSbuMpHlLzPDZUPd6idIz+Q==
   /js-data-structs/1.1.3:
@@ -15633,6 +15762,28 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==
+  /playwright-chromium/1.10.0:
+    dependencies:
+      commander: 6.2.1
+      debug: 4.3.1
+      extract-zip: 2.0.1
+      https-proxy-agent: 5.0.0
+      jpeg-js: 0.4.3
+      mime: 2.5.2
+      pngjs: 5.0.0
+      progress: 2.0.3
+      proper-lockfile: 4.1.2
+      proxy-from-env: 1.1.0
+      rimraf: 3.0.2
+      stack-utils: 2.0.3
+      ws: 7.4.5
+    dev: true
+    engines:
+      node: '>=10.17.0'
+    hasBin: true
+    requiresBuild: true
+    resolution:
+      integrity: sha512-ry/60/YKGJfrnaS7j5C3+xmA2DAMv6pBE351FoTHe4Llq0WU92IL0rBYK3TkK3PzSHYtp1KdCRsRjDnJhImA3g==
   /playwright/1.10.0:
     dependencies:
       commander: 6.2.1
@@ -15662,7 +15813,6 @@ packages:
     resolution:
       integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==
   /pngjs/5.0.0:
-    dev: false
     engines:
       node: '>=10.13.0'
     resolution:
@@ -16126,6 +16276,14 @@ packages:
       clipboard: 2.0.8
     resolution:
       integrity: sha512-c29LVsqOaLbBHuIbsTxaKENh1N2EQBOHaWv7gkHN4dgRbxSREqDnDbtFJYdpPauS4YCplMSNCABQ6Eeor69bAA==
+  /process-exists/4.0.0:
+    dependencies:
+      ps-list: 6.3.0
+    dev: true
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-BnlcYPiZjSW+fye12g9B7UeCzMAOdMkxuTz3zcytJ2BHwYZf2RoKvuuwUcJLeXlGj58x9YQrvhT21PmKhUc4UQ==
   /process-nextick-args/2.0.1:
     resolution:
       integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==
@@ -16214,7 +16372,6 @@ packages:
       graceful-fs: 4.2.6
       retry: 0.12.0
       signal-exit: 3.0.3
-    dev: false
     resolution:
       integrity: sha512-TjNPblN4BwAWMXU8s9AEz4JmQxnD1NNL7bNOY/AKUzyamc379FWASUhc/K1pL2noVb+XmZKLL68cjzLsiOAMaA==
   /property-information/5.6.0:
@@ -16269,9 +16426,19 @@ packages:
   /prr/1.0.1:
     resolution:
       integrity: sha1-0/wRS6BplaRexok/SEzrHXj19HY=
+  /ps-list/6.3.0:
+    dev: true
+    engines:
+      node: '>=8'
+    resolution:
+      integrity: sha512-qau0czUSB0fzSlBOQt0bo+I2v6R+xiQdj78e1BR/Qjfl5OHWJ/urXi8+ilw1eHe+5hSeDI1wrwVTgDp2wst4oA==
   /psl/1.8.0:
     resolution:
       integrity: sha512-RIdOzyoavK+hA18OGGWDqUTsCLhtA7IcZ/6NCs4fFJaHBDab+pDDmDIByWFRQJq2Cd7r1OoQxBGKOaztq+hjIQ==
+  /pstree.remy/1.1.8:
+    dev: true
+    resolution:
+      integrity: sha512-77DZwxQmxKnu3aR542U+X8FypNzbfJ+C5XQDk3uWjWxn6151aIMGthWYRXTqT1E5oJvg+ljaa2OJi+VfvCOQ8w==
   /public-encrypt/4.0.3:
     dependencies:
       bn.js: 4.12.0
@@ -18892,7 +19059,6 @@ packages:
       source-map-support: 0.5.19
       typescript: 4.2.4
       yn: 3.1.1
-    dev: true
     engines:
       node: '>=10.0.0'
     hasBin: true
@@ -20012,7 +20178,6 @@ packages:
     resolution:
       integrity: sha512-sbE4G+bSP0jw71aJ9Hqi5UxOTy8JGkObIaCSpY6krRoNqssPCWq05rqV9PQcuMqcrHD3twzko92fVaF1S3id/Q==
   /yn/3.1.1:
-    dev: true
     engines:
       node: '>=6'
     resolution:
