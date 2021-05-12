@@ -78,4 +78,7 @@ storybook-static
 
 .idea/workspace.xml
 
+# Bots
+**/gravity/testing/out/*
 **/out/bots/*
+**/.bots/*
