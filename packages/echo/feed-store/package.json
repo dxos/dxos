@@ -43,7 +43,8 @@
     "pump": "^3.0.0",
     "random-access-file": "^2.1.0",
     "source-map-support": "^0.5.12",
-    "through2": "^3.0.1"
+    "through2": "^3.0.1",
+    "sodium-universal": "~3.0.4"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
