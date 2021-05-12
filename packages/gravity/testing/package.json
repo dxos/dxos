@@ -1,22 +1,22 @@
 {
   "name": "@dxos/testing",
   "version": "2.10.2",
+  "private": true,
   "description": "Testing framework",
   "keywords": [],
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "private": true,
   "scripts": {
     "build": "toolchain build",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/bot": "workspace:*",
     "@dxos/botkit": "workspace:*",
-    "@dxos/botkit-client":"workspace:*",
-    "@dxos/async":"workspace:*",
+    "@dxos/botkit-client": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "~1.0.0-beta.74",
     "@dxos/credentials": "workspace:*",

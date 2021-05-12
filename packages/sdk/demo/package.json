@@ -35,7 +35,6 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/util": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -52,6 +51,7 @@
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ux": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
     "@types/debug": "^4.1.1",

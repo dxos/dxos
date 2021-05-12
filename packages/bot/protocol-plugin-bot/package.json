@@ -11,12 +11,12 @@
     "url": "git+https://github.com/dxos/protocol.git"
   },
   "license": "GPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
     "lint": "toolchain lint"

@@ -3,6 +3,13 @@
   "version": "2.10.1-beta.4",
   "description": "Network generator.",
   "homepage": "https://github.com/dxos/network-generator#readme",
+  "bugs": {
+    "url": "https://github.com/dxos/network-generator/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/network-generator.git"
+  },
   "license": "GPL-3.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -12,13 +19,6 @@
     "src",
     "README.md"
   ],
-  "bugs": {
-    "url": "https://github.com/dxos/network-generator/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/network-generator.git"
-  },
   "scripts": {
     "build": "toolchain build",
     "lint": "toolchain lint",
