@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import { expect, mockFn } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
@@ -13,9 +14,8 @@ import { afterTest } from '../testutils';
 import { FullyConnectedTopology } from '../topology/fully-connected-topology';
 import { createWebRtcTransportFactory, WebrtcTransport } from '../transport/webrtc-transport';
 import { Swarm } from './swarm';
-import debug from 'debug';
 
-const log = debug('dxos:network-manager:swarm:test')
+const log = debug('dxos:network-manager:swarm:test');
 
 const setup = () => {
   const topic = PublicKey.random();
@@ -69,14 +69,14 @@ test('connects two peers in a swarm', async () => {
 
   const promise = Promise.all([
     promiseTimeout(swarm1.connected.waitForCount(1), 3000, 'Swarm1 connect timeout.'),
-    promiseTimeout(swarm2.connected.waitForCount(1), 3000, 'Swarm2 connect timeout.'),
+    promiseTimeout(swarm2.connected.waitForCount(1), 3000, 'Swarm2 connect timeout.')
   ]);
 
   swarm1.onPeerCandidatesChanged([peerId2]);
 
-  log('Candidates changed')
+  log('Candidates changed');
   await promise;
-  log('Swarms connected')
+  log('Swarms connected');
 
   const swarm1Connection = swarm1.connections[0];
   const swarm2Connection = swarm2.connections[0];
