@@ -1,0 +1,13 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.teamwork.messenger;
+
+message Message {
+  required string    timestamp               = 2;
+  required string text = 3;
+  required string sender = 4;
+}

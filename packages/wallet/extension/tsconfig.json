@@ -5,11 +5,12 @@
       "DOM",
       "ES6"
     ],
+    "jsx": "react",
     "outDir": "dist",
-    "jsx": "react"
+    "types": [
+      "node",
+      "webpack-env"
+    ]
   },
-  "include": [
-    "src",
-    "test"
-  ]
+  "include": ["src/**/*", "tools/**/*"]
 }

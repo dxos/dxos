@@ -1,0 +1,30 @@
+{
+  "name": "@dxos/messenger-model",
+  "version": "2.10.2",
+  "license": "AGPL-3.0",
+  "main": "dist/src/index.js",
+  "files": [
+    "src",
+    "src/proto/gen",
+    "dist"
+  ],
+  "scripts": {
+    "build": "toolchain build",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/model-factory": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@types/debug": "^4.1.1",
+    "debug": "^4.1.1"
+  },
+  "devDependencies": {
+    "@dxos/protobuf-compiler": "workspace:*",
+    "@dxos/toolchain-node-library": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
