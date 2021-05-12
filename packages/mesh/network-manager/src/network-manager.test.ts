@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import { expect, mockFn } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
@@ -14,6 +15,8 @@ import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protoco
 import { FullyConnectedTopology } from './topology/fully-connected-topology';
 import { StarTopology } from './topology/star-topology';
 import { Topology } from './topology/topology';
+
+const log = debug('dxos:network-manager:test');
 
 interface CreatePeerOptions {
   topic: PublicKey
@@ -68,7 +71,7 @@ describe('Network manager', () => {
     await nm2.destroy();
   }, 10_000);
 
-  test('join an leave swarm', async () => {
+  test('join and leave swarm', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -81,12 +84,25 @@ describe('Network manager', () => {
       Event.wrap(plugin2, 'connect').waitForCount(1)
     ]);
 
-    const promise = Event.wrap(plugin2, 'disconnect').waitForCount(1);
+    log('Connected');
+
+    const promise1 = Event.wrap(plugin1, 'disconnect').waitForCount(1);
+    const promise2 = Event.wrap(plugin2, 'disconnect').waitForCount(1);
+
     await networkManager1.leaveProtocolSwarm(topic);
-    await promise;
+
+    await promise1;
+
+    log('Peer1 disconnected');
+
+    await promise2;
+
+    log('Peer2 disconnected');
 
     await networkManager1.destroy();
+    log('Peer1 destroyed');
     await networkManager2.destroy();
+    log('Peer2 destroyed');
   }, 10_000);
 
   it.skip('two peers with different signal & turn servers', async () => {

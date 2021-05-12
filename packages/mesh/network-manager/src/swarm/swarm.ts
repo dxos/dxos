@@ -11,7 +11,8 @@ import { ComplexMap, ComplexSet, Event } from '@dxos/util';
 import { ProtocolProvider } from '../network-manager';
 import { SignalApi } from '../signal';
 import { SwarmController, Topology } from '../topology/topology';
-import { Connection, ConnectionState, ConnectionFactory } from './connection';
+import { TransportFactory } from '../transport/transport';
+import { Connection, ConnectionState } from './connection';
 
 const log = debug('dxos:network-manager:swarm');
 
@@ -54,7 +55,7 @@ export class Swarm {
     private readonly _sendOffer: (message: SignalApi.SignalMessage) => Promise<SignalApi.Answer>,
     private readonly _sendSignal: (message: SignalApi.SignalMessage) => Promise<void>,
     private readonly _lookup: () => void,
-    private readonly _connectionFactory: ConnectionFactory,
+    private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
     log(`Creating swarm topic=${_topic} peerId=${_ownPeerId}`);
@@ -92,12 +93,11 @@ export class Swarm {
     assert(message.remoteId.equals(this._ownPeerId));
     assert(message.topic.equals(this._topic));
 
-    await this._waitForPeerCandidate(remoteId);
-
     // Check if we are already trying to connect to that peer.
     if (this._connections.has(remoteId)) {
       // Peer with the highest Id closes it's connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this._ownPeerId.toHex()) {
+        log(`[${this._ownPeerId}] Closing local connection and accepting remote peer's offer.`);
         // Close our connection and accept remote peer's connection.
         await this._closeConnection(remoteId).catch(err => {
           console.error(err);
@@ -215,29 +215,24 @@ export class Swarm {
     log(`Create connection topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
     assert(!this._connections.has(remoteId), 'Peer already connected');
 
-    const connection = this._connectionFactory({
-      initiator,
-
-      ownId: this._ownPeerId,
+    const connection = new Connection(
+      this._topic,
+      this._ownPeerId,
       remoteId,
       sessionId,
-      topic: this._topic,
+      initiator,
+      this._sendSignal,
+      this._protocol({ channel: discoveryKey(this._topic) }),
+      this._transportFactory
+    );
 
-      protocol: this._protocol({ channel: discoveryKey(this._topic) }),
-      sendSignal: msg => this._sendSignal(msg)
-    });
     // TODO(marik-d): Handle errors.
-
     this._connections.set(remoteId, connection);
     this.connectionAdded.emit(connection);
 
-    if (connection.state === ConnectionState.CONNECTED) {
-      this.connected.emit(remoteId);
-    } else {
-      connection.stateChanged.waitFor(s => s === ConnectionState.CONNECTED).then(() => this.connected.emit(remoteId));
-    }
+    connection.stateChanged.waitFor(s => s === ConnectionState.CONNECTED).then(() => this.connected.emit(remoteId));
 
-    connection.closed.once(() => {
+    connection.stateChanged.waitFor(s => s === ConnectionState.CLOSED).then(() => {
       log(`Connection closed topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
       // Connection might have been already closed or replace by a different one. Only remove the connection if it has the same session id.
       if (this._connections.get(remoteId)?.sessionId.equals(sessionId)) {
@@ -252,40 +247,7 @@ export class Swarm {
     log(`Close connection topic=${this._topic} remoteId=${peerId}`);
     const connection = this._connections.get(peerId);
     assert(connection);
-    await connection.close();
     this._connections.delete(peerId);
-    this.connectionRemoved.emit(connection);
-  }
-
-  private async _waitForPeerCandidate (peerId: PublicKey): Promise<void> {
-    if (this._discoveredPeers.has(peerId)) {
-      log(`Offering peer is already discovered ${peerId}`);
-      return;
-    }
-
-    // Error is created on top level to preserve the stack trace.
-    const timeoutError = new Error('Timed out on trying to discover a peer');
-    log(`Waiting for offering peer to be discovered ${peerId}`);
-
-    return new Promise((resolve, reject) => {
-      const lookupIntervalId = setInterval(() => this._lookup(), 1000);
-      const timeoutIntervalId = setTimeout(() => {
-        log(`Timeout on waiting for offering peer discovery ${peerId}`);
-        reject(timeoutError);
-        clearInterval(lookupIntervalId);
-        clearTimeout(timeoutIntervalId);
-        unsubscribe();
-      }, 10_000);
-      const unsubscribe = this._peerCandidatesUpdated.on(() => {
-        if (this._discoveredPeers.has(peerId)) {
-          log(`Discovered offering peer ${peerId}`);
-          resolve();
-          clearInterval(lookupIntervalId);
-          clearTimeout(timeoutIntervalId);
-          unsubscribe();
-        }
-      });
-      this._lookup();
-    });
+    await connection.close();
   }
 }

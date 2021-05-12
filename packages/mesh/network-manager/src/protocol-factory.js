@@ -8,7 +8,7 @@ import debug from 'debug';
 import { discoveryKey, keyToString } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 
-const log = debug('dxos:network-manager');
+const log = debug('dxos:network-manager:protocol-factory');
 
 /**
  * Returns a function that takes a channel parameter, returns a Protocol object
