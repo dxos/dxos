@@ -16,6 +16,7 @@
     "@dxos/bot": "workspace:*",
     "@dxos/botkit": "workspace:*",
     "@dxos/botkit-client":"workspace:*",
+    "@dxos/async":"workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "~1.0.0-beta.74",
     "@dxos/credentials": "workspace:*",

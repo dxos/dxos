@@ -9,13 +9,13 @@ import path from 'path';
 import ram from 'random-access-memory';
 import kill from 'tree-kill';
 
+import { promiseTimeout } from '@dxos/async';
 import { BotFactoryClient } from '@dxos/botkit-client';
 import { Client } from '@dxos/client';
 import { Invitation } from '@dxos/credentials';
 import { SIGNATURE_LENGTH, keyToBuffer, createKeyPair, keyToString, verify, sha256 } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 import { SpawnOptions } from '@dxos/protocol-plugin-bot';
-import { promiseTimeout } from '@dxos/util';
 
 import { Agent } from './agent';
 import { CONFIG, FACTORY_OUT_DIR } from './config';
