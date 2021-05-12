@@ -11,10 +11,6 @@ module.exports = {
   plugins: [...require('./webpack.plugins')],
   resolve: {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.css'],
-    alias: {
-      // Custom Aliases
-      ...require('./webpack.aliases'),
-    },
   },
   stats: 'errors-warnings',
   devtool: 'eval-source-map',

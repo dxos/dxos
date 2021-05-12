@@ -14,8 +14,6 @@ module.exports = {
     alias: {
       // React Hot Loader Patch
       'react-dom': '@hot-loader/react-dom',
-      // Custom Aliases
-      ...require('./webpack.aliases'),
     },
   },
   stats: 'errors-warnings',

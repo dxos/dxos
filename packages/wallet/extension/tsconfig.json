@@ -10,13 +10,7 @@
     "types": [
       "node",
       "webpack-env"
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "*": ["node_modules/*"],
-      "@assets/*": ["./assets/*"],
-      "@src/*": ["./src/*"]
-    }
+    ]
   },
   "include": ["src/**/*", "tools/**/*"]
 }
