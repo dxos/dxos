@@ -1,21 +1,17 @@
 {
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ES6"
+    ],
     "jsx": "react",
-    "allowJs": true,
-    "target": "ES6",
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "noImplicitAny": true,
-    "sourceMap": true,
-    "baseUrl": ".",
     "outDir": "dist",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
     "types": [
       "node",
       "webpack-env"
     ],
+    "baseUrl": ".",
     "paths": {
       "*": ["node_modules/*"],
       "@assets/*": ["./assets/*"],
