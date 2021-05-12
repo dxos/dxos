@@ -10,7 +10,7 @@ import { /* BROWSER_ENV, NODE_ENV, */ Orchestrator } from '../src/orchestrator';
 jest.setTimeout(100 * 1000);
 
 test.skip('invite two agents to a party', async () => {
-  const orchestrator = new Orchestrator({ local: true });
+  const orchestrator = await Orchestrator.create({ local: true });
 
   orchestrator.client.registerModel(MessengerModel);
 

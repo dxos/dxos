@@ -18,7 +18,7 @@ import { SpawnOptions } from '@dxos/protocol-plugin-bot';
 import { promiseTimeout } from '@dxos/util';
 
 import { Agent } from './agent';
-import { CONFIG, FACTORY_OUT_DIR } from './config';
+import { FACTORY_OUT_DIR, getTestConfig, mapConfigToEnv } from './config';
 import { buildAndPublishBot } from './distributor';
 
 const log = debug('dxos:testing');
@@ -43,21 +43,29 @@ const getBotIdentifiers = (botPath: string, env: string | undefined) => {
 };
 
 export class Orchestrator {
+  static async create (options: {local: boolean}) {
+    const config = await getTestConfig();
+    return new Orchestrator(config, options);
+  }
+
   _builds = new Map();
   _client: Client;
   _localRun: boolean;
   _party: Party;
   _factoryClient: BotFactoryClient;
   _factory: any;
+  _config: any;
 
-  constructor (options: {local: boolean}) {
+  constructor (config: any, options: {local: boolean}) {
+    this._config = config;
+
     const { local = true } = options;
     this._client = new Client({
       storage: ram,
       // TODO(egorgripasov): Factor out (use main config).
       swarm: {
-        signal: CONFIG.DX_SIGNAL_ENDPOINT,
-        ice: JSON.parse(CONFIG.DX_ICE_ENDPOINTS)
+        signal: this._config.get('services.signal.server'),
+        ice: this._config.get('services.ice')
       }
     });
     this._localRun = local;
@@ -107,14 +115,14 @@ export class Orchestrator {
       let ipfsCID = this._builds.get(buildId);
       if (!ipfsCID) {
         log('Building & publishing bot package...');
-        ipfsCID = await buildAndPublishBot(CONFIG.DX_IPFS_GATEWAY, botPath, env === 'browser');
+        ipfsCID = await buildAndPublishBot(this._config.get('services.ipfs.gateway'), botPath, env === 'browser');
         this._builds.set(buildId, ipfsCID);
       }
       options = {
         ...rest,
         env,
         ipfsCID,
-        ipfsEndpoint: CONFIG.DX_IPFS_GATEWAY
+        ipfsEndpoint: this._config.get('services.ipfs.gateway')
       };
     }
 
@@ -143,7 +151,7 @@ export class Orchestrator {
       const env = {
         ...process.env,
         NODE_OPTIONS: '',
-        ...CONFIG,
+        ...mapConfigToEnv(this._config),
         DEBUG: `bot-factory,bot-factory:*,dxos:botkit*,dxos:testing*,${process.env.DEBUG}`,
         DX_BOT_RESET: 'true',
         DX_BOT_TOPIC: topic,

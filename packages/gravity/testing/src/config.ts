@@ -2,16 +2,44 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(egorgripasov): Factor out (use config from ~/.dx?).
-export const CONFIG = {
-  DX_SIGNAL_ENDPOINT: 'wss://apollo1.kube.moon.dxos.network/dxos/signal',
-  DX_ICE_ENDPOINTS: '[{"urls":"stun:apollo1.kube.moon.dxos.network:3478"},{"urls":"turn:apollo1.kube.moon.dxos.network:3478","username":"dxos","credential":"dxos"},{"urls":"stun:apollo2.kube.moon.dxos.network:3478"},{"urls":"turn:apollo2.kube.moon.dxos.network:3478","username":"dxos","credential":"dxos"}]',
-  DX_WNS_ENDPOINT: 'https://wns1.kube.moon.dxos.network/api',
-  DX_WNS_USER_KEY: undefined,
-  DX_WNS_BOND_ID: undefined,
-  DX_WNS_CHAIN_ID: 'devnet-2',
-  DX_IPFS_SERVER: 'https://apollo1.kube.moon.dxos.network/dxos/ipfs/api',
-  DX_IPFS_GATEWAY: 'https://apollo1.kube.moon.dxos.network/dxos/ipfs/gateway/'
-};
+import crypto from 'crypto';
+import download from 'download';
+import { existsSync, readFileSync, writeFileSync } from 'fs-extra';
+import yaml from 'js-yaml';
+import { tmpdir } from 'os';
+import path from 'path';
+
+import { Config, mapFromKeyValues, mapToKeyValues } from '@dxos/config';
+
+import envmap from './env-map.json';
+
+const PROFILE_PATH = path.join(tmpdir(), `${crypto.randomBytes(4).toString('hex')}.yml`);
 
 export const FACTORY_OUT_DIR = './out';
+export const FACTORY_BOT_DIR = '.bots';
+
+export const TEST_PROFILE = 'https://git.io/JUkhm';
+
+// Config to override.
+export const OVERRIDE_CONFIG = {
+  DX_SIGNAL_ENDPOINT: 'ws://localhost:4999'
+};
+
+export const getTestConfig = async () => {
+  if (!existsSync(PROFILE_PATH)) {
+    writeFileSync(PROFILE_PATH, await download(TEST_PROFILE));
+  }
+
+  const profileConfig = yaml.load(readFileSync(PROFILE_PATH));
+
+  const config = new Config(
+    mapFromKeyValues(envmap, OVERRIDE_CONFIG),
+    profileConfig
+  );
+
+  return config;
+};
+
+export const mapConfigToEnv = (config: any) => {
+  return mapToKeyValues(envmap, config.values);
+};
