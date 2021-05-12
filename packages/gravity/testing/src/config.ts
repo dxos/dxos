@@ -15,3 +15,4 @@ export const CONFIG = {
 };
 
 export const FACTORY_OUT_DIR = './out';
+export const FACTORY_BOT_DIR = '.bots';

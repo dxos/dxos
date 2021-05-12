@@ -8,9 +8,9 @@
   "main": "dist/src/index.js",
   "private": true,
   "scripts": {
-    "build": "toolchain build",
+    "build": "toolchain build --globalTeardown='./src/teardown.ts'",
     "lint": "toolchain lint",
-    "test": "toolchain test"
+    "test": "toolchain test --globalTeardown='./src/teardown.ts'"
   },
   "dependencies": {
     "@dxos/bot": "workspace:*",
