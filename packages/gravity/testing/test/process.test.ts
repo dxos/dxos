@@ -14,7 +14,7 @@ jest.setTimeout(100 * 1000);
 
 // TODO(egorgripasov): Run multiple test files simultaneously.
 test.skip('bot resource test', async () => {
-  const orchestrator = new Orchestrator({ local: true });
+  const orchestrator = await Orchestrator.create({ local: true });
   await orchestrator.start();
 
   const agents = [];

@@ -6,9 +6,9 @@ import { exec } from 'child_process';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { FACTORY_OUT_DIR, FACTORY_BOT_DIR, CONFIG } from './config';
+import { FACTORY_OUT_DIR, FACTORY_BOT_DIR, OVERRIDE_CONFIG } from './config';
 
-const signalUrl = new URL(CONFIG.DX_SIGNAL_ENDPOINT);
+const signalUrl = new URL(OVERRIDE_CONFIG.DX_SIGNAL_ENDPOINT);
 
 const testTeardown = async () => {
   await fs.remove(path.join(process.cwd(), FACTORY_OUT_DIR));
