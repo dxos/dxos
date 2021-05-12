@@ -534,6 +534,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/messenger-model",
+      "projectFolder": "packages/echo/messenger-model",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/echo-db",
       "projectFolder": "packages/echo/echo-db",
       "shouldPublish": true,
@@ -649,6 +655,15 @@
       "projectFolder": "packages/bot/bot",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
+    },
+
+    //
+    // gravity
+    //
+
+    {
+      "packageName": "@dxos/testing",
+      "projectFolder": "packages/gravity/testing"
     },
 
     //
