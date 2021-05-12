@@ -924,6 +924,7 @@ importers:
       '@storybook/react': 6.2.9_1568a4a4371cca35bea7fd1ef25c77f4
       eslint: 7.26.0
       eslint-plugin-react: 7.23.2_eslint@7.26.0
+      fork-ts-checker-webpack-plugin: 6.2.7
       react: 16.14.0
       react-docgen-typescript-loader: 3.7.2_typescript@4.2.4+webpack@4.44.2
       react-dom: 16.14.0_react@16.14.0
@@ -948,6 +949,7 @@ importers:
       '@wirelineio/discovery-swarm-memory': ^0.2.17
       eslint: ^7.7.0
       eslint-plugin-react: ^7.22.0
+      fork-ts-checker-webpack-plugin: ~6.2.5
       react: ^16.14.0
       react-docgen-typescript-loader: ^3.7.2
       react-dom: ^16.14.0

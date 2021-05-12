@@ -1,6 +1,9 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2021 DXOS.org
 //
+
+import assert from 'assert';
+import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
@@ -8,29 +11,9 @@ import { ErrorStream } from '@dxos/debug';
 import { Protocol } from '@dxos/protocol';
 
 import { SignalApi } from '../signal';
+import { Transport, TransportFactory } from '../transport/transport';
 
-/**
- * Abstraction over a P2P connection transport. Currently either WebRTC or in-memory.
- */
-export interface Connection {
-  stateChanged: Event<ConnectionState>;
-
-  closed: Event;
-
-  errors: ErrorStream;
-
-  remoteId: PublicKey
-
-  sessionId: PublicKey
-
-  state: ConnectionState;
-
-  connect(): void;
-
-  signal (msg: SignalApi.SignalMessage): void;
-
-  close (): Promise<void>;
-}
+const log = debug('dxos:network-manager:swarm:connection');
 
 /**
  * State machine for each connection.
@@ -62,26 +45,104 @@ export enum ConnectionState {
   CLOSED = 'CLOSED',
 }
 
-export interface ConnectionOptions {
-  /**
-   * Did local node initiate this connection.
-   */
-  initiator: boolean,
+export class Connection {
+  private _state: ConnectionState = ConnectionState.INITIAL;
 
-  ownId: PublicKey,
-  remoteId: PublicKey,
-  sessionId: PublicKey,
-  topic: PublicKey,
+  private _transport: Transport | undefined;
 
-  /**
-   * Wire protocol.
-   */
-  protocol: Protocol,
+  private _bufferedSignals: SignalApi.SignalMessage[] = [];
 
-  /**
-   * Send a signal message to remote peer.
-   */
-  sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>,
+  readonly stateChanged = new Event<ConnectionState>();
+
+  readonly errors = new ErrorStream();
+
+  constructor (
+    public readonly topic: PublicKey,
+    public readonly ownId: PublicKey,
+    public readonly remoteId: PublicKey,
+    public readonly sessionId: PublicKey,
+    public readonly initiator: boolean,
+    private readonly _sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>,
+    private readonly _protocol: Protocol,
+    private readonly _transportFactory: TransportFactory
+  ) {}
+
+  get state () {
+    return this._state;
+  }
+
+  get transport () {
+    return this._transport;
+  }
+
+  connect () {
+    assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
+
+    this._state = this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION;
+    this.stateChanged.emit(this._state);
+
+    assert(!this._transport);
+    this._transport = this._transportFactory({
+      topic: this.topic,
+      ownId: this.ownId,
+      remoteId: this.remoteId,
+      sessionId: this.sessionId,
+      initiator: this.initiator,
+      protocol: this._protocol,
+      sendSignal: this._sendSignal
+    });
+
+    this._transport.connected.once(() => {
+      this._state = ConnectionState.CONNECTED;
+      this.stateChanged.emit(this._state);
+    });
+
+    this._transport.closed.once(() => {
+      this._state = ConnectionState.CLOSED;
+      this.stateChanged.emit(this._state);
+    });
+
+    this._transport.errors.pipeTo(this.errors);
+
+    // Replay signals that were received before transport was created.
+    for (const signal of this._bufferedSignals) {
+      this._transport.signal(signal);
+    }
+    this._bufferedSignals = [];
+  }
+
+  signal (msg: SignalApi.SignalMessage) {
+    if (!msg.sessionId.equals(this.sessionId)) {
+      log('Dropping signal for incorrect session id.');
+      return;
+    }
+    if (msg.data.type === 'offer' && this._state === ConnectionState.INITIATING_CONNECTION) {
+      throw new Error('Invalid state: Cannot send offer to an initiating peer.');
+    }
+    assert(msg.id.equals(this.remoteId));
+    assert(msg.remoteId.equals(this.ownId));
+
+    if (this._state === ConnectionState.INITIAL) {
+      log(`${this.ownId} buffered signal from ${this.remoteId}: ${msg.data.type}`);
+      this._bufferedSignals.push(msg);
+      return;
+    }
+
+    assert(this._transport, 'Connection not ready to accept signals.');
+    log(`${this.ownId} received signal from ${this.remoteId}: ${msg.data.type}`);
+    this._transport.signal(msg);
+  }
+
+  async close () {
+    // TODO(marik-d): CLOSING state.
+
+    log(`Closing ${this.ownId}`);
+
+    await this._transport?.close();
+
+    log(`Closed ${this.ownId}`);
+
+    this._state = ConnectionState.CLOSED;
+    this.stateChanged.emit(this._state);
+  }
 }
-
-export type ConnectionFactory = (options: ConnectionOptions) => Connection;

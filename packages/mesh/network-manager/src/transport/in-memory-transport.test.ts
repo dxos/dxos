@@ -11,8 +11,7 @@ import { range } from '@dxos/util';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { afterTest } from '../testutils';
-import { ConnectionState } from './connection';
-import { InMemoryConnection } from './in-memory-connection';
+import { InMemoryTransport } from './in-memory-transport';
 
 // TODO(burdon): Flaky test.
 //     Cannot log after tests are done. Did you forget to wait for something async in your test?
@@ -26,7 +25,7 @@ function createPair () {
 
   const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
   const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
-  const connection1 = new InMemoryConnection(
+  const connection1 = new InMemoryTransport(
     peer1Id,
     peer2Id,
     sessionId,
@@ -38,7 +37,7 @@ function createPair () {
 
   const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
   const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
-  const connection2 = new InMemoryConnection(
+  const connection2 = new InMemoryTransport(
     peer2Id,
     peer1Id,
     sessionId,
@@ -48,16 +47,11 @@ function createPair () {
   afterTest(() => connection2.close());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
-  connection1.connect();
-  connection2.connect();
   return { connection1, connection2, plugin1, plugin2, peer1Id, peer2Id, topic };
 }
 
 test('establish connection and send data through with protocol', async () => {
-  const { connection1, connection2, plugin1, plugin2, peer1Id } = createPair();
-
-  expect(connection1.state).toEqual(ConnectionState.CONNECTED);
-  expect(connection2.state).toEqual(ConnectionState.CONNECTED);
+  const { plugin1, plugin2, peer1Id } = createPair();
 
   const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
   plugin1.on('receive', mockReceive);
@@ -73,10 +67,7 @@ test('establish connection and send data through with protocol', async () => {
 
 test('10 pairs of peers connecting at the same time', async () => {
   await Promise.all(range(10).map(async () => {
-    const { connection1, connection2, plugin1, plugin2, peer1Id } = createPair();
-
-    expect(connection1.state).toEqual(ConnectionState.CONNECTED);
-    expect(connection2.state).toEqual(ConnectionState.CONNECTED);
+    const { plugin1, plugin2, peer1Id } = createPair();
 
     const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
     plugin1.on('receive', mockReceive);
