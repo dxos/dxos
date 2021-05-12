@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ErrorStream, Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
+import { ErrorStream, Event } from '@dxos/util';
 
 import { SignalApi } from '../signal';
 
@@ -12,53 +12,15 @@ import { SignalApi } from '../signal';
  * Abstraction over a P2P connection transport. Currently either WebRTC or in-memory.
  */
 export interface Transport {
-  stateChanged: Event<TransportState>;
-
   closed: Event;
 
+  connected: Event;
+
   errors: ErrorStream;
-
-  remoteId: PublicKey
-
-  sessionId: PublicKey
-
-  state: TransportState;
-
-  connect(): void;
 
   signal (msg: SignalApi.SignalMessage): void;
 
   close (): Promise<void>;
-}
-
-/**
- * State machine for each connection.
- */
-export enum TransportState {
-  /**
-   * Initial state. Connection is registered but no attempt to connect to the remote peer has been performed. Might mean that we are waiting for the answer signal from the remote peer.
-   */
-  INITIAL = 'INITIAL',
-
-  /**
-   * Originating a connection.
-   */
-  INITIATING_CONNECTION = 'INITIATING_CONNECTION',
-
-  /**
-   * Waiting for a connection to be originated from the remote peer.
-   */
-  WAITING_FOR_CONNECTION = 'WAITING_FOR_CONNECTION',
-
-  /**
-   * Connection is established.
-   */
-  CONNECTED = 'CONNECTED',
-
-  /**
-   * Connection closed.
-   */
-  CLOSED = 'CLOSED',
 }
 
 export interface TransportOptions {

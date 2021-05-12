@@ -69,20 +69,20 @@ test('connects two peers in a swarm', async () => {
 
   await Promise.all([
     swarm1.connected.waitForCount(1),
-    swarm1.connected.waitForCount(1)
+    swarm2.connected.waitForCount(1)
   ]);
 
   const swarm1Connection = swarm1.connections[0];
   const swarm2Connection = swarm2.connections[0];
   const onData = mockFn<(data: Buffer) => void>().returns(undefined);
-  (swarm2Connection as WebrtcTransport).peer!.on('data', onData);
+  (swarm2Connection.transport as WebrtcTransport).peer!.on('data', onData);
 
   const data = Buffer.from('1234');
-  (swarm1Connection as WebrtcTransport).peer!.send(data);
+  (swarm1Connection.transport as WebrtcTransport).peer!.send(data);
   await waitForExpect(() => {
     expect(onData).toHaveBeenCalledWith([data]);
   });
-});
+}, 5_000);
 
 test('two peers try to originate connections to each other simultaneously', async () => {
   const { swarm1, swarm2, peerId1, peerId2 } = setup();
@@ -117,11 +117,11 @@ test('second peer discovered after delat', async () => {
   const swarm1Connection = swarm1.connections[0];
   const swarm2Connection = swarm2.connections[0];
   const onData = mockFn<(data: Buffer) => void>().returns(undefined);
-  (swarm2Connection as WebrtcTransport).peer!.on('data', onData);
+  (swarm2Connection.transport as WebrtcTransport).peer!.on('data', onData);
 
   const data = Buffer.from('1234');
-  (swarm1Connection as WebrtcTransport).peer!.send(data);
+  (swarm1Connection.transport as WebrtcTransport).peer!.send(data);
   await waitForExpect(() => {
     expect(onData).toHaveBeenCalledWith([data]);
   });
-});
+}, 5_000);

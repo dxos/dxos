@@ -280,12 +280,11 @@ export namespace SignalApi {
     id: PublicKey
     remoteId: PublicKey,
     topic: PublicKey,
-    sessionId?: PublicKey,
+    sessionId: PublicKey,
     data: SignalData,
   }
 
   export interface Answer {
     accept: boolean
-    sessionId: PublicKey,
   }
 }

@@ -12,7 +12,6 @@ import { range } from '@dxos/util';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { afterTest } from '../testutils';
 import { InMemoryTransport } from './in-memory-transport';
-import { TransportState } from './transport';
 
 function createPair () {
   const topic = PublicKey.random();
@@ -44,16 +43,11 @@ function createPair () {
   afterTest(() => connection2.close());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
-  connection1.connect();
-  connection2.connect();
   return { connection1, connection2, plugin1, plugin2, peer1Id, peer2Id, topic };
 }
 
 test('establish connection and send data through with protocol', async () => {
-  const { connection1, connection2, plugin1, plugin2, peer1Id } = createPair();
-
-  expect(connection1.state).toEqual(TransportState.CONNECTED);
-  expect(connection2.state).toEqual(TransportState.CONNECTED);
+  const { plugin1, plugin2, peer1Id } = createPair();
 
   const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
   plugin1.on('receive', mockReceive);
@@ -69,10 +63,7 @@ test('establish connection and send data through with protocol', async () => {
 
 test('10 pairs of peers connecting at the same time', async () => {
   await Promise.all(range(10).map(async () => {
-    const { connection1, connection2, plugin1, plugin2, peer1Id } = createPair();
-
-    expect(connection1.state).toEqual(TransportState.CONNECTED);
-    expect(connection2.state).toEqual(TransportState.CONNECTED);
+    const { plugin1, plugin2, peer1Id } = createPair();
 
     const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
     plugin1.on('receive', mockReceive);

@@ -11,7 +11,6 @@ import { sleep } from '@dxos/util';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { afterTest } from '../testutils';
-import { TransportState } from './transport';
 import { WebrtcTransport } from './webrtc-transport';
 
 describe('WebrtcConnection', () => {
@@ -26,17 +25,17 @@ describe('WebrtcConnection', () => {
       PublicKey.random(),
       async msg => {}
     );
-    expect(connection.state).toEqual(TransportState.INITIAL);
 
-    connection.connect();
-
-    expect(connection.state).toEqual(TransportState.INITIATING_CONNECTION);
+    const closedCb = mockFn(() => {});
+    connection.closed.once(closedCb);
 
     await sleep(10); // Let simple-peer process events
     await connection.close();
 
-    expect(connection.state).toEqual(TransportState.CLOSED);
-  });
+    await sleep(1); // Process events
+
+    expect(closedCb.calls.length).toEqual(1)
+  }, 1_000);
 
   test('establish connection and send data through with protocol', async () => {
     const topic = PublicKey.random();
@@ -78,17 +77,6 @@ describe('WebrtcConnection', () => {
     afterTest(() => connection2.close());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
-    connection1.connect();
-    connection2.connect();
-
-    expect(connection1.state).toEqual(TransportState.INITIATING_CONNECTION);
-    expect(connection2.state).toEqual(TransportState.WAITING_FOR_CONNECTION);
-
-    await Promise.all([
-      connection1.stateChanged.waitFor(s => s === TransportState.CONNECTED),
-      connection2.stateChanged.waitFor(s => s === TransportState.CONNECTED)
-    ]);
-
     const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
     plugin1.on('receive', mockReceive);
 
@@ -99,5 +87,5 @@ describe('WebrtcConnection', () => {
     await waitForExpect(() => {
       expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
     });
-  }, 5_000);
+  }, 1_000);
 });
