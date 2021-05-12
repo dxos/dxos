@@ -34,7 +34,7 @@ describe('WebrtcConnection', () => {
 
     await sleep(1); // Process events
 
-    expect(closedCb.calls.length).toEqual(1)
+    expect(closedCb.calls.length).toEqual(1);
   }, 1_000);
 
   test('establish connection and send data through with protocol', async () => {

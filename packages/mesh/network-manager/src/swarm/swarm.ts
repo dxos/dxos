@@ -247,7 +247,5 @@ export class Swarm {
     const connection = this._connections.get(peerId);
     assert(connection);
     await connection.close();
-    this._connections.delete(peerId);
-    this.connectionRemoved.emit(connection);
   }
 }

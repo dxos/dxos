@@ -14,7 +14,7 @@ import { ErrorStream, Event } from '@dxos/util';
 import { SignalApi } from '../signal';
 import { Transport, TransportFactory } from './transport';
 
-const log = debug('dxos:network-manager:swarm:connection');
+const log = debug('dxos:network-manager:swarm:transport:webrtc');
 
 /**
  * Wrapper around simple-peer. Tracks peer state.
@@ -94,15 +94,12 @@ export class WebrtcTransport implements Transport {
 
   async close () {
     await this._closeStream();
-    await new Promise(resolve => {
-      this._peer!.once('close', resolve);
-      this._peer!.destroy();
-    });
-    this.closed.emit();
+    this._peer!.destroy();
+    log('Closed.');
   }
 
   private async _closeStream () {
-    await (this._protocol as any).close();
+    await this._protocol.close();
 
     const stream = this._protocol.stream as NodeJS.ReadWriteStream;
     stream.unpipe(this._peer).unpipe(stream);

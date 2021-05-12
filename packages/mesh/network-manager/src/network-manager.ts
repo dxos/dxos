@@ -100,7 +100,7 @@ export class NetworkManager {
   }
 
   async leaveProtocolSwarm (topic: PublicKey) {
-    log(`Join ${topic}`);
+    log(`Leave ${topic}`);
 
     if (!this._swarms.has(topic)) {
       return;

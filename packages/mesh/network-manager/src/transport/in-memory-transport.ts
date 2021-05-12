@@ -12,7 +12,7 @@ import { ComplexMap, ErrorStream, Event } from '@dxos/util';
 import { SignalApi } from '../signal';
 import { Transport, TransportFactory } from './transport';
 
-const log = debug('dxos:network-manager:swarm:in-memory-connection');
+const log = debug('dxos:network-manager:swarm:transport:in-memory-transport');
 
 export class InMemoryTransport implements Transport {
   private static readonly _connections = new ComplexMap<[topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey], InMemoryTransport>(([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex());
@@ -62,9 +62,12 @@ export class InMemoryTransport implements Transport {
     log(`Closing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
 
     InMemoryTransport._connections.delete([this._topic, this._ownId, this._remoteId]);
+    await this._protocol.close();
 
     if (this._remoteConnection) {
       InMemoryTransport._connections.delete([this._topic, this._remoteId, this._ownId]);
+
+      await this._remoteConnection._protocol.close();
 
       const stream = this._protocol.stream;
       stream.unpipe(this._remoteConnection._protocol.stream).unpipe(stream);
@@ -76,6 +79,7 @@ export class InMemoryTransport implements Transport {
     }
 
     this.closed.emit();
+    log('Closed.');
   }
 }
 

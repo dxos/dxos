@@ -7,12 +7,15 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
-import { sleep } from '@dxos/util';
+import { promiseTimeout, sleep } from '@dxos/util';
 
 import { afterTest } from '../testutils';
 import { FullyConnectedTopology } from '../topology/fully-connected-topology';
 import { createWebRtcTransportFactory, WebrtcTransport } from '../transport/webrtc-transport';
 import { Swarm } from './swarm';
+import debug from 'debug';
+
+const log = debug('dxos:network-manager:swarm:test')
 
 const setup = () => {
   const topic = PublicKey.random();
@@ -59,18 +62,21 @@ const setup = () => {
 };
 
 test('connects two peers in a swarm', async () => {
-  const { swarm1, swarm2, peerId1, peerId2 } = setup();
+  const { swarm1, swarm2, peerId2 } = setup();
 
   expect(swarm1.connections.length).toEqual(0);
   expect(swarm2.connections.length).toEqual(0);
 
-  swarm1.onPeerCandidatesChanged([peerId2]);
-  swarm2.onPeerCandidatesChanged([peerId1]);
-
-  await Promise.all([
-    swarm1.connected.waitForCount(1),
-    swarm2.connected.waitForCount(1)
+  const promise = Promise.all([
+    promiseTimeout(swarm1.connected.waitForCount(1), 3000, 'Swarm1 connect timeout.'),
+    promiseTimeout(swarm2.connected.waitForCount(1), 3000, 'Swarm2 connect timeout.'),
   ]);
+
+  swarm1.onPeerCandidatesChanged([peerId2]);
+
+  log('Candidates changed')
+  await promise;
+  log('Swarms connected')
 
   const swarm1Connection = swarm1.connections[0];
   const swarm2Connection = swarm2.connections[0];
@@ -95,11 +101,11 @@ test('two peers try to originate connections to each other simultaneously', asyn
 
   await Promise.all([
     swarm1.connected.waitForCount(1),
-    swarm1.connected.waitForCount(1)
+    swarm2.connected.waitForCount(1)
   ]);
 }, 5_000);
 
-test('second peer discovered after delat', async () => {
+test('second peer discovered after delay', async () => {
   const { swarm1, swarm2, peerId1, peerId2 } = setup();
 
   expect(swarm1.connections.length).toEqual(0);

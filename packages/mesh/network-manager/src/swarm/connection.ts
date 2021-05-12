@@ -91,6 +91,11 @@ export class Connection {
       sendSignal: this._sendSignal
     });
 
+    this._transport.connected.once(() => {
+      this._state = ConnectionState.CONNECTED;
+      this.stateChanged.emit(this._state);
+    });
+
     this._transport.closed.once(() => {
       this._state = ConnectionState.CLOSED;
       this.stateChanged.emit(this._state);
@@ -98,6 +103,7 @@ export class Connection {
 
     this._transport.errors.pipeTo(this.errors);
 
+    // Replay signals that were received before transport was created.
     for (const signal of this._bufferedSignals) {
       this._transport.signal(signal);
     }
@@ -129,7 +135,11 @@ export class Connection {
   async close () {
     // TODO(marik-d): CLOSING state.
 
+    log(`Closing ${this.ownId}`);
+
     await this._transport?.close();
+
+    log(`Closed ${this.ownId}`);
 
     this._state = ConnectionState.CLOSED;
     this.stateChanged.emit(this._state);
