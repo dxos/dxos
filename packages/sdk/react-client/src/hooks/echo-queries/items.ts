@@ -13,6 +13,9 @@ export interface UseItemsProps {
   partyKey: PublicKey
 }
 
+/**
+ * @deprecated Use selection API.
+ */
 export const useItems = ({ partyKey, ...filter }: UseItemsProps) => {
   const client = useClient();
   const party = client.echo.getParty(PublicKey.from(partyKey));
