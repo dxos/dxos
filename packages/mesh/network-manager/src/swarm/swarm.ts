@@ -97,6 +97,7 @@ export class Swarm {
     if (this._connections.has(remoteId)) {
       // Peer with the highest Id closes it's connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this._ownPeerId.toHex()) {
+        log(`[${this._ownPeerId}] Closing local connection and accepting remote peer's offer.`);
         // Close our connection and accept remote peer's connection.
         await this._closeConnection(remoteId).catch(err => {
           console.error(err);
@@ -246,6 +247,7 @@ export class Swarm {
     log(`Close connection topic=${this._topic} remoteId=${peerId}`);
     const connection = this._connections.get(peerId);
     assert(connection);
+    this._connections.delete(peerId);
     await connection.close();
   }
 }
