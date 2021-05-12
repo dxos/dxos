@@ -19,7 +19,7 @@ module.exports = {
     },
   },
   stats: 'errors-warnings',
-  devtool: 'cheap-module-source-map',
+  devtool: 'eval-source-map',
   devServer: {
     open: true,
     stats: 'errors-warnings',

@@ -17,7 +17,7 @@ module.exports = {
     },
   },
   stats: 'errors-warnings',
-  devtool: 'cheap-module-source-map',
+  devtool: 'eval-source-map',
   optimization: {
     minimize: false,
     sideEffects: true,
