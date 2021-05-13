@@ -9,9 +9,10 @@ import ram from 'random-access-memory';
 import { Writable } from 'stream';
 import tempy from 'tempy';
 
+import { latch, sink } from '@dxos/async';
 import { createId, keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
-import { createWritableFeedStream, latch, sink } from '@dxos/util';
+import { createWritableFeedStream } from '@dxos/util';
 
 import { codec, createTestItemMutation, FeedMessage } from '../proto';
 import { Timeframe } from '../spacetime';

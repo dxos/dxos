@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { sleep } from '../src/async/async';
-import { Lock, synchronized } from '../src/async/lock';
+import { sleep } from './async';
+import { Lock, synchronized } from './lock';
 
 describe('Lock', () => {
   test('single execution', async () => {

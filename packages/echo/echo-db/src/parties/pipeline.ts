@@ -6,10 +6,14 @@ import assert from 'assert';
 import debug from 'debug';
 import { Readable } from 'stream';
 
+import { Event } from '@dxos/async';
 import { Message as HaloMessage } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
-import { createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter } from '@dxos/echo-protocol';
-import { Event, checkType, createReadable, jsonReplacer } from '@dxos/util';
+import { checkType } from '@dxos/debug';
+import {
+  createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter
+} from '@dxos/echo-protocol';
+import { createReadable, jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../items';
 import { PartyProcessor } from './party-processor';

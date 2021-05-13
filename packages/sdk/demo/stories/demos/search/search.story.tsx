@@ -6,16 +6,15 @@ import React, { useState } from 'react';
 
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
-import { useClient } from '@dxos/react-client';
+import { useClient, ClientInitializer, ProfileInitializer } from '@dxos/react-client';
 
-import { ONLINE_CONFIG } from '../../../src/config';
-import { ClientInitializer } from '../../story-components/ClientInitializer';
+import { ONLINE_CONFIG } from '../../../src';
 import Home from './Home';
 import Main from './Main';
 
 const Story = () => {
-  const [party, setParty] = useState<Party>();
   const client = useClient();
+  const [party, setParty] = useState<Party>();
 
   const handleCreateParty = async () => {
     const party = await client.echo.createParty();
@@ -52,8 +51,10 @@ const Story = () => {
 };
 
 export const Primary = () => (
-  <ClientInitializer initProfile config={ONLINE_CONFIG}>
-    <Story />
+  <ClientInitializer config={ONLINE_CONFIG}>
+    <ProfileInitializer>
+      <Story />
+    </ProfileInitializer>
   </ClientInitializer>
 );
 

@@ -5,9 +5,10 @@
 import assert from 'assert';
 import debug from 'debug';
 
+import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
-import { Event, ComplexMap } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager } from './signal';
 import { SwarmMapper } from './swarm-mapper';

@@ -1,18 +1,12 @@
 ## DXOS Protocols 
 
-* ECHO
-* HALO
-* MESH
-
-DXOS developer framework
-
-* SDK
+This monorepo contains all DXOS Protocols, SDK, and related low-level infrastructure.
 
 ## Getting started
 
 1. Install node `v12.20.0`
 
-1. Install Rush and pnpm to manage the monorepo:
+1. Install Rush and `pnpm` to manage the monorepo:
 ```
 npm install -g @microsoft/rush pnpm
 ```
@@ -51,7 +45,6 @@ cd package/directory
 
 rushx <script name>
 ```
-
 
 ### Adding a new package to the monorepo
 

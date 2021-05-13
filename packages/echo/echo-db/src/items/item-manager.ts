@@ -6,10 +6,12 @@ import assert from 'assert';
 import debug from 'debug';
 import pify from 'pify';
 
+import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
+import { timed } from '@dxos/debug';
 import { EchoEnvelope, FeedWriter, IEchoStream, ItemID, ItemType, LinkData, mapFeedWriter } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
-import { Event, trigger, createTransform, timed } from '@dxos/util';
+import { createTransform } from '@dxos/util';
 
 import { ResultSet } from '../result';
 import { DefaultModel } from './default-model';

@@ -6,6 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import ram from 'random-access-memory';
 
+import { waitForCondition, latch } from '@dxos/async';
 import {
   createPartyGenesisMessage,
   KeyType,
@@ -23,12 +24,13 @@ import {
   verify,
   SIGNATURE_LENGTH
 } from '@dxos/crypto';
+import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { waitForCondition, checkType, createWritableFeedStream, latch } from '@dxos/util';
+import { createWritableFeedStream } from '@dxos/util';
 
 import { InvitationDescriptor, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';

@@ -7,10 +7,11 @@
 
 import EventEmitter from 'events';
 
-import { promiseTimeout } from '../src/async/async';
-import { expectToThrow } from '../src/testing';
-import { onEvent, waitForEvent } from '../src/async/events';
-import { latch } from '../src/async/latch';
+import { expectToThrow } from '@dxos/debug';
+
+import { promiseTimeout } from './async';
+import { onEvent, waitForEvent } from './events';
+import { latch } from './latch';
 
 test('onEvent', async () => {
   const emitter = new EventEmitter();

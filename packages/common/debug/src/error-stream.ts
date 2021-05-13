@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { getStackTrace } from './stack-trace';
+
 export type ErrorHandler = (error: Error) => void;
 
 /**
@@ -18,6 +20,12 @@ export class ErrorStream {
     this._creationStack = getStackTrace();
   }
 
+  assertNoUnhandledErrors () {
+    if (this._unhandledErrors > 0) {
+      throw new Error(`Assertion failed: expected no unhandled errors to be thrown, but ${this._unhandledErrors} were thrown.\nThey originated from:\n${this._creationStack}`);
+    }
+  }
+
   raise (error: Error) {
     if (this._handler) {
       this._handler(error);
@@ -30,12 +38,6 @@ export class ErrorStream {
     this._handler = handler;
   }
 
-  assertNoUnhandledErrors () {
-    if (this._unhandledErrors > 0) {
-      throw new Error(`Assertion failed: expected no unhandled errors to be thrown, but ${this._unhandledErrors} were thrown.\nThey originated from:\n${this._creationStack}`);
-    }
-  }
-
   pipeTo (receiver: ErrorStream) {
     this.handle(error => receiver.raise(error));
   }
@@ -45,14 +47,5 @@ export class ErrorStream {
 
     console.error(error);
     console.error(`The above unhandled error originated from:\n${this._creationStack}`);
-  }
-}
-
-// TODO(marik-d): Use one from @dxos/util.
-function getStackTrace () {
-  try {
-    throw new Error();
-  } catch (err) {
-    return err.stack.split('\n').slice(1).join('\n');
   }
 }

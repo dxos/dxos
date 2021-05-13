@@ -3,13 +3,13 @@
   "version": "2.10.1-beta",
   "private": true,
   "description": "ECHO database demo app.",
-  "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
+  "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
-    "url": "https://github.com/dxos/echo/issues"
+    "url": "'https://github.com/dxos/protocols/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dxos/echo.git"
+    "url": "git+https://github.com/dxos/protocols.git"
   },
   "license": "AGPL-3.0",
   "scripts": {
@@ -36,7 +36,6 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@dxos/util": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -53,6 +52,7 @@
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ux": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
     "@types/debug": "^4.1.1",
@@ -74,7 +74,7 @@
   "devDependencies": {
     "@babel/core": "~7.13.15",
     "@babel/plugin-transform-runtime": "^7.11.5",
-    "@dxos/debug": "~1.0.0-beta.73",
+    "@dxos/debug": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.10",
     "@storybook/addon-essentials": "^6.2.9",
     "@storybook/addon-knobs": "^6.2.9",

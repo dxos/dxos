@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { raise } from './raise';
+import { raise } from '@dxos/debug';
 
 export type Primitive =
   | string

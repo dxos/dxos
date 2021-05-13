@@ -16,7 +16,9 @@
     "test": "toolchain test"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/metrics": "~1.0.0-beta.9",
     "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",

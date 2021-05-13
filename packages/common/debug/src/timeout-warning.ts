@@ -14,7 +14,8 @@ import { getStackTrace } from './stack-trace';
 export async function warnAfterTimeout<T> (timeout: number, context: string, body: () => Promise<T>): Promise<T> {
   const stackTrace = getStackTrace();
   const timeoutId = setTimeout(() => {
-    console.warn(`Action \`${context}\` is taking more then ${timeout} ms to complete. This might be a bug.\n${stackTrace}`);
+    console.warn(
+      `Action \`${context}\` is taking more then ${timeout} ms to complete. This might be a bug.\n${stackTrace}`);
   }, timeout);
   try {
     return await body();

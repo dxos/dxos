@@ -42,20 +42,20 @@
     "pify": "~5.0.0",
     "pump": "^3.0.0",
     "random-access-file": "^2.1.0",
+    "sodium-universal": "~3.0.4",
     "source-map-support": "^0.5.12",
-    "through2": "^3.0.1",
-    "sodium-universal": "~3.0.4"
+    "through2": "^3.0.1"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
     "@dxos/browser-runner": "^1.0.0-beta.8",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/node": "^14.0.9",
     "end-of-stream-promise": "^1.0.0",
     "random-access-memory": "~3.1.2",
     "tempy": "~1.0.1",
-    "wait-for-expect": "^3.0.2",
-    "@types/node": "^14.0.9"
+    "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"
