@@ -1,0 +1,47 @@
+{
+  "name": "@dxos/config",
+  "version": "2.10.2",
+  "description": "Config utilities",
+  "keywords": [],
+  "license": "AGPL-3.0",
+  "author": "DxOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "ConfigPlugin.js"
+  ],
+  "scripts": {
+    "build": "toolchain build",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.10.4",
+    "boolean": "^3.0.1",
+    "debug": "^4.1.1",
+    "js-yaml": "^3.13.1",
+    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.get": "^4.4.2",
+    "lodash.set": "^4.3.2",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "~7.13.15",
+    "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "@babel/plugin-proposal-export-default-from": "^7.2.0",
+    "@babel/plugin-transform-runtime": "^7.11.5",
+    "@babel/preset-env": "^7.12.7",
+    "babel-loader": "8.1.0",
+    "babel-plugin-add-module-exports": "^1.0.4",
+    "babel-plugin-inline-import": "^3.0.0",
+    "del-cli": "^3.0.0",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "jest": "^26.6.3",
+    "webpack": "4.44.2"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
