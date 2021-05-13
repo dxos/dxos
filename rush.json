@@ -470,6 +470,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/config",
+      "projectFolder": "packages/sdk/config",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/protobuf-compiler",
       "projectFolder": "packages/common/protobuf-compiler",
       "shouldPublish": true,
@@ -510,6 +516,10 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
+    {
+      "packageName": "@dxos/demo",
+      "projectFolder": "packages/sdk/demo"
+    },
 
     //
     // echo
@@ -548,10 +558,6 @@
     {
       "packageName": "@dxos/echo-testing",
       "projectFolder": "packages/echo/echo-testing"
-    },
-    {
-      "packageName": "@dxos/demo",
-      "projectFolder": "packages/sdk/demo"
     },
     {
       "packageName": "@dxos/feed-store",

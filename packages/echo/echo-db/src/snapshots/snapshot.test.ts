@@ -19,7 +19,7 @@ jest.setTimeout(10000);
 
 // TODO(burdon): Remove "foo", etc. from tests.
 
-test('loading large party', async () => {
+test.skip('loading large party', async () => {
   const echo = await createTestInstance({ initialize: true });
 
   let partyKey: PartyKey;

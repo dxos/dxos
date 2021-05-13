@@ -871,7 +871,7 @@ describe('Party manager', () => {
     expect((await partyA.database.queryItems({ type: 'dxn://example/item/test' })).value.length).toEqual(1);
   }, 10000);
 
-  test('Deactivate Party - multi device', async () => {
+  test.skip('Deactivate Party - multi device', async () => {
     const { partyManager: partyManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB } = await setup(true, false);
     assert(seedPhrase);
@@ -958,8 +958,8 @@ describe('Party manager', () => {
     expect(partyA.title).toBe('A2');
   });
 
-  // TODO(burdon): Sporadically fails: 'https://github.com/dxos/protocols/issues/391
-  test('Setting title propagates to other devices AND other party members', async () => {
+  // TODO(burdon): Sporadically fails: https://github.com/dxos/echo/issues/391
+  test.skip('Setting title propagates to other devices AND other party members', async () => {
     // User creating the party
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     assert(seedPhrase);
@@ -1040,7 +1040,7 @@ describe('Party manager', () => {
   // I don't seem to be receiving an update after which party.title holds correct value.
   // https://github.com/dxos/teamwork/issues/496#issuecomment-739862830
   // However it seems to be working fine in this test.
-  test('Party update event is emitted after the title is set', async () => {
+  test.skip('Party update event is emitted after the title is set', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
     const { partyManager: partyManagerC, identityManager: identityManagerC } = await setup(true, false);

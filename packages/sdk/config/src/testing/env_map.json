@@ -1,0 +1,12 @@
+{
+  "TEST_CLIENT_ID": {
+    "path": "client.id", 
+    "type": "number"
+  },
+  "TEST_CLIENT_TAG": {
+    "path": "client.tag"
+  },
+  "TEST_SERVER_ENDPOINT": {
+    "path": "server.endpoint"
+  }
+}

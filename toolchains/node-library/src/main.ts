@@ -70,8 +70,10 @@ yargs(process.argv.slice(2))
     'build, lint, and test the package',
     yargs => yargs
       .strict()
+      .option('globalSetup', { type: 'string', description: 'globalSetup for test' })
+      .option('globalTeardown', { type: 'string', description: 'globalTeardown for test' })
       .option('light', { type: 'boolean', description: 'don\'t run lint or test' }),
-    ({ light }) => {
+    (args) => {
       const before = Date.now();
 
       const pkgDir = getPackageDir();
@@ -102,12 +104,12 @@ yargs(process.argv.slice(2))
       console.log(chalk.bold`\ntypescript`);
       execTool('tsc');
 
-      if (!light) {
+      if (!args.light) {
         console.log(chalk.bold`\neslint`);
         execLint();
 
         console.log(chalk.bold`\jest`);
-        execJest(pkgDir);
+        execJest(pkgDir, ['globalSetup', 'globalTeardown'].filter(arg => !!args[arg]).map(arg => `--${arg}=${args[arg]}`));
       }
 
       console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
