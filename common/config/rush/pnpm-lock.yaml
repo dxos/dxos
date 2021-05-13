@@ -1371,6 +1371,7 @@ importers:
       immutability-helper: 3.1.1
       level-js: 5.0.2
       lodash.merge: 4.6.2
+      mobile-detect: 1.4.5
       random-access-memory: 3.1.2
       react-resize-aware: 3.1.0_react@16.14.0
       source-map-support: 0.5.19
@@ -1455,6 +1456,7 @@ importers:
       jest: ^26.6.3
       level-js: ^5.0.2
       lodash.merge: ^4.6.2
+      mobile-detect: ~1.4.5
       random-access-memory: ~3.1.2
       react: ^16.14.0
       react-docgen-typescript-loader: ^3.7.2
@@ -15613,6 +15615,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
+  /mobile-detect/1.4.5:
+    dev: false
+    resolution:
+      integrity: sha512-yc0LhH6tItlvfLBugVUEtgawwFU2sIe+cSdmRJJCTMZ5GEJyLxNyC/NIOAOGk67Fa8GNpOttO3Xz/1bHpXFD/g==
   /moleculer-apollo-server/0.3.4_graphql@15.5.0+moleculer@0.14.13:
     dependencies:
       '@apollographql/graphql-playground-html': 1.6.28
