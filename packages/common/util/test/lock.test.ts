@@ -152,7 +152,7 @@ class TestClass {
   @synchronized
   async bar () {
     this.events.push('bar start');
-    await sleep(10);
+    await sleep(30);
     this.events.push('bar end');
   }
 }
@@ -187,16 +187,11 @@ describe('synchronized decorator', () => {
     await p1;
     await p2;
 
-    expect(events.slice(0, 2)).toEqual([
+    expect(events).toEqual([
       'foo start',
-      'bar start'
-    ]);
-    // Cannot guarantee order of ends
-    expect(events.map(s => s.split(' ')[1])).toEqual([
-      'start',
-      'start',
-      'end',
-      'end'
+      'bar start',
+      'foo end',
+      'bar end'
     ]);
   });
 });
