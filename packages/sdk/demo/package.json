@@ -22,7 +22,8 @@
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "storybook-docs": "start-storybook --docs --no-manager-cache",
     "prepublishOnly": "npm run test && npm run build",
-    "watch": "babel-watch src --out-dir ./dist --source-maps"
+    "watch": "babel-watch src --out-dir ./dist --source-maps",
+    "chromatic": "npx chromatic --exit-zero-on-changes --auto-accept-changes"
   },
   "browserslist": [
     "> 5%"
