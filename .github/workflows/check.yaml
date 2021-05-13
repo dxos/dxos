@@ -27,6 +27,7 @@ jobs:
           
           # Build
           node common/scripts/install-run-rush.js rebuild --verbose
+
           # Build storybooks
           cd packages/echo/echo-demo && pnpm build-storybook && cd -
           cd packages/sdk/react-ux && pnpm build-storybook && cd -
