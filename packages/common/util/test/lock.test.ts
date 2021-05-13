@@ -158,7 +158,7 @@ class TestClass {
 }
 
 describe('synchronized decorator', () => {
-  test('differnet methods on same instance', async () => {
+  test('different methods on same instance', async () => {
     const events: string[] = [];
     const testClass = new TestClass(events);
 
@@ -187,11 +187,16 @@ describe('synchronized decorator', () => {
     await p1;
     await p2;
 
-    expect(events).toEqual([
+    expect(events.slice(0, 2)).toEqual([
       'foo start',
-      'bar start',
-      'foo end',
-      'bar end'
+      'bar start'
+    ]);
+    // Cannot guarantee order of ends
+    expect(events.map(s => s.split(' ')[1])).toEqual([
+      'start',
+      'start',
+      'end',
+      'end'
     ]);
   });
 });
