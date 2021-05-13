@@ -4,7 +4,7 @@ importers:
   ../../packages/bot/bot:
     dependencies:
       '@dxos/client': link:../../sdk/client
-      '@dxos/config': 1.0.0-beta.74
+      '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
@@ -20,7 +20,7 @@ importers:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
     specifiers:
       '@dxos/client': workspace:*
-      '@dxos/config': ~1.0.0-beta.74
+      '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/network-manager': workspace:*
@@ -36,7 +36,7 @@ importers:
   ../../packages/bot/botkit:
     dependencies:
       '@dxos/client': link:../../sdk/client
-      '@dxos/config': 1.0.0-beta.74
+      '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/network-manager': link:../../mesh/network-manager
@@ -68,18 +68,18 @@ importers:
       moment: 2.29.1
       node-watch: 0.6.4
       pkg-up: 3.1.0
-      playwright: 1.11.0
+      playwright: 1.10.0
       random-access-memory: 3.1.2
       read-pkg-up: 7.0.1
       tcp-port-used: 1.0.2
       tree-kill: 1.2.2
-      uuidv4: 6.2.8
+      uuidv4: 6.2.7
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.22
     specifiers:
       '@dxos/client': workspace:*
-      '@dxos/config': ~1.0.0-beta.74
+      '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/network-manager': workspace:*
@@ -657,7 +657,7 @@ importers:
       '@dxos/botkit': link:../../bot/botkit
       '@dxos/botkit-client': link:../../bot/botkit-client
       '@dxos/client': link:../../sdk/client
-      '@dxos/config': 1.0.0-beta.74
+      '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
@@ -706,7 +706,7 @@ importers:
       '@dxos/botkit': workspace:*
       '@dxos/botkit-client': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/config': ~1.0.0-beta.74
+      '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
@@ -1227,6 +1227,52 @@ importers:
       through2: ^3.0.1
       wait-for-expect: ^3.0.2
       wrtc: ^0.4.6
+  ../../packages/sdk/config:
+    dependencies:
+      '@babel/runtime': 7.13.17
+      boolean: 3.0.3
+      debug: 4.3.1
+      js-yaml: 3.14.1
+      lodash.defaultsdeep: 4.6.1
+      lodash.get: 4.4.2
+      lodash.set: 4.3.2
+      node-fetch: 2.6.1
+    devDependencies:
+      '@babel/cli': 7.13.16_@babel+core@7.13.16
+      '@babel/core': 7.13.16
+      '@babel/plugin-proposal-class-properties': 7.13.0_@babel+core@7.13.16
+      '@babel/plugin-proposal-export-default-from': 7.12.13_@babel+core@7.13.16
+      '@babel/plugin-transform-runtime': 7.13.15_@babel+core@7.13.16
+      '@babel/preset-env': 7.13.15_@babel+core@7.13.16
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
+      babel-plugin-add-module-exports: 1.0.4
+      babel-plugin-inline-import: 3.0.0
+      del-cli: 3.0.1
+      jest: 26.6.3
+      webpack: 4.44.2
+    specifiers:
+      '@babel/cli': ^7.0.0
+      '@babel/core': ~7.13.15
+      '@babel/plugin-proposal-class-properties': ^7.12.1
+      '@babel/plugin-proposal-export-default-from': ^7.2.0
+      '@babel/plugin-transform-runtime': ^7.11.5
+      '@babel/preset-env': ^7.12.7
+      '@babel/runtime': ^7.10.4
+      '@dxos/toolchain-node-library': workspace:*
+      babel-loader: 8.1.0
+      babel-plugin-add-module-exports: ^1.0.4
+      babel-plugin-inline-import: ^3.0.0
+      boolean: ^3.0.1
+      debug: ^4.1.1
+      del-cli: ^3.0.0
+      jest: ^26.6.3
+      js-yaml: ^3.13.1
+      lodash.defaultsdeep: ^4.6.1
+      lodash.get: ^4.4.2
+      lodash.set: ^4.3.2
+      node-fetch: ^2.6.0
+      webpack: 4.44.2
   ../../packages/sdk/demo:
     dependencies:
       '@dxos/client': link:../client
@@ -3039,20 +3085,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-8TlF1BrGSymjcKnvrbFJA1WS3PwTofhbXSTe38f4ydyghBSqZ52u8fVC7v1vxLrOHtST+irqG+T8zzAFGCuWRg==
-  /@dxos/config/1.0.0-beta.74:
-    dependencies:
-      '@babel/runtime': 7.13.17
-      boolean: 3.0.4
-      debug: 4.3.1
-      js-yaml: 3.14.1
-      lodash.defaultsdeep: 4.6.1
-      lodash.get: 4.4.2
-      lodash.set: 4.3.2
-    dev: false
-    optionalDependencies:
-      webpack: 4.44.2
-    resolution:
-      integrity: sha512-oKQEPJFiXFpxYvvRboqsxrT7HBy7apdab4edDNfXJ+cA+WC6vXcxvmyg78tATeth3XDsGY3Q0rB65wjL/SHh4Q==
   /@dxos/debug/1.0.0-beta.78:
     dependencies:
       debug: 4.3.1
@@ -7277,6 +7309,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-yJ9BsJaISua7d8zNT7oRG1ZLBJCIdZ4PZqmH8qa9N5AK01ifk3fnkc98AXhtzE7UkfCsEumvoQWgoYLhOnJ7jQ==
+  /babel-plugin-inline-import/3.0.0:
+    dependencies:
+      require-resolve: 0.0.2
+    dev: true
+    resolution:
+      integrity: sha512-thnykl4FMb8QjMjVCuZoUmAM7r2mnTn5qJwrryCvDv6rugbJlTHZMctdjDtEgD0WBAXJOLJSGXN3loooEwx7UQ==
   /babel-plugin-istanbul/6.0.0:
     dependencies:
       '@babel/helper-plugin-utils': 7.13.0
@@ -7674,10 +7712,10 @@ packages:
     dev: true
     resolution:
       integrity: sha1-aN/1++YMUes3cl6p4+0xDcwed24=
-  /boolean/3.0.4:
+  /boolean/3.0.3:
     dev: false
     resolution:
-      integrity: sha512-5pyOr+w2LNN72F2mAq6J0ckHUfJYSgRKma7e/wlcMMhgOLV9OI0ERhERYXxUqo+dPyVxcbXKy9n+wg13+LpNnA==
+      integrity: sha512-EqrTKXQX6Z3A2nRmMEIlAIfjQOgFnVO2nqZGpbcsPnYGWBwpFqzlrozU1dy+S2iqfYDLh26ef4KrgTxu9xQrxA==
   /boxen/4.2.0:
     dependencies:
       ansi-align: 3.0.0
@@ -16548,6 +16586,10 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-ak9Qy5Q7jYb2Wwcey5Fpvg2KoAc/ZIhLSLOSBmRmygPsGwkVVt0fZa0qrtMz+m6tJTAHfZQ8FnmB4MG4LWy7/w==
+  /path-extra/1.0.3:
+    dev: true
+    resolution:
+      integrity: sha1-fBEhiablDVlXkOetIDfkTkEMEWY=
   /path-is-absolute/1.0.1:
     engines:
       node: '>=0.10.0'
@@ -16732,7 +16774,7 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-CNV58vXoyItAXOuK9rgyESBmnwVMnQg12TBJEDq1IksJo9m2Gi1maReiMOOJAFduMhicvLGgRsQfdzm44KCcxA==
-  /playwright/1.11.0:
+  /playwright/1.10.0:
     dependencies:
       commander: 6.2.1
       debug: 4.3.1
@@ -16747,14 +16789,13 @@ packages:
       rimraf: 3.0.2
       stack-utils: 2.0.3
       ws: 7.4.5
-      yazl: 2.5.1
     dev: false
     engines:
-      node: '>=12'
+      node: '>=10.17.0'
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-s3FQBRpu/pW/vZ/lFYhG/Q3WBUbT2rvMgrgy1PHDA7QtPN910C2rj9Ovd6A/m8yxuLnltd/OKqvlAGevWISHKw==
+      integrity: sha512-b7SGBcCPq4W3pb4ImEDmNXtO0ZkJbZMuWiShsaNJd+rGfY/6fqwgllsAojmxGSgFmijYw7WxCoPiAIEDIH16Kw==
   /pluralize/8.0.0:
     dev: true
     engines:
@@ -18170,6 +18211,12 @@ packages:
   /require-main-filename/2.0.0:
     resolution:
       integrity: sha512-NKN5kMDylKuldxYLSUfrbo5Tuzh4hd+2E8NPPX02mZtn1VuREQToYe/ZdlJy+J3uCpfaiGF05e7B8W0iXbQHmg==
+  /require-resolve/0.0.2:
+    dependencies:
+      x-path: 0.0.2
+    dev: true
+    resolution:
+      integrity: sha1-urQQqxruLz9Vt5MXRR3TQodk5vM=
   /requires-port/1.0.0:
     dev: true
     resolution:
@@ -19613,7 +19660,7 @@ packages:
       serialize-javascript: 4.0.0
       source-map: 0.6.1
       terser: 4.8.0
-      webpack: 4.44.2_webpack-cli@4.7.0
+      webpack: 4.44.2
       webpack-sources: 1.4.3
       worker-farm: 1.7.0
     engines:
@@ -20545,13 +20592,13 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
-  /uuidv4/6.2.8:
+  /uuidv4/6.2.7:
     dependencies:
       '@types/uuid': 8.3.0
       uuid: 8.3.2
     dev: false
     resolution:
-      integrity: sha512-GX4W6FXHa3N4p8FQGrus/snwYr8zYpbiXL5rJk92jogj3cn93F02VnTHZd6MOW83CYNSMLmCvLuWy9qEB5EABw==
+      integrity: sha512-3XvpuG5LVO9Bd9H/mjdMd7eh556ojlAFx5jJ7dSiGGjFNaU8XhcKhhnV34YGjyZiRs8kPBwXuhYJoyvrY+EMOA==
   /v8-compile-cache/2.3.0:
     resolution:
       integrity: sha512-l8lCEmLcLYZh4nbunNZvQCJc5pv7+RCwa8q/LdUx8u7lsWvPDKmpodJAJNwkAhJC//dFY48KuIEmjtd4RViDrA==
@@ -21150,6 +21197,12 @@ packages:
         optional: true
     resolution:
       integrity: sha512-xzyu3hFvomRfXKH8vOFMU3OguG6oOvhXMo3xsGy3xWExqaM2dxBbVxuD99O7m3ZUFMvvscsZDqxfgMaRr/Nr1g==
+  /x-path/0.0.2:
+    dependencies:
+      path-extra: 1.0.3
+    dev: true
+    resolution:
+      integrity: sha1-KU0Ha7l6dwbMBwu7Km/YxU32exI=
   /xml-name-validator/3.0.0:
     resolution:
       integrity: sha512-A5CUptxDsvxKJEU3yO6DuWBSJz/qizqzJKOMIfUJHETbBw/sFaDxgd6fxm1ewUaM0jZ444Fc5vC5ROYurg/4Pw==
@@ -21301,6 +21354,7 @@ packages:
   /yazl/2.5.1:
     dependencies:
       buffer-crc32: 0.2.13
+    dev: true
     resolution:
       integrity: sha512-phENi2PLiHnHb6QBVot+dJnaAZ0xosj7p3fWl+znIjBDlnMI2PsZCJZ306BPTFOaHf5qdDEI8x5qFrSOBN5vrw==
   /yjs/13.5.5:
