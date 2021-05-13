@@ -5,16 +5,16 @@
 import React, { useState } from 'react';
 
 import { Dialog, DialogContent, DialogContentText, LinearProgress } from '@material-ui/core';
-import RestoreIcon from '@material-ui/icons/Restore';
 import { makeStyles } from '@material-ui/core/styles';
+import RestoreIcon from '@material-ui/icons/Restore';
 
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { useClient } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-ux';
 
+import { sleep } from '../../../client/node_modules/@dxos/async/dist/src';
 import DialogHeading from '../components/DialogHeading';
 import RegistrationDialog from '../components/RegistrationDialog';
-import { sleep } from '../../../client/node_modules/@dxos/async/dist/src';
 
 const useStyles = makeStyles((theme) => ({
   progressBar: {
@@ -41,7 +41,7 @@ const Registration = () => {
     await sleep(2000); // Simulate recovering.
     // await client.echo.recoverHalo(seedPhrase);
 
-    await client.createProfile(keyPairFromSeedPhrase(seedPhrase)) // We don't have device recovery, so just recreating halo from scratch.
+    await client.createProfile(keyPairFromSeedPhrase(seedPhrase)); // We don't have device recovery, so just recreating halo from scratch.
 
     setRecovering(false);
   };
