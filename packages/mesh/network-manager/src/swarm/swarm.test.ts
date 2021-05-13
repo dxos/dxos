@@ -2,17 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import { expect, mockFn } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
-import { sleep } from '@dxos/util';
+import { promiseTimeout, sleep } from '@dxos/util';
 
 import { afterTest } from '../testutils';
 import { FullyConnectedTopology } from '../topology/fully-connected-topology';
+import { createWebRtcTransportFactory, WebrtcTransport } from '../transport/webrtc-transport';
 import { Swarm } from './swarm';
-import { createWebRtcConnectionFactory, WebrtcConnection } from './webrtc-connection';
+
+const log = debug('dxos:network-manager:swarm:test');
 
 const setup = () => {
   const topic = PublicKey.random();
@@ -32,7 +35,7 @@ const setup = () => {
       await swarm2.onSignal(msg);
     },
     () => {},
-    createWebRtcConnectionFactory(),
+    createWebRtcTransportFactory(),
     undefined
   );
   const swarm2: Swarm = new Swarm(
@@ -49,7 +52,7 @@ const setup = () => {
       await swarm1.onSignal(msg);
     },
     () => {},
-    createWebRtcConnectionFactory(),
+    createWebRtcTransportFactory(),
     undefined
   );
   afterTest(() => swarm1.destroy());
@@ -59,30 +62,33 @@ const setup = () => {
 };
 
 test('connects two peers in a swarm', async () => {
-  const { swarm1, swarm2, peerId1, peerId2 } = setup();
+  const { swarm1, swarm2, peerId2 } = setup();
 
   expect(swarm1.connections.length).toEqual(0);
   expect(swarm2.connections.length).toEqual(0);
 
-  swarm1.onPeerCandidatesChanged([peerId2]);
-  swarm2.onPeerCandidatesChanged([peerId1]);
-
-  await Promise.all([
-    swarm1.connected.waitForCount(1),
-    swarm1.connected.waitForCount(1)
+  const promise = Promise.all([
+    promiseTimeout(swarm1.connected.waitForCount(1), 3000, 'Swarm1 connect timeout.'),
+    promiseTimeout(swarm2.connected.waitForCount(1), 3000, 'Swarm2 connect timeout.')
   ]);
+
+  swarm1.onPeerCandidatesChanged([peerId2]);
+
+  log('Candidates changed');
+  await promise;
+  log('Swarms connected');
 
   const swarm1Connection = swarm1.connections[0];
   const swarm2Connection = swarm2.connections[0];
   const onData = mockFn<(data: Buffer) => void>().returns(undefined);
-  (swarm2Connection as WebrtcConnection).peer!.on('data', onData);
+  (swarm2Connection.transport as WebrtcTransport).peer!.on('data', onData);
 
   const data = Buffer.from('1234');
-  (swarm1Connection as WebrtcConnection).peer!.send(data);
+  (swarm1Connection.transport as WebrtcTransport).peer!.send(data);
   await waitForExpect(() => {
     expect(onData).toHaveBeenCalledWith([data]);
   });
-});
+}, 5_000);
 
 test('two peers try to originate connections to each other simultaneously', async () => {
   const { swarm1, swarm2, peerId1, peerId2 } = setup();
@@ -95,11 +101,11 @@ test('two peers try to originate connections to each other simultaneously', asyn
 
   await Promise.all([
     swarm1.connected.waitForCount(1),
-    swarm1.connected.waitForCount(1)
+    swarm2.connected.waitForCount(1)
   ]);
 }, 5_000);
 
-test('second peer discovered after delat', async () => {
+test('second peer discovered after delay', async () => {
   const { swarm1, swarm2, peerId1, peerId2 } = setup();
 
   expect(swarm1.connections.length).toEqual(0);
@@ -117,11 +123,11 @@ test('second peer discovered after delat', async () => {
   const swarm1Connection = swarm1.connections[0];
   const swarm2Connection = swarm2.connections[0];
   const onData = mockFn<(data: Buffer) => void>().returns(undefined);
-  (swarm2Connection as WebrtcConnection).peer!.on('data', onData);
+  (swarm2Connection.transport as WebrtcTransport).peer!.on('data', onData);
 
   const data = Buffer.from('1234');
-  (swarm1Connection as WebrtcConnection).peer!.send(data);
+  (swarm1Connection.transport as WebrtcTransport).peer!.send(data);
   await waitForExpect(() => {
     expect(onData).toHaveBeenCalledWith([data]);
   });
-});
+}, 5_000);

@@ -276,6 +276,14 @@ export namespace SignalApi {
     data: SignalData,
   }
 
+  export interface OfferMessage {
+    id: PublicKey
+    remoteId: PublicKey,
+    topic: PublicKey,
+    sessionId: PublicKey,
+    data: SignalData,
+  }
+
   export interface Answer {
     accept: boolean
   }

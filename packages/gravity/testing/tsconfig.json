@@ -1,0 +1,19 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "outDir": "dist",
+    "jsx": "react",
+    "lib": [
+      "DOM"
+    ],
+    "strictPropertyInitialization": false
+  },
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "exclude": [
+    "/node_modules/"
+  ]
+}

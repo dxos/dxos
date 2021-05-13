@@ -121,7 +121,7 @@
    * Specify a SemVer range to ensure developers use a Node.js version that is appropriate
    * for your repo.
    */
-  "nodeSupportedVersionRange": ">=12.17.0 <13.0.0 || 16.0.0",
+  "nodeSupportedVersionRange": ">=12.17.0 <13.0.0 || >=16.0.0",
 
   /**
    * Odd-numbered major versions of Node.js are experimental.  Even-numbered releases
@@ -444,6 +444,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/messenger-model",
+      "projectFolder": "packages/echo/messenger-model",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/echo-db",
       "projectFolder": "packages/echo/echo-db",
       "shouldPublish": true,
@@ -554,6 +560,10 @@
       "projectFolder": "packages/bot/bot",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/testing",
+      "projectFolder": "packages/gravity/testing"
     }
     // {
     //   /**
