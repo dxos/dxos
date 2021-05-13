@@ -152,13 +152,13 @@ class TestClass {
   @synchronized
   async bar () {
     this.events.push('bar start');
-    await sleep(10);
+    await sleep(30);
     this.events.push('bar end');
   }
 }
 
 describe('synchronized decorator', () => {
-  test('differnet methods on same instance', async () => {
+  test('different methods on same instance', async () => {
     const events: string[] = [];
     const testClass = new TestClass(events);
 
