@@ -3,16 +3,16 @@
 //
 
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+// import { useHistory } from 'react-router-dom';
 
 import { Dialog, DialogContent, DialogContentText, LinearProgress } from '@material-ui/core';
 import RestoreIcon from '@material-ui/icons/Restore';
-import { makeStyles } from '@material-ui/styles';
+import { makeStyles } from '@material-ui/core/styles';
 
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { decrypt } from '@dxos/crypto';
 import { useClient, useConfig } from '@dxos/react-client';
-import { useQuery, createUrl } from '@dxos/react-router';
+// import { useQuery, createUrl } from '@dxos/react-router';
 import { FullScreen } from '@dxos/react-ux';
 
 import DialogHeading from '../components/DialogHeading';
@@ -28,8 +28,8 @@ const Registration = () => {
   const classes = useStyles();
 
   const [open, setOpen] = useState(true);
-  const history = useHistory();
-  const { redirectUrl = '/', ...rest } = useQuery();
+  // const history = useHistory();
+  // const { redirectUrl = '/', ...rest } = useQuery();
   const client = useClient();
   const config = useConfig();
   const [recovering, setRecovering] = useState(false);
@@ -42,41 +42,37 @@ const Registration = () => {
     await Promise.all(client.feedStore.getDescriptors().map(({ path }) => client.feedStore.deleteDescriptor(path)));
   };
 
-  const handleFinishCreate = async (username, seedPhrase) => {
+  const handleFinishCreate = async (username: string, seedPhrase: string) => {
     await clearIdentity();
     const identityKeyPair = keyPairFromSeedPhrase(seedPhrase);
     await client.createProfile({ ...identityKeyPair, username });
-    if (sentry) {
-      sentry.setUser({ username: `${username}-${identityKeyPair.publicKey.toString('hex')}`, id: identityKeyPair.publicKey.toString('hex') });
-      sentry.captureMessage('User registered.');
-    }
 
     // await client.partyManager.identityManager.initializeForNewIdentity({
     //   identityDisplayName: username || keyToString(client.partyManager.identityManager.publicKey),
     //   deviceDisplayName: keyToString(client.partyManager.identityManager.deviceManager.publicKey)
     // });
 
-    history.push(createUrl(redirectUrl, rest));
+    // history.push(createUrl(redirectUrl, rest));
   };
 
-  const handleFinishRestore = async (seedPhrase) => {
+  const handleFinishRestore = async (seedPhrase: string) => {
     await clearIdentity();
     setRecovering(true);
     await client.echo.recoverHalo(seedPhrase);
     setRecovering(false);
-    history.push(createUrl(redirectUrl, rest));
+    // history.push(createUrl(redirectUrl, rest));
   };
 
-  const keyringDecrypter = async (data, passphrase) => {
+  const keyringDecrypter = async (data: string, passphrase: string) => {
     await client.echo.keyring.loadJSON(decrypt(data, passphrase));
   };
 
   return (
     <FullScreen>
       <RegistrationDialog
-        keyringDecrypter={keyringDecrypter}
+        keyringDecrypter={keyringDecrypter as any}
         open={open}
-        debug={config.debug.mode === 'development'}
+        debug={true}
         onFinishCreate={handleFinishCreate}
         onFinishRestore={handleFinishRestore}
       />
