@@ -27,7 +27,7 @@ import {
 import { Registry } from '@wirelineio/registry-client';
 
 import { BOT_CONFIG_FILENAME } from './config';
-import { BotContainer } from './containers/common';
+import { BotContainer } from './containers';
 import { NATIVE_ENV, getBotCID } from './env';
 import { log } from './log';
 import { BOT_PACKAGE_DOWNLOAD_DIR, SourceManager } from './source-manager';
@@ -106,7 +106,7 @@ export class BotManager {
     ensureFileSync(this._botsFile);
 
     for (const container of Object.values(this._botContainers)) {
-      container.botExit.on(async ({ botId, exitCode }) => {
+      container.botExit.on(async ({ botId, exitCode }: { botId: string, exitCode: number }) => {
         const botInfo = this._bots.get(botId);
         if (!exitCode && botInfo) {
           botInfo.stopped = true;

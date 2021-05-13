@@ -5,8 +5,8 @@
 import assert from 'assert';
 import debug from 'debug';
 
+import { Event, waitForCondition } from '@dxos/async';
 import { Keyring, KeyChain, KeyType, Filter, KeyRecord } from '@dxos/credentials';
-import { Event, waitForCondition } from '@dxos/util';
 
 import { HaloParty } from './halo-party';
 import { PartyInternal } from './party-internal';

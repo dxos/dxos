@@ -5,6 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
+import { Event, waitForCondition } from '@dxos/async';
 import {
   admitsKeys,
   createEnvelopeMessage, Greeter,
@@ -15,7 +16,6 @@ import {
 import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
-import { Event, waitForCondition } from '@dxos/util';
 
 import { IdentityManager, PartyProcessor } from '../parties';
 import { InvitationOptions, SecretProvider, SecretValidator } from './common';

@@ -14,6 +14,8 @@ export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;
 export const SIGNATURE_LENGTH = 64;
 
+export const zeroKey = () => new Uint8Array(32);
+
 //
 // The purpose of this module is to assure consistent use of keys throughout the project.
 // NOTE: keys should be maintained as buffers in objects and proto definitions, and converted to hex

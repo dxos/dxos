@@ -13,6 +13,10 @@ import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protoc
 import { afterTest } from '../testutils';
 import { InMemoryTransport } from './in-memory-transport';
 
+// TODO(burdon): Flaky test.
+//     Cannot log after tests are done. Did you forget to wait for something async in your test?
+//     Attempted to log "Ignoring unsupported ICE candidate.".
+
 function createPair () {
   const topic = PublicKey.random();
   const peer1Id = PublicKey.random();

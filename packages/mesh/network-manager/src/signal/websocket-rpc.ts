@@ -8,7 +8,7 @@ import WebSocket from 'isomorphic-ws';
 import nanomessagerpc from 'nanomessage-rpc';
 import { promisify } from 'util';
 
-import { Event, sleep, Trigger } from '@dxos/util';
+import { Event, Trigger, sleep } from '@dxos/async';
 
 import { SignalApi } from './signal-api';
 

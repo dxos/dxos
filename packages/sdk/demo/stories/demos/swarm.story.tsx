@@ -12,12 +12,9 @@ import { createId, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
-import { useClient } from '@dxos/react-client';
+import { ClientInitializer, ProfileInitializer, useClient } from '@dxos/react-client';
 
-import { EchoGraph, MemberList } from '../../src';
-import { ONLINE_CONFIG } from '../../src/config';
-import { Node } from '../../src/models';
-import { ClientInitializer } from '../story-components/ClientInitializer';
+import { EchoGraph, MemberList, Node, ONLINE_CONFIG } from '../../src';
 
 const log = debug('dxos:echo:story');
 
@@ -28,8 +25,10 @@ export default {
 };
 
 export const Primary = () => (
-  <ClientInitializer initProfile config={ONLINE_CONFIG}>
-    <Story/>
+  <ClientInitializer config={ONLINE_CONFIG}>
+    <ProfileInitializer>
+      <Story/>
+    </ProfileInitializer>
   </ClientInitializer>
 );
 

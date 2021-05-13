@@ -13,6 +13,7 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",

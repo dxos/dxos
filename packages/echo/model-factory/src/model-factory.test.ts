@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { latch } from '@dxos/async';
 import { createId, createKeyPair } from '@dxos/crypto';
 import { TestItemMutation, createMockFeedWriterFromStream } from '@dxos/echo-protocol';
-import { createTransform, latch } from '@dxos/util';
+import { createTransform } from '@dxos/util';
 
 import { ModelFactory } from './model-factory';
 import { TestModel } from './testing';

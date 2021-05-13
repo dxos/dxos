@@ -3,13 +3,13 @@
   "version": "2.10.2",
   "private": false,
   "description": "ECHO object model.",
-  "homepage": "https://github.com/dxos/echo/tree/master/packages/echo#readme",
+  "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
-    "url": "https://github.com/dxos/echo/issues"
+    "url": "'https://github.com/dxos/protocols/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dxos/echo.git"
+    "url": "git+https://github.com/dxos/protocols.git"
   },
   "license": "AGPL-3.0",
   "main": "dist/src/index.js",

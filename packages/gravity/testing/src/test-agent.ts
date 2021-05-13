@@ -4,10 +4,10 @@
 
 import debug from 'debug';
 
+import { waitForCondition } from '@dxos/async';
 import { Bot, getConfig } from '@dxos/bot';
 import { createId } from '@dxos/crypto';
 import { MessengerModel } from '@dxos/messenger-model';
-import { waitForCondition } from '@dxos/util';
 
 export const ITEM_TYPE = 'dxos.org/type/testing/object';
 

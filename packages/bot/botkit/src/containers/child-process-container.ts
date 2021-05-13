@@ -6,9 +6,9 @@ import { spawn, SpawnOptions, ChildProcess } from 'child_process';
 import fs from 'fs-extra';
 import kill from 'tree-kill';
 
+import { Event } from '@dxos/async';
 import { keyToString } from '@dxos/crypto';
 import { SpawnOptions as BotSpawnOptions } from '@dxos/protocol-plugin-bot';
-import { Event } from '@dxos/util';
 
 import { BotId, BotInfo } from '../bot-manager';
 import { log, logBot } from '../log';

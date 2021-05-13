@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expectToThrow } from '../src/testing';
+import { expectToThrow } from './throw';
 
 test('expectToThrow', async () => {
   await expectToThrow(() => {

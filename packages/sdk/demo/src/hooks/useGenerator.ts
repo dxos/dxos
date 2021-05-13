@@ -33,7 +33,6 @@ export const useGenerator = () => {
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000')
     );
     await party.open();
-    console.debug('Open', party);
 
     setGenerator(new Generator(party.database, { seed: 1 }));
     setParty(party);

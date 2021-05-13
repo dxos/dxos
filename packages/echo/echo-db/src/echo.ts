@@ -6,6 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import memdown from 'memdown';
 
+import { Event } from '@dxos/async';
 import { KeyRecord, Keyring, KeyStore, KeyType } from '@dxos/credentials';
 import { KeyPair, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
@@ -14,7 +15,6 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Storage } from '@dxos/random-access-multi-storage';
-import { Event } from '@dxos/util';
 
 import {
   InvitationAuthenticator, InvitationDescriptor, InvitationOptions, OfflineInvitationClaimer, SecretProvider

@@ -15,14 +15,16 @@
     "build-storybook": "build-storybook --quiet"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/debug": "~1.0.0-beta.73",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/metrics": "~1.0.0-beta.9",
     "@dxos/object-model": "workspace:*",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
+    "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/util": "workspace:*",
     "@material-ui/core": "^4.11.4",
     "@types/debug": "^4.1.1",
@@ -34,8 +36,7 @@
     "react-display-name": "^0.2.5",
     "react-router-dom": "^5.1.2",
     "use-deep-compare-effect": "^1.3.0",
-    "use-subscription": "^1.4.1",
-    "@dxos/toolchain-node-library": "workspace:*"
+    "use-subscription": "^1.4.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

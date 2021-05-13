@@ -60,7 +60,7 @@ export function mapScalarField (field: protobufjs.Field, substitutions: MapingDe
   }
   const substitution = field.resolvedType && substitutions[field.resolvedType.fullName.slice(1)];
   if (substitution) {
-    return substitution(value, ...extraArgs); // TODO: handle recursive substitutions
+    return substitution(value, ...extraArgs); // TODO(???): handle recursive substitutions
   } else if (field.resolvedType && field.resolvedType instanceof protobufjs.Type) {
     return mapMessage(field.resolvedType, substitutions, value, extraArgs);
   } else {

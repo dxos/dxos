@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { FeedKey, Timeframe } from '@dxos/echo-protocol';
-import { Event } from '@dxos/util';
 
 /**
  * Keeps state of the last timeframe that was processed by ECHO.
