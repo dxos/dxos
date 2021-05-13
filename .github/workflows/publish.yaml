@@ -10,9 +10,10 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        node-version: [16.0]
+        node-version: [12.17]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     steps:
     - uses: actions/checkout@v2
       with:
@@ -34,3 +35,10 @@ jobs:
 
         # Publish
         node common/scripts/install-run-rush.js publish --publish --include-all
+    - name: Chromatic
+      run:  |
+        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+        npm install -g @microsoft/rush pnpm
+
+        cd packages/sdk/demo
+        rushx chromatic
