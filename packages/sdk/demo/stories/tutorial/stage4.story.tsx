@@ -12,7 +12,7 @@ import { JsonTreeView } from '@dxos/react-ux';
 import { Registration } from '../../src';
 
 /**
- * Walk through the registration flow
+ * Registration and profile recovery.
  */
 export const Stage4 = () => {
   const App = () => {
