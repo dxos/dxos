@@ -13,6 +13,7 @@ jobs:
         node-version: [12.17, 16.0]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -32,3 +33,10 @@ jobs:
           cd packages/echo/echo-demo && pnpm build-storybook && cd -
           cd packages/sdk/react-ux && pnpm build-storybook && cd -
           cd packages/sdk/react-client && pnpm build-storybook && cd -
+      - name: Chromatic
+        run:  |
+          \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+          npm install -g @microsoft/rush pnpm
+
+          cd packages/sdk/demo
+          rushx chromatic
