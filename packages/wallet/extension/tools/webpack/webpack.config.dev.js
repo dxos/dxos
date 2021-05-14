@@ -1,12 +1,15 @@
 module.exports = {
   mode: 'development',
-  entry: ['./src/main.tsx'],
+  entry: {
+    popup: './src/popup/main.tsx',
+    background: './src/background/background.ts'
+  },
   module: {
     rules: require('./webpack.rules'),
   },
   output: {
     filename: '[name].js',
-    chunkFilename: '[name].chunk.js',
+    // chunkFilename: '[name].chunk.js',
   },
   plugins: require('./webpack.plugins'),
   resolve: {
