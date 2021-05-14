@@ -6,9 +6,15 @@ const CopyPlugin = require("copy-webpack-plugin");
 module.exports = [
   new ForkTsCheckerWebpackPlugin(),
   new HtmlWebpackPlugin({
-    template: 'src/index.html',
+    template: 'src/popup/popup.html',
+    filename: "popup.html",
     favicon: 'assets/images/dxos.png',
-    inject: true,
+    chunks: ["popup"]
+  }),
+  new HtmlWebpackPlugin({
+    template: 'src/background/background.html',
+    filename: "background.html",
+    chunks: ["background"]
   }),
   new MiniCssExtractPlugin({
     filename: '[name].[chunkhash].css',
