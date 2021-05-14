@@ -1,6 +1,9 @@
 module.exports = {
   mode: 'development',
-  entry: ['./src/popup/main.tsx', './src/background/background.ts'],
+  entry: {
+    popup: './src/popup/main.tsx',
+    background: './src/background/background.ts'
+  },
   module: {
     rules: require('./webpack.rules'),
   },
