@@ -32,7 +32,7 @@ const config: ClientConfig = {
     console.log('Message received', {request, sender})
     if (request.method === 'GetProfile') {
       console.log('returning..', profile)
-      return Promise.resolve(profile);
+      return Promise.resolve(profile ? {...profile, publicKey: profile.publicKey.toHex()} : profile);
     }
     return;
   }

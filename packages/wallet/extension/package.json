@@ -16,7 +16,8 @@
     "@dxos/react-client": "workspace:*",
     "@hot-loader/react-dom": "16.13.0",
     "react": "^16.14.0",
-    "react-dom": "^16.14.0"
+    "react-dom": "^16.14.0",
+    "@dxos/react-ux": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
