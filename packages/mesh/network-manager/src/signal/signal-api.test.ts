@@ -26,7 +26,7 @@ describe('SignalApi', () => {
   let broker2: ReturnType<typeof createBroker>;
   const signalApiPort2 = 13543;
   const signalApiUrl2 = 'http://0.0.0.0:' + signalApiPort2;
-  const getBroker2 = () => createBroker(topic.asBuffer(), { port: signalApiPort2, logger: false});
+  const getBroker2 = () => createBroker(topic.asBuffer(), { port: signalApiPort2, logger: false });
 
   beforeEach(async () => {
     topic = PublicKey.random();
