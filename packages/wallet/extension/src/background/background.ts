@@ -3,10 +3,11 @@ import { createKeyPair } from "@dxos/crypto";
 
 const config: ClientConfig = {
   storage: {
-    persistent: true
-  },
-  snapshots: true,
-  snapshotInterval: 10
+    persistent: true,
+    type: 'idb',
+    // path: `/tmp/dxos-${Date.now()}`
+    path: `/tmp/dxos-2`
+  }
 };
 
 (async () => {
