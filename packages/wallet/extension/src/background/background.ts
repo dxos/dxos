@@ -5,6 +5,8 @@
 import { Client, ClientConfig } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
+import { browser, Runtime } from "webextension-polyfill-ts";
+
 const config: ClientConfig = {
   storage: {
     persistent: true,
@@ -18,12 +20,22 @@ const config: ClientConfig = {
   const client = new Client(config);
   await client.initialize();
 
-  const profile = await client.getProfile();
-  console.log({ profile });
-
-  if (!profile) {
+  if (!await client.getProfile()) {
     console.log('Creating new profile...');
     await client.createProfile({ ...createKeyPair(), username: 'DXOS User' });
-    console.log({ profile: await client.getProfile() });
   }
+  
+  const profile = await client.getProfile()
+  console.log({ profile });
+
+  const listener = (request: any, sender: Runtime.MessageSender) => {
+    console.log('Message received', {request, sender})
+    if (request.method === 'GetProfile') {
+      console.log('returning..', profile)
+      return Promise.resolve(profile);
+    }
+    return;
+  }
+
+  browser.runtime.onMessage.addListener(listener as any)
 })();

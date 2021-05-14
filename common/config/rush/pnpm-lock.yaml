@@ -1484,7 +1484,6 @@ importers:
       '@dxos/metrics': 1.0.0-beta.9
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@dxos/util': link:../../common/util
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@types/debug': 4.1.5
@@ -1506,6 +1505,7 @@ importers:
       '@babel/preset-env': 7.14.2_@babel+core@7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
       '@dxos/eslint-plugin': 1.0.10_eslint@7.26.0+typescript@4.2.4
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@storybook/addon-actions': 6.2.9_79cda1d42d14e5224ea88731ba484d0d
       '@storybook/addon-knobs': 6.2.9_79cda1d42d14e5224ea88731ba484d0d
       '@storybook/react': 6.2.9_1568a4a4371cca35bea7fd1ef25c77f4
@@ -1662,6 +1662,9 @@ importers:
       style-loader: 2.0.0_webpack@4.44.2
       ts-loader: 8.1.0_typescript@4.2.4+webpack@4.44.2
       typescript: 4.2.4
+      web-ext-types: 3.2.1
+      webextension-polyfill: 0.8.0
+      webextension-polyfill-ts: 0.25.0
       webpack: 4.44.2_webpack-cli@4.7.0
       webpack-cli: 4.7.0_b24347012da62a72aee59d51298aa452
       webpack-dev-server: 3.11.2_webpack-cli@4.7.0+webpack@4.44.2
@@ -1688,6 +1691,9 @@ importers:
       style-loader: ^2.0.0
       ts-loader: ~8.1.0
       typescript: ^4.2.4
+      web-ext-types: ~3.2.1
+      webextension-polyfill: ~0.8.0
+      webextension-polyfill-ts: ~0.25.0
       webpack: 4.44.2
       webpack-cli: ^4.6.0
       webpack-dev-server: ^3.11.2
@@ -20676,10 +20682,28 @@ packages:
       defaults: 1.0.3
     resolution:
       integrity: sha1-8LDc+RW8X/FSivrbLA4XtTLaL+g=
+  /web-ext-types/3.2.1:
+    dev: true
+    resolution:
+      integrity: sha512-oQZYDU3W8X867h8Jmt3129kRVKklz70db40Y6OzoTTuzOJpF/dB2KULJUf0txVPyUUXuyzV8GmT3nVvRHoG+Ew==
   /web-namespaces/1.1.4:
     dev: true
     resolution:
       integrity: sha512-wYxSGajtmoP4WxfejAPIr4l0fVh+jeMXZb08wNc0tMg6xsfZXj3cECqIK0G7ZAqUq0PP8WlMDtaOGVBTAWztNw==
+  /webextension-polyfill-ts/0.25.0:
+    dependencies:
+      webextension-polyfill: 0.7.0
+    dev: true
+    resolution:
+      integrity: sha512-ikQhwwHYkpBu00pFaUzIKY26I6L87DeRI+Q6jBT1daZUNuu8dSrg5U9l/ZbqdaQ1M/TTSPKeAa3kolP5liuedw==
+  /webextension-polyfill/0.7.0:
+    dev: true
+    resolution:
+      integrity: sha512-su48BkMLxqzTTvPSE1eWxKToPS2Tv5DLGxKexLEVpwFd6Po6N8hhSLIvG6acPAg7qERoEaDL+Y5HQJeJeml5Aw==
+  /webextension-polyfill/0.8.0:
+    dev: true
+    resolution:
+      integrity: sha512-a19+DzlT6Kp9/UI+mF9XQopeZ+n2ussjhxHJ4/pmIGge9ijCDz7Gn93mNnjpZAk95T4Tae8iHZ6sSf869txqiQ==
   /webidl-conversions/4.0.2:
     dev: false
     optional: true

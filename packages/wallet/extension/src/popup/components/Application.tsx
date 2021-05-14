@@ -10,6 +10,8 @@ import { ClientProvider } from '@dxos/react-client';
 
 import Home from './Home';
 
+import { browser } from "webextension-polyfill-ts";
+
 const Application = () => {
   const [client, setClient] = useState<Client | undefined>();
 
@@ -20,6 +22,14 @@ const Application = () => {
       setClient(client);
     });
   }, []);
+
+  useEffect(() => {
+    setImmediate(async () => {
+      console.log('asking for profile..')
+      const result = await browser.runtime.sendMessage({method: 'GetProfile'})
+      console.log('received', result)
+    })
+  }, [])
 
   if (!client) {
     return <p>Loading...</p>;
