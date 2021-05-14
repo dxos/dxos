@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/PrsPrsBK/ffext-manifest-schema/master/ffext.json",
   "name": "DXOS",
   "version": "1.0.0",
   "manifest_version": 2,
@@ -8,7 +9,10 @@
   },
   "browser_action": {
       "default_icon": "dxos.png",
-      "default_popup": "index.html"
+      "default_popup": "popup/index.html"
   },
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "background": {
+    "scripts": [""]
+  }
 }

@@ -1,11 +1,11 @@
 module.exports = {
   mode: 'production',
-  entry: ['./src/main.tsx'],
+  entry: ['./src/popup/main.tsx'],
   module: {
     rules: require('./webpack.rules'),
   },
   output: {
-    filename: '[name].[chunkhash].js',
+    filename: '[name].js',
     chunkFilename: '[name].[chunkhash].chunk.js'
   },
   plugins: [...require('./webpack.plugins')],

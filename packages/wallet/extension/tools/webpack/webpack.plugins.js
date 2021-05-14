@@ -6,7 +6,8 @@ const CopyPlugin = require("copy-webpack-plugin");
 module.exports = [
   new ForkTsCheckerWebpackPlugin(),
   new HtmlWebpackPlugin({
-    template: 'src/index.html',
+    template: 'src/popup/index.html',
+    filename: 'popup/index.html',
     favicon: 'assets/images/dxos.png',
     inject: true,
   }),
