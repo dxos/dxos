@@ -7,7 +7,7 @@ module.exports = [
   new ForkTsCheckerWebpackPlugin(),
   new HtmlWebpackPlugin({
     template: 'src/popup/index.html',
-    filename: 'popup/index.html',
+    filename: 'index.html',
     favicon: 'assets/images/dxos.png',
     inject: true,
   }),
