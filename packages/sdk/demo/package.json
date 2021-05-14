@@ -69,7 +69,9 @@
     "random-access-memory": "~3.1.2",
     "react-resize-aware": "^3.0.0",
     "source-map-support": "^0.5.12",
-    "stream-buffers": "^3.0.2"
+    "stream-buffers": "^3.0.2",
+    "mobile-detect": "~1.4.5",
+    "@material-ui/styles": "^4.11.4"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
