@@ -39,6 +39,8 @@
     "webpack": "4.44.2",
     "webpack-cli": "^4.6.0",
     "webpack-dev-server": "^3.11.2",
-    "@esbuild-plugins/node-modules-polyfill": "~0.1.1"
+    "@esbuild-plugins/node-modules-polyfill": "~0.1.1",
+    "copy": "~0.3.2",
+    "rmdir": "~1.2.0"
   }
 }
