@@ -20,8 +20,7 @@ export function jsonReplacer (this: any, key: string, value: any): any {
       const key = Buffer.from(value.data);
       return `[${humanize(key)}]:[${keyToString(key)}]`;
     } else {
-      const buf = Buffer.from(value.data);
-      return (buf as any).inspect();
+      return Buffer.from(value.data).toString('hex');
     }
   }
 

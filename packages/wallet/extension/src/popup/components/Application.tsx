@@ -3,7 +3,6 @@
 //
 
 import React, { useState, useEffect } from 'react';
-import { hot } from 'react-hot-loader';
 
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
@@ -32,4 +31,4 @@ const Application = () => {
   );
 };
 
-export default hot(module)(Application);
+export default Application;

@@ -1208,6 +1208,7 @@ importers:
       '@dxos/util': link:../../common/util
       '@geut/discovery-swarm-webrtc': 4.3.0
       '@wirelineio/registry-client': 1.1.0-beta.3
+      abstract-leveldown: 7.0.0
       assert: 2.0.0
       buffer-json-encoding: 1.0.2
       canonicalize: 1.0.5
@@ -1240,7 +1241,6 @@ importers:
       '@types/level-js': 4.0.1
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/memdown': 3.0.0
-      abstract-leveldown: 7.0.0
       random-access-memory: 3.1.2
       wait-for-expect: 3.0.2
     specifiers:
@@ -1484,7 +1484,6 @@ importers:
       '@dxos/metrics': 1.0.0-beta.9
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@dxos/util': link:../../common/util
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@types/debug': 4.1.5
@@ -1506,6 +1505,7 @@ importers:
       '@babel/preset-env': 7.14.2_@babel+core@7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
       '@dxos/eslint-plugin': 1.0.10_eslint@7.26.0+typescript@4.2.4
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@storybook/addon-actions': 6.2.9_79cda1d42d14e5224ea88731ba484d0d
       '@storybook/addon-knobs': 6.2.9_79cda1d42d14e5224ea88731ba484d0d
       '@storybook/react': 6.2.9_1568a4a4371cca35bea7fd1ef25c77f4
@@ -1647,6 +1647,8 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@esbuild-plugins/node-globals-polyfill': 0.1.0_esbuild@0.11.23
+      '@esbuild-plugins/node-modules-polyfill': 0.1.1_esbuild@0.11.23
       '@types/node': 14.14.45
       '@types/react': 16.14.6
       '@types/react-dom': 17.0.5
@@ -1654,6 +1656,7 @@ importers:
       copy-webpack-plugin: 5.1.2_webpack@4.44.2
       cross-env: 7.0.3
       css-loader: 5.2.4_webpack@4.44.2
+      esbuild: 0.11.23
       file-loader: 6.2.0_webpack@4.44.2
       fork-ts-checker-webpack-plugin: 6.2.7
       html-webpack-plugin: 4.5.2_webpack@4.44.2
@@ -1670,6 +1673,8 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@esbuild-plugins/node-globals-polyfill': ~0.1.0
+      '@esbuild-plugins/node-modules-polyfill': ~0.1.1
       '@hot-loader/react-dom': 16.13.0
       '@types/node': ^14.0.9
       '@types/react': ^16.14.0
@@ -1678,6 +1683,7 @@ importers:
       copy-webpack-plugin: 5.1.2
       cross-env: ^7.0.3
       css-loader: ^5.2.4
+      esbuild: ^0.11.23
       file-loader: ^6.2.0
       fork-ts-checker-webpack-plugin: ~6.2.5
       html-webpack-plugin: 4.5.2
@@ -3448,6 +3454,24 @@ packages:
     dev: true
     resolution:
       integrity: sha512-6U71C2Wp7r5XtFtQzYrW5iKFT67OixrSxjI4MptCHzdSVlgabczzqLe0ZSgnub/5Kp4hSbpDB1tMytZY9pwxxA==
+  /@esbuild-plugins/node-globals-polyfill/0.1.0_esbuild@0.11.23:
+    dependencies:
+      esbuild: 0.11.23
+    dev: true
+    peerDependencies:
+      esbuild: '*'
+    resolution:
+      integrity: sha512-kZFvuxGb2puY7USbS/HtKaNrvR2FUlU6iddcYwGOz6nlv4ficSHYmhZ4x0WrJnLNBYzla+Y3P6YvC0DPrb0M/Q==
+  /@esbuild-plugins/node-modules-polyfill/0.1.1_esbuild@0.11.23:
+    dependencies:
+      esbuild: 0.11.23
+      escape-string-regexp: 4.0.0
+      rollup-plugin-node-polyfills: 0.2.1
+    dev: true
+    peerDependencies:
+      esbuild: '*'
+    resolution:
+      integrity: sha512-nfaj343BMA1pWJW4e2gLZUbC50rgUY+jsI55j9fKb0CgXbDyIEL8nxPzE1OMoyqvu7W0RMgI+TjmMAuXhC96Ow==
   /@eslint/eslintrc/0.4.1:
     dependencies:
       ajv: 6.12.6
@@ -6556,7 +6580,7 @@ packages:
       level-concat-iterator: 3.0.0
       level-supports: 2.0.0
       queue-microtask: 1.2.3
-    dev: true
+    dev: false
     engines:
       node: '>=10'
     resolution:
@@ -10553,6 +10577,12 @@ packages:
       es6-symbol: 2.0.1
     resolution:
       integrity: sha1-cGzvnpmqI2undmwjnIueKG6n0ig=
+  /esbuild/0.11.23:
+    dev: true
+    hasBin: true
+    requiresBuild: true
+    resolution:
+      integrity: sha512-iaiZZ9vUF5wJV8ob1tl+5aJTrwDczlvGP0JoMmnpC2B0ppiMCu8n8gmy5ZTGl5bcG081XBVn+U+jP+mPFm5T5Q==
   /escalade/3.1.1:
     engines:
       node: '>=6'
@@ -10571,6 +10601,12 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-UpzcLCXolUWcNu5HtVMHYdXJjArjsF9C0aNnquZYY4uW/Vu0miy5YoWvbV345HauVvcAUnpRuhMMcqTcGOY2+w==
+  /escape-string-regexp/4.0.0:
+    dev: true
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==
   /escodegen/2.0.0:
     dependencies:
       esprima: 4.0.1
@@ -10871,6 +10907,10 @@ packages:
       node: '>=8.3.0'
     resolution:
       integrity: sha512-YNF+mZ/Wu2FU/gvmzuWtYc8rloubL7wfXCTgouFrnjGVXPA/EeYYA7pupXWrb3Iv1cTBeSSxxJIbK23l4MRNqg==
+  /estree-walker/0.6.1:
+    dev: true
+    resolution:
+      integrity: sha512-SqmZANLWS0mnatqbSfRP5g8OXZC12Fgg1IwNtLsyHDzJizORW4khDfjPqJZsemPWBB2uqykUah5YpQ6epsqC/w==
   /esutils/2.0.3:
     engines:
       node: '>=0.10.0'
@@ -13006,7 +13046,6 @@ packages:
     resolution:
       integrity: sha512-NcdALwpXkTm5Zvvbk7owOUSvVvBKDgKP5/ewfXEznmQFfs4ZRmanOeKBTjRVjka3QFoN6XJ+9F3USqfHqTaU5w==
   /is-buffer/2.0.5:
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -14474,7 +14513,7 @@ packages:
     resolution:
       integrity: sha512-OTKKOqeav2QWcERMJR7IS9CUo1sHnke2C0gkSmcR7QuEtFNLLzHQAvnMw8ykvEcv0Qtkg0p7FOwP1v9e5Smdcw==
   /level-concat-iterator/3.0.0:
-    dev: true
+    dev: false
     engines:
       node: '>=10'
     resolution:
@@ -14514,7 +14553,7 @@ packages:
     resolution:
       integrity: sha512-rXM7GYnW8gsl1vedTJIbzOrRv85c/2uCMpiiCzO2fndd06U/kUXEEU9evYn4zFggBOg36IsBW8LzqIpETwwQzg==
   /level-supports/2.0.0:
-    dev: true
+    dev: false
     engines:
       node: '>=10'
     resolution:
@@ -14915,6 +14954,12 @@ packages:
     hasBin: true
     resolution:
       integrity: sha1-wNjq82BZ9wV5bh40SBHPTEmNOiY=
+  /magic-string/0.25.7:
+    dependencies:
+      sourcemap-codec: 1.4.8
+    dev: true
+    resolution:
+      integrity: sha512-4CrMT5DOHTDk4HYDlzmwu4FVCcIYI8gauveasrdCu2IKIFOJ3f0v/8MDGJCDL9oD2ppz/Av1b0Nj345H9M+XIA==
   /make-dir/1.3.0:
     dependencies:
       pify: 3.0.0
@@ -18302,6 +18347,27 @@ packages:
       inherits: 2.0.4
     resolution:
       integrity: sha512-ii4iagi25WusVoiC4B4lq7pbXfAp3D9v5CwfkY33vffw2+pkDjY1D8GaN7spsxvCSx8dkPqOZCEZyfxcmJG2IA==
+  /rollup-plugin-inject/3.0.2:
+    dependencies:
+      estree-walker: 0.6.1
+      magic-string: 0.25.7
+      rollup-pluginutils: 2.8.2
+    deprecated: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-inject.
+    dev: true
+    resolution:
+      integrity: sha512-ptg9PQwzs3orn4jkgXJ74bfs5vYz1NCZlSQMBUA0wKcGp5i5pA1AO3fOUEte8enhGUC+iapTCzEWw2jEFFUO/w==
+  /rollup-plugin-node-polyfills/0.2.1:
+    dependencies:
+      rollup-plugin-inject: 3.0.2
+    dev: true
+    resolution:
+      integrity: sha512-4kCrKPTJ6sK4/gLL/U5QzVT8cxJcofO0OU74tnB19F40cmuAKSzH5/siithxlofFEjwvw1YAhPmbvGNA6jEroA==
+  /rollup-pluginutils/2.8.2:
+    dependencies:
+      estree-walker: 0.6.1
+    dev: true
+    resolution:
+      integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==
   /rsvp/4.8.5:
     engines:
       node: 6.* || >= 7.*
@@ -18983,6 +19049,10 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-CkCj6giN3S+n9qrYiBTX5gystlENnRW5jZeNLHpe6aue+SrHcG5VYwujhW9s4dY31mEGsxBDrHR6oI69fTXsaQ==
+  /sourcemap-codec/1.4.8:
+    dev: true
+    resolution:
+      integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==
   /space-separated-tokens/1.1.5:
     dev: true
     resolution:
