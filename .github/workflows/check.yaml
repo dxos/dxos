@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        node-version: [12.17]
+        node-version: [16.0]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}

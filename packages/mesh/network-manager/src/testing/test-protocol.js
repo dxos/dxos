@@ -51,9 +51,6 @@ export class TestProtocolPlugin extends EventEmitter {
 
     // TODO(dboreham): Mis-named because this is OUR node ID, not the id of any peer.
     this._peerId = peerId;
-    if (this._peerId === undefined) {
-      throw new Error('Peer id must be defined');
-    }
     this._uppercase = uppercase;
     this._peers = new Map();
   }

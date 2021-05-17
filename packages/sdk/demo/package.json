@@ -90,7 +90,7 @@
     "babel-loader": "8.1.0",
     "babel-plugin-add-module-exports": "^1.0.4",
     "chance": "^1.1.6",
-    "chromatic": "^5.6.0",
+    "chromatic": "^5.8.0",
     "del-cli": "^3.0.0",
     "eslint": "^7.7.0",
     "eslint-plugin-jest": "^24.0.2",
