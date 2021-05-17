@@ -13,6 +13,7 @@ jobs:
         node-version: [12.17]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     steps:
       - uses: actions/checkout@v2
         with:
