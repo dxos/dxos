@@ -8,8 +8,8 @@ import waitForExpect from 'wait-for-expect';
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { createBroker } from '@dxos/signal';
+import { randomInt } from '@dxos/util';
 
-import { afterTest } from '../testutils';
 import { SignalApi } from './signal-api';
 
 describe('SignalApi', () => {
@@ -20,25 +20,32 @@ describe('SignalApi', () => {
   let api2: SignalApi;
 
   let broker: ReturnType<typeof createBroker>;
-  const signalApiPort = 13542;
+  const signalApiPort = randomInt(10000, 50000);
   const signalApiUrl = 'http://0.0.0.0:' + signalApiPort;
 
   let broker2: ReturnType<typeof createBroker>;
-  const signalApiPort2 = 13543;
+  const signalApiPort2 = randomInt(10000, 50000);
   const signalApiUrl2 = 'http://0.0.0.0:' + signalApiPort2;
-  const getBroker2 = () => createBroker(topic.asBuffer(), { port: signalApiPort2, logger: false });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
+    const brokerTopic = PublicKey.random();
+    const broker2Topic = PublicKey.random();
+    broker = createBroker(brokerTopic.asBuffer(), { port: signalApiPort, logger: false });
+    broker2 = createBroker(broker2Topic.asBuffer(), { port: signalApiPort2, logger: false });
+    await broker.start();
+    await broker2.start();
+  });
+
+  beforeEach(() => {
     topic = PublicKey.random();
     peer1 = PublicKey.random();
     peer2 = PublicKey.random();
-    broker = createBroker(topic.asBuffer(), { port: signalApiPort, logger: false });
-    await broker.start();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await api.close();
     await broker.stop();
+    await broker2.stop();
   });
 
   test('join', async () => {
@@ -49,7 +56,7 @@ describe('SignalApi', () => {
 
     const join2 = await api.join(topic, peer2);
     expect(join2).toEqual([peer1, peer2]);
-  }, 10_000);
+  }, 1_000);
 
   test('offer', async () => {
     const offerMock = mockFn<(msg: SignalApi.SignalMessage) => Promise<SignalApi.Answer>>()
@@ -91,16 +98,10 @@ describe('SignalApi', () => {
     }, 4_000);
   }, 5_000);
 
-  test('join across multiple signal servers', async () => {
-    broker2 = getBroker2();
-    await broker2.start();
-
+  test.skip('join across multiple signal servers', async () => {
+    // This feature is not implemented yet.
     api = new SignalApi(signalApiUrl, (async () => {}) as any, async () => {});
     api2 = new SignalApi(signalApiUrl2, (async () => {}) as any, async () => {});
-    afterTest(async () => {
-      await api2.close();
-      await broker2.stop();
-    });
 
     await api.join(topic, peer1);
     await api2.join(topic, peer2);
@@ -108,19 +109,16 @@ describe('SignalApi', () => {
     await waitForExpect(async () => {
       const peers = await api2.lookup(topic);
       expect(peers.length).toEqual(2);
-    }, 40_000);
+    }, 4_000);
 
     await waitForExpect(async () => {
       const peers = await api.lookup(topic);
       expect(peers.length).toEqual(2);
-    }, 40_000);
-  }, 50_000);
+    }, 4_000);
+  }, 5_000);
 
   // skip because communication between signal servers is not yet implemented
   test.skip('newly joined peer can receive signals from other signal servers', async () => {
-    broker2 = getBroker2();
-    await broker2.start();
-
     const offerMock = mockFn<(msg: SignalApi.SignalMessage) => Promise<SignalApi.Answer>>()
       .resolvesTo({ accept: true });
     const signalMock = mockFn<(msg: SignalApi.SignalMessage) => Promise<void>>()
@@ -128,11 +126,6 @@ describe('SignalApi', () => {
 
     api = new SignalApi(signalApiUrl, offerMock, async () => {});
     api2 = new SignalApi(signalApiUrl2, (async () => {}) as any, signalMock);
-
-    afterTest(async () => {
-      await api2.close();
-      await broker2.stop();
-    });
 
     await api.join(topic, peer1);
     await sleep(3000);
@@ -159,6 +152,6 @@ describe('SignalApi', () => {
 
     await waitForExpect(() => {
       expect(signalMock).toHaveBeenCalledWith([msg]);
-    }, 40_000);
-  }, 50_000);
+    }, 4_000);
+  }, 5_000);
 });

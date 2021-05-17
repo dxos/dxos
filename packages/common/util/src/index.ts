@@ -8,3 +8,4 @@ export * from './map';
 export * from './stream';
 export * from './range';
 export * from './types';
+export * from './randomInt';
