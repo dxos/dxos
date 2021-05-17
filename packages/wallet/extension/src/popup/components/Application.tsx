@@ -5,30 +5,38 @@
 import React, { useState, useEffect } from 'react';
 import { hot } from 'react-hot-loader';
 
-import { Client } from '@dxos/client';
-import { ClientProvider } from '@dxos/react-client';
+import { JsonTreeView } from '@dxos/react-ux';
 
-import Home from './Home';
+import { useBackground } from '../hooks';
 
 const Application = () => {
-  const [client, setClient] = useState<Client | undefined>();
+  const [profile, setProfile] = useState<any | undefined>();
+  const background = useBackground();
 
   useEffect(() => {
-    setImmediate(async () => {
-      const client = new Client();
-      await client.initialize();
-      setClient(client);
-    });
-  }, []);
+    if (background === undefined) {
+      return;
+    }
 
-  if (!client) {
-    return <p>Loading...</p>;
+    const listener = (message: any) => {
+      console.log('Popup received: ', message);
+      if (message?.method === 'ResponseProfile') {
+        setProfile(message.data);
+      }
+    };
+    background.onMessage.addListener(listener);
+    background.postMessage({ method: 'GetProfile' });
+    return () => background.onMessage.removeListener(listener);
+  }, [background]);
+
+  if (!profile) {
+    return <p>No profile loaded.</p>;
   }
 
   return (
-    <ClientProvider client={client}>
-      <Home />
-    </ClientProvider>
+    <div style={{ minWidth: 400 }}>
+      <JsonTreeView data={profile} />
+    </div>
   );
 };
 
