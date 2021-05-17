@@ -3,7 +3,6 @@
 //
 
 import React, { useState, useEffect } from 'react';
-import { hot } from 'react-hot-loader';
 
 import { JsonTreeView } from '@dxos/react-ux';
 
@@ -40,4 +39,4 @@ const Application = () => {
   );
 };
 
-export default hot(module)(Application);
+export default Application;
