@@ -13,7 +13,7 @@ export const useBackground = () => {
     setPort(connectedPort);
 
     return () => {
-      port?.disconnect();
+      connectedPort.disconnect();
     };
   }, []);
 

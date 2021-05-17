@@ -9,8 +9,7 @@
     "outDir": "dist",
     "types": [
       "node",
-      "webpack-env",
-      "web-ext-types"
+      "webpack-env"
     ]
   },
   "include": ["src/**/*", "tools/**/*"]
