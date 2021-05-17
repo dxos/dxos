@@ -1,5 +1,8 @@
 const path = require('path')
 
+/**
+ * @returns {import('esbuild').Plugin}
+ */
 function NodeGlobalsPolyfillPlugin() {
     return {
         name: 'node-globals-polyfill',
