@@ -16,21 +16,24 @@ const publicDir = join(__dirname, '../public')
     await promisify(rmdir)(distDir)
   }
 
-  const result = await build({
-    entryPoints: [
-      join(srcDir, 'background/background.ts'),
-      join(srcDir, 'popup/main.tsx'),
-    ],
-    outdir: distDir,
-    write: true,
-    bundle: true,
-    plugins: [
-      NodeModulesPolyfillPlugin(),
-      NodeGlobalsPolyfillPlugin(),
-    ]
-  })
-
-  console.log(result)
+  try {
+    await build({
+      entryPoints: [
+        join(srcDir, 'background/background.ts'),
+        join(srcDir, 'popup/main.tsx'),
+      ],
+      outdir: distDir,
+      write: true,
+      bundle: true,
+      plugins: [
+        NodeModulesPolyfillPlugin(),
+        NodeGlobalsPolyfillPlugin(),
+      ]
+    })
+  } catch {
+    process.exit(-1); // Diagnostics are already printed.
+  }
+  
 
   await promisify(copy)(`${publicDir}/**`, distDir)
 })()
