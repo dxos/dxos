@@ -4,27 +4,37 @@
 
 import React, { useState, useEffect } from 'react';
 import { hot } from 'react-hot-loader';
+
 import { JsonTreeView } from '@dxos/react-ux';
 
-import { browser } from "webextension-polyfill-ts";
+import { useBackground } from '../hooks';
 
 const Application = () => {
   const [profile, setProfile] = useState<any | undefined>();
+  const background = useBackground();
 
   useEffect(() => {
-    setImmediate(async () => {
-      const result = await browser.runtime.sendMessage({method: 'GetProfile'})
-      console.log('Received', result)
-      setProfile(result);
-    })
-  }, [])
+    if (background === undefined) {
+      return;
+    }
+
+    const listener = (message: any) => {
+      console.log('Popup received: ', message);
+      if (message?.method === 'ResponseProfile') {
+        setProfile(message.data);
+      }
+    };
+    background.onMessage.addListener(listener);
+    background.postMessage({ method: 'GetProfile' });
+    return () => background.onMessage.removeListener(listener);
+  }, [background]);
 
   if (!profile) {
     return <p>No profile loaded.</p>;
   }
 
   return (
-    <div style={{minWidth: 400}}>
+    <div style={{ minWidth: 400 }}>
       <JsonTreeView data={profile} />
     </div>
   );

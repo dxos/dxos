@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
+import { browser, Runtime } from 'webextension-polyfill-ts';
+
 import { Client, ClientConfig } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
-
-import { browser, Runtime } from "webextension-polyfill-ts";
 
 const config: ClientConfig = {
   storage: {
@@ -24,18 +24,24 @@ const config: ClientConfig = {
     console.log('Creating new profile...');
     await client.createProfile({ ...createKeyPair(), username: 'DXOS User' });
   }
-  
-  const profile = await client.getProfile()
+
+  const profile = await client.getProfile();
   console.log({ profile });
 
-  const listener = (request: any, sender: Runtime.MessageSender) => {
-    console.log('Message received', {request, sender})
+  const listener = (request: any, port: Runtime.Port) => {
+    console.log('Message received in background: ', { request });
     if (request.method === 'GetProfile') {
-      console.log('returning..', profile)
-      return Promise.resolve(profile ? {...profile, publicKey: profile.publicKey.toHex()} : profile);
+      const result = profile ? {
+        method: 'ResponseProfile',
+        data: { ...profile, publicKey: profile.publicKey.toHex() }
+      } : null;
+      console.log('returning..', result);
+      port.postMessage(result);
     }
-    return;
-  }
+  };
 
-  browser.runtime.onMessage.addListener(listener as any)
+  browser.runtime.onConnect.addListener((port: Runtime.Port) => {
+    console.log(`Background process connected on port ${port.name}`);
+    port.onMessage.addListener(listener);
+  });
 })();
