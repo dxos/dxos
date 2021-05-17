@@ -29,9 +29,8 @@ describe('SignalApi', () => {
 
   beforeAll(async () => {
     const brokerTopic = PublicKey.random();
-    const broker2Topic = PublicKey.random();
     broker = createBroker(brokerTopic.asBuffer(), { port: signalApiPort, logger: false });
-    broker2 = createBroker(broker2Topic.asBuffer(), { port: signalApiPort2, logger: false });
+    broker2 = createBroker(brokerTopic.asBuffer(), { port: signalApiPort2, logger: false });
     await broker.start();
     await broker2.start();
   });

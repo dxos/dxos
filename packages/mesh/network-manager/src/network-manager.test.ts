@@ -71,7 +71,7 @@ describe('Remote network manager', () => {
   });
 
   afterAll(async () => {
-    broker && (await broker.stop());
+    await broker?.stop();
   });
 
   test('two peers connect to each other', async () => {
