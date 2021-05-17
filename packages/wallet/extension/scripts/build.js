@@ -5,13 +5,16 @@ const rmdir = require('rmdir');
 const { promisify } = require('util')
 const copy = require('copy')
 const { join } = require('path')
+const fs = require('fs')
 
 const distDir = join(__dirname, '../dist')
 const srcDir = join(__dirname, '../src')
 const publicDir = join(__dirname, '../public')
 
 ; (async () => {
-  await promisify(rmdir)(distDir)
+  if(fs.existsSync(distDir)) {
+    await promisify(rmdir)(distDir)
+  }
 
   const result = await build({
     entryPoints: [
