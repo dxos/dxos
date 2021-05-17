@@ -29,7 +29,14 @@ const publicDir = join(__dirname, '../public')
         NodeModulesPolyfillPlugin(),
         NodeGlobalsPolyfillPlugin(),
         FixMemdownPlugin(),
-      ]
+      ],
+      watch: process.argv.includes('--watch') ? {onRebuild: ((error) => {
+        if (error) {
+          console.error('Build failed.')
+        } else {
+          console.log(`Rebuild finished.`)
+        }
+       })} : false,
     })
   } catch {
     process.exit(-1); // Diagnostics are already printed.
