@@ -1,0 +1,20 @@
+//
+// Copyright 2019 DxOS.
+//
+
+syntax = "proto3";
+
+package dxos.wallet.extension;
+
+service ProfileService {
+  rpc GetProfile(ProfileRequest) returns (ProfileResponse);
+}
+
+message ProfileRequest {
+
+}
+
+message ProfileResponse {
+  string publicKey = 1;
+  string username = 2;
+}
