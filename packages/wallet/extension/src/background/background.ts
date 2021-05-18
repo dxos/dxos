@@ -34,7 +34,7 @@ const config: ClientConfig = {
     try {
       const messageArray = new Uint8Array(Object.values(message)); // an array gets transformed into an object over the messaging.
       const requestEnvelope = schema.getCodecForType('dxos.wallet.extension.RequestEnvelope').decode(messageArray);
-      console.log('Message received in background: ', { requestEnvelope, message });
+      console.log('Message received in background: ', { requestEnvelope, message, messageArray });
       if (requestEnvelope.req1) {
         const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
           requestId: requestEnvelope.req1.requestId,
@@ -45,6 +45,7 @@ const config: ClientConfig = {
         });
         port.postMessage(response);
       } else if (requestEnvelope.req2) {
+        console.log('Creating a party...');
         const newParty = await client.echo.createParty();
         const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
           requestId: requestEnvelope.req2.requestId,
@@ -55,6 +56,7 @@ const config: ClientConfig = {
         port.postMessage(response);
       } else if (requestEnvelope.req3) {
         const parties = (await client.echo.queryParties()).value;
+        console.log('Responding', { parties });
         const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
           requestId: requestEnvelope.req3.requestId,
           res3: {
@@ -66,7 +68,7 @@ const config: ClientConfig = {
         console.log('Unsupported request.', { requestEnvelope, message });
       }
     } catch (error) {
-      console.error('Background process failed to process a message.');
+      console.error('Failed to process a message.');
       console.log({ error, message });
     }
   };
