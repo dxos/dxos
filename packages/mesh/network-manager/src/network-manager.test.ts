@@ -10,7 +10,7 @@ import { Event, latch, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 import { createBroker } from '@dxos/signal';
-import { range } from '@dxos/util';
+import { range, randomInt } from '@dxos/util';
 
 import { NetworkManager } from './network-manager';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
@@ -29,7 +29,7 @@ interface CreatePeerOptions {
   ice?: any
 }
 
-const signalApiPort = 13542;
+const signalApiPort = randomInt(10000, 50000);
 const signalApiUrl = 'http://0.0.0.0:' + signalApiPort;
 
 const createPeer = async ({
@@ -58,16 +58,20 @@ describe('Remote network manager', () => {
   let peer2Id: PublicKey;
   let broker: ReturnType<typeof createBroker>;
 
-  beforeEach(async () => {
-    topic = PublicKey.random();
-    peer1Id = PublicKey.random();
-    peer2Id = PublicKey.random();
-    broker = createBroker(topic.asBuffer(), { port: signalApiPort, logger: false });
+  beforeAll(async () => {
+    const brokerTopic = PublicKey.random();
+    broker = createBroker(brokerTopic.asBuffer(), { port: signalApiPort, logger: false });
     await broker.start();
   });
 
-  afterEach(async () => {
-    await broker.stop();
+  beforeEach(() => {
+    topic = PublicKey.random();
+    peer1Id = PublicKey.random();
+    peer2Id = PublicKey.random();
+  });
+
+  afterAll(async () => {
+    await broker?.stop();
   });
 
   test('two peers connect to each other', async () => {

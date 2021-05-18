@@ -15,6 +15,7 @@
   "scripts": {
     "build": "tsc --noEmit && pnpm run lint && pnpm run test 2>&1 && true",
     "build-storybook": "build-storybook --quiet",
+    "build-storybook-docs": "build-storybook --quiet --docs",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
     "coverage": "jest --coverage --verbose  --rootDir=./src --passWithNoTests",
     "lint": "eslint --format codeframe './{src,test,stories}/**/*.{ts,tsx}'",
@@ -23,7 +24,8 @@
     "storybook-docs": "start-storybook --docs --no-manager-cache",
     "prepublishOnly": "npm run test && npm run build",
     "watch": "babel-watch src --out-dir ./dist --source-maps",
-    "chromatic": "npx chromatic --exit-zero-on-changes --auto-accept-changes"
+    "chromatic": "npx chromatic --exit-zero-on-changes --auto-accept-changes",
+    "chromatic-docs": "npx chromatic --exit-zero-on-changes --auto-accept-changes --build-script-name build-storybook-docs"
   },
   "browserslist": [
     "> 5%"
@@ -88,7 +90,7 @@
     "babel-loader": "8.1.0",
     "babel-plugin-add-module-exports": "^1.0.4",
     "chance": "^1.1.6",
-    "chromatic": "^5.6.0",
+    "chromatic": "^5.8.0",
     "del-cli": "^3.0.0",
     "eslint": "^7.7.0",
     "eslint-plugin-jest": "^24.0.2",
