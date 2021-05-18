@@ -76,5 +76,14 @@ const config: ClientConfig = {
   browser.runtime.onConnect.addListener((port: Runtime.Port) => {
     console.log(`Background process connected on port ${port.name}`);
     port.onMessage.addListener(listener);
+
+    client.echo.queryParties().subscribe(parties => {
+      const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
+        res3: {
+          partyKeys: parties.map(party => party.key.toHex())
+        }
+      });
+      port.postMessage(response);
+    });
   });
 })();
