@@ -115,6 +115,9 @@ export class TestProtocolPlugin extends EventEmitter {
 
   _onPeerConnect (protocol) {
     const peerId = getPeerId(protocol);
+    if (peerId === undefined) {
+      return;
+    }
     const peerIdStr = keyToString(peerId);
     if (this._peers.has(peerIdStr)) {
       return;
@@ -126,6 +129,9 @@ export class TestProtocolPlugin extends EventEmitter {
 
   _onPeerDisconnect (protocol) {
     const peerId = getPeerId(protocol);
+    if (peerId === undefined) {
+      return;
+    }
 
     this._peers.delete(keyToString(peerId));
     this.emit('disconnect', peerId);
