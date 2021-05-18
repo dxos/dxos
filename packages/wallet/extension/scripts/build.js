@@ -28,7 +28,15 @@ const publicDir = join(__dirname, '../public')
       plugins: [
         NodeModulesPolyfillPlugin(),
         NodeGlobalsPolyfillPlugin(),
-      ]
+        FixMemdownPlugin(),
+      ],
+      watch: process.argv.includes('--watch') ? {onRebuild: ((error) => {
+        if (error) {
+          console.error('Build failed.')
+        } else {
+          console.log(`Rebuild finished.`)
+        }
+       })} : false,
     })
   } catch {
     process.exit(-1); // Diagnostics are already printed.
@@ -38,3 +46,18 @@ const publicDir = join(__dirname, '../public')
   await promisify(copy)(`${publicDir}/**`, distDir)
 })()
 
+/**
+ * @returns {import('esbuild').Plugin}
+ */
+function FixMemdownPlugin() {
+  return {
+    name: 'fix-memdown-plugin',
+    setup({ onResolve }) {
+      onResolve({ filter: /^immediate$/ }, arg => {
+        return {
+          path: require.resolve(arg.path, { paths: [arg.resolveDir] })
+        }
+      })
+    }
+  }
+}
