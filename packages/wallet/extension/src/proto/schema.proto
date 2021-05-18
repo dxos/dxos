@@ -6,15 +6,48 @@ syntax = "proto3";
 
 package dxos.wallet.extension;
 
-service ProfileService {
-  rpc GetProfile(ProfileRequest) returns (ProfileResponse);
+service BackgroundService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+
+  rpc CreateParty(CreatePartyRequest) returns (CreatePartyResponse);
+  rpc GetParties(GetPartiesRequest) returns (GetPartiesResponse);
 }
 
-message ProfileRequest {
-
+message GetProfileRequest {
+  string requestId = 1;
 }
-
-message ProfileResponse {
+message GetProfileResponse {
   string publicKey = 1;
   string username = 2;
+}
+
+message CreatePartyRequest {
+  string requestId = 1;
+}
+message CreatePartyResponse {
+  string partyKey = 1;
+}
+
+message GetPartiesRequest {
+  string requestId = 1;
+}
+message GetPartiesResponse {
+  repeated string partyKeys = 1;
+}
+
+message RequestEnvelope {
+  oneof request {
+    GetProfileRequest req1 = 2;
+    CreatePartyRequest req2 = 3;
+    GetPartiesRequest req3 = 4;
+  }
+}
+
+message ResponseEnvelope {
+  string requestId = 1;
+  oneof request {
+    GetProfileResponse res1 = 2;
+    CreatePartyResponse res2 = 3;
+    GetPartiesResponse res3 = 4;
+  }
 }
