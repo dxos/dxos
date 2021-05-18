@@ -13,5 +13,10 @@
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "background": {
     "page": "background/background.html"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "dxos@dxos.org"
+    }
   }
 }
