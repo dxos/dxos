@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 
 import { JsonTreeView } from '@dxos/react-ux';
 
+import { schema } from '../../proto/gen';
 import { useBackground } from '../hooks';
 
 const Application = () => {
@@ -18,10 +19,9 @@ const Application = () => {
     }
 
     const listener = (message: any) => {
-      console.log('Popup received: ', message);
-      if (message?.method === 'ResponseProfile') {
-        setProfile(message.data);
-      }
+      const decodedMessage = schema.getCodecForType('dxos.wallet.extension.ProfileResponse').decode(message);
+      console.log('Popup received: ', decodedMessage);
+      setProfile(decodedMessage);
     };
     background.onMessage.addListener(listener);
     background.postMessage({ method: 'GetProfile' });

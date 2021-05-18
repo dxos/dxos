@@ -6,7 +6,7 @@
   "author": "DXOS.org",
   "scripts": {
     "lint": "toolchain lint",
-    "build": "node scripts/build.js"
+    "build": "toolchain build && node scripts/build.js && true"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
@@ -15,7 +15,8 @@
     "@hot-loader/react-dom": "16.13.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
-    "@dxos/react-ux": "workspace:*"
+    "@dxos/react-ux": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
