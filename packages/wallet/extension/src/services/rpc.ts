@@ -6,20 +6,33 @@ import assert from 'assert';
 import * as pb from 'protobufjs';
 import { Runtime } from 'webextension-polyfill-ts';
 
+import { Event, trigger } from '@dxos/async';
+
 import { schema, schemaJson } from '../proto/gen';
 
 const root = pb.Root.fromJSON(schemaJson);
 const BackgroundService = root.lookupService('BackgroundService');
+
+export class ResponseStream {
+  readonly message = new Event<Uint8Array>()
+}
+
+interface RpcPort {
+  sendMessage: (msg: Uint8Array) => Promise<void>,
+  subscribe: (cb: (msg: Uint8Array) => void) => (() => void),
+}
 
 export class RpcClient {
   private _nextId = 0;
 
   private readonly _requests = new Map<string, (response: Uint8Array) => void>() // eslint-disable-line func-call-spacing
 
+  private readonly _streamRequests = new Map<string, ResponseStream>()
+
   private _unsubscribe: (() => void) | undefined
 
   constructor (
-    private readonly _port: RpcPort,
+    private readonly _port: RpcPort
   ) {
     console.log('Client constructor', { BackgroundService });
 
@@ -30,21 +43,24 @@ export class RpcClient {
 
       assert(response.id);
       const cb = this._requests.get(response.id);
-      assert(cb);
-
-      assert(response.payload);
-      cb(response.payload);
+      const responseStream = this._streamRequests.get(response.id);
+      if (cb) {
+        assert(response.payload);
+        cb(response.payload);
+      } else if (responseStream) {
+        assert(response.payload);
+        responseStream.message.emit(response.payload);
+      } else {
+        console.warn('Request without a corresponding entry in a map of requests and response streams', { response });
+      }
     });
   }
 
   async call (method: string, payload: Uint8Array): Promise<Uint8Array> {
     const id = (this._nextId++).toString();
 
-    let resolveCb: (response: Uint8Array) => void;
-    const promise = new Promise<Uint8Array>((resolve) => {
-      resolveCb = resolve;
-    });
-    this._requests.set(id, resolveCb!);
+    const [done, resolve] = trigger<Uint8Array>();
+    this._requests.set(id, resolve);
 
     // Send request here
 
@@ -56,7 +72,7 @@ export class RpcClient {
 
     await this._port.sendMessage(request);
 
-    const response = await promise; // encoded payload
+    const response = await done(); // encoded payload
 
     this._requests.delete(id);
 
@@ -65,53 +81,82 @@ export class RpcClient {
     return response;
   }
 
+  async callAndSubscribe (method: string, payload: Uint8Array): Promise<ResponseStream> {
+    const id = (this._nextId++).toString();
+
+    const request = schema.getCodecForType('dxos.wallet.extension.RequestEnvelope').encode({
+      id,
+      method,
+      payload,
+      streamResponse: true
+    });
+
+    const responseStream = new ResponseStream();
+    this._streamRequests.set(id, responseStream);
+
+    await this._port.sendMessage(request);
+
+    return responseStream;
+  }
+
   close () {
     this._unsubscribe?.();
   }
 }
 
-interface RpcPort {
-  sendMessage: (msg: Uint8Array) => Promise<void>,
-  subscribe: (cb: (msg: Uint8Array) => void) => (() => void),
-}
-
 export class RpcServer {
   constructor (
-    private readonly _handle: (method: string, request: Uint8Array) => Promise<Uint8Array>
+    private readonly _handle: (method: string, request: Uint8Array) => Promise<Uint8Array | ResponseStream>
   ) {
     console.log('Server constructor', { BackgroundService });
   }
 
   handleConnection (connection: RpcPort) {
     connection.subscribe(async msg => {
-      console.log('handleConnection', { msg })
+      console.log('handleConnection', { msg });
 
       const request = schema.getCodecForType('dxos.wallet.extension.RequestEnvelope').decode(msg);
+      console.log({ request });
 
       assert(request.method);
       assert(request.payload);
       const result = await this._handle(request.method, request.payload);
+      console.log({ result });
 
-      const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
-        id: request.id,
-        payload: result
-      });
+      if (request.streamResponse) {
+        assert(result instanceof ResponseStream, 'Expected result to be a response stream.');
 
-      await connection.sendMessage(response);
+        // TODO: handle unsubscribe
+        result.message.on(message => {
+          const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
+            id: request.id,
+            payload: message
+          });
+          connection.sendMessage(response);
+        });
+      } else {
+        assert(!(result instanceof ResponseStream), 'Expect result not to be a response stream.');
+
+        const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
+          id: request.id,
+          payload: result
+        });
+        await connection.sendMessage(response);
+      }
     });
   }
 }
 
-export function wrapPort(port: Runtime.Port): RpcPort {
+export function wrapPort (port: Runtime.Port): RpcPort {
   return {
     sendMessage: async (msg) => port.postMessage(Array.from(msg)),
     subscribe: cb => {
       const handler = (msg: any) => {
-        cb(new Uint8Array(msg))
-      }
+        cb(new Uint8Array(msg));
+      };
 
       port.onMessage.addListener(handler);
       return () => port.onMessage.removeListener(handler);
     }
-  }
+  };
 }

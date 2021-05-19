@@ -10,7 +10,7 @@ service BackgroundService {
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
 
   rpc CreateParty(CreatePartyRequest) returns (CreatePartyResponse);
-  rpc GetParties(GetPartiesRequest) returns (GetPartiesResponse);
+  rpc GetParties(GetPartiesRequest) returns (stream GetPartiesResponse);
 }
 
 message GetProfileRequest {}
@@ -33,6 +33,7 @@ message RequestEnvelope {
   string id = 1;
   string method = 2; // From service definition
   bytes payload = 3; // encoding specific to every method
+  bool streamResponse = 4;
 }
 
 message ResponseEnvelope {

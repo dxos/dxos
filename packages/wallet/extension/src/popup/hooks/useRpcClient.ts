@@ -13,7 +13,7 @@ export const useRpcClient = () => {
   useEffect(() => {
     const connectedPort = browser.runtime.connect();
 
-    const client = new RpcClient(wrapPort(connectedPort))
+    const client = new RpcClient(wrapPort(connectedPort));
 
     setClient(client);
 

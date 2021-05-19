@@ -17,7 +17,8 @@
     "react-dom": "^16.14.0",
     "@dxos/react-ux": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "protobufjs": "^6.9.0"
+    "protobufjs": "^6.9.0",
+    "@dxos/async": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
