@@ -7,7 +7,6 @@ import React, { useState, useEffect } from 'react';
 import { JsonTreeView } from '@dxos/react-ux';
 
 import { schema } from '../../proto/gen';
-import { ResponseStream } from '../../services';
 import { useRpcClient } from '../hooks';
 
 const getProfileRequest = schema.getCodecForType('dxos.wallet.extension.GetProfileRequest').encode({});
