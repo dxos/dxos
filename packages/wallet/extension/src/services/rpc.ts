@@ -18,7 +18,7 @@ export class ResponseStream {
 }
 
 interface RpcPort {
-  sendMessage: (msg: Uint8Array) => Promise<void>,
+  sendMessage: (msg: Uint8Array) => void,
   subscribe: (cb: (msg: Uint8Array) => void) => (() => void),
 }
 
@@ -70,7 +70,7 @@ export class RpcClient {
       payload
     });
 
-    await this._port.sendMessage(request);
+    this._port.sendMessage(request);
 
     const response = await done(); // encoded payload
 
@@ -81,7 +81,7 @@ export class RpcClient {
     return response;
   }
 
-  async callAndSubscribe (method: string, payload: Uint8Array): Promise<ResponseStream> {
+  callAndSubscribe (method: string, payload: Uint8Array): ResponseStream {
     const id = (this._nextId++).toString();
 
     const request = schema.getCodecForType('dxos.wallet.extension.RequestEnvelope').encode({
@@ -94,7 +94,7 @@ export class RpcClient {
     const responseStream = new ResponseStream();
     this._streamRequests.set(id, responseStream);
 
-    await this._port.sendMessage(request);
+    this._port.sendMessage(request);
 
     return responseStream;
   }
