@@ -8,6 +8,7 @@ import { Client, ClientConfig } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
 import { schema } from '../proto/gen';
+import { RpcServer, wrapPort } from '../services';
 
 const config: ClientConfig = {
   storage: {
@@ -30,60 +31,35 @@ const config: ClientConfig = {
   const profile = await client.getProfile();
   console.log({ profile });
 
-  const listener = async (message: any, port: Runtime.Port) => {
-    try {
-      const messageArray = new Uint8Array(Object.values(message)); // an array gets transformed into an object over the messaging.
-      const requestEnvelope = schema.getCodecForType('dxos.wallet.extension.RequestEnvelope').decode(messageArray);
-      console.log('Message received in background: ', { requestEnvelope, message, messageArray });
-      if (requestEnvelope.req1) {
-        const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
-          requestId: requestEnvelope.req1.requestId,
-          res1: {
-            publicKey: profile?.publicKey.toHex(),
-            username: profile?.username
-          }
-        });
-        port.postMessage(response);
-      } else if (requestEnvelope.req2) {
-        console.log('Creating a party...');
-        const newParty = await client.echo.createParty();
-        const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
-          requestId: requestEnvelope.req2.requestId,
-          res2: {
-            partyKey: newParty.key.toHex()
-          }
-        });
-        port.postMessage(response);
-      } else if (requestEnvelope.req3) {
-        const parties = (await client.echo.queryParties()).value;
-        console.log('Responding', { parties });
-        const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
-          requestId: requestEnvelope.req3.requestId,
-          res3: {
-            partyKeys: parties.map(party => party.key.toHex())
-          }
-        });
-        port.postMessage(response);
-      } else {
-        console.log('Unsupported request.', { requestEnvelope, message });
-      }
-    } catch (error) {
-      console.error('Failed to process a message.');
-      console.log({ error, message });
+  const requestHandler: (method: string, request: Uint8Array) => Promise<Uint8Array> = async (method, request) => {
+    // request is not used anywhere yet because we have parameter-less requests at the moment.
+    if (method === 'GetProfile') {
+
+      return schema.getCodecForType('dxos.wallet.extension.GetProfileResponse').encode({
+        publicKey: profile?.publicKey.toHex(),
+        username: profile?.username
+      });
+    } else if (method === 'GetParties') {
+      const parties = (await client.echo.queryParties()).value;
+      return schema.getCodecForType('dxos.wallet.extension.GetPartiesResponse').encode({
+        partyKeys: parties.map(party => party.key.toHex())
+      });
+    } else if (method === 'CreateParty') {
+      const newParty = await client.echo.createParty();
+      return schema.getCodecForType('dxos.wallet.extension.CreatePartyResponse').encode({
+        partyKey: newParty.key.toHex()
+      });
+    } else {
+      console.log('Unsupported method: ', method);
+      return new Uint8Array();
     }
   };
 
+  const rpcServer = new RpcServer(requestHandler);
+
   browser.runtime.onConnect.addListener((port: Runtime.Port) => {
     console.log(`Background process connected on port ${port.name}`);
-    port.onMessage.addListener(listener);
 
-    client.echo.queryParties().subscribe(parties => {
-      const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
-        res3: {
-          partyKeys: parties.map(party => party.key.toHex())
-        }
-      });
-      port.postMessage(response);
-    });
+    rpcServer.handleConnection(wrapPort(port));
   });
 })();

@@ -13,41 +13,37 @@ service BackgroundService {
   rpc GetParties(GetPartiesRequest) returns (GetPartiesResponse);
 }
 
-message GetProfileRequest {
-  string requestId = 1;
-}
+message GetProfileRequest {}
 message GetProfileResponse {
   string publicKey = 1;
   string username = 2;
 }
 
-message CreatePartyRequest {
-  string requestId = 1;
-}
+message CreatePartyRequest {}
 message CreatePartyResponse {
   string partyKey = 1;
 }
 
-message GetPartiesRequest {
-  string requestId = 1;
-}
+message GetPartiesRequest {}
 message GetPartiesResponse {
   repeated string partyKeys = 1;
 }
 
 message RequestEnvelope {
-  oneof request {
-    GetProfileRequest req1 = 2;
-    CreatePartyRequest req2 = 3;
-    GetPartiesRequest req3 = 4;
-  }
+  string id = 1;
+  string method = 2; // From service definition
+  bytes payload = 3; // encoding specific to every method
 }
 
 message ResponseEnvelope {
-  string requestId = 1;
-  oneof request {
-    GetProfileResponse res1 = 2;
-    CreatePartyResponse res2 = 3;
-    GetPartiesResponse res3 = 4;
+  string id = 1;
+  oneof response {
+    bytes payload = 2;
+    Error error = 3;
   }
+}
+
+message Error {
+  string error = 1;
+  string stack = 2;
 }

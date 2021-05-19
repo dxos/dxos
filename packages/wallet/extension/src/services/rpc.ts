@@ -1,0 +1,117 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+import assert from 'assert';
+import * as pb from 'protobufjs';
+import { Runtime } from 'webextension-polyfill-ts';
+
+import { schema, schemaJson } from '../proto/gen';
+
+const root = pb.Root.fromJSON(schemaJson);
+const BackgroundService = root.lookupService('BackgroundService');
+
+export class RpcClient {
+  private _nextId = 0;
+
+  private readonly _requests = new Map<string, (response: Uint8Array) => void>() // eslint-disable-line func-call-spacing
+
+  private _unsubscribe: (() => void) | undefined
+
+  constructor (
+    private readonly _port: RpcPort,
+  ) {
+    console.log('Client constructor', { BackgroundService });
+
+    this._unsubscribe = _port.subscribe(msg => { // encoded
+      // Ignore errors here cause something else might have sent the message.
+
+      const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').decode(msg);
+
+      assert(response.id);
+      const cb = this._requests.get(response.id);
+      assert(cb);
+
+      assert(response.payload);
+      cb(response.payload);
+    });
+  }
+
+  async call (method: string, payload: Uint8Array): Promise<Uint8Array> {
+    const id = (this._nextId++).toString();
+
+    let resolveCb: (response: Uint8Array) => void;
+    const promise = new Promise<Uint8Array>((resolve) => {
+      resolveCb = resolve;
+    });
+    this._requests.set(id, resolveCb!);
+
+    // Send request here
+
+    const request = schema.getCodecForType('dxos.wallet.extension.RequestEnvelope').encode({
+      id,
+      method,
+      payload
+    });
+
+    await this._port.sendMessage(request);
+
+    const response = await promise; // encoded payload
+
+    this._requests.delete(id);
+
+    // Handle response here
+
+    return response;
+  }
+
+  close () {
+    this._unsubscribe?.();
+  }
+}
+
+interface RpcPort {
+  sendMessage: (msg: Uint8Array) => Promise<void>,
+  subscribe: (cb: (msg: Uint8Array) => void) => (() => void),
+}
+
+export class RpcServer {
+  constructor (
+    private readonly _handle: (method: string, request: Uint8Array) => Promise<Uint8Array>
+  ) {
+    console.log('Server constructor', { BackgroundService });
+  }
+
+  handleConnection (connection: RpcPort) {
+    connection.subscribe(async msg => {
+      console.log('handleConnection', { msg })
+
+      const request = schema.getCodecForType('dxos.wallet.extension.RequestEnvelope').decode(msg);
+
+      assert(request.method);
+      assert(request.payload);
+      const result = await this._handle(request.method, request.payload);
+
+      const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').encode({
+        id: request.id,
+        payload: result
+      });
+
+      await connection.sendMessage(response);
+    });
+  }
+}
+
+export function wrapPort(port: Runtime.Port): RpcPort {
+  return {
+    sendMessage: async (msg) => port.postMessage(Array.from(msg)),
+    subscribe: cb => {
+      const handler = (msg: any) => {
+        cb(new Uint8Array(msg))
+      }
+
+      port.onMessage.addListener(handler);
+      return () => port.onMessage.removeListener(handler);
+    }
+  }
+}

@@ -1655,6 +1655,7 @@ importers:
       '@types/react': 16.14.6
       '@types/react-dom': 17.0.5
       '@types/webpack-env': 1.16.0
+      chalk: 4.1.1
       copy: 0.3.2
       esbuild: 0.11.23
       rmdir: 1.2.0
@@ -1673,6 +1674,7 @@ importers:
       '@types/react': ^16.14.0
       '@types/react-dom': ^17.0.2
       '@types/webpack-env': ^1.16.0
+      chalk: ^4.1.0
       copy: ~0.3.2
       esbuild: ^0.11.23
       protobufjs: ^6.9.0
