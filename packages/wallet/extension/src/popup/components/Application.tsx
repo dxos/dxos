@@ -40,12 +40,12 @@ const Application = () => {
     return () => responseStream.message.off(partiesListener);
   }, [rpcClient]);
 
-  if (!profile) {
-    return <p>No profile loaded.</p>;
-  }
-
   if (!rpcClient) {
     return <p>Connecting to background...</p>;
+  }
+
+  if (!profile) {
+    return <p>No profile loaded.</p>;
   }
 
   const handleCreateParty = async () => {
