@@ -35,13 +35,9 @@ const Application = () => {
       setParties(parties.partyKeys);
     };
 
-    let responseStream: ResponseStream;
-    setImmediate(async () => {
-      const responseStream = (await rpcClient.callAndSubscribe('GetParties', getPartiesRequest));
-      responseStream.message.on(partiesListener);
-    });
-
-    return () => responseStream?.message.off(partiesListener);
+    const responseStream = rpcClient.callAndSubscribe('GetParties', getPartiesRequest);
+    responseStream.message.on(partiesListener);
+    return () => responseStream.message.off(partiesListener);
   }, [rpcClient]);
 
   if (!profile) {
