@@ -37,21 +37,24 @@ export class RpcClient {
     console.log('Client constructor', { BackgroundService });
 
     this._unsubscribe = _port.subscribe(msg => { // encoded
-      // Ignore errors here cause something else might have sent the message.
+      try {
+        const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').decode(msg);
 
-      const response = schema.getCodecForType('dxos.wallet.extension.ResponseEnvelope').decode(msg);
-
-      assert(response.id);
-      const cb = this._requests.get(response.id);
-      const responseStream = this._streamRequests.get(response.id);
-      if (cb) {
-        assert(response.payload);
-        cb(response.payload);
-      } else if (responseStream) {
-        assert(response.payload);
-        responseStream.message.emit(response.payload);
-      } else {
-        console.warn('Request without a corresponding entry in a map of requests and response streams', { response });
+        assert(response.id);
+        const cb = this._requests.get(response.id);
+        const responseStream = this._streamRequests.get(response.id);
+        if (cb) {
+          assert(response.payload);
+          cb(response.payload);
+        } else if (responseStream) {
+          assert(response.payload);
+          responseStream.message.emit(response.payload);
+        } else {
+          console.warn('Request without a corresponding entry in a map of requests and response streams', { response });
+        }
+      } catch (err) {
+        console.error('Processing message failed.');
+        console.error(err);
       }
     });
   }
@@ -61,8 +64,6 @@ export class RpcClient {
 
     const [done, resolve] = trigger<Uint8Array>();
     this._requests.set(id, resolve);
-
-    // Send request here
 
     const request = schema.getCodecForType('dxos.wallet.extension.RequestEnvelope').encode({
       id,
@@ -75,8 +76,6 @@ export class RpcClient {
     const response = await done(); // encoded payload
 
     this._requests.delete(id);
-
-    // Handle response here
 
     return response;
   }
