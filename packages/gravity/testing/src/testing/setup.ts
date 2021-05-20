@@ -4,7 +4,7 @@
 
 import { spawn } from 'child_process';
 
-import { OVERRIDE_CONFIG } from './config';
+import { OVERRIDE_CONFIG } from '../config';
 
 const LOCAL = 'localhost';
 

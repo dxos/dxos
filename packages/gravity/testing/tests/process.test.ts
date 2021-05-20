@@ -24,13 +24,13 @@ test.skip('bot resource test', async () => {
     );
   }
 
-  const childs = await promisify(psTree)(orchestrator.botFactoryPid);
+  const children = await promisify(psTree)(orchestrator.botFactoryPid);
 
   for await (const agent of agents) {
     await agent.stop();
   }
 
-  const exists = await processExists.all(childs);
+  const exists = await processExists.all(children);
   expect(Array.from(exists.values()).includes(true)).toBeFalsy();
 
   await orchestrator.destroy();

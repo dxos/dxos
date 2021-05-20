@@ -34,20 +34,25 @@ class TestAgent extends Bot {
   }
 
   async botCommandHandler (command:any) {
-    log('Received command', JSON.stringify(command));
+    log('Received command:', JSON.stringify(command));
     await waitForCondition(() => !!this._item);
     switch (command.type) {
-      case 'append': {
-        await this._item.model.sendMessage({ id: createId(), text: 'Hello world!', sender: 'Sender', timestamp: new Date().toString() });
+      case 'append': { // TODO(burdon): Const.
+        await this._item.model.sendMessage({
+          id: createId(), text: 'Hello world!', sender: 'Sender', timestamp: new Date().toString()
+        });
         break;
       }
-      case 'get-all': {
+
+      case 'get-all': { // TODO(burdon): Const.
         return this._item.model.messages;
       }
+
       default:
         break;
     }
   }
 }
 
+// TODO(burdon): Files should not have side effects of being imported.
 new TestAgent(getConfig(), {}).start();

@@ -8,9 +8,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "scripts": {
-    "build": "toolchain build --globalTeardown='./src/teardown.ts' --globalSetup='./src/setup.ts'",
+    "build": "toolchain build --globalTeardown='./src/testing/teardown.ts' --globalSetup='./src/testing/setup.ts'",
     "lint": "toolchain lint",
-    "test": "toolchain test --globalTeardown='./src/teardown.ts' --globalSetup='./src/setup.ts'"
+    "test": "toolchain test --globalTeardown='./src/testing/teardown.ts' --globalSetup='./src/testing/setup.ts'"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
