@@ -7,6 +7,7 @@ import path from 'path';
 import { MessengerModel } from '@dxos/messenger-model';
 
 import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../src';
+import { APPEND_COMMAND, GET_ALL_COMMAND } from '../src/agents/test-agent';
 
 jest.setTimeout(100_000);
 
@@ -21,10 +22,10 @@ test('local source', async () => {
 
   await orchestrator.party.database.createItem({ model: MessengerModel, type: 'dxos.org/type/testing/object' });
 
-  await agent.sendCommand({ type: 'append' });
-  await agent.sendCommand({ type: 'append' });
+  await agent.sendCommand({ type: APPEND_COMMAND });
+  await agent.sendCommand({ type: APPEND_COMMAND });
 
-  const messages = await agent.sendCommand({ type: 'get-all' });
+  const messages = await agent.sendCommand({ type: GET_ALL_COMMAND });
 
   expect(messages).toHaveLength(2);
 
@@ -42,7 +43,7 @@ test.skip('remote source', async () => {
 
   await orchestrator.party.database.createItem({ model: MessengerModel, type: 'dxos.org/type/testing/object' });
 
-  await agent.sendCommand({ type: 'append' });
+  await agent.sendCommand({ type: APPEND_COMMAND });
 
   await orchestrator.destroy();
 });
@@ -58,10 +59,10 @@ test.skip('browser', async () => {
 
   await orchestrator.party.database.createItem({ model: MessengerModel, type: 'dxos.org/type/testing/object' });
 
-  await agent.sendCommand({ type: 'append' });
-  await agent.sendCommand({ type: 'append' });
+  await agent.sendCommand({ type: APPEND_COMMAND });
+  await agent.sendCommand({ type: APPEND_COMMAND });
 
-  const messages = await agent.sendCommand({ type: 'get-all' });
+  const messages = await agent.sendCommand({ type: GET_ALL_COMMAND });
 
   expect(messages).toHaveLength(2);
 
