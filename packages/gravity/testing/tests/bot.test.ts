@@ -6,9 +6,9 @@ import path from 'path';
 
 import { MessengerModel } from '@dxos/messenger-model';
 
-import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../src/orchestrator';
+import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../src';
 
-jest.setTimeout(100 * 1000);
+jest.setTimeout(100_000);
 
 test('local source', async () => {
   const orchestrator = await Orchestrator.create({ local: true });

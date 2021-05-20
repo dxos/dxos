@@ -6,11 +6,11 @@ import processExists from 'process-exists';
 import psTree from 'pstree.remy';
 import { promisify } from 'util';
 
-import { Orchestrator } from '../src/orchestrator';
+import { Orchestrator } from '../src';
 
 const BOT_NUMBER = 5;
 
-jest.setTimeout(100 * 1000);
+jest.setTimeout(100_000);
 
 // TODO(egorgripasov): Run multiple test files simultaneously.
 test.skip('bot resource test', async () => {

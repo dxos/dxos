@@ -6,4 +6,5 @@ declare module 'download';
 declare module 'js-yaml';
 declare module 'random-access-memory';
 declare module 'pstree.remy';
+
 declare module '@dxos/config';

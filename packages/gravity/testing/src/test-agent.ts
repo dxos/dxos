@@ -13,6 +13,7 @@ export const ITEM_TYPE = 'dxos.org/type/testing/object';
 
 const log = debug('dxos:testing:test-agent');
 
+// TODO(burdon): Comment.
 class TestAgent extends Bot {
   /** @type {Item<MessengerModel>} */
   _item:any;

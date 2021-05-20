@@ -18,6 +18,7 @@ const PROFILE_PATH = path.join(tmpdir(), `${crypto.randomBytes(4).toString('hex'
 export const FACTORY_OUT_DIR = './out';
 export const FACTORY_BOT_DIR = '.bots';
 
+// TODO(burdon): Factor out.
 export const TEST_PROFILE = 'https://git.io/JUkhm';
 
 // Config to override.

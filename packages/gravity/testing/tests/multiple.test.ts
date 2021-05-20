@@ -4,8 +4,7 @@
 
 import { MessengerModel } from '@dxos/messenger-model';
 
-import { Agent } from '../src/agent';
-import { BROWSER_ENV, /* NODE_ENV, */ Orchestrator } from '../src/orchestrator';
+import { Agent, BROWSER_ENV, /* NODE_ENV, */ Orchestrator } from '../src';
 
 jest.setTimeout(100_000);
 
