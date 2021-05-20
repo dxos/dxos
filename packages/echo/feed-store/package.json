@@ -15,8 +15,7 @@
   "types": "dist/src/index.d.ts",
   "files": [
     "src",
-    "dist",
-    "index.js"
+    "dist"
   ],
   "scripts": {
     "build": "toolchain build",
