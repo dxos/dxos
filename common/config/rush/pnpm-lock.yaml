@@ -1448,7 +1448,7 @@ importers:
       babel-loader: 8.1.0
       babel-plugin-add-module-exports: ^1.0.4
       chance: ^1.1.6
-      chromatic: ^5.6.0
+      chromatic: ^5.8.0
       clsx: ^1.1.0
       d3: ^5.9.2
       debug: ^4.1.1
@@ -1640,10 +1640,12 @@ importers:
   ../../packages/wallet/extension:
     dependencies:
       '@dxos/client': link:../../sdk/client
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ux': link:../../sdk/react-ux
       '@hot-loader/react-dom': 16.13.0_react@16.14.0
+      protobufjs: 6.11.2
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
@@ -1653,6 +1655,7 @@ importers:
       '@types/react': 16.14.6
       '@types/react-dom': 17.0.5
       '@types/webpack-env': 1.16.0
+      chalk: 4.1.1
       copy: 0.3.2
       esbuild: 0.11.23
       rmdir: 1.2.0
@@ -1660,6 +1663,7 @@ importers:
       webextension-polyfill-ts: 0.25.0
     specifiers:
       '@dxos/client': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ux': workspace:*
@@ -1670,8 +1674,10 @@ importers:
       '@types/react': ^16.14.0
       '@types/react-dom': ^17.0.2
       '@types/webpack-env': ^1.16.0
+      chalk: ^4.1.0
       copy: ~0.3.2
       esbuild: ^0.11.23
+      protobufjs: ^6.9.0
       react: ^16.14.0
       react-dom: ^16.14.0
       rmdir: ~1.2.0

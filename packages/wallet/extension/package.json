@@ -6,7 +6,7 @@
   "author": "DXOS.org",
   "scripts": {
     "lint": "toolchain lint",
-    "build": "toolchain build && node scripts/build.js && true"
+    "build": "toolchain build && node scripts/build.js"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
@@ -16,7 +16,9 @@
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "@dxos/react-ux": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*"
+    "@dxos/codec-protobuf": "workspace:*",
+    "protobufjs": "^6.9.0",
+    "@dxos/async": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
@@ -29,6 +31,7 @@
     "@esbuild-plugins/node-modules-polyfill": "~0.1.1",
     "copy": "~0.3.2",
     "rmdir": "~1.2.0",
-    "webextension-polyfill-ts": "~0.25.0"
+    "webextension-polyfill-ts": "~0.25.0",
+    "chalk": "^4.1.0"
   }
 }
