@@ -1,6 +1,6 @@
-# ECHO - Demo
+# SDK Demos
 
-A set of storybook demonstrating functionalities of ECHO database.
+Storybooks for SDK testing and demos.
 
 ## Running the storybooks
 
@@ -33,3 +33,15 @@ Next, edit the `.env` file, leaving the following `STORYBOOK_SIGNAL` variable un
 ```bash
 STORYBOOK_SIGNAL="ws://localhost:4000"
 ```
+
+## Electron
+
+For demos, create a native electron app:
+
+```
+mkdir -p ./dist
+npx nativefier http://localhost:9001 ./dist
+open dist/APP-darwin-x64/APP.app
+```
+
+NOTE: This is large -- don't check it in.
