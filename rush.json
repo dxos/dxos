@@ -561,7 +561,9 @@
     },
     {
       "packageName": "@dxos/feed-store",
-      "projectFolder": "packages/echo/feed-store"
+      "projectFolder": "packages/echo/feed-store",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/text-model",
