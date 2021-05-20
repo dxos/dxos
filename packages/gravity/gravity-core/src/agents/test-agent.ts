@@ -39,14 +39,14 @@ class TestAgent extends Bot {
     log('Received command:', JSON.stringify(command));
     await waitForCondition(() => !!this._item);
     switch (command.type) {
-      case APPEND_COMMAND: { // TODO(burdon): Const.
+      case APPEND_COMMAND: {
         await this._item.model.sendMessage({
           id: createId(), text: 'Hello world!', sender: 'Sender', timestamp: new Date().toString()
         });
         break;
       }
 
-      case GET_ALL_COMMAND: { // TODO(burdon): Const.
+      case GET_ALL_COMMAND: {
         return this._item.model.messages;
       }
 
