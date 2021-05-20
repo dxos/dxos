@@ -8,6 +8,7 @@ import { Client, ClientConfig } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
 import { schema } from '../proto/gen';
+import { RpcServer, wrapPort, ResponseStream } from '../services';
 
 const config: ClientConfig = {
   storage: {
@@ -30,19 +31,38 @@ const config: ClientConfig = {
   const profile = await client.getProfile();
   console.log({ profile });
 
-  const listener = (request: any, port: Runtime.Port) => {
-    console.log('Message received in background: ', { request });
-    if (request.method === 'GetProfile') {
-      const protoEncodedResponse = schema.getCodecForType('dxos.wallet.extension.ProfileResponse').encode({
+  const requestHandler: (method: string, request: Uint8Array) => Promise<Uint8Array | ResponseStream> = async (method, request) => {
+    // request is not used anywhere yet because we have parameter-less requests at the moment.
+    if (method === 'GetProfile') {
+      return schema.getCodecForType('dxos.wallet.extension.GetProfileResponse').encode({
         publicKey: profile?.publicKey.toHex(),
         username: profile?.username
       });
-      port.postMessage(protoEncodedResponse);
+    } else if (method === 'GetParties') {
+      const responseStream = new ResponseStream();
+      (await client.echo.queryParties()).subscribe((parties) => {
+        const responseItem = schema.getCodecForType('dxos.wallet.extension.GetPartiesResponse').encode({
+          partyKeys: parties.map(party => party.key.toHex())
+        });
+        responseStream.message.emit(responseItem);
+      });
+      return responseStream;
+    } else if (method === 'CreateParty') {
+      const newParty = await client.echo.createParty();
+      return schema.getCodecForType('dxos.wallet.extension.CreatePartyResponse').encode({
+        partyKey: newParty.key.toHex()
+      });
+    } else {
+      console.log('Unsupported method: ', method);
+      return new Uint8Array();
     }
   };
 
+  const rpcServer = new RpcServer(requestHandler);
+
   browser.runtime.onConnect.addListener((port: Runtime.Port) => {
     console.log(`Background process connected on port ${port.name}`);
-    port.onMessage.addListener(listener);
+
+    rpcServer.handleConnection(wrapPort(port));
   });
 })();
