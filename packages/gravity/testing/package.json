@@ -2,7 +2,7 @@
   "name": "@dxos/testing",
   "version": "2.10.2",
   "private": true,
-  "description": "Testing framework",
+  "description": "Gravity testing framework",
   "keywords": [],
   "license": "AGPL-3.0",
   "author": "DXOS.org",

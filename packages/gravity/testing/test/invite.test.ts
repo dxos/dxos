@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
+import { waitForCondition } from '@dxos/async';
 import { MessengerModel } from '@dxos/messenger-model';
-import { waitForCondition } from '@dxos/util';
 
-import { /* BROWSER_ENV, NODE_ENV, */ Orchestrator } from '../src/orchestrator';
+import { /* BROWSER_ENV, NODE_ENV, */ Orchestrator } from '../src';
 
-jest.setTimeout(100 * 1000);
+jest.setTimeout(100_000);
 
 test.skip('invite two agents to a party', async () => {
   const orchestrator = await Orchestrator.create({ local: true });
