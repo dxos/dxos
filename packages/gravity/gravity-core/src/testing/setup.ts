@@ -16,6 +16,4 @@ const testSetup = async () => {
   }
 };
 
-// TODO(burdon): DOWNLOAD CONFIG PROFILE into conf temp file.
-
 export default testSetup;
