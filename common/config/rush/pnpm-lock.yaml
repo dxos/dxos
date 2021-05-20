@@ -707,7 +707,7 @@ importers:
       '@types/node': ^14.0.9
       protobufjs: ^6.9.0
       yjs: ^13.4.1
-  ../../packages/gravity/testing:
+  ../../packages/gravity/gravity-core:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/bot': link:../../bot/bot
@@ -731,6 +731,7 @@ importers:
       assert: 2.0.0
       chance: 1.1.7
       debug: 4.3.1
+      dotenv: 8.6.0
       download: 7.1.0
       fs-extra: 8.1.0
       hypercore-crypto: 1.0.0
@@ -784,6 +785,7 @@ importers:
       assert: ^2.0.0
       chance: ^1.1.6
       debug: ^4.1.1
+      dotenv: ^8.2.0
       download: ^7.1.0
       fs-extra: ^8.1.0
       hypercore-crypto: ^1.0.0
@@ -1639,6 +1641,7 @@ importers:
       uuid: ^3.3.2
   ../../packages/wallet/extension:
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
@@ -1662,6 +1665,7 @@ importers:
       typescript: 4.2.4
       webextension-polyfill-ts: 0.25.0
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
@@ -10005,7 +10009,6 @@ packages:
     resolution:
       integrity: sha512-HygQCKUBSFl8wKQZBSemMywRWcEDNidvNbjGVyZu3nbZ8qq9ubiPoGLMdRDpfSrpkkm9BXYFkpKxxFX38o/76w==
   /dotenv/8.6.0:
-    dev: true
     engines:
       node: '>=10'
     resolution:
