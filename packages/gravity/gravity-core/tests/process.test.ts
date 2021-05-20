@@ -6,11 +6,11 @@ import processExists from 'process-exists';
 import psTree from 'pstree.remy';
 import { promisify } from 'util';
 
-import { Orchestrator } from '../src/orchestrator';
+import { Orchestrator } from '../src';
 
 const BOT_NUMBER = 5;
 
-jest.setTimeout(100 * 1000);
+jest.setTimeout(100_000);
 
 // TODO(egorgripasov): Run multiple test files simultaneously.
 test.skip('bot resource test', async () => {
@@ -24,13 +24,13 @@ test.skip('bot resource test', async () => {
     );
   }
 
-  const childs = await promisify(psTree)(orchestrator.botFactoryPid);
+  const children = await promisify(psTree)(orchestrator.botFactoryPid);
 
   for await (const agent of agents) {
     await agent.stop();
   }
 
-  const exists = await processExists.all(childs);
+  const exists = await processExists.all(children);
   expect(Array.from(exists.values()).includes(true)).toBeFalsy();
 
   await orchestrator.destroy();

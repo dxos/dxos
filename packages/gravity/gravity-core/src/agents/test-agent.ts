@@ -10,9 +10,12 @@ import { createId } from '@dxos/crypto';
 import { MessengerModel } from '@dxos/messenger-model';
 
 export const ITEM_TYPE = 'dxos.org/type/testing/object';
+export const APPEND_COMMAND = 'append';
+export const GET_ALL_COMMAND = 'get-all';
 
 const log = debug('dxos:testing:test-agent');
 
+// TODO(burdon): Comment.
 class TestAgent extends Bot {
   /** @type {Item<MessengerModel>} */
   _item:any;
@@ -33,20 +36,26 @@ class TestAgent extends Bot {
   }
 
   async botCommandHandler (command:any) {
-    log('Received command', JSON.stringify(command));
+    log('Received command:', JSON.stringify(command));
     await waitForCondition(() => !!this._item);
     switch (command.type) {
-      case 'append': {
-        await this._item.model.sendMessage({ id: createId(), text: 'Hello world!', sender: 'Sender', timestamp: new Date().toString() });
+      case APPEND_COMMAND: {
+        await this._item.model.sendMessage({
+          id: createId(), text: 'Hello world!', sender: 'Sender', timestamp: new Date().toString()
+        });
         break;
       }
-      case 'get-all': {
+
+      case GET_ALL_COMMAND: {
         return this._item.model.messages;
       }
+
       default:
         break;
     }
   }
 }
 
-new TestAgent(getConfig(), {}).start();
+if (!module.parent) {
+  new TestAgent(getConfig(), {}).start();
+}

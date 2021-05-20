@@ -34,14 +34,12 @@ export const BROWSER_ENV = 'browser';
 // Important: this regulates how often bot gets downloaded from ipfs.
 const testTime = Date.now();
 const getBotIdentifiers = (botPath: string, env: string | undefined) => {
-  const name = `wrn://dxos/bot/${env}/${path.basename(botPath)}`;
+  const name = `wrn://dxos/bot/${env}/${path.basename(botPath)}`; // TODO(burdon): dxn.
   const id = sha256(`${name}${testTime}`);
-  return {
-    id,
-    name
-  };
+  return { id, name };
 };
 
+// TODO(burdon): Comment.
 export class Orchestrator {
   static async create (options: {local: boolean}) {
     const config = await getTestConfig();

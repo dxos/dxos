@@ -6,7 +6,7 @@ import { exec } from 'child_process';
 import fs from 'fs-extra';
 import path from 'path';
 
-import { FACTORY_OUT_DIR, FACTORY_BOT_DIR, OVERRIDE_CONFIG } from './config';
+import { FACTORY_OUT_DIR, FACTORY_BOT_DIR, OVERRIDE_CONFIG } from '../config';
 
 const signalUrl = new URL(OVERRIDE_CONFIG.DX_SIGNAL_ENDPOINT);
 

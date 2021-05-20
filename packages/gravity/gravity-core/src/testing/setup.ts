@@ -4,7 +4,7 @@
 
 import { spawn } from 'child_process';
 
-import { OVERRIDE_CONFIG } from './config';
+import { OVERRIDE_CONFIG } from '../config';
 
 const LOCAL = 'localhost';
 
@@ -15,7 +15,5 @@ const testSetup = async () => {
     spawn('npx', ['signal', '--port', signalUrl.port.toString()]);
   }
 };
-
-// DOWNLOAD CONFIG PROFILE into conf temp file
 
 export default testSetup;
