@@ -30,7 +30,8 @@ export const useGenerator = () => {
 
   const joinParty = async (invitation: string) => {
     const party = await client.echo.joinParty(
-      InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)), async () => Buffer.from('0000')
+      InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)),
+      async () => Buffer.from('0000')
     );
     await party.open();
 

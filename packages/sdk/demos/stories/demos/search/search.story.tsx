@@ -12,6 +12,8 @@ import { ONLINE_CONFIG } from '../../../src';
 import Home from './Home';
 import Main from './Main';
 
+const code = '0000';
+
 const Story = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
@@ -32,8 +34,9 @@ const Story = () => {
 
   const handleJoinParty = async (invitationCode: string) => {
     const party = await client.echo.joinParty(
-      InvitationDescriptor.fromQueryParameters(JSON.parse(invitationCode)), async () => Buffer.from('0000')
+      InvitationDescriptor.fromQueryParameters(JSON.parse(invitationCode)), async () => Buffer.from(code)
     );
+
     await party.open();
     setParty(party);
   };
@@ -41,7 +44,7 @@ const Story = () => {
   // TODO(burdon): Implement storybook router.
   if (party) {
     return (
-      <Main party={party} />
+      <Main party={party} code={code} />
     );
   }
 

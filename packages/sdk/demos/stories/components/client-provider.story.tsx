@@ -15,7 +15,7 @@ import { JsonTreeView } from '@dxos/react-ux';
 import { PartyCard } from '../../src';
 
 export default {
-  title: 'Demos/ClientInitializer',
+  title: 'Components/ClientInitializer',
   component: ClientInitializer
 };
 
