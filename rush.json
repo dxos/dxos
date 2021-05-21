@@ -670,8 +670,8 @@
     //
 
     {
-      "packageName": "@dxos/testing",
-      "projectFolder": "packages/gravity/testing"
+      "packageName": "@dxos/gravity-core",
+      "projectFolder": "packages/gravity/gravity-core"
     },
 
     //
