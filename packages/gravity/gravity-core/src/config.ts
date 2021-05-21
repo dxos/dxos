@@ -3,6 +3,7 @@
 //
 
 import crypto from 'crypto';
+import dotenv from 'dotenv';
 import download from 'download';
 import { existsSync, readFileSync, writeFileSync } from 'fs-extra';
 import yaml from 'js-yaml';
@@ -13,13 +14,12 @@ import { Config, mapFromKeyValues, mapToKeyValues } from '@dxos/config';
 
 import envmap from './env-map.json';
 
+dotenv.config();
+
 const PROFILE_PATH = path.join(tmpdir(), `${crypto.randomBytes(4).toString('hex')}.yml`);
 
 export const FACTORY_OUT_DIR = './out';
 export const FACTORY_BOT_DIR = '.bots';
-
-// TODO(burdon): Factor out.
-export const TEST_PROFILE = 'https://git.io/JUkhm';
 
 // Config to override.
 export const OVERRIDE_CONFIG = {
@@ -28,7 +28,8 @@ export const OVERRIDE_CONFIG = {
 
 export const getTestConfig = async () => {
   if (!existsSync(PROFILE_PATH)) {
-    writeFileSync(PROFILE_PATH, await download(TEST_PROFILE));
+    // TODO(egorgripasov): DX_PROFILE_URL.
+    writeFileSync(PROFILE_PATH, await download(process.env.WIRE_PROFILE_URL));
   }
 
   const profileConfig = yaml.load(readFileSync(PROFILE_PATH));

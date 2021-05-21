@@ -10,6 +10,8 @@ import { createId } from '@dxos/crypto';
 import { MessengerModel } from '@dxos/messenger-model';
 
 export const ITEM_TYPE = 'dxos.org/type/testing/object';
+export const APPEND_COMMAND = 'append';
+export const GET_ALL_COMMAND = 'get-all';
 
 const log = debug('dxos:testing:test-agent');
 
@@ -37,14 +39,14 @@ class TestAgent extends Bot {
     log('Received command:', JSON.stringify(command));
     await waitForCondition(() => !!this._item);
     switch (command.type) {
-      case 'append': { // TODO(burdon): Const.
+      case APPEND_COMMAND: {
         await this._item.model.sendMessage({
           id: createId(), text: 'Hello world!', sender: 'Sender', timestamp: new Date().toString()
         });
         break;
       }
 
-      case 'get-all': { // TODO(burdon): Const.
+      case GET_ALL_COMMAND: {
         return this._item.model.messages;
       }
 
@@ -54,5 +56,6 @@ class TestAgent extends Bot {
   }
 }
 
-// TODO(burdon): Files should not have side effects of being imported.
-new TestAgent(getConfig(), {}).start();
+if (!module.parent) {
+  new TestAgent(getConfig(), {}).start();
+}

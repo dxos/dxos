@@ -5,6 +5,7 @@
 import { MessengerModel } from '@dxos/messenger-model';
 
 import { Agent, BROWSER_ENV, /* NODE_ENV, */ Orchestrator } from '../src';
+import { APPEND_COMMAND, GET_ALL_COMMAND } from '../src/agents/test-agent';
 
 jest.setTimeout(100_000);
 
@@ -25,14 +26,14 @@ test.skip('multiple agents', async () => {
 
   await Promise.all(agents.map(async agent => {
     for (let i = 0; i < numMessages; i++) {
-      await agent.sendCommand({ type: 'append' });
+      await agent.sendCommand({ type: APPEND_COMMAND });
     }
   }));
 
   await Promise.all(agents.map(agent => new Promise<void>((resolve, reject) => {
     const timeoutId = setTimeout(async () => {
       try {
-        const messages = await agent.sendCommand({ type: 'get-all' });
+        const messages = await agent.sendCommand({ type: GET_ALL_COMMAND });
         if (messages.length === numAgents * numMessages) {
           clearTimeout(timeoutId);
           resolve();
