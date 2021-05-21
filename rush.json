@@ -517,8 +517,8 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/demo",
-      "projectFolder": "packages/sdk/demo"
+      "packageName": "@dxos/demos",
+      "projectFolder": "packages/sdk/demos"
     },
 
     //

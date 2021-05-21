@@ -76,10 +76,11 @@ const VIEW_GRAPH = 4;
 
 interface MainProps {
   party: Party
+  code: string
 }
 
 // TODO(burdon): Factor out.
-const Main = ({ party }: MainProps) => {
+const Main = ({ party, code }: MainProps) => {
   const classes = useStyles();
 
   const [adapter] = useState(createAdapter(party.database));
@@ -123,7 +124,7 @@ const Main = ({ party }: MainProps) => {
 
   const handleCopyInvite = async () => {
     const invitation = await party.createInvitation({
-      secretProvider: async () => Buffer.from('0000'),
+      secretProvider: async () => Buffer.from(code),
       secretValidator: async () => true
     });
 

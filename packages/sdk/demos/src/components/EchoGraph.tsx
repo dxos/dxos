@@ -173,7 +173,7 @@ const EchoGraph = (
   const [{ nodeProjector, linkProjector }] = useState({
     nodeProjector: new NodeProjector({
       node: {
-        radius: 16,
+        radius: 8,
         showLabels: true,
         // TODO(burdon): Properties on node directly (e.g., radius, class). Arrows use radius.
         propertyAdapter: ({ type }: {type: 'database' | 'party' | 'item'}) => ({
