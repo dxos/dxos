@@ -13,14 +13,14 @@ const f = ts.factory;
 
 function getFieldType (field: protobufjs.Field, subs: SubstitutionsMap): ts.TypeNode {
   if (field.repeated) {
-    return f.createArrayTypeNode(getScalarType(field, subs));
+    return f.createArrayTypeNode(getScalarFieldType(field, subs));
   } else if (field.map && field instanceof protobufjs.MapField) {
     return f.createTypeReferenceNode('Partial', [f.createTypeReferenceNode('Record', [
       f.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
-      getScalarType(field, subs)
+      getScalarFieldType(field, subs)
     ])]);
   } else {
-    return getScalarType(field, subs);
+    return getScalarFieldType(field, subs);
   }
 }
 
@@ -37,8 +37,8 @@ function createSubstitutionsReference (type: string): ts.TypeNode {
   );
 }
 
-function getScalarType (field: protobufjs.Field, subs: SubstitutionsMap): ts.TypeNode {
-  switch (field.type) {
+function getPrimitiveType(type: string): ts.TypeNode {
+  switch (type) {
     case 'double': return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
     case 'float': return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
     case 'int32': return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
@@ -54,20 +54,34 @@ function getScalarType (field: protobufjs.Field, subs: SubstitutionsMap): ts.Typ
     case 'bool': return f.createKeywordTypeNode(ts.SyntaxKind.BooleanKeyword);
     case 'string': return f.createKeywordTypeNode(ts.SyntaxKind.StringKeyword);
     case 'bytes': return f.createTypeReferenceNode('Uint8Array');
-    default:
-      if (!field.resolved) {
-        field.resolve();
-      }
-      if (field.resolvedType && subs[field.resolvedType.fullName.slice(1)]) {
-        return createSubstitutionsReference(field.resolvedType.fullName.slice(1));
-      }
-      if (field.resolvedType) {
-        assert(field.message);
-        return getTypeReference(field.resolvedType, field.message);
-      }
-
-      return f.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword);
+    default: return f.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword);
   }
+}
+
+type PbType = protobufjs.Enum | protobufjs.Type | string 
+
+function getScalarType(type: PbType, containingObject: protobufjs.ReflectionObject, subs: SubstitutionsMap) {
+  if(typeof type === 'string') {
+    return getPrimitiveType(type)
+  } else if (subs[type.fullName.slice(1)]) {
+    return createSubstitutionsReference(type.fullName.slice(1));
+  } else {
+    return getTypeReference(type, containingObject);
+  }
+}
+
+function getScalarFieldType (field: protobufjs.Field, subs: SubstitutionsMap): ts.TypeNode {
+  assert(field.message)
+  field.resolve()
+  return getScalarType(field.resolvedType ?? field.type, field.message, subs)
+}
+
+function getRpcTypes(method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap): [ts.TypeNode, ts.TypeNode] {
+  method.resolve()
+  return [
+    getScalarType(method.resolvedRequestType ?? method.requestType, service, subs),
+    getScalarType(method.resolvedResponseType ?? method.responseType, service, subs),
+  ]  
 }
 
 function getTypeReference (to: protobufjs.Type | protobufjs.Enum, from?: protobufjs.ReflectionObject) {
@@ -111,9 +125,11 @@ function createEnumDeclaration (type: protobufjs.Enum) {
   );
 }
 
-function createRpcMethodType(method: protobufjs.Method, subs: SubstitutionsMap) {
+function createRpcMethodType(method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap) {
   assert(!method.requestStream, 'Streaming RPC requests are not supported.')
   assert(!method.responseStream, 'Streaming RPC responses are not supported.')
+
+  const [requestType, responseType] = getRpcTypes(method, service, subs)
 
   return f.createFunctionTypeNode(
     undefined,
@@ -123,11 +139,11 @@ function createRpcMethodType(method: protobufjs.Method, subs: SubstitutionsMap) 
       undefined,
       'request',
       undefined,
-      f.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword) // TODO: Use actual type.
+      requestType,
     )],
     f.createTypeReferenceNode(
       f.createIdentifier('Promise'),
-      [f.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword)], // TODO: Use actual type.
+      [responseType],
     )
   )
 }
@@ -143,7 +159,7 @@ function createServiceDeclaration(type: protobufjs.Service, subs: SubstitutionsM
       undefined,
       method.name,
       undefined,
-      createRpcMethodType(method, subs),
+      createRpcMethodType(method, type, subs),
     ))
   );
 }
