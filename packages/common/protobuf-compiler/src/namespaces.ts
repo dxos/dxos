@@ -84,7 +84,7 @@ export function splitSchemaIntoNamespaces (root: pb.Namespace): Map<string, pb.R
   const namespace = normalizeFullyQualifiedName(root.fullName);
 
   for (const obj of root.nestedArray) {
-    if (obj instanceof pb.Enum || obj instanceof pb.Type) {
+    if (obj instanceof pb.Enum || obj instanceof pb.Type || obj instanceof pb.Service) {
       if (!res.has(namespace)) {
         res.set(namespace, []);
       }

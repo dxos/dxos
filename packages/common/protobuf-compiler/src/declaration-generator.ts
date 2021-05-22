@@ -111,10 +111,49 @@ function createEnumDeclaration (type: protobufjs.Enum) {
   );
 }
 
+function createRpcMethodType(method: protobufjs.Method, subs: SubstitutionsMap) {
+  assert(!method.requestStream, 'Streaming RPC requests are not supported.')
+  assert(!method.responseStream, 'Streaming RPC responses are not supported.')
+
+  return f.createFunctionTypeNode(
+    undefined,
+    [f.createParameterDeclaration(
+      undefined,
+      undefined,
+      undefined,
+      'request',
+      undefined,
+      f.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword) // TODO: Use actual type.
+    )],
+    f.createTypeReferenceNode(
+      f.createIdentifier('Promise'),
+      [f.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword)], // TODO: Use actual type.
+    )
+  )
+}
+
+function createServiceDeclaration(type: protobufjs.Service, subs: SubstitutionsMap) {
+  return f.createInterfaceDeclaration(
+    undefined,
+    [f.createToken(ts.SyntaxKind.ExportKeyword)],
+    type.name,
+    undefined,
+    undefined,
+    type.methodsArray.map(method => f.createPropertySignature(
+      undefined,
+      method.name,
+      undefined,
+      createRpcMethodType(method, subs),
+    ))
+  );
+}
+
 export function * createDeclarations (types: protobufjs.ReflectionObject[], subs: SubstitutionsMap): Generator<ts.Statement> {
   for (const obj of types) {
     if (obj instanceof protobufjs.Enum) {
       yield createEnumDeclaration(obj);
+    } else if(obj instanceof protobufjs.Service) {
+      yield createServiceDeclaration(obj, subs)
     } else if (obj instanceof protobufjs.Type) {
       yield createMessageDeclaration(obj, subs);
 

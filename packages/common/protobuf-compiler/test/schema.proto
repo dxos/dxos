@@ -82,3 +82,7 @@ message TaskList {
 message SubstitutedByInterface {
   string foo = 1;
 }
+
+service TestService {
+  rpc TestRpc(TaskList) returns (Scalars);
+}
