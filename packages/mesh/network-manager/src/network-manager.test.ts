@@ -5,18 +5,20 @@
 import debug from 'debug';
 import { expect, mockFn } from 'earljs';
 import waitForExpect from 'wait-for-expect';
+import * as fc from 'fast-check'
 
 import { Event, latch, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 import { createBroker } from '@dxos/signal';
-import { range, randomInt } from '@dxos/util';
+import { range, randomInt, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from './network-manager';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
 import { FullyConnectedTopology } from './topology/fully-connected-topology';
 import { StarTopology } from './topology/star-topology';
 import { Topology } from './topology/topology';
+import { Presence } from '../../protocol-plugin-presence/dist/src';
 
 const log = debug('dxos:network-manager:test');
 
@@ -253,3 +255,48 @@ describe('In-memory network manager', () => {
     }));
   });
 });
+
+test('property-based test', async () => {
+  interface Model {
+    peers: ComplexSet<PublicKey>
+    topics: ComplexMap<PublicKey, PublicKey[]>
+  }
+  interface Real {
+    peers: {
+      peerId: PublicKey
+      networkManager: NetworkManager
+      connections: ComplexMap<PublicKey, Presence>
+    }[]
+  }
+
+  class CreatePeerCommand implements fc.Command<Model, Real> {
+    constructor(readonly peerId: PublicKey) {}
+
+    check = (m: Model) => !m.peers.has(this.peerId);
+    
+    run(m: Model, r: Real) {
+      const networkManager = new NetworkManager();
+
+      r.peers.push({
+        peerId: this.peerId,
+        networkManager,
+        connections: new ComplexMap(x => x.toHex())
+      })
+    }
+  }
+
+  class RemovePeerCommand implements fc.Command<Model, Real> {
+    constructor(readonly peerId: PublicKey) {}
+
+    check = (m: Model) => m.peers.has(this.peerId);
+    
+    run(m: Model, r: Real) {
+      const networkManager = new NetworkManager();
+
+      r.peers.push({
+        networkManager,
+        connections: new ComplexMap(x => x.toHex())
+      })
+    }
+
+})
