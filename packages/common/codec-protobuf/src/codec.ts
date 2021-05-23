@@ -2,53 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import merge from 'lodash.merge';
-import protobufjs, { Root } from 'protobufjs';
+import protobufjs from 'protobufjs';
 
-import { Substitutions } from './common';
-import { BidirectionalMapingDescriptors, createMappingDescriptors, mapMessage } from './mapping';
-
-export class Schema<T> {
-  static fromJson<T extends Record<string, any>> (schema: any, substitutions: Substitutions = {}) {
-    const root = protobufjs.Root.fromJSON(schema);
-    return new Schema<T>(root, substitutions);
-  }
-
-  private readonly _mapping: BidirectionalMapingDescriptors;
-
-  constructor (
-    private _typesRoot: protobufjs.Root,
-    substitutions: Substitutions
-  ) {
-    this._mapping = createMappingDescriptors(substitutions);
-  }
-
-  getCodecForType<K extends keyof T & string> (typeName: K): Codec<T[K]> {
-    if (typeof typeName !== 'string') {
-      throw new TypeError('Expected `typeName` argument to be a string');
-    }
-    const type = this._typesRoot.lookupType(typeName);
-    return new Codec(type, this._mapping, this);
-  }
-
-  tryGetCodecForType (typeName: string): Codec {
-    if (typeof typeName !== 'string') {
-      throw new TypeError('Expected `typeName` argument to be a string');
-    }
-    const type = this._typesRoot.lookupType(typeName);
-    return new Codec(type, this._mapping, this);
-  }
-
-  /**
-   * Dynamically add new definitions to this schema.
-   */
-  addJson (schema: any) {
-    if (!schema.nested) {
-      throw new Error('Invalid schema: missing nested object');
-    }
-    this._typesRoot = Root.fromJSON(merge(this._typesRoot.toJSON(), schema));
-  }
-}
+import { BidirectionalMapingDescriptors, mapMessage } from './mapping';
+import type { Schema } from './schema'
 
 export class Codec<T = any> {
   constructor (

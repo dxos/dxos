@@ -161,3 +161,32 @@ export function createTypeDictionary (root: protobufjs.NamespaceBase) {
       ))
   );
 }
+
+function * getServices (root: protobufjs.NamespaceBase): Generator<protobufjs.Service> {
+  for (const obj of root.nestedArray) {
+    if (obj instanceof protobufjs.Service) {
+      yield obj;
+      yield * getServices(obj);
+    } else if (obj instanceof protobufjs.Namespace) {
+      yield * getServices(obj);
+    }
+  }
+}
+
+export function createServicesDictionary (root: protobufjs.NamespaceBase) {
+  return f.createInterfaceDeclaration(
+    undefined,
+    [f.createToken(ts.SyntaxKind.ExportKeyword)],
+    'SERVICES',
+    undefined,
+    undefined,
+    Array.from(getServices(root))
+      .sort((b, a) => b.fullName.localeCompare(a.fullName))
+      .map(type => f.createPropertySignature(
+        undefined,
+        f.createStringLiteral(normalizeFullyQualifiedName(type.fullName)),
+        undefined,
+        getTypeReference(type)
+      ))
+  );
+}

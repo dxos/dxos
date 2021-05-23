@@ -7,7 +7,7 @@ import { dirname, join } from 'path';
 import pb from 'protobufjs';
 import * as ts from 'typescript';
 
-import { createDeclarations, createTypeDictionary } from './generator/declaration-generator';
+import {createDeclarations, createServicesDictionary, createTypeDictionary} from './generator/declaration-generator';
 import { createSerializerDefinition } from './generator/serializer-definition-generator';
 import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
@@ -99,6 +99,7 @@ function createIndexSourceFile (substitutionsModule: ModuleSpecifier | undefined
       ...otherNamespaceImports,
       ...(substitutionsImport ? [substitutionsImport] : []),
       createTypeDictionary(root),
+      createServicesDictionary(root),
       ...schemaExports
     ],
     ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),

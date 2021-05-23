@@ -49,7 +49,7 @@ export function createSerializerDefinition (substitutionsModule: ModuleSpecifier
         undefined,
         f.createCallExpression(
           f.createPropertyAccessExpression(schemaIdentifier, 'fromJson'),
-          [f.createTypeReferenceNode('TYPES')],
+          [f.createTypeReferenceNode('TYPES'), f.createTypeReferenceNode('SERVICES')],
           substitutionsModule ? [schemaJsonIdentifier, substitutionsIdentifier] : [schemaJsonIdentifier]
         )
       )

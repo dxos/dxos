@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Schema } from './codec';
+import type { Schema } from './schema';
 
 export interface SubstitutionDescriptor<T> {
   encode: (value: T, schema: Schema<any>) => any,
