@@ -37,7 +37,7 @@ function createSubstitutionsReference (type: string): ts.TypeNode {
   );
 }
 
-function getPrimitiveType(type: string): ts.TypeNode {
+function getPrimitiveType (type: string): ts.TypeNode {
   switch (type) {
     case 'double': return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
     case 'float': return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
@@ -58,11 +58,11 @@ function getPrimitiveType(type: string): ts.TypeNode {
   }
 }
 
-type PbType = protobufjs.Enum | protobufjs.Type | string 
+type PbType = protobufjs.Enum | protobufjs.Type | string
 
-function getScalarType(type: PbType, containingObject: protobufjs.ReflectionObject, subs: SubstitutionsMap) {
-  if(typeof type === 'string') {
-    return getPrimitiveType(type)
+function getScalarType (type: PbType, containingObject: protobufjs.ReflectionObject, subs: SubstitutionsMap) {
+  if (typeof type === 'string') {
+    return getPrimitiveType(type);
   } else if (subs[type.fullName.slice(1)]) {
     return createSubstitutionsReference(type.fullName.slice(1));
   } else {
@@ -71,17 +71,17 @@ function getScalarType(type: PbType, containingObject: protobufjs.ReflectionObje
 }
 
 function getScalarFieldType (field: protobufjs.Field, subs: SubstitutionsMap): ts.TypeNode {
-  assert(field.message)
-  field.resolve()
-  return getScalarType(field.resolvedType ?? field.type, field.message, subs)
+  assert(field.message);
+  field.resolve();
+  return getScalarType(field.resolvedType ?? field.type, field.message, subs);
 }
 
-function getRpcTypes(method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap): [ts.TypeNode, ts.TypeNode] {
-  method.resolve()
+function getRpcTypes (method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap): [ts.TypeNode, ts.TypeNode] {
+  method.resolve();
   return [
     getScalarType(method.resolvedRequestType ?? method.requestType, service, subs),
-    getScalarType(method.resolvedResponseType ?? method.responseType, service, subs),
-  ]  
+    getScalarType(method.resolvedResponseType ?? method.responseType, service, subs)
+  ];
 }
 
 function getTypeReference (to: protobufjs.Type | protobufjs.Enum, from?: protobufjs.ReflectionObject) {
@@ -125,11 +125,11 @@ function createEnumDeclaration (type: protobufjs.Enum) {
   );
 }
 
-function createRpcMethodType(method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap) {
-  assert(!method.requestStream, 'Streaming RPC requests are not supported.')
-  assert(!method.responseStream, 'Streaming RPC responses are not supported.')
+function createRpcMethodType (method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap) {
+  assert(!method.requestStream, 'Streaming RPC requests are not supported.');
+  assert(!method.responseStream, 'Streaming RPC responses are not supported.');
 
-  const [requestType, responseType] = getRpcTypes(method, service, subs)
+  const [requestType, responseType] = getRpcTypes(method, service, subs);
 
   return f.createFunctionTypeNode(
     undefined,
@@ -139,16 +139,16 @@ function createRpcMethodType(method: protobufjs.Method, service: protobufjs.Serv
       undefined,
       'request',
       undefined,
-      requestType,
+      requestType
     )],
     f.createTypeReferenceNode(
       f.createIdentifier('Promise'),
-      [responseType],
+      [responseType]
     )
-  )
+  );
 }
 
-function createServiceDeclaration(type: protobufjs.Service, subs: SubstitutionsMap) {
+function createServiceDeclaration (type: protobufjs.Service, subs: SubstitutionsMap) {
   return f.createInterfaceDeclaration(
     undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
@@ -159,7 +159,7 @@ function createServiceDeclaration(type: protobufjs.Service, subs: SubstitutionsM
       undefined,
       method.name,
       undefined,
-      createRpcMethodType(method, type, subs),
+      createRpcMethodType(method, type, subs)
     ))
   );
 }
@@ -168,8 +168,8 @@ export function * createDeclarations (types: protobufjs.ReflectionObject[], subs
   for (const obj of types) {
     if (obj instanceof protobufjs.Enum) {
       yield createEnumDeclaration(obj);
-    } else if(obj instanceof protobufjs.Service) {
-      yield createServiceDeclaration(obj, subs)
+    } else if (obj instanceof protobufjs.Service) {
+      yield createServiceDeclaration(obj, subs);
     } else if (obj instanceof protobufjs.Type) {
       yield createMessageDeclaration(obj, subs);
 
