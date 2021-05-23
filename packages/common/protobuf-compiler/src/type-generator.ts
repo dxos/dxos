@@ -49,15 +49,13 @@ export async function compileSchema (substitutionsModule: ModuleSpecifier | unde
   writeFileSync(join(outDirPath, 'index.ts'), source);
 }
 
-function createSubstitutionsImport (substitutionsModule: ModuleSpecifier | undefined, context: string) {
-  const substitutionsIdentifier = ts.factory.createIdentifier('substitutions');
-  const substitutionsImport = substitutionsModule && ts.factory.createImportDeclaration(
+function createSubstitutionsImport (substitutionsModule: ModuleSpecifier, context: string) {
+  return substitutionsModule && ts.factory.createImportDeclaration(
     [],
     [],
-    ts.factory.createImportClause(false, substitutionsIdentifier, undefined),
+    ts.factory.createImportClause(false, ts.factory.createIdentifier('substitutions'), undefined),
     ts.factory.createStringLiteral(substitutionsModule.importSpecifier(context))
   );
-  return substitutionsImport;
 }
 
 function createNamespaceSourceFile (
@@ -71,7 +69,7 @@ function createNamespaceSourceFile (
   const outFile = join(outDir, getFileNameForNamespace(namespace));
   const declarations: ts.Statement[] = Array.from(createDeclarations(types, substitutions));
 
-  const substitutionsImport = createSubstitutionsImport(substitutionsModule, dirname(outFile));
+  const substitutionsImport = substitutionsModule && createSubstitutionsImport(substitutionsModule, dirname(outFile));
 
   const otherNamespaceImports = createNamespaceImports(otherNamespaces.filter(ns => ns !== namespace), outDir, dirname(outFile));
 
@@ -92,7 +90,7 @@ function createIndexSourceFile (substitutionsModule: ModuleSpecifier | undefined
     exports: schemaExports
   } = createSerializerDefinition(substitutionsModule, root, outDirPath);
 
-  const substitutionsImport = createSubstitutionsImport(substitutionsModule, outDirPath);
+  const substitutionsImport = substitutionsModule && createSubstitutionsImport(substitutionsModule, outDirPath);
   const otherNamespaceImports = createNamespaceImports(namespaces, outDirPath, outDirPath);
 
   return ts.factory.createSourceFile(
