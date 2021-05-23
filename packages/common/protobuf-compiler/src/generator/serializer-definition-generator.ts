@@ -5,7 +5,7 @@
 import protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
-import { CODEC_MODULE, ModuleSpecifier } from './module-specifier';
+import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
 
 export function createSerializerDefinition (substitutionsModule: ModuleSpecifier | undefined, root: protobufjs.Root, outFileDir: string): { imports: ts.Statement[], exports: ts.Statement[] } {
   const schemaIdentifier = ts.factory.createIdentifier('Schema');
