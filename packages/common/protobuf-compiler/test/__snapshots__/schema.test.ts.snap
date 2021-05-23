@@ -106,11 +106,11 @@ export interface Any {
 
 index.ts:
 import { Schema } from \\"@dxos/codec-protobuf\\";
-import substitutions from \\"../substitutions\\";
 import * as dxos_test from \\"./dxos/test\\";
 import * as dxos_test_another from \\"./dxos/test/another\\";
 import * as dxos_test_any from \\"./dxos/test/any\\";
 import * as google_protobuf from \\"./google/protobuf\\";
+import substitutions from \\"../substitutions\\";
 export interface TYPES {
     \\"dxos.test.another.AnotherMessage\\": dxos_test_another.AnotherMessage;
     \\"dxos.test.Any\\": dxos_test.Any;

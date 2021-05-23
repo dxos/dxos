@@ -6,9 +6,9 @@ import assert from 'assert';
 import * as protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
-import {normalizeFullyQualifiedName} from '../namespaces';
-import {SubstitutionsMap} from '../parser/substitutions-parser';
-import {types, getTypeReference} from "./types";
+import { normalizeFullyQualifiedName } from '../namespaces';
+import { SubstitutionsMap } from '../parser/substitutions-parser';
+import { types, getTypeReference } from './types';
 
 const f = ts.factory;
 
