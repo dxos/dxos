@@ -30,13 +30,16 @@
     "debug": "^4.1.1",
     "ngraph.graph": "^19.0.1",
     "p-limit": "^3.0.2",
-    "queue-microtask": "^1.1.2"
+    "queue-microtask": "^1.1.2",
+    "@types/node": "^14.0.9",
+    "@types/debug": "^4.1.1"
   },
   "devDependencies": {
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "@types/jest": "^26.0.7"
   },
   "publishConfig": {
     "access": "restricted"
