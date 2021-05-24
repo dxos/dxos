@@ -275,7 +275,7 @@ test('property-based test', async () => {
     await waitForExpect(() => {
       r.peers.forEach(peer => {
         if (peer.presence) {
-          expect(Array.from(m.joinedPeers.values()).every(peerId => peer.presence!.peers.some(x => PublicKey.equals(peerId, x)))).toEqual(true)
+          expect(Array.from(m.joinedPeers.values()).every(peerId => peer.presence!.peers.some(x => PublicKey.equals(peerId, x)))).toEqual(true);
         }
       });
     }, 1_000);
