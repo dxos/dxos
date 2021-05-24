@@ -258,7 +258,7 @@ describe('In-memory network manager', () => {
   });
 });
 
-test.skip('property-based test', async () => {
+test('property-based test', async () => {
   interface Model {
     topic: PublicKey
     peers: ComplexSet<PublicKey>
@@ -275,8 +275,7 @@ test.skip('property-based test', async () => {
     await waitForExpect(() => {
       r.peers.forEach(peer => {
         if (peer.presence) {
-          expect(peer.presence.peers.map(x => x.toString('hex')).sort())
-            .toEqual(Array.from(m.joinedPeers.values()).map(x => x.toHex()).sort());
+          expect(Array.from(m.joinedPeers.values()).every(peerId => peer.presence!.peers.some(x => PublicKey.equals(peerId, x)))).toEqual(true)
         }
       });
     }, 1_000);
@@ -383,7 +382,7 @@ test.skip('property-based test', async () => {
     toString = () => `LeaveTopic(peerId=${this.peerId})`;
   }
 
-  const peerIds = range(2).map(() => PublicKey.random());
+  const peerIds = range(10).map(() => PublicKey.random());
 
   const aPeerId = fc.constantFrom(...peerIds);
 
@@ -395,7 +394,7 @@ test.skip('property-based test', async () => {
   ];
 
   await fc.assert(
-    fc.asyncProperty(fc.commands(allCommands, { maxCommands: 15 }), async cmds => {
+    fc.asyncProperty(fc.commands(allCommands, { maxCommands: 30 }), async cmds => {
       const s: ModelRunSetup<Model, Real> = () => ({
         model: {
           topic: PublicKey.random(),
