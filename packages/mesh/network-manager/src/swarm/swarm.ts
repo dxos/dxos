@@ -7,6 +7,7 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { discoveryKey, PublicKey } from '@dxos/crypto';
+import { ErrorStream } from '@dxos/debug';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
@@ -47,6 +48,8 @@ export class Swarm {
    * Connection is established to a new peer.
    */
   readonly connected = new Event<PublicKey>();
+
+  readonly errors = new ErrorStream();
 
   constructor (
     private readonly _topic: PublicKey,
@@ -101,8 +104,7 @@ export class Swarm {
         log(`[${this._ownPeerId}] Closing local connection and accepting remote peer's offer.`);
         // Close our connection and accept remote peer's connection.
         await this._closeConnection(remoteId).catch(err => {
-          console.error(err);
-          // TODO(marik-d): Error handling.
+          this.errors.raise(err);
         });
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
@@ -114,7 +116,11 @@ export class Swarm {
     if (await this._topology.onOffer(remoteId)) {
       if (!this._connections.has(remoteId)) { // Connection might have been already established.
         const connection = this._createConnection(false, message.id, message.sessionId);
-        connection.connect();
+        try {
+          connection.connect();
+        } catch (err) {
+          this.errors.raise(err);
+        }
         accept = true;
       }
     }
@@ -163,8 +169,7 @@ export class Swarm {
         try {
           await this._closeConnection(peer);
         } catch (err) {
-          console.error('Error closing connection');
-          console.error(err);
+          this.errors.raise(err);
         }
         this._topology.update();
       },
@@ -198,7 +203,11 @@ export class Swarm {
         }
 
         if (answer.accept) {
-          connection.connect();
+          try {
+            connection.connect();
+          } catch (err) {
+            this.errors.raise(err);
+          }
         } else {
           // If the peer rejected our connection remove it from the set of candidates.
           this._discoveredPeers.delete(remoteId);
@@ -206,8 +215,7 @@ export class Swarm {
         this._topology.update();
       })
       .catch(err => {
-        console.error('Offer error:');
-        console.error(err);
+        this.errors.raise(err);
       });
     this._topology.update();
   }

@@ -1006,6 +1006,7 @@ importers:
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
       earljs: 0.1.10
+      fast-check: 2.14.0
       ngraph.path: 1.3.1
       random-access-memory: 3.1.2
       wait-for-expect: 3.0.2
@@ -1028,6 +1029,7 @@ importers:
       assert: ^2.0.0
       debug: ^4.1.1
       earljs: ~0.1.10
+      fast-check: ~2.14.0
       isomorphic-ws: ^4.0.1
       nanomessage-rpc: ^3.0.0
       ngraph.path: ^1.3.1
@@ -1132,6 +1134,8 @@ importers:
       '@dxos/broadcast': 1.0.0-beta.11
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/protocol': link:../protocol
+      '@types/debug': 4.1.5
+      '@types/node': 14.14.45
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
       ngraph.graph: 19.1.0
@@ -1141,6 +1145,7 @@ importers:
       '@dxos/protobuf-compiler': link:../../common/protobuf-compiler
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/jest': 26.0.23
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/broadcast': ~1.0.0-beta.11
@@ -1149,6 +1154,9 @@ importers:
       '@dxos/protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/debug': ^4.1.1
+      '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
       ngraph.graph: ^19.0.1
@@ -10967,6 +10975,14 @@ packages:
     dev: false
     resolution:
       integrity: sha512-t8HYqkuE3YEqNcyWlAfh55479aTxO+GpYwvQvJppYqyBfSmRdNIhzY2m09FKN/MENTzq4wH6heHOIvsPyMAwvQ==
+  /fast-check/2.14.0:
+    dependencies:
+      pure-rand: 4.1.2
+    dev: true
+    engines:
+      node: '>=8.0.0'
+    resolution:
+      integrity: sha512-4hm0ioyEVCwgjBLBqriwAFYu3/yc7pNH9fBfvzi6JRWRs4R3mwZwrr/d4MHbY0fTBJ0Uakg4TaMAAQ8Cnt2+KQ==
   /fast-deep-equal/3.1.3:
     resolution:
       integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==
@@ -17035,6 +17051,10 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-23zNqRltZ1PPoK28uRefWJ/zKb5Jhnzbbwbpcna2o5+QMn17F0khq5s1bdH3vPlyj+J36pubccR8wiNA/VE0Vw==
+  /pure-rand/4.1.2:
+    dev: true
+    resolution:
+      integrity: sha512-uLzZpQWfroIqyFWmX/pl0OL2JHJdoU3dbh0dvZ25fChHFJJi56J5oQZhW6QgbT2Llwh1upki84LnTwlZvsungA==
   /qs/6.10.1:
     dependencies:
       side-channel: 1.0.4
