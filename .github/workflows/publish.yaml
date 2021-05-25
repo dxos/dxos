@@ -40,5 +40,5 @@ jobs:
         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
         npm install -g @microsoft/rush pnpm
 
-        cd packages/sdk/demo
+        cd packages/sdk/demos
         rushx chromatic-docs
