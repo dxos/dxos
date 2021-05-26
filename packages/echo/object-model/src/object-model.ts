@@ -135,7 +135,7 @@ export class ObjectModel extends Model<ObjectMutationSet> {
     log('processMessage', JSON.stringify({ meta, message }, jsonReplacer));
     MutationUtil.applyMutationSet(this._object, message);
 
-    // Clear pending updates as the actual state is newer now
+    // Clear pending updates as the actual state is newer now.
     // TODO(marik-d): What happens when multiple mutations are pending at once?
     this._pendingObject = undefined;
     return true;
