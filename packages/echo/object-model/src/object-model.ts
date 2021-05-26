@@ -36,11 +36,13 @@ export class ObjectModel extends Model<ObjectMutationSet> {
 
   private _object = {};
 
+  private _pendingObject: object | undefined;
+
   /**
    * Returns an immutable object.
    */
   toObject () {
-    return cloneDeep(this._object);
+    return this._pendingObject ? cloneDeep(this._pendingObject) : cloneDeep(this._object);
   }
 
   /**
@@ -50,12 +52,20 @@ export class ObjectModel extends Model<ObjectMutationSet> {
    * @param [defaultValue]
    */
   getProperty (path: string, defaultValue: any = undefined): any {
-    return cloneDeep(get(this._object, path, defaultValue));
+    return cloneDeep(get(this._pendingObject ?? this._object, path, defaultValue));
+  }
+
+  private async _makeMutation (mutation: ObjectMutationSet) {
+    this._pendingObject ??= { ...this._object };
+    MutationUtil.applyMutationSet(this._pendingObject, mutation);
+
+    const receipt = await this.write(mutation);
+    await receipt.waitToBeProcessed();
   }
 
   // TODO(burdon): Create builder pattern (replace static methods).
   async setProperty (key: string, value: any) {
-    const receipt = await this.write({
+    await this._makeMutation({
       mutations: [
         {
           operation: ObjectMutation.Operation.SET,
@@ -64,18 +74,16 @@ export class ObjectModel extends Model<ObjectMutationSet> {
         }
       ]
     });
-    await receipt.waitToBeProcessed();
   }
 
   async setProperties (properties: any) {
-    const receipt = await this.write({
+    await this._makeMutation({
       mutations: createMultiFieldMutationSet(properties)
     });
-    await receipt.waitToBeProcessed();
   }
 
   async addToSet (key: string, value: any) {
-    const receipt = await this.write({
+    await this._makeMutation({
       mutations: [
         {
           operation: ObjectMutation.Operation.SET_ADD,
@@ -84,11 +92,10 @@ export class ObjectModel extends Model<ObjectMutationSet> {
         }
       ]
     });
-    await receipt.waitToBeProcessed();
   }
 
   async removeFromSet (key: string, value: any) {
-    const receipt = await this.write({
+    await this._makeMutation({
       mutations: [
         {
           operation: ObjectMutation.Operation.SET_DELETE,
@@ -97,11 +104,10 @@ export class ObjectModel extends Model<ObjectMutationSet> {
         }
       ]
     });
-    await receipt.waitToBeProcessed();
   }
 
   async pushToArray (key: string, value: any) {
-    const receipt = await this.write({
+    await this._makeMutation({
       mutations: [
         {
           operation: ObjectMutation.Operation.ARRAY_PUSH,
@@ -110,7 +116,6 @@ export class ObjectModel extends Model<ObjectMutationSet> {
         }
       ]
     });
-    await receipt.waitToBeProcessed();
   }
 
   createSnapshot () {
@@ -129,6 +134,10 @@ export class ObjectModel extends Model<ObjectMutationSet> {
   async _processMessage (meta: FeedMeta, message: ObjectMutationSet) {
     log('processMessage', JSON.stringify({ meta, message }, jsonReplacer));
     MutationUtil.applyMutationSet(this._object, message);
+
+    // Clear pending updates as the actual state is newer now
+    // TODO(marik-d): What happens when multiple mutations are pending at once?
+    this._pendingObject = undefined;
     return true;
   }
 }
