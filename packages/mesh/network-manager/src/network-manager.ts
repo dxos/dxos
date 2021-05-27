@@ -11,11 +11,9 @@ import { Protocol } from '@dxos/protocol';
 import { ComplexMap } from '@dxos/util';
 
 import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager } from './signal';
-import { SwarmMapper } from './swarm-mapper';
-import { Swarm } from './swarm/swarm';
-import { Topology } from './topology/topology';
-import { inMemoryTransportFactory } from './transport/in-memory-transport';
-import { createWebRtcTransportFactory } from './transport/webrtc-transport';
+import { Swarm, SwarmMapper } from './swarm';
+import { Topology } from './topology';
+import { createWebRtcTransportFactory, inMemoryTransportFactory } from './transport';
 
 export type ProtocolProvider = (opts: { channel: Buffer }) => Protocol;
 

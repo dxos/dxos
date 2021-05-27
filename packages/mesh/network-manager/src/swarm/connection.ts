@@ -11,7 +11,7 @@ import { ErrorStream } from '@dxos/debug';
 import { Protocol } from '@dxos/protocol';
 
 import { SignalApi } from '../signal';
-import { Transport, TransportFactory } from '../transport/transport';
+import { Transport, TransportFactory } from '../transport';
 
 const log = debug('dxos:network-manager:swarm:connection');
 

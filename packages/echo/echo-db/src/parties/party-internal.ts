@@ -51,10 +51,7 @@ export interface PartyOptions {
   snapshotInterval?: number;
 }
 
-/**
- * A Party represents a shared dataset containing queryable Items that are constructed from an ordered stream
- * of mutations.
- */
+// TODO(burdon): Rename PartyImpl
 export class PartyInternal {
   public readonly update = new Event<void>();
 
@@ -137,7 +134,7 @@ export class PartyInternal {
     }
 
     const feed = this._feedStore.queryWritableFeed(this._partyKey);
-    assert(feed, 'No writable feed.');
+    assert(feed, `Missing feed for: ${String(this._partyKey)}`);
 
     this._timeframeClock = new TimeframeClock(this._initialTimeframe);
 
@@ -148,7 +145,7 @@ export class PartyInternal {
       }
     }
 
-    // TODO(burdon): Close.
+    // TODO(burdon): Close on clean-up.
     const iterator = await this._feedStore.createIterator(this._partyKey,
       createMessageSelector(this._partyProcessor, this._timeframeClock), this._initialTimeframe);
 
@@ -163,16 +160,18 @@ export class PartyInternal {
       this._networkManager
     );
 
-    assert(this._identityManager.deviceKey, 'No device key.');
+    assert(this._identityManager.deviceKey, 'Missing device key.');
+
+    // Network/swarm.
     this._protocol = new PartyProtocol(
-      this._identityManager,
+      this._partyKey,
       this._networkManager,
       this._feedStore,
-      this._partyKey,
       this._partyProcessor.getActiveFeedSet(),
+      this._invitationManager,
+      this._identityManager,
       this._createCredentialsProvider(this._partyKey, PublicKey.from(feed!.key)),
-      this._partyProcessor.authenticator,
-      this._invitationManager
+      this._partyProcessor.authenticator
     );
 
     // TODO(burdon): Support read-only parties.

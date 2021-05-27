@@ -19,6 +19,7 @@ const log = debug('dxos:network-manager:protocol-factory');
  * @param {[plugin]} plugins array of Protocol plugin objects to add to created Protocol objects
  * @param {function() : Buffer[]} getTopics retrieve a list of known topic keys to encrypt by public key.
  * @return {ProtocolProvider}
+ * @deprecated
  */
 // TODO(dboreham): Deprecate, replace with protocol provider factory functions.
 export const protocolFactory = ({ session = {}, plugins = [], getTopics }) => {

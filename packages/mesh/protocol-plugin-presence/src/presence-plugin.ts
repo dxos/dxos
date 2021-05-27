@@ -31,21 +31,23 @@ interface GraphNode {
 }
 
 /**
- * Presence.
+ * Presence protocol plugin.
  */
-export class Presence extends EventEmitter {
-  private _peerId: Buffer;
-  private _peerTimeout: number;
+export class PresencePlugin extends EventEmitter {
+  static EXTENSION_NAME = 'dxos.protocol.presence';
+
+  private readonly _peerId: Buffer;
+  private readonly _peerTimeout: number;
+  private readonly _limit: any;
+
   private _codec: Codec<Alive>;
   private _neighbors!: Map<string, any>;
   private _metadata: any;
-  private _limit: any;
   private _graph!: Graph<GraphNode, any> & EventedType;
   private _scheduler: any;
   private _broadcast: any;
+
   public emit: any;
-  public peerTimeout: any;
-  static EXTENSION_NAME = 'dxos.protocol.presence';
 
   /**
    * @constructor
@@ -107,7 +109,7 @@ export class Presence extends EventEmitter {
   createExtension () {
     this.start();
 
-    return new Extension(Presence.EXTENSION_NAME)
+    return new Extension(PresencePlugin.EXTENSION_NAME)
       .setInitHandler(async (protocol) => this._addPeer(protocol))
       .setMessageHandler(async (protocol, chunk) => this._peerMessageHandler(protocol, chunk))
       .setCloseHandler(async (protocol) => this._removePeer(protocol));
@@ -179,7 +181,7 @@ export class Presence extends EventEmitter {
         });
       },
       send: async (packet: any, { protocol }: { protocol: Protocol}) => {
-        const presence = protocol.getExtension(Presence.EXTENSION_NAME);
+        const presence = protocol.getExtension(PresencePlugin.EXTENSION_NAME);
         assert(presence);
         await presence.send(packet, { oneway: true });
       },

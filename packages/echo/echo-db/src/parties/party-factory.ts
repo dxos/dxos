@@ -212,6 +212,7 @@ export class PartyFactory {
       await invitationClaimer.destroy();
     }
 
+    // TODO(burdon): Factor out.
     const initiator = new GreetingInitiator(
       this._networkManager,
       this._identityManager,
