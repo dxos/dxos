@@ -8,17 +8,13 @@ import { EventEmitter } from 'events';
 
 import { PublicKey, PublicKeyLike, discoveryKey } from '@dxos/crypto';
 
-import { isIdentityMessage } from '../identity/identity-message';
-import { IdentityMessageProcessor } from '../identity/identity-message-processor';
-import { Keyring, keyTypeName } from '../keys';
-import { assertValidPublicKey } from '../keys/keyring-helpers';
+import { isIdentityMessage, IdentityMessageProcessor, IdentityEvents } from '../identity';
+import { Keyring, assertValidPublicKey, keyTypeName } from '../keys';
 import { Message, KeyChain, KeyHint, KeyRecord, KeyType, PartyCredential, SignedMessage } from '../proto';
 import { isEnvelope, isPartyInvitationMessage, isSignedMessage } from './party-credential';
 import { PartyInvitationManager } from './party-invitation-manager';
 
 const log = debug('dxos:creds:party');
-
-// TODO(telackey): Look into package specific error types.
 
 /**
  * The party state is constructed via signed messages on the feeds.
@@ -35,10 +31,7 @@ const log = debug('dxos:creds:party');
  * @event Party#'update:identityinfo' fires when IdentityInfo is added or updated.
  * @type {PublicKey}
  */
-// TODO(burdon): Rename to avoid collision with echo-db.
-export class Party extends EventEmitter {
-  static declaredEvents = ['admit:key', 'admit:feed', 'update:key', ...IdentityMessageProcessor.declaredEvents];
-
+export class PartyState extends EventEmitter {
   _publicKey: PublicKey;
   _keyring: Keyring;
   _invitationManager: PartyInvitationManager;
@@ -52,7 +45,7 @@ export class Party extends EventEmitter {
 
   /**
    * Initialize with party public key
-   * @return {Party}
+   * @return {PartyState}
    */
   constructor (publicKey: PublicKeyLike) {
     super();
@@ -77,7 +70,7 @@ export class Party extends EventEmitter {
     });
 
     // Surface IdentityMessageProcessor events.
-    for (const eventName of IdentityMessageProcessor.declaredEvents) {
+    for (const eventName of IdentityEvents) {
       this._identityMessageProcessor.on(eventName, (...args) => this.emit(eventName, ...args));
     }
   }

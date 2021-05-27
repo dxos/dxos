@@ -8,16 +8,16 @@ import debug from 'debug';
 
 import { expectToThrow } from '@dxos/debug';
 
-import { createIdentityInfoMessage } from '../identity/identity-message';
+import { createIdentityInfoMessage } from '../identity';
 import { Filter, Keyring } from '../keys';
 import { codecLoop, KeyType } from '../proto';
-import { Party } from './party';
 import {
   createEnvelopeMessage,
   createFeedAdmitMessage,
   createKeyAdmitMessage,
   createPartyGenesisMessage
 } from './party-credential';
+import { PartyState } from './party-state';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const log = debug('dxos:creds:party:test');
@@ -61,7 +61,7 @@ test('Process basic message types', async () => {
     deviceKeyChain = Keyring.buildKeyChain(deviceKey.publicKey, haloMessages, [haloFeedKey.publicKey]);
   }
 
-  const party = new Party(partyKey.publicKey);
+  const party = new PartyState(partyKey.publicKey);
 
   const messages = [
     // The Genesis message is signed by the party private key, the feed key, and one admitted key (IdentityA).
@@ -112,7 +112,7 @@ test('GreetingCommandPlugin envelopes', async () => {
   const { keyring: greeterKeyring, partyKey } = await createPartyKeyrings();
   const { keyring: inviteeKeyring } = await createPartyKeyrings();
 
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   expect(party.memberKeys.length).toEqual(0);
   expect(party.memberFeeds.length).toEqual(0);
 
@@ -148,7 +148,7 @@ test('GreetingCommandPlugin envelopes', async () => {
 
 test('Reject message from unknown source', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const alienKey = await keyring.createKeyRecord();
 
   const messages = [
@@ -174,7 +174,7 @@ test('Reject message from unknown source', async () => {
 
 test('Message signed by known and unknown key should not admit unknown key', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const alienKey = await keyring.createKeyRecord();
 
   const messages = [
@@ -200,7 +200,7 @@ test('Message signed by known and unknown key should not admit unknown key', asy
 
 test('Reject Genesis not signed by Party key', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   await keyring.createKeyRecord({ type: KeyType.FEED });
   const wrongKey = await keyring.createKeyRecord();
 
@@ -224,7 +224,7 @@ test('Reject Genesis not signed by Party key', async () => {
 test('Reject admit key message with wrong Party', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   await keyring.createKeyRecord({ type: KeyType.FEED });
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const wrongParty = await keyring.createKeyRecord();
 
   let messages = [
@@ -261,7 +261,7 @@ test('Reject admit feed message with wrong Party', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   await keyring.createKeyRecord({ type: KeyType.FEED });
   await keyring.createKeyRecord({ type: KeyType.FEED });
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const wrongParty = await keyring.createKeyRecord();
 
   let messages = [
@@ -297,7 +297,7 @@ test('Reject admit feed message with wrong Party', async () => {
 test('Reject tampered Genesis message', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   await keyring.createKeyRecord({ type: KeyType.FEED });
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
 
   const messages = [
     createPartyGenesisMessage(keyring,
@@ -322,7 +322,7 @@ test('Reject tampered admit feed message', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   await keyring.createKeyRecord({ type: KeyType.FEED });
   await keyring.createKeyRecord({ type: KeyType.FEED });
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
 
   let messages = [
     createPartyGenesisMessage(keyring,
@@ -359,7 +359,7 @@ test('Reject tampered admit feed message', async () => {
 test('Reject tampered admit key message', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   await keyring.createKeyRecord({ type: KeyType.FEED });
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
 
   let messages = [
     createPartyGenesisMessage(keyring,

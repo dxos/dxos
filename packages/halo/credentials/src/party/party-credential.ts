@@ -6,11 +6,10 @@ import assert from 'assert';
 
 import { randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
 
-import { Keyring } from '../keys';
-import { assertValidPublicKey } from '../keys/keyring-helpers';
-import { KeyChain, KeyRecord, Message, SignedMessage, PartyCredential, Command, Auth } from '../proto';
-import { WithTypeUrl } from '../proto/any';
+import { Keyring, assertValidPublicKey } from '../keys';
+import { KeyChain, KeyRecord, Message, SignedMessage, PartyCredential, Command, Auth, WithTypeUrl } from '../proto';
 
+// TODO(burdon): Remove dependencies on ANY?
 export const TYPE_URL_MESSAGE = 'dxos.credentials.Message';
 export const TYPE_URL_SIGNED_MESSAGE = 'dxos.credentials.SignedMessage';
 export const TYPE_URL_PARTY_CREDENTIAL = 'dxos.credentials.party.PartyCredential';
@@ -157,22 +156,24 @@ export function isSignedMessage (message: any): message is SignedMessage {
 }
 
 /**
+ * Wraps a SignedMessage with a Message.
+ */
+// TODO(burdon): Typespec is too loose.
+export function wrapMessage (message: Message | SignedMessage | Command | Auth): WithTypeUrl<Message> {
+  const payload = message as any;
+  return { __type_url: TYPE_URL_MESSAGE, payload } as WithTypeUrl<Message>;
+}
+
+/**
  * Unwraps (if necessary) a Message to its contents.
  */
 export function unwrapMessage (message: any): any {
   let result: any = message;
-  while (result.payload) {
+  while (result.payload) { // TODO(burdon): Recursion!
     result = result.payload;
   }
-  return result;
-}
 
-/**
- * Wraps a SignedMessage with a Message
- */
-export function wrapMessage (message: Message | SignedMessage | Command | Auth): WithTypeUrl<Message> {
-  const payload = message as any;
-  return { __type_url: TYPE_URL_MESSAGE, payload } as WithTypeUrl<Message>;
+  return result;
 }
 
 /**
@@ -183,6 +184,7 @@ export const unwrapEnvelopes = (message: any): SignedMessage => {
   while (isEnvelope(message)) {
     message = message.signed.payload.envelope.message.payload;
   }
+
   return message;
 };
 
@@ -302,6 +304,5 @@ export const isPartyInvitationMessage = (message: Message | SignedMessage) => {
   const payloadType = signed?.__type_url;
   // eslint-disable-next-line camelcase
   const signedType = signed?.signed?.payload?.__type_url;
-  return payloadType === TYPE_URL_SIGNED_MESSAGE &&
-    signedType === TYPE_URL_PARTY_INVITATION;
+  return payloadType === TYPE_URL_SIGNED_MESSAGE && signedType === TYPE_URL_PARTY_INVITATION;
 };

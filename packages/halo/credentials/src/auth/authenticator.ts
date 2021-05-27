@@ -9,7 +9,7 @@ import moment from 'moment';
 import { PublicKey } from '@dxos/crypto';
 
 import { Keyring } from '../keys';
-import { isSignedMessage, Party } from '../party';
+import { isSignedMessage, PartyState } from '../party';
 import { codec, KeyType, Message } from '../proto';
 
 const log = debug('dxos:creds:auth');
@@ -53,13 +53,13 @@ export abstract class Authenticator {
  * A Party-based Authenticator, which checks that the supplied credentials belong to a Party member.
  */
 export class PartyAuthenticator extends Authenticator {
-  _party: Party;
+  _party: PartyState;
 
   /**
    * Takes the target Party for checking admitted keys and verifying signatures.
    * @param party
    */
-  constructor (party: Party) {
+  constructor (party: PartyState) {
     assert(party);
     super();
 

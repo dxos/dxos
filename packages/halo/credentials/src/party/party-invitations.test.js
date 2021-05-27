@@ -9,15 +9,14 @@ import waitForExpect from 'wait-for-expect';
 
 import { randomBytes } from '@dxos/crypto';
 
-import { createGreetingClaimMessage } from '../greet';
-import { PartyInvitationClaimHandler } from '../greet/party-invitation-claim-handler';
+import { PartyInvitationClaimHandler, createGreetingClaimMessage } from '../greet';
 import { Filter, Keyring } from '../keys';
 import { KeyType } from '../proto';
-import { Party } from './party';
 import {
   createKeyAdmitMessage, createPartyGenesisMessage,
   createPartyInvitationMessage, createEnvelopeMessage
 } from './party-credential';
+import { PartyState } from './party-state';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const log = debug('dxos:creds:party:test');
@@ -49,7 +48,7 @@ test('PartyInvitation messages', async () => {
   const rendezvousKey = randomBytes();
   const { keyring, partyKey, identityKey, feedKey } = await createPartyKeyrings();
   const { keyring: inviteeKeyring, identityKey: inviteeKey } = await createPartyKeyrings();
-  const party = new Party(partyKey.publicKey);
+  const party = new PartyState(partyKey.publicKey);
 
   // First, configure the Party.
   const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey);

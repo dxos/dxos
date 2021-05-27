@@ -77,6 +77,7 @@ export class HaloParty {
     await this._party.close();
   }
 
+  // TODO(burdon): Not used?
   async recordPartyJoining (joinedParty: JoinedParty) {
     const knownParties = await this._party.database.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE }).value;
     const partyDesc = knownParties.find(partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')));
@@ -111,6 +112,7 @@ export class HaloParty {
     return this._setPartyPreference(item, party, key, value);
   }
 
+  // TODO(burdon): Not used?
   public getDevicePartyPreference (partyKey: PublicKey, key: string) {
     const item = this.getDevicePreferences();
     assert(item, 'Device preference item required.');

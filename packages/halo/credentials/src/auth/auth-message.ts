@@ -7,9 +7,8 @@ import assert from 'assert';
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 
 import { Keyring } from '../keys';
-import { wrapMessage } from '../party/party-credential';
-import { Auth, KeyChain, KeyRecord, Message } from '../proto';
-import { WithTypeUrl } from '../proto/any';
+import { wrapMessage } from '../party';
+import { Auth, KeyChain, KeyRecord, Message, WithTypeUrl } from '../proto';
 
 /**
  * Create `dxos.credentials.auth.Auth` credentials.
