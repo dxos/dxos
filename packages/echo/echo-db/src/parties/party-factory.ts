@@ -66,7 +66,7 @@ export class PartyFactory {
   /**
    * Create a new party with a new feed for it. Writes a party genensis message to this feed.
    */
-  @timed(5000)
+  @timed(5_000)
   async createParty (): Promise<PartyInternal> {
     assert(!this._options.readOnly, 'PartyFactory is read-only');
     assert(this._identityManager.halo, 'HALO must exist');

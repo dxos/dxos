@@ -33,7 +33,7 @@ export type FeedSelector = (descriptor: FeedDescriptor) => boolean;
 const STALL_TIMEOUT = 1000;
 
 /**
- * Creates an ordered stream.
+ * Creates an ordered message iterator.
  *
  * @param feedStore
  * @param feedSelector Filter for desired feeds.
@@ -54,6 +54,7 @@ export async function createIterator (
     await feedStore.open();
     await feedStore.ready();
   }
+
   const iterator = new FeedStoreIterator(feedSelector, messageSelector, skipTimeframe ?? new Timeframe());
 
   // TODO(burdon): Only add feeds that belong to party (or use feedSelector).
@@ -108,6 +109,8 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   public readonly stalled = new Event<FeedBlock[]>();
 
   /**
+   * @param _feedSelector
+   * @param _messageSelector
    * @param _skipTimeframe Feeds are read starting from the first message after this timeframe.
    */
   constructor (
@@ -179,8 +182,8 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
     this._openFeeds.set(keyToString(descriptor.key), {
       descriptor,
       iterator: stream[Symbol.asyncIterator](),
-      frozen: false,
-      sendQueue: []
+      sendQueue: [],
+      frozen: false
     });
   }
 

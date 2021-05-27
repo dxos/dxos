@@ -47,6 +47,7 @@ export interface PartyOptions {
   readLogger?: (msg: any) => void;
   writeLogger?: (msg: any) => void;
   readOnly?: boolean;
+  // TODO(burdon): Hierarchical options ({ snapshot: { enabled: true, interval: 100 } })
   snapshots?: boolean;
   snapshotInterval?: number;
 }
@@ -131,7 +132,7 @@ export class PartyInternal {
    * Opens the pipeline and connects the streams.
    */
   @synchronized
-  @timed(5000)
+  @timed(5_000)
   async open () {
     if (this.isOpen) {
       return this;
@@ -150,8 +151,11 @@ export class PartyInternal {
     }
 
     // TODO(burdon): Close on clean-up.
-    const iterator = await this._feedStore.createIterator(this._partyKey,
-      createMessageSelector(this._partyProcessor, this._timeframeClock), this._initialTimeframe);
+    const iterator = await this._feedStore.createIterator(
+      this._partyKey,
+      createMessageSelector(this._partyProcessor, this._timeframeClock),
+      this._initialTimeframe
+    );
 
     const feedWriteStream = createFeedWriter(feed);
 

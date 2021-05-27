@@ -26,15 +26,15 @@ export function createMessageSelector (
 ): MessageSelector {
   // TODO(telackey): Add KeyAdmit checks.
   return candidates => {
-    // We go over ECHO candidates here first because checking them is way less expensive then HALO ones.
+    // Check ECHO mutation candidates first since they are less expensive than HALO cancidates.
     for (let i = 0; i < candidates.length; i++) {
       const { data: { echo } } = candidates[i];
       const feedKey = PublicKey.from(candidates[i].key);
       if (!echo) {
         continue;
       }
-      assert(echo.timeframe);
 
+      assert(echo.timeframe);
       if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(echo.timeframe)) {
         return i;
       }
