@@ -41,6 +41,8 @@ const STALL_TIMEOUT = 1000;
  * @param skipTimeframe Feeds are read starting from the next message after this timeframe. Feeds not included in this timeframe are read from the beginning.
  * @readonly {NodeJS.ReadableStream} readStream stream.
  */
+// TODO(burdon): Remove factory.
+// TODO(burdon): Use arrow functions (remove this side-effect).
 export async function createIterator (
   feedStore: FeedStore,
   feedSelector: FeedSelector = () => true,

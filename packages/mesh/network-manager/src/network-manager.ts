@@ -90,9 +90,11 @@ export class NetworkManager {
       this._signal instanceof InMemorySignalManager ? inMemoryTransportFactory : createWebRtcTransportFactory({ iceServers: this._ice }),
       options.label
     );
+
     this._swarms.set(topic, swarm);
     this._signal.join(topic, peerId);
     this._maps.set(topic, new SwarmMapper(swarm, presence));
+
     this.topicsUpdated.emit();
 
     return () => this.leaveProtocolSwarm(topic);

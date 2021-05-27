@@ -35,6 +35,7 @@ const log = debug('dxos:creds:party');
  * @event Party#'update:identityinfo' fires when IdentityInfo is added or updated.
  * @type {PublicKey}
  */
+// TODO(burdon): Rename to avoid collision with echo-db.
 export class Party extends EventEmitter {
   static declaredEvents = ['admit:key', 'admit:feed', 'update:key', ...IdentityMessageProcessor.declaredEvents];
 

@@ -19,6 +19,7 @@ import { PartyProcessor } from './party-processor';
  * @param partyProcessor
  * @param timeframeClock
  */
+// TODO(burdon): Remove factory.
 export function createMessageSelector (
   partyProcessor: PartyProcessor,
   timeframeClock: TimeframeClock

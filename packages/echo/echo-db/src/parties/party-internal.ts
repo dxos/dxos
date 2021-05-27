@@ -51,7 +51,11 @@ export interface PartyOptions {
   snapshotInterval?: number;
 }
 
-// TODO(burdon): Rename PartyImpl
+/**
+ * A Party represents a shared dataset containing queryable Items that are constructed from an ordered stream
+ * of mutations.
+ */
+// TODO(burdon): Rename PartyImpl.
 export class PartyInternal {
   public readonly update = new Event<void>();
 
