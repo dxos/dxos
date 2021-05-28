@@ -13,11 +13,11 @@ import {
   PartyState,
   PartyAuthenticator,
   Message as HaloMessage
+  , IdentityEventType, PartyEventType
 } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedWriter, IHaloStream, PartyKey, HaloStateSnapshot, WriteReceipt } from '@dxos/echo-protocol';
 import { jsonReplacer } from '@dxos/util';
-import { IdentityEventType, PartyEventType } from '@dxos/credentials';
 
 const log = debug('dxos:echo:parties:party-processor');
 
