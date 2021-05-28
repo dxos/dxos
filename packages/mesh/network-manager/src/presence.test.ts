@@ -6,10 +6,10 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/crypto';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { afterTest } from '@dxos/testutils';
 
 import { NetworkManager } from './network-manager';
 import { protocolFactory } from './protocol-factory';
-import { afterTest } from './testutils';
 import { FullyConnectedTopology } from './topology';
 
 const createPeer = (topic: PublicKey) => {

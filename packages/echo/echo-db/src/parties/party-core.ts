@@ -87,8 +87,8 @@ export class PartyCore {
   /**
    * Opens the pipeline and connects the streams.
    */
-   @synchronized
-   @timed(5_000)
+  @synchronized
+  @timed(1_000)
   async open () {
     if (this.isOpen) {
       return this;
@@ -153,24 +153,24 @@ export class PartyCore {
     * Closes the pipeline and streams.
     */
    @synchronized
-   async close () {
-     if (!this.isOpen) {
-       return this;
-     }
+  async close () {
+    if (!this.isOpen) {
+      return this;
+    }
 
-     await this._database?.destroy();
-     this._database = undefined;
+    await this._database?.destroy();
+    this._database = undefined;
 
-     await this._pipeline?.close();
-     this._pipeline = undefined;
+    await this._pipeline?.close();
+    this._pipeline = undefined;
 
-     this._partyProcessor = undefined;
-     this._timeframeClock = undefined;
+    this._partyProcessor = undefined;
+    this._timeframeClock = undefined;
 
-     this._subscriptions.forEach(cb => cb());
+    this._subscriptions.forEach(cb => cb());
 
-     return this;
-   }
+    return this;
+  }
 
    /**
     * Create a snapshot of the current state.
