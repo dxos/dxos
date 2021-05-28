@@ -16,7 +16,7 @@ import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
 import { PartyCore } from './party-core';
 
-test('create', async () => {
+const setup = async () => {
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
   await feedStore.open();
   afterTest(async () => feedStore.close());
@@ -64,7 +64,22 @@ test('create', async () => {
   // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
   await keyring.deleteSecretKey(partyKey);
 
+  return { party, feedKey };
+};
+
+test('create & have the feed key admitted', async () => {
+  const { party, feedKey } = await setup();
+
   await party.processor.keyOrInfoAdded.waitForCount(1);
 
   expect(party.processor.isFeedAdmitted(feedKey.publicKey)).toBeTruthy();
+}, 10_000);
+
+test('create item', async () => {
+  const { party } = await setup();
+
+  const item = await party.database.createItem({ model: ObjectModel });
+  await item.model.setProperty('foo', 'bar');
+
+  expect(item.model.getProperty('foo')).toEqual('bar');
 }, 10_000);
