@@ -7,8 +7,7 @@
 import { randomBytes } from '@dxos/crypto';
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
 
-import { Filter, Keyring } from '../keys';
-import { createKeyRecord, stripSecrets } from '../keys/keyring-helpers';
+import { createKeyRecord, stripSecrets, Filter, Keyring } from '../keys';
 import { createKeyAdmitMessage, createPartyInvitationMessage } from '../party';
 import { codecLoop, KeyType } from '../proto';
 import { Command } from './constants';

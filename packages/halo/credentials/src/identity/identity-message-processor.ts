@@ -9,9 +9,8 @@ import { EventEmitter } from 'events';
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 
 import { isDeviceInfoMessage, isIdentityInfoMessage } from '../identity';
-import { Keyring } from '../keys';
-import { assertValidPublicKey } from '../keys/keyring-helpers';
-import { isEnvelope, isSignedMessage, Party } from '../party';
+import { Keyring, assertValidPublicKey } from '../keys';
+import { PartyState, isEnvelope, isSignedMessage } from '../party';
 import { SignedMessage } from '../proto';
 
 const log = debug('dxos:creds:party');
@@ -21,13 +20,12 @@ const log = debug('dxos:creds:party');
  * @event IdentityMessageProcessor#set:identityinfo  When a new IdentityInfo record is set.
  */
 export class IdentityMessageProcessor extends EventEmitter {
-  static declaredEvents = ['update:identityinfo'];
+  _party: PartyState;
 
-  _party: Party;
   // TODO(telackey): Switch to Buffer-aware maps.
   _infoMessages: Map<string, SignedMessage>;
 
-  constructor (party: Party) {
+  constructor (party: PartyState) {
     super();
     assert(party);
 

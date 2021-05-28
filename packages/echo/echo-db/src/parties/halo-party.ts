@@ -15,10 +15,11 @@ import { Item } from '../items';
 import { ResultSet } from '../result';
 import { PARTY_TITLE_PROPERTY, PartyActivator, PartyInternal } from './party-internal';
 
+// HALO data types.
 export const HALO_PARTY_DESCRIPTOR_TYPE = 'dxn://dxos/item/halo/party-descriptor';
-export const HALO_CONTACT_LIST_TYPE = 'dxn://dxos/item/halo/contact-list';
-export const HALO_GENERAL_PREFERENCES_TYPE = 'dxn://dxos/item/halo/preferences';
-export const HALO_DEVICE_PREFERENCES_TYPE = 'dxn://dxos/item/halo/device/preferences';
+export const HALO_PARTY_CONTACT_LIST_TYPE = 'dxn://dxos/item/halo/contact-list';
+export const HALO_PARTY_PREFERENCES_TYPE = 'dxn://dxos/item/halo/preferences';
+export const HALO_PARTY_DEVICE_PREFERENCES_TYPE = 'dxn://dxos/item/halo/device/preferences';
 
 /**
  * A record in HALO party representing a party that user is currently a member of.
@@ -77,6 +78,7 @@ export class HaloParty {
     await this._party.close();
   }
 
+  // TODO(burdon): Not used?
   async recordPartyJoining (joinedParty: JoinedParty) {
     const knownParties = await this._party.database.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE }).value;
     const partyDesc = knownParties.find(partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')));
@@ -111,6 +113,7 @@ export class HaloParty {
     return this._setPartyPreference(item, party, key, value);
   }
 
+  // TODO(burdon): Not used?
   public getDevicePartyPreference (partyKey: PublicKey, key: string) {
     const item = this.getDevicePreferences();
     assert(item, 'Device preference item required.');
@@ -138,18 +141,18 @@ export class HaloParty {
   }
 
   getGlobalPreferences () {
-    const [globalItem] = this.database.queryItems({ type: HALO_GENERAL_PREFERENCES_TYPE }).value;
+    const [globalItem] = this.database.queryItems({ type: HALO_PARTY_PREFERENCES_TYPE }).value;
     return globalItem;
   }
 
   getDevicePreferences () {
-    const deviceItems = this.database.queryItems({ type: HALO_DEVICE_PREFERENCES_TYPE }).value ?? [];
+    const deviceItems = this.database.queryItems({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).value ?? [];
     return deviceItems.find(item => this._deviceKey.equals(item.model.getProperty('publicKey')));
   }
 
   subscribeToPreferences (cb: (preferences: any) => void) {
-    const globalResults = this.database.queryItems({ type: HALO_GENERAL_PREFERENCES_TYPE });
-    const deviceResults = this.database.queryItems({ type: HALO_DEVICE_PREFERENCES_TYPE });
+    const globalResults = this.database.queryItems({ type: HALO_PARTY_PREFERENCES_TYPE });
+    const deviceResults = this.database.queryItems({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE });
 
     const event = new Event<any>();
 
@@ -211,7 +214,7 @@ export class HaloParty {
   }
 
   getContactListItem (): Item<ObjectModel> | undefined {
-    return this.database.queryItems({ type: HALO_CONTACT_LIST_TYPE }).value[0];
+    return this.database.queryItems({ type: HALO_PARTY_CONTACT_LIST_TYPE }).value[0];
   }
 
   createPartyActivator (party: PartyInternal): PartyActivator {

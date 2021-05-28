@@ -28,20 +28,28 @@ export class IdentityManager {
     private readonly _keyring: Keyring
   ) {}
 
+  get keyring () {
+    return this._keyring;
+  }
+
+  get initialized () {
+    return !!this._halo;
+  }
+
   get halo () {
     return this._halo;
   }
 
-  get keyring () {
-    return this._keyring;
+  get identityInfo () {
+    return this.halo?.identityInfo;
   }
 
   get identityGenesis () {
     return this.halo?.identityGenesis;
   }
 
-  get identityInfo () {
-    return this.halo?.identityInfo;
+  get displayName () {
+    return this.identityInfo?.signed.payload.displayName;
   }
 
   get identityKey (): KeyRecord | undefined {
@@ -50,10 +58,6 @@ export class IdentityManager {
     }
 
     return this._identityKey;
-  }
-
-  get displayName () {
-    return this.identityInfo?.signed.payload.displayName;
   }
 
   get deviceKey (): KeyRecord | undefined {
@@ -79,10 +83,6 @@ export class IdentityManager {
     }
 
     return this._deviceKeyChain;
-  }
-
-  get initialized () {
-    return !!this._halo;
   }
 
   async initialize (halo: PartyInternal) {

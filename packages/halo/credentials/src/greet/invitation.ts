@@ -4,7 +4,7 @@
 
 import { randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
 
-import { createDateTimeString } from '../proto/datetime';
+import { createDateTimeString } from '../proto';
 
 /**
  * Provides a shared secret during an invitation process.

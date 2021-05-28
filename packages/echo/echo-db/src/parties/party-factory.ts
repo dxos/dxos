@@ -35,7 +35,7 @@ import {
 } from '../invitations';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
-import { HALO_CONTACT_LIST_TYPE, HALO_DEVICE_PREFERENCES_TYPE, HALO_GENERAL_PREFERENCES_TYPE } from './halo-party';
+import { HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE } from './halo-party';
 import { IdentityManager } from './identity-manager';
 import { PartyInternal, PARTY_ITEM_TYPE, PartyOptions } from './party-internal';
 
@@ -311,7 +311,7 @@ export class PartyFactory {
     const halo = await this.joinParty(invitationDescriptor, secretProvider);
     await halo.database.createItem({
       model: ObjectModel,
-      type: HALO_DEVICE_PREFERENCES_TYPE,
+      type: HALO_PARTY_DEVICE_PREFERENCES_TYPE,
       props: { publicKey: this._identityManager.deviceKey.publicKey.asBuffer() }
     });
 
@@ -360,11 +360,11 @@ export class PartyFactory {
 
     // Create special properties item.
     await halo.database.createItem({ model: ObjectModel, type: PARTY_ITEM_TYPE });
-    await halo.database.createItem({ model: ObjectModel, type: HALO_GENERAL_PREFERENCES_TYPE });
-    await halo.database.createItem({ model: ObjectModel, type: HALO_CONTACT_LIST_TYPE });
+    await halo.database.createItem({ model: ObjectModel, type: HALO_PARTY_PREFERENCES_TYPE });
+    await halo.database.createItem({ model: ObjectModel, type: HALO_PARTY_CONTACT_LIST_TYPE });
     await halo.database.createItem({
       model: ObjectModel,
-      type: HALO_DEVICE_PREFERENCES_TYPE,
+      type: HALO_PARTY_DEVICE_PREFERENCES_TYPE,
       props: { publicKey: deviceKey.publicKey.asBuffer() }
     });
 
