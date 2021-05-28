@@ -7,10 +7,10 @@ import waitForExpect from 'wait-for-expect';
 
 import { discoveryKey, PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
+import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
-import { afterTest } from '../testutils';
 import { InMemoryTransport } from './in-memory-transport';
 
 // TODO(burdon): Flaky test.
