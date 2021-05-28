@@ -8,6 +8,7 @@ import debug from 'debug';
 import { PublicKey } from '@dxos/crypto';
 
 import { KeyRecord, SignedMessage } from '../proto';
+import { PartyEventType } from './events';
 import { PartyState } from './party-state';
 
 const log = debug('dxos:creds:party');
@@ -28,7 +29,7 @@ export class PartyInvitationManager {
     this._activeInvitations = new Map<string, SignedMessage>();
     this._invitationsByKey = new Map<string, Set<string>>();
 
-    this._party.on('admit:key', (keyRecord: KeyRecord) => {
+    this._party.on(PartyEventType.ADMIT_KEY, (keyRecord: KeyRecord) => {
       const byKey = this._invitationsByKey.get(keyRecord.publicKey.toHex()) || new Set();
       for (const idStr of byKey) {
         log(`${keyRecord.publicKey.toHex()} admitted, deactivating Invitation ${idStr}.`);
