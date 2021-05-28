@@ -21,7 +21,7 @@ import {
 } from './invitations';
 import { DefaultModel } from './items';
 import {
-  HALO_CONTACT_LIST_TYPE, IdentityManager, OpenProgress, Party, PartyFactory, PartyFilter, PartyManager, PartyMember
+  HALO_PARTY_CONTACT_LIST_TYPE, IdentityManager, OpenProgress, Party, PartyFactory, PartyFilter, PartyManager, PartyMember
 } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
@@ -378,7 +378,7 @@ export class ECHO {
     assert(this._partyManager.opened, 'ECHO not open.');
     assert(this._partyManager.identityManager.halo, 'HALO required.');
 
-    const results = this._partyManager.identityManager.halo.database.queryItems({ type: HALO_CONTACT_LIST_TYPE });
+    const results = this._partyManager.identityManager.halo.database.queryItems({ type: HALO_PARTY_CONTACT_LIST_TYPE });
 
     const getter = (): Contact[] => {
       const [contactListItem] = results.value;

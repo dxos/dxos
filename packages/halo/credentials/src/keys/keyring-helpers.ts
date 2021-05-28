@@ -3,8 +3,7 @@
 //
 
 //
-// IMPORTANT: The contents of this file are utilities/helper functions used exclusively by Keyring.
-// The functions are NOT EXPORTED outside of this package.
+// TODO(burdon): Factor out helpers.
 //
 
 import assert from 'assert';
@@ -12,8 +11,7 @@ import stableStringify from 'json-stable-stringify';
 
 import { createKeyPair, KeyPair, PublicKey, PublicKeyLike } from '@dxos/crypto';
 
-import { KeyChain, KeyRecord, KeyType, SignedMessage } from '../proto';
-import { createDateTimeString } from '../proto/datetime';
+import { KeyChain, KeyRecord, KeyType, createDateTimeString } from '../proto';
 import { MakeOptional } from '../typedefs';
 import { SecretKey } from './keytype';
 
@@ -123,6 +121,7 @@ export const createKeyRecord = (attributes: Partial<KeyRecord> = {},
 /**
  * Utility method to produce stable output for signing/verifying.
  */
+// TODO(burdon): Factor out.
 export const canonicalStringify = (obj: any) => {
   return stableStringify(obj, {
     // The point of signing and verifying is not that the internal, private state of the objects be
@@ -180,29 +179,4 @@ export const checkAndNormalizeKeyRecord = (keyRecord: Omit<KeyRecord, 'key'>) =>
       secretKey: secretKey ? Buffer.from(secretKey) : undefined
     }
   );
-};
-
-/**
- * Is object `message` a SignedMessage?
- */
-// TODO(burdon): Collision with party-credentials (need better tests).
-export const isSignedMessage2 = (message: any = {}): message is SignedMessage => {
-  if (!message || typeof message !== 'object') {
-    return false;
-  }
-
-  const { signed, signatures } = message;
-  return signed && signatures && Array.isArray(signatures);
-};
-
-/**
- * Unwraps (if necessary) a Message to its SignedMessage contents
- */
-// TODO(burdon): Collision with party-credentials (need better tests).
-export const unwrapMessage2 = (message: any): SignedMessage => {
-  if (message && message.payload && !message.signed && !Array.isArray(message.signatures)) {
-    return message.payload;
-  }
-
-  return message;
 };

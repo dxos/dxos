@@ -11,22 +11,22 @@ import {
   sign as cryptoSign, verify as cryptoVerify
 } from '@dxos/crypto';
 
-import { KeyChain, KeyRecord, KeyRecordList, KeyType, Message, SignedMessage, WithTypeUrl } from '../proto';
-import { createDateTimeString } from '../proto/datetime';
+import { isSignedMessage, unwrapMessage } from '../party';
+import {
+  KeyChain, KeyRecord, KeyRecordList, KeyType, Message, SignedMessage, WithTypeUrl, createDateTimeString
+} from '../proto';
 import { RawSignature } from '../typedefs';
 import { Filter, FilterFuntion } from './filter';
 import {
-  canonicalStringify,
-  createKeyRecord,
   assertNoSecrets,
   assertValidKeyPair,
   assertValidPublicKey,
-  stripSecrets,
-  isKeyChain,
+  assertValidSecretKey,
+  canonicalStringify,
   checkAndNormalizeKeyRecord,
-  isSignedMessage2,
-  unwrapMessage2,
-  assertValidSecretKey
+  createKeyRecord,
+  isKeyChain,
+  stripSecrets
 } from './keyring-helpers';
 import { KeyStore } from './keystore';
 import { SimpleMetrics, createMeter } from './simple-metrics';
@@ -157,7 +157,7 @@ export class Keyring {
   static buildKeyChain (publicKey: PublicKeyLike, signedMessageMap: Map<string, Message | SignedMessage>, exclude: PublicKey[] = []): KeyChain {
     publicKey = PublicKey.from(publicKey);
 
-    const message = unwrapMessage2(signedMessageMap.get(publicKey.toHex()));
+    const message = unwrapMessage(signedMessageMap.get(publicKey.toHex()));
     if (!message) {
       throw Error('No such message.');
     }
@@ -199,7 +199,7 @@ export class Keyring {
   static signingKeys (message: Message | SignedMessage, { deep = true, validate = true } = {}): PublicKey[] {
     const all = new Set<string>();
 
-    if (isSignedMessage2(message)) {
+    if (isSignedMessage(message)) {
       const { signed, signatures = [] } = message;
       for (const signature of signatures) {
         if (!validate || Keyring.validateSignature(signed, signature.signature, signature.key.asBuffer())) {
@@ -229,7 +229,7 @@ export class Keyring {
    */
   @meter
   static validateSignatures (message: Message | SignedMessage): boolean {
-    const unwrapped = unwrapMessage2(message);
+    const unwrapped = unwrapMessage(message);
     assert(Array.isArray(unwrapped.signatures));
 
     const { signed, signatures } = unwrapped;
