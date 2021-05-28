@@ -28,6 +28,16 @@ export interface PartyOptions {
   snapshotInterval?: number;
 }
 
+/**
+ * Encapsulates core components needed to run a party:
+ *  - ECHO database with item-manager & item-demuxer.
+ *  - Collection of feeds from the feed store.
+ *  - HALO PartyState state-machine that handles key admission.
+ *  - A Pipeline with the feed-store iterator that reads the messages in the proper order.
+ *
+ * The core class also handles the combined ECHO and HALO state snapshots.
+ */
+// TODO(marik-d): Try to pick a better name for it.
 export class PartyCore {
   /**
    * Snapshot to be restored from when party.open() is called.
@@ -46,7 +56,6 @@ export class PartyCore {
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
-    private readonly _hints: KeyHint[] = [],
     private readonly _initialTimeframe?: Timeframe,
     private readonly _options: PartyOptions = {}
   ) {}
@@ -74,6 +83,7 @@ export class PartyCore {
     return this._pipeline;
   }
 
+  // TODO(marik-d): Needed for Replicator plugin in PartProtocol, consider removing.
   get feedStore () {
     return this._feedStore;
   }
@@ -89,7 +99,7 @@ export class PartyCore {
    */
   @synchronized
   @timed(1_000)
-  async open () {
+  async open (keyHints: KeyHint[] = []) {
     if (this.isOpen) {
       return this;
     }
@@ -101,12 +111,11 @@ export class PartyCore {
 
     if (!this._partyProcessor) {
       this._partyProcessor = new PartyProcessor(this._partyKey);
-      if (this._hints.length) {
-        await this._partyProcessor.takeHints(this._hints);
+      if (keyHints.length > 0) {
+        await this._partyProcessor.takeHints(keyHints);
       }
     }
 
-    // TODO(burdon): Close on clean-up.
     const iterator = await this._feedStore.createIterator(
       this._partyKey,
       createMessageSelector(this._partyProcessor, this._timeframeClock),

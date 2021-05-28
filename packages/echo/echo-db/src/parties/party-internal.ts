@@ -67,7 +67,7 @@ export class PartyInternal {
     _modelFactory: ModelFactory,
     private readonly _networkManager: NetworkManager,
     _snapshotStore: SnapshotStore,
-    _hints: KeyHint[] = [],
+    private readonly _hints: KeyHint[] = [],
     _initialTimeframe?: Timeframe,
     _options: PartyOptions = {}
   ) {
@@ -76,7 +76,6 @@ export class PartyInternal {
       _feedStore,
       _modelFactory,
       _snapshotStore,
-      _hints,
       _initialTimeframe,
       _options
     );
@@ -128,7 +127,7 @@ export class PartyInternal {
       return this;
     }
 
-    await this._partyCore.open();
+    await this._partyCore.open(this._hints);
 
     this._invitationManager = new InvitationManager(
       this._partyCore.processor,
