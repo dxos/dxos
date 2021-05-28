@@ -37,7 +37,8 @@ import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
 import { HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE } from './halo-party';
 import { IdentityManager } from './identity-manager';
-import { PartyInternal, PARTY_ITEM_TYPE, PartyOptions } from './party-internal';
+import { PartyOptions } from './party-core';
+import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 
 /**
  * Options allowed when creating the HALO.
