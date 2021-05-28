@@ -166,7 +166,6 @@ export class BotPlugin extends EventEmitter {
    */
   private _addPeer (protocol: Protocol) {
     const { peerId } = protocol.getSession();
-
     if (this._peers.has(keyToString(peerId))) {
       return;
     }
@@ -178,7 +177,7 @@ export class BotPlugin extends EventEmitter {
    * Remove peer.
    */
   private _removePeer (protocol: Protocol) {
-    console.assert(protocol);
+    assert(protocol);
 
     const { peerId } = protocol.getSession();
     if (!peerId) {

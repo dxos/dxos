@@ -11,6 +11,7 @@ import { PublicKey, PublicKeyLike, discoveryKey } from '@dxos/crypto';
 import { isIdentityMessage, IdentityMessageProcessor, IdentityEvents } from '../identity';
 import { Keyring, assertValidPublicKey, keyTypeName } from '../keys';
 import { Message, KeyChain, KeyHint, KeyRecord, KeyType, PartyCredential, SignedMessage } from '../proto';
+import { PartyEventType } from './events';
 import { isEnvelope, isPartyInvitationMessage, isSignedMessage } from './party-credential';
 import { PartyInvitationManager } from './party-invitation-manager';
 
@@ -217,9 +218,9 @@ export class PartyState extends EventEmitter {
       if (!this._keyring.hasKey(publicKey)) {
         const keyRecord = await this._admitKey(publicKey, { hint: true, type });
         if (KeyType.FEED === type) {
-          this.emit('admit:feed', keyRecord);
+          this.emit(PartyEventType.ADMIT_FEED, keyRecord);
         } else {
-          this.emit('admit:key', keyRecord);
+          this.emit(PartyEventType.ADMIT_KEY, keyRecord);
         }
       }
     }
@@ -310,8 +311,8 @@ export class PartyState extends EventEmitter {
         this._admittedBy.set(admitKey.publicKey.toHex(), this._publicKey);
         this._admittedBy.set(feedKey.publicKey.toHex(), this._publicKey);
 
-        this.emit('admit:key', admitKey);
-        this.emit('admit:feed', feedKey);
+        this.emit(PartyEventType.ADMIT_KEY, admitKey);
+        this.emit(PartyEventType.ADMIT_FEED, feedKey);
         break;
       }
 
@@ -324,7 +325,7 @@ export class PartyState extends EventEmitter {
         this._admittedBy.set(admitKey.publicKey.toHex(), admittedBy);
         log(`Key ${admitKey.publicKey.toHex()} admitted by ${admittedBy.toHex()}.`);
 
-        this.emit('admit:key', admitKey);
+        this.emit(PartyEventType.ADMIT_KEY, admitKey);
         break;
       }
 
@@ -339,7 +340,7 @@ export class PartyState extends EventEmitter {
         this._admittedBy.set(feedKey.publicKey.toHex(), admittedBy);
         log(`Feed ${feedKey.publicKey.toHex()} admitted by ${admittedBy.toHex()}.`);
 
-        this.emit('admit:feed', feedKey);
+        this.emit(PartyEventType.ADMIT_FEED, feedKey);
         break;
       }
 
@@ -529,7 +530,7 @@ export class PartyState extends EventEmitter {
       keyRecord = await this._keyring.addPublicKey(makeRecord());
     } else if (keyRecord.hint && !attributes.hint) {
       keyRecord = await this._keyring.updateKey(makeRecord());
-      this.emit('update:key', keyRecord);
+      this.emit(PartyEventType.UPDATE_KEY, keyRecord);
     }
 
     if (keyRecord.type === KeyType.FEED) {

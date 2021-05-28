@@ -26,17 +26,14 @@ const createModel = () => {
         seq: seq++
       };
 
-      setImmediate(() => model.processor.write({
-        mutation,
-        meta
-      } as any));
+      // TODO(marik-d): Investigate why setImmediate is required.
+      setImmediate(() => model.processor.write({ mutation, meta } as any));
 
       return meta;
     }
   };
 
   const model = new ObjectModel(ObjectModel.meta, createId(), writer);
-
   return model;
 };
 

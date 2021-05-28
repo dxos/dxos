@@ -56,15 +56,13 @@ export class PresencePlugin extends EventEmitter {
    */
   constructor (peerId: Buffer, options: PresenceOptions = {}) {
     super();
-
-    console.assert(Buffer.isBuffer(peerId));
+    assert(Buffer.isBuffer(peerId));
 
     const { peerTimeout = 2 * 60 * 1000, metadata } = options;
 
     this._peerId = peerId;
     this._peerTimeout = peerTimeout;
-    this._codec = schema
-      .getCodecForType('dxos.protocol.presence.Alive');
+    this._codec = schema.getCodecForType('dxos.protocol.presence.Alive');
 
     this._neighbors = new Map();
     this._metadata = metadata;
@@ -235,7 +233,7 @@ export class PresencePlugin extends EventEmitter {
   }
 
   private _addPeer (protocol: Protocol) {
-    console.assert(protocol);
+    assert(protocol);
     const session = protocol.getSession();
 
     if (!session || !session.peerId) {
@@ -261,7 +259,7 @@ export class PresencePlugin extends EventEmitter {
    * Remove peer.
    */
   private _removePeer (protocol: Protocol) {
-    console.assert(protocol);
+    assert(protocol);
     const session = protocol.getSession();
     if (!session || !session.peerId) {
       return;

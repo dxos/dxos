@@ -13,6 +13,7 @@ import {
   PartyState,
   PartyAuthenticator,
   Message as HaloMessage
+  , IdentityEventType, PartyEventType
 } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedWriter, IHaloStream, PartyKey, HaloStateSnapshot, WriteReceipt } from '@dxos/echo-protocol';
@@ -55,12 +56,12 @@ export class PartyProcessor {
     const state = this._state as any;
 
     // TODO(marik-d): Use Event.wrap here.
-    state.on('admit:feed', (keyRecord: any) => {
+    state.on(PartyEventType.ADMIT_FEED, (keyRecord: any) => {
       log(`Feed key admitted ${keyRecord.publicKey.toHex()}`);
       this._feedAdded.emit(keyRecord.publicKey);
     });
-    state.on('admit:key', (keyRecord: KeyRecord) => this.keyOrInfoAdded.emit(keyRecord.publicKey));
-    state.on('update:identityinfo', (publicKey: PublicKey) => this.keyOrInfoAdded.emit(publicKey));
+    state.on(PartyEventType.ADMIT_KEY, (keyRecord: KeyRecord) => this.keyOrInfoAdded.emit(keyRecord.publicKey));
+    state.on(IdentityEventType, (publicKey: PublicKey) => this.keyOrInfoAdded.emit(publicKey));
   }
 
   get partyKey () {
