@@ -8,8 +8,8 @@ import debug from 'debug';
 import { PublicKey } from '@dxos/crypto';
 
 import { KeyRecord, SignedMessage } from '../proto';
-import { PartyState } from './party-state';
 import { PartyEventType } from './events';
+import { PartyState } from './party-state';
 
 const log = debug('dxos:creds:party');
 
