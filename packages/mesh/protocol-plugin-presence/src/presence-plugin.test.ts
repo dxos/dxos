@@ -11,7 +11,7 @@ import waitForExpect from 'wait-for-expect';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 
-import { Presence } from './presence';
+import { PresencePlugin } from './presence-plugin';
 
 const log = debug('test');
 debug.enable('test');
@@ -23,7 +23,7 @@ jest.setTimeout(TIMEOUT);
 const random = <T>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
-  const presence = new Presence(peerId, {
+  const presence = new PresencePlugin(peerId, {
     metadata: { shareStr: 'test1', shareBuf: Buffer.from('test2') }
   });
 

@@ -20,8 +20,8 @@ export interface PartyMember {
 const log = debug('dxos:echo:party');
 
 /**
- * A Party represents a shared dataset containing queryable Items that are constructed from an ordered stream
- * of mutations.
+ * A Party represents a shared dataset (ECHO database) containing queryable items
+ * that are constructed from an ordered stream of mutations.
  */
 export class Party {
   constructor (

@@ -5,12 +5,12 @@
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/crypto';
-import { Presence } from '@dxos/protocol-plugin-presence';
+import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 
 import { NetworkManager } from './network-manager';
 import { protocolFactory } from './protocol-factory';
 import { afterTest } from './testutils';
-import { FullyConnectedTopology } from './topology/fully-connected-topology';
+import { FullyConnectedTopology } from './topology';
 
 const createPeer = (topic: PublicKey) => {
   const peerId = PublicKey.random();
@@ -18,14 +18,16 @@ const createPeer = (topic: PublicKey) => {
   const networkManager = new NetworkManager();
   afterTest(() => networkManager.destroy());
 
-  const presence = new Presence(peerId.asBuffer());
+  const presencePlugin = new PresencePlugin(peerId.asBuffer());
+
   const protocol = protocolFactory({
     getTopics: () => {
       return [topic.asBuffer()];
     },
     session: { peerId: peerId.asBuffer() },
-    plugins: [presence]
+    plugins: [presencePlugin]
   });
+
   networkManager.joinProtocolSwarm({
     peerId,
     protocol,
@@ -33,7 +35,7 @@ const createPeer = (topic: PublicKey) => {
     topology: new FullyConnectedTopology()
   });
 
-  return { peerId, presence, networkManager };
+  return { peerId, presence: presencePlugin, networkManager };
 };
 
 test('presence', async () => {

@@ -68,11 +68,12 @@ export class PartyManager {
   }
 
   @synchronized
-  @timed(6000)
+  @timed(6_000) // TODO(burdon): Why not 5000?
   async open (onProgressCallback?: (progress: OpenProgress) => void) {
     if (this._opened) {
       return;
     }
+
     onProgressCallback?.({ haloOpened: false });
 
     await this._feedStore.open();
@@ -86,7 +87,7 @@ export class PartyManager {
         await halo.open();
         await this._setHalo(halo);
       } else if (!this.identityManager.keyring.hasSecretKey(this.identityManager.identityKey!)) {
-        throw new Error('HALO missing and Identity key has no secret.');
+        throw new Error('HALO missing and identity key has no secret.');
       }
     }
 
@@ -124,7 +125,7 @@ export class PartyManager {
   }
 
   @synchronized
-  @timed(6000)
+  @timed(6_000)
   async close () {
     this._opened = false;
 
@@ -391,7 +392,7 @@ export class PartyManager {
     return partyKey.equals(this._identityManager.identityKey.publicKey);
   }
 
-  @timed(5000)
+  @timed(5_000)
   private async _recordPartyJoining (party: PartyInternal) {
     assert(this._identityManager.halo, 'HALO is required.');
 

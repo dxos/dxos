@@ -13,9 +13,11 @@ import { PartyInternal } from './party-internal';
 
 const log = debug('dxos:echo:parties:identity-manager');
 
+/**
+ * Manages the keyring and HALO party.
+ */
 export class IdentityManager {
   private _halo?: HaloParty;
-
   private _identityKey?: KeyRecord;
   private _deviceKey?: KeyRecord;
   private _deviceKeyChain?: KeyChain;
@@ -46,6 +48,7 @@ export class IdentityManager {
     if (!this._identityKey) {
       this._identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
     }
+
     return this._identityKey;
   }
 
@@ -57,6 +60,7 @@ export class IdentityManager {
     if (!this._deviceKey) {
       this._deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
     }
+
     return this._deviceKey;
   }
 
@@ -82,8 +86,8 @@ export class IdentityManager {
   }
 
   async initialize (halo: PartyInternal) {
-    assert(this._identityKey, 'No identity key');
-    assert(this._deviceKey, 'No device key');
+    assert(this._identityKey, 'No identity key.');
+    assert(this._deviceKey, 'No device key.');
 
     this._halo = new HaloParty(halo, this._identityKey.publicKey, this._deviceKey.publicKey);
 

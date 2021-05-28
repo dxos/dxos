@@ -8,8 +8,8 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionState } from './swarm/connection';
-import { Swarm } from './swarm/swarm';
+import { ConnectionState } from './connection';
+import { Swarm } from './swarm';
 
 /**
  * State of the connection to the remote peer with additional info derived from network mapping.
