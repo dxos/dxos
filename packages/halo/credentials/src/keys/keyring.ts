@@ -11,27 +11,25 @@ import {
   sign as cryptoSign, verify as cryptoVerify
 } from '@dxos/crypto';
 
-import { KeyChain, KeyRecord, KeyRecordList, KeyType, Message, SignedMessage } from '../proto';
-import { WithTypeUrl } from '../proto/any';
-import { createDateTimeString } from '../proto/datetime';
+import { isSignedMessage, unwrapMessage } from '../party';
+import {
+  KeyChain, KeyRecord, KeyRecordList, KeyType, Message, SignedMessage, WithTypeUrl, createDateTimeString
+} from '../proto';
 import { RawSignature } from '../typedefs';
 import { Filter, FilterFuntion } from './filter';
 import {
-  SimpleMetrics,
-  canonicalStringify,
-  createKeyRecord,
   assertNoSecrets,
   assertValidKeyPair,
   assertValidPublicKey,
-  stripSecrets,
-  isKeyChain,
+  assertValidSecretKey,
+  canonicalStringify,
   checkAndNormalizeKeyRecord,
-  isSignedMessage,
-  createMeter,
-  unwrapMessage,
-  assertValidSecretKey
+  createKeyRecord,
+  isKeyChain,
+  stripSecrets
 } from './keyring-helpers';
 import { KeyStore } from './keystore';
+import { SimpleMetrics, createMeter } from './simple-metrics';
 
 const log = debug('dxos:creds:keys'); // eslint-disable-line @typescript-eslint/no-unused-vars
 

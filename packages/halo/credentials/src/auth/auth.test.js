@@ -15,7 +15,7 @@ import {
   createEnvelopeMessage,
   createKeyAdmitMessage,
   createPartyGenesisMessage,
-  Party
+  PartyState
 } from '../party';
 import { codecLoop, KeyType } from '../proto';
 import { createAuthMessage } from './auth-message';
@@ -137,7 +137,7 @@ test('Chain of Keys', async () => {
 
 test('PartyAuthenticator - good direct', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
 
   const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
@@ -168,7 +168,7 @@ test('PartyAuthenticator - good direct', async () => {
 
 test('PartyAuthenticator - good chain', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
 
   const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
@@ -210,7 +210,7 @@ test('PartyAuthenticator - good chain', async () => {
 
 test('PartyAuthenticator - bad chain', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
 
   const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
@@ -256,7 +256,7 @@ test('PartyAuthenticator - bad chain', async () => {
 // TODO(dboreham): This test isn't discriminating errors because when I broke the code entirely it still passed.
 test('PartyAuthenticator - wrong key', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
   const wrongKey = await keyring.createKeyRecord();
 
@@ -284,7 +284,7 @@ test('PartyAuthenticator - wrong key', async () => {
 
 test('PartyAuthenticator - wrong party', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
   const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
 
@@ -312,7 +312,7 @@ test('PartyAuthenticator - wrong party', async () => {
 
 test('PartyAuthenticator - missing deviceKey', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
 
   const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
@@ -342,7 +342,7 @@ test('PartyAuthenticator - missing deviceKey', async () => {
 
 test('PartyAuthenticator - tampered message', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
   const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
 
@@ -376,7 +376,7 @@ test('PartyAuthenticator - tampered message', async () => {
 
 test('PartyAuthenticator - tampered signature', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
   const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
 
@@ -410,7 +410,7 @@ test('PartyAuthenticator - tampered signature', async () => {
 
 test('PartyAuthenticator - signature too old', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
   const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
@@ -446,7 +446,7 @@ test('PartyAuthenticator - signature too old', async () => {
 
 test('PartyAuthenticator - signature too far in future', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
   const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
@@ -482,7 +482,7 @@ test('PartyAuthenticator - signature too far in future', async () => {
 
 test('PartyAuthenticator - signature date invalid', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
-  const party = new Party(partyKey);
+  const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
   const identityKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKeyRecord = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));

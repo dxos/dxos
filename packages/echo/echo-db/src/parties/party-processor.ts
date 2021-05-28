@@ -10,7 +10,7 @@ import {
   Authenticator,
   KeyHint,
   KeyRecord,
-  Party as PartyStateMachine, // TODO(burdon): Why rename?
+  PartyState,
   PartyAuthenticator,
   Message as HaloMessage
 } from '@dxos/credentials';
@@ -29,7 +29,7 @@ export interface FeedSetProvider {
  * Party processor for testing.
  */
 export class PartyProcessor {
-  private readonly _stateMachine: PartyStateMachine;
+  private readonly _state: PartyState;
   private readonly _authenticator: Authenticator;
 
   private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
@@ -46,13 +46,13 @@ export class PartyProcessor {
   constructor (
     private readonly _partyKey: PartyKey
   ) {
-    this._stateMachine = new PartyStateMachine(this._partyKey);
-    this._authenticator = new PartyAuthenticator(this._stateMachine);
+    this._state = new PartyState(this._partyKey);
+    this._authenticator = new PartyAuthenticator(this._state);
 
     // TODO(telackey) @dxos/credentials was only half converted to TS. In its current state, the KeyRecord type
     // is not exported, and the PartyStateMachine being used is not properly understood as an EventEmitter by TS.
     // Casting to 'any' is a workaround for the compiler, but the fix is fully to convert @dxos/credentials to TS.
-    const state = this._stateMachine as any;
+    const state = this._state as any;
 
     // TODO(marik-d): Use Event.wrap here.
     state.on('admit:feed', (keyRecord: any) => {
@@ -68,23 +68,23 @@ export class PartyProcessor {
   }
 
   get feedKeys (): PublicKey[] {
-    return this._stateMachine.memberFeeds;
+    return this._state.memberFeeds;
   }
 
   get memberKeys (): PublicKey[] {
-    return this._stateMachine.memberKeys;
+    return this._state.memberKeys;
   }
 
   get credentialMessages () {
-    return this._stateMachine.credentialMessages;
+    return this._state.credentialMessages;
   }
 
   get infoMessages () {
-    return this._stateMachine.infoMessages;
+    return this._state.infoMessages;
   }
 
   get genesisRequired () {
-    return this._stateMachine.credentialMessages.size === 0;
+    return this._state.credentialMessages.size === 0;
   }
 
   get authenticator () {
@@ -93,17 +93,17 @@ export class PartyProcessor {
 
   isFeedAdmitted (feedKey: FeedKey) {
     // TODO(telackey): Make sure it is a feed.
-    return this._stateMachine.credentialMessages.has(feedKey.toHex());
+    return this._state.credentialMessages.has(feedKey.toHex());
   }
 
   isMemberKey (publicKey: PublicKey) {
     // TODO(telackey): Make sure it is not a feed.
-    return this._stateMachine.credentialMessages.has(publicKey.toHex());
+    return this._state.credentialMessages.has(publicKey.toHex());
   }
 
   getMemberInfo (publicKey: PublicKey) {
     // TODO(telackey): Normalize PublicKey types in @dxos/credentials.
-    return this._stateMachine.getInfo(publicKey);
+    return this._state.getInfo(publicKey);
   }
 
   /**
@@ -112,7 +112,7 @@ export class PartyProcessor {
   getFeedOwningMember (feedKey: FeedKey): PublicKey | undefined {
     // TODO(marik-d): Commented out beacuse it breaks tests currently.
     // assert(this._stateMachine.isMemberFeed(feedKey), 'Not a member feed');
-    return this._stateMachine.getAdmittedBy(feedKey);
+    return this._state.getAdmittedBy(feedKey);
   }
 
   // TODO(burdon): Rename xxxProvider.
@@ -124,7 +124,7 @@ export class PartyProcessor {
   }
 
   getOfflineInvitation (invitationID: Buffer) {
-    return this._stateMachine.getInvitation(invitationID);
+    return this._state.getInvitation(invitationID);
   }
 
   async takeHints (hints: KeyHint[]) {
@@ -133,14 +133,14 @@ export class PartyProcessor {
     // TODO(telackey): Hints were not intended to provide a feed set for PartyGenesis messages. They are about
     // what feeds and keys to trust immediately after Greeting, before we have had the opportunity to replicate the
     // credential messages for ourselves.
-    await this._stateMachine.takeHints(hints);
+    await this._state.takeHints(hints);
   }
 
   async processMessage (message: IHaloStream) {
     log(`Processing: ${JSON.stringify(message, jsonReplacer)}`);
     const { data } = message;
     this._haloMessages.push(data);
-    await this._stateMachine.processMessages([data]);
+    await this._state.processMessages([data]);
   }
 
   setOutboundStream (stream: FeedWriter<HaloMessage>) {
@@ -163,6 +163,6 @@ export class PartyProcessor {
     assert(this._haloMessages.length === 0, 'PartyProcessor is already initialized');
     assert(snapshot.messages);
     this._haloMessages = snapshot.messages;
-    await this._stateMachine.processMessages(snapshot.messages);
+    await this._state.processMessages(snapshot.messages);
   }
 }

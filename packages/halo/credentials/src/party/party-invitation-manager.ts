@@ -8,7 +8,7 @@ import debug from 'debug';
 import { PublicKey } from '@dxos/crypto';
 
 import { KeyRecord, SignedMessage } from '../proto';
-import { Party } from './party';
+import { PartyState } from './party-state';
 
 const log = debug('dxos:creds:party');
 
@@ -17,11 +17,11 @@ const log = debug('dxos:creds:party');
  * @package
  */
 export class PartyInvitationManager {
-  _party: Party;
+  _party: PartyState;
   _activeInvitations: Map<string, SignedMessage>;
   _invitationsByKey: Map<string, Set<string>>;
 
-  constructor (party: Party) {
+  constructor (party: PartyState) {
     assert(party);
 
     this._party = party;

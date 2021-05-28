@@ -36,7 +36,7 @@ import { InvitationDescriptor, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter, messageLogger } from '../util';
-import { HALO_CONTACT_LIST_TYPE } from './halo-party';
+import { HALO_PARTY_CONTACT_LIST_TYPE } from './halo-party';
 import { IdentityManager } from './identity-manager';
 import { Party } from './party';
 import { PartyFactory } from './party-factory';
@@ -766,14 +766,14 @@ describe('Party manager', () => {
     const [updatedA, onUpdateA] = latch();
     const [updatedB, onUpdateB] = latch();
 
-    identityManagerA?.halo?.database.queryItems({ type: HALO_CONTACT_LIST_TYPE }).subscribe((value) => {
+    identityManagerA?.halo?.database.queryItems({ type: HALO_PARTY_CONTACT_LIST_TYPE }).subscribe((value) => {
       const [list] = value;
       if (list && list.model.getProperty(identityManagerB?.identityKey?.publicKey.toHex())) {
         onUpdateA();
       }
     });
 
-    identityManagerB?.halo?.database.queryItems({ type: HALO_CONTACT_LIST_TYPE }).subscribe((value) => {
+    identityManagerB?.halo?.database.queryItems({ type: HALO_PARTY_CONTACT_LIST_TYPE }).subscribe((value) => {
       const [list] = value;
       if (list && list.model.getProperty(identityManagerA?.identityKey?.publicKey.toHex())) {
         onUpdateB();
