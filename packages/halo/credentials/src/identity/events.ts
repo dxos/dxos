@@ -3,10 +3,8 @@
 //
 
 // TODO(burdon): Move to protobuf and replace use of string literals.
-export enum EventType {
+export enum IdentityEventType {
   UPDATE_IDENTITY = 'update:identityinfo'
 }
 
-export const IdentityEvents = [
-  EventType.UPDATE_IDENTITY
-];
+export const IdentityEvents = Object.keys(IdentityEventType);

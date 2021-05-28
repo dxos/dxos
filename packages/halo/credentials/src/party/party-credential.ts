@@ -50,7 +50,8 @@ export const createPartyGenesisMessage = (keyring: Keyring,
  * Admit a single key to the Party. This message must be signed by the key to be admitted, and unless the contents
  * of an Envelope, also by a key which has already been admitted.
  */
-export const createKeyAdmitMessage = (keyring: Keyring,
+export const createKeyAdmitMessage = (
+  keyring: Keyring,
   partyKey: PublicKeyLike,
   admitKeyPair: KeyRecord,
   signingKeys: (KeyRecord | KeyChain)[] = [],
