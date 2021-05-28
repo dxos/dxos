@@ -3,5 +3,6 @@
 //
 
 declare module 'buffer-json-encoding'
-declare module '@dxos/broadcast'
 declare module 'ngraph.path'
+
+declare module '@dxos/broadcast'

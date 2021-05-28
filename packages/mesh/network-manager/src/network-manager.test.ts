@@ -11,16 +11,14 @@ import waitForExpect from 'wait-for-expect';
 import { Event, latch, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
-import { Presence } from '@dxos/protocol-plugin-presence';
+import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { createBroker } from '@dxos/signal';
 import { range, randomInt, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from './network-manager';
 import { protocolFactory } from './protocol-factory';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
-import { FullyConnectedTopology } from './topology/fully-connected-topology';
-import { StarTopology } from './topology/star-topology';
-import { Topology } from './topology/topology';
+import { FullyConnectedTopology, StarTopology, Topology } from './topology';
 
 const log = debug('dxos:network-manager:test');
 
@@ -267,7 +265,7 @@ test('property-based test', async () => {
   interface Real {
     peers: ComplexMap<PublicKey, {
       networkManager: NetworkManager
-      presence?: Presence
+      presence?: PresencePlugin
     }>
   }
 
@@ -336,7 +334,7 @@ test('property-based test', async () => {
 
       const peer = r.peers.get(this.peerId)!;
 
-      const presence = new Presence(this.peerId.asBuffer());
+      const presence = new PresencePlugin(this.peerId.asBuffer());
       const protocol = protocolFactory({
         getTopics: () => {
           return [m.topic.asBuffer()];
@@ -346,7 +344,7 @@ test('property-based test', async () => {
       });
 
       peer.networkManager.joinProtocolSwarm({
-        peerId: this.peerId,
+        peerId: this.peerId, // TODO(burdon): this?
         topic: m.topic,
         protocol,
         topology: new FullyConnectedTopology(),

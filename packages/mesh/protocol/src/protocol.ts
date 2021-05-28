@@ -84,14 +84,14 @@ export class Protocol extends NanoresourcePromise {
    private _stream?: any = undefined;
 
    /**
-   * https://github.com/mafintosh/hypercore-protocol#var-feed--streamfeedkey
-   * @type {Feed}
-   */
+    * https://github.com/mafintosh/hypercore-protocol#var-feed--streamfeedkey
+    * @type {Feed}
+    */
    private _feed?: any = undefined;
 
    /**
-   * Local object to store data for extensions.
-   */
+    * Local object to store data for extensions.
+    */
    private _context: Record<string, any> = {}
 
    constructor (options: ProtocolOptions = {}) {
@@ -158,8 +158,9 @@ export class Protocol extends NanoresourcePromise {
    }
 
    /**
-   * Sets session data which is exchanged with the peer during the handshake.
-   */
+    * Sets session data which is exchanged with the peer during the handshake.
+    */
+   // TODO(burdon): Define type.
    setSession (data: any) {
      this._stream.userData = bufferJson.encode(data);
 
@@ -167,8 +168,8 @@ export class Protocol extends NanoresourcePromise {
    }
 
    /**
-   * Get remote session data.
-   */
+    * Get remote session data.
+    */
    getSession (): any | {} {
      try {
        return bufferJson.decode(this._stream.remoteUserData);
@@ -178,8 +179,8 @@ export class Protocol extends NanoresourcePromise {
    }
 
    /**
-   * Set local context.
-   */
+    * Set local context.
+    */
    setContext (context: any) {
      this._context = Object.assign({}, context);
 
@@ -187,15 +188,15 @@ export class Protocol extends NanoresourcePromise {
    }
 
    /**
-   * Get local context.
-   */
+    * Get local context.
+    */
    getContext (): any {
      return this._context;
    }
 
    /**
-   * Sets the named extension.
-   */
+    * Sets the named extension.
+    */
    setExtension (extension: Extension) {
      assert(extension);
      this._extensionMap.set(extension.name, extension);
@@ -204,8 +205,8 @@ export class Protocol extends NanoresourcePromise {
    }
 
    /**
-   * Sets the set of extensions.
-   */
+    * Sets the set of extensions.
+    */
    setExtensions (extensions: Extension[]) {
      extensions.forEach(extension => this.setExtension(extension));
 
@@ -213,17 +214,17 @@ export class Protocol extends NanoresourcePromise {
    }
 
    /**
-   * Returns the extension by name.
-   */
+    * Returns the extension by name.
+    */
    getExtension (name: string): Extension | undefined {
      return this._extensionMap.get(name);
    }
 
    /**
-   * Set protocol handshake handler.
-   * @param {Function<{protocol}>} handler - Async handshake handler.
-   * @returns {Protocol}
-   */
+    * Set protocol handshake handler.
+    * @param {Function<{protocol}>} handler - Async handshake handler.
+    * @returns {Protocol}
+    */
    setHandshakeHandler (handler: HandshakeHandler) {
      this._handshakes.push(async (protocol: Protocol) => {
        try {
@@ -236,11 +237,9 @@ export class Protocol extends NanoresourcePromise {
    }
 
    /**
-   * Initializes the protocol stream, creating a feed.
-   *
-   * https://github.com/mafintosh/hypercore-protocol
-   *
-   */
+    * Initializes the protocol stream, creating a feed.
+    * https://github.com/mafintosh/hypercore-protocol
+    */
    init (discoveryKey?: Buffer) {
      assert(!this._init);
 

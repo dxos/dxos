@@ -29,7 +29,7 @@ export async function warnAfterTimeout<T> (timeout: number, context: string, bod
  *
  * ```typescript
  * class Foo {
- *   @timed(5000)
+ *   @timed(5_000)
  *   async doStuff() {
  *     // long task
  *   }

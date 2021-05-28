@@ -108,6 +108,7 @@ export const waitForCondition = (condFn, timeout = 0, interval = 10) => {
       await sleep(interval);
     }
   };
+
   setTimeout(waiter, 0);
 
   return timeout ? promiseTimeout(provider(), timeout) : provider();

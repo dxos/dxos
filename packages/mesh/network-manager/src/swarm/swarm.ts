@@ -12,8 +12,8 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
 import { SignalApi } from '../signal';
-import { SwarmController, Topology } from '../topology/topology';
-import { TransportFactory } from '../transport/transport';
+import { SwarmController, Topology } from '../topology';
+import { TransportFactory } from '../transport';
 import { Connection, ConnectionState } from './connection';
 
 const log = debug('dxos:network-manager:swarm');

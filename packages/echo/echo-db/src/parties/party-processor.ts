@@ -10,7 +10,7 @@ import {
   Authenticator,
   KeyHint,
   KeyRecord,
-  Party as PartyStateMachine,
+  Party as PartyStateMachine, // TODO(burdon): Why rename?
   PartyAuthenticator,
   Message as HaloMessage
 } from '@dxos/credentials';
@@ -29,9 +29,10 @@ export interface FeedSetProvider {
  * Party processor for testing.
  */
 export class PartyProcessor {
-  private readonly _authenticator: Authenticator;
-  private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
   private readonly _stateMachine: PartyStateMachine;
+  private readonly _authenticator: Authenticator;
+
+  private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
 
   protected readonly _feedAdded = new Event<FeedKey>()
 

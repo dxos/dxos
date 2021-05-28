@@ -11,8 +11,8 @@ import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 
 import { afterTest } from '../testutils';
-import { FullyConnectedTopology } from '../topology/fully-connected-topology';
-import { createWebRtcTransportFactory, WebrtcTransport } from '../transport/webrtc-transport';
+import { FullyConnectedTopology } from '../topology';
+import { createWebRtcTransportFactory, WebrtcTransport } from '../transport';
 import { Swarm } from './swarm';
 
 const log = debug('dxos:network-manager:swarm:test');

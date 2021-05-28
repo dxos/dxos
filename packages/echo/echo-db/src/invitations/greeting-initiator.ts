@@ -32,7 +32,7 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
 
 const log = debug('dxos:echo:invitations:greeting-initiator');
 
-const DEFAULT_TIMEOUT = 30000;
+const DEFAULT_TIMEOUT = 30_000;
 
 /**
  * Attempts to connect to a greeting responder to 'redeem' an invitation, potentially with some out-of-band

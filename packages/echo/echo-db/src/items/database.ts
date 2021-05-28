@@ -71,7 +71,7 @@ export class Database {
   @synchronized
   async init () {
     if (this._state !== State.INITIAL) {
-      throw new Error('Invalid state, database was already initialized.');
+      throw new Error('Invalid state: database was already initialized.');
     }
 
     this._itemDemuxerInboundStream = this._itemDemuxer.open();

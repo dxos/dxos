@@ -19,6 +19,7 @@ const defaultSubscribe = () => () => {};
 /**
  * Manages key exchange and feed replication.
  */
+// TODO(burdon): Rename ReplicatorPlugin.
 export class Replicator extends EventEmitter {
   static extension = 'dxos.protocol.replicator';
 
