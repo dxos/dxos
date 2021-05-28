@@ -9,8 +9,8 @@ import waitForExpect from 'wait-for-expect';
 import { sleep, promiseTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
+import { afterTest } from '@dxos/testutils';
 
-import { afterTest } from '../testutils';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRtcTransportFactory, WebrtcTransport } from '../transport';
 import { Swarm } from './swarm';

@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-let afterTestCallbacks: (() => void | Promise<void>)[] = [];
+let afterTestCallbacks: (() => any | Promise<any>)[] = [];
 
-export function afterTest (cb: () => void | Promise<void>) {
+export function afterTest (cb: () => any | Promise<any>) {
   afterTestCallbacks.push(cb);
 }
 
