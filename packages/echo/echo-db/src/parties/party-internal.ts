@@ -12,53 +12,41 @@ import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
+import { ActivationOptions, IdentityManager, PartyActivator } from '../halo';
 import { InvitationManager } from '../invitations';
 import { Database } from '../items';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
-import { IdentityManager } from './identity-manager';
 import { PartyCore, PartyOptions } from './party-core';
 import { PartyProtocol } from './party-protocol';
 
 export const PARTY_ITEM_TYPE = 'dxn://dxos/item/party';
 export const PARTY_TITLE_PROPERTY = 'title';
 
+// TODO(burdon): Factor out public API.
+export interface PartyMember {
+  publicKey: PublicKey,
+  displayName?: string
+}
+
+// TODO(burdon): Factor out public API.
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface PartyFilter {}
 
-export interface ActivationOptions {
-  global?: boolean;
-  device?: boolean;
-}
-
-// TODO(burdon): Party properties?
-export interface PartyActivator {
-  isActive(): boolean,
-  getLastKnownTitle(): string,
-  setLastKnownTitle(title: string): Promise<void>,
-  activate(options: ActivationOptions): Promise<void>;
-  deactivate(options: ActivationOptions): Promise<void>;
-}
-
 /**
- * A Party represents a shared dataset containing queryable Items that are constructed from an ordered stream
- * of mutations.
+ * Internal representation of a party.
  */
 // TODO(burdon): Rename PartyImpl.
 export class PartyInternal {
   public readonly update = new Event<void>();
 
+  // TODO(burdon): Merge with PartyInternal.
   private readonly _partyCore: PartyCore;
+
   private readonly _activator?: PartyActivator;
 
-  private _protocol?: PartyProtocol;
   private _invitationManager?: InvitationManager;
-
-  /**
-   * Snapshot to be restored from when party.open() is called.
-   */
-  // TODO(burdon): Not updated?
-  private _subscriptions: (() => void)[] = [];
+  private _protocol?: PartyProtocol;
 
   constructor (
     _partyKey: PartyKey,
@@ -80,7 +68,10 @@ export class PartyInternal {
       _options
     );
 
-    this._activator = this._identityManager.halo?.createPartyActivator(this);
+    // TODO(burdon): When is this not null?
+    if (this._identityManager.halo) {
+      this._activator = new PartyActivator(this._identityManager.halo, this);
+    }
   }
 
   get key (): PartyKey {
@@ -176,8 +167,6 @@ export class PartyInternal {
 
     this._protocol = undefined;
     this._invitationManager = undefined;
-
-    this._subscriptions.forEach(callback => callback());
 
     this.update.emit();
 

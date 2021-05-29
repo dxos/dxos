@@ -2,9 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './halo-factory';
-export * from './halo-party';
-export * from './identity-manager';
 export * from './party';
 export * from './party-factory';
 export * from './party-internal';

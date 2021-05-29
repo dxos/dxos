@@ -23,12 +23,11 @@ import {
   InvitationDescriptor,
   SecretProvider
 } from '../invitations';
+import { PartyFactory, PartyInternal, PARTY_ITEM_TYPE } from '../parties';
 import {
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
 import { IdentityManager } from './identity-manager';
-import { PartyFactory } from './party-factory';
-import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 
 /**
  * Options allowed when creating the HALO.

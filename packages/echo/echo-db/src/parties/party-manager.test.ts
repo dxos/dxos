@@ -32,13 +32,11 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { createWritableFeedStream } from '@dxos/util';
 
+import { HALO_PARTY_CONTACT_LIST_TYPE, HaloFactory, IdentityManager } from '../halo';
 import { InvitationDescriptor, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter, messageLogger } from '../util';
-import { HaloFactory } from './halo-factory';
-import { HALO_PARTY_CONTACT_LIST_TYPE } from './halo-party';
-import { IdentityManager } from './identity-manager';
 import { Party } from './party';
 import { PartyFactory } from './party-factory';
 import { PARTY_ITEM_TYPE } from './party-internal';

@@ -20,6 +20,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
+import { IdentityManager } from '../halo';
 import {
   GreetingInitiator,
   InvitationDescriptor,
@@ -29,7 +30,6 @@ import {
 } from '../invitations';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
-import { IdentityManager } from './identity-manager';
 import { PartyOptions } from './party-core';
 import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 
