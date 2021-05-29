@@ -39,6 +39,16 @@ export class HaloParty {
     private readonly _deviceKey: PublicKey
   ) {}
 
+  // TODO(burdon): Why is this exposed?
+  get database () {
+    return this._party.database;
+  }
+
+  // TODO(burdon): Why is this exposed?
+  get invitationManager () {
+    return this._party.invitationManager;
+  }
+
   get identityInfo () {
     return this._party.processor.infoMessages.get(this._identityKey.toHex());
   }
@@ -59,14 +69,6 @@ export class HaloParty {
     return this._party.processor.feedKeys;
   }
 
-  get database () {
-    return this._party.database;
-  }
-
-  get invitationManager () {
-    return this._party.invitationManager;
-  }
-
   get preferences () {
     const globalItem = this.getGlobalPreferences();
     const deviceItem = this.getDevicePreferences();
@@ -74,15 +76,23 @@ export class HaloParty {
     return defaultsDeep({}, deviceItem?.model.toObject() ?? {}, globalItem?.model.toObject() ?? {});
   }
 
+  // TODO(burdon): Change to getter.
+  isActive (partyKey: PublicKey) {
+    const { preferences } = this;
+    const partyPrefs = preferences[partyKey.toHex()] ?? {};
+    return partyPrefs.active || undefined === partyPrefs.active;
+  }
+
   async close () {
     await this._party.close();
   }
 
-  // TODO(burdon): Not used?
+  // TODO(burdon): What is this -- not used?
   async recordPartyJoining (joinedParty: JoinedParty) {
     const knownParties = await this._party.database.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE }).value;
-    const partyDesc = knownParties.find(partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')));
-    assert(!partyDesc, `Descriptor already exists for Party ${joinedParty.partyKey.toHex()}`);
+    const partyDesc = knownParties.find(
+      partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')));
+    assert(!partyDesc, `Descriptor already exists for Party: ${joinedParty.partyKey.toHex()}`);
 
     await this._party.database.createItem({
       model: ObjectModel,
@@ -93,61 +103,6 @@ export class HaloParty {
         hints: joinedParty.keyHints.map(hint => ({ ...hint, publicKey: hint.publicKey?.toHex() }))
       }
     });
-  }
-
-  isActive (partyKey: PublicKey) {
-    const { preferences } = this;
-    const partyPrefs = preferences[partyKey.toHex()] ?? {};
-    return partyPrefs.active || undefined === partyPrefs.active;
-  }
-
-  public getGlobalPartyPreference (partyKey: PublicKey, key: string) {
-    const item = this.getGlobalPreferences();
-    assert(item, 'Global preference item required.');
-    return this._getPartyPreference(item, partyKey, key);
-  }
-
-  public async setGlobalPartyPreference (party: PartyInternal, key: string, value: any) {
-    const item = this.getGlobalPreferences();
-    assert(item, 'Global preference item required.');
-    return this._setPartyPreference(item, party, key, value);
-  }
-
-  // TODO(burdon): Not used?
-  public getDevicePartyPreference (partyKey: PublicKey, key: string) {
-    const item = this.getDevicePreferences();
-    assert(item, 'Device preference item required.');
-    return this._getPartyPreference(item, partyKey, key);
-  }
-
-  public async setDevicePartyPreference (party: PartyInternal, key: string, value: any) {
-    const item = this.getDevicePreferences();
-    assert(item, 'Device preference item required.');
-    return this._setPartyPreference(item, party, key, value);
-  }
-
-  public _getPartyPreference (preferences: Item<any>, partyKey: PublicKey, key: string) {
-    const path = partyKey.toHex();
-    const partyPrefs = preferences.model.getProperty(path, {});
-    return partyPrefs[key];
-  }
-
-  public async _setPartyPreference (preferences: Item<any>, party: PartyInternal, key: string, value: any) {
-    const path = party.key.toHex();
-    const partyPrefs = preferences.model.getProperty(path, {});
-    partyPrefs[key] = value;
-    await preferences.model.setProperty(party.key.toHex(), partyPrefs);
-    party.update.emit();
-  }
-
-  getGlobalPreferences () {
-    const [globalItem] = this.database.queryItems({ type: HALO_PARTY_PREFERENCES_TYPE }).value;
-    return globalItem;
-  }
-
-  getDevicePreferences () {
-    const deviceItems = this.database.queryItems({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).value ?? [];
-    return deviceItems.find(item => this._deviceKey.equals(item.model.getProperty('publicKey')));
   }
 
   subscribeToPreferences (cb: (preferences: any) => void) {
@@ -217,6 +172,7 @@ export class HaloParty {
     return this.database.queryItems({ type: HALO_PARTY_CONTACT_LIST_TYPE }).value[0];
   }
 
+  // TODO(burdon): Comment?
   createPartyActivator (party: PartyInternal): PartyActivator {
     return {
       isActive: () => this.isActive(party.key),
@@ -239,5 +195,57 @@ export class HaloParty {
         }
       }
     };
+  }
+
+  //
+  // TODO(burdon): Factor out properties.
+  //
+
+  getGlobalPreferences () {
+    const [globalItem] = this.database.queryItems({ type: HALO_PARTY_PREFERENCES_TYPE }).value;
+    return globalItem;
+  }
+
+  public getGlobalPartyPreference (partyKey: PublicKey, key: string) {
+    const item = this.getGlobalPreferences();
+    assert(item, 'Global preference item required.');
+    return this._getPartyPreference(item, partyKey, key);
+  }
+
+  public async setGlobalPartyPreference (party: PartyInternal, key: string, value: any) {
+    const item = this.getGlobalPreferences();
+    assert(item, 'Global preference item required.');
+    return this._setPartyPreference(item, party, key, value);
+  }
+
+  getDevicePreferences () {
+    const deviceItems = this.database.queryItems({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).value ?? [];
+    return deviceItems.find(item => this._deviceKey.equals(item.model.getProperty('publicKey')));
+  }
+
+  public getDevicePartyPreference (partyKey: PublicKey, key: string) {
+    const item = this.getDevicePreferences();
+    assert(item, 'Device preference item required.');
+    return this._getPartyPreference(item, partyKey, key);
+  }
+
+  public async setDevicePartyPreference (party: PartyInternal, key: string, value: any) {
+    const item = this.getDevicePreferences();
+    assert(item, 'Device preference item required.');
+    return this._setPartyPreference(item, party, key, value);
+  }
+
+  public _getPartyPreference (preferences: Item<any>, partyKey: PublicKey, key: string) {
+    const path = partyKey.toHex();
+    const partyPrefs = preferences.model.getProperty(path, {});
+    return partyPrefs[key];
+  }
+
+  public async _setPartyPreference (preferences: Item<any>, party: PartyInternal, key: string, value: any) {
+    const path = party.key.toHex();
+    const partyPrefs = preferences.model.getProperty(path, {});
+    partyPrefs[key] = value;
+    await preferences.model.setProperty(party.key.toHex(), partyPrefs);
+    party.update.emit();
   }
 }

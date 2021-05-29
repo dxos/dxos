@@ -35,18 +35,11 @@ import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { FeedStoreAdapter, createRamStorage } from './util';
 
+// TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
 
-export interface Options {
-  readOnly?: false;
-  readLogger?: (msg: any) => void;
-  writeLogger?: (msg: any) => void;
-}
-
-// TODO(burdon): Move?
+// TODO(burdon): Factor out.
 export type Contact = PartyMember;
-
-// TODO(burdon): Create index.ts in each subfolder (no indirect imports).
 
 /**
  * Various options passed to `ECHO.create`.
@@ -75,6 +68,7 @@ export interface EchoCreationOptions {
   /**
    * Whether to save and load snapshots. Defaults to `true`.
    */
+  // TODO(burdon): Hierarchical config.
   snapshots?: boolean
 
   /**
@@ -82,6 +76,7 @@ export interface EchoCreationOptions {
    */
   snapshotInterval?: number
 
+  // TODO(burdon): Comments.
   readLogger?: (msg: any) => void;
   writeLogger?: (msg: any) => void;
 }
@@ -98,6 +93,7 @@ export interface EchoCreationOptions {
  * Messages are streamed into the pipeline (from the `FeedStore`) in logical order, determined by the
  * `Spactime` `Timeframe` (which implements a vector clock).
  */
+// TODO(burdon): Create ECHOError class for public errors.
 export class ECHO {
   private readonly _keyring: Keyring;
   private readonly _identityManager: IdentityManager;
@@ -165,20 +161,29 @@ export class ECHO {
     );
   }
 
+  toString () {
+    return `Database(${JSON.stringify({
+      parties: this._partyManager.parties.length
+    })})`;
+  }
+
   get isOpen () {
     return this._partyManager.opened;
   }
 
-  get identityReady () {
-    return this._identityManager.ready;
-  }
+  //
+  // HALO
+  //
 
   // TODO(burdon): Different from 'identityReady'?
   get isHaloInitialized (): boolean {
     return !!this._identityManager.halo;
   }
 
-  // TODO(burdon): Wrap up identity related methods?
+  get identityReady () {
+    return this._identityManager.ready;
+  }
+
   get identityKey (): KeyRecord | undefined {
     return this._identityManager.identityKey;
   }
@@ -187,35 +192,25 @@ export class ECHO {
     return this._identityManager.displayName;
   }
 
-  get modelFactory (): ModelFactory {
-    return this._modelFactory;
-  }
+  //
+  // Devtools.
+  // TODO(burdon): Expose single devtools object.
+  //
 
-  /**
-   * For devtools.
-   */
   get keyring (): Keyring {
     return this._keyring;
   }
 
-  /**
-   * For devtools.
-   */
   get feedStore (): FeedStore {
-    return this._feedStore.feedStore;
+    return this._feedStore.feedStore; // TODO(burdon): Why not return top-level object?
   }
 
-  /**
-   * For devtools.
-   */
   get networkManager (): NetworkManager {
     return this._networkManager;
   }
 
-  toString () {
-    return `Database(${JSON.stringify({
-      parties: this._partyManager.parties.length
-    })})`;
+  get modelFactory (): ModelFactory {
+    return this._modelFactory;
   }
 
   /**
@@ -241,6 +236,7 @@ export class ECHO {
   /**
    * Removes all data and closes this ECHO instance.
    */
+  // TODO(burdon): Enable re-open.
   async reset () {
     await this.close();
 
@@ -265,36 +261,9 @@ export class ECHO {
     }
   }
 
-  /**
-   * Create Profile. Add Identity key if public and secret key are provided.
-   */
-  async createIdentity (keyPair: KeyPair) {
-    const { publicKey, secretKey } = keyPair;
-    assert(publicKey, 'Invalid publicKey');
-    assert(secretKey, 'Invalid secretKey');
-
-    if (this._identityManager.identityKey) {
-      // TODO(burdon): Bad API: Semantics change based on options.
-      // TODO(burdon): createProfile isn't party of this pakage.
-      throw new Error('Identity key already exists. Call createProfile without a keypair to only create a halo party.');
-    }
-
-    await this._keyring.addKeyRecord({ secretKey, publicKey: PublicKey.from(publicKey), type: KeyType.IDENTITY });
-  }
-
-  async createHalo (displayName?: string) {
-    // TODO(burdon): Why not assert?
-    if (this._identityManager.halo) {
-      throw new Error('HALO party already exists');
-    }
-    if (!this._identityManager.identityKey) {
-      throw new Error('Cannot create HALO. Identity key not found.');
-    }
-
-    await this._partyManager.createHalo({
-      identityDisplayName: displayName || this._identityManager.identityKey.publicKey.humanize()
-    });
-  }
+  //
+  // Parties
+  //
 
   /**
    * Creates a new party.
@@ -349,12 +318,44 @@ export class ECHO {
     return new Party(impl);
   }
 
+  //
+  // HALO
+  // TODO(burdon): Factor out HALO-specific API.
+  //
+
   /**
-   * Create an invitation to an exiting Identity HALO.
+   * Create Profile. Add Identity key if public and secret key are provided.
    */
-  async createHaloInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions) {
-    assert(this._identityManager.halo, 'Cannot create invitation because halo does not exists');
-    return this._identityManager.halo.invitationManager.createInvitation(authenticationDetails, options);
+  async createIdentity (keyPair: KeyPair) {
+    const { publicKey, secretKey } = keyPair;
+    assert(publicKey, 'Invalid publicKey');
+    assert(secretKey, 'Invalid secretKey');
+
+    if (this._identityManager.identityKey) {
+      // TODO(burdon): Bad API: Semantics change based on options.
+      // TODO(burdon): createProfile isn't party of this pakage.
+      throw new Error('Identity key already exists. Call createProfile without a keypair to only create a halo party.');
+    }
+
+    await this._keyring.addKeyRecord({ secretKey, publicKey: PublicKey.from(publicKey), type: KeyType.IDENTITY });
+  }
+
+  /**
+   * Creates the initial HALO party.
+   * @param displayName
+   */
+  async createHalo (displayName?: string) {
+    // TODO(burdon): Why not assert?
+    if (this._identityManager.halo) {
+      throw new Error('HALO party already exists');
+    }
+    if (!this._identityManager.identityKey) {
+      throw new Error('Cannot create HALO. Identity key not found.');
+    }
+
+    await this._partyManager.createHalo({
+      identityDisplayName: displayName || this._identityManager.identityKey.publicKey.humanize()
+    });
   }
 
   /**
@@ -381,13 +382,25 @@ export class ECHO {
   }
 
   /**
-   * Query for contacts.  Contacts represent member keys across all known Parties.
+   * Create an invitation to an exiting Identity HALO.
+   */
+  async createHaloInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions) {
+    assert(this._identityManager.halo, 'HALO not initialized.');
+    return this._identityManager.halo.invitationManager.createInvitation(authenticationDetails, options);
+  }
+
+  /**
+   * Query for contacts. Contacts represent member keys across all known Parties.
    */
   queryContacts (): ResultSet<Contact> {
     assert(this._partyManager.opened, 'ECHO not open.');
-    assert(this._partyManager.identityManager.halo, 'HALO required.');
+    assert(this._partyManager.identityManager.halo, 'Invalid HALO.');
 
+    const event = new Event();
     const results = this._partyManager.identityManager.halo.database.queryItems({ type: HALO_PARTY_CONTACT_LIST_TYPE });
+    results.subscribe(() => {
+      event.emit();
+    });
 
     const getter = (): Contact[] => {
       const [contactListItem] = results.value;
@@ -397,11 +410,6 @@ export class ECHO {
         displayName: contact.displayName
       }));
     };
-
-    const event = new Event();
-    results.subscribe(() => {
-      event.emit();
-    });
 
     return new ResultSet(event, getter);
   }
