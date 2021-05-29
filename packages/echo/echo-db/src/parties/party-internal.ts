@@ -68,7 +68,8 @@ export class PartyInternal {
       _options
     );
 
-    // TODO(burdon): When is this not null?
+    // TODO(burdon): Remove from here since e.g., it isn't applicable to HaloParty.
+    console.log('PartyInternal', this._partyCore.key, !!this._identityManager.halo);
     if (this._identityManager.halo) {
       this._activator = new PartyActivator(this._identityManager.halo, this);
     }

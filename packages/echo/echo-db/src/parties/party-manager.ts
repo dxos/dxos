@@ -73,7 +73,7 @@ export class PartyManager {
     // TODO(burdon): Replace with events.
     onProgressCallback?.({ haloOpened: false });
 
-    //
+    // TODO(burdon): Should this already by open?
     await this._feedStore.open();
 
     // Open the HALO first (if present).

@@ -81,7 +81,7 @@ export class PartyFactory {
     // Connect the pipeline.
     await party.open();
 
-    // PartyGenesis (self-signed by Party)
+    // PartyGenesis (self-signed by Party).
     await party.processor.writeHaloMessage(createPartyGenesisMessage(
       this._identityManager.keyring,
       partyKey,
@@ -89,7 +89,7 @@ export class PartyFactory {
       partyKey)
     );
 
-    // KeyAdmit (IdentityGenesis in an Envelope signed by Party)
+    // KeyAdmit (IdentityGenesis in an Envelope signed by Party).
     await party.processor.writeHaloMessage(createEnvelopeMessage(
       this._identityManager.keyring,
       partyKey.publicKey,
@@ -106,7 +106,7 @@ export class PartyFactory {
     ));
 
     if (this._identityManager.identityInfo) {
-      // IdentityInfo in an Envelope signed by the Device KeyChain
+      // IdentityInfo in an Envelope signed by the Device KeyChain.
       await party.processor.writeHaloMessage(createEnvelopeMessage(
         this._identityManager.keyring,
         partyKey.publicKey,
@@ -116,7 +116,9 @@ export class PartyFactory {
     }
 
     // Create special properties item.
+    console.log('PartyFactory createParty open =', party.isOpen);
     await party.database.createItem({ model: ObjectModel, type: PARTY_ITEM_TYPE });
+    console.log('PartyFactory createItem(PARTY_ITEM_TYPE)'); // TODO(burdon): Happens after test is closed.
 
     // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
     await this._identityManager.keyring.deleteSecretKey(partyKey);
@@ -186,7 +188,7 @@ export class PartyFactory {
       this._options
     );
 
-    log(`Constructed: ${party}`);
+    console.log(`PartyFactory.constructParty: ${party.key}`);
     return party;
   }
 

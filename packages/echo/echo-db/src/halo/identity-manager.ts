@@ -107,6 +107,7 @@ export class IdentityManager {
       this.deviceKeyChain
     );
 
+    log('HALO initialized.');
     this.ready.emit();
   }
 }

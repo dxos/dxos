@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 import { PARTY_TITLE_PROPERTY, PartyInternal } from '../parties';
 import { HaloParty } from './halo-party';
 
@@ -16,20 +18,16 @@ export interface ActivationOptions {
 // TODO(burdon): Rename.
 export class PartyActivator {
   constructor (
-    private _halo: HaloParty,
-    private _party: PartyInternal
-  ) {}
+    private readonly _halo: HaloParty,
+    private readonly _party: PartyInternal
+  ) {
+    assert(this._party);
+    console.log('PartyActivator', this._party.key);
+  }
 
   isActive () {
+    console.log('PartyActivator.isActive', this._party.key);
     return this._halo.preferences.isPartyActive(this._party.key);
-  }
-
-  getLastKnownTitle () {
-    return this._halo.preferences.getGlobalPartyPreference(this._party.key, PARTY_TITLE_PROPERTY);
-  }
-
-  async setLastKnownTitle (title: string) {
-    return this._halo.preferences.setGlobalPartyPreference(this._party, PARTY_TITLE_PROPERTY, title);
   }
 
   async activate (options: ActivationOptions) {
@@ -54,5 +52,13 @@ export class PartyActivator {
     if (device || (global && device === undefined && this._halo.preferences.isPartyActive(this._party.key))) {
       await this._halo.preferences.setDevicePartyPreference(this._party, 'active', false);
     }
+  }
+
+  getLastKnownTitle () {
+    return this._halo.preferences.getGlobalPartyPreference(this._party.key, PARTY_TITLE_PROPERTY);
+  }
+
+  async setLastKnownTitle (title: string) {
+    return this._halo.preferences.setGlobalPartyPreference(this._party, PARTY_TITLE_PROPERTY, title);
   }
 }

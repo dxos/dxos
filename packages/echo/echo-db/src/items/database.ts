@@ -97,7 +97,7 @@ export class Database {
    * Creates a new item with the given queryable type and model.
    */
   // TODO(burdon): Get modelType from somewhere other than ObjectModel.meta.type.
-  createItem <M extends Model<any>> (options: ItemCreationOptions<M>): Promise<Item<M>> {
+  async createItem <M extends Model<any>> (options: ItemCreationOptions<M>): Promise<Item<M>> {
     this._assertInitialized();
 
     if (!options.model) {
@@ -117,7 +117,7 @@ export class Database {
     return this._itemManager.createItem(options.model.meta.type, options.type, options.parent, options.props);
   }
 
-  createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>> (
+  async createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>> (
     options: LinkCreationOptions<M, S, T>
   ): Promise<Link<M, S, T>> {
     this._assertInitialized();
