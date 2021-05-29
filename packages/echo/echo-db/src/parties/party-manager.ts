@@ -16,8 +16,9 @@ import { ComplexMap } from '@dxos/util';
 import { SecretProvider, InvitationDescriptor } from '../invitations';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
+import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { IdentityManager } from './identity-manager';
-import { HaloCreationOptions, PartyFactory } from './party-factory';
+import { PartyFactory } from './party-factory';
 import { PartyInternal, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './party-internal';
 
 const CONTACT_DEBOUNCE_INTERVAL = 500;
@@ -50,7 +51,8 @@ export class PartyManager {
     private readonly _identityManager: IdentityManager,
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _snapshotStore: SnapshotStore,
-    private readonly _partyFactory: PartyFactory
+    private readonly _partyFactory: PartyFactory,
+    private readonly _haloFactory: HaloFactory
   ) {}
 
   get identityManager () {
@@ -145,6 +147,24 @@ export class PartyManager {
     this._parties.clear();
   }
 
+  //
+  // HALO
+  // TODO(burdon): Move into HaloFactory (don't need two-levels of these methods).
+  //
+
+  /**
+   * Creates the Identity HALO.
+   */
+  @synchronized
+  async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
+    assert(this._opened, 'PartyManager is not open.');
+    assert(!this._identityManager.halo, 'HALO already exists.');
+
+    const halo = await this._haloFactory.createHalo(options);
+    await this._setHalo(halo);
+    return halo;
+  }
+
   /**
    * Joins an existing Identity HALO from a recovery seed phrase.
    * TODO(telackey): Combine with joinHalo?
@@ -158,9 +178,8 @@ export class PartyManager {
     assert(!this._identityManager.halo, 'HALO already exists.');
     assert(!this._identityManager.identityKey, 'Identity key already exists.');
 
-    const halo = await this._partyFactory.recoverHalo(seedPhrase);
+    const halo = await this._haloFactory.recoverHalo(seedPhrase);
     await this._setHalo(halo);
-
     return halo;
   }
 
@@ -172,25 +191,55 @@ export class PartyManager {
     assert(this._opened, 'PartyManager is not open.');
     assert(!this._identityManager.halo, 'HALO already exists.');
 
-    const halo = await this._partyFactory.joinHalo(invitationDescriptor, secretProvider);
+    const halo = await this._haloFactory.joinHalo(invitationDescriptor, secretProvider);
     await this._setHalo(halo);
-
     return halo;
   }
 
-  /**
-   * Creates the Identity HALO.
-   */
-  @synchronized
-  async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
-    assert(this._opened, 'PartyManager is not open.');
-    assert(!this._identityManager.halo, 'HALO already exists.');
+  // Only call from a @synchronized method.
+  private async _setHalo (halo: PartyInternal) {
+    // TODO(burdon): Move into HaloFactory.
+    await this._identityManager.initialize(halo);
 
-    const halo = await this._partyFactory.createHalo(options);
-    await this._setHalo(halo);
+    this._subscriptions.push(this._identityManager.halo!.subscribeToJoinedPartyList(async values => {
+      if (!this._opened) {
+        return;
+      }
 
-    return halo;
+      for (const partyDesc of values) {
+        if (!this._parties.has(partyDesc.partyKey)) {
+          log(`Auto-opening new Party from HALO: ${partyDesc.partyKey.toHex()}`);
+          await this.addParty(partyDesc.partyKey, partyDesc.keyHints);
+        }
+      }
+    }));
+
+    this._subscriptions.push(this._identityManager.halo!.subscribeToPreferences(async () => {
+      for (const party of this._parties.values()) {
+        const shouldBeOpen = this._identityManager.halo?.isActive(party.key);
+        if (party.isOpen && !shouldBeOpen) {
+          log(`Auto-closing deactivated party: ${party.key.toHex()}`);
+
+          await party.close();
+          this.update.emit(party);
+        } else if (!party.isOpen && shouldBeOpen) {
+          log(`Auto-opening activated party: ${party.key.toHex()}`);
+
+          await party.open();
+          this.update.emit(party);
+        }
+      }
+    }));
   }
+
+  private _isHalo (partyKey: PublicKey) {
+    assert(this._identityManager.identityKey, 'No identity key.');
+    return partyKey.equals(this._identityManager.identityKey.publicKey);
+  }
+
+  //
+  // Party
+  //
 
   /**
    * Creates a new party, writing its genesis block to the stream.
@@ -233,7 +282,6 @@ export class PartyManager {
     log(`Adding party partyKey=${partyKey.toHex()} hints=${hints.length}`);
     const party = await this._partyFactory.addParty(partyKey, hints);
     this._setParty(party);
-
     return party;
   }
 
@@ -256,43 +304,7 @@ export class PartyManager {
     this._setParty(party);
     await this._recordPartyJoining(party);
     await this._updateContactList(party);
-
     return party;
-  }
-
-  // Only call from a @synchronized method.
-  private async _setHalo (halo: PartyInternal) {
-    await this._identityManager.initialize(halo);
-
-    this._subscriptions.push(this._identityManager.halo!.subscribeToJoinedPartyList(async values => {
-      if (!this._opened) {
-        return;
-      }
-
-      for (const partyDesc of values) {
-        if (!this._parties.has(partyDesc.partyKey)) {
-          log(`Auto-opening new Party from HALO: ${partyDesc.partyKey.toHex()}`);
-          await this.addParty(partyDesc.partyKey, partyDesc.keyHints);
-        }
-      }
-    }));
-
-    this._subscriptions.push(this._identityManager.halo!.subscribeToPreferences(async () => {
-      for (const party of this._parties.values()) {
-        const shouldBeOpen = this._identityManager.halo?.isActive(party.key);
-        if (party.isOpen && !shouldBeOpen) {
-          log(`Auto-closing deactivated party ${party.key.toHex()}`);
-
-          await party.close();
-          this.update.emit(party);
-        } else if (!party.isOpen && shouldBeOpen) {
-          log(`Auto-opening activated party ${party.key.toHex()}`);
-
-          await party.open();
-          this.update.emit(party);
-        }
-      }
-    }));
   }
 
   private _setParty (party: PartyInternal) {
@@ -385,11 +397,6 @@ export class PartyManager {
         await contactListItem.model.setProperty(hexKey, { publicKey, displayName });
       }
     }
-  }
-
-  private _isHalo (partyKey: PublicKey) {
-    assert(this._identityManager.identityKey, 'No identity key');
-    return partyKey.equals(this._identityManager.identityKey.publicKey);
   }
 
   @timed(5_000)

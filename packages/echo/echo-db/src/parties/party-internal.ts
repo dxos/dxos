@@ -20,7 +20,6 @@ import { IdentityManager } from './identity-manager';
 import { PartyCore, PartyOptions } from './party-core';
 import { PartyProtocol } from './party-protocol';
 
-// TODO(burdon): Format?
 export const PARTY_ITEM_TYPE = 'dxn://dxos/item/party';
 export const PARTY_TITLE_PROPERTY = 'title';
 
@@ -32,6 +31,7 @@ export interface ActivationOptions {
   device?: boolean;
 }
 
+// TODO(burdon): Party properties?
 export interface PartyActivator {
   isActive(): boolean,
   getLastKnownTitle(): string,
@@ -49,24 +49,24 @@ export class PartyInternal {
   public readonly update = new Event<void>();
 
   private readonly _partyCore: PartyCore;
-
-  /**
-   * Snapshot to be restored from when party.open() is called.
-   */
-  private _subscriptions: (() => void)[] = [];
+  private readonly _activator?: PartyActivator;
 
   private _protocol?: PartyProtocol;
   private _invitationManager?: InvitationManager;
 
-  private readonly _activator?: PartyActivator;
+  /**
+   * Snapshot to be restored from when party.open() is called.
+   */
+  // TODO(burdon): Not updated?
+  private _subscriptions: (() => void)[] = [];
 
   constructor (
     _partyKey: PartyKey,
-    private readonly _identityManager: IdentityManager,
     _feedStore: FeedStoreAdapter,
     _modelFactory: ModelFactory,
-    private readonly _networkManager: NetworkManager,
     _snapshotStore: SnapshotStore,
+    private readonly _identityManager: IdentityManager,
+    private readonly _networkManager: NetworkManager,
     private readonly _hints: KeyHint[] = [],
     _initialTimeframe?: Timeframe,
     _options: PartyOptions = {}
@@ -79,6 +79,7 @@ export class PartyInternal {
       _initialTimeframe,
       _options
     );
+
     this._activator = this._identityManager.halo?.createPartyActivator(this);
   }
 
@@ -171,13 +172,13 @@ export class PartyInternal {
     }
 
     await this._partyCore.close();
-
     await this._protocol?.stop();
-    this._protocol = undefined;
 
+    this._protocol = undefined;
     this._invitationManager = undefined;
 
-    this._subscriptions.forEach(cb => cb());
+    this._subscriptions.forEach(callback => callback());
+
     this.update.emit();
 
     return this;

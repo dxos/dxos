@@ -45,13 +45,16 @@ export class GreetingInitiator {
   private _state: GreetingState = GreetingState.INITIALIZED;
 
   /**
-   * @param _feedInitializer Callback to open or create a write feed for this party and return it's keypair
+   * @param _networkManager
+   * @param _identityManager
+   * @param _invitationDescriptor
+   * @param _feedInitializer Callback to open or create a write feed for this party and return it's keypair.
    */
   constructor (
     private readonly _networkManager: NetworkManager,
     private readonly _identityManager: IdentityManager,
-    private readonly _feedInitializer: (partyKey: PartyKey) => Promise<any /* Keypair */>,
-    private readonly _invitationDescriptor: InvitationDescriptor
+    private readonly _invitationDescriptor: InvitationDescriptor,
+    private readonly _feedInitializer: (partyKey: PartyKey) => Promise<any /* Keypair */>
   ) {
     assert(InvitationDescriptorType.INTERACTIVE === this._invitationDescriptor.type);
   }

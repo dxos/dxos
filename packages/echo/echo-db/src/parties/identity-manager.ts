@@ -16,6 +16,7 @@ const log = debug('dxos:echo:parties:identity-manager');
 /**
  * Manages the keyring and HALO party.
  */
+// TODO(burdon): Merge with HaloParty?
 export class IdentityManager {
   private _halo?: HaloParty;
   private _identityKey?: KeyRecord;
@@ -41,15 +42,15 @@ export class IdentityManager {
   }
 
   get identityInfo () {
-    return this.halo?.identityInfo;
+    return this._halo?.identityInfo;
   }
 
   get identityGenesis () {
-    return this.halo?.identityGenesis;
+    return this._halo?.identityGenesis;
   }
 
   get displayName () {
-    return this.identityInfo?.signed.payload.displayName;
+    return this._halo?.identityInfo?.signed.payload.displayName;
   }
 
   get identityKey (): KeyRecord | undefined {
@@ -70,14 +71,14 @@ export class IdentityManager {
 
   get deviceKeyChain () {
     if (!this._deviceKeyChain) {
-      const { halo, deviceKey } = this;
+      const deviceKey = this.deviceKey;
       try {
-        this._deviceKeyChain = halo && deviceKey ? Keyring.buildKeyChain(
+        this._deviceKeyChain = (this._halo && deviceKey) ? Keyring.buildKeyChain(
           deviceKey.publicKey,
-          halo.credentialMessages,
-          halo.feedKeys
+          this._halo.credentialMessages,
+          this._halo.feedKeys
         ) : undefined;
-      } catch (e) {
+      } catch (err) {
         log('Unable to locate device KeyChain.');
       }
     }
@@ -85,6 +86,7 @@ export class IdentityManager {
     return this._deviceKeyChain;
   }
 
+  // TODO(burdon): Move to HaloFactory?
   async initialize (halo: PartyInternal) {
     assert(this._identityKey, 'No identity key.');
     assert(this._deviceKey, 'No device key.');
@@ -94,7 +96,7 @@ export class IdentityManager {
     // Wait for the minimum set of keys and messages we need for proper function.
     await waitForCondition(() =>
       this._halo!.memberKeys.length &&
-      this.identityGenesis &&
+      this._halo!.identityGenesis &&
       this.deviceKeyChain
     );
 

@@ -15,7 +15,6 @@ import { Item } from '../items';
 import { ResultSet } from '../result';
 import { PARTY_TITLE_PROPERTY, PartyActivator, PartyInternal } from './party-internal';
 
-// HALO data types.
 export const HALO_PARTY_DESCRIPTOR_TYPE = 'dxn://dxos/item/halo/party-descriptor';
 export const HALO_PARTY_CONTACT_LIST_TYPE = 'dxn://dxos/item/halo/contact-list';
 export const HALO_PARTY_PREFERENCES_TYPE = 'dxn://dxos/item/halo/preferences';
@@ -32,6 +31,7 @@ export interface JoinedParty {
 /**
  * Wraps PartyInternal and provides all HALO-related functionality.
  */
+// TODO(burdon): Merge with IdentityManager?
 export class HaloParty {
   constructor (
     private readonly _party: PartyInternal,
@@ -39,12 +39,12 @@ export class HaloParty {
     private readonly _deviceKey: PublicKey
   ) {}
 
-  get identityGenesis () {
-    return this._party.processor.credentialMessages.get(this._identityKey.toHex());
-  }
-
   get identityInfo () {
     return this._party.processor.infoMessages.get(this._identityKey.toHex());
+  }
+
+  get identityGenesis () {
+    return this._party.processor.credentialMessages.get(this._identityKey.toHex());
   }
 
   get memberKeys () {

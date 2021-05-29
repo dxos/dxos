@@ -36,6 +36,7 @@ import { InvitationDescriptor, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter, messageLogger } from '../util';
+import { HaloFactory } from './halo-factory';
 import { HALO_PARTY_CONTACT_LIST_TYPE } from './halo-party';
 import { IdentityManager } from './identity-manager';
 import { Party } from './party';
@@ -67,11 +68,12 @@ const setup = async (open = true, createIdentity = true) => {
   const identityManager = new IdentityManager(keyring);
   const snapshotStore = new SnapshotStore(ram);
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
+  const networkManager = new NetworkManager();
   const partyFactory = new PartyFactory(
     identityManager,
+    networkManager,
     feedStoreAdapter,
     modelFactory,
-    new NetworkManager(),
     snapshotStore,
     {
       writeLogger: messageLogger('<<<'),
@@ -79,7 +81,8 @@ const setup = async (open = true, createIdentity = true) => {
     }
   );
 
-  const partyManager = new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory);
+  const haloFactory = new HaloFactory(partyFactory, identityManager, networkManager);
+  const partyManager = new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory, haloFactory);
 
   if (open) {
     await partyManager.open();
@@ -168,10 +171,12 @@ describe('Party manager', () => {
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const snapshotStore = new SnapshotStore(ram);
+    const networkManager = new NetworkManager();
     const partyFactory =
-      new PartyFactory(identityManager, feedStoreAdapter, modelFactory, new NetworkManager(), snapshotStore);
+      new PartyFactory(identityManager, networkManager, feedStoreAdapter, modelFactory, snapshotStore);
+    const haloFactory = new HaloFactory(partyFactory, identityManager, networkManager);
     const partyManager =
-      new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory);
+      new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory, haloFactory);
 
     await feedStore.open();
 

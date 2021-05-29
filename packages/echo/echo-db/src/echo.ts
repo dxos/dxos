@@ -21,7 +21,15 @@ import {
 } from './invitations';
 import { DefaultModel } from './items';
 import {
-  HALO_PARTY_CONTACT_LIST_TYPE, IdentityManager, OpenProgress, Party, PartyFactory, PartyFilter, PartyManager, PartyMember
+  HALO_PARTY_CONTACT_LIST_TYPE,
+  HaloFactory,
+  IdentityManager,
+  OpenProgress,
+  Party,
+  PartyFactory,
+  PartyFilter,
+  PartyManager,
+  PartyMember
 } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
@@ -91,28 +99,22 @@ export interface EchoCreationOptions {
  * `Spactime` `Timeframe` (which implements a vector clock).
  */
 export class ECHO {
-  private readonly _feedStore: FeedStoreAdapter;
-
   private readonly _keyring: Keyring;
-
   private readonly _identityManager: IdentityManager;
-
-  private readonly _snapshotStore: SnapshotStore;
-
-  private readonly _networkManager: NetworkManager;
-
+  private readonly _feedStore: FeedStoreAdapter;
   private readonly _modelFactory: ModelFactory;
-
+  private readonly _networkManager: NetworkManager;
+  private readonly _snapshotStore: SnapshotStore;
   private readonly _partyManager: PartyManager;
 
   /**
    * Creates a new instance of ECHO.
-   *
-   * Without any parameters will create an in-memory database.
+   * Default will create an in-memory database.
    */
+  // TODO(burdon): Factor out config an define type.
   constructor ({
-    feedStorage = createRamStorage(),
     keyStorage = memdown(),
+    feedStorage = createRamStorage(),
     snapshotStorage = createRamStorage(),
     networkManagerOptions,
     snapshots = true,
@@ -120,40 +122,46 @@ export class ECHO {
     readLogger,
     writeLogger
   }: EchoCreationOptions = {}) {
-    this._feedStore = FeedStoreAdapter.create(feedStorage);
-
-    const keyStore = new KeyStore(keyStorage);
-    this._keyring = new Keyring(keyStore);
+    this._keyring = new Keyring(new KeyStore(keyStorage));
     this._identityManager = new IdentityManager(this._keyring);
+
+    this._feedStore = FeedStoreAdapter.create(feedStorage);
 
     this._modelFactory = new ModelFactory()
       .registerModel(ObjectModel)
       .registerModel(DefaultModel);
 
-    const options = {
-      readLogger,
-      writeLogger,
-      snapshots,
-      snapshotInterval
-    };
-
     this._networkManager = new NetworkManager(networkManagerOptions);
     this._snapshotStore = new SnapshotStore(snapshotStorage);
 
+    const options = {
+      snapshots,
+      snapshotInterval,
+      readLogger,
+      writeLogger
+    };
+
     const partyFactory = new PartyFactory(
       this._identityManager,
+      this._networkManager,
       this._feedStore,
       this._modelFactory,
-      this._networkManager,
       this._snapshotStore,
       options
+    );
+
+    const haloFactory = new HaloFactory(
+      partyFactory,
+      this._identityManager,
+      this._networkManager
     );
 
     this._partyManager = new PartyManager(
       this._identityManager,
       this._feedStore,
       this._snapshotStore,
-      partyFactory
+      partyFactory,
+      haloFactory
     );
   }
 
@@ -275,6 +283,7 @@ export class ECHO {
   }
 
   async createHalo (displayName?: string) {
+    // TODO(burdon): Why not assert?
     if (this._identityManager.halo) {
       throw new Error('HALO party already exists');
     }
