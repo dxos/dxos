@@ -1,3 +1,5 @@
+![js-dxos](./docs/images/banner-1280.png)
+
 ## DXOS Protocols 
 
 This monorepo contains all DXOS Protocols, SDK, and related low-level infrastructure.
