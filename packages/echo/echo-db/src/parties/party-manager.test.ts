@@ -9,10 +9,10 @@ import ram from 'random-access-memory';
 import { waitForCondition, latch } from '@dxos/async';
 import {
   createPartyGenesisMessage,
-  KeyType,
-  Keyring,
   generateSeedPhrase,
   keyPairFromSeedPhrase,
+  KeyType,
+  Keyring,
   SecretProvider,
   SecretValidator
 } from '@dxos/credentials';
@@ -49,6 +49,10 @@ const log = debug('dxos:echo:parties:party-manager:test');
 // TODO(burdon): Close cleanly.
 // This usually means that there are asynchronous operations that weren't stopped in your tests.
 
+/**
+ * @param open - Open the PartyManager
+ * @param createIdentity - Create the identity key record.
+ */
 const setup = async (open = true, createIdentity = true) => {
   const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
   const feedStoreAdapter = new FeedStoreAdapter(feedStore);
@@ -63,6 +67,8 @@ const setup = async (open = true, createIdentity = true) => {
       secretKey: keyPair.secretKey,
       type: KeyType.IDENTITY
     });
+
+    assert(keyring.keys.length === 1);
   }
 
   const identityManager = new IdentityManager(keyring);
@@ -838,15 +844,19 @@ describe('Party manager', () => {
     expect(partyB.title).toBe('B');
   });
 
+  // TODO(burdon): Fix
+  // rushx test src/parties/party-manager.test.ts --detectOpenHandles
   test.only('Deactivate Party - retrieving items', async () => {
-    const { partyManager: partyManagerA } = await setup(true, true);
+    const { identityManager, partyManager: partyManagerA } = await setup(true, true);
+
+    console.log('Identity key:', identityManager.identityKey?.publicKey);
 
     // TODO(burdon): Race condition: partyA is not well-formed.
     const partyA = new Party(await partyManagerA.createParty());
     console.log('test', partyA.key);
-    return;
 
     expect(partyA.isOpen).toBe(true);
+    return; // TODO(burdon): Fix.
     expect(partyA.isActive()).toBe(true);
 
     // Create an item.

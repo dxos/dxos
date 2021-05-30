@@ -26,6 +26,7 @@ export class PartyActivator {
   }
 
   isActive () {
+    console.log('!!!!!!!!!!!!!');
     console.log('PartyActivator.isActive', this._party.key);
     return this._halo.preferences.isPartyActive(this._party.key);
   }

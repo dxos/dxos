@@ -105,8 +105,8 @@ export class PartyFactory {
       [this._identityManager.deviceKeyChain]
     ));
 
+    // IdentityInfo in an Envelope signed by the Device KeyChain.
     if (this._identityManager.identityInfo) {
-      // IdentityInfo in an Envelope signed by the Device KeyChain.
       await party.processor.writeHaloMessage(createEnvelopeMessage(
         this._identityManager.keyring,
         partyKey.publicKey,
@@ -116,7 +116,7 @@ export class PartyFactory {
     }
 
     // Create special properties item.
-    console.log('PartyFactory createParty open =', party.isOpen);
+    console.log('PartyFactory createParty open ===', party.isOpen);
     await party.database.createItem({ model: ObjectModel, type: PARTY_ITEM_TYPE });
     console.log('PartyFactory createItem(PARTY_ITEM_TYPE)'); // TODO(burdon): Happens after test is closed.
 
@@ -188,7 +188,7 @@ export class PartyFactory {
       this._options
     );
 
-    console.log(`PartyFactory.constructParty: ${party.key}`);
+    console.log(`PartyFactory.constructParty: ${party.key.humanize()}`);
     return party;
   }
 
