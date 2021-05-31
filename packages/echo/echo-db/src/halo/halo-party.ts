@@ -86,6 +86,7 @@ export class HaloParty {
     return this._party.processor.feedKeys;
   }
 
+  // TODO(burdon): Life-cycle: this must be in the same class/stack as open (currently IdentityManager).
   async close () {
     await this._party.close();
   }
