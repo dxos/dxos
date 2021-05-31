@@ -30,6 +30,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { afterTest } from '@dxos/testutils';
 import { createWritableFeedStream } from '@dxos/util';
 
 import { HALO_PARTY_CONTACT_LIST_TYPE, HaloFactory, IdentityManager } from '../halo';
@@ -89,6 +90,7 @@ const setup = async (open = true, createIdentity = true) => {
 
   const haloFactory = new HaloFactory(partyFactory, identityManager, networkManager);
   const partyManager = new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory, haloFactory);
+  afterTest(() => partyManager.close());
 
   if (open) {
     await partyManager.open();
@@ -125,7 +127,6 @@ describe('Party manager', () => {
     expect(identityManager.keyring.hasSecretKey(partyKey)).toBe(false);
 
     await update;
-    await partyManager.close();
   });
 
   test('Created via sync', async () => {
@@ -163,7 +164,6 @@ describe('Party manager', () => {
     }]);
 
     await update;
-    await partyManager.close();
   });
 
   test('Create from cold start', async () => {
@@ -415,6 +415,7 @@ describe('Party manager', () => {
       }
     }
 
+    // TODO(burdon): Clean-up.
     // await partyManagerA.close();
     // await partyManagerB.close();
   });
@@ -477,8 +478,7 @@ describe('Party manager', () => {
       await updated;
     }
 
-    const [partyUpdated, onPartyUpdate] = latch();
-    partyManagerB.update.on(onPartyUpdate);
+    const partyUpdated = partyManagerB.update.waitForCount(1);
 
     // Now create a Party on A and make sure it gets opened on both A and B.
     const partyA2 = await partyManagerA.createParty();
@@ -845,7 +845,7 @@ describe('Party manager', () => {
   });
 
   test('Deactivate Party - retrieving items', async () => {
-    const { identityManager, partyManager: partyManagerA } = await setup(true, true);
+    const { partyManager: partyManagerA } = await setup(true, true);
 
     // TODO(burdon): Race condition: partyA is not well-formed.
     const partyA = new Party(await partyManagerA.createParty());

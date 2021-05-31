@@ -68,7 +68,6 @@ export class PartyInternal {
       _options
     );
 
-    // TODO(burdon): Remove from here since e.g., it isn't applicable to HaloParty?
     if (this._identityManager.halo) {
       this._activator = new PartyActivator(this._identityManager.halo, this);
     }

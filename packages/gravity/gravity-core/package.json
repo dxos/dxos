@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^26.0.23",
     "@types/tar": "^4.0.4",
     "playwright-chromium": "^1.7.0",
     "process-exists": "^4.0.0",
