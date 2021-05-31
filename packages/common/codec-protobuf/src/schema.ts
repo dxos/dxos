@@ -1,9 +1,14 @@
-import {Substitutions} from "./common";
-import protobufjs, {Root} from "protobufjs";
-import {BidirectionalMapingDescriptors, createMappingDescriptors} from "./mapping";
-import merge from "lodash.merge";
-import {Codec} from "./codec";
-import {ServiceDescriptor} from "./service";
+//
+// Copyright 2021 DXOS.org
+//
+
+import merge from 'lodash.merge';
+import protobufjs, { Root } from 'protobufjs';
+
+import { Codec } from './codec';
+import { Substitutions } from './common';
+import { BidirectionalMapingDescriptors, createMappingDescriptors } from './mapping';
+import { ServiceDescriptor } from './service';
 
 export class Schema<T, S = {}> {
   static fromJson<T extends Record<string, any>, S extends Record<string, any> = {}> (schema: any, substitutions: Substitutions = {}): Schema<T, S> {

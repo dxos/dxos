@@ -79,7 +79,7 @@ export function types (type: PbType, containingObject: protobufjs.ReflectionObje
   }
 }
 
-export function getTypeReference (to: protobufjs.ReflectionObject , from?: protobufjs.ReflectionObject) {
+export function getTypeReference (to: protobufjs.ReflectionObject, from?: protobufjs.ReflectionObject) {
   const toNamespace = getNamespaceName(to);
   const fromNamespace = from && getNamespaceName(from);
 

@@ -5,7 +5,7 @@
 import protobufjs from 'protobufjs';
 
 import { BidirectionalMapingDescriptors, mapMessage } from './mapping';
-import type { Schema } from './schema'
+import type { Schema } from './schema';
 
 export class Codec<T = any> {
   constructor (

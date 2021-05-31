@@ -83,6 +83,10 @@ message SubstitutedByInterface {
   string foo = 1;
 }
 
+message TaskCount {
+  int32 count = 1;
+}
+
 service TestService {
-  rpc TestRpc(TaskList) returns (Scalars);
+  rpc CountTasks(TaskList) returns (TaskCount);
 }
