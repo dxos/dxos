@@ -1,4 +1,4 @@
-![js-dxos](./docs/images/banner-1280.png)
+![js-dxos](./docs/images/github-repo-banner.png)
 
 ## DXOS Protocols 
 
