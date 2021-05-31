@@ -22,12 +22,9 @@ export class PartyActivator {
     private readonly _party: PartyInternal
   ) {
     assert(this._party);
-    console.log('PartyActivator', this._party.key);
   }
 
-  isActive () {
-    console.log('!!!!!!!!!!!!!');
-    console.log('PartyActivator.isActive', this._party.key);
+  get isActive (): boolean {
     return this._halo.preferences.isPartyActive(this._party.key);
   }
 

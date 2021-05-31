@@ -68,8 +68,7 @@ export class PartyInternal {
       _options
     );
 
-    // TODO(burdon): Remove from here since e.g., it isn't applicable to HaloParty.
-    console.log('PartyInternal', this._partyCore.key, 'HALO initialized: ', !!this._identityManager.halo);
+    // TODO(burdon): Remove from here since e.g., it isn't applicable to HaloParty?
     if (this._identityManager.halo) {
       this._activator = new PartyActivator(this._identityManager.halo, this);
     }
@@ -174,7 +173,7 @@ export class PartyInternal {
     return this;
   }
 
-  get isActive () {
+  get isActive (): boolean {
     assert(this._activator, 'PartyActivator required');
     return this._activator.isActive;
   }

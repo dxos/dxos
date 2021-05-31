@@ -116,9 +116,7 @@ export class PartyFactory {
     }
 
     // Create special properties item.
-    console.log('PartyFactory createParty open ===', party.isOpen);
     await party.database.createItem({ model: ObjectModel, type: PARTY_ITEM_TYPE });
-    console.log('PartyFactory createItem(PARTY_ITEM_TYPE)'); // TODO(burdon): Happens after test is closed.
 
     // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
     await this._identityManager.keyring.deleteSecretKey(partyKey);
@@ -188,7 +186,6 @@ export class PartyFactory {
       this._options
     );
 
-    console.log(`PartyFactory.constructParty: ${party.key.humanize()}`);
     return party;
   }
 

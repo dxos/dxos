@@ -844,20 +844,14 @@ describe('Party manager', () => {
     expect(partyB.title).toBe('B');
   });
 
-  // TODO(burdon): Fix
-  // rushx test src/parties/party-manager.test.ts --detectOpenHandles
-  test.only('Deactivate Party - retrieving items', async () => {
+  test('Deactivate Party - retrieving items', async () => {
     const { identityManager, partyManager: partyManagerA } = await setup(true, true);
-
-    console.log('Identity key:', identityManager.identityKey?.publicKey);
 
     // TODO(burdon): Race condition: partyA is not well-formed.
     const partyA = new Party(await partyManagerA.createParty());
-    console.log('test', partyA.key);
 
     expect(partyA.isOpen).toBe(true);
-    return; // TODO(burdon): Fix.
-    expect(partyA.isActive()).toBe(true);
+    expect(partyA.isActive).toBe(true);
 
     // Create an item.
     let itemA: Item<any> | null = null;
@@ -882,7 +876,7 @@ describe('Party manager', () => {
     await partyA.activate({ global: true });
 
     expect(partyA.isOpen).toBe(true);
-    expect(partyA.isActive()).toBe(true);
+    expect(partyA.isActive).toBe(true);
 
     await waitForCondition(() => partyA.database.queryItems({ type: 'dxn://example/item/test' }).value.length > 0, 5000);
     expect((await partyA.database.queryItems({ type: 'dxn://example/item/test' })).value.length).toEqual(1);
@@ -929,7 +923,7 @@ describe('Party manager', () => {
 
     const partyA = new Party(await partyManagerA.createParty());
     expect(partyA.isOpen).toBe(true);
-    expect(partyA.isActive()).toBe(true);
+    expect(partyA.isActive).toBe(true);
 
     await partyA.setTitle('A');
     expect(partyA.title).toBe('A');
@@ -937,12 +931,12 @@ describe('Party manager', () => {
 
     await partyA.deactivate({ global: true });
     expect(partyA.isOpen).toBe(false);
-    expect(partyA.isActive()).toBe(false);
+    expect(partyA.isActive).toBe(false);
     expect(partyA.title).toBe('A');
 
     await partyA.activate({ global: true });
     expect(partyA.isOpen).toBe(true);
-    expect(partyA.isActive()).toBe(true);
+    expect(partyA.isActive).toBe(true);
     expect(partyA.title).toBe('A');
 
     await waitForCondition(() => partyA.getProperty('title') === 'A', 4000);
@@ -955,19 +949,19 @@ describe('Party manager', () => {
     const partyA = new Party(await partyManagerA.createParty());
 
     expect(partyA.isOpen).toBe(true);
-    expect(partyA.isActive()).toBe(true);
+    expect(partyA.isActive).toBe(true);
 
     await partyA.setTitle('A');
     expect(partyA.title).toBe('A');
 
     await partyA.deactivate({ global: true });
     expect(partyA.isOpen).toBe(false);
-    expect(partyA.isActive()).toBe(false);
+    expect(partyA.isActive).toBe(false);
     expect(partyA.title).toBe('A');
 
     await partyA.activate({ global: true });
     expect(partyA.isOpen).toBe(true);
-    expect(partyA.isActive()).toBe(true);
+    expect(partyA.isActive).toBe(true);
     expect(partyA.title).toBe('A');
 
     // The party at this point is open and activate (see expects above), however setTitle seems to be hanging forever
@@ -992,7 +986,7 @@ describe('Party manager', () => {
 
     const partyA = new Party(await partyManagerA.createParty());
     expect(partyA.isOpen).toBe(true);
-    expect(partyA.isActive()).toBe(true);
+    expect(partyA.isActive).toBe(true);
 
     // B joins as another device of A, device invitation.
 

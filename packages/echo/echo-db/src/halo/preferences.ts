@@ -19,6 +19,7 @@ import { HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE } from 
 // TODO(burdon): Split into device settings, user preferences, etc. (Expose subset as public API).
 export class Preferences {
   constructor (
+    // TODO(burdon): Only requires key.
     private readonly _party: PartyInternal,
     private readonly _deviceKey: PublicKey
   ) {}
@@ -115,6 +116,6 @@ export class Preferences {
     const partyPrefs = preferences.model.getProperty(path, {});
     partyPrefs[key] = value;
     await preferences.model.setProperty(party.key.toHex(), partyPrefs);
-    party.update.emit();
+    party.update.emit(); // TODO(burdon): Should subscribe to database changes only?
   }
 }
