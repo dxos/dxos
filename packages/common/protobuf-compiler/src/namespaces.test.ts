@@ -6,7 +6,7 @@ import { join } from 'path';
 import * as pb from 'protobufjs';
 
 import { splitSchemaIntoNamespaces } from './namespaces';
-import { registerResolver } from './parser/resolver';
+import { registerResolver } from './parser';
 
 registerResolver();
 

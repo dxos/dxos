@@ -12,8 +12,7 @@ import { createSerializerDefinition } from './generator/serializer-definition-ge
 import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
 import { getSafeNamespaceIdentifier, parseFullyQualifiedName, splitSchemaIntoNamespaces } from './namespaces';
-import { registerResolver } from './parser/resolver';
-import { parseSubstitutionsFile, SubstitutionsMap } from './parser/substitutions-parser';
+import { registerResolver, parseSubstitutionsFile, SubstitutionsMap } from './parser';
 
 const f = ts.factory;
 

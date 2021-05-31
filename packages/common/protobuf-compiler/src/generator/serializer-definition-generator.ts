@@ -9,7 +9,11 @@ import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
 
 const f = ts.factory;
 
-export function createSerializerDefinition (substitutionsModule: ModuleSpecifier | undefined, root: protobufjs.Root, outFileDir: string): { imports: ts.Statement[], exports: ts.Statement[] } {
+export function createSerializerDefinition (
+  substitutionsModule: ModuleSpecifier | undefined,
+  root: protobufjs.Root,
+  outFileDir: string
+): { imports: ts.Statement[], exports: ts.Statement[] } {
   const schemaIdentifier = f.createIdentifier('Schema');
 
   const schemaImport = f.createImportDeclaration(

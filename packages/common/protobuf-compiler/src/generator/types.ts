@@ -13,7 +13,7 @@ import {
   getSafeNamespaceIdentifier,
   namesEqual
 } from '../namespaces';
-import { SubstitutionsMap } from '../parser/substitutions-parser';
+import { SubstitutionsMap } from '../parser';
 
 const f = ts.factory;
 
