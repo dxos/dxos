@@ -2,7 +2,7 @@
 
 ## DXOS Protocols 
 
-**js-dxos** is a  monorepo containing the TypeScript implementation of the DXOS protocols, SDK, and toolchain. 
+**dxos-js** is a  monorepo containing the TypeScript implementation of the DXOS protocols, SDK, and toolchain. 
 If you are unfamiliar with DXIS, see the [https://dxos.org](website) for more information.
 
 ## Quick start
