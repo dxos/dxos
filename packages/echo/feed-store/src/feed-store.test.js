@@ -11,6 +11,8 @@ import pify from 'pify';
 import ram from 'random-access-memory';
 import tempy from 'tempy';
 
+import { trigger } from '@dxos/async';
+
 import { FeedStore } from './feed-store';
 
 async function createDefault () {
@@ -540,16 +542,18 @@ describe('FeedStore', () => {
     });
   });
 
-  test('append event', async (done) => {
+  test('append event', async () => {
     const feedStore = await FeedStore.create(ram);
     const feed = await feedStore.openFeed('/test');
 
+    const [wait, done] = trigger();
     feedStore.on('append', (f) => {
       expect(f).toBe(feed);
       done();
     });
 
     feed.append('test');
+    await wait();
   });
 
   test('update metadata', async () => {
@@ -574,18 +578,20 @@ describe('FeedStore', () => {
     expect(feed).toBeDefined();
   });
 
-  test('createReadStream should destroy if FeedStore is closed', async (done) => {
+  test('createReadStream should destroy if FeedStore is closed', async () => {
     const feedStore = new FeedStore(ram);
 
     await feedStore.open();
 
     const stream2 = feedStore.createReadStream();
+    const [wait, done] = trigger();
     eos(stream2, err => {
       expect(err.message).toBe('FeedStore closed');
       done();
     });
 
     await feedStore.close();
+    await wait();
   });
 
   test('createReadStream should destroy if filter throws an error', async () => {

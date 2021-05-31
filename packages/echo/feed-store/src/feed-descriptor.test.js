@@ -9,6 +9,8 @@ import pify from 'pify';
 import ram from 'random-access-memory';
 import tempy from 'tempy';
 
+import { trigger } from '@dxos/async';
+
 import FeedDescriptor from './feed-descriptor';
 
 describe('FeedDescriptor', () => {
@@ -112,11 +114,12 @@ describe('FeedDescriptor', () => {
     expect(msg).toBe('test');
   });
 
-  test('Watch data', async (done) => {
+  test('Watch data', async () => {
     const fd = new FeedDescriptor('/feed', {
       storage: ram
     });
 
+    const [wait, done] = trigger();
     fd.watch(event => {
       expect(event).toBe('opened');
       fd.watch(null);
@@ -124,6 +127,7 @@ describe('FeedDescriptor', () => {
     });
 
     await fd.open();
+    await wait();
   });
 
   test('on open error should unlock the resource', async () => {

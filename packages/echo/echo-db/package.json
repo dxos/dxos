@@ -55,7 +55,7 @@
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^26.0.23",
     "@types/memdown": "^3.0.0",
     "lodash": "4.17.21",
     "memdown": "^5.1.0",

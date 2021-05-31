@@ -22,7 +22,7 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^26.0.23",
     "@types/node": "^14.0.9"
   },
   "devDependencies": {

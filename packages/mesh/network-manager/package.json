@@ -39,7 +39,7 @@
     "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.1",
-    "@types/jest": "^26.0.7",
+    "@types/jest": "^26.0.23",
     "@types/node": "^14.0.9",
     "earljs": "~0.1.10",
     "ngraph.path": "^1.3.1",

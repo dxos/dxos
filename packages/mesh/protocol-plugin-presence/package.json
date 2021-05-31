@@ -39,7 +39,7 @@
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "wait-for-expect": "^3.0.2",
-    "@types/jest": "^26.0.7"
+    "@types/jest": "^26.0.23"
   },
   "publishConfig": {
     "access": "restricted"
