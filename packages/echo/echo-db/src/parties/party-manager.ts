@@ -149,6 +149,7 @@ export class PartyManager {
       }
     }
 
+    // TODO(marik-d): Should this be closing HALO?
     await this._identityManager.halo?.close();
     await this._feedStore.close();
     await this._parties.clear();
