@@ -70,11 +70,17 @@ export class Preferences {
   }
 
   getGlobalPreferences () {
+    if (!this._party.isOpen) {
+      return null;
+    }
     const [globalItem] = this._party.database.queryItems({ type: HALO_PARTY_PREFERENCES_TYPE }).value;
     return globalItem;
   }
 
   getDevicePreferences () {
+    if (!this._party.isOpen) {
+      return null;
+    }
     const deviceItems = this._party.database.queryItems({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).value ?? [];
     return deviceItems.find(item => this._deviceKey.equals(item.model.getProperty('publicKey')));
   }
