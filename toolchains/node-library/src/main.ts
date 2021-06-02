@@ -63,8 +63,8 @@ function execJest (pkgDir: string, additionalArgs: string[] = []) {
   });
 }
 
-function execMocha () {
-  execTool('mocha', ['-r', 'ts-node/register/transpile-only', '--exit', '-t', '10000', 'src/**/*.test.ts'], {
+function execMocha (additionalArgs: string[] = []) {
+  execTool('mocha', ['-r', 'ts-node/register/transpile-only', '--exit', '-t', '15000', 'src/**/*.test.ts', ...additionalArgs], {
     stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
   });
 }
@@ -144,7 +144,7 @@ yargs(process.argv.slice(2))
 
       if (packageJson.toolchain?.testingFramework === 'mocha') {
         console.log(chalk.bold`\nmocha`);
-        execMocha();
+        execMocha(_.slice(1).map(String));
       } else {
         console.log(chalk.bold`\njest`);
         execJest(pkgDir, _.slice(1).map(String));
