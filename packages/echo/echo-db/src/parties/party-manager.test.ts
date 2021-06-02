@@ -4,6 +4,8 @@
 
 import assert from 'assert';
 import debug from 'debug';
+import expect from 'expect';
+import { it as test } from 'mocha';
 import ram from 'random-access-memory';
 
 import { waitForCondition, latch } from '@dxos/async';
@@ -502,7 +504,7 @@ describe('Party manager', () => {
       // Now wait to see it on A.
       await updated;
     }
-  });
+  }).timeout(10_000);
 
   test('Two users, two devices each', async () => {
     const { partyManager: partyManagerA1, identityManager: identityManagerA1 } = await setup(true, true);
@@ -609,7 +611,7 @@ describe('Party manager', () => {
       item = await party.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
       await Promise.all(itemPromises);
     }
-  });
+  }).timeout(10_000);
 
   test('Join new device to HALO by recovering from Identity seed phrase', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
@@ -687,7 +689,7 @@ describe('Party manager', () => {
       // Now wait to see it on A.
       await updated;
     }
-  });
+  }).timeout(10_000);
 
   test('Join a party - Offline', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
@@ -752,7 +754,7 @@ describe('Party manager', () => {
         }
       }
     }
-  });
+  }).timeout(10_000);
 
   test('Contacts', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
@@ -869,7 +871,7 @@ describe('Party manager', () => {
 
     await waitForCondition(() => partyA.database.queryItems({ type: 'dxn://example/item/test' }).value.length > 0, 5000);
     expect((await partyA.database.queryItems({ type: 'dxn://example/item/test' })).value.length).toEqual(1);
-  }, 10000);
+  }).timeout(10_000);
 
   test.skip('Deactivate Party - multi device', async () => {
     const { partyManager: partyManagerA, seedPhrase } = await setup(true, true);

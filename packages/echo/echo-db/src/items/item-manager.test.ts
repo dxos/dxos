@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import expect from 'expect';
+import { it as test } from 'mocha';
 import ram from 'random-access-memory';
 
 import { createFeedWriter } from '@dxos/echo-protocol';

@@ -3,6 +3,7 @@
 //
 
 import { mockFn, expect } from 'earljs';
+import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { discoveryKey, PublicKey } from '@dxos/crypto';
@@ -63,7 +64,7 @@ test('establish connection and send data through with protocol', async () => {
   await waitForExpect(() => {
     expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
   });
-}, 5_000);
+}).timeout(5_000);
 
 test('10 pairs of peers connecting at the same time', async () => {
   await Promise.all(range(10).map(async () => {
@@ -80,4 +81,4 @@ test('10 pairs of peers connecting at the same time', async () => {
       expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
     });
   }));
-}, 5_000);
+}).timeout(5_000);

@@ -3,6 +3,8 @@
 //
 
 import debug from 'debug';
+import expect from 'expect';
+import { it as test } from 'mocha';
 
 import { waitForCondition } from '@dxos/async';
 import { schema, ItemID, PartyKey } from '@dxos/echo-protocol';
@@ -14,8 +16,6 @@ import { PartyInternal } from '../parties';
 import { createTestInstance } from '../util';
 
 const log = debug('dxos:snapshot:test');
-
-jest.setTimeout(10000);
 
 // TODO(burdon): Remove "foo", etc. from tests.
 

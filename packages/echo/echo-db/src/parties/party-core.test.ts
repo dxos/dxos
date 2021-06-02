@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import expect from 'expect';
+import { it as test } from 'mocha';
 import ram from 'random-access-memory';
 
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
@@ -73,7 +75,7 @@ test('create & have the feed key admitted', async () => {
   await party.processor.keyOrInfoAdded.waitForCount(1);
 
   expect(party.processor.isFeedAdmitted(feedKey.publicKey)).toBeTruthy();
-}, 10_000);
+});
 
 test('create item', async () => {
   const { party } = await setup();
@@ -82,4 +84,4 @@ test('create item', async () => {
   await item.model.setProperty('foo', 'bar');
 
   expect(item.model.getProperty('foo')).toEqual('bar');
-}, 10_000);
+});
