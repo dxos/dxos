@@ -3,6 +3,7 @@
 //
 
 import { expect, mockFn } from 'earljs';
+import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
@@ -23,16 +24,19 @@ describe('SignalApi', () => {
   const signalApiPort = randomInt(10000, 50000);
   const signalApiUrl = 'http://0.0.0.0:' + signalApiPort;
 
-  let broker2: ReturnType<typeof createBroker>;
+  // let broker2: ReturnType<typeof createBroker>;
   const signalApiPort2 = randomInt(10000, 50000);
   const signalApiUrl2 = 'http://0.0.0.0:' + signalApiPort2;
 
-  beforeAll(async () => {
+  before(async function () {
+    this.timeout(0);
     const brokerTopic = PublicKey.random();
     broker = createBroker(brokerTopic.asBuffer(), { port: signalApiPort, logger: false });
-    broker2 = createBroker(brokerTopic.asBuffer(), { port: signalApiPort2, logger: false });
-    await broker.start();
-    await broker2.start();
+    // broker2 = createBroker(brokerTopic.asBuffer(), { port: signalApiPort2, logger: false });
+    await Promise.all([
+      broker.start()
+      // broker2.start()
+    ]);
   });
 
   beforeEach(() => {
@@ -41,10 +45,11 @@ describe('SignalApi', () => {
     peer2 = PublicKey.random();
   });
 
-  afterAll(async () => {
+  after(async function () {
+    this.timeout(0);
     await api.close();
     await broker.stop();
-    await broker2.stop();
+    // await broker2.stop();
   });
 
   test('join', async () => {
@@ -55,7 +60,7 @@ describe('SignalApi', () => {
 
     const join2 = await api.join(topic, peer2);
     expect(join2).toEqual([peer1, peer2]);
-  }, 1_000);
+  }).timeout(1_000);
 
   test('offer', async () => {
     const offerMock = mockFn<(msg: SignalApi.SignalMessage) => Promise<SignalApi.Answer>>()
@@ -74,7 +79,7 @@ describe('SignalApi', () => {
     const offerResult = await api.offer(offer);
     expect(offerResult).toEqual({ accept: true });
     expect(offerMock).toHaveBeenCalledWith([offer]);
-  }, 5_000);
+  }).timeout(5_000);
 
   test('signal', async () => {
     const signalMock = mockFn<(msg: SignalApi.SignalMessage) => Promise<void>>()
@@ -95,7 +100,7 @@ describe('SignalApi', () => {
     await waitForExpect(() => {
       expect(signalMock).toHaveBeenCalledWith([msg]);
     }, 4_000);
-  }, 5_000);
+  }).timeout(5_000);
 
   test.skip('join across multiple signal servers', async () => {
     // This feature is not implemented yet.
@@ -114,7 +119,7 @@ describe('SignalApi', () => {
       const peers = await api.lookup(topic);
       expect(peers.length).toEqual(2);
     }, 4_000);
-  }, 5_000);
+  }).timeout(5_000);
 
   // skip because communication between signal servers is not yet implemented
   test.skip('newly joined peer can receive signals from other signal servers', async () => {
@@ -152,5 +157,5 @@ describe('SignalApi', () => {
     await waitForExpect(() => {
       expect(signalMock).toHaveBeenCalledWith([msg]);
     }, 4_000);
-  }, 5_000);
-});
+  }).timeout(5_000);
+}).timeout(10_000);

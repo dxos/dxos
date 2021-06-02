@@ -3,7 +3,9 @@
 //
 
 import debug from 'debug';
+import expect from 'expect';
 import { Feed } from 'hypercore';
+import { it as test } from 'mocha';
 import ram from 'random-access-memory';
 
 import { waitForCondition, latch } from '@dxos/async';

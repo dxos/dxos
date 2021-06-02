@@ -4,6 +4,8 @@
 
 import assert from 'assert';
 import debug from 'debug';
+import expect from 'expect';
+import { it as test } from 'mocha';
 
 import { latch, sleep, waitForCondition } from '@dxos/async';
 import { SecretValidator, SecretProvider } from '@dxos/credentials';
@@ -155,7 +157,7 @@ describe('api tests', () => {
 
     expect(party2.key).toEqual(party.key);
     expect(party2.isOpen).toBe(true);
-  });
+  }).timeout(10_000);
 
   test('cold start from replicated party', async () => {
     const echo1 = await createTestInstance({ initialize: true });

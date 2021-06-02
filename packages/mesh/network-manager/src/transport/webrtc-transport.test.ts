@@ -3,6 +3,7 @@
 //
 
 import { expect, mockFn } from 'earljs';
+import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
@@ -35,7 +36,7 @@ describe('WebrtcConnection', () => {
     await sleep(1); // Process events
 
     expect(closedCb.calls.length).toEqual(1);
-  }, 1_000);
+  }).timeout(1_000);
 
   test('establish connection and send data through with protocol', async () => {
     const topic = PublicKey.random();
@@ -87,5 +88,5 @@ describe('WebrtcConnection', () => {
     await waitForExpect(() => {
       expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
     });
-  }, 1_000);
+  }).timeout(1_000);
 });
