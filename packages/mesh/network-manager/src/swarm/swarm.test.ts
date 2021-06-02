@@ -5,6 +5,7 @@
 import debug from 'debug';
 import { expect, mockFn } from 'earljs';
 import waitForExpect from 'wait-for-expect';
+import { it as test } from 'mocha'
 
 import { sleep, promiseTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
@@ -88,7 +89,7 @@ test('connects two peers in a swarm', async () => {
   await waitForExpect(() => {
     expect(onData).toHaveBeenCalledWith([data]);
   });
-}, 5_000);
+}).timeout(5_000);
 
 test('two peers try to originate connections to each other simultaneously', async () => {
   const { swarm1, swarm2, peerId1, peerId2 } = setup();
@@ -103,7 +104,7 @@ test('two peers try to originate connections to each other simultaneously', asyn
     swarm1.connected.waitForCount(1),
     swarm2.connected.waitForCount(1)
   ]);
-}, 5_000);
+}).timeout(5_000);
 
 test('second peer discovered after delay', async () => {
   const { swarm1, swarm2, peerId1, peerId2 } = setup();
@@ -130,4 +131,4 @@ test('second peer discovered after delay', async () => {
   await waitForExpect(() => {
     expect(onData).toHaveBeenCalledWith([data]);
   });
-}, 5_000);
+}).timeout(5_000);

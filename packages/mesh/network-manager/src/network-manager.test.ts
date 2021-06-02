@@ -6,6 +6,7 @@ import debug from 'debug';
 import { expect, mockFn } from 'earljs';
 import * as fc from 'fast-check';
 import { ModelRunSetup } from 'fast-check';
+import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { Event, latch, sleep } from '@dxos/async';
@@ -60,7 +61,8 @@ describe('Remote network manager', () => {
   let peer2Id: PublicKey;
   let broker: ReturnType<typeof createBroker>;
 
-  beforeAll(async () => {
+  before(async function() {
+    this.timeout(0) // Broker start/stop is extremely slow.
     const brokerTopic = PublicKey.random();
     broker = createBroker(brokerTopic.asBuffer(), { port: signalApiPort, logger: false });
     await broker.start();
@@ -72,7 +74,8 @@ describe('Remote network manager', () => {
     peer2Id = PublicKey.random();
   });
 
-  afterAll(async () => {
+  after(async function () {
+    this.timeout(0)
     await broker?.stop();
   });
 
@@ -93,7 +96,7 @@ describe('Remote network manager', () => {
 
     await nm1.destroy();
     await nm2.destroy();
-  }, 10_000);
+  }).timeout(10_000);
 
   test('join and leave swarm', async () => {
     const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id });
@@ -123,7 +126,7 @@ describe('Remote network manager', () => {
     log('Peer1 destroyed');
     await networkManager2.destroy();
     log('Peer2 destroyed');
-  }, 10_000);
+  }).timeout(10_000);
 
   it.skip('two peers with different signal & turn servers', async () => {
     const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal'], ice: [{ urls: 'turn:apollo1.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }] });
@@ -143,7 +146,7 @@ describe('Remote network manager', () => {
 
     await networkManager1.destroy();
     await networkManager2.destroy();
-  }, 10_000);
+  }).timeout(10_000);
 
   describe('StarTopology', () => {
     test('two peers connect to each other', async () => {
@@ -160,9 +163,9 @@ describe('Remote network manager', () => {
       await waitForExpect(() => {
         expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
       });
-    }, 10_000);
+    }).timeout(10_000);
   });
-});
+}).timeout(10_000);
 
 describe('In-memory network manager', () => {
   test('two peers connect to each other', async () => {
@@ -186,7 +189,7 @@ describe('In-memory network manager', () => {
 
     nm1.destroy();
     nm2.destroy();
-  }, 10_000);
+  }).timeout(10_000);
 
   test('two swarms at the same time', async () => {
     const topicA = PublicKey.random();
@@ -421,4 +424,4 @@ test('property-based test', async () => {
       ]
     }
   );
-}, 2_000_000_000);
+}).timeout(2_000_000_000);

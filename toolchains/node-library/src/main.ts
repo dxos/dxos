@@ -108,8 +108,13 @@ yargs(process.argv.slice(2))
         console.log(chalk.bold`\neslint`);
         execLint();
 
-        console.log(chalk.bold`\jest`);
-        execJest(pkgDir, ['globalSetup', 'globalTeardown'].filter(arg => !!args[arg]).map(arg => `--${arg}=${args[arg]}`));
+        if (packageJson.toolchain?.testingFramework === 'mocha') {
+          console.log(chalk.bold`\nmocha`);
+          execTool('mocha', ['-r', 'ts-node/register/transpile-only', 'src/**/*.test.ts']);
+        } else {
+          console.log(chalk.bold`\njest`);
+          execJest(pkgDir, ['globalSetup', 'globalTeardown'].filter(arg => !!args[arg]).map(arg => `--${arg}=${args[arg]}`));
+        }
       }
 
       console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
@@ -129,7 +134,15 @@ yargs(process.argv.slice(2))
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
     ({ _ }) => {
       const pkgDir = getPackageDir();
-      execJest(pkgDir, _.slice(1).map(String));
+      const packageJson = JSON.parse(fs.readFileSync(join(pkgDir, 'package.json'), 'utf-8'));
+
+      if (packageJson.toolchain?.testingFramework === 'mocha') {
+        console.log(chalk.bold`\nmocha`);
+        execTool('mocha', ['-r', 'ts-node/register/transpile-only', 'src/**/*.test.ts', '--exit']);
+      } else {
+        console.log(chalk.bold`\njest`);
+        execJest(pkgDir,  _.slice(1).map(String));
+      }
     }
   )
   .command<{ command: string }>(
