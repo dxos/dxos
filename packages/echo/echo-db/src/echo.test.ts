@@ -4,8 +4,8 @@
 
 import assert from 'assert';
 import debug from 'debug';
+import expect from 'expect';
 import { it as test } from 'mocha';
-import expect from 'expect'
 
 import { latch, sleep, waitForCondition } from '@dxos/async';
 import { SecretValidator, SecretProvider } from '@dxos/credentials';

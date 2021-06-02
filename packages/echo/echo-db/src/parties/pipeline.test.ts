@@ -3,10 +3,10 @@
 //
 
 import debug from 'debug';
+import expect from 'expect';
 import { Feed } from 'hypercore';
-import ram from 'random-access-memory';
 import { it as test } from 'mocha';
-import expect from 'expect'
+import ram from 'random-access-memory';
 
 import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';

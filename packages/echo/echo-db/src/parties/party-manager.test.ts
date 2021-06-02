@@ -4,11 +4,11 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import ram from 'random-access-memory';
+import expect from 'expect';
 import { it as test } from 'mocha';
-import expect from 'expect'
+import ram from 'random-access-memory';
 
-import { waitForCondition, latch, sleep } from '@dxos/async';
+import { waitForCondition, latch } from '@dxos/async';
 import {
   createPartyGenesisMessage,
   KeyType,
@@ -44,7 +44,6 @@ import { Party } from './party';
 import { PartyFactory } from './party-factory';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
-import { emit } from 'process';
 
 const log = debug('dxos:echo:parties:party-manager:test');
 

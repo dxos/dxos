@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import ram from 'random-access-memory';
+import expect from 'expect';
 import { it as test } from 'mocha';
-import expect from 'expect'
+import ram from 'random-access-memory';
 
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
