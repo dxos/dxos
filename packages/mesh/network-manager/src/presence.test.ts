@@ -2,13 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
+import { expect } from 'earljs';
+import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
-import { expect } from 'earljs'
 
 import { PublicKey } from '@dxos/crypto';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { afterTest } from '@dxos/testutils';
-import { it as test } from 'mocha'
 
 import { NetworkManager } from './network-manager';
 import { protocolFactory } from './protocol-factory';

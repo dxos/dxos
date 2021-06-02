@@ -4,8 +4,8 @@
 
 import debug from 'debug';
 import { expect, mockFn } from 'earljs';
+import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
-import { it as test } from 'mocha'
 
 import { sleep, promiseTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';

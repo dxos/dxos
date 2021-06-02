@@ -61,8 +61,8 @@ describe('Remote network manager', () => {
   let peer2Id: PublicKey;
   let broker: ReturnType<typeof createBroker>;
 
-  before(async function() {
-    this.timeout(0) // Broker start/stop is extremely slow.
+  before(async function () {
+    this.timeout(0); // Broker start/stop is extremely slow.
     const brokerTopic = PublicKey.random();
     broker = createBroker(brokerTopic.asBuffer(), { port: signalApiPort, logger: false });
     await broker.start();
@@ -75,7 +75,7 @@ describe('Remote network manager', () => {
   });
 
   after(async function () {
-    this.timeout(0)
+    this.timeout(0);
     await broker?.stop();
   });
 

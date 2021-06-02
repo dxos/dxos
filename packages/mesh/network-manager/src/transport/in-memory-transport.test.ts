@@ -3,8 +3,8 @@
 //
 
 import { mockFn, expect } from 'earljs';
+import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
-import { it as test } from 'mocha'
 
 import { discoveryKey, PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
