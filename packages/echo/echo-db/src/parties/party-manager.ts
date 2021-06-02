@@ -141,14 +141,14 @@ export class PartyManager {
 
     // Clean-up.
     this._onCloseHandlers.forEach(callback => callback());
-
+    
     // Close parties.
     for (const party of this._parties.values()) {
       if (party.isOpen) {
         await party.close();
       }
     }
-
+    
     // TODO(marik-d): Should this be closing HALO?
     await this._identityManager.halo?.close();
     await this._feedStore.close();
