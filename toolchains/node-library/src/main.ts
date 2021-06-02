@@ -59,13 +59,13 @@ function execJest (pkgDir: string, additionalArgs: string[] = []) {
   );
   const config = isReactLib ? join(selfDir, 'jest.config.react.json') : join(selfDir, 'jest.config.json');
   execTool('jest', ['--config', config, '--passWithNoTests', '--rootDir', pkgDir, ...additionalArgs], {
-    stdio: ['inherit', 'inherit', process.stdout], // Redirect stderr > stdout.
+    stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
   });
 }
 
 function execMocha () {
   execTool('mocha', ['-r', 'ts-node/register/transpile-only', '--exit', '-t', '10000', 'src/**/*.test.ts'], {
-    stdio: ['inherit', 'inherit', process.stdout], // Redirect stderr > stdout.
+    stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
   });
 }
 
