@@ -93,7 +93,7 @@ const setup = async (open = true, createIdentity = true) => {
   const haloFactory = new HaloFactory(partyFactory, identityManager, networkManager);
   const partyManager = new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory, haloFactory);
   afterTest(() => {
-    partyManager.close()
+    partyManager.close();
   });
 
   if (open) {
