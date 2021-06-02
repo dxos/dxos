@@ -3,6 +3,8 @@
 //
 
 import debug from 'debug';
+import expect from 'expect';
+import { it as test } from 'mocha';
 
 import { latch } from '@dxos/async';
 import { createId, createKeyPair, PublicKey, randomBytes } from '@dxos/crypto';

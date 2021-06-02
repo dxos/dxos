@@ -46,7 +46,11 @@
     "random-access-memory": "~3.1.2",
     "wait-for-expect": "^3.0.2",
     "@dxos/signal": "~1.0.3-alpha.0",
-    "fast-check": "~2.14.0"
+    "fast-check": "~2.14.0",
+    "@types/mocha": "~8.2.2"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   },
   "publishConfig": {
     "access": "restricted"

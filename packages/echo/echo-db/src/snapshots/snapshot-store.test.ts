@@ -2,6 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import expect from 'expect';
+import { it as test } from 'mocha';
+
 import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
 import { PartySnapshot } from '@dxos/echo-protocol';
 

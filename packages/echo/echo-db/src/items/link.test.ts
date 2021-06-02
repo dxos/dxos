@@ -2,6 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import expect from 'expect';
+import { it as test } from 'mocha';
+
 import { ObjectModel } from '@dxos/object-model';
 
 import { createTestInstance } from '../util';

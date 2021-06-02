@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { expect } from 'earljs';
+import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/crypto';
@@ -51,4 +53,4 @@ test('presence', async () => {
     expect(peer2.presence.peers.map(x => x.toString('hex')).sort())
       .toEqual([peer1, peer2].map(x => x.peerId.toHex()).sort());
   });
-});
+}).timeout(10_000);
