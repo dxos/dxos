@@ -37,7 +37,7 @@
     "cpy-cli": "^2.0.0",
     "del-cli": "^3.0.0",
     "end-of-stream": "^1.4.1",
-    "jest": "^27.0.3",
+    "jest": "^26.6.3",
     "pify": "~5.0.0",
     "random-access-memory": "~3.1.2",
     "wait-for-expect": "^3.0.2"

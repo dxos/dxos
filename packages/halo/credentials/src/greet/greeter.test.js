@@ -119,7 +119,8 @@ test('Good invitation', async () => {
   }
 });
 
-test('Bad invitation secret', async () => {
+// eslint-disable-next-line jest/no-test-callback
+test('Bad invitation secret', async (done) => {
   const keyring = await createKeyring();
   const greeter = createGreeter(keyring);
 
@@ -153,9 +154,12 @@ test('Bad invitation secret', async () => {
 
     await expect(() => greeter.handleMessage(message.payload, invitation.id, randomBytes())).rejects.toThrow(ERR_EXTENSION_RESPONSE_FAILED);
   }
+
+  done();
 });
 
-test('Attempt to re-use invitation', async () => {
+// eslint-disable-next-line jest/no-test-callback
+test('Attempt to re-use invitation', async (done) => {
   const keyring = await createKeyring();
   const greeter = createGreeter(keyring);
 
@@ -213,6 +217,8 @@ test('Attempt to re-use invitation', async () => {
     // Now it is all used up, try submitting another command. It should fail.
     await expect(() => greeter.handleMessage(message.payload, invitation.id, randomBytes())).rejects.toThrow(ERR_EXTENSION_RESPONSE_FAILED);
   }
+
+  done();
 });
 
 test('Wrong partyKey', async () => {

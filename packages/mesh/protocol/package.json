@@ -40,7 +40,7 @@
     "@types/assert": "^1.5.4",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
-    "@types/jest": "^26.0.23",
+    "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
     "@types/pump": "^1.1.0",
     "pump": "^3.0.0",

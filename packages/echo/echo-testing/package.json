@@ -29,7 +29,7 @@
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/faker": "~5.5.1",
-    "@types/jest": "^26.0.23",
+    "@types/jest": "^26.0.7",
     "@types/lodash": "^4.14.159",
     "wait-for-expect": "^3.0.2"
   },

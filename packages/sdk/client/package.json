@@ -62,7 +62,7 @@
   "devDependencies": {
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/jest": "^26.0.23",
+    "@types/jest": "^26.0.7",
     "@types/level-js": "~4.0.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/memdown": "^3.0.0",
