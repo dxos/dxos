@@ -7,7 +7,7 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { discoveryKey, PublicKey } from '@dxos/crypto';
-import { ErrorStream } from '@dxos/debug';
+import { ErrorStream, timed } from '@dxos/debug';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
@@ -151,6 +151,7 @@ export class Swarm {
     this._topology.update();
   }
 
+  @timed(3_000)
   async destroy () {
     log(`Destroy swarm ${this._topic}`);
     await this._topology.destroy();
