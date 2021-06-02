@@ -384,6 +384,7 @@ importers:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.23
       '@types/memdown': 3.0.0
+      '@types/mocha': 8.2.2
       expect: 27.0.2
       lodash: 4.17.21
       memdown: 5.1.0
@@ -413,6 +414,7 @@ importers:
       '@types/json-stable-stringify': ^1.0.32
       '@types/lodash': ^4.14.159
       '@types/memdown': ^3.0.0
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       debug: ^4.1.1
       expect: ~27.0.2
