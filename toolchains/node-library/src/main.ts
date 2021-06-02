@@ -63,6 +63,10 @@ function execJest (pkgDir: string, additionalArgs: string[] = []) {
   });
 }
 
+function execMocha () {
+  execTool('mocha', ['-r', 'ts-node/register/transpile-only', '--exit', '-t', '10000', 'src/**/*.test.ts']);
+}
+
 // eslint-disable-next-line no-unused-expressions
 yargs(process.argv.slice(2))
   .command<{ light?: boolean }>(
@@ -110,7 +114,7 @@ yargs(process.argv.slice(2))
 
         if (packageJson.toolchain?.testingFramework === 'mocha') {
           console.log(chalk.bold`\nmocha`);
-          execTool('mocha', ['-r', 'ts-node/register/transpile-only', 'src/**/*.test.ts']);
+          execMocha();
         } else {
           console.log(chalk.bold`\njest`);
           execJest(pkgDir, ['globalSetup', 'globalTeardown'].filter(arg => !!args[arg]).map(arg => `--${arg}=${args[arg]}`));
@@ -138,10 +142,10 @@ yargs(process.argv.slice(2))
 
       if (packageJson.toolchain?.testingFramework === 'mocha') {
         console.log(chalk.bold`\nmocha`);
-        execTool('mocha', ['-r', 'ts-node/register/transpile-only', 'src/**/*.test.ts', '--exit']);
+        execMocha();
       } else {
         console.log(chalk.bold`\njest`);
-        execJest(pkgDir,  _.slice(1).map(String));
+        execJest(pkgDir, _.slice(1).map(String));
       }
     }
   )

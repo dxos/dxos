@@ -3,6 +3,8 @@
 //
 
 import debug from 'debug';
+import { it as test } from 'mocha';
+import expect from 'expect'
 
 import {
   Keyring, KeyType, createPartyGenesisMessage, createFeedAdmitMessage, createKeyAdmitMessage, createEnvelopeMessage

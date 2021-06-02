@@ -11,6 +11,8 @@ import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream } from '@dxos
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { createTransform } from '@dxos/util';
+import { it as test } from 'mocha';
+import expect from 'expect'
 
 import { DefaultModel } from './default-model';
 import { Item } from './item';

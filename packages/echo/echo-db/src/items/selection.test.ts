@@ -3,6 +3,8 @@
 //
 
 import assert from 'assert';
+import { it as test } from 'mocha';
+import expect from 'expect'
 
 import { Event } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';

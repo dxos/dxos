@@ -4,6 +4,8 @@
 
 import { randomBytes, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
+import { it as test } from 'mocha';
+import expect from 'expect'
 
 import { FeedStoreAdapter } from './feed-store-adapter';
 import { createRamStorage } from './persistant-ram-storage';

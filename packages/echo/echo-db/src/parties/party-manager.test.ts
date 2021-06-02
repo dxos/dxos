@@ -5,8 +5,10 @@
 import assert from 'assert';
 import debug from 'debug';
 import ram from 'random-access-memory';
+import { it as test } from 'mocha';
+import expect from 'expect'
 
-import { waitForCondition, latch } from '@dxos/async';
+import { waitForCondition, latch, sleep } from '@dxos/async';
 import {
   createPartyGenesisMessage,
   KeyType,
@@ -42,6 +44,7 @@ import { Party } from './party';
 import { PartyFactory } from './party-factory';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
+import { emit } from 'process';
 
 const log = debug('dxos:echo:parties:party-manager:test');
 
@@ -502,7 +505,7 @@ describe('Party manager', () => {
       // Now wait to see it on A.
       await updated;
     }
-  });
+  }).timeout(10_000);
 
   test('Two users, two devices each', async () => {
     const { partyManager: partyManagerA1, identityManager: identityManagerA1 } = await setup(true, true);
@@ -609,7 +612,7 @@ describe('Party manager', () => {
       item = await party.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
       await Promise.all(itemPromises);
     }
-  });
+  }).timeout(10_000);
 
   test('Join new device to HALO by recovering from Identity seed phrase', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
@@ -687,7 +690,7 @@ describe('Party manager', () => {
       // Now wait to see it on A.
       await updated;
     }
-  });
+  }).timeout(10_000);
 
   test('Join a party - Offline', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
@@ -752,7 +755,7 @@ describe('Party manager', () => {
         }
       }
     }
-  });
+  }).timeout(10_000);
 
   test('Contacts', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();

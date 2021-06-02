@@ -5,6 +5,8 @@
 import debug from 'debug';
 import { Feed } from 'hypercore';
 import ram from 'random-access-memory';
+import { it as test } from 'mocha';
+import expect from 'expect'
 
 import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';

@@ -3,6 +3,8 @@
 //
 
 import ram from 'random-access-memory';
+import { it as test } from 'mocha';
+import expect from 'expect'
 
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';

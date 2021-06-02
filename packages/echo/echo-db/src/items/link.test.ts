@@ -3,6 +3,8 @@
 //
 
 import { ObjectModel } from '@dxos/object-model';
+import { it as test } from 'mocha';
+import expect from 'expect'
 
 import { createTestInstance } from '../util';
 
