@@ -622,7 +622,7 @@ describe('Party manager', () => {
       item = await party.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
       await Promise.all(itemPromises);
     }
-  }).timeout(10_000);
+  }).timeout(20_000);
 
   test('Join new device to HALO by recovering from identity seed phrase', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
