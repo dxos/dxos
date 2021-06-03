@@ -25,7 +25,7 @@ import { useSelection, searchSelector } from '@dxos/react-client';
 
 import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, ItemDialog, graphSelector
-} from '../../../src';
+} from '../../src';
 import { createAdapter, TYPES } from './adapter';
 
 const useStyles = makeStyles(theme => ({
