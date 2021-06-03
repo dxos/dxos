@@ -21,7 +21,7 @@ const log = debug('dxos:echo:story');
 debug.enable('dxos:echo:story:*, dxos:*:error');
 
 export default {
-  title: 'Demos/Swarm'
+  title: 'Experimental/Swarm'
 };
 
 export const Primary = () => (

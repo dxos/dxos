@@ -81,7 +81,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.10",
     "@storybook/addon-essentials": "^6.2.9",
-    "@storybook/addon-knobs": "^6.2.9",
     "@storybook/addon-links": "^6.2.9",
     "@storybook/react": "^6.2.9",
     "@types/faker": "~5.5.1",

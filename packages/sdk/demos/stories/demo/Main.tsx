@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import faker from 'faker';
 import React, { useState } from 'react';
 
@@ -25,7 +26,7 @@ import { useSelection, searchSelector } from '@dxos/react-client';
 
 import {
   CardView, GraphView, ListView, GridView, SearchBar, ItemCard, ItemDialog, graphSelector
-} from '../../../src';
+} from '../../src';
 import { createAdapter, TYPES } from './adapter';
 
 const useStyles = makeStyles(theme => ({
@@ -76,7 +77,7 @@ const VIEW_GRAPH = 4;
 
 interface MainProps {
   party: Party
-  code: string
+  code?: string
 }
 
 // TODO(burdon): Factor out.
@@ -123,6 +124,7 @@ const Main = ({ party, code }: MainProps) => {
   };
 
   const handleCopyInvite = async () => {
+    assert(code);
     const invitation = await party.createInvitation({
       secretProvider: async () => Buffer.from(code),
       secretValidator: async () => true
@@ -142,7 +144,9 @@ const Main = ({ party, code }: MainProps) => {
           <ViewButton view={VIEW_GRID} icon={GridIcon} />
           <ViewButton view={VIEW_GRAPH} icon={GraphIcon} />
         </div>
-        <Button onClick={handleCopyInvite}>Copy invite</Button>
+        {code && (
+          <Button onClick={handleCopyInvite}>Copy invite</Button>
+        )}
       </Toolbar>
 
       <div className={classes.content}>

@@ -23,7 +23,7 @@ interface HomeProps {
 /**
  * Home page.
  */
-const Home = ({ onCreate, onJoin }: HomeProps) => {
+const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
   const [invitationCode, setInvitationCode] = useState('');
   const [inProgress, setInProgress] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -35,7 +35,7 @@ const Home = ({ onCreate, onJoin }: HomeProps) => {
         <TextField
           fullWidth
           value={invitationCode}
-          onChange={e => setInvitationCode(e.target.value)}
+          onChange={event => setInvitationCode(event.target.value)}
           variant='outlined'
           label='Invitation code'
           spellCheck={false}
@@ -82,4 +82,4 @@ const Home = ({ onCreate, onJoin }: HomeProps) => {
   );
 };
 
-export default Home;
+export default StartDialog;
