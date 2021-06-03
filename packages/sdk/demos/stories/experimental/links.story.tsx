@@ -23,7 +23,7 @@ import {
 } from '../../src';
 
 export default {
-  title: 'Demos/Links'
+  title: 'Experimental/Links'
 };
 
 debug.enable('dxos:echo:story:*, dxos:*:error');
