@@ -4,9 +4,15 @@
     "outDir": "dist"
   },
   "include": [
-    "src", "test",
+    "src",
+    "test"
   ],
   "exclude": [
     "node_modules"
+  ],
+  "references": [
+    {
+      "path": "../debug"
+    }
   ]
 }

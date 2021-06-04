@@ -4,7 +4,9 @@
     "outDir": "dist"
   },
   "references": [
-    {"path": "../codec-protobuf"}
+    {
+      "path": "../codec-protobuf"
+    }
   ],
   "include": [
     "src"

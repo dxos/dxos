@@ -6,5 +6,13 @@
   "include": [
     "src/**/*",
     "src/proto/*.json"
+  ],
+  "references": [
+    {
+      "path": "../network-generator"
+    },
+    {
+      "path": "../protocol"
+    }
   ]
 }

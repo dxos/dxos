@@ -3,11 +3,15 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "types": ["jest", "node"],
+  "types": [
+    "jest",
+    "node"
+  ],
   "include": [
     "src"
   ],
   "exclude": [
     "src/**/*.test.js"
-  ]
+  ],
+  "references": []
 }
