@@ -11,6 +11,29 @@
     "src/**/*.json"
   ],
   "references": [
-    { "path": "../protocol-plugin-bot" }
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../protocol-plugin-bot"
+    },
+    {
+      "path": "../../common/util"
+    }
   ]
 }

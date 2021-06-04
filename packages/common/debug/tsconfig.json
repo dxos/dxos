@@ -6,11 +6,16 @@
       "DOM"
     ]
   },
-  "types": ["jest", "node"],
+  "types": [
+    "jest",
+    "node"
+  ],
   "include": [
-    "src", "test",
+    "src",
+    "test"
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
+  "references": []
 }

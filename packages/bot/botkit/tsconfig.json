@@ -6,12 +6,38 @@
       "DOM"
     ]
   },
-  "types": ["jest", "node"],
+  "types": [
+    "jest",
+    "node"
+  ],
   "include": [
     "src",
     "src/**/*.json"
   ],
   "references": [
-    { "path": "../protocol-plugin-bot" }
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../protocol-plugin-bot"
+    },
+    {
+      "path": "../../common/util"
+    }
   ]
 }

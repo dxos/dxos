@@ -12,6 +12,11 @@
     "test"
   ],
   "references": [
-    { "path": "../client" }
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    }
   ]
 }

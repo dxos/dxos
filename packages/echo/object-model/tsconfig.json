@@ -1,9 +1,32 @@
 {
   "extends": "../../../tsconfig.json",
   "include": [
-    "src",
+    "src"
   ],
   "compilerOptions": {
     "outDir": "dist"
   },
+  "references": [
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../echo-protocol"
+    },
+    {
+      "path": "../feed-store"
+    },
+    {
+      "path": "../model-factory"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../common/async"
+    }
+  ]
 }

@@ -6,5 +6,19 @@
   "include": [
     "src/**/*",
     "src/proto/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../protocol"
+    },
+    {
+      "path": "../../common/protobuf-compiler"
+    },
+    {
+      "path": "../protocol-network-generator"
+    }
   ]
 }
