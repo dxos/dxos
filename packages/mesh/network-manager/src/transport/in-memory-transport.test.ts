@@ -51,23 +51,8 @@ function createPair () {
   return { connection1, connection2, plugin1, plugin2, peer1Id, peer2Id, topic };
 }
 
-test('establish connection and send data through with protocol', async () => {
-  const { plugin1, plugin2, peer1Id } = createPair();
-
-  const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
-  plugin1.on('receive', mockReceive);
-
-  plugin2.on('connect', async (protocol) => {
-    plugin2.send(peer1Id.asBuffer(), 'Foo');
-  });
-
-  await waitForExpect(() => {
-    expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
-  });
-}).timeout(5_000);
-
-test('10 pairs of peers connecting at the same time', async () => {
-  await Promise.all(range(10).map(async () => {
+describe('InMemoryTransport', () => {
+  test('establish connection and send data through with protocol', async () => {
     const { plugin1, plugin2, peer1Id } = createPair();
 
     const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
@@ -80,5 +65,42 @@ test('10 pairs of peers connecting at the same time', async () => {
     await waitForExpect(() => {
       expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
     });
-  }));
-}).timeout(5_000);
+  });
+
+  test('10 pairs of peers connecting at the same time', async () => {
+    await Promise.all(range(10).map(async () => {
+      const { plugin1, plugin2, peer1Id } = createPair();
+
+      const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
+      plugin1.on('receive', mockReceive);
+
+      plugin2.on('connect', async (protocol) => {
+        plugin2.send(peer1Id.asBuffer(), 'Foo');
+      });
+
+      await waitForExpect(() => {
+        expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
+      });
+    }));
+  });
+
+  test('close', async () => {
+    const { plugin1, plugin2, connection1, connection2 } = createPair();
+
+    await waitForExpect(() => {
+      expect(plugin1.peers.length).toEqual(1)
+      expect(plugin2.peers.length).toEqual(1)
+    })
+
+    const closed = connection2.closed.waitForCount(1);
+
+    await connection1.close()
+
+    await closed;
+
+    await waitForExpect(() => {
+      expect(plugin1.peers.length).toEqual(0)
+      expect(plugin2.peers.length).toEqual(0)
+    })
+  })
+})
