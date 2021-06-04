@@ -64,7 +64,9 @@ export class InMemoryTransport implements Transport {
     log(`Closing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
 
     InMemoryTransport._connections.delete([this._topic, this._ownId, this._remoteId]);
+    console.log('in memory transport closing protocol')
     await this._protocol.close();
+    console.log('in memory transport closed protocol')
 
     if (this._remoteConnection) {
       InMemoryTransport._connections.delete([this._topic, this._remoteId, this._ownId]);

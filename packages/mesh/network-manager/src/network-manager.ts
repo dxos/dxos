@@ -115,8 +115,10 @@ export class NetworkManager {
     map.destroy();
     this._maps.delete(topic);
 
+    console.log('leaveProtocolSwarm - swarm.destroy()...')
     await swarm.destroy();
     this._swarms.delete(topic);
+    console.log('leaveProtocolSwarm - topicsUpdated.emit...')
     this.topicsUpdated.emit();
   }
 

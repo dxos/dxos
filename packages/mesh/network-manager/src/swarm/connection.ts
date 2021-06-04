@@ -138,7 +138,9 @@ export class Connection {
 
     log(`Closing ${this.ownId}`);
 
+    console.log('connection: closing transport')
     await this._transport?.close();
+    console.log('connection: closed transport')
 
     log(`Closed ${this.ownId}`);
 

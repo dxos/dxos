@@ -260,30 +260,35 @@ export class PresencePlugin extends EventEmitter {
    */
   private _removePeer (protocol: Protocol) {
     assert(protocol);
+    console.log(`[${protocol.tempId}] Presence plugin: _removePeer()`)
     const session = protocol.getSession();
     if (!session || !session.peerId) {
       return;
     }
-
+    
     const { peerId } = session;
     const peerIdHex = peerId.toString('hex');
-
+    
+    console.log(`[${protocol.tempId}] Presence plugin: delete neighbor`)
     this._neighbors.delete(peerIdHex);
+    console.log(`[${protocol.tempId}] Presence plugin: delete node`)
     this._deleteNode(peerIdHex);
     this.emit('neighbor:left', peerId);
-
+    
     if (this._neighbors.size > 0) {
       return this.ping();
     }
-
+    
     // We clear the._graph graph.
     const localPeerId = this._peerId.toString('hex');
+    console.log(`[${protocol.tempId}] Presence plugin: foreach node`)
     this._graph.forEachNode((node) => {
       if (node.id === localPeerId) {
         return;
       }
       this._deleteNode(node.id as string);
     });
+    console.log(`[${protocol.tempId}] Presence plugin: _removePeer() finished`)
   }
 
   private _updateGraph ({ peerId: from, connections = [], metadata }: any) {

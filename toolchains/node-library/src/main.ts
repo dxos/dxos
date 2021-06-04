@@ -64,7 +64,7 @@ function execJest (pkgDir: string, additionalArgs: string[] = []) {
 }
 
 function execMocha (additionalArgs: string[] = []) {
-  execTool('mocha', ['-r', 'ts-node/register/transpile-only', '--exit', '-t', '15000', 'src/**/*.test.ts', ...additionalArgs], {
+  execTool('mocha', ['-r', 'ts-node/register/transpile-only', '--exit', '-t', '35000', 'src/**/*.test.ts', ...additionalArgs], {
     stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
   });
 }

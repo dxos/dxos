@@ -72,6 +72,10 @@ export class Protocol extends NanoresourcePromise {
   public discoveryToPublicKey: any;
   public initTimeout: any;
 
+  public get tempId () {
+    return this.id.toString('hex').slice(0, 5);
+  }
+
   /**
    * Protocol extensions.
    */
@@ -276,13 +280,20 @@ export class Protocol extends NanoresourcePromise {
    }
 
    async _close () {
+     const exts = Array.from(this._extensionMap.keys())
+     console.log(`[${this.tempId}] protocol: _close()`)
      this._connected = false;
      this._stream.destroy();
+     console.log(`[${this.tempId}] protocol: closing _extensionInit`)
      await this._extensionInit.close().catch((err: any) => process.nextTick(() => this._stream.destroy(err)));
+     console.log(`[${this.tempId}] protocol: closing _extensionMap`)
      for (const [name, extension] of this._extensionMap) {
        log(`close extension "${name}"`);
+       console.log(`[${this.tempId}] close extension "${name}"`);
        await extension.close().catch((err: any) => process.nextTick(() => this._stream.destroy(err)));
-     }
+       console.log(`[${this.tempId}] closed extension "${name}"`);
+      }
+      console.log(`[${this.tempId}] protocol: _close() finished`)
    }
 
    async _openExtensions () {

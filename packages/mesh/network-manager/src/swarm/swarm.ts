@@ -154,8 +154,11 @@ export class Swarm {
   @timed(3_000)
   async destroy () {
     log(`Destroy swarm ${this._topic}`);
+    console.log('swarm: destroying topology...')
     await this._topology.destroy();
+    console.log('swarm: closing connections')
     await Promise.all(Array.from(this._connections.keys()).map(key => this._closeConnection(key)));
+    console.log('swarm: destroy done.')
   }
 
   private _getSwarmController (): SwarmController {
