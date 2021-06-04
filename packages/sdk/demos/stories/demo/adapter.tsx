@@ -24,7 +24,7 @@ import {
 } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
 
-import { CreateItemCallback, ItemProperties, ItemAdapter, ItemDialog } from '../../../src';
+import { CreateItemCallback, ItemProperties, ItemAdapter, ItemDialog } from '../../src';
 
 export const TYPES = {
   [OBJECT_ORG]: OrgIcon,

@@ -3,5 +3,10 @@
 //
 
 export const parameters = {
-  layout: 'fullscreen'
+  layout: 'fullscreen',
+  options: {
+    storySort: {
+      order: ['Demo']
+    }
+  }
 };

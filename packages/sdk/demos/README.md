@@ -1,6 +1,6 @@
 # SDK Demos
 
-Storybooks for SDK testing and demos.
+Storybooks for SDK demos, tutorials, and testing experimental components.
 
 ## Running the storybooks
 
