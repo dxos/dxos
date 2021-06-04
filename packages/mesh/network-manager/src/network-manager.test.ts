@@ -5,7 +5,6 @@
 import debug from 'debug';
 import { expect, mockFn } from 'earljs';
 import * as fc from 'fast-check';
-import { ModelRunSetup } from 'fast-check';
 import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
@@ -274,9 +273,13 @@ test('property-based test', async () => {
 
   async function assertState (m: Model, r: Real) {
     await waitForExpect(() => {
+      const expectedPeerIds = Array.from(m.joinedPeers.values()).map(x => x.toHex()).sort()
+
       r.peers.forEach(peer => {
         if (peer.presence) {
-          expect(Array.from(m.joinedPeers.values()).every(peerId => peer.presence!.peers.some(x => PublicKey.equals(peerId, x)))).toEqual(true);
+          const actualPeerIds = peer.presence!.peers.map(x => x.toString('hex')).sort()
+
+          expect(actualPeerIds).toEqual(expectedPeerIds)
         }
       });
     }, 1_000);
@@ -395,8 +398,8 @@ test('property-based test', async () => {
   ];
 
   await fc.assert(
-    fc.asyncProperty(fc.commands(allCommands, { maxCommands: 30 }), async cmds => {
-      const s: ModelRunSetup<Model, Real> = () => ({
+    fc.asyncProperty(fc.commands(allCommands, { maxCommands: 30, replayPath: 'FACABBABABAAATA:qqC' }), async cmds => {
+      const s: fc.ModelRunSetup<Model, Real> = () => ({
         model: {
           topic: PublicKey.random(),
           peers: new ComplexSet(x => x.toHex()),
@@ -421,7 +424,8 @@ test('property-based test', async () => {
           new RemovePeerCommand(peerIds[0]),
           new RemovePeerCommand(peerIds[1])
         ]]
-      ]
+      ],
+      seed: 295828236, path: "93:10:8:10", endOnFailure: true
     }
   );
 }).timeout(2_000_000_000);
