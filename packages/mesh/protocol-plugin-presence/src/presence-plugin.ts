@@ -12,11 +12,9 @@ import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
 import { Broadcast } from '@dxos/broadcast';
-import { Codec } from '@dxos/codec-protobuf';
 import { Extension, Protocol } from '@dxos/protocol';
 
 import { schema } from './proto/gen';
-import { Alive } from './proto/gen/dxos/protocol/presence';
 
 const log = debug('presence');
 
