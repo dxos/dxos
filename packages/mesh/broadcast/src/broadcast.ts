@@ -5,7 +5,7 @@
 import assert from 'assert';
 import crypto from 'crypto';
 import debug from 'debug';
-import { NanoresourcePromise } from 'nanoresource-promise/emitter';
+import EventEmitter from 'events';
 import LRU, { Lru } from 'tiny-lru';
 
 import { schema } from './proto/gen';
@@ -61,10 +61,8 @@ type FixedLru = Lru<any> & { ttl: number, max: number, items: any[]} // The orig
 
 /**
  * Abstract module to send broadcast messages.
- *
- * @extends {EventEmitter}
  */
-export class Broadcast extends NanoresourcePromise {
+export class Broadcast extends EventEmitter {
   private readonly _id: Buffer;
   private readonly _codec = schema.getCodecForType('dxos.broadcast.Packet');
 
@@ -72,6 +70,8 @@ export class Broadcast extends NanoresourcePromise {
   private readonly _subscribe: SubscribeFn;
   private readonly _lookup: LookupFn | undefined;
   private readonly _seenSeqs: FixedLru;
+
+  private _isOpen = false;
   private _peers: Peer[] = [];
   private _unsubscribe: (() => void) | undefined;
 
@@ -86,8 +86,8 @@ export class Broadcast extends NanoresourcePromise {
 
     this._id = id;
 
-    this._send = (...args: any) => middleware.send(...args);
-    this._subscribe = (...args: any) => middleware.subscribe(...args);
+    this._send = middleware.send;
+    this._subscribe = middleware.subscribe;
 
     this._seenSeqs = LRU(maxSize, maxAge) as any;
 
@@ -114,10 +114,8 @@ export class Broadcast extends NanoresourcePromise {
 
   /**
    * Update internal list of peers.
-   *
-   * @param {Array<Peer>} peers
    */
-  updatePeers (peers: any) {
+  updatePeers (peers: Peer[]) {
     this._peers = peers;
   }
 
@@ -139,44 +137,30 @@ export class Broadcast extends NanoresourcePromise {
    */
   pruneCache () {
     const time = Date.now();
-    for (const item of Object.values(this._seenSeqs.items) as any) {
+    for (const item of Object.values(this._seenSeqs.items)) {
       if (this._seenSeqs.ttl > 0 && item.expiry <= time) {
         this._seenSeqs.delete(item.key);
       }
     }
   }
 
-  /**
-   * @deprecated
-   */
-  run () {
-    this.open().catch((err: any) => {
-      process.nextTick(() => this.emit('error', err));
-    });
-  }
+  open () {
+    if (this._isOpen) {
+      return;
+    }
+    this._isOpen = true;
 
-  /**
-   * @deprecated
-   */
-  stop () {
-    this.close().catch((err: any) => {
-      process.nextTick(() => this.emit('error', err));
-    });
-  }
-
-  /**
-   * @override
-   */
-  private _open () {
     this._unsubscribe = this._subscribe(this._onPacket.bind(this), this.updatePeers.bind(this)) || (() => {});
 
     log('running %h', this._id);
   }
 
-  /**
-   * @override
-   */
-  private _close () {
+  close () {
+    if (!this._isOpen) {
+      return;
+    }
+    this._isOpen = false;
+
     this._unsubscribe?.();
     this._seenSeqs.clear();
 
@@ -184,14 +168,12 @@ export class Broadcast extends NanoresourcePromise {
   }
 
   /**
-   * Publish and/or Forward a packet message to each peer neighboor.
+   * Publish and/or Forward a packet message to each peer neighbor.
    *
    * @param {Packet} packet
    * @param {Object} options
    */
   private async _publish (packet: Packet, options = {}): Promise<Packet | undefined> {
-    await this._isOpen();
-
     /** @deprecated */
     this._lookup && this.updatePeers(await this._lookup());
 
@@ -207,7 +189,7 @@ export class Broadcast extends NanoresourcePromise {
 
     const packetEncoded = this._codec.encode(packet);
 
-    await Promise.all(peers.map((peer: any) => {
+    await Promise.all(peers.map((peer) => {
       log('publish %h -> %h', this._id, peer.id, packet);
 
       return this._send(packetEncoded, peer, options).then(() => {
@@ -226,7 +208,7 @@ export class Broadcast extends NanoresourcePromise {
    * @returns Returns the packet if the decoding was successful.
    */
   private _onPacket (packetEncoded: Buffer): Packet | undefined {
-    if (!this.opened || this.closed || this.closing) {
+    if (!this._isOpen) {
       return;
     }
 
@@ -257,15 +239,6 @@ export class Broadcast extends NanoresourcePromise {
       return packet;
     } catch (err) {
       this.emit('subscribe-error', err);
-    }
-  }
-
-  private _isOpen () {
-    if (this.opening) {
-      return this.open();
-    }
-    if (!this.opened || this.closed || this.closing) {
-      throw new Error('broadcast closed');
     }
   }
 }

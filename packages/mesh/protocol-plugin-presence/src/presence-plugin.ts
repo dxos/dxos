@@ -45,7 +45,7 @@ export class PresencePlugin extends EventEmitter {
   private _metadata: any;
   private _graph!: Graph<GraphNode, any> & EventedType;
   private _scheduler: any;
-  private _broadcast: any;
+  private _broadcast!: Broadcast;
 
   public emit: any;
 
@@ -122,7 +122,7 @@ export class PresencePlugin extends EventEmitter {
       return;
     }
 
-    this._broadcast.run();
+    this._broadcast.open();
 
     this._scheduler = setInterval(() => {
       this.ping();
@@ -131,7 +131,7 @@ export class PresencePlugin extends EventEmitter {
   }
 
   stop () {
-    this._broadcast.stop();
+    this._broadcast.close();
     clearInterval(this._scheduler);
     this._scheduler = null;
   }
