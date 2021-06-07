@@ -119,7 +119,7 @@ export class PresencePlugin extends EventEmitter {
 
   stop () {
     this._broadcast.stop();
-    if(this._scheduler !== null) {
+    if (this._scheduler !== null) {
       clearInterval(this._scheduler);
       this._scheduler = null;
     }
@@ -253,18 +253,18 @@ export class PresencePlugin extends EventEmitter {
     if (!session || !session.peerId) {
       return;
     }
-    
+
     const { peerId } = session;
     const peerIdHex = peerId.toString('hex');
-    
+
     this._neighbors.delete(peerIdHex);
     this._deleteNode(peerIdHex);
     this.emit('neighbor:left', peerId);
-    
+
     if (this._neighbors.size > 0) {
       await this.ping();
     }
-    
+
     // We clear the._graph graph.
     const localPeerId = this._peerId.toString('hex');
     this._graph.forEachNode((node) => {

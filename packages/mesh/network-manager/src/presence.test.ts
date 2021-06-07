@@ -74,4 +74,4 @@ describe('Presence', () => {
         .toEqual([peer1].map(x => x.peerId.toHex()).sort());
     });
   });
-})
+});

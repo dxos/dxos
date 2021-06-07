@@ -88,19 +88,19 @@ describe('InMemoryTransport', () => {
     const { plugin1, plugin2, connection1, connection2 } = createPair();
 
     await waitForExpect(() => {
-      expect(plugin1.peers.length).toEqual(1)
-      expect(plugin2.peers.length).toEqual(1)
-    })
+      expect(plugin1.peers.length).toEqual(1);
+      expect(plugin2.peers.length).toEqual(1);
+    });
 
     const closed = connection2.closed.waitForCount(1);
 
-    await connection1.close()
+    await connection1.close();
 
     await closed;
 
     await waitForExpect(() => {
-      expect(plugin1.peers.length).toEqual(0)
-      expect(plugin2.peers.length).toEqual(0)
-    })
-  })
-})
+      expect(plugin1.peers.length).toEqual(0);
+      expect(plugin2.peers.length).toEqual(0);
+    });
+  });
+});
