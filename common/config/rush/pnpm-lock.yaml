@@ -149,7 +149,7 @@ importers:
       hypercore-crypto: ^1.0.0
   ../../packages/bot/protocol-plugin-bot:
     dependencies:
-      '@dxos/broadcast': 1.0.0-beta.11
+      '@dxos/broadcast': link:../../mesh/broadcast
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
       '@dxos/protocol': link:../../mesh/protocol
@@ -167,7 +167,7 @@ importers:
       pump: 3.0.0
       wait-for-expect: 3.0.2
     specifiers:
-      '@dxos/broadcast': ~1.0.0-beta.11
+      '@dxos/broadcast': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/feed-store': workspace:*
@@ -927,6 +927,28 @@ importers:
       stream-to-array: ^2.3.0
       uuid: ^3.3.2
       wait-for-expect: ^3.0.2
+  ../../packages/mesh/broadcast:
+    dependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@types/debug': 4.1.5
+      '@types/node': 14.14.45
+      debug: 4.3.1
+      nanoresource-promise: 2.0.0
+      tiny-lru: 7.0.6
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/jest': 26.0.23
+      wait-for-expect: 3.0.2
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/debug': ^4.1.1
+      '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
+      debug: ^4.1.1
+      nanoresource-promise: ^2.0.0
+      tiny-lru: ^7.0.6
+      wait-for-expect: ^3.0.2
   ../../packages/mesh/network-devtools:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
@@ -1127,7 +1149,7 @@ importers:
       wait-for-expect: ^3.0.2
   ../../packages/mesh/protocol-plugin-messenger:
     dependencies:
-      '@dxos/broadcast': 1.0.0-beta.11
+      '@dxos/broadcast': link:../broadcast
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/protocol': link:../protocol
       debug: 4.3.1
@@ -1140,7 +1162,7 @@ importers:
       jest: 26.6.3
       wait-for-expect: 3.0.2
     specifiers:
-      '@dxos/broadcast': ~1.0.0-beta.11
+      '@dxos/broadcast': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
@@ -1153,7 +1175,7 @@ importers:
       wait-for-expect: ^3.0.2
   ../../packages/mesh/protocol-plugin-presence:
     dependencies:
-      '@dxos/broadcast': 1.0.0-beta.11
+      '@dxos/broadcast': link:../broadcast
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/protocol': link:../protocol
       '@types/debug': 4.1.5
@@ -1170,7 +1192,7 @@ importers:
       '@types/jest': 26.0.23
       wait-for-expect: 3.0.2
     specifiers:
-      '@dxos/broadcast': ~1.0.0-beta.11
+      '@dxos/broadcast': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/protocol': workspace:*
@@ -1417,7 +1439,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/eslint-plugin': 1.0.10_eslint@7.26.0+typescript@4.2.4
       '@storybook/addon-essentials': 6.2.9_ccd003247d485aeca5d249e8f9b350d2
-      '@storybook/addon-knobs': 6.2.9_79cda1d42d14e5224ea88731ba484d0d
       '@storybook/addon-links': 6.2.9_react-dom@16.14.0+react@16.14.0
       '@storybook/react': 6.2.9_1568a4a4371cca35bea7fd1ef25c77f4
       '@types/faker': 5.5.5
@@ -1466,7 +1487,6 @@ importers:
       '@material-ui/icons': ^4.11.2
       '@material-ui/styles': ^4.11.4
       '@storybook/addon-essentials': ^6.2.9
-      '@storybook/addon-knobs': ^6.2.9
       '@storybook/addon-links': ^6.2.9
       '@storybook/react': ^6.2.9
       '@types/debug': ^4.1.1

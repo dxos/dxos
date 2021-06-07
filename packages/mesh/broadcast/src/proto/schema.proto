@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package dxos.broadcast;
+
+message Packet {
+  bytes seqno = 1;
+  bytes origin = 2;
+  bytes from = 3;
+  bytes data = 4;
+}
