@@ -27,7 +27,7 @@ jobs:
         node common/scripts/install-run-rush.js install
         
         # Build
-        node common/scripts/install-run-rush.js build --light --verbose 
+        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --light --verbose 
     - name: Publish
       run:  |
         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}

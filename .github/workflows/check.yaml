@@ -27,7 +27,7 @@ jobs:
           node common/scripts/install-run-rush.js install
           
           # Build
-          node common/scripts/install-run-rush.js rebuild --verbose
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js rebuild --verbose
 
           # Build storybooks
           cd packages/echo/echo-demo && pnpm build-storybook && cd -
