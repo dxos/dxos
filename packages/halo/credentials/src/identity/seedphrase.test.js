@@ -14,6 +14,7 @@ test('Create cold identity key and recover', async () => {
   const seedPhrase = generateSeedPhrase();
   expect(typeof seedPhrase === 'string').toBeTruthy();
   expect(seedPhrase.split(/\s+/g).length).toEqual(12);
+
   // Add the key to a keyring and verify it is retrievable.
   /** @type {KeyPair} */
   const identityKeyPair = keyPairFromSeedPhrase(seedPhrase);
@@ -26,12 +27,9 @@ test('Create cold identity key and recover', async () => {
   expect(identityKeyRecord.type).toEqual(KeyType.IDENTITY);
   expect(identityKeyRecord.own).toBeTruthy();
 
-  // Mocked export seed phrase, then re-import later, with this assignment:
-  /** @type {string} */
-  const importedSeedPhrase = seedPhrase;
   // Recover seed phrase to key pair.
   /** @type {KeyPair} */
-  const recoveredKeyPair = keyPairFromSeedPhrase(importedSeedPhrase);
+  const recoveredKeyPair = keyPairFromSeedPhrase(seedPhrase);
 
   // Verify same key as exported above.
   expect(PublicKey.from(recoveredKeyPair.publicKey)).toEqual(identityKeyRecord.publicKey);
@@ -44,6 +42,7 @@ test('Create cold identity key and recover', async () => {
   const signed = newKeyring.sign({ message: 'Test' }, [
     newKeyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))
   ]);
+
   // Note -- original keyring used to verify:
   // TODO(dboreham): fix Keyring.verify() so it does a trusted verify -- someone broke this at some point.
   const verified = origKeyring.verify(signed);

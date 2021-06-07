@@ -287,6 +287,7 @@ export class Extension extends Nanomessage {
     await super._open();
   }
 
+  // @override
   private async _close () {
     try {
       await super._close();

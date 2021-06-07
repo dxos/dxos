@@ -79,6 +79,8 @@ class SignatureValidationCache {
 export class Keyring {
   static _signatureValidationCache = new SignatureValidationCache();
 
+  // TODO(burdon): Relocate static methods.
+
   @meter
   static cryptoVerify (message: Buffer, signature: Buffer, publicKey: Buffer) {
     return cryptoVerify(message, signature, publicKey);
@@ -278,7 +280,6 @@ export class Keyring {
   }
 
   private readonly _keystore: KeyStore;
-
   private readonly _keyCache = new Map<string, any>();
   private readonly _findTrustedCache = new Map<string, PublicKeyLike>();
 

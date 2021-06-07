@@ -40,17 +40,38 @@ const createPeer = (topic: PublicKey) => {
   return { peerId, presence: presencePlugin, networkManager };
 };
 
-test('presence', async () => {
-  const topic = PublicKey.random();
+describe('Presence', () => {
+  test('sees connected peers', async () => {
+    const topic = PublicKey.random();
 
-  const peer1 = createPeer(topic);
-  const peer2 = createPeer(topic);
+    const peer1 = createPeer(topic);
+    const peer2 = createPeer(topic);
 
-  await waitForExpect(() => {
-    expect(peer1.presence.peers.map(x => x.toString('hex')).sort())
-      .toEqual([peer1, peer2].map(x => x.peerId.toHex()).sort());
+    await waitForExpect(() => {
+      expect(peer1.presence.peers.map(x => x.toString('hex')).sort())
+        .toEqual([peer1, peer2].map(x => x.peerId.toHex()).sort());
 
-    expect(peer2.presence.peers.map(x => x.toString('hex')).sort())
-      .toEqual([peer1, peer2].map(x => x.peerId.toHex()).sort());
+      expect(peer2.presence.peers.map(x => x.toString('hex')).sort())
+        .toEqual([peer1, peer2].map(x => x.peerId.toHex()).sort());
+    });
   });
-}).timeout(10_000);
+
+  test('removes disconnected peers', async () => {
+    const topic = PublicKey.random();
+
+    const peer1 = createPeer(topic);
+    const peer2 = createPeer(topic);
+
+    await waitForExpect(() => {
+      expect(peer1.presence.peers.map(x => x.toString('hex')).sort())
+        .toEqual([peer1, peer2].map(x => x.peerId.toHex()).sort());
+    });
+
+    peer2.networkManager.leaveProtocolSwarm(topic);
+
+    await waitForExpect(() => {
+      expect(peer1.presence.peers.map(x => x.toString('hex')).sort())
+        .toEqual([peer1].map(x => x.peerId.toHex()).sort());
+    });
+  });
+});
