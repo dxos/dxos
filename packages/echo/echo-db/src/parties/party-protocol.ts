@@ -16,7 +16,7 @@ import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
 import { MMSTTopology, NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
-import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+// import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
 import { IdentityManager } from '../halo';
@@ -111,7 +111,7 @@ export class PartyProtocol {
 
     const plugins = [
       ...this._haloProtocolPluginFactory.createPlugins(),
-      ...this._replicatorProtocolPluginFactory.createPlugins(),
+      ...this._replicatorProtocolPluginFactory.createPlugins()
       // this._presence
     ];
 
