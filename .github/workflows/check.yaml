@@ -24,12 +24,16 @@ jobs:
           npm install -g @microsoft/rush pnpm
           
           # Install dependencies
+          echo "::group::Install"
           node common/scripts/install-run-rush.js install
+          echo "::endgroup::"
           
           # Build
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js rebuild --verbose
 
           # Build storybooks
+          echo "::group::Storybooks"
           cd packages/echo/echo-demo && pnpm build-storybook && cd -
           cd packages/sdk/react-ux && pnpm build-storybook && cd -
           cd packages/sdk/react-client && pnpm build-storybook && cd -
+          echo "::endgroup::"
