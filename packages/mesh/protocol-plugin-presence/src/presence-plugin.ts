@@ -11,7 +11,7 @@ import createGraph, { Graph } from 'ngraph.graph';
 import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
-import { Broadcast } from '@dxos/broadcast';
+import { Broadcast, Middleware } from '@dxos/broadcast';
 import { Extension, Protocol } from '@dxos/protocol';
 
 import { schema } from './proto/gen';
@@ -196,7 +196,7 @@ export class PresencePlugin extends EventEmitter {
       if (data.metadata) {
         data.metadata = bufferJson.decode(data.metadata);
       }
-      this.emit('remote-ping', packet);
+      this.emit('remote-ping', data);
     });
     this._broadcast.sendError.on(err => console.warn(err));
     this._broadcast.subscribeError.on(err => console.warn(err));

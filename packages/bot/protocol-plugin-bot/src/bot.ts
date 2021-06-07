@@ -19,6 +19,11 @@ const DEFAULT_TIMEOUT = 60000;
  */
 export const codec = schema.getCodecForType('dxos.protocol.bot.Message');
 
+interface Peer {
+  id: Buffer
+  protocol: Protocol
+}
+
 /**
  * Bot protocol.
  */
@@ -35,7 +40,7 @@ export class BotPlugin extends EventEmitter {
 
   private readonly _codec: Codec<Message>;
 
-  private readonly _broadcast: Broadcast;
+  private readonly _broadcast: Broadcast<Peer>;
 
   /**
    * @constructor
@@ -61,7 +66,7 @@ export class BotPlugin extends EventEmitter {
       }
     };
 
-    const middleware: Middleware = {
+    const middleware: Middleware<Peer> = {
       lookup: async () => {
         return Array.from(this._peers.values()).map((peer) => {
           const { peerId } = peer.getSession();
@@ -72,8 +77,8 @@ export class BotPlugin extends EventEmitter {
           };
         });
       },
-      send: async (packet: any, peer: any) => {
-        await peer.protocol.getExtension(BotPlugin.EXTENSION_NAME).send(packet);
+      send: async (packet, peer) => {
+        await peer.protocol.getExtension(BotPlugin.EXTENSION_NAME)!.send(packet);
       },
       subscribe: (onPacket) => {
         this._commandHandler = (protocol, chunk) => {
