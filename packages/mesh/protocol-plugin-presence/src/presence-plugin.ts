@@ -12,11 +12,9 @@ import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
 import { Broadcast } from '@dxos/broadcast';
-import { Codec } from '@dxos/codec-protobuf';
 import { Extension, Protocol } from '@dxos/protocol';
 
 import { schema } from './proto/gen';
-import { Alive } from './proto/gen/dxos/protocol/presence';
 
 const log = debug('presence');
 
@@ -36,37 +34,27 @@ interface GraphNode {
 export class PresencePlugin extends EventEmitter {
   static EXTENSION_NAME = 'dxos.protocol.presence';
 
-  private readonly _peerId: Buffer;
   private readonly _peerTimeout: number;
-  private readonly _limit: any;
+  private readonly _limit = pLimit(1);
+  private readonly _codec = schema.getCodecForType('dxos.protocol.presence.Alive');
+  private readonly _neighbors = new Map<string, any>();
 
-  private _codec: Codec<Alive>;
-  private _neighbors!: Map<string, any>;
   private _metadata: any;
   private _graph!: Graph<GraphNode, any> & EventedType;
-  private _scheduler: any;
+  private _scheduler: NodeJS.Timeout | null = null;
   private _broadcast: any;
 
-  public emit: any;
-
-  /**
-   * @constructor
-   * @param {Buffer} peerId
-   * @param {Object} options
-   */
-  constructor (peerId: Buffer, options: PresenceOptions = {}) {
+  constructor (
+    private readonly _peerId: Buffer,
+    options: PresenceOptions = {}
+  ) {
     super();
-    assert(Buffer.isBuffer(peerId));
+    assert(Buffer.isBuffer(_peerId));
 
     const { peerTimeout = 2 * 60 * 1000, metadata } = options;
-
-    this._peerId = peerId;
     this._peerTimeout = peerTimeout;
-    this._codec = schema.getCodecForType('dxos.protocol.presence.Alive');
 
-    this._neighbors = new Map();
     this._metadata = metadata;
-    this._limit = pLimit(1);
 
     this._buildGraph();
     this._buildBroadcast();
@@ -102,9 +90,8 @@ export class PresencePlugin extends EventEmitter {
 
   /**
    * Create protocol extension.
-   * @return {Extension}
    */
-  createExtension () {
+  createExtension (): Extension {
     this.start();
 
     return new Extension(PresencePlugin.EXTENSION_NAME)
@@ -113,8 +100,8 @@ export class PresencePlugin extends EventEmitter {
       .setCloseHandler(async (protocol) => this._removePeer(protocol));
   }
 
-  ping () {
-    return this._limit(() => this._ping());
+  async ping (): Promise<void> {
+    await this._limit(() => this._ping());
   }
 
   start () {
@@ -132,8 +119,10 @@ export class PresencePlugin extends EventEmitter {
 
   stop () {
     this._broadcast.stop();
-    clearInterval(this._scheduler);
-    this._scheduler = null;
+    if (this._scheduler !== null) {
+      clearInterval(this._scheduler);
+      this._scheduler = null;
+    }
   }
 
   private _buildGraph () {
@@ -258,7 +247,7 @@ export class PresencePlugin extends EventEmitter {
   /**
    * Remove peer.
    */
-  private _removePeer (protocol: Protocol) {
+  private async _removePeer (protocol: Protocol) {
     assert(protocol);
     const session = protocol.getSession();
     if (!session || !session.peerId) {
@@ -273,7 +262,7 @@ export class PresencePlugin extends EventEmitter {
     this.emit('neighbor:left', peerId);
 
     if (this._neighbors.size > 0) {
-      return this.ping();
+      await this.ping();
     }
 
     // We clear the._graph graph.
@@ -338,7 +327,7 @@ export class PresencePlugin extends EventEmitter {
     }
   }
 
-  private async _ping () {
+  private async _ping (): Promise<void> {
     this._limit.clearQueue();
 
     try {
