@@ -191,7 +191,7 @@ export class PresencePlugin extends EventEmitter {
     });
 
     this._broadcast.packet.on(packet => {
-      assert(packet.data)
+      assert(packet.data);
       const data = this._codec.decode(packet.data);
       if (data.metadata) {
         data.metadata = bufferJson.decode(data.metadata);
