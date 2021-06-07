@@ -2,10 +2,12 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    "types": ["jest", "node"],
-
+    "types": [
+      "jest",
+      "node"
+    ],
     // TODO: Fix.
-    "noImplicitAny": false,
+    "noImplicitAny": false
   },
   "include": [
     "src"
@@ -13,6 +15,9 @@
   "references": [
     {
       "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../network-generator"
     }
   ]
 }

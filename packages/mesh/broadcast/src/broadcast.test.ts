@@ -101,14 +101,17 @@ async function publishAndSync (peers, message, opts?) {
 
 test('balancedBinTree: broadcast a message.', async () => {
   const generator = new NetworkGenerator({
-    createPeer: (id) => new Peer(id),
-    createConnection: (peerFrom, peerTo) => {
+    createPeer: async (id) => new Peer(id),
+    createConnection: (peerFrom: any, peerTo: any) => {
       peerFrom.connect(peerTo);
       peerTo.connect(peerFrom);
+
+      // TODO(marik-d): Fix network generator types.
+      return null as any;
     }
   });
 
-  const network = generator.balancedBinTree(2);
+  const network = await (generator as any).balancedBinTree(2);
   await publishAndSync(network.peers, Buffer.from('message1'));
 
   const packet = await publishAndSync(network.peers, Buffer.from('message1'), { seqno: Buffer.from('custom-seqno') });
@@ -119,14 +122,17 @@ test('balancedBinTree: broadcast a message.', async () => {
 
 test('complete: broadcast a message.', async () => {
   const generator = new NetworkGenerator({
-    createPeer: (id) => new Peer(id, { maxAge: 1000, maxSize: 2 }),
-    createConnection: (peerFrom, peerTo) => {
+    createPeer: async (id) => new Peer(id, { maxAge: 1000, maxSize: 2 }),
+    createConnection: (peerFrom: any, peerTo: any) => {
       peerFrom.connect(peerTo);
       peerTo.connect(peerFrom);
+
+      // TODO(marik-d): Fix network generator types.
+      return null as any;
     }
   });
 
-  const network = generator.complete(10);
+  const network = await (generator as any).complete(10);
 
   let time = Date.now();
 
