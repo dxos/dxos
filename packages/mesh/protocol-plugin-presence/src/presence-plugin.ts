@@ -105,8 +105,11 @@ export class PresencePlugin extends EventEmitter {
       .setCloseHandler(async (protocol) => this._removePeer(protocol));
   }
 
-  async ping (): Promise<void> {
-    await this._limit(() => this._ping());
+  /**
+   * NOTICE: Does not return a Promise cause it could hang if the queue is cleared.
+   */
+  private _pingLimit() {
+    this._limit(() => this.ping());
   }
 
   start () {
@@ -117,7 +120,7 @@ export class PresencePlugin extends EventEmitter {
     this._broadcast.open();
 
     this._scheduler = setInterval(() => {
-      this.ping();
+      this._pingLimit();
       queueMicrotask(() => this._pruneGraph());
     }, Math.floor(this._peerTimeout / 2));
   }
@@ -198,7 +201,12 @@ export class PresencePlugin extends EventEmitter {
       }
       this.emit('remote-ping', data);
     });
-    this._broadcast.sendError.on(err => console.warn(err));
+    this._broadcast.sendError.on(err => {
+      // Filter out "stream closed" errors.
+      if((err as any).code !== 'ERR_PROTOCOL_STREAM_CLOSED') {
+        console.warn(err)
+      }
+    });
     this._broadcast.subscribeError.on(err => console.warn(err));
     this.on('remote-ping', packet => this._updateGraph(packet));
   }
@@ -246,7 +254,7 @@ export class PresencePlugin extends EventEmitter {
     this._neighbors.set(peerIdHex, protocol);
 
     this.emit('neighbor:joined', peerId, protocol);
-    this.ping();
+    this._pingLimit();
   }
 
   /**
@@ -332,7 +340,7 @@ export class PresencePlugin extends EventEmitter {
     }
   }
 
-  private async _ping (): Promise<void> {
+  async ping (): Promise<void> {
     this._limit.clearQueue();
 
     try {
