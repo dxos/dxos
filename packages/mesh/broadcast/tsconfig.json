@@ -6,8 +6,6 @@
       "jest",
       "node"
     ],
-    // TODO: Fix.
-    "noImplicitAny": false
   },
   "include": [
     "src"

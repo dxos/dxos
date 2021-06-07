@@ -6,26 +6,58 @@ import assert from 'assert';
 import crypto from 'crypto';
 import debug from 'debug';
 import { NanoresourcePromise } from 'nanoresource-promise/emitter';
-import LRU from 'tiny-lru';
+import LRU, { Lru } from 'tiny-lru';
 
 import { schema } from './proto/gen';
+import { Packet } from './proto/gen/dxos/broadcast';
 
 debug.formatters.h = v => v.toString('hex').slice(0, 6);
 const log = debug('broadcast');
 
-/**
- * @typedef {Object} Middleware
- * @property {Function} send Defines how to send the packet builded by the broadcast.
- * @property {Function} subscribe Defines how to subscribe to incoming packets and update the internal list of peers.
- */
+export type SendFn = Function
+export type SubscribeFn = Function
+export type LookupFn = () => Promise<Peer[]>
 
-/**
- * @typedef {Object} Packet
- * @property {Buffer} seqno Id message.
- * @property {Buffer} origin Represents the author's ID of the message. To identify a message in the network you should check for the: `seqno + origin`.
- * @property {Buffer} from Represents the current sender's ID of the message.
- * @property {Buffer} data Represents an opaque blob of data, it can contain any data that the publisher wants to send.
- */
+export interface Middleware {
+  readonly send: SendFn
+  readonly subscribe: SubscribeFn
+  /**
+   * @deprecated
+   */
+   readonly lookup?: LookupFn
+}
+
+export interface CacheOptions {
+  /**
+   * Defines the max live time for the cache messages.
+   *
+   * Default: 10000.
+   */
+   maxAge?: number
+   /**
+    * Defines the max size for the cache messages.
+    *
+    * Default: 1000.
+    */
+   maxSize?: number
+}
+
+export interface Options extends CacheOptions {
+  /**
+   * Defines an id for the current peer.
+   */
+  id?: Buffer
+}
+
+export interface PublishOptions {
+  seqno?: Buffer
+}
+
+export interface Peer {
+  id: Buffer
+}
+
+type FixedLru = Lru<any> & { ttl: number, max: number, items: any[]} // The original type did not have all of the fields defined.
 
 /**
  * Abstract module to send broadcast messages.
@@ -33,40 +65,22 @@ const log = debug('broadcast');
  * @extends {EventEmitter}
  */
 export class Broadcast extends NanoresourcePromise {
-  public _id: any;
-  public _send: any;
-  public _subscribe: any;
-  public _seenSeqs: any;
-  public _peers: any;
-  public _codec: any;
-  public _lookup: any;
-  public open: any;
-  public emit: any;
-  public close: any;
-  public _unsubscribe: any;
-  public opened: any;
-  public closed: any;
-  public closing: any;
-  public opening: any;
-  public id: any;
-  public maxAge: any;
-  public maxSize: any;
-  public seqno: any;
+  private readonly _id: Buffer;
+  private readonly _codec = schema.getCodecForType('dxos.broadcast.Packet');
 
-  /**
-   * @constructor
-   * @param {Middleware} middleware
-   * @param {Object} options
-   * @param {Buffer} options.id Defines an id for the current peer.
-   * @param {number} [options.maxAge=10000] Defines the max live time for the cache messages.
-   * @param {number} [options.maxSize=1000] Defines the max size for the cache messages.
-   */
-  constructor (middleware: any, options: any = {}) {
+  private readonly _send: SendFn;
+  private readonly _subscribe: SubscribeFn;
+  private readonly _lookup: LookupFn | undefined;
+  private readonly _seenSeqs: FixedLru;
+  private _peers: Peer[] = [];
+  private _unsubscribe: (() => void) | undefined;
+
+  constructor (middleware: Middleware, options: Options = {}) {
+    super();
+
     assert(middleware);
     assert(middleware.send);
     assert(middleware.subscribe);
-
-    super();
 
     const { id = crypto.randomBytes(32), maxAge = 10 * 1000, maxSize = 1000 } = options;
 
@@ -75,32 +89,27 @@ export class Broadcast extends NanoresourcePromise {
     this._send = (...args: any) => middleware.send(...args);
     this._subscribe = (...args: any) => middleware.subscribe(...args);
 
-    this._seenSeqs = LRU(maxSize, maxAge);
-    this._peers = [];
-    this._codec = schema.getCodecForType('dxos.broadcast.Packet');
+    this._seenSeqs = LRU(maxSize, maxAge) as any;
 
-    /** @deprecated */
     if (middleware.lookup) {
-      this._lookup = () => middleware.lookup();
+      this._lookup = () => middleware.lookup!();
     }
   }
 
   /**
-   * Broadcast a flooding message to the peers neighboors.
-   *
-   * @param {Buffer} data
-   * @param {Object} options
-   * @param {Buffer} [options.seqno=crypto.randomBytes(32)]
-   * @returns {Promise<Packet>}
+   * Broadcast a flooding message to the peers neighbors.
    */
-  publish (data: any, options: any = {}) {
+  async publish (data: Buffer, options: PublishOptions = {}): Promise<Packet | undefined> {
     const { seqno = crypto.randomBytes(32) } = options;
 
     assert(Buffer.isBuffer(data));
     assert(Buffer.isBuffer(seqno));
 
-    const packet = { seqno, origin: this._id, data };
-    return this._publish(packet);
+    return this._publish({
+      seqno,
+      origin: this._id,
+      data
+    });
   }
 
   /**
@@ -114,10 +123,8 @@ export class Broadcast extends NanoresourcePromise {
 
   /**
    * Update internal cache options
-   *
-   * @param {{ maxAge: number, maxSize: number }} opts
    */
-  updateCache (opts: any = {}) {
+  updateCache (opts: CacheOptions = {}) {
     if (opts.maxAge) {
       this._seenSeqs.ttl = opts.maxAge;
     }
@@ -157,14 +164,20 @@ export class Broadcast extends NanoresourcePromise {
     });
   }
 
-  _open () {
+  /**
+   * @override
+   */
+  private _open () {
     this._unsubscribe = this._subscribe(this._onPacket.bind(this), this.updatePeers.bind(this)) || (() => {});
 
     log('running %h', this._id);
   }
 
-  _close () {
-    this._unsubscribe();
+  /**
+   * @override
+   */
+  private _close () {
+    this._unsubscribe?.();
     this._seenSeqs.clear();
 
     log('stop %h', this._id);
@@ -175,15 +188,14 @@ export class Broadcast extends NanoresourcePromise {
    *
    * @param {Packet} packet
    * @param {Object} options
-   * @returns {Promise<Packet>}
    */
-  async _publish (packet: any, options = {}) {
+  private async _publish (packet: Packet, options = {}): Promise<Packet | undefined> {
     await this._isOpen();
 
     /** @deprecated */
     this._lookup && this.updatePeers(await this._lookup());
 
-    const peers = this._peers.filter((peer: any) => (!packet.origin.equals(peer.id) && (!packet.from || !packet.from.equals(peer.id))));
+    const peers = this._peers.filter(peer => (!Buffer.from(packet.origin!).equals(peer.id) && (!packet.from || !Buffer.from(packet.from).equals(peer.id))));
     if (peers.length === 0) {
       return;
     }
@@ -211,10 +223,9 @@ export class Broadcast extends NanoresourcePromise {
   /**
    * Process incoming encoded packets.
    *
-   * @param {Buffer} packetEncoded
-   * @returns {(Packet|undefined)} Returns the packet if the decoding was successful.
+   * @returns Returns the packet if the decoding was successful.
    */
-  _onPacket (packetEncoded: any) {
+  private _onPacket (packetEncoded: Buffer): Packet | undefined {
     if (!this.opened || this.closed || this.closing) {
       return;
     }
@@ -226,11 +237,11 @@ export class Broadcast extends NanoresourcePromise {
       }
 
       // Ignore packets produced by me and forwarded by others
-      if (packet.origin.equals(this._id)) {
+      if (Buffer.from(packet.origin).equals(this._id)) {
         return;
       }
 
-      const packetId = packet.origin.toString('hex') + ':' + packet.seqno.toString('hex');
+      const packetId = Buffer.from(packet.origin).toString('hex') + ':' + Buffer.from(packet.seqno).toString('hex');
 
       // Check if I already see this packet.
       if (this._seenSeqs.get(packetId)) {
@@ -249,7 +260,7 @@ export class Broadcast extends NanoresourcePromise {
     }
   }
 
-  _isOpen () {
+  private _isOpen () {
     if (this.opening) {
       return this.open();
     }

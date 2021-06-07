@@ -6,7 +6,7 @@ import { EventEmitter } from 'events';
 
 import { NetworkGenerator } from '@dxos/network-generator';
 
-import { Broadcast } from './broadcast';
+import { Broadcast, Middleware } from './broadcast';
 
 const packetId = (packet: any) => packet.seqno.toString('hex') + packet.origin.toString('hex');
 
@@ -26,11 +26,11 @@ class Peer extends EventEmitter {
     this._peers = new Map();
     this._messages = new Map();
 
-    const middleware = {
-      send: async (packet, node, options) => {
+    const middleware: Middleware = {
+      send: async (packet: any, node: any, options: any) => {
         node.send(packet);
       },
-      subscribe: (onData, updatePeers) => {
+      subscribe: (onData: any, updatePeers: any) => {
         this.on('message', onData);
 
         const onPeerAdded = () => updatePeers(Array.from(this._peers.values()));
@@ -48,7 +48,7 @@ class Peer extends EventEmitter {
       ...opts
     });
 
-    this._broadcast.on('packet', (packet) => {
+    this._broadcast.on('packet', (packet: any) => {
       this._messages.set(packetId(packet), packet.data.toString('utf8'));
       this.emit('packet', packet);
     });
@@ -64,16 +64,16 @@ class Peer extends EventEmitter {
     return this._broadcast._seenSeqs.size;
   }
 
-  send (message) {
+  send (message: any) {
     this.emit('message', message);
   }
 
-  connect (peer) {
+  connect (peer: any) {
     this._peers.set(peer.id.toString('hex'), peer);
     this.emit('peer-added', peer);
   }
 
-  publish (message, options) {
+  publish (message: any, options: any) {
     return this._broadcast.publish(message, options);
   }
 
@@ -86,14 +86,14 @@ class Peer extends EventEmitter {
   }
 }
 
-async function publishAndSync (peers, message, opts?) {
+async function publishAndSync (peers: any, message: any, opts?: any) {
   const [peerOrigin, ...peersTarget] = peers;
-  const sync = Promise.all(peersTarget.map(peer => {
+  const sync = Promise.all(peersTarget.map((peer: any) => {
     return new Promise<void>(resolve => peer.once('packet', () => resolve()));
   }));
   const packet = await peerOrigin.publish(message, opts);
   await sync;
-  expect(peersTarget.reduce((prev, curr) => {
+  expect(peersTarget.reduce((prev: any, curr: any) => {
     return prev && curr.messages.has(packetId(packet));
   }, true)).toBe(true);
   return packet;
@@ -117,7 +117,7 @@ test('balancedBinTree: broadcast a message.', async () => {
   const packet = await publishAndSync(network.peers, Buffer.from('message1'), { seqno: Buffer.from('custom-seqno') });
   expect(packet.seqno.toString()).toBe('custom-seqno');
 
-  network.peers.forEach(peer => peer.close());
+  network.peers.forEach((peer: any) => peer.close());
 });
 
 test('complete: broadcast a message.', async () => {
@@ -141,7 +141,7 @@ test('complete: broadcast a message.', async () => {
   await publishAndSync(network.peers, Buffer.from('message1'));
 
   // The cache should have always the limit of 100
-  expect(network.peers.slice(1).reduce((prev, next) => {
+  expect(network.peers.slice(1).reduce((prev: any, next: any) => {
     return prev && next.seenMessagesSize === 2;
   }, true)).toBeTruthy();
 
@@ -150,10 +150,10 @@ test('complete: broadcast a message.', async () => {
     await new Promise(resolve => setTimeout(resolve, 2000 - time));
   }
 
-  network.peers.forEach(peer => peer.prune());
-  expect(network.peers.reduce((prev, next) => {
+  network.peers.forEach((peer: any) => peer.prune());
+  expect(network.peers.reduce((prev: any, next: any) => {
     return prev && next.seenMessagesSize === 0;
   }, true)).toBeTruthy();
 
-  network.peers.forEach(peer => peer.close());
+  network.peers.forEach((peer: any) => peer.close());
 });
