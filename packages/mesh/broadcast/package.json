@@ -1,0 +1,39 @@
+{
+  "name": "@dxos/broadcast",
+  "version": "2.10.8",
+  "description": "Abstract module to send broadcast messages.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/protocols.git",
+    "directory": "packages/mesh/broadcast"
+  },
+  "license": "AGPLv3",
+  "files": [
+    "srd",
+    "dist"
+  ],
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "toolchain build",
+    "test": "toolchain test",
+    "lint": "toolchain lint"
+  },
+  "dependencies": {
+    "@dxos/codec-protobuf": "workspace:*",
+    "debug": "^4.1.1",
+    "tiny-lru": "^7.0.6",
+    "@dxos/async": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/network-generator": "workspace:*",
+    "wait-for-expect": "^3.0.2",
+    "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.9",
+    "@types/debug": "^4.1.1"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
