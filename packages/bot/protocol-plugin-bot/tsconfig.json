@@ -1,9 +1,26 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist"
   },
   "include": [
-    "src",
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../mesh/protocol"
+    },
+    {
+      "path": "../../echo/feed-store"
+    },
+    {
+      "path": "../../common/protobuf-compiler"
+    }
   ]
 }

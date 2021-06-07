@@ -21,14 +21,53 @@
   },
   "include": [
     "src",
-    "stories",
+    "stories"
   ],
   "references": [
-    { "path": "../../echo/echo-db" },
-    { "path": "../../echo/echo-protocol" },
-    { "path": "../../echo/model-factory" },
-    { "path": "../../echo/object-model" },
-    { "path": "../../common/util" },
-    { "path": "../../sdk/react-client" }
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../../echo/echo-testing"
+    },
+    {
+      "path": "../../echo/feed-store"
+    },
+    {
+      "path": "../../echo/model-factory"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../react-client"
+    },
+    {
+      "path": "../react-ux"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../common/debug"
+    }
   ]
 }

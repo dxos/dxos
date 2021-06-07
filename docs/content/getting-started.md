@@ -144,7 +144,7 @@ Add new modules to `rush.json`
 
 Add TS config to support browser globals.
 
-``````
+```
   "compilerOptions": {
     "outDir": "dist",
     "lib": [
@@ -159,4 +159,10 @@ Add TS config to support browser globals.
 ```
 # List all packages in monorepo.
 pnpm ls -r --depth -1
+```
+
+## Updating typescript project references
+
+```
+npx @monorepo-utils/workspaces-to-typescript-project-references
 ```

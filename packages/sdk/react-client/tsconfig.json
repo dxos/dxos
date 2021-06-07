@@ -14,9 +14,32 @@
   },
   "include": [
     "src",
-    "stories",
+    "stories"
   ],
   "references": [
-    {"path": "../client"}
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../common/util"
+    }
   ]
 }

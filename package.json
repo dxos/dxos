@@ -1,5 +1,8 @@
 {
   "license": "AGPL-3.0",
+  "workspaces": [
+    "packages/*/*"
+  ],
   "scripts": {
     "preinstall": "echo 'This project is using Rush Stack. More details in the readme.' && false"
   }

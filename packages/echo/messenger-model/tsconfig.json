@@ -4,10 +4,23 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
+    "src"
   ],
   "references": [
-    { "path": "../model-factory" },
-    { "path": "../../common/util" }
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../echo-protocol"
+    },
+    {
+      "path": "../model-factory"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../common/protobuf-compiler"
+    }
   ]
 }

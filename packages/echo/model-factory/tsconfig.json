@@ -4,10 +4,29 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
+    "src"
   ],
   "references": [
-    { "path": "../echo-protocol" },
-    { "path": "../../common/util" }
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../echo-protocol"
+    },
+    {
+      "path": "../feed-store"
+    },
+    {
+      "path": "../../common/util"
+    }
   ]
 }
