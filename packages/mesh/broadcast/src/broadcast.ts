@@ -2,11 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event } from '@dxos/async';
 import assert from 'assert';
 import crypto from 'crypto';
 import debug from 'debug';
 import LRU, { Lru } from 'tiny-lru';
+
+import { Event } from '@dxos/async';
 
 import { schema } from './proto/gen';
 import { Packet } from './proto/gen/dxos/broadcast';
