@@ -14,22 +14,24 @@ import { Packet } from './proto/gen/dxos/broadcast';
 debug.formatters.h = v => v.toString('hex').slice(0, 6);
 const log = debug('broadcast');
 
-export type SendFn = (message: Uint8Array, peer: Peer, options: unknown) => Promise<void>;
+export type SendFn<P> = (message: Uint8Array, peer: P, options: unknown) => Promise<void>;
 
-export type SubscribeFn = (
+type Unsubscribe = () => void;
+
+export type SubscribeFn<P> = (
   onPacket: (packetEncoded: Uint8Array) => Packet | undefined,
-  updatePeers: (peers: Peer[]) => void,
-) => (() => void) | undefined;
+  updatePeers: (peers: P[]) => void,
+) => Unsubscribe | void;
 
-export type LookupFn = () => Promise<Peer[]>;
+export type LookupFn<P> = () => Promise<P[]>;
 
-export interface Middleware {
-  readonly send: SendFn
-  readonly subscribe: SubscribeFn
+export interface Middleware<P extends Peer = Peer> {
+  readonly send: SendFn<P>
+  readonly subscribe: SubscribeFn<P>
   /**
    * @deprecated
    */
-   readonly lookup?: LookupFn
+   readonly lookup?: LookupFn<P>
 }
 
 export interface CacheOptions {
@@ -67,20 +69,20 @@ type FixedLru = Lru<any> & { ttl: number, max: number, items: any[]} // The orig
 /**
  * Abstract module to send broadcast messages.
  */
-export class Broadcast extends EventEmitter {
+export class Broadcast<P extends Peer = Peer> extends EventEmitter {
   private readonly _id: Buffer;
   private readonly _codec = schema.getCodecForType('dxos.broadcast.Packet');
 
-  private readonly _send: SendFn;
-  private readonly _subscribe: SubscribeFn;
-  private readonly _lookup: LookupFn | undefined;
+  private readonly _send: SendFn<P>;
+  private readonly _subscribe: SubscribeFn<P>;
+  private readonly _lookup: LookupFn<P> | undefined;
   private readonly _seenSeqs: FixedLru;
 
   private _isOpen = false;
-  private _peers: Peer[] = [];
-  private _unsubscribe: (() => void) | undefined;
+  private _peers: P[] = [];
+  private _unsubscribe: Unsubscribe | undefined;
 
-  constructor (middleware: Middleware, options: Options = {}) {
+  constructor (middleware: Middleware<P>, options: Options = {}) {
     super();
 
     assert(middleware);
@@ -104,7 +106,7 @@ export class Broadcast extends EventEmitter {
   /**
    * Broadcast a flooding message to the peers neighbors.
    */
-  async publish (data: Buffer, options: PublishOptions = {}): Promise<Packet | undefined> {
+  async publish (data: Uint8Array, options: PublishOptions = {}): Promise<Packet | undefined> {
     const { seqno = crypto.randomBytes(32) } = options;
 
     assert(Buffer.isBuffer(data));
@@ -120,7 +122,7 @@ export class Broadcast extends EventEmitter {
   /**
    * Update internal list of peers.
    */
-  updatePeers (peers: Peer[]) {
+  updatePeers (peers: P[]) {
     this._peers = peers;
   }
 

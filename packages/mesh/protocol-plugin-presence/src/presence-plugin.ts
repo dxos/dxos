@@ -11,7 +11,7 @@ import createGraph, { Graph } from 'ngraph.graph';
 import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
-import { Broadcast } from '@dxos/broadcast';
+import { Broadcast, Middleware } from '@dxos/broadcast';
 import { Codec } from '@dxos/codec-protobuf';
 import { Extension, Protocol } from '@dxos/protocol';
 
@@ -30,6 +30,11 @@ interface GraphNode {
   lastUpdate?: number
 }
 
+interface Peer {
+  id: Buffer
+  protocol: Protocol
+}
+
 /**
  * Presence protocol plugin.
  */
@@ -45,7 +50,7 @@ export class PresencePlugin extends EventEmitter {
   private _metadata: any;
   private _graph!: Graph<GraphNode, any> & EventedType;
   private _scheduler: any;
-  private _broadcast!: Broadcast;
+  private _broadcast!: Broadcast<Peer>;
 
   public emit: any;
 
@@ -167,8 +172,8 @@ export class PresencePlugin extends EventEmitter {
   }
 
   private _buildBroadcast () {
-    const middleware = {
-      lookup: () => {
+    const middleware: Middleware<Peer> = {
+      lookup: async () => {
         return Array.from(this._neighbors.values()).map((peer) => {
           const { peerId } = peer.getSession();
 
@@ -178,12 +183,12 @@ export class PresencePlugin extends EventEmitter {
           };
         });
       },
-      send: async (packet: any, { protocol }: { protocol: Protocol}) => {
+      send: async (packet, { protocol }) => {
         const presence = protocol.getExtension(PresencePlugin.EXTENSION_NAME);
         assert(presence);
         await presence.send(packet, { oneway: true });
       },
-      subscribe: (onPacket: (msg: any) => void) => {
+      subscribe: (onPacket) => {
         this.on('protocol-message', (protocol: Protocol, message: any) => {
           if (message && message.data) {
             onPacket(message.data);
