@@ -16,7 +16,7 @@ import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
 import { MMSTTopology, NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
-// import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
 import { IdentityManager } from '../halo';
@@ -46,8 +46,7 @@ export interface PartyProvider {
 export class PartyProtocol {
   private readonly _peerId = PublicKey.random(); // TODO(marik-d): Should this be a specific peer id?
 
-  // TODO(rzadp): Enable and fix the cleanup bug.
-  // private readonly _presence = new PresencePlugin(this._peerId.asBuffer());
+  private readonly _presence = new PresencePlugin(this._peerId.asBuffer());
 
   private readonly _haloProtocolPluginFactory: HaloProtocolPluginFactory;
   private readonly _replicatorProtocolPluginFactory: ReplicatorProtocolPluginFactory;
@@ -90,7 +89,7 @@ export class PartyProtocol {
       protocol: ({ channel }: any) => this._createProtocol(channel),
       peerId: this._peerId,
       topic: this._partyKey,
-      // presence: this._presence,
+      presence: this._presence,
       topology: new MMSTTopology(topologyConfig),
       label: `Protocol swarm: ${this._partyKey}`
     });
@@ -111,8 +110,8 @@ export class PartyProtocol {
 
     const plugins = [
       ...this._haloProtocolPluginFactory.createPlugins(),
-      ...this._replicatorProtocolPluginFactory.createPlugins()
-      // this._presence
+      ...this._replicatorProtocolPluginFactory.createPlugins(),
+      this._presence
     ];
 
     const protocol = new Protocol({
