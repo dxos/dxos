@@ -5,6 +5,9 @@
 const path = require('path');
 
 module.exports = {
+  typescript: {
+    reactDocgen: 'none',
+  },
   stories: [
     '../stories/**/*.jsx',
     '../stories/**/*.tsx'
@@ -20,10 +23,10 @@ module.exports = {
         {
           loader: require.resolve('ts-loader'),
         },
-        // Optional
-        {
-          loader: require.resolve('react-docgen-typescript-loader'),
-        }
+        // // Optional
+        // {
+        //   loader: require.resolve('react-docgen-typescript-loader'),
+        // }
       ],
     });
     config.resolve.extensions.push('.ts', '.tsx');
