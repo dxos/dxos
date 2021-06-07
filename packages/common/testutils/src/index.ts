@@ -6,7 +6,7 @@ let afterTestCallbacks: (() => any | Promise<any>)[] = [];
 
 /**
  * Will execute the closure after the current test has finished running.
- * 
+ *
  * Closures are executed from last to first.
  */
 export function afterTest (cb: () => any | Promise<any>) {

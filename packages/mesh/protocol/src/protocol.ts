@@ -282,7 +282,7 @@ export class Protocol extends NanoresourcePromise {
      for (const [name, extension] of this._extensionMap) {
        log(`close extension "${name}"`);
        await extension.close().catch((err: any) => process.nextTick(() => this._stream.destroy(err)));
-      }
+     }
    }
 
    async _openExtensions () {
