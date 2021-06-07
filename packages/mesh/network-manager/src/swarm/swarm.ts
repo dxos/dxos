@@ -7,13 +7,12 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { discoveryKey, PublicKey } from '@dxos/crypto';
-import { ErrorStream, timed } from '@dxos/debug';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
 import { SignalApi } from '../signal';
-import { SwarmController, Topology } from '../topology';
-import { TransportFactory } from '../transport';
+import { SwarmController, Topology } from '../topology/topology';
+import { TransportFactory } from '../transport/transport';
 import { Connection, ConnectionState } from './connection';
 
 const log = debug('dxos:network-manager:swarm');
@@ -48,8 +47,6 @@ export class Swarm {
    * Connection is established to a new peer.
    */
   readonly connected = new Event<PublicKey>();
-
-  readonly errors = new ErrorStream();
 
   constructor (
     private readonly _topic: PublicKey,
@@ -104,7 +101,8 @@ export class Swarm {
         log(`[${this._ownPeerId}] Closing local connection and accepting remote peer's offer.`);
         // Close our connection and accept remote peer's connection.
         await this._closeConnection(remoteId).catch(err => {
-          this.errors.raise(err);
+          console.error(err);
+          // TODO(marik-d): Error handling.
         });
       } else {
         // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
@@ -116,11 +114,7 @@ export class Swarm {
     if (await this._topology.onOffer(remoteId)) {
       if (!this._connections.has(remoteId)) { // Connection might have been already established.
         const connection = this._createConnection(false, message.id, message.sessionId);
-        try {
-          connection.connect();
-        } catch (err) {
-          this.errors.raise(err);
-        }
+        connection.connect();
         accept = true;
       }
     }
@@ -151,14 +145,10 @@ export class Swarm {
     this._topology.update();
   }
 
-  @timed(3_000)
   async destroy () {
     log(`Destroy swarm ${this._topic}`);
-    console.log('swarm: destroying topology...')
     await this._topology.destroy();
-    console.log('swarm: closing connections')
     await Promise.all(Array.from(this._connections.keys()).map(key => this._closeConnection(key)));
-    console.log('swarm: destroy done.')
   }
 
   private _getSwarmController (): SwarmController {
@@ -173,7 +163,8 @@ export class Swarm {
         try {
           await this._closeConnection(peer);
         } catch (err) {
-          this.errors.raise(err);
+          console.error('Error closing connection');
+          console.error(err);
         }
         this._topology.update();
       },
@@ -207,11 +198,7 @@ export class Swarm {
         }
 
         if (answer.accept) {
-          try {
-            connection.connect();
-          } catch (err) {
-            this.errors.raise(err);
-          }
+          connection.connect();
         } else {
           // If the peer rejected our connection remove it from the set of candidates.
           this._discoveredPeers.delete(remoteId);
@@ -219,7 +206,8 @@ export class Swarm {
         this._topology.update();
       })
       .catch(err => {
-        this.errors.raise(err);
+        console.error('Offer error:');
+        console.error(err);
       });
     this._topology.update();
   }

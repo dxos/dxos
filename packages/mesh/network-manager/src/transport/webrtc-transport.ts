@@ -100,9 +100,7 @@ export class WebrtcTransport implements Transport {
   }
 
   private async _closeStream () {
-    console.log('webrtc transport closing protocol...')
     await this._protocol.close();
-    console.log('webrtc transport closed protocol...')
 
     const stream = this._protocol.stream as NodeJS.ReadWriteStream;
     stream.unpipe(this._peer).unpipe(stream);

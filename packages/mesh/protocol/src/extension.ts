@@ -290,18 +290,12 @@ export class Extension extends Nanomessage {
   // @override
   private async _close () {
     try {
-      console.log(`[${this._protocol?.tempId}] Extension: super._close()`)
       await super._close();
-      console.log(`[${this._protocol?.tempId}] Extension: super closed`)
       if (this._closeHandler) {
         assert(this._protocol);
-        console.log(`[${this._protocol?.tempId}] Extension: close_handler`)
         await this._closeHandler(this._protocol);
-        console.log(`[${this._protocol?.tempId}] Extension: close_handler finished`)
       }
-      console.log(`[${this._protocol?.tempId}] Extension: _close finished`)
     } catch (err) {
-      console.log(`[${this._protocol?.tempId}] Extension: catch, ${err}}`)
       throw ERR_EXTENSION_CLOSE_FAILED.from(err);
     }
   }

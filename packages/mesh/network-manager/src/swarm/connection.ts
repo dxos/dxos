@@ -11,7 +11,7 @@ import { ErrorStream } from '@dxos/debug';
 import { Protocol } from '@dxos/protocol';
 
 import { SignalApi } from '../signal';
-import { Transport, TransportFactory } from '../transport';
+import { Transport, TransportFactory } from '../transport/transport';
 
 const log = debug('dxos:network-manager:swarm:connection');
 
@@ -138,9 +138,7 @@ export class Connection {
 
     log(`Closing ${this.ownId}`);
 
-    console.log('connection: closing transport')
     await this._transport?.close();
-    console.log('connection: closed transport')
 
     log(`Closed ${this.ownId}`);
 

@@ -11,9 +11,11 @@ import { Protocol } from '@dxos/protocol';
 import { ComplexMap } from '@dxos/util';
 
 import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager } from './signal';
-import { Swarm, SwarmMapper } from './swarm';
-import { Topology } from './topology';
-import { createWebRtcTransportFactory, inMemoryTransportFactory } from './transport';
+import { SwarmMapper } from './swarm-mapper';
+import { Swarm } from './swarm/swarm';
+import { Topology } from './topology/topology';
+import { inMemoryTransportFactory } from './transport/in-memory-transport';
+import { createWebRtcTransportFactory } from './transport/webrtc-transport';
 
 export type ProtocolProvider = (opts: { channel: Buffer }) => Protocol;
 
@@ -90,11 +92,9 @@ export class NetworkManager {
       this._signal instanceof InMemorySignalManager ? inMemoryTransportFactory : createWebRtcTransportFactory({ iceServers: this._ice }),
       options.label
     );
-
     this._swarms.set(topic, swarm);
     this._signal.join(topic, peerId);
     this._maps.set(topic, new SwarmMapper(swarm, presence));
-
     this.topicsUpdated.emit();
 
     return () => this.leaveProtocolSwarm(topic);
@@ -115,10 +115,8 @@ export class NetworkManager {
     map.destroy();
     this._maps.delete(topic);
 
-    console.log('leaveProtocolSwarm - swarm.destroy()...')
     await swarm.destroy();
     this._swarms.delete(topic);
-    console.log('leaveProtocolSwarm - topicsUpdated.emit...')
     this.topicsUpdated.emit();
   }
 
