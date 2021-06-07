@@ -14,13 +14,13 @@ import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { createBroker } from '@dxos/signal';
+import { afterTest } from '@dxos/testutils';
 import { range, randomInt, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from './network-manager';
 import { protocolFactory } from './protocol-factory';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
-import { afterTest } from '@dxos/testutils';
 
 const log = debug('dxos:network-manager:test');
 
@@ -275,12 +275,12 @@ test('property-based test', async () => {
 
   async function assertState (m: Model, r: Real) {
     await waitForExpect(() => {
-      const peersExpected = Array.from(m.joinedPeers.values()).map(x => x.toHex()).sort()
+      const peersExpected = Array.from(m.joinedPeers.values()).map(x => x.toHex()).sort();
       r.peers.forEach(peer => {
         if (peer.presence) {
-          const actualPeers = peer.presence!.peers.map(x => x.toString('hex')).sort()
+          const actualPeers = peer.presence!.peers.map(x => x.toString('hex')).sort();
 
-          expect(actualPeers).toEqual(peersExpected)
+          expect(actualPeers).toEqual(peersExpected);
         }
       });
     }, 1_000);
@@ -299,7 +299,7 @@ test('property-based test', async () => {
       m.peers.add(this.peerId);
 
       const networkManager = new NetworkManager();
-      afterTest(() => networkManager.destroy())
+      afterTest(() => networkManager.destroy());
 
       r.peers.set(this.peerId, {
         networkManager
@@ -432,7 +432,7 @@ test('property-based test', async () => {
           new CreatePeerCommand(peerIds[1]),
           new RemovePeerCommand(peerIds[0]),
           new JoinTopicCommand(peerIds[1]),
-          new RemovePeerCommand(peerIds[1]),
+          new RemovePeerCommand(peerIds[1])
         ]],
         [[
           new CreatePeerCommand(peerIds[0]),
@@ -441,7 +441,7 @@ test('property-based test', async () => {
           new CreatePeerCommand(peerIds[1]),
           new JoinTopicCommand(peerIds[1]),
           new CreatePeerCommand(peerIds[2]),
-          new JoinTopicCommand(peerIds[2]),
+          new JoinTopicCommand(peerIds[2])
         ]]
       ]
     }
