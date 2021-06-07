@@ -205,7 +205,7 @@ export class Broadcast<P extends Peer = Peer> {
 
       return this._send(packetEncoded, peer, options).then(() => {
         this.send.emit([packetEncoded, peer]);
-      }).catch((err: any) => {
+      }).catch(err => {
         this.sendError.emit(err);
       });
     }));

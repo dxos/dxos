@@ -14,10 +14,7 @@ class Peer extends EventEmitter {
   public id: any;
   public _peers: any;
   public _messages: any;
-  public on: any;
-  public off: any;
-  public _broadcast: any;
-  public emit: any;
+  public _broadcast: Broadcast;
 
   constructor (id: any, opts = {}) {
     super();
@@ -48,8 +45,8 @@ class Peer extends EventEmitter {
       ...opts
     });
 
-    this._broadcast.on('packet', (packet: any) => {
-      this._messages.set(packetId(packet), packet.data.toString('utf8'));
+    this._broadcast.packet.on(packet => {
+      this._messages.set(packetId(packet), Buffer.from(packet.data!).toString('utf8'));
       this.emit('packet', packet);
     });
 
@@ -61,7 +58,7 @@ class Peer extends EventEmitter {
   }
 
   get seenMessagesSize () {
-    return this._broadcast._seenSeqs.size;
+    return (this._broadcast as any)._seenSeqs.size;
   }
 
   send (message: any) {
