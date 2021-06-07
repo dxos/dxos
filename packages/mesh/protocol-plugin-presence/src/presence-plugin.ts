@@ -201,16 +201,16 @@ export class PresencePlugin extends EventEmitter {
       id: this._peerId
     });
 
-    this._broadcast.on('packet', (packet: any) => {
-      packet = this._codec.decode(packet.data);
-      if (packet.metadata) {
-        packet.metadata = bufferJson.decode(packet.metadata);
+    this._broadcast.packet.on(packet => {
+      assert(packet.data)
+      const data = this._codec.decode(packet.data);
+      if (data.metadata) {
+        data.metadata = bufferJson.decode(data.metadata);
       }
       this.emit('remote-ping', packet);
     });
-    this._broadcast.on('lookup-error', (err: Error) => console.warn(err));
-    this._broadcast.on('send-error', (err: Error) => console.warn(err));
-    this._broadcast.on('subscribe-error', (err: Error) => console.warn(err));
+    this._broadcast.sendError.on(err => console.warn(err));
+    this._broadcast.subscribeError.on(err => console.warn(err));
     this.on('remote-ping', packet => this._updateGraph(packet));
   }
 

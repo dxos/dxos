@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import assert from 'assert';
 import crypto from 'crypto';
 import debug from 'debug';
-import EventEmitter from 'events';
 import LRU, { Lru } from 'tiny-lru';
 
 import { schema } from './proto/gen';
@@ -69,7 +69,7 @@ type FixedLru = Lru<any> & { ttl: number, max: number, items: any[]} // The orig
 /**
  * Abstract module to send broadcast messages.
  */
-export class Broadcast<P extends Peer = Peer> extends EventEmitter {
+export class Broadcast<P extends Peer = Peer> {
   private readonly _id: Buffer;
   private readonly _codec = schema.getCodecForType('dxos.broadcast.Packet');
 
@@ -82,9 +82,12 @@ export class Broadcast<P extends Peer = Peer> extends EventEmitter {
   private _peers: P[] = [];
   private _unsubscribe: Unsubscribe | undefined;
 
-  constructor (middleware: Middleware<P>, options: Options = {}) {
-    super();
+  readonly send = new Event<[packetEncoded: Uint8Array, peer: P]>();
+  readonly sendError = new Event<Error>();
+  readonly packet = new Event<Packet>();
+  readonly subscribeError = new Event<Error>();
 
+  constructor (middleware: Middleware<P>, options: Options = {}) {
     assert(middleware);
     assert(middleware.send);
     assert(middleware.subscribe);
@@ -200,9 +203,9 @@ export class Broadcast<P extends Peer = Peer> extends EventEmitter {
       log('publish %h -> %h', this._id, peer.id, packet);
 
       return this._send(packetEncoded, peer, options).then(() => {
-        this.emit('send', packetEncoded, peer);
+        this.send.emit([packetEncoded, peer]);
       }).catch((err: any) => {
-        this.emit('send-error', err);
+        this.sendError.emit(err);
       });
     }));
 
@@ -242,10 +245,10 @@ export class Broadcast<P extends Peer = Peer> extends EventEmitter {
 
       this._publish(packet).catch(() => {});
 
-      this.emit('packet', packet);
+      this.packet.emit(packet);
       return packet;
     } catch (err) {
-      this.emit('subscribe-error', err);
+      this.subscribeError.emit(err);
     }
   }
 }

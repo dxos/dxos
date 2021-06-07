@@ -22,7 +22,8 @@
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "debug": "^4.1.1",
-    "tiny-lru": "^7.0.6"
+    "tiny-lru": "^7.0.6",
+    "@dxos/async": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
