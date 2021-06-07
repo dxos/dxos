@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(dboreham): move this code to @dxos/crypto or ../keys
+// TODO(dboreham): move this code to @dxos/crypto
 
 import assert from 'assert';
 import { generateMnemonic, mnemonicToSeedSync } from 'bip39';

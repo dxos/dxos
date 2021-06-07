@@ -16,13 +16,18 @@ import { Transport, TransportFactory } from './transport';
 
 const log = debug('dxos:network-manager:swarm:transport:in-memory-transport');
 
+type ConnectionKey = [topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey];
+
 export class InMemoryTransport implements Transport {
-  private static readonly _connections = new ComplexMap<[topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey], InMemoryTransport>(([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex());
+  private static readonly _connections = new ComplexMap<ConnectionKey, InMemoryTransport>(([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex());
 
   public readonly closed = new Event<void>();
   public readonly connected = new Event<void>();
 
   public readonly errors = new ErrorStream();
+
+  private readonly _ownKey: ConnectionKey;
+  private readonly _remoteKey: ConnectionKey;
 
   private _remoteConnection?: InMemoryTransport;
 
@@ -35,11 +40,16 @@ export class InMemoryTransport implements Transport {
   ) {
     log(`Registering connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
 
-    assert(!InMemoryTransport._connections.has([this._topic, this._ownId, this._remoteId]), 'Duplicate in-memory connection');
-    InMemoryTransport._connections.set([this._topic, this._ownId, this._remoteId], this);
+    this._ownKey = [this._topic, this._ownId, this._remoteId];
+    this._remoteKey = [this._topic, this._remoteId, this._ownId];
 
-    this._remoteConnection = InMemoryTransport._connections.get([this._topic, this._remoteId, this._ownId]);
+    assert(!InMemoryTransport._connections.has(this._ownKey), 'Duplicate in-memory connection');
+    InMemoryTransport._connections.set(this._ownKey, this);
+
+    this._remoteConnection = InMemoryTransport._connections.get(this._remoteKey);
     if (this._remoteConnection) {
+      this._remoteConnection._remoteConnection = this;
+
       log(`Connecting to existing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
       this._protocol.stream.pipe(this._remoteConnection._protocol.stream).pipe(this._protocol.stream);
 
@@ -63,11 +73,11 @@ export class InMemoryTransport implements Transport {
   async close (): Promise<void> {
     log(`Closing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
 
-    InMemoryTransport._connections.delete([this._topic, this._ownId, this._remoteId]);
+    InMemoryTransport._connections.delete(this._ownKey);
     await this._protocol.close();
 
     if (this._remoteConnection) {
-      InMemoryTransport._connections.delete([this._topic, this._remoteId, this._ownId]);
+      InMemoryTransport._connections.delete(this._remoteKey);
 
       await this._remoteConnection._protocol.close();
 
