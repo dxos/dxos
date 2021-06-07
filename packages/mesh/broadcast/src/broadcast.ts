@@ -14,9 +14,14 @@ import { Packet } from './proto/gen/dxos/broadcast';
 debug.formatters.h = v => v.toString('hex').slice(0, 6);
 const log = debug('broadcast');
 
-export type SendFn = Function
-export type SubscribeFn = Function
-export type LookupFn = () => Promise<Peer[]>
+export type SendFn = (message: Uint8Array, peer: Peer, options: unknown) => Promise<void>;
+
+export type SubscribeFn = (
+  onPacket: (packetEncoded: Uint8Array) => Packet | undefined,
+  updatePeers: (peers: Peer[]) => void,
+) => (() => void) | undefined;
+
+export type LookupFn = () => Promise<Peer[]>;
 
 export interface Middleware {
   readonly send: SendFn
@@ -207,7 +212,7 @@ export class Broadcast extends EventEmitter {
    *
    * @returns Returns the packet if the decoding was successful.
    */
-  private _onPacket (packetEncoded: Buffer): Packet | undefined {
+  private _onPacket (packetEncoded: Uint8Array): Packet | undefined {
     if (!this._isOpen) {
       return;
     }
