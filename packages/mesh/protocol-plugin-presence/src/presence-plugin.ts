@@ -108,7 +108,7 @@ export class PresencePlugin extends EventEmitter {
   /**
    * NOTICE: Does not return a Promise cause it could hang if the queue is cleared.
    */
-  private _pingLimit() {
+  private _pingLimit () {
     this._limit(() => this.ping());
   }
 
@@ -203,8 +203,8 @@ export class PresencePlugin extends EventEmitter {
     });
     this._broadcast.sendError.on(err => {
       // Filter out "stream closed" errors.
-      if((err as any).code !== 'ERR_PROTOCOL_STREAM_CLOSED') {
-        console.warn(err)
+      if ((err as any).code !== 'ERR_PROTOCOL_STREAM_CLOSED') {
+        console.warn(err);
       }
     });
     this._broadcast.subscribeError.on(err => console.warn(err));
