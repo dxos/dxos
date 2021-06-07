@@ -20,6 +20,7 @@ import { NetworkManager } from './network-manager';
 import { protocolFactory } from './protocol-factory';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
+import { afterTest } from '@dxos/testutils';
 
 const log = debug('dxos:network-manager:test');
 
@@ -274,9 +275,12 @@ test('property-based test', async () => {
 
   async function assertState (m: Model, r: Real) {
     await waitForExpect(() => {
+      const peersExpected = Array.from(m.joinedPeers.values()).map(x => x.toHex()).sort()
       r.peers.forEach(peer => {
         if (peer.presence) {
-          expect(Array.from(m.joinedPeers.values()).every(peerId => peer.presence!.peers.some(x => PublicKey.equals(peerId, x)))).toEqual(true);
+          const actualPeers = peer.presence!.peers.map(x => x.toString('hex')).sort()
+
+          expect(actualPeers).toEqual(peersExpected)
         }
       });
     }, 1_000);
@@ -295,6 +299,7 @@ test('property-based test', async () => {
       m.peers.add(this.peerId);
 
       const networkManager = new NetworkManager();
+      afterTest(() => networkManager.destroy())
 
       r.peers.set(this.peerId, {
         networkManager
@@ -420,6 +425,23 @@ test('property-based test', async () => {
           new LeaveTopicCommand(peerIds[1]),
           new RemovePeerCommand(peerIds[0]),
           new RemovePeerCommand(peerIds[1])
+        ]],
+        [[
+          new CreatePeerCommand(peerIds[0]),
+          new JoinTopicCommand(peerIds[0]),
+          new CreatePeerCommand(peerIds[1]),
+          new RemovePeerCommand(peerIds[0]),
+          new JoinTopicCommand(peerIds[1]),
+          new RemovePeerCommand(peerIds[1]),
+        ]],
+        [[
+          new CreatePeerCommand(peerIds[0]),
+          new JoinTopicCommand(peerIds[0]),
+          new RemovePeerCommand(peerIds[0]),
+          new CreatePeerCommand(peerIds[1]),
+          new JoinTopicCommand(peerIds[1]),
+          new CreatePeerCommand(peerIds[2]),
+          new JoinTopicCommand(peerIds[2]),
         ]]
       ]
     }
