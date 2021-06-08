@@ -184,8 +184,9 @@ export class HaloRecoveryInitiator {
           invitation.authNonce.equals(authMessage.signed.nonce);
       };
 
-      // TODO(telackey): Configure expiration?
-      return identityManager.halo.invitationManager.createInvitation({ secretValidator }, { expiration: Date.now() + 60000 });
+      // TODO(telackey): Configure expiration.
+      return identityManager.halo.invitationManager
+        .createInvitation({ secretValidator }, { expiration: Date.now() + 60_000 });
     });
 
     return claimHandler.createMessageHandler();
