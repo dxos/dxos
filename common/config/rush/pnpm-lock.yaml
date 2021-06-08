@@ -1022,7 +1022,6 @@ importers:
       '@dxos/testutils': link:../../common/testutils
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/debug': 4.1.5
-      '@types/jest': 26.0.23
       '@types/mocha': 8.2.2
       '@types/node': 14.17.2
       earljs: 0.1.10
@@ -1043,7 +1042,6 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
-      '@types/jest': ^26.0.7
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/simple-peer': ^9.6.1
@@ -1407,6 +1405,7 @@ importers:
       level-js: 5.0.2
       lodash.merge: 4.6.2
       mobile-detect: 1.4.5
+      playwright: 1.11.1
       random-access-memory: 3.1.2
       react-resize-aware: 3.1.0_react@16.14.0
       source-map-support: 0.5.19
@@ -1417,7 +1416,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/eslint-plugin': 1.0.10_eslint@7.27.0+typescript@4.3.2
       '@storybook/addon-essentials': 6.2.9_475cba0964470b8155d810a74b1eef74
-      '@storybook/addon-knobs': 6.2.9_fc912283d399fd7bb063d99a41408c7a
       '@storybook/addon-links': 6.2.9_react-dom@16.14.0+react@16.14.0
       '@storybook/react': 6.2.9_ace1bdfca3bf0beccdfed886a7dd30bb
       '@types/faker': 5.5.6
@@ -1466,7 +1464,6 @@ importers:
       '@material-ui/icons': ^4.11.2
       '@material-ui/styles': ^4.11.4
       '@storybook/addon-essentials': ^6.2.9
-      '@storybook/addon-knobs': ^6.2.9
       '@storybook/addon-links': ^6.2.9
       '@storybook/react': ^6.2.9
       '@types/debug': ^4.1.1
@@ -1493,6 +1490,7 @@ importers:
       level-js: ^5.0.2
       lodash.merge: ^4.6.2
       mobile-detect: ~1.4.5
+      playwright: ^1.7.0
       random-access-memory: ~3.1.2
       react: ^16.14.0
       react-docgen-typescript-loader: ^3.7.2

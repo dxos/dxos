@@ -30,6 +30,36 @@ jobs:
           node common/scripts/install-run-rush.js rebuild --verbose
 
           # Build storybooks
-          cd packages/echo/echo-demo && pnpm build-storybook && cd -
-          cd packages/sdk/react-ux && pnpm build-storybook && cd -
-          cd packages/sdk/react-client && pnpm build-storybook && cd -
+          cd packages/sdk/demos && pnpm build-storybook --quiet && cd -
+          cd packages/sdk/react-ux && pnpm build-storybook --quiet && cd -
+          cd packages/sdk/react-client && pnpm build-storybook --quiet && cd -
+
+  check-demo-storybooks:
+    runs-on: [self-hosted, dind-actions-runner]
+    needs: [check]
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        node-version: [16.0]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check, install and build
+        run: |
+          \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+          npm install -g @microsoft/rush pnpm
+
+          # Install dependencies
+          node common/scripts/install-run-rush.js install
+          
+          # Build
+          node common/scripts/install-run-rush.js build --light --to @dxos/demos
+
+          # Start and test the storybook
+          cd packages/sdk/demos
+          ./scripts/start-and-wait.sh
+          pnpm test:playwright
+      - name: Cleanup
+        run: kill %1
+        if: always()
