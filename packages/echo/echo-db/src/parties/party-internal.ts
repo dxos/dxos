@@ -20,7 +20,6 @@ import { FeedStoreAdapter } from '../util';
 import { PartyCore, PartyOptions } from './party-core';
 import { PartyProtocol } from './party-protocol';
 
-// TODO(burdon): Format?
 export const PARTY_ITEM_TYPE = 'dxn://dxos/item/party';
 export const PARTY_TITLE_PROPERTY = 'title';
 
@@ -35,32 +34,27 @@ export interface PartyMember {
 export interface PartyFilter {}
 
 /**
- * A Party represents a shared dataset containing queryable Items that are constructed from an ordered stream
- * of mutations.
+ * Internal representation of a party.
  */
 // TODO(burdon): Rename PartyImpl.
 export class PartyInternal {
   public readonly update = new Event<void>();
 
+  // TODO(burdon): Merge with PartyInternal.
   private readonly _partyCore: PartyCore;
-
-  /**
-   * Snapshot to be restored from when party.open() is called.
-   */
-  private _subscriptions: (() => void)[] = [];
-
-  private _protocol?: PartyProtocol;
-  private _invitationManager?: InvitationManager;
 
   private readonly _activator?: PartyActivator;
 
+  private _invitationManager?: InvitationManager;
+  private _protocol?: PartyProtocol;
+
   constructor (
     _partyKey: PartyKey,
-    private readonly _identityManager: IdentityManager,
     _feedStore: FeedStoreAdapter,
     _modelFactory: ModelFactory,
-    private readonly _networkManager: NetworkManager,
     _snapshotStore: SnapshotStore,
+    private readonly _identityManager: IdentityManager,
+    private readonly _networkManager: NetworkManager,
     private readonly _hints: KeyHint[] = [],
     _initialTimeframe?: Timeframe,
     _options: PartyOptions = {}
@@ -73,7 +67,10 @@ export class PartyInternal {
       _initialTimeframe,
       _options
     );
-    this._activator = this._identityManager.halo?.createPartyActivator(this);
+
+    if (this._identityManager.halo) {
+      this._activator = new PartyActivator(this._identityManager.halo, this);
+    }
   }
 
   get key (): PartyKey {
@@ -165,19 +162,17 @@ export class PartyInternal {
     }
 
     await this._partyCore.close();
-
     await this._protocol?.stop();
-    this._protocol = undefined;
 
+    this._protocol = undefined;
     this._invitationManager = undefined;
 
-    this._subscriptions.forEach(cb => cb());
     this.update.emit();
 
     return this;
   }
 
-  get isActive () {
+  get isActive (): boolean {
     assert(this._activator, 'PartyActivator required');
     return this._activator.isActive;
   }
