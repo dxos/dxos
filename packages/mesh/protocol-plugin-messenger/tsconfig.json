@@ -9,6 +9,9 @@
   ],
   "references": [
     {
+      "path": "../broadcast"
+    },
+    {
       "path": "../../common/codec-protobuf"
     },
     {
