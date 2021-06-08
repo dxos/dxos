@@ -5,10 +5,10 @@
 import assert from 'assert';
 import { EventEmitter } from 'events';
 
-import { Broadcast, Middleware } from '@dxos/broadcast';
+import { Broadcast } from '@dxos/broadcast';
 import { Codec } from '@dxos/codec-protobuf';
 import { keyToString, keyToBuffer } from '@dxos/crypto';
-import { Extension, Protocol } from '@dxos/protocol';
+import { Extension } from '@dxos/protocol';
 
 import { schema, Message } from './proto';
 
@@ -19,10 +19,9 @@ const DEFAULT_TIMEOUT = 60000;
  */
 export const codec = schema.getCodecForType('dxos.protocol.bot.Message');
 
-interface Peer {
-  id: Buffer
-  protocol: Protocol
-}
+// TODO(marik-d): Temporary until @dxos/protocol has its own types.
+type Protocol = any;
+type Broadcast = any;
 
 /**
  * Bot protocol.
@@ -40,7 +39,7 @@ export class BotPlugin extends EventEmitter {
 
   private readonly _codec: Codec<Message>;
 
-  private readonly _broadcast: Broadcast<Peer>;
+  private readonly _broadcast: Broadcast;
 
   /**
    * @constructor
@@ -66,8 +65,8 @@ export class BotPlugin extends EventEmitter {
       }
     };
 
-    const middleware: Middleware<Peer> = {
-      lookup: async () => {
+    const middleware = {
+      lookup: () => {
         return Array.from(this._peers.values()).map((peer) => {
           const { peerId } = peer.getSession();
 
@@ -77,15 +76,15 @@ export class BotPlugin extends EventEmitter {
           };
         });
       },
-      send: async (packet, peer) => {
-        await peer.protocol.getExtension(BotPlugin.EXTENSION_NAME)!.send(packet);
+      send: async (packet: any, peer: any) => {
+        await peer.protocol.getExtension(BotPlugin.EXTENSION_NAME).send(packet);
       },
-      subscribe: (onPacket) => {
+      subscribe: (onPacket: (data: Buffer) => ({ data: Buffer }) | undefined) => {
         this._commandHandler = (protocol, chunk) => {
           const packet = onPacket(chunk.data);
 
           // Validate if is a broadcast message or not.
-          const message = this._codec.decode(packet?.data ?? chunk.data);
+          const message = this._codec.decode(packet ? packet.data : chunk.data);
 
           return this._onMessage(protocol, message);
         };
@@ -108,13 +107,13 @@ export class BotPlugin extends EventEmitter {
    * @return {Extension}
    */
   createExtension (timeout = DEFAULT_TIMEOUT) {
-    this._broadcast.open();
+    this._broadcast.run();
 
     return new Extension(BotPlugin.EXTENSION_NAME, { timeout })
-      .setInitHandler(async protocol => {
+      .setInitHandler((protocol: Protocol) => {
         this._addPeer(protocol);
       })
-      .setHandshakeHandler(async protocol => {
+      .setHandshakeHandler((protocol: Protocol) => {
         const { peerId } = protocol.getSession();
 
         if (this._peers.has(keyToString(peerId))) {
@@ -122,7 +121,7 @@ export class BotPlugin extends EventEmitter {
         }
       })
       .setMessageHandler(this._commandHandler)
-      .setCloseHandler(async protocol => {
+      .setCloseHandler((protocol: Protocol) => {
         this._removePeer(protocol);
       });
   }

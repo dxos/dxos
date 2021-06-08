@@ -113,7 +113,7 @@ describe('test peers in a network graph of 15 peers', () => {
       });
     }, 10000, 5000);
 
-    peers.forEach(peer => peer.bot._broadcast.close());
+    peers.forEach(peer => peer.bot._broadcast.stop());
     connections.forEach(c => c.destroy());
   });
 });

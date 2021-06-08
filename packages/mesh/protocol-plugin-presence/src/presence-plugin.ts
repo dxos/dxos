@@ -11,7 +11,7 @@ import createGraph, { Graph } from 'ngraph.graph';
 import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
-import { Broadcast, Middleware } from '@dxos/broadcast';
+import { Broadcast } from '@dxos/broadcast';
 import { Extension, Protocol } from '@dxos/protocol';
 
 import { schema } from './proto/gen';
@@ -28,11 +28,6 @@ interface GraphNode {
   lastUpdate?: number
 }
 
-interface Peer {
-  id: Buffer
-  protocol: Protocol
-}
-
 /**
  * Presence protocol plugin.
  */
@@ -46,8 +41,8 @@ export class PresencePlugin extends EventEmitter {
 
   private _metadata: any;
   private _graph!: Graph<GraphNode, any> & EventedType;
-  private _broadcast!: Broadcast<Peer>;
   private _scheduler: NodeJS.Timeout | null = null;
+  private _broadcast: any;
 
   constructor (
     private readonly _peerId: Buffer,
@@ -114,7 +109,7 @@ export class PresencePlugin extends EventEmitter {
       return;
     }
 
-    this._broadcast.open();
+    this._broadcast.run();
 
     this._scheduler = setInterval(() => {
       this.ping();
@@ -123,7 +118,7 @@ export class PresencePlugin extends EventEmitter {
   }
 
   stop () {
-    this._broadcast.close();
+    this._broadcast.stop();
     if (this._scheduler !== null) {
       clearInterval(this._scheduler);
       this._scheduler = null;
@@ -161,8 +156,8 @@ export class PresencePlugin extends EventEmitter {
   }
 
   private _buildBroadcast () {
-    const middleware: Middleware<Peer> = {
-      lookup: async () => {
+    const middleware = {
+      lookup: () => {
         return Array.from(this._neighbors.values()).map((peer) => {
           const { peerId } = peer.getSession();
 
@@ -172,12 +167,12 @@ export class PresencePlugin extends EventEmitter {
           };
         });
       },
-      send: async (packet, { protocol }) => {
+      send: async (packet: any, { protocol }: { protocol: Protocol}) => {
         const presence = protocol.getExtension(PresencePlugin.EXTENSION_NAME);
         assert(presence);
         await presence.send(packet, { oneway: true });
       },
-      subscribe: (onPacket) => {
+      subscribe: (onPacket: (msg: any) => void) => {
         this.on('protocol-message', (protocol: Protocol, message: any) => {
           if (message && message.data) {
             onPacket(message.data);
@@ -190,16 +185,16 @@ export class PresencePlugin extends EventEmitter {
       id: this._peerId
     });
 
-    this._broadcast.packet.on(packet => {
-      assert(packet.data);
-      const data = this._codec.decode(packet.data);
-      if (data.metadata) {
-        data.metadata = bufferJson.decode(data.metadata);
+    this._broadcast.on('packet', (packet: any) => {
+      packet = this._codec.decode(packet.data);
+      if (packet.metadata) {
+        packet.metadata = bufferJson.decode(packet.metadata);
       }
-      this.emit('remote-ping', data);
+      this.emit('remote-ping', packet);
     });
-    this._broadcast.sendError.on(err => console.warn(err));
-    this._broadcast.subscribeError.on(err => console.warn(err));
+    this._broadcast.on('lookup-error', (err: Error) => console.warn(err));
+    this._broadcast.on('send-error', (err: Error) => console.warn(err));
+    this._broadcast.on('subscribe-error', (err: Error) => console.warn(err));
     this.on('remote-ping', packet => this._updateGraph(packet));
   }
 

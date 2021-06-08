@@ -8,9 +8,6 @@
   ],
   "references": [
     {
-      "path": "../../mesh/broadcast"
-    },
-    {
       "path": "../../common/codec-protobuf"
     },
     {

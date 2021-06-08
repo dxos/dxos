@@ -23,7 +23,7 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
-    "@dxos/broadcast": "workspace:*",
+    "@dxos/broadcast": "~1.0.0-beta.11",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protocol": "workspace:*",
     "debug": "^4.1.1"
