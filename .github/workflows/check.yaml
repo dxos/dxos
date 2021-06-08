@@ -61,5 +61,5 @@ jobs:
           ./scripts/start-and-wait.sh
           pnpm test:playwright
       - name: Cleanup
-        run: kill %1
+        run: pkill -f "storybook"
         if: always()

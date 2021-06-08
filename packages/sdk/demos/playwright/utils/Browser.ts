@@ -8,11 +8,11 @@ const headless = !!process.env.CI;
 const slowMo = process.env.CI ? 0 : 200;
 
 export class Browser {
-  browser: PWBrowser = null;
-  context: BrowserContext = null;
-  page: Page = null;
+  browser: PWBrowser | undefined;
+  context: BrowserContext | undefined;
+  page: Page | undefined;
 
-  async launchBrowser (_browser: BrowserType, _startUrl) {
+  async launchBrowser (_browser: BrowserType, _startUrl: string) {
     this.browser = await _browser.launch({ headless, slowMo });
     this.context = await this.browser.newContext();
     this.page = await this.context.newPage();
@@ -20,10 +20,10 @@ export class Browser {
   }
 
   async closeBrowser () {
-    await this.browser.close();
+    await this.browser?.close();
   }
 
-  async goToPage (url) {
-    await this.page.goto(url);
+  async goToPage (url: string) {
+    await this.page?.goto(url);
   }
 }

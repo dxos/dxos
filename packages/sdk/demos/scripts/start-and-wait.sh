@@ -20,3 +20,5 @@ do
   echo "Sleeping..."
   sleep 3
 done
+
+echo "Storybook started."

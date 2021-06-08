@@ -23,11 +23,12 @@ describe('Smoke tests for demo storybooks', () => {
   });
 
   test('Opens the Tutorials stage 1', async () => {
-    await user.page.goto(`${startUrl}/iframe.html?id=tutorials-stage-1--stage-1&viewMode=story`);
-    await user.page.waitForSelector('//span[text()=\'Create HALO\']');
-    await user.page.click('//span[text()=\'Create HALO\']');
+    expect(user.page).toBeDefined();
+    await user.page!.goto(`${startUrl}/iframe.html?id=tutorials-stage-1--stage-1&viewMode=story`);
+    await user.page!.waitForSelector('//span[text()=\'Create HALO\']');
+    await user.page!.click('//span[text()=\'Create HALO\']');
 
-    await user.page.waitForSelector('//p[text()=\'username\']');
-    await user.page.waitForSelector('//p[text()=\'publicKey\']');
+    await user.page!.waitForSelector('//p[text()=\'username\']');
+    await user.page!.waitForSelector('//p[text()=\'publicKey\']');
   });
 });

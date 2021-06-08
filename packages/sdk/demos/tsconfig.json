@@ -22,7 +22,8 @@
   },
   "include": [
     "src",
-    "stories"
+    "stories",
+    "playwright"
   ],
   "references": [
     {

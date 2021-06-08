@@ -20,7 +20,7 @@
     "coverage": "jest --coverage --verbose  --rootDir=./src --passWithNoTests",
     "lint": "eslint --format codeframe './{src,test,stories}/**/*.{ts,tsx}'",
     "test": "jest --rootDir=./src --verbose --passWithNoTests",
-    "test:playwright": "./scripts/start-and-wait.sh && jest --rootDir ./playwright --runInBand",
+    "test:playwright": "jest --rootDir ./playwright --runInBand",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "storybook-docs": "start-storybook --docs --no-manager-cache",
     "prepublishOnly": "npm run test && npm run build",
