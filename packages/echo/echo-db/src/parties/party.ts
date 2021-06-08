@@ -8,10 +8,14 @@ import debug from 'debug';
 import { PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 
-import { ActivationOptions } from '../halo';
 import { InvitationAuthenticator, InvitationOptions } from '../invitations';
 import { ResultSet } from '../result';
-import { PartyInternal, PartyMember } from './party-internal';
+import { PartyInternal, ActivationOptions } from './party-internal';
+
+export interface PartyMember {
+  publicKey: PublicKey,
+  displayName?: string
+}
 
 const log = debug('dxos:echo:party');
 

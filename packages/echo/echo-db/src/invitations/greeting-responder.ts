@@ -17,8 +17,7 @@ import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { IdentityManager } from '../halo';
-import { PartyProcessor } from '../parties';
+import { IdentityManager, PartyProcessor } from '../parties';
 import { InvitationOptions, SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 

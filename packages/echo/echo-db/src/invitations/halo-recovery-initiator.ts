@@ -21,7 +21,7 @@ import { keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { IdentityManager } from '../halo';
+import { IdentityManager } from '../parties';
 import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
@@ -184,9 +184,8 @@ export class HaloRecoveryInitiator {
           invitation.authNonce.equals(authMessage.signed.nonce);
       };
 
-      // TODO(telackey): Configure expiration.
-      return identityManager.halo.invitationManager
-        .createInvitation({ secretValidator }, { expiration: Date.now() + 60_000 });
+      // TODO(telackey): Configure expiration?
+      return identityManager.halo.invitationManager.createInvitation({ secretValidator }, { expiration: Date.now() + 60000 });
     });
 
     return claimHandler.createMessageHandler();

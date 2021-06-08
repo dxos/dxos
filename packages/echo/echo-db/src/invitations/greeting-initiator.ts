@@ -24,7 +24,7 @@ import { keyToString, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { IdentityManager } from '../halo';
+import { IdentityManager } from '../parties';
 import { SecretProvider } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
@@ -45,16 +45,13 @@ export class GreetingInitiator {
   private _state: GreetingState = GreetingState.INITIALIZED;
 
   /**
-   * @param _networkManager
-   * @param _identityManager
-   * @param _invitationDescriptor
-   * @param _feedInitializer Callback to open or create a write feed for this party and return it's keypair.
+   * @param _feedInitializer Callback to open or create a write feed for this party and return it's keypair
    */
   constructor (
     private readonly _networkManager: NetworkManager,
     private readonly _identityManager: IdentityManager,
-    private readonly _invitationDescriptor: InvitationDescriptor,
-    private readonly _feedInitializer: (partyKey: PartyKey) => Promise<any /* Keypair */>
+    private readonly _feedInitializer: (partyKey: PartyKey) => Promise<any /* Keypair */>,
+    private readonly _invitationDescriptor: InvitationDescriptor
   ) {
     assert(InvitationDescriptorType.INTERACTIVE === this._invitationDescriptor.type);
   }
