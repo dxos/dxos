@@ -93,7 +93,10 @@ const setup = async (open = true, createIdentity = true) => {
   const haloFactory = new HaloFactory(partyFactory, identityManager, networkManager);
   const partyManager = new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory, haloFactory);
   afterTest(async () => {
-    await partyManager.close();
+    // TODO(rzadp): Bring back once presence bug is fixed.
+    // https://github.com/dxos/protocols/issues/116
+    // await partyManager.close();
+    partyManager.close();
   });
 
   if (open) {
