@@ -3,9 +3,21 @@
 // Copyright 2020 DXOS.org
 //
 
-import { firefox } from 'playwright';
+import { firefox, Page } from 'playwright';
 
 import { Browser } from './utils';
+
+const createHalo = async (page: Page) => {
+  const haloButtonSelector = '//span[text()=\'Create HALO\']'
+  await page.waitForSelector(haloButtonSelector);
+  await page.click(haloButtonSelector);
+}
+
+const createParty = async (page: Page) => {
+  const haloButtonSelector = '//span[text()=\'Create Party\']'
+  await page.waitForSelector(haloButtonSelector);
+  await page.click(haloButtonSelector);
+}
 
 describe('Smoke tests for demo storybooks', () => {
   const browser = firefox;
@@ -22,13 +34,23 @@ describe('Smoke tests for demo storybooks', () => {
     await user.closeBrowser();
   });
 
-  test('Opens the Tutorials stage 1', async () => {
+  test('Tutorials stage 1', async () => {
     expect(user.page).toBeDefined();
     await user.page!.goto(`${startUrl}/iframe.html?id=tutorials-stage-1--stage-1&viewMode=story`);
-    await user.page!.waitForSelector('//span[text()=\'Create HALO\']');
-    await user.page!.click('//span[text()=\'Create HALO\']');
+    await createHalo(user.page!)
 
     await user.page!.waitForSelector('//p[text()=\'username\']');
     await user.page!.waitForSelector('//p[text()=\'publicKey\']');
+  });
+
+  test('Tutorials stage 2', async () => {
+    expect(user.page).toBeDefined();
+    await user.page!.goto(`${startUrl}/iframe.html?id=tutorials-stage-2--stage-2&viewMode=story`);
+    await createHalo(user.page!)
+    await createParty(user.page!)
+    await createParty(user.page!)
+    await createParty(user.page!)
+
+    await user.page!.waitForSelector('//li[text()=\'Rau - Sporer\']'); // deterministic thanks to faker seed.
   });
 });
