@@ -7,7 +7,7 @@ name: check
 jobs:
   check:
     runs-on: [self-hosted, dind-actions-runner]
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       matrix:
         node-version: [12.17, 16.0]
