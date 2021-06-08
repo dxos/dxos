@@ -25,6 +25,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
+import { IdentityManager } from '../halo';
 import {
   GreetingInitiator,
   HaloRecoveryInitiator,

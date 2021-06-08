@@ -13,11 +13,11 @@ import { timed } from '@dxos/debug';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ComplexMap } from '@dxos/util';
 
+import { HaloCreationOptions, HaloFactory, IdentityManager } from '../halo';
 import { SecretProvider, InvitationDescriptor } from '../invitations';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
-import { IdentityManager } from './identity-manager';
-import { HaloCreationOptions, PartyFactory } from './party-factory';
+import { PartyFactory } from './party-factory';
 import { PartyInternal, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './party-internal';
 
 const CONTACT_DEBOUNCE_INTERVAL = 500;

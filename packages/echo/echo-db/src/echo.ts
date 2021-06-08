@@ -16,29 +16,17 @@ import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Storage } from '@dxos/random-access-multi-storage';
 
+import { Contact, HaloFactory, IdentityManager } from './halo';
 import {
   InvitationAuthenticator, InvitationDescriptor, InvitationOptions, OfflineInvitationClaimer, SecretProvider
 } from './invitations';
 import { DefaultModel } from './items';
-import {
-  HALO_PARTY_CONTACT_LIST_TYPE, IdentityManager, OpenProgress, Party, PartyFactory, PartyFilter, PartyManager, PartyMember
-} from './parties';
+import { OpenProgress, Party, PartyFactory, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { FeedStoreAdapter, createRamStorage } from './util';
 
 const log = debug('dxos:echo');
-
-export interface Options {
-  readOnly?: false;
-  readLogger?: (msg: any) => void;
-  writeLogger?: (msg: any) => void;
-}
-
-// TODO(burdon): Move?
-export type Contact = PartyMember;
-
-// TODO(burdon): Create index.ts in each subfolder (no indirect imports).
 
 /**
  * Various options passed to `ECHO.create`.
