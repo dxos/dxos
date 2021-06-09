@@ -274,12 +274,9 @@ describe('In-memory network manager', () => {
 
     async function assertState (m: Model, r: Real) {
       await waitForExpect(() => {
-        const peersExpected = Array.from(m.joinedPeers.values()).map(x => x.toHex()).sort();
         r.peers.forEach(peer => {
           if (peer.presence) {
-            const actualPeers = peer.presence!.peers.map(x => x.toString('hex')).sort();
-
-            expect(actualPeers).toEqual(peersExpected);
+            expect(Array.from(m.joinedPeers.values()).every(peerId => peer.presence!.peers.some(x => PublicKey.equals(peerId, x)))).toEqual(true);
           }
         });
       }, 1_000);
