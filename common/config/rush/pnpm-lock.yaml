@@ -835,6 +835,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/feed-store': link:../../echo/feed-store
       '@dxos/protocol': link:../../mesh/protocol
+      '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/pify': 3.0.2
@@ -887,6 +888,7 @@ importers:
       '@dxos/protocol': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
       '@types/encoding-down': ^5.0.0
       '@types/end-of-stream': ^1.4.0
@@ -929,24 +931,26 @@ importers:
       wait-for-expect: ^3.0.2
   ../../packages/mesh/broadcast:
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@types/debug': 4.1.5
-      '@types/node': 14.14.45
       debug: 4.3.1
-      nanoresource-promise: 2.0.0
       tiny-lru: 7.0.6
     devDependencies:
+      '@dxos/network-generator': link:../network-generator
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/debug': 4.1.5
       '@types/jest': 26.0.23
+      '@types/node': 14.14.45
       wait-for-expect: 3.0.2
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/network-generator': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.1
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
       debug: ^4.1.1
-      nanoresource-promise: ^2.0.0
       tiny-lru: ^7.0.6
       wait-for-expect: ^3.0.2
   ../../packages/mesh/network-devtools:
@@ -1044,7 +1048,6 @@ importers:
       '@dxos/testutils': link:../../common/testutils
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/debug': 4.1.5
-      '@types/jest': 26.0.23
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       earljs: 0.1.10
@@ -1065,7 +1068,6 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
-      '@types/jest': ^26.0.7
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/simple-peer': ^9.6.1
@@ -1429,6 +1431,7 @@ importers:
       level-js: 5.0.2
       lodash.merge: 4.6.2
       mobile-detect: 1.4.5
+      playwright: 1.11.0
       random-access-memory: 3.1.2
       react-resize-aware: 3.1.0_react@16.14.0
       source-map-support: 0.5.19
@@ -1513,6 +1516,7 @@ importers:
       level-js: ^5.0.2
       lodash.merge: ^4.6.2
       mobile-detect: ~1.4.5
+      playwright: ^1.7.0
       random-access-memory: ~3.1.2
       react: ^16.14.0
       react-docgen-typescript-loader: ^3.7.2

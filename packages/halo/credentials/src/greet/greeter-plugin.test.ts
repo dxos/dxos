@@ -8,6 +8,7 @@ import pump from 'pump';
 import { trigger } from '@dxos/async';
 import { keyToString, randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
+import { arraysEqual } from '@dxos/util';
 
 import { Keyring } from '../keys';
 import { createKeyAdmitMessage } from '../party';
@@ -98,7 +99,7 @@ test('Greeting Flow using GreetingCommandPlugin', async () => {
   const secret = '0000';
 
   const secretProvider: SecretProvider = async () => Buffer.from(secret);
-  const secretValidator: SecretValidator = async (invitation, secret) => !!secret && !!invitation.secret && secret.equals(invitation.secret);
+  const secretValidator: SecretValidator = async (invitation, secret) => !!secret && !!invitation.secret && arraysEqual(secret, invitation.secret);
 
   const {
     protocol: greeterProtocol, greeter, rendezvousKey, hints, writePromise
