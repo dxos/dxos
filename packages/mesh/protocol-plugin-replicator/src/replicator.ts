@@ -205,9 +205,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
           return feedStore.openFeed(`/remote/${key.toString()}`, {
             key: Buffer.from(key),
             metadata,
-            secretKey: null as any,
-            valueEncoding: null as any
-          });
+          } as any);
         }
 
         if (discoveryKey) {
