@@ -19,7 +19,19 @@ import { Storage } from '@dxos/random-access-multi-storage';
 // TODO(burdon): Temporary: will replace FeedStore.
 export class FeedStoreAdapter {
   static create (storage: Storage) {
-    return new FeedStoreAdapter(new FeedStore(storage, { feedOptions: { valueEncoding: codec } }));
+    return new FeedStoreAdapter(new FeedStore(storage, { feedOptions: { valueEncoding: {
+      encode: (x: any) => {
+        const data = codec.encode(x) as any
+        if(!data.copy) {
+          console.log('broken', data)
+        } else {
+          console.log('not broken')
+        }
+
+        return Buffer.from(data)
+      },
+      decode: codec.decode.bind(codec)
+    } } }));
   }
 
   constructor (
