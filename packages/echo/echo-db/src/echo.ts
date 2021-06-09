@@ -109,7 +109,6 @@ export class ECHO {
     writeLogger
   }: EchoCreationOptions = {}) {
     this._keyring = new Keyring(new KeyStore(keyStorage));
-    this._identityManager = new IdentityManager(this._keyring);
 
     this._feedStore = FeedStoreAdapter.create(feedStorage);
 
@@ -138,9 +137,10 @@ export class ECHO {
 
     const haloFactory = new HaloFactory(
       partyFactory,
-      this._identityManager,
-      this._networkManager
+      this._networkManager,
+      this._keyring
     );
+    this._identityManager = new IdentityManager(this._keyring, haloFactory);
 
     this._partyManager = new PartyManager(
       this._identityManager,
@@ -367,7 +367,7 @@ export class ECHO {
       throw new Error('Cannot create HALO. Identity key not found.');
     }
 
-    await this._partyManager.createHalo({
+    await this._identityManager.createHalo({
       identityDisplayName: displayName || this._identityManager.identityKey.publicKey.humanize()
     });
   }
@@ -380,7 +380,7 @@ export class ECHO {
     assert(!this._identityManager.halo, 'HALO already exists.');
     assert(!this._identityManager.identityKey, 'Identity key already exists.');
 
-    const impl = await this._partyManager.recoverHalo(seedPhrase);
+    const impl = await this._identityManager.recoverHalo(seedPhrase);
     return new Party(impl);
   }
 
@@ -391,7 +391,7 @@ export class ECHO {
     assert(this._partyManager.isOpen, 'ECHO not open.');
     assert(!this._identityManager.halo, 'HALO already exists.');
 
-    const impl = await this._partyManager.joinHalo(invitationDescriptor, secretProvider);
+    const impl = await this._identityManager.joinHalo(invitationDescriptor, secretProvider);
     return new Party(impl);
   }
 

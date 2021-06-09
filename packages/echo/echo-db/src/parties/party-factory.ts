@@ -48,6 +48,10 @@ export class PartyFactory {
     private readonly _options: PartyOptions = {}
   ) {}
 
+  async hasFeedForParty (partyKey: PartyKey) {
+    return !!this._feedStore.queryWritableFeed(partyKey);
+  }
+
   // TODO(marik-d): Refactor this.
   async initWritableFeed (partyKey: PartyKey) {
     const identity = this._identityProvider();

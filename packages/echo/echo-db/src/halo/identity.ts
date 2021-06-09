@@ -9,7 +9,7 @@ import { IdentityManager } from './identity-manager';
 
 /**
  * Represents users identity exposing access to signing keys and HALO party.
- * 
+ *
  * Acts as a read-only view into IdentityManager.
  */
 export class Identity {
