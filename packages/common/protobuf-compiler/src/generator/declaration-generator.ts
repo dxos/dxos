@@ -97,12 +97,14 @@ function createServiceDeclaration (type: protobufjs.Service, subs: Substitutions
     type.name,
     undefined,
     undefined,
-    type.methodsArray.map(method => f.createPropertySignature(
-      undefined,
-      method.name,
-      undefined,
-      createRpcMethodType(method, type, subs)
-    ))
+    type.methodsArray
+      .filter(m => !m.requestStream && !m.responseStream)
+      .map(method => f.createPropertySignature(
+        undefined,
+        method.name,
+        undefined,
+        createRpcMethodType(method, type, subs)
+      ))
   );
 }
 
