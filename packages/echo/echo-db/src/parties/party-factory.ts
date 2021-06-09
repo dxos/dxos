@@ -20,7 +20,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
-import { IdentityProvider } from '../halo/identity';
+import { IdentityProvider } from '../halo';
 import {
   GreetingInitiator,
   InvitationDescriptor,
@@ -189,7 +189,7 @@ export class PartyFactory {
       this._feedStore,
       this._modelFactory,
       this._snapshotStore,
-      identity.identityManager,
+      identity,
       this._networkManager,
       hints,
       initialTimeframe,
@@ -216,7 +216,7 @@ export class PartyFactory {
 
     // Claim the offline invitation and convert it into an interactive invitation.
     if (InvitationDescriptorType.OFFLINE_KEY === invitationDescriptor.type) {
-      const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, identity.identityManager, invitationDescriptor);
+      const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
       await invitationClaimer.connect();
       invitationDescriptor = await invitationClaimer.claim();
       log(`Party invitation ${keyToString(originalInvitation.invitation)} triggered interactive Greeting`,
@@ -227,7 +227,7 @@ export class PartyFactory {
     // TODO(burdon): Factor out.
     const initiator = new GreetingInitiator(
       this._networkManager,
-      identity.identityManager,
+      identity,
       invitationDescriptor,
       async partyKey => {
         const { feedKey } = await this.initWritableFeed(partyKey);

@@ -42,7 +42,6 @@ export class OfflineInvitationClaimer {
 
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _identityManager: IdentityManager,
     private readonly _invitationDescriptor: InvitationDescriptor
   ) {
     assert(InvitationDescriptorType.OFFLINE_KEY === _invitationDescriptor.type);
