@@ -8,17 +8,18 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { latch, sleep, waitForCondition } from '@dxos/async';
-import { SecretValidator, SecretProvider } from '@dxos/credentials';
+import { SecretValidator, SecretProvider, testSecretProvider, testSecretValidator } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { arraysEqual } from '@dxos/util';
 
 import { ECHO } from './echo';
 import { createTestInstance, inviteTestPeer } from './util';
+import { Item } from './items';
 
-const log = debug('dxos:echo:database:test,dxos:*:error');
+const log = debug('dxos:echo:test');
 
-describe('api tests', () => {
+describe('ECHO', () => {
   test('create party and update properties.', async () => {
     const echo = await createTestInstance({ initialize: true });
     const parties = await echo.queryParties({ open: true });
@@ -283,4 +284,67 @@ describe('api tests', () => {
 
     return echo.reset();
   });
+
+  test('One user, two devices', async () => {
+    const a = await createTestInstance({ initialize: true });
+    const b = await createTestInstance({ initialize: false });
+    await b.open();
+
+    expect(a.isHaloInitialized).toEqual(true);
+    expect(b.isHaloInitialized).toEqual(false);
+
+    expect(a.queryParties().value.length).toBe(0);
+    await a.createParty();
+    expect(a.queryParties().value.length).toBe(1);
+
+    // Issue the invitation on nodeA.
+    const invitation = await a.createHaloInvitation({ secretValidator: testSecretValidator, secretProvider: testSecretProvider });
+
+    // Should not have any parties.
+    expect(b.queryParties().value.length).toBe(0);
+
+    // And then redeem it on nodeB.
+    await b.joinHalo(invitation, testSecretProvider);
+    expect(a.isHaloInitialized).toEqual(true);
+    expect(b.isHaloInitialized).toEqual(true);
+
+    // Check the initial party is opened.
+    await waitForCondition(() => b.queryParties().value.length === 1, 1000);
+
+    const partyA = a.queryParties().value[0];
+    await partyA.open()
+    const partyB = b.queryParties().value[0];
+    await partyB.open()
+
+    {
+      let itemA: Item<any> | null = null;
+
+      // Subscribe to Item updates on B.
+      const updated = partyB.database.queryItems({ type: 'dxn://example/item/test' })
+        .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id))
+
+      // Create a new Item on A.
+      itemA = await partyA.database
+        .createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
+      log(`A created ${itemA.id}`);
+
+      // Now wait to see it on B.
+      await updated;
+      log(`B has ${itemA.id}`);
+    }
+
+    const partyUpdated = b.queryParties().update.waitForCount(1);
+
+    // Now create a Party on A and make sure it gets opened on both A and B.
+    const partyA2 = await a.createParty();
+    log('A a created second party')
+    await partyA2.open();
+    expect(a.queryParties().value.length).toBe(2);
+
+    await partyUpdated;
+    log('B has second party')
+    expect(b.queryParties().value.length).toBe(2);
+    expect(a.queryParties().value[0].key).toEqual(b.queryParties().value[0].key);
+    expect(a.queryParties().value[1].key).toEqual(b.queryParties().value[1].key);
+  }).timeout(10_000);
 });
