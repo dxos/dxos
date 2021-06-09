@@ -4,7 +4,7 @@
 
 import { getStackTrace } from './stack-trace';
 
-export type ErrorHandler = (error: Error) => void;
+export type ErrorHandlerCallback = (error: Error) => void;
 
 /**
  * Represents a stream of errors that entities can expose.
@@ -12,7 +12,7 @@ export type ErrorHandler = (error: Error) => void;
 export class ErrorStream {
   private readonly _creationStack: string;
 
-  private _handler: ErrorHandler | undefined;
+  private _handler: ErrorHandlerCallback | undefined;
 
   private _unhandledErrors = 0;
 
@@ -34,7 +34,7 @@ export class ErrorStream {
     }
   }
 
-  handle (handler: ErrorHandler) {
+  handle (handler: ErrorHandlerCallback) {
     this._handler = handler;
   }
 
