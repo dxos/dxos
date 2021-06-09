@@ -146,8 +146,7 @@ export class ECHO {
       this._identityManager,
       this._feedStore,
       this._snapshotStore,
-      partyFactory,
-      haloFactory
+      partyFactory
     );
 
     this._identityManager.ready.once(() => {

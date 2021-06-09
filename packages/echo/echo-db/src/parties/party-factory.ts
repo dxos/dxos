@@ -216,7 +216,7 @@ export class PartyFactory {
 
     // Claim the offline invitation and convert it into an interactive invitation.
     if (InvitationDescriptorType.OFFLINE_KEY === invitationDescriptor.type) {
-      const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, identity.identityManager, invitationDescriptor);
+      const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
       await invitationClaimer.connect();
       invitationDescriptor = await invitationClaimer.claim();
       log(`Party invitation ${keyToString(originalInvitation.invitation)} triggered interactive Greeting`,

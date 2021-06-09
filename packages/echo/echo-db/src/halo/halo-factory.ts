@@ -28,7 +28,7 @@ import { PartyFactory, PartyInternal, PARTY_ITEM_TYPE } from '../parties';
 import {
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
-import { IdentityManager } from './identity-manager';
+import { Identity } from './identity';
 
 /**
  * Options allowed when creating the HALO.
@@ -110,8 +110,7 @@ export class HaloFactory {
     return halo;
   }
 
-  // TODO(marik-d): Circular dependency on IdentityManager.
-  async recoverHalo (identityManager: IdentityManager, seedPhrase: string) {
+  async recoverHalo (identity: Identity, seedPhrase: string) {
     const recoveredKeyPair = keyPairFromSeedPhrase(seedPhrase);
     await this._keyring.addKeyRecord({
       publicKey: PublicKey.from(recoveredKeyPair.publicKey),
@@ -119,7 +118,7 @@ export class HaloFactory {
       type: KeyType.IDENTITY
     });
 
-    const recoverer = new HaloRecoveryInitiator(this._networkManager, identityManager);
+    const recoverer = new HaloRecoveryInitiator(this._networkManager, identity);
     await recoverer.connect();
 
     const invitationDescriptor = await recoverer.claim();

@@ -21,7 +21,7 @@ import { keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { IdentityManager } from '../halo';
+import { Identity } from '../halo';
 import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
@@ -45,7 +45,7 @@ export class HaloRecoveryInitiator {
 
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _identityManager: IdentityManager
+    private readonly _identity: Identity
   ) {
     this._state = GreetingState.INITIALIZED;
   }
@@ -65,8 +65,8 @@ export class HaloRecoveryInitiator {
     this._peerId = randomBytes();
     log('Local PeerId:', keyToString(this._peerId));
 
-    assert(this._identityManager.identityKey);
-    const swarmKey = this._identityManager.identityKey.publicKey.asBuffer();
+    assert(this._identity.identityKey);
+    const swarmKey = this._identity.identityKey.publicKey.asBuffer();
 
     this._greeterPlugin = new GreetingCommandPlugin(this._peerId, async () => false);
 
@@ -97,16 +97,16 @@ export class HaloRecoveryInitiator {
     assert(this._state === GreetingState.CONNECTED);
     assert(this._greeterPlugin);
     assert(this._peerId);
-    assert(this._identityManager.identityKey);
+    assert(this._identity.identityKey);
 
     // Send to the first peer (any peer will do).
     const peer = this._greeterPlugin.peers[0];
     const { peerId: responderPeerId } = peer.getSession();
 
     // Synthesize an "invitationID" which is the signature of both peerIds signed by our Identity key.
-    const signature = this._identityManager.keyring.rawSign(
+    const signature = this._identity.keyring.rawSign(
       Buffer.concat([this._peerId, responderPeerId]),
-      this._identityManager.identityKey
+      this._identity.identityKey
     );
 
     // We expect to receive a new swarm/rendezvousKey to use for the full Greeting process.
@@ -122,13 +122,13 @@ export class HaloRecoveryInitiator {
       InvitationDescriptorType.INTERACTIVE,
       Buffer.from(rendezvousKey),
       Buffer.from(id),
-      this._identityManager.identityKey.publicKey
+      this._identity.identityKey.publicKey
     );
   }
 
   async disconnect () {
-    assert(this._identityManager.identityKey);
-    const swarmKey = this._identityManager.identityKey.publicKey.asBuffer();
+    assert(this._identity.identityKey);
+    const swarmKey = this._identity.identityKey.publicKey.asBuffer();
     await this._networkManager.leaveProtocolSwarm(PublicKey.from(swarmKey));
     this._state = GreetingState.DISCONNECTED;
   }
@@ -146,22 +146,22 @@ export class HaloRecoveryInitiator {
       // The signed portion of the Auth message includes the ID and authNonce provided
       // by "info". These values will be validated on the other end.
       createAuthMessage(
-        this._identityManager.keyring,
+        this._identity.keyring,
         info.id.value,
-        this._identityManager.identityKey ?? raise(new Error('No identity key')),
-        this._identityManager.identityKey ?? raise(new Error('No identity key')),
+        this._identity.identityKey ?? raise(new Error('No identity key')),
+        this._identity.identityKey ?? raise(new Error('No identity key')),
         undefined,
         info.authNonce.value)
     ));
   }
 
-  static createHaloInvitationClaimHandler (identityManager: IdentityManager) {
+  static createHaloInvitationClaimHandler (identity: Identity) {
     const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer, remotePeerId: Buffer, peerId: Buffer) => {
-      assert(identityManager.halo, 'HALO is required');
-      assert(identityManager.identityKey);
+      assert(identity.halo, 'HALO is required');
+      assert(identity.identityKey);
 
       // The invitationtId is the signature of both peerIds, signed by the Identity key.
-      const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationID, identityManager.identityKey.publicKey.asBuffer());
+      const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationID, identity.identityKey.publicKey.asBuffer());
       if (!ok) {
         throw new Error(`Invalid invitation ${keyToString(invitationID)}`);
       }
@@ -170,7 +170,7 @@ export class HaloRecoveryInitiator {
       // or a KeyChain which traces back to that key, will be verified.
       const keyring = new Keyring();
       await keyring.addPublicKey({
-        publicKey: identityManager.identityKey.publicKey,
+        publicKey: identity.identityKey.publicKey,
         type: KeyType.IDENTITY,
         trusted: true,
         own: false
@@ -185,7 +185,7 @@ export class HaloRecoveryInitiator {
       };
 
       // TODO(telackey): Configure expiration.
-      return identityManager.halo.invitationManager
+      return identity.halo.invitationManager
         .createInvitation({ secretValidator }, { expiration: Date.now() + 60_000 });
     });
 

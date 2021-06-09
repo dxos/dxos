@@ -13,7 +13,7 @@ import { timed } from '@dxos/debug';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ComplexMap } from '@dxos/util';
 
-import { HaloFactory, IdentityManager } from '../halo';
+import { IdentityManager } from '../halo';
 import { SecretProvider, InvitationDescriptor } from '../invitations';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
@@ -50,8 +50,7 @@ export class PartyManager {
     private readonly _identityManager: IdentityManager,
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _snapshotStore: SnapshotStore,
-    private readonly _partyFactory: PartyFactory,
-    private readonly _haloFactory: HaloFactory
+    private readonly _partyFactory: PartyFactory
   ) {}
 
   get parties (): PartyInternal[] {
