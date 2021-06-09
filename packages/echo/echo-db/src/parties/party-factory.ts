@@ -189,7 +189,7 @@ export class PartyFactory {
       this._feedStore,
       this._modelFactory,
       this._snapshotStore,
-      identity.identityManager,
+      identity,
       this._networkManager,
       hints,
       initialTimeframe,
@@ -227,7 +227,7 @@ export class PartyFactory {
     // TODO(burdon): Factor out.
     const initiator = new GreetingInitiator(
       this._networkManager,
-      identity.identityManager,
+      identity,
       invitationDescriptor,
       async partyKey => {
         const { feedKey } = await this.initWritableFeed(partyKey);

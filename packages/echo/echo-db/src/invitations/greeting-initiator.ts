@@ -29,6 +29,7 @@ import { SecretProvider } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
+import { Identity } from '../halo/identity';
 
 const log = debug('dxos:echo:invitations:greeting-initiator');
 
@@ -46,13 +47,13 @@ export class GreetingInitiator {
 
   /**
    * @param _networkManager
-   * @param _identityManager
+   * @param _identity
    * @param _invitationDescriptor
    * @param _feedInitializer Callback to open or create a write feed for this party and return it's keypair.
    */
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _identityManager: IdentityManager,
+    private readonly _identity: Identity,
     private readonly _invitationDescriptor: InvitationDescriptor,
     private readonly _feedInitializer: (partyKey: PartyKey) => Promise<any /* Keypair */>
   ) {
@@ -153,14 +154,14 @@ export class GreetingInitiator {
 
     const credentialMessages = [];
     if (haloInvitation) {
-      assert(this._identityManager.deviceKey, 'Device key required');
+      assert(this._identity.deviceKey, 'Device key required');
 
       // For the HALO, add the DEVICE directly.
       credentialMessages.push(
         createKeyAdmitMessage(
-          this._identityManager.keyring,
+          this._identity.keyring,
           partyKey,
-          this._identityManager.deviceKey,
+          this._identity.deviceKey,
           [],
           nonce)
       );
@@ -168,33 +169,33 @@ export class GreetingInitiator {
       // And Feed, signed for by the FEED and the DEVICE.
       credentialMessages.push(
         createFeedAdmitMessage(
-          this._identityManager.keyring,
+          this._identity.keyring,
           partyKey,
           feedKey,
-          [this._identityManager.deviceKey],
+          [this._identity.deviceKey],
           nonce)
       );
     } else {
-      assert(this._identityManager.deviceKeyChain, 'Device key required');
-      assert(this._identityManager.identityGenesis, 'Identity genesis message required');
+      assert(this._identity.deviceKeyChain, 'Device key required');
+      assert(this._identity.identityGenesis, 'Identity genesis message required');
 
       // For any other Party, add the IDENTITY, signed by the DEVICE keychain, which links back to that IDENTITY.
       credentialMessages.push(
         createEnvelopeMessage(
-          this._identityManager.keyring,
+          this._identity.keyring,
           partyKey,
-          wrapMessage(this._identityManager.identityGenesis),
-          [this._identityManager.deviceKeyChain],
+          wrapMessage(this._identity.identityGenesis),
+          [this._identity.deviceKeyChain],
           nonce)
       );
 
       // And the Feed, signed for by the FEED and by the DEVICE keychain, as above.
       credentialMessages.push(
         createFeedAdmitMessage(
-          this._identityManager.keyring,
+          this._identity.keyring,
           partyKey,
           feedKey,
-          [this._identityManager.deviceKeyChain],
+          [this._identity.deviceKeyChain],
           nonce)
       );
     }

@@ -19,6 +19,7 @@ import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
 import { PartyCore, PartyOptions } from './party-core';
 import { PartyProtocol } from './party-protocol';
+import { Identity } from '../halo/identity';
 
 export const PARTY_ITEM_TYPE = 'dxn://dxos/item/party';
 export const PARTY_TITLE_PROPERTY = 'title';
@@ -53,7 +54,7 @@ export class PartyInternal {
     _feedStore: FeedStoreAdapter,
     _modelFactory: ModelFactory,
     _snapshotStore: SnapshotStore,
-    private readonly _identityManager: IdentityManager,
+    private readonly _identity: Identity,
     private readonly _networkManager: NetworkManager,
     private readonly _hints: KeyHint[] = [],
     _initialTimeframe?: Timeframe,
@@ -68,8 +69,8 @@ export class PartyInternal {
       _options
     );
 
-    if (this._identityManager.halo) {
-      this._activator = new PartyActivator(this._identityManager.halo, this);
+    if (this._identity.halo) {
+      this._activator = new PartyActivator(this._identity.halo, this);
     }
   }
 
@@ -122,11 +123,11 @@ export class PartyInternal {
 
     this._invitationManager = new InvitationManager(
       this._partyCore.processor,
-      this._identityManager,
+      this._identity,
       this._networkManager
     );
 
-    assert(this._identityManager.deviceKey, 'Missing device key.');
+    assert(this._identity.deviceKey, 'Missing device key.');
 
     // Network/swarm.
     this._protocol = new PartyProtocol(
@@ -135,7 +136,7 @@ export class PartyInternal {
       this._partyCore.feedStore,
       this._partyCore.processor.getActiveFeedSet(),
       this._invitationManager,
-      this._identityManager,
+      this._identity,
       this._createCredentialsProvider(this._partyCore.key, PublicKey.from(this._partyCore.getWriteFeed().key)),
       this._partyCore.processor.authenticator
     );
@@ -233,11 +234,11 @@ export class PartyInternal {
   private _createCredentialsProvider (partyKey: PartyKey, feedKey: FeedKey) {
     return {
       get: () => Buffer.from(Authenticator.encodePayload(createAuthMessage(
-        this._identityManager.keyring,
+        this._identity.keyring,
         partyKey,
-        this._identityManager.identityKey ?? raise(new Error('No identity key')),
-        this._identityManager.deviceKeyChain ?? this._identityManager.deviceKey ?? raise(new Error('No device key')),
-        this._identityManager.keyring.getKey(feedKey)
+        this._identity.identityKey ?? raise(new Error('No identity key')),
+        this._identity.deviceKeyChain ?? this._identity.deviceKey ?? raise(new Error('No device key')),
+        this._identity.keyring.getKey(feedKey)
       )))
     };
   }

@@ -21,6 +21,7 @@ import { IdentityManager } from '../halo';
 import { PartyProcessor } from '../parties';
 import { InvitationOptions, SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
+import { Identity } from '../halo/identity';
 
 const log = debug('dxos:echo:invitations:greeting-responder');
 
@@ -56,8 +57,8 @@ export class GreetingResponder {
   readonly connected = new Event<any>();
 
   constructor (
-    private readonly _identityManager: IdentityManager,
     private readonly _networkManager: NetworkManager,
+    private readonly _identity: Identity,
     private readonly _partyProcessor: PartyProcessor
   ) {
     this._greeter = new Greeter(
@@ -193,7 +194,7 @@ export class GreetingResponder {
    */
   async _writeCredentialsToParty (messages: any[]) {
     assert(this._state === GreetingState.CONNECTED);
-    assert(this._identityManager.deviceKeyChain);
+    assert(this._identity.deviceKeyChain);
 
     // These messages will be self-signed by keys not yet admitted to the Party,, so we cannot check
     // for a trusted key, only that the signatures are valid.
@@ -216,10 +217,10 @@ export class GreetingResponder {
       };
 
       const envelope = createEnvelopeMessage(
-        this._identityManager.keyring,
+        this._identity.keyring,
         this._partyProcessor.partyKey,
         message,
-        [this._identityManager.deviceKeyChain]
+        [this._identity.deviceKeyChain]
       );
 
       await this._partyProcessor.writeHaloMessage(envelope);

@@ -50,6 +50,9 @@ export class Identity {
     return this._identityManager.halo;
   }
 
+  /**
+   * @deprecated
+   */
   // TODO(marik-d): Remove.
   get identityManager (): IdentityManager {
     return this._identityManager;
