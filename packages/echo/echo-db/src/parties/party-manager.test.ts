@@ -36,6 +36,7 @@ import { afterTest } from '@dxos/testutils';
 import { createWritableFeedStream } from '@dxos/util';
 
 import { HALO_PARTY_CONTACT_LIST_TYPE, HaloFactory, IdentityManager } from '../halo';
+import { autoPartyOpener } from '../halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
 import { SnapshotStore } from '../snapshots';
@@ -57,8 +58,8 @@ const log = debug('dxos:echo:parties:party-manager:test');
  * @param createIdentity - Create the identity key record.
  */
 const setup = async (open = true, createIdentity = true) => {
-  const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore);
+  const feedStore = FeedStoreAdapter.create(ram);
+  await feedStore.open();
   const keyring = new Keyring();
 
   let seedPhrase;
@@ -74,14 +75,13 @@ const setup = async (open = true, createIdentity = true) => {
     assert(keyring.keys.length === 1);
   }
 
-  const identityManager = new IdentityManager(keyring);
   const snapshotStore = new SnapshotStore(ram);
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
   const partyFactory = new PartyFactory(
-    identityManager,
+    () => identityManager.identity,
     networkManager,
-    feedStoreAdapter,
+    feedStore,
     modelFactory,
     snapshotStore,
     {
@@ -90,16 +90,21 @@ const setup = async (open = true, createIdentity = true) => {
     }
   );
 
-  const haloFactory = new HaloFactory(partyFactory, identityManager, networkManager);
-  const partyManager = new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory, haloFactory);
-  afterTest(async () => {
-    await partyManager.close();
+  const haloFactory: HaloFactory = new HaloFactory(partyFactory, networkManager, keyring);
+  const identityManager = new IdentityManager(keyring, haloFactory);
+  const partyManager = new PartyManager(identityManager, feedStore, snapshotStore, partyFactory, haloFactory);
+  afterTest(() => partyManager.close());
+
+  identityManager.ready.once(() => {
+    assert(identityManager.halo?.isOpen);
+    const unsub = autoPartyOpener(identityManager.halo!, partyManager);
+    afterTest(unsub);
   });
 
   if (open) {
     await partyManager.open();
     if (createIdentity) {
-      await partyManager.createHalo({
+      await identityManager.createHalo({
         identityDisplayName: identityManager.identityKey!.publicKey.humanize()
       });
     }
@@ -151,7 +156,7 @@ describe('Party manager', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     // TODO(burdon): Create multiple feeds.
-    const feed = await feedStore.openFeed(
+    const feed = await feedStore.feedStore.openFeed(
       partyKey.publicKey.toHex(), { metadata: { partyKey: partyKey.publicKey } } as any);
     const feedKey = await keyring.addKeyRecord({
       publicKey: PublicKey.from(feed.key),
@@ -177,14 +182,13 @@ describe('Party manager', () => {
     const keyring = new Keyring();
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     await keyring.createKeyRecord({ type: KeyType.DEVICE });
-    const identityManager = new IdentityManager(keyring);
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const snapshotStore = new SnapshotStore(ram);
     const networkManager = new NetworkManager();
-    const partyFactory =
-      new PartyFactory(identityManager, networkManager, feedStoreAdapter, modelFactory, snapshotStore);
-    const haloFactory = new HaloFactory(partyFactory, identityManager, networkManager);
+    const partyFactory: PartyFactory = new PartyFactory(() => identityManager.identity, networkManager, feedStoreAdapter, modelFactory, snapshotStore);
+    const haloFactory = new HaloFactory(partyFactory, networkManager, keyring);
+    const identityManager = new IdentityManager(keyring, haloFactory);
     const partyManager =
       new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory, haloFactory);
 
@@ -424,16 +428,17 @@ describe('Party manager', () => {
     // await partyManagerB.close();
   });
 
+  // TODO(marik-d): Move to ECHO tests.
   test('One user, two devices', async () => {
-    const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup(true, true);
-    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
+    const a = await setup(true, true);
+    const b = await setup(true, false);
 
-    expect(identityManagerA.halo).toBeDefined();
-    expect(identityManagerB.halo).not.toBeDefined();
+    expect(a.identityManager.halo).toBeDefined();
+    expect(b.identityManager.halo).not.toBeDefined();
 
-    expect(partyManagerA.parties.length).toBe(0);
-    await partyManagerA.createParty();
-    expect(partyManagerA.parties.length).toBe(1);
+    expect(a.partyManager.parties.length).toBe(0);
+    await a.partyManager.createParty();
+    expect(a.partyManager.parties.length).toBe(1);
 
     const pinSecret = '0000';
     const secretProvider: SecretProvider = async () => Buffer.from(pinSecret);
@@ -441,29 +446,29 @@ describe('Party manager', () => {
       secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
 
     // Issue the invitation on nodeA.
-    const invitation = await identityManagerA?.halo?.invitationManager.createInvitation({
+    const invitation = await a.identityManager?.halo?.invitationManager.createInvitation({
       secretValidator,
       secretProvider
     }) as InvitationDescriptor;
 
     // Should not have any parties.
-    expect(partyManagerB.parties.length).toBe(0);
+    expect(b.partyManager.parties.length).toBe(0);
 
     // And then redeem it on nodeB.
-    await partyManagerB.joinHalo(invitation, secretProvider);
-    expect(identityManagerA.halo).toBeDefined();
-    expect(identityManagerB.halo).toBeDefined();
+    await b.identityManager.joinHalo(invitation, secretProvider);
+    expect(a.identityManager.halo).toBeDefined();
+    expect(b.identityManager.halo).toBeDefined();
 
     // Check the initial party is opened.
-    await waitForCondition(() => partyManagerB.parties.length, 1000);
-    expect(partyManagerB.parties.length).toBe(1);
+    await waitForCondition(() => b.partyManager.parties.length, 1000);
+    expect(b.partyManager.parties.length).toBe(1);
 
     {
       let itemA: Item<any> | null = null;
       const [updated, onUpdate] = latch();
 
       // Subscribe to Item updates on B.
-      identityManagerB.halo?.database.queryItems({ type: 'dxn://example/item/test' })
+      b.identityManager.halo?.database.queryItems({ type: 'dxn://example/item/test' })
         .subscribe((result) => {
           if (result.length) {
             if (itemA && result.find(item => item.id === itemA?.id)) {
@@ -474,7 +479,7 @@ describe('Party manager', () => {
         });
 
       // Create a new Item on A.
-      itemA = await identityManagerA.halo?.database
+      itemA = await a.identityManager.halo?.database
         .createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
       log(`A created ${itemA.id}`);
 
@@ -482,24 +487,24 @@ describe('Party manager', () => {
       await updated;
     }
 
-    const partyUpdated = partyManagerB.update.waitForCount(1);
+    const partyUpdated = b.partyManager.update.waitForCount(1);
 
     // Now create a Party on A and make sure it gets opened on both A and B.
-    const partyA2 = await partyManagerA.createParty();
+    const partyA2 = await a.partyManager.createParty();
     await partyA2.open();
-    expect(partyManagerA.parties.length).toBe(2);
+    expect(a.partyManager.parties.length).toBe(2);
 
     await partyUpdated;
-    expect(partyManagerB.parties.length).toBe(2);
-    expect(partyManagerA.parties[0].key).toEqual(partyManagerB.parties[0].key);
-    expect(partyManagerA.parties[1].key).toEqual(partyManagerB.parties[1].key);
+    expect(b.partyManager.parties.length).toBe(2);
+    expect(a.partyManager.parties[0].key).toEqual(b.partyManager.parties[0].key);
+    expect(a.partyManager.parties[1].key).toEqual(b.partyManager.parties[1].key);
 
     {
       let itemA: Item<any> | null = null;
       const [updated, onUpdate] = latch();
 
       // Subscribe to Item updates on A.
-      partyManagerA.parties[0].database.queryItems({ type: 'dxn://example/item/test' })
+      a.partyManager.parties[0].database.queryItems({ type: 'dxn://example/item/test' })
         .subscribe((result) => {
           if (result.length) {
             const [itemB] = result;
@@ -511,7 +516,7 @@ describe('Party manager', () => {
         });
 
       // Create a new Item on B.
-      itemA = await partyManagerB.parties[0].database
+      itemA = await b.partyManager.parties[0].database
         .createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
 
       // Now wait to see it on A.
@@ -519,6 +524,7 @@ describe('Party manager', () => {
     }
   }).timeout(10_000);
 
+  // TODO(marik-d): Move to ECHO tests.
   test('Two users, two devices each', async () => {
     const { partyManager: partyManagerA1, identityManager: identityManagerA1 } = await setup(true, true);
     const { partyManager: partyManagerA2, identityManager: identityManagerA2 } = await setup(true, false);
@@ -544,7 +550,7 @@ describe('Party manager', () => {
       }) as InvitationDescriptor;
 
       // And then redeem it on nodeB.
-      await partyManagerA2.joinHalo(invitation, secretProvider);
+      await identityManagerA2.joinHalo(invitation, secretProvider);
     }
 
     {
@@ -555,7 +561,7 @@ describe('Party manager', () => {
       }) as InvitationDescriptor;
 
       // And then redeem it on nodeB.
-      await partyManagerB2.joinHalo(invitation, secretProvider);
+      await identityManagerB2.joinHalo(invitation, secretProvider);
     }
 
     // Now create a Party on 1 and make sure it gets opened on both 1 and 2.
@@ -626,6 +632,7 @@ describe('Party manager', () => {
     }
   }).timeout(20_000);
 
+  // TODO(marik-d): Move to ECHO tests.
   test('Join new device to HALO by recovering from identity seed phrase', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
@@ -635,7 +642,7 @@ describe('Party manager', () => {
     expect(identityManagerB.halo).not.toBeDefined();
 
     // And then redeem it on nodeB.
-    await partyManagerB.recoverHalo(seedPhrase);
+    await identityManagerB.recoverHalo(seedPhrase);
     expect(identityManagerA.halo).toBeDefined();
     expect(identityManagerB.halo).toBeDefined();
 
@@ -887,38 +894,38 @@ describe('Party manager', () => {
   }).timeout(10_000);
 
   test.skip('Deactivate Party - multi device', async () => {
-    const { partyManager: partyManagerA, seedPhrase } = await setup(true, true);
-    const { partyManager: partyManagerB } = await setup(true, false);
-    assert(seedPhrase);
+    const a = await setup(true, true);
+    const b = await setup(true, false);
+    assert(a.seedPhrase);
 
-    await partyManagerA.open();
-    await partyManagerB.open();
+    await a.partyManager.open();
+    await b.partyManager.open();
 
-    await partyManagerB.recoverHalo(seedPhrase);
-    await partyManagerA.createParty();
+    await b.identityManager.recoverHalo(a.seedPhrase);
+    await a.partyManager.createParty();
 
-    await waitForCondition(() => partyManagerB.parties.length, 1000);
+    await waitForCondition(() => b.partyManager.parties.length, 1000);
 
-    expect(partyManagerA.parties[0].isOpen).toBe(true);
-    expect(partyManagerB.parties[0].isOpen).toBe(true);
+    expect(a.partyManager.parties[0].isOpen).toBe(true);
+    expect(b.partyManager.parties[0].isOpen).toBe(true);
 
-    await partyManagerA.parties[0].deactivate({ device: true });
-    await waitForCondition(() => !partyManagerA.parties[0].isOpen);
+    await a.partyManager.parties[0].deactivate({ device: true });
+    await waitForCondition(() => !a.partyManager.parties[0].isOpen);
 
-    expect(partyManagerA.parties[0].isOpen).toBe(false);
-    expect(partyManagerB.parties[0].isOpen).toBe(true);
+    expect(a.partyManager.parties[0].isOpen).toBe(false);
+    expect(b.partyManager.parties[0].isOpen).toBe(true);
 
-    await partyManagerA.parties[0].deactivate({ global: true });
-    await waitForCondition(() => !partyManagerB.parties[0].isOpen, 1000);
+    await a.partyManager.parties[0].deactivate({ global: true });
+    await waitForCondition(() => !b.partyManager.parties[0].isOpen, 1000);
 
-    expect(partyManagerA.parties[0].isOpen).toBe(false);
-    expect(partyManagerB.parties[0].isOpen).toBe(false);
+    expect(a.partyManager.parties[0].isOpen).toBe(false);
+    expect(b.partyManager.parties[0].isOpen).toBe(false);
 
-    await partyManagerA.parties[0].activate({ global: true });
-    await waitForCondition(() => partyManagerA.parties[0].isOpen && partyManagerB.parties[0].isOpen, 1000);
+    await a.partyManager.parties[0].activate({ global: true });
+    await waitForCondition(() => a.partyManager.parties[0].isOpen && b.partyManager.parties[0].isOpen, 1000);
 
-    expect(partyManagerA.parties[0].isOpen).toBe(true);
-    expect(partyManagerB.parties[0].isOpen).toBe(true);
+    expect(a.partyManager.parties[0].isOpen).toBe(true);
+    expect(b.partyManager.parties[0].isOpen).toBe(true);
   });
 
   test('Deactivating and activating party.', async () => {
@@ -1005,7 +1012,7 @@ describe('Party manager', () => {
     }) as InvitationDescriptor;
 
     expect(partyManagerB.parties.length).toBe(0);
-    await partyManagerB.joinHalo(invitation, secretProviderDevice);
+    await identityManagerB.joinHalo(invitation, secretProviderDevice);
     expect(identityManagerB.halo).toBeDefined();
     await waitForCondition(() => partyManagerB.parties.length, 1000);
     expect(partyManagerB.parties.length).toBe(1);
@@ -1013,7 +1020,7 @@ describe('Party manager', () => {
 
     // C joins as another device of A, seed phrase recovery.
 
-    await partyManagerC.recoverHalo(seedPhrase);
+    await identityManagerC.recoverHalo(seedPhrase);
     expect(identityManagerC.halo).toBeDefined();
     await waitForCondition(() => partyManagerC.parties.length, 1000);
     expect(partyManagerC.parties.length).toBe(1);
@@ -1077,7 +1084,7 @@ describe('Party manager', () => {
 
     expect(partyManagerB.parties.length).toBe(0);
 
-    await partyManagerB.joinHalo(invitation, secretProviderDevice);
+    await identityManagerB.joinHalo(invitation, secretProviderDevice);
     expect(identityManagerB.halo).toBeDefined();
 
     await waitForCondition(() => partyManagerB.parties.length, 1000);
@@ -1086,7 +1093,7 @@ describe('Party manager', () => {
 
     // C joins as another device of A, seed phrase recovery.
 
-    await partyManagerC.recoverHalo(seedPhrase);
+    await identityManagerC.recoverHalo(seedPhrase);
     expect(identityManagerC.halo).toBeDefined();
 
     await waitForCondition(() => partyManagerC.parties.length, 1000);

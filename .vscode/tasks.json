@@ -5,14 +5,14 @@
 			"label": "Rush build all light",
 			"group": "build",
 			"type": "shell",
-			"command": "rush update && rush build --light",
+			"command": "rush build --light",
 			"problemMatcher": []
 		},
 		{
 			"label": "Rush build to current package light",
 			"group": "build",
 			"type": "shell",
-			"command": "rush update && rush build --light --to-except $(cut -d '=' -f 2 <<< $(npm run env | grep 'npm_package_name'))",
+			"command": "rush build --light --to-except $(cut -d '=' -f 2 <<< $(npm run env | grep 'npm_package_name'))",
 			"options": {
 				"cwd": "${fileDirname}"
 			},

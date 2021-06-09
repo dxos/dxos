@@ -13,7 +13,7 @@ import { timed } from '@dxos/debug';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ComplexMap } from '@dxos/util';
 
-import { HaloCreationOptions, HaloFactory, IdentityManager } from '../halo';
+import { HaloFactory, IdentityManager } from '../halo';
 import { SecretProvider, InvitationDescriptor } from '../invitations';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
@@ -69,34 +69,18 @@ export class PartyManager {
     if (this._open) {
       return;
     }
-
-    // TODO(burdon): Replace with events.
-    onProgressCallback?.({ haloOpened: false });
-
-    // TODO(burdon): Should this already by open?
-    await this._feedStore.open();
+    this._open = true;
 
     // Open the HALO first (if present).
-    const identityKey = this._identityManager.identityKey;
-    if (identityKey) {
-      if (this._feedStore.queryWritableFeed(identityKey.publicKey)) {
-        // TODO(marik-d): Snapshots for halo party?
-        const halo = await this._partyFactory.constructParty(identityKey.publicKey);
-        // Always open the HALO.
-        await halo.open();
-        await this._setHalo(halo);
-      } else if (!this._identityManager.keyring.hasSecretKey(identityKey)) {
-        throw new Error('HALO missing and identity key has no secret.');
-      }
-    }
+    this._identityManager.loadFromStorage();
 
     onProgressCallback?.({ haloOpened: true });
 
     let partyKeys = this._feedStore.getPartyKeys();
 
     // TODO(telackey): Does it make any sense to load other parties if we don't have an HALO?
-    if (identityKey) {
-      partyKeys = partyKeys.filter(partyKey => !partyKey.equals(identityKey.publicKey));
+    if (this._identityManager.identityKey) {
+      partyKeys = partyKeys.filter(partyKey => !partyKey.equals(this._identityManager.identityKey!.publicKey));
     }
 
     // TODO(burdon): Does this make sense?
@@ -127,8 +111,6 @@ export class PartyManager {
         onProgressCallback?.({ haloOpened: true, totalParties: partyKeys.length, partiesOpened: i + 1 });
       }
     }
-
-    this._open = true;
   }
 
   @synchronized
@@ -138,6 +120,7 @@ export class PartyManager {
     if (!this._open) {
       return;
     }
+    this._open = false;
 
     // Clean-up.
     this._onCloseHandlers.forEach(callback => callback());
@@ -153,8 +136,6 @@ export class PartyManager {
     await this._identityManager.halo?.close();
     await this._feedStore.close();
     await this._parties.clear();
-
-    this._open = false;
   }
 
   //
@@ -332,90 +313,5 @@ export class PartyManager {
       partyKey: party.key,
       keyHints
     });
-  }
-
-  //
-  // HALO
-  // TODO(burdon): Factor out?
-  //
-
-  /**
-   * Creates the Identity HALO.
-   */
-  @synchronized
-  async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
-    assert(this._open, 'PartyManager is not open.');
-    assert(!this._identityManager.halo, 'HALO already exists.');
-
-    const halo = await this._haloFactory.createHalo(options);
-    await this._setHalo(halo);
-    return halo;
-  }
-
-  /**
-   * Joins an existing Identity HALO from a recovery seed phrase.
-   * TODO(telackey): Combine with joinHalo?
-   *   joinHalo({ seedPhrase }) // <- Recovery version
-   *   joinHalo({ invitationDescriptor, secretProvider}) // <- Standard invitation version
-   * The downside is that would wreck the symmetry to createParty/joinParty.
-   */
-  @synchronized
-  async recoverHalo (seedPhrase: string) {
-    assert(this._open, 'PartyManager is not open.');
-    assert(!this._identityManager.halo, 'HALO already exists.');
-    assert(!this._identityManager.identityKey, 'Identity key already exists.');
-
-    const halo = await this._haloFactory.recoverHalo(seedPhrase);
-    await this._setHalo(halo);
-    return halo;
-  }
-
-  /**
-   * Joins an existing Identity HALO.
-   */
-  @synchronized
-  async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
-    assert(this._open, 'PartyManager is not open.');
-    assert(!this._identityManager.halo, 'HALO already exists.');
-
-    const halo = await this._haloFactory.joinHalo(invitationDescriptor, secretProvider);
-    await this._setHalo(halo);
-    return halo;
-  }
-
-  // Only call from a @synchronized method.
-  // TODO(burdon): Should this be synchronized?
-  private async _setHalo (halo: PartyInternal) {
-    await this._identityManager.initialize(halo);
-
-    this._onCloseHandlers.push(this._identityManager.halo!.subscribeToJoinedPartyList(async values => {
-      if (!this._open) {
-        return;
-      }
-
-      for (const partyDesc of values) {
-        if (!this._parties.has(partyDesc.partyKey)) {
-          log(`Auto-opening new Party from HALO: ${partyDesc.partyKey.toHex()}`);
-          await this.addParty(partyDesc.partyKey, partyDesc.keyHints);
-        }
-      }
-    }));
-
-    this._onCloseHandlers.push(this._identityManager.halo!.preferences.subscribeToPreferences(async () => {
-      for (const party of this._parties.values()) {
-        const shouldBeOpen = this._identityManager.halo?.preferences.isPartyActive(party.key);
-        if (party.isOpen && !shouldBeOpen) {
-          log(`Auto-closing deactivated party: ${party.key.toHex()}`);
-
-          await party.close();
-          this.update.emit(party);
-        } else if (!party.isOpen && shouldBeOpen) {
-          log(`Auto-opening activated party: ${party.key.toHex()}`);
-
-          await party.open();
-          this.update.emit(party);
-        }
-      }
-    }));
   }
 }
