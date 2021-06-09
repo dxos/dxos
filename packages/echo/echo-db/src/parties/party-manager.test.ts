@@ -8,23 +8,20 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 import ram from 'random-access-memory';
 
-import { waitForCondition, latch } from '@dxos/async';
+import { latch } from '@dxos/async';
 import {
   createPartyGenesisMessage,
   generateSeedPhrase,
   keyPairFromSeedPhrase,
-  KeyType,
-  Keyring,
+  Keyring, KeyType,
   SecretProvider,
   SecretValidator
 } from '@dxos/credentials';
 import {
-  PublicKey,
-  createKeyPair,
+  createKeyPair, PublicKey,
   randomBytes,
   sign,
-  verify,
-  SIGNATURE_LENGTH
+  SIGNATURE_LENGTH, verify
 } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
@@ -35,9 +32,9 @@ import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 import { createWritableFeedStream } from '@dxos/util';
 
-import { HALO_PARTY_CONTACT_LIST_TYPE, HaloFactory, IdentityManager } from '../halo';
+import { HaloFactory, IdentityManager } from '../halo';
 import { autoPartyOpener } from '../halo/party-opener';
-import { InvitationDescriptor, OfflineInvitationClaimer } from '../invitations';
+import { OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter, messageLogger } from '../util';

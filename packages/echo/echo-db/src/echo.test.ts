@@ -470,8 +470,8 @@ describe('ECHO', () => {
     const a = await setup(true);
     const b = await setup(true);
 
-    const updatedA = a.queryContacts().update.waitFor(contacts => contacts.some(c => b.identityKey?.publicKey.equals(c.publicKey)))
-    const updatedB = b.queryContacts().update.waitFor(contacts => contacts.some(c => a.identityKey?.publicKey.equals(c.publicKey)))
+    const updatedA = a.queryContacts().update.waitFor(contacts => contacts.some(c => b.identityKey?.publicKey.equals(c.publicKey)));
+    const updatedB = b.queryContacts().update.waitFor(contacts => contacts.some(c => a.identityKey?.publicKey.equals(c.publicKey)));
 
     // Create the Party.
     const partyA = await a.createParty();
@@ -487,10 +487,9 @@ describe('ECHO', () => {
     await updatedA;
     await updatedB;
 
-    expect(a.queryContacts().value.length).toBe(1)
-    expect(b.queryContacts().value.length).toBe(1)
+    expect(a.queryContacts().value.length).toBe(1);
+    expect(b.queryContacts().value.length).toBe(1);
   });
-
 
   test('Deactivating and activating party.', async () => {
     const a = await setup(true);
@@ -541,7 +540,6 @@ describe('ECHO', () => {
     expect(partyA.title).toBe('A2');
   });
 
-
   test('Deactivate Party - single device', async () => {
     const a = await setup(true);
     const partyA = await a.createParty();
@@ -575,7 +573,7 @@ describe('ECHO', () => {
 
   test('Deactivate Party - retrieving items', async () => {
     const a = await setup(true);
-    const partyA = await a.createParty()
+    const partyA = await a.createParty();
 
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive).toBe(true);
@@ -614,10 +612,10 @@ describe('ECHO', () => {
     const b = await setup(false);
 
     {
-      const invitation = await a.createHaloInvitation(testInvitationAuthenticator)
-      await b.joinHalo(invitation, testSecretProvider)
+      const invitation = await a.createHaloInvitation(testInvitationAuthenticator);
+      await b.joinHalo(invitation, testSecretProvider);
     }
-    
+
     await a.createParty();
     await waitForCondition(() => b.queryParties().value.length, 1000);
 
@@ -646,7 +644,7 @@ describe('ECHO', () => {
   // TODO(burdon): Sporadically fails: https://github.com/dxos/echo/issues/391
   test('Setting title propagates to other devices AND other party members', async () => {
     // User creating the party
-    const a = new ECHO()
+    const a = new ECHO();
     await a.open();
     afterTest(() => a.close());
 
@@ -663,7 +661,7 @@ describe('ECHO', () => {
     // Another user in the party.
     const d = await setup(true);
 
-    const partyA = await a.createParty()
+    const partyA = await a.createParty();
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive).toBe(true);
 
@@ -717,7 +715,7 @@ describe('ECHO', () => {
   // I don't seem to be receiving an update after which party.title holds correct value.
   // https://github.com/dxos/teamwork/issues/496#issuecomment-739862830
   // However it seems to be working fine in this test.
-  /*test.skip('Party update event is emitted after the title is set', async () => {
+  /* test.skip('Party update event is emitted after the title is set', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
     const { partyManager: partyManagerC, identityManager: identityManagerC } = await setup(true, false);
@@ -776,5 +774,5 @@ describe('ECHO', () => {
     expect(partyA.title).toEqual('value-2');
     await waitForCondition(() => titleInC === 'value-2', 10000);
     await waitForCondition(() => titleInB === 'value-2', 10000);
-  });*/
+  }); */
 });
