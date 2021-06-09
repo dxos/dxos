@@ -2,25 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Extension, Protocol } from '@dxos/protocol';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 
 const log = debug('dxos.replicator.peer');
 
 export class Peer extends EventEmitter {
-  /**
-   * @param {Protocol} protocol
-   * @param {Extension} extension
-   * @param {CodecProtobuf} codec
-   */
-  constructor (protocol, extension, codec) {
+  private readonly _feeds = new Map();
+  constructor (private _protocol: Protocol, private _extension: Extension) {
     super();
-
-    this._protocol = protocol;
-    this._extension = extension;
-    this._codec = codec;
-
-    this._feeds = new Map();
   }
 
   get feeds () {

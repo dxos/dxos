@@ -6,7 +6,7 @@ import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
 import { EventEmitter } from 'events';
 
-import { Extension } from '@dxos/protocol';
+import { Extension, Protocol } from '@dxos/protocol';
 
 import { Peer } from './peer';
 import { schemaJson } from './proto/gen';
@@ -22,19 +22,19 @@ const defaultSubscribe = () => () => {};
 // TODO(burdon): Rename ReplicatorPlugin.
 export class Replicator extends EventEmitter {
   static extension = 'dxos.protocol.replicator';
+  private readonly _peers = new Map<Protocol, Peer>();
+  private _options: {timeout: number}
+  private _load: (...args: any[]) => any;
+  private _subscribe: (...args: any[]) => any;
+  private _replicate: (...args: any[]) => any;
 
-  /**
-   * @param {Middleware} middleware
-   * @param {Object} [options]
-   * @param {number} [options.timeout=1000]
-   */
-  constructor (middleware, options) {
+  constructor (middleware: any, options: {timeout?: number}) {
+    super();
     assert(middleware);
     assert(middleware.load);
 
     const { load, subscribe = defaultSubscribe, replicate = defaultReplicate } = middleware;
 
-    super();
 
     this._load = async (...args) => load(...args);
     this._subscribe = (...args) => subscribe(...args);
@@ -43,8 +43,6 @@ export class Replicator extends EventEmitter {
     this._options = Object.assign({
       timeout: 1000
     }, options);
-
-    this._peers = new Map();
   }
 
   toString () {
@@ -62,7 +60,7 @@ export class Replicator extends EventEmitter {
       schema: schemaJson,
       timeout: this._options.timeout
     })
-      .on('error', err => this.emit(err))
+      .on('error', (err: any) => this.emit(err))
       .setInitHandler(this._initHandler.bind(this))
       .setHandshakeHandler(this._handshakeHandler.bind(this))
       .setMessageHandler(this._messageHandler.bind(this))
@@ -70,8 +68,9 @@ export class Replicator extends EventEmitter {
       .setFeedHandler(this._feedHandler.bind(this));
   }
 
-  async _initHandler (protocol) {
+  async _initHandler (protocol: Protocol) {
     const extension = protocol.getExtension(Replicator.extension);
+    assert(extension, `Missing '${Replicator.extension}' extension in protocol.`)
 
     const peer = new Peer(protocol, extension);
 
@@ -84,7 +83,7 @@ export class Replicator extends EventEmitter {
    * @param {Protocol} protocol
    * @returns {Promise<void>}
    */
-  async _handshakeHandler (protocol) {
+  async _handshakeHandler (protocol: Protocol) {
     const peer = this._peers.get(protocol);
 
     const context = protocol.getContext();
@@ -94,7 +93,7 @@ export class Replicator extends EventEmitter {
     try {
       const share = feeds => peer.share(feeds);
       const unsubscribe = this._subscribe(share, info);
-      peer.on('close', unsubscribe);
+      peer?.on('close', unsubscribe);
 
       const feeds = await this._load(info) || [];
       await share(feeds);
@@ -106,10 +105,8 @@ export class Replicator extends EventEmitter {
   /**
    * Handles key exchange requests.
    *
-   * @param {Protocol} protocol
-   * @param {Object} message
    */
-  async _messageHandler (protocol, message) {
+  async _messageHandler (protocol: Protocol, message: any) {
     const { type, data } = message;
 
     try {
@@ -128,7 +125,7 @@ export class Replicator extends EventEmitter {
     }
   }
 
-  async _replicateHandler (protocol, data) {
+  async _replicateHandler (protocol: Protocol, data: any) {
     const peer = this._peers.get(protocol);
     const context = protocol.getContext();
     const session = protocol.getSession();
@@ -136,21 +133,19 @@ export class Replicator extends EventEmitter {
 
     try {
       const feeds = await this._replicate(data, info) || [];
-      peer.replicate(feeds);
+      peer?.replicate(feeds);
     } catch (err) {
       console.warn('Replicate feeds error', err);
     }
   }
 
-  async _feedHandler (protocol, discoveryKey) {
+  async _feedHandler (protocol: Protocol, discoveryKey) {
     await this._replicateHandler(protocol, [{ discoveryKey }]);
   }
 
-  _closeHandler (protocol) {
+  _closeHandler (protocol: Protocol) {
     const peer = this._peers.get(protocol);
-    if (peer) {
-      peer.close();
-    }
+    peer?.close();
     this._peers.delete(protocol);
   }
 }

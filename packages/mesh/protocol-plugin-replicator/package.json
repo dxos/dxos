@@ -40,7 +40,8 @@
     "jest": "^26.6.3",
     "pify": "~5.0.0",
     "random-access-memory": "~3.1.2",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "@types/debug": "^4.1.1"
   },
   "publishConfig": {
     "access": "restricted"
