@@ -2,10 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import { KeyChain, KeyRecord, SignedMessage } from '@dxos/credentials';
+import debug from 'debug';
+
+import { Filter, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage } from '@dxos/credentials';
 
 import { HaloParty } from './halo-party';
-import { IdentityManager } from './identity-manager';
+
+const log = debug('dxos:echo:parties:identity');
 
 /**
  * Represents users identity exposing access to signing keys and HALO party.
@@ -13,41 +16,67 @@ import { IdentityManager } from './identity-manager';
  * Acts as a read-only view into IdentityManager.
  */
 export class Identity {
-  // TODO(marik-d): Take only necessary dependencies.
-  constructor (private readonly _identityManager: IdentityManager) {}
+  private _identityKey?: KeyRecord;
+
+  private _deviceKey?: KeyRecord;
+  private _deviceKeyChain?: KeyChain;
+
+  constructor (
+    private readonly _keyring: Keyring,
+    private readonly _halo: HaloParty | undefined
+  ) {}
 
   get keyring () {
-    return this._identityManager.keyring;
+    return this._keyring;
   }
 
-  // TODO(burdon): Move to KeyRing?
   get identityKey (): KeyRecord | undefined {
-    return this._identityManager.identityKey;
+    if (!this._identityKey) {
+      this._identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
+    }
+
+    return this._identityKey;
   }
 
-  // TODO(burdon): Move to KeyRing?
   get deviceKey (): KeyRecord | undefined {
-    return this._identityManager.deviceKey;
+    if (!this._deviceKey) {
+      this._deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
+    }
+
+    return this._deviceKey;
   }
 
-  get displayName (): string | undefined {
-    return this._identityManager.displayName;
-  }
+  get deviceKeyChain () {
+    if (!this._deviceKeyChain) {
+      const deviceKey = this.deviceKey;
+      try {
+        this._deviceKeyChain = (this._halo && deviceKey) ? Keyring.buildKeyChain(
+          deviceKey.publicKey,
+          this._halo.credentialMessages,
+          this._halo.feedKeys
+        ) : undefined;
+      } catch (err) {
+        log('Unable to locate device KeyChain:', err); // TODO(burdon): ???
+      }
+    }
 
-  get identityInfo (): SignedMessage | undefined {
-    return this._identityManager.identityInfo;
-  }
-
-  get identityGenesis (): SignedMessage | undefined {
-    return this._identityManager.identityGenesis;
-  }
-
-  get deviceKeyChain (): KeyChain | undefined {
-    return this._identityManager.deviceKeyChain;
+    return this._deviceKeyChain;
   }
 
   get halo (): HaloParty | undefined {
-    return this._identityManager.halo;
+    return this._halo;
+  }
+
+  get displayName (): string | undefined {
+    return this._halo?.identityInfo?.signed.payload.displayName;
+  }
+
+  get identityInfo (): SignedMessage | undefined {
+    return this._halo?.identityInfo;
+  }
+
+  get identityGenesis (): SignedMessage | undefined {
+    return this._halo?.identityGenesis;
   }
 }
 

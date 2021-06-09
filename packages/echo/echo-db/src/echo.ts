@@ -151,8 +151,8 @@ export class ECHO {
 
     this._identityManager.ready.once(() => {
       // It might be the case that halo gets closed before this has a chance to execute.
-      if (this._identityManager.halo?.isOpen) {
-        this._subs.push(autoPartyOpener(this._identityManager.halo!, this._partyManager));
+      if (this._identityManager.identity.halo?.isOpen) {
+        this._subs.push(autoPartyOpener(this._identityManager.identity.halo!, this._partyManager));
       }
     });
   }
@@ -172,9 +172,13 @@ export class ECHO {
   // TODO(burdon): Expose as Profile API class.
   //
 
+  private get _identity () {
+    return this._identityManager.identity;
+  }
+
   // TODO(burdon): Different from 'identityReady'?
   get isHaloInitialized (): boolean {
-    return this._identityManager.halo !== undefined;
+    return this._identity.halo !== undefined;
   }
 
   // TODO(burdon): Remove? This returns an event handler.
@@ -184,12 +188,12 @@ export class ECHO {
 
   // TODO(burdon): Factor out into Profile API.
   get identityKey (): KeyRecord | undefined {
-    return this._identityManager.identityKey;
+    return this._identity.identityKey;
   }
 
   // TODO(burdon): Factor out into Profile API.
   get identityDisplayName (): string | undefined {
-    return this._identityManager.displayName;
+    return this._identity.displayName;
   }
 
   //
@@ -245,7 +249,8 @@ export class ECHO {
 
     this._subs.unsubscribe();
 
-    await this._identityManager.halo?.close();
+    // TODO(marik-d): Should be _identityManager.close().
+    await this._identity.halo?.close();
 
     // TODO(marik-d): Close network manager.
     await this._partyManager.close();
@@ -332,7 +337,7 @@ export class ECHO {
     assert(this._partyManager.isOpen, 'ECHO not open.');
 
     const actualSecretProvider =
-      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this._identityManager);
+      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this._identity);
 
     const impl = await this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
     return new Party(impl);
@@ -352,7 +357,7 @@ export class ECHO {
     assert(publicKey, 'Invalid publicKey');
     assert(secretKey, 'Invalid secretKey');
 
-    if (this._identityManager.identityKey) {
+    if (this._identity.identityKey) {
       // TODO(burdon): Bad API: Semantics change based on options.
       // TODO(burdon): createProfile isn't part of this package.
       throw new Error('Identity key already exists. Call createProfile without a keypair to only create a halo party.');
@@ -368,15 +373,15 @@ export class ECHO {
   // TODO(burdon): Return Halo API object?
   async createHalo (displayName?: string) {
     // TODO(burdon): Why not assert?
-    if (this._identityManager.halo) {
+    if (this._identity.halo) {
       throw new Error('HALO party already exists');
     }
-    if (!this._identityManager.identityKey) {
+    if (!this._identity.identityKey) {
       throw new Error('Cannot create HALO. Identity key not found.');
     }
 
     await this._identityManager.createHalo({
-      identityDisplayName: displayName || this._identityManager.identityKey.publicKey.humanize()
+      identityDisplayName: displayName || this._identity.identityKey.publicKey.humanize()
     });
   }
 
@@ -385,8 +390,8 @@ export class ECHO {
    */
   async recoverHalo (seedPhrase: string) {
     assert(this._partyManager.isOpen, 'ECHO not open.');
-    assert(!this._identityManager.halo, 'HALO already exists.');
-    assert(!this._identityManager.identityKey, 'Identity key already exists.');
+    assert(!this._identity.halo, 'HALO already exists.');
+    assert(!this._identity.identityKey, 'Identity key already exists.');
 
     const impl = await this._identityManager.recoverHalo(seedPhrase);
     return new Party(impl);
@@ -397,7 +402,7 @@ export class ECHO {
    */
   async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
     assert(this._partyManager.isOpen, 'ECHO not open.');
-    assert(!this._identityManager.halo, 'HALO already exists.');
+    assert(!this._identity.halo, 'HALO already exists.');
 
     const impl = await this._identityManager.joinHalo(invitationDescriptor, secretProvider);
     return new Party(impl);
@@ -407,9 +412,9 @@ export class ECHO {
    * Create an invitation to an exiting identity HALO.
    */
   async createHaloInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions) {
-    assert(this._identityManager.halo, 'HALO not initialized.');
+    assert(this._identity.halo, 'HALO not initialized.');
 
-    return this._identityManager.halo.invitationManager.createInvitation(authenticationDetails, options);
+    return this._identity.halo.invitationManager.createInvitation(authenticationDetails, options);
   }
 
   /**
@@ -418,8 +423,8 @@ export class ECHO {
   // TODO(burdon): Expose ContactManager directly.
   queryContacts (): ResultSet<Contact> {
     assert(this._partyManager.isOpen, 'ECHO not open.');
-    assert(this._identityManager.halo, 'Invalid HALO.');
+    assert(this._identity.halo, 'Invalid HALO.');
 
-    return this._identityManager.halo.contacts.queryContacts();
+    return this._identity.halo.contacts.queryContacts();
   }
 }

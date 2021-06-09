@@ -93,8 +93,8 @@ const setup = async (open = true, createIdentity = true) => {
   afterTest(() => partyManager.close());
 
   identityManager.ready.once(() => {
-    assert(identityManager.halo?.isOpen);
-    const unsub = autoPartyOpener(identityManager.halo!, partyManager);
+    assert(identityManager.identity.halo?.isOpen);
+    const unsub = autoPartyOpener(identityManager.identity.halo!, partyManager);
     afterTest(unsub);
   });
 
@@ -102,17 +102,18 @@ const setup = async (open = true, createIdentity = true) => {
     await partyManager.open();
     if (createIdentity) {
       await identityManager.createHalo({
-        identityDisplayName: identityManager.identityKey!.publicKey.humanize()
+        identityDisplayName: identityManager.identity.identityKey!.publicKey.humanize()
       });
     }
   }
+  const identity = identityManager.identity;
 
-  return { feedStore, partyManager, identityManager, seedPhrase };
+  return { feedStore, partyManager, identityManager, seedPhrase, identity };
 };
 
 describe('Party manager', () => {
   test('Created locally', async () => {
-    const { partyManager, identityManager } = await setup();
+    const { partyManager, identity } = await setup();
     await partyManager.open();
 
     const [update, setUpdated] = latch();
@@ -127,10 +128,10 @@ describe('Party manager', () => {
     expect(party.isOpen).toBeTruthy();
 
     // The Party key is an inception key, so its secret should be destroyed immediately after use.
-    const partyKey = identityManager.keyring.getKey(party.key);
+    const partyKey = identity.keyring.getKey(party.key);
     expect(partyKey).toBeDefined();
     assert(partyKey);
-    expect(identityManager.keyring.hasSecretKey(partyKey)).toBe(false);
+    expect(identity.keyring.hasSecretKey(partyKey)).toBe(false);
 
     await update;
   });
@@ -270,8 +271,8 @@ describe('Party manager', () => {
   });
 
   test('Join a party - PIN', async () => {
-    const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
-    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
+    const { partyManager: partyManagerA, identity: identityA } = await setup();
+    const { partyManager: partyManagerB, identity: identityB } = await setup();
     await partyManagerA.open();
     await partyManagerB.open();
 
@@ -326,13 +327,13 @@ describe('Party manager', () => {
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {
-        if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerA.identityKey!.publicKey.humanize());
-          expect(member.displayName).toEqual(identityManagerA.displayName);
+        if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(identityA.displayName);
         }
-        if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerB.identityKey!.publicKey.humanize());
-          expect(member.displayName).toEqual(identityManagerB.displayName);
+        if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(identityB.displayName);
         }
       }
     }
@@ -342,8 +343,8 @@ describe('Party manager', () => {
   });
 
   test('Join a party - signature', async () => {
-    const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
-    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
+    const { partyManager: partyManagerA, identity: identityA } = await setup();
+    const { partyManager: partyManagerB, identity: identityB } = await setup();
     await partyManagerA.open();
     await partyManagerB.open();
 
@@ -411,11 +412,11 @@ describe('Party manager', () => {
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {
-        if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerA.identityKey!.publicKey.humanize());
+        if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
         }
-        if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerB.identityKey!.publicKey.humanize());
+        if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
         }
       }
     }
@@ -426,10 +427,10 @@ describe('Party manager', () => {
   });
 
   test('Join a party - Offline', async () => {
-    const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
-    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
-    assert(identityManagerA.identityKey);
-    assert(identityManagerB.identityKey);
+    const { partyManager: partyManagerA, identity: identityA } = await setup();
+    const { partyManager: partyManagerB, identity: identityB } = await setup();
+    assert(identityA.identityKey);
+    assert(identityB.identityKey);
 
     await partyManagerA.open();
     await partyManagerB.open();
@@ -441,12 +442,12 @@ describe('Party manager', () => {
     log(`Created ${partyA.key.toHex()}`);
 
     const invitationDescriptor = await partyA.invitationManager
-      .createOfflineInvitation(identityManagerB.identityKey.publicKey);
+      .createOfflineInvitation(identityB.identityKey.publicKey);
 
     // Redeem the invitation on B.
     expect(partyManagerB.parties).toHaveLength(0);
     const partyB = await partyManagerB.joinParty(invitationDescriptor,
-      OfflineInvitationClaimer.createSecretProvider(identityManagerB));
+      OfflineInvitationClaimer.createSecretProvider(identityB));
     expect(partyB).toBeDefined();
     log(`Joined ${partyB.key.toHex()}`);
 
@@ -478,13 +479,13 @@ describe('Party manager', () => {
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {
-        if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerA.identityKey!.publicKey.humanize());
-          expect(member.displayName).toEqual(identityManagerA.displayName);
+        if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(identityA.displayName);
         }
-        if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerB.identityKey!.publicKey.humanize());
-          expect(member.displayName).toEqual(identityManagerB.displayName);
+        if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(identityB.displayName);
         }
       }
     }

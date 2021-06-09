@@ -175,8 +175,6 @@ export class PartyFactory {
    * @param hints
    */
   async constructParty (partyKey: PartyKey, hints: KeyHint[] = [], initialTimeframe?: Timeframe) {
-    const identity = this._identityProvider();
-
     // TODO(marik-d): Support read-only parties if this feed doesn't exist?
     // TODO(marik-d): Verify that this feed is admitted.
     assert(this._feedStore.queryWritableFeed(partyKey), `Feed not found for party: ${partyKey.toHex()}`);
@@ -189,7 +187,7 @@ export class PartyFactory {
       this._feedStore,
       this._modelFactory,
       this._snapshotStore,
-      identity,
+      this._identityProvider,
       this._networkManager,
       hints,
       initialTimeframe,
