@@ -493,52 +493,6 @@ describe('Party manager', () => {
     }
   }).timeout(10_000);
 
-  test('Contacts', async () => {
-    const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
-    const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
-    assert(identityManagerA.identityKey);
-    assert(identityManagerB.identityKey);
-
-    await partyManagerA.open();
-    await partyManagerB.open();
-
-    const [updatedA, onUpdateA] = latch();
-    const [updatedB, onUpdateB] = latch();
-
-    identityManagerA?.halo?.database.queryItems({ type: HALO_PARTY_CONTACT_LIST_TYPE }).subscribe((value) => {
-      const [list] = value;
-      if (list && list.model.getProperty(identityManagerB?.identityKey?.publicKey.toHex())) {
-        onUpdateA();
-      }
-    });
-
-    identityManagerB?.halo?.database.queryItems({ type: HALO_PARTY_CONTACT_LIST_TYPE }).subscribe((value) => {
-      const [list] = value;
-      if (list && list.model.getProperty(identityManagerA?.identityKey?.publicKey.toHex())) {
-        onUpdateB();
-      }
-    });
-
-    // Create the Party.
-    expect(partyManagerA.parties).toHaveLength(0);
-    const partyA = await partyManagerA.createParty();
-    expect(partyManagerA.parties).toHaveLength(1);
-    log(`Created ${partyA.key.toHex()}`);
-
-    const invitationDescriptor =
-      await partyA.invitationManager.createOfflineInvitation(identityManagerB.identityKey.publicKey);
-
-    // Redeem the invitation on B.
-    expect(partyManagerB.parties).toHaveLength(0);
-    const partyB = await partyManagerB.joinParty(invitationDescriptor,
-      OfflineInvitationClaimer.createSecretProvider(identityManagerB));
-    expect(partyB).toBeDefined();
-    log(`Joined ${partyB.key.toHex()}`);
-
-    await updatedA;
-    await updatedB;
-  });
-
   test('Deactivate Party - single device', async () => {
     const { partyManager: partyManagerA } = await setup();
     await partyManagerA.open();

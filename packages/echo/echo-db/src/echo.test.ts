@@ -15,7 +15,7 @@ import { afterTest } from '@dxos/testutils';
 import { arraysEqual } from '@dxos/util';
 
 import { ECHO } from './echo';
-import { testInvitationAuthenticator } from './invitations';
+import { OfflineInvitationClaimer, testInvitationAuthenticator } from './invitations';
 import { Item } from './items';
 import { inviteTestPeer } from './util';
 
@@ -210,49 +210,6 @@ describe('ECHO', () => {
 
     expect(item.model.getProperty('foo')).toEqual('bar');
     expect(item.model.getProperty('baz')).toEqual(123);
-  });
-
-  test('Contacts', async () => {
-    const echoA = await setup(true);
-    const echoB = await setup(true);
-
-    const partyA = await echoA.createParty();
-
-    const PIN = Buffer.from('0000');
-
-    // Create a validation function which tests the signature of a specific KeyPair.
-    const secretValidator: SecretValidator = async (invitation, secret) => arraysEqual(secret, PIN);
-
-    // And a provider for the secret.
-    // (We reuse the function here, but normally both the Inviter and Invitee would have their own SecretProvider.)
-    const secretProvider: SecretProvider = async () => PIN;
-
-    // Issue the invitation to the Party on A.
-    const invitationDescriptor = await partyA.createInvitation({ secretProvider, secretValidator });
-
-    const [updatedA, onUpdateA] = latch();
-    const [updatedB, onUpdateB] = latch();
-
-    echoA.queryContacts().subscribe((value) => {
-      if (value && value.length) {
-        onUpdateA();
-      }
-    });
-
-    echoB.queryContacts().subscribe((value) => {
-      if (value && value.length) {
-        onUpdateB();
-      }
-    });
-
-    // Redeem the invitation on B.
-    await echoB.joinParty(invitationDescriptor, secretProvider);
-
-    await updatedA;
-    await updatedB;
-
-    expect(echoA.queryContacts().value.length).toBe(1);
-    expect(echoB.queryContacts().value.length).toBe(1);
   });
 
   test('open and close', async () => {
@@ -508,4 +465,30 @@ describe('ECHO', () => {
       log(`B has ${itemA.id}`);
     }
   }).timeout(10_000);
+
+  test('Contacts', async () => {
+    const a = await setup(true);
+    const b = await setup(true);
+
+    const updatedA = a.queryContacts().update.waitFor(contacts => contacts.some(c => b.identityKey?.publicKey.equals(c.publicKey)))
+    const updatedB = b.queryContacts().update.waitFor(contacts => contacts.some(c => a.identityKey?.publicKey.equals(c.publicKey)))
+
+    // Create the Party.
+    const partyA = await a.createParty();
+    log(`Created ${partyA.key.toHex()}`);
+
+    const invitationDescriptor = await partyA.createOfflineInvitation(b.identityKey!.publicKey);
+
+    // Redeem the invitation on B.
+    const partyB = await b.joinParty(invitationDescriptor);
+    expect(partyB).toBeDefined();
+    log(`Joined ${partyB.key.toHex()}`);
+
+    await updatedA;
+    await updatedB;
+
+    expect(a.queryContacts().value.length).toBe(1)
+    expect(b.queryContacts().value.length).toBe(1)
+  });
+
 });
