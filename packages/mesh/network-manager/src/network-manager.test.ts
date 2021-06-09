@@ -424,5 +424,4 @@ describe('In-memory network manager', () => {
       }
     );
   }).timeout(30_000);
-
 });
