@@ -44,6 +44,7 @@ import { Party } from './party';
 import { PartyFactory } from './party-factory';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
+import { autoPartyOpener } from '../halo/party-opener';
 
 const log = debug('dxos:echo:parties:party-manager:test');
 
@@ -93,6 +94,12 @@ const setup = async (open = true, createIdentity = true) => {
   const haloFactory = new HaloFactory(partyFactory, identityManager, networkManager);
   const partyManager = new PartyManager(identityManager, feedStore, snapshotStore, partyFactory, haloFactory);
   afterTest(() => partyManager.close());
+
+  identityManager.ready.once(() => {
+    assert(identityManager.halo?.isOpen);
+    const unsub = autoPartyOpener(identityManager.halo!, partyManager);
+    afterTest(unsub)
+  })
 
   if (open) {
     await partyManager.open();
@@ -422,6 +429,7 @@ describe('Party manager', () => {
     // await partyManagerB.close();
   });
 
+  // TODO(marik-d): Move to ECHO tests.
   test('One user, two devices', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup(true, true);
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
@@ -517,6 +525,7 @@ describe('Party manager', () => {
     }
   }).timeout(10_000);
 
+  // TODO(marik-d): Move to ECHO tests.
   test('Two users, two devices each', async () => {
     const { partyManager: partyManagerA1, identityManager: identityManagerA1 } = await setup(true, true);
     const { partyManager: partyManagerA2, identityManager: identityManagerA2 } = await setup(true, false);
@@ -624,6 +633,7 @@ describe('Party manager', () => {
     }
   }).timeout(20_000);
 
+  // TODO(marik-d): Move to ECHO tests.
   test('Join new device to HALO by recovering from identity seed phrase', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);

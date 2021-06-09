@@ -24,6 +24,8 @@ import { OpenProgress, Party, PartyFactory, PartyFilter, PartyManager } from './
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { FeedStoreAdapter, createRamStorage } from './util';
+import { SubscriptionGroup } from '@dxos/util';
+import { autoPartyOpener } from './halo/party-opener';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
@@ -89,6 +91,7 @@ export class ECHO {
   private readonly _networkManager: NetworkManager;
   private readonly _snapshotStore: SnapshotStore;
   private readonly _partyManager: PartyManager;
+  private readonly _subs = new SubscriptionGroup();
 
   /**
    * Creates a new instance of ECHO.
@@ -146,6 +149,13 @@ export class ECHO {
       partyFactory,
       haloFactory
     );
+    
+    this._identityManager.ready.once(() => {
+      // It might be the case that halo gets closed before this has a chance to execute.
+      if(this._identityManager.halo?.isOpen) {
+        this._subs.push(autoPartyOpener(this._identityManager.halo!, this._partyManager));
+      }
+    })
   }
 
   toString () {
@@ -225,10 +235,14 @@ export class ECHO {
    * Closes the party and associated streams.
    */
   async close () {
-    if (this.isOpen) {
-      // TODO(marik-d): Close network manager.
-      await this._partyManager.close();
+    if (!this.isOpen) {
+      return;
     }
+
+    this._subs.unsubscribe();
+
+    // TODO(marik-d): Close network manager.
+    await this._partyManager.close();
   }
 
   /**

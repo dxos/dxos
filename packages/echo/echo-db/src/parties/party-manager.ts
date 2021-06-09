@@ -69,6 +69,7 @@ export class PartyManager {
     if (this._open) {
       return;
     }
+    this._open = true;
 
     // Open the HALO first (if present).
     const identityKey = this._identityManager.identityKey;
@@ -121,8 +122,6 @@ export class PartyManager {
         onProgressCallback?.({ haloOpened: true, totalParties: partyKeys.length, partiesOpened: i + 1 });
       }
     }
-
-    this._open = true;
   }
 
   @synchronized
@@ -132,6 +131,7 @@ export class PartyManager {
     if (!this._open) {
       return;
     }
+    this._open = false;
 
     // Clean-up.
     this._onCloseHandlers.forEach(callback => callback());
@@ -147,8 +147,6 @@ export class PartyManager {
     await this._identityManager.halo?.close();
     await this._feedStore.close();
     await this._parties.clear();
-
-    this._open = false;
   }
 
   //
@@ -381,35 +379,5 @@ export class PartyManager {
   // TODO(burdon): Should this be synchronized?
   private async _setHalo (halo: PartyInternal) {
     await this._identityManager.initialize(halo);
-
-    this._onCloseHandlers.push(this._identityManager.halo!.subscribeToJoinedPartyList(async values => {
-      if (!this._open) {
-        return;
-      }
-
-      for (const partyDesc of values) {
-        if (!this._parties.has(partyDesc.partyKey)) {
-          log(`Auto-opening new Party from HALO: ${partyDesc.partyKey.toHex()}`);
-          await this.addParty(partyDesc.partyKey, partyDesc.keyHints);
-        }
-      }
-    }));
-
-    this._onCloseHandlers.push(this._identityManager.halo!.preferences.subscribeToPreferences(async () => {
-      for (const party of this._parties.values()) {
-        const shouldBeOpen = this._identityManager.halo?.preferences.isPartyActive(party.key);
-        if (party.isOpen && !shouldBeOpen) {
-          log(`Auto-closing deactivated party: ${party.key.toHex()}`);
-
-          await party.close();
-          this.update.emit(party);
-        } else if (!party.isOpen && shouldBeOpen) {
-          log(`Auto-opening activated party: ${party.key.toHex()}`);
-
-          await party.open();
-          this.update.emit(party);
-        }
-      }
-    }));
   }
 }

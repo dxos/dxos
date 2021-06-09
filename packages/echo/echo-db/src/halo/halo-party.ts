@@ -44,6 +44,10 @@ export class HaloParty {
     this._preferences = new Preferences(this._party, deviceKey);
   }
 
+  get isOpen() {
+    return this._party.isOpen;
+  }
+
   get contacts () {
     return this._contactManager;
   }

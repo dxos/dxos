@@ -97,6 +97,7 @@ export class IdentityManager {
   async initialize (halo: PartyInternal) {
     assert(this._identityKey, 'No identity key.');
     assert(this._deviceKey, 'No device key.');
+    assert(halo.isOpen, 'Halo must be open.');
 
     this._halo = new HaloParty(halo, this._identityKey.publicKey, this._deviceKey.publicKey);
 
