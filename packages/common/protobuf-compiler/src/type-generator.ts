@@ -2,18 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import { writeFileSync, existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import protobufjs from 'protobufjs';
+import pb from 'protobufjs';
 import * as ts from 'typescript';
 
-import { createDeclarations, createTypeDictinary } from './declaration-generator';
+import { createDeclarations, createServicesDictionary, createTypeDictionary } from './generator/declaration-generator';
+import { createSerializerDefinition } from './generator/serializer-definition-generator';
 import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
 import { getSafeNamespaceIdentifier, parseFullyQualifiedName, splitSchemaIntoNamespaces } from './namespaces';
-import { registerResolver } from './resolver';
-import { createSerializerDefinition } from './serializer-definition-generator';
-import { parseSubstitutionsFile } from './substitutions-parser';
+import { registerResolver, parseSubstitutionsFile, SubstitutionsMap } from './parser';
 
 const f = ts.factory;
 
@@ -23,43 +22,17 @@ export async function compileSchema (substitutionsModule: ModuleSpecifier | unde
   const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
   logger.logParsedSubstitutions(substitutions);
 
-  const root = await protobufjs.load(protoFiles);
+  const root = await pb.load(protoFiles);
 
   const namespaces = splitSchemaIntoNamespaces(root);
 
+  const printer = ts.createPrinter();
+
   for (const [namespace, types] of namespaces) {
-    const declarations: ts.Statement[] = Array.from(createDeclarations(types, substitutions));
     const outFile = join(outDirPath, getFileNameForNamespace(namespace));
 
-    const substitutionsIdentifier = ts.factory.createIdentifier('substitutions');
-    const substitutionsImport = substitutionsModule && ts.factory.createImportDeclaration(
-      [],
-      [],
-      ts.factory.createImportClause(false, substitutionsIdentifier, undefined),
-      ts.factory.createStringLiteral(substitutionsModule.importSpecifier(dirname(outFile)))
-    );
+    const generatedSourceFile = createNamespaceSourceFile(types, substitutions, outDirPath, namespace, substitutionsModule, Array.from(namespaces.keys()));
 
-    const otherNamespaceImports = Array.from(namespaces.keys())
-      .filter(ns => ns !== namespace)
-      .sort((b, a) => b.localeCompare(a))
-      .map(ns => f.createImportDeclaration(
-        [],
-        [],
-        f.createImportClause(false, undefined, f.createNamespaceImport(f.createIdentifier(getSafeNamespaceIdentifier(parseFullyQualifiedName(ns))))),
-        f.createStringLiteral(ModuleSpecifier.resolveFromFilePath(getFileNameForNamespace(ns), outDirPath).importSpecifier(dirname(outFile)))
-      ));
-
-    const generatedSourceFile = ts.factory.createSourceFile(
-      [
-        ...(substitutionsImport ? [substitutionsImport] : []),
-        ...otherNamespaceImports,
-        ...declarations
-      ],
-      ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
-      ts.NodeFlags.None
-    );
-
-    const printer = ts.createPrinter();
     const source = printer.printFile(generatedSourceFile);
 
     if (!existsSync(dirname(outFile))) {
@@ -68,32 +41,80 @@ export async function compileSchema (substitutionsModule: ModuleSpecifier | unde
     writeFileSync(outFile, source);
   }
 
-  const { imports: schemaImports, exports: schemaExports } = createSerializerDefinition(substitutionsModule, root, outDirPath);
+  const generatedSourceFile = createIndexSourceFile(substitutionsModule, root, outDirPath, Array.from(namespaces.keys()));
 
-  const otherNamespaceImports = Array.from(namespaces.keys())
-    .sort((b, a) => b.localeCompare(a))
-    .map(ns => f.createImportDeclaration(
-      [],
-      [],
-      f.createImportClause(false, undefined, f.createNamespaceImport(f.createIdentifier(getSafeNamespaceIdentifier(parseFullyQualifiedName(ns))))),
-      f.createStringLiteral(ModuleSpecifier.resolveFromFilePath(getFileNameForNamespace(ns), outDirPath).importSpecifier(outDirPath))
-    ));
+  const source = printer.printFile(generatedSourceFile);
 
-  const generatedSourceFile = ts.factory.createSourceFile(
+  writeFileSync(join(outDirPath, 'index.ts'), source);
+}
+
+function createSubstitutionsImport (substitutionsModule: ModuleSpecifier, context: string) {
+  return substitutionsModule && ts.factory.createImportDeclaration(
+    [],
+    [],
+    ts.factory.createImportClause(false, ts.factory.createIdentifier('substitutions'), undefined),
+    ts.factory.createStringLiteral(substitutionsModule.importSpecifier(context))
+  );
+}
+
+function createNamespaceSourceFile (
+  types: pb.ReflectionObject[],
+  substitutions: SubstitutionsMap,
+  outDir: string,
+  namespace: string,
+  substitutionsModule: ModuleSpecifier | undefined,
+  otherNamespaces: string[]
+) {
+  const outFile = join(outDir, getFileNameForNamespace(namespace));
+  const declarations: ts.Statement[] = Array.from(createDeclarations(types, substitutions));
+
+  const substitutionsImport = substitutionsModule && createSubstitutionsImport(substitutionsModule, dirname(outFile));
+
+  const otherNamespaceImports = createNamespaceImports(otherNamespaces.filter(ns => ns !== namespace), outDir, dirname(outFile));
+
+  return ts.factory.createSourceFile(
+    [
+      ...(substitutionsImport ? [substitutionsImport] : []),
+      ...otherNamespaceImports,
+      ...declarations
+    ],
+    ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
+    ts.NodeFlags.None
+  );
+}
+
+function createIndexSourceFile (substitutionsModule: ModuleSpecifier | undefined, root: pb.Root, outDirPath: string, namespaces: string[]) {
+  const {
+    imports: schemaImports,
+    exports: schemaExports
+  } = createSerializerDefinition(substitutionsModule, root, outDirPath);
+
+  const substitutionsImport = substitutionsModule && createSubstitutionsImport(substitutionsModule, outDirPath);
+  const otherNamespaceImports = createNamespaceImports(namespaces, outDirPath, outDirPath);
+
+  return ts.factory.createSourceFile(
     [
       ...schemaImports,
       ...otherNamespaceImports,
-      createTypeDictinary(root),
+      ...(substitutionsImport ? [substitutionsImport] : []),
+      createTypeDictionary(root),
+      createServicesDictionary(root),
       ...schemaExports
     ],
     ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
     ts.NodeFlags.None
   );
+}
 
-  const printer = ts.createPrinter();
-  const source = printer.printFile(generatedSourceFile);
-
-  writeFileSync(join(outDirPath, 'index.ts'), source);
+function createNamespaceImports (namespaces: string[], outDirPath: string, context: string) {
+  return namespaces
+    .sort((b, a) => b.localeCompare(a))
+    .map(ns => f.createImportDeclaration(
+      [],
+      [],
+      f.createImportClause(false, undefined, f.createNamespaceImport(f.createIdentifier(getSafeNamespaceIdentifier(parseFullyQualifiedName(ns))))),
+      f.createStringLiteral(ModuleSpecifier.resolveFromFilePath(getFileNameForNamespace(ns), outDirPath).importSpecifier(context))
+    ));
 }
 
 function getFileNameForNamespace (namespace: string) {
