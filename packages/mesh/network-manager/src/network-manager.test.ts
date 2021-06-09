@@ -278,7 +278,7 @@ describe('In-memory network manager', () => {
         r.peers.forEach(peer => {
           if (peer.presence) {
             const actualPeers = peer.presence!.peers.map(x => x.toString('hex')).sort();
-  
+
             expect(actualPeers).toEqual(peersExpected);
           }
         });
@@ -410,40 +410,40 @@ describe('In-memory network manager', () => {
             peers: new ComplexMap(x => x.toHex())
           }
 
-      });
-      await fc.asyncModelRun(s, cmds);
-    }),
-    {
-      examples: [
-        [[
-          new CreatePeerCommand(peerIds[0]),
-          new CreatePeerCommand(peerIds[1]),
-          new JoinTopicCommand(peerIds[0]),
-          new JoinTopicCommand(peerIds[1]),
-          new LeaveTopicCommand(peerIds[0]),
-          new LeaveTopicCommand(peerIds[1]),
-          new RemovePeerCommand(peerIds[0]),
-          new RemovePeerCommand(peerIds[1])
-        ]],
-        [[
-          new CreatePeerCommand(peerIds[0]),
-          new JoinTopicCommand(peerIds[0]),
-          new CreatePeerCommand(peerIds[1]),
-          new RemovePeerCommand(peerIds[0]),
-          new JoinTopicCommand(peerIds[1]),
-          new RemovePeerCommand(peerIds[1])
-        ]],
-        [[
-          new CreatePeerCommand(peerIds[0]),
-          new JoinTopicCommand(peerIds[0]),
-          new RemovePeerCommand(peerIds[0]),
-          new CreatePeerCommand(peerIds[1]),
-          new JoinTopicCommand(peerIds[1]),
-          new CreatePeerCommand(peerIds[2]),
-          new JoinTopicCommand(peerIds[2])
-        ]]
-      ]
-    }
-  );
-}).timeout(30_000);
+        });
+        await fc.asyncModelRun(s, cmds);
+      }),
+      {
+        examples: [
+          [[
+            new CreatePeerCommand(peerIds[0]),
+            new CreatePeerCommand(peerIds[1]),
+            new JoinTopicCommand(peerIds[0]),
+            new JoinTopicCommand(peerIds[1]),
+            new LeaveTopicCommand(peerIds[0]),
+            new LeaveTopicCommand(peerIds[1]),
+            new RemovePeerCommand(peerIds[0]),
+            new RemovePeerCommand(peerIds[1])
+          ]],
+          [[
+            new CreatePeerCommand(peerIds[0]),
+            new JoinTopicCommand(peerIds[0]),
+            new CreatePeerCommand(peerIds[1]),
+            new RemovePeerCommand(peerIds[0]),
+            new JoinTopicCommand(peerIds[1]),
+            new RemovePeerCommand(peerIds[1])
+          ]],
+          [[
+            new CreatePeerCommand(peerIds[0]),
+            new JoinTopicCommand(peerIds[0]),
+            new RemovePeerCommand(peerIds[0]),
+            new CreatePeerCommand(peerIds[1]),
+            new JoinTopicCommand(peerIds[1]),
+            new CreatePeerCommand(peerIds[2]),
+            new JoinTopicCommand(peerIds[2])
+          ]]
+        ]
+      }
+    );
+  }).timeout(30_000);
 });
