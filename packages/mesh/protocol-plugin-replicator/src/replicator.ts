@@ -3,14 +3,13 @@
 //
 
 import assert from 'assert';
-import bufferJson from 'buffer-json-encoding';
 import { EventEmitter } from 'events';
 
+import { PublicKeyLike } from '@dxos/crypto';
 import { Extension, Protocol } from '@dxos/protocol';
 
 import { Peer } from './peer';
 import { schemaJson } from './proto/gen';
-import { PublicKeyLike } from '@dxos/crypto';
 import { Feed } from './proto/gen/dxos/protocol/replicator';
 
 // const log = debug('dxos.replicator');
@@ -36,7 +35,6 @@ export class Replicator extends EventEmitter {
     assert(middleware.load);
 
     const { load, subscribe = defaultSubscribe, replicate = defaultReplicate } = middleware;
-
 
     this._load = async (...args) => load(...args);
     this._subscribe = (...args) => subscribe(...args);
@@ -72,7 +70,7 @@ export class Replicator extends EventEmitter {
 
   async _initHandler (protocol: Protocol) {
     const extension = protocol.getExtension(Replicator.extension);
-    assert(extension, `Missing '${Replicator.extension}' extension in protocol.`)
+    assert(extension, `Missing '${Replicator.extension}' extension in protocol.`);
 
     const peer = new Peer(protocol, extension);
 
@@ -151,4 +149,3 @@ export class Replicator extends EventEmitter {
     this._peers.delete(protocol);
   }
 }
-

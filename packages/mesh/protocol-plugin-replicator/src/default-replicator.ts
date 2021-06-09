@@ -2,8 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import bufferJson from 'buffer-json-encoding';
+
+import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
+
 import { Feed } from './proto/gen/dxos/protocol/replicator';
 import { Replicator } from './replicator';
 
@@ -61,7 +63,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
             key: Buffer.from(key),
             metadata,
             secretKey: null as any,
-            valueEncoding: null as any,
+            valueEncoding: null as any
           });
         }
 

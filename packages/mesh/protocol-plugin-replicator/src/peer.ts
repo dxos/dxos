@@ -2,9 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Extension, Protocol } from '@dxos/protocol';
 import debug from 'debug';
 import { EventEmitter } from 'events';
+
+import { Extension, Protocol } from '@dxos/protocol';
+
 import { Feed } from './proto/gen/dxos/protocol/replicator';
 
 const log = debug('dxos.replicator.peer');
