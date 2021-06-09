@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 
 import { ModuleSpecifier } from './module-specifier';
-import { SubstitutionsMap } from './substitutions-parser';
+import { SubstitutionsMap } from './parser';
 
 export class Logger {
   logCompilationOptions (substitutionsModule: ModuleSpecifier | undefined, protoFilePaths: string[], outDirPath: string) {

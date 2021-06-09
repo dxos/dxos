@@ -18,8 +18,8 @@ export function getFullNestedTypeName (type: pb.ReflectionObject): DeclarationFu
   }
 }
 
-function isType (obj: pb.ReflectionObject): obj is (pb.Type | pb.Enum) {
-  return obj instanceof pb.Type || obj instanceof pb.Enum;
+function isType (obj: pb.ReflectionObject): obj is (pb.Type | pb.Enum | pb.Service) {
+  return obj instanceof pb.Type || obj instanceof pb.Enum || obj instanceof pb.Service;
 }
 
 export function getNamespaceName (type: pb.ReflectionObject): DeclarationFullName {
@@ -84,7 +84,7 @@ export function splitSchemaIntoNamespaces (root: pb.Namespace): Map<string, pb.R
   const namespace = normalizeFullyQualifiedName(root.fullName);
 
   for (const obj of root.nestedArray) {
-    if (obj instanceof pb.Enum || obj instanceof pb.Type) {
+    if (isType(obj)) {
       if (!res.has(namespace)) {
         res.set(namespace, []);
       }

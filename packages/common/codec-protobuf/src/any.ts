@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Schema } from './codec';
+import type { Schema } from './schema';
 
 export const anySubstitutions = {
   'google.protobuf.Any': {

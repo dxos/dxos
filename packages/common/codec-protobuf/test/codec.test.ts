@@ -6,7 +6,7 @@ import { join } from 'path';
 import * as pb from 'protobufjs';
 
 import { anySubstitutions } from '../src';
-import { Schema } from '../src/codec';
+import { Schema } from '../src/schema';
 
 describe('extending protobuf', () => {
   it('extends proto with another file', async () => {
