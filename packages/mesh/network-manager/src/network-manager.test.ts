@@ -424,4 +424,4 @@ test('property-based test', async () => {
       ]
     }
   );
-}).timeout(2_000_000_000);
+}).timeout(30_000);
