@@ -24,12 +24,11 @@ import { keyToString, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { IdentityManager } from '../halo';
+import { Identity } from '../halo/identity';
 import { SecretProvider } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
-import { Identity } from '../halo/identity';
 
 const log = debug('dxos:echo:invitations:greeting-initiator');
 

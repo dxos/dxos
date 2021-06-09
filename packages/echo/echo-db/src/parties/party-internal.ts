@@ -12,14 +12,14 @@ import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { ActivationOptions, IdentityManager, PartyActivator } from '../halo';
+import { ActivationOptions, PartyActivator } from '../halo';
+import { Identity } from '../halo/identity';
 import { InvitationManager } from '../invitations';
 import { Database } from '../items';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
 import { PartyCore, PartyOptions } from './party-core';
 import { PartyProtocol } from './party-protocol';
-import { Identity } from '../halo/identity';
 
 export const PARTY_ITEM_TYPE = 'dxn://dxos/item/party';
 export const PARTY_TITLE_PROPERTY = 'title';

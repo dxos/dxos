@@ -20,10 +20,10 @@ import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
 import { IdentityManager } from '../halo';
+import { Identity } from '../halo/identity';
 import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
 import { FeedStoreAdapter } from '../util';
 import { PartyInternal } from './party-internal';
-import { Identity } from '../halo/identity';
 
 const log = debug('dxos:echo:replication-adapter');
 

@@ -17,11 +17,10 @@ import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { IdentityManager } from '../halo';
+import { Identity } from '../halo/identity';
 import { PartyProcessor } from '../parties';
 import { InvitationOptions, SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
-import { Identity } from '../halo/identity';
 
 const log = debug('dxos:echo:invitations:greeting-responder');
 
