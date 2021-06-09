@@ -20,7 +20,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
-import { IdentityProvider } from '../halo/identity';
+import { IdentityProvider } from '../halo';
 import {
   GreetingInitiator,
   InvitationDescriptor,

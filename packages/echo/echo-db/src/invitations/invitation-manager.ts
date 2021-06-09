@@ -8,7 +8,7 @@ import { createPartyInvitationMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { Identity } from '../halo/identity';
+import { Identity } from '../halo';
 import { PartyProcessor } from '../parties';
 import { InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';

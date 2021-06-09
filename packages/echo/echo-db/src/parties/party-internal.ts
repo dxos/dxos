@@ -12,8 +12,7 @@ import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { ActivationOptions, PartyActivator } from '../halo';
-import { Identity } from '../halo/identity';
+import { ActivationOptions, PartyActivator, Identity } from '../halo';
 import { InvitationManager } from '../invitations';
 import { Database } from '../items';
 import { SnapshotStore } from '../snapshots';
