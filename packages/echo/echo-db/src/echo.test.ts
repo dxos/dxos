@@ -14,6 +14,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { ECHO } from './echo';
 import { createTestInstance, inviteTestPeer } from './util';
+import { arraysEqual } from '@dxos/util';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 
@@ -203,7 +204,7 @@ describe('api tests', () => {
     const PIN = Buffer.from('0000');
 
     // Create a validation function which tests the signature of a specific KeyPair.
-    const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
+    const secretValidator: SecretValidator = async (invitation, secret) => arraysEqual(secret, PIN);
 
     // And a provider for the secret.
     // (We reuse the function here, but normally both the Inviter and Invitee would have their own SecretProvider.)
