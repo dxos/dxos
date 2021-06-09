@@ -26,7 +26,8 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protocol": "workspace:*",
     "buffer-json-encoding": "^1.0.2",
-    "debug": "^4.1.1"
+    "debug": "^4.1.1",
+    "@dxos/async": "workspace:*"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*",

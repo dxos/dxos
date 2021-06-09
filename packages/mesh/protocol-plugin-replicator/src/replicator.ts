@@ -93,7 +93,7 @@ export class Replicator extends EventEmitter {
     try {
       const share = (feeds: Feed[]) => peer?.share(feeds);
       const unsubscribe = this._subscribe(share, info);
-      peer?.on('close', unsubscribe);
+      peer?.closed.on(unsubscribe);
 
       const feeds = await this._load(info) || [];
       await share(feeds);

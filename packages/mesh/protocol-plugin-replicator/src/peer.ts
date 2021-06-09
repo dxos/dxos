@@ -3,19 +3,18 @@
 //
 
 import debug from 'debug';
-import { EventEmitter } from 'events';
 
+import { Event } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
 
 import { Feed } from './proto/gen/dxos/protocol/replicator';
 
 const log = debug('dxos.replicator.peer');
 
-export class Peer extends EventEmitter {
+export class Peer {
   private readonly _feeds = new Map();
-  constructor (private _protocol: Protocol, private _extension: Extension) {
-    super();
-  }
+  readonly closed = new Event();
+  constructor (private _protocol: Protocol, private _extension: Extension) {}
 
   get feeds () {
     return this._feeds;
@@ -61,7 +60,7 @@ export class Peer extends EventEmitter {
       stream.destroy();
     }
 
-    this.emit('close');
+    this.closed.emit();
   }
 
   /**
