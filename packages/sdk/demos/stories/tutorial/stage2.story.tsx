@@ -11,6 +11,8 @@ import { createKeyPair } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
 
+faker.seed(0);
+
 /**
  * Create the user's HALO profile, then create parties.
  */

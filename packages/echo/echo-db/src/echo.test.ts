@@ -11,6 +11,7 @@ import { latch, sleep, waitForCondition } from '@dxos/async';
 import { SecretValidator, SecretProvider } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
+import { arraysEqual } from '@dxos/util';
 
 import { ECHO } from './echo';
 import { createTestInstance, inviteTestPeer } from './util';
@@ -203,7 +204,7 @@ describe('api tests', () => {
     const PIN = Buffer.from('0000');
 
     // Create a validation function which tests the signature of a specific KeyPair.
-    const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
+    const secretValidator: SecretValidator = async (invitation, secret) => arraysEqual(secret, PIN);
 
     // And a provider for the secret.
     // (We reuse the function here, but normally both the Inviter and Invitee would have their own SecretProvider.)

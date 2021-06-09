@@ -8,7 +8,8 @@
       "ESNext"
     ],
     "types": [
-      "node"
+      "node",
+      "jest"
     ],
     "module": "commonjs",
     "moduleResolution": "node",
@@ -21,7 +22,8 @@
   },
   "include": [
     "src",
-    "stories"
+    "stories",
+    "playwright"
   ],
   "references": [
     {
