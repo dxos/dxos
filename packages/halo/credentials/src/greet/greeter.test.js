@@ -6,6 +6,7 @@
 
 import { randomBytes } from '@dxos/crypto';
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
+import { arraysEqual } from '@dxos/util';
 
 import { createKeyRecord, stripSecrets, Filter, Keyring } from '../keys';
 import { createKeyAdmitMessage, createPartyInvitationMessage } from '../party';
@@ -41,7 +42,7 @@ test('Good invitation', async () => {
   const greeter = createGreeter(keyring, hints);
 
   const secretProvider = async () => Buffer.from(secret);
-  const secretValidator = async (invitation, secret) => secret && secret.equals(invitation.secret);
+  const secretValidator = async (invitation, secret) => secret && arraysEqual(secret, invitation.secret);
   const invitation = await greeter.createInvitation(
     keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey, secretValidator, secretProvider
   );
@@ -125,7 +126,7 @@ test('Bad invitation secret', async (done) => {
   const greeter = createGreeter(keyring);
 
   const secretProvider = async () => Buffer.from('0000');
-  const secretValidator = async (invitation, secret) => secret && secret.equals(invitation.secret);
+  const secretValidator = async (invitation, secret) => secret && arraysEqual(secret, invitation.secret);
   const invitation = await greeter.createInvitation(
     keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey, secretValidator, secretProvider
   );
@@ -164,7 +165,7 @@ test('Attempt to re-use invitation', async (done) => {
   const greeter = createGreeter(keyring);
 
   const secretProvider = async () => Buffer.from('0000');
-  const secretValidator = async (invitation, secret) => secret && secret.equals(invitation.secret);
+  const secretValidator = async (invitation, secret) => secret && arraysEqual(secret, invitation.secret);
   const invitation = await greeter.createInvitation(
     keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey, secretValidator, secretProvider
   );

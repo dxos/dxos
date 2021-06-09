@@ -88,5 +88,5 @@ describe('WebrtcConnection', () => {
     await waitForExpect(() => {
       expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
     });
-  }).timeout(1_000);
+  }).timeout(2_000);
 });
