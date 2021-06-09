@@ -11,17 +11,32 @@ import { latch, sleep, waitForCondition } from '@dxos/async';
 import { SecretValidator, SecretProvider, testSecretProvider, testSecretValidator } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
+import { afterTest } from '@dxos/testutils';
 import { arraysEqual } from '@dxos/util';
 
 import { ECHO } from './echo';
-import { createTestInstance, inviteTestPeer } from './util';
 import { Item } from './items';
+import { inviteTestPeer } from './util';
 
 const log = debug('dxos:echo:test');
 
+const setup = async (createProfile: boolean) => {
+  const echo = new ECHO();
+
+  await echo.open();
+  afterTest(() => echo.close());
+
+  if (createProfile) {
+    await echo.createIdentity(createKeyPair());
+    await echo.createHalo();
+  }
+
+  return echo;
+};
+
 describe('ECHO', () => {
   test('create party and update properties.', async () => {
-    const echo = await createTestInstance({ initialize: true });
+    const echo = await setup(true);
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
@@ -33,7 +48,7 @@ describe('ECHO', () => {
   });
 
   test('create party and items.', async () => {
-    const echo = await createTestInstance({ initialize: true });
+    const echo = await setup(true);
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
@@ -75,7 +90,7 @@ describe('ECHO', () => {
   });
 
   test('create party and item with child item.', async () => {
-    const echo = await createTestInstance({ initialize: true });
+    const echo = await setup(true);
 
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
@@ -116,7 +131,7 @@ describe('ECHO', () => {
   });
 
   test('create party, two items with child items, and then move child.', async () => {
-    const echo = await createTestInstance({ initialize: true });
+    const echo = await setup(true);
 
     const parties = await echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
@@ -148,7 +163,7 @@ describe('ECHO', () => {
   });
 
   test('cold start with party', async () => {
-    const echo = await createTestInstance({ initialize: true });
+    const echo = await setup(true);
     const party = await echo.createParty();
 
     await echo.close();
@@ -162,8 +177,8 @@ describe('ECHO', () => {
   }).timeout(10_000);
 
   test('cold start from replicated party', async () => {
-    const echo1 = await createTestInstance({ initialize: true });
-    const echo2 = await createTestInstance({ initialize: true });
+    const echo1 = await setup(true);
+    const echo2 = await setup(true);
 
     const party1 = await echo1.createParty();
     await inviteTestPeer(party1, echo2);
@@ -186,7 +201,7 @@ describe('ECHO', () => {
   });
 
   test('create party and items with props', async () => {
-    const echo = await createTestInstance({ initialize: true });
+    const echo = await setup(true);
 
     const party = await echo.createParty();
 
@@ -197,8 +212,8 @@ describe('ECHO', () => {
   });
 
   test('Contacts', async () => {
-    const echoA = await createTestInstance({ initialize: true });
-    const echoB = await createTestInstance({ initialize: true });
+    const echoA = await setup(true);
+    const echoB = await setup(true);
 
     const partyA = await echoA.createParty();
 
@@ -286,9 +301,8 @@ describe('ECHO', () => {
   });
 
   test('One user, two devices', async () => {
-    const a = await createTestInstance({ initialize: true });
-    const b = await createTestInstance({ initialize: false });
-    await b.open();
+    const a = await setup(true);
+    const b = await setup(false);
 
     expect(a.isHaloInitialized).toEqual(true);
     expect(b.isHaloInitialized).toEqual(false);
@@ -312,16 +326,16 @@ describe('ECHO', () => {
     await waitForCondition(() => b.queryParties().value.length === 1, 1000);
 
     const partyA = a.queryParties().value[0];
-    await partyA.open()
+    await partyA.open();
     const partyB = b.queryParties().value[0];
-    await partyB.open()
+    await partyB.open();
 
     {
       let itemA: Item<any> | null = null;
 
       // Subscribe to Item updates on B.
       const updated = partyB.database.queryItems({ type: 'dxn://example/item/test' })
-        .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id))
+        .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id));
 
       // Create a new Item on A.
       itemA = await partyA.database
@@ -337,12 +351,12 @@ describe('ECHO', () => {
 
     // Now create a Party on A and make sure it gets opened on both A and B.
     const partyA2 = await a.createParty();
-    log('A a created second party')
+    log('A a created second party');
     await partyA2.open();
     expect(a.queryParties().value.length).toBe(2);
 
     await partyUpdated;
-    log('B has second party')
+    log('B has second party');
     expect(b.queryParties().value.length).toBe(2);
     expect(a.queryParties().value[0].key).toEqual(b.queryParties().value[0].key);
     expect(a.queryParties().value[1].key).toEqual(b.queryParties().value[1].key);
