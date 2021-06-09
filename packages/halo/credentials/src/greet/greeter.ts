@@ -23,6 +23,7 @@ import {
 } from './error-codes';
 import { GreetingCommandPlugin } from './greeting-command-plugin';
 import { Invitation, InvitationOnFinish, SecretProvider, SecretValidator } from './invitation';
+import { arraysEqual } from '@dxos/util';
 
 const log = debug('dxos:creds:greet');
 
@@ -225,7 +226,7 @@ export class Greeter {
 
     for await (const message of params) {
       // Every message needs to have our nonce inside it.
-      if (!message.payload.signed.nonce.equals(invitation.nonce)) {
+      if (!arraysEqual(message.payload.signed.nonce, invitation.nonce)) {
         throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_NONCE, `Invalid nonce: ${message.payload.signed.nonce.toString('hex')}`);
       }
 

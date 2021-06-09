@@ -15,6 +15,7 @@ import { Command, KeyType, Message } from '../proto';
 import { Greeter } from './greeter';
 import { GreetingCommandPlugin } from './greeting-command-plugin';
 import { SecretProvider, SecretValidator } from './invitation';
+import { arraysEqual } from '@dxos/util';
 
 const log = debug('dxos:creds:greet');
 
@@ -98,7 +99,7 @@ test('Greeting Flow using GreetingCommandPlugin', async () => {
   const secret = '0000';
 
   const secretProvider: SecretProvider = async () => Buffer.from(secret);
-  const secretValidator: SecretValidator = async (invitation, secret) => !!secret && !!invitation.secret && secret.equals(invitation.secret);
+  const secretValidator: SecretValidator = async (invitation, secret) => !!secret && !!invitation.secret && arraysEqual(secret, invitation.secret);
 
   const {
     protocol: greeterProtocol, greeter, rendezvousKey, hints, writePromise

@@ -10,6 +10,7 @@ import {
   PublicKey, PublicKeyLike, KeyPair, keyToBuffer, randomBytes,
   sign as cryptoSign, verify as cryptoVerify
 } from '@dxos/crypto';
+import { arraysEqual } from '@dxos/util'
 
 import { isSignedMessage, unwrapMessage } from '../party';
 import {
@@ -61,7 +62,7 @@ class SignatureValidationCache {
     if (sigResults.length) {
       const stringy = canonicalStringify(obj);
       for (const result of sigResults) {
-        if (result.sig.equals(sig) && result.key.equals(key) && result.stringy === stringy) {
+        if (arraysEqual(result.sig, sig) && result.key.equals(key) && result.stringy === stringy) {
           cacheMetrics.inc('HIT');
           return result.valid;
         }
