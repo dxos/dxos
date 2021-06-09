@@ -70,11 +70,6 @@ export class PartyManager {
     }
     this._open = true;
 
-    // Open the HALO first (if present).
-    this._identityManager.loadFromStorage();
-
-    onProgressCallback?.({ haloOpened: true });
-
     let partyKeys = this._feedStore.getPartyKeys();
 
     // TODO(telackey): Does it make any sense to load other parties if we don't have an HALO?

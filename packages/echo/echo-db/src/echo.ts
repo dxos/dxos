@@ -227,6 +227,11 @@ export class ECHO {
     // TODO(burdon): Replace with events.
     onProgressCallback?.({ haloOpened: false });
 
+    // Open the HALO first (if present).
+    await this._identityManager.loadFromStorage();
+
+    onProgressCallback?.({ haloOpened: true });
+
     await this._partyManager.open(onProgressCallback);
   }
 
