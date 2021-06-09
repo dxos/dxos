@@ -50,12 +50,15 @@ jobs:
           npm install -g @microsoft/rush pnpm
           
           # Install dependencies
+          echo "::group::Install"
           node common/scripts/install-run-rush.js install
+          echo "::endgroup::"
           
           # Build
-          node common/scripts/install-run-rush.js rebuild --verbose
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js rebuild --verbose
 
           # Build storybooks
+          echo "::group::Storybooks"
           cd packages/sdk/demos && pnpm build-storybook --quiet && cd -
           cd packages/sdk/react-ux && pnpm build-storybook --quiet && cd -
           cd packages/sdk/react-client && pnpm build-storybook --quiet && cd -
@@ -64,6 +67,7 @@ jobs:
           cd packages/sdk/demos
           ./scripts/start-and-wait.sh
           pnpm test:playwright
+          echo "::endgroup::"
       - name: Cleanup
         run: pkill -f "storybook"
         if: always()
