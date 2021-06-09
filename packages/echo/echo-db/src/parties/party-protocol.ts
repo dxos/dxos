@@ -19,7 +19,7 @@ import { Protocol } from '@dxos/protocol';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
-import { IdentityManager } from '../halo';
+import { Identity } from '../halo';
 import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
 import { FeedStoreAdapter } from '../util';
 import { PartyInternal } from './party-internal';
@@ -59,14 +59,14 @@ export class PartyProtocol {
     feedStore: FeedStoreAdapter,
     activeFeeds: FeedSetProvider,
     invitationManager: InvitationManager,
-    private readonly _identityManager: IdentityManager,
+    private readonly _identity: Identity,
     private readonly _credentials: CredentialsProvider,
     authenticator: Authenticator
   ) {
     // TODO(burdon): Does it make sense to pass in factories rather than creating them here?
     //   ONLY if the system can function without one of them!
     this._haloProtocolPluginFactory =
-      new HaloProtocolPluginFactory(this._partyKey, this._identityManager, invitationManager, authenticator);
+      new HaloProtocolPluginFactory(this._partyKey, this._identity, invitationManager, authenticator);
     this._replicatorProtocolPluginFactory =
       new ReplicatorProtocolPluginFactory(this._partyKey, feedStore, activeFeeds);
   }
@@ -106,7 +106,7 @@ export class PartyProtocol {
   }
 
   private _createProtocol (channel: any) {
-    assert(this._identityManager.deviceKey);
+    assert(this._identity.deviceKey);
 
     const plugins = [
       ...this._haloProtocolPluginFactory.createPlugins(),
@@ -137,7 +137,7 @@ export class PartyProtocol {
     protocol
       .setSession({
         // TODO(burdon): See deprecated `protocolFactory` in HALO.
-        peerId: this._identityManager.deviceKey.publicKey.asBuffer(),
+        peerId: this._identity.deviceKey.publicKey.asBuffer(),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
         credentials: this._credentials.get().toString('base64')
       })
@@ -198,38 +198,38 @@ class ReplicatorProtocolPluginFactory {
 class HaloProtocolPluginFactory {
   constructor (
     private readonly _partyKey: PartyKey,
-    private readonly _identityManager: IdentityManager,
+    private readonly _identity: Identity,
     private readonly _invitationManager: InvitationManager,
     private readonly _authenticator: Authenticator
   ) {}
 
   createPlugins () {
-    assert(this._identityManager.identityKey);
-    assert(this._identityManager.deviceKey);
+    assert(this._identity.identityKey);
+    assert(this._identity.deviceKey);
 
     const plugins: any[] = [
       new AuthPlugin(
-        this._identityManager.deviceKey.publicKey.asBuffer(),
+        this._identity.deviceKey.publicKey.asBuffer(),
         this._authenticator,
         [Replicator.extension]
       )
     ];
 
     // Determine if this party is the main HALO.
-    const isHalo = this._identityManager.identityKey.publicKey.equals(this._partyKey);
+    const isHalo = this._identity.identityKey.publicKey.equals(this._partyKey);
     if (isHalo) {
       // Enables devices to re-join the HALO using a recovery seed phrase.
       plugins.push(
         new GreetingCommandPlugin(
-          this._identityManager.deviceKey.publicKey.asBuffer(),
-          HaloRecoveryInitiator.createHaloInvitationClaimHandler(this._identityManager)
+          this._identity.deviceKey.publicKey.asBuffer(),
+          HaloRecoveryInitiator.createHaloInvitationClaimHandler(this._identity)
         )
       );
     } else {
       // Enables peers to join the party.
       plugins.push(
         new GreetingCommandPlugin(
-          this._identityManager.deviceKey.publicKey.asBuffer(),
+          this._identity.deviceKey.publicKey.asBuffer(),
           OfflineInvitationClaimer.createOfflineInvitationClaimHandler(this._invitationManager)
         )
       );

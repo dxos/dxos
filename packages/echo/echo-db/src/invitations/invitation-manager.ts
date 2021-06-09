@@ -8,7 +8,7 @@ import { createPartyInvitationMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { IdentityManager } from '../halo';
+import { Identity } from '../halo';
 import { PartyProcessor } from '../parties';
 import { InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
@@ -20,27 +20,27 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
 export class InvitationManager {
   constructor (
     private readonly _partyProcessor: PartyProcessor,
-    private readonly _identityManager: IdentityManager,
+    private readonly _identity: Identity,
     private readonly _networkManager: NetworkManager
   ) {}
 
   get isHalo () {
     // The PartyKey of the HALO is the Identity key.
-    assert(this._identityManager.identityKey, 'No identity key');
-    return this._identityManager.identityKey.publicKey.equals(this._partyProcessor.partyKey);
+    assert(this._identity.identityKey, 'No identity key');
+    return this._identity.identityKey.publicKey.equals(this._partyProcessor.partyKey);
   }
 
   async createOfflineInvitation (publicKey: PublicKey) {
     assert(!this.isHalo, 'Offline invitations to HALO are not allowed.');
-    assert(this._identityManager.identityKey, 'Identity key is required.');
-    assert(this._identityManager.deviceKeyChain, 'Device keychain is required.');
+    assert(this._identity.identityKey, 'Identity key is required.');
+    assert(this._identity.deviceKeyChain, 'Device keychain is required.');
 
     const invitationMessage = createPartyInvitationMessage(
-      this._identityManager.keyring,
+      this._identity.keyring,
       this._partyProcessor.partyKey,
       publicKey,
-      this._identityManager.identityKey,
-      this._identityManager.deviceKeyChain
+      this._identity.identityKey,
+      this._identity.deviceKeyChain
     );
     await this._partyProcessor.writeHaloMessage(invitationMessage);
 
@@ -58,8 +58,8 @@ export class InvitationManager {
     assert(this._networkManager);
 
     const responder = new GreetingResponder(
-      this._identityManager,
       this._networkManager,
+      this._identity,
       this._partyProcessor
     );
 

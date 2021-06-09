@@ -92,7 +92,7 @@ const setup = async (open = true, createIdentity = true) => {
 
   const haloFactory: HaloFactory = new HaloFactory(partyFactory, networkManager, keyring);
   const identityManager = new IdentityManager(keyring, haloFactory);
-  const partyManager = new PartyManager(identityManager, feedStore, snapshotStore, partyFactory, haloFactory);
+  const partyManager = new PartyManager(feedStore, snapshotStore, () => identityManager.identity, partyFactory);
   afterTest(() => partyManager.close());
 
   identityManager.ready.once(() => {
@@ -190,7 +190,7 @@ describe('Party manager', () => {
     const haloFactory = new HaloFactory(partyFactory, networkManager, keyring);
     const identityManager = new IdentityManager(keyring, haloFactory);
     const partyManager =
-      new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory, haloFactory);
+      new PartyManager(feedStoreAdapter, snapshotStore, () => identityManager.identity, partyFactory);
 
     await feedStore.open();
 

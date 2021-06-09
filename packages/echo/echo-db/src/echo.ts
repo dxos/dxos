@@ -143,11 +143,10 @@ export class ECHO {
     this._identityManager = new IdentityManager(this._keyring, haloFactory);
 
     this._partyManager = new PartyManager(
-      this._identityManager,
       this._feedStore,
       this._snapshotStore,
-      partyFactory,
-      haloFactory
+      () => this._identityManager.identity,
+      partyFactory
     );
 
     this._identityManager.ready.once(() => {
@@ -228,6 +227,11 @@ export class ECHO {
     // TODO(burdon): Replace with events.
     onProgressCallback?.({ haloOpened: false });
 
+    // Open the HALO first (if present).
+    await this._identityManager.loadFromStorage();
+
+    onProgressCallback?.({ haloOpened: true });
+
     await this._partyManager.open(onProgressCallback);
   }
 
@@ -241,8 +245,12 @@ export class ECHO {
 
     this._subs.unsubscribe();
 
+    await this._identityManager.halo?.close();
+
     // TODO(marik-d): Close network manager.
     await this._partyManager.close();
+
+    await this._feedStore.close();
   }
 
   /**

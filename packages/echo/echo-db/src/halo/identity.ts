@@ -49,11 +49,6 @@ export class Identity {
   get halo (): HaloParty | undefined {
     return this._identityManager.halo;
   }
-
-  // TODO(marik-d): Remove.
-  get identityManager (): IdentityManager {
-    return this._identityManager;
-  }
 }
 
 export type IdentityProvider = () => Identity;

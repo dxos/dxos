@@ -158,7 +158,7 @@ export class IdentityManager {
      assert(!this._halo, 'HALO already exists.');
      assert(!this.identityKey, 'Identity key already exists.');
 
-     const halo = await this._haloFactory.recoverHalo(this, seedPhrase);
+     const halo = await this._haloFactory.recoverHalo(this.identity, seedPhrase);
      await this._initialize(halo);
      return halo;
    }
