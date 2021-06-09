@@ -208,10 +208,17 @@ export class ECHO {
    * Opens the party and constructs the inbound/outbound mutation streams.
    */
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
-    if (!this.isOpen) {
-      await this._keyring.load();
-      await this._partyManager.open(onProgressCallback);
+    if (this.isOpen) {
+      return;
     }
+
+    await this._keyring.load();
+    await this._feedStore.open();
+
+    // TODO(burdon): Replace with events.
+    onProgressCallback?.({ haloOpened: false });
+
+    await this._partyManager.open(onProgressCallback);
   }
 
   /**

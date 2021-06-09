@@ -57,8 +57,8 @@ const log = debug('dxos:echo:parties:party-manager:test');
  * @param createIdentity - Create the identity key record.
  */
 const setup = async (open = true, createIdentity = true) => {
-  const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore);
+  const feedStore = FeedStoreAdapter.create(ram);
+  await feedStore.open();
   const keyring = new Keyring();
 
   let seedPhrase;
@@ -81,7 +81,7 @@ const setup = async (open = true, createIdentity = true) => {
   const partyFactory = new PartyFactory(
     identityManager,
     networkManager,
-    feedStoreAdapter,
+    feedStore,
     modelFactory,
     snapshotStore,
     {
@@ -91,10 +91,8 @@ const setup = async (open = true, createIdentity = true) => {
   );
 
   const haloFactory = new HaloFactory(partyFactory, identityManager, networkManager);
-  const partyManager = new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory, haloFactory);
-  afterTest(async () => {
-    await partyManager.close();
-  });
+  const partyManager = new PartyManager(identityManager, feedStore, snapshotStore, partyFactory, haloFactory);
+  afterTest(() => partyManager.close());
 
   if (open) {
     await partyManager.open();
@@ -151,7 +149,7 @@ describe('Party manager', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     // TODO(burdon): Create multiple feeds.
-    const feed = await feedStore.openFeed(
+    const feed = await feedStore.feedStore.openFeed(
       partyKey.publicKey.toHex(), { metadata: { partyKey: partyKey.publicKey } } as any);
     const feedKey = await keyring.addKeyRecord({
       publicKey: PublicKey.from(feed.key),

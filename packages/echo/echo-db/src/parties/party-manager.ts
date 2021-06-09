@@ -70,12 +70,6 @@ export class PartyManager {
       return;
     }
 
-    // TODO(burdon): Replace with events.
-    onProgressCallback?.({ haloOpened: false });
-
-    // TODO(burdon): Should this already by open?
-    await this._feedStore.open();
-
     // Open the HALO first (if present).
     const identityKey = this._identityManager.identityKey;
     if (identityKey) {
