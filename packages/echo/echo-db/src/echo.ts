@@ -143,9 +143,9 @@ export class ECHO {
     this._identityManager = new IdentityManager(this._keyring, haloFactory);
 
     this._partyManager = new PartyManager(
-      this._identityManager,
       this._feedStore,
       this._snapshotStore,
+      () => this._identityManager.identity,
       partyFactory
     );
 
@@ -245,8 +245,12 @@ export class ECHO {
 
     this._subs.unsubscribe();
 
+    await this._identityManager.halo?.close();
+
     // TODO(marik-d): Close network manager.
     await this._partyManager.close();
+
+    await this._feedStore.close();
   }
 
   /**

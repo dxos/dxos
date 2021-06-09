@@ -13,7 +13,7 @@ import { timed } from '@dxos/debug';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ComplexMap } from '@dxos/util';
 
-import { IdentityManager } from '../halo';
+import { IdentityProvider } from '../halo';
 import { SecretProvider, InvitationDescriptor } from '../invitations';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
@@ -47,9 +47,9 @@ export class PartyManager {
   private _open = false;
 
   constructor (
-    private readonly _identityManager: IdentityManager,
     private readonly _feedStore: FeedStoreAdapter,
     private readonly _snapshotStore: SnapshotStore,
+    private readonly _identityProvider: IdentityProvider,
     private readonly _partyFactory: PartyFactory
   ) {}
 
@@ -72,9 +72,11 @@ export class PartyManager {
 
     let partyKeys = this._feedStore.getPartyKeys();
 
+    const identity = this._identityProvider();
+
     // TODO(telackey): Does it make any sense to load other parties if we don't have an HALO?
-    if (this._identityManager.identityKey) {
-      partyKeys = partyKeys.filter(partyKey => !partyKey.equals(this._identityManager.identityKey!.publicKey));
+    if (identity.identityKey) {
+      partyKeys = partyKeys.filter(partyKey => !partyKey.equals(identity.identityKey!.publicKey));
     }
 
     // TODO(burdon): Does this make sense?
@@ -93,7 +95,7 @@ export class PartyManager {
           ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
           : await this._partyFactory.constructParty(partyKey);
 
-        const isActive = this._identityManager.halo?.preferences.isPartyActive(partyKey) ?? true;
+        const isActive = identity.halo?.preferences.isPartyActive(partyKey) ?? true;
         if (isActive) {
           await party.open();
           // TODO(marik-d): Might not be required if separately snapshot this item.
@@ -126,9 +128,6 @@ export class PartyManager {
       }
     }
 
-    // TODO(marik-d): Should this be closing HALO?
-    await this._identityManager.halo?.close();
-    await this._feedStore.close();
     await this._parties.clear();
   }
 
@@ -142,7 +141,9 @@ export class PartyManager {
   @synchronized
   async createParty (): Promise<PartyInternal> {
     assert(this._open, 'PartyManager is not open.');
-    assert(this._identityManager.initialized, 'IdentityManager has not been initialized with the HALO.');
+
+    const identity = this._identityProvider();
+    assert(!!identity.halo, 'HALO party on present on identity.');
 
     const party = await this._partyFactory.createParty();
     assert(!this._parties.has(party.key), 'Party already exists.');
@@ -163,7 +164,9 @@ export class PartyManager {
   @synchronized
   async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     assert(this._open, 'PartyManager is not open.');
-    assert(this._identityManager.initialized, 'IdentityManager has not been initialized with the HALO.');
+
+    const identity = this._identityProvider();
+    assert(!!identity.halo, 'HALO party on present on identity.');
 
     // The caller should have checked if the Party existed before calling addParty, but that check
     // is not within a single critical section, and so things may have changed. So we must perform that
@@ -182,7 +185,9 @@ export class PartyManager {
   @synchronized
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
     assert(this._open, 'PartyManager is not open.');
-    assert(this._identityManager.initialized, 'IdentityManager has not been initialized with the HALO.');
+
+    const identity = this._identityProvider();
+    assert(!!identity.halo, 'HALO party on present on identity.');
 
     // TODO(marik-d): Somehow check that we don't already have this party
     // TODO(telackey): ^^ We can check the PartyKey during the greeting flow.
@@ -246,12 +251,14 @@ export class PartyManager {
       return;
     }
 
+    const identity = this._identityProvider();
+
     const item = await party.getPropertiesItem();
     const currentTitle = item.model.getProperty(PARTY_TITLE_PROPERTY);
-    const storedTitle = this._identityManager.halo?.preferences.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY);
+    const storedTitle = identity.halo?.preferences.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY);
     if (storedTitle !== currentTitle) {
       log(`Updating stored name from ${storedTitle} to ${currentTitle} for Party ${party.key.toHex()}`);
-      await this._identityManager.halo?.preferences.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, currentTitle);
+      await identity.halo?.preferences.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, currentTitle);
     }
   }
 
@@ -263,7 +270,9 @@ export class PartyManager {
       return;
     }
 
-    const contactListItem = this._identityManager.halo?.contacts.getContactListItem();
+    const identity = this._identityProvider();
+
+    const contactListItem = identity.halo?.contacts.getContactListItem();
     if (!contactListItem) {
       return;
     }
@@ -272,7 +281,7 @@ export class PartyManager {
 
     for (const publicKey of party.processor.memberKeys) {
       // A key that represents either us or the Party itself is never a contact.
-      if (this._identityManager?.identityKey?.publicKey.equals(publicKey) || party.key.equals(publicKey)) {
+      if (identity?.identityKey?.publicKey.equals(publicKey) || party.key.equals(publicKey)) {
         continue;
       }
 
@@ -296,14 +305,16 @@ export class PartyManager {
 
   @timed(5_000)
   private async _recordPartyJoining (party: PartyInternal) {
-    assert(this._identityManager.halo, 'HALO is required.');
+    const identity = this._identityProvider();
+
+    assert(identity.halo, 'HALO is required.');
 
     const keyHints: KeyHint[] = [
       ...party.processor.memberKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.UNKNOWN })),
       ...party.processor.feedKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.FEED }))
     ];
 
-    await this._identityManager.halo.recordPartyJoining({
+    await identity.halo.recordPartyJoining({
       partyKey: party.key,
       keyHints
     });
