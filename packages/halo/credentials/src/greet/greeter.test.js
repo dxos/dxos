@@ -6,6 +6,7 @@
 
 import { randomBytes } from '@dxos/crypto';
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
+import { arraysEqual } from '@dxos/util';
 
 import { createKeyRecord, stripSecrets, Filter, Keyring } from '../keys';
 import { createKeyAdmitMessage, createPartyInvitationMessage } from '../party';

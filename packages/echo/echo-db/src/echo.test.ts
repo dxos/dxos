@@ -11,10 +11,10 @@ import { latch, sleep, waitForCondition } from '@dxos/async';
 import { SecretValidator, SecretProvider } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
+import { arraysEqual } from '@dxos/util';
 
 import { ECHO } from './echo';
 import { createTestInstance, inviteTestPeer } from './util';
-import { arraysEqual } from '@dxos/util';
 
 const log = debug('dxos:echo:database:test,dxos:*:error');
 

@@ -8,6 +8,7 @@ import pump from 'pump';
 import { trigger } from '@dxos/async';
 import { keyToString, randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
+import { arraysEqual } from '@dxos/util';
 
 import { Keyring } from '../keys';
 import { createKeyAdmitMessage } from '../party';
@@ -15,7 +16,6 @@ import { Command, KeyType, Message } from '../proto';
 import { Greeter } from './greeter';
 import { GreetingCommandPlugin } from './greeting-command-plugin';
 import { SecretProvider, SecretValidator } from './invitation';
-import { arraysEqual } from '@dxos/util';
 
 const log = debug('dxos:creds:greet');
 

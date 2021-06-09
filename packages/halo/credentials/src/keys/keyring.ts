@@ -10,7 +10,7 @@ import {
   PublicKey, PublicKeyLike, KeyPair, keyToBuffer, randomBytes,
   sign as cryptoSign, verify as cryptoVerify
 } from '@dxos/crypto';
-import { arraysEqual } from '@dxos/util'
+import { arraysEqual } from '@dxos/util';
 
 import { isSignedMessage, unwrapMessage } from '../party';
 import {

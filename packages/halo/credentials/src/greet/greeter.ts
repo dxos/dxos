@@ -7,6 +7,7 @@ import debug from 'debug';
 
 import { PublicKeyLike, PublicKey } from '@dxos/crypto';
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
+import { arraysEqual } from '@dxos/util';
 
 import { Keyring } from '../keys';
 import { getPartyCredentialMessageType } from '../party';
@@ -23,7 +24,6 @@ import {
 } from './error-codes';
 import { GreetingCommandPlugin } from './greeting-command-plugin';
 import { Invitation, InvitationOnFinish, SecretProvider, SecretValidator } from './invitation';
-import { arraysEqual } from '@dxos/util';
 
 const log = debug('dxos:creds:greet');
 
