@@ -14,8 +14,10 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Storage } from '@dxos/random-access-multi-storage';
+import { SubscriptionGroup } from '@dxos/util';
 
 import { Contact, HaloFactory, IdentityManager } from './halo';
+import { autoPartyOpener } from './halo/party-opener';
 import {
   InvitationAuthenticator, InvitationDescriptor, InvitationOptions, OfflineInvitationClaimer, SecretProvider
 } from './invitations';
@@ -24,8 +26,6 @@ import { OpenProgress, Party, PartyFactory, PartyFilter, PartyManager } from './
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { FeedStoreAdapter, createRamStorage } from './util';
-import { SubscriptionGroup } from '@dxos/util';
-import { autoPartyOpener } from './halo/party-opener';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
@@ -128,7 +128,7 @@ export class ECHO {
     };
 
     const partyFactory = new PartyFactory(
-      this._identityManager,
+      () => this._identityManager.identity,
       this._networkManager,
       this._feedStore,
       this._modelFactory,
@@ -149,13 +149,13 @@ export class ECHO {
       partyFactory,
       haloFactory
     );
-    
+
     this._identityManager.ready.once(() => {
       // It might be the case that halo gets closed before this has a chance to execute.
-      if(this._identityManager.halo?.isOpen) {
+      if (this._identityManager.halo?.isOpen) {
         this._subs.push(autoPartyOpener(this._identityManager.halo!, this._partyManager));
       }
-    })
+    });
   }
 
   toString () {

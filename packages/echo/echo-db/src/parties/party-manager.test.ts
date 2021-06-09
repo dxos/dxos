@@ -36,6 +36,7 @@ import { afterTest } from '@dxos/testutils';
 import { createWritableFeedStream } from '@dxos/util';
 
 import { HALO_PARTY_CONTACT_LIST_TYPE, HaloFactory, IdentityManager } from '../halo';
+import { autoPartyOpener } from '../halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
 import { SnapshotStore } from '../snapshots';
@@ -44,7 +45,6 @@ import { Party } from './party';
 import { PartyFactory } from './party-factory';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
-import { autoPartyOpener } from '../halo/party-opener';
 
 const log = debug('dxos:echo:parties:party-manager:test');
 
@@ -80,7 +80,7 @@ const setup = async (open = true, createIdentity = true) => {
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
   const partyFactory = new PartyFactory(
-    identityManager,
+    () => identityManager.identity,
     networkManager,
     feedStore,
     modelFactory,
@@ -98,8 +98,8 @@ const setup = async (open = true, createIdentity = true) => {
   identityManager.ready.once(() => {
     assert(identityManager.halo?.isOpen);
     const unsub = autoPartyOpener(identityManager.halo!, partyManager);
-    afterTest(unsub)
-  })
+    afterTest(unsub);
+  });
 
   if (open) {
     await partyManager.open();
@@ -188,7 +188,7 @@ describe('Party manager', () => {
     const snapshotStore = new SnapshotStore(ram);
     const networkManager = new NetworkManager();
     const partyFactory =
-      new PartyFactory(identityManager, networkManager, feedStoreAdapter, modelFactory, snapshotStore);
+      new PartyFactory(() => identityManager.identity, networkManager, feedStoreAdapter, modelFactory, snapshotStore);
     const haloFactory = new HaloFactory(partyFactory, identityManager, networkManager);
     const partyManager =
       new PartyManager(identityManager, feedStoreAdapter, snapshotStore, partyFactory, haloFactory);

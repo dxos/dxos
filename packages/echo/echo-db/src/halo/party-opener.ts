@@ -1,14 +1,20 @@
-import { SubscriptionGroup, Unsubscribe } from "@dxos/util";
-import { PartyManager } from "../parties";
-import { HaloParty } from "./halo-party";
-import debug from 'debug'
+//
+// Copyright 2021 DXOS.org
+//
+
+import debug from 'debug';
+
+import { SubscriptionGroup, Unsubscribe } from '@dxos/util';
+
+import { PartyManager } from '../parties';
+import { HaloParty } from './halo-party';
 
 const log = debug('dxos:echo:halo:party-opener');
 
 /**
- * Automatically adds, opens, and clothes parties from HALO preferences. 
+ * Automatically adds, opens, and clothes parties from HALO preferences.
  */
-export function autoPartyOpener(halo: HaloParty, partyManager: PartyManager): Unsubscribe {
+export function autoPartyOpener (halo: HaloParty, partyManager: PartyManager): Unsubscribe {
   const subs = new SubscriptionGroup();
 
   subs.push(halo.subscribeToJoinedPartyList(async values => {

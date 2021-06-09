@@ -44,7 +44,7 @@ export class HaloParty {
     this._preferences = new Preferences(this._party, deviceKey);
   }
 
-  get isOpen() {
+  get isOpen () {
     return this._party.isOpen;
   }
 

@@ -10,6 +10,7 @@ import { Keyring, KeyChain, KeyType, Filter, KeyRecord } from '@dxos/credentials
 
 import { PartyInternal } from '../parties';
 import { HaloParty } from './halo-party';
+import { Identity } from './identity';
 
 const log = debug('dxos:echo:parties:identity-manager');
 
@@ -32,6 +33,10 @@ export class IdentityManager {
   constructor (
     private readonly _keyring: Keyring
   ) {}
+
+  get identity () {
+    return new Identity(this);
+  }
 
   get keyring () {
     return this._keyring;
