@@ -17,24 +17,25 @@ import { arraysEqual } from '@dxos/util';
 import { ECHO } from './echo';
 import { Item } from './items';
 import { inviteTestPeer } from './util';
+import { testInvitationAuthenticator } from './invitations';
 
 const log = debug('dxos:echo:test');
 
-const setup = async (createProfile: boolean) => {
-  const echo = new ECHO();
-
-  await echo.open();
-  afterTest(() => echo.close());
-
-  if (createProfile) {
-    await echo.createIdentity(createKeyPair());
-    await echo.createHalo();
-  }
-
-  return echo;
-};
-
 describe('ECHO', () => {
+  const setup = async (createProfile: boolean) => {
+    const echo = new ECHO();
+  
+    await echo.open();
+    afterTest(() => echo.close());
+  
+    if (createProfile) {
+      await echo.createIdentity(createKeyPair());
+      await echo.createHalo();
+    }
+  
+    return echo;
+  };
+
   test('create party and update properties.', async () => {
     const echo = await setup(true);
     const parties = await echo.queryParties({ open: true });
@@ -361,4 +362,99 @@ describe('ECHO', () => {
     expect(a.queryParties().value[0].key).toEqual(b.queryParties().value[0].key);
     expect(a.queryParties().value[1].key).toEqual(b.queryParties().value[1].key);
   }).timeout(10_000);
+
+  test('Two users, two devices each', async () => {
+    const a1 = await setup(true);
+    const a2 = await setup(false);
+    const b1 = await setup(true);
+    const b2 = await setup(false);
+
+    expect(a1.isHaloInitialized).toBeTruthy()
+    expect(a2.isHaloInitialized).toBeFalsy()
+
+    expect(b1.isHaloInitialized).toBeTruthy()
+    expect(b2.isHaloInitialized).toBeFalsy()
+
+    await Promise.all([
+      (async () => {
+        // Issue the invitation on nodeA.
+        const invitation = await a1.createHaloInvitation(testInvitationAuthenticator);
+
+        // And then redeem it on nodeB.
+        await a2.joinHalo(invitation, testSecretProvider);
+      })(),
+      (async () => {
+        // Issue the invitation on nodeA.
+        const invitation = await b1.createHaloInvitation(testInvitationAuthenticator);
+
+        // And then redeem it on nodeB.
+        await b2.joinHalo(invitation, testSecretProvider);
+      })()
+    ])
+
+    // Now create a Party on 1 and make sure it gets opened on both 1 and 2.
+    let partyA;
+    {
+      expect(a1.queryParties().value.length).toBe(0);
+      expect(a2.queryParties().value.length).toBe(0);
+
+      const [partyUpdatedA, onPartyUpdateA] = latch();
+      a2.queryParties().update.on(onPartyUpdateA);
+
+      partyA = await a1.createParty();
+      await partyUpdatedA;
+
+      expect(a1.queryParties().value.length).toBe(1);
+      expect(a2.queryParties().value.length).toBe(1);
+      expect(a1.queryParties().value[0].key).toEqual(a2.queryParties().value[0].key);
+    }
+
+    // Invite B to join the Party.
+    {
+      expect(b1.queryParties().value.length).toBe(0);
+      expect(b2.queryParties().value.length).toBe(0);
+
+      const [partyUpdatedB, onPartyUpdateB] = latch();
+      b2.queryParties().update.on(onPartyUpdateB);
+
+      const invitation = await partyA.createInvitation(testInvitationAuthenticator);
+      await b1.joinParty(invitation, testSecretProvider);
+
+      await partyUpdatedB;
+      expect(b1.queryParties().value.length).toBe(1);
+      expect(b2.queryParties().value.length).toBe(1);
+      expect(b1.queryParties().value[0].key).toEqual(b2.queryParties().value[0].key);
+
+      // A and B now both belong to the Party
+      expect(a1.queryParties().value[0].key).toEqual(b1.queryParties().value[0].key);
+    }
+
+    // Empty across the board.
+    for (const node of [a1, a2, b1, b2]) {
+      const [party] = node.queryParties().value;
+      expect(party.database.queryItems({ type: 'dxn://example/item/test' }).value.length).toBe(0);
+    }
+
+    for await (const node of [a1, a2, b1, b2]) {
+      let item: Item<any> | null = null;
+      const [party] = node.queryParties().value;
+      const itemPromises = [];
+
+      for (const otherNode of [a1, a2, b1, b2].filter(x => x !== node)) {
+        const [otherParty] = otherNode.queryParties().value;
+        const [updated, onUpdate] = latch();
+        otherParty.database.queryItems({ type: 'dxn://example/item/test' })
+          .subscribe((result) => {
+            if (result.find(current => current.id === item?.id)) {
+              log(`other has ${item?.id}`);
+              onUpdate();
+            }
+          });
+        itemPromises.push(updated);
+      }
+
+      item = await party.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
+      await Promise.all(itemPromises);
+    }
+  }).timeout(20_000);
 });

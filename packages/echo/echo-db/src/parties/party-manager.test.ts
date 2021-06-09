@@ -429,10 +429,6 @@ describe('Party manager', () => {
   });
 
   // TODO(marik-d): Move to ECHO tests.
-
-  // TODO(marik-d): Move to ECHO tests.
-
-  // TODO(marik-d): Move to ECHO tests.
   test('Join new device to HALO by recovering from identity seed phrase', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);

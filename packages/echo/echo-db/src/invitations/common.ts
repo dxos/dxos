@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { SecretProvider, SecretValidator } from '@dxos/credentials';
+import { SecretProvider, SecretValidator, testSecretProvider, testSecretValidator } from '@dxos/credentials';
 export { SecretProvider, SecretValidator };
 
 /**
@@ -11,6 +11,11 @@ export { SecretProvider, SecretValidator };
 export interface InvitationAuthenticator {
   secretProvider?: SecretProvider
   secretValidator: SecretValidator
+}
+
+export const testInvitationAuthenticator: InvitationAuthenticator = {
+  secretProvider: testSecretProvider,
+  secretValidator: testSecretValidator,
 }
 
 /**
