@@ -493,6 +493,12 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
+    {
+      "packageName": "@dxos/testutils",
+      "projectFolder": "packages/common/testutils",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
+    },
 
     //
     // sdk
@@ -632,6 +638,12 @@
     {
       "packageName": "@dxos/network-generator",
       "projectFolder": "packages/mesh/network-generator",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/broadcast",
+      "projectFolder": "packages/mesh/broadcast",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },

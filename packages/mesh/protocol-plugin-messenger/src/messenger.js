@@ -27,9 +27,8 @@ export class Messenger extends EventEmitter {
    */
   constructor (peerId, peerMessageHandler = () => {}, options = {}) {
     super();
-
-    console.assert(Buffer.isBuffer(peerId));
-    console.assert(peerMessageHandler);
+    assert(Buffer.isBuffer(peerId));
+    assert(peerMessageHandler);
 
     this._peerId = peerId;
 

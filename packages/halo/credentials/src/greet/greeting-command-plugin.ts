@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+// TODO(burdon): Rename CommandPlugin
 // TODO(dboreham): This class is not specific to Greeting (apart from the codec chosen) and so should be renamed
-//  and moved somewhere more abstract (RpcProtocolPlugin?).
+//   and moved somewhere more abstract (RpcProtocolPlugin?).
 
 import assert from 'assert';
 import debug from 'debug';
@@ -36,12 +37,14 @@ const getPeerId = (protocol: any) => {
  * is the response message, sent to the requesting node, and is the return
  * value from the original call to send().
  * Encode/decode is done inside the plugin using codec.
- * TODO(dboreham) What happens on errors and timeouts?
+ *
+ * TODO(dboreham): What happens on errors and timeouts?
  * @param peerId {Buffer} Unique key. On a responding node, this value must be communicated OOB to any requesting node.
  * @param peerMessageHandler {function({Buffer}):Buffer} Async receive/send callback. Only used on responding nodes.
  * @event GreetingCommandPlugin#'peer:joined' - Peer joined swarm
  * @event GreetingCommandPlugin#'peer:exited' - Peer exits swarm
  */
+// TODO(burdon): Rename GreetingPlugin
 export class GreetingCommandPlugin extends EventEmitter {
   public static EXTENSION_NAME = 'dxos.credentials.greeting';
 
@@ -50,9 +53,9 @@ export class GreetingCommandPlugin extends EventEmitter {
   _peers: Map<string, any>;
 
   constructor (peerId: Buffer, peerMessageHandler: GreetingCommandMessageHandler) {
+    super();
     assert(Buffer.isBuffer(peerId));
     assert(peerMessageHandler);
-    super();
 
     this._peerId = peerId;
     this._peerMessageHandler = peerMessageHandler;

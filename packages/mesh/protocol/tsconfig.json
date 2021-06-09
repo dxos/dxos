@@ -6,5 +6,10 @@
   "include": [
     "src/**/*",
     "src/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../common/codec-protobuf"
+    }
   ]
 }

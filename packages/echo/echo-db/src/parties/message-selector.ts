@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { Keyring, getPartyCredentialMessageType, PartyCredential, admitsKeys } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
@@ -10,6 +11,8 @@ import { MessageSelector } from '@dxos/echo-protocol';
 
 import { TimeframeClock } from '../items';
 import { PartyProcessor } from './party-processor';
+
+const log = debug('dxos:echo:parties:message-selector');
 
 /**
  * The MessageSelector makes sure that we read in a trusted order. The first message we wish to process is
@@ -25,20 +28,21 @@ export function createMessageSelector (
 ): MessageSelector {
   // TODO(telackey): Add KeyAdmit checks.
   return candidates => {
-    // We go over ECHO candidates here first because checking them is way less expensive then HALO ones.
+    // Check ECHO message candidates first since they are less expensive than HALO cancidates.
     for (let i = 0; i < candidates.length; i++) {
       const { data: { echo } } = candidates[i];
       const feedKey = PublicKey.from(candidates[i].key);
       if (!echo) {
         continue;
       }
-      assert(echo.timeframe);
 
+      assert(echo.timeframe);
       if (partyProcessor.isFeedAdmitted(feedKey) && !timeframeClock.hasGaps(echo.timeframe)) {
         return i;
       }
     }
 
+    // Check HALO message candidates.
     for (let i = 0; i < candidates.length; i++) {
       const { data: { halo } } = candidates[i];
       const feedKey = PublicKey.from(candidates[i].key);
@@ -68,7 +72,6 @@ export function createMessageSelector (
     }
 
     // Not ready for this message yet.
-
-    return undefined;
+    log('Skipping...');
   };
 }

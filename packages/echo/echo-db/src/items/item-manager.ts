@@ -70,7 +70,7 @@ export class ItemManager {
    * @param {ItemID} [parentId]
    * @param initProps
    */
-  @timed(5000)
+  @timed(5_000)
   async createItem (
     modelType: ModelType,
     itemType?: ItemType,
@@ -116,7 +116,7 @@ export class ItemManager {
     return await waitForCreation();
   }
 
-  @timed(5000)
+  @timed(5_000)
   async createLink (
     modelType: ModelType, itemType: ItemType | undefined, source: ItemID, target: ItemID, initProps?: any
   ): Promise<Link<any, any, any>> {
@@ -174,7 +174,7 @@ export class ItemManager {
    */
   // TODO(marik-d): Convert optional params to typed object.
   // TODO(burdon): Break up long function (helper function or comment blocks).
-  @timed(5000)
+  @timed(5_000)
   async constructItem ({
     itemId,
     modelType,

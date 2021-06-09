@@ -5,9 +5,8 @@
 import assert from 'assert';
 
 import { Keyring } from '../keys';
-import { unwrapEnvelopes, extractContents, unwrapMessage, wrapMessage } from '../party/party-credential';
-import { DeviceInfo, IdentityInfo, KeyRecord, Message, SignedMessage } from '../proto';
-import { WithTypeUrl } from '../proto/any';
+import { unwrapEnvelopes, extractContents, unwrapMessage, wrapMessage } from '../party';
+import { DeviceInfo, IdentityInfo, KeyRecord, Message, SignedMessage, WithTypeUrl } from '../proto';
 
 /**
  * Return the __type_url, if present.

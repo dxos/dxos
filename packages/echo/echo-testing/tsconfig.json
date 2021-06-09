@@ -4,10 +4,17 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
+    "src"
   ],
   "references": [
-    { "path": "../echo-protocol" },
-    { "path": "../../common/util" }
+    {
+      "path": "../echo-db"
+    },
+    {
+      "path": "../echo-protocol"
+    },
+    {
+      "path": "../object-model"
+    }
   ]
 }

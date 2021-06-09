@@ -1,0 +1,22 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Rush build all light",
+			"group": "build",
+			"type": "shell",
+			"command": "rush update && rush build --light",
+			"problemMatcher": []
+		},
+		{
+			"label": "Rush build to current package light",
+			"group": "build",
+			"type": "shell",
+			"command": "rush update && rush build --light --to-except $(cut -d '=' -f 2 <<< $(npm run env | grep 'npm_package_name'))",
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": []
+		}
+	]
+}

@@ -4,15 +4,26 @@
 
 import { select } from '@storybook/addon-knobs';
 import React, { useState, useEffect } from 'react';
-import { FullScreen } from '@dxos/gem-core';
 import useResizeAware from 'react-resize-aware';
-import { FullyConnectedTopology, Swarm, MMSTTopology, StarTopology, NetworkManager, SignalApi, SignalManager, SwarmMapper, transportProtocolProvider, PeerInfo } from '@dxos/network-manager'
+
 import { PublicKey } from '@dxos/crypto';
-import { Presence } from '@dxos/protocol-plugin-presence'
-import { PeerGraph } from '../src/PeerGraph';
-import { SignalStatus } from '../src/SignalStatus';
-import { SignalTrace } from '../src/SignalTrace';
-import { Topology } from '@dxos/network-manager';
+import { FullScreen } from '@dxos/gem-core';
+import {
+  FullyConnectedTopology,
+  Swarm,
+  MMSTTopology,
+  StarTopology,
+  NetworkManager,
+  SignalApi,
+  SignalManager,
+  SwarmMapper,
+  transportProtocolProvider,
+  PeerInfo,
+  Topology
+} from '@dxos/network-manager';
+import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+
+import { PeerGraph, SignalStatus, SignalTrace } from '../src';
 
 export default {
   title: 'Devtools'
@@ -22,7 +33,7 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
   const networkManager = new NetworkManager({
     signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal']
   });
-  const presencePlugin = new Presence(peerId.asBuffer());
+  const presencePlugin = new PresencePlugin(peerId.asBuffer());
   networkManager.joinProtocolSwarm({
     topic: controlTopic,
     peerId,

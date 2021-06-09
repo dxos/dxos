@@ -8,9 +8,29 @@
     ]
   },
   "include": [
-    "src",
+    "src"
   ],
   "exclude": [
     "/node_modules/"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../protocol-plugin-bot"
+    },
+    {
+      "path": "../../common/util"
+    }
   ]
 }

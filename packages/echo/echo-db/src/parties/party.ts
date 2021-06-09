@@ -8,20 +8,16 @@ import debug from 'debug';
 import { PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 
+import { ActivationOptions } from '../halo';
 import { InvitationAuthenticator, InvitationOptions } from '../invitations';
 import { ResultSet } from '../result';
-import { PartyInternal, ActivationOptions } from './party-internal';
-
-export interface PartyMember {
-  publicKey: PublicKey,
-  displayName?: string
-}
+import { PartyInternal, PartyMember } from './party-internal';
 
 const log = debug('dxos:echo:party');
 
 /**
- * A Party represents a shared dataset containing queryable Items that are constructed from an ordered stream
- * of mutations.
+ * A Party represents a shared dataset (ECHO database) containing queryable items
+ * that are constructed from an ordered stream of mutations.
  */
 export class Party {
   constructor (

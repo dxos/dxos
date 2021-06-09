@@ -5,13 +5,13 @@
 import debug from 'debug';
 
 import { TimeframeClock } from '../items';
-import { PartyInternal } from '../parties';
+import { PartyCore } from '../parties/party-core';
 import { SnapshotStore } from './snapshot-store';
 
 const log = debug('dxos:snapshot-generator');
 
 export function createAutomaticSnapshots (
-  party: PartyInternal, clock: TimeframeClock, store: SnapshotStore, interval: number
+  party: PartyCore, clock: TimeframeClock, store: SnapshotStore, interval: number
 ) {
   return clock.update.on(async timeframe => {
     const totalMessages = timeframe.totalMessages();

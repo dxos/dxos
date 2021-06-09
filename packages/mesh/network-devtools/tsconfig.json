@@ -9,5 +9,19 @@
   "include": [
     "src",
     "stories"
+  ],
+  "references": [
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../network-manager"
+    },
+    {
+      "path": "../protocol-plugin-presence"
+    },
+    {
+      "path": "../../sdk/react-ux"
+    }
   ]
 }

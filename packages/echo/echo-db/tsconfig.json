@@ -4,12 +4,53 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
+    "src"
   ],
   "references": [
-    { "path": "../echo-protocol" },
-    { "path": "../model-factory" },
-    { "path": "../object-model" },
-    { "path": "../../common/util" }
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../echo-protocol"
+    },
+    {
+      "path": "../feed-store"
+    },
+    {
+      "path": "../model-factory"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../object-model"
+    },
+    {
+      "path": "../../mesh/protocol"
+    },
+    {
+      "path": "../../mesh/protocol-plugin-presence"
+    },
+    {
+      "path": "../../mesh/protocol-plugin-replicator"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../common/testutils"
+    }
   ]
 }
