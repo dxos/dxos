@@ -9,7 +9,7 @@ import ram from 'random-access-memory';
 import waitForExpect from 'wait-for-expect';
 
 import { discoveryKey } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 
@@ -19,7 +19,12 @@ jest.setTimeout(30000);
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const feedStore = await FeedStore.create(ram, { feedOptions: { valueEncoding: 'utf8' } });
-  const feed = await feedStore.openFeed('/feed', { metadata: { topic: topic.toString('hex') } });
+  const feed = await feedStore.openFeed('/feed', {
+    metadata: { topic: topic.toString('hex') } ,
+    key: null as any,
+    secretKey: null as any,
+    valueEncoding: null as any
+  });
   const append = pify(feed.append.bind(feed));
   let closed = false;
 
@@ -51,17 +56,17 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
         .init(discoveryKey(topic))
         .stream;
     },
-    append (msg) {
+    append (msg: any) {
       return append(msg);
     },
     getMessages () {
-      const messages = [];
+      const messages: any[] = [];
       const stream = feedStore.createReadStream();
-      stream.on('data', (data) => {
+      stream.on('data', (data: any) => {
         messages.push(data.data);
       });
       return new Promise((resolve, reject) => {
-        eos(stream, (err) => {
+        eos(stream, (err: any) => {
           if (err) {
             reject(err);
           } else {
@@ -78,10 +83,10 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
 
 describe('test data replication in a balanced network graph of 15 peers', () => {
   const topic = crypto.randomBytes(32);
-  let network;
+  let network: any;
 
   beforeAll(async () => {
-    network = await generator.balancedBinTree({
+    network = await (generator as any).balancedBinTree({
       topic,
       parameters: [3]
     });
@@ -91,7 +96,7 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
     expect(network.peers.length).toBe(15);
 
     await waitForExpect(() => {
-      const result = network.peers.reduce((prev, peer) => {
+      const result = network.peers.reduce((prev: boolean, peer: any) => {
         return prev && peer.getFeeds().length === network.peers.length;
       }, true);
 
@@ -100,16 +105,16 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
 
     let metadataOk = true;
     for (const peer of network.peers) {
-      metadataOk = metadataOk && !peer.getDescriptors().find(d => !d.metadata || !d.metadata.topic);
+      metadataOk = metadataOk && !peer.getDescriptors().find((d: FeedDescriptor) => !d.metadata || !d.metadata.topic);
     }
 
     expect(metadataOk).toBe(true);
   });
 
   test('message synchronization', async () => {
-    const messages = [];
-    const wait = [];
-    network.peers.forEach((peer) => {
+    const messages: any[] = [];
+    const wait: any[] = [];
+    network.peers.forEach((peer: any) => {
       const msg = `${peer.id.toString('hex')}:foo`;
       messages.push(msg);
       wait.push(peer.append(msg));
@@ -119,8 +124,8 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
     await Promise.all(wait);
 
     await waitForExpect(async () => {
-      const results = [];
-      network.peers.forEach((peer) => {
+      const results: any = [];
+      network.peers.forEach((peer: any) => {
         results.push(peer.getMessages());
       });
       for await (const nodeMessages of results) {

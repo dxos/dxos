@@ -10,6 +10,8 @@ import { Extension, Protocol } from '@dxos/protocol';
 
 import { Peer } from './peer';
 import { schemaJson } from './proto/gen';
+import { PublicKeyLike } from '@dxos/crypto';
+import { Feed } from './proto/gen/dxos/protocol/replicator';
 
 // const log = debug('dxos.replicator');
 
@@ -28,7 +30,7 @@ export class Replicator extends EventEmitter {
   private _subscribe: (...args: any[]) => any;
   private _replicate: (...args: any[]) => any;
 
-  constructor (middleware: any, options: {timeout?: number}) {
+  constructor (middleware: any, options?: {timeout?: number}) {
     super();
     assert(middleware);
     assert(middleware.load);
@@ -91,7 +93,7 @@ export class Replicator extends EventEmitter {
     const info = { context, session };
 
     try {
-      const share = feeds => peer.share(feeds);
+      const share = (feeds: Feed[]) => peer?.share(feeds);
       const unsubscribe = this._subscribe(share, info);
       peer?.on('close', unsubscribe);
 
@@ -139,7 +141,7 @@ export class Replicator extends EventEmitter {
     }
   }
 
-  async _feedHandler (protocol: Protocol, discoveryKey) {
+  async _feedHandler (protocol: Protocol, discoveryKey: PublicKeyLike) {
     await this._replicateHandler(protocol, [{ discoveryKey }]);
   }
 
@@ -150,60 +152,3 @@ export class Replicator extends EventEmitter {
   }
 }
 
-const noop = () => {};
-
-const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = noop }) => {
-  const encodeFeed = (feed, descriptor = {}) => ({
-    key: feed.key,
-    discoveryKey: feed.discoveryKey,
-    metadata: descriptor.metadata && bufferJson.encode(descriptor.metadata)
-  });
-
-  const decodeFeed = feed => ({
-    key: feed.key,
-    discoveryKey: feed.discoveryKey,
-    metadata: feed.metadata && bufferJson.decode(feed.metadata)
-  });
-
-  return {
-    subscribe (next) {
-      const onFeed = (feed, descriptor) => next(encodeFeed(feed, descriptor));
-      feedStore.on('feed', onFeed);
-      return () => {
-        onUnsubscribe(feedStore);
-        feedStore.removeListener('feed', onFeed);
-      };
-    },
-    async load () {
-      const feeds = onLoad(feedStore);
-      return feeds.map(feed => encodeFeed(feed, feedStore.getDescriptorByDiscoveryKey(feed.discoveryKey)));
-    },
-    async replicate (feeds) {
-      return Promise.all(feeds.map((feed) => {
-        const { key, discoveryKey, metadata } = decodeFeed(feed);
-
-        if (key) {
-          const feed = feedStore.getOpenFeed(d => d.key.equals(key));
-
-          if (feed) {
-            return feed;
-          }
-
-          return feedStore.openFeed(`/remote/${key.toString('hex')}`, { key, metadata });
-        }
-
-        if (discoveryKey) {
-          return feedStore.getOpenFeed(d => d.discoveryKey.equals(discoveryKey));
-        }
-
-        return null;
-      }));
-    }
-  };
-};
-
-export class DefaultReplicator extends Replicator {
-  constructor (opts = {}) {
-    super(middleware(opts));
-  }
-}

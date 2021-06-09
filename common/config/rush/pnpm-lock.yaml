@@ -1221,6 +1221,7 @@ importers:
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/debug': 4.1.5
+      '@types/jest': 26.0.23
       coveralls: 3.1.0
       cpy-cli: 2.0.0
       del-cli: 3.0.1
@@ -1237,6 +1238,7 @@ importers:
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.1
+      '@types/jest': ^26.0.7
       buffer-json-encoding: ^1.0.2
       coveralls: ^3.0.7
       cpy-cli: ^2.0.0

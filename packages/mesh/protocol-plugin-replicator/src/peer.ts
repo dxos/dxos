@@ -5,6 +5,7 @@
 import { Extension, Protocol } from '@dxos/protocol';
 import debug from 'debug';
 import { EventEmitter } from 'events';
+import { Feed } from './proto/gen/dxos/protocol/replicator';
 
 const log = debug('dxos.replicator.peer');
 
@@ -20,11 +21,8 @@ export class Peer extends EventEmitter {
 
   /**
    * Share feeds to the remote peer.
-   *
-   * @param {(Object[]|Object)} [feeds] List of feeds of type: [{ key: Buffer, metadata: Buffer }]
-   * @returns {Promise}
    */
-  async share (feeds = []) {
+  async share (feeds: Feed | Feed[] = []): Promise<void> {
     log('share', feeds);
 
     if (!Array.isArray(feeds)) {
@@ -46,9 +44,8 @@ export class Peer extends EventEmitter {
 
   /**
    * Replicate multiple feeds.
-   * @param {Hypercore[]} feed
    */
-  replicate (feeds = []) {
+  replicate (feeds: Feed[] = []) {
     feeds.forEach(feed => this._replicate(feed));
   }
 
@@ -71,7 +68,7 @@ export class Peer extends EventEmitter {
    * @returns {boolean} - true if `feed.replicate` was called.
    * @private
    */
-  _replicate (feed) {
+  _replicate (feed: any): boolean {
     if (!feed || !feed.replicate) {
       return false;
     }
