@@ -491,4 +491,53 @@ describe('ECHO', () => {
     expect(b.queryContacts().value.length).toBe(1)
   });
 
+
+  test('Deactivating and activating party.', async () => {
+    const a = await setup(true);
+    const partyA = await a.createParty();
+
+    expect(partyA.isOpen).toBe(true);
+    expect(partyA.isActive).toBe(true);
+
+    await partyA.setTitle('A');
+    expect(partyA.title).toBe('A');
+    expect(partyA.getProperty('title')).toBe('A');
+
+    await partyA.deactivate({ global: true });
+    expect(partyA.isOpen).toBe(false);
+    expect(partyA.isActive).toBe(false);
+    expect(partyA.title).toBe('A');
+
+    await partyA.activate({ global: true });
+    expect(partyA.isOpen).toBe(true);
+    expect(partyA.isActive).toBe(true);
+    expect(partyA.title).toBe('A');
+
+    await waitForCondition(() => partyA.getProperty('title') === 'A', 4000);
+  });
+
+  test('Deactivating and activating party, setting properties after', async () => {
+    const a = await setup(true);
+    const partyA = await a.createParty();
+
+    expect(partyA.isOpen).toBe(true);
+    expect(partyA.isActive).toBe(true);
+
+    await partyA.setTitle('A');
+    expect(partyA.title).toBe('A');
+
+    await partyA.deactivate({ global: true });
+    expect(partyA.isOpen).toBe(false);
+    expect(partyA.isActive).toBe(false);
+    expect(partyA.title).toBe('A');
+
+    await partyA.activate({ global: true });
+    expect(partyA.isOpen).toBe(true);
+    expect(partyA.isActive).toBe(true);
+    expect(partyA.title).toBe('A');
+
+    // The party at this point is open and activate (see expects above), however setTitle seems to be hanging forever
+    await partyA.setTitle('A2');
+    expect(partyA.title).toBe('A2');
+  });
 });

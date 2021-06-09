@@ -599,58 +599,6 @@ describe('Party manager', () => {
     expect(b.partyManager.parties[0].isOpen).toBe(true);
   });
 
-  test('Deactivating and activating party.', async () => {
-    const { partyManager: partyManagerA } = await setup();
-    await partyManagerA.open();
-
-    const partyA = new Party(await partyManagerA.createParty());
-    expect(partyA.isOpen).toBe(true);
-    expect(partyA.isActive).toBe(true);
-
-    await partyA.setTitle('A');
-    expect(partyA.title).toBe('A');
-    expect(partyA.getProperty('title')).toBe('A');
-
-    await partyA.deactivate({ global: true });
-    expect(partyA.isOpen).toBe(false);
-    expect(partyA.isActive).toBe(false);
-    expect(partyA.title).toBe('A');
-
-    await partyA.activate({ global: true });
-    expect(partyA.isOpen).toBe(true);
-    expect(partyA.isActive).toBe(true);
-    expect(partyA.title).toBe('A');
-
-    await waitForCondition(() => partyA.getProperty('title') === 'A', 4000);
-  });
-
-  test('Deactivating and activating party, setting properties after', async () => {
-    const { partyManager: partyManagerA } = await setup();
-    await partyManagerA.open();
-
-    const partyA = new Party(await partyManagerA.createParty());
-
-    expect(partyA.isOpen).toBe(true);
-    expect(partyA.isActive).toBe(true);
-
-    await partyA.setTitle('A');
-    expect(partyA.title).toBe('A');
-
-    await partyA.deactivate({ global: true });
-    expect(partyA.isOpen).toBe(false);
-    expect(partyA.isActive).toBe(false);
-    expect(partyA.title).toBe('A');
-
-    await partyA.activate({ global: true });
-    expect(partyA.isOpen).toBe(true);
-    expect(partyA.isActive).toBe(true);
-    expect(partyA.title).toBe('A');
-
-    // The party at this point is open and activate (see expects above), however setTitle seems to be hanging forever
-    await partyA.setTitle('A2');
-    expect(partyA.title).toBe('A2');
-  });
-
   // TODO(burdon): Sporadically fails: https://github.com/dxos/echo/issues/391
   test.skip('Setting title propagates to other devices AND other party members', async () => {
     // User creating the party
