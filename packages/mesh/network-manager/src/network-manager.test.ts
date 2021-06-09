@@ -258,158 +258,157 @@ describe('In-memory network manager', () => {
       }));
     }));
   });
-});
 
-test('property-based test', async () => {
-  interface Model {
-    topic: PublicKey
-    peers: ComplexSet<PublicKey>
-    joinedPeers: ComplexSet<PublicKey>
-  }
-  interface Real {
-    peers: ComplexMap<PublicKey, {
-      networkManager: NetworkManager
-      presence?: PresencePlugin
-    }>
-  }
-
-  async function assertState (m: Model, r: Real) {
-    await waitForExpect(() => {
-      const peersExpected = Array.from(m.joinedPeers.values()).map(x => x.toHex()).sort();
-      r.peers.forEach(peer => {
-        if (peer.presence) {
-          const actualPeers = peer.presence!.peers.map(x => x.toString('hex')).sort();
-
-          expect(actualPeers).toEqual(peersExpected);
-        }
-      });
-    }, 1_000);
-
-    r.peers.forEach(peer => peer.networkManager.topics.forEach(topic => {
-      peer.networkManager.getSwarm(topic)!.errors.assertNoUnhandledErrors();
-    }));
-  }
-
-  class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
-    constructor (readonly peerId: PublicKey) {}
-
-    check = (m: Model) => !m.peers.has(this.peerId);
-
-    async run (m: Model, r: Real) {
-      m.peers.add(this.peerId);
-
-      const networkManager = new NetworkManager();
-      afterTest(() => networkManager.destroy());
-
-      r.peers.set(this.peerId, {
-        networkManager
-      });
-
-      await assertState(m, r);
+  test('property-based test', async () => {
+    interface Model {
+      topic: PublicKey
+      peers: ComplexSet<PublicKey>
+      joinedPeers: ComplexSet<PublicKey>
+    }
+    interface Real {
+      peers: ComplexMap<PublicKey, {
+        networkManager: NetworkManager
+        presence?: PresencePlugin
+      }>
     }
 
-    toString = () => `CreatePeer(${this.peerId})`;
-  }
+    async function assertState (m: Model, r: Real) {
+      await waitForExpect(() => {
+        const peersExpected = Array.from(m.joinedPeers.values()).map(x => x.toHex()).sort();
+        r.peers.forEach(peer => {
+          if (peer.presence) {
+            const actualPeers = peer.presence!.peers.map(x => x.toString('hex')).sort();
+  
+            expect(actualPeers).toEqual(peersExpected);
+          }
+        });
+      }, 1_000);
 
-  class RemovePeerCommand implements fc.AsyncCommand<Model, Real> {
-    constructor (readonly peerId: PublicKey) {}
-
-    check = (m: Model) => m.peers.has(this.peerId);
-
-    async run (m: Model, r: Real) {
-      m.peers.delete(this.peerId);
-      m.joinedPeers.delete(this.peerId);
-
-      const peer = r.peers.get(this.peerId);
-      await peer!.networkManager.destroy();
-      r.peers.delete(this.peerId);
-
-      await assertState(m, r);
+      r.peers.forEach(peer => peer.networkManager.topics.forEach(topic => {
+        peer.networkManager.getSwarm(topic)!.errors.assertNoUnhandledErrors();
+      }));
     }
 
-    toString = () => `RemovePeer(${this.peerId})`;
-  }
+    class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
+      constructor (readonly peerId: PublicKey) {}
 
-  class JoinTopicCommand implements fc.AsyncCommand<Model, Real> {
-    constructor (readonly peerId: PublicKey) {}
+      check = (m: Model) => !m.peers.has(this.peerId);
 
-    check = (m: Model) =>
-      m.peers.has(this.peerId) &&
-      !m.joinedPeers.has(this.peerId);
+      async run (m: Model, r: Real) {
+        m.peers.add(this.peerId);
 
-    async run (m: Model, r: Real) {
-      m.joinedPeers.add(this.peerId);
+        const networkManager = new NetworkManager();
+        afterTest(() => networkManager.destroy());
 
-      const peer = r.peers.get(this.peerId)!;
+        r.peers.set(this.peerId, {
+          networkManager
+        });
 
-      const presence = new PresencePlugin(this.peerId.asBuffer());
-      const protocol = protocolFactory({
-        getTopics: () => {
-          return [m.topic.asBuffer()];
-        },
-        session: { peerId: this.peerId.asBuffer() },
-        plugins: [presence]
-      });
+        await assertState(m, r);
+      }
 
-      peer.networkManager.joinProtocolSwarm({
-        peerId: this.peerId, // TODO(burdon): this?
-        topic: m.topic,
-        protocol,
-        topology: new FullyConnectedTopology(),
-        presence
-      });
-
-      peer.presence = presence;
-
-      await assertState(m, r);
+      toString = () => `CreatePeer(${this.peerId})`;
     }
 
-    toString = () => `JoinTopic(peerId=${this.peerId})`;
-  }
+    class RemovePeerCommand implements fc.AsyncCommand<Model, Real> {
+      constructor (readonly peerId: PublicKey) {}
 
-  class LeaveTopicCommand implements fc.AsyncCommand<Model, Real> {
-    constructor (readonly peerId: PublicKey) {}
+      check = (m: Model) => m.peers.has(this.peerId);
 
-    check = (m: Model) =>
-      m.peers.has(this.peerId) &&
-      m.joinedPeers.has(this.peerId);
+      async run (m: Model, r: Real) {
+        m.peers.delete(this.peerId);
+        m.joinedPeers.delete(this.peerId);
 
-    async run (m: Model, r: Real) {
-      m.joinedPeers.delete(this.peerId);
+        const peer = r.peers.get(this.peerId);
+        await peer!.networkManager.destroy();
+        r.peers.delete(this.peerId);
 
-      const peer = r.peers.get(this.peerId)!;
+        await assertState(m, r);
+      }
 
-      peer.networkManager.leaveProtocolSwarm(m.topic);
-      peer.presence = undefined;
-
-      await assertState(m, r);
+      toString = () => `RemovePeer(${this.peerId})`;
     }
 
-    toString = () => `LeaveTopic(peerId=${this.peerId})`;
-  }
+    class JoinTopicCommand implements fc.AsyncCommand<Model, Real> {
+      constructor (readonly peerId: PublicKey) {}
 
-  const peerIds = range(10).map(() => PublicKey.random());
+      check = (m: Model) =>
+        m.peers.has(this.peerId) &&
+        !m.joinedPeers.has(this.peerId);
 
-  const aPeerId = fc.constantFrom(...peerIds);
+      async run (m: Model, r: Real) {
+        m.joinedPeers.add(this.peerId);
 
-  const allCommands = [
-    aPeerId.map(x => new CreatePeerCommand(x)),
-    aPeerId.map(x => new RemovePeerCommand(x)),
-    aPeerId.map(p => new JoinTopicCommand(p)),
-    aPeerId.map(p => new LeaveTopicCommand(p))
-  ];
+        const peer = r.peers.get(this.peerId)!;
 
-  await fc.assert(
-    fc.asyncProperty(fc.commands(allCommands, { maxCommands: 30 }), async cmds => {
-      const s: ModelRunSetup<Model, Real> = () => ({
-        model: {
-          topic: PublicKey.random(),
-          peers: new ComplexSet(x => x.toHex()),
-          joinedPeers: new ComplexSet(x => x.toHex())
-        },
-        real: {
-          peers: new ComplexMap(x => x.toHex())
-        }
+        const presence = new PresencePlugin(this.peerId.asBuffer());
+        const protocol = protocolFactory({
+          getTopics: () => {
+            return [m.topic.asBuffer()];
+          },
+          session: { peerId: this.peerId.asBuffer() },
+          plugins: [presence]
+        });
+
+        peer.networkManager.joinProtocolSwarm({
+          peerId: this.peerId, // TODO(burdon): this?
+          topic: m.topic,
+          protocol,
+          topology: new FullyConnectedTopology(),
+          presence
+        });
+
+        peer.presence = presence;
+
+        await assertState(m, r);
+      }
+
+      toString = () => `JoinTopic(peerId=${this.peerId})`;
+    }
+
+    class LeaveTopicCommand implements fc.AsyncCommand<Model, Real> {
+      constructor (readonly peerId: PublicKey) {}
+
+      check = (m: Model) =>
+        m.peers.has(this.peerId) &&
+        m.joinedPeers.has(this.peerId);
+
+      async run (m: Model, r: Real) {
+        m.joinedPeers.delete(this.peerId);
+
+        const peer = r.peers.get(this.peerId)!;
+
+        peer.networkManager.leaveProtocolSwarm(m.topic);
+        peer.presence = undefined;
+
+        await assertState(m, r);
+      }
+
+      toString = () => `LeaveTopic(peerId=${this.peerId})`;
+    }
+
+    const peerIds = range(10).map(() => PublicKey.random());
+
+    const aPeerId = fc.constantFrom(...peerIds);
+
+    const allCommands = [
+      aPeerId.map(x => new CreatePeerCommand(x)),
+      aPeerId.map(x => new RemovePeerCommand(x)),
+      aPeerId.map(p => new JoinTopicCommand(p)),
+      aPeerId.map(p => new LeaveTopicCommand(p))
+    ];
+
+    await fc.assert(
+      fc.asyncProperty(fc.commands(allCommands, { maxCommands: 30 }), async cmds => {
+        const s: ModelRunSetup<Model, Real> = () => ({
+          model: {
+            topic: PublicKey.random(),
+            peers: new ComplexSet(x => x.toHex()),
+            joinedPeers: new ComplexSet(x => x.toHex())
+          },
+          real: {
+            peers: new ComplexMap(x => x.toHex())
+          }
 
       });
       await fc.asyncModelRun(s, cmds);
@@ -446,4 +445,5 @@ test('property-based test', async () => {
       ]
     }
   );
-}).timeout(2_000_000_000);
+}).timeout(30_000);
+});
