@@ -9,4 +9,5 @@ export * from './stream';
 export * from './range';
 export * from './types';
 export * from './randomInt';
+export * from './subscription';
 export * from './uint8array';

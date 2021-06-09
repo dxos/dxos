@@ -14,8 +14,10 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Storage } from '@dxos/random-access-multi-storage';
+import { SubscriptionGroup } from '@dxos/util';
 
 import { Contact, HaloFactory, IdentityManager } from './halo';
+import { autoPartyOpener } from './halo/party-opener';
 import {
   InvitationAuthenticator, InvitationDescriptor, InvitationOptions, OfflineInvitationClaimer, SecretProvider
 } from './invitations';
@@ -89,6 +91,7 @@ export class ECHO {
   private readonly _networkManager: NetworkManager;
   private readonly _snapshotStore: SnapshotStore;
   private readonly _partyManager: PartyManager;
+  private readonly _subs = new SubscriptionGroup();
 
   /**
    * Creates a new instance of ECHO.
@@ -106,7 +109,6 @@ export class ECHO {
     writeLogger
   }: EchoCreationOptions = {}) {
     this._keyring = new Keyring(new KeyStore(keyStorage));
-    this._identityManager = new IdentityManager(this._keyring);
 
     this._feedStore = FeedStoreAdapter.create(feedStorage);
 
@@ -125,7 +127,7 @@ export class ECHO {
     };
 
     const partyFactory = new PartyFactory(
-      this._identityManager,
+      () => this._identityManager.identity,
       this._networkManager,
       this._feedStore,
       this._modelFactory,
@@ -135,9 +137,10 @@ export class ECHO {
 
     const haloFactory = new HaloFactory(
       partyFactory,
-      this._identityManager,
-      this._networkManager
+      this._networkManager,
+      this._keyring
     );
+    this._identityManager = new IdentityManager(this._keyring, haloFactory);
 
     this._partyManager = new PartyManager(
       this._identityManager,
@@ -146,6 +149,13 @@ export class ECHO {
       partyFactory,
       haloFactory
     );
+
+    this._identityManager.ready.once(() => {
+      // It might be the case that halo gets closed before this has a chance to execute.
+      if (this._identityManager.halo?.isOpen) {
+        this._subs.push(autoPartyOpener(this._identityManager.halo!, this._partyManager));
+      }
+    });
   }
 
   toString () {
@@ -208,20 +218,31 @@ export class ECHO {
    * Opens the party and constructs the inbound/outbound mutation streams.
    */
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
-    if (!this.isOpen) {
-      await this._keyring.load();
-      await this._partyManager.open(onProgressCallback);
+    if (this.isOpen) {
+      return;
     }
+
+    await this._keyring.load();
+    await this._feedStore.open();
+
+    // TODO(burdon): Replace with events.
+    onProgressCallback?.({ haloOpened: false });
+
+    await this._partyManager.open(onProgressCallback);
   }
 
   /**
    * Closes the party and associated streams.
    */
   async close () {
-    if (this.isOpen) {
-      // TODO(marik-d): Close network manager.
-      await this._partyManager.close();
+    if (!this.isOpen) {
+      return;
     }
+
+    this._subs.unsubscribe();
+
+    // TODO(marik-d): Close network manager.
+    await this._partyManager.close();
   }
 
   /**
@@ -346,7 +367,7 @@ export class ECHO {
       throw new Error('Cannot create HALO. Identity key not found.');
     }
 
-    await this._partyManager.createHalo({
+    await this._identityManager.createHalo({
       identityDisplayName: displayName || this._identityManager.identityKey.publicKey.humanize()
     });
   }
@@ -359,7 +380,7 @@ export class ECHO {
     assert(!this._identityManager.halo, 'HALO already exists.');
     assert(!this._identityManager.identityKey, 'Identity key already exists.');
 
-    const impl = await this._partyManager.recoverHalo(seedPhrase);
+    const impl = await this._identityManager.recoverHalo(seedPhrase);
     return new Party(impl);
   }
 
@@ -370,7 +391,7 @@ export class ECHO {
     assert(this._partyManager.isOpen, 'ECHO not open.');
     assert(!this._identityManager.halo, 'HALO already exists.');
 
-    const impl = await this._partyManager.joinHalo(invitationDescriptor, secretProvider);
+    const impl = await this._identityManager.joinHalo(invitationDescriptor, secretProvider);
     return new Party(impl);
   }
 

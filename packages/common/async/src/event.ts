@@ -256,12 +256,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
 
   private _trigger (listener: (data: T) => void, data: T) {
     setImmediate(() => {
-      try {
-        listener(data);
-      } catch (err) {
-        console.error('Unhandled error in Event listener:');
-        console.error(err);
-      }
+      listener(data);
     });
   }
 
