@@ -50,7 +50,7 @@
     "lodash.unset": "^4.5.2",
     "memdown": "^5.1.0",
     "multi-read-stream": "^2.0.0",
-    "p-limit": "^3.0.2",
+    "p-limit": "^3.1.0",
     "pify": "~5.0.0",
     "pump": "^3.0.0",
     "pumpify": "^2.0.1",
