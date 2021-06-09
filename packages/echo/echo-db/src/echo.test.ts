@@ -8,31 +8,31 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { latch, sleep, waitForCondition } from '@dxos/async';
-import { SecretValidator, SecretProvider, testSecretProvider, testSecretValidator } from '@dxos/credentials';
+import { SecretValidator, SecretProvider, testSecretProvider, testSecretValidator, generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 import { arraysEqual } from '@dxos/util';
 
 import { ECHO } from './echo';
+import { testInvitationAuthenticator } from './invitations';
 import { Item } from './items';
 import { inviteTestPeer } from './util';
-import { testInvitationAuthenticator } from './invitations';
 
 const log = debug('dxos:echo:test');
 
 describe('ECHO', () => {
   const setup = async (createProfile: boolean) => {
     const echo = new ECHO();
-  
+
     await echo.open();
     afterTest(() => echo.close());
-  
+
     if (createProfile) {
       await echo.createIdentity(createKeyPair());
       await echo.createHalo();
     }
-  
+
     return echo;
   };
 
@@ -369,11 +369,11 @@ describe('ECHO', () => {
     const b1 = await setup(true);
     const b2 = await setup(false);
 
-    expect(a1.isHaloInitialized).toBeTruthy()
-    expect(a2.isHaloInitialized).toBeFalsy()
+    expect(a1.isHaloInitialized).toBeTruthy();
+    expect(a2.isHaloInitialized).toBeFalsy();
 
-    expect(b1.isHaloInitialized).toBeTruthy()
-    expect(b2.isHaloInitialized).toBeFalsy()
+    expect(b1.isHaloInitialized).toBeTruthy();
+    expect(b2.isHaloInitialized).toBeFalsy();
 
     await Promise.all([
       (async () => {
@@ -390,7 +390,7 @@ describe('ECHO', () => {
         // And then redeem it on nodeB.
         await b2.joinHalo(invitation, testSecretProvider);
       })()
-    ])
+    ]);
 
     // Now create a Party on 1 and make sure it gets opened on both 1 and 2.
     let partyA;
@@ -457,4 +457,55 @@ describe('ECHO', () => {
       await Promise.all(itemPromises);
     }
   }).timeout(20_000);
+
+  // TODO(marik-d): Move to ECHO tests.
+  test('Join new device to HALO by recovering from identity seed phrase', async () => {
+    const a = new ECHO();
+    await a.open();
+    afterTest(() => a.close());
+
+    const seedPhrase = generateSeedPhrase();
+    await a.createIdentity(keyPairFromSeedPhrase(seedPhrase));
+    await a.createHalo();
+
+    const b = await setup(false);
+
+    expect(a.isHaloInitialized).toBeTruthy();
+    expect(b.isHaloInitialized).toBeFalsy();
+
+    // And then redeem it on nodeB.
+    await b.recoverHalo(seedPhrase);
+    expect(a.isHaloInitialized).toBeTruthy();
+    expect(b.isHaloInitialized).toBeTruthy();
+
+    // Now create a Party on A and make sure it gets opened on both A and B.
+    expect(a.queryParties().value.length).toBe(0);
+    expect(b.queryParties().value.length).toBe(0);
+
+    const partyUpdated = b.queryParties().update.waitForCount(1);
+
+    await a.createParty();
+    expect(a.queryParties().value.length).toBe(1);
+
+    await partyUpdated;
+    expect(b.queryParties().value.length).toBe(1);
+    expect(a.queryParties().value[0].key).toEqual(b.queryParties().value[0].key);
+
+    {
+      let itemA: Item<any> | null = null;
+
+      // Subscribe to Item updates on B.
+      const updated = b.queryParties().value[0].database.queryItems({ type: 'dxn://example/item/test' })
+        .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id));
+
+      // Create a new Item on A.
+      itemA = await a.queryParties().value[0].database
+        .createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
+      log(`A created ${itemA.id}`);
+
+      // Now wait to see it on B.
+      await updated;
+      log(`B has ${itemA.id}`);
+    }
+  }).timeout(10_000);
 });

@@ -15,8 +15,8 @@ export interface InvitationAuthenticator {
 
 export const testInvitationAuthenticator: InvitationAuthenticator = {
   secretProvider: testSecretProvider,
-  secretValidator: testSecretValidator,
-}
+  secretValidator: testSecretValidator
+};
 
 /**
  * Additional set of callbacks and options used in the invitation process.
