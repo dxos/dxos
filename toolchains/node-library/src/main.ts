@@ -69,8 +69,8 @@ function execMocha (additionalArgs: string[] = []) {
   });
 }
 
-function execBuild() {
-  const {packageDir, packageJson} = getPackage();
+function execBuild () {
+  const { packageDir, packageJson } = getPackage();
 
   if (packageJson.jest) {
     process.stderr.write(chalk`{yellow warn}: jest config in package.json is ignored\n`);
@@ -97,8 +97,8 @@ function execBuild() {
   execTool('tsc');
 }
 
-function execTest(additionalArgs?: string[]) {
-  const {packageDir, packageJson} = getPackage();
+function execTest (additionalArgs?: string[]) {
+  const { packageDir, packageJson } = getPackage();
 
   if (packageJson.toolchain?.testingFramework === 'mocha') {
     console.log(chalk.bold`\nmocha`);
@@ -186,9 +186,9 @@ function getPackageJson () {
   return JSON.parse(fs.readFileSync(join(getPackageDir(), 'package.json'), 'utf-8'));
 }
 
-function getPackage() {
+function getPackage () {
   return {
     packageDir: getPackageDir(),
-    packageJson: getPackageJson(),
-  }
+    packageJson: getPackageJson()
+  };
 }
