@@ -196,16 +196,9 @@ export class Network extends EventEmitter {
 
   /**
    * Destroy all the peers and connections related
-   *
-   * @returns {Promise}
    */
   async destroy () {
-    const promises: Promise<any>[] = [];
-    this.peers.forEach(peer => {
-      promises.push(this.deletePeer(peer.id));
-    });
-
-    return Promise.all(promises);
+    return Promise.all(this.peers.map(peer => this.deletePeer(peer.id)))
   }
 
   async _addConnection (from: Buffer, to: Buffer, conn?: Connection) {
