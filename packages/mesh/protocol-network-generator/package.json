@@ -32,7 +32,8 @@
     "@dxos/protocol": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/node": "^14.0.9",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "@types/jest": "^26.0.7"
   },
   "publishConfig": {
     "access": "restricted"

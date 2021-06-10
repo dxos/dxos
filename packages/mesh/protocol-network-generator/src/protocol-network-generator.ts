@@ -89,7 +89,7 @@ export class ProtocolNetworkGenerator extends EventEmitter {
       }
     });
 
-    generator.on('error', err => this.emit('error', err));
+    generator.on('error', (err: any) => this.emit('error', err));
 
     const network = await (generator as any)[topology](...parameters);
 
