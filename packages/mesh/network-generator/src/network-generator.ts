@@ -8,14 +8,21 @@ import { Event } from '@dxos/async';
 
 import { IdGenerator, Network, NetworkOptions } from './network';
 
-export const topologies = ['ladder', 'complete', 'completeBipartite', 'balancedBinTree', 'path', 'circularLadder', 'grid', 'grid3', 'noLinks', 'cliqueCircle', 'wattsStrogatz'];
+export const TOPOLOGIES = ['ladder', 'complete', 'completeBipartite', 'balancedBinTree', 'path', 'circularLadder', 'grid', 'grid3', 'noLinks', 'cliqueCircle', 'wattsStrogatz'] as const;
+export type Topology = typeof TOPOLOGIES[number];
+
+type Generator = (...args: any) => Promise<Network>
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface NetworkGenerator extends Record<Topology, Generator> {}
 
 export class NetworkGenerator {
   readonly error = new Event<Error>();
+  private readonly generator: any;
 
   constructor (options: NetworkOptions = {}) {
     const self = this; // eslint-disable-line
-    const generator = graphGenerators.factory(() => {
+    this.generator = graphGenerators.factory(() => {
       const idGenerator = new IdGenerator();
 
       const network = new Network(options);
@@ -34,13 +41,15 @@ export class NetworkGenerator {
       };
     });
 
-    topologies.forEach(topology => {
-      (this as any)[topology] = async (...args: any) => {
-        const { network } = generator[topology](...args);
-        await Promise.all(network.peers);
-        await Promise.all(network.connectionsOpening);
-        return network;
-      };
+    TOPOLOGIES.forEach(topology => {
+      this[topology] = async (...args: any) => this.createTopology(topology, ...args);
     });
+  }
+
+  async createTopology (topology: Topology, ...args: any): Promise<Network> {
+    const { network } = this.generator[topology](...args);
+    await Promise.all(network.peers);
+    await Promise.all(network.connectionsOpening);
+    return network;
   }
 }
