@@ -6,9 +6,9 @@ import crypto from 'crypto';
 import { PassThrough } from 'stream';
 import waitForExpect from 'wait-for-expect';
 
-import { NetworkGenerator } from './network-generator';
+import { Network, NetworkGenerator } from './network-generator';
 
-const genericTest = async network => {
+const genericTest = async (network: Network) => {
   expect(network.peers[0]).toHaveProperty('name');
 
   const conn1 = network.connections[0];
@@ -35,12 +35,12 @@ const genericTest = async network => {
 
 test('generate a grid topology', async () => {
   const generator = new NetworkGenerator({
-    createPeer (id) {
+    async createPeer (id) {
       return { id, name: `peer${id}` };
     }
   });
 
-  generator.on('error', err => console.log(err));
+  generator.on('error', (err: any) => console.log(err));
 
   const network = await generator.grid(10, 10);
   expect(network.peers.length).toBe(100);
@@ -50,7 +50,7 @@ test('generate a grid topology', async () => {
 
 test('generate a balancedBinTree of 2 n', async () => {
   const generator = new NetworkGenerator({
-    createPeer (id) {
+    async createPeer (id) {
       return { id, name: `peer${id}` };
     },
     createConnection (fromPeer, toPeer) {
@@ -58,7 +58,7 @@ test('generate a balancedBinTree of 2 n', async () => {
     }
   });
 
-  generator.on('error', err => console.log(err));
+  generator.on('error', (err: any) => console.log(err));
 
   const network = await generator.balancedBinTree(2);
   expect(network.peers.length).toBe(7);
@@ -69,7 +69,7 @@ test('generate a balancedBinTree of 2 n', async () => {
 test('insert pre-made peers', async () => {
   let createPeerCalledCount = 0;
   const generator = new NetworkGenerator({
-    createPeer (id) {
+    async createPeer (id) {
       createPeerCalledCount++;
       return { id, name: `peer${id}` };
     },
@@ -78,7 +78,7 @@ test('insert pre-made peers', async () => {
     }
   });
 
-  generator.on('error', err => console.log(err));
+  generator.on('error', (err: any) => console.log(err));
 
   const network = await generator.noLinks();
   expect(network.peers.length).toBe(0);

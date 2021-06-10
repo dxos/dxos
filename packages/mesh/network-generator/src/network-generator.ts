@@ -8,34 +8,31 @@ import eos from 'end-of-stream';
 import { EventEmitter } from 'events';
 import graphGenerators from 'ngraph.generators';
 import createGraph from 'ngraph.graph';
-import { PassThrough } from 'stream';
+import { PassThrough, Stream } from 'stream';
+
+interface Peer {
+  id: Buffer
+}
+
+interface Connection {
+  fromPeer: Peer,
+  toPeer: Peer,
+  stream: Stream.Stream
+}
 
 /**
- * @typedef {Object} Peer
- * @property {Buffer} id Required peer id.
- */
-
-/**
- * @typedef {Object} Connection
- * @property {Peer} fromPeer
- * @property {Peer} toPeer
- * @property {Stream} stream
- */
-
-/**
- *
- * @callback CreatePeerCallback
- * @param {Buffer} id Random buffer of 32 bytes to represent the id of the peer
+ * @param id Random buffer of 32 bytes to represent the id of the peer
  * @returns {Promise<Peer>}
  */
+type CreatePeerCallback = (id: Buffer) => Promise<Peer>
+
 
 /**
  *
- * @callback CreateConnectionCallback
  * @param {Peer} fromPeer Peer initiator of the connection
  * @param {Peer} toPeer Peer target
- * @returns {Promise<(Stream|undefined)>}
  */
+type CreateConnectionCallback = (fromPeer: Peer, toPeer: Peer) => Promise<Stream.Stream | undefined>
 
 export const topologies = ['ladder', 'complete', 'completeBipartite', 'balancedBinTree', 'path', 'circularLadder', 'grid', 'grid3', 'noLinks', 'cliqueCircle', 'wattsStrogatz'];
 
@@ -43,11 +40,9 @@ export const topologies = ['ladder', 'complete', 'completeBipartite', 'balancedB
  * Class helper to generate random buffer ids based on a number.
  */
 class IdGenerator {
-  constructor () {
-    this._ids = new Map();
-  }
+  private _ids = new Map();
 
-  get (id) {
+  get (id: any) {
     if (this._ids.has(id)) {
       return this._ids.get(id);
     }
@@ -58,18 +53,16 @@ class IdGenerator {
   }
 }
 
-/**
- * Network.
- *
- */
+interface NetworkOptions {
+  createPeer?: CreatePeerCallback,
+  createConnection?: CreateConnectionCallback
+}
+
 export class Network extends EventEmitter {
-  /**
-   * @constructor
-   * @param {Object} options
-   * @param {CreatePeerCallback} options.createPeer
-   * @param {CreateConnectionCallback} options.createConnection
-   */
-  constructor (options = {}) {
+  private _createPeer: CreatePeerCallback
+  private _createConnection: CreateConnectionCallback
+
+  constructor (options: NetworkOptions = {}) {
     super();
 
     const { createPeer = id => ({ id }), createConnection = () => new PassThrough() } = options;
@@ -77,8 +70,8 @@ export class Network extends EventEmitter {
     this._createPeer = async (...args) => createPeer(...args);
     this._createConnection = async (...args) => createConnection(...args);
     this._graph = createGraph();
-    this._graph.on('changed', (changes) => {
-      changes.forEach(async ({ changeType, node, link }) => {
+    this._graph.on('changed', (changes: any) => {
+      changes.forEach(async ({ changeType, node, link }: any) => {
         if (changeType === 'update') {
           return;
         }
@@ -90,30 +83,21 @@ export class Network extends EventEmitter {
     this._connectionsOpening = new Map();
   }
 
-  /**
-   * @type {Ngraph}
-   */
   get graph () {
     return this._graph;
   }
 
-  /**
-   * @type {Peer[]}
-   */
   get peers () {
-    const peers = [];
-    this._graph.forEachNode(node => {
+    const peers: Peer[] = [];
+    this._graph.forEachNode((node: any) => {
       peers.push(node.data);
     });
     return peers;
   }
 
-  /**
-   * @type {Connection[]}
-   */
   get connections () {
-    const connections = [];
-    this._graph.forEachLink(link => {
+    const connections: Connection[] = [];
+    this._graph.forEachLink((link: any) => {
       const fromPeer = this._graph.getNode(link.fromId).data;
       const toPeer = this._graph.getNode(link.toId).data;
       connections.push({ fromPeer, toPeer, stream: link.data });
@@ -121,20 +105,15 @@ export class Network extends EventEmitter {
     return connections;
   }
 
-  /**
-   * @type {Promise[]}
-   */
-  get connectionsOpening () {
+  get connectionsOpening (): Promise<any>[] {
     return Array.from(this._connectionsOpening.values());
   }
 
   /**
    * Add a new peer supplied by the caller to the network
-   *
-   * @param {Peer} peer
    */
   // TOOD(dboreham): better method name?
-  insertPeer (peer) {
+  insertPeer (peer: Peer) {
     assert(peer);
     assert(Buffer.isBuffer(peer.id));
     this._graph.addNode(peer.id.toString('hex'), peer);
@@ -142,11 +121,8 @@ export class Network extends EventEmitter {
 
   /**
    * Add a new peer to the network
-   *
-   * @param {Buffer} id
-   * @returns {Promise<Peer>}
    */
-  async addPeer (id) {
+  async addPeer (id: Buffer): Promise<Peer> {
     assert(Buffer.isBuffer(id));
 
     const peer = this._createPeer(id).then((peer) => {
@@ -168,12 +144,8 @@ export class Network extends EventEmitter {
 
   /**
    * Add a new connection to the network
-   *
-   * @param {Buffer} from
-   * @param {Buffer} to
-   * @returns {Promise<Connection>}
    */
-  async addConnection (from, to, conn) {
+  async addConnection (from: Buffer, to: Buffer, conn?: Connection): Promise<Connection> {
     assert(Buffer.isBuffer(from));
     assert(Buffer.isBuffer(to));
 
@@ -190,11 +162,8 @@ export class Network extends EventEmitter {
 
   /**
    * Delete a peer
-   *
-   * @param {Buffer} id
-   * @returns {Promise}
    */
-  deletePeer (id) {
+  deletePeer (id: Buffer) {
     assert(Buffer.isBuffer(id));
 
     const idHex = id.toString('hex');
@@ -203,8 +172,8 @@ export class Network extends EventEmitter {
       throw new Error(`Peer ${idHex} not found`);
     }
 
-    const promises = [];
-    this._graph.forEachLinkedNode(idHex, (_, link) => {
+    const promises: Promise<any>[] = [];
+    this._graph.forEachLinkedNode(idHex, (_: any, link: any) => {
       promises.push(this._destroyLink(link));
     });
     this._graph.removeNode(idHex);
@@ -213,17 +182,13 @@ export class Network extends EventEmitter {
 
   /**
    * Delete a connection
-   *
-   * @param {Buffer} from
-   * @param {Buffer} to
-   * @returns {Promise}
    */
-  deleteConnection (from, to) {
+  deleteConnection (from: Buffer, to: Buffer) {
     const fromHex = from.toString('hex');
     const toHex = to.toString('hex');
 
-    const promises = [];
-    this._graph.forEachLinkedNode(fromHex, (_, link) => {
+    const promises: Promise<any>[] = [];
+    this._graph.forEachLinkedNode(fromHex, (_: any, link: any) => {
       if (link.fromId === fromHex && link.toId === toHex) {
         promises.push(this._destroyLink(link));
       }
@@ -238,7 +203,7 @@ export class Network extends EventEmitter {
    * @returns {Promise}
    */
   async destroy () {
-    const promises = [];
+    const promises: Promise<any>[] = [];
     this.peers.forEach(peer => {
       promises.push(this.deletePeer(peer.id));
     });
@@ -246,7 +211,7 @@ export class Network extends EventEmitter {
     return Promise.all(promises);
   }
 
-  async _addConnection (from, to, conn) {
+  async _addConnection (from: Buffer, to: Buffer, conn?: Connection) {
     const fromHex = from.toString('hex');
     const toHex = to.toString('hex');
 
@@ -277,7 +242,7 @@ export class Network extends EventEmitter {
     return { fromPeer, toPeer, stream };
   }
 
-  async _getPeerOrCreate (id) {
+  async _getPeerOrCreate (id: Buffer) {
     if (!this._graph.hasNode(id.toString('hex'))) {
       return this.addPeer(id);
     }
@@ -296,9 +261,9 @@ export class Network extends EventEmitter {
     return peer;
   }
 
-  async _destroyLink (link) {
+  async _destroyLink (link: any) {
     if (!link.data.destroyed) {
-      const p = new Promise(resolve => eos(link.data, () => {
+      const p = new Promise<void>(resolve => eos(link.data, () => {
         resolve();
       }));
       link.data.destroy();
@@ -307,18 +272,8 @@ export class Network extends EventEmitter {
   }
 }
 
-/**
- * Network generator.
- *
- */
 export class NetworkGenerator extends EventEmitter {
-  /**
-   * @constructor
-   * @param {Object} options
-   * @param {CreatePeerCallback} options.createPeer
-   * @param {CreateConnectionCallback} options.createConnection
-   */
-  constructor (options = {}) {
+  constructor (options: NetworkOptions = {}) {
     super();
 
     const self = this; // eslint-disable-line
@@ -329,10 +284,10 @@ export class NetworkGenerator extends EventEmitter {
 
       return {
         network,
-        addNode (id) {
+        addNode (id: any) {
           network.addPeer(idGenerator.get(id)).catch(err => self.emit('error', err));
         },
-        addLink (from, to) {
+        addLink (from: Buffer, to: Buffer) {
           network.addConnection(idGenerator.get(from), idGenerator.get(to)).catch(err => self.emit('error', err));
         },
         getNodesCount () {
@@ -342,7 +297,7 @@ export class NetworkGenerator extends EventEmitter {
     });
 
     topologies.forEach(topology => {
-      this[topology] = async (...args) => {
+      this[topology] = async (...args: any) => {
         const { network } = generator[topology](...args);
         await Promise.all(network.peers);
         await Promise.all(network.connectionsOpening);
