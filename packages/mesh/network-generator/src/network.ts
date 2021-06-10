@@ -32,7 +32,6 @@ interface Connection {
  */
 type CreatePeerCallback = (id: Buffer) => Promise<Peer>
 
-
 /**
  *
  * @param {Peer} fromPeer Peer initiator of the connection
@@ -205,7 +204,7 @@ export class Network extends EventEmitter {
    * Destroy all the peers and connections related
    */
   async destroy () {
-    return Promise.all(this.peers.map(peer => this.deletePeer(peer.id)))
+    return Promise.all(this.peers.map(peer => this.deletePeer(peer.id)));
   }
 
   async _addConnection (from: Buffer, to: Buffer, conn?: Connection) {

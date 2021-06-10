@@ -2,14 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
-import crypto from 'crypto';
-import eos from 'end-of-stream';
 import { EventEmitter } from 'events';
 import graphGenerators from 'ngraph.generators';
-import createGraph from 'ngraph.graph';
-import { PassThrough, Stream } from 'stream';
-import {NetworkOptions, IdGenerator, Network} from './network'
+
+import { IdGenerator, Network, NetworkOptions } from './network';
 
 export const topologies = ['ladder', 'complete', 'completeBipartite', 'balancedBinTree', 'path', 'circularLadder', 'grid', 'grid3', 'noLinks', 'cliqueCircle', 'wattsStrogatz'];
 
