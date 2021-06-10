@@ -7,5 +7,9 @@
   ],
   "cSpell.words": [
     "burdon"
-  ]
+  ],
+  "files.associations": {
+    "rush.json": "jsonc",
+    "command-line.json": "jsonc"
+  },
 }
