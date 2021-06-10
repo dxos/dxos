@@ -13,6 +13,7 @@ export type Topology = typeof TOPOLOGIES[number];
 
 type Generator = (...args: any) => Promise<Network>
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface NetworkGenerator extends Record<Topology, Generator> {}
 
 export class NetworkGenerator {

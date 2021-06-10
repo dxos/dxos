@@ -31,6 +31,7 @@ interface GenerateOptions {
   parameters?: any[]
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ProtocolNetworkGenerator extends NetworkGenerator {}
 
 export class ProtocolNetworkGenerator extends EventEmitter {
