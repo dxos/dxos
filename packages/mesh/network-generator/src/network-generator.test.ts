@@ -40,9 +40,9 @@ test('generate a grid topology', async () => {
     }
   });
 
-  generator.on('error', (err: any) => console.log(err));
+  generator.error.on(err => console.log(err));
 
-  const network = await generator.grid(10, 10);
+  const network = await (generator as any).grid(10, 10);
   expect(network.peers.length).toBe(100);
   expect(network.connections.length).toBe(180);
   await genericTest(network);
@@ -58,9 +58,9 @@ test('generate a balancedBinTree of 2 n', async () => {
     }
   });
 
-  generator.on('error', (err: any) => console.log(err));
+  generator.error.on(err => console.log(err));
 
-  const network = await generator.balancedBinTree(2);
+  const network = await (generator as any).balancedBinTree(2);
   expect(network.peers.length).toBe(7);
   expect(network.connections.length).toBe(6);
   await genericTest(network);
@@ -78,9 +78,9 @@ test('insert pre-made peers', async () => {
     }
   });
 
-  generator.on('error', (err: any) => console.log(err));
+  generator.error.on(err => console.log(err));
 
-  const network = await generator.noLinks();
+  const network = await (generator as any).noLinks();
   expect(network.peers.length).toBe(0);
   expect(network.connections.length).toBe(0);
 
