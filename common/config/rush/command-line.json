@@ -165,43 +165,6 @@
    * For example, you might define a "--production" parameter for the "rush build" command.
    */
   "parameters": [
-    {
-      /**
-       * (Required) Determines the type of custom parameter.
-       * A "flag" is a custom command-line parameter whose presence acts as an on/off switch.
-       */
-      "parameterKind": "flag",
-    
-      /**
-       * (Required) The long name of the parameter.  It must be lower-case and use dash delimiters.
-       */
-      "longName": "--light",
-    
-      /**
-       * An optional alternative short name for the parameter.  It must be a dash followed by a single
-       * lower-case or upper-case letter, which is case-sensitive.
-       *
-       * NOTE: The Rush developers recommend that automation scripts should always use the long name
-       * to improve readability.  The short name is only intended as a convenience for humans.
-       * The alphabet letters run out quickly, and are difficult to memorize, so *only* use
-       * a short name if you expect the parameter to be needed very often in everyday operations.
-       */
-      "shortName": "-l",
-    
-      /**
-       * (Required) A long description to be shown in the command-line help.
-       *
-       * Whenever you introduce commands/parameters, taking a little time to write meaningful
-       * documentation can make a big difference for the developer experience in your repo.
-       */
-      "description": "Don't run lint or test",
-    
-      /**
-       * (Required) A list of custom commands and/or built-in Rush commands that this parameter may
-       * be used with.  The parameter will be appended to the shell command that Rush invokes.
-       */
-      "associatedCommands": ["build", "rebuild"]
-    }
     // {
     //   /**
     //    * (Required) Determines the type of custom parameter.
