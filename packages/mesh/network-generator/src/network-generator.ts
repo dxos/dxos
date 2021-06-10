@@ -43,7 +43,6 @@ export class NetworkGenerator {
     TOPOLOGIES.forEach(topology => {
       this[topology] = async (...args: any) => this.createTopology(topology, ...args);
     });
-
   }
 
   async createTopology (topology: Topology, ...args: any): Promise<Network> {
