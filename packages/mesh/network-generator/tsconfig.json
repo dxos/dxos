@@ -3,6 +3,10 @@
   "compilerOptions": {
     "outDir": "dist"
   },
+  "types": [
+    "node",
+    "jest"
+  ],
   "include": [
     "src",
     "src/**/*.js",
