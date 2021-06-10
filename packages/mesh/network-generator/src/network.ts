@@ -9,8 +9,15 @@ import { EventEmitter } from 'events';
 import createGraph from 'ngraph.graph';
 import { PassThrough, Stream } from 'stream';
 
+interface CreateStreamOptions {
+  initiator?: boolean,
+  topic?: Buffer,
+  channel?: Buffer,
+  options?: any
+}
 interface Peer {
-  id: Buffer
+  id: Buffer,
+  createStream?: (options: CreateStreamOptions) => Stream.Stream
 }
 
 interface Connection {

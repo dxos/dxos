@@ -40,7 +40,7 @@ export class ProtocolNetworkGenerator extends EventEmitter {
     assert(typeof createPeer === 'function', 'createPeer is required and must be a function');
     this._createPeer = (...args) => createPeer(...args);
     topologies.forEach(topology => {
-      this[topology] = async (options: GenerateOptions) => this._generate(topology, options);
+      (this as any)[topology] = async (options: GenerateOptions) => this._generate(topology, options);
     });
   }
 
@@ -71,9 +71,9 @@ export class ProtocolNetworkGenerator extends EventEmitter {
         return peer;
       },
       createConnection: async (fromPeer, toPeer) => {
-        const r1 = fromPeer.createStream({ initiator: true, topic, channel: topic, options: protocol });
+        const r1 = fromPeer.createStream?.({ initiator: true, topic, channel: topic, options: protocol });
         // Target peer shouldn't get the topic, this help us to simulate the network like discovery-swarm/hyperswarm
-        const r2 = toPeer.createStream({ initiator: false, options: protocol });
+        const r2 = toPeer.createStream?.({ initiator: false, options: protocol });
         assert(isStream(r1), 'createStream function must return a stream');
         assert(isStream(r1), 'createStream function must return a stream');
 
@@ -91,7 +91,7 @@ export class ProtocolNetworkGenerator extends EventEmitter {
 
     generator.on('error', err => this.emit('error', err));
 
-    const network = await generator[topology](...parameters);
+    const network = await (generator as any)[topology](...parameters);
 
     return network;
   }
