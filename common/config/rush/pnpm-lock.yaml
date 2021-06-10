@@ -1015,9 +1015,15 @@ importers:
       ngraph.graph: 19.1.0
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/assert': 1.5.4
+      '@types/jest': 26.0.23
+      '@types/node': 14.14.45
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/toolchain-node-library': workspace:*
+      '@types/assert': ^1.5.4
+      '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
       debug: ^4.1.1
       end-of-stream: ^1.4.1
       ngraph.generators: ^18.0.1
@@ -1138,12 +1144,14 @@ importers:
     devDependencies:
       '@dxos/protocol': link:../protocol
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/jest': 26.0.23
       '@types/node': 14.14.45
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/network-generator': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
       debug: ^4.1.1
       p-event: ^4.2.0
@@ -1211,6 +1219,7 @@ importers:
       wait-for-expect: ^3.0.2
   ../../packages/mesh/protocol-plugin-replicator:
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/protocol': link:../protocol
       buffer-json-encoding: 1.0.2
@@ -1231,6 +1240,7 @@ importers:
       random-access-memory: 3.1.2
       wait-for-expect: 3.0.2
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/feed-store': workspace:*

@@ -9,7 +9,7 @@ import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from './protocol-network-generator';
 
 test('basic generator', async () => {
-  const generator = new ProtocolNetworkGenerator((topic, id) => {
+  const generator = new ProtocolNetworkGenerator(async (topic, id) => {
     return {
       id,
       createStream () {
@@ -26,7 +26,7 @@ test('basic generator', async () => {
 
   generator.on('error', err => console.log(err));
 
-  const network = await generator.grid({
+  const network = await (generator as any).grid({
     topic: crypto.randomBytes(32),
     parameters: [10, 10]
   });

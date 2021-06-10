@@ -7,53 +7,57 @@ import { EventEmitter } from 'events';
 import pEvent from 'p-event';
 import pump from 'pump';
 
-import { NetworkGenerator, topologies } from '@dxos/network-generator';
-import { getProtocolFromStream } from '@dxos/protocol';
+import { Network, NetworkGenerator, topologies } from '@dxos/network-generator';
+import { getProtocolFromStream, ProtocolOptions } from '@dxos/protocol';
+
+interface Peer {
+  id: Buffer,
+  createStream: () => void,
+}
 
 /**
- * @typedef {Object} Peer
- * @property {Buffer} id Required peer id.
+ * @param topic Buffer to initialize the stream protocol
+ * @param id Random buffer of 32 bytes to represent the id of the peer
  */
+type CreatePeerCallback = (topic: Buffer, id: Buffer, options: any) => Promise<Peer>
 
-/**
- *
- * @callback CreatePeerCallback
- * @param {Buffer} topic Buffer to initialize the stream protocol
- * @param {Buffer} id Random buffer of 32 bytes to represent the id of the peer
- * @returns {Promise<Peer>}
- */
+const isStream = (stream: any) => typeof stream === 'object' && typeof stream.pipe === 'function';
 
-const isStream = stream => typeof stream === 'object' && typeof stream.pipe === 'function';
+interface GenerateOptions {
+  topic?: Buffer,
+  waitForFullConnection?: boolean,
+  peer?: any,
+  protocol?: ProtocolOptions,
+  parameters?: any[]
+}
 
 export class ProtocolNetworkGenerator extends EventEmitter {
-  /**
-   * @constructor
-   *
-   * @param {CreatePeerCallback} createPeer
-   */
-  constructor (createPeer) {
+  private _createPeer: CreatePeerCallback
+
+  constructor (createPeer: CreatePeerCallback) {
     super();
 
     assert(typeof createPeer === 'function', 'createPeer is required and must be a function');
     this._createPeer = (...args) => createPeer(...args);
     topologies.forEach(topology => {
-      this[topology] = async (options) => this._generate(topology, options);
+      (this as any)[topology] = async (options: GenerateOptions) => this._generate(topology, options);
     });
   }
 
   /**
    * Generate a network based on a ngraph.generator topology
    *
-   * @param {string} topology Valid ngraph.generator topology
-   * @param {Object} options
-   * @param {Buffer} options.topic Buffer to use on the stream protocol initialization
-   * @param {boolean} [options.waitForFullConnection=true] Wait until all the connections are ready
-   * @param {Object} options.peer peer options
-   * @param {Object} options.protocol Protocol options
-   * @param {Array} options.parameters Arguments for the ngraph generator.
-   * @returns {Promise<Network>}
+   * @param topology Valid ngraph.generator topology
+   * @param options.topic Buffer to use on the stream protocol initialization
+   * @param [options.waitForFullConnection=true] Wait until all the connections are ready
+   * @param options.peer peer options
+   * @param options.protocol Protocol options
+   * @param options.parameters Arguments for the ngraph generator.
    */
-  async _generate (topology, options = {}) {
+  async _generate (
+    topology: string,
+    options: GenerateOptions = { waitForFullConnection: true }
+  ): Promise<Network> {
     const { topic, waitForFullConnection = true, peer: peerOptions = {}, protocol = {}, parameters = [] } = options;
 
     assert(Buffer.isBuffer(topic), 'topic is required and must be a buffer');
@@ -67,9 +71,9 @@ export class ProtocolNetworkGenerator extends EventEmitter {
         return peer;
       },
       createConnection: async (fromPeer, toPeer) => {
-        const r1 = fromPeer.createStream({ initiator: true, topic, channel: topic, options: protocol });
+        const r1 = fromPeer.createStream?.({ initiator: true, topic, channel: topic, options: protocol });
         // Target peer shouldn't get the topic, this help us to simulate the network like discovery-swarm/hyperswarm
-        const r2 = toPeer.createStream({ initiator: false, options: protocol });
+        const r2 = toPeer.createStream?.({ initiator: false, options: protocol });
         assert(isStream(r1), 'createStream function must return a stream');
         assert(isStream(r1), 'createStream function must return a stream');
 
@@ -85,9 +89,9 @@ export class ProtocolNetworkGenerator extends EventEmitter {
       }
     });
 
-    generator.on('error', err => this.emit('error', err));
+    generator.error.on(err => this.emit('error', err));
 
-    const network = await generator[topology](...parameters);
+    const network = await (generator as any)[topology](...parameters);
 
     return network;
   }
