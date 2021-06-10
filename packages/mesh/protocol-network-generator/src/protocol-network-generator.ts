@@ -56,7 +56,7 @@ export class ProtocolNetworkGenerator extends EventEmitter {
    */
   async _generate (
     topology: string,
-    options: GenerateOptions = {waitForFullConnection: true}
+    options: GenerateOptions = { waitForFullConnection: true }
   ): Promise<Network> {
     const { topic, waitForFullConnection = true, peer: peerOptions = {}, protocol = {}, parameters = [] } = options;
 
