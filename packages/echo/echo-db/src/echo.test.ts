@@ -8,14 +8,13 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { latch, sleep, waitForCondition } from '@dxos/async';
-import { SecretValidator, SecretProvider, testSecretProvider, testSecretValidator, generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
+import { generateSeedPhrase, keyPairFromSeedPhrase, testSecretProvider, testSecretValidator } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
-import { arraysEqual } from '@dxos/util';
 
 import { ECHO } from './echo';
-import { OfflineInvitationClaimer, testInvitationAuthenticator } from './invitations';
+import { testInvitationAuthenticator } from './invitations';
 import { Item } from './items';
 import { inviteTestPeer } from './util';
 
