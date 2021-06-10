@@ -83,7 +83,7 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
   let network: any;
 
   beforeAll(async () => {
-    network = await (generator as any).balancedBinTree({
+    network = await generator.balancedBinTree({
       topic,
       parameters: [3]
     });

@@ -108,7 +108,7 @@ test('balancedBinTree: broadcast a message.', async () => {
     }
   });
 
-  const network = await (generator as any).balancedBinTree(2);
+  const network = await generator.balancedBinTree(2);
   await publishAndSync(network.peers, Buffer.from('message1'));
 
   const packet = await publishAndSync(network.peers, Buffer.from('message1'), { seqno: Buffer.from('custom-seqno') });
@@ -129,7 +129,7 @@ test('complete: broadcast a message.', async () => {
     }
   });
 
-  const network = await (generator as any).complete(10);
+  const network = await generator.complete(10);
 
   let time = Date.now();
 
