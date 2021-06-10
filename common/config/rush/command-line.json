@@ -156,7 +156,7 @@
       "description": "Build, lint and test.",
       "summary": "Build, lint and test.",
       "incremental": true,
-      "enableParallelism": false
+      "enableParallelism": true
     }
   ],
 
