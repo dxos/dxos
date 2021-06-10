@@ -97,6 +97,18 @@ function execBuild() {
   execTool('tsc');
 }
 
+function execTest(additionalArgs?: string[]) {
+  const {packageDir, packageJson} = getPackage();
+
+  if (packageJson.toolchain?.testingFramework === 'mocha') {
+    console.log(chalk.bold`\nmocha`);
+    execMocha(additionalArgs);
+  } else {
+    console.log(chalk.bold`\njest`);
+    execJest(packageDir, additionalArgs);
+  }
+}
+
 // eslint-disable-next-line no-unused-expressions
 yargs(process.argv.slice(2))
   .command(
@@ -111,27 +123,20 @@ yargs(process.argv.slice(2))
     }
   )
   .command(
-    'check',
+    'build:check',
     'build, lint, and test the package',
     yargs => yargs
       .strict()
       .option('globalSetup', { type: 'string', description: 'globalSetup for test' })
       .option('globalTeardown', { type: 'string', description: 'globalTeardown for test' }),
-    (args) => {
+    () => {
       const before = Date.now();
-      const {packageDir, packageJson} = getPackage();
       execBuild();
 
       console.log(chalk.bold`\neslint`);
       execLint();
 
-      if (packageJson.toolchain?.testingFramework === 'mocha') {
-        console.log(chalk.bold`\nmocha`);
-        execMocha();
-      } else {
-        console.log(chalk.bold`\njest`);
-        execJest(packageDir, ['globalSetup', 'globalTeardown'].filter(arg => !!args[arg]).map(arg => `--${arg}=${args[arg]}`));
-      }
+      execTest();
 
       console.log(chalk`\n{green.bold CHECK COMPLETE} in {bold ${Date.now() - before}} ms`);
     }
@@ -149,15 +154,7 @@ yargs(process.argv.slice(2))
     'run tests',
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
     ({ _ }) => {
-      const {packageDir, packageJson} = getPackage();
-
-      if (packageJson.toolchain?.testingFramework === 'mocha') {
-        console.log(chalk.bold`\nmocha`);
-        execMocha(_.slice(1).map(String));
-      } else {
-        console.log(chalk.bold`\njest`);
-        execJest(packageDir, _.slice(1).map(String));
-      }
+      execTest(_.slice(1).map(String));
     }
   )
   .command<{ command: string }>(
