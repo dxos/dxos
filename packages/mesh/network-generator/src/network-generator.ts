@@ -8,9 +8,8 @@ import { Event } from '@dxos/async';
 
 import { IdGenerator, Network, NetworkOptions } from './network';
 
-export type Topology = 'ladder' | 'complete' | 'completeBipartite' | 'balancedBinTree' | 'path' | 'circularLadder' | 'grid' | 'grid3' | 'noLinks' | 'cliqueCircle' | 'wattsStrogatz'
-
-export const TOPOLOGIES: Topology[] = ['ladder', 'complete', 'completeBipartite', 'balancedBinTree', 'path', 'circularLadder', 'grid', 'grid3', 'noLinks', 'cliqueCircle', 'wattsStrogatz'];
+export const TOPOLOGIES = <const>['ladder', 'complete', 'completeBipartite', 'balancedBinTree', 'path', 'circularLadder', 'grid', 'grid3', 'noLinks', 'cliqueCircle', 'wattsStrogatz'];
+export type Topology = typeof TOPOLOGIES[number];
 
 type Generator = (...args: any) => Promise<Network>
 
