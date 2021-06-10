@@ -1206,7 +1206,7 @@ importers:
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
       ngraph.graph: ^19.0.1
-      p-limit: ^3.0.2
+      p-limit: ^3.1.0
       queue-microtask: ^1.1.2
       wait-for-expect: ^3.0.2
   ../../packages/mesh/protocol-plugin-replicator:
@@ -1220,6 +1220,8 @@ importers:
       '@dxos/feed-store': link:../../echo/feed-store
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/debug': 4.1.5
+      '@types/jest': 26.0.23
       coveralls: 3.1.0
       cpy-cli: 2.0.0
       del-cli: 3.0.1
@@ -1235,6 +1237,8 @@ importers:
       '@dxos/protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/debug': ^4.1.1
+      '@types/jest': ^26.0.7
       buffer-json-encoding: ^1.0.2
       coveralls: ^3.0.7
       cpy-cli: ^2.0.0
@@ -1342,7 +1346,7 @@ importers:
       lodash.unset: ^4.5.2
       memdown: ^5.1.0
       multi-read-stream: ^2.0.0
-      p-limit: ^3.0.2
+      p-limit: ^3.1.0
       pify: ~5.0.0
       pump: ^3.0.0
       pumpify: ^2.0.1
