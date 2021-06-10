@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import pEvent from 'p-event';
 import pump from 'pump';
 
-import { Network, NetworkGenerator, topologies } from '@dxos/network-generator';
+import { Network, NetworkGenerator, Topology, TOPOLOGIES } from '@dxos/network-generator';
 import { getProtocolFromStream, ProtocolOptions } from '@dxos/protocol';
 
 interface Peer {
@@ -31,6 +31,8 @@ interface GenerateOptions {
   parameters?: any[]
 }
 
+export interface ProtocolNetworkGenerator extends NetworkGenerator {}
+
 export class ProtocolNetworkGenerator extends EventEmitter {
   private _createPeer: CreatePeerCallback
 
@@ -39,8 +41,8 @@ export class ProtocolNetworkGenerator extends EventEmitter {
 
     assert(typeof createPeer === 'function', 'createPeer is required and must be a function');
     this._createPeer = (...args) => createPeer(...args);
-    topologies.forEach(topology => {
-      (this as any)[topology] = async (options: GenerateOptions) => this._generate(topology, options);
+    TOPOLOGIES.forEach(topology => {
+      this[topology] = async (options: GenerateOptions) => this._generate(topology, options);
     });
   }
 
@@ -55,7 +57,7 @@ export class ProtocolNetworkGenerator extends EventEmitter {
    * @param options.parameters Arguments for the ngraph generator.
    */
   async _generate (
-    topology: string,
+    topology: Topology,
     options: GenerateOptions = { waitForFullConnection: true }
   ): Promise<Network> {
     const { topic, waitForFullConnection = true, peer: peerOptions = {}, protocol = {}, parameters = [] } = options;
@@ -91,7 +93,7 @@ export class ProtocolNetworkGenerator extends EventEmitter {
 
     generator.error.on(err => this.emit('error', err));
 
-    const network = await (generator as any)[topology](...parameters);
+    const network = await generator[topology](...parameters);
 
     return network;
   }

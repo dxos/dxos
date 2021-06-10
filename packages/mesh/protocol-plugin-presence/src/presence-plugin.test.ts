@@ -51,7 +51,7 @@ function links (graph: Graph) {
 
 test('presence', async () => {
   const topic = crypto.randomBytes(32);
-  const network = await (generator as any).balancedBinTree({
+  const network = await generator.balancedBinTree({
     topic,
     waitForFullConnection: false,
     parameters: [3]
