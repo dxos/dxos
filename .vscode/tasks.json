@@ -2,17 +2,17 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Rush build all light",
+			"label": "Rush build (light)",
 			"group": "build",
 			"type": "shell",
-			"command": "rush build --light",
+			"command": "rush build",
 			"problemMatcher": []
 		},
 		{
-			"label": "Rush build to current package light",
+			"label": "Rush build to current package (light)",
 			"group": "build",
 			"type": "shell",
-			"command": "rush build --light --to-except $(cut -d '=' -f 2 <<< $(npm run env | grep 'npm_package_name'))",
+			"command": "rush build --to-except $(cut -d '=' -f 2 <<< $(npm run env | grep 'npm_package_name'))",
 			"options": {
 				"cwd": "${fileDirname}"
 			},
