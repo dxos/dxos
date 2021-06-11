@@ -38,7 +38,6 @@
     "use-subscription": "^1.4.1"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*",
     "@babel/cli": "^7.0.0",
     "@babel/core": "~7.13.15",
     "@babel/plugin-proposal-class-properties": "^7.12.1",
@@ -48,6 +47,7 @@
     "@babel/preset-react": "7.9.4",
     "@dxos/eslint-plugin": "~1.0.10",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
+    "@dxos/toolchain-node-library": "workspace:*",
     "@storybook/addon-actions": "^6.2.9",
     "@storybook/addon-knobs": "^6.2.9",
     "@storybook/react": "^6.2.9",

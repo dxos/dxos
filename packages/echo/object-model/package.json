@@ -44,6 +44,7 @@
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/jest-expect-message": "^1.0.3",
@@ -51,8 +52,7 @@
     "jest": "^26.6.3",
     "jest-expect-message": "^1.0.2",
     "stream-buffers": "^3.0.2",
-    "wait-for-expect": "^3.0.2",
-    "@dxos/async": "workspace:*"
+    "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "restricted"
