@@ -13,7 +13,8 @@
   },
   "license": "AGPL-3.0",
   "scripts": {
-    "build": "tsc --noEmit && pnpm run lint && pnpm run test 2>&1 && true",
+    "build": "tsc --noEmit",
+    "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
     "build-storybook": "build-storybook --quiet",
     "build-storybook-docs": "build-storybook --quiet --docs",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",

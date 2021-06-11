@@ -55,7 +55,7 @@ jobs:
           echo "::endgroup::"
           
           # Build
-          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js rebuild --verbose
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
 
           # Build storybooks
           echo "::group::Storybooks"

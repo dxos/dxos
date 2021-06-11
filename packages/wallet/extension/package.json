@@ -6,7 +6,8 @@
   "author": "DXOS.org",
   "scripts": {
     "lint": "toolchain lint",
-    "build": "toolchain build && node scripts/build.js"
+    "build": "toolchain build && node scripts/build.js",
+    "build:test": "pnpm run build && pnpm run lint"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
