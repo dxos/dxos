@@ -32,7 +32,6 @@ const config: ClientConfig = {
   console.log({ profile });
 
   const requestHandler: (method: string, request: Uint8Array) => Promise<Uint8Array | ResponseStream> = async (method, request) => {
-    // request is not used anywhere yet because we have parameter-less requests at the moment.
     if (method === 'GetProfile') {
       return schema.getCodecForType('dxos.wallet.extension.GetProfileResponse').encode({
         publicKey: profile?.publicKey.toHex(),
@@ -51,6 +50,13 @@ const config: ClientConfig = {
       const newParty = await client.echo.createParty();
       return schema.getCodecForType('dxos.wallet.extension.CreatePartyResponse').encode({
         partyKey: newParty.key.toHex()
+      });
+    } else if (method === 'SignMessage') {
+      const signMessageRequest = schema.getCodecForType('dxos.wallet.extension.SignMessageRequest').decode(request);
+      return schema.getCodecForType('dxos.wallet.extension.SignMessageResponse').encode({
+        publicKey: profile?.publicKey.toHex(),
+        username: profile?.username,
+        signedMessage: client.echo.keyring.sign(signMessageRequest.message, client.echo.keyring.keys).signed.payload
       });
     } else {
       console.log('Unsupported method: ', method);
