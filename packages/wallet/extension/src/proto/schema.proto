@@ -11,6 +11,18 @@ service BackgroundService {
 
   rpc CreateParty(CreatePartyRequest) returns (CreatePartyResponse);
   rpc GetParties(GetPartiesRequest) returns (stream GetPartiesResponse);
+
+  rpc SignMessage(SignMessageRequest) returns (SignMessageResponse);
+}
+
+message SignMessageRequest {
+  number nonce = 1;
+  bytes message = 2;
+}
+message SignMessageResponse {
+  string publicKey = 1;
+  string username = 2;
+  bytes signedMessage = 3;
 }
 
 message GetProfileRequest {}
