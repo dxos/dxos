@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { browser } from 'webextension-polyfill-ts';
 
-import { RpcClient, wrapPort } from '../../services';
+import { RpcClient, wrapPort } from '../services';
 
 export const useRpcClient = () => {
   const [client, setClient] = useState<RpcClient | undefined>(undefined);

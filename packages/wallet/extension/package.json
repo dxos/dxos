@@ -12,6 +12,7 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/wallet-core": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@hot-loader/react-dom": "16.13.0",
     "react": "^16.14.0",

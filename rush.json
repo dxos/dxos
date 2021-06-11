@@ -701,6 +701,12 @@
       "projectFolder": "packages/wallet/playground",
       "shouldPublish": false,
       "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/wallet-core",
+      "projectFolder": "packages/wallet/core",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
     }
   ]
 }

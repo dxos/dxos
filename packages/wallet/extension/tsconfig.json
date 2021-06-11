@@ -17,7 +17,7 @@
   "include": [
     "src/**/*",
     "tools/**/*"
-  ],
+, "../core/src/services"  ],
   "references": [
     {
       "path": "../../sdk/client"
