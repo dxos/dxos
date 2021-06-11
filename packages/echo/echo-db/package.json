@@ -54,16 +54,16 @@
     "random-access-memory": "~3.1.2"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/testutils": "workspace:*",
+    "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/memdown": "^3.0.0",
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2",
     "lodash": "4.17.21",
     "memdown": "^5.1.0",
     "tempy": "~1.0.1",
-    "ws": "^7.4.4",
-    "expect": "~27.0.2",
-    "@types/mocha": "~8.2.2"
+    "ws": "^7.4.4"
   },
   "toolchain": {
     "testingFramework": "mocha"

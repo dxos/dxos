@@ -26,18 +26,18 @@
     "test": "toolchain test"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "debug": "^4.1.1",
     "end-of-stream": "^1.4.1",
     "ngraph.generators": "^18.0.1",
-    "ngraph.graph": "^19.0.1",
-    "@dxos/async": "workspace:*"
+    "ngraph.graph": "^19.0.1"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "wait-for-expect": "^3.0.2",
     "@types/assert": "^1.5.4",
+    "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
-    "@types/jest": "^26.0.7"
+    "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "restricted"
