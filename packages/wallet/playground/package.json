@@ -12,7 +12,7 @@
   "scripts": {
     "build": "snowpack build --bundle",
     "build:test": "pnpm run build && pnpm run test",
-    "test": "pnpn run lint",
+    "test": "pnpm run lint",
     "lint": "toolchain lint",
     "start": "snowpack dev"
   },

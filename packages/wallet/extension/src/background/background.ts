@@ -6,9 +6,7 @@ import { browser, Runtime } from 'webextension-polyfill-ts';
 
 import { Client, ClientConfig } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
-
-import { schema } from '@dxos/wallet-core';
-import { RpcServer, wrapPort, ResponseStream } from '@dxos/wallet-core';
+import { schema, RpcServer, wrapPort, ResponseStream } from '@dxos/wallet-core';
 
 const config: ClientConfig = {
   storage: {
