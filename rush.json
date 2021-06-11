@@ -444,7 +444,9 @@
 
     {
       "packageName": "@dxos/toolchain-node-library",
-      "projectFolder": "toolchains/node-library"
+      "projectFolder": "toolchains/node-library",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
     },
 
     //
@@ -524,7 +526,9 @@
     },
     {
       "packageName": "@dxos/demos",
-      "projectFolder": "packages/sdk/demos"
+      "projectFolder": "packages/sdk/demos",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
     },
 
     //
@@ -563,7 +567,9 @@
     },
     {
       "packageName": "@dxos/echo-testing",
-      "projectFolder": "packages/echo/echo-testing"
+      "projectFolder": "packages/echo/echo-testing",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/feed-store",
@@ -683,7 +689,9 @@
 
     {
       "packageName": "@dxos/gravity-core",
-      "projectFolder": "packages/gravity/gravity-core"
+      "projectFolder": "packages/gravity/gravity-core",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
     },
 
     //
