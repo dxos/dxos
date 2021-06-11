@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
+    "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "test": "toolchain test",
     "benchmark": "pnpm run build && pnpm run benchmark:node && pnpm run benchmark:browser",

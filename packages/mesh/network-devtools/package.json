@@ -6,7 +6,8 @@
   "scripts": {
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook",
     "lint": "eslint '{src, stories}/**/*.{ts,js,tsx}'",
-    "build": "tsc && pnpm run lint && true"
+    "build": "tsc",
+    "build:test": "pnpm run build && pnpm run lint"
   },
   "eslintConfig": {
     "extends": "plugin:@dxos/react",

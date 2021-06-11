@@ -9,6 +9,7 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
+    "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "test": "toolchain test",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",

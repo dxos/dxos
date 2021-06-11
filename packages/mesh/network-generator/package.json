@@ -21,6 +21,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
+    "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
