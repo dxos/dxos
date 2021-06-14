@@ -7,16 +7,29 @@ import { firefox, Page } from 'playwright';
 
 import { Browser } from './utils';
 
-const createHalo = async (page: Page) => {
-  const haloButtonSelector = '//span[text()=\'Create HALO\']'
-  await page.waitForSelector(haloButtonSelector);
-  await page.click(haloButtonSelector);
-}
+const INVITATION_REGEX = /swarmKey/g
 
 const createParty = async (page: Page) => {
   const haloButtonSelector = '//span[text()=\'Create Party\']'
   await page.waitForSelector(haloButtonSelector);
   await page.click(haloButtonSelector);
+}
+
+const createInvitation = async (page: Page): Promise<string> => {
+  let invitationText: string;
+    const invitationPromise = page.waitForEvent('console', message => {
+      if (message.text().match(INVITATION_REGEX)) {
+        invitationText = message.text();
+        return true;
+      }
+      return false;
+    });
+
+    await page!.click('//span[text()=\'Copy invite\']')
+    await invitationPromise;
+
+    expect(invitationText!).toBeDefined();
+    return invitationText!
 }
 
 describe.only('Peers - invitations and replication', () => {
@@ -29,8 +42,8 @@ describe.only('Peers - invitations and replication', () => {
     jest.setTimeout(30000);
     alice = new Browser();
     bob = new Browser();
-    await alice.launchBrowser(browser, url);
-    await bob.launchBrowser(browser, url);
+    await alice.launchBrowser(browser, 'about:blank');
+    await bob.launchBrowser(browser, 'about:blank');
   });
 
   afterAll(async () => {
@@ -44,5 +57,17 @@ describe.only('Peers - invitations and replication', () => {
     await createParty(alice.page!)
 
     await alice.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
+  });
+
+  test.only('Alice invites Bob to a party', async () => {
+    await alice.page!.goto(url);
+    await createParty(alice.page!)
+    const invitationFromAlice = await createInvitation(alice.page!);
+    
+    await bob.page!.goto(url);
+    await bob.page!.fill('#start-dialog-invitation-input', invitationFromAlice)
+    await bob.page!.click('//span[text()=\'Join Party\']')
+
+    await bob.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
   });
 });
