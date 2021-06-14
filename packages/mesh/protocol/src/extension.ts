@@ -241,7 +241,6 @@ export class Extension extends Nanomessage {
    * @returns {Promise<Object>} Response from peer.
    */
   async send (message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
-    console.log({ message });
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -255,13 +254,11 @@ export class Extension extends Nanomessage {
       const response = await this.request(this._buildMessage(message));
 
       if (response && response.code && response.message) {
-        console.log(response);
         throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, response.code, response.message);
       }
 
       return { response };
     } catch (err) {
-      console.error(err);
       if (ERR_EXTENSION_RESPONSE_FAILED.equals(err)) {
         throw err;
       }
@@ -316,7 +313,6 @@ export class Extension extends Nanomessage {
    * @overrides _send in Nanomessage
    */
   private _send (chunk: Uint8Array) {
-    console.log({ chunk });
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       return;

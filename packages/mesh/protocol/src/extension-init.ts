@@ -33,8 +33,6 @@ export class ExtensionInit extends Extension {
       const { data } = message;
       assert(data);
 
-      console.log({ hanshakeMessage: data, hanshakeMessageStr: Buffer.from(data).toString() });
-
       if (Buffer.from(data).toString() === 'continue') {
         this._remoteInit = true;
       } else {
@@ -69,7 +67,6 @@ export class ExtensionInit extends Extension {
         throw new Error('Connection closed during handshake.');
       }
     } catch (err) {
-      console.error(err);
       throw new ERR_PROTOCOL_INIT_INVALID(err.message);
     }
   }
