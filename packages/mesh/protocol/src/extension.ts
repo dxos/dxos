@@ -241,6 +241,7 @@ export class Extension extends Nanomessage {
    * @returns {Promise<Object>} Response from peer.
    */
   async send (message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
+    console.log({ message })
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -311,12 +312,16 @@ export class Extension extends Nanomessage {
     });
   }
 
-  private _send (chunk: Buffer) {
+  /**
+   * @overrides _send in Nanomessage
+   */
+  private _send (chunk: Uint8Array) {
+    console.log({ chunk })
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       return;
     }
-    this._protocol.feed.extension(this._name, chunk);
+    this._protocol.feed.extension(this._name, Buffer.from(chunk));
   }
 
   /**
