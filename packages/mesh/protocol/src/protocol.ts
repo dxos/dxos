@@ -289,7 +289,7 @@ export class Protocol {
     this._isOpen = false;
   }
 
-  async _openExtensions () {
+  private async _openExtensions () {
     await this._extensionInit.openWithProtocol(this);
 
     const sortedExtensions = [this._extensionInit.name];
@@ -305,7 +305,7 @@ export class Protocol {
     });
   }
 
-  async _initExtensions () {
+  private async _initExtensions () {
     try {
       for (const [name, extension] of this._extensionMap) {
         log(`init extension "${name}": ${keyToHuman(this._stream.id)} <=> ${keyToHuman(this._stream.remoteId)}`);
@@ -319,7 +319,7 @@ export class Protocol {
     }
   }
 
-  async _handshakeExtensions () {
+  private async _handshakeExtensions () {
     for (const handshake of this._handshakes) {
       await handshake(this);
     }
@@ -345,7 +345,7 @@ export class Protocol {
     });
   }
 
-  _openConnection () {
+  private _openConnection () {
     let initialKey = null;
 
     const openFeed = async (discoveryKey: Buffer) => {
@@ -380,20 +380,20 @@ export class Protocol {
   /**
    * Handles extension messages.
    */
-  _extensionHandler = (name: string, message: any) => {
-    if (name === this._extensionInit.name) {
-      this._extensionInit.emit('extension-message', message);
-      return;
-    }
+   private _extensionHandler = (name: string, message: any) => {
+     if (name === this._extensionInit.name) {
+       this._extensionInit.emit('extension-message', message);
+       return;
+     }
 
-    const extension = this._extensionMap.get(name);
-    if (!extension) {
-      process.nextTick(() => this._stream.destroy(new ERR_PROTOCOL_EXTENSION_MISSING(name)));
-      return;
-    }
+     const extension = this._extensionMap.get(name);
+     if (!extension) {
+       process.nextTick(() => this._stream.destroy(new ERR_PROTOCOL_EXTENSION_MISSING(name)));
+       return;
+     }
 
-    extension.emit('extension-message', message);
-  }
+     extension.emit('extension-message', message);
+   }
 }
 
 export const getProtocolFromStream = (stream: any): Protocol => {
