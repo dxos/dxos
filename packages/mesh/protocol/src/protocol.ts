@@ -289,6 +289,13 @@ export class Protocol {
     this._isOpen = false;
   }
 
+  async waitForHandshake (): Promise<void> {
+    await Promise.race([
+      this.handshake.waitForCount(1),
+      this.error.waitForCount(1).then(err => Promise.reject(err))
+    ]);
+  }
+
   private async _openExtensions () {
     await this._extensionInit.openWithProtocol(this);
 
