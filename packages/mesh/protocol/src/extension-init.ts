@@ -13,6 +13,9 @@ export interface ExtensionInitOptions {
 
 export class ExtensionInit extends Extension {
   private _timeout?: number;
+  /**
+   * Whether the remote peer has finished initialization.
+   */
   private _remoteInit: boolean | null = null;
   private _remoteSignal: any;
   public data: any;
@@ -27,14 +30,15 @@ export class ExtensionInit extends Extension {
     this.setMessageHandler(async (protocol, message) => {
       const { data } = message;
 
+      console.log({ hanshakeMessage: data })
+
       if (data.toString() === 'continue') {
         this._remoteInit = true;
-        this._remoteSignal.notify();
-        return;
+      } else {
+        // break
+        this._remoteInit = false;
       }
-
-      // break
-      this._remoteInit = false;
+      
       this._remoteSignal.notify();
     });
 
@@ -51,17 +55,18 @@ export class ExtensionInit extends Extension {
       if (this._remoteInit !== null) {
         if (this._remoteInit) {
           return;
+        } else {
+          throw new Error('Connection closed during handshake.');
         }
-        throw new Error('remoteInit false');
       }
 
       await this._remoteSignal.wait(this._timeout);
 
-      if (this._remoteInit) {
-        return;
+      if (!this._remoteInit) {
+        throw new Error('Connection closed during handshake.');
       }
-      throw new Error('remoteInit false');
     } catch (err) {
+      console.error(err)
       throw new ERR_PROTOCOL_INIT_INVALID(err.message);
     }
   }

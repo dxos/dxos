@@ -5,7 +5,7 @@
 import assert from 'assert';
 import { Feed } from 'hypercore';
 
-import { Codec } from '@dxos/codec-protobuf';
+import { patchBufferCodec } from '@dxos/codec-protobuf';
 import { createId, PublicKey } from '@dxos/crypto';
 import {
   codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
@@ -101,14 +101,4 @@ export class FeedStoreAdapter {
       initialTimeframe
     );
   }
-}
-
-/**
- * Protobuf codec returns instances of Uint8Arrays, but some storages expect to receive Buffers. This function patches the encode method to convert result into a Bufffer.
- */
-function patchBufferCodec (codec: Codec<any>) {
-  return {
-    encode: (x: any) => Buffer.from(codec.encode(x)),
-    decode: codec.decode.bind(codec)
-  };
 }

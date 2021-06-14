@@ -59,7 +59,7 @@ export class Protocol extends NanoresourcePromise {
   public _discoveryToPublicKey: any;
   public _streamOptions: any;
   public _initTimeout: any;
-  public _extensionInit: any;
+  public _extensionInit: ExtensionInit;
   public _init: any;
   public _connected: any;
   public _handshakes: any;

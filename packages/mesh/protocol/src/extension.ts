@@ -7,7 +7,7 @@ import debug from 'debug';
 import eos from 'end-of-stream';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 
-import { WithTypeUrl } from '@dxos/codec-protobuf';
+import { patchBufferCodec, WithTypeUrl } from '@dxos/codec-protobuf';
 
 import {
   ERR_PROTOCOL_STREAM_CLOSED,
@@ -105,8 +105,8 @@ export class Extension extends Nanomessage {
       this.codec.addJson(userSchema);
     }
 
-    this.codec.encode.bind(this.codec);
-    this.codec.decode.bind(this.codec);
+    this.codec = patchBufferCodec(this.codec);
+
     this.on('error', (err: any) => log(err));
   }
 
@@ -255,11 +255,13 @@ export class Extension extends Nanomessage {
       const response = await this.request(this._buildMessage(message));
 
       if (response && response.code && response.message) {
+        console.log(response)
         throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, response.code, response.message);
       }
 
       return { response };
     } catch (err) {
+      console.error(err)
       if (ERR_EXTENSION_RESPONSE_FAILED.equals(err)) {
         throw err;
       }
