@@ -10,10 +10,7 @@ import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import {
-  createPartyGenesisMessage,
-  generateSeedPhrase,
-  keyPairFromSeedPhrase,
-  Keyring, KeyType,
+  createPartyGenesisMessage, Keyring, KeyType,
   SecretProvider,
   SecretValidator
 } from '@dxos/credentials';
@@ -33,7 +30,6 @@ import { afterTest } from '@dxos/testutils';
 import { createWritableFeedStream } from '@dxos/util';
 
 import { HaloFactory, Identity, IdentityManager } from '../halo';
-import { autoPartyOpener } from '../halo/party-opener';
 import { OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
 import { SnapshotStore } from '../snapshots';
