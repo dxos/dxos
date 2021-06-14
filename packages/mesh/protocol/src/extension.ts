@@ -7,7 +7,7 @@ import debug from 'debug';
 import eos from 'end-of-stream';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 
-import { WithTypeUrl } from '@dxos/codec-protobuf';
+import { patchBufferCodec, WithTypeUrl } from '@dxos/codec-protobuf';
 
 import {
   ERR_PROTOCOL_STREAM_CLOSED,
@@ -19,7 +19,6 @@ import {
   ERR_EXTENSION_RESPONSE_TIMEOUT
 } from './errors';
 import { schema } from './proto/gen';
-import * as proto from './proto/gen/dxos/protocol';
 import { Protocol } from './protocol';
 import { keyToHuman } from './utils';
 
@@ -105,8 +104,8 @@ export class Extension extends Nanomessage {
       this.codec.addJson(userSchema);
     }
 
-    this.codec.encode.bind(this.codec);
-    this.codec.decode.bind(this.codec);
+    this.codec = patchBufferCodec(this.codec);
+
     this.on('error', (err: any) => log(err));
   }
 
@@ -241,7 +240,7 @@ export class Extension extends Nanomessage {
    * @param {Boolean} options.oneway
    * @returns {Promise<Object>} Response from peer.
    */
-  async send (message: Buffer | Record<string, any>, options: { oneway?: boolean } = {}) {
+  async send (message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -310,15 +309,21 @@ export class Extension extends Nanomessage {
     });
   }
 
-  private _send (chunk: Buffer) {
+  /**
+   * @overrides _send in Nanomessage
+   */
+  private _send (chunk: Uint8Array) {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       return;
     }
-    this._protocol.feed.extension(this._name, chunk);
+    this._protocol.feed.extension(this._name, Buffer.from(chunk));
   }
 
-  async _onMessage (msg: any) {
+  /**
+   * @override _onMessage from Nanomessagerpc
+   */
+  private async _onMessage (msg: any) {
     try {
       await this.open();
       if (this._messageHandler) {
@@ -337,16 +342,20 @@ export class Extension extends Nanomessage {
     }
   }
 
-  private _buildMessage (message: Buffer | Record<string, any>): WithTypeUrl<proto.Buffer> {
-    if (!Buffer.isBuffer(message) && typeof message === 'object' && message.__type_url) {
-      return message as any;
-    }
+  /**
+   * Wrap a message in a `dxos.protocol.Buffer` if required to be sent over the wire.
+   */
+  private _buildMessage (message: Buffer | Uint8Array | WithTypeUrl<object>): WithTypeUrl<any> {
+    if (typeof message === 'string') { // Backwards compatibility.
+      return this._buildMessage(Buffer.from(message));
+    } else if (Buffer.isBuffer(message) || message instanceof Uint8Array) {
+      return { __type_url: 'dxos.protocol.Buffer', data: message };
+    } else if (message == null) { // Apparently this is a use-case.
+      return { __type_url: 'dxos.protocol.Buffer', data: message };
+    } else {
+      assert(message.__type_url, 'Message does not have a type URL.');
 
-    if (typeof message === 'string') {
-      message = Buffer.from(message);
+      return message;
     }
-
-    assert(message == null || Buffer.isBuffer(message));
-    return { __type_url: 'dxos.protocol.Buffer', data: message };
   }
 }
