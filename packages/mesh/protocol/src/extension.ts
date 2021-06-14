@@ -241,7 +241,7 @@ export class Extension extends Nanomessage {
    * @param {Boolean} options.oneway
    * @returns {Promise<Object>} Response from peer.
    */
-  async send (message: Buffer | Record<string, any>, options: { oneway?: boolean } = {}) {
+  async send (message: Buffer | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -342,16 +342,20 @@ export class Extension extends Nanomessage {
     }
   }
 
-  private _buildMessage (message: Buffer | Record<string, any>): WithTypeUrl<proto.Buffer> {
-    if (!Buffer.isBuffer(message) && typeof message === 'object' && message.__type_url) {
-      return message as any;
+  /**
+   * Wrap a message in a `dxos.protocol.Buffer` if required to be sent over the wire.
+   */
+  private _buildMessage (message: Buffer | WithTypeUrl<object>): WithTypeUrl<any> {
+    if (typeof message === 'string') { // Backwards compatibility.
+      return this._buildMessage(Buffer.from(message));
+    } else if(Buffer.isBuffer(message) || message instanceof Uint8Array) {
+      return { __type_url: 'dxos.protocol.Buffer', data: message };
+    } else if(message == null) { // Apparently this is a use-case.
+      return { __type_url: 'dxos.protocol.Buffer', data: message };
+    } else {
+      assert(message.__type_url, 'Message does not have a type URL.');
+      
+      return message;
     }
-
-    if (typeof message === 'string') {
-      message = Buffer.from(message);
-    }
-
-    assert(message == null || Buffer.isBuffer(message));
-    return { __type_url: 'dxos.protocol.Buffer', data: message };
   }
 }
