@@ -19,7 +19,7 @@ const createParty = async (page: Page) => {
   await page.click(haloButtonSelector);
 }
 
-describe('Smoke tests for demo storybooks', () => {
+describe.skip('Tutorial storybooks', () => {
   const browser = firefox;
   const startUrl = 'http://localhost:9001';
   let user: Browser;
