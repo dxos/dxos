@@ -70,4 +70,25 @@ describe('Peers - invitations and replication', () => {
 
     await bob.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
   });
+
+  test('Replication in party', async () => {
+    await alice.page!.goto(url);
+    await createParty(alice.page!)
+    const invitationFromAlice = await createInvitation(alice.page!);
+    
+    await bob.page!.goto(url);
+    await bob.page!.fill('#start-dialog-invitation-input', invitationFromAlice)
+    await bob.page!.click('//span[text()=\'Join Party\']')
+
+    await bob.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
+    
+    // Bob creates an item..
+    const itemName = `${Math.random().toString().slice(5)}`
+    await bob.page!.click('.MuiFab-root'); // The 'Add" fab button
+    await bob.page!.fill('#item-dialog-item-name', itemName)
+    await bob.page!.click('//span[text()=\'Create\']');
+
+    // ..item gets replicated over to Alice.
+    await alice.page!.waitForSelector(`//span[text()='${itemName}']`)
+  });
 });
