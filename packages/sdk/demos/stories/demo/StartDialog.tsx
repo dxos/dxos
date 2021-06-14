@@ -57,7 +57,7 @@ const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
             try {
               await onJoin(invitationCode);
             } catch (error) {
-              console.error(error)
+              console.error(error);
               setError(error);
             } finally {
               setInProgress(false);

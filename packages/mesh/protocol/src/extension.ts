@@ -255,13 +255,13 @@ export class Extension extends Nanomessage {
       const response = await this.request(this._buildMessage(message));
 
       if (response && response.code && response.message) {
-        console.log(response)
+        console.log(response);
         throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, response.code, response.message);
       }
 
       return { response };
     } catch (err) {
-      console.error(err)
+      console.error(err);
       if (ERR_EXTENSION_RESPONSE_FAILED.equals(err)) {
         throw err;
       }
@@ -348,13 +348,13 @@ export class Extension extends Nanomessage {
   private _buildMessage (message: Buffer | WithTypeUrl<object>): WithTypeUrl<any> {
     if (typeof message === 'string') { // Backwards compatibility.
       return this._buildMessage(Buffer.from(message));
-    } else if(Buffer.isBuffer(message) || message instanceof Uint8Array) {
+    } else if (Buffer.isBuffer(message) || message instanceof Uint8Array) {
       return { __type_url: 'dxos.protocol.Buffer', data: message };
-    } else if(message == null) { // Apparently this is a use-case.
+    } else if (message == null) { // Apparently this is a use-case.
       return { __type_url: 'dxos.protocol.Buffer', data: message };
     } else {
       assert(message.__type_url, 'Message does not have a type URL.');
-      
+
       return message;
     }
   }

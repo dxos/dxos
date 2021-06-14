@@ -7,7 +7,7 @@ import Signal from 'signal-promise';
 
 import { ERR_PROTOCOL_INIT_INVALID } from './errors';
 import { Extension } from './extension';
-import { Buffer as ProtoBuffer } from './proto/gen/dxos/protocol'
+import { Buffer as ProtoBuffer } from './proto/gen/dxos/protocol';
 
 export interface ExtensionInitOptions {
   timeout?: number
@@ -31,9 +31,9 @@ export class ExtensionInit extends Extension {
 
     this.setMessageHandler(async (protocol, message: ProtoBuffer) => {
       const { data } = message;
-      assert(data)
+      assert(data);
 
-      console.log({ hanshakeMessage: data })
+      console.log({ hanshakeMessage: data });
 
       if (Buffer.from(data).toString() === 'continue') {
         this._remoteInit = true;
@@ -41,7 +41,7 @@ export class ExtensionInit extends Extension {
         // break
         this._remoteInit = false;
       }
-      
+
       this._remoteSignal.notify();
     });
 
@@ -69,7 +69,7 @@ export class ExtensionInit extends Extension {
         throw new Error('Connection closed during handshake.');
       }
     } catch (err) {
-      console.error(err)
+      console.error(err);
       throw new ERR_PROTOCOL_INIT_INVALID(err.message);
     }
   }
