@@ -241,7 +241,7 @@ export class Extension extends Nanomessage {
    * @returns {Promise<Object>} Response from peer.
    */
   async send (message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
-    console.log({ message })
+    console.log({ message });
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -316,7 +316,7 @@ export class Extension extends Nanomessage {
    * @overrides _send in Nanomessage
    */
   private _send (chunk: Uint8Array) {
-    console.log({ chunk })
+    console.log({ chunk });
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       return;
