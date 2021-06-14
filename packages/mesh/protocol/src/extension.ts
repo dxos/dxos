@@ -19,7 +19,6 @@ import {
   ERR_EXTENSION_RESPONSE_TIMEOUT
 } from './errors';
 import { schema } from './proto/gen';
-import * as proto from './proto/gen/dxos/protocol';
 import { Protocol } from './protocol';
 import { keyToHuman } from './utils';
 
@@ -241,7 +240,7 @@ export class Extension extends Nanomessage {
    * @param {Boolean} options.oneway
    * @returns {Promise<Object>} Response from peer.
    */
-  async send (message: Buffer | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
+  async send (message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -345,7 +344,7 @@ export class Extension extends Nanomessage {
   /**
    * Wrap a message in a `dxos.protocol.Buffer` if required to be sent over the wire.
    */
-  private _buildMessage (message: Buffer | WithTypeUrl<object>): WithTypeUrl<any> {
+  private _buildMessage (message: Buffer | Uint8Array | WithTypeUrl<object>): WithTypeUrl<any> {
     if (typeof message === 'string') { // Backwards compatibility.
       return this._buildMessage(Buffer.from(message));
     } else if (Buffer.isBuffer(message) || message instanceof Uint8Array) {

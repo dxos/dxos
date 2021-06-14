@@ -33,7 +33,7 @@ export class ExtensionInit extends Extension {
       const { data } = message;
       assert(data);
 
-      console.log({ hanshakeMessage: data });
+      console.log({ hanshakeMessage: data, hanshakeMessageStr: Buffer.from(data).toString() });
 
       if (Buffer.from(data).toString() === 'continue') {
         this._remoteInit = true;

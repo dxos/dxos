@@ -92,8 +92,8 @@ export class GreetingResponder {
     onFinish?: InvitationOptions['onFinish'],
     expiration?: number
   ): Promise<Buffer> {
-    console.log('GreetingResponder.invite')
-    
+    console.log('GreetingResponder.invite');
+
     assert(secretValidator);
     assert(this._state === GreetingState.LISTENING);
 
