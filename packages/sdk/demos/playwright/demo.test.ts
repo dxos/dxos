@@ -32,9 +32,18 @@ const createInvitation = async (page: Page): Promise<string> => {
     return invitationText!
 }
 
-describe('Peers - invitations and replication', () => {
+const createItem = async (page: Page): Promise<string> => {
+  const itemName = `${Math.random().toString().slice(5)}`
+  await page.click('.MuiFab-root'); // The 'Add" fab button
+  await page.fill('#item-dialog-item-name', itemName)
+  await page.click('//span[text()=\'Create\']');
+  return itemName
+}
+
+describe('Demo - Primary and Peers', () => {
   const browser = firefox;
-  const url = 'http://localhost:9001/iframe.html?id=demo--peers&viewMode=story';
+  const primaryUrl = 'http://localhost:9001/iframe.html?id=demo--primary&viewMode=story';
+  const peersUrl = 'http://localhost:9001/iframe.html?id=demo--peers&viewMode=story';
   let alice: Browser;
   let bob: Browser;
 
@@ -51,42 +60,45 @@ describe('Peers - invitations and replication', () => {
     await bob.closeBrowser();
   });
 
-  test('Alice creates a party', async () => {
+  test('Primary - item creation', async () => {
+    await alice.page!.goto(primaryUrl);
+    const itemName = await createItem(alice.page!);
+    await alice.page!.waitForSelector(`//span[text()='${itemName}']`)
+  })
+
+  test('Peers - Alice creates a party', async () => {
     expect(alice.page).toBeDefined();
-    await alice.page!.goto(url);
+    await alice.page!.goto(peersUrl);
     await createParty(alice.page!)
 
     await alice.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
   });
 
-  test('Alice invites Bob to a party', async () => {
-    await alice.page!.goto(url);
+  test('Peers - Alice invites Bob to a party', async () => {
+    await alice.page!.goto(peersUrl);
     await createParty(alice.page!)
     const invitationFromAlice = await createInvitation(alice.page!);
     
-    await bob.page!.goto(url);
+    await bob.page!.goto(peersUrl);
     await bob.page!.fill('#start-dialog-invitation-input', invitationFromAlice)
     await bob.page!.click('//span[text()=\'Join Party\']')
 
     await bob.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
   });
 
-  test('Replication in party', async () => {
-    await alice.page!.goto(url);
+  test('Peers - Replication in party', async () => {
+    await alice.page!.goto(peersUrl);
     await createParty(alice.page!)
     const invitationFromAlice = await createInvitation(alice.page!);
     
-    await bob.page!.goto(url);
+    await bob.page!.goto(peersUrl);
     await bob.page!.fill('#start-dialog-invitation-input', invitationFromAlice)
     await bob.page!.click('//span[text()=\'Join Party\']')
 
     await bob.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
     
     // Bob creates an item..
-    const itemName = `${Math.random().toString().slice(5)}`
-    await bob.page!.click('.MuiFab-root'); // The 'Add" fab button
-    await bob.page!.fill('#item-dialog-item-name', itemName)
-    await bob.page!.click('//span[text()=\'Create\']');
+    const itemName = await createItem(bob.page!);
 
     // ..item gets replicated over to Alice.
     await alice.page!.waitForSelector(`//span[text()='${itemName}']`)
