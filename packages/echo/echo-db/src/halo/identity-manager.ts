@@ -24,7 +24,7 @@ const log = debug('dxos:echo:parties:identity-manager');
 //   Need abstraction: since identityManager.halo is called from many places.
 //   ECHO => PartyManager => IdentityManaager => HaloParty
 export class IdentityManager {
-  private _identity: Identity;
+  private readonly _identity: Identity;
 
   public readonly ready = new Event();
 
@@ -32,7 +32,7 @@ export class IdentityManager {
     private readonly _keyring: Keyring,
     private readonly _haloFactory: HaloFactory
   ) {
-    this._identity = new Identity(_keyring, undefined);
+    this._identity = Identity.fromKeyring(_keyring);
   }
 
   get identity () {
@@ -49,7 +49,7 @@ export class IdentityManager {
     assert(halo.isOpen, 'Halo must be open.');
 
     const haloParty = new HaloParty(halo, this._identity.identityKey!.publicKey, this._identity.deviceKey.publicKey);
-    this._identity = new Identity(this._keyring, haloParty);
+    this._identity.setHalo(haloParty);
 
     // Wait for the minimum set of keys and messages we need for proper function.
     await waitForCondition(() =>

@@ -3,8 +3,9 @@
 //
 
 import debug from 'debug';
+import assert from 'assert';
 
-import { Filter, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage } from '@dxos/credentials';
+import { createKeyAdmitMessage, createDeviceInfoMessage, createIdentityInfoMessage, Filter, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage, createPartyGenesisMessage, Message } from '@dxos/credentials';
 
 import { HaloParty } from './halo-party';
 
@@ -21,9 +22,54 @@ export class Identity {
   private _deviceKey?: KeyRecord;
   private _deviceKeyChain?: KeyChain;
 
+  static fromKeyring(keyring: Keyring) {
+    return new Identity(
+      keyring,
+      undefined,
+      undefined,
+      undefined,
+      () => undefined,
+    )
+  }
+
+  static createFromHalo(keyring: Keyring, halo: HaloParty) {
+    const identity = Identity.fromKeyring(keyring)
+    identity.setHalo(halo);
+    return identity;
+  }
+
+  static async newIdentity(keyring: Keyring) {
+    assert(!keyring.findKey(Filter.matches({ type: KeyType.IDENTITY})), 'Identity key already present');
+
+    const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    const deviceKey = await keyring.createKeyRecord({ type: KeyType.DEVICE });
+    const identityInfo = createIdentityInfoMessage(keyring, identityKey.publicKey.humanize(), identityKey)
+    const deviceInfo = createDeviceInfoMessage(keyring, deviceKey.publicKey.humanize(), deviceKey)
+    const identityGenesis = createKeyAdmitMessage(keyring, identityKey.publicKey, identityKey)
+    const partyGenesis = createPartyGenesisMessage(keyring, identityKey, deviceKey, deviceKey)
+
+    const credentials = new Map<string, SignedMessage | Message>()
+    credentials.set(deviceKey.publicKey.toHex(), partyGenesis);
+    credentials.set(identityKey.publicKey.toHex(), identityGenesis);
+
+    return new Identity(
+      keyring,
+      identityInfo.payload,
+      identityGenesis.payload,
+      undefined,
+      () => Keyring.buildKeyChain(
+        deviceKey.publicKey,
+        credentials,
+      ),
+    )
+  }
+
   constructor (
     private readonly _keyring: Keyring,
-    private readonly _halo: HaloParty | undefined
+    private _identityInfo: SignedMessage | undefined,
+    private _identityGenesis: SignedMessage | undefined,
+    private _halo: HaloParty | undefined,
+    private _getDeviceKeyChain: () => KeyChain | undefined,
   ) {}
 
   get keyring () {
@@ -46,18 +92,9 @@ export class Identity {
     return this._deviceKey;
   }
 
-  get deviceKeyChain () {
+  get deviceKeyChain (): KeyChain | undefined {
     if (!this._deviceKeyChain) {
-      const deviceKey = this.deviceKey;
-      try {
-        this._deviceKeyChain = (this._halo && deviceKey) ? Keyring.buildKeyChain(
-          deviceKey.publicKey,
-          this._halo.credentialMessages,
-          this._halo.feedKeys
-        ) : undefined;
-      } catch (err) {
-        log('Unable to locate device KeyChain:', err); // TODO(burdon): ???
-      }
+      this._deviceKeyChain = this._getDeviceKeyChain();
     }
 
     return this._deviceKeyChain;
@@ -68,16 +105,41 @@ export class Identity {
   }
 
   get displayName (): string | undefined {
-    return this._halo?.identityInfo?.signed.payload.displayName;
+    return this._identityInfo?.signed.payload.displayName;
   }
 
   get identityInfo (): SignedMessage | undefined {
-    return this._halo?.identityInfo;
+    return this._identityInfo;
   }
 
   get identityGenesis (): SignedMessage | undefined {
-    return this._halo?.identityGenesis;
+    return this._identityGenesis;
+  }
+
+  /**
+   * @internal
+   * 
+   * Called by `IdentityManager` when HALO party is initialized.
+   */
+  setHalo(halo: HaloParty) {
+    this._halo = halo;
+    this._identityGenesis = halo.identityGenesis;
+    this._identityInfo = halo.identityInfo;
+    this._getDeviceKeyChain = () => this.deviceKey ? getDeviceKeyChainFromHalo(halo, this.deviceKey) : undefined;
   }
 }
 
 export type IdentityProvider = () => Identity;
+
+function getDeviceKeyChainFromHalo(halo: HaloParty, deviceKey: KeyRecord) {
+  try {
+    return Keyring.buildKeyChain(
+      deviceKey.publicKey,
+      halo.credentialMessages,
+      halo.feedKeys
+    )
+  } catch (err) {
+    log('Unable to locate device KeyChain:', err); // TODO(burdon): ???
+    return undefined
+  }
+}

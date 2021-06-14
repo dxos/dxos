@@ -77,7 +77,6 @@ export class PartyFactory {
     const identity = this._identityProvider();
 
     assert(!this._options.readOnly, 'PartyFactory is read-only');
-    assert(identity.halo, 'HALO must exist');
     assert(identity.identityGenesis, 'IdentityGenesis must exist');
     assert(identity.deviceKeyChain, 'Device KeyChain must exist');
 
@@ -242,7 +241,6 @@ export class PartyFactory {
       assert(identity.deviceKeyChain);
 
       // Copy our signed IdentityInfo into the new Party.
-      assert(identity.halo, 'HALO not initialized.');
       const infoMessage = identity.identityInfo;
       if (infoMessage) {
         await party.processor.writeHaloMessage(createEnvelopeMessage(

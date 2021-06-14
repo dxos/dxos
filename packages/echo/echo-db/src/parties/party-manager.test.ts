@@ -32,7 +32,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 import { createWritableFeedStream } from '@dxos/util';
 
-import { HaloFactory, IdentityManager } from '../halo';
+import { HaloFactory, Identity, IdentityManager } from '../halo';
 import { autoPartyOpener } from '../halo/party-opener';
 import { OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
@@ -54,29 +54,17 @@ const log = debug('dxos:echo:parties:party-manager:test');
  * @param open - Open the PartyManager
  * @param createIdentity - Create the identity key record.
  */
-const setup = async (open = true, createIdentity = true) => {
+const setup = async () => {
   const feedStore = FeedStoreAdapter.create(ram);
   await feedStore.open();
   const keyring = new Keyring();
-
-  let seedPhrase;
-  if (createIdentity) {
-    seedPhrase = generateSeedPhrase();
-    const keyPair = keyPairFromSeedPhrase(seedPhrase);
-    await keyring.addKeyRecord({
-      publicKey: PublicKey.from(keyPair.publicKey),
-      secretKey: keyPair.secretKey,
-      type: KeyType.IDENTITY
-    });
-
-    assert(keyring.keys.length === 1);
-  }
+  const identity = await Identity.newIdentity(keyring);
 
   const snapshotStore = new SnapshotStore(ram);
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
   const partyFactory = new PartyFactory(
-    () => identityManager.identity,
+    () => identity,
     networkManager,
     feedStore,
     modelFactory,
@@ -87,28 +75,10 @@ const setup = async (open = true, createIdentity = true) => {
     }
   );
 
-  const haloFactory: HaloFactory = new HaloFactory(partyFactory, networkManager, keyring);
-  const identityManager = new IdentityManager(keyring, haloFactory);
-  const partyManager = new PartyManager(feedStore, snapshotStore, () => identityManager.identity, partyFactory);
+  const partyManager = new PartyManager(feedStore, snapshotStore, () => identity, partyFactory);
   afterTest(() => partyManager.close());
 
-  identityManager.ready.once(() => {
-    assert(identityManager.identity.halo?.isOpen);
-    const unsub = autoPartyOpener(identityManager.identity.halo!, partyManager);
-    afterTest(unsub);
-  });
-
-  if (open) {
-    await partyManager.open();
-    if (createIdentity) {
-      await identityManager.createHalo({
-        identityDisplayName: identityManager.identity.identityKey!.publicKey.humanize()
-      });
-    }
-  }
-  const identity = identityManager.identity;
-
-  return { feedStore, partyManager, identityManager, seedPhrase, identity };
+  return { feedStore, partyManager, identity };
 };
 
 describe('Party manager', () => {
