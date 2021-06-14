@@ -320,7 +320,10 @@ export class Extension extends Nanomessage {
     this._protocol.feed.extension(this._name, chunk);
   }
 
-  async _onMessage (msg: any) {
+  /**
+   * @override _onMessage from Nanomessagerpc
+   */
+  private async _onMessage (msg: any) {
     try {
       await this.open();
       if (this._messageHandler) {

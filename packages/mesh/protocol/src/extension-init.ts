@@ -2,10 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import Signal from 'signal-promise';
 
 import { ERR_PROTOCOL_INIT_INVALID } from './errors';
 import { Extension } from './extension';
+import { Buffer as ProtoBuffer } from './proto/gen/dxos/protocol'
 
 export interface ExtensionInitOptions {
   timeout?: number
@@ -27,12 +29,13 @@ export class ExtensionInit extends Extension {
     this._remoteInit = null;
     this._remoteSignal = new Signal();
 
-    this.setMessageHandler(async (protocol, message) => {
+    this.setMessageHandler(async (protocol, message: ProtoBuffer) => {
       const { data } = message;
+      assert(data)
 
       console.log({ hanshakeMessage: data })
 
-      if (data.toString() === 'continue') {
+      if (Buffer.from(data).toString() === 'continue') {
         this._remoteInit = true;
       } else {
         // break
