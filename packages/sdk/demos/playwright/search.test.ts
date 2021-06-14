@@ -32,7 +32,7 @@ const createInvitation = async (page: Page): Promise<string> => {
     return invitationText!
 }
 
-describe.only('Peers - invitations and replication', () => {
+describe('Peers - invitations and replication', () => {
   const browser = firefox;
   const url = 'http://localhost:9001/iframe.html?id=demo--peers&viewMode=story';
   let alice: Browser;
@@ -59,7 +59,7 @@ describe.only('Peers - invitations and replication', () => {
     await alice.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
   });
 
-  test.only('Alice invites Bob to a party', async () => {
+  test('Alice invites Bob to a party', async () => {
     await alice.page!.goto(url);
     await createParty(alice.page!)
     const invitationFromAlice = await createInvitation(alice.page!);
