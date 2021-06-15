@@ -31,7 +31,7 @@ export default {
     encode: (value: PublicKey) => ({ data: value.asUint8Array() }),
     decode: (value: any) => PublicKey.from(value.data)
   },
-  'dxos.credentials.keys.SecretKey': {
+  'dxos.credentials.keys.PrivateKey': {
     encode: (value: SecretKey) => ({ data: value }), // TODO(burdon): Why is this different from PublicKey impl?
     decode: (value: any) => Buffer.from(value.data)
   }
