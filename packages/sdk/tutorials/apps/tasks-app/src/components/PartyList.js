@@ -23,7 +23,7 @@ import SettingsIcon from '@material-ui/icons/Settings';
 // import { RedeemDialog } from '@dxos/react-appkit';
 import { useParties } from '@dxos/react-client';
 
-import { getPartyTitle } from '../hacks';
+import { getPartyTitle } from '../utils/hacks.utils';
 import PartySettings from './PartySettings';
 
 const useStyles = makeStyles(theme => ({
