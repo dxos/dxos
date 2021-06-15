@@ -4,6 +4,8 @@
 
 import { TYPES } from './gen';
 
+// TODO(burdon): Move .ts files out of proto directory.
+
 // eslint-disable-next-line camelcase
 export type WithTypeUrl<T> = T & { __type_url: string }
 

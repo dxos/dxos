@@ -100,11 +100,13 @@ export class Keyring {
    * }
    */
   @meter
-  static signMessage (message: any,
+  static signMessage (
+    message: any,
     keys: KeyRecord[],
     keyChainMap: Map<string, KeyChain>,
     nonce?: Buffer,
-    created?: string): WithTypeUrl<SignedMessage> {
+    created?: string
+  ): WithTypeUrl<SignedMessage> {
     assert(typeof message === 'object');
     for (const key of keys) {
       assertValidKeyPair(key);

@@ -4,6 +4,7 @@
 
 import { KeyType } from '../proto/gen/dxos/credentials/keys';
 
+// TODO(burdon): Clashes with protobuf message names.
 export type SecretKey = Buffer;
 export type DiscoveryKey = Buffer;
 

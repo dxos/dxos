@@ -23,7 +23,8 @@ export function isValidPublicKey (key: PublicKeyLike): key is PublicKeyLike {
   try {
     PublicKey.from(key);
     return true;
-  } catch (e) {
+  } catch (err) {
+    // Ignore.
   }
   return false;
 }
@@ -95,8 +96,10 @@ export const assertValidAttributes = (keyRecord: Partial<KeyRecord>) => {
  * @param attributes Valid attributes above.
  * @param keyPair If undefined then a public/private key pair will be generated.
  */
-export const createKeyRecord = (attributes: Partial<KeyRecord> = {},
-  keyPair: MakeOptional<KeyPair, 'secretKey'> = createKeyPair()): KeyRecord => {
+export const createKeyRecord = (
+  attributes: Partial<KeyRecord> = {},
+  keyPair: MakeOptional<KeyPair, 'secretKey'> = createKeyPair()
+): KeyRecord => {
   const { publicKey: rawPublicKey, secretKey } = keyPair;
   const publicKey = PublicKey.from(rawPublicKey);
 
@@ -105,16 +108,16 @@ export const createKeyRecord = (attributes: Partial<KeyRecord> = {},
 
   return {
     type: KeyType.UNKNOWN,
+    publicKey,
+    secretKey, // TODO(burdon): Wrong type (expected PrivateKey not Buffer).
+
     hint: false,
     own: !!secretKey,
     trusted: true,
     created: createDateTimeString(),
 
     // Overrides the defaults above.
-    ...attributes,
-
-    publicKey,
-    secretKey
+    ...attributes
   };
 };
 

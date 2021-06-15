@@ -103,11 +103,13 @@ export const createFeedAdmitMessage = (keyring: Keyring,
  * @returns {SignedMessage}
  */
 // TODO(burdon): What is an envelope, distinct from above?
-export const createEnvelopeMessage = (keyring: Keyring,
-  partyKey: PublicKeyLike,
-  contents: Message,
-  signingKeys: (KeyRecord | KeyChain)[] = [],
-  nonce?: Buffer): Message => {
+export const createEnvelopeMessage = (
+  keyring: Keyring,
+    partyKey: PublicKeyLike,
+    contents: Message,
+    signingKeys: (KeyRecord | KeyChain)[] = [],
+    nonce?: Buffer
+  ): Message => {
   partyKey = PublicKey.from(partyKey);
 
   const message: WithTypeUrl<PartyCredential> = {

@@ -15,6 +15,7 @@ export class PublicKey {
   /**
    * Creates new instance of PublicKey automatically determening the input format.
    */
+  // TODO(burdon): See note re PublicKeyLike.
   static from (source: PublicKeyLike): PublicKey {
     if (source instanceof PublicKey) {
       return source;
@@ -27,7 +28,7 @@ export class PublicKey {
     } else if ((<any>source).asUint8Array) {
       return new PublicKey((<any>source).asUint8Array());
     } else {
-      throw new TypeError(`Unable to create PublicKey from ${source}`);
+      throw new TypeError(`Unable to create PublicKey from ${JSON.stringify(source)}`);
     }
   }
 
@@ -141,6 +142,7 @@ export class PublicKey {
 /**
  * All representations that can be converted to a PublicKey.
  */
+// TODO(burdon: THIS IS A REALLY REALLY BAD IDEA.
 export type PublicKeyLike =
   | PublicKey
   | Buffer

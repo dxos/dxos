@@ -27,12 +27,12 @@ export default {
       };
     }
   },
-  'dxos.credentials.keys.PubKey': {
+  'dxos.credentials.keys.PublicKey': {
     encode: (value: PublicKey) => ({ data: value.asUint8Array() }),
     decode: (value: any) => PublicKey.from(value.data)
   },
-  'dxos.credentials.keys.PrivKey': {
-    encode: (value: SecretKey) => ({ data: value }),
+  'dxos.credentials.keys.SecretKey': {
+    encode: (value: SecretKey) => ({ data: value }), // TODO(burdon): Why is this different from PublicKey impl?
     decode: (value: any) => Buffer.from(value.data)
   }
 };
