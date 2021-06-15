@@ -23,7 +23,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "SKIP_PREFLIGHT_CHECK=true react-scripts build",
     "build:test": "npm run build && npm run test",
     "test": "react-scripts test --passWithNoTests --watchAll=false",
     "eject": "react-scripts eject"
