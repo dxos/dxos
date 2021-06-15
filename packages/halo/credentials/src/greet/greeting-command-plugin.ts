@@ -144,8 +144,8 @@ export class GreetingCommandPlugin extends EventEmitter {
       }
     }
 
-    assert(result.response.data, 'Response data is missing.')
-    const response = Buffer.isBuffer(result.response.data) ? result.response.data : Buffer.from(result.response.data)
+    assert(result.response.data, 'Response data is missing.');
+    const response = Buffer.isBuffer(result.response.data) ? result.response.data : Buffer.from(result.response.data);
     result.response = codec.decode(response);
 
     log('Received response from %s: %o', peerIdStr, result.response.payload);
