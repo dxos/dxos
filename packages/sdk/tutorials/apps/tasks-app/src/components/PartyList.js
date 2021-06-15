@@ -103,7 +103,7 @@ const PartyList = ({ selectedPartyKey, onSelectParty }) => {
         />
       )} */}
 
-      <List __disablePadding>
+      <List disablePadding>
         {parties.map(party => (
           <ListItem
             button
