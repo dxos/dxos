@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/tasks-app",
+  "name": "@dxos/tutorials-tasks-app",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
