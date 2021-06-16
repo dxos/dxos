@@ -17,7 +17,7 @@ import { Transport, TransportFactory } from './transport';
 const log = debug('dxos:network-manager:swarm:transport:webrtc');
 
 /**
- * Wrapper around simple-peer. Tracks peer state.
+ * Implements Transport for WebRTC. Uses simple-peer under the hood.
  */
 export class WebrtcTransport implements Transport {
   private _peer: SimplePeer;
@@ -66,7 +66,10 @@ export class WebrtcTransport implements Transport {
 
       this.connected.emit();
     });
-    this._peer.on('error', err => this.errors.raise(err));
+    this._peer.on('error', err => {
+      this.errors.raise(err);
+      this.close();
+    });
     this._peer.on('close', () => {
       log(`Connection closed ${this._ownId} -> ${this._remoteId}`);
       this._closeStream();
@@ -92,12 +95,12 @@ export class WebrtcTransport implements Transport {
   }
 
   async close () {
-    await this._closeStream();
+    this._closeStream();
     this._peer!.destroy();
     log('Closed.');
   }
 
-  private async _closeStream () {
+  private _closeStream () {
     this._stream.unpipe(this._peer).unpipe(this._stream);
   }
 }
