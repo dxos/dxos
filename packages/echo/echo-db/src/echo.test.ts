@@ -707,7 +707,7 @@ describe('ECHO', () => {
     // For the other member of the party, title propagates correctly as well
     await waitForCondition(() => partyD.getProperty('title') === 'Test', 3000);
     expect(partyD.title).toEqual('Test'); // However this does not
-  });
+  }).retries(1);
 
   // TODO(burdon): Fix.
   // Note: The reason I wrote this test is because it does not seem to be working properly in Teamwork.

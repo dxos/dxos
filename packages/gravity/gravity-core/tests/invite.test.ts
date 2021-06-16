@@ -4,13 +4,14 @@
 
 import { waitForCondition } from '@dxos/async';
 import { MessengerModel } from '@dxos/messenger-model';
+import path from 'path';
 
 import { /* BROWSER_ENV, NODE_ENV, */ Orchestrator } from '../src';
 import { APPEND_COMMAND, GET_ALL_COMMAND } from '../src/agents/test-agent';
 
 jest.setTimeout(100_000);
 
-test.skip('invite two agents to a party', async () => {
+test('invite two agents to a party', async () => {
   const orchestrator = await Orchestrator.create({ local: true });
 
   orchestrator.client.registerModel(MessengerModel);
@@ -19,8 +20,8 @@ test.skip('invite two agents to a party', async () => {
 
   await orchestrator.party.database.createItem({ model: MessengerModel, type: 'dxos.org/type/testing/object' });
 
-  const agent1 = await orchestrator.startAgent({ botPath: './src/test-agent.js' });
-  const agent2 = await orchestrator.startAgent({ botPath: './src/test-agent.js' });
+  const agent1 = await orchestrator.startAgent({ botPath: path.join(__dirname, '../src/agents/test-agent.ts') });
+  const agent2 = await orchestrator.startAgent({ botPath: path.join(__dirname, '../src/agents/test-agent.ts') });
 
   await agent1.sendCommand({ type: APPEND_COMMAND });
   await agent2.sendCommand({ type: APPEND_COMMAND });
