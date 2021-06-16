@@ -130,7 +130,9 @@ const Main = ({ party, code }: MainProps) => {
       secretValidator: async () => true
     });
 
-    await navigator.clipboard.writeText(JSON.stringify(invitation.toQueryParameters()));
+    const invitationText = JSON.stringify(invitation.toQueryParameters());
+    await navigator.clipboard.writeText(invitationText);
+    console.log(invitationText); // Console log is required for E2E tests.
   };
 
   // TODO(burdon): Show/hide components to maintain state (and test subscriptions). Show for first time on select.

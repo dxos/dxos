@@ -54,7 +54,7 @@ test('basic', async () => {
       .setMessageHandler(async (protocol, message) => {
         const { data } = message;
 
-        switch (data.toString()) {
+        switch (Buffer.from(data).toString()) {
           // Async response.
           case 'ping': {
             return Buffer.from('pong');

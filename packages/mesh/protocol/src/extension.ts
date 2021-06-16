@@ -246,12 +246,14 @@ export class Extension extends Nanomessage {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
     }
 
+    const builtMessage = this._buildMessage(message);
+
     if (options.oneway) {
-      return super.send(this._buildMessage(message));
+      return super.send(builtMessage);
     }
 
     try {
-      const response = await this.request(this._buildMessage(message));
+      const response = await this.request(builtMessage);
 
       if (response && response.code && response.message) {
         throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, response.code, response.message);
@@ -259,6 +261,7 @@ export class Extension extends Nanomessage {
 
       return { response };
     } catch (err) {
+      console.error(err);
       if (ERR_EXTENSION_RESPONSE_FAILED.equals(err)) {
         throw err;
       }
@@ -332,6 +335,7 @@ export class Extension extends Nanomessage {
         return this._buildMessage(result);
       }
     } catch (err) {
+      console.error(err);
       this.emit('error', err);
       const responseError = new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
       return {

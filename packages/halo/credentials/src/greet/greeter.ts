@@ -116,8 +116,8 @@ export class Greeter {
       return this._handleBegin(invitationId);
     }
 
-    assert(Buffer.isBuffer(secret));
-    const invitation = await this._getInvitation(invitationId, secret);
+    assert(secret, 'Secret is missing.');
+    const invitation = await this._getInvitation(invitationId, Buffer.isBuffer(secret) ? secret : Buffer.from(secret));
     if (!invitation) {
       throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_INVITATION, 'Invalid invitation');
     }
