@@ -33,6 +33,7 @@ const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
       <DialogTitle>Demo</DialogTitle>
       <DialogContent>
         <TextField
+          id="start-dialog-invitation-input"
           fullWidth
           value={invitationCode}
           onChange={event => setInvitationCode(event.target.value)}

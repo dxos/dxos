@@ -14,6 +14,8 @@ import { JsonTreeView } from '@dxos/react-ux';
 
 import { PartyCard } from '../../src';
 
+faker.seed(0);
+
 export default {
   title: 'Components/ClientInitializer',
   component: ClientInitializer

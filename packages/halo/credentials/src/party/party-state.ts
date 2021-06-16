@@ -135,7 +135,7 @@ export class PartyState extends EventEmitter {
    * Retrieve an PartyInvitation by its ID.
    */
   getInvitation (invitationID: Buffer) {
-    assert(Buffer.isBuffer(invitationID));
+    assert(Buffer.isBuffer(invitationID), 'invitationID is not a buffer.');
 
     return this._invitationManager.getInvitation(invitationID);
   }

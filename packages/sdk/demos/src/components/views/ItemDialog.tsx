@@ -73,6 +73,7 @@ const ItemDialog = ({
           )}
 
           <TextField
+            id='item-dialog-item-name'
             autoFocus
             fullWidth
             label='Name'

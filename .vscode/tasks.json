@@ -17,6 +17,15 @@
 				"cwd": "${fileDirname}"
 			},
 			"problemMatcher": []
+		},
+		{
+			"label": "Run demos",
+			"type": "shell",
+			"command": "rushx storybook",
+			"options": {
+				"cwd": "packages/sdk/demos"
+			},
+			"problemMatcher": []
 		}
 	]
 }
