@@ -49,6 +49,7 @@ describe('Demo - Primary and Peers', () => {
 
   beforeAll(async () => {
     jest.setTimeout(30000);
+    jest.retryTimes(1);
     alice = new Browser();
     bob = new Browser();
     await alice.launchBrowser(browser, 'about:blank');
