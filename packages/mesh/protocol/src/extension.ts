@@ -249,8 +249,8 @@ export class Extension extends Nanomessage {
     let builtMessage: WithTypeUrl<any>;
     try {
       builtMessage = this._buildMessage(message);
-    } catch(err) {
-      console.error(`Cannot build message in extension ${this._name}`, err)
+    } catch (err) {
+      console.error(`Cannot build message in extension ${this._name}`, err);
       throw err;
     }
 
@@ -267,7 +267,7 @@ export class Extension extends Nanomessage {
 
       return { response };
     } catch (err) {
-      console.error(err)
+      console.error(err);
       if (ERR_EXTENSION_RESPONSE_FAILED.equals(err)) {
         throw err;
       }
@@ -341,7 +341,7 @@ export class Extension extends Nanomessage {
         return this._buildMessage(result);
       }
     } catch (err) {
-      console.error(err)
+      console.error(err);
       this.emit('error', err);
       const responseError = new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
       return {
