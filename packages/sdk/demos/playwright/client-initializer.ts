@@ -42,7 +42,7 @@ const createItem = async (page: Page): Promise<string> => {
 
 describe('ClientInitializer', () => {
   const browser = firefox;
-  const memoryUrl = 'http://localhost:9001/iframe.html?idcomponents-clientinitializer--memory&viewMode=story';
+  const memoryUrl = 'http://localhost:9001/iframe.html?id=components-clientinitializer--memory&viewMode=story';
   const persistentUrl = 'http://localhost:9001/iframe.html?id=components-clientinitializer--persistent&viewMode=story';
   let alice: Browser;
   let bob: Browser;
