@@ -96,12 +96,14 @@ const PartyList = ({ selectedPartyKey, onSelectParty }) => {
         />
       )}
 
-      {/* {redeemDialog && (
-        <RedeemDialog
-          onClose={() => setRedeemDialog(false)}
-          // TODO(burdon): Get party key from dialog.
-        />
-      )} */}
+      {redeemDialog && (
+        <></>
+        // TODO(grazianoramiro): Implement redeem dialog
+        // <RedeemDialog
+        //   onClose={() => setRedeemDialog(false)}
+        //   // TODO(burdon): Get party key from dialog.
+        // />
+      )}
 
       <List disablePadding>
         {parties.map(party => (

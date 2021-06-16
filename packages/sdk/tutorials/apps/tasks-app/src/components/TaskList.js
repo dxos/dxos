@@ -119,13 +119,15 @@ const TaskList = ({ partyKey }) => {
 
   return (
     <div className={classes.fillVertically}>
-      {/* {shareDialog && (
-        <PartySharingDialog
-          open
-          party={party}
-          onClose={() => setShareDialog(false)}
-        />
-      )} */}
+      {shareDialog && (
+        <></>
+        // TODO(grazianoramiro): Implement party sharing dialog
+        // <PartySharingDialog
+        //   open
+        //   party={party}
+        //   onClose={() => setShareDialog(false)}
+        // />
+      )}
 
       <div className={classes.container}>
         {/* Create task. */}
