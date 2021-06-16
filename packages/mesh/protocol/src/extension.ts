@@ -246,12 +246,12 @@ export class Extension extends Nanomessage {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
     }
 
-    let builtMessage: WithTypeUrl<proto.Buffer>;
+    let builtMessage: WithTypeUrl<any>;
     try {
       builtMessage = this._buildMessage(message);
     } catch(err) {
       console.error(`Cannot build message in extension ${this._name}`, err)
-      throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
+      throw err;
     }
 
     if (options.oneway) {

@@ -52,14 +52,14 @@ const createUser1Protocol = (): Protocol => {
   
     {
       const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
-      console.assert(data === Buffer.from('pong'), 'is not pong')
+      console.assert(Buffer.from(data).toString() === 'pong', 'is not pong', Buffer.from(data).toString())
     }
   
     {
       const result = await bufferMessages.send(Buffer.from('oneway'), { oneway: true });
       console.assert(result === undefined, 'result is not undefined')
       const data = await waitOneWayMessage.promise;
-      console.assert(data === Buffer.from('oneway'), 'is not oneway')
+      console.assert(Buffer.from(data).toString() === 'oneway', 'is not oneway', Buffer.from(data).toString())
     }
   
     try {
@@ -100,7 +100,7 @@ const createUser2Protocol = (): Protocol => {
     .setMessageHandler(async (protocol, message) => {
       const { data } = message;
 
-      switch (data.toString()) {
+      switch (Buffer.from(data).toString()) {
         // Async response.
         case 'ping': {
           return Buffer.from('pong');
@@ -119,7 +119,7 @@ const createUser2Protocol = (): Protocol => {
 
         // Error.
         default: {
-          throw new Error('Invalid data.');
+          throw new Error('Invalid data: ' + Buffer.from(data).toString());
         }
       }
     }))
