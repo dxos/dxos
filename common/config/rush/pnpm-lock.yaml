@@ -1009,7 +1009,6 @@ importers:
       webpack: 4.44.2
   ../../packages/mesh/network-generator:
     dependencies:
-      '@dxos/async': link:../../common/async
       debug: 4.3.1
       end-of-stream: 1.4.4
       ngraph.generators: 18.0.1
@@ -1021,7 +1020,6 @@ importers:
       '@types/node': 14.14.45
       wait-for-expect: 3.0.2
     specifiers:
-      '@dxos/async': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/assert': ^1.5.4
       '@types/jest': ^26.0.7
@@ -1428,7 +1426,6 @@ importers:
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
-      '@dxos/protocol': link:../../mesh/protocol
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
       '@dxos/react-client': link:../react-client
       '@dxos/react-ux': link:../react-ux
@@ -1463,7 +1460,6 @@ importers:
       '@storybook/react': 6.2.9_1568a4a4371cca35bea7fd1ef25c77f4
       '@types/faker': 5.5.5
       '@types/jest': 26.0.23
-      '@types/pump': 1.1.1
       '@types/react': 16.14.6
       babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
       babel-plugin-add-module-exports: 1.0.4
@@ -1474,7 +1470,6 @@ importers:
       eslint-plugin-jest: 24.3.6_eslint@7.26.0+typescript@4.2.4
       eslint-plugin-react: 7.23.2_eslint@7.26.0
       jest: 26.6.3
-      pump: 3.0.0
       react: 16.14.0
       react-docgen-typescript-loader: 3.7.2_typescript@4.2.4+webpack@4.44.2
       react-dom: 16.14.0_react@16.14.0
@@ -1501,7 +1496,6 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
-      '@dxos/protocol': workspace:*
       '@dxos/random-access-multi-storage': ~1.1.0-beta.8
       '@dxos/react-client': workspace:*
       '@dxos/react-ux': workspace:*
@@ -1518,7 +1512,6 @@ importers:
       '@types/jest': ^26.0.7
       '@types/lodash': ^4.14.159
       '@types/node': ^14.0.9
-      '@types/pump': ^1.1.0
       '@types/react': ^16.14.0
       '@types/stream-buffers': ^3.0.2
       babel-loader: 8.1.0
@@ -1538,7 +1531,6 @@ importers:
       lodash.merge: ^4.6.2
       mobile-detect: ~1.4.5
       playwright: ^1.7.0
-      pump: ^3.0.0
       random-access-memory: ~3.1.2
       react: ^16.14.0
       react-docgen-typescript-loader: ^3.7.2
