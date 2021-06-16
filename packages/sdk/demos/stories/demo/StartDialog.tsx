@@ -46,7 +46,7 @@ const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
           {inProgress && <LinearProgress />}
         </div>
 
-        {error && <Typography>{String(error)}</Typography>}
+        {error && <Typography>{String(error.stack)}</Typography>}
       </DialogContent>
       <DialogActions>
         <Button
@@ -58,6 +58,7 @@ const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
             try {
               await onJoin(invitationCode);
             } catch (error) {
+              console.error(error);
               setError(error);
             } finally {
               setInProgress(false);
