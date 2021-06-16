@@ -246,13 +246,7 @@ export class Extension extends Nanomessage {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
     }
 
-    let builtMessage: WithTypeUrl<any>;
-    try {
-      builtMessage = this._buildMessage(message);
-    } catch (err) {
-      console.error(`Cannot build message in extension ${this._name}`, err);
-      throw err;
-    }
+    const builtMessage = this._buildMessage(message);
 
     if (options.oneway) {
       return super.send(builtMessage);
