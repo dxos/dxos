@@ -8,7 +8,6 @@ import debug from 'debug';
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
-import { Protocol } from '@dxos/protocol';
 import { ComplexMap } from '@dxos/util';
 
 import { SignalApi } from '../signal';
@@ -36,7 +35,7 @@ export class InMemoryTransport implements Transport {
     private readonly _remoteId: PublicKey,
     private readonly _sessionId: PublicKey,
     private readonly _topic: PublicKey,
-    private readonly _protocol: Protocol
+    private readonly _stream: NodeJS.ReadWriteStream
   ) {
     log(`Registering connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
 
@@ -51,7 +50,7 @@ export class InMemoryTransport implements Transport {
       this._remoteConnection._remoteConnection = this;
 
       log(`Connecting to existing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
-      this._protocol.stream.pipe(this._remoteConnection._protocol.stream).pipe(this._protocol.stream);
+      this._stream.pipe(this._remoteConnection._stream).pipe(this._stream);
 
       this.connected.emit();
       this._remoteConnection.connected.emit();
@@ -74,15 +73,12 @@ export class InMemoryTransport implements Transport {
     log(`Closing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
 
     InMemoryTransport._connections.delete(this._ownKey);
-    await this._protocol.close();
 
     if (this._remoteConnection) {
       InMemoryTransport._connections.delete(this._remoteKey);
 
-      await this._remoteConnection._protocol.close();
-
-      const stream = this._protocol.stream;
-      stream.unpipe(this._remoteConnection._protocol.stream).unpipe(stream);
+      const stream = this._stream;
+      stream.unpipe(this._remoteConnection._stream).unpipe(stream);
 
       this._remoteConnection.closed.emit();
 
@@ -100,5 +96,5 @@ export const inMemoryTransportFactory: TransportFactory = opts => new InMemoryTr
   opts.remoteId,
   opts.sessionId,
   opts.topic,
-  opts.protocol
+  opts.stream
 );

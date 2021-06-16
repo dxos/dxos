@@ -5,7 +5,6 @@
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
-import { Protocol } from '@dxos/protocol';
 
 import { SignalApi } from '../signal';
 
@@ -38,7 +37,7 @@ export interface TransportOptions {
   /**
    * Wire protocol.
    */
-  protocol: Protocol,
+  stream: NodeJS.ReadWriteStream,
 
   /**
    * Send a signal message to remote peer.
