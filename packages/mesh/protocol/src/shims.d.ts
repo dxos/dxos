@@ -27,7 +27,8 @@ declare module 'hypercore-protocol' {
 
   }
 
-  interface ConstructorOptions {
+  export interface ProtocolStreamCtorOpts {
+    live?: boolean;
     encrypted?: true, // set to false to disable encryption if you are already piping through a encrypted stream
     noise?: true, // set to false to disable the NOISE handshake completely. Requires encrypted = false, and also disables the capability verification
     timeout?: 20000, // stream timeout. set to 0 or false to disable.
@@ -55,7 +56,7 @@ declare module 'hypercore-protocol' {
   export class ProtocolStream extends EventEmitter {
     id: any;
 
-    constructor(initiator: boolean, opts: ConstructorOptions);
+    constructor(initiator?: boolean, opts?: ProtocolStreamCtorOpts);
 
     open (key: any, handlers: ChannelHandlers): Channel;
   }

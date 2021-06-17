@@ -6,7 +6,7 @@ import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
 import eos from 'end-of-stream';
-import ProtocolStream from 'hypercore-protocol';
+import ProtocolStream, { ProtocolStreamCtorOpts } from 'hypercore-protocol';
 
 import { Event, synchronized } from '@dxos/async';
 import type { Codec } from '@dxos/codec-protobuf';
@@ -70,7 +70,7 @@ export class Protocol {
   readonly handshake = new Event<this>()
 
   private _discoveryToPublicKey: (discoveryKey: Buffer) => Buffer;
-  private _streamOptions: ProtocolStreamOptions | undefined;
+  private _streamOptions: ProtocolStreamCtorOpts | undefined;
   private _initTimeout: number;
   private _extensionInit: ExtensionInit;
   private _init = false;
