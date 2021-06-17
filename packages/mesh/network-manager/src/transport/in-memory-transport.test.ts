@@ -31,7 +31,7 @@ function createPair () {
     peer2Id,
     sessionId,
     topic,
-    protocolProvider1({ channel: discoveryKey(topic) })
+    protocolProvider1({ channel: discoveryKey(topic) }).stream
   );
   afterTest(() => connection1.close());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
@@ -43,7 +43,7 @@ function createPair () {
     peer1Id,
     sessionId,
     topic,
-    protocolProvider2({ channel: discoveryKey(topic) })
+    protocolProvider2({ channel: discoveryKey(topic) }).stream
   );
   afterTest(() => connection2.close());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
@@ -82,25 +82,5 @@ describe('InMemoryTransport', () => {
         expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
       });
     }));
-  });
-
-  test('close', async () => {
-    const { plugin1, plugin2, connection1, connection2 } = createPair();
-
-    await waitForExpect(() => {
-      expect(plugin1.peers.length).toEqual(1);
-      expect(plugin2.peers.length).toEqual(1);
-    });
-
-    const closed = connection2.closed.waitForCount(1);
-
-    await connection1.close();
-
-    await closed;
-
-    await waitForExpect(() => {
-      expect(plugin1.peers.length).toEqual(0);
-      expect(plugin2.peers.length).toEqual(0);
-    });
   });
 });

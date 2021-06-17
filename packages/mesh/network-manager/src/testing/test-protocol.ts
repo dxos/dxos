@@ -9,7 +9,7 @@ import debug from 'debug';
 import { EventEmitter } from 'events';
 
 import { keyToString } from '@dxos/crypto';
-import { Extension } from '@dxos/protocol';
+import { Extension, Protocol } from '@dxos/protocol';
 
 import { protocolFactory } from '../protocol-factory';
 
@@ -18,8 +18,8 @@ const log = debug('dxos:network-manager:test');
 const EXTENSION_NAME = 'test';
 
 // TODO(dboreham): This method should be added to Protocol (and one for "my ID"?).
-export const getPeerId = (protocol) => {
-  const { peerId } = protocol && protocol.getSession ? protocol.getSession() : {};
+export const getPeerId = (protocol: Protocol | undefined) => {
+  const { peerId = undefined } = protocol && protocol.getSession ? protocol.getSession() : {};
   return peerId;
 };
 
@@ -45,7 +45,7 @@ export class TestProtocolPlugin extends EventEmitter {
    * @param {Buffer} peerId
    * @param {Boolean} uppercase Fold payload case to upper if set.
    */
-  constructor (peerId, uppercase = false) {
+  constructor (peerId: Buffer, uppercase = false) {
     assert(Buffer.isBuffer(peerId));
     super();
 
@@ -92,7 +92,7 @@ export class TestProtocolPlugin extends EventEmitter {
    * @param payload {string} Message to send
    * @return {string} Message received from peer in response to our request.
    */
-  async send (peerId, payload) {
+  async send (peerId: Buffer, payload: string) {
     assert(Buffer.isBuffer(peerId));
     const peerIdStr = keyToString(peerId);
     const peer = this._peers.get(peerIdStr);
@@ -103,7 +103,7 @@ export class TestProtocolPlugin extends EventEmitter {
     log('Sent to %s: %s', peerIdStr, payload);
   }
 
-  async _receive (protocol, data) {
+  async _receive (protocol: Protocol, data: any) {
     const peerIdStr = keyToString(getPeerId(protocol));
     let payload = data.data.toString();
     if (this._uppercase) {
@@ -113,7 +113,7 @@ export class TestProtocolPlugin extends EventEmitter {
     this.emit('receive', protocol, payload);
   }
 
-  _onPeerConnect (protocol) {
+  _onPeerConnect (protocol: Protocol) {
     const peerId = getPeerId(protocol);
     if (peerId === undefined) {
       return;
@@ -127,7 +127,7 @@ export class TestProtocolPlugin extends EventEmitter {
     this.emit('connect', protocol);
   }
 
-  _onPeerDisconnect (protocol) {
+  _onPeerDisconnect (protocol: Protocol) {
     const peerId = getPeerId(protocol);
     if (peerId === undefined) {
       return;
@@ -142,7 +142,7 @@ export class TestProtocolPlugin extends EventEmitter {
  * @return {ProtocolProvider}
  */
 // TODO(dboreham): Try to encapsulate swarmKey, nodeId.
-export const testProtocolProvider = (swarmKey, nodeId, protocolPlugin) => {
+export const testProtocolProvider = (swarmKey: Buffer, nodeId: Buffer, protocolPlugin: { createExtension(): Extension }): (session: any) => Protocol => {
   return protocolFactory({
     getTopics: () => {
       return [swarmKey];
