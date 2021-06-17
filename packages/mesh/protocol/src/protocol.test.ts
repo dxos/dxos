@@ -30,14 +30,14 @@ test('basic without extensions', async () => {
   let onInitCalled = 0;
   const onInit = () => onInitCalled++;
 
-  const protocol1 = new Protocol({ discoveryKey: topic })
+  const protocol1 = new Protocol({ discoveryKey: topic, initiator: true })
     .setSession({ user: 'user1' })
     .setHandshakeHandler(async () => {
       onInit();
     })
     .init();
 
-  const protocol2 = new Protocol({ discoveryKey: topic })
+  const protocol2 = new Protocol({ discoveryKey: topic, initiator: false })
     .setSession({ user: 'user2' })
     .setHandshakeHandler(async () => {
       onInit()
@@ -47,9 +47,6 @@ test('basic without extensions', async () => {
   protocol1.error.on(err => console.log('protocol1', err));
   protocol2.error.on(err => console.log('protocol2', err));
 
-  await waitForExpect(async () => {
-    expect(onInitCalled).toBe(2);
-  })
 
   // protocol1.setHandshakeHandler(async (protocol) => {
   //   expect(onInitCalled).toBe(2);
@@ -96,9 +93,11 @@ test('basic without extensions', async () => {
   //   protocol1.stream.destroy();
   // });
 
-  return new Promise<void>(resolve => pump(protocol1.stream, protocol2.stream, protocol1.stream, () => {
-    resolve();
-  }));
+  pump(protocol1.stream, protocol2.stream, protocol1.stream)
+
+  await waitForExpect(async () => {
+    expect(onInitCalled).toBe(2);
+  })
 }).timeout(0 * 1000);
 
 test('basic', async () => {

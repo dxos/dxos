@@ -54,6 +54,8 @@ export interface ProtocolOptions {
    * Define a codec to encode/decode messages from extensions.
    */
   codec?: Codec
+
+  initiator?: boolean
 }
 
 /**
@@ -106,7 +108,7 @@ export class Protocol {
     this._initTimeout = initTimeout;
 
     this._discoveryKey = options.discoveryKey;
-    this._initiator = !!options.discoveryKey;
+    this._initiator = !!options.initiator;
 
     this._stream = new ProtocolStream(this._initiator, this._streamOptions);
     (this._stream as any)[kProtocol] = this; // TODO: can be removed?
