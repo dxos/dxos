@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { getStackTrace } from './stack-trace';
-
 export type ErrorHandlerCallback = (error: Error) => void;
 
 /**
@@ -39,6 +37,8 @@ export class ErrorStream {
   private _unhandledError (error: Error) {
     this._unhandledErrors++;
 
-    setTimeout(() => { throw error; })
+    setTimeout(() => {
+      throw error;
+    });
   }
 }
