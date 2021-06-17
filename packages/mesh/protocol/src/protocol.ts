@@ -126,7 +126,7 @@ export class Protocol {
   }
 
   get id () {
-    return this._stream.id;
+    return this._stream.publicKey;
   }
 
   get stream () {
@@ -311,7 +311,7 @@ export class Protocol {
     }
 
     sortedExtensions.sort().forEach(name => {
-      this._stream.extensions.push(name);
+      this._stream.registerExtension(name);
     });
   }
 
@@ -366,7 +366,7 @@ export class Protocol {
         }
 
         // init stream
-        this._feed = this._stream.feed(initialKey);
+        this._feed = this._stream.write(initialKey);
         this._feed.on('extension', this._extensionHandler);
       } catch (err) {
         let newErr = err;

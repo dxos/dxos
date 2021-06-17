@@ -14,11 +14,12 @@ test('basic generator', async () => {
       id,
       createStream () {
         return new Protocol({
+          discoveryKey: topic,
           streamOptions: {
             live: true
           }
         })
-          .init(topic)
+          .init()
           .stream;
       }
     };

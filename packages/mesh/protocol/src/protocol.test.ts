@@ -83,6 +83,9 @@ test('basic', async () => {
   protocol1.error.on(err => console.log('protocol1', err));
   protocol2.error.on(err => console.log('protocol2', err));
 
+  expect(protocol1.id).toBeDefined();
+  expect(protocol2.id).toBeDefined();
+
   protocol1.setHandshakeHandler(async (protocol) => {
     expect(onInitCalled).toBe(2);
 
