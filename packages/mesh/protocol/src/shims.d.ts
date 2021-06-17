@@ -24,7 +24,8 @@ declare module 'hypercore-protocol' {
   import EventEmitter from 'node:events';
 
   export class Channel {
-
+    options: (options: {extensions: any[]}) => any;
+    extension: (id: number, message: Buffer) => any;
   }
 
   export interface ProtocolStreamCtorOpts {
@@ -53,12 +54,25 @@ declare module 'hypercore-protocol' {
     onclose?: () => any,
   }
 
+  interface ExtensionHandlers {
+    onmessage?: (message: Buffer) => any,
+    onerror?: (error: any) => any,
+    encoding?: 'json' | 'utf-8' | 'binary',
+  }
+
+  class Extension {
+    send: (message: buffer) => void;
+    destroy: () => void;
+  }
+
   export class ProtocolStream extends EventEmitter {
     id: any;
 
     constructor(initiator?: boolean, opts?: ProtocolStreamCtorOpts);
 
     open (key: any, handlers: ChannelHandlers): Channel;
+
+    registerExtension(name: string, handlers?: ExtensionHandlers): Extension;
   }
 
   export = ProtocolStream;

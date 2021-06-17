@@ -21,10 +21,10 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 test('Basic connection of two hypercore protocols', async () => {
   const topic = crypto.randomBytes(32);
-  const alice: any = new ProtocolStream(true, {
+  const alice = new ProtocolStream(true, {
     onhandshake: () => console.log('alices handshake'),
   })
-  const bob: any = new ProtocolStream(false, {
+  const bob = new ProtocolStream(false, {
     onhandshake: () => console.log('bobs handshake'),
   })
 
@@ -36,9 +36,8 @@ test('Basic connection of two hypercore protocols', async () => {
     onoptions: (msg: any) => console.log('bob options', msg),
     onextension: (id: any, data: any) => console.log('bob onextension', id, data)
   })
-
   
-  pump(alice, bob, alice);
+  pump(alice as any, bob as any, alice as any);
 
   aliceChannel.options({
     extensions: ['ext-foo']
@@ -48,6 +47,17 @@ test('Basic connection of two hypercore protocols', async () => {
   })
   aliceChannel.extension(0, Buffer.from([1, 2, 3]))
 
+  const aliceExt = alice.registerExtension('ext-on-stream', {
+    onmessage: (msg: any) => {
+      console.log('alice got msg in extension', msg)
+      console.log(typeof msg)
+    }
+  })
+  const bobExt = bob.registerExtension('ext-on-stream', {
+
+  })
+
+  bobExt.send(Buffer.from([4,5,6]));
 
   await sleep(1000)
   // aliceChannel.data({ index: 1, value: '{ block: 42 }'})
