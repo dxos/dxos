@@ -270,7 +270,7 @@ export class Protocol {
       this.close();
     });
 
-    log(keyToHuman(this._stream.id, 'node'), 'initialized');
+    log(keyToHuman(this._stream.publicKey, 'node'), 'initialized');
 
     this._isOpen = true;
   }
@@ -305,7 +305,7 @@ export class Protocol {
     const sortedExtensions = [this._extensionInit.name];
 
     for (const [name, extension] of this._extensionMap) {
-      log(`open extension "${name}": ${keyToHuman(this._stream.id, 'node')}`);
+      log(`open extension "${name}": ${keyToHuman(this._stream.publicKey, 'node')}`);
       await extension.openWithProtocol(this);
       sortedExtensions.push(name);
     }
@@ -318,7 +318,7 @@ export class Protocol {
   private async _initExtensions () {
     try {
       for (const [name, extension] of this._extensionMap) {
-        log(`init extension "${name}": ${keyToHuman(this._stream.id)} <=> ${keyToHuman(this._stream.remoteId)}`);
+        log(`init extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
         await extension.onInit();
       }
 
@@ -335,18 +335,18 @@ export class Protocol {
     }
 
     for (const [name, extension] of this._extensionMap) {
-      log(`handshake extension "${name}": ${keyToHuman(this._stream.id)} <=> ${keyToHuman(this._stream.remoteId)}`);
+      log(`handshake extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
       await extension.onHandshake();
     }
 
-    log(`handshake: ${keyToHuman(this._stream.id)} <=> ${keyToHuman(this._stream.remoteId)}`);
+    log(`handshake: ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
     this.handshake.emit(this);
     this._connected = true;
 
     this._stream.on('feed', async (discoveryKey: Buffer) => {
       try {
         for (const [name, extension] of this._extensionMap) {
-          log(`feed extension "${name}": ${keyToHuman(this._stream.id)} <=> ${keyToHuman(this._stream.remoteId)}`);
+          log(`feed extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
           await extension.onFeed(discoveryKey);
         }
       } catch (err) {
@@ -366,8 +366,7 @@ export class Protocol {
         }
 
         // init stream
-        this._feed = this._stream.write(initialKey);
-        this._feed.on('extension', this._extensionHandler);
+        this._feed = this._stream.open(initialKey, {onExtension: this._extensionHandler});
       } catch (err) {
         let newErr = err;
         if (!ERR_PROTOCOL_CONNECTION_INVALID.equals(newErr)) {
