@@ -23,13 +23,13 @@ declare module 'buffer-json-encoding';
 declare module 'hypercore-protocol' {
   import EventEmitter from 'node:events';
 
-  export interface Stream extends EventEmitter {
+  export class ProtocolStream extends EventEmitter {
     id: any;
+
+    constructor(initiator: boolean, opts: any);
   }
 
-  declare function protocol(opts: any): Stream;
-
-  export = protocol;
+  export = ProtocolStream;
 }
 
 declare module 'nanoresource-promise/emitter';

@@ -31,7 +31,7 @@ test('basic', async () => {
   const topic = crypto.randomBytes(32);
   const onInit = jest.fn();
 
-  const protocol1 = new Protocol()
+  const protocol1 = new Protocol({discoveryKey: topic})
     .setSession({ user: 'user1' })
     .setExtension(
       new Extension(bufferExtension, { timeout })
@@ -39,9 +39,9 @@ test('basic', async () => {
           onInit();
         })
     )
-    .init(topic);
+    .init();
 
-  const protocol2 = new Protocol()
+  const protocol2 = new Protocol({discoveryKey: topic})
     .setSession({ user: 'user2' })
     .setHandshakeHandler(async () => {
       expect(onInit).toHaveBeenCalledTimes(2);
@@ -77,7 +77,7 @@ test('basic', async () => {
           }
         }
       }))
-    .init(topic);
+    .init();
 
   protocol1.error.on(err => console.log('protocol1', err));
   protocol2.error.on(err => console.log('protocol2', err));
@@ -145,7 +145,7 @@ test('protocol init error', async () => {
   const topic = crypto.randomBytes(32);
   const onHandshake = jest.fn();
 
-  const protocol = (name: string, error?: any) => new Protocol()
+  const protocol = (name: string, error?: any) => new Protocol({discoveryKey: topic})
     .setContext({ name })
     .setHandshakeHandler(async () => {
       onHandshake();
@@ -159,7 +159,7 @@ test('protocol init error', async () => {
           }
         })
     )
-    .init(topic);
+    .init();
 
   const protocol1 = protocol('protocol1');
   const protocol2 = protocol('protocol2', new Error('big error'));

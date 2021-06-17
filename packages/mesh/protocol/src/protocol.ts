@@ -6,7 +6,7 @@ import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
 import eos from 'end-of-stream';
-import protocol from 'hypercore-protocol';
+import ProtocolStream from 'hypercore-protocol';
 
 import { Event, synchronized } from '@dxos/async';
 import type { Codec } from '@dxos/codec-protobuf';
@@ -45,6 +45,8 @@ export interface ProtocolOptions {
    * https://github.com/mafintosh/hypercore-protocol#var-stream--protocoloptions
    */
   streamOptions?: ProtocolStreamOptions,
+
+  discoveryKey?: Buffer,
 
   initTimeout?: number
 
@@ -103,8 +105,11 @@ export class Protocol {
     this._streamOptions = streamOptions;
     this._initTimeout = initTimeout;
 
-    this._stream = protocol(this._streamOptions);
-    (this._stream as any)[kProtocol] = this;
+    this._discoveryKey = options.discoveryKey;
+    this._initiator = !!options.discoveryKey;
+
+    this._stream = new ProtocolStream(this._initiator, this._streamOptions);
+    (this._stream as any)[kProtocol] = this; // TODO: can be removed?
     this._stream.on('error', (err: any) => this.error.emit(err));
     this.error.on(error => log(error));
 
@@ -112,6 +117,7 @@ export class Protocol {
   }
 
   toString () {
+    console.log('getting id', this.stream.publicKey)
     const meta = {
       id: keyToHuman(this._stream!.id),
       extensions: Array.from(this._extensionMap.keys())
@@ -231,12 +237,10 @@ export class Protocol {
    * Initializes the protocol stream, creating a feed.
    * https://github.com/mafintosh/hypercore-protocol
    */
-  init (discoveryKey?: Buffer) {
+  init () {
     assert(!this._init);
 
     this._init = true;
-    this._discoveryKey = discoveryKey;
-    this._initiator = !!discoveryKey;
     this.open().catch((err: any) => process.nextTick(() => this._stream.destroy(err)));
 
     return this;
