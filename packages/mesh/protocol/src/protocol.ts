@@ -117,7 +117,6 @@ export class Protocol {
   }
 
   toString () {
-    console.log('getting id', this.stream.publicKey)
     const meta = {
       id: keyToHuman(this._stream!.id),
       extensions: Array.from(this._extensionMap.keys())

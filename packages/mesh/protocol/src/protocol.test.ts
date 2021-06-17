@@ -4,6 +4,8 @@
 
 import crypto from 'crypto';
 import debug from 'debug';
+import expect from 'expect';
+import { it as test } from 'mocha';
 import pump from 'pump';
 
 import { ERR_EXTENSION_RESPONSE_FAILED, ERR_EXTENSION_RESPONSE_TIMEOUT } from './errors';
@@ -12,8 +14,6 @@ import { Protocol } from './protocol';
 
 const log = debug('test');
 debug.enable('test,protocol');
-
-jest.setTimeout(10 * 1000);
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -29,9 +29,10 @@ test('basic', async () => {
   });
 
   const topic = crypto.randomBytes(32);
-  const onInit = jest.fn();
+  let onInitCalled = 0;
+  const onInit = () => onInitCalled++;
 
-  const protocol1 = new Protocol({discoveryKey: topic})
+  const protocol1 = new Protocol({ discoveryKey: topic })
     .setSession({ user: 'user1' })
     .setExtension(
       new Extension(bufferExtension, { timeout })
@@ -41,10 +42,10 @@ test('basic', async () => {
     )
     .init();
 
-  const protocol2 = new Protocol({discoveryKey: topic})
+  const protocol2 = new Protocol({ discoveryKey: topic })
     .setSession({ user: 'user2' })
     .setHandshakeHandler(async () => {
-      expect(onInit).toHaveBeenCalledTimes(2);
+      expect(onInitCalled).toBe(2);
     })
     .setExtension(new Extension(bufferExtension, { timeout })
       .setInitHandler(async () => {
@@ -83,7 +84,7 @@ test('basic', async () => {
   protocol2.error.on(err => console.log('protocol2', err));
 
   protocol1.setHandshakeHandler(async (protocol) => {
-    expect(onInit).toHaveBeenCalledTimes(2);
+    expect(onInitCalled).toBe(2);
 
     const bufferMessages = protocol.getExtension(bufferExtension)!;
 
@@ -130,7 +131,7 @@ test('basic', async () => {
   return new Promise<void>(resolve => pump(protocol1.stream, protocol2.stream, protocol1.stream, () => {
     resolve();
   }));
-});
+}).timeout(0 * 1000);
 
 test('protocol init error', async () => {
   expect.assertions(1);
@@ -143,9 +144,10 @@ test('protocol init error', async () => {
   });
 
   const topic = crypto.randomBytes(32);
-  const onHandshake = jest.fn();
+  let onHandshakeCalled = 0;
+  const onHandshake = () => onHandshakeCalled++;
 
-  const protocol = (name: string, error?: any) => new Protocol({discoveryKey: topic})
+  const protocol = (name: string, error?: any) => new Protocol({ discoveryKey: topic })
     .setContext({ name })
     .setHandshakeHandler(async () => {
       onHandshake();
@@ -165,7 +167,7 @@ test('protocol init error', async () => {
   const protocol2 = protocol('protocol2', new Error('big error'));
 
   return new Promise<void>(resolve => pump(protocol1.stream, protocol2.stream, protocol1.stream, () => {
-    expect(onHandshake).not.toHaveBeenCalled();
+    expect(onHandshakeCalled).toBe(0);
     resolve();
   }));
 });
