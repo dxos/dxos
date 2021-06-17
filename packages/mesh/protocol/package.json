@@ -30,7 +30,7 @@
     "debug": "^4.1.1",
     "end-of-stream": "^1.4.1",
     "humanhash": "^1.0.4",
-    "hypercore-protocol": "^6.11.1",
+    "hypercore-protocol": "^8.0.7",
     "nanoerror": "^1.2.1",
     "nanomessage": "^5.4.0",
     "nanoresource-promise": "^2.0.0",

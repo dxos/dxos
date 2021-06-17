@@ -37,7 +37,7 @@
     "@types/stream-buffers": "^3.0.2",
     "@types/through2": "^2.0.36",
     "debug": "^4.1.1",
-    "hypercore": "^7.7.1",
+    "hypercore": "^9.10.0",
     "js-data-structs": "^1.1.2",
     "lodash": "4.17.21",
     "lodash.merge": "^4.6.2",
