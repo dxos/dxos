@@ -39,6 +39,6 @@ export class ErrorStream {
   private _unhandledError (error: Error) {
     this._unhandledErrors++;
 
-    console.error(error);
+    setTimeout(() => { throw error; })
   }
 }
