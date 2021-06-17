@@ -129,7 +129,7 @@ export class PartyProtocol {
         protocol.setContext({ topic: this._partyKey.toHex() });
 
         // TODO(burdon): Inconsistent use of toHex and asBuffer.
-        //   Need to progressively clean-up all uses of Keys via Typscript.
+        //   Need to progressively clean-up all uses of Keys via Typescript.
         return this._partyKey.asBuffer();
       }
     });
