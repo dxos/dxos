@@ -65,12 +65,7 @@ export class Connection {
     private readonly _sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>,
     private readonly _protocol: Protocol,
     private readonly _transportFactory: TransportFactory
-  ) {
-    this._protocol.error.once(err => {
-      log(err);
-      this.close().catch(err => this.errors.raise(err));
-    });
-  }
+  ) {}
 
   get state () {
     return this._state;
@@ -103,9 +98,6 @@ export class Connection {
     });
 
     this._transport.closed.once(() => {
-      this._state = ConnectionState.CLOSED;
-      this.stateChanged.emit(this._state);
-
       this._transport = undefined;
       this.close().catch(err => this.errors.raise(err));
     });
