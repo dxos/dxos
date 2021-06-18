@@ -1,3 +1,11 @@
-# Util
+# @dxos/rpc
 
-This is a temporary repo for ECHO utilities. Group and refactor out to other repos.
+A lightweight, transport-agnostic RPC implementation.
+
+## Features
+
+* Performs a handshake to wait for the other side to be open.
+* Errors are serialized and transported with their stack intact.
+* Requests are terminated on close.
+* TODO: Request timeouts.
+* TODO: Data streams.
