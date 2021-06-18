@@ -85,7 +85,7 @@ export class Peer {
       return true;
     }
 
-    const replicateOptions = Object.assign({}, this._protocol.streamOptions, { stream });
+    const replicateOptions = Object.assign({}, this._protocol.streamOptions, { stream, initiator: this._protocol.initiator });
 
     if (!replicateOptions.live && replicateOptions.expectedFeeds === undefined) {
       stream.expectedFeeds = stream.feeds.length + 1;

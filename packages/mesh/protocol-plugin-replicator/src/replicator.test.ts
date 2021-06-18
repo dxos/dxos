@@ -41,8 +41,9 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     getDescriptors () {
       return feedStore.getDescriptors();
     },
-    createStream () {
+    createStream ({ initiator }) {
       return new Protocol({
+        initiator: !!initiator,
         discoveryKey: discoveryKey(topic),
         streamOptions: {
           live: true
