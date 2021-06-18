@@ -1456,6 +1456,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
+      '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/eslint-plugin': 1.0.10_eslint@7.26.0+typescript@4.2.4
       '@storybook/addon-essentials': 6.2.9_ccd003247d485aeca5d249e8f9b350d2
@@ -1486,6 +1487,7 @@ importers:
     specifiers:
       '@babel/core': ~7.13.15
       '@babel/plugin-transform-runtime': ^7.11.5
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
@@ -1669,6 +1671,7 @@ importers:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
+      '@dxos/react-client': link:../react-client
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
@@ -1677,6 +1680,8 @@ importers:
       '@types/react': 16.14.6
       clsx: 1.1.1
       lodash.isplainobject: 4.0.6
+      moment: 2.29.1
+      react-copy-to-clipboard: 5.0.3_react@16.14.0
       uuid: 3.4.0
     devDependencies:
       '@babel/core': 7.13.16
@@ -1695,6 +1700,7 @@ importers:
       '@babel/core': ~7.13.15
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/react-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
@@ -1711,7 +1717,9 @@ importers:
       '@types/react': ^16.14.0
       clsx: ^1.1.0
       lodash.isplainobject: ^4.0.6
+      moment: ^2.24.0
       react: ^16.14.0
+      react-copy-to-clipboard: ~5.0.3
       react-dom: ^16.14.0
       typescript: ^4.2.4
       uuid: ^3.3.2
@@ -1721,6 +1729,7 @@ importers:
       '@dxos/crypto': link:../../../../common/crypto
       '@dxos/object-model': link:../../../../echo/object-model
       '@dxos/react-client': link:../../../react-client
+      '@dxos/react-ux': link:../../../react-ux
       '@material-ui/core': 4.11.4_react-dom@16.14.0+react@16.14.0
       '@material-ui/icons': 4.11.2_de4125cbc7df93d07bfd24495ba7ecef
       '@testing-library/dom': 7.31.2
@@ -1740,6 +1749,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-ux': workspace:*
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
       '@testing-library/dom': ~7.31.2
@@ -10413,7 +10423,6 @@ packages:
   /copy-to-clipboard/3.3.1:
     dependencies:
       toggle-selection: 1.0.6
-    dev: true
     resolution:
       integrity: sha512-i13qo6kIHTTpCm8/Wup+0b1mVWETvu2kIMzKoK8FpkLkFxlt0znUAHcMzox+T8sPlqtZXq3CulEjQHsYiGFJUw==
   /copy/0.3.2:
@@ -20644,6 +20653,16 @@ packages:
       react-dom: '>=16.8.0'
     resolution:
       integrity: sha512-WOEpRNz8Oo2SEU4eYQ279jEKFSjpFPa9Vi2U/K0DGwP9wOQ8wYkJcNSd5Qbv1L8OFvyKDCbWekjftXaU5mbmtg==
+  /react-copy-to-clipboard/5.0.3_react@16.14.0:
+    dependencies:
+      copy-to-clipboard: 3.3.1
+      prop-types: 15.7.2
+      react: 16.14.0
+    dev: false
+    peerDependencies:
+      react: ^15.3.0 || ^16.0.0 || ^17.0.0
+    resolution:
+      integrity: sha512-9S3j+m+UxDZOM0Qb8mhnT/rMR0NGSrj9A/073yz2DSxPMYhmYFBMYIdI2X4o8AjOjyFsSNxDRnCX6s/gRxpriw==
   /react-dev-utils/11.0.4:
     dependencies:
       '@babel/code-frame': 7.10.4
@@ -23381,7 +23400,6 @@ packages:
     resolution:
       integrity: sha512-FWtleNAtZ/Ki2qtqej2CXTOayOH9bHDQF+Q48VpWyDXjbYxA4Yz8iDB31zXOBUlOHHKidDbqGVrTUvQMPmBGBw==
   /toggle-selection/1.0.6:
-    dev: true
     resolution:
       integrity: sha1-bkWxJj8gF/oKzH2J14sVuL932jI=
   /toidentifier/1.0.0:
