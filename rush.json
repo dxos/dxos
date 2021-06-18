@@ -524,6 +524,10 @@
       "packageName": "@dxos/demos",
       "projectFolder": "packages/sdk/demos"
     },
+    {
+      "packageName": "@dxos/tutorials-tasks-app",
+      "projectFolder": "packages/sdk/tutorials/apps/tasks-app"
+    },
 
     //
     // echo
