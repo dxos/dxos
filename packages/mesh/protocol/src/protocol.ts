@@ -126,6 +126,7 @@ export class Protocol {
         }
       }
     });
+    (this._stream as any)[kProtocol] = this;
     this._stream.on('error', (err: any) => this.error.emit(err));
     this.error.on(error => log(error));
 

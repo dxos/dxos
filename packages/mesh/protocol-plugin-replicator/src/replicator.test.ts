@@ -43,6 +43,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     },
     createStream () {
       return new Protocol({
+        discoveryKey: discoveryKey(topic),
         streamOptions: {
           live: true
         }
@@ -50,7 +51,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
         .setSession({ id: 'session1' })
         .setContext({ name: 'foo' })
         .setExtensions([replicator.createExtension()])
-        .init(discoveryKey(topic))
+        .init()
         .stream;
     },
     append (msg: any) {
