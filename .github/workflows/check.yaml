@@ -69,5 +69,5 @@ jobs:
           pnpm test:playwright
           echo "::endgroup::"
       - name: Cleanup
-        run: pkill -f "storybook"
+        run: pkill -f "storybook" || true
         if: always()
