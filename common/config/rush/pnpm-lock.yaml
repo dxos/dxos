@@ -1669,8 +1669,10 @@ importers:
       webpack: 4.44.2
   ../../packages/sdk/react-ux:
     dependencies:
+      '@dxos/botkit-client': link:../../bot/botkit-client
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
+      '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/react-client': link:../react-client
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
@@ -1679,6 +1681,7 @@ importers:
       '@material-ui/utils': 4.11.2_react-dom@16.14.0+react@16.14.0
       '@types/react': 16.14.6
       clsx: 1.1.1
+      lodash.defaultsdeep: 4.6.1
       lodash.isplainobject: 4.0.6
       moment: 2.29.1
       react-copy-to-clipboard: 5.0.3_react@16.14.0
@@ -1698,8 +1701,10 @@ importers:
       typescript: 4.2.4
     specifiers:
       '@babel/core': ~7.13.15
+      '@dxos/botkit-client': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/echo-db': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
@@ -1716,6 +1721,7 @@ importers:
       '@types/node': ^14.0.9
       '@types/react': ^16.14.0
       clsx: ^1.1.0
+      lodash.defaultsdeep: ^4.6.1
       lodash.isplainobject: ^4.0.6
       moment: ^2.24.0
       react: ^16.14.0
