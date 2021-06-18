@@ -27,10 +27,10 @@ const createNode = async (topic: Buffer) => {
     bot,
     commands,
     replicate (options: any) {
-      return new Protocol(options)
+      return new Protocol({ ...options, discoveryKey: topic })
         .setSession({ peerId })
         .setExtensions([bot.createExtension()])
-        .init(topic)
+        .init()
         .stream;
     }
   };
@@ -63,8 +63,8 @@ const createConnections = (graph: any): Promise<any[]> => {
     graph.forEachLink((link: any) => {
       const fromNode = graph.getNode(link.fromId).data;
       const toNode = graph.getNode(link.toId).data;
-      const r1 = fromNode.replicate(options);
-      const r2 = toNode.replicate(options);
+      const r1 = fromNode.replicate({ ...options, initiator: true });
+      const r2 = toNode.replicate({ ...options, initiator: false });
       link.data = pump(r1, r2, r1);
       link.data.on('handshake', () => {
         count--;
@@ -91,6 +91,7 @@ describe('test peers in a network graph of 15 peers', () => {
 
   test('bot commands', async () => {
     const peer1 = random(peers);
+    expect(peer1.bot.peers.length).toBeGreaterThan(0);
     let peer2: any = random(peer1.bot.peers);
     peer2 = peers.find(p => p.id.equals(peer2));
 
