@@ -1,0 +1,40 @@
+{
+  "name": "@dxos/rpc",
+  "version": "2.10.10",
+  "description": "Tiny RPC library.",
+  "bugs": {
+    "url": "'https://github.com/dxos/protocols/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/protocols.git"
+  },
+  "license": "AGPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/async": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/mocha": "~8.2.2",
+    "earljs": "~0.1.10"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
