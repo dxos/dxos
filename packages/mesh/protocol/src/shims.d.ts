@@ -21,8 +21,7 @@ declare module 'nanoerror' {
 declare module 'buffer-json-encoding';
 
 declare module 'hypercore-protocol' {
-  import EventEmitter from 'node:events';
-
+  import events = require('events');
   export class Channel {
     options: (options: {extensions: any[]}) => any;
     extension: (id: number, message: Buffer) => any;
@@ -65,12 +64,16 @@ declare module 'hypercore-protocol' {
     destroy: () => void;
   }
 
-  export class ProtocolStream extends EventEmitter {
-    id: any;
+  export class ProtocolStream extends events.EventEmitter {
+    publicKey: any;
+    remotePublicKey: any;
+    state: any;
 
     constructor(initiator?: boolean, opts?: ProtocolStreamCtorOpts);
 
+
     open (key: any, handlers: ChannelHandlers): Channel;
+    destroy (error?: any);
 
     registerExtension(name: string, handlers?: ExtensionHandlers): Extension;
   }

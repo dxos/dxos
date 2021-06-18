@@ -93,7 +93,7 @@ test('basic without extensions', async () => {
   //   protocol1.stream.destroy();
   // });
 
-  pump(protocol1.stream, protocol2.stream, protocol1.stream)
+  pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any)
 
   await waitForExpect(async () => {
     expect(onInitCalled).toBe(2);
@@ -214,7 +214,7 @@ test('basic', async () => {
     protocol1.stream.destroy();
   });
 
-  return new Promise<void>(resolve => pump(protocol1.stream, protocol2.stream, protocol1.stream, () => {
+  return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
     resolve();
   }));
 }).timeout(0 * 1000);
@@ -252,7 +252,7 @@ test('protocol init error', async () => {
   const protocol1 = protocol('protocol1');
   const protocol2 = protocol('protocol2', new Error('big error'));
 
-  return new Promise<void>(resolve => pump(protocol1.stream, protocol2.stream, protocol1.stream, () => {
+  return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
     expect(onHandshakeCalled).toBe(0);
     resolve();
   }));

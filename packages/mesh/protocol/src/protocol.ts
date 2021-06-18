@@ -86,9 +86,8 @@ export class Protocol {
 
   /**
    * https://github.com/mafintosh/hypercore-protocol
-   * @type {{ on, once, feed, remoteId, remoteUserData }}
    */
-  private _stream?: any = undefined;
+  private _stream: ProtocolStream;
 
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-feed--streamfeedkey
@@ -120,7 +119,7 @@ export class Protocol {
 
   toString () {
     const meta = {
-      id: keyToHuman(this._stream!.id),
+      id: keyToHuman(this._stream.publicKey),
       extensions: Array.from(this._extensionMap.keys())
     };
 
@@ -144,7 +143,7 @@ export class Protocol {
   }
 
   get streamOptions () {
-    return Object.assign({}, { id: this._stream!.id }, this._streamOptions);
+    return Object.assign({}, { id: this._stream!.publicKey }, this._streamOptions);
   }
 
   get connected () {
@@ -160,7 +159,7 @@ export class Protocol {
    */
   // TODO(burdon): Define type.
   setSession (data: any) {
-    this._stream.userData = bufferJson.encode(data);
+    this._stream.state.userData = bufferJson.encode(data);
 
     return this;
   }
@@ -170,7 +169,7 @@ export class Protocol {
    */
   getSession (): any | {} {
     try {
-      return bufferJson.decode(this._stream.remoteUserData);
+      return bufferJson.decode(this._stream.state.remoteUserData);
     } catch (err) {
       return {};
     }
@@ -268,7 +267,7 @@ export class Protocol {
 
     this._openConnection();
 
-    eos(this._stream, () => {
+    eos(this._stream as any, () => {
       this.close();
     });
 
@@ -368,7 +367,10 @@ export class Protocol {
         }
 
         // init stream
-        this._channel = this._stream.open(initialKey, {onExtension: this._extensionHandler}); // needs a list of extension right away.
+        this._channel = this._stream.open(initialKey, {
+          onextension: this._extensionHandler,
+
+        }); // needs a list of extension right away.
       } catch (err) {
         let newErr = err;
         if (!ERR_PROTOCOL_CONNECTION_INVALID.equals(newErr)) {
