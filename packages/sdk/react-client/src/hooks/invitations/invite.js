@@ -22,6 +22,7 @@ const noOp = () => null;
  * @param {Object} options
  * @param {(party: Party) => void} options.onDone called once the redeem flow finishes successfully.
  * @param {(error?: string) => void | never} options.onError called if the invite flow produces an error.
+ * @param {boolean} options.isOffline
  * @returns {[redeemCode: (code: String) => void, setPin: (pin: String) => void ]}
  */
 export function useInvitationRedeemer ({ onDone = noOp, onError = noOp, isOffline = false } = {}) {
