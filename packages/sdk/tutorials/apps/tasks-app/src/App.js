@@ -6,10 +6,8 @@
 // import * as Sentry from '@sentry/react';
 import React from 'react';
 
-import { CssBaseline } from '@material-ui/core';
-import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
-
 import { ClientInitializer } from '@dxos/react-client';
+import { Theme } from '@dxos/react-ux';
 
 import config from './config';
 import Root from './components/Root';
@@ -27,7 +25,7 @@ import Root from './components/Root';
 //   });
 // }
 
-const theme = createMuiTheme({
+const baseTheme = {
   overrides: {
     MuiCssBaseline: {
       '@global': {
@@ -41,7 +39,7 @@ const theme = createMuiTheme({
   sidebar: {
     width: 300,
   },
-});
+};
 
 /**
  * Root container.
@@ -50,10 +48,9 @@ const theme = createMuiTheme({
 function App() {
   return (
     <ClientInitializer config={config}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
+      <Theme base={baseTheme}>
         <Root />
-      </ThemeProvider>
+      </Theme>
     </ClientInitializer>
   );
 }
