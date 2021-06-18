@@ -111,12 +111,21 @@ export class Protocol {
 
     this._stream = new ProtocolStream(this._initiator, {
       ...this._streamOptions,
-      // onhandshake: async () => {
-      //   console.log('we have a handshake!')
-        
-      // }
+      onhandshake: async () => {
+        try {
+          await this.open();
+
+          await this._initExtensions();
+          this.extensionsInitialized.emit();
+
+          await this.streamOptions?.onhandshake?.();
+          await this._handshakeExtensions();
+          this.extensionsHandshake.emit();
+        } catch (err) {
+          process.nextTick(() => this._stream.destroy(err));
+        }
+      }
     });
-    (this._stream as any)[kProtocol] = this; // TODO: can be removed?
     this._stream.on('error', (err: any) => this.error.emit(err));
     this.error.on(error => log(error));
 
@@ -225,10 +234,8 @@ export class Protocol {
 
   /**
    * Set protocol handshake handler.
-   * @param {Function<{protocol}>} handler - Async handshake handler.
-   * @returns {Protocol}
    */
-  setHandshakeHandler (handler: HandshakeHandler) {
+  setHandshakeHandler (handler: (protocol: Protocol) => void): Protocol {
     this._handshakes.push(async (protocol: Protocol) => {
       try {
         await handler(protocol);
@@ -239,10 +246,6 @@ export class Protocol {
     return this;
   }
 
-  /**
-   * Initializes the protocol stream, creating a feed.
-   * https://github.com/mafintosh/hypercore-protocol
-   */
   init () {
     assert(!this._init);
 
@@ -258,20 +261,6 @@ export class Protocol {
       return;
     }
     await this._openExtensions();
-
-    // Handshake.
-    this._stream.once('handshake', async () => {
-      try {
-        await this._initExtensions();
-        this.extensionsInitialized.emit();
-        await this._handshakeExtensions();
-        this.extensionsHandshake.emit();
-      } catch (err) {
-        process.nextTick(() => this._stream.destroy(err));
-      }
-    });
-
-    this._openConnection();
 
     eos(this._stream as any, () => {
       this.close();
@@ -309,17 +298,10 @@ export class Protocol {
   private async _openExtensions () {
     await this._extensionInit.openWithProtocol(this);
 
-    const sortedExtensions = [this._extensionInit.name];
-
     for (const [name, extension] of this._extensionMap) {
       log(`open extension "${name}": ${keyToHuman(this._stream.publicKey, 'node')}`);
       await extension.openWithProtocol(this);
-      sortedExtensions.push(name);
     }
-
-    sortedExtensions.sort().forEach(name => {
-      this._stream.registerExtension(name);
-    });
   }
 
   private async _initExtensions () {
@@ -350,6 +332,7 @@ export class Protocol {
     this.handshake.emit(this);
     this._connected = true;
 
+    // TODO: Redo this
     this._stream.on('feed', async (discoveryKey: Buffer) => {
       try {
         for (const [name, extension] of this._extensionMap) {
@@ -374,7 +357,7 @@ export class Protocol {
 
         // init stream
         this._channel = this._stream.open(initialKey, {
-          onextension: this._extensionHandler,
+          onextension: this._extensionHandler
 
         }); // needs a list of extension right away.
       } catch (err) {

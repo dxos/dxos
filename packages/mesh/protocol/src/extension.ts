@@ -5,6 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 import eos from 'end-of-stream';
+import { ProtocolExtension } from 'hypercore-protocol';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 
 import { patchBufferCodec, WithTypeUrl } from '@dxos/codec-protobuf';
@@ -63,6 +64,8 @@ export class Extension extends Nanomessage {
 
   private _protocol: Protocol | null = null;
 
+  private _protocolExtension: ProtocolExtension | null = null;
+
   private _initHandler: InitHandler | null = null;
 
   /**
@@ -85,6 +88,8 @@ export class Extension extends Nanomessage {
    * Feed handler.
    */
   private _feedHandler: FeedHandler | null = null;
+
+  private _subscribeCb: ((data: any) => void) | null = null;
 
   /**
    * @param {string} name
@@ -172,6 +177,11 @@ export class Extension extends Nanomessage {
     log(`init[${this._name}]: ${keyToHuman(protocol.id)}`);
 
     this._protocol = protocol;
+    this._protocolExtension = this._protocol.stream.registerExtension(this.name, {
+      onmessage: (msg: any) => {
+        this._subscribeCb?.(msg);
+      }
+    });
 
     await this.open();
   }
@@ -303,13 +313,7 @@ export class Extension extends Nanomessage {
   }
 
   private _subscribe (next: (msg: any) => Promise<void>) {
-    this.on('extension-message', async (message: any) => {
-      try {
-        await next(message);
-      } catch (err) {
-        this.emit('error', err);
-      }
-    });
+    this._subscribeCb = next;
   }
 
   /**
@@ -317,10 +321,11 @@ export class Extension extends Nanomessage {
    */
   private _send (chunk: Uint8Array) {
     assert(this._protocol);
+    assert(this._protocolExtension);
     if (this._protocol.stream.destroyed) {
       return;
     }
-    this._protocol.channel.extension(this._name, Buffer.from(chunk));
+    this._protocolExtension.send(chunk);
   }
 
   /**

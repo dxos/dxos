@@ -59,7 +59,7 @@ declare module 'hypercore-protocol' {
     encoding?: 'json' | 'utf-8' | 'binary',
   }
 
-  class Extension {
+  export class ProtocolExtension {
     send: (message: buffer) => void;
     destroy: () => void;
   }
@@ -71,7 +71,6 @@ declare module 'hypercore-protocol' {
     destroyed: boolean;
 
     constructor(initiator?: boolean, opts?: ProtocolStreamCtorOpts);
-
 
     open (key: any, handlers: ChannelHandlers): Channel;
     destroy (error?: any);
