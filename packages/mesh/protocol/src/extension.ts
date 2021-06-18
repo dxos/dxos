@@ -271,7 +271,6 @@ export class Extension extends Nanomessage {
 
       return { response };
     } catch (err) {
-      console.error(err);
       if (ERR_EXTENSION_RESPONSE_FAILED.equals(err)) {
         throw err;
       }
@@ -340,7 +339,6 @@ export class Extension extends Nanomessage {
         return this._buildMessage(result);
       }
     } catch (err) {
-      console.error(err);
       this.emit('error', err);
       const responseError = new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
       return {

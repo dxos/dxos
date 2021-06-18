@@ -187,7 +187,7 @@ test('basic ping and oneway', async () => {
       }
   
       log('%o', bufferMessages.stats);
-      protocol1.stream.destroy();
+      protocol1.close();
     })
     .init();
 
