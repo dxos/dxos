@@ -497,6 +497,10 @@
       "packageName": "@dxos/testutils",
       "projectFolder": "packages/common/testutils"
     },
+    {
+      "packageName": "@dxos/rpc",
+      "projectFolder": "packages/common/rpc"
+    },
 
     //
     // sdk
