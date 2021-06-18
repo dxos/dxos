@@ -21,7 +21,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import ShareIcon from '@material-ui/icons/Share';
 
 import { ObjectModel } from '@dxos/object-model';
-// import { PartySharingDialog } from '@dxos/react-appkit';
+import { PartySharingDialog } from '@dxos/react-ux';
 import { useParty, useItems } from '@dxos/react-client';
 
 const useStyles = makeStyles(theme => ({
@@ -120,13 +120,11 @@ const TaskList = ({ partyKey }) => {
   return (
     <div className={classes.fillVertically}>
       {shareDialog && (
-        <></>
-        // TODO(grazianoramiro): Implement party sharing dialog
-        // <PartySharingDialog
-        //   open
-        //   party={party}
-        //   onClose={() => setShareDialog(false)}
-        // />
+        <PartySharingDialog
+          open
+          party={party}
+          onClose={() => setShareDialog(false)}
+        />
       )}
 
       <div className={classes.container}>
