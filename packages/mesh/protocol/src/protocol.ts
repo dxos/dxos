@@ -94,7 +94,7 @@ export class Protocol {
    * https://github.com/mafintosh/hypercore-protocol#var-feed--streamfeedkey
    * @type {Feed}
    */
-  private _feed?: any = undefined;
+  private _channel?: any = undefined;
 
   /**
    * Local object to store data for extensions.
@@ -136,7 +136,7 @@ export class Protocol {
   }
 
   get feed () {
-    return this._feed;
+    return this._channel;
   }
 
   get extensions () {
@@ -360,7 +360,7 @@ export class Protocol {
   private _openConnection () {
     let initialKey = null;
 
-    const openFeed = async (discoveryKey: Buffer) => {
+    const openChannel = async (discoveryKey: Buffer) => {
       try {
         initialKey = await this._discoveryToPublicKey(discoveryKey);
         if (!initialKey) {
@@ -368,7 +368,7 @@ export class Protocol {
         }
 
         // init stream
-        this._feed = this._stream.open(initialKey, {onExtension: this._extensionHandler});
+        this._channel = this._stream.open(initialKey, {onExtension: this._extensionHandler}); // needs a list of extension right away.
       } catch (err) {
         let newErr = err;
         if (!ERR_PROTOCOL_CONNECTION_INVALID.equals(newErr)) {
@@ -381,10 +381,10 @@ export class Protocol {
     // If this protocol stream is being created via a swarm connection event,
     // only the client side will know the topic (i.e. initial feed key to share).
     if (this._discoveryKey) {
-      openFeed(this._discoveryKey);
+      openChannel(this._discoveryKey);
     } else {
       // Wait for the peer to share the initial feed and see if we have the public key for that.
-      this._stream.once('feed', openFeed);
+      this._stream.once('feed', openChannel); // TODO: probably not working anymore.
     }
   }
 
