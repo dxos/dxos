@@ -10,6 +10,7 @@ import FullScreen from './FullScreen';
 import JsonTreeView from './JsonTreeView';
 import Passcode from './Passcode';
 import RedeemDialog from './RedeemDialog';
+import PartySharingDialog from './PartySharingDialog';
 export * from './Drawer';
 
 export {
@@ -20,5 +21,6 @@ export {
   Passcode,
   DeleteConfirmation,
   ErrorView,
-  RedeemDialog
+  RedeemDialog,
+  PartySharingDialog,
 };
