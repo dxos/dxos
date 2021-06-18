@@ -9,6 +9,7 @@ import ErrorView from './ErrorView';
 import FullScreen from './FullScreen';
 import JsonTreeView from './JsonTreeView';
 import Passcode from './Passcode';
+import RedeemDialog from './RedeemDialog';
 export * from './Drawer';
 
 export {
@@ -18,5 +19,6 @@ export {
   FullScreen,
   Passcode,
   DeleteConfirmation,
-  ErrorView
+  ErrorView,
+  RedeemDialog
 };

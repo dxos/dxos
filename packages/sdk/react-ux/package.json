@@ -25,7 +25,8 @@
     "@types/react": "^16.14.0",
     "clsx": "^1.1.0",
     "lodash.isplainobject": "^4.0.6",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "@dxos/react-client": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
