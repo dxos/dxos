@@ -114,15 +114,16 @@ test('basic with a buffer ping-pong extension', async () => {
     {
       const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
       expect(data).toEqual(Buffer.from('pong'));
+      protocol1.close()
       resolve();
     }
   });
-
-  pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any);
-  const result = await promise;
+  return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
+    resolve();
+  }));
 }).timeout(1 * 1000);
 
-test('basic', async () => {
+test('basic ping and oneway', async () => {
   expect.assertions(9);
 
   const bufferExtension = 'buffer';
@@ -137,7 +138,7 @@ test('basic', async () => {
   let onInitCalled = 0;
   const onInit = () => onInitCalled++;
 
-  const protocol1 = new Protocol({ discoveryKey: topic })
+  const protocol1 = new Protocol({ discoveryKey: topic, initiator: true })
     .setSession({ user: 'user1' })
     .setExtension(
       new Extension(bufferExtension, { timeout })
@@ -145,16 +146,59 @@ test('basic', async () => {
           onInit();
         })
     )
+    .setHandshakeHandler(async (protocol) => {
+      expect(onInitCalled).toBe(2);
+  
+      const bufferMessages = protocol.getExtension(bufferExtension)!;
+  
+      bufferMessages.on('error', (err: any) => {
+        log('Error: %o', err);
+      });
+  
+      // const session = protocol.getSession();
+      // expect(session.user).toBe('user2');
+  
+      {
+        const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
+        expect(data).toEqual(Buffer.from('pong'));
+      }
+  
+      {
+        const result = await bufferMessages.send(Buffer.from('oneway'), { oneway: true });
+        expect(result).toBeUndefined();
+        const data = await waitOneWayMessage.promise;
+        expect(data).toEqual(Buffer.from('oneway'));
+      }
+  
+      try {
+        await bufferMessages.send(Buffer.from('crash'));
+      } catch (err) {
+        // eslint-disable-next-line
+        expect(ERR_EXTENSION_RESPONSE_FAILED.equals(err)).toBe(true);
+        // eslint-disable-next-line
+        expect(err.responseMessage).toBe('Invalid data.');
+      }
+  
+      try {
+        await bufferMessages.send(Buffer.from('timeout'));
+      } catch (err) {
+        // eslint-disable-next-line
+        expect(ERR_EXTENSION_RESPONSE_TIMEOUT.equals(err)).toBe(true); // timeout.
+      }
+  
+      log('%o', bufferMessages.stats);
+      protocol1.stream.destroy();
+    })
     .init();
 
-  const protocol2 = new Protocol({ discoveryKey: topic })
+  const protocol2 = new Protocol({ discoveryKey: topic, initiator: false })
     .setSession({ user: 'user2' })
     .setHandshakeHandler(async () => {
       expect(onInitCalled).toBe(2);
     })
     .setExtension(new Extension(bufferExtension, { timeout })
       .setInitHandler(async () => {
-        await sleep(2 * 1000);
+        await sleep(200);
         onInit();
       })
       .setMessageHandler(async (protocol, message) => {
@@ -191,55 +235,10 @@ test('basic', async () => {
   expect(protocol1.id).toBeDefined();
   expect(protocol2.id).toBeDefined();
 
-  protocol1.setHandshakeHandler(async (protocol) => {
-    expect(onInitCalled).toBe(2);
-
-    const bufferMessages = protocol.getExtension(bufferExtension)!;
-
-    bufferMessages.on('error', (err: any) => {
-      log('Error: %o', err);
-    });
-
-    const session = protocol.getSession();
-
-    expect(session.user).toBe('user2');
-
-    {
-      const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
-      expect(data).toEqual(Buffer.from('pong'));
-    }
-
-    {
-      const result = await bufferMessages.send(Buffer.from('oneway'), { oneway: true });
-      expect(result).toBeUndefined();
-      const data = await waitOneWayMessage.promise;
-      expect(data).toEqual(Buffer.from('oneway'));
-    }
-
-    try {
-      await bufferMessages.send(Buffer.from('crash'));
-    } catch (err) {
-      // eslint-disable-next-line
-      expect(ERR_EXTENSION_RESPONSE_FAILED.equals(err)).toBe(true);
-      // eslint-disable-next-line
-      expect(err.responseMessage).toBe('Invalid data.');
-    }
-
-    try {
-      await bufferMessages.send(Buffer.from('timeout'));
-    } catch (err) {
-      // eslint-disable-next-line
-      expect(ERR_EXTENSION_RESPONSE_TIMEOUT.equals(err)).toBe(true); // timeout.
-    }
-
-    log('%o', bufferMessages.stats);
-    protocol1.stream.destroy();
-  });
-
   return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
     resolve();
   }));
-}).timeout(1 * 1000);
+});
 
 test('protocol init error', async () => {
   expect.assertions(1);
