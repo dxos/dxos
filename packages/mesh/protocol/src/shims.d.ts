@@ -68,6 +68,7 @@ declare module 'hypercore-protocol' {
     publicKey: any;
     remotePublicKey: any;
     state: any;
+    destroyed: boolean;
 
     constructor(initiator?: boolean, opts?: ProtocolStreamCtorOpts);
 

@@ -30,18 +30,20 @@ test('basic without extensions', async () => {
   let onInitCalled = 0;
   const onInit = () => onInitCalled++;
 
-  const protocol1 = new Protocol({ discoveryKey: topic, initiator: true })
-    .setSession({ user: 'user1' })
-    .setHandshakeHandler(async () => {
+  const protocol1 = new Protocol({ discoveryKey: topic, initiator: true, streamOptions: {
+    onhandshake: async () => {
       onInit();
-    })
+    }
+  } })
+    .setSession({ user: 'user1' })
     .init();
 
-  const protocol2 = new Protocol({ discoveryKey: topic, initiator: false })
-    .setSession({ user: 'user2' })
-    .setHandshakeHandler(async () => {
+  const protocol2 = new Protocol({ discoveryKey: topic, initiator: false, streamOptions: {
+    onhandshake: async () => {
       onInit()
-    })
+    }
+  } })
+    .setSession({ user: 'user2' })
     .init();
 
   protocol1.error.on(err => console.log('protocol1', err));

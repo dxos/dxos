@@ -24,7 +24,7 @@ const log = debug('dxos:protocol');
 
 const kProtocol = Symbol('dxos.protocol');
 
-export interface ProtocolStreamOptions {
+export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtorOpts {
   /**
    * You can use this to detect if you connect to yourself.
    */
@@ -109,7 +109,13 @@ export class Protocol {
     this._discoveryKey = options.discoveryKey;
     this._initiator = !!options.initiator;
 
-    this._stream = new ProtocolStream(this._initiator, this._streamOptions);
+    this._stream = new ProtocolStream(this._initiator, {
+      ...this._streamOptions,
+      // onhandshake: async () => {
+      //   console.log('we have a handshake!')
+        
+      // }
+    });
     (this._stream as any)[kProtocol] = this; // TODO: can be removed?
     this._stream.on('error', (err: any) => this.error.emit(err));
     this.error.on(error => log(error));
@@ -134,7 +140,7 @@ export class Protocol {
     return this._stream;
   }
 
-  get feed () {
+  get channel () {
     return this._channel;
   }
 
@@ -359,9 +365,9 @@ export class Protocol {
   private _openConnection () {
     let initialKey = null;
 
-    const openChannel = async (discoveryKey: Buffer) => {
+    const openChannel = (discoveryKey: Buffer) => {
       try {
-        initialKey = await this._discoveryToPublicKey(discoveryKey);
+        initialKey = this._discoveryToPublicKey(discoveryKey);
         if (!initialKey) {
           throw new ERR_PROTOCOL_CONNECTION_INVALID('key not found');
         }

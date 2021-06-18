@@ -282,7 +282,7 @@ export class Extension extends Nanomessage {
     }
 
     assert(this._protocol);
-    eos(this._protocol.stream, () => {
+    eos(this._protocol.stream as any, () => {
       this.close();
     });
 
@@ -320,7 +320,7 @@ export class Extension extends Nanomessage {
     if (this._protocol.stream.destroyed) {
       return;
     }
-    this._protocol.feed.extension(this._name, Buffer.from(chunk));
+    this._protocol.channel.extension(this._name, Buffer.from(chunk));
   }
 
   /**
