@@ -254,7 +254,7 @@ test('protocol init error', async () => {
   let onHandshakeCalled = 0;
   const onHandshake = () => onHandshakeCalled++;
 
-  const protocol = (name: string, error?: any) => new Protocol({ discoveryKey: topic })
+  const protocol = (name: string, error?: any, initiator?: boolean) => new Protocol({ discoveryKey: topic, initiator })
     .setContext({ name })
     .setHandshakeHandler(async () => {
       onHandshake();
@@ -271,7 +271,7 @@ test('protocol init error', async () => {
     .init();
 
   const protocol1 = protocol('protocol1');
-  const protocol2 = protocol('protocol2', new Error('big error'));
+  const protocol2 = protocol('protocol2', new Error('big error'), true);
 
   return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
     expect(onHandshakeCalled).toBe(0);
