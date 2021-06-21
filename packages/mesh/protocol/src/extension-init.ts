@@ -5,9 +5,13 @@
 import assert from 'assert';
 import Signal from 'signal-promise';
 
+import { Trigger } from '@dxos/async';
+
 import { ERR_PROTOCOL_INIT_INVALID } from './errors';
 import { Extension } from './extension';
 import { Buffer as ProtoBuffer } from './proto/gen/dxos/protocol';
+
+type Command = 'continue' | 'break' | 'session'
 
 export interface ExtensionInitOptions {
   timeout?: number,
@@ -25,6 +29,8 @@ export class ExtensionInit extends Extension {
   public userSession: string | null = null;
   public remoteUserSession: string | null = null;
 
+  private readonly _sessionTrigger = new Trigger();
+
   constructor (options: ExtensionInitOptions = {}) {
     super('dxos.protocol.init', options);
 
@@ -36,16 +42,21 @@ export class ExtensionInit extends Extension {
       const { data } = message;
       assert(data);
 
-      const dataString = Buffer.from(data).toString();
-      if (dataString === 'continue') {
-        this._remoteInit = true;
-      } else if (dataString === 'break') {
-        this._remoteInit = false;
-      } else {
-        this.remoteUserSession = dataString;
-      }
+      const messageObj = JSON.parse(Buffer.from(data).toString());
 
-      this._remoteSignal.notify();
+      switch (messageObj.command as Command) {
+        case 'continue':
+          this._remoteInit = true;
+          this._remoteSignal.notify();
+          break;
+        case 'break':
+          this._remoteInit = false;
+          this._remoteSignal.notify();
+          break;
+        case 'session':
+          this.remoteUserSession = messageObj.data;
+          this._sessionTrigger.wake();
+      }
     });
 
     this.setCloseHandler(async () => {
@@ -54,14 +65,20 @@ export class ExtensionInit extends Extension {
     });
   }
 
-  async continue (userSession?: string) {
-    assert(userSession !== 'continue' && userSession !== 'break', `Cannot use reserved word ${userSession} for session.`);
+  async sendCommand (command: Command, data?: string) {
+    return this.send(Buffer.from(JSON.stringify({ command, data })));
+  }
+
+  async sendSession (userSession?: string) {
+    // TODO(rzadp): Protobuf.
+    this.sendCommand('session', userSession ?? '');
+
+    await this._sessionTrigger.wait();
+  }
+
+  async continue () {
     try {
-      if (userSession) {
-        this.userSession = userSession;
-        await this.send(Buffer.from(userSession));
-      }
-      await this.send(Buffer.from('continue'));
+      await this.sendCommand('continue');
 
       if (this._remoteInit !== null) {
         if (this._remoteInit) {
@@ -87,7 +104,7 @@ export class ExtensionInit extends Extension {
         return;
       }
 
-      await this.send(Buffer.from('break'));
+      await this.sendCommand('break');
     } catch (err) {}
   }
 }
