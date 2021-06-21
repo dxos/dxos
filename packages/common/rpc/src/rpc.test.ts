@@ -23,8 +23,8 @@ describe('RpcPeer', () => {
 
     await Promise.all([
       alice.open(),
-      bob.open(),
-    ])
+      bob.open()
+    ]);
   });
 
   test('can send a request', async () => {
@@ -43,8 +43,8 @@ describe('RpcPeer', () => {
 
     await Promise.all([
       alice.open(),
-      bob.open(),
-    ])
+      bob.open()
+    ]);
 
     const response = await bob.call('method', Buffer.from('request'));
     expect(response).toEqual(Buffer.from('response'));
@@ -73,8 +73,8 @@ describe('RpcPeer', () => {
 
     await Promise.all([
       alice.open(),
-      bob.open(),
-    ])
+      bob.open()
+    ]);
 
     expect(await bob.call('method', Buffer.from('request'))).toEqual(Buffer.from('request'));
 
@@ -106,8 +106,8 @@ describe('RpcPeer', () => {
 
     await Promise.all([
       alice.open(),
-      bob.open(),
-    ])
+      bob.open()
+    ]);
 
     let error!: Error;
     try {
@@ -138,8 +138,8 @@ describe('RpcPeer', () => {
 
     await Promise.all([
       alice.open(),
-      bob.open(),
-    ])
+      bob.open()
+    ]);
 
     const req = bob.call('method', Buffer.from('request'));
     bob.close();
@@ -163,8 +163,8 @@ describe('RpcPeer', () => {
 
     await Promise.all([
       alice.open(),
-      bob.open(),
-    ])
+      bob.open()
+    ]);
 
     alice.close();
     const req = bob.call('method', Buffer.from('request'));
@@ -182,20 +182,23 @@ describe('RpcPeer', () => {
       send: msg => alice.receive(msg)
     });
 
-    let aliceOpen = false
-    const promise = alice.open().then(() => { aliceOpen = true; });
+    let aliceOpen = false;
+    const promise = alice.open().then(() => {
+      aliceOpen = true;
+    });
 
-    await sleep(5)
+    await sleep(5);
 
-    expect(aliceOpen).toEqual(false)
+    expect(aliceOpen).toEqual(false);
 
     await bob.open();
 
-    expect(aliceOpen).toEqual(true)
+    expect(aliceOpen).toEqual(true);
     await promise;
   });
 
   test('one peer can open before the other is created ', async () => {
+    // eslint-disable-next-line prefer-const
     let bob: RpcPeer | undefined;
     const alice: RpcPeer = new RpcPeer({
       messageHandler: async msg => new Uint8Array(),
@@ -213,6 +216,6 @@ describe('RpcPeer', () => {
     await Promise.all([
       aliceOpen,
       bob.open()
-    ])
+    ]);
   });
 });

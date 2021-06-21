@@ -7,36 +7,33 @@ import { it as test } from 'mocha';
 
 import { schema } from './proto/gen';
 import { RpcPeer } from './rpc';
+import { createRpcClient, createRpcServer } from './service';
 
 describe('Protobuf service', () => {
   test('Works with protobuf service', async () => {
-    const server = schema.getService('dxos.rpc.test.TestService').createServer({
-      TestCall: async (req) => {
-        expect(req.data).toEqual('requestData');
-        return { data: 'responseData' };
-      }
-    });
-    const serverRpc: RpcPeer = new RpcPeer({
-      messageHandler: server.call.bind(server),
-      send: msg => clientRpc.receive(msg)
+    const service = schema.getService('dxos.rpc.test.TestService');
+
+    const server: RpcPeer = createRpcServer({
+      service,
+      handlers: {
+        TestCall: async (req) => {
+          expect(req.data).toEqual('requestData');
+          return { data: 'responseData' };
+        }
+      },
+      send: msg => client.receive(msg)
     });
 
-    const clientRpc = new RpcPeer({
-      messageHandler: () => {
-        throw new Error('Requests to client are not supported.');
-      },
-      send: msg => serverRpc.receive(msg)
-    });
-    const client = schema.getService('dxos.rpc.test.TestService').createClient({
-      call: clientRpc.call.bind(clientRpc)
+    const client = createRpcClient(service, {
+      send: msg => server.receive(msg)
     });
 
     await Promise.all([
-      serverRpc.open(),
-      clientRpc.open(),
-    ])
+      server.open(),
+      client.open()
+    ]);
 
-    const response = await client.TestCall({ data: 'requestData' });
+    const response = await client.rpc.TestCall({ data: 'requestData' });
 
     expect(response.data).toEqual('responseData');
   });
