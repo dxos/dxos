@@ -194,4 +194,25 @@ describe('RpcPeer', () => {
     expect(aliceOpen).toEqual(true)
     await promise;
   });
+
+  test('one peer can open before the other is created ', async () => {
+    let bob: RpcPeer | undefined;
+    const alice: RpcPeer = new RpcPeer({
+      messageHandler: async msg => new Uint8Array(),
+      send: msg => bob?.receive(msg)
+    });
+    const aliceOpen = alice.open();
+
+    await sleep(5);
+
+    bob = new RpcPeer({
+      messageHandler: async msg => new Uint8Array(),
+      send: msg => alice.receive(msg)
+    });
+
+    await Promise.all([
+      aliceOpen,
+      bob.open()
+    ])
+  });
 });
