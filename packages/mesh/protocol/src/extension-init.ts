@@ -10,7 +10,8 @@ import { Extension } from './extension';
 import { Buffer as ProtoBuffer } from './proto/gen/dxos/protocol';
 
 export interface ExtensionInitOptions {
-  timeout?: number
+  timeout?: number,
+  userSession?: string,
 }
 
 export class ExtensionInit extends Extension {
@@ -21,6 +22,8 @@ export class ExtensionInit extends Extension {
   private _remoteInit: boolean | null = null;
   private _remoteSignal: any;
   public data: any;
+  public userSession: string | null = null;
+  public remoteUserSession: string | null = null;
 
   constructor (options: ExtensionInitOptions = {}) {
     super('dxos.protocol.init', options);
@@ -33,11 +36,13 @@ export class ExtensionInit extends Extension {
       const { data } = message;
       assert(data);
 
-      if (Buffer.from(data).toString() === 'continue') {
+      const dataString = Buffer.from(data).toString();
+      if (dataString === 'continue') {
         this._remoteInit = true;
-      } else {
-        // break
+      } else if (dataString === 'break') {
         this._remoteInit = false;
+      } else {
+        this.remoteUserSession = dataString;
       }
 
       this._remoteSignal.notify();
@@ -49,8 +54,13 @@ export class ExtensionInit extends Extension {
     });
   }
 
-  async continue () {
+  async continue (userSession?: string) {
+    assert(userSession !== 'continue' && userSession !== 'break', `Cannot use reserved word ${userSession} for session.`);
     try {
+      if (userSession) {
+        this.userSession = userSession;
+        await this.send(Buffer.from(userSession));
+      }
       await this.send(Buffer.from('continue'));
 
       if (this._remoteInit !== null) {

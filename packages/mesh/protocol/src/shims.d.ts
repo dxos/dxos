@@ -34,7 +34,7 @@ declare module 'hypercore-protocol' {
     timeout?: 20000, // stream timeout. set to 0 or false to disable.
     keyPair?: { publicKey: any, secretKey: any }, // use this keypair for the stream authentication
     onauthenticate?: (remotePublicKey: any, done: any) => any, // hook to verify the remotes public key
-    onhandshake?: () => any, // function called when the stream handshake has finished
+    onhandshake?: (protocol: Protocol) => any, // function called when the stream handshake has finished
     ondiscoverykey?: (discoveryKey: any) => any, // function called when the remote stream opens a channel you have not
     onchannelclose?: (discoveryKey: any, publicKey: any) => any // function called when a feed-channel closes
   }

@@ -3,7 +3,6 @@
 //
 
 import assert from 'assert';
-import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
 import eos from 'end-of-stream';
 import ProtocolStream, { ProtocolStreamCtorOpts } from 'hypercore-protocol';
@@ -55,7 +54,8 @@ export interface ProtocolOptions {
    */
   codec?: Codec
 
-  initiator?: boolean
+  initiator?: boolean,
+  userSession?: string,
 }
 
 /**
@@ -115,10 +115,10 @@ export class Protocol {
         try {
           await this.open();
 
-          await this._initExtensions();
+          await this._initExtensions(options.userSession);
           this.extensionsInitialized.emit();
 
-          await this.streamOptions?.onhandshake?.();
+          await this.streamOptions?.onhandshake?.(this);
           await this._handshakeExtensions();
           this.extensionsHandshake.emit();
         } catch (err) {
@@ -171,23 +171,13 @@ export class Protocol {
   }
 
   /**
-   * Sets session data which is exchanged with the peer during the handshake.
-   */
-  // TODO(burdon): Define type.
-  setSession (data: any) {
-    this._stream.state.userData = bufferJson.encode(data);
-
-    return this;
-  }
-
-  /**
    * Get remote session data.
    */
-  getSession (): any | {} {
+  getSession (): any {
     try {
-      return bufferJson.decode(this._stream.state.remoteUserData);
+      return this._extensionInit.remoteUserSession;
     } catch (err) {
-      return {};
+      return null;
     }
   }
 
@@ -305,14 +295,14 @@ export class Protocol {
     }
   }
 
-  private async _initExtensions () {
+  private async _initExtensions (userSession?: string) {
     try {
       for (const [name, extension] of this._extensionMap) {
         log(`init extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
         await extension.onInit();
       }
 
-      await this._extensionInit.continue();
+      await this._extensionInit.continue(userSession);
     } catch (err) {
       await this._extensionInit.break();
       throw err;
