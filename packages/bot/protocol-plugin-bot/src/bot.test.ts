@@ -12,6 +12,7 @@ import { Protocol } from '@dxos/protocol';
 import { BotPlugin } from './bot';
 import { createSpawnCommand } from './botkit-messages';
 import { Message } from './proto';
+import { keyToBuffer, keyToString } from '@dxos/crypto';
 
 const random = <T> (arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -27,7 +28,7 @@ const createNode = async (topic: Buffer) => {
     bot,
     commands,
     replicate (options: any) {
-      return new Protocol({ ...options, discoveryKey: topic, userSession: peerId })
+      return new Protocol({ ...options, discoveryKey: topic, userSession: keyToString(peerId) })
         .setExtensions([bot.createExtension()])
         .init()
         .stream;
@@ -96,6 +97,7 @@ describe('test peers in a network graph of 15 peers', () => {
     });
     let peer2: any = random(peer1.bot.peers);
     peer2 = peers.find(p => p.id.equals(peer2));
+    expect(peer2).toBeDefined();
 
     peer1.bot.sendCommand(peer2.id, command);
 

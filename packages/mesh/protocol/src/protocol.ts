@@ -304,7 +304,6 @@ export class Protocol {
         log(`init extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
         await extension.onInit();
       }
-
     } catch (err) {
       await this._extensionInit.break();
       throw err;

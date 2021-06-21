@@ -72,7 +72,7 @@ export class BotPlugin extends EventEmitter {
           const peerId = peer.getSession();
 
           return {
-            id: peerId,
+            id: keyToBuffer(peerId),
             protocol: peer
           };
         });
@@ -167,11 +167,11 @@ export class BotPlugin extends EventEmitter {
    */
   private _addPeer (protocol: Protocol) {
     const peerId = protocol.getSession();
-    if (peerId && this._peers.has(keyToString(Buffer.from(peerId)))) {
+    if (!peerId || this._peers.has(peerId)) {
       return;
     }
 
-    this._peers.set(keyToString(Buffer.from(peerId)), protocol);
+    this._peers.set(peerId, protocol);
   }
 
   /**
@@ -185,7 +185,7 @@ export class BotPlugin extends EventEmitter {
       return;
     }
 
-    this._peers.delete(keyToString(peerId));
+    this._peers.delete(peerId);
     this.emit('peer:exited', peerId);
   }
 }
