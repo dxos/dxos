@@ -297,12 +297,14 @@ export class Protocol {
 
   private async _initExtensions (userSession?: string) {
     try {
+      // Extension init takes place first, because other extensions (like Bot Plugin) might depend on session being already there.
+      await this._extensionInit.continue(userSession);
+
       for (const [name, extension] of this._extensionMap) {
         log(`init extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
         await extension.onInit();
       }
 
-      await this._extensionInit.continue(userSession);
     } catch (err) {
       await this._extensionInit.break();
       throw err;

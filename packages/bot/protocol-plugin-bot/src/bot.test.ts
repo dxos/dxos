@@ -90,7 +90,10 @@ describe('test peers in a network graph of 15 peers', () => {
 
   test('bot commands', async () => {
     const peer1 = random(peers);
-    expect(peer1.bot.peers.length).toBeGreaterThan(0);
+
+    await waitForExpect(() => {
+      expect(peer1.bot.peers.length).toBeGreaterThan(0);
+    });
     let peer2: any = random(peer1.bot.peers);
     peer2 = peers.find(p => p.id.equals(peer2));
 
