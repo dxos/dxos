@@ -26,7 +26,7 @@ const DEFAULT_TIMEOUT = 30000;
 export type GreetingCommandMessageHandler = (message: any, remotePeerId: Buffer, peerId: Buffer) => Promise<any>;
 
 const getPeerId = (protocol: any) => {
-  const { peerId = undefined } = protocol && protocol.getSession ? protocol.getSession() : {};
+  const peerId = protocol && protocol.getSession ? protocol.getSession() : undefined;
   return peerId;
 };
 

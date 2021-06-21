@@ -237,13 +237,13 @@ describe('In-memory network manager', () => {
         const [done, pongReceived] = latch(peersPerTopic - 1);
 
         plugin.on('connect', async (protocol: Protocol) => {
-          const remoteId = PublicKey.from(protocol.getSession().peerId);
+          const remoteId = PublicKey.from(protocol.getSession());
 
           plugin.send(remoteId.asBuffer(), 'ping');
         });
 
         plugin.on('receive', (protocol, data) => {
-          const remoteId = PublicKey.from(protocol.getSession().peerId);
+          const remoteId = PublicKey.from(protocol.getSession());
 
           if (data === 'ping') {
             plugin.send(remoteId.asBuffer(), 'pong');

@@ -69,7 +69,7 @@ export class BotPlugin extends EventEmitter {
     const middleware: Middleware<Peer> = {
       lookup: async () => {
         return Array.from(this._peers.values()).map((peer) => {
-          const { peerId } = peer.getSession();
+          const peerId = peer.getSession();
 
           return {
             id: peerId,
@@ -115,7 +115,7 @@ export class BotPlugin extends EventEmitter {
         this._addPeer(protocol);
       })
       .setHandshakeHandler(async protocol => {
-        const { peerId } = protocol.getSession();
+        const peerId = protocol.getSession();
 
         if (this._peers.has(keyToString(peerId))) {
           this.emit('peer:joined', peerId, protocol);
@@ -166,7 +166,7 @@ export class BotPlugin extends EventEmitter {
    * Add peer.
    */
   private _addPeer (protocol: Protocol) {
-    const { peerId } = protocol.getSession();
+    const peerId = protocol.getSession();
     if (this._peers.has(keyToString(peerId))) {
       return;
     }
@@ -180,7 +180,7 @@ export class BotPlugin extends EventEmitter {
   private _removePeer (protocol: Protocol) {
     assert(protocol);
 
-    const { peerId } = protocol.getSession();
+    const peerId = protocol.getSession();
     if (!peerId) {
       return;
     }

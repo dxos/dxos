@@ -71,7 +71,7 @@ export class AuthPlugin extends EventEmitter {
     // Obtain the credentials from the session.
     // At this point credentials is protobuf encoded and base64-encoded
     // Note protocol.session.credentials is our data
-    const { credentials = undefined, peerId: sessionPeerId = undefined } = protocol?.getSession() ?? {};
+    const { credentials = undefined, peerId: sessionPeerId = undefined } = protocol?.getSession() ?? {}; // TODO: upgrade session object
     if (!credentials) {
       // If we only require auth when certain extensions are active, check if those are present.
       if (this._requiredForExtensions.size) {
