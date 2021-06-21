@@ -1,0 +1,37 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.rpc;
+
+message RpcMessage {
+  oneof content {
+    Request request = 1;
+    Response response = 2;
+
+    // Means that the node is open to receiving requests.
+    bool open = 3;
+  }
+}
+
+message Request {
+  int32 id = 1;
+  string method = 2;
+  bytes payload = 3;
+}
+
+message Response {
+  int32 id = 1;
+  oneof content {
+    bytes payload = 2;
+    Error error = 3;
+  }
+}
+
+message Error {
+  string name = 1;
+  string message = 2;
+  string stack = 3;
+}

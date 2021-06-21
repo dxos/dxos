@@ -497,6 +497,10 @@
       "packageName": "@dxos/testutils",
       "projectFolder": "packages/common/testutils"
     },
+    {
+      "packageName": "@dxos/rpc",
+      "projectFolder": "packages/common/rpc"
+    },
 
     //
     // sdk
@@ -523,6 +527,10 @@
     {
       "packageName": "@dxos/demos",
       "projectFolder": "packages/sdk/demos"
+    },
+    {
+      "packageName": "@dxos/tutorials-tasks-app",
+      "projectFolder": "packages/sdk/tutorials/apps/tasks-app"
     },
 
     //
