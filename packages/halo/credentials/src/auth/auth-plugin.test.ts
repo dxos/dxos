@@ -136,12 +136,13 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   };
 
   const proto = new Protocol({
-    streamOptions: { live: true }
+    streamOptions: { live: true },
+    discoveryKey: partyKey.asBuffer()
   })
     .setSession({ peerId, credentials })
     .setExtension(auth.createExtension())
     .setExtension(repl.createExtension())
-    .init(partyKey.asBuffer());
+    .init();
 
   return { id: peerId, auth, authPromise, proto, repl, feed, feedStore, append, getMessages };
 };
