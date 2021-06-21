@@ -10,7 +10,6 @@ import { promises as fs } from 'fs';
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
 import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin } from '@dxos/esbuild-plugins'
 
-
 export enum Browser {
   CHROMIUM = 'chromium',
   FIREFOX = 'firefox',
@@ -64,13 +63,19 @@ export async function run(options: RunOptions) {
   })
 
   const browser = await chromium.launch({
-    headless: false,
     args: [
       '--disable-web-security',
     ], 
   });
   const context = await browser.newContext();
   const page = await context.newPage();
+
+  // TODO(marik-d): Ensure log ordering.
+  page.on('console', async msg => {
+    const args = await Promise.all(msg.args().map(x => x.jsonValue()))
+    console.log(...args)
+  })
+
   await page.goto(`file://${join(packageDir, './src/index.html')}`)
 
   await page.addScriptTag({
