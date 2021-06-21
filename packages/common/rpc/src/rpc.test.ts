@@ -9,16 +9,19 @@ import { sleep } from '@dxos/async';
 
 import { SerializedRpcError } from './errors';
 import { RpcPeer } from './rpc';
+import { createLinkedPorts } from './testutil';
 
 describe('RpcPeer', () => {
   test('can open', async () => {
-    const alice: RpcPeer = new RpcPeer({
+    const [alicePort, bobPort] = createLinkedPorts();
+
+    const alice = new RpcPeer({
       messageHandler: async msg => new Uint8Array(),
-      send: msg => bob.receive(msg)
+      port: alicePort
     });
     const bob = new RpcPeer({
       messageHandler: async msg => new Uint8Array(),
-      send: msg => alice.receive(msg)
+      port: bobPort
     });
 
     await Promise.all([
@@ -28,17 +31,19 @@ describe('RpcPeer', () => {
   });
 
   test('can send a request', async () => {
-    const alice: RpcPeer = new RpcPeer({
+    const [alicePort, bobPort] = createLinkedPorts();
+
+    const alice = new RpcPeer({
       messageHandler: async (method, msg) => {
         expect(method).toEqual('method');
         expect(msg).toEqual(Buffer.from('request'));
         return Buffer.from('response');
       },
-      send: msg => bob.receive(msg)
+      port: alicePort
     });
     const bob = new RpcPeer({
       messageHandler: async (method, msg) => new Uint8Array(),
-      send: msg => alice.receive(msg)
+      port: bobPort
     });
 
     await Promise.all([
@@ -51,6 +56,8 @@ describe('RpcPeer', () => {
   });
 
   test('can send multiple requests', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
+
     const alice: RpcPeer = new RpcPeer({
       messageHandler: async (method, msg) => {
         expect(method).toEqual('method');
@@ -64,11 +71,11 @@ describe('RpcPeer', () => {
 
         return msg;
       },
-      send: msg => bob.receive(msg)
+      port: alicePort
     });
     const bob = new RpcPeer({
       messageHandler: async msg => new Uint8Array(),
-      send: msg => alice.receive(msg)
+      port: bobPort
     });
 
     await Promise.all([
@@ -88,6 +95,8 @@ describe('RpcPeer', () => {
   });
 
   test('errors get serialized', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
+
     const alice: RpcPeer = new RpcPeer({
       messageHandler: async (method, msg) => {
         expect(method).toEqual('RpcMethodName');
@@ -97,11 +106,11 @@ describe('RpcPeer', () => {
 
         return await handlerFn();
       },
-      send: msg => bob.receive(msg)
+      port: alicePort
     });
     const bob = new RpcPeer({
       messageHandler: async msg => new Uint8Array(),
-      send: msg => alice.receive(msg)
+      port: bobPort
     });
 
     await Promise.all([
@@ -123,17 +132,19 @@ describe('RpcPeer', () => {
   });
 
   test('closing local endpoint stops pending requests', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
+
     const alice: RpcPeer = new RpcPeer({
       messageHandler: async (method, msg) => {
         expect(method).toEqual('method');
         await sleep(5);
         return msg;
       },
-      send: msg => bob.receive(msg)
+      port: alicePort
     });
     const bob = new RpcPeer({
       messageHandler: async msg => new Uint8Array(),
-      send: msg => alice.receive(msg)
+      port: bobPort
     });
 
     await Promise.all([
@@ -148,17 +159,19 @@ describe('RpcPeer', () => {
   });
 
   test('closing remote endpoint stops pending requests', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
+
     const alice: RpcPeer = new RpcPeer({
       messageHandler: async (method, msg) => {
         expect(method).toEqual('method');
         await sleep(5);
         return msg;
       },
-      send: msg => bob.receive(msg)
+      port: alicePort
     });
     const bob = new RpcPeer({
       messageHandler: async msg => new Uint8Array(),
-      send: msg => alice.receive(msg)
+      port: bobPort
     });
 
     await Promise.all([
@@ -173,13 +186,14 @@ describe('RpcPeer', () => {
   });
 
   test('open waits for the other peer to call open', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
     const alice: RpcPeer = new RpcPeer({
       messageHandler: async msg => new Uint8Array(),
-      send: msg => bob.receive(msg)
+      port: alicePort
     });
     const bob = new RpcPeer({
       messageHandler: async msg => new Uint8Array(),
-      send: msg => alice.receive(msg)
+      port: bobPort
     });
 
     let aliceOpen = false;
@@ -198,19 +212,20 @@ describe('RpcPeer', () => {
   });
 
   test('one peer can open before the other is created ', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
+
     // eslint-disable-next-line prefer-const
-    let bob: RpcPeer | undefined;
     const alice: RpcPeer = new RpcPeer({
       messageHandler: async msg => new Uint8Array(),
-      send: msg => bob?.receive(msg)
+      port: alicePort
     });
     const aliceOpen = alice.open();
 
     await sleep(5);
 
-    bob = new RpcPeer({
+    const bob = new RpcPeer({
       messageHandler: async msg => new Uint8Array(),
-      send: msg => alice.receive(msg)
+      port: bobPort
     });
 
     await Promise.all([

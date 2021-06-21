@@ -22,10 +22,6 @@ export class ProtoRpcClient<S> {
   close () {
     this.peer.close();
   }
-
-  async receive (msg: Uint8Array): Promise<void> {
-    await this.peer.receive(msg);
-  }
 }
 
 /**

@@ -11,9 +11,12 @@ import { SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
 import { RpcPeer } from './rpc';
 import { createRpcClient, createRpcServer } from './service';
+import { createLinkedPorts } from './testutil';
 
 describe('Protobuf service', () => {
   test('Works with protobuf service', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
+
     const service = schema.getService('dxos.rpc.test.TestService');
 
     const server: RpcPeer = createRpcServer({
@@ -24,11 +27,11 @@ describe('Protobuf service', () => {
           return { data: 'responseData' };
         }
       },
-      send: msg => client.receive(msg)
+      port: alicePort
     });
 
     const client = createRpcClient(service, {
-      send: msg => server.receive(msg)
+      port: bobPort
     });
 
     await Promise.all([
@@ -42,6 +45,8 @@ describe('Protobuf service', () => {
   });
 
   test('Errors are serialized', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
+
     const service = schema.getService('dxos.rpc.test.TestService');
 
     const server: RpcPeer = createRpcServer({
@@ -56,11 +61,11 @@ describe('Protobuf service', () => {
           return await handlerFn();
         }
       },
-      send: msg => client.receive(msg)
+      port: alicePort
     });
 
     const client = createRpcClient(service, {
-      send: msg => server.receive(msg)
+      port: bobPort
     });
 
     await Promise.all([

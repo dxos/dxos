@@ -14,7 +14,15 @@ type MaybePromise<T> = Promise<T> | T
 
 export interface RpcPeerOptions {
   messageHandler: (method: string, request: Uint8Array) => MaybePromise<Uint8Array>
+  port: RpcPort
+}
+
+/**
+ * Interface for a transport-agnostic port to send/receive binary messages.
+ */
+export interface RpcPort {
   send: (msg: Uint8Array) => MaybePromise<void>
+  subscribe: (cb: (msg: Uint8Array) => void) => (() => void) | void
 }
 
 class RequestItem {
@@ -45,6 +53,7 @@ export class RpcPeer {
 
   private _nextId = 0;
   private _open = false;
+  private _unsubscribe: (() => void) | undefined;
 
   constructor (private readonly _options: RpcPeerOptions) {}
 
@@ -59,11 +68,13 @@ export class RpcPeer {
       return;
     }
 
-    await this._options.send(codec.encode({ open: true }));
+    this._unsubscribe = this._options.port.subscribe(this._receive.bind(this)) as any;
+
+    await this._options.port.send(codec.encode({ open: true }));
     await this._remoteOpenTrigger.wait();
 
     // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
-    await this._options.send(codec.encode({ open: true }));
+    await this._options.port.send(codec.encode({ open: true }));
 
     this._open = true;
   }
@@ -72,6 +83,7 @@ export class RpcPeer {
    * Close the peer. Stop taking or making requests.
    */
   close () {
+    this._unsubscribe?.();
     for (const req of this._requests.values()) {
       req.reject(new RpcClosedError());
     }
@@ -80,20 +92,20 @@ export class RpcPeer {
   }
 
   /**
-   * Handle incoming message. Should be called as the result of other peer's `send` callback.
+   * Handle incoming message. Shoulda be called as the result of other peer's `send` callback.
    */
-  async receive (msg: Uint8Array): Promise<void> {
+  private async _receive (msg: Uint8Array): Promise<void> {
     const decoded = codec.decode(msg);
     if (decoded.request) {
       if (!this._open) {
-        await this._options.send(codec.encode({ response: { error: encodeError(new RpcClosedError()) } }));
+        await this._options.port.send(codec.encode({ response: { error: encodeError(new RpcClosedError()) } }));
         return;
       }
 
       const req = decoded.request;
       const response = await this._callHandler(req);
 
-      await this._options.send(codec.encode({ response }));
+      await this._options.port.send(codec.encode({ response }));
     } else if (decoded.response) {
       if (!this._open) {
         return; // Ignore when not open.
@@ -135,7 +147,7 @@ export class RpcPeer {
     // Here we're attaching a dummy handler that will not interfere with error handling to avoid that warning.
     promise.catch(() => {});
 
-    await this._options.send(codec.encode({
+    await this._options.port.send(codec.encode({
       request: {
         id,
         method,
