@@ -8,7 +8,7 @@ import pkgUp from 'pkg-up'
 import assert from 'assert';
 import { promises as fs } from 'fs';
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
-import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin } from '@dxos/esbuild-plugins'
+import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin } from '@dxos/esbuild-plugins'
 
 
 export enum Browser {
@@ -34,12 +34,13 @@ export async function run(options: RunOptions) {
 
   const mainFile = join(tempDir, 'main.js');
   const mainContents = `
-    import 'mocha/mocha.js';
+    import { mocha } from 'mocha';
 
+    mocha.reporter('spec');
     mocha.setup('bdd');
     mocha.checkLeaks();
 
-    ${files.map(file => `import "${resolve(file)}";`).join('\n')}
+    ${files.map(file => `require("${resolve(file)}");`).join('\n')}
     
     mocha.run();
   `
@@ -54,15 +55,13 @@ export async function run(options: RunOptions) {
     platform: 'browser',
     format: 'iife',
     outfile: join(tempDir, 'bundle.js'),
-    metafile: true,
     plugins: [
       NodeModulesPolyfillPlugin(),
       NodeGlobalsPolyfillPlugin(),
       FixMemdownPlugin(),
+      FixGracefulFsPlugin(),
     ],
   })
-
-  console.log(res.metafile)
 
   const browser = await chromium.launch({
     headless: false,

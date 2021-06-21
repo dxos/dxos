@@ -753,6 +753,7 @@ importers:
       '@types/through2': 2.0.36
       earljs: 0.1.10
       esbuild: 0.11.23
+      expect: 27.0.2
       glob: 7.1.7
       lodash.merge: 4.6.2
       mocha: 8.4.0
@@ -782,6 +783,7 @@ importers:
       '@types/yargs': ~16.0.1
       earljs: ~0.1.10
       esbuild: ^0.11.23
+      expect: ~27.0.2
       glob: ~7.1.6
       lodash.merge: ^4.6.2
       mocha: ~8.4.0
@@ -4922,7 +4924,6 @@ packages:
       '@types/node': 14.14.45
       '@types/yargs': 16.0.1
       chalk: 4.1.1
-    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -8281,7 +8282,6 @@ packages:
     resolution:
       integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==
   /ansi-styles/5.2.0:
-    dev: true
     engines:
       node: '>=10'
     resolution:
@@ -11899,7 +11899,6 @@ packages:
     resolution:
       integrity: sha512-Mv/TDa3nZ9sbc5soK+OoA74BsS3mL37yixCvUAQkiuA4Wz6YtwP/K47n2rv2ovzHZvoiQeA5FTQOschKkEwB0Q==
   /diff-sequences/27.0.1:
-    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -13080,7 +13079,6 @@ packages:
       jest-matcher-utils: 27.0.2
       jest-message-util: 27.0.2
       jest-regex-util: 27.0.1
-    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -16030,7 +16028,6 @@ packages:
       diff-sequences: 27.0.1
       jest-get-type: 27.0.1
       pretty-format: 27.0.2
-    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -16088,7 +16085,6 @@ packages:
     resolution:
       integrity: sha512-TpfaviN1R2pQWkIihlfEanwOXK0zcxrKEE4MlU6Tn7keoXdN6/3gK/xl0yEh8DOunn5pOVGKf8hB4R9gVh04ig==
   /jest-get-type/27.0.1:
-    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -16188,7 +16184,6 @@ packages:
       jest-diff: 27.0.2
       jest-get-type: 27.0.1
       pretty-format: 27.0.2
-    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -16219,7 +16214,6 @@ packages:
       pretty-format: 27.0.2
       slash: 3.0.0
       stack-utils: 2.0.3
-    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -16263,7 +16257,6 @@ packages:
     resolution:
       integrity: sha512-Gv3ZIs/nA48/Zvjrl34bf+oD76JHiGDUxNOVgUjh3j890sblXryjY4rss71fPtD/njchl6PSE2hIhvyWa1eT0A==
   /jest-regex-util/27.0.1:
-    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -20241,7 +20234,6 @@ packages:
       ansi-regex: 5.0.0
       ansi-styles: 5.2.0
       react-is: 17.0.2
-    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
