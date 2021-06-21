@@ -16,7 +16,7 @@ import {
   ERR_PROTOCOL_HANDSHAKE_FAILED,
   ERR_PROTOCOL_EXTENSION_MISSING
 } from './errors';
-import { Extension, HandshakeHandler } from './extension';
+import { Extension } from './extension';
 import { ExtensionInit } from './extension-init';
 import { keyToHuman } from './utils';
 

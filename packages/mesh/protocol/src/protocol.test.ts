@@ -9,8 +9,6 @@ import { it as test } from 'mocha';
 import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
-import { latch } from '@dxos/async';
-
 import { ERR_EXTENSION_RESPONSE_FAILED, ERR_EXTENSION_RESPONSE_TIMEOUT } from './errors';
 import { Extension } from './extension';
 import { Protocol } from './protocol';
@@ -19,6 +17,10 @@ const log = debug('test');
 debug.enable('test,protocol');
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+test('protocol sessions', async () => {
+  // TODO: test setsession / getsession
+}).timeout(1 * 1000);
 
 test('basic without extensions', async () => {
   const topic = crypto.randomBytes(32);
@@ -105,8 +107,6 @@ test('basic with a buffer ping-pong extension', async () => {
   protocol1.error.on(err => console.log('protocol1', err));
   protocol2.error.on(err => console.log('protocol2', err));
 
-  const [promise, resolve] = latch(1);
-
   protocol1.setHandshakeHandler(async (protocol) => {
     const bufferMessages = protocol.getExtension(bufferExtension)!;
     expect(bufferMessages).toBeDefined();
@@ -114,8 +114,7 @@ test('basic with a buffer ping-pong extension', async () => {
     {
       const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
       expect(data).toEqual(Buffer.from('pong'));
-      protocol1.close()
-      resolve();
+      protocol1.close();
     }
   });
   return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
@@ -148,28 +147,28 @@ test('basic ping and oneway', async () => {
     )
     .setHandshakeHandler(async (protocol) => {
       expect(onInitCalled).toBe(2);
-  
+
       const bufferMessages = protocol.getExtension(bufferExtension)!;
-  
+
       bufferMessages.on('error', (err: any) => {
         log('Error: %o', err);
       });
-  
+
       // const session = protocol.getSession();
       // expect(session.user).toBe('user2');
-  
+
       {
         const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
         expect(data).toEqual(Buffer.from('pong'));
       }
-  
+
       {
         const result = await bufferMessages.send(Buffer.from('oneway'), { oneway: true });
         expect(result).toBeUndefined();
         const data = await waitOneWayMessage.promise;
         expect(data).toEqual(Buffer.from('oneway'));
       }
-  
+
       try {
         await bufferMessages.send(Buffer.from('crash'));
       } catch (err) {
@@ -178,14 +177,14 @@ test('basic ping and oneway', async () => {
         // eslint-disable-next-line
         expect(err.responseMessage).toBe('Invalid data.');
       }
-  
+
       try {
         await bufferMessages.send(Buffer.from('timeout'));
       } catch (err) {
         // eslint-disable-next-line
         expect(ERR_EXTENSION_RESPONSE_TIMEOUT.equals(err)).toBe(true); // timeout.
       }
-  
+
       log('%o', bufferMessages.stats);
       protocol1.close();
     })

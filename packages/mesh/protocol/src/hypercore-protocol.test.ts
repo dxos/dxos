@@ -38,7 +38,7 @@ test('Basic connection of two hypercore protocols', async () => {
   });
   aliceChannel.extension(0, Buffer.from([1, 2, 3]));
 
-  const aliceExt = alice.registerExtension('ext-on-stream', {
+  alice.registerExtension('ext-on-stream', {
     onmessage: (msg: any) => {
       console.log('alice got msg in extension', msg);
       console.log(typeof msg);
