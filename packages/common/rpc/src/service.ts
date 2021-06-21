@@ -6,6 +6,9 @@ import { Service, ServiceDescriptor } from '@dxos/codec-protobuf';
 
 import { RpcPeer, RpcPeerOptions } from './rpc';
 
+/**
+ * A type-safe RPC client.
+ */
 export class ProtoRpcClient<S> {
   constructor (
     public readonly rpc: Service & S,
@@ -25,6 +28,9 @@ export class ProtoRpcClient<S> {
   }
 }
 
+/**
+ * Create a type-safe RPC client.
+ */
 export function createRpcClient<S> (serviceDef: ServiceDescriptor<S>, options: Omit<RpcPeerOptions, 'messageHandler'>): ProtoRpcClient<S> {
   const peer = new RpcPeer({
     ...options,
@@ -45,6 +51,9 @@ export interface ProtoRpcServerOptions<S> extends Omit<RpcPeerOptions, 'messageH
   handlers: S,
 }
 
+/**
+ * Create a type-safe RPC server.
+ */
 export function createRpcServer<S> ({ service, handlers, ...rest }: ProtoRpcServerOptions<S>): RpcPeer {
   const server = service.createServer(handlers);
 

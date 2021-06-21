@@ -26,6 +26,18 @@ class RequestItem {
 
 const codec = schema.getCodecForType('dxos.rpc.RpcMessage');
 
+/**
+ * A remote procedure call peer.
+ *
+ * Provides a away to make RPC calls and get a response back as a promise.
+ * Does not handle encoding/decoding and only works with byte buffers.
+ * For type safe approach see `createRpcClient` and `createRpcServer`.
+ *
+ * Must be connected with another instance on the other side via `send`/`receive` methods.
+ * Both sides must be opened before making any RPC calls.
+ *
+ * Errors inside the handler get serialized and sent to the other side.
+ */
 export class RpcPeer {
   private readonly _requests = new Map<number, RequestItem>();
 
@@ -36,6 +48,11 @@ export class RpcPeer {
 
   constructor (private readonly _options: RpcPeerOptions) {}
 
+  /**
+   * Open the peer. Required before making any calls.
+   *
+   * Will block before the other peer calls `open`.
+   */
   @synchronized
   async open () {
     if (this._open) {
@@ -51,6 +68,9 @@ export class RpcPeer {
     this._open = true;
   }
 
+  /**
+   * Close the peer. Stop taking or making requests.
+   */
   close () {
     for (const req of this._requests.values()) {
       req.reject(new RpcClosedError());
@@ -59,6 +79,9 @@ export class RpcPeer {
     this._open = false;
   }
 
+  /**
+   * Handle incoming message. Should be called as the result of other peer's `send` callback.
+   */
   async receive (msg: Uint8Array): Promise<void> {
     const decoded = codec.decode(msg);
     if (decoded.request) {
@@ -92,6 +115,11 @@ export class RpcPeer {
     }
   }
 
+  /**
+   * Make RPC call. Will trigger a handler on the other side.
+   *
+   * Peer should be open before making this call.
+   */
   async call (method: string, request: Uint8Array): Promise<Uint8Array> {
     if (!this._open) {
       throw new RpcNotOpenError();
@@ -148,6 +176,7 @@ export class RpcPeer {
     }
   }
 }
+
 function encodeError (err: any): ErrorResponse {
   return {
     name: err.name,
