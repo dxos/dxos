@@ -117,7 +117,7 @@ export class BotPlugin extends EventEmitter {
       .setHandshakeHandler(async protocol => {
         const peerId = protocol.getSession();
 
-        if (this._peers.has(keyToString(peerId))) {
+        if (peerId && this._peers.has(keyToString(Buffer.from(peerId)))) {
           this.emit('peer:joined', peerId, protocol);
         }
       })
@@ -167,11 +167,11 @@ export class BotPlugin extends EventEmitter {
    */
   private _addPeer (protocol: Protocol) {
     const peerId = protocol.getSession();
-    if (this._peers.has(keyToString(peerId))) {
+    if (peerId && this._peers.has(keyToString(Buffer.from(peerId)))) {
       return;
     }
 
-    this._peers.set(keyToString(peerId), protocol);
+    this._peers.set(keyToString(Buffer.from(peerId)), protocol);
   }
 
   /**
