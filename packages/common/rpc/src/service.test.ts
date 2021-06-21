@@ -4,6 +4,7 @@
 
 import { expect } from 'earljs';
 import { it as test } from 'mocha';
+import { SerializedRpcError } from './errors';
 
 import { schema } from './proto/gen';
 import { RpcPeer } from './rpc';
@@ -36,5 +37,46 @@ describe('Protobuf service', () => {
     const response = await client.rpc.TestCall({ data: 'requestData' });
 
     expect(response.data).toEqual('responseData');
+  });
+
+  test('Errors are serialized', async () => {
+    const service = schema.getService('dxos.rpc.test.TestService');
+
+    const server: RpcPeer = createRpcServer({
+      service,
+      handlers: {
+        TestCall: async (req) => {
+          async function handlerFn(): Promise<never> {
+            throw new Error('TestError');
+          }
+
+          return await handlerFn();
+        }
+      },
+      send: msg => client.receive(msg)
+    });
+
+    const client = createRpcClient(service, {
+      send: msg => server.receive(msg)
+    });
+
+    
+    
+    await Promise.all([
+      server.open(),
+      client.open()
+    ]);
+    
+    let error!: Error;
+    try {
+      await client.rpc.TestCall({ data: 'requestData' });
+    } catch(err) {
+      error = err;
+    }
+
+    expect(error).toBeA(SerializedRpcError)
+    expect(error.message).toEqual('TestError');
+    expect(error.stack?.includes('handlerFn')).toEqual(true);
+    expect(error.stack?.includes('TestCall')).toEqual(true);
   });
 });
