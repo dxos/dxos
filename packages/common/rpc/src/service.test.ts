@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { sleep } from '@dxos/async';
 import { expect } from 'earljs';
 import { it as test } from 'mocha';
 import { SerializedRpcError } from './errors';
@@ -47,6 +48,7 @@ describe('Protobuf service', () => {
       handlers: {
         TestCall: async (req) => {
           async function handlerFn(): Promise<never> {
+            await sleep(5)
             throw new Error('TestError');
           }
 
