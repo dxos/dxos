@@ -13,7 +13,7 @@ import { Request, Response, Error as ErrorResponse } from './proto/gen/dxos/rpc'
 type MaybePromise<T> = Promise<T> | T
 
 export interface RpcPeerOptions {
-  messageHandler: (req: Uint8Array) => MaybePromise<Uint8Array>
+  messageHandler: (method: string, request: Uint8Array) => MaybePromise<Uint8Array>
   send: (msg: Uint8Array) => MaybePromise<void>
 }
 
@@ -96,7 +96,7 @@ export class RpcPeer {
     }
   }
 
-  async call (request: Uint8Array): Promise<Uint8Array> {
+  async call (method: string, request: Uint8Array): Promise<Uint8Array> {
     if (!this._open) {
       throw new RpcNotOpenError();
     }
@@ -114,6 +114,7 @@ export class RpcPeer {
     await this._options.send(codec.encode({
       request: {
         id,
+        method,
         payload: request
       }
     }));
@@ -137,7 +138,8 @@ export class RpcPeer {
     try {
       assert(typeof req.id === 'number');
       assert(req.payload);
-      const response = await this._options.messageHandler(req.payload);
+      assert(req.method);
+      const response = await this._options.messageHandler(req.method, req.payload);
       return {
         id: req.id,
         payload: response
