@@ -31,8 +31,10 @@ describe('Protobuf service', () => {
       call: clientRpc.call.bind(clientRpc)
     });
 
-    await serverRpc.open();
-    await clientRpc.open();
+    await Promise.all([
+      serverRpc.open(),
+      clientRpc.open(),
+    ])
 
     const response = await client.TestCall({ data: 'requestData' });
 

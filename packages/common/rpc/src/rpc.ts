@@ -33,7 +33,6 @@ export class RpcPeer {
 
   private _nextId = 0;
   private _open = false;
-  private _remoteOpen = false;
 
   constructor (private readonly _options: RpcPeerOptions) {}
 
@@ -45,6 +44,9 @@ export class RpcPeer {
 
     await this._options.send(codec.encode({ open: true }));
     await this._remoteOpenTrigger.wait();
+
+    // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
+    await this._options.send(codec.encode({ open: true }));
 
     this._open = true;
   }
@@ -85,12 +87,6 @@ export class RpcPeer {
       item.resolve(decoded.response);
     } else if (decoded.open) {
       this._remoteOpenTrigger.wake();
-
-      // Respond with an "open" message to acknowledge opening.
-      if (!this._remoteOpen) {
-        this._remoteOpen = true;
-        await this._options.send(codec.encode({ open: true }));
-      }
     } else {
       throw new Error('Malformed message.');
     }
