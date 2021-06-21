@@ -18,7 +18,8 @@ message RpcMessage {
 
 message Request {
   int32 id = 1;
-  bytes payload = 2;
+  string method = 2;
+  bytes payload = 3;
 }
 
 message Response {
