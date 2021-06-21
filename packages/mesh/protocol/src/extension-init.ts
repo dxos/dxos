@@ -6,6 +6,7 @@ import assert from 'assert';
 import Signal from 'signal-promise';
 
 import { Trigger } from '@dxos/async';
+import { keyToString } from '@dxos/crypto';
 
 import { ERR_PROTOCOL_INIT_INVALID } from './errors';
 import { Extension } from './extension';
@@ -69,9 +70,10 @@ export class ExtensionInit extends Extension {
     return this.send(Buffer.from(JSON.stringify({ command, data })));
   }
 
-  async sendSession (userSession?: string) {
+  async sendSession (userSession?: string | Buffer) {
     // TODO(rzadp): Protobuf.
-    this.sendCommand('session', userSession ?? '');
+    const session = userSession ? (typeof userSession === 'string' ? userSession : keyToString(userSession)) : '';
+    this.sendCommand('session', session);
 
     await this._sessionTrigger.wait();
   }

@@ -32,14 +32,14 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
       live: true
     },
     discoveryKey: topic,
-    initiator
+    initiator,
+    userSession: peerId
   })
-    .setSession({ peerId })
     .setExtension(presence.createExtension())
     .init()
     .stream;
 
-  return { id: peerId, presence, createStream};
+  return { id: peerId, presence, createStream };
 });
 
 function links (graph: Graph) {

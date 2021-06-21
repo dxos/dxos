@@ -55,7 +55,7 @@ export interface ProtocolOptions {
   codec?: Codec
 
   initiator?: boolean,
-  userSession?: string,
+  userSession?: string | Buffer,
 }
 
 /**
@@ -295,7 +295,7 @@ export class Protocol {
     }
   }
 
-  private async _initExtensions (userSession?: string) {
+  private async _initExtensions (userSession?: string | Buffer) {
     try {
       // Exchanging sessions, because other extensions (like Bot Plugin) might depend on the session being already there.
       await this._extensionInit.sendSession(userSession);
