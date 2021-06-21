@@ -128,7 +128,7 @@ export class RpcPeer {
       assert(response.error.name);
       assert(response.error.message);
       assert(response.error.stack);
-      throw new SerializedRpcError(response.error.name, response.error.message, response.error.stack);
+      throw new SerializedRpcError(response.error.name, response.error.message, response.error.stack, method);
     } else {
       throw new Error('Malformed response.');
     }

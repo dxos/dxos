@@ -84,7 +84,7 @@ describe('RpcPeer', () => {
   test('errors get serialized', async () => {
     const alice: RpcPeer = new RpcPeer({
       messageHandler: async (method, msg) => {
-        expect(method).toEqual('method');
+        expect(method).toEqual('RpcMethodName');
         async function handlerFn (): Promise<never> {
           throw new Error('My error');
         }
@@ -103,7 +103,7 @@ describe('RpcPeer', () => {
 
     let error!: Error;
     try {
-      await bob.call('method', Buffer.from('request'));
+      await bob.call('RpcMethodName', Buffer.from('request'));
     } catch (err) {
       error = err;
     }
@@ -111,6 +111,7 @@ describe('RpcPeer', () => {
     expect(error).toBeA(SerializedRpcError);
     expect(error.message).toEqual('My error');
     expect(error.stack?.includes('handlerFn')).toEqual(true);
+    expect(error.stack?.includes('RpcMethodName')).toEqual(true);
   });
 
   test('closing local endpoint stops pending requests', async () => {
