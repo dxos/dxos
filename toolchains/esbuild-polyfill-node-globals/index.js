@@ -20,4 +20,25 @@ function NodeGlobalsPolyfillPlugin() {
     }
 }
 
-module.exports = NodeGlobalsPolyfillPlugin
+/**
+ * @returns {import('esbuild').Plugin}
+ */
+ function FixMemdownPlugin() {
+    return {
+      name: 'fix-memdown-plugin',
+      setup({ onResolve }) {
+        onResolve({ filter: /^immediate$/ }, arg => {
+          return {
+            path: require.resolve(arg.path, { paths: [arg.resolveDir] })
+          }
+        })
+      }
+    }
+  }
+  
+
+module.exports = {
+    NodeGlobalsPolyfillPlugin,
+    FixMemdownPlugin
+}
+

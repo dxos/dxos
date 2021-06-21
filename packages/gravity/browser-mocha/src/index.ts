@@ -1,11 +1,15 @@
 import { randomBytes } from 'crypto';
 import { build } from 'esbuild';
 import glob from 'glob'
-import { join } from 'path';
+import { dirname, join, resolve } from 'path';
 import { chromium } from 'playwright';
 import { promisify } from 'util';
 import pkgUp from 'pkg-up'
 import assert from 'assert';
+import { promises as fs } from 'fs';
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
+import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin } from '@dxos/esbuild-plugins'
+
 
 export enum Browser {
   CHROMIUM = 'chromium',
@@ -22,38 +26,57 @@ export interface RunOptions {
 }
 
 export async function run(options: RunOptions) {
-  const packageDir = await pkgUp({ cwd: __dirname })
+  const packageDir = dirname(await pkgUp({ cwd: __dirname }) as string)
   assert(packageDir)
-  const tempDir = '../../out'; // `/tmp/browser-mocha-${randomBytes(32).toString('hex')}`
+  const tempDir = join(__dirname, '../../out'); // `/tmp/browser-mocha-${randomBytes(32).toString('hex')}`
 
   const files = await resolveFiles(options.files);
+
+  const mainFile = join(tempDir, 'main.js');
+  const mainContents = `
+    import 'mocha/mocha.js';
+
+    mocha.setup('bdd');
+    mocha.checkLeaks();
+
+    ${files.map(file => `import "${resolve(file)}";`).join('\n')}
+    
+    mocha.run();
+  `
+
+
+  await fs.writeFile(mainFile, mainContents)
+
   const res = await build({
-    entryPoints: files,
+    entryPoints: [mainFile],
     write: true,
     bundle: true,
     platform: 'browser',
-    splitting: true,
-    format: 'esm',
-    outdir: tempDir,
+    format: 'iife',
+    outfile: join(tempDir, 'bundle.js'),
     metafile: true,
+    plugins: [
+      NodeModulesPolyfillPlugin(),
+      NodeGlobalsPolyfillPlugin(),
+      FixMemdownPlugin(),
+    ],
   })
 
   console.log(res.metafile)
 
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({
+    headless: false,
+    args: [
+      '--disable-web-security',
+    ], 
+  });
   const context = await browser.newContext();
   const page = await context.newPage();
-  await page.goto(`file://${join(__dirname, './index.html')}`)
+  await page.goto(`file://${join(packageDir, './src/index.html')}`)
 
-  for(const [name, output] of Object.entries(res.metafile!.outputs)) {
-    if(!output.entryPoint) {
-      continue
-    }
-    page.addScriptTag({
-      path: join(tempDir, name)
-    })
-  }
-  
+  await page.addScriptTag({
+    path: join(tempDir, 'bundle.js'),
+  })
 }
 
 async function resolveFiles(globs: string[]): Promise<string[]> {

@@ -446,6 +446,10 @@
       "packageName": "@dxos/toolchain-node-library",
       "projectFolder": "toolchains/node-library"
     },
+    {
+      "packageName": "@dxos/esbuild-plugins",
+      "projectFolder": "toolchains/esbuild-polyfill-node-globals"
+    },
 
     //
     // common

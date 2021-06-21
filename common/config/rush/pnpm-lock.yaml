@@ -742,12 +742,16 @@ importers:
   ../../packages/gravity/browser-mocha:
     dependencies:
       '@dxos/debug': link:../../common/debug
+      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-polyfill-node-globals
+      '@esbuild-plugins/node-modules-polyfill': 0.1.1_esbuild@0.11.23
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/lodash': 4.14.169
+      '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       '@types/stream-buffers': 3.0.3
       '@types/through2': 2.0.36
+      earljs: 0.1.10
       esbuild: 0.11.23
       glob: 7.1.7
       lodash.merge: 4.6.2
@@ -763,16 +767,20 @@ importers:
       stream-buffers: 3.0.2
     specifiers:
       '@dxos/debug': workspace:*
+      '@dxos/esbuild-plugins': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@esbuild-plugins/node-modules-polyfill': ~0.1.1
       '@types/debug': ^4.1.1
       '@types/end-of-stream': ^1.4.0
       '@types/glob': ~7.1.3
       '@types/jest': ^26.0.7
       '@types/lodash': ^4.14.159
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/stream-buffers': ^3.0.2
       '@types/through2': ^2.0.36
       '@types/yargs': ~16.0.1
+      earljs: ~0.1.10
       esbuild: ^0.11.23
       glob: ~7.1.6
       lodash.merge: ^4.6.2
@@ -1822,6 +1830,7 @@ importers:
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
+      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-polyfill-node-globals
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@esbuild-plugins/node-modules-polyfill': 0.1.1_esbuild@0.11.23
       '@types/node': 14.14.45
@@ -1839,6 +1848,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
+      '@dxos/esbuild-plugins': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ux': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -1857,6 +1867,8 @@ importers:
       rmdir: ~1.2.0
       typescript: ^4.2.4
       webextension-polyfill-ts: ~0.25.0
+  ../../toolchains/esbuild-polyfill-node-globals:
+    specifiers: {}
   ../../toolchains/node-library:
     dependencies:
       '@dxos/eslint-plugin': 1.0.10_eslint@7.26.0+typescript@4.2.4
@@ -4526,7 +4538,6 @@ packages:
       esbuild: 0.11.23
       escape-string-regexp: 4.0.0
       rollup-plugin-node-polyfills: 0.2.1
-    dev: true
     peerDependencies:
       esbuild: '*'
     resolution:
@@ -7294,7 +7305,6 @@ packages:
     resolution:
       integrity: sha512-wuzZksN4w4kyfoOv/dlpov4NOunwutLA/q7uc00xU02ZyUY+aoM5PWIXEKBMnm0NHd4a+N71BMjq+x7+2Af1fg==
   /@types/mocha/8.2.2:
-    dev: true
     resolution:
       integrity: sha512-Lwh0lzzqT5Pqh6z61P3c3P5nm6fzQK/MMHl9UKeneAeInVflBSz1O2EkX6gM6xfJd7FBXBY5purtLx7fUiZ7Hw==
   /@types/node-fetch/2.5.10:
@@ -12168,7 +12178,6 @@ packages:
       lodash: 4.17.21
       pretty-format: 26.6.2
       ts-essentials: 6.0.7
-    dev: true
     resolution:
       integrity: sha512-3/tIKsL5ryPWgjHFue99ljXeHCMVEvJZTkhnmaMM4kRb8F94dxxatZgXRrwmf5ohQruJU330JvYVYwnw96bzrw==
   /ecc-jsbn/0.1.2:
@@ -21686,13 +21695,11 @@ packages:
       magic-string: 0.25.7
       rollup-pluginutils: 2.8.2
     deprecated: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-inject.
-    dev: true
     resolution:
       integrity: sha512-ptg9PQwzs3orn4jkgXJ74bfs5vYz1NCZlSQMBUA0wKcGp5i5pA1AO3fOUEte8enhGUC+iapTCzEWw2jEFFUO/w==
   /rollup-plugin-node-polyfills/0.2.1:
     dependencies:
       rollup-plugin-inject: 3.0.2
-    dev: true
     resolution:
       integrity: sha512-4kCrKPTJ6sK4/gLL/U5QzVT8cxJcofO0OU74tnB19F40cmuAKSzH5/siithxlofFEjwvw1YAhPmbvGNA6jEroA==
   /rollup-plugin-terser/5.3.1_rollup@1.32.1:
@@ -23527,7 +23534,6 @@ packages:
     resolution:
       integrity: sha512-3IVX4nI6B5cc31/GFFE+i8ey/N2eA0CZDbo6n0yrz0zDX8ZJ8djmU1p+XRz7G3is0F3bB3pu2pAroFdAWQKU3w==
   /ts-essentials/6.0.7:
-    dev: true
     resolution:
       integrity: sha512-2E4HIIj4tQJlIHuATRHayv0EfMGK3ris/GRk1E3CFnsZzeNV+hUmelbaTZHLtXaZppM5oLhHRtO04gINC4Jusw==
   /ts-invariant/0.4.4:
