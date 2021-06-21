@@ -34,7 +34,8 @@
     "ngraph.graph": "^19.0.1",
     "p-limit": "^3.1.0",
     "queue-microtask": "^1.1.2",
-    "hypercore-protocol": "^8.0.7"
+    "hypercore-protocol": "^8.0.7",
+    "@dxos/crypto": "workspace:*"
   },
   "devDependencies": {
     "@dxos/protobuf-compiler": "workspace:*",

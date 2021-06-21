@@ -15,6 +15,7 @@ import { Broadcast, Middleware } from '@dxos/broadcast';
 import { Extension, Protocol } from '@dxos/protocol';
 
 import { schema } from './proto/gen';
+import { keyToBuffer } from '@dxos/crypto';
 
 const log = debug('presence');
 
@@ -167,7 +168,7 @@ export class PresencePlugin extends EventEmitter {
     const middleware: Middleware<Peer> = {
       lookup: async () => {
         return Array.from(this._neighbors.values()).map((peer) => {
-          const { peerId } = peer.getSession();
+          const peerId = peer.getSession();
 
           return {
             id: peerId,
@@ -236,22 +237,19 @@ export class PresencePlugin extends EventEmitter {
 
   private _addPeer (protocol: Protocol) {
     assert(protocol);
-    const session = protocol.getSession();
+    const peerId = protocol.getSession();
 
-    if (!session || !session.peerId) {
+    if (!peerId) {
       this.emit('error', new Error('peerId not found'));
       return;
     }
 
-    const { peerId } = session;
-    const peerIdHex = peerId.toString('hex');
-
-    if (this._neighbors.has(peerIdHex)) {
+    if (this._neighbors.has(peerId)) {
       this.emit('neighbor:already-connected', peerId);
       return;
     }
 
-    this._neighbors.set(peerIdHex, protocol);
+    this._neighbors.set(peerId, protocol);
 
     this.emit('neighbor:joined', peerId, protocol);
     this._pingLimit();
@@ -262,16 +260,13 @@ export class PresencePlugin extends EventEmitter {
    */
   private async _removePeer (protocol: Protocol) {
     assert(protocol);
-    const session = protocol.getSession();
-    if (!session || !session.peerId) {
+    const peerId = protocol.getSession();
+    if (!peerId) {
       return;
     }
 
-    const { peerId } = session;
-    const peerIdHex = peerId.toString('hex');
-
-    this._neighbors.delete(peerIdHex);
-    this._deleteNode(peerIdHex);
+    this._neighbors.delete(peerId);
+    this._deleteNode(peerId);
     this.emit('neighbor:left', peerId);
 
     if (this._neighbors.size > 0) {
@@ -346,10 +341,7 @@ export class PresencePlugin extends EventEmitter {
     try {
       const message = {
         peerId: this._peerId,
-        connections: Array.from(this._neighbors.values()).map((peer) => {
-          const { peerId } = peer.getSession();
-          return { peerId };
-        }),
+        connections: Array.from(this._neighbors.values()).map((peer) => ({peerId: keyToBuffer(peer.getSession())})),
         metadata: this._metadata && bufferJson.encode(this._metadata)
       };
       await this._broadcast.publish(this._codec.encode(message));
