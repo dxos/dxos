@@ -6,7 +6,7 @@
 //
 
 export class SerializedRpcError extends Error {
-  constructor (name: string, message: string, public readonly remoteStack: string, public readonly rpcMethod: string ) {
+  constructor (name: string, message: string, public readonly remoteStack: string, public readonly rpcMethod: string) {
     super(message);
     Object.setPrototypeOf(this, new.target.prototype); // Restore prototype chain. https://stackoverflow.com/a/48342359
     this.name = name;
