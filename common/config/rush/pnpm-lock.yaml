@@ -1196,6 +1196,7 @@ importers:
       '@types/node': 14.14.45
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
+      hypercore-protocol: 8.0.7
       ngraph.graph: 19.1.0
       p-limit: 3.1.0
       queue-microtask: 1.2.3
@@ -1217,6 +1218,7 @@ importers:
       '@types/node': ^14.0.9
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
+      hypercore-protocol: ^8.0.7
       ngraph.graph: ^19.0.1
       p-limit: ^3.1.0
       queue-microtask: ^1.1.2
