@@ -38,7 +38,7 @@
     "debug": "^4.1.1",
     "download": "^7.1.0",
     "fs-extra": "^8.1.0",
-    "hypercore-crypto": "^2.3.0",
+    "hypercore-crypto": "^1.0.0",
     "js-yaml": "^3.13.1",
     "lodash.defaults": "^4.2.0",
     "lodash.defaultsdeep": "^4.6.1",

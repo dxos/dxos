@@ -32,7 +32,7 @@
     "end-of-stream": "^1.4.1",
     "from2": "^2.3.0",
     "hypercore": "^9.10.0",
-    "hypercore-crypto": "^2.3.0",
+    "hypercore-crypto": "^1.0.0",
     "hypertrie": "^3.8.0",
     "multi-read-stream": "^2.0.0",
     "mutexify": "^1.2.0",
