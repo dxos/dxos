@@ -1,7 +1,15 @@
+const { REACT_APP_SWARM_SIGNAL } = process.env;
+
 const config = {
-  app: { title: 'Tasks App' },
-  storage: { persistent: true },
-  swarm: { signal: 'wss://apollo1.kube.moon.dxos.network/dxos/signal' },
+  app: {
+    title: 'Tasks App',
+  },
+  storage: {
+    persistent: true,
+  },
+  swarm: {
+    signal: REACT_APP_SWARM_SIGNAL,
+  },
 };
 
 export default config;
