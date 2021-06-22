@@ -93,7 +93,6 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
   const [botInvitationPending, setBotInvitationPending] = useState(false);
   const [botInvitationError, setBotInvitationError] = useState();
   const [inviteRequestTime, setInviteRequestTime] = useState<number>();
-  // const sentry = useSentry();
 
   const [contacts] = useContacts();
   const invitableContacts = contacts?.filter((c) => !members.some((m) => m.publicKey.toHex() === c.publicKey.toHex())); // contacts not already in this party
@@ -101,9 +100,6 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
   const [invitationIndex, setInvitationIndex] = useState(1);
 
   const createInvitation = () => {
-    // if (sentry) {
-    //   sentry.captureMessage('Online invitation initiated.');
-    // }
     setInvitations([
       {
         id: Date.now(),
@@ -117,14 +113,6 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
 
   const createOfflineInvitation = (contact: Contact) => {
     setContactsInvitations((old) => [...old, { id: Date.now(), contact }]);
-    // if (sentry) {
-    //   sentry.addBreadcrumb({
-    //     message: `Created offline invitation for contact: '${
-    //       contact.displayName || 'Unknown'
-    //     }', ${contact.publicKey.toHex()}`,
-    //   });
-    //   sentry.captureMessage('Offline invitation initiated.');
-    // }
   };
 
   const handleBotInviteClick = () => {
@@ -280,9 +268,6 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
                     handleCopy={handleCopy}
                     onInvitationDone={handleInvitationDone}
                     onRenew={() => {
-                      // if (sentry) {
-                      //   sentry.captureMessage('Online invitation renewed.');
-                      // }
                       setInvitations((old) => [
                         {
                           id: Date.now(),

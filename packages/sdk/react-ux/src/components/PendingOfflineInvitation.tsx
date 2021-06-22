@@ -15,7 +15,6 @@ function PendingOfflineInvitation({
   invitation: Record<string, any> | undefined;
   handleCopy: (value: string) => void;
 }) {
-  // const sentry = useSentry();
   if (!invitation) {
     return null;
   }
@@ -23,14 +22,6 @@ function PendingOfflineInvitation({
   const [inviteCode] = useOfflineInvitation(party.key.asBuffer(), invitation.contact, {
     onDone: () => null,
     onError: (e) => {
-      // if (sentry) {
-      //   sentry.addBreadcrumb({
-      //     message: `Offline invitation for contact: '${
-      //       invitation.contact.displayName || 'Unknown'
-      //     }', ${invitation.contact.publicKey.toHex()}`,
-      //   });
-      //   sentry.captureMessage('Offline invitation failed.');
-      // }
       throw e;
     },
   });

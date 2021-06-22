@@ -64,7 +64,6 @@ function PendingInvitation({
   onRenew?: () => void;
 }) {
   const classes = useStyles();
-  // const sentry = useSentry();
   const [expired, setExpired] = useState(false);
   const [status, setStatus] = useState(getInvitationStatus(pending));
 
@@ -75,23 +74,13 @@ function PendingInvitation({
 
   const [inviteCode, pin] = useInvitation(party.key, {
     onDone: () => {
-      // if (sentry) {
-      //   sentry.captureMessage('Online invitation succeeded.');
-      // }
       onInvitationDone(pending.id);
     },
     onError: (e: any) => {
-      // if (sentry) {
-      //   sentry.addBreadcrumb({ message: String(e) });
-      //   sentry.captureMessage('Online invitation failed.');
-      // }
       throw e;
     },
     onExpiration: pending.expiration
       ? () => {
-          // if (sentry) {
-          //   sentry.captureMessage('Online invitation expired.');
-          // }
           setExpired(true);
         }
       : undefined,
