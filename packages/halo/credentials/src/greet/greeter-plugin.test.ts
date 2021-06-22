@@ -49,7 +49,8 @@ const createGreeter = async (targetPartyKey: PublicKeyLike) => {
       live: true
     },
     discoveryKey: peerId,
-    userSession: { peerId }
+    userSession: { peerId: keyToString(peerId) },
+    initiator: true
   })
     .setExtension(plugin.createExtension())
     .init();
@@ -80,7 +81,8 @@ const createInvitee = async (rendezvousKey: Buffer, invitationId: Buffer) => {
       live: true
     },
     discoveryKey: rendezvousKey,
-    userSession: { peerId }
+    userSession: { peerId: keyToString(peerId) },
+    initiator: false
   })
     .setExtension(plugin.createExtension())
     .init();

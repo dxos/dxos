@@ -11,7 +11,7 @@ import debug from 'debug';
 import { EventEmitter } from 'events';
 
 import { WithTypeUrl } from '@dxos/codec-protobuf';
-import { keyToString } from '@dxos/crypto';
+import { keyToBuffer, keyToString } from '@dxos/crypto';
 import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/protocol';
 
 import { wrapMessage } from '../party';
@@ -27,7 +27,7 @@ export type GreetingCommandMessageHandler = (message: any, remotePeerId: Buffer,
 
 const getPeerId = (protocol: Protocol) => {
   const { peerId } = protocol.getSession() ?? {};
-  return peerId;
+  return keyToBuffer(peerId);
 };
 
 /**
