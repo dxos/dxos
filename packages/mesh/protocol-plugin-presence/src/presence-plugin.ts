@@ -12,10 +12,10 @@ import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
 import { Broadcast, Middleware } from '@dxos/broadcast';
+import { keyToBuffer } from '@dxos/crypto';
 import { Extension, Protocol } from '@dxos/protocol';
 
 import { schema } from './proto/gen';
-import { keyToBuffer } from '@dxos/crypto';
 
 const log = debug('presence');
 
@@ -341,7 +341,7 @@ export class PresencePlugin extends EventEmitter {
     try {
       const message = {
         peerId: this._peerId,
-        connections: Array.from(this._neighbors.values()).map((peer) => ({peerId: keyToBuffer(peer.getSession())})),
+        connections: Array.from(this._neighbors.values()).map((peer) => ({ peerId: keyToBuffer(peer.getSession()) })),
         metadata: this._metadata && bufferJson.encode(this._metadata)
       };
       await this._broadcast.publish(this._codec.encode(message));
