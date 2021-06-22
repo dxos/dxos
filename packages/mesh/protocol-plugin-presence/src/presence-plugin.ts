@@ -171,7 +171,7 @@ export class PresencePlugin extends EventEmitter {
           const peerId = peer.getSession();
 
           return {
-            id: peerId,
+            id: keyToBuffer(peerId),
             protocol: peer
           };
         });
