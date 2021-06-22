@@ -13,7 +13,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
-import { Protocol } from '@dxos/protocol';
+import { Protocol, ProtocolOptions } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
 import { Keyring } from '../keys';
@@ -66,7 +66,7 @@ class ExpectedKeyAuthenticator extends Authenticator {
  * Basically, we need all of data-client but in one fairly small function.
  * @listens AuthPlugin#authenticated
  */
-const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator, keyring: Keyring) => {
+const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator, keyring: Keyring, protocolOptions?: ProtocolOptions) => {
   const topic = partyKey.toHex();
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
@@ -138,7 +138,8 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const proto = new Protocol({
     streamOptions: { live: true },
     discoveryKey: partyKey.asBuffer(),
-    userSession: { peerId, credentials }
+    userSession: { peerId: keyToString(peerId), credentials },
+    initiator: !!protocolOptions?.initiator
   })
     .setExtension(auth.createExtension())
     .setExtension(repl.createExtension())
@@ -159,10 +160,10 @@ test('Auth Plugin (GOOD)', async () => {
   const partyKey = PublicKey.from(randomBytes(32));
   const node1 = await createProtocol(partyKey,
     new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring);
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: true });
   const node2 = await createProtocol(partyKey,
     new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring);
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: false });
 
   const connection = connect(node1.proto, node2.proto);
   await node1.authPromise;
@@ -176,10 +177,10 @@ test('Auth & Repl (GOOD)', async () => {
   const partyKey = PublicKey.from(randomBytes(32));
   const node2 = await createProtocol(partyKey,
     new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring);
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: true });
   const node1 = await createProtocol(partyKey,
     new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring);
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: false });
 
   const connection = connect(node1.proto, node2.proto);
   await node1.authPromise;

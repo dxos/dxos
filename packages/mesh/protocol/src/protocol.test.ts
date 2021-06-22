@@ -280,7 +280,7 @@ test('protocol init error', async () => {
   let onHandshakeCalled = 0;
   const onHandshake = () => onHandshakeCalled++;
 
-  const protocol = (name: string, error?: any, initiator?: boolean) => new Protocol({ discoveryKey: topic, initiator })
+  const protocol = (name: string, error?: any, initiator?: boolean) => new Protocol({ discoveryKey: topic, initiator: !!initiator })
     .setContext({ name })
     .setHandshakeHandler(async () => {
       onHandshake();

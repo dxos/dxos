@@ -54,7 +54,7 @@ export interface ProtocolOptions {
    */
   codec?: Codec
 
-  initiator?: boolean,
+  initiator: boolean,
   userSession?: Record<string, any>,
 }
 
@@ -100,7 +100,7 @@ export class Protocol {
    */
   private _context: Record<string, any> = {}
 
-  constructor (options: ProtocolOptions = {}) {
+  constructor (options: ProtocolOptions = { initiator: false }) {
     const { discoveryToPublicKey = key => key, streamOptions, initTimeout = 5 * 1000 } = options;
     this._discoveryToPublicKey = discoveryToPublicKey;
     this._streamOptions = streamOptions;

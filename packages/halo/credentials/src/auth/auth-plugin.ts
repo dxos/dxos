@@ -7,7 +7,7 @@ import debug from 'debug';
 import { EventEmitter } from 'events';
 
 import { keyToString } from '@dxos/crypto';
-import { Extension, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
+import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/protocol';
 
 import { codec } from '../proto';
 import { Authenticator } from './authenticator';
@@ -65,13 +65,13 @@ export class AuthPlugin extends EventEmitter {
   // This is done because there is no known way using the current lower layer
   // implementation (Protocol, dependencies) to explicitly send such a response message.
   // TODO(telackey): supply further background/detail and correct anything incorrect above.
-  async _onHandshake (protocol: any /* , context */) { // TODO(burdon): ???
+  async _onHandshake (protocol: Protocol /* , context */) { // TODO(burdon): ???
     assert(protocol);
 
     // Obtain the credentials from the session.
     // At this point credentials is protobuf encoded and base64-encoded
     // Note protocol.session.credentials is our data
-    const { credentials = undefined, peerId: sessionPeerId = undefined } = protocol?.getSession() ?? {}; // TODO: upgrade session object
+    const { credentials, peerId: sessionPeerId } = protocol?.getSession() ?? {};
     if (!credentials) {
       // If we only require auth when certain extensions are active, check if those are present.
       if (this._requiredForExtensions.size) {
