@@ -5,10 +5,9 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 import React from 'react';
 
-import { CssBaseline } from '@material-ui/core';
+import { CssBaseline, ThemeProvider, createMuiTheme } from '@material-ui/core';
 import primary from '@material-ui/core/colors/blue';
 import secondary from '@material-ui/core/colors/blueGrey';
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 
 // https://material-ui.com/customization/theming
 export const defaultThemeProperties = {
@@ -39,19 +38,13 @@ export const defaultThemeProperties = {
   },
 };
 
-export const createTheme = (base: any) => {
-  console.log(defaultsDeep(base, defaultThemeProperties));
-  const a = createMuiTheme(defaultsDeep(base, defaultThemeProperties));
-  console.log({ a });
-  return a;
-};
+export const createTheme = (base: any) => createMuiTheme(defaultsDeep(base, defaultThemeProperties));
 
-// TODO(burdon): Rename ThemeProvider or Remove.
-const Theme = ({ children, base }: { base: any; children: React.ReactNode }) => (
-  <MuiThemeProvider theme={createTheme(base)}>
+const ReactUXTheme = ({ children, base }: { base: any; children: React.ReactNode }) => (
+  <ThemeProvider theme={createTheme(base)}>
     <CssBaseline />
     {children}
-  </MuiThemeProvider>
+  </ThemeProvider>
 );
 
-export default Theme;
+export default ReactUXTheme;

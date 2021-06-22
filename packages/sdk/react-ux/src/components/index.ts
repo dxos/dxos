@@ -11,7 +11,7 @@ import JsonTreeView from './JsonTreeView';
 import Passcode from './Passcode';
 import RedeemDialog from './RedeemDialog';
 import PartySharingDialog from './PartySharingDialog';
-import Theme from './Theme';
+import ReactUXTheme from './Theme';
 export * from './Drawer';
 
 export {
@@ -24,5 +24,5 @@ export {
   ErrorView,
   RedeemDialog,
   PartySharingDialog,
-  Theme
+  ReactUXTheme,
 };
