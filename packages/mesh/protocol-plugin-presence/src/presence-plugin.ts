@@ -341,7 +341,7 @@ export class PresencePlugin extends EventEmitter {
     try {
       const message = {
         peerId: this._peerId,
-        connections: Array.from(this._neighbors.values()).map((peer) => ({ peerId: keyToBuffer(peer.getSession()) })),
+        connections: Array.from(this._neighbors.values()).map((peer) => ({ peerId: keyToBuffer(peer.getSession().peerId) })),
         metadata: this._metadata && bufferJson.encode(this._metadata)
       };
       await this._broadcast.publish(this._codec.encode(message));
