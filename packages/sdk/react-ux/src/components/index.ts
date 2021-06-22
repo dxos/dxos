@@ -8,9 +8,9 @@ import ErrorBoundary from './ErrorBoundary';
 import ErrorView from './ErrorView';
 import FullScreen from './FullScreen';
 import JsonTreeView from './JsonTreeView';
+import PartySharingDialog from './PartySharingDialog';
 import Passcode from './Passcode';
 import RedeemDialog from './RedeemDialog';
-import PartySharingDialog from './PartySharingDialog';
 import ReactUXTheme from './Theme';
 export * from './Drawer';
 
@@ -24,5 +24,5 @@ export {
   ErrorView,
   RedeemDialog,
   PartySharingDialog,
-  ReactUXTheme,
+  ReactUXTheme
 };

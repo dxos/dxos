@@ -23,11 +23,11 @@ import DialogHeading from './DialogHeading';
 
 const useStyles = makeStyles((theme) => ({
   marginTop: {
-    marginTop: theme.spacing(2),
+    marginTop: theme.spacing(2)
   },
   title: {
-    marginLeft: theme.spacing(2),
-  },
+    marginLeft: theme.spacing(2)
+  }
 }));
 
 const RedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => {
@@ -63,7 +63,7 @@ const RedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => {
       handleDone();
     },
     onError: (ex?: string) => handleInvitationError(String(ex)),
-    isOffline,
+    isOffline
   });
 
   const handleEnterInvitationCode = async () => {

@@ -13,29 +13,29 @@ import secondary from '@material-ui/core/colors/blueGrey';
 export const defaultThemeProperties = {
   props: {
     MuiAppBar: {
-      elevation: 0,
+      elevation: 0
     },
 
     MuiButtonBase: {
-      disableRipple: true,
-    },
+      disableRipple: true
+    }
   },
 
   overrides: {
     MuiCssBaseline: {
       '@global': {
         body: {
-          overflow: 'hidden', // Prevent scroll bounce.
-        },
-      },
-    },
+          overflow: 'hidden' // Prevent scroll bounce.
+        }
+      }
+    }
   },
 
   // TODO(burdon): DXOS Palette.
   palette: {
     primary,
-    secondary,
-  },
+    secondary
+  }
 };
 
 export const createTheme = (base: any) => createMuiTheme(defaultsDeep(base, defaultThemeProperties));

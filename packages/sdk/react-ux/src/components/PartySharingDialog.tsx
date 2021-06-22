@@ -39,42 +39,42 @@ import TableCell from './TableCell';
 
 const useStyles = makeStyles((theme) => ({
   title: {
-    marginLeft: theme.spacing(2),
+    marginLeft: theme.spacing(2)
   },
   table: {
     minWidth: 650,
     marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
+    marginBottom: theme.spacing(2)
   },
   tableContainer: {
     maxHeight: 250,
-    paddingRight: 20,
+    paddingRight: 20
   },
   expand: {
     display: 'flex',
-    flex: 1,
+    flex: 1
   },
   label: {
-    fontVariant: 'all-small-caps',
+    fontVariant: 'all-small-caps'
   },
   passcode: {
     marginLeft: theme.spacing(1),
     padding: theme.spacing(1),
-    border: `2px solid ${theme.palette.primary.dark}`,
+    border: `2px solid ${theme.palette.primary.dark}`
   },
   colAvatar: {
-    width: 60,
+    width: 60
   },
   colPasscode: {
-    width: 160,
+    width: 160
   },
   colStatus: {
-    width: 150,
+    width: 150
   },
   colActions: {
     width: 60,
-    textAlign: 'right',
-  },
+    textAlign: 'right'
+  }
 }));
 
 const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: boolean; onClose: () => void }) => {
@@ -104,9 +104,9 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
       {
         id: Date.now(),
         expiration: client.config.invitationExpiration && Date.now() + client.config.invitationExpiration,
-        name: `Invitation ${invitationIndex}`,
+        name: `Invitation ${invitationIndex}`
       },
-      ...invitations,
+      ...invitations
     ]);
     setInvitationIndex((old) => old + 1);
   };
@@ -193,7 +193,7 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
   const handleInvitationDone = (invitationId: string) => {
     setInvitations((old) => [
       ...old.filter((invite) => invite.id !== invitationId),
-      ...old.filter((invite) => invite.id === invitationId).map((invite) => ({ ...invite, done: true })),
+      ...old.filter((invite) => invite.id === invitationId).map((invite) => ({ ...invite, done: true }))
     ]);
   };
 
@@ -273,9 +273,9 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
                           id: Date.now(),
                           expiration:
                             client.config.invitationExpiration && Date.now() + client.config.invitationExpiration,
-                          name: pending.name,
+                          name: pending.name
                         },
-                        ...old.filter((invite) => invite.id !== pending.id),
+                        ...old.filter((invite) => invite.id !== pending.id)
                       ]);
                     }}
                   />

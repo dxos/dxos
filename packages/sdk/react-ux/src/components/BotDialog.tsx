@@ -32,30 +32,30 @@ const BOT_FACTORY_DOMAIN = 'dxos.network';
 const useStyles = makeStyles((theme) => ({
   paper: {
     // TODO(burdon): Standardize.
-    minWidth: 500,
+    minWidth: 500
   },
   formControl: {
     width: '100%',
-    marginBottom: theme.spacing(2),
+    marginBottom: theme.spacing(2)
   },
   advanced: {
     border: 0,
     boxShadow: 'none',
     '&:before': {
-      display: 'none',
-    },
+      display: 'none'
+    }
   },
   advancedHeader: {
-    padding: 0,
+    padding: 0
   },
   advancedBody: {
     display: 'block',
     paddingLeft: 0,
-    paddingRight: 0,
+    paddingRight: 0
   },
   title: {
-    marginLeft: theme.spacing(2),
-  },
+    marginLeft: theme.spacing(2)
+  }
 }));
 
 /**
@@ -67,7 +67,7 @@ const BotDialog = ({
   onSubmit,
   onClose,
   onBotFactorySelect,
-  invitationError,
+  invitationError
 }: {
   open: boolean;
   onSubmit: ({ topic, bot, spec }: { topic?: string; bot: string | undefined; spec?: Record<string, unknown> }) => void;

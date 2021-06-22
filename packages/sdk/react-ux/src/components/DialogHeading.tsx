@@ -10,13 +10,13 @@ import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles((theme) => ({
   title: {
-    marginLeft: theme.spacing(2),
-  },
+    marginLeft: theme.spacing(2)
+  }
 }));
 
 const DialogHeading = ({
   title,
-  icon: Icon,
+  icon: Icon
 }: {
   title: string;
   icon: OverridableComponent<SvgIconTypeMap<unknown, 'svg'>>;

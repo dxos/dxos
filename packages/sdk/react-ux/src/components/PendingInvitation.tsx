@@ -1,18 +1,24 @@
-import React, { useState, useEffect } from 'react';
+//
+// Copyright 2021 DXOS.org
+//
+
 import moment from 'moment';
+import React, { useState, useEffect } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 import { makeStyles, TableRow, IconButton } from '@material-ui/core';
 import Avatar from '@material-ui/core/Avatar';
 import AutorenewIcon from '@material-ui/icons/Autorenew';
+import DeleteIcon from '@material-ui/icons/Clear';
 import FaceIcon from '@material-ui/icons/Face';
 import LinkIcon from '@material-ui/icons/Link';
-import DeleteIcon from '@material-ui/icons/Clear';
 import { useTheme } from '@material-ui/styles';
-import { useInvitation } from '@dxos/react-client';
+
 import { Party } from '@dxos/echo-db';
-import TableCell from './TableCell';
+import { useInvitation } from '@dxos/react-client';
+
 import { getAvatarStyle } from './MemberAvatar';
+import TableCell from './TableCell';
 
 const getInvitationStatus = (invitation: Record<string, any>) => {
   if (invitation.done) {
@@ -26,35 +32,35 @@ const getInvitationStatus = (invitation: Record<string, any>) => {
 
 const useStyles = makeStyles((theme) => ({
   label: {
-    fontVariant: 'all-small-caps',
+    fontVariant: 'all-small-caps'
   },
   passcode: {
     marginLeft: theme.spacing(1),
     padding: theme.spacing(1),
-    border: `2px solid ${theme.palette.primary.dark}`,
+    border: `2px solid ${theme.palette.primary.dark}`
   },
   colAvatar: {
-    width: 60,
+    width: 60
   },
   colPasscode: {
-    width: 160,
+    width: 160
   },
   colStatus: {
-    width: 150,
+    width: 150
   },
   colActions: {
     width: 60,
-    textAlign: 'right',
-  },
+    textAlign: 'right'
+  }
 }));
 
-function PendingInvitation({
+function PendingInvitation ({
   party,
   pending,
   invitationName,
   handleCopy,
   onInvitationDone,
-  onRenew,
+  onRenew
 }: {
   party: Party;
   pending: Record<string, any>;
@@ -81,10 +87,10 @@ function PendingInvitation({
     },
     onExpiration: pending.expiration
       ? () => {
-          setExpired(true);
-        }
+        setExpired(true);
+      }
       : undefined,
-    expiration: pending.expiration,
+    expiration: pending.expiration
   });
 
   return (

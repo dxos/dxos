@@ -25,7 +25,7 @@ const COLORS = [
   cyan[depth],
   teal[depth],
   green[depth],
-  amber[depth],
+  amber[depth]
 ];
 
 const getColor = (publicKey: PublicKeyLike) =>
@@ -37,7 +37,7 @@ export const getAvatarStyle = (theme: Theme, publicKey?: PublicKeyLike): Record<
     backgroundColor: color,
     color: theme.palette.getContrastText(color),
     width: theme.spacing(4) - 2,
-    height: theme.spacing(4) - 2,
+    height: theme.spacing(4) - 2
   };
 };
 

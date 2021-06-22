@@ -1,15 +1,20 @@
+//
+// Copyright 2021 DXOS.org
+//
+
 import React from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 import { IconButton } from '@material-ui/core';
 import LinkIcon from '@material-ui/icons/Link';
+
 import { Party } from '@dxos/echo-db';
 import { useOfflineInvitation } from '@dxos/react-client';
 
-function PendingOfflineInvitation({
+function PendingOfflineInvitation ({
   party,
   invitation,
-  handleCopy,
+  handleCopy
 }: {
   party: Party;
   invitation: Record<string, any> | undefined;
@@ -23,7 +28,7 @@ function PendingOfflineInvitation({
     onDone: () => null,
     onError: (e) => {
       throw e;
-    },
+    }
   });
 
   return (
