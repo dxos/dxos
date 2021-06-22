@@ -24,10 +24,10 @@ type InvitationRedeemerHookProps = {
 };
 
 // Hook to redeem an invitation Code and provide the PIN authentication if needed.
-export function useInvitationRedeemer({
+export function useInvitationRedeemer ({
   onDone = noOp,
   onError = noOp,
-  isOffline = false,
+  isOffline = false
 }: InvitationRedeemerHookProps = {}) {
   const client = useClient();
   const [code, setCode] = useState<string>();
@@ -57,7 +57,7 @@ export function useInvitationRedeemer({
 
   return [
     setCode, // redeemCode
-    resolver ? (pin: string) => secretResolver(Buffer.from(pin)) : () => null, // setPin
+    resolver ? (pin: string) => secretResolver(Buffer.from(pin)) : () => null // setPin
   ];
 }
 
@@ -69,7 +69,7 @@ type InvitationHookProps = {
 };
 
 // Hook to create an Invitation for a given party
-export function useInvitation(
+export function useInvitation (
   partyKey: PublicKeyLike, // the Party to create invite for.
   { onDone = noOp, onError = noOp, onExpiration = noOp, expiration }: InvitationHookProps = {}
 ) {
@@ -92,7 +92,7 @@ export function useInvitation(
           onFinish: ({ expired }) => {
             expired ? onExpiration() : onDone();
           },
-          expiration,
+          expiration
         }
       )
       .then((invitation) => setInvitationCode(encodeInvitation(invitation)))
@@ -108,7 +108,7 @@ type OfflineInvitationHookProps = {
 };
 
 // Hook to create an Offline Invitation for recipient to a given party
-export function useOfflineInvitation(
+export function useOfflineInvitation (
   partyKey: PublicKeyLike, // the Party to create invite for. Required.
   recipient: Contact, // the recipient for the invitation. Required.
   { onDone = noOp, onError = noOp }: OfflineInvitationHookProps = {}
