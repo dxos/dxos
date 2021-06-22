@@ -4,9 +4,9 @@
 
 import { useContext } from 'react';
 
-import { AppKitContext } from './context';
+import { ReactUXContext } from './context';
 
 export const useKeywords = () => {
-  const { keywords = [] } = useContext(AppKitContext);
+  const { keywords = [] } = useContext(ReactUXContext);
   return keywords;
 };
