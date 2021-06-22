@@ -8,6 +8,7 @@ import { Graph } from 'ngraph.graph';
 import path from 'ngraph.path';
 import waitForExpect from 'wait-for-expect';
 
+import { keyToString } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 
@@ -33,7 +34,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     },
     discoveryKey: topic,
     initiator,
-    userSession: peerId
+    userSession: { peerId: keyToString(peerId) }
   })
     .setExtension(presence.createExtension())
     .init()

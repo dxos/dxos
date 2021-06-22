@@ -127,7 +127,7 @@ export class Broadcast<P extends Peer = Peer> {
    * Update internal list of peers.
    */
   updatePeers (peers: P[]) {
-    assert(peers.every(peer => Buffer.isBuffer(peer.id)), 'Peer ID is expected to be a buffer.')
+    assert(peers.every(peer => Buffer.isBuffer(peer.id)), 'Peer ID is expected to be a buffer.');
     this._peers = peers;
   }
 

@@ -163,7 +163,7 @@ export class Messenger extends EventEmitter {
    * @private
    */
   _addPeer (protocol) {
-    const peerId = protocol.getSession();
+    const { peerId } = protocol.getSession();
     if (!peerId) {
       throw new Error('missing peerId');
     }
@@ -185,7 +185,7 @@ export class Messenger extends EventEmitter {
    * @private
    */
   _removePeer (protocol) {
-    const peerId = protocol.getSession();
+    const { peerId } = protocol.getSession();
     if (!peerId) {
       return;
     }

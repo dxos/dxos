@@ -28,7 +28,7 @@ const createNode = async (topic: Buffer) => {
     bot,
     commands,
     replicate (options: any) {
-      return new Protocol({ ...options, discoveryKey: topic, userSession: keyToString(peerId) })
+      return new Protocol({ ...options, discoveryKey: topic, userSession: { peerId: keyToString(peerId) } })
         .setExtensions([bot.createExtension()])
         .init()
         .stream;

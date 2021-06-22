@@ -137,9 +137,9 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
 
   const proto = new Protocol({
     streamOptions: { live: true },
-    discoveryKey: partyKey.asBuffer()
+    discoveryKey: partyKey.asBuffer(),
+    userSession: { peerId, credentials }
   })
-    .setSession({ peerId, credentials })
     .setExtension(auth.createExtension())
     .setExtension(repl.createExtension())
     .init();

@@ -26,10 +26,10 @@ test('protocol sessions', async () => {
     initiator: true,
     streamOptions: {
       onhandshake: async (protocol) => {
-        expect(protocol.getSession()).toEqual('user2');
+        expect(protocol.getSession().peerId).toEqual('user2');
       }
     },
-    userSession: 'user1'
+    userSession: { peerId: 'user1' }
   })
     .init();
 
@@ -38,10 +38,10 @@ test('protocol sessions', async () => {
     initiator: false,
     streamOptions: {
       onhandshake: async (protocol) => {
-        expect(protocol.getSession()).toEqual('user1');
+        expect(protocol.getSession().peerId).toEqual('user1');
       }
     },
-    userSession: 'user2'
+    userSession: { peerId: 'user2' }
   })
     .init();
 
@@ -64,7 +64,7 @@ test('basic without extensions', async () => {
         onInit();
       }
     },
-    userSession: 'user1'
+    userSession: { peerId: 'user1' }
   })
     .init();
 
@@ -76,7 +76,7 @@ test('basic without extensions', async () => {
         onInit();
       }
     },
-    userSession: 'user2'
+    userSession: { peerId: 'user2' }
   })
     .init();
 
@@ -101,7 +101,7 @@ test('basic with a buffer ping-pong extension', async () => {
     streamOptions: {
       onhandshake: async () => {}
     },
-    userSession: 'user1'
+    userSession: { peerId: 'user1' }
   })
     .setExtension(
       new Extension(bufferExtension, { timeout })
@@ -115,7 +115,7 @@ test('basic with a buffer ping-pong extension', async () => {
     streamOptions: {
       onhandshake: async () => {}
     },
-    userSession: 'user2'
+    userSession: { peerId: 'user2' }
   })
     .setExtension(new Extension(bufferExtension, { timeout })
       .setInitHandler(async () => {})
@@ -166,7 +166,7 @@ test('basic ping and oneway', async () => {
   let onInitCalled = 0;
   const onInit = () => onInitCalled++;
 
-  const protocol1 = new Protocol({ discoveryKey: topic, initiator: true, userSession: 'user1' })
+  const protocol1 = new Protocol({ discoveryKey: topic, initiator: true, userSession: { peerId: 'user1' } })
     .setExtension(
       new Extension(bufferExtension, { timeout })
         .setInitHandler(async () => {
@@ -182,7 +182,7 @@ test('basic ping and oneway', async () => {
         log('Error: %o', err);
       });
 
-      const session = protocol.getSession();
+      const { peerId: session } = protocol.getSession() ?? {};
       expect(session).toBe('user2');
 
       {
@@ -218,7 +218,7 @@ test('basic ping and oneway', async () => {
     })
     .init();
 
-  const protocol2 = new Protocol({ discoveryKey: topic, initiator: false, userSession: 'user2' })
+  const protocol2 = new Protocol({ discoveryKey: topic, initiator: false, userSession: { peerId: 'user2' } })
     .setHandshakeHandler(async () => {
       expect(onInitCalled).toBe(2);
     })

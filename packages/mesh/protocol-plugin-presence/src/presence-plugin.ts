@@ -168,7 +168,7 @@ export class PresencePlugin extends EventEmitter {
     const middleware: Middleware<Peer> = {
       lookup: async () => {
         return Array.from(this._neighbors.values()).map((peer) => {
-          const peerId = peer.getSession();
+          const { peerId } = peer.getSession();
 
           return {
             id: keyToBuffer(peerId),
@@ -237,7 +237,7 @@ export class PresencePlugin extends EventEmitter {
 
   private _addPeer (protocol: Protocol) {
     assert(protocol);
-    const peerId = protocol.getSession();
+    const { peerId } = protocol.getSession() ?? {};
 
     if (!peerId) {
       this.emit('error', new Error('peerId not found'));
@@ -260,7 +260,7 @@ export class PresencePlugin extends EventEmitter {
    */
   private async _removePeer (protocol: Protocol) {
     assert(protocol);
-    const peerId = protocol.getSession();
+    const { peerId } = protocol.getSession() ?? {};
     if (!peerId) {
       return;
     }

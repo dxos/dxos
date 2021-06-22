@@ -6,7 +6,6 @@ import assert from 'assert';
 import Signal from 'signal-promise';
 
 import { Trigger } from '@dxos/async';
-import { keyToString } from '@dxos/crypto';
 
 import { ERR_PROTOCOL_INIT_INVALID } from './errors';
 import { Extension } from './extension';
@@ -16,7 +15,7 @@ type Command = 'continue' | 'break' | 'session'
 
 export interface ExtensionInitOptions {
   timeout?: number,
-  userSession?: string,
+  userSession?: Record<string, any>,
 }
 
 export class ExtensionInit extends Extension {
@@ -27,8 +26,8 @@ export class ExtensionInit extends Extension {
   private _remoteInit: boolean | null = null;
   private _remoteSignal: any;
   public data: any;
-  public userSession: string | null = null;
-  public remoteUserSession: string | null = null;
+  public userSession: Record<string, any> | null = null;
+  public remoteUserSession: Record<string, any> | null = null;
 
   private readonly _sessionTrigger = new Trigger();
 
@@ -66,14 +65,16 @@ export class ExtensionInit extends Extension {
     });
   }
 
-  async sendCommand (command: Command, data?: string) {
+  async sendCommand (command: Command, data?: Record<string, any>) {
+    if (data?.peerId) {
+      assert(['undefined', 'string'].includes(typeof data.peerId), 'PeerId must be a string.');
+    }
     return this.send(Buffer.from(JSON.stringify({ command, data })));
   }
 
-  async sendSession (userSession?: string | Buffer) {
+  async sendSession (userSession?: Record<string, any>) {
     // TODO(rzadp): Protobuf.
-    const session = userSession ? (typeof userSession === 'string' ? userSession : keyToString(userSession)) : '';
-    this.sendCommand('session', session);
+    this.sendCommand('session', userSession);
 
     await this._sessionTrigger.wait();
   }

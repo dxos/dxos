@@ -55,7 +55,7 @@ export interface ProtocolOptions {
   codec?: Codec
 
   initiator?: boolean,
-  userSession?: string | Buffer,
+  userSession?: Record<string, any>,
 }
 
 /**
@@ -173,7 +173,7 @@ export class Protocol {
   /**
    * Get remote session data.
    */
-  getSession (): any {
+  getSession (): Record<string, any> | null {
     try {
       return this._extensionInit.remoteUserSession;
     } catch (err) {
@@ -295,7 +295,7 @@ export class Protocol {
     }
   }
 
-  private async _initExtensions (userSession?: string | Buffer) {
+  private async _initExtensions (userSession?: Record<string, any>) {
     try {
       // Exchanging sessions, because other extensions (like Bot Plugin) might depend on the session being already there.
       await this._extensionInit.sendSession(userSession);

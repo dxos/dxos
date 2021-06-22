@@ -48,7 +48,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
         streamOptions: {
           live: true
         },
-        userSession: 'session1'
+        userSession: { peerId: 'session1' }
       })
         .setContext({ name: 'foo' })
         .setExtensions([replicator.createExtension()])

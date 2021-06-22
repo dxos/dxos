@@ -15,7 +15,7 @@ test('Create keypair from seedphrase', async () => {
 
   const recoveredKeyPair = keyPairFromSeedPhrase(seedPhrase);
   expect(recoveredKeyPair).toBeDefined();
-})
+});
 
 test('Create cold identity key and recover', async () => {
   // Generate a seed phrase and validate result.
