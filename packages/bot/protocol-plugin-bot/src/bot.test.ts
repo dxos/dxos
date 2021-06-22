@@ -7,12 +7,12 @@ import generator from 'ngraph.generators';
 import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
+import { keyToString } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 
 import { BotPlugin } from './bot';
 import { createSpawnCommand } from './botkit-messages';
 import { Message } from './proto';
-import { keyToBuffer, keyToString } from '@dxos/crypto';
 
 const random = <T> (arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
