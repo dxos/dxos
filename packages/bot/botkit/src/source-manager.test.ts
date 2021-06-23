@@ -16,7 +16,7 @@ test.skip('Download & install bot', async () => {
     localDev: false,
     services: {
       ipfs: {
-        gateway: 'https://apollo1.kube.moon.dxos.network/dxos/ipfs/gateway/'
+        gateway: 'https://apollo3.kube.moon.dxos.network/dxos/ipfs/gateway/'
       }
     }
   }));
