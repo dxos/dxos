@@ -32,7 +32,7 @@ Next create a List and enter some tasks.
 
 ## Development and debugging
 
-Next install the DXOS Devtools. 
+Next install the DXOS Devtools.
 Download the Chrome extension https://github.com/dxos/devtools/releases (select `dxos-devtools.zip`).
 
 ![Tasks App](images/devtools-download.png)
@@ -44,6 +44,32 @@ To reset the application open the Developer Tools and select the DXOS tab, then 
 Click the Reset Storage button to completely erase the current application's state.
 
 After refreshing the page you should see the Create Profile dialog again.
+
+## Using local signal server
+
+By default, the task-app uses a singal server deployed on a demo kube.
+
+Local signal server can be used for better performance.
+
+1. Run the local signal server
+
+```bash
+npx @dxos/signal
+```
+
+2. Use the signal server with storybooks
+
+First, copy the environment file example:
+
+```bash
+cp .env.example .env
+```
+
+Next, edit the `.env` file, and set `REACT_APP_SWAM_SIGNAL` variable as:
+
+```bash
+REACT_APP_SWAM_SIGNAL="ws://localhost:4000"
+```
 
 ## Deploying the application
 

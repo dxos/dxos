@@ -35,7 +35,7 @@ import { Client } from '@dxos/client';
 
 const client = new Client({
   swarm: {
-    signal: 'wss://apollo1.kube.moon.dxos.network/dxos/signal'
+    signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal'
   }
 });
 ```
@@ -61,7 +61,7 @@ function App() {
       const client = new Client({
         storageType: 'persistent',
         swarm: {
-          signal: 'wss://apollo1.kube.moon.dxos.network/dxos/signal'
+          signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal'
         }
       });
 
