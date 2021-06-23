@@ -20,7 +20,7 @@ import PartyIcon from '@material-ui/icons/Assignment';
 import RedeemIcon from '@material-ui/icons/Redeem';
 import SettingsIcon from '@material-ui/icons/Settings';
 
-// import { RedeemDialog } from '@dxos/react-appkit';
+import { RedeemDialog } from '@dxos/react-ux';
 import { useParties } from '@dxos/react-client';
 
 import { getPartyTitle } from '../utils/hacks.utils';
@@ -97,12 +97,10 @@ const PartyList = ({ selectedPartyKey, onSelectParty }) => {
       )}
 
       {redeemDialog && (
-        <></>
-        // TODO(grazianoramiro): Implement redeem dialog
-        // <RedeemDialog
-        //   onClose={() => setRedeemDialog(false)}
-        //   // TODO(burdon): Get party key from dialog.
-        // />
+        <RedeemDialog
+          onClose={() => setRedeemDialog(false)}
+          // TODO(burdon): Get party key from dialog.
+        />
       )}
 
       <List disablePadding>

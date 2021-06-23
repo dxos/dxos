@@ -2,32 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-// import * as Integrations from '@sentry/integrations';
-// import * as Sentry from '@sentry/react';
 import React from 'react';
 
-import { CssBaseline } from '@material-ui/core';
-import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
-
 import { ClientInitializer } from '@dxos/react-client';
+import { CssBaseline, ThemeProvider, createMuiTheme } from '@material-ui/core';
 
 import config from './config';
 import Root from './components/Root';
+import { ReactUXTheme } from '@dxos/react-ux';
 
-// if (config.sentry) {
-//   Sentry.init({
-//     dsn: config.sentry.dns,
-//     environment: config.sentry.environment || process.env.NODE_ENV,
-//     release: 'tutorials@' + process.env.GIT_COMMIT_HASH,
-//     integrations: [
-//       new Integrations.CaptureConsole({
-//         levels: ['error']
-//       })
-//     ]
-//   });
-// }
-
-const theme = createMuiTheme({
+const baseTheme = createMuiTheme({
   overrides: {
     MuiCssBaseline: {
       '@global': {
@@ -50,10 +34,12 @@ const theme = createMuiTheme({
 function App() {
   return (
     <ClientInitializer config={config}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Root />
-      </ThemeProvider>
+      <ReactUXTheme base={baseTheme}>
+        <ThemeProvider theme={baseTheme}>
+          <CssBaseline />
+          <Root />
+        </ThemeProvider>
+      </ReactUXTheme>
     </ClientInitializer>
   );
 }
