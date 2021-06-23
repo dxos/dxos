@@ -147,7 +147,7 @@ export const testProtocolProvider = (swarmKey: Buffer, nodeId: Buffer, protocolP
     getTopics: () => {
       return [swarmKey];
     },
-    session: { peerId: nodeId },
+    session: { peerId: keyToString(nodeId) },
     plugins: [protocolPlugin],
     initiator: !!opts.initiator
   });
