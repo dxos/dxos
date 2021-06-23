@@ -82,7 +82,7 @@ export class InMemoryTransport implements Transport {
       await this._remoteConnection._protocol.close();
 
       const stream = this._protocol.stream;
-      stream.unpipe(this._remoteConnection._protocol.stream).unpipe(stream);
+      stream.unpipe?.(this._remoteConnection._protocol.stream)?.unpipe?.(stream); // TODO(rzadp): Find a way of unpiping this?
 
       this._remoteConnection.closed.emit();
 

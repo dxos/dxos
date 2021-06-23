@@ -45,8 +45,8 @@ describe('Presence', () => {
   test('sees connected peers', async () => {
     const topic = PublicKey.random();
 
-    const peer1 = createPeer(topic, {initiator: true});
-    const peer2 = createPeer(topic, {initiator: false});
+    const peer1 = createPeer(topic, { initiator: true });
+    const peer2 = createPeer(topic, { initiator: false });
 
     await waitForExpect(() => {
       expect(peer1.presence.peers.map(x => x.toString('hex')).sort())
@@ -60,8 +60,8 @@ describe('Presence', () => {
   test('removes disconnected peers', async () => {
     const topic = PublicKey.random();
 
-    const peer1 = createPeer(topic, {initiator: true});
-    const peer2 = createPeer(topic, {initiator: false});
+    const peer1 = createPeer(topic, { initiator: true });
+    const peer2 = createPeer(topic, { initiator: false });
 
     await waitForExpect(() => {
       expect(peer1.presence.peers.map(x => x.toString('hex')).sort())

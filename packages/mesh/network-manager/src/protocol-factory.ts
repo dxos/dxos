@@ -6,7 +6,8 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { discoveryKey, keyToString } from '@dxos/crypto';
-import { Extension, Protocol } from '@dxos/protocol';
+import { Protocol } from '@dxos/protocol';
+
 import { ProtocolProvider } from './network-manager';
 
 const log = debug('dxos:network-manager:protocol-factory');
@@ -39,7 +40,7 @@ export const protocolFactory = ({ session = {}, plugins = [], getTopics, initiat
         if (publicKey) {
           protocol.setContext({ topic: keyToString(publicKey) });
         }
-        assert(publicKey, 'PublicKey not found in discovery.')
+        assert(publicKey, 'PublicKey not found in discovery.');
         return publicKey;
       },
       initiator,

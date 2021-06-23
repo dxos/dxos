@@ -103,7 +103,7 @@ export class WebrtcTransport implements Transport {
     await this._protocol.close();
 
     const stream = this._protocol.stream as NodeJS.ReadWriteStream;
-    stream.unpipe(this._peer).unpipe(stream);
+    stream.unpipe?.(this._peer)?.unpipe?.(stream); // TODO(rzadp): Find a way of unpiping this?
   }
 }
 
