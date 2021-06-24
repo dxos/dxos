@@ -47,11 +47,13 @@ After refreshing the page you should see the Create Profile dialog again.
 
 ## Using local signal server
 
-By default, the task-app uses a singal server deployed on a demo kube.
+By default, the task-app uses a signal server deployed on a demo kube.
 
 Local signal server can be used for better performance.
 
 1. Run the local signal server
+
+TODO: The following should be `@dxos/signal-server`, not `@dxos/signal`.
 
 ```bash
 npx @dxos/signal
