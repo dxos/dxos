@@ -119,6 +119,8 @@ export class PartyProtocol {
         live: true
       },
 
+      discoveryKey: channel,
+
       discoveryToPublicKey: (dk: any) => {
         if (!discoveryKey(this._partyKey.asBuffer()).equals(dk)) {
           return undefined;
@@ -131,18 +133,19 @@ export class PartyProtocol {
         // TODO(burdon): Inconsistent use of toHex and asBuffer.
         //   Need to progressively clean-up all uses of Keys via Typescript.
         return this._partyKey.asBuffer();
+      },
+
+      userSession: {
+        // TODO(burdon): See deprecated `protocolFactory` in HALO.
+        peerId: keyToString(this._identity.deviceKey.publicKey.asBuffer()),
+        // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
+        credentials: this._credentials.get().toString('base64')
       }
     });
 
     protocol
-      .setSession({
-        // TODO(burdon): See deprecated `protocolFactory` in HALO.
-        peerId: this._identity.deviceKey.publicKey.asBuffer(),
-        // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
-        credentials: this._credentials.get().toString('base64')
-      })
       .setExtensions(plugins.map(plugin => plugin.createExtension()))
-      .init(channel);
+      .init();
 
     return protocol;
   }

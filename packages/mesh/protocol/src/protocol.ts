@@ -39,7 +39,7 @@ export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtor
 }
 
 export interface ProtocolOptions {
-  discoveryToPublicKey?: (discoveryKey: Buffer) => Buffer
+  discoveryToPublicKey?: (discoveryKey: Buffer) => (Buffer | undefined)
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-stream--protocoloptions
    */
@@ -69,7 +69,7 @@ export class Protocol {
   readonly extensionsHandshake = new Event()
   readonly handshake = new Event<this>()
 
-  private _discoveryToPublicKey: (discoveryKey: Buffer) => Buffer;
+  private _discoveryToPublicKey: ProtocolOptions['discoveryToPublicKey'];
   private _streamOptions: ProtocolStreamCtorOpts | undefined;
   private _initTimeout: number;
   private _extensionInit: ExtensionInit;
@@ -344,7 +344,7 @@ export class Protocol {
 
     const openChannel = (discoveryKey: Buffer) => {
       try {
-        initialKey = this._discoveryToPublicKey(discoveryKey);
+        initialKey = this._discoveryToPublicKey?.(discoveryKey);
         if (!initialKey) {
           throw new ERR_PROTOCOL_CONNECTION_INVALID('key not found');
         }
