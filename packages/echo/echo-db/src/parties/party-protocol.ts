@@ -140,7 +140,9 @@ export class PartyProtocol {
         peerId: keyToString(this._identity.deviceKey.publicKey.asBuffer()),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
         credentials: this._credentials.get().toString('base64')
-      }
+      },
+
+      initiator: true // TODO(rzadp): When is it initiator, when is it not?
     });
 
     protocol
