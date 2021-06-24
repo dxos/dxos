@@ -36,15 +36,15 @@ export interface ExtensionOptions {
   [key: string]: any;
 }
 
-export type InitHandler = (protocol: Protocol) => Promise<void>;
+export type InitHandler = (protocol: Protocol) => Promise<void> | void;
 
-export type HandshakeHandler = (protocol: Protocol) => Promise<void>;
+export type HandshakeHandler = (protocol: Protocol) => Promise<void> | void;
 
-export type CloseHandler = (protocol: Protocol) => Promise<void>
+export type CloseHandler = (protocol: Protocol) => Promise<void> | void;
 
-export type MessageHandler = (protocol: Protocol, message: any) => Promise<any>
+export type MessageHandler = (protocol: Protocol, message: any) => Promise<any> | void;
 
-export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<void>
+export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<void> | void;
 
 /**
  * Reliable message passing via using Dat protocol extensions.

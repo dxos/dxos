@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Event } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
 import { Protocol } from '@dxos/protocol';
@@ -88,7 +88,7 @@ export class Connection {
       remoteId: this.remoteId,
       sessionId: this.sessionId,
       initiator: this.initiator,
-      protocol: this._protocol,
+      stream: this._protocol.stream,
       sendSignal: this._sendSignal
     });
 
@@ -98,8 +98,8 @@ export class Connection {
     });
 
     this._transport.closed.once(() => {
-      this._state = ConnectionState.CLOSED;
-      this.stateChanged.emit(this._state);
+      this._transport = undefined;
+      this.close().catch(err => this.errors.raise(err));
     });
 
     this._transport.errors.pipeTo(this.errors);
@@ -133,10 +133,16 @@ export class Connection {
     this._transport.signal(msg);
   }
 
+  @synchronized
   async close () {
+    if (this._state === ConnectionState.CLOSED) {
+      return;
+    }
     // TODO(marik-d): CLOSING state.
 
     log(`Closing ${this.ownId}`);
+
+    await this._protocol.close();
 
     await this._transport?.close();
 

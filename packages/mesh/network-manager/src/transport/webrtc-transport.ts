@@ -10,7 +10,6 @@ import wrtc from 'wrtc';
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
-import { Protocol } from '@dxos/protocol';
 
 import { SignalApi } from '../signal';
 import { Transport, TransportFactory } from './transport';
@@ -18,7 +17,7 @@ import { Transport, TransportFactory } from './transport';
 const log = debug('dxos:network-manager:swarm:transport:webrtc');
 
 /**
- * Wrapper around simple-peer. Tracks peer state.
+ * Implements Transport for WebRTC. Uses simple-peer under the hood.
  */
 export class WebrtcTransport implements Transport {
   private _peer: SimplePeer;
@@ -31,7 +30,7 @@ export class WebrtcTransport implements Transport {
 
   constructor (
     private readonly _initiator: boolean,
-    private readonly _protocol: Protocol,
+    private readonly _stream: NodeJS.ReadWriteStream,
     private readonly _ownId: PublicKey,
     private readonly _remoteId: PublicKey,
     private readonly _sessionId: PublicKey,
@@ -63,12 +62,14 @@ export class WebrtcTransport implements Transport {
     this._peer.on('connect', () => {
       log(`Connection established ${this._ownId} -> ${this._remoteId}`);
 
-      const stream = this._protocol.stream as NodeJS.ReadWriteStream;
-      stream.pipe(this._peer!).pipe(stream);
+      this._stream.pipe(this._peer!).pipe(this._stream);
 
       this.connected.emit();
     });
-    this._peer.on('error', err => this.errors.raise(err));
+    this._peer.on('error', err => {
+      this.errors.raise(err);
+      this.close();
+    });
     this._peer.on('close', () => {
       log(`Connection closed ${this._ownId} -> ${this._remoteId}`);
       this._closeStream();
@@ -94,23 +95,20 @@ export class WebrtcTransport implements Transport {
   }
 
   async close () {
-    await this._closeStream();
+    this._closeStream();
     this._peer!.destroy();
     log('Closed.');
   }
 
   private async _closeStream () {
-    await this._protocol.close();
-
-    const stream = this._protocol.stream as NodeJS.ReadWriteStream;
-    stream.unpipe?.(this._peer)?.unpipe?.(stream); // TODO(rzadp): Find a way of unpiping this?
+    this._stream.unpipe?.(this._peer)?.unpipe?.(this._stream); // TODO(rzadp): Find a way of unpiping this?
   }
 }
 
 export function createWebRtcTransportFactory (webrtcConfig?: any): TransportFactory {
   return opts => new WebrtcTransport(
     opts.initiator,
-    opts.protocol,
+    opts.stream,
     opts.ownId,
     opts.remoteId,
     opts.sessionId,

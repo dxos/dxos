@@ -132,7 +132,7 @@ describe('Remote network manager', () => {
   }).timeout(10_000);
 
   it.skip('two peers with different signal & turn servers', async () => {
-    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signal: ['wss://apollo1.kube.moon.dxos.network/dxos/signal'], ice: [{ urls: 'turn:apollo1.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }], initiator: true });
+    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signal: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'], ice: [{ urls: 'turn:apollo3.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }], initiator: true });
     await sleep(3000);
     const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, signal: ['wss://apollo2.kube.moon.dxos.network/dxos/signal'], ice: [{ urls: 'turn:apollo2.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }], initiator: false });
 
@@ -245,7 +245,7 @@ describe('In-memory network manager', () => {
           plugin.send(remoteId.asBuffer(), 'ping');
         });
 
-        plugin.on('receive', (protocol, data) => {
+        plugin.on('receive', (protocol: Protocol, data: any) => {
           const { peerId } = protocol.getSession() ?? {};
           const remoteId = PublicKey.from(peerId);
 
