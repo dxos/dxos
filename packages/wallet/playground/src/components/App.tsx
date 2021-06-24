@@ -33,7 +33,7 @@ const App = () => {
 
   return (
     <div style={{ minWidth: 400 }}>
-      <p>Hello, {profile.username ?? profile.publicKey.toHex()}</p>
+      <p>Hello, {profile.username ?? profile.publicKey}</p>
     </div>
   );
 };
