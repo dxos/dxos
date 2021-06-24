@@ -84,7 +84,7 @@ export class PartyInvitationManager {
     }
 
     const { id } = invitationMessage.signed.payload;
-    assert(Buffer.isBuffer(id));
+    assert(Buffer.isBuffer(id), 'id is not a buffer in the invitation.');
 
     const issuerKey = PublicKey.from(invitationMessage.signed.payload.issuerKey);
 

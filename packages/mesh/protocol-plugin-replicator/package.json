@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-replicator",
-  "version": "2.10.9",
+  "version": "2.10.10",
   "description": "Protocol plugin replicator.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
@@ -24,17 +24,19 @@
     "test": "toolchain test"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protocol": "workspace:*",
     "buffer-json-encoding": "^1.0.2",
-    "debug": "^4.1.1",
-    "@dxos/async": "workspace:*"
+    "debug": "^4.1.1"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
+    "@types/debug": "^4.1.1",
+    "@types/jest": "^26.0.7",
     "coveralls": "^3.0.7",
     "cpy-cli": "^2.0.0",
     "del-cli": "^3.0.0",
@@ -42,9 +44,7 @@
     "jest": "^26.6.3",
     "pify": "~5.0.0",
     "random-access-memory": "~3.1.2",
-    "wait-for-expect": "^3.0.2",
-    "@types/debug": "^4.1.1",
-    "@types/jest": "^26.0.7"
+    "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "restricted"

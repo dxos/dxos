@@ -237,6 +237,7 @@ export class Client {
    * Create a new party.
    * @return {Promise<Party>} The new Party.
    */
+  @synchronized
   async createParty () {
     return this._echo.createParty();
   }
@@ -249,6 +250,7 @@ export class Client {
    * - This won't work when identities are required, e.g. in chess.
    * This solution is appropriate only for short term, expected to work only in Teamwork
    */
+  @synchronized
   async createPartyFromSnapshot (snapshot: DatabaseSnapshot) {
     const party = await this._echo.createParty();
     const items = snapshot.items ?? [];

@@ -54,7 +54,7 @@ test('basic', async () => {
       .setMessageHandler(async (protocol, message) => {
         const { data } = message;
 
-        switch (data.toString()) {
+        switch (Buffer.from(data).toString()) {
           // Async response.
           case 'ping': {
             return Buffer.from('pong');
@@ -79,8 +79,8 @@ test('basic', async () => {
       }))
     .init(topic);
 
-  protocol1.on('error', (err: any) => console.log('protocol1', err));
-  protocol2.on('error', (err: any) => console.log('protocol2', err));
+  protocol1.error.on(err => console.log('protocol1', err));
+  protocol2.error.on(err => console.log('protocol2', err));
 
   protocol1.setHandshakeHandler(async (protocol) => {
     expect(onInit).toHaveBeenCalledTimes(2);

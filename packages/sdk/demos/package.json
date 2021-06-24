@@ -1,6 +1,6 @@
 {
   "name": "@dxos/demos",
-  "version": "2.10.1-beta",
+  "version": "2.10.10",
   "private": true,
   "description": "ECHO database demo app.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
@@ -59,6 +59,7 @@
     "@dxos/util": "workspace:*",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
+    "@material-ui/styles": "^4.11.4",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/lodash": "^4.14.159",
@@ -70,13 +71,13 @@
     "immutability-helper": "^3.0.2",
     "level-js": "^5.0.2",
     "lodash.merge": "^4.6.2",
+    "mobile-detect": "~1.4.5",
+    "playwright": "^1.7.0",
     "random-access-memory": "~3.1.2",
     "react-resize-aware": "^3.0.0",
     "source-map-support": "^0.5.12",
     "stream-buffers": "^3.0.2",
-    "mobile-detect": "~1.4.5",
-    "@material-ui/styles": "^4.11.4",
-    "playwright": "^1.7.0"
+    "@dxos/protocol": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
@@ -88,6 +89,7 @@
     "@storybook/react": "^6.2.9",
     "@types/faker": "~5.5.1",
     "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.9",
     "@types/react": "^16.14.0",
     "babel-loader": "8.1.0",
     "babel-plugin-add-module-exports": "^1.0.4",
@@ -106,7 +108,9 @@
     "ts-loader": "~8.1.0",
     "typescript": "^4.2.4",
     "webpack": "4.44.2",
-    "@types/node": "^14.0.9"
+    "pump": "^3.0.0",
+    "@types/pump": "^1.1.0",
+    "@dxos/async": "workspace:*"
   },
   "publishConfig": {
     "access": "restricted"

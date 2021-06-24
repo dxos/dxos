@@ -7,7 +7,7 @@ import debug from 'debug';
 import eos from 'end-of-stream';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 
-import { WithTypeUrl } from '@dxos/codec-protobuf';
+import { patchBufferCodec, WithTypeUrl } from '@dxos/codec-protobuf';
 
 import {
   ERR_PROTOCOL_STREAM_CLOSED,
@@ -19,7 +19,6 @@ import {
   ERR_EXTENSION_RESPONSE_TIMEOUT
 } from './errors';
 import { schema } from './proto/gen';
-import * as proto from './proto/gen/dxos/protocol';
 import { Protocol } from './protocol';
 import { keyToHuman } from './utils';
 
@@ -36,15 +35,15 @@ export interface ExtensionOptions {
   [key: string]: any;
 }
 
-export type InitHandler = (protocol: Protocol) => Promise<void>;
+export type InitHandler = (protocol: Protocol) => Promise<void> | void;
 
-export type HandshakeHandler = (protocol: Protocol) => Promise<void>;
+export type HandshakeHandler = (protocol: Protocol) => Promise<void> | void;
 
-export type CloseHandler = (protocol: Protocol) => Promise<void>
+export type CloseHandler = (protocol: Protocol) => Promise<void> | void;
 
-export type MessageHandler = (protocol: Protocol, message: any) => Promise<any>
+export type MessageHandler = (protocol: Protocol, message: any) => Promise<any> | void;
 
-export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<void>
+export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<void> | void;
 
 /**
  * Reliable message passing via using Dat protocol extensions.
@@ -105,8 +104,8 @@ export class Extension extends Nanomessage {
       this.codec.addJson(userSchema);
     }
 
-    this.codec.encode.bind(this.codec);
-    this.codec.decode.bind(this.codec);
+    this.codec = patchBufferCodec(this.codec);
+
     this.on('error', (err: any) => log(err));
   }
 
@@ -241,18 +240,20 @@ export class Extension extends Nanomessage {
    * @param {Boolean} options.oneway
    * @returns {Promise<Object>} Response from peer.
    */
-  async send (message: Buffer | Record<string, any>, options: { oneway?: boolean } = {}) {
+  async send (message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
     }
 
+    const builtMessage = this._buildMessage(message);
+
     if (options.oneway) {
-      return super.send(this._buildMessage(message));
+      return super.send(builtMessage);
     }
 
     try {
-      const response = await this.request(this._buildMessage(message));
+      const response = await this.request(builtMessage);
 
       if (response && response.code && response.message) {
         throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, response.code, response.message);
@@ -260,6 +261,7 @@ export class Extension extends Nanomessage {
 
       return { response };
     } catch (err) {
+      console.error(err);
       if (ERR_EXTENSION_RESPONSE_FAILED.equals(err)) {
         throw err;
       }
@@ -310,15 +312,21 @@ export class Extension extends Nanomessage {
     });
   }
 
-  private _send (chunk: Buffer) {
+  /**
+   * @overrides _send in Nanomessage
+   */
+  private _send (chunk: Uint8Array) {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       return;
     }
-    this._protocol.feed.extension(this._name, chunk);
+    this._protocol.feed.extension(this._name, Buffer.from(chunk));
   }
 
-  async _onMessage (msg: any) {
+  /**
+   * @override _onMessage from Nanomessagerpc
+   */
+  private async _onMessage (msg: any) {
     try {
       await this.open();
       if (this._messageHandler) {
@@ -327,6 +335,7 @@ export class Extension extends Nanomessage {
         return this._buildMessage(result);
       }
     } catch (err) {
+      console.error(err);
       this.emit('error', err);
       const responseError = new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
       return {
@@ -337,16 +346,20 @@ export class Extension extends Nanomessage {
     }
   }
 
-  private _buildMessage (message: Buffer | Record<string, any>): WithTypeUrl<proto.Buffer> {
-    if (!Buffer.isBuffer(message) && typeof message === 'object' && message.__type_url) {
-      return message as any;
-    }
+  /**
+   * Wrap a message in a `dxos.protocol.Buffer` if required to be sent over the wire.
+   */
+  private _buildMessage (message: Buffer | Uint8Array | WithTypeUrl<object>): WithTypeUrl<any> {
+    if (typeof message === 'string') { // Backwards compatibility.
+      return this._buildMessage(Buffer.from(message));
+    } else if (Buffer.isBuffer(message) || message instanceof Uint8Array) {
+      return { __type_url: 'dxos.protocol.Buffer', data: message };
+    } else if (message == null) { // Apparently this is a use-case.
+      return { __type_url: 'dxos.protocol.Buffer', data: message };
+    } else {
+      assert(message.__type_url, 'Message does not have a type URL.');
 
-    if (typeof message === 'string') {
-      message = Buffer.from(message);
+      return message;
     }
-
-    assert(message == null || Buffer.isBuffer(message));
-    return { __type_url: 'dxos.protocol.Buffer', data: message };
   }
 }

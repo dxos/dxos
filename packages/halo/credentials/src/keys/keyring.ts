@@ -657,7 +657,7 @@ export class Keyring {
    */
   @meter
   rawSign (data: Buffer, keyRecord: KeyRecord) {
-    assert(Buffer.isBuffer(data));
+    assert(Buffer.isBuffer(data), 'Data to sign is not a buffer.');
     assert(keyRecord);
     assertValidPublicKey(keyRecord.publicKey);
     assertNoSecrets(keyRecord);

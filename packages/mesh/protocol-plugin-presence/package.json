@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-presence",
-  "version": "2.10.9",
+  "version": "2.10.10",
   "description": "Protocol plugin presence.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-presence#readme",
   "bugs": {
@@ -27,20 +27,20 @@
     "@dxos/broadcast": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protocol": "workspace:*",
+    "@types/debug": "^4.1.1",
+    "@types/node": "^14.0.9",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.1.1",
     "ngraph.graph": "^19.0.1",
     "p-limit": "^3.1.0",
-    "queue-microtask": "^1.1.2",
-    "@types/node": "^14.0.9",
-    "@types/debug": "^4.1.1"
+    "queue-microtask": "^1.1.2"
   },
   "devDependencies": {
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
-    "wait-for-expect": "^3.0.2",
-    "@types/jest": "^26.0.7"
+    "@types/jest": "^26.0.7",
+    "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "restricted"

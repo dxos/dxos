@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gravity-core",
-  "version": "2.10.2",
+  "version": "2.10.10",
   "private": true,
   "description": "Gravity testing framework",
   "keywords": [],
@@ -11,7 +11,7 @@
     "build": "toolchain build",
     "build:test": "toolchain build:test --globalTeardown='./src/testing/teardown.ts' --globalSetup='./src/testing/setup.ts'",
     "lint": "toolchain lint",
-    "test": "toolchain test --globalTeardown='./src/testing/teardown.ts' --globalSetup='./src/testing/setup.ts'"
+    "test": "toolchain test --globalTeardown='./src/testing/teardown.ts' --globalSetup='./src/testing/setup.ts' --runInBand"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

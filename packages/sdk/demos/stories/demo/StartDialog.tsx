@@ -33,6 +33,7 @@ const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
       <DialogTitle>Demo</DialogTitle>
       <DialogContent>
         <TextField
+          id="start-dialog-invitation-input"
           fullWidth
           value={invitationCode}
           onChange={event => setInvitationCode(event.target.value)}
@@ -45,7 +46,7 @@ const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
           {inProgress && <LinearProgress />}
         </div>
 
-        {error && <Typography>{String(error)}</Typography>}
+        {error && <Typography>{String(error.stack)}</Typography>}
       </DialogContent>
       <DialogActions>
         <Button
@@ -57,6 +58,7 @@ const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
             try {
               await onJoin(invitationCode);
             } catch (error) {
+              console.error(error);
               setError(error);
             } finally {
               setInProgress(false);
