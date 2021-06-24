@@ -95,7 +95,7 @@ export class GreetingInitiator {
 
     await this._networkManager.joinProtocolSwarm({
       topic: PublicKey.from(swarmKey),
-      protocol: greetingProtocolProvider(swarmKey, localPeerId, [this._greeterPlugin]),
+      protocol: greetingProtocolProvider(swarmKey, localPeerId, [this._greeterPlugin], { initiator: true }),
       peerId: PublicKey.from(localPeerId),
       topology: new FullyConnectedTopology(),
       label: 'Greeting initiator'

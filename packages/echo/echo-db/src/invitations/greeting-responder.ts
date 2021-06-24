@@ -149,7 +149,7 @@ export class GreetingResponder {
     // (For reasons why see detailed comment on greetClient).
     await this._networkManager.joinProtocolSwarm({
       topic: PublicKey.from(this._swarmKey),
-      protocol: greetingProtocolProvider(this._swarmKey, this._swarmKey, [this._greeterPlugin]),
+      protocol: greetingProtocolProvider(this._swarmKey, this._swarmKey, [this._greeterPlugin], { initiator: false }),
       peerId: PublicKey.from(this._swarmKey),
       topology: new FullyConnectedTopology(),
       label: 'Greeting responder'
