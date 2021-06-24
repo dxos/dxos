@@ -27,7 +27,8 @@
     "@dxos/broadcast": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protocol": "workspace:*",
-    "debug": "^4.1.1"
+    "debug": "^4.1.1",
+    "@dxos/crypto": "workspace:*"
   },
   "devDependencies": {
     "@dxos/protocol-network-generator": "workspace:*",
