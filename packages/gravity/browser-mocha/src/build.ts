@@ -1,10 +1,15 @@
-import { build } from 'esbuild';
-import { join, resolve } from 'path';
-import { promises as fs } from 'fs';
-import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
-import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin } from '@dxos/esbuild-plugins'
+//
+// Copyright 2021 DXOS.org
+//
 
-export async function buildTests(files: string[], outDir: string) {
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
+import { build } from 'esbuild';
+import { promises as fs } from 'fs';
+import { join, resolve } from 'path';
+
+import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin } from '@dxos/esbuild-plugins';
+
+export async function buildTests (files: string[], outDir: string) {
   const mainFile = join(outDir, 'main.js');
   const mainContents = `
     import { mocha } from 'mocha';
@@ -16,9 +21,9 @@ export async function buildTests(files: string[], outDir: string) {
     ${files.map(file => `require("${resolve(file)}");`).join('\n')}
     
     mocha.run(window.testsDone);
-  `
+  `;
 
-  await fs.writeFile(mainFile, mainContents)
+  await fs.writeFile(mainFile, mainContents);
 
   await build({
     entryPoints: [mainFile],
@@ -31,7 +36,7 @@ export async function buildTests(files: string[], outDir: string) {
       NodeModulesPolyfillPlugin(),
       NodeGlobalsPolyfillPlugin(),
       FixMemdownPlugin(),
-      FixGracefulFsPlugin(),
-    ],
-  })
+      FixGracefulFsPlugin()
+    ]
+  });
 }
