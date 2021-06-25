@@ -41,7 +41,8 @@
     "earljs": "~0.1.10",
     "@esbuild-plugins/node-modules-polyfill": "~0.1.1",
     "@dxos/esbuild-plugins": "workspace:*",
-    "expect": "~27.0.2"
+    "expect": "~27.0.2",
+    "@dxos/async": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

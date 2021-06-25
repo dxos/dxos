@@ -9,6 +9,7 @@ import assert from 'assert';
 import { promises as fs } from 'fs';
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
 import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin } from '@dxos/esbuild-plugins'
+import { Lock, sleep, trigger } from '@dxos/async';
 
 export enum Browser {
   CHROMIUM = 'chromium',
@@ -27,7 +28,8 @@ export interface RunOptions {
 export async function run(options: RunOptions) {
   const packageDir = dirname(await pkgUp({ cwd: __dirname }) as string)
   assert(packageDir)
-  const tempDir = join(__dirname, '../../out'); // `/tmp/browser-mocha-${randomBytes(32).toString('hex')}`
+  const tempDir = 'dist/browser-tests'
+  await fs.mkdir(tempDir)
 
   const files = await resolveFiles(options.files);
 
@@ -41,13 +43,12 @@ export async function run(options: RunOptions) {
 
     ${files.map(file => `require("${resolve(file)}");`).join('\n')}
     
-    mocha.run();
+    mocha.run(window.testsDone);
   `
-
 
   await fs.writeFile(mainFile, mainContents)
 
-  const res = await build({
+  await build({
     entryPoints: [mainFile],
     write: true,
     bundle: true,
@@ -70,13 +71,23 @@ export async function run(options: RunOptions) {
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  // TODO(marik-d): Ensure log ordering.
+  const lock = new Lock()
+
   page.on('console', async msg => {
-    const args = await Promise.all(msg.args().map(x => x.jsonValue()))
-    console.log(...args)
+    await lock.executeSynchronized(async () => {
+      const args = await Promise.all(msg.args().map(x => x.jsonValue()))
+      console.log(...args)
+    })
   })
 
   await page.goto(`file://${join(packageDir, './src/index.html')}`)
+
+  await page.exposeFunction('testsDone', async (exitCode: number) => {
+    await lock.executeSynchronized(async () => {
+      console.log({ exitCode })
+      process.exit(exitCode)
+    })
+  })
 
   await page.addScriptTag({
     path: join(tempDir, 'bundle.js'),
