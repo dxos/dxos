@@ -699,6 +699,10 @@
       "packageName": "@dxos/browser-mocha",
       "projectFolder": "packages/gravity/browser-mocha"
     },
+    {
+      "packageName": "@dxos/browser-tests",
+      "projectFolder": "packages/gravity/browser-tests"
+    },
 
     //
     // wallet

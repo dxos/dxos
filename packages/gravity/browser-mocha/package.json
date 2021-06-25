@@ -16,11 +16,14 @@
     "dist",
     "src"
   ],
+  "bin": {
+    "browser-mocha": "./main.js"
+  },
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build && ./main.js 'test/*.test.ts'",
+    "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "./main.js 'test/*.test.ts'"
+    "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",

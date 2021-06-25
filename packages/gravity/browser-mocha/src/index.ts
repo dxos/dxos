@@ -25,6 +25,7 @@ export async function run(options: RunOptions) {
 
   const tempDir = 'dist/browser-tests'
   try {
+    await fs.mkdir('dist')
     await fs.mkdir(tempDir)
   } catch{}
 
