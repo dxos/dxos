@@ -17,7 +17,7 @@ import {
   createGreetingClaimMessage,
   SignedMessage
 } from '@dxos/credentials';
-import { keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
+import { keyToBuffer, keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
@@ -101,7 +101,7 @@ export class HaloRecoveryInitiator {
 
     // Send to the first peer (any peer will do).
     const peer = this._greeterPlugin.peers[0];
-    const { peerId: responderPeerId } = peer.getSession();
+    const responderPeerId = keyToBuffer(peer.getSession().peerId);
 
     // Synthesize an "invitationID" which is the signature of both peerIds signed by our Identity key.
     const signature = this._identity.keyring.rawSign(
