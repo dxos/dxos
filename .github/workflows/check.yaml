@@ -40,7 +40,11 @@ jobs:
             libgdk-pixbuf2.0-0\
             libxcb-shm0\
             libpangoft2-1.0-0\
-            libxt6
+            libxt6\
+            libdrm2\
+            libnspr4\
+            libgbm1\
+            libasound2
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
