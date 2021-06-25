@@ -183,8 +183,6 @@ describe('ECHO', () => {
     const party1 = await echo1.createParty();
     await inviteTestPeer(party1, echo2);
 
-    await sleep(1000); // TODO(marik-d): Figure out why this is needed.
-
     await echo1.close();
     await echo2.close();
 

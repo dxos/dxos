@@ -184,7 +184,7 @@ class ReplicatorProtocolPluginFactory {
         replicate: async (remoteFeeds: any, info: any) => {
           // We can ignore remoteFeeds entirely, since the set of feeds we want to replicate is dictated by the Party.
           // TODO(telackey): why are we opening feeds? Necessary or belt/braces thinking, or because open party does it?
-          log(`Replicating: peerId=${info.session.peerId.toString('hex')}; feeds=${this._activeFeeds.get().map(key => key.toHex())}`);
+          log(`Replicating: peerId=${info.session.peerId}; feeds=${this._activeFeeds.get().map(key => key.toHex())}`);
           return Promise.all(this._activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
         }
       })
