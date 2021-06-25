@@ -25,25 +25,25 @@ function createPair () {
   const sessionId = PublicKey.random();
 
   const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
-  const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1, { initiator: true });
+  const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
   const connection1 = new InMemoryTransport(
     peer1Id,
     peer2Id,
     sessionId,
     topic,
-    protocolProvider1({ channel: discoveryKey(topic) }).stream
+    protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream
   );
   afterTest(() => connection1.close());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
   const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
-  const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2, { initiator: false });
+  const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
   const connection2 = new InMemoryTransport(
     peer2Id,
     peer1Id,
     sessionId,
     topic,
-    protocolProvider2({ channel: discoveryKey(topic) }).stream
+    protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream
   );
   afterTest(() => connection2.close());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());

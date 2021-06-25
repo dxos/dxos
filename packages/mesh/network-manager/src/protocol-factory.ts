@@ -15,7 +15,6 @@ const log = debug('dxos:network-manager:protocol-factory');
 interface ProtocolFactoryOptions {
   plugins: any[],
   getTopics: () => Buffer[],
-  initiator: boolean,
   session: Record<string, any>
 }
 
@@ -29,10 +28,10 @@ interface ProtocolFactoryOptions {
  * @deprecated
  */
 // TODO(dboreham): Deprecate, replace with protocol provider factory functions.
-export const protocolFactory = ({ session = {}, plugins = [], getTopics, initiator }: ProtocolFactoryOptions): ProtocolProvider => {
+export const protocolFactory = ({ session = {}, plugins = [], getTopics }: ProtocolFactoryOptions): ProtocolProvider => {
   assert(getTopics);
   // eslint-disable-next-line no-unused-vars
-  return ({ channel }: {channel: Buffer}) => {
+  return ({ channel, initiator }) => {
     const protocol = new Protocol({
       streamOptions: { live: true },
       discoveryToPublicKey: (dk) => {
@@ -60,13 +59,12 @@ export const protocolFactory = ({ session = {}, plugins = [], getTopics, initiat
 /**
  * Creates a ProtocolProvider for simple transport connections with only one protocol plugin.
  */
-export const transportProtocolProvider = (rendezvousKey: Buffer, peerId: Buffer, protocolPlugin: any, opts?: {initiator: boolean}): ProtocolProvider => {
+export const transportProtocolProvider = (rendezvousKey: Buffer, peerId: Buffer, protocolPlugin: any): ProtocolProvider => {
   return protocolFactory({
     getTopics: () => {
       return [rendezvousKey];
     },
     session: { peerId },
-    plugins: [protocolPlugin],
-    initiator: !!opts?.initiator
+    plugins: [protocolPlugin]
   });
 };

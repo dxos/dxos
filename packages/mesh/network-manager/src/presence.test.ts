@@ -14,7 +14,7 @@ import { NetworkManager } from './network-manager';
 import { protocolFactory } from './protocol-factory';
 import { FullyConnectedTopology } from './topology';
 
-const createPeer = (topic: PublicKey, opts: {initiator: boolean}) => {
+const createPeer = (topic: PublicKey) => {
   const peerId = PublicKey.random();
 
   const networkManager = new NetworkManager();
@@ -27,8 +27,7 @@ const createPeer = (topic: PublicKey, opts: {initiator: boolean}) => {
       return [topic.asBuffer()];
     },
     session: { peerId: keyToString(peerId.asBuffer()) },
-    plugins: [presencePlugin],
-    initiator: opts.initiator
+    plugins: [presencePlugin]
   });
 
   networkManager.joinProtocolSwarm({
@@ -45,8 +44,8 @@ describe('Presence', () => {
   test('sees connected peers', async () => {
     const topic = PublicKey.random();
 
-    const peer1 = createPeer(topic, { initiator: true });
-    const peer2 = createPeer(topic, { initiator: false });
+    const peer1 = createPeer(topic);
+    const peer2 = createPeer(topic);
 
     await waitForExpect(() => {
       expect(peer1.presence.peers.map(x => x.toString('hex')).sort())
@@ -60,8 +59,8 @@ describe('Presence', () => {
   test('removes disconnected peers', async () => {
     const topic = PublicKey.random();
 
-    const peer1 = createPeer(topic, { initiator: true });
-    const peer2 = createPeer(topic, { initiator: false });
+    const peer1 = createPeer(topic);
+    const peer2 = createPeer(topic);
 
     await waitForExpect(() => {
       expect(peer1.presence.peers.map(x => x.toString('hex')).sort())

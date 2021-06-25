@@ -77,7 +77,7 @@ export class HaloRecoveryInitiator {
     await this._networkManager.joinProtocolSwarm({
       topic: PublicKey.from(swarmKey),
       peerId: PublicKey.from(this._peerId),
-      protocol: greetingProtocolProvider(swarmKey, this._peerId, [this._greeterPlugin], { initiator: true }),
+      protocol: greetingProtocolProvider(swarmKey, this._peerId, [this._greeterPlugin]),
       topology: new FullyConnectedTopology(),
       label: 'HALO recovery initiator'
     });
