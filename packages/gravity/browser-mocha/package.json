@@ -18,9 +18,9 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "build:test": "toolchain build && ./main.js 'test/*.test.ts'",
     "lint": "toolchain lint",
-    "test": "toolchain test"
+    "test": "./main.js 'test/*.test.ts'"
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",
