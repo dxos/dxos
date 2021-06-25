@@ -64,7 +64,7 @@ export const transportProtocolProvider = (rendezvousKey: Buffer, peerId: Buffer,
     getTopics: () => {
       return [rendezvousKey];
     },
-    session: { peerId },
+    session: { peerId: keyToString(peerId) },
     plugins: [protocolPlugin]
   });
 };
