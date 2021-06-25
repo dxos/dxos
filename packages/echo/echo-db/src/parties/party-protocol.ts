@@ -86,7 +86,7 @@ export class PartyProtocol {
 
     log('Starting...', this._partyKey.toHex());
     return this._networkManager.joinProtocolSwarm({
-      protocol: ({ channel }: any) => this._createProtocol(channel),
+      protocol: ({ channel, initiator }) => this._createProtocol(channel, { initiator }),
       peerId: this._peerId,
       topic: this._partyKey,
       presence: this._presence,
@@ -105,7 +105,7 @@ export class PartyProtocol {
     await this._networkManager.leaveProtocolSwarm(this._partyKey);
   }
 
-  private _createProtocol (channel: any) {
+  private _createProtocol (channel: any, opts: {initiator: boolean}) {
     assert(this._identity.deviceKey);
 
     const plugins = [
@@ -142,7 +142,7 @@ export class PartyProtocol {
         credentials: this._credentials.get().toString('base64')
       },
 
-      initiator: true // TODO(rzadp): When is it initiator, when is it not?
+      initiator: opts.initiator
     });
 
     protocol
