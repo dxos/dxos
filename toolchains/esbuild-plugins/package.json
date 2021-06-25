@@ -4,6 +4,7 @@
   "private": true,
   "main": "./index.js",
   "scripts": {
-    "build": ""
+    "build": "",
+    "build:test": ""
   }
 }

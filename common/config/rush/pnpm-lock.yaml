@@ -743,28 +743,23 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
-      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-polyfill-node-globals
+      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@esbuild-plugins/node-modules-polyfill': 0.1.1_esbuild@0.11.23
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/lodash': 4.14.169
-      '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       '@types/stream-buffers': 3.0.3
       '@types/through2': 2.0.36
-      earljs: 0.1.10
       esbuild: 0.11.23
-      expect: 27.0.2
       glob: 7.1.7
       lodash.merge: 4.6.2
-      mocha: 8.4.0
       pkg-up: 3.1.0
       playwright: 1.11.0
       yargs: 16.2.0
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/glob': 7.1.3
-      '@types/jest': 26.0.23
       '@types/yargs': 16.0.1
       stream-buffers: 3.0.2
     specifiers:
@@ -776,19 +771,14 @@ importers:
       '@types/debug': ^4.1.1
       '@types/end-of-stream': ^1.4.0
       '@types/glob': ~7.1.3
-      '@types/jest': ^26.0.7
       '@types/lodash': ^4.14.159
-      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/stream-buffers': ^3.0.2
       '@types/through2': ^2.0.36
       '@types/yargs': ~16.0.1
-      earljs: ~0.1.10
       esbuild: ^0.11.23
-      expect: ~27.0.2
       glob: ~7.1.6
       lodash.merge: ^4.6.2
-      mocha: ~8.4.0
       pkg-up: ^3.1.0
       playwright: ^1.7.0
       stream-buffers: ^3.0.2
@@ -1847,7 +1837,7 @@ importers:
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
-      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-polyfill-node-globals
+      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@esbuild-plugins/node-modules-polyfill': 0.1.1_esbuild@0.11.23
       '@types/node': 14.14.45
@@ -1884,7 +1874,7 @@ importers:
       rmdir: ~1.2.0
       typescript: ^4.2.4
       webextension-polyfill-ts: ~0.25.0
-  ../../toolchains/esbuild-polyfill-node-globals:
+  ../../toolchains/esbuild-plugins:
     specifiers: {}
   ../../toolchains/node-library:
     dependencies:
@@ -4939,6 +4929,7 @@ packages:
       '@types/node': 14.14.45
       '@types/yargs': 16.0.1
       chalk: 4.1.1
+    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -7321,6 +7312,7 @@ packages:
     resolution:
       integrity: sha512-wuzZksN4w4kyfoOv/dlpov4NOunwutLA/q7uc00xU02ZyUY+aoM5PWIXEKBMnm0NHd4a+N71BMjq+x7+2Af1fg==
   /@types/mocha/8.2.2:
+    dev: true
     resolution:
       integrity: sha512-Lwh0lzzqT5Pqh6z61P3c3P5nm6fzQK/MMHl9UKeneAeInVflBSz1O2EkX6gM6xfJd7FBXBY5purtLx7fUiZ7Hw==
   /@types/node-fetch/2.5.10:
@@ -8296,6 +8288,7 @@ packages:
     resolution:
       integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==
   /ansi-styles/5.2.0:
+    dev: true
     engines:
       node: '>=10'
     resolution:
@@ -11909,6 +11902,7 @@ packages:
     resolution:
       integrity: sha512-Mv/TDa3nZ9sbc5soK+OoA74BsS3mL37yixCvUAQkiuA4Wz6YtwP/K47n2rv2ovzHZvoiQeA5FTQOschKkEwB0Q==
   /diff-sequences/27.0.1:
+    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -12186,6 +12180,7 @@ packages:
       lodash: 4.17.21
       pretty-format: 26.6.2
       ts-essentials: 6.0.7
+    dev: true
     resolution:
       integrity: sha512-3/tIKsL5ryPWgjHFue99ljXeHCMVEvJZTkhnmaMM4kRb8F94dxxatZgXRrwmf5ohQruJU330JvYVYwnw96bzrw==
   /ecc-jsbn/0.1.2:
@@ -13088,6 +13083,7 @@ packages:
       jest-matcher-utils: 27.0.2
       jest-message-util: 27.0.2
       jest-regex-util: 27.0.1
+    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -16034,6 +16030,7 @@ packages:
       diff-sequences: 27.0.1
       jest-get-type: 27.0.1
       pretty-format: 27.0.2
+    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -16091,6 +16088,7 @@ packages:
     resolution:
       integrity: sha512-TpfaviN1R2pQWkIihlfEanwOXK0zcxrKEE4MlU6Tn7keoXdN6/3gK/xl0yEh8DOunn5pOVGKf8hB4R9gVh04ig==
   /jest-get-type/27.0.1:
+    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -16190,6 +16188,7 @@ packages:
       jest-diff: 27.0.2
       jest-get-type: 27.0.1
       pretty-format: 27.0.2
+    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -16220,6 +16219,7 @@ packages:
       pretty-format: 27.0.2
       slash: 3.0.0
       stack-utils: 2.0.3
+    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -16263,6 +16263,7 @@ packages:
     resolution:
       integrity: sha512-Gv3ZIs/nA48/Zvjrl34bf+oD76JHiGDUxNOVgUjh3j890sblXryjY4rss71fPtD/njchl6PSE2hIhvyWa1eT0A==
   /jest-regex-util/27.0.1:
+    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -20236,6 +20237,7 @@ packages:
       ansi-regex: 5.0.0
       ansi-styles: 5.2.0
       react-is: 17.0.2
+    dev: true
     engines:
       node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0
     resolution:
@@ -23526,6 +23528,7 @@ packages:
     resolution:
       integrity: sha512-3IVX4nI6B5cc31/GFFE+i8ey/N2eA0CZDbo6n0yrz0zDX8ZJ8djmU1p+XRz7G3is0F3bB3pu2pAroFdAWQKU3w==
   /ts-essentials/6.0.7:
+    dev: true
     resolution:
       integrity: sha512-2E4HIIj4tQJlIHuATRHayv0EfMGK3ris/GRk1E3CFnsZzeNV+hUmelbaTZHLtXaZppM5oLhHRtO04gINC4Jusw==
   /ts-invariant/0.4.4:

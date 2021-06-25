@@ -448,7 +448,7 @@
     },
     {
       "packageName": "@dxos/esbuild-plugins",
-      "projectFolder": "toolchains/esbuild-polyfill-node-globals"
+      "projectFolder": "toolchains/esbuild-plugins"
     },
 
     //
