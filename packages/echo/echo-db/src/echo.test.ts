@@ -412,7 +412,6 @@ describe('ECHO', () => {
     }
   }).timeout(20_000);
 
-  // TODO(marik-d): Move to ECHO tests.
   test('Join new device to HALO by recovering from identity seed phrase', async () => {
     const a = new ECHO();
     await a.open();
