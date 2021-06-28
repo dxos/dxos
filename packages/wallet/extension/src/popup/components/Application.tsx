@@ -6,12 +6,12 @@ import React, { useState, useEffect } from 'react';
 
 import { JsonTreeView } from '@dxos/react-ux';
 
-import { useExtensionToBackground } from '../hooks';
+import { useExtensionBackgroundService } from '../hooks';
 
 const Application = () => {
   const [profile, setProfile] = useState<any | undefined>(undefined);
   const [parties] = useState<any[] | undefined>(undefined);
-  const backgroundService = useExtensionToBackground();
+  const backgroundService = useExtensionBackgroundService();
 
   useEffect(() => {
     if (backgroundService === undefined) {
@@ -22,15 +22,6 @@ const Application = () => {
       const response = await backgroundService.rpc.GetProfile({});
       setProfile(response);
     });
-
-    // const partiesListener = (message: Uint8Array) => {
-    //   const parties = schema.getCodecForType('dxos.wallet.extension.GetPartiesResponse').decode(message);
-    //   setParties(parties.partyKeys);
-    // };
-
-    // const responseStream = rpcClient.callAndSubscribe('GetParties', getPartiesRequest);
-    // responseStream.message.on(partiesListener);
-    // return () => responseStream.message.off(partiesListener);
   }, [backgroundService]);
 
   if (!backgroundService) {

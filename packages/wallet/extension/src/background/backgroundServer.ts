@@ -6,7 +6,7 @@ import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/wallet-core';
 
 export class BackgroundServer {
-  constructor (private client: Client, private port: RpcPort) {}
+  constructor (private readonly _client: Client, private readonly _port: RpcPort) {}
 
   public async run () {
     const service = schema.getService('dxos.wallet.extension.BackgroundService');
@@ -14,28 +14,28 @@ export class BackgroundServer {
       service,
       handlers: {
         GetProfile: async () => {
-          const profile = this.client.getProfile();
+          const profile = this._client.getProfile();
           return {
             publicKey: profile?.publicKey.toHex(),
             username: profile?.username
           };
         },
         CreateParty: async () => {
-          const newParty = await this.client.echo.createParty();
+          const newParty = await this._client.echo.createParty();
           return {
             partyKey: newParty.key.toHex()
           };
         },
         SignMessage: async request => {
-          const profile = this.client.getProfile();
+          const profile = this._client.getProfile();
           return {
             publicKey: profile?.publicKey.toHex(),
             username: profile?.username,
-            signedMessage: this.client.echo.keyring.sign(request.message, this.client.echo.keyring.keys).signed.payload
+            signedMessage: this._client.echo.keyring.sign(request.message, this._client.echo.keyring.keys).signed.payload
           };
         }
       },
-      port: this.port
+      port: this._port
     });
 
     await server.open();
