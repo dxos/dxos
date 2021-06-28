@@ -291,9 +291,6 @@ export class Extension extends Nanomessage {
     }
 
     assert(this._protocol);
-    eos(this._protocol.stream as any, () => {
-      this.close();
-    });
 
     await super._open();
   }
