@@ -152,7 +152,6 @@ export class Orchestrator {
         ...process.env,
         NODE_OPTIONS: '',
         ...mapConfigToEnv(this._config),
-        DEBUG: `bot-factory,bot-factory:*,dxos:botkit*,dxos:testing*,${process.env.DEBUG}`,
         DX_BOT_RESET: 'true',
         DX_BOT_TOPIC: topic,
         DX_BOT_SECRET_KEY: keyToString(secretKey),
