@@ -126,17 +126,15 @@ yargs(process.argv.slice(2))
     'build:test',
     'build, lint, and test the package',
     yargs => yargs
-      .strict()
-      .option('globalSetup', { type: 'string', description: 'globalSetup for test' })
-      .option('globalTeardown', { type: 'string', description: 'globalTeardown for test' }),
-    (args) => {
+      .strict(),
+    () => {
       const before = Date.now();
       execBuild();
 
       console.log(chalk.bold`\neslint`);
       execLint();
 
-      execTest(['globalSetup', 'globalTeardown'].filter(arg => !!args[arg]).map(arg => `--${arg}=${args[arg]}`));
+      execTest();
 
       console.log(chalk`\n{green.bold CHECK COMPLETE} in {bold ${Date.now() - before}} ms`);
     }

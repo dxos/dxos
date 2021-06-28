@@ -2,12 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import { it as test } from 'mocha';
+
 import { MessengerModel } from '@dxos/messenger-model';
 
-import { Agent, BROWSER_ENV, /* NODE_ENV, */ Orchestrator } from '../src';
-import { APPEND_COMMAND, GET_ALL_COMMAND } from '../src/agents/test-agent';
-
-jest.setTimeout(100_000);
+import { Agent, BROWSER_ENV, /* NODE_ENV, */ Orchestrator } from '..';
+import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents/test-agent';
+import { AGENT_PATH } from './agent';
+import '../testing/setup';
 
 test.skip('multiple agents', async () => {
   const numAgents = 5;
@@ -21,7 +23,7 @@ test.skip('multiple agents', async () => {
 
   const agents: Agent[] = [];
   for (let i = 0; i < numAgents; i++) {
-    agents.push(await orchestrator.startAgent({ botPath: './src/test-agent.js', env: BROWSER_ENV }));
+    agents.push(await orchestrator.startAgent({ botPath: AGENT_PATH, env: BROWSER_ENV }));
   }
 
   await Promise.all(agents.map(async agent => {
