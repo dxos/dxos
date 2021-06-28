@@ -1,0 +1,53 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": [
+      "DOM"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../../echo/feed-store"
+    },
+    {
+      "path": "../../echo/model-factory"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../mesh/protocol"
+    },
+    {
+      "path": "../../mesh/protocol-plugin-replicator"
+    },
+    {
+      "path": "../../common/util"
+    }
+  ]
+}
