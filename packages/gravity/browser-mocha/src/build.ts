@@ -31,6 +31,7 @@ export async function buildTests (files: string[], outDir: string) {
     bundle: true,
     platform: 'browser',
     format: 'iife',
+    sourcemap: 'inline',
     outfile: join(outDir, 'bundle.js'),
     plugins: [
       NodeModulesPolyfillPlugin(),

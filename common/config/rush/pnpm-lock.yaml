@@ -784,6 +784,10 @@ importers:
       stream-buffers: ^3.0.2
       yargs: ~16.2.0
   ../../packages/gravity/browser-tests:
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/crypto': link:../../common/crypto
+      source-map-support: 0.5.19
     devDependencies:
       '@dxos/browser-mocha': link:../browser-mocha
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
@@ -792,10 +796,13 @@ importers:
       mocha: 8.4.0
     specifiers:
       '@dxos/browser-mocha': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/mocha': ~8.2.2
       expect: ~27.0.2
       mocha: ~8.4.0
+      source-map-support: ^0.5.12
   ../../packages/gravity/gravity-core:
     dependencies:
       '@dxos/async': link:../../common/async
