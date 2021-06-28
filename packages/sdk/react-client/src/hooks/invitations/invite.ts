@@ -29,7 +29,7 @@ type InvitationRedeemerHookProps = {
 export const useInvitationRedeemer = ({
   onDone = noOp,
   onError = noOp,
-  isOffline = false,
+  isOffline = false
 }: InvitationRedeemerHookProps = {}) => {
   const client = useClient();
   const [code, setCode] = useState<string>();
