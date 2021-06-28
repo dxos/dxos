@@ -55,8 +55,6 @@ export class AuthPlugin extends EventEmitter {
   /**
    * Handler to be called when the 'handshake' event is emitted.
    * If the session can not be authenticated, a ERR_EXTENSION_RESPONSE_FAILED will be thrown.
-   * @param protocol
-   * @private
    * @fires AuthPlugin#authenticated
    */
   // TODO(dboreham): Improve Protocol to avoid this:
@@ -65,7 +63,7 @@ export class AuthPlugin extends EventEmitter {
   // This is done because there is no known way using the current lower layer
   // implementation (Protocol, dependencies) to explicitly send such a response message.
   // TODO(telackey): supply further background/detail and correct anything incorrect above.
-  async _onHandshake (protocol: Protocol /* , context */) { // TODO(burdon): ???
+  private async _onHandshake (protocol: Protocol /* , context */) { // TODO(burdon): ???
     assert(protocol);
 
     // Obtain the credentials from the session.
