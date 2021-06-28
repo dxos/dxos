@@ -1,6 +1,7 @@
 //
 // Copyright 2021 DXOS.org
 //
+
 import { Client } from '@dxos/client';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/wallet-core';
