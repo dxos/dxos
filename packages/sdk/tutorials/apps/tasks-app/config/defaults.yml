@@ -1,0 +1,4 @@
+app:
+  title: "Tasks App"
+storage:
+  persistent: true

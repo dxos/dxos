@@ -1,0 +1,4 @@
+DX_SIGNAL_ENDPOINT:
+  path: swarm.signal
+DX_STORAGE_PERSISTENT:
+  path: storage.persistent

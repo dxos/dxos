@@ -1,9 +1,15 @@
 const webpack = require('webpack');
+const path = require('path');
+const { ConfigPlugin } = require('@dxos/config/ConfigPlugin');
 
 module.exports = {
   webpack: {
     plugins: {
       add: [
+        new ConfigPlugin({
+          path: path.resolve(__dirname, 'config'),
+          dynamic: process.env.CONFIG_DYNAMIC
+        }),
         /**
          * The package sodium-javascript, used on our packages, has a critical dependency issue.
          * This issue is throwing a warning on the build output, and causing the CI to fail.

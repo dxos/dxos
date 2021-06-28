@@ -1,0 +1,2 @@
+swarm:
+  signal: "ws://localhost:5000"
