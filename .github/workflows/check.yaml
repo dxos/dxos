@@ -44,7 +44,23 @@ jobs:
             libdrm2\
             libnspr4\
             libgbm1\
-            libasound2
+            libgtk2.0-0\
+            libgtk-3-0\
+            libnotify-dev\
+            libgconf-2-4\
+            libnss3\
+            libxss1\
+            libasound2\
+            libxtst6\
+            xauth\
+            xvfb\
+            libgbm-dev\
+            google-chrome-stable\
+            fonts-ipafont-gothic\
+            fonts-wqy-zenhei\
+            fonts-thai-tlwg\
+            fonts-kacst\
+            fonts-freefont-ttf
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
