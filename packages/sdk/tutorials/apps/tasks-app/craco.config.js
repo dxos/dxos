@@ -1,8 +1,14 @@
 const webpack = require('webpack');
 const path = require('path');
 const { ConfigPlugin } = require('@dxos/config/ConfigPlugin');
+const BabelRcPlugin = require('@jackwilsdon/craco-use-babelrc');
 
 module.exports = {
+  plugins: [
+    {
+      plugin: BabelRcPlugin
+    }
+  ],
   webpack: {
     plugins: {
       add: [
