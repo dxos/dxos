@@ -6,7 +6,6 @@ import assert from 'assert';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 
-import { keyToString } from '@dxos/crypto';
 import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/protocol';
 
 import { codec } from '../proto';

@@ -4,7 +4,6 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import eos from 'end-of-stream';
 import { ProtocolExtension } from 'hypercore-protocol';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 

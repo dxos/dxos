@@ -7,7 +7,7 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch, sleep, waitForCondition } from '@dxos/async';
+import { latch, waitForCondition } from '@dxos/async';
 import { generateSeedPhrase, keyPairFromSeedPhrase, testSecretProvider, testSecretValidator } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
