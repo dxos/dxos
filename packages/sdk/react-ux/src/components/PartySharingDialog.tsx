@@ -21,14 +21,12 @@ import {
   Toolbar,
   Typography
 } from '@material-ui/core';
-
 import {
   Add as InviteIcon,
   Clear as DeleteIcon,
   FileCopy as FileCopyIcon,
-  People as PeopleIcon,
-} from '@material-ui/icons'
-
+  People as PeopleIcon
+} from '@material-ui/icons';
 import { Alert } from '@material-ui/lab';
 
 import { BotFactoryClient } from '@dxos/botkit-client';
