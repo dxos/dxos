@@ -16,9 +16,11 @@ import {
   TextField
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import AddIcon from '@material-ui/icons/Add';
-import DeleteIcon from '@material-ui/icons/Delete';
-import ShareIcon from '@material-ui/icons/Share';
+import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Share as ShareIcon
+} from '@material-ui/icons';
 
 import { ObjectModel } from '@dxos/object-model';
 import { PartySharingDialog } from '@dxos/react-ux';
