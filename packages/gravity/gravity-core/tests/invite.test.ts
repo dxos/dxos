@@ -11,7 +11,7 @@ import { APPEND_COMMAND, GET_ALL_COMMAND } from '../src/agents/test-agent';
 
 jest.setTimeout(100_000);
 
-test('invite two agents to a party', async () => {
+test.skip('invite two agents to a party', async () => {
   const orchestrator = await Orchestrator.create({ local: true });
 
   orchestrator.client.registerModel(MessengerModel);
