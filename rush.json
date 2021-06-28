@@ -702,12 +702,12 @@
       "shouldPublish": false,
       "versionPolicyName": "lockStepPolicy"
     },
-    {
-      "packageName": "@dxos/wallet-playground",
-      "projectFolder": "packages/wallet/playground",
-      "shouldPublish": false,
-      "versionPolicyName": "lockStepPolicy"
-    },
+    // {
+    //   "packageName": "@dxos/wallet-playground",
+    //   "projectFolder": "packages/wallet/playground",
+    //   "shouldPublish": false,
+    //   "versionPolicyName": "lockStepPolicy"
+    // },
     {
       "packageName": "@dxos/wallet-core",
       "projectFolder": "packages/wallet/core",

@@ -8,7 +8,7 @@ import { Client, ClientConfig } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
 import { wrapPort } from '../popup/utils/wrapPort';
-import { BackgroundServer } from './backgroundServer';
+import { BackgroundServer } from './background-server';
 
 const config: ClientConfig = {
   storage: {
