@@ -3,3 +3,4 @@
 //
 
 export * from './useRpcClient';
+export * from './useBackgoundService';

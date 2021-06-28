@@ -308,12 +308,14 @@ importers:
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/mocha': 8.2.2
+      '@types/node': 14.14.45
       earljs: 0.1.10
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
       earljs: ~0.1.10
   ../../packages/common/testutils:
     dependencies:
@@ -1784,7 +1786,9 @@ importers:
   ../../packages/wallet/core:
     dependencies:
       '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/rpc': link:../../common/rpc
       protobufjs: 6.11.2
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
@@ -1794,10 +1798,11 @@ importers:
       '@types/react': 16.14.6
       '@types/react-dom': 17.0.5
       typescript: 4.2.4
-      webextension-polyfill-ts: 0.25.0
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/node': ^14.0.9
       '@types/react': ^16.14.0
@@ -1806,7 +1811,6 @@ importers:
       react: ^16.14.0
       react-dom: ^16.14.0
       typescript: ^4.2.4
-      webextension-polyfill-ts: ~0.25.0
   ../../packages/wallet/extension:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -1815,6 +1819,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ux': link:../../sdk/react-ux
+      '@dxos/rpc': link:../../common/rpc
       '@dxos/wallet-core': link:../core
       '@hot-loader/react-dom': 16.13.0_react@16.14.0
       protobufjs: 6.11.2
@@ -1840,6 +1845,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ux': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/wallet-core': workspace:*
       '@esbuild-plugins/node-modules-polyfill': ~0.1.1

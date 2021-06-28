@@ -20,7 +20,8 @@
     "@dxos/react-ux": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "protobufjs": "^6.9.0",
-    "@dxos/async": "workspace:*"
+    "@dxos/async": "workspace:*",
+    "@dxos/rpc": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

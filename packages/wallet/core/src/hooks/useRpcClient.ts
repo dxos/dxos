@@ -3,25 +3,33 @@
 //
 
 import { useEffect, useState } from 'react';
-import { browser } from 'webextension-polyfill-ts';
 
-import { RpcClient, wrapPort } from '../services';
+import { ServiceDescriptor } from '@dxos/codec-protobuf';
+import { RpcPort, ProtoRpcClient, createRpcClient } from '@dxos/rpc';
 
-export const useRpcClient = () => {
-  const [client, setClient] = useState<RpcClient | undefined>(undefined);
+interface UseRpcClientProps<S> {
+  port: RpcPort,
+  service: ServiceDescriptor<S>
+}
+
+export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) => {
+  const [rpcClient, setRpcClient] = useState<ProtoRpcClient<S> | undefined>(undefined);
 
   useEffect(() => {
-    const connectedPort = browser.runtime.connect();
+    const client = createRpcClient(service, {
+      port: port
+    });
 
-    const client = new RpcClient(wrapPort(connectedPort));
+    setImmediate(async () => {
+      await client.open();
+      setRpcClient(client);
+    });
 
-    setClient(client);
-
+    // TODO: Make sure close is not called before open is finished (maybe put @synchronized in RPC client?).
     return () => {
       client.close();
-      connectedPort.disconnect();
     };
   }, []);
 
-  return client;
+  return rpcClient;
 };
