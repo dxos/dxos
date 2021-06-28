@@ -10,7 +10,7 @@ service BackgroundService {
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
 
   rpc CreateParty(CreatePartyRequest) returns (CreatePartyResponse);
-  rpc GetParties(GetPartiesRequest) returns (stream GetPartiesResponse);
+  // rpc GetParties(GetPartiesRequest) returns (stream GetPartiesResponse);
 
   // Used by the key hole application to prove identity and allow/disallow access.
   rpc SignMessage(SignMessageRequest) returns (SignMessageResponse);
