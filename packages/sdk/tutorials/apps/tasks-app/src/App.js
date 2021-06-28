@@ -34,7 +34,7 @@ const baseTheme = createMuiTheme({
 const App = () => {
   return (
     <ClientInitializer config={initConfig}>
-      <ReactUXTheme base={baseTheme}>ƒ
+      <ReactUXTheme base={baseTheme}>
         <ThemeProvider theme={baseTheme}>
           <CssBaseline />
           <Root />
