@@ -21,7 +21,7 @@ const publicDir = join(__dirname, '../public')
     await build({
       entryPoints: [
         join(srcDir, 'background/background.ts'),
-        join(srcDir, 'popup/main.tsx'),
+        join(srcDir, 'popup/main.tsx')
       ],
       outdir: distDir,
       write: true,

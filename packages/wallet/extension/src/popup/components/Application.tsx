@@ -6,40 +6,25 @@ import React, { useState, useEffect } from 'react';
 
 import { JsonTreeView } from '@dxos/react-ux';
 
-import { schema } from '../../proto/gen';
-import { useRpcClient } from '../hooks';
-
-const getProfileRequest = schema.getCodecForType('dxos.wallet.extension.GetProfileRequest').encode({});
-const getPartiesRequest = schema.getCodecForType('dxos.wallet.extension.GetPartiesRequest').encode({});
-const createPartyRequest = schema.getCodecForType('dxos.wallet.extension.CreatePartyRequest').encode({});
+import { useExtensionBackgroundService } from '../hooks';
 
 const Application = () => {
   const [profile, setProfile] = useState<any | undefined>(undefined);
-  const [parties, setParties] = useState<any[] | undefined>(undefined);
-  const rpcClient = useRpcClient();
+  const [parties] = useState<any[] | undefined>(undefined);
+  const backgroundService = useExtensionBackgroundService();
 
   useEffect(() => {
-    if (rpcClient === undefined) {
+    if (backgroundService === undefined) {
       return;
     }
 
     setImmediate(async () => {
-      const response = await rpcClient.call('GetProfile', getProfileRequest);
-      const profile = schema.getCodecForType('dxos.wallet.extension.GetProfileResponse').decode(response);
-      setProfile(profile);
+      const response = await backgroundService.rpc.GetProfile({});
+      setProfile(response);
     });
+  }, [backgroundService]);
 
-    const partiesListener = (message: Uint8Array) => {
-      const parties = schema.getCodecForType('dxos.wallet.extension.GetPartiesResponse').decode(message);
-      setParties(parties.partyKeys);
-    };
-
-    const responseStream = rpcClient.callAndSubscribe('GetParties', getPartiesRequest);
-    responseStream.message.on(partiesListener);
-    return () => responseStream.message.off(partiesListener);
-  }, [rpcClient]);
-
-  if (!rpcClient) {
+  if (!backgroundService) {
     return <p>Connecting to background...</p>;
   }
 
@@ -48,9 +33,8 @@ const Application = () => {
   }
 
   const handleCreateParty = async () => {
-    const response = await rpcClient.call('CreateParty', createPartyRequest);
-    const party = schema.getCodecForType('dxos.wallet.extension.CreatePartyResponse').decode(response);
-    console.log('Created party: ', party.partyKey);
+    const response = await backgroundService.rpc.CreateParty({});
+    console.log('Created party: ', response.partyKey);
   };
 
   return (
