@@ -74,8 +74,7 @@ export class AuthPlugin extends EventEmitter {
       // If we only require auth when certain extensions are active, check if those are present.
       if (this._requiredForExtensions.size) {
         let authRequired = false;
-        for (const index of protocol.stream.remoteExtensions) {
-          const name = protocol.stream.extensions[index];
+        for (const name of protocol.stream.remoteExtensions.names) {
           if (this._requiredForExtensions.has(name)) {
             log(`Auth required for extension: ${name}`);
             authRequired = true;
@@ -86,7 +85,7 @@ export class AuthPlugin extends EventEmitter {
         // We can allow the unauthenticated connection, because none of the extensions which
         // require authentication to use are active on this connection.
         if (!authRequired) {
-          log(`Unauthenticated access allowed for ${keyToString(sessionPeerId)};`,
+          log(`Unauthenticated access allowed for ${sessionPeerId};`,
             'no extensions which require authentication are active on remote Protocol.');
           this.emit('allowed-unauthenticated', sessionPeerId);
           return;
