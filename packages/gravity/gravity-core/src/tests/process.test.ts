@@ -2,15 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
+import expect from 'expect';
+import { it as test } from 'mocha';
 import processExists from 'process-exists';
 import psTree from 'pstree.remy';
 import { promisify } from 'util';
 
-import { Orchestrator } from '../src';
+import { Orchestrator } from '..';
+import { AGENT_PATH } from './agent';
+import '../testing/setup';
 
 const BOT_NUMBER = 5;
-
-jest.setTimeout(100_000);
 
 // TODO(egorgripasov): Run multiple test files simultaneously.
 test.skip('bot resource test', async () => {
@@ -20,7 +22,7 @@ test.skip('bot resource test', async () => {
   const agents = [];
   for (let i = 0; i < BOT_NUMBER; i++) {
     agents.push(
-      await orchestrator.startAgent({ botPath: './src/test-agent.ts' })
+      await orchestrator.startAgent({ botPath: AGENT_PATH })
     );
   }
 

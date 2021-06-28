@@ -446,6 +446,10 @@
       "packageName": "@dxos/toolchain-node-library",
       "projectFolder": "toolchains/node-library"
     },
+    {
+      "packageName": "@dxos/esbuild-plugins",
+      "projectFolder": "toolchains/esbuild-plugins"
+    },
 
     //
     // common
@@ -690,6 +694,14 @@
     {
       "packageName": "@dxos/gravity-core",
       "projectFolder": "packages/gravity/gravity-core"
+    },
+    {
+      "packageName": "@dxos/browser-mocha",
+      "projectFolder": "packages/gravity/browser-mocha"
+    },
+    {
+      "packageName": "@dxos/browser-tests",
+      "projectFolder": "packages/gravity/browser-tests"
     },
 
     //
