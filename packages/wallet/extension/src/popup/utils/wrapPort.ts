@@ -2,8 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { RpcPort } from '@dxos/rpc';
 import { Runtime } from 'webextension-polyfill-ts';
+
+import { RpcPort } from '@dxos/rpc';
 
 export function wrapPort (port: Runtime.Port): RpcPort {
   return {

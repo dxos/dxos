@@ -6,8 +6,9 @@ import { browser, Runtime } from 'webextension-polyfill-ts';
 
 import { Client, ClientConfig } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
-import { BackgroundServer } from './backgroundServer';
+
 import { wrapPort } from '../popup/utils/wrapPort';
+import { BackgroundServer } from './backgroundServer';
 
 const config: ClientConfig = {
   storage: {
@@ -33,7 +34,7 @@ const config: ClientConfig = {
   browser.runtime.onConnect.addListener((port: Runtime.Port) => {
     console.log(`Background process connected on port ${port.name}`);
 
-    const server = new BackgroundServer(client, wrapPort(port))
-    server.run()
+    const server = new BackgroundServer(client, wrapPort(port));
+    server.run();
   });
 })();

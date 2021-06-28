@@ -3,8 +3,9 @@
 //
 
 import { useEffect, useState } from 'react';
-import { RpcPort, ProtoRpcClient, createRpcClient } from '@dxos/rpc';
+
 import { ServiceDescriptor } from '@dxos/codec-protobuf';
+import { RpcPort, ProtoRpcClient, createRpcClient } from '@dxos/rpc';
 
 interface UseRpcClientProps<S> {
   port: RpcPort,
@@ -21,7 +22,7 @@ export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) => {
 
     setImmediate(async () => {
       await client.open();
-      setRpcClient(client)
+      setRpcClient(client);
     });
 
     // TODO: Make sure close is not called before open is finished (maybe put @synchronized in RPC client?).

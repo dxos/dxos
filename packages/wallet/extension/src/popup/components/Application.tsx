@@ -5,11 +5,12 @@
 import React, { useState, useEffect } from 'react';
 
 import { JsonTreeView } from '@dxos/react-ux';
+
 import { useExtensionToBackground } from '../hooks';
 
 const Application = () => {
   const [profile, setProfile] = useState<any | undefined>(undefined);
-  const [parties, setParties] = useState<any[] | undefined>(undefined);
+  const [parties] = useState<any[] | undefined>(undefined);
   const backgroundService = useExtensionToBackground();
 
   useEffect(() => {

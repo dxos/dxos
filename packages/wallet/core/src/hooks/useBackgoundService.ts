@@ -3,8 +3,9 @@
 //
 
 import { RpcPort } from '@dxos/rpc';
-import { schema } from '../proto/gen';
+
 import { useRpcClient } from '.';
+import { schema } from '../proto/gen';
 
 interface UseBackgroundServiceProps {
   port: RpcPort
