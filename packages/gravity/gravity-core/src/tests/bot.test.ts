@@ -2,23 +2,24 @@
 // Copyright 2020 DXOS.org
 //
 
-import path from 'path';
+import expect from 'expect';
+import { it as test } from 'mocha';
 
 import { MessengerModel } from '@dxos/messenger-model';
 
-import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../src';
-import { APPEND_COMMAND, GET_ALL_COMMAND } from '../src/agents/test-agent';
+import { BROWSER_ENV, NODE_ENV, Orchestrator } from '..';
+import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents/test-agent';
+import { AGENT_PATH } from './agent';
+import '../testing/setup';
 
-jest.setTimeout(100_000);
-
-test.skip('local source', async () => {
+test('local source', async () => {
   const orchestrator = await Orchestrator.create({ local: true });
 
   orchestrator.client.registerModel(MessengerModel);
 
   await orchestrator.start();
 
-  const agent = await orchestrator.startAgent({ botPath: path.join(__dirname, '../src/agents/test-agent.ts') });
+  const agent = await orchestrator.startAgent({ botPath: AGENT_PATH });
 
   await orchestrator.party.database.createItem({ model: MessengerModel, type: 'dxos.org/type/testing/object' });
 
@@ -30,7 +31,7 @@ test.skip('local source', async () => {
   expect(messages).toHaveLength(2);
 
   await orchestrator.destroy();
-});
+}).timeout(100_000).retries(2);
 
 test.skip('remote source', async () => {
   const orchestrator = await Orchestrator.create({ local: false });
@@ -39,7 +40,7 @@ test.skip('remote source', async () => {
 
   await orchestrator.start();
 
-  const agent = await orchestrator.startAgent({ botPath: path.join(__dirname, '../src/agents/test-agent.ts'), env: NODE_ENV });
+  const agent = await orchestrator.startAgent({ botPath: AGENT_PATH, env: NODE_ENV });
 
   await orchestrator.party.database.createItem({ model: MessengerModel, type: 'dxos.org/type/testing/object' });
 

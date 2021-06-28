@@ -842,8 +842,9 @@ importers:
       webpack: 4.44.2
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
-      '@types/jest': 26.0.23
+      '@types/mocha': 8.2.2
       '@types/tar': 4.0.4
+      expect: 27.0.2
       playwright-chromium: 1.11.0
       process-exists: 4.0.0
       pstree.remy: 1.1.8
@@ -867,7 +868,7 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
       '@types/fs-extra': ^9.0.4
-      '@types/jest': ^26.0.7
+      '@types/mocha': ~8.2.2
       '@types/node-fetch': ^2.5.10
       '@types/tar': ^4.0.4
       '@types/webpack': ^4.41.27
@@ -876,6 +877,7 @@ importers:
       debug: ^4.1.1
       dotenv: ^8.2.0
       download: ^7.1.0
+      expect: ~27.0.2
       fs-extra: ^8.1.0
       hypercore-crypto: ^1.0.0
       js-yaml: ^3.13.1
