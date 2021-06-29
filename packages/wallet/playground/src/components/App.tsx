@@ -17,7 +17,11 @@ const App = () => {
     }
 
     setImmediate(async () => {
-      setProfile(await rpcClient.GetProfile({}));
+      try {
+        setProfile(await rpcClient.GetProfile({}));
+      } catch(err) {
+        console.error('Cannot get the profile', err)
+      }
     });
   }, [rpcClient]);
 
@@ -37,6 +41,7 @@ const App = () => {
   return (
     <div style={{ minWidth: 400 }}>
       <p>Hello, {profile.username ?? profile.publicKey}</p>
+      <p>{profile.publicKey}</p>
     </div>
   );
 };

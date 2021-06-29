@@ -11,13 +11,13 @@ import { browser } from 'webextension-polyfill-ts';
     console.log('message in content script received from the background', message)
 
     // passing through back to the app
-    window.postMessage({ 'payload': message }, '*')
+    window.postMessage({ 'payloadFromContentScriptToApp': message }, '*')
   });
 
   window.addEventListener("message", (event) => {
-    if (event?.data?.payload) {
-      console.log('message in content script received from the app', event);
-      port.postMessage(event.data.payload); // passing through the payload to background script
+    const ourPayload = event?.data?.payloadFromAppToContentScript
+    if (ourPayload) {
+      port.postMessage(ourPayload); // passing through the payload to background script
     }
   });
 })();
