@@ -11,7 +11,6 @@ export function createWindowMessagePort (): RpcPort {
       const listener: EventListener = (ev) => {
         const ourPayload = (ev as any)?.data?.payloadFromContentScriptToApp
         if (ourPayload) {
-          console.log('got our payload: ', ourPayload)
           cb(ourPayload)
         }
       }

@@ -5,7 +5,7 @@
 import { browser } from 'webextension-polyfill-ts';
 
 (() => {
-  const port = browser.runtime.connect();
+  const port = browser.runtime.connect(); // port to background script
 
   port.onMessage.addListener((message, port) => {
     console.log('message in content script received from the background', message)
