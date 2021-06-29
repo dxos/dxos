@@ -5,19 +5,18 @@
 import { browser } from 'webextension-polyfill-ts';
 
 (() => {
-  const port = browser.runtime.connect(); // Port to background script.
+  const port = browser.runtime.connect(); // Port to extension's background script.
 
   port.onMessage.addListener((message, port) => {
-    console.log('message in content script received from the background', message)
-
-    // passing through back to the app
+    // Passing through a message from background script back to the app.
     window.postMessage({ 'payloadFromContentScriptToApp': message }, '*')
   });
 
   window.addEventListener("message", (event) => {
     const ourPayload = event?.data?.payloadFromAppToContentScript
     if (ourPayload) {
-      port.postMessage(ourPayload); // passing through the payload to background script
+      // passing through a message from the App to the background script.
+      port.postMessage(ourPayload);
     }
   });
 })();
