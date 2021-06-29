@@ -11,7 +11,7 @@ import { useExtensionBackgroundService } from '../hooks';
 const Application = () => {
   const [profile, setProfile] = useState<any | undefined>(undefined);
   const [parties] = useState<any[] | undefined>(undefined);
-  const backgroundService = useExtensionBackgroundService();
+  const {error, rpcClient: backgroundService} = useExtensionBackgroundService();
 
   useEffect(() => {
     if (backgroundService === undefined) {
@@ -23,6 +23,11 @@ const Application = () => {
       setProfile(response);
     });
   }, [backgroundService]);
+
+  if (error) {
+    console.error(error);
+    return <p>Connection failed.</p>
+  }
 
   if (!backgroundService) {
     return <p>Connecting to background...</p>;

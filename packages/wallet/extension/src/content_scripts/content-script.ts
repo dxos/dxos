@@ -4,8 +4,6 @@
 
 import { browser } from 'webextension-polyfill-ts';
 
-// declare var browser: any; // TODO(rzadp): Proper TS types
-
 (() => {
   const port = browser.runtime.connect();
 
@@ -18,11 +16,9 @@ import { browser } from 'webextension-polyfill-ts';
   port.onMessage.addListener(onMessageCb);
 
   window.addEventListener("message", (event) => {
-    console.log('message in content script received from the app', event);
     if (event?.data?.payload) {
+      console.log('message in content script received from the app', event);
       port.postMessage(event.data.payload); // passing through the payload to background script
-    } else {
-      console.warn('Invalid data, not passing through to background script.')
     }
   });
 })();
