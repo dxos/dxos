@@ -6,8 +6,7 @@ import React, { useState } from 'react';
 
 import { AppBar, Drawer, Toolbar, Typography, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import AccountIcon from '@material-ui/icons/AccountCircle';
-import WorkIcon from '@material-ui/icons/Work';
+import { AccountCircle as AccountIcon, Work as WorkIcon } from '@material-ui/icons';
 
 import { useClient, useProfile } from '@dxos/react-client';
 

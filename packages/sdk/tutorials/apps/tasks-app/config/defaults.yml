@@ -1,0 +1,6 @@
+app:
+  title: "Tasks App"
+storage:
+  persistent: true
+swarm:
+  signal: "wss://apollo3.kube.moon.dxos.network/dxos/signal"
