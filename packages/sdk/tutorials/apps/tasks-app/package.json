@@ -26,20 +26,16 @@
     "@babel/core": "~7.13.15",
     "babel-plugin-import": "~1.13.3",
     "@jackwilsdon/craco-use-babelrc": "~1.0.0",
-    "@babel/preset-react": "7.9.4"
+    "@babel/preset-react": "7.9.4",
+    "@dxos/toolchain-node-library": "workspace:*"
   },
   "scripts": {
     "start": "SKIP_PREFLIGHT_CHECK=true craco start",
-    "build": "SKIP_PREFLIGHT_CHECK=true craco build",
+    "build": "npm run lint && SKIP_PREFLIGHT_CHECK=true craco build",
     "build:test": "npm run build && npm run test",
+    "lint": "toolchain lint",
     "test": "SKIP_PREFLIGHT_CHECK=true react-scripts test --passWithNoTests --watchAll=false",
     "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [

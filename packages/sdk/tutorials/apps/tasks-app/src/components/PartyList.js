@@ -22,8 +22,8 @@ import {
   Settings as SettingsIcon
 } from '@material-ui/icons';
 
-import { RedeemDialog } from '@dxos/react-ux';
 import { useParties } from '@dxos/react-client';
+import { RedeemDialog } from '@dxos/react-ux';
 
 import { getPartyTitle } from '../utils/hacks.utils';
 import PartySettings from './PartySettings';

@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { ClientInitializer } from '@dxos/react-client';
+import { CssBaseline } from '@material-ui/core';
 import { createMuiTheme } from '@material-ui/core/styles';
 import { ThemeProvider } from '@material-ui/styles';
-import { CssBaseline } from '@material-ui/core';
+
+import { ClientInitializer } from '@dxos/react-client';
+import { ReactUXTheme } from '@dxos/react-ux';
 
 import Root from './components/Root';
-import { ReactUXTheme } from '@dxos/react-ux';
 import { initConfig } from './config';
-
 
 const baseTheme = createMuiTheme({
   overrides: {
@@ -20,14 +20,14 @@ const baseTheme = createMuiTheme({
       '@global': {
         body: {
           margin: 0,
-          overflow: 'hidden',
-        },
-      },
-    },
+          overflow: 'hidden'
+        }
+      }
+    }
   },
   sidebar: {
-    width: 300,
-  },
+    width: 300
+  }
 });
 
 /**
@@ -44,6 +44,6 @@ const App = () => {
       </ReactUXTheme>
     </ClientInitializer>
   );
-}
+};
 
 export default App;

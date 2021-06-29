@@ -23,8 +23,8 @@ import {
 } from '@material-ui/icons';
 
 import { ObjectModel } from '@dxos/object-model';
-import { PartySharingDialog } from '@dxos/react-ux';
 import { useParty, useItems } from '@dxos/react-client';
+import { PartySharingDialog } from '@dxos/react-ux';
 
 const useStyles = makeStyles(theme => ({
   toolbar: {
