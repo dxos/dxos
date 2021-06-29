@@ -12,7 +12,6 @@ const App = () => {
   const rpcClient = contentScript?.rpc;
 
   useEffect(() => {
-    console.log('useeffect', {rpcClient})
     if (rpcClient === undefined) {
       return;
     }

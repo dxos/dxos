@@ -7,13 +7,12 @@ import { browser } from 'webextension-polyfill-ts';
 (() => {
   const port = browser.runtime.connect();
 
-  const onMessageCb = (message: any) => {
+  port.onMessage.addListener((message, port) => {
     console.log('message in content script received from the background', message)
 
-    // TODO: send back to app.
-  }
-
-  port.onMessage.addListener(onMessageCb);
+    // passing through back to the app
+    window.postMessage({ 'payload': message }, '*')
+  });
 
   window.addEventListener("message", (event) => {
     if (event?.data?.payload) {
