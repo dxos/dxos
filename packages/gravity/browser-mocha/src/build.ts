@@ -2,12 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 import { build } from 'esbuild';
 import { promises as fs } from 'fs';
 import { join, resolve } from 'path';
 
-import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin } from '@dxos/esbuild-plugins';
+import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 export async function buildTests (files: string[], outDir: string) {
   const mainFile = join(outDir, 'main.js');
@@ -34,7 +33,7 @@ export async function buildTests (files: string[], outDir: string) {
     sourcemap: 'inline',
     outfile: join(outDir, 'bundle.js'),
     plugins: [
-      NodeModulesPolyfillPlugin(),
+      NodeModulesPlugin(),
       NodeGlobalsPolyfillPlugin(),
       FixMemdownPlugin(),
       FixGracefulFsPlugin()
