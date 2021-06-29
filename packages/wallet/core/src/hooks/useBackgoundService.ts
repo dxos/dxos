@@ -12,6 +12,5 @@ interface UseBackgroundServiceProps {
 }
 
 export const useBackgroundService = ({ port } : UseBackgroundServiceProps) => {
-  const backgroundService = useRpcClient({ port, service: schema.getService('dxos.wallet.extension.BackgroundService') });
-  return backgroundService;
+  return useRpcClient({ port, service: schema.getService('dxos.wallet.extension.BackgroundService') });
 };

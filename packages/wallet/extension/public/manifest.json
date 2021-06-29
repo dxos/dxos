@@ -14,6 +14,12 @@
   "background": {
     "page": "background/background.html"
   },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"]
+    }
+  ],
   "browser_specific_settings": {
     "gecko": {
       "id": "dxos@dxos.org"
