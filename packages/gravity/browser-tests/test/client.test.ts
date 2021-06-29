@@ -4,17 +4,18 @@
 
 import expect from 'expect';
 import { Mocha } from 'mocha';
+import 'source-map-support/register';
 
 import { Client } from '@dxos/client';
+import { testSecretProvider } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
+import { testInvitationAuthenticator } from '@dxos/echo-db';
+import { ObjectModel } from '@dxos/object-model';
 
-import 'source-map-support/register';
-import { testInvitationAuthenticator } from '../../../echo/echo-db/dist/src';
-import { ObjectModel } from '../../../echo/object-model/dist/src';
-import { testSecretProvider } from '../../../halo/credentials/dist/src';
+const it = Mocha.it;
 
 Mocha.describe('Client', () => {
-  Mocha.it('open & close', async () => {
+  it('open & close', async () => {
     const client = new Client();
 
     await client.initialize();
@@ -22,7 +23,7 @@ Mocha.describe('Client', () => {
     await client.destroy();
   });
 
-  Mocha.it('create profile', async () => {
+  it('create profile', async () => {
     const client = new Client();
 
     await client.initialize();
@@ -38,7 +39,7 @@ Mocha.describe('Client', () => {
     await client.destroy();
   });
 
-  Mocha.it('create party', async () => {
+  it('create party', async () => {
     const client = new Client();
 
     await client.initialize();
@@ -59,7 +60,7 @@ Mocha.describe('Client', () => {
   });
 
   // TODO(marik-d): Fails with "RTCError: Transport channel closed".
-  Mocha.it.skip('invitations', async () => {
+  it.skip('invitations', async () => {
     const client = new Client();
     await client.initialize();
     await client.createProfile({

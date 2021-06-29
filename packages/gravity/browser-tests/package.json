@@ -34,6 +34,9 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "source-map-support": "^0.5.12"
+    "source-map-support": "^0.5.12",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/object-model": "workspace:*",
+    "@dxos/credentials": "workspace:*"
   }
 }
