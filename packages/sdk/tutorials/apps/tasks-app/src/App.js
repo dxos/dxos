@@ -5,11 +5,14 @@
 import React from 'react';
 
 import { ClientInitializer } from '@dxos/react-client';
-import { CssBaseline, ThemeProvider, createMuiTheme } from '@material-ui/core';
+import { createMuiTheme } from '@material-ui/core/styles';
+import { ThemeProvider } from '@material-ui/styles';
+import { CssBaseline } from '@material-ui/core';
 
-import config from './config';
 import Root from './components/Root';
 import { ReactUXTheme } from '@dxos/react-ux';
+import { initConfig } from './config';
+
 
 const baseTheme = createMuiTheme({
   overrides: {
@@ -29,11 +32,10 @@ const baseTheme = createMuiTheme({
 
 /**
  * Root container.
- * @param config
  */
-function App() {
+const App = () => {
   return (
-    <ClientInitializer config={config}>
+    <ClientInitializer config={initConfig}>
       <ReactUXTheme base={baseTheme}>
         <ThemeProvider theme={baseTheme}>
           <CssBaseline />

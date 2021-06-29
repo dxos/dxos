@@ -5,25 +5,29 @@
 import assert from 'assert';
 import React, { useState, useEffect } from 'react';
 
-import { makeStyles } from '@material-ui/core';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import IconButton from '@material-ui/core/IconButton';
-import Snackbar from '@material-ui/core/Snackbar';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableRow from '@material-ui/core/TableRow';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import InviteIcon from '@material-ui/icons/Add';
-import DeleteIcon from '@material-ui/icons/Clear';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
-import PeopleIcon from '@material-ui/icons/People';
-import Alert from '@material-ui/lab/Alert';
+import {
+  makeStyles,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Snackbar,
+  Table,
+  TableBody,
+  TableContainer,
+  TableRow,
+  Toolbar,
+  Typography
+} from '@material-ui/core';
+import {
+  Add as InviteIcon,
+  Clear as DeleteIcon,
+  FileCopy as FileCopyIcon,
+  People as PeopleIcon
+} from '@material-ui/icons';
+import { Alert } from '@material-ui/lab';
 
 import { BotFactoryClient } from '@dxos/botkit-client';
 import { keyToBuffer, verify, SIGNATURE_LENGTH } from '@dxos/crypto';
@@ -95,7 +99,7 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
   const [inviteRequestTime, setInviteRequestTime] = useState<number>();
 
   const [contacts] = useContacts();
-  const invitableContacts = contacts?.filter((c) => !members.some((m) => m.publicKey.toHex() === c.publicKey.toHex())); // contacts not already in this party
+  const invitableContacts = contacts?.filter((c) => !members.some((m) => m.publicKey.toHex() === c.publicKey.toHex())); // Contacts not already in this party.
 
   const [invitationIndex, setInvitationIndex] = useState(1);
 
