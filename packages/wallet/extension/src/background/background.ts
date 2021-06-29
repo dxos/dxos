@@ -7,7 +7,7 @@ import { browser, Runtime } from 'webextension-polyfill-ts';
 import { Client, ClientConfig } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
-import { wrapPort } from '../popup/utils/wrapPort';
+import { wrapPort } from '../utils/wrapPort';
 import { BackgroundServer } from './background-server';
 
 const config: ClientConfig = {
