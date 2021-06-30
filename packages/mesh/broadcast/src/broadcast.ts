@@ -3,11 +3,11 @@
 //
 
 import assert from 'assert';
-import { randomBytes } from '@dxos/crypto';
 import debug from 'debug';
 import LRU, { Lru } from 'tiny-lru';
 
 import { Event } from '@dxos/async';
+import { randomBytes } from '@dxos/crypto';
 
 import { schema } from './proto/gen';
 import { Packet } from './proto/gen/dxos/broadcast';
