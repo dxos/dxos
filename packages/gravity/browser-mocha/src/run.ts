@@ -9,8 +9,9 @@ import { chromium } from 'playwright';
 
 import { Lock, trigger } from '@dxos/async';
 
-export async function runTests (bundleFile: string): Promise<number> {
+export async function runTests (bundleFile: string, show: boolean): Promise<number> {
   const browser = await chromium.launch({
+    headless: !show,
     args: [
       '--disable-web-security'
     ]

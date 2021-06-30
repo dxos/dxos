@@ -23,6 +23,7 @@ export interface RunOptions {
    */
   files: string[]
   browsers: Browser[]
+  show?: boolean
 }
 
 export async function run (options: RunOptions) {
@@ -37,8 +38,12 @@ export async function run (options: RunOptions) {
   const files = await resolveFiles(options.files);
 
   await buildTests(files, tempDir);
-  const exitCode = await runTests(join(tempDir, 'bundle.js'));
-  process.exit(exitCode);
+  const exitCode = await runTests(join(tempDir, 'bundle.js'), !!options.show);
+  if(!options.show) {
+    process.exit(exitCode);
+  } else {
+    console.log(`\nCompleted with exit code ${exitCode}. Browser window stays open.`);
+  }
 }
 
 async function resolveFiles (globs: string[]): Promise<string[]> {
