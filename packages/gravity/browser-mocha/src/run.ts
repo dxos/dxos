@@ -22,9 +22,14 @@ export async function runTests (bundleFile: string, show: boolean): Promise<numb
   const lock = new Lock();
 
   page.on('console', async msg => {
-    const args = Promise.all(msg.args().map(x => x.jsonValue()));
+    const argsPromise = Promise.all(msg.args().map(x => x.jsonValue()));
     await lock.executeSynchronized(async () => {
-      console.log(...await args);
+      const args = await argsPromise;
+      if (args.length > 0) {
+        console.log(...args);
+      } else {
+        console.log(msg);
+      }
     });
   });
 
