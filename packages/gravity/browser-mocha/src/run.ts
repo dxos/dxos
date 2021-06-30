@@ -7,7 +7,7 @@ import { dirname, join } from 'path';
 import pkgUp from 'pkg-up';
 import { chromium } from 'playwright';
 
-import { Lock, trigger } from '@dxos/async';
+import { Lock, sleep, trigger } from '@dxos/async';
 
 export async function runTests (bundleFile: string, show: boolean): Promise<number> {
   const browser = await chromium.launch({
@@ -22,9 +22,9 @@ export async function runTests (bundleFile: string, show: boolean): Promise<numb
   const lock = new Lock();
 
   page.on('console', async msg => {
+    const args = Promise.all(msg.args().map(x => x.jsonValue()));
     await lock.executeSynchronized(async () => {
-      const args = await Promise.all(msg.args().map(x => x.jsonValue()));
-      console.log(...args);
+      console.log(...await args);
     });
   });
 

@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { Mocha } from 'mocha';
 import 'source-map-support/register';
 
 import { Client } from '@dxos/client';
@@ -12,9 +11,7 @@ import { createKeyPair } from '@dxos/crypto';
 import { testInvitationAuthenticator } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-const it = Mocha.it;
-
-Mocha.describe('Client', () => {
+describe('Client', () => {
   it('open & close', async () => {
     const client = new Client();
 
@@ -34,7 +31,7 @@ Mocha.describe('Client', () => {
     });
 
     const profile = client.getProfile();
-    expect(profile.username).toEqual('DXOS test');
+    expect(profile?.username).toEqual('DXOS test');
 
     await client.destroy();
   });
