@@ -38,13 +38,9 @@
     "build": "npm run lint && SKIP_PREFLIGHT_CHECK=true craco build",
     "build:test": "npm run build && npm run test",
     "lint": "toolchain lint",
-    "test": "SKIP_PREFLIGHT_CHECK=true react-scripts test --passWithNoTests --watchAll=false",
+    "test": "SKIP_PREFLIGHT_CHECK=true craco test --passWithNoTests --watchAll=false",
     "test:playwright": "jest --rootDir ./playwright --runInBand --passWithNoTests",
-    "eject": "react-scripts eject"
-  },
-  "jest": {
-    "preset": "ts-jest/presets/default",
-    "testEnvironment": "node"
+    "eject": "craco eject"
   },
   "browserslist": {
     "production": [
