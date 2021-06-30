@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { Mocha } from 'mocha';
 import 'source-map-support/register';
 
 import { Client } from '@dxos/client';
@@ -12,9 +11,7 @@ import { createKeyPair } from '@dxos/crypto';
 import { testInvitationAuthenticator } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-const it = Mocha.it;
-
-Mocha.describe('Client', () => {
+describe('Client', () => {
   it('open & close', async () => {
     const client = new Client();
 
@@ -34,7 +31,7 @@ Mocha.describe('Client', () => {
     });
 
     const profile = client.getProfile();
-    expect(profile.username).toEqual('DXOS test');
+    expect(profile?.username).toEqual('DXOS test');
 
     await client.destroy();
   });
@@ -59,8 +56,7 @@ Mocha.describe('Client', () => {
     await client.destroy();
   });
 
-  // TODO(marik-d): Fails with "RTCError: Transport channel closed".
-  it.skip('invitations', async () => {
+  it('invitations', async () => {
     const client = new Client();
     await client.initialize();
     await client.createProfile({
@@ -86,5 +82,6 @@ Mocha.describe('Client', () => {
     expect(otherItem.model.getProperty('foo')).toEqual('bar');
 
     await client.destroy();
-  });
+    await otherClient.destroy();
+  }).timeout(10_000).retries(2);
 });

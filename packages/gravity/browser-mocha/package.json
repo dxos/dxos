@@ -41,7 +41,8 @@
     "pkg-up": "^3.1.0",
     "@esbuild-plugins/node-modules-polyfill": "~0.1.1",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/async": "workspace:*"
+    "@dxos/async": "workspace:*",
+    "@dxos/signal": "~1.0.3-alpha.0"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
