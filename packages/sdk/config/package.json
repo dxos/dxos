@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "2.10.10",
+  "version": "2.10.10-alpha.1",
   "description": "Config utilities",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -34,11 +34,11 @@
     "@babel/plugin-proposal-export-default-from": "^7.2.0",
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@babel/preset-env": "^7.12.7",
+    "@dxos/toolchain-node-library": "workspace:*",
     "babel-loader": "8.1.0",
     "babel-plugin-add-module-exports": "^1.0.4",
     "babel-plugin-inline-import": "^3.0.0",
     "del-cli": "^3.0.0",
-    "@dxos/toolchain-node-library": "workspace:*",
     "jest": "^26.6.3",
     "webpack": "4.44.2"
   },

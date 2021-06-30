@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc",
-  "version": "2.10.10",
+  "version": "2.10.10-alpha.1",
   "description": "Tiny RPC library.",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
@@ -23,14 +23,14 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/async": "workspace:*"
+    "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/mocha": "~8.2.2",
-    "earljs": "~0.1.10",
-    "@types/node": "^14.0.9"
+    "@types/node": "^14.0.9",
+    "earljs": "~0.1.10"
   },
   "toolchain": {
     "testingFramework": "mocha"
