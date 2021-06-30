@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "build": "",
-    "build:test": "rushx test",
+    "build:test": "browser-mocha --setup test/setup.js 'test/*.test.ts'",
     "lint": "toolchain lint",
     "test": "browser-mocha --setup test/setup.js 'test/*.test.ts'"
   },
