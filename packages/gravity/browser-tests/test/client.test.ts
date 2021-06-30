@@ -82,6 +82,6 @@ describe('Client', () => {
     expect(otherItem.model.getProperty('foo')).toEqual('bar');
 
     await client.destroy();
-    await otherClient.destroy()
+    await otherClient.destroy();
   }).timeout(10_000);
 });

@@ -7,7 +7,7 @@ import { dirname, join } from 'path';
 import pkgUp from 'pkg-up';
 import { chromium } from 'playwright';
 
-import { Lock, sleep, trigger } from '@dxos/async';
+import { Lock, trigger } from '@dxos/async';
 
 export async function runTests (bundleFile: string, show: boolean): Promise<number> {
   const browser = await chromium.launch({
