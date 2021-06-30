@@ -112,6 +112,16 @@ function NodeModulesPlugin() {
           path: require.resolve('./polyfills/empty-module-stub.js'),
         }
       })
+      onResolve({ filter: /^debug$/ }, arg => {
+        return {
+          path: require.resolve('debug'), // Resolves to installed debug module.
+        }
+      })
+      onResolve({ filter: /^tty$/ }, arg => {
+        return {
+          path: require.resolve('tty-browserify'),
+        }
+      })
     }
   }
 }

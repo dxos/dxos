@@ -10,6 +10,7 @@ import { promisify } from 'util';
 
 import { buildTests } from './build';
 import { runTests } from './run';
+import { runSetup } from './run-setup';
 
 export enum Browser {
   CHROMIUM = 'chromium',
@@ -23,10 +24,16 @@ export interface RunOptions {
    */
   files: string[]
   browsers: Browser[]
+  show?: boolean
+  setup?: string
 }
 
 export async function run (options: RunOptions) {
   assert(options.browsers.length === 1 && options.browsers[0] === Browser.CHROMIUM, 'Only chromium is supported.');
+
+  if (options.setup) {
+    await runSetup(options.setup);
+  }
 
   const tempDir = 'dist/browser-tests';
   try {
@@ -37,8 +44,12 @@ export async function run (options: RunOptions) {
   const files = await resolveFiles(options.files);
 
   await buildTests(files, tempDir);
-  const exitCode = await runTests(join(tempDir, 'bundle.js'));
-  process.exit(exitCode);
+  const exitCode = await runTests(join(tempDir, 'bundle.js'), !!options.show);
+  if (!options.show) {
+    process.exit(exitCode);
+  } else {
+    console.log(`\nCompleted with exit code ${exitCode}. Browser window stays open.`);
+  }
 }
 
 async function resolveFiles (globs: string[]): Promise<string[]> {
