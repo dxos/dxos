@@ -75,8 +75,7 @@ describe('Demo - Primary and Peers', () => {
     await alice.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
   });
 
-  // TODO(marik-d): FIX.
-  test.skip('Peers - Alice invites Bob to a party', async () => {
+  test('Peers - Alice invites Bob to a party', async () => {
     await alice.page!.goto(peersUrl);
     await createParty(alice.page!)
     const invitationFromAlice = await createInvitation(alice.page!);
@@ -88,8 +87,7 @@ describe('Demo - Primary and Peers', () => {
     await bob.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
   });
 
-  // TODO(marik-d): FIX.
-  test.skip('Peers - Replication in party', async () => {
+  test('Peers - Replication in party', async () => {
     await alice.page!.goto(peersUrl);
     await createParty(alice.page!)
     const invitationFromAlice = await createInvitation(alice.page!);
