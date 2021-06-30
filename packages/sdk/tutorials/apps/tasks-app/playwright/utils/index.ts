@@ -3,3 +3,4 @@
 //
 
 export * from './Browser'
+export * from './TaskApp'
