@@ -786,7 +786,10 @@ importers:
   ../../packages/gravity/browser-tests:
     dependencies:
       '@dxos/client': link:../../sdk/client
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
+      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/object-model': link:../../echo/object-model
       source-map-support: 0.5.19
     devDependencies:
       '@dxos/browser-mocha': link:../browser-mocha
@@ -797,7 +800,10 @@ importers:
     specifiers:
       '@dxos/browser-mocha': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/object-model': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/mocha': ~8.2.2
       expect: ~27.0.2
@@ -1013,6 +1019,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/crypto': link:../../common/crypto
       debug: 4.3.1
       tiny-lru: 7.0.6
     devDependencies:
@@ -1025,6 +1032,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/network-generator': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.1
@@ -1831,6 +1839,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
+      '@dxos/toolchain-node-library': link:../../../../../toolchains/node-library
       '@jackwilsdon/craco-use-babelrc': 1.0.0_react-scripts@4.0.3
       babel-plugin-import: 1.13.3
       typescript: 4.2.4
@@ -1843,6 +1852,7 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ux': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
       '@jackwilsdon/craco-use-babelrc': ~1.0.0
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
@@ -1974,15 +1984,19 @@ importers:
   ../../toolchains/esbuild-plugins:
     dependencies:
       assert: 2.0.0
+      debug: 4.3.1
       events: 3.3.0
       path-browserify: 1.0.1
       readable-stream: 3.6.0
+      tty-browserify: 0.0.1
       util: 0.12.4
     specifiers:
       assert: ^2.0.0
+      debug: ^4.1.1
       events: ~3.3.0
       path-browserify: ~1.0.1
       readable-stream: ^3.6.0
+      tty-browserify: ~0.0.1
       util: ~0.12.4
   ../../toolchains/node-library:
     dependencies:
@@ -23838,6 +23852,10 @@ packages:
   /tty-browserify/0.0.0:
     resolution:
       integrity: sha1-oVe6QC2iTpv5V/mqadUk7tQpAaY=
+  /tty-browserify/0.0.1:
+    dev: false
+    resolution:
+      integrity: sha512-C3TaO7K81YvjCgQH9Q1S3R3P3BtN3RIM8n+OvX4il1K1zgE8ZhI0op7kClgkxtutIE8hQrcrHBXvIheqKUUCxw==
   /tunnel-agent/0.6.0:
     dependencies:
       safe-buffer: 5.2.1

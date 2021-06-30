@@ -11,6 +11,10 @@ import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeM
 export async function buildTests (files: string[], outDir: string) {
   const mainFile = join(outDir, 'main.js');
   const mainContents = `
+    import debug from 'debug';
+    
+    debug.enable('${process.env.DEBUG}');
+
     import { mocha } from 'mocha';
 
     mocha.reporter('spec');

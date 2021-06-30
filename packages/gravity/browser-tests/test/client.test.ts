@@ -59,8 +59,7 @@ Mocha.describe('Client', () => {
     await client.destroy();
   });
 
-  // TODO(marik-d): Fails with "RTCError: Transport channel closed".
-  it.skip('invitations', async () => {
+  it('invitations', async () => {
     const client = new Client();
     await client.initialize();
     await client.createProfile({
@@ -86,5 +85,6 @@ Mocha.describe('Client', () => {
     expect(otherItem.model.getProperty('foo')).toEqual('bar');
 
     await client.destroy();
-  });
+    await otherClient.destroy()
+  }).timeout(10_000);
 });
