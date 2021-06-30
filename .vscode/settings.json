@@ -12,4 +12,5 @@
     "rush.json": "jsonc",
     "command-line.json": "jsonc"
   },
+  "search.followSymlinks": false,
 }

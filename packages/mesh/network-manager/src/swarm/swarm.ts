@@ -235,9 +235,13 @@ export class Swarm {
       this._transportFactory
     );
 
-    // TODO(marik-d): Handle errors.
     this._connections.set(remoteId, connection);
     this.connectionAdded.emit(connection);
+
+    connection.errors.handle(error => {
+      log(`Connection error topic=${this._topic} remoteId=${remoteId} ${error.stack}`);
+      this._closeConnection(remoteId).catch(err => this.errors.raise(err));
+    });
 
     connection.stateChanged.waitFor(s => s === ConnectionState.CONNECTED).then(() => this.connected.emit(remoteId));
 
@@ -255,7 +259,9 @@ export class Swarm {
   private async _closeConnection (peerId: PublicKey) {
     log(`Close connection topic=${this._topic} remoteId=${peerId}`);
     const connection = this._connections.get(peerId);
-    assert(connection);
+    if (!connection) {
+      return;
+    }
     this._connections.delete(peerId);
     await connection.close();
   }

@@ -3,11 +3,11 @@
 //
 
 import assert from 'assert';
-import crypto from 'crypto';
 import debug from 'debug';
 import LRU, { Lru } from 'tiny-lru';
 
 import { Event } from '@dxos/async';
+import { randomBytes } from '@dxos/crypto';
 
 import { schema } from './proto/gen';
 import { Packet } from './proto/gen/dxos/broadcast';
@@ -93,7 +93,7 @@ export class Broadcast<P extends Peer = Peer> {
     assert(middleware.send);
     assert(middleware.subscribe);
 
-    const { id = crypto.randomBytes(32), maxAge = 10 * 1000, maxSize = 1000 } = options;
+    const { id = randomBytes(32), maxAge = 10 * 1000, maxSize = 1000 } = options;
 
     this._id = id;
 
@@ -111,7 +111,7 @@ export class Broadcast<P extends Peer = Peer> {
    * Broadcast a flooding message to the peers neighbors.
    */
   async publish (data: Uint8Array, options: PublishOptions = {}): Promise<Packet | undefined> {
-    const { seqno = crypto.randomBytes(32) } = options;
+    const { seqno = randomBytes(32) } = options;
 
     assert(Buffer.isBuffer(data));
     assert(Buffer.isBuffer(seqno));

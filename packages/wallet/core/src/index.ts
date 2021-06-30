@@ -6,3 +6,4 @@ export * from './hooks';
 export * from './proto/gen';
 export * from './proto/gen/dxos/wallet/extension';
 export * from './proto';
+export * from './utils';

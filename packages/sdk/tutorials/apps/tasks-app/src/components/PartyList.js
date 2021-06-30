@@ -15,13 +15,15 @@ import {
   ListItemText
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import AddIcon from '@material-ui/icons/Add';
-import PartyIcon from '@material-ui/icons/Assignment';
-import RedeemIcon from '@material-ui/icons/Redeem';
-import SettingsIcon from '@material-ui/icons/Settings';
+import {
+  Add as AddIcon,
+  Assignment as PartyIcon,
+  Redeem as RedeemIcon,
+  Settings as SettingsIcon
+} from '@material-ui/icons';
 
-import { RedeemDialog } from '@dxos/react-ux';
 import { useParties } from '@dxos/react-client';
+import { RedeemDialog } from '@dxos/react-ux';
 
 import { getPartyTitle } from '../utils/hacks.utils';
 import PartySettings from './PartySettings';
@@ -99,7 +101,7 @@ const PartyList = ({ selectedPartyKey, onSelectParty }) => {
       {redeemDialog && (
         <RedeemDialog
           onClose={() => setRedeemDialog(false)}
-          // TODO(burdon): Get party key from dialog.
+        // TODO(burdon): Get party key from dialog.
         />
       )}
 

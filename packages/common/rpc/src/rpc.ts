@@ -92,7 +92,7 @@ export class RpcPeer {
   }
 
   /**
-   * Handle incoming message. Shoulda be called as the result of other peer's `send` callback.
+   * Handle incoming message. Should be called as the result of other peer's `send` callback.
    */
   private async _receive (msg: Uint8Array): Promise<void> {
     const decoded = codec.decode(msg);

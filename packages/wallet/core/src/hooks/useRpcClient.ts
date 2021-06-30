@@ -13,16 +13,29 @@ interface UseRpcClientProps<S> {
 }
 
 export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) => {
+  const [error, setError] = useState<Error | undefined>(undefined);
   const [rpcClient, setRpcClient] = useState<ProtoRpcClient<S> | undefined>(undefined);
 
   useEffect(() => {
-    const client = createRpcClient(service, {
-      port: port
-    });
+    let client: ProtoRpcClient<S>;
+    try {
+      client = createRpcClient(service, {
+        port: port
+      });
+    } catch (err) {
+      console.error('Creating RPC client failed', err);
+      setError(err);
+      return;
+    }
 
     setImmediate(async () => {
-      await client.open();
-      setRpcClient(client);
+      try {
+        await client.open();
+        setRpcClient(client);
+      } catch (err) {
+        console.error('Opening RPC client failed', err);
+        setError(err);
+      }
     });
 
     // TODO: Make sure close is not called before open is finished (maybe put @synchronized in RPC client?).
@@ -31,5 +44,5 @@ export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) => {
     };
   }, []);
 
-  return rpcClient;
+  return { error, rpcClient };
 };

@@ -6,5 +6,14 @@
   "scripts": {
     "build": "",
     "build:test": ""
+  },
+  "dependencies": {
+    "assert": "^2.0.0",
+    "readable-stream": "^3.6.0",
+    "path-browserify": "~1.0.1",
+    "events": "~3.3.0",
+    "util": "~0.12.4",
+    "debug": "^4.1.1",
+    "tty-browserify": "~0.0.1"
   }
 }
