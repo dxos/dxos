@@ -27,7 +27,11 @@
     "babel-plugin-import": "~1.13.3",
     "@jackwilsdon/craco-use-babelrc": "~1.0.0",
     "@babel/preset-react": "7.9.4",
-    "@dxos/toolchain-node-library": "workspace:*"
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.9",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.5.6"
   },
   "scripts": {
     "start": "SKIP_PREFLIGHT_CHECK=true craco start",
@@ -35,7 +39,12 @@
     "build:test": "npm run build && npm run test",
     "lint": "toolchain lint",
     "test": "SKIP_PREFLIGHT_CHECK=true react-scripts test --passWithNoTests --watchAll=false",
+    "test:playwright": "jest --rootDir ./playwright --runInBand --passWithNoTests",
     "eject": "react-scripts eject"
+  },
+  "jest": {
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node"
   },
   "browserslist": {
     "production": [
