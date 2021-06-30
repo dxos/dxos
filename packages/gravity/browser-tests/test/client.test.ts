@@ -83,5 +83,5 @@ describe('Client', () => {
 
     await client.destroy();
     await otherClient.destroy();
-  }).timeout(10_000);
+  }).retries(2).timeout(10_000);
 });
