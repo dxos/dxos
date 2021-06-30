@@ -9,7 +9,7 @@ export class Browser {
   context?: BrowserContext;
   page?: Page;
 
-  async launchBrowser(_browser: BrowserType, _startUrl: string) {
+  async launch(_browser: BrowserType, _startUrl: string) {
     this.browser = await _browser.launch({
       headless: Boolean(process.env.CI),
       slowMo: process.env.CI ? 0 : 200
@@ -22,7 +22,7 @@ export class Browser {
     await this.getPage().goto(_startUrl, { waitUntil: 'load' });
   }
 
-  getBrowser() {
+  get() {
     return this.browser!;
   }
 
