@@ -3,7 +3,7 @@
 //
 
 import React, {useState, useEffect} from 'react';
-import { useRpcClient, schema, GetProfileResponse } from '@dxos/wallet-core';
+import { GetProfileResponse } from '@dxos/wallet-core';
 import { useContentScript } from '../hooks';
 
 const App = () => {
