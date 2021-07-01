@@ -63,7 +63,7 @@ const useStyles = makeStyles(theme => ({
  * @param selectedPartyKey
  * @param onSelectParty
  */
-const PartyList = ({ selectedPartyKey, onSelectParty }) => {
+const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
   const classes = useStyles();
   const [redeemDialog, setRedeemDialog] = useState(false);
   const [{ settingsDialog, settingsPartyKey }, setSettingsDialog] = useState({});
@@ -150,15 +150,17 @@ const PartyList = ({ selectedPartyKey, onSelectParty }) => {
         >
           <AddIcon />
         </Fab>
-        <Fab
-          size="small"
-          color="secondary"
-          aria-label="redeem"
-          title="Redeem invitation"
-          onClick={handleRedeemParty}
-        >
-          <RedeemIcon />
-        </Fab>
+        {!hideRedeem && (
+          <Fab
+            size="small"
+            color="secondary"
+            aria-label="redeem"
+            title="Redeem invitation"
+            onClick={handleRedeemParty}
+          >
+            <RedeemIcon />
+          </Fab>
+        )}
       </div>
     </div>
   );
