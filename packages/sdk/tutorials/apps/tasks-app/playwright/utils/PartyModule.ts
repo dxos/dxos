@@ -3,12 +3,20 @@ import { Browser } from './Browser';
 
 export class PartyModule extends AppSimulator {
 
-  async checkCurrentUsers() {
+  async openPartyModal() {
     await this.browser.getPage().click('[aria-label="invite"]');
 
     const invitationModal = await this.browser.getPage().$('text="Access permissions"');
 
     expect(invitationModal).toBeDefined();
+  }
+
+  async closePartyModal() {
+    const isModalOpen = await this.browser.getPage().$('button :text("Done")');
+
+    if (isModalOpen) {
+      await this.browser.getPage().click('button :text("Done")');
+    }
   }
 
   async generateUserInvitation() {
@@ -54,6 +62,12 @@ export class PartyModule extends AppSimulator {
     await this.browser.getPage().fill('textarea', invitationCode);
 
     await this.browser.getPage().click('button :text("Submit")');
+  }
+
+  async checkPinCodeModal() {
+    const pinCodeModal = await this.browser.getPage().waitForSelector('text=PIN', { timeout: 5000 })
+
+    expect(pinCodeModal).toBeDefined();
   }
 
   async getPinCode(): Promise<string> {
