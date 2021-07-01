@@ -39,7 +39,7 @@
     "build:test": "npm run build && npm run test",
     "lint": "toolchain lint",
     "test": "SKIP_PREFLIGHT_CHECK=true craco test --passWithNoTests --watchAll=false",
-    "test:playwright": "jest --rootDir ./playwright --runInBand --passWithNoTests",
+    "test:playwright": "jest --rootDir ./playwright --passWithNoTests --verbose",
     "eject": "craco eject"
   },
   "browserslist": {
