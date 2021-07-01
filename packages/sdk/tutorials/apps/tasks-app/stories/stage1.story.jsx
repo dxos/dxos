@@ -4,38 +4,38 @@
 
 import React from 'react';
 
-import { createKeyPair } from '@dxos/crypto';
-import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
+import { ClientInitializer, useClient } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-ux';
-import ProfileDialog from '../src/components/ProfileDialog';
 
 /**
- * Create the user's HALO profile.
+ * Demonstrate ClientInitializer
  */
 export const Stage1 = () => {
   const App = () => {
     const client = useClient();
-    const profile = useProfile();
-
-    const handleCreateProfile = async ({ username }) => {
-      if (username) {
-        // TODO(burdon): Default keyPair?
-        const { publicKey, secretKey } = createKeyPair();
-        await client.createProfile({ publicKey, secretKey, username });
-      }
-    };
 
     return (
       <>
-        <ProfileDialog open={!profile} onClose={handleCreateProfile} />
-        <JsonTreeView data={profile} />
+        <h2>Client Config</h2>
+        <JsonTreeView data={client.config} />
       </>
     );
   };
 
-  // TODO(burdon): Must not hide ClientInitializer in tutorial (magic).
+  // TODO(wittjosiah): default config available elsewhere?
+  const config = {
+    storage: {},
+    swarm: {
+      signal: 'ws://localhost:4000',
+      ice: [{ urls: 'stun:stun.wireline.ninja:3478' }]
+    },
+    wns: undefined,
+    snapshots: false,
+    snapshotInterval: undefined
+  };
+
   return (
-    <ClientInitializer>
+    <ClientInitializer config={config}>
       <App />
     </ClientInitializer>
   );

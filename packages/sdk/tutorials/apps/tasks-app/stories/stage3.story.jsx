@@ -4,43 +4,23 @@
 
 import React, { useState } from 'react';
 
-import { Drawer } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { Button, Toolbar } from '@material-ui/core';
 import { createKeyPair } from '@dxos/crypto';
-import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
+import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
+import { JsonTreeView } from '@dxos/react-ux';
+import PartySettings from '../src/components/PartySettings';
 import ProfileDialog from '../src/components/ProfileDialog';
-import PartyList from '../src/components/PartyList';
-import TaskList from '../src/components/TaskList';
+import { getPartyTitle } from '../src/utils/hacks.utils';
 
 /**
- * Create the user's HALO profile, then create parties with items.
+ * Create the user's HALO profile, then create parties.
  */
 export const Stage3 = () => {
-  const useStyles = makeStyles(() => ({
-    root: {
-      display: 'flex'
-    },
-    drawer: {
-      flexShrink: 0,
-      width: 300
-    },
-    drawerPaper: {
-      width: 300,
-      overflow: 'auto'
-    },
-    main: {
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1
-    }
-  }));
-
   const App = () => {
-    const classes = useStyles();
     const client = useClient();
     const profile = useProfile();
-    const [partyKey, setPartyKey] = useState();
+    const parties = useParties();
+    const [settingsDialog, setSettingsDialog] = useState(false);
 
     const handleCreateProfile = async ({ username }) => {
       if (username) {
@@ -52,33 +32,26 @@ export const Stage3 = () => {
     if (!profile) {
       return (
         <ProfileDialog open={!profile} onClose={handleCreateProfile} />
-      )
+      );
     }
 
-    return (
-      <div className={classes.root}>
-        <Drawer
-          variant="permanent"
-          className={classes.drawer}
-          classes={{
-            paper: classes.drawerPaper
-          }}
-        >
-          <PartyList
-            selectedPartyKey={partyKey}
-            onSelectParty={partyKey => setPartyKey(partyKey)}
-            hideRedeem={true}
-          />
-        </Drawer>
+    const partyData = parties.map((party) => ({
+      key: party.key.toString(),
+      title: getPartyTitle(party)
+    }));
 
-        <main className={classes.main}>
-          {partyKey && (
-            <>
-              <TaskList partyKey={partyKey} hideShare={true} />
-            </>
-          )}
-        </main>
-      </div>
+    return (
+      <>
+        <Toolbar>
+          <Button disabled={!profile} onClick={() => setSettingsDialog(true)}>
+            Create Party
+          </Button>
+        </Toolbar>
+        <JsonTreeView data={partyData} />
+        {settingsDialog && (
+          <PartySettings partyKey={undefined} onClose={() => setSettingsDialog(false)} />
+        )}
+      </>
     );
   };
 

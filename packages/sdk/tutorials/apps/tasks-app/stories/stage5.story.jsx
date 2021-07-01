@@ -12,10 +12,12 @@ import ProfileDialog from '../src/components/ProfileDialog';
 import PartyList from '../src/components/PartyList';
 import TaskList from '../src/components/TaskList';
 
+// TODO(wittjosiah): fix sharing parties
+
 /**
- * Create the user's HALO profile, then create parties with items.
+ * Create the user's HALO profile, then create shareable parties with items.
  */
-export const Stage4 = () => {
+export const Stage5 = () => {
   const useStyles = makeStyles(() => ({
     root: {
       display: 'flex'
@@ -67,12 +69,11 @@ export const Stage4 = () => {
           <PartyList
             selectedPartyKey={partyKey}
             onSelectParty={partyKey => setPartyKey(partyKey)}
-            hideRedeem={true}
           />
         </Drawer>
 
         <main className={classes.main}>
-          {partyKey && <TaskList partyKey={partyKey} hideShare={true} />}
+          {partyKey && <TaskList partyKey={partyKey} />}
         </main>
       </div>
     );
@@ -86,6 +87,6 @@ export const Stage4 = () => {
 };
 
 export default {
-  title: 'Tutorials/Stage 4',
-  component: Stage4
+  title: 'Tutorials/Stage 5',
+  component: Stage5
 };
