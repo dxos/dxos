@@ -166,3 +166,97 @@ pnpm ls -r --depth -1
 ```
 npx @monorepo-utils/workspaces-to-typescript-project-references
 ```
+
+## Linking packages to outside repositories
+
+During development, sometimes there is a need to link a package from `protocols` to another repository, in order to test the integration locally without the need to publish a new version to `NPM`.
+
+1. Log into `npm` and save the authentication token for later
+
+```bash
+npm login
+
+cat ~/.npmrc | grep registry.npmjs.com
+```
+
+2. Install and launch [Verdaccio](https://verdaccio.org/)
+
+3. Configure package managers to use Verdaccio, and create Verdaccio user
+
+```bash
+npm set registry http://localhost:4873/
+pnpm set registry http://localhost:4873/
+yarn config set registry http://localhost:4873/
+
+npm adduser
+pnpm login
+```
+
+4. Configure Verdaccio with credentials to `NPM`
+
+Verdaccio acts as a proxy to `NPM`.
+
+Some of our packages are private, so we need to configure Verdaccio with our credentials to `NPM`
+
+Edit `~/.config/verdaccio/config.yaml`:
+
+```yaml
+(...)
+
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+    auth:
+      type: bearer
+      token: <TOKEN FROM STEP 1.>
+```
+
+Then, restart Verdaccio.
+
+5. Publish local `protocols` to Verdaccio
+
+First, bump the versions:
+
+```bash
+rush version --bump --override-bump prerelease
+```
+
+Then, change the publishing config at `protocols/common/config/rush/.npmrc-publish`:
+
+```
+registry=http://localhost:4873
+always-auth=false
+//localhost:4873/:_authToken="<VERDACCIO TOKEN"
+```
+
+Verdaccio token can be taken similarly as step 1.:
+
+```bash
+cat ~/.npmrc | grep localhost
+```
+
+If it's not there, go back to step 3.
+
+After that, publish:
+
+```
+rush publish --publish --include-all
+```
+
+Visit the UI at `http://localhost:4874/` to verify the packages are there.
+
+6. Install locally published packages in outside repositories.
+
+```bash
+yarn add @dxos/name@a.b.c-d
+```
+
+### Resetting Verdaccio
+
+Clear Verdaccio's storage:
+
+```bash
+rm -rf ~/.local/share/verdaccio/storage/*
+```
+
+Then, start Verdaccio again.
