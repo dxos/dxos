@@ -145,7 +145,7 @@ const TaskList = ({ partyKey }) => {
               <IconButton
                 size="small"
                 edge="end"
-                aria-label="delete"
+                aria-label="create"
                 onClick={handleCreateTask}
               >
                 <AddIcon />
