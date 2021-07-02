@@ -45,13 +45,3 @@ open dist/APP-darwin-x64/APP.app
 ```
 
 NOTE: This is large -- don't check it in.
-
-## Documentation
-
-To spin up this repo documentation on your local environment please follow this steps:
-
-```bash
-$ cd docs
-$ yarn
-$ yarn dev
-```
