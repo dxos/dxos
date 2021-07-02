@@ -1,0 +1,17 @@
+# dotenv environment variables file
+.env
+
+dist/
+out/
+public/
+
+.cache
+
+.idea/workspace.xml
+.idea/dictionaries/
+.idea/shelf/
+.idea/watcherTasks.xml
+
+.DS_Store
+
+lerna-debug.log
