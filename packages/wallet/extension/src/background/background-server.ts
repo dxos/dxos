@@ -2,14 +2,29 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import { Client, ClientConfig } from '@dxos/client';
+import { createKeyPair } from '@dxos/crypto';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/wallet-core';
 
+const config: ClientConfig = {
+  storage: {
+    persistent: true,
+    type: 'idb',
+    path: '/tmp/dxos'
+  }
+};
+
 export class BackgroundServer {
-  constructor (private readonly _client: Client, private readonly _port: RpcPort) {}
+  private _client: Client = new Client(config);
+
+  constructor (private readonly _port: RpcPort) {}
 
   public async run () {
+    await this._client.initialize();
+    if (!this._client.getProfile()){
+      await this._client.createProfile({ ...createKeyPair(), username: 'DXOS user' });
+    }
     const service = schema.getService('dxos.wallet.extension.BackgroundService');
     const server: RpcPeer = createRpcServer({
       service,
@@ -33,6 +48,16 @@ export class BackgroundServer {
             publicKey: profile?.publicKey.toHex(),
             username: profile?.username,
             signedMessage: this._client.echo.keyring.sign(request.message, this._client.echo.keyring.keys).signed.payload
+          };
+        },
+        CreateProfile: async request => {
+          await this._client.reset();
+          this._client = new Client(config);
+          await this._client.initialize();
+          await this._client.createProfile({ ...createKeyPair(), ...request });
+          return {
+            username: this._client.getProfile()?.username,
+            publicKey: this._client.getProfile()?.publicKey.toHex()
           };
         }
       },

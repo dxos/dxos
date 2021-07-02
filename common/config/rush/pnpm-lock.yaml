@@ -1847,13 +1847,12 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/rpc': link:../../common/rpc
       protobufjs: 6.11.2
-      react: 16.14.0
-      react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/node': 14.14.45
       '@types/react': 16.14.6
       '@types/react-dom': 17.0.5
+      react: 16.14.0
       typescript: 4.2.4
     specifiers:
       '@dxos/async': workspace:*
@@ -1866,7 +1865,6 @@ importers:
       '@types/react-dom': ^17.0.2
       protobufjs: ^6.9.0
       react: ^16.14.0
-      react-dom: ^16.14.0
       typescript: ^4.2.4
   ../../packages/wallet/extension:
     dependencies:
@@ -1886,6 +1884,7 @@ importers:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@esbuild-plugins/node-modules-polyfill': 0.1.1_esbuild@0.11.23
+      '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@types/node': 14.14.45
       '@types/react': 16.14.6
       '@types/react-dom': 17.0.5
@@ -1909,6 +1908,7 @@ importers:
       '@dxos/wallet-core': workspace:*
       '@esbuild-plugins/node-modules-polyfill': ~0.1.1
       '@hot-loader/react-dom': 16.13.0
+      '@material-ui/core': ^4.11.4
       '@types/node': ^14.0.9
       '@types/react': ^16.14.0
       '@types/react-dom': ^17.0.2
@@ -5054,7 +5054,6 @@ packages:
       react-dom: 16.14.0_react@16.14.0
       react-is: 17.0.2
       react-transition-group: 4.4.1_react-dom@16.14.0+react@16.14.0
-    dev: false
     engines:
       node: '>=8.0.0'
     peerDependencies:
@@ -5178,7 +5177,6 @@ packages:
       prop-types: 15.7.2
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
-    dev: false
     engines:
       node: '>=8.0.0'
     peerDependencies:
@@ -5231,7 +5229,6 @@ packages:
       prop-types: 15.7.2
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
-    dev: false
     engines:
       node: '>=8.0.0'
     peerDependencies:
@@ -5275,7 +5272,6 @@ packages:
   /@material-ui/types/5.1.0_@types+react@16.14.6:
     dependencies:
       '@types/react': 16.14.6
-    dev: false
     peerDependencies:
       '@types/react': '*'
     peerDependenciesMeta:
@@ -5290,7 +5286,6 @@ packages:
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
       react-is: 17.0.2
-    dev: false
     engines:
       node: '>=8.0.0'
     peerDependencies:
@@ -7494,7 +7489,6 @@ packages:
   /@types/react-transition-group/4.4.1:
     dependencies:
       '@types/react': 16.14.6
-    dev: false
     resolution:
       integrity: sha512-vIo69qKKcYoJ8wKCJjwSgCTM+z3chw3g18dkrDfVX665tMH7tmbDxEAnPdey4gTlwZz5QuHGzd+hul0OVZDqqQ==
   /@types/react/16.14.6:
@@ -10351,7 +10345,6 @@ packages:
     resolution:
       integrity: sha1-G39Ln1kfHo+DZwQBYANFoCiHQ18=
   /clsx/1.1.1:
-    dev: false
     engines:
       node: '>=6'
     resolution:
@@ -10988,7 +10981,6 @@ packages:
     dependencies:
       '@babel/runtime': 7.14.0
       is-in-browser: 1.1.3
-    dev: false
     resolution:
       integrity: sha512-x9Aq0XTInxrkuFeHKbYC7zWY8ai7qJ04Kxd9MnvbC1uO5DagxoHQjm4JvG+vCdXOoFtCjbL2XSZfxmoYa9uQVQ==
   /css-what/3.4.2:
@@ -15073,7 +15065,6 @@ packages:
     resolution:
       integrity: sha512-mAZpE3FwrwHQvg5IUx0P2rsOUM8cCFhNv7pdrXL0O3sX8dpjmyX6mxedM26HfifyM40BJdrDer4ZQltfIf+3JA==
   /hyphenate-style-name/1.0.4:
-    dev: false
     resolution:
       integrity: sha512-ygGZLjmXfPHj+ZWh6LwbC37l43MhfztxetbFCoYTM2VjkIUpeHgSNn7QIyVFj7YQ1Wl9Cbw5sholVJPzWvC2MQ==
   /iconv-lite/0.4.24:
@@ -15190,7 +15181,6 @@ packages:
   /indefinite-observable/2.0.1:
     dependencies:
       symbol-observable: 1.2.0
-    dev: false
     resolution:
       integrity: sha512-G8vgmork+6H9S8lUAg1gtXEj2JxIQTo0g2PbFiYOdjkziSI0F7UYBiVwhZRuixhBCNGczAls34+5HJPyZysvxQ==
   /indent-string/3.2.0:
@@ -15592,7 +15582,6 @@ packages:
     resolution:
       integrity: sha512-gyPJuv83bHMpocVYoqof5VDiZveEoGoFL8m3BXNb2VW8Xs+rz9kqO8LOQ5DH6EsuvilT1ApazU0pyl+ytbPtlw==
   /is-in-browser/1.1.3:
-    dev: false
     resolution:
       integrity: sha1-Vv9NtoOgeMYILrldrX3GLh0E+DU=
   /is-ip/3.1.0:
@@ -16860,21 +16849,18 @@ packages:
       '@babel/runtime': 7.14.0
       hyphenate-style-name: 1.0.4
       jss: 10.6.0
-    dev: false
     resolution:
       integrity: sha512-JdLpA3aI/npwj3nDMKk308pvnhoSzkW3PXlbgHAzfx0yHWnPPVUjPhXFtLJzgKZge8lsfkUxvYSQ3X2OYIFU6A==
   /jss-plugin-default-unit/10.6.0:
     dependencies:
       '@babel/runtime': 7.14.0
       jss: 10.6.0
-    dev: false
     resolution:
       integrity: sha512-7y4cAScMHAxvslBK2JRK37ES9UT0YfTIXWgzUWD5euvR+JR3q+o8sQKzBw7GmkQRfZijrRJKNTiSt1PBsLI9/w==
   /jss-plugin-global/10.6.0:
     dependencies:
       '@babel/runtime': 7.14.0
       jss: 10.6.0
-    dev: false
     resolution:
       integrity: sha512-I3w7ji/UXPi3VuWrTCbHG9rVCgB4yoBQLehGDTmsnDfXQb3r1l3WIdcO8JFp9m0YMmyy2CU7UOV6oPI7/Tmu+w==
   /jss-plugin-nested/10.6.0:
@@ -16882,14 +16868,12 @@ packages:
       '@babel/runtime': 7.14.0
       jss: 10.6.0
       tiny-warning: 1.0.3
-    dev: false
     resolution:
       integrity: sha512-fOFQWgd98H89E6aJSNkEh2fAXquC9aZcAVjSw4q4RoQ9gU++emg18encR4AT4OOIFl4lQwt5nEyBBRn9V1Rk8g==
   /jss-plugin-props-sort/10.6.0:
     dependencies:
       '@babel/runtime': 7.14.0
       jss: 10.6.0
-    dev: false
     resolution:
       integrity: sha512-oMCe7hgho2FllNc60d9VAfdtMrZPo9n1Iu6RNa+3p9n0Bkvnv/XX5San8fTPujrTBScPqv9mOE0nWVvIaohNuw==
   /jss-plugin-rule-value-function/10.6.0:
@@ -16897,7 +16881,6 @@ packages:
       '@babel/runtime': 7.14.0
       jss: 10.6.0
       tiny-warning: 1.0.3
-    dev: false
     resolution:
       integrity: sha512-TKFqhRTDHN1QrPTMYRlIQUOC2FFQb271+AbnetURKlGvRl/eWLswcgHQajwuxI464uZk91sPiTtdGi7r7XaWfA==
   /jss-plugin-vendor-prefixer/10.6.0:
@@ -16905,7 +16888,6 @@ packages:
       '@babel/runtime': 7.14.0
       css-vendor: 2.0.8
       jss: 10.6.0
-    dev: false
     resolution:
       integrity: sha512-doJ7MouBXT1lypLLctCwb4nJ6lDYqrTfVS3LtXgox42Xz0gXusXIIDboeh6UwnSmox90QpVnub7au8ybrb0krQ==
   /jss/10.6.0:
@@ -16915,7 +16897,6 @@ packages:
       indefinite-observable: 2.0.1
       is-in-browser: 1.1.3
       tiny-warning: 1.0.3
-    dev: false
     resolution:
       integrity: sha512-n7SHdCozmxnzYGXBHe0NsO0eUf9TvsHVq2MXvi4JmTn3x5raynodDVE/9VQmBdWFyyj9HpHZ2B4xNZ7MMy7lkw==
   /jsx-ast-utils/3.2.0:
@@ -19546,7 +19527,6 @@ packages:
     resolution:
       integrity: sha512-jq4t3PJUpVRcveC53nnbEX35VyQI05x3tniwp26WFdm1dwaNUBHAi5awa/roBlwQxx1uRhwNSYeAi/aMbfiJCQ==
   /popper.js/1.16.1-lts:
-    dev: false
     resolution:
       integrity: sha512-Kjw8nKRl1m+VrSFCoVGPph93W/qrSO7ZkqPpTf7F4bk/sqcfWK019dWBUpE/fBOsOQY1dks/Bmcbfn1heM/IsA==
   /portfinder/1.0.28:
@@ -23482,7 +23462,6 @@ packages:
     resolution:
       integrity: sha512-FmqJZGduTyvsr2cF3375fqGHUovSwDi/QytexX1Se4BPuPZpTE5Ftp5fg+EFSuEf3lhZqgCRjEG3ydUQ/aNiwA==
   /tiny-warning/1.0.3:
-    dev: false
     resolution:
       integrity: sha512-lBN9zLN/oAf68o3zNXYrdCt1kP8WsiGW8Oo2ka41b2IM5JL/S1CTyX1rW0mb/zSuJun0ZUrDxx4sqvYS2FWzPA==
   /tmp-promise/3.0.2:
