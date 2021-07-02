@@ -5,19 +5,20 @@
 import React, { useState } from 'react';
 
 import { Drawer } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { createMuiTheme, makeStyles } from '@material-ui/core/styles';
 import { createKeyPair } from '@dxos/crypto';
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
+import { ReactUXTheme } from '@dxos/react-ux';
 import ProfileDialog from '../src/components/ProfileDialog';
 import PartyList from '../src/components/PartyList';
 import TaskList from '../src/components/TaskList';
-
-// TODO(wittjosiah): fix sharing parties
 
 /**
  * Create the user's HALO profile, then create shareable parties with items.
  */
 export const Stage5 = () => {
+  const baseTheme = createMuiTheme({});
+
   const useStyles = makeStyles(() => ({
     root: {
       display: 'flex'
@@ -81,7 +82,9 @@ export const Stage5 = () => {
 
   return (
     <ClientInitializer>
-      <App />
+      <ReactUXTheme base={baseTheme}>
+        <App />
+      </ReactUXTheme>
     </ClientInitializer>
   );
 };
