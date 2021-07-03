@@ -42,6 +42,6 @@ export const Stage1 = () => {
 };
 
 export default {
-  title: 'Tutorials/Stage 1',
+  title: 'Tasks App/Stage 1',
   component: Stage1
 };

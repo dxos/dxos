@@ -5,17 +5,20 @@
 import React, { useState } from 'react';
 
 import { Drawer } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { createMuiTheme, makeStyles } from '@material-ui/core/styles';
 import { createKeyPair } from '@dxos/crypto';
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
+import { ReactUXTheme } from '@dxos/react-ux';
 import ProfileDialog from '../src/components/ProfileDialog';
 import PartyList from '../src/components/PartyList';
 import TaskList from '../src/components/TaskList';
 
 /**
- * Create the user's HALO profile, then create parties with items.
+ * Create the user's HALO profile, then create shareable parties with items.
  */
-export const Stage4 = () => {
+export const Stage5 = () => {
+  const baseTheme = createMuiTheme({});
+
   const useStyles = makeStyles(() => ({
     root: {
       display: 'flex'
@@ -40,9 +43,9 @@ export const Stage4 = () => {
     const classes = useStyles();
     const client = useClient();
     const profile = useProfile();
-    const [partyKey, setPartyKey] = useState();
+    const [partyKey, setPartyKey] = useState<Buffer | undefined>();
 
-    const handleCreateProfile = async ({ username }) => {
+    const handleCreateProfile = async ({ username }: { username: string }) => {
       if (username) {
         const { publicKey, secretKey } = createKeyPair();
         await client.createProfile({ publicKey, secretKey, username });
@@ -66,13 +69,12 @@ export const Stage4 = () => {
         >
           <PartyList
             selectedPartyKey={partyKey}
-            onSelectParty={partyKey => setPartyKey(partyKey)}
-            hideRedeem={true}
+            onSelectParty={(partyKey: Buffer) => setPartyKey(partyKey)}
           />
         </Drawer>
 
         <main className={classes.main}>
-          {partyKey && <TaskList partyKey={partyKey} hideShare={true} />}
+          {partyKey && <TaskList partyKey={partyKey} />}
         </main>
       </div>
     );
@@ -80,12 +82,14 @@ export const Stage4 = () => {
 
   return (
     <ClientInitializer>
-      <App />
+      <ReactUXTheme base={baseTheme}>
+        <App />
+      </ReactUXTheme>
     </ClientInitializer>
   );
 };
 
 export default {
-  title: 'Tutorials/Stage 4',
-  component: Stage4
+  title: 'Tasks App/Stage 5',
+  component: Stage5
 };

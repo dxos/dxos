@@ -17,7 +17,7 @@ export const Stage2 = () => {
     const client = useClient();
     const profile = useProfile();
 
-    const handleCreateProfile = async ({ username }) => {
+    const handleCreateProfile = async ({ username }: { username: string }) => {
       if (username) {
         // TODO(burdon): Default keyPair?
         const { publicKey, secretKey } = createKeyPair();
@@ -41,6 +41,6 @@ export const Stage2 = () => {
 };
 
 export default {
-  title: 'Tutorials/Stage 2',
+  title: 'Tasks App/Stage 2',
   component: Stage2
 };

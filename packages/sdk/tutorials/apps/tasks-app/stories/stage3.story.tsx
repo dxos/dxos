@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { Button, Toolbar } from '@material-ui/core';
 import { createKeyPair } from '@dxos/crypto';
+import { Party } from '@dxos/echo-db';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-ux';
 import PartySettings from '../src/components/PartySettings';
@@ -22,7 +23,7 @@ export const Stage3 = () => {
     const parties = useParties();
     const [settingsDialog, setSettingsDialog] = useState(false);
 
-    const handleCreateProfile = async ({ username }) => {
+    const handleCreateProfile = async ({ username }: { username: string }) => {
       if (username) {
         const { publicKey, secretKey } = createKeyPair();
         await client.createProfile({ publicKey, secretKey, username });
@@ -35,7 +36,7 @@ export const Stage3 = () => {
       );
     }
 
-    const partyData = parties.map((party) => ({
+    const partyData = parties.map((party: Party) => ({
       key: party.key.toString(),
       title: getPartyTitle(party)
     }));
@@ -48,9 +49,7 @@ export const Stage3 = () => {
           </Button>
         </Toolbar>
         <JsonTreeView data={partyData} />
-        {settingsDialog && (
-          <PartySettings partyKey={undefined} onClose={() => setSettingsDialog(false)} />
-        )}
+        {settingsDialog && <PartySettings onClose={() => setSettingsDialog(false)} />}
       </>
     );
   };
@@ -63,6 +62,6 @@ export const Stage3 = () => {
 };
 
 export default {
-  title: 'Tutorials/Stage 3',
+  title: 'Tasks App/Stage 3',
   component: Stage3
 };
