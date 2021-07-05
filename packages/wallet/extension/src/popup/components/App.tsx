@@ -22,7 +22,7 @@ const baseTheme = createMuiTheme({
   }
 });
 
-function App() {
+function App () {
   return (
     <ThemeProvider theme={baseTheme}>
       <CssBaseline />

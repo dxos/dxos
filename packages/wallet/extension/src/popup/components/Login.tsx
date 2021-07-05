@@ -12,7 +12,7 @@ import { browser } from 'webextension-polyfill-ts';
 
 import { Card, Button, makeStyles, CardActions } from '@material-ui/core';
 
-import { useBackgroundContext} from '../contexts';
+import { useBackgroundContext } from '../contexts';
 import type { Profile } from '../utils/types';
 
 const useStyles = makeStyles({
@@ -37,7 +37,7 @@ const Login = ({ profile, setProfile } : LoginProps) => {
     }
     const response = await backgroundService.rpc.CreateProfile({ username: 'DXOS user' });
     setProfile(response);
-  }
+  };
 
   const onImport = async () => {
     await browser.tabs.create({ active: true, url: location.toString().replace('login', 'import') });
@@ -59,7 +59,7 @@ const Login = ({ profile, setProfile } : LoginProps) => {
   }
 
   if (profile && profile.username && profile.publicKey) {
-    return <Redirect to='/user'/>
+    return <Redirect to='/user'/>;
   }
 
   return (
@@ -72,6 +72,6 @@ const Login = ({ profile, setProfile } : LoginProps) => {
       </Card>
     </>
   );
-}
+};
 
 export default Login;

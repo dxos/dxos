@@ -5,11 +5,11 @@
 import React, { useState } from 'react';
 import { HashRouter, Switch, Route, Redirect } from 'react-router-dom';
 
+import { WithBackgroundContext } from '../contexts/BackgroundContext';
 import type { Profile } from '../utils/types';
+import Import from './Import';
 import Login from './Login';
 import User from './User';
-import Import from './Import';
-import { WithBackgroundContext } from '../contexts/BackgroundContext';
 
 const Main = () => {
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
@@ -24,16 +24,16 @@ const Main = () => {
           <Route path='/import'>
             <Import />
           </Route>
-          {profile && profile.username && profile.publicKey ?
-          <Route path='/user'>
-            <User profile={profile} />
-          </Route>
-          : null}
+          {profile && profile.username && profile.publicKey
+            ? <Route path='/user'>
+              <User profile={profile} />
+            </Route>
+            : null}
           <Redirect to='/login' />
         </Switch>
       </HashRouter>
     </WithBackgroundContext>
   );
-}
+};
 
 export default Main;

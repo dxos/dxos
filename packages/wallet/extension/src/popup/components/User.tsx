@@ -28,7 +28,7 @@ const User = ({ profile } : UserProps) => {
 
   return (
     <Card className={classes.card} raised={true}>
-      <CardContent> 
+      <CardContent>
         <Typography gutterBottom variant="h5" component="h2">
           {profile.username}
         </Typography>
@@ -38,6 +38,6 @@ const User = ({ profile } : UserProps) => {
       </CardContent>
     </Card>
   );
-}
+};
 
 export default User;

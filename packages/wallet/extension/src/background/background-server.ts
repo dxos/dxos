@@ -3,10 +3,10 @@
 //
 
 import { Client, ClientConfig } from '@dxos/client';
+import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/wallet-core';
-import { keyPairFromSeedPhrase } from '@dxos/credentials';
 
 const config: ClientConfig = {
   storage: {

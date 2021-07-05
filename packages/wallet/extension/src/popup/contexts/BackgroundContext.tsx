@@ -2,9 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
+import React, { useContext } from 'react';
+
 import { ProtoRpcClient } from '@dxos/rpc';
 import { BackgroundService } from '@dxos/wallet-core';
-import React, { useContext } from 'react';
 
 import { useExtensionBackgroundService } from '../hooks';
 
