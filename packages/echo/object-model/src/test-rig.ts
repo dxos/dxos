@@ -21,7 +21,7 @@ export class TestRig<M extends Model<any>> {
           seq: seq++
         };
   
-        // TODO(marik-d): Investigate why setImmediate is required.
+        // Process the message later, after resolving mutation-write promise. Doing otherwise breaks the model.
         setImmediate(() => this.model.processor.write({ mutation, meta } as any));
   
         return meta;
