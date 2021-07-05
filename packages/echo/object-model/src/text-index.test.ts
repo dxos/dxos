@@ -5,6 +5,8 @@
 import { Matcher } from './matcher';
 import { Predicate } from './proto';
 import { TextIndex } from './text-index';
+import expect from 'expect';
+import { it as test } from 'mocha'
 
 // https://en.wikipedia.org/wiki/Shakespeare%27s_plays#Canonical_plays
 const items = [

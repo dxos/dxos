@@ -3,6 +3,8 @@
 //
 
 import MiniSearch from 'minisearch';
+import expect from 'expect';
+import { it as test } from 'mocha'
 
 test('minisearch', async () => {
   // https://lucaong.github.io/minisearch/classes/_minisearch_.minisearch.html

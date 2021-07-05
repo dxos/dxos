@@ -4,6 +4,8 @@
 
 import { Matcher } from './matcher';
 import { Predicate, Query } from './proto';
+import expect from 'expect';
+import { it as test } from 'mocha'
 
 // TODO(burdon): Adapt for ObjectModel.
 // TODO(burdon): Nested properties?

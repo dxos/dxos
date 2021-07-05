@@ -4,6 +4,8 @@
 
 import { MutationUtil, ValueUtil } from './mutation';
 import { ObjectMutation } from './proto';
+import expect from 'expect';
+import { it as test } from 'mocha'
 
 test('ValueUtil', () => {
   {
