@@ -26,9 +26,6 @@ export class Identity {
     return new Identity(
       keyring,
       undefined,
-      undefined,
-      undefined,
-      () => undefined
     );
   }
 
@@ -38,38 +35,9 @@ export class Identity {
     return identity;
   }
 
-  static async newIdentity (keyring: Keyring) {
-    assert(!keyring.findKey(Filter.matches({ type: KeyType.IDENTITY })), 'Identity key already present');
-
-    const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    const deviceKey = await keyring.createKeyRecord({ type: KeyType.DEVICE });
-    const identityInfo = createIdentityInfoMessage(keyring, identityKey.publicKey.humanize(), identityKey);
-    createDeviceInfoMessage(keyring, deviceKey.publicKey.humanize(), deviceKey);
-    const identityGenesis = createKeyAdmitMessage(keyring, identityKey.publicKey, identityKey);
-    const partyGenesis = createPartyGenesisMessage(keyring, identityKey, deviceKey, deviceKey);
-
-    const credentials = new Map<string, SignedMessage | Message>();
-    credentials.set(deviceKey.publicKey.toHex(), partyGenesis);
-    credentials.set(identityKey.publicKey.toHex(), identityGenesis);
-
-    return new Identity(
-      keyring,
-      identityInfo.payload,
-      identityGenesis.payload,
-      undefined,
-      () => Keyring.buildKeyChain(
-        deviceKey.publicKey,
-        credentials
-      )
-    );
-  }
-
   constructor (
     private readonly _keyring: Keyring,
-    private _identityInfo: SignedMessage | undefined,
-    private _identityGenesis: SignedMessage | undefined,
     private _halo: HaloParty | undefined,
-    private _getDeviceKeyChain: () => KeyChain | undefined
   ) {}
 
   get keyring () {
@@ -94,7 +62,7 @@ export class Identity {
 
   get deviceKeyChain (): KeyChain | undefined {
     if (!this._deviceKeyChain) {
-      this._deviceKeyChain = this._getDeviceKeyChain();
+      this._deviceKeyChain = this.deviceKey && this._halo ? getDeviceKeyChainFromHalo(this._halo, this.deviceKey) : undefined;
     }
 
     return this._deviceKeyChain;
@@ -105,15 +73,15 @@ export class Identity {
   }
 
   get displayName (): string | undefined {
-    return this._identityInfo?.signed.payload.displayName;
+    return this.identityInfo?.signed.payload.displayName;
   }
 
-  get identityInfo (): SignedMessage | undefined {
-    return this._identityInfo;
+  get identityInfo () {
+    return this._halo?.identityInfo;
   }
 
-  get identityGenesis (): SignedMessage | undefined {
-    return this._identityGenesis;
+  get identityGenesis () {
+    return this._halo?.identityGenesis;
   }
 
   /**
@@ -123,9 +91,6 @@ export class Identity {
    */
   setHalo (halo: HaloParty) {
     this._halo = halo;
-    this._identityGenesis = halo.identityGenesis;
-    this._identityInfo = halo.identityInfo;
-    this._getDeviceKeyChain = () => this.deviceKey ? getDeviceKeyChainFromHalo(halo, this.deviceKey) : undefined;
   }
 }
 
