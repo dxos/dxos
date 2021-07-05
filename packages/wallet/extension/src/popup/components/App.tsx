@@ -15,8 +15,7 @@ const baseTheme = createMuiTheme({
         body: {
           margin: 0,
           overflow: 'hidden',
-          minWidth: 400,
-          maxWidth: 600
+          minWidth: 400
         }
       }
     }

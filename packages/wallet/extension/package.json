@@ -21,7 +21,8 @@
     "@dxos/codec-protobuf": "workspace:*",
     "protobufjs": "^6.9.0",
     "@dxos/async": "workspace:*",
-    "@dxos/rpc": "workspace:*"
+    "@dxos/rpc": "workspace:*",
+    "react-router-dom": "^5.1.2"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
@@ -37,6 +38,7 @@
     "rmdir": "~1.2.0",
     "webextension-polyfill-ts": "~0.25.0",
     "chalk": "^4.1.0",
-    "@material-ui/core": "^4.11.4"
+    "@material-ui/core": "^4.11.4",
+    "@types/react-router-dom": "~5.1.7"
   }
 }

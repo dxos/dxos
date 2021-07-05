@@ -22,9 +22,6 @@ export class BackgroundServer {
 
   public async run () {
     await this._client.initialize();
-    if (!this._client.getProfile()){
-      await this._client.createProfile({ ...createKeyPair(), username: 'DXOS user' });
-    }
     const service = schema.getService('dxos.wallet.extension.BackgroundService');
     const server: RpcPeer = createRpcServer({
       service,
@@ -51,9 +48,6 @@ export class BackgroundServer {
           };
         },
         CreateProfile: async request => {
-          await this._client.reset();
-          this._client = new Client(config);
-          await this._client.initialize();
           await this._client.createProfile({ ...createKeyPair(), ...request });
           return {
             username: this._client.getProfile()?.username,

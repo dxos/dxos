@@ -1880,6 +1880,7 @@ importers:
       protobufjs: 6.11.2
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
+      react-router-dom: 5.2.0_react@16.14.0
     devDependencies:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
@@ -1888,6 +1889,7 @@ importers:
       '@types/node': 14.14.45
       '@types/react': 16.14.6
       '@types/react-dom': 17.0.5
+      '@types/react-router-dom': 5.1.7
       '@types/webpack-env': 1.16.0
       chalk: 4.1.1
       copy: 0.3.2
@@ -1912,6 +1914,7 @@ importers:
       '@types/node': ^14.0.9
       '@types/react': ^16.14.0
       '@types/react-dom': ^17.0.2
+      '@types/react-router-dom': ~5.1.7
       '@types/webpack-env': ^1.16.0
       chalk: ^4.1.0
       copy: ~0.3.2
@@ -1919,6 +1922,7 @@ importers:
       protobufjs: ^6.9.0
       react: ^16.14.0
       react-dom: ^16.14.0
+      react-router-dom: ^5.1.2
       rmdir: ~1.2.0
       typescript: ^4.2.4
       webextension-polyfill-ts: ~0.25.0
@@ -7234,6 +7238,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-viwwrB+6xGzw+G1eWpF9geV3fnsDgXqHG+cqgiHrvQfDUW5hzhCyV7Sy3UJxhfRFBsgky2SSW33qi/YrIkjX5Q==
+  /@types/history/4.7.8:
+    dev: true
+    resolution:
+      integrity: sha512-S78QIYirQcUoo6UJZx9CSP0O2ix9IaeAXwQi26Rhr/+mg7qqPy8TzaxHSUut7eGjL8WmLccT7/MXf304WjqHcA==
   /@types/html-minifier-terser/5.1.1:
     resolution:
       integrity: sha512-giAlZwstKbmvMk1OO7WXSj4OZ0keXAcl2TQq4LWHiiPH2ByaH7WeUzng+Qej8UPxxv+8lRTuouo0iaNDBuzIBA==
@@ -7474,6 +7482,21 @@ packages:
     dev: true
     resolution:
       integrity: sha512-ikqukEhH4H9gr4iJCmQVNzTB307kROe3XFfHAOTxOXPOw7lAoEXnM5KWTkzeANGL5Ce6ABfiMl/zJBYNi7ObmQ==
+  /@types/react-router-dom/5.1.7:
+    dependencies:
+      '@types/history': 4.7.8
+      '@types/react': 16.14.6
+      '@types/react-router': 5.1.15
+    dev: true
+    resolution:
+      integrity: sha512-D5mHD6TbdV/DNHYsnwBTv+y73ei+mMjrkGrla86HthE4/PVvL1J94Bu3qABU+COXzpL23T1EZapVVpwHuBXiUg==
+  /@types/react-router/5.1.15:
+    dependencies:
+      '@types/history': 4.7.8
+      '@types/react': 16.14.6
+    dev: true
+    resolution:
+      integrity: sha512-z3UlMG/x91SFEVmmvykk9FLTliDvfdIUky4k2rCfXWQ0NKbrP8o9BTCaCTPuYsB8gDkUnUmkcA2vYlm2DR+HAA==
   /@types/react-syntax-highlighter/11.0.5:
     dependencies:
       '@types/react': 16.14.6
