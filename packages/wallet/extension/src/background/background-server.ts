@@ -6,6 +6,7 @@ import { Client, ClientConfig } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/wallet-core';
+import { keyPairFromSeedPhrase } from '@dxos/credentials';
 
 const config: ClientConfig = {
   storage: {
@@ -49,6 +50,14 @@ export class BackgroundServer {
         },
         CreateProfile: async request => {
           await this._client.createProfile({ ...createKeyPair(), ...request });
+          return {
+            username: this._client.getProfile()?.username,
+            publicKey: this._client.getProfile()?.publicKey.toHex()
+          };
+        },
+        RestoreProfile: async request => {
+          const keyPair = keyPairFromSeedPhrase(request.seedPhrase ?? '');
+          await this._client.createProfile({ ...keyPair, username: request.username });
           return {
             username: this._client.getProfile()?.username,
             publicKey: this._client.getProfile()?.publicKey.toHex()

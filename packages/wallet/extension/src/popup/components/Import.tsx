@@ -6,8 +6,24 @@ import React, { useState } from 'react';
 import { TextField, Container, Button, Grid } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
 
+import { useBackgroundContext} from '../contexts';
+import { Redirect } from 'react-router-dom';
+
 const Import = () =>  {
   const [seedPhrase, setSeedPhrase] = useState('');
+  const [redirected, setRedirected] = useState(false);
+  const backgroundService = useBackgroundContext();
+
+  const onRestore = async () => {
+    const response = await backgroundService?.rpc.RestoreProfile({ username: 'DXOS user', seedPhrase });
+    if (response) {
+      setRedirected(true);
+    }
+  };
+
+  if (redirected) {
+    return <Redirect to='/user'/>;
+  }
 
   return (
     <Container>
@@ -28,7 +44,7 @@ const Import = () =>  {
         </Grid>
         <Grid item xs={12}>
           <Grid container justify='flex-end'>
-            <Button variant='contained' color='primary'> Restore </Button>  
+            <Button variant='contained' color='primary' onClick={onRestore}> Restore </Button>  
           </Grid>
         </Grid>
       </Grid>
