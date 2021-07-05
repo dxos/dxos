@@ -12,9 +12,8 @@ interface UseRpcClientProps<S> {
   service: ServiceDescriptor<S>
 }
 
-export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) =>
-{
-  const [error, setError] = useState<Error | undefined>(undefined)
+export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) => {
+  const [error, setError] = useState<Error | undefined>(undefined);
   const [rpcClient, setRpcClient] = useState<ProtoRpcClient<S> | undefined>(undefined);
 
   useEffect(() => {
@@ -23,8 +22,8 @@ export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) =>
       client = createRpcClient(service, {
         port: port
       });
-    } catch(err) {
-      console.error('Creating RPC client failed', err)
+    } catch (err) {
+      console.error('Creating RPC client failed', err);
       setError(err);
       return;
     }
@@ -33,10 +32,9 @@ export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) =>
       try {
         await client.open();
         setRpcClient(client);
-      } catch(err) {
-        console.error('Opening RPC client failed', err)
+      } catch (err) {
+        console.error('Opening RPC client failed', err);
         setError(err);
-        return;
       }
     });
 
@@ -46,5 +44,5 @@ export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) =>
     };
   }, []);
 
-  return {error, rpcClient};
+  return { error, rpcClient };
 };

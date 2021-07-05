@@ -13,7 +13,7 @@ export function createWindowMessagePort (): RpcPort {
         if (payload) {
           cb(payload);
         }
-      }
+      };
       window.addEventListener('message', listener);
       return () => window.removeEventListener('message', listener);
     }
