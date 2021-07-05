@@ -12,201 +12,202 @@ import { Predicate, Query } from './proto';
 // TODO(burdon): Nested properties?
 // TODO(burdon): Indexed properties? (schema?)
 const getter = (item: any, key: string) => item[key];
-
-test('Basic queries', () => {
-  const queries: Query[] = [
-    {
-      root: {
-        op: Predicate.Operation.EQUALS,
-        key: 'name',
-        value: {
-          string: 'xxx'
-        }
-      }
-    },
-    {
-      root: {
-        op: Predicate.Operation.EQUALS,
-        key: 'name',
-        value: {
-          string: 'item-0'
-        }
-      }
-    },
-    {
-      root: {
-        op: Predicate.Operation.EQUALS,
-        key: 'complete',
-        value: {
-          bool: true // TODO(burdon): Should false match undefined?
-        }
-      }
-    },
-    {
-      root: {
-        op: Predicate.Operation.NOT,
-        predicates: [
-          {
-            op: Predicate.Operation.EQUALS,
-            key: 'name',
-            value: {
-              string: 'item-1'
-            }
-          }
-        ]
-      }
-    },
-    {
-      root: {
-        op: Predicate.Operation.OR,
-        predicates: [
-          {
-            op: Predicate.Operation.EQUALS,
-            key: 'name',
-            value: {
-              string: 'item-0'
-            }
-          },
-          {
-            op: Predicate.Operation.EQUALS,
-            key: 'name',
-            value: {
-              string: 'item-2'
-            }
-          }
-        ]
-      }
-    },
-    {
-      root: {
-        op: Predicate.Operation.IN,
-        key: 'label',
-        value: {
-          array: {
-            values: [
-              {
-                string: 'red'
-              },
-              {
-                string: 'green'
-              },
-              {
-                string: 'blue'
-              }
-            ]
+describe('matcher', () => {
+  test('Basic queries', () => {
+    const queries: Query[] = [
+      {
+        root: {
+          op: Predicate.Operation.EQUALS,
+          key: 'name',
+          value: {
+            string: 'xxx'
           }
         }
-      }
-    },
-    {
-      root: {
-        op: Predicate.Operation.OR,
-        predicates: [
-          {
-            op: Predicate.Operation.EQUALS,
-            key: 'name',
-            value: {
-              string: 'item-0'
-            }
-          },
-          {
-            op: Predicate.Operation.IN,
-            key: 'label',
-            value: {
-              array: {
-                values: [
-                  {
-                    string: 'red'
-                  },
-                  {
-                    string: 'green'
-                  },
-                  {
-                    string: 'blue'
-                  }
-                ]
+      },
+      {
+        root: {
+          op: Predicate.Operation.EQUALS,
+          key: 'name',
+          value: {
+            string: 'item-0'
+          }
+        }
+      },
+      {
+        root: {
+          op: Predicate.Operation.EQUALS,
+          key: 'complete',
+          value: {
+            bool: true // TODO(burdon): Should false match undefined?
+          }
+        }
+      },
+      {
+        root: {
+          op: Predicate.Operation.NOT,
+          predicates: [
+            {
+              op: Predicate.Operation.EQUALS,
+              key: 'name',
+              value: {
+                string: 'item-1'
               }
             }
+          ]
+        }
+      },
+      {
+        root: {
+          op: Predicate.Operation.OR,
+          predicates: [
+            {
+              op: Predicate.Operation.EQUALS,
+              key: 'name',
+              value: {
+                string: 'item-0'
+              }
+            },
+            {
+              op: Predicate.Operation.EQUALS,
+              key: 'name',
+              value: {
+                string: 'item-2'
+              }
+            }
+          ]
+        }
+      },
+      {
+        root: {
+          op: Predicate.Operation.IN,
+          key: 'label',
+          value: {
+            array: {
+              values: [
+                {
+                  string: 'red'
+                },
+                {
+                  string: 'green'
+                },
+                {
+                  string: 'blue'
+                }
+              ]
+            }
           }
-        ]
-      }
-    },
-    {
-      root: {
-        op: Predicate.Operation.PREFIX_MATCH,
-        key: 'name',
-        value: {
-          string: 'item'
+        }
+      },
+      {
+        root: {
+          op: Predicate.Operation.OR,
+          predicates: [
+            {
+              op: Predicate.Operation.EQUALS,
+              key: 'name',
+              value: {
+                string: 'item-0'
+              }
+            },
+            {
+              op: Predicate.Operation.IN,
+              key: 'label',
+              value: {
+                array: {
+                  values: [
+                    {
+                      string: 'red'
+                    },
+                    {
+                      string: 'green'
+                    },
+                    {
+                      string: 'blue'
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        root: {
+          op: Predicate.Operation.PREFIX_MATCH,
+          key: 'name',
+          value: {
+            string: 'item'
+          }
+        }
+      },
+      {
+        root: {
+          op: Predicate.Operation.TEXT_MATCH,
+          key: 'description',
+          value: {
+            string: 'dx'
+          }
+        }
+      },
+      {
+        root: {
+          op: Predicate.Operation.TEXT_MATCH,
+          key: 'description',
+          value: {
+            string: ''
+          }
         }
       }
-    },
-    {
-      root: {
-        op: Predicate.Operation.TEXT_MATCH,
-        key: 'description',
-        value: {
-          string: 'dx'
-        }
+    ];
+
+    const items = [
+      {
+        name: 'item-0',
+        description: 'this should not match any text queries.',
+        count: 0
+      },
+      {
+        name: 'item-1',
+        label: 'red',
+        description: 'this item -- references  dxos  projects.',
+        count: 1
+      },
+      {
+        name: 'item-2',
+        label: 'green',
+        complete: true,
+        count: 1
+      },
+      {
+        name: 'item-3',
+        complete: true,
+        count: 2
+      },
+      {
+        name: 'item-4',
+        complete: false
       }
-    },
-    {
-      root: {
-        op: Predicate.Operation.TEXT_MATCH,
-        key: 'description',
-        value: {
-          string: ''
-        }
-      }
-    }
-  ];
+    ];
 
-  const items = [
-    {
-      name: 'item-0',
-      description: 'this should not match any text queries.',
-      count: 0
-    },
-    {
-      name: 'item-1',
-      label: 'red',
-      description: 'this item -- references  dxos  projects.',
-      count: 1
-    },
-    {
-      name: 'item-2',
-      label: 'green',
-      complete: true,
-      count: 1
-    },
-    {
-      name: 'item-3',
-      complete: true,
-      count: 2
-    },
-    {
-      name: 'item-4',
-      complete: false
-    }
-  ];
+    const expected = [
+      [],
+      [items[0]],
+      [items[2], items[3]],
+      [items[0], items[2], items[3], items[4]],
+      [items[0], items[2]],
+      [items[1], items[2]],
+      [items[0], items[1], items[2]],
+      [items[0], items[1], items[2], items[3], items[4]],
+      [items[1]],
+      []
+    ];
 
-  const expected = [
-    [],
-    [items[0]],
-    [items[2], items[3]],
-    [items[0], items[2], items[3], items[4]],
-    [items[0], items[2]],
-    [items[1], items[2]],
-    [items[0], items[1], items[2]],
-    [items[0], items[1], items[2], items[3], items[4]],
-    [items[1]],
-    []
-  ];
+    const matcher = new Matcher({ getter });
+    const results = queries.map(query => matcher.matchItems(query, items));
 
-  const matcher = new Matcher({ getter });
-  const results = queries.map(query => matcher.matchItems(query, items));
-
-  results.forEach((result, i) => {
+    results.forEach((result, i) => {
     // eslint-disable-next-line jest/valid-expect
-    expect(result).toEqual(expected[i]);
+      expect(result).toEqual(expected[i]);
+    });
   });
 });

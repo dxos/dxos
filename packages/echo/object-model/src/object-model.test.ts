@@ -6,8 +6,6 @@
 
 import expect from 'expect';
 
-import { Timeframe } from '@dxos/echo-protocol';
-
 import { ObjectModel } from './object-model';
 import { TestRig } from './test-rig';
 
@@ -52,4 +50,4 @@ describe('TestRig', () => {
 
     expect(b.model.getProperty('foo')).toEqual('bar');
   });
-})
+});

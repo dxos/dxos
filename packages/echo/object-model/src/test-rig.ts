@@ -2,13 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
+import debug from 'debug';
+
 import { createId, PublicKey } from '@dxos/crypto';
 import { FeedWriter, Timeframe, WriteReceipt, MutationMeta } from '@dxos/echo-protocol';
 import { Model, ModelConstructor } from '@dxos/model-factory';
 import { ComplexMap } from '@dxos/util';
-import debug from 'debug'
 
-const log = debug('dxos:echo:model-test-rig')
+const log = debug('dxos:echo:model-test-rig');
 
 type ModelMessageOf<M extends Model<any>> = M extends Model<infer T> ? T : never;
 
@@ -39,11 +40,11 @@ export class TestRig<M extends Model<any>> {
   private _writeMessage (peerKey: PublicKey, mutation: ModelMessageOf<M>): WriteReceipt {
     const seq = this._peers.get(peerKey)!.mutations.length;
 
-    log(`Write ${peerKey}:${seq}`)
+    log(`Write ${peerKey}:${seq}`);
     this._peers.get(peerKey)!.mutations.push(mutation);
-    
+
     // Process the message later, after resolving mutation-write promise. Doing otherwise breaks the model.
-    setImmediate(() => this._replicate())
+    setImmediate(() => this._replicate());
 
     return {
       feedKey: peerKey,
@@ -51,21 +52,21 @@ export class TestRig<M extends Model<any>> {
     };
   }
 
-  private _replicate() {
+  private _replicate () {
     for (const peer of this._peers.values()) {
-      for(const [feed, {mutations}] of this._peers) {
-        const timeframeSeq = peer.timeframe.get(feed)
-        const startingIndex = timeframeSeq === undefined ? 0 : timeframeSeq + 1
-        log(`Replicating feed ${feed} -> ${peer.key} range [${startingIndex}; ${mutations.length})`)
+      for (const [feed, { mutations }] of this._peers) {
+        const timeframeSeq = peer.timeframe.get(feed);
+        const startingIndex = timeframeSeq === undefined ? 0 : timeframeSeq + 1;
+        log(`Replicating feed ${feed} -> ${peer.key} range [${startingIndex}; ${mutations.length})`);
 
-        for(let i = startingIndex; i < mutations.length; i++) {
+        for (let i = startingIndex; i < mutations.length; i++) {
           const meta: MutationMeta = {
             feedKey: feed.asUint8Array(),
             memberKey: feed.asUint8Array(),
-            seq: i,
+            seq: i
           };
-          log(`Process ${feed}:${i} -> ${peer.key}`)
-          peer.processMutation(meta, mutations[i])
+          log(`Process ${feed}:${i} -> ${peer.key}`);
+          peer.processMutation(meta, mutations[i]);
         }
       }
     }
