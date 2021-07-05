@@ -28,7 +28,7 @@ message Value {
     string    datetime                = 11;   // https://en.wikipedia.org/wiki/ISO_8601 (e.g., "2019-10-25T18:48:16Z")
     bytes     bytes                   = 12;
 
-    Object    object                  = 20;
+    KeyValueObject    object                  = 20;
     Array     array                   = 21;
   }
 }
@@ -51,7 +51,7 @@ message KeyValue {
 //
 // Object data definition.
 //
-message Object {
+message KeyValueObject {
   repeated KeyValue properties        = 1;
 }
 
