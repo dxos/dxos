@@ -93,8 +93,8 @@ const setup = async (open = true, createIdentity = true) => {
   afterTest(() => partyManager.close());
 
   identityManager.ready.once(() => {
-    assert(identityManager.halo?.isOpen);
-    const unsub = autoPartyOpener(identityManager.halo!, partyManager);
+    assert(identityManager.identity.halo?.isOpen);
+    const unsub = autoPartyOpener(identityManager.identity.halo!, partyManager);
     afterTest(unsub);
   });
 
@@ -102,7 +102,7 @@ const setup = async (open = true, createIdentity = true) => {
     await partyManager.open();
     if (createIdentity) {
       await identityManager.createHalo({
-        identityDisplayName: identityManager.identityKey!.publicKey.humanize()
+        identityDisplayName: identityManager.identity.identityKey!.publicKey.humanize()
       });
     }
   }
@@ -127,10 +127,10 @@ describe('Party manager', () => {
     expect(party.isOpen).toBeTruthy();
 
     // The Party key is an inception key, so its secret should be destroyed immediately after use.
-    const partyKey = identityManager.keyring.getKey(party.key);
+    const partyKey = identityManager.identity.keyring.getKey(party.key);
     expect(partyKey).toBeDefined();
     assert(partyKey);
-    expect(identityManager.keyring.hasSecretKey(partyKey)).toBe(false);
+    expect(identityManager.identity.keyring.hasSecretKey(partyKey)).toBe(false);
 
     await update;
   });
@@ -326,13 +326,13 @@ describe('Party manager', () => {
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {
-        if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerA.identityKey!.publicKey.humanize());
-          expect(member.displayName).toEqual(identityManagerA.displayName);
+        if (identityManagerA.identity.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityManagerA.identity.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(identityManagerA.identity.displayName);
         }
-        if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerB.identityKey!.publicKey.humanize());
-          expect(member.displayName).toEqual(identityManagerB.displayName);
+        if (identityManagerB.identity.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityManagerB.identity.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(identityManagerB.identity.displayName);
         }
       }
     }
@@ -411,11 +411,11 @@ describe('Party manager', () => {
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {
-        if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerA.identityKey!.publicKey.humanize());
+        if (identityManagerA.identity.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityManagerA.identity.identityKey!.publicKey.humanize());
         }
-        if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerB.identityKey!.publicKey.humanize());
+        if (identityManagerB.identity.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityManagerB.identity.identityKey!.publicKey.humanize());
         }
       }
     }
@@ -428,8 +428,8 @@ describe('Party manager', () => {
   test('Join a party - Offline', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
-    assert(identityManagerA.identityKey);
-    assert(identityManagerB.identityKey);
+    assert(identityManagerA.identity.identityKey);
+    assert(identityManagerB.identity.identityKey);
 
     await partyManagerA.open();
     await partyManagerB.open();
@@ -441,12 +441,12 @@ describe('Party manager', () => {
     log(`Created ${partyA.key.toHex()}`);
 
     const invitationDescriptor = await partyA.invitationManager
-      .createOfflineInvitation(identityManagerB.identityKey.publicKey);
+      .createOfflineInvitation(identityManagerB.identity.identityKey.publicKey);
 
     // Redeem the invitation on B.
     expect(partyManagerB.parties).toHaveLength(0);
     const partyB = await partyManagerB.joinParty(invitationDescriptor,
-      OfflineInvitationClaimer.createSecretProvider(identityManagerB));
+      OfflineInvitationClaimer.createSecretProvider(identityManagerB.identity));
     expect(partyB).toBeDefined();
     log(`Joined ${partyB.key.toHex()}`);
 
@@ -478,13 +478,13 @@ describe('Party manager', () => {
       const members = party.queryMembers().value;
       expect(members.length).toBe(2);
       for (const member of members) {
-        if (identityManagerA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerA.identityKey!.publicKey.humanize());
-          expect(member.displayName).toEqual(identityManagerA.displayName);
+        if (identityManagerA.identity.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityManagerA.identity.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(identityManagerA.identity.displayName);
         }
-        if (identityManagerB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityManagerB.identityKey!.publicKey.humanize());
-          expect(member.displayName).toEqual(identityManagerB.displayName);
+        if (identityManagerB.identity.identityKey!.publicKey.equals(member.publicKey)) {
+          expect(member.displayName).toEqual(identityManagerB.identity.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(identityManagerB.identity.displayName);
         }
       }
     }

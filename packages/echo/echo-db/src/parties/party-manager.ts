@@ -142,9 +142,6 @@ export class PartyManager {
   async createParty (): Promise<PartyInternal> {
     assert(this._open, 'PartyManager is not open.');
 
-    const identity = this._identityProvider();
-    assert(!!identity.halo, 'HALO party on present on identity.');
-
     const party = await this._partyFactory.createParty();
     assert(!this._parties.has(party.key), 'Party already exists.');
 
@@ -165,9 +162,6 @@ export class PartyManager {
   async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     assert(this._open, 'PartyManager is not open.');
 
-    const identity = this._identityProvider();
-    assert(!!identity.halo, 'HALO party on present on identity.');
-
     // The caller should have checked if the Party existed before calling addParty, but that check
     // is not within a single critical section, and so things may have changed. So we must perform that
     // check again, here within the synchronized block.
@@ -185,9 +179,6 @@ export class PartyManager {
   @synchronized
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
     assert(this._open, 'PartyManager is not open.');
-
-    const identity = this._identityProvider();
-    assert(!!identity.halo, 'HALO party on present on identity.');
 
     // TODO(marik-d): Somehow check that we don't already have this party
     // TODO(telackey): ^^ We can check the PartyKey during the greeting flow.
@@ -307,7 +298,10 @@ export class PartyManager {
   private async _recordPartyJoining (party: PartyInternal) {
     const identity = this._identityProvider();
 
-    assert(identity.halo, 'HALO is required.');
+    // TODO(marik-d): Extract HALO functionality from this class.
+    if (!identity.halo) {
+      return;
+    }
 
     const keyHints: KeyHint[] = [
       ...party.processor.memberKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.UNKNOWN })),
