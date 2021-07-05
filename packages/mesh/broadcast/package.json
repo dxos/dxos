@@ -1,6 +1,6 @@
 {
   "name": "@dxos/broadcast",
-  "version": "2.10.10",
+  "version": "2.10.11",
   "description": "Abstract module to send broadcast messages.",
   "repository": {
     "type": "git",
@@ -23,6 +23,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "debug": "^4.1.1",
     "tiny-lru": "^7.0.6"
   },

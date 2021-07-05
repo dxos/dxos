@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.10.10",
+  "version": "2.10.11",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
@@ -56,7 +56,6 @@
   "devDependencies": {
     "@dxos/testutils": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/jest": "^26.0.7",
     "@types/memdown": "^3.0.0",
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2",

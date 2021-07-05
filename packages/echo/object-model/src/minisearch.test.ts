@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import expect from 'expect';
 import MiniSearch from 'minisearch';
+import { it as test } from 'mocha';
 
 test('minisearch', async () => {
   // https://lucaong.github.io/minisearch/classes/_minisearch_.minisearch.html

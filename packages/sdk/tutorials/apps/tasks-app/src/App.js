@@ -4,12 +4,15 @@
 
 import React from 'react';
 
-import { ClientInitializer } from '@dxos/react-client';
-import { CssBaseline, ThemeProvider, createMuiTheme } from '@material-ui/core';
+import { CssBaseline } from '@material-ui/core';
+import { createMuiTheme } from '@material-ui/core/styles';
+import { ThemeProvider } from '@material-ui/styles';
 
-import config from './config';
-import Root from './components/Root';
+import { ClientInitializer } from '@dxos/react-client';
 import { ReactUXTheme } from '@dxos/react-ux';
+
+import Root from './components/Root';
+import { initConfig } from './config';
 
 const baseTheme = createMuiTheme({
   overrides: {
@@ -17,23 +20,22 @@ const baseTheme = createMuiTheme({
       '@global': {
         body: {
           margin: 0,
-          overflow: 'hidden',
-        },
-      },
-    },
+          overflow: 'hidden'
+        }
+      }
+    }
   },
   sidebar: {
-    width: 300,
-  },
+    width: 300
+  }
 });
 
 /**
  * Root container.
- * @param config
  */
-function App() {
+const App = () => {
   return (
-    <ClientInitializer config={config}>
+    <ClientInitializer config={initConfig}>
       <ReactUXTheme base={baseTheme}>
         <ThemeProvider theme={baseTheme}>
           <CssBaseline />
@@ -42,6 +44,6 @@ function App() {
       </ReactUXTheme>
     </ClientInitializer>
   );
-}
+};
 
 export default App;

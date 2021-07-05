@@ -8,7 +8,7 @@ import { createPartyInvitationMessage } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { Identity } from '../halo';
+import { IdentityProvider } from '../halo';
 import { PartyProcessor } from '../parties';
 import { InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
@@ -20,9 +20,15 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
 export class InvitationManager {
   constructor (
     private readonly _partyProcessor: PartyProcessor,
-    private readonly _identity: Identity,
+    // This needs to be a provider in case this is a backend for the HALO party.
+    // Then the identity would be changed after this is instantiated.
+    private readonly _identityProvider: IdentityProvider,
     private readonly _networkManager: NetworkManager
   ) {}
+
+  private get _identity () {
+    return this._identityProvider();
+  }
 
   get isHalo () {
     // The PartyKey of the HALO is the Identity key.

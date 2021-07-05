@@ -396,7 +396,6 @@ importers:
     devDependencies:
       '@dxos/testutils': link:../../common/testutils
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
-      '@types/jest': 26.0.23
       '@types/memdown': 3.0.0
       '@types/mocha': 8.2.2
       expect: 27.0.2
@@ -424,7 +423,6 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
       '@types/end-of-stream': ^1.4.0
-      '@types/jest': ^26.0.7
       '@types/json-stable-stringify': ^1.0.32
       '@types/lodash': ^4.14.159
       '@types/memdown': ^3.0.0
@@ -681,11 +679,9 @@ importers:
     devDependencies:
       '@dxos/async': link:../../common/async
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
-      '@types/jest': 26.0.23
-      '@types/jest-expect-message': 1.0.3
+      '@types/mocha': 8.2.2
       chance: 1.1.7
-      jest: 26.6.3
-      jest-expect-message: 1.0.2
+      expect: 27.0.2
       stream-buffers: 3.0.2
       wait-for-expect: 3.0.2
     specifiers:
@@ -699,17 +695,15 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
       '@types/end-of-stream': ^1.4.0
-      '@types/jest': ^26.0.7
-      '@types/jest-expect-message': ^1.0.3
       '@types/lodash': ^4.14.159
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/stream-buffers': ^3.0.2
       '@types/through2': ^2.0.36
       chance: ^1.1.6
       debug: ^4.1.1
+      expect: ~27.0.2
       hypercore: ^7.7.1
-      jest: ^26.6.3
-      jest-expect-message: ^1.0.2
       js-data-structs: ^1.1.2
       lodash: 4.17.21
       lodash.merge: ^4.6.2
@@ -744,6 +738,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
+      '@dxos/signal': 1.0.3
       '@esbuild-plugins/node-modules-polyfill': 0.1.1_esbuild@0.11.23
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
@@ -766,6 +761,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': workspace:*
+      '@dxos/signal': ~1.0.3-alpha.0
       '@dxos/toolchain-node-library': workspace:*
       '@esbuild-plugins/node-modules-polyfill': ~0.1.1
       '@types/debug': ^4.1.1
@@ -784,6 +780,13 @@ importers:
       stream-buffers: ^3.0.2
       yargs: ~16.2.0
   ../../packages/gravity/browser-tests:
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/object-model': link:../../echo/object-model
+      source-map-support: 0.5.19
     devDependencies:
       '@dxos/browser-mocha': link:../browser-mocha
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
@@ -792,10 +795,16 @@ importers:
       mocha: 8.4.0
     specifiers:
       '@dxos/browser-mocha': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/credentials': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/object-model': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/mocha': ~8.2.2
       expect: ~27.0.2
       mocha: ~8.4.0
+      source-map-support: ^0.5.12
   ../../packages/gravity/gravity-core:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -1006,6 +1015,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/crypto': link:../../common/crypto
       debug: 4.3.1
       tiny-lru: 7.0.6
     devDependencies:
@@ -1018,6 +1028,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/network-generator': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.1
@@ -1805,12 +1816,14 @@ importers:
   ../../packages/sdk/tutorials/apps/tasks-app:
     dependencies:
       '@craco/craco': 6.1.2_react-scripts@4.0.3
+      '@dxos/config': link:../../../config
       '@dxos/crypto': link:../../../../common/crypto
       '@dxos/object-model': link:../../../../echo/object-model
       '@dxos/react-client': link:../../../react-client
       '@dxos/react-ux': link:../../../react-ux
       '@material-ui/core': 4.11.4_react-dom@16.14.0+react@16.14.0
       '@material-ui/icons': 4.11.2_de4125cbc7df93d07bfd24495ba7ecef
+      '@material-ui/styles': 4.11.4_react-dom@16.14.0+react@16.14.0
       '@testing-library/dom': 7.31.2
       '@testing-library/jest-dom': 5.12.0
       '@testing-library/react': 11.2.6_react-dom@16.14.0+react@16.14.0
@@ -1821,23 +1834,41 @@ importers:
       type-fest: 0.13.1
     devDependencies:
       '@babel/core': 7.13.16
+      '@babel/preset-react': 7.9.4_@babel+core@7.13.16
+      '@dxos/toolchain-node-library': link:../../../../../toolchains/node-library
+      '@jackwilsdon/craco-use-babelrc': 1.0.0_react-scripts@4.0.3
+      '@types/jest': 26.0.23
+      '@types/node': 14.14.45
+      babel-plugin-import: 1.13.3
+      jest: 26.6.3
+      ts-jest: 26.5.6_jest@26.6.3+typescript@4.2.4
       typescript: 4.2.4
     specifiers:
       '@babel/core': ~7.13.15
+      '@babel/preset-react': 7.9.4
       '@craco/craco': ~6.1.2
+      '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ux': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@jackwilsdon/craco-use-babelrc': ~1.0.0
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
+      '@material-ui/styles': ^4.11.4
       '@testing-library/dom': ~7.31.2
       '@testing-library/jest-dom': ^5.11.4
       '@testing-library/react': ^11.0.4
       '@testing-library/user-event': ^12.1.10
+      '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
+      babel-plugin-import: ~1.13.3
+      jest: ^26.6.3
       react: ^16.14.0
       react-dom: ^16.14.0
       react-scripts: 4.0.3
+      ts-jest: ^26.5.6
       type-fest: ^0.13.1
       typescript: ^4.2.4
   ../../packages/wallet/core:
@@ -1871,6 +1902,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ux': link:../../sdk/react-ux
@@ -1901,6 +1933,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/react-client': workspace:*
@@ -1959,7 +1992,22 @@ importers:
       webpack-cli: ^4.7.0
       webpack-dev-server: ^3.11.2
   ../../toolchains/esbuild-plugins:
-    specifiers: {}
+    dependencies:
+      assert: 2.0.0
+      debug: 4.3.1
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.0
+      tty-browserify: 0.0.1
+      util: 0.12.4
+    specifiers:
+      assert: ^2.0.0
+      debug: ^4.1.1
+      events: ~3.3.0
+      path-browserify: ~1.0.1
+      readable-stream: ^3.6.0
+      tty-browserify: ~0.0.1
+      util: ~0.12.4
   ../../toolchains/node-library:
     dependencies:
       '@dxos/eslint-plugin': 1.0.10_eslint@7.26.0+typescript@4.2.4
@@ -2983,7 +3031,7 @@ packages:
   /@babel/plugin-syntax-jsx/7.12.13_@babel+core@7.12.3:
     dependencies:
       '@babel/core': 7.12.3
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     dev: false
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -2992,7 +3040,7 @@ packages:
   /@babel/plugin-syntax-jsx/7.12.13_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     peerDependencies:
       '@babel/core': ^7.0.0-0
     resolution:
@@ -3647,7 +3695,7 @@ packages:
   /@babel/plugin-transform-react-display-name/7.14.2_@babel+core@7.12.3:
     dependencies:
       '@babel/core': 7.12.3
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     dev: false
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -3656,7 +3704,7 @@ packages:
   /@babel/plugin-transform-react-display-name/7.14.2_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     peerDependencies:
       '@babel/core': ^7.0.0-0
     resolution:
@@ -3681,7 +3729,7 @@ packages:
   /@babel/plugin-transform-react-jsx-self/7.12.13_@babel+core@7.12.3:
     dependencies:
       '@babel/core': 7.12.3
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     dev: false
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -3690,7 +3738,7 @@ packages:
   /@babel/plugin-transform-react-jsx-self/7.12.13_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     dev: true
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -3699,7 +3747,7 @@ packages:
   /@babel/plugin-transform-react-jsx-source/7.14.2_@babel+core@7.12.3:
     dependencies:
       '@babel/core': 7.12.3
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     dev: false
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -3708,7 +3756,7 @@ packages:
   /@babel/plugin-transform-react-jsx-source/7.14.2_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     dev: true
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -3719,7 +3767,7 @@ packages:
       '@babel/core': 7.12.3
       '@babel/helper-annotate-as-pure': 7.12.13
       '@babel/helper-module-imports': 7.13.12
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
       '@babel/plugin-syntax-jsx': 7.12.13_@babel+core@7.12.3
       '@babel/types': 7.14.2
     dev: false
@@ -3732,7 +3780,7 @@ packages:
       '@babel/core': 7.13.16
       '@babel/helper-annotate-as-pure': 7.12.13
       '@babel/helper-module-imports': 7.13.12
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
       '@babel/plugin-syntax-jsx': 7.12.13_@babel+core@7.13.16
       '@babel/types': 7.14.2
     peerDependencies:
@@ -4184,7 +4232,7 @@ packages:
   /@babel/preset-react/7.9.4_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
       '@babel/plugin-transform-react-display-name': 7.14.2_@babel+core@7.13.16
       '@babel/plugin-transform-react-jsx': 7.13.12_@babel+core@7.13.16
       '@babel/plugin-transform-react-jsx-development': 7.12.17_@babel+core@7.13.16
@@ -4299,6 +4347,20 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-v9kIhKwjeZThiWrLmj0y17CWoyddASLj9O2yvbZkbvw/N3rWOYy9zkV66ursAoVr0mV15bL8g0c4QZUE6cdDoQ==
+  /@craco/craco/3.6.0_react-scripts@4.0.3:
+    dependencies:
+      cross-spawn: 6.0.5
+      lodash.mergewith: 4.6.1
+      react-scripts: 4.0.3_866ead2e7b417c7c882864b5cf000383
+      webpack-merge: 4.1.4
+    dev: true
+    engines:
+      node: '>=6'
+    hasBin: true
+    peerDependencies:
+      react-scripts: '*'
+    resolution:
+      integrity: sha512-01hBd0kefkDmfOsiXq5lAnSISVPgLqT1Qrr8Y062XRboeIlz9GQvOjJxhIxoqgVFYdeKURW6xza2qOEj5Til4w==
   /@craco/craco/6.1.2_react-scripts@4.0.3:
     dependencies:
       cross-spawn: 7.0.3
@@ -4791,6 +4853,14 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-ZXRY4jNvVgSVQ8DL3LTcakaAtXwTVUxE81hslsyD2AtoXW/wVob10HkOJ1X/pAlcI7D+2YoZKg5do8G/w6RYgA==
+  /@jackwilsdon/craco-use-babelrc/1.0.0_react-scripts@4.0.3:
+    dependencies:
+      '@craco/craco': 3.6.0_react-scripts@4.0.3
+    dev: true
+    peerDependencies:
+      react-scripts: '*'
+    resolution:
+      integrity: sha512-q8Y3o7bBiAw+mlLZnoIJUm5Yzh8wIKxpM4qkuXDxFdeWM/Rio06j/zRBmBXcKJLFiCZABSWao/ymZPBRqK0o3Q==
   /@jest/console/26.6.2:
     dependencies:
       '@jest/types': 26.6.2
@@ -7268,12 +7338,6 @@ packages:
       '@types/istanbul-lib-report': 3.0.0
     resolution:
       integrity: sha512-nwKNbvnwJ2/mndE9ItP/zc2TCzw6uuodnF4EHYWD+gCQDVBuRQL5UzbZD0/ezy1iKsFU2ZQiDqg4M9dN4+wZgA==
-  /@types/jest-expect-message/1.0.3:
-    dependencies:
-      '@types/jest': 26.0.23
-    dev: true
-    resolution:
-      integrity: sha512-sp70Lc8POkOcXHEcLERpX/7B/BtQiqIYz3AvC9ZMNKSaiDttr8hKvz9DljIn7N6WJi3ioVoTtB1utDAX46oPlg==
   /@types/jest/26.0.23:
     dependencies:
       jest-diff: 26.6.2
@@ -8827,7 +8891,7 @@ packages:
       es6-object-assign: 1.1.0
       is-nan: 1.3.2
       object-is: 1.1.5
-      util: 0.12.3
+      util: 0.12.4
     resolution:
       integrity: sha512-se5Cd+js9dXJnu6Ag2JFc00t+HmHOen+8Q+L7O9zI0PqQXr20uk2J0XQqMxZEeo5U50o8Nvmmx7dZrl+Ufr35A==
   /assign-symbols/1.0.0:
@@ -9094,6 +9158,13 @@ packages:
     dev: true
     resolution:
       integrity: sha512-yJ9BsJaISua7d8zNT7oRG1ZLBJCIdZ4PZqmH8qa9N5AK01ifk3fnkc98AXhtzE7UkfCsEumvoQWgoYLhOnJ7jQ==
+  /babel-plugin-import/1.13.3:
+    dependencies:
+      '@babel/helper-module-imports': 7.13.12
+      '@babel/runtime': 7.14.0
+    dev: true
+    resolution:
+      integrity: sha512-1qCWdljJOrDRH/ybaCZuDgySii4yYrtQ8OJQwrcDqdt0y67N30ng3X3nABg6j7gR7qUJgcMa9OMhc4AGViDwWw==
   /babel-plugin-inline-import/3.0.0:
     dependencies:
       require-resolve: 0.0.2
@@ -16208,10 +16279,6 @@ packages:
       node: '>= 10.14.2'
     resolution:
       integrity: sha512-zhtMio3Exty18dy8ee8eJ9kjnRyZC1N4C1Nt/VShN1apyXc8rWGtJ9lI7vqiWcyyXS4BVSEn9lxAM2D+07/Tag==
-  /jest-expect-message/1.0.2:
-    dev: true
-    resolution:
-      integrity: sha512-WFiXMgwS2lOqQZt1iJMI/hOXpUm32X+ApsuzYcQpW5m16Pv6/Gd9kgC+Q+Q1YVNU04kYcAOv9NXMnjg6kKUy6Q==
   /jest-get-type/26.3.0:
     engines:
       node: '>= 10.14.2'
@@ -17374,6 +17441,10 @@ packages:
   /lodash.merge/4.6.2:
     resolution:
       integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==
+  /lodash.mergewith/4.6.1:
+    dev: true
+    resolution:
+      integrity: sha512-eWw5r+PYICtEBgrBE5hhlT6aAa75f411bgDz/ZL2KZqYV03USvucsxcHUIlGTDTECs1eunpI7HOV7U+WLDvNdQ==
   /lodash.pick/4.4.0:
     resolution:
       integrity: sha1-UvBWEP/53tQiYRRB7R/BI6AwAbM=
@@ -23779,6 +23850,10 @@ packages:
   /tty-browserify/0.0.0:
     resolution:
       integrity: sha1-oVe6QC2iTpv5V/mqadUk7tQpAaY=
+  /tty-browserify/0.0.1:
+    dev: false
+    resolution:
+      integrity: sha512-C3TaO7K81YvjCgQH9Q1S3R3P3BtN3RIM8n+OvX4il1K1zgE8ZhI0op7kClgkxtutIE8hQrcrHBXvIheqKUUCxw==
   /tunnel-agent/0.6.0:
     dependencies:
       safe-buffer: 5.2.1
@@ -24282,7 +24357,7 @@ packages:
       inherits: 2.0.3
     resolution:
       integrity: sha512-HShAsny+zS2TZfaXxD9tYj4HQGlBezXZMZuM/S5PKLLoZkShZiGk9o5CzukI1LVHZvjdvZ2Sj1aW/Ndn2NB/HQ==
-  /util/0.12.3:
+  /util/0.12.4:
     dependencies:
       inherits: 2.0.4
       is-arguments: 1.1.0
@@ -24291,7 +24366,7 @@ packages:
       safe-buffer: 5.2.1
       which-typed-array: 1.1.4
     resolution:
-      integrity: sha512-I8XkoQwE+fPQEhy9v012V+TSdH2kp9ts29i20TaaDUXsg7x/onePbhFJUExBfv/2ay1ZOp/Vsm3nDlmnFGSAog==
+      integrity: sha512-bxZ9qtSlGUWSOy9Qa9Xgk11kSslpuZwaxCg4sNIDj6FLucDab2JxnHwyNTCpHMtK1MjoQiWQ6DiUMZYbSrO+Sw==
   /utila/0.4.0:
     resolution:
       integrity: sha1-ihagXURWV6Oupe7MWxKk+lN5dyw=
@@ -24714,6 +24789,12 @@ packages:
       webpack: 2 || 3 || 4
     resolution:
       integrity: sha512-9S6YyKKKh/Oz/eryM1RyLVDVmy3NSPV0JXMRhZ18fJsq+AwGxUY34X54VNwkzYcEmEkDwNxuEOboCZEebJXBAQ==
+  /webpack-merge/4.1.4:
+    dependencies:
+      lodash: 4.17.21
+    dev: true
+    resolution:
+      integrity: sha512-TmSe1HZKeOPey3oy1Ov2iS3guIZjWvMT2BBJDzzT5jScHTjVC3mpjJofgueEzaEd6ibhxRDD6MIblDr8tzh8iQ==
   /webpack-merge/4.2.2:
     dependencies:
       lodash: 4.17.21

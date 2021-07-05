@@ -1,15 +1,13 @@
-const { REACT_APP_SWARM_SIGNAL } = process.env;
+//
+// Copyright 2021 DXOS.org
+//
 
-const config = {
-  app: {
-    title: 'Tasks App',
-  },
-  storage: {
-    persistent: true,
-  },
-  swarm: {
-    signal: REACT_APP_SWARM_SIGNAL,
-  },
-};
+import { Config, Envs, Defaults, Dynamics } from '@dxos/config';
 
-export default config;
+const config = async () => new Config(
+  await Dynamics(),
+  Envs(),
+  Defaults()
+);
+
+export const initConfig = () => config().then(({ values }) => values);

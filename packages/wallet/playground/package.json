@@ -1,6 +1,6 @@
 {
   "name": "@dxos/wallet-playground",
-  "version": "2.10.10",
+  "version": "2.10.11",
   "description": "DXOS Wallet Playground.",
   "author": "DXOS.org",
   "main": "dist/src/index.js",

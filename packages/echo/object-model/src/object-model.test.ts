@@ -4,53 +4,50 @@
 
 // This file is not compiled or run because it introduces a circular dependency on echo-db
 
-import { sleep } from '@dxos/async';
-import { createId, PublicKey } from '@dxos/crypto';
-import { FeedWriter } from '@dxos/echo-protocol';
+import expect from 'expect';
 
 import { ObjectModel } from './object-model';
-import { ObjectMutationSet } from './proto';
+import { TestRig } from './test-rig';
 
-const createModel = () => {
-  const feedKey = PublicKey.random();
-  const memberKey = PublicKey.random();
-  let seq = 0;
+describe('TestRig', () => {
+  it('can set a property', async () => {
+    const rig = new TestRig(ObjectModel);
+    const { model } = rig.createPeer();
 
-  const writer: FeedWriter<ObjectMutationSet> = {
-    write: async (mutation) => {
-      await sleep(10);
+    await model.setProperty('foo', 'bar');
 
-      const meta = {
-        feedKey,
-        memberKey,
-        seq: seq++
-      };
+    expect(model.getProperty('foo')).toEqual('bar');
+  });
 
-      // TODO(marik-d): Investigate why setImmediate is required.
-      setImmediate(() => model.processor.write({ mutation, meta } as any));
+  it('property updates are optimistically applied', async () => {
+    const rig = new TestRig(ObjectModel);
+    const { model } = rig.createPeer();
 
-      return meta;
-    }
-  };
+    const promise = model.setProperty('foo', 'bar');
 
-  const model = new ObjectModel(ObjectModel.meta, createId(), writer);
-  return model;
-};
+    expect(model.getProperty('foo')).toEqual('bar');
 
-it('can set a property', async () => {
-  const model = createModel();
+    await promise;
+  });
 
-  await model.setProperty('foo', 'bar');
+  it('timeframe is updated after a mutation', async () => {
+    const rig = new TestRig(ObjectModel);
+    const peer = rig.createPeer();
 
-  expect(model.getProperty('foo')).toEqual('bar');
-});
+    expect(peer.timeframe.get(peer.key)).toEqual(undefined);
 
-it('property updates are optimistically applied', async () => {
-  const model = createModel();
+    await peer.model.setProperty('foo', 'bar');
 
-  const promise = model.setProperty('foo', 'bar');
+    expect(peer.timeframe.get(peer.key)).toEqual(0);
+  });
 
-  expect(model.getProperty('foo')).toEqual('bar');
+  it('two peers', async () => {
+    const rig = new TestRig(ObjectModel);
+    const a = rig.createPeer();
+    const b = rig.createPeer();
 
-  await promise;
+    await a.model.setProperty('foo', 'bar');
+
+    expect(b.model.getProperty('foo')).toEqual('bar');
+  });
 });
