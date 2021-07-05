@@ -10,7 +10,8 @@ import expect from 'expect';
 import { it as test } from 'mocha'
 
 it('can set a property', async () => {
-  const {model} = new TestRig(ObjectModel);
+  const rig = new TestRig(ObjectModel);
+  const {model} = rig.createPeer()
 
   await model.setProperty('foo', 'bar');
 
@@ -18,7 +19,8 @@ it('can set a property', async () => {
 });
 
 it('property updates are optimistically applied', async () => {
-  const {model} = new TestRig(ObjectModel);
+  const rig = new TestRig(ObjectModel);
+  const {model} = rig.createPeer()
 
   const promise = model.setProperty('foo', 'bar');
 
