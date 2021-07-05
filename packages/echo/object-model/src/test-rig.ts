@@ -29,7 +29,7 @@ export class TestRig<M extends Model<any>> {
 
     const model = new this._modelConstructor(this._modelConstructor.meta, createId(), writer);
 
-    const peer = new TestPeer(model);
+    const peer = new TestPeer(model, key);
     this._peers.set(key, peer);
 
     return peer;
@@ -60,10 +60,13 @@ export class TestPeer<M extends Model<any>> {
   public timeframe = new Timeframe()
 
   constructor (
-    public readonly model: M
+    public readonly model: M,
+    public readonly key: PublicKey
   ) {}
 
   processMutation (meta: MutationMeta, mutation: ModelMessageOf<M>) {
     this.model.processor.write({ mutation, meta } as any);
+
+    this.timeframe = Timeframe.merge(this.timeframe, new Timeframe([[PublicKey.from(meta.feedKey), meta.seq]]));
   }
 }

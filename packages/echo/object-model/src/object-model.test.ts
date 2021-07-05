@@ -5,7 +5,8 @@
 // This file is not compiled or run because it introduces a circular dependency on echo-db
 
 import expect from 'expect';
-import { it as test } from 'mocha';
+
+import { Timeframe } from '@dxos/echo-protocol';
 
 import { ObjectModel } from './object-model';
 import { TestRig } from './test-rig';
@@ -28,4 +29,15 @@ it('property updates are optimistically applied', async () => {
   expect(model.getProperty('foo')).toEqual('bar');
 
   await promise;
+});
+
+it('timeframe is updated after a mutation', async () => {
+  const rig = new TestRig(ObjectModel);
+  const peer = rig.createPeer();
+
+  expect(peer.timeframe.get(peer.key)).toEqual(undefined);
+
+  await peer.model.setProperty('foo', 'bar');
+
+  expect(peer.timeframe.get(peer.key)).toEqual(0);
 });
