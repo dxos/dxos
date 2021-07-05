@@ -1,6 +1,6 @@
 {
   "name": "@dxos/wallet-extension",
-  "version": "2.10.10",
+  "version": "2.10.11",
   "description": "DXOS Wallet Extension",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -12,6 +12,7 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/wallet-core": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@hot-loader/react-dom": "16.13.0",
     "react": "^16.14.0",
@@ -19,10 +20,12 @@
     "@dxos/react-ux": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "protobufjs": "^6.9.0",
-    "@dxos/async": "workspace:*"
+    "@dxos/async": "workspace:*",
+    "@dxos/rpc": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/esbuild-plugins": "workspace:*",
     "esbuild": "^0.11.23",
     "@types/node": "^14.0.9",
     "@types/react": "^16.14.0",

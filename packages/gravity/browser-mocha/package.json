@@ -1,0 +1,56 @@
+{
+  "name": "@dxos/browser-mocha",
+  "version": "2.10.10",
+  "description": "Run mocha test in the browser.",
+  "bugs": {
+    "url": "'https://github.com/dxos/protocols/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/protocols.git"
+  },
+  "license": "AGPL-3.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "bin": {
+    "browser-mocha": "./main.js"
+  },
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "@dxos/debug": "workspace:*",
+    "@types/debug": "^4.1.1",
+    "@types/end-of-stream": "^1.4.0",
+    "@types/lodash": "^4.14.159",
+    "@types/node": "^14.0.9",
+    "@types/stream-buffers": "^3.0.2",
+    "@types/through2": "^2.0.36",
+    "lodash.merge": "^4.6.2",
+    "esbuild": "^0.11.23",
+    "playwright": "^1.7.0",
+    "yargs": "~16.2.0",
+    "glob": "~7.1.6",
+    "pkg-up": "^3.1.0",
+    "@esbuild-plugins/node-modules-polyfill": "~0.1.1",
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/signal": "~1.0.3-alpha.0"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
+    "stream-buffers": "^3.0.2",
+    "@types/yargs": "~16.0.1",
+    "@types/glob": "~7.1.3"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

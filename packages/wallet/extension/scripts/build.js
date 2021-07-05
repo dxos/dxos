@@ -1,5 +1,5 @@
 const { NodeModulesPolyfillPlugin } = require('@esbuild-plugins/node-modules-polyfill')
-const NodeGlobalsPolyfillPlugin = require('./globals-plugin')
+const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin } = require('@dxos/esbuild-plugins')
 const { build } = require('esbuild')
 const rmdir = require('rmdir');
 const { promisify } = require('util')
@@ -22,6 +22,7 @@ const publicDir = join(__dirname, '../public')
       entryPoints: [
         join(srcDir, 'background/background.ts'),
         join(srcDir, 'popup/main.tsx'),
+        join(srcDir, 'content/content.ts')
       ],
       outdir: distDir,
       write: true,
@@ -47,18 +48,3 @@ const publicDir = join(__dirname, '../public')
   await promisify(copy)(`${publicDir}/**`, distDir)
 })()
 
-/**
- * @returns {import('esbuild').Plugin}
- */
-function FixMemdownPlugin() {
-  return {
-    name: 'fix-memdown-plugin',
-    setup({ onResolve }) {
-      onResolve({ filter: /^immediate$/ }, arg => {
-        return {
-          path: require.resolve(arg.path, { paths: [arg.resolveDir] })
-        }
-      })
-    }
-  }
-}

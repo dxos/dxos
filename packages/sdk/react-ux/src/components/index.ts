@@ -8,7 +8,10 @@ import ErrorBoundary from './ErrorBoundary';
 import ErrorView from './ErrorView';
 import FullScreen from './FullScreen';
 import JsonTreeView from './JsonTreeView';
+import PartySharingDialog from './PartySharingDialog';
 import Passcode from './Passcode';
+import RedeemDialog from './RedeemDialog';
+import ReactUXTheme from './Theme';
 export * from './Drawer';
 
 export {
@@ -18,5 +21,8 @@ export {
   FullScreen,
   Passcode,
   DeleteConfirmation,
-  ErrorView
+  ErrorView,
+  RedeemDialog,
+  PartySharingDialog,
+  ReactUXTheme
 };

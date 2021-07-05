@@ -1,0 +1,9 @@
+app:
+  title: "Tasks App"
+storage:
+  persistent: true
+swarm:
+  signal: "wss://apollo3.kube.moon.dxos.network/dxos/signal"
+wns:
+  server: "https://apollo3.kube.moon.dxos.network/dxos/wns/api"
+  chainId: "devnet-2"

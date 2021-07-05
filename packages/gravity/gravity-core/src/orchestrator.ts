@@ -103,6 +103,8 @@ export class Orchestrator {
     const { env = NODE_ENV, botPath, ...rest } = options;
 
     assert(botPath);
+    assert(path.isAbsolute(botPath), 'Bot path must be absolute');
+
     if (this._localRun) {
       options = {
         ...rest,

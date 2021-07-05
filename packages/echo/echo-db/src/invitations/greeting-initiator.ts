@@ -122,7 +122,7 @@ export class GreetingInitiator {
     // starting the redemption of the Invitation.
     //
 
-    assert(this._greeterPlugin); // Neded because typechecker complains that `_greeterPlugin` can possibly be undefined.
+    assert(this._greeterPlugin); // Needed because typechecker complains that `_greeterPlugin` can possibly be undefined.
     const { info } = await this._greeterPlugin.send(responderPeerId, createGreetingBeginMessage() as any) as any;
 
     //

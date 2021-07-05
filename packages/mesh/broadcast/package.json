@@ -1,6 +1,6 @@
 {
   "name": "@dxos/broadcast",
-  "version": "2.10.10",
+  "version": "2.10.11",
   "description": "Abstract module to send broadcast messages.",
   "repository": {
     "type": "git",
@@ -24,7 +24,8 @@
     "@dxos/codec-protobuf": "workspace:*",
     "debug": "^4.1.1",
     "tiny-lru": "^7.0.6",
-    "@dxos/async": "workspace:*"
+    "@dxos/async": "workspace:*",
+    "@dxos/crypto": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

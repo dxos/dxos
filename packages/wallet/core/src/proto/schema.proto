@@ -1,0 +1,62 @@
+//
+// Copyright 2019 DxOS.
+//
+
+syntax = "proto3";
+
+package dxos.wallet.extension;
+
+service BackgroundService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+
+  rpc CreateParty(CreatePartyRequest) returns (CreatePartyResponse);
+
+  // Used by the key hole application to prove identity and allow/disallow access.
+  rpc SignMessage(SignMessageRequest) returns (SignMessageResponse);
+}
+
+message SignMessageRequest {
+  string nonce = 1;
+  bytes message = 2;
+}
+message SignMessageResponse {
+  string publicKey = 1;
+  string username = 2;
+  bytes signedMessage = 3;
+}
+
+message GetProfileRequest {}
+message GetProfileResponse {
+  string publicKey = 1;
+  string username = 2;
+}
+
+message CreatePartyRequest {}
+message CreatePartyResponse {
+  string partyKey = 1;
+}
+
+message GetPartiesRequest {}
+message GetPartiesResponse {
+  repeated string partyKeys = 1;
+}
+
+message RequestEnvelope {
+  string id = 1;
+  string method = 2; // From service definition
+  bytes payload = 3; // encoding specific to every method
+  bool streamResponse = 4;
+}
+
+message ResponseEnvelope {
+  string id = 1;
+  oneof response {
+    bytes payload = 2;
+    Error error = 3;
+  }
+}
+
+message Error {
+  string error = 1;
+  string stack = 2;
+}

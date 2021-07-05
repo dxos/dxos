@@ -4,7 +4,6 @@
 
 import assert from 'assert';
 import { EventEmitter } from 'events';
-import pEvent from 'p-event';
 import pump from 'pump';
 
 import { Network, NetworkGenerator, Topology, TOPOLOGIES } from '@dxos/network-generator';
@@ -83,9 +82,7 @@ export class ProtocolNetworkGenerator extends EventEmitter {
         const stream = pump(r1, r2, r1);
 
         if (waitForFullConnection) {
-          await pEvent(getProtocolFromStream(r1), 'handshake', {
-            rejectionEvents: ['error', 'close']
-          });
+          await getProtocolFromStream(r1).waitForHandshake();
         }
 
         return stream;

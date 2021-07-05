@@ -94,7 +94,7 @@ export class GreetingCommandPlugin extends EventEmitter {
    * @return {Object} Message received from peer in response to our request.
    */
   async send (peerId: PeerId, message: WithTypeUrl<Command>) {
-    assert(Buffer.isBuffer(peerId));
+    assert(Buffer.isBuffer(peerId), 'peerId is not a buffer.');
     assert(message);
     // Only the FINISH command does not require a response.
     return this._send(peerId, message, message.command === Command.Type.FINISH);
@@ -144,10 +144,9 @@ export class GreetingCommandPlugin extends EventEmitter {
       }
     }
 
-    // In an older version, response.data could be either binary or JSON encoded.
-    // Assert we received binary encoded data then decode.
-    assert(Buffer.isBuffer(result.response.data));
-    result.response = codec.decode(result.response.data);
+    assert(result.response.data, 'Response data is missing.');
+    const response = Buffer.isBuffer(result.response.data) ? result.response.data : Buffer.from(result.response.data);
+    result.response = codec.decode(response);
 
     log('Received response from %s: %o', peerIdStr, result.response.payload);
 

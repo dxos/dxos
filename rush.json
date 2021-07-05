@@ -446,6 +446,10 @@
       "packageName": "@dxos/toolchain-node-library",
       "projectFolder": "toolchains/node-library"
     },
+    {
+      "packageName": "@dxos/esbuild-plugins",
+      "projectFolder": "toolchains/esbuild-plugins"
+    },
 
     //
     // common
@@ -497,6 +501,10 @@
       "packageName": "@dxos/testutils",
       "projectFolder": "packages/common/testutils"
     },
+    {
+      "packageName": "@dxos/rpc",
+      "projectFolder": "packages/common/rpc"
+    },
 
     //
     // sdk
@@ -523,6 +531,10 @@
     {
       "packageName": "@dxos/demos",
       "projectFolder": "packages/sdk/demos"
+    },
+    {
+      "packageName": "@dxos/tutorials-tasks-app",
+      "projectFolder": "packages/sdk/tutorials/apps/tasks-app"
     },
 
     //
@@ -683,6 +695,14 @@
       "packageName": "@dxos/gravity-core",
       "projectFolder": "packages/gravity/gravity-core"
     },
+    {
+      "packageName": "@dxos/browser-mocha",
+      "projectFolder": "packages/gravity/browser-mocha"
+    },
+    {
+      "packageName": "@dxos/browser-tests",
+      "projectFolder": "packages/gravity/browser-tests"
+    },
 
     //
     // wallet
@@ -690,7 +710,21 @@
 
     {
       "packageName": "@dxos/wallet-extension",
-      "projectFolder": "packages/wallet/extension"
+      "projectFolder": "packages/wallet/extension",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/wallet-playground",
+      "projectFolder": "packages/wallet/playground",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/wallet-core",
+      "projectFolder": "packages/wallet/core",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
     }
   ]
 }
