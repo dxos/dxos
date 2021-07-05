@@ -12,13 +12,13 @@ import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { ActivationOptions, PartyActivator, Identity } from '../halo';
+import { ActivationOptions, PartyActivator, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
 import { Database } from '../items';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
 import { PartyCore, PartyOptions } from './party-core';
-import { PartyProtocol } from './party-protocol';
+import { CredentialsProvider, PartyProtocol } from './party-protocol';
 
 export const PARTY_ITEM_TYPE = 'dxn://dxos/item/party';
 export const PARTY_TITLE_PROPERTY = 'title';
@@ -53,7 +53,9 @@ export class PartyInternal {
     _feedStore: FeedStoreAdapter,
     _modelFactory: ModelFactory,
     _snapshotStore: SnapshotStore,
-    private readonly _identity: Identity,
+    // This needs to be a provider in case this is a backend for the HALO party.
+    // Then the identity would be changed after this is instantiated.
+    private readonly _identityProvider: IdentityProvider,
     private readonly _networkManager: NetworkManager,
     private readonly _hints: KeyHint[] = [],
     _initialTimeframe?: Timeframe,
@@ -68,8 +70,9 @@ export class PartyInternal {
       _options
     );
 
-    if (this._identity.halo) {
-      this._activator = new PartyActivator(this._identity.halo, this);
+    const identity = this._identityProvider();
+    if (identity.halo) {
+      this._activator = new PartyActivator(identity.halo, this);
     }
   }
 
@@ -120,13 +123,14 @@ export class PartyInternal {
 
     await this._partyCore.open(this._hints);
 
+    const identity = await this._identityProvider();
     this._invitationManager = new InvitationManager(
       this._partyCore.processor,
-      this._identity,
+      this._identityProvider,
       this._networkManager
     );
 
-    assert(this._identity.deviceKey, 'Missing device key.');
+    assert(identity.deviceKey, 'Missing device key.');
 
     // Network/swarm.
     this._protocol = new PartyProtocol(
@@ -135,7 +139,7 @@ export class PartyInternal {
       this._partyCore.feedStore,
       this._partyCore.processor.getActiveFeedSet(),
       this._invitationManager,
-      this._identity,
+      this._identityProvider,
       this._createCredentialsProvider(this._partyCore.key, PublicKey.from(this._partyCore.getWriteFeed().key)),
       this._partyCore.processor.authenticator
     );
@@ -230,15 +234,18 @@ export class PartyInternal {
     await this._partyCore.restoreFromSnapshot(snapshot);
   }
 
-  private _createCredentialsProvider (partyKey: PartyKey, feedKey: FeedKey) {
+  private _createCredentialsProvider (partyKey: PartyKey, feedKey: FeedKey): CredentialsProvider {
     return {
-      get: () => Buffer.from(Authenticator.encodePayload(createAuthMessage(
-        this._identity.keyring,
-        partyKey,
-        this._identity.identityKey ?? raise(new Error('No identity key')),
-        this._identity.deviceKeyChain ?? this._identity.deviceKey ?? raise(new Error('No device key')),
-        this._identity.keyring.getKey(feedKey)
-      )))
+      get: () => {
+        const identity = this._identityProvider();
+        return Buffer.from(Authenticator.encodePayload(createAuthMessage(
+          identity.keyring,
+          partyKey,
+          identity.identityKey ?? raise(new Error('No identity key')),
+          identity.deviceKeyChain ?? identity.deviceKey ?? raise(new Error('No device key')),
+          identity.keyring.getKey(feedKey)
+        )));
+      }
     };
   }
 }
