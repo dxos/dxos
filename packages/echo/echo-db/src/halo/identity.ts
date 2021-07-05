@@ -2,10 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 
-import { createKeyAdmitMessage, createDeviceInfoMessage, createIdentityInfoMessage, Filter, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage, createPartyGenesisMessage, Message } from '@dxos/credentials';
+import { Filter, KeyChain, KeyRecord, Keyring, KeyType } from '@dxos/credentials';
 
 import { HaloParty } from './halo-party';
 
@@ -25,7 +24,7 @@ export class Identity {
   static fromKeyring (keyring: Keyring) {
     return new Identity(
       keyring,
-      undefined,
+      undefined
     );
   }
 
@@ -37,7 +36,7 @@ export class Identity {
 
   constructor (
     private readonly _keyring: Keyring,
-    private _halo: HaloParty | undefined,
+    private _halo: HaloParty | undefined
   ) {}
 
   get keyring () {
