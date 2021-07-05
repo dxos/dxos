@@ -1,6 +1,6 @@
 {
   "name": "@dxos/demos",
-  "version": "2.10.10-alpha.1",
+  "version": "2.10.10",
   "private": true,
   "description": "ECHO database demo app.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",

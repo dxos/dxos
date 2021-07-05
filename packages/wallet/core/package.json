@@ -1,6 +1,6 @@
 {
   "name": "@dxos/wallet-core",
-  "version": "2.10.10-alpha.1",
+  "version": "2.10.10",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",

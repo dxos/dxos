@@ -19,5 +19,4 @@
 
 registry=http://localhost:4873/
 always-auth=false
-//localhost:4873/:_authToken="qsWYBirkAbVPLsACvUTOYA=="
-# //registry.npmjs.org/:_authToken=${NPM_TOKEN}
+//registry.npmjs.org/:_authToken=${NPM_TOKEN}

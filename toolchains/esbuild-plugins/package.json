@@ -1,6 +1,6 @@
 {
   "name": "@dxos/esbuild-plugins",
-  "version": "2.10.10-alpha.1",
+  "version": "2.10.10",
   "private": true,
   "main": "./index.js",
   "scripts": {
