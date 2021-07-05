@@ -12,7 +12,7 @@ import { browser } from 'webextension-polyfill-ts';
 
 import { Card, Button, makeStyles, CardActions } from '@material-ui/core';
 
-import { useExtensionBackgroundService } from '../hooks';
+import { useBackgroundContext} from '../contexts';
 import type { Profile } from '../utils/types';
 
 const useStyles = makeStyles({
@@ -29,7 +29,7 @@ interface LoginProps {
 const Login = ({ profile, setProfile } : LoginProps) => {
   const classes = useStyles();
 
-  const {error, rpcClient: backgroundService} = useExtensionBackgroundService();
+  const backgroundService = useBackgroundContext();
 
   const onCreateIdentity = async () => {
     if (!backgroundService) {
@@ -53,11 +53,6 @@ const Login = ({ profile, setProfile } : LoginProps) => {
       setProfile(response);
     });
   }, [backgroundService]);
-
-  if (error) {
-    console.error(error);
-    return <p>Connection failed.</p>
-  }
 
   if (!backgroundService) {
     return <p>Connecting to background...</p>;

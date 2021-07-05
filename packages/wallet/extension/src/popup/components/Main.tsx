@@ -9,27 +9,30 @@ import type { Profile } from '../utils/types';
 import Login from './Login';
 import User from './User';
 import Import from './Import';
+import { WithBackgroundContext } from '../contexts/BackgroundContext';
 
 const Main = () => {
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
 
   return (
-    <HashRouter hashType="noslash">
-      <Switch>
-        <Route path='/login'>
-          <Login profile={profile} setProfile={setProfile}/>
-        </Route>
-        <Route path='/import'>
-          <Import />
-        </Route>
-        {profile && profile.username && profile.publicKey ?
-        <Route path='/user'>
-          <User profile={profile} />
-        </Route>
-        : null}
-        <Redirect to='/login' />
-      </Switch>
-    </HashRouter>
+    <WithBackgroundContext>
+      <HashRouter hashType="noslash">
+        <Switch>
+          <Route path='/login'>
+            <Login profile={profile} setProfile={setProfile}/>
+          </Route>
+          <Route path='/import'>
+            <Import />
+          </Route>
+          {profile && profile.username && profile.publicKey ?
+          <Route path='/user'>
+            <User profile={profile} />
+          </Route>
+          : null}
+          <Redirect to='/login' />
+        </Switch>
+      </HashRouter>
+    </WithBackgroundContext>
   );
 }
 

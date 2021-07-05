@@ -28,7 +28,6 @@ export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) =>
       setError(err);
       return;
     }
-    
 
     setImmediate(async () => {
       try {
