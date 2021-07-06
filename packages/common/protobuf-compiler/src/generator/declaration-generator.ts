@@ -69,9 +69,10 @@ function createEnumDeclaration (type: protobufjs.Enum) {
 
 function createRpcMethodType (method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap) {
   assert(!method.requestStream, 'Streaming RPC requests are not supported.');
-  assert(!method.responseStream, 'Streaming RPC responses are not supported.');
 
   const [requestType, responseType] = getRpcTypes(method, service, subs);
+
+  const outputTypeMonad = method.responseStream ? f.createIdentifier('Stream') : f.createIdentifier('Promise');
 
   return f.createFunctionTypeNode(
     undefined,
@@ -84,7 +85,7 @@ function createRpcMethodType (method: protobufjs.Method, service: protobufjs.Ser
       requestType
     )],
     f.createTypeReferenceNode(
-      f.createIdentifier('Promise'),
+      outputTypeMonad,
       [responseType]
     )
   );
@@ -98,7 +99,7 @@ function createServiceDeclaration (type: protobufjs.Service, subs: Substitutions
     undefined,
     undefined,
     type.methodsArray
-      .filter(m => !m.requestStream && !m.responseStream)
+      .filter(m => !m.requestStream)
       .map(method => f.createPropertySignature(
         undefined,
         method.name,
