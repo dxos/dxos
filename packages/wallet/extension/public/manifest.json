@@ -17,7 +17,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content_scripts/content-script.js"]
+      "js": ["content/content.js"]
     }
   ],
   "browser_specific_settings": {

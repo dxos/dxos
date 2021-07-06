@@ -22,7 +22,7 @@ const publicDir = join(__dirname, '../public')
       entryPoints: [
         join(srcDir, 'background/background.ts'),
         join(srcDir, 'popup/main.tsx'),
-        join(srcDir, 'content_scripts/content-script.ts')
+        join(srcDir, 'content/content.ts')
       ],
       outdir: distDir,
       write: true,

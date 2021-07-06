@@ -56,7 +56,10 @@ export class BackgroundServer {
           };
         },
         RestoreProfile: async request => {
-          const keyPair = keyPairFromSeedPhrase(request.seedPhrase ?? '');
+          if (!request.seedPhrase || !request.username) {
+            throw new Error('Seedphrase and username are required.');
+          }
+          const keyPair = keyPairFromSeedPhrase(request.seedPhrase);
           await this._client.createProfile({ ...keyPair, username: request.username });
           return {
             username: this._client.getProfile()?.username,
