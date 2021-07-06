@@ -1,53 +1,65 @@
 ---
-title: Setup a DXOS Client
-description: Create a Client and Connect a React Application.
+title: 1. Setup a DXOS Client
+description: Create a Client and connect a React Application.
 ---
 
-Every Application starts by creating a Client. The `@dxos/client` is your entry point to save and share data with other peers in your network.
+Every DXOS Application starts by creating a Client. The `@dxos/client` is your entry point to save and share data with other peers in your network.
 
 ## Create a Client
 
-We will focus on the `tutorial/apps/task-list` first. 
+Take a look at the component `src/App.js`, the root component of the application.
 
-We can now proceed on how to create our Client instance. In `index.js` we added the imports for `@dxos/client` and its dependencies:
+You will find that the first component being rendered is `ClientInitializer` from `@dxos/react-client`.
 
 ```js
-import { Client } from '@dxos/client';
-import { createStorage } from '@dxos/random-access-multi-storage';
-import { Keyring, KeyStore } from '@dxos/credentials';
-import { ClientProvider } from '@dxos/react-client';
+import React from 'react';
+import { ClientInitializer } from '@dxos/react-client';
+
+import { initConfig } from './config';
+
+const App = () => {
+  return <ClientInitializer config={initConfig}></ClientInitializer>;
+};
 ```
 
-We created the `client` instance as follows. We provided a `storage` and `keyring` instances, and the configuration for the `signal` server:
+This `ClientInitializer` is a React component that facilitates the process of initializing and providing a client instance, given a config object or generator function.
+
+Behind the scenes creates a new `Client` instance and uses [React Context](https://reactjs.org/docs/context.html) feature to make the instance accessible anywhere in the app.
+
+An example config object would look like:
 
 ```js
-const client = new Client({
-  storage: createStorage('tasks-db'),
-  keyring: new Keyring(new KeyStore(leveljs('tasks-keys'))), 
-  swarm: {
-    signal: 'wss://signal2.dxos.network/dxos/signal'
-  }
-});
+const config = {
+  storage: { persistent: true },
+  wns: {
+    server: 'https://wns1.kube.moon.dxos.network/api',
+    chainId: 'devnet-2',
+  },
+  swarm: { signal: 'wss://apollo1.kube.moon.dxos.network/dxos/signal' },
+};
 ```
 
-We will dive deep into all these configurations later in this tutorial. 
+Short explanation of parameters:
 
-## Connect the React Application
+- `storage` - storage for feeds and keyring
+- `wns` - connection to WNS registry
+- `swarm.signal` - signaling server URL. Used to establish WebRTC connections with other peers.
 
-Once we have our client constructed we can connect our React Application using the `ClientProvider` 
-from `@dxos/react-client` package. This provider is similar to React's Context.Provider.
+## Retrieve the Client instance
 
-We wrapped our Application and other Providers (such as the `ThemeProvider` for `material-ui` components) with the `ClientProvider` and setup the client instance we just created:
+Once we have our client constructed and provided thanks to ClientInitializer we will be able to access the client instance through the `useClient` custom hook provided by `@dxos/react-client` package. Take a look at src/components/Root.js and you will find something like:
 
 ```js
+import React from 'react';
+import { useClient } from '@dxos/react-client';
 
-ReactDOM.render(
-  <ClientProvider client={client}>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <App />
-    </ThemeProvider>
-  </ClientProvider>,
-  document.querySelector('#root'),
-);
+import Main from './Main';
+
+const Root = () => {
+  const client = useClient();
+
+  return <Main />;
+};
+
+export default Root;
 ```
