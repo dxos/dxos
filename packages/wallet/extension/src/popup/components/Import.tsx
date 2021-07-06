@@ -3,11 +3,12 @@
 //
 
 import React, { useState } from 'react';
-import { Redirect } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import { TextField, Container, Button, Grid, Typography, Checkbox, FormControlLabel, makeStyles } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
+import type { Profile } from '../utils/types';
 
 const useStyles = makeStyles({
   container: {
@@ -15,26 +16,28 @@ const useStyles = makeStyles({
   }
 });
 
-const Import = () => {
+interface ImportProps {
+  onProfileCreated: (profile: Profile | undefined) => void
+}
+
+const Import = ({ onProfileCreated } : ImportProps) => {
   const classes = useStyles();
 
   const [seedPhrase, setSeedPhrase] = useState('');
   const [username, setUsername] = useState('');
   const [showSeed, setShowseed] = useState(false);
-  const [redirected, setRedirected] = useState(false);
+
+  const history = useHistory();
 
   const backgroundService = useBackgroundContext();
 
   const onRestore = async () => {
     const response = await backgroundService?.rpc.RestoreProfile({ username, seedPhrase });
     if (response && response.publicKey) {
-      setRedirected(true);
+      onProfileCreated(response);
+      history.push('/user');
     }
   };
-
-  if (redirected) {
-    return <Redirect to='/user'/>;
-  }
 
   return (
     <Container className={classes.container}>

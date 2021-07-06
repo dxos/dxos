@@ -33,25 +33,25 @@ const Main = () => {
   }
 
   return (
-      <HashRouter hashType="noslash">
-        <Switch>
-          <Route path='/login'>
-            <Login profile={profile} />
+    <HashRouter hashType="noslash">
+      <Switch>
+        <Route path='/login'>
+          <Login profile={profile} />
+        </Route>
+        <Route path='/import'>
+          <Import onProfileCreated={setProfile} />
+        </Route>
+        <Route path='/create'>
+          <CreateProfile onProfileCreated={setProfile} />
+        </Route>
+        {profile && profile.username && profile.publicKey
+          ? <Route path='/user'>
+            <User profile={profile} />
           </Route>
-          <Route path='/import'>
-            <Import />
-          </Route>
-          <Route path='/create'>
-            <CreateProfile />
-          </Route>
-          {profile && profile.username && profile.publicKey
-            ? <Route path='/user'>
-              <User profile={profile} />
-            </Route>
-            : null}
-          <Redirect to='/login' />
-        </Switch>
-      </HashRouter>
+          : null}
+        <Redirect to='/login' />
+      </Switch>
+    </HashRouter>
   );
 };
 

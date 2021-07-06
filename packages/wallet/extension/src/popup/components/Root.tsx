@@ -6,8 +6,8 @@ import React from 'react';
 
 import { AppBar, makeStyles, Toolbar, Typography } from '@material-ui/core';
 
-import Main from './Main';
 import { WithBackgroundContext } from '../contexts';
+import Main from './Main';
 
 const useStyles = makeStyles({
   logo: {

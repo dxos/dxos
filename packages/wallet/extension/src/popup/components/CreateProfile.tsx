@@ -3,11 +3,12 @@
 //
 
 import React, { useState } from 'react';
-import { Redirect } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import { Button, Container, Grid, makeStyles, TextField, Typography } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
+import type { Profile } from '../utils/types';
 
 const useStyles = makeStyles({
   container: {
@@ -15,24 +16,26 @@ const useStyles = makeStyles({
   }
 });
 
-const CreateProfile = () => {
+interface CreateProfileProps {
+  onProfileCreated: (profile: Profile | undefined) => void
+}
+
+const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
   const classes = useStyles();
 
   const [username, setUsername] = useState('');
-  const [redirected, setRedirected] = useState(false);
+
+  const history = useHistory();
 
   const backgroundService = useBackgroundContext();
 
   const onCreate = async () => {
     const response = await backgroundService?.rpc.CreateProfile({ username });
     if (response && response.publicKey) {
-      setRedirected(true);
+      onProfileCreated(response);
+      history.push('/user');
     }
   };
-
-  if (redirected) {
-    return <Redirect to='/user'/>;
-  }
 
   return (
     <Container className={classes.container}>
