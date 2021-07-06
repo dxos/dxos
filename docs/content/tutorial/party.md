@@ -35,7 +35,7 @@ const PartySettings = ({ partyKey, onClose }) => {
 
 ## Retrieve a single Party
 
-Once we have a party created, we can retrieve it using its `publicKey` with the `useParty` hook. This is showcased in the `TaskList.js` component.
+Once we have a party created, we can retrieve it using its public key (`partyKey`) with the `useParty` hook. This is showcased in the `TaskList.js` component.
 
 ```js
 import { useParty } from '@dxos/react-client';
