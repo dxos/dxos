@@ -2,13 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect } from 'react';
-import { Redirect } from 'react-router-dom';
+import React from 'react';
+import { Redirect, useHistory } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
 
 import { Card, Button, makeStyles, CardActions } from '@material-ui/core';
 
-import { useBackgroundContext } from '../contexts';
 import type { Profile } from '../utils/types';
 
 const useStyles = makeStyles({
@@ -18,41 +17,21 @@ const useStyles = makeStyles({
 });
 
 interface LoginProps {
-  profile?: Profile,
-  setProfile: (profile: Profile | undefined) => void
+  profile?: Profile
 }
 
-const Login = ({ profile, setProfile } : LoginProps) => {
+const Login = ({ profile } : LoginProps) => {
   const classes = useStyles();
 
-  const backgroundService = useBackgroundContext();
+  const history = useHistory();
 
   const onCreateIdentity = async () => {
-    if (!backgroundService) {
-      return;
-    }
-    const response = await backgroundService.rpc.CreateProfile({ username: 'DXOS user' });
-    setProfile(response);
+    history.push('/create');
   };
 
   const onImport = async () => {
     await browser.tabs.create({ active: true, url: location.toString().replace('login', 'import') });
   };
-
-  useEffect(() => {
-    if (backgroundService === undefined) {
-      return;
-    }
-
-    setImmediate(async () => {
-      const response = await backgroundService.rpc.GetProfile({});
-      setProfile(response);
-    });
-  }, [backgroundService]);
-
-  if (!backgroundService) {
-    return <p>Connecting to background...</p>;
-  }
 
   if (profile && profile.username && profile.publicKey) {
     return <Redirect to='/user'/>;

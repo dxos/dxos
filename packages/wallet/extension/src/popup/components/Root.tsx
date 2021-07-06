@@ -6,6 +6,7 @@ import React from 'react';
 
 import { AppBar, makeStyles, Toolbar, Typography } from '@material-ui/core';
 
+import { WithBackgroundContext } from '../contexts';
 import Main from './Main';
 
 const useStyles = makeStyles({
@@ -19,7 +20,7 @@ const Root = () => {
   const classes = useStyles();
 
   return (
-    <>
+    <WithBackgroundContext>
       <AppBar position='static' color='default'>
         <Toolbar>
           <img src='../dxos.png' alt="logo" className={classes.logo} />
@@ -27,7 +28,7 @@ const Root = () => {
         </Toolbar>
       </AppBar>
       <Main/>
-    </>
+    </WithBackgroundContext>
   );
 };
 
