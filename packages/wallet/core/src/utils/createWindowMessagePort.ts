@@ -6,12 +6,12 @@ import { RpcPort } from '@dxos/rpc';
 
 export function createWindowMessagePort (): RpcPort {
   return {
-    send: async (msg) => window.postMessage({ payloadFromAppToContentScript: Array.from(msg) }, '*'),
+    send: async (msg) => window.postMessage({ payload: Array.from(msg) }, '*'),
     subscribe: (cb) => {
       const listener: EventListener = (ev) => {
-        const ourPayload = (ev as any)?.data?.payloadFromContentScriptToApp;
-        if (ourPayload) {
-          cb(ourPayload);
+        const payload = (ev as any)?.data?.payload;
+        if (payload) {
+          cb(payload);
         }
       };
       window.addEventListener('message', listener);

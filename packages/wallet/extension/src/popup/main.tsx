@@ -5,11 +5,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import Application from './components/Application';
+import App from './components/App';
 import { inDev } from './utils/helpers';
 
 // Application to Render
-const app = <Application />;
+const app = <App />;
 
 // Render application in DOM
 ReactDOM.render(app, document.getElementById('app'));
