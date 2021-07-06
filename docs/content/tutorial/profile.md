@@ -32,7 +32,7 @@ Here we decide to show the `ProfileModal` component if there is no profile in th
 
 ## Create a Profile
 
-This is very similar to a login or a sign up page. Jump into `ProfileModal.js`. This component is a very simple sign up form. The user have to provide a username in order to create a profile. The input element will save the state in the `username` variable and then `handleSignUp` is the invoked method when the user clicks on the `Create` button.
+This is very similar to a login or a sign up page. Jump into `ProfileModal.js`. This component is a very simple sign up form. The user have to provide a username in order to create a profile. The input element will save the state in the `username` variable and then `handleRegistration` is the invoked method when the user clicks on the `Create` button.
 
 ![Tasks App - Create Profile](./introduction-00.png)
 
