@@ -2,10 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-//
-// Copyright 2021 DXOS.org
-//
-
 import React, { useEffect } from 'react';
 import { Redirect } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
