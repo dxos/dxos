@@ -18,7 +18,8 @@ module.exports = {
         sidebarCategories: {
           null: [
             'index',
-            'getting-started'
+            'getting-started',
+            'need-help'
           ],
           Tutorial: [
             'tutorial/introduction',
@@ -26,11 +27,9 @@ module.exports = {
             'tutorial/profile',
             'tutorial/party',
             'tutorial/invite',
-            'tutorial/data'
+            'tutorial/data',
+            'tutorial/summary',
           ],
-          Botkit: [
-            'botkit/index'
-          ]
         }
       }
     },
