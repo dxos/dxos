@@ -58,12 +58,14 @@ const Import = () => {
         </Grid>
         <Grid item xs={12}>
           <FormControlLabel
-            control={<Checkbox checked={showSeed} onChange={(e) => {setShowseed(e.target.checked)}} name="showSeed" color='primary' />}
+            control={<Checkbox checked={showSeed} onChange={(e) => {
+              setShowseed(e.target.checked);
+            }} name="showSeed" color='primary' />}
             label='Show Secret Recovery Phrase'
           />
         </Grid>
         <Grid item xs={12}>
-          <TextField 
+          <TextField
             label='Your new username'
             placeholder='Type in username'
             spellCheck={false}

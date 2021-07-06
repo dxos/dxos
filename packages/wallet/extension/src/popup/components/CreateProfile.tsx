@@ -2,9 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Button, Container, Grid, makeStyles, TextField, Typography } from '@material-ui/core';
 import React, { useState } from 'react';
 import { Redirect } from 'react-router-dom';
+
+import { Button, Container, Grid, makeStyles, TextField, Typography } from '@material-ui/core';
+
 import { useBackgroundContext } from '../contexts';
 
 const useStyles = makeStyles({
@@ -39,7 +41,7 @@ const CreateProfile = () => {
           <Typography variant='h6' align='center'> Create new profile </Typography>
         </Grid>
         <Grid item xs={12}>
-          <TextField 
+          <TextField
             label='Your new username'
             placeholder='Type in username'
             spellCheck={false}
@@ -57,6 +59,6 @@ const CreateProfile = () => {
       </Grid>
     </Container>
   );
-}
+};
 
 export default CreateProfile;
