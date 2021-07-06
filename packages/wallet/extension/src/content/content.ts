@@ -10,7 +10,7 @@ import { browser } from 'webextension-polyfill-ts';
   port.onMessage.addListener((message, port) => {
     // passing through back to the app
     // TODO: Find out and document what is the type of message, and whether it is supported in chrome, firefox & safari.
-    window.postMessage({ payloadFromContentScriptToApp : message }, '*');
+    window.postMessage({ payloadFromContentScriptToApp: message }, '*');
   });
 
   window.addEventListener('message', (event) => {
