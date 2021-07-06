@@ -15,27 +15,12 @@ export const Stage1 = () => {
     const client = useClient();
 
     return (
-      <>
-        <h2>Client Config</h2>
-        <JsonTreeView data={client.config} />
-      </>
+      <JsonTreeView data={client.config} />
     );
   };
 
-  // TODO(wittjosiah): default config available elsewhere?
-  const config = {
-    storage: {},
-    swarm: {
-      signal: 'ws://localhost:4000',
-      ice: [{ urls: 'stun:stun.wireline.ninja:3478' }]
-    },
-    wns: undefined,
-    snapshots: false,
-    snapshotInterval: undefined
-  };
-
   return (
-    <ClientInitializer config={config}>
+    <ClientInitializer>
       <App />
     </ClientInitializer>
   );
