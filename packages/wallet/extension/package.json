@@ -23,7 +23,8 @@
     "protobufjs": "^6.9.0",
     "@dxos/async": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "react-router-dom": "^5.1.2"
+    "react-router-dom": "^5.1.2",
+    "@dxos/echo-db": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

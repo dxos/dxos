@@ -9,6 +9,7 @@
 import React from 'react';
 
 import { Card, CardContent, Typography, makeStyles } from '@material-ui/core';
+import Parties from './Parties';
 
 const useStyles = makeStyles({
   card: {
@@ -35,6 +36,7 @@ const User = ({ profile } : UserProps) => {
         <Typography variant="body2" color="textSecondary" component="p">
           {profile.publicKey}
         </Typography>
+        <Parties/>
       </CardContent>
     </Card>
   );
