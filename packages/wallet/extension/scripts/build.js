@@ -1,5 +1,4 @@
-const { NodeModulesPolyfillPlugin } = require('@esbuild-plugins/node-modules-polyfill')
-const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin } = require('@dxos/esbuild-plugins')
+const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPolyfillPlugin } = require('@dxos/esbuild-plugins')
 const { build } = require('esbuild')
 const rmdir = require('rmdir');
 const { promisify } = require('util')
