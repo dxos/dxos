@@ -21,19 +21,19 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
-    "@dxos/codec-protobuf": "workspace:*",
-    "debug": "^4.1.1",
-    "tiny-lru": "^7.0.6",
     "@dxos/async": "workspace:*",
-    "@dxos/crypto": "workspace:*"
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "debug": "^4.1.1",
+    "tiny-lru": "^7.0.6"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/network-generator": "workspace:*",
-    "wait-for-expect": "^3.0.2",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/debug": "^4.1.1",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
-    "@types/debug": "^4.1.1"
+    "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "restricted"

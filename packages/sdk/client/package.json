@@ -33,6 +33,7 @@
     "@dxos/util": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
     "@wirelineio/registry-client": "~1.1.0-beta.3",
+    "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "canonicalize": "^1.0.1",
@@ -57,7 +58,6 @@
     "pumpify": "^2.0.1",
     "queue-microtask": "^1.1.2",
     "through2": "^3.0.1",
-    "abstract-leveldown": "~7.0.0",
     "wrtc": "^0.4.6"
   },
   "devDependencies": {

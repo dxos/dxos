@@ -13,6 +13,28 @@ service BackgroundService {
 
   // Used by the key hole application to prove identity and allow/disallow access.
   rpc SignMessage(SignMessageRequest) returns (SignMessageResponse);
+
+  rpc CreateProfile(CreateProfileRequest) returns (CreateProfileResponse);
+
+  rpc RestoreProfile(RestoreProfileRequest) returns (RestoreProfileResponse);
+}
+
+message RestoreProfileRequest {
+  string seedPhrase = 1;
+  string username = 2;
+}
+
+message RestoreProfileResponse {
+  string publicKey = 1;
+  string username = 2;
+}
+
+message CreateProfileRequest {
+  string username = 1;
+}
+message CreateProfileResponse {
+  string publicKey = 1;
+  string username = 2;
 }
 
 message SignMessageRequest {
