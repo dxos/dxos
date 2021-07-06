@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc",
-  "version": "2.10.10",
+  "version": "2.10.12",
   "description": "Tiny RPC library.",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
