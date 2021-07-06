@@ -1,8 +1,7 @@
-# Build configuration
-
-TODO(burdon): Move to `dxos/eng`.
-
-## Getting started
+---
+title: Getting started
+description: DXOS SDK
+---
 
 The project is developed using [rush](https://rushjs.io/) and NodeJS version `16.1.0` via `nodenv`.
 
@@ -13,7 +12,7 @@ npm install -g @microsoft/rush pnpm
 nodenv install 16.1.0
 ```
 
-### Rush
+## Rush
 
 1. The project currently uses private NPM packages.
    Make sure you have access to the [`dxos`](https://www.npmjs.com/org/dxos) NPM org
@@ -31,8 +30,12 @@ rush update
 rush build
 ```
 
-### Adding new dependencies
+### Local Development
 
+- Re-run `rush update` after changing any `package.json` files.
+- Run `rushx build` in a local package folder to get local errors.
+
+### Adding new dependencies
 
 ```
 cd package/directory
@@ -55,25 +58,36 @@ When merging monorepos it's best practice to add packages one by one, starting f
 1. Copy over package contents.
 2. Add the package to the list in `<root>/rush.json`.
 3. Run `rush update` and fix any broken dependencies.
-4. Put the entire package lifecycle in the `build` script. it might look like `"build": "tsc && pnpm run lint && pnpm run test`. Look for examples in other packages.
-5. Make sure that package builds.
-6. (optional) Refactor to use Heft and rig packages.
-
-### Package configuration with heft
-
-A rigged package config consists of:
-
-* `config/rig.json` file that points to the rig package.
-* `tsconfig.json` that extends the tsconfig from the rig package but also specifies the out dir.
-* `.eslintrc.js` that extends the .eslintrc.js from the rig package.
-
-Rigged package should specify it's build script as:
+4. Add the toolchain internal library to build, test and lint your package.
 
 ```
-"build": "heft test 2>&1"`
+rush add --dev -p @dxos/toolchain-node-library --make-consistent
 ```
 
-This will build the package with typescript, run eslint, and test with jest.
+5. Set the build script to `"build": "toolchain build"`. Look for examples in other packages.
+6. Make sure that package builds.
+
+#### Configure package.json
+
+```
+"deps": {
+  "@types/node": "^14.0.9",
+}
+```
+
+#### Configure TSC
+
+Add TS config to support browser globals.
+
+```
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": [
+      "DOM"
+    ]
+  },
+  "types": ["jest", "node"],
+```
 
 ### Sorting `package.json`
 
@@ -89,18 +103,6 @@ ncu --deep -u '<PACKAGE>'
 # e.g.
 ncu --deep -u '@storybook/*'
 ```
-
-### Troubleshooting Storybooks
-
-1. `Cannot GET /"` when running `rushx storybook`
-
-Solution:
-
-```bash
-rushx storybook--no-manager-cache
-```
-
-[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
 
 ### Publishing packages
 
@@ -121,38 +123,20 @@ In order to publish **non-breaking changes**, bump the minor version:
 ```bash
   rush version --bump --target-branch <YOUR_CURRENT_BRANCH> --override-bump minor
 ```
+
 This will create a new commit with all packages' versions bumped up on your current branch. When the branch gets merged to main, changes will automatically get published to NPM.
 
-## Rush
+### Troubleshooting Storybooks
 
-- Re-run `rush update` after changing any `package.json` files.
-- Run `rushx build` in a local package folder to get local errors.
+1. `Cannot GET /"` when running `rushx storybook`
 
-## Configure new modules.
+Solution:
 
-Add new modules to `rush.json`
-
-## Configure package.json
-
-```
-"deps": {
-  "@types/node": "^14.0.9",
-}
+```bash
+rushx storybook--no-manager-cache
 ```
 
-## Configure TSC
-
-Add TS config to support browser globals.
-
-```
-  "compilerOptions": {
-    "outDir": "dist",
-    "lib": [
-      "DOM"
-    ]
-  },
-  "types": ["jest", "node"],
-```
+[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
 
 ## Snippets
 
