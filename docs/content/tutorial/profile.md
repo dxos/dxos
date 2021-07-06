@@ -36,7 +36,7 @@ This is very similar to a login or a sign up page. Jump into `ProfileModal.js`. 
 
 ![Tasks App - Create Profile](./introduction-00.png)
 
-The `handleSignUp` generates a `keypair` and sets the profile using the client. The client is retrieved by the react hook `useClient`.
+The `handleRegistration` generates a `keypair` and sets the profile using the client. The client is retrieved by the react hook `useClient`.
 
 ```js
 import React from 'react';
