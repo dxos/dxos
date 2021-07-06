@@ -5,18 +5,29 @@
 import React, { useState } from 'react';
 import { Redirect } from 'react-router-dom';
 
-import { TextField, Container, Button, Grid, Typography } from '@material-ui/core';
+import { TextField, Container, Button, Grid, Typography, Checkbox, FormControlLabel, makeStyles } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
 
+const useStyles = makeStyles({
+  container: {
+    marginTop: 50
+  }
+});
+
 const Import = () => {
+  const classes = useStyles();
+
   const [seedPhrase, setSeedPhrase] = useState('');
+  const [username, setUsername] = useState('');
+  const [showSeed, setShowseed] = useState(false);
   const [redirected, setRedirected] = useState(false);
+
   const backgroundService = useBackgroundContext();
 
   const onRestore = async () => {
-    const response = await backgroundService?.rpc.RestoreProfile({ username: 'DXOS user', seedPhrase });
-    if (response) {
+    const response = await backgroundService?.rpc.RestoreProfile({ username, seedPhrase });
+    if (response && response.publicKey) {
       setRedirected(true);
     }
   };
@@ -26,8 +37,8 @@ const Import = () => {
   }
 
   return (
-    <Container>
-      <Grid container spacing={6}>
+    <Container className={classes.container}>
+      <Grid container spacing={4}>
         <Grid item xs={12}>
           <Typography variant='h4' align='center'> Restore your identity using seedphrase </Typography>
         </Grid>
@@ -40,7 +51,27 @@ const Import = () => {
             spellCheck={false}
             value={seedPhrase}
             onChange={e => setSeedPhrase(e.target.value)}
-            variant='outlined'/>
+            variant='outlined'
+            required
+            helperText={<div> Your public and private keys will be recreated using this seedphrase. You will have all the accesses you had before.</div>}
+            type={showSeed ? 'string' : 'password'}/>
+        </Grid>
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={<Checkbox checked={showSeed} onChange={(e) => {setShowseed(e.target.checked)}} name="showSeed" color='primary' />}
+            label='Show Secret Recovery Phrase'
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField 
+            label='Your new username'
+            placeholder='Type in username'
+            spellCheck={false}
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            variant='outlined'
+            required
+            helperText={<div> We cannot restore your username using your seedphrase, so you need to create a new one. </div>}/>
         </Grid>
         <Grid item xs={12}>
           <Grid container justify='flex-end'>

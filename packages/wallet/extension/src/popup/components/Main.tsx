@@ -10,6 +10,7 @@ import type { Profile } from '../utils/types';
 import Import from './Import';
 import Login from './Login';
 import User from './User';
+import CreateProfile from './CreateProfile';
 
 const Main = () => {
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
@@ -23,6 +24,9 @@ const Main = () => {
           </Route>
           <Route path='/import'>
             <Import />
+          </Route>
+          <Route path='/create'>
+            <CreateProfile />
           </Route>
           {profile && profile.username && profile.publicKey
             ? <Route path='/user'>

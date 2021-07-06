@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect } from 'react';
-import { Redirect } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Redirect, useHistory } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
 
 import { Card, Button, makeStyles, CardActions } from '@material-ui/core';
@@ -25,14 +25,12 @@ interface LoginProps {
 const Login = ({ profile, setProfile } : LoginProps) => {
   const classes = useStyles();
 
+  const history = useHistory();
+
   const backgroundService = useBackgroundContext();
 
   const onCreateIdentity = async () => {
-    if (!backgroundService) {
-      return;
-    }
-    const response = await backgroundService.rpc.CreateProfile({ username: 'DXOS user' });
-    setProfile(response);
+    history.push('/create');
   };
 
   const onImport = async () => {
