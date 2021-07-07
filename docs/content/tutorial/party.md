@@ -1,41 +1,62 @@
 ---
-title: Creating a Party
-description: Add a Space for Sharing Data.
+title: 3. Create a Party
+description: Add a Space for Sharing Data
 ---
 
-A Party is ...
+A Party is a DXOS component responsible for sharing content between invited clients. Each Party is identified by a `publicKey`.
 
 ## Create a Party
 
-A Party is identified by a `publicKey`. We can create multiple parties. In this example we use the Parties to create a List that we'll share and invite other peers to read and collaborate later on.
+In this example we use the Parties to create a Task List that we'll share and invite other peers to read and collaborate later on.
 
-In `containers/Main.js` we added a handler to create a list, which will create the party: 
+Pay attention to the `PartySettings.js` component rendered by `PartyList.js`. It contains the logic to create new parties.
+
+Party creation is handled through the `Echo` object that is contained by the Client instance. After creating the party it's required to set the title property through the `setProperty` function.
 
 ```js
-export default function Main () {
+const PartySettings = ({ partyKey, onClose }) => {
   const client = useClient();
-  // ...
-  const [selected, setSelected] = useState();
+
+  const [title, setTitle] = useState('');
+
+  const handleUpdate = async () => {
+    const party = await client.echo.createParty();
+
+    await party.setProperty('title', title);
+
+    partyKey = party.key;
+
+    onClose({ partyKey });
+  };
 
   // ...
-  
-  const handleCreateList = async () => {
-    const party = await client.createParty();
-    setSelected(party.publicKey.toString('hex'));
-  }
-
+};
 ```
 
-The `handleCreateList` creates a new `Party` using the `client` and then sets the `selected` to a *hex* value of the party's publicKey.
+## Retrieve a single Party
 
-## Retrieve a Party
-
-Once we have a party created, we can retrieve it using its `publicKey` with the `useParty` hook. This is showcased in the Tasks Component (`containers/Tasks.js`). We will get back to this in the [DATA CHAPTER LINK HERE]
+Once we have a party created, we can retrieve it using its public key (`partyKey`) with the `useParty` hook. This is showcased in the `TaskList.js` component.
 
 ```js
-export default function Tasks({ partyKey }) {
+import { useParty } from '@dxos/react-client';
+
+const TaskList = ({ partyKey }) => {
   const party = useParty(partyKey);
 
   // ...
-}  
+};
+```
+
+## Retrieve all the Parties
+
+We can also retrieve all the Parties created under the same `Echo` object contained by the Client instance. You can watch this on the `PartyList.js` component.
+
+```js
+import { useParties } from '@dxos/react-client';
+
+const PartyList = ({ partyKey }) => {
+  const parties = useParties();
+
+  // ...
+};
 ```

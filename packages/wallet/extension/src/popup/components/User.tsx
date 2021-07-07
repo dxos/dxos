@@ -2,10 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-//
-// Copyright 2021 DXOS.org
-//
-
 import React from 'react';
 
 import { Card, CardContent, Typography, makeStyles } from '@material-ui/core';

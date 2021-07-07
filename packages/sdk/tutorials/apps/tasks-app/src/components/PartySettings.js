@@ -18,11 +18,13 @@ import { useClient, useParty } from '@dxos/react-client';
 
 /**
  * Settings dialog.
- * @param {Buffer} [partyKey] Key of party to edit or undefined to create a new one.
- * @param {requestCallback} onClose
+ * @param {Object} props
+ * @param {Buffer} [props.partyKey] Key of party to edit or undefined to create a new one.
+ * @param {requestCallback} props.onClose
  *
  * @callback requestCallback
- * @param {Buffer} partyKey
+ * @param {Object} params
+ * @param {Buffer} params.partyKey
  */
 const PartySettings = ({ partyKey = undefined, onClose }) => {
   const client = useClient();

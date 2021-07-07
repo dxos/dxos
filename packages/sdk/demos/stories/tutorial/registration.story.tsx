@@ -9,12 +9,12 @@ import { Box } from '@material-ui/core';
 import { ClientInitializer, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-ux';
 
-import { Registration } from '../../src';
+import { Registration as RegistrationDialog } from '../../src';
 
 /**
  * Registration and profile recovery.
  */
-export const Stage4 = () => {
+export const Registration = () => {
   const App = () => {
     const profile = useProfile();
 
@@ -29,7 +29,7 @@ export const Stage4 = () => {
     return (
       <>
         <Box m={2}>
-          <Registration />
+          <RegistrationDialog />
         </Box>
       </>
     );
@@ -43,6 +43,6 @@ export const Stage4 = () => {
 };
 
 export default {
-  title: 'Tutorials/Stage 4',
-  component: Stage4
+  title: 'Tutorials/Registration',
+  component: Registration
 };
