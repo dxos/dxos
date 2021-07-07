@@ -106,4 +106,26 @@ export class Timeframe {
 
     return result;
   }
+
+  /**
+   * Compares timeframes.
+   * 
+   * @returns Number to define order or null if there's no ordering.
+   */
+  static compare(
+    a: Timeframe, b: Timeframe
+  ): -1 | 0 | 1 | null {
+    let aSmaller = false;
+    let bSmaller = false
+
+    for (const key of [...a._frames.keys(), ...b._frames.keys()]) {
+      const aSeq = a.get(key)
+      const bSeq = b.get(key)
+
+      if(aSeq !== undefined) {
+        
+      }
+    }
+
+  }
 }
