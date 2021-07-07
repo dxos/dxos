@@ -136,11 +136,13 @@ export class Pipeline {
             const { itemId } = message.echo;
             if (itemId) {
               assert(this._inboundEchoStream);
+              assert(message.echo.timeframe);
               this._inboundEchoStream.push(checkType<IEchoStream>({
                 meta: {
                   seq: block.seq,
                   feedKey: block.key,
-                  memberKey: memberKey.asUint8Array()
+                  memberKey: memberKey.asUint8Array(),
+                  timeframe: message.echo.timeframe,
                 },
                 data: message.echo
               }));
