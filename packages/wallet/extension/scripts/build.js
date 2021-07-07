@@ -39,7 +39,8 @@ const publicDir = join(__dirname, '../public')
         }
        })} : false,
     })
-  } catch {
+  } catch (err) {
+    console.error(err); // \/ Turns out, they're not always printed.
     process.exit(-1); // Diagnostics are already printed.
   }
   

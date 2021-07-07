@@ -130,6 +130,7 @@ module.exports = {
   NodeGlobalsPolyfillPlugin,
   FixGracefulFsPlugin,
   FixMemdownPlugin,
-  NodeModulesPlugin
+  NodeModulesPlugin,
+  NodeModulesPolyfillPlugin: NodeModulesPlugin
 }
 
