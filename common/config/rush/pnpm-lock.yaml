@@ -723,6 +723,8 @@ importers:
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.23
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/echo-db': workspace:*
@@ -730,7 +732,9 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/jest': ^26.0.7
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
+      expect: ~27.0.2
       protobufjs: ^6.9.0
       yjs: ^13.4.1
   ../../packages/gravity/browser-mocha:
