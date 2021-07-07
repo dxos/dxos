@@ -57,8 +57,8 @@ describe('TextModel', () => {
 
     await Promise.all([
       item1.model.modelUpdate.waitForCount(1),
-      item2.model.modelUpdate.waitForCount(1),
-    ])
+      item2.model.modelUpdate.waitForCount(1)
+    ]);
 
     expect(item1.model.textContent).toBe(item2.model.textContent);
   });
