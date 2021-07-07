@@ -18,7 +18,15 @@ describe('Config hook', () => {
     expect(result.error?.message).toBeDefined();
   });
 
-  test('should return client config when used properly in a context', () => {
+  test('should return default client config when no config is passed in a context', () => {
+    const client = new Client({});
+    const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
+    const { result } = renderHook(render, { wrapper });
+    expect(result.error?.message).not.toBeDefined();
+    expect(Object.entries(result.current).length).toBeGreaterThan(0);
+  });
+
+  test('should return custom client config when used properly in a context', () => {
     const config: ClientConfig = {
       storage: {
         persistent: false
@@ -28,6 +36,6 @@ describe('Config hook', () => {
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
     expect(result.error?.message).not.toBeDefined();
-    expect(result.current).toEqual(config);
+    expect(result.current.storage).toEqual(config.storage);
   });
 });

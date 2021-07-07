@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@dxos/crypto": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@testing-library/jest-dom": "^5.11.4",
@@ -31,7 +32,14 @@
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
     "jest": "^26.6.3",
-    "ts-jest": "^26.5.6"
+    "ts-jest": "^26.5.6",
+    "@storybook/addon-actions": "^6.2.9",
+    "@storybook/addon-knobs": "^6.2.9",
+    "@storybook/react": "^6.2.9",
+    "@types/react": "^16.14.0",
+    "react-docgen-typescript-loader": "^3.7.2",
+    "ts-loader": "~8.1.0",
+    "webpack": "4.44.2"
   },
   "scripts": {
     "start": "SKIP_PREFLIGHT_CHECK=true craco start",

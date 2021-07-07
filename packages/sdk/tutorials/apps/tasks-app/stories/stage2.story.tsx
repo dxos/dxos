@@ -2,39 +2,37 @@
 // Copyright 2021 DXOS.org
 //
 
-import faker from 'faker';
 import React from 'react';
-
-import { Button, Toolbar } from '@material-ui/core';
 
 import { createKeyPair } from '@dxos/crypto';
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-ux';
+import ProfileDialog from '../src/components/ProfileDialog';
 
 /**
  * Create the user's HALO profile.
  */
-export const Stage1 = () => {
+export const Stage2 = () => {
   const App = () => {
     const client = useClient();
     const profile = useProfile();
 
-    const handleCreateProfile = async () => {
-      // TODO(burdon): Default keyPair?
-      await client.createProfile({ ...createKeyPair(), username: faker.name.firstName() });
+    const handleCreateProfile = async ({ username }: { username: string }) => {
+      if (username) {
+        // TODO(burdon): Default keyPair?
+        const { publicKey, secretKey } = createKeyPair();
+        await client.createProfile({ publicKey, secretKey, username });
+      }
     };
 
     return (
       <>
-        <Toolbar>
-          <Button variant='contained' disabled={!!profile} onClick={handleCreateProfile}>Create HALO</Button>
-        </Toolbar>
+        <ProfileDialog open={!profile} onClose={handleCreateProfile} />
         <JsonTreeView data={profile} />
       </>
     );
   };
 
-  // TODO(burdon): Must not hide ClientInitializer in tutorial (magic).
   return (
     <ClientInitializer>
       <App />
@@ -43,6 +41,6 @@ export const Stage1 = () => {
 };
 
 export default {
-  title: 'Tutorials/Stage 1',
-  component: Stage1
+  title: 'Tasks App/Stage 2',
+  component: Stage2
 };
