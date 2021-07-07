@@ -5,11 +5,9 @@
 import React, { useState } from 'react';
 
 import Button from '@material-ui/core/Button';
-import Checkbox from '@material-ui/core/Checkbox';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
@@ -111,7 +109,6 @@ const RedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => {
               onKeyDown={handleKeyDown}
               rows={6}
             />
-
 
             {/*
             issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
