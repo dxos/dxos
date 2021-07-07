@@ -1552,6 +1552,7 @@ importers:
       '@types/react': 16.14.6
       babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
       babel-plugin-add-module-exports: 1.0.4
+      buffer: 6.0.3
       chance: 1.1.7
       chromatic: 5.8.0
       del-cli: 3.0.1
@@ -1609,6 +1610,7 @@ importers:
       '@types/stream-buffers': ^3.0.2
       babel-loader: 8.1.0
       babel-plugin-add-module-exports: ^1.0.4
+      buffer: ^6.0.3
       chance: ^1.1.6
       chromatic: ^5.8.0
       clsx: ^1.1.0

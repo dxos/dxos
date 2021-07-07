@@ -3,6 +3,7 @@
 //
 
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   stories: [
@@ -27,6 +28,12 @@ module.exports = {
       ],
     });
     config.resolve.extensions.push('.ts', '.tsx');
+    config.node = {
+      Buffer: false
+    };
+    config.plugins.push(new webpack.ProvidePlugin({
+      Buffer: [require.resolve('buffer/'), 'Buffer']
+    }));
     return config;
   },
 };
