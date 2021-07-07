@@ -52,8 +52,9 @@ describe('TextModel', () => {
 
     item1.model.insert(0, 'Hello');
     await item2.model.modelUpdate.waitForCount(1);
-    item1.model.insert(5, ' world');
-    item2.model.insert(5, '!');
+
+    item1.model.insert(5, '!');
+    item2.model.insert(5, '?');
 
     await Promise.all([
       item1.model.modelUpdate.waitForCount(1),
