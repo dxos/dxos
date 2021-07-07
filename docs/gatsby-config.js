@@ -16,11 +16,6 @@ module.exports = {
         subtitle: 'SDK',
         githubRepo: 'dxos/sdk',
         sidebarCategories: {
-          null: [
-            'index',
-            'getting-started',
-            'need-help'
-          ],
           Tutorial: [
             'tutorial/introduction',
             'tutorial/client',
