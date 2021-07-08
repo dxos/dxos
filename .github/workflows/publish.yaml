@@ -13,6 +13,38 @@ jobs:
         node-version: [16.0]
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Check, install and build
+      run: |
+        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+
+        npm install -g @microsoft/rush pnpm
+        
+        # Install dependencies
+        echo "::group::Install"
+        node common/scripts/install-run-rush.js install
+        echo "::endgroup::"
+
+        # Build with tests
+        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose 
+    - name: Publish
+      run:  |
+        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+        npm install -g @microsoft/rush pnpm
+
+        # Publish
+        node common/scripts/install-run-rush.js publish --publish --include-all
+  publish-storybooks:
+    runs-on: [self-hosted, dind-actions-runner]
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        node-version: [16.0]
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     steps:
     - uses: actions/checkout@v2
@@ -29,15 +61,8 @@ jobs:
         node common/scripts/install-run-rush.js install
         echo "::endgroup::"
 
-        # Build
-        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose 
-    - name: Publish
-      run:  |
-        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-        npm install -g @microsoft/rush pnpm
-
-        # Publish
-        node common/scripts/install-run-rush.js publish --publish --include-all
+        # Quick build
+        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose 
     - name: Chromatic
       run:  |
         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
