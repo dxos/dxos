@@ -34,4 +34,31 @@ describe('Conflicts', () => {
     console.log(item1.model.getProperty('prop'));
     console.log(item2.model.getProperty('prop'));
   });
+
+  test('Non-conflicting writes are safe', async () => {
+    const { items: [item1, item2] } = await createModelTestBench({ model: ObjectModel });
+
+    const updatesSettled = Promise.all([
+      item1.model.modelUpdate.waitForCount(4),
+      item2.model.modelUpdate.waitForCount(4)
+    ]);
+
+    await Promise.all([
+      item1.model.setProperty('prop', 'foo'),
+      item2.model.setProperty('prop', 'bar'),
+
+      item1.model.setProperty('x1', 'x1'),
+      item2.model.setProperty('x2', 'x2')
+    ]);
+
+    await updatesSettled;
+
+    expect(item1.model.getProperty('prop')).toEqual(item2.model.getProperty('prop'));
+    expect(['foo', 'bar'].includes(item1.model.getProperty('prop'))).toBeTruthy();
+
+    expect(item1.model.getProperty('x1')).toEqual('x1');
+    expect(item2.model.getProperty('x1')).toEqual('x1');
+    expect(item1.model.getProperty('x2')).toEqual('x2');
+    expect(item2.model.getProperty('x2')).toEqual('x2');
+  })
 });
