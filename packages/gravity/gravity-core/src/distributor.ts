@@ -3,14 +3,13 @@
 //
 
 import debug from 'debug';
-import fs from 'fs-extra';
+import { build } from 'esbuild';
 import fetch from 'node-fetch';
 import path from 'path';
 import tar from 'tar';
-import { build } from 'esbuild';
-import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 import { createId } from '@dxos/crypto';
+import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 const BUILD_PATH = './out/builds/';
 
@@ -34,7 +33,7 @@ export const buildBot = async (botPath: string, browser: boolean) => {
         'runtimejs',
         'wrtc',
         'bip32',
-        'typeforce',
+        'typeforce'
       ],
     plugins: browser
       ? [
