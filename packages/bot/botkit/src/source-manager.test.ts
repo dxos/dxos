@@ -11,6 +11,7 @@ import { SourceManager } from './source-manager';
 
 // This tests stops working after the hash gets removed from IPFS.
 // We need to first upload the file to make it work.
+// TODO(marik-d): Do we need this test?
 test.skip('Download & install bot', async () => {
   const sourceManager = new SourceManager(new Config({
     localDev: false,
