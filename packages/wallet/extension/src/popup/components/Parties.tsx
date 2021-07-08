@@ -8,9 +8,9 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Card, CardContent, Typography, makeStyles, TextField, Button } from '@material-ui/core';
-import { useExtensionBackgroundService } from '../hooks';
+import { Card, CardContent, makeStyles, TextField, Button } from '@material-ui/core';
 import { GetPartiesResponse } from '@dxos/wallet-core';
+import { useBackgroundContext } from '../contexts';
 
 const useStyles = makeStyles({
   card: {
@@ -20,7 +20,8 @@ const useStyles = makeStyles({
 
 const Parties = () => {
   const classes = useStyles();
-  const {error, rpcClient: backgroundService} = useExtensionBackgroundService();
+
+  const backgroundService = useBackgroundContext();
   const [parties, setParties] = useState<GetPartiesResponse | undefined>(undefined);
   const [invitation, setInvitation] = useState('');
   const [passcode, setPasscode] = useState('');
@@ -35,11 +36,6 @@ const Parties = () => {
       setParties(await backgroundService.rpc.GetParties({}))
     });
   }, [backgroundService]);
-
-  if (error) {
-    console.error(error);
-    return <p>Connection failed.</p>
-  }
 
   if (!backgroundService) {
     return <p>Connecting to background...</p>;

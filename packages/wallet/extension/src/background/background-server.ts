@@ -16,11 +16,11 @@ const config: ClientConfig = {
     path: '/tmp/dxos'
   },
   swarm: {
-    signal: 'wss://apollo2.kube.moon.dxos.network/dxos/signal',
+    signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal',
     ice: [
-      { urls: 'stun:apollo2.kube.moon.dxos.network:3478' },
+      { urls: 'stun:apollo3.kube.moon.dxos.network:3478' },
       {
-        urls: 'turn:apollo2.kube.moon.dxos.network:3478',
+        urls: 'turn:apollo3.kube.moon.dxos.network:3478',
         username: 'dxos',
         credential: 'dxos'
       },
