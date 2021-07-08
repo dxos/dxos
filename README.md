@@ -1,3 +1,5 @@
+[![publish](https://github.com/dxos/protocols/actions/workflows/publish.yaml/badge.svg)](https://github.com/dxos/protocols/actions/workflows/publish.yaml)
+
 ![js-dxos](./docs/images/github-repo-banner.png)
 
 ## DXOS Protocols 

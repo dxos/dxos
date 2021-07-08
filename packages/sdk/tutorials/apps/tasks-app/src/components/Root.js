@@ -11,7 +11,7 @@ import Main from './Main';
 import ProfileDialog from './ProfileDialog';
 
 /**
- * Main component.
+ * Root component.
  */
 const Root = () => {
   const client = useClient();

@@ -15,7 +15,8 @@
     "jsx": "react-jsx"
   },
   "include": [
+    "playwright",
     "src",
-    "playwright"
+    "stories"
   ]
 }

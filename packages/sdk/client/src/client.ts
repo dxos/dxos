@@ -75,7 +75,6 @@ export class Client {
   private _initialized = false;
 
   constructor (config: ClientConfig = {}) {
-    this._config = config;
     // TODO(burdon): Make hierarchical (e.g., snapshot.[enabled, interval])
     const {
       storage = {},
@@ -84,6 +83,8 @@ export class Client {
       snapshots = false,
       snapshotInterval
     } = config;
+
+    this._config = { storage, swarm, wns, snapshots, snapshotInterval, ...config };
 
     const { feedStorage, keyStorage, snapshotStorage } = createStorageObjects(storage, snapshots);
 

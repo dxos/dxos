@@ -29,8 +29,35 @@ jobs:
           node common/scripts/install-run-rush.js install
           echo "::endgroup::"
           
-          # Build
+          # Build with tests
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
+
+  check-storybooks:
+    runs-on: [self-hosted, dind-actions-runner]
+    timeout-minutes: 25
+    strategy:
+      matrix:
+        node-version: [16.0]
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          clean: false
+      - name: Check, install and build
+        run: |
+          \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+          npm install -g @microsoft/rush pnpm
+          
+          # Install dependencies
+          echo "::group::Install"
+          node common/scripts/install-run-rush.js install
+          echo "::endgroup::"
+          
+          # Quick build
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose
 
           # Build storybooks
           echo "::group::Storybooks"
