@@ -2,10 +2,12 @@
   "name": "@dxos/esbuild-plugins",
   "version": "2.10.10",
   "private": true,
-  "main": "./index.js",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "scripts": {
-    "build": "",
-    "build:test": ""
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint"
   },
   "dependencies": {
     "assert": "^2.0.0",
@@ -15,5 +17,8 @@
     "util": "~0.12.4",
     "debug": "^4.1.1",
     "tty-browserify": "~0.0.1"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*"
   }
 }
