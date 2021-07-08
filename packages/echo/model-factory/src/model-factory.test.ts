@@ -4,7 +4,7 @@
 
 import { latch } from '@dxos/async';
 import { createId, createKeyPair } from '@dxos/crypto';
-import { TestItemMutation, createMockFeedWriterFromStream } from '@dxos/echo-protocol';
+import { TestItemMutation, createMockFeedWriterFromStream, Timeframe } from '@dxos/echo-protocol';
 import { createTransform } from '@dxos/util';
 
 import { ModelFactory } from './model-factory';
@@ -35,7 +35,8 @@ describe('model factory', () => {
           meta: {
             memberKey: feedKey,
             feedKey,
-            seq: 1
+            seq: 1,
+            timeframe: new Timeframe(),
           },
           mutation
         };
