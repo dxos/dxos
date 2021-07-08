@@ -33,7 +33,7 @@ test('local source', async () => {
   await orchestrator.destroy();
 }).timeout(100_000).retries(2);
 
-test.skip('remote source', async () => {
+test('remote source', async () => {
   const orchestrator = await Orchestrator.create({ local: false });
 
   orchestrator.client.registerModel(MessengerModel);

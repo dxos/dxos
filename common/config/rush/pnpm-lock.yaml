@@ -835,6 +835,7 @@ importers:
       debug: 4.3.1
       dotenv: 8.6.0
       download: 7.1.0
+      esbuild: 0.11.23
       fs-extra: 8.1.0
       hypercore-crypto: 1.0.0
       js-yaml: 3.14.1
@@ -890,6 +891,7 @@ importers:
       debug: ^4.1.1
       dotenv: ^8.2.0
       download: ^7.1.0
+      esbuild: ^0.11.23
       expect: ~27.0.2
       fs-extra: ^8.1.0
       hypercore-crypto: ^1.0.0

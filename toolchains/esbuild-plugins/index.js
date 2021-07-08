@@ -122,6 +122,11 @@ function NodeModulesPlugin() {
           path: require.resolve('tty-browserify'),
         }
       })
+      onResolve({ filter: /^fs$/ }, arg => {
+        return {
+          path: require.resolve('./polyfills/empty-module-stub.js'),
+        }
+      })
     }
   }
 }
