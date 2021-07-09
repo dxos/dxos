@@ -9,7 +9,8 @@
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
-    "test": "toolchain test"
+    "test": "toolchain test",
+    "lint": "toolchain lint"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -19,16 +20,18 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-bot": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "assert": "^2.0.0",
     "debug": "^4.1.1",
-    "eslint": "^7.7.0",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*"
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   },
   "publishConfig": {
     "access": "restricted"
