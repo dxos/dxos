@@ -21,6 +21,11 @@ export async function runTests (bundleFile: string, show: boolean): Promise<numb
 
   const lock = new Lock();
 
+  page.on('pageerror', error => {
+    lock.executeSynchronized(async () => {
+      console.log(error);
+    });
+  });
   page.on('console', async msg => {
     const argsPromise = Promise.all(msg.args().map(x => x.jsonValue()));
     await lock.executeSynchronized(async () => {
