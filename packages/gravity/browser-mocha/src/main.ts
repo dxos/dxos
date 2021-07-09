@@ -27,7 +27,7 @@ yargs(process.argv.slice(2))
         browsers: [Browser.CHROMIUM],
         show: argv.show,
         setup: argv.setup,
-        debug: argv.debug,
+        debug: argv.debug
       });
     }
   )

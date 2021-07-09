@@ -19,7 +19,7 @@ export async function runTests (bundleFile: string, show: boolean, debug: boolea
     headless: !show,
     args: [
       '--disable-web-security',
-      ...(debug ? ['--auto-open-devtools-for-tabs'] : []),
+      ...(debug ? ['--auto-open-devtools-for-tabs'] : [])
     ]
   });
   const context = await browser.newContext();
@@ -57,10 +57,10 @@ export async function runTests (bundleFile: string, show: boolean, debug: boolea
   });
 
   const exitTimeout = setTimeout(() => {
-    if(debug) {
-      return
+    if (debug) {
+      return;
     }
-    
+
     console.log(`\n\nTests failed to load in ${INIT_TIMEOUT} ms.`);
     process.exit(-1);
   }, INIT_TIMEOUT);
