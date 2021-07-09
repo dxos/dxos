@@ -117,8 +117,8 @@ export class BotPlugin extends EventEmitter {
       .setHandshakeHandler(async protocol => {
         const { peerId } = protocol.getSession() ?? {};
 
-        if (peerId && this._peers.has(keyToString(Buffer.from(peerId)))) {
-          this.emit('peer:joined', peerId, protocol);
+        if (peerId && this._peers.has(peerId)) {
+          this.emit('peer:joined', Buffer.from(peerId, 'hex'), protocol);
         }
       })
       .setMessageHandler(this._commandHandler)
