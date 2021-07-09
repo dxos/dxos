@@ -10,6 +10,7 @@ import { Typography, Container, makeStyles, Button, Grid } from '@material-ui/co
 import type { GetPartiesResponse } from '@dxos/wallet-core';
 
 import { useBackgroundContext } from '../contexts';
+import BackButton from './BackButton';
 
 const useStyles = makeStyles({
   container: {
@@ -45,7 +46,10 @@ const Parties = () => {
           <Typography variant='h4' align='center'> Your parties </Typography>
         </Grid>
         {(parties?.partyKeys ?? ['You have no parties']).map(key => <Grid item xs={12} key={key}> {key} </Grid>)}
-        <Grid item xs={12}>
+        <Grid item xs={6}>
+          <BackButton />
+        </Grid>
+        <Grid item xs={6}>
           <Grid container justify='flex-end'>
             <Button
               variant='contained'

@@ -8,6 +8,7 @@ import { useHistory } from 'react-router-dom';
 import { Button, Container, Grid, makeStyles, TextField, Typography } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
+import BackButton from './BackButton';
 
 const useStyles = makeStyles({
   container: {
@@ -37,7 +38,7 @@ const JoinParty = () => {
         invitation,
         passcode
       });
-      history.push('/parties');
+      history.goBack();
     } catch (e) {
       console.error(e);
     } finally {
@@ -78,7 +79,10 @@ const JoinParty = () => {
             required
             helperText={<div> The passcode you get from the party owner.  </div>}/>
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={6}>
+          <BackButton />
+        </Grid>
+        <Grid item xs={6}>
           <Grid container justify='flex-end'>
             <Button
               variant='contained'
