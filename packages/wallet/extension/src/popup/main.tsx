@@ -11,7 +11,7 @@ import { inDev } from './utils/helpers';
 
 const ee = new EventEmitter();
 if (!ee.off) {
-  throw new Error('off is missing on EventEmitter');
+  throw new Error('off is missing on EventEmitter - insufficient node polyfills.');
 } // Check if `node` polyfills are correct
 
 // Application to Render
