@@ -8,24 +8,26 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Card, CardContent, makeStyles, TextField, Button } from '@material-ui/core';
-import { GetPartiesResponse } from '@dxos/wallet-core';
+import { List, ListItem, Typography, Container, makeStyles, Button, Grid } from '@material-ui/core';
+import type { GetPartiesResponse } from '@dxos/wallet-core';
+
 import { useBackgroundContext } from '../contexts';
+import { Link, useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles({
-  card: {
-    margin: 15
+  container: {
+    marginTop: 20
   }
 });
 
 const Parties = () => {
   const classes = useStyles();
 
-  const backgroundService = useBackgroundContext();
   const [parties, setParties] = useState<GetPartiesResponse | undefined>(undefined);
-  const [invitation, setInvitation] = useState('');
-  const [passcode, setPasscode] = useState('');
-  const [inProgress, setInProgress] = useState(false);
+
+  const backgroundService = useBackgroundContext();
+
+  const history = useHistory();
 
   useEffect(() => {
     if (backgroundService === undefined) {
@@ -41,35 +43,26 @@ const Parties = () => {
     return <p>Connecting to background...</p>;
   }
 
-  const handleJoin = async () => {
-    try {
-      setInProgress(true);
-      console.log('joining...')
-      await backgroundService.rpc.JoinParty({
-        invitation,
-        passcode
-      })
-      console.log('getting parties after join...')
-      setParties(await backgroundService.rpc.GetParties({}))
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setInvitation('')
-      setPasscode('')
-      setInProgress(false);
-    }
-  }
-
   return (
-    <Card className={classes.card} raised={true}>
-      <CardContent> 
-        <p>You have {parties?.partyKeys?.length ?? 0} parties.</p>
-
-        <TextField placeholder={'Invitation'} value={invitation} onChange={event => setInvitation(event.target.value)} />
-        <TextField placeholder={'Passcode'} value={passcode} onChange={event => setPasscode(event.target.value)} />
-        <Button disabled={!invitation || !passcode || inProgress} onClick={handleJoin}>{inProgress ? 'Joining...' : 'Join Party'}</Button>
-      </CardContent>
-    </Card>
+    <Container className={classes.container}>
+      <Grid container spacing={4}>
+        <Grid item xs={12}>
+          <Typography variant='h4' align='center'> Your parties </Typography>
+        </Grid>
+        {(parties?.partyKeys ?? ['You have no parties']).map(key => <Grid item xs={12} key={key}> {key} </Grid>)}
+        <Grid item xs={12}>
+          <Grid container justify='flex-end'>
+            <Button 
+              variant='contained' 
+              color='primary' 
+              component={Link}
+              to='/joinparty'>
+              Join new party
+            </Button>
+          </Grid>
+        </Grid>
+      </Grid>
+    </Container>
   );
 }
 

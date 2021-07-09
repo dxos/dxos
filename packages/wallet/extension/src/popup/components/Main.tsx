@@ -11,6 +11,8 @@ import CreateProfile from './CreateProfile';
 import Import from './Import';
 import Login from './Login';
 import User from './User';
+import Parties from './Parties';
+import JoinParty from './JoinParty';
 
 const Main = () => {
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
@@ -45,9 +47,17 @@ const Main = () => {
           <CreateProfile onProfileCreated={setProfile} />
         </Route>
         {profile && profile.username && profile.publicKey
-          ? <Route path='/user'>
-            <User profile={profile} />
-          </Route>
+          ? <Switch>
+            <Route path='/user'>
+              <User profile={profile} />
+            </Route>
+            <Route path='/parties'>
+              <Parties />
+            </Route>
+            <Route path='/joinparty'>
+              <JoinParty />
+            </Route>
+          </Switch>
           : null}
         <Redirect to='/login' />
       </Switch>

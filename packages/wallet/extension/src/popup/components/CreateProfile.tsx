@@ -24,13 +24,16 @@ const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
   const classes = useStyles();
 
   const [username, setUsername] = useState('');
+  const [inProgress, setInProgress] = useState(false);
 
   const history = useHistory();
 
   const backgroundService = useBackgroundContext();
 
   const onCreate = async () => {
+    setInProgress(true);
     const response = await backgroundService?.rpc.CreateProfile({ username });
+    setInProgress(false);
     if (response && response.publicKey) {
       onProfileCreated(response);
       history.push('/user');
@@ -56,7 +59,13 @@ const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
         </Grid>
         <Grid item xs={12}>
           <Grid container justify='flex-end'>
-            <Button variant='contained' color='primary' onClick={onCreate}> Create </Button>
+            <Button 
+              variant='contained' 
+              color='primary' 
+              onClick={onCreate}
+              disabled={inProgress}> 
+              {inProgress ? 'Creating...' : 'Create'} 
+            </Button>
           </Grid>
         </Grid>
       </Grid>
