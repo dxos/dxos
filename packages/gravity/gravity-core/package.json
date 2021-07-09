@@ -58,7 +58,9 @@
     "tar": "^6.0.5",
     "tree-kill": "^1.2.2",
     "ts-node": "^9.1.1",
-    "webpack": "4.44.2"
+    "webpack": "4.44.2",
+    "esbuild": "^0.11.23",
+    "@dxos/esbuild-plugins": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

@@ -22,8 +22,10 @@ export async function buildTests (files: string[], outDir: string) {
     mocha.checkLeaks();
 
     ${files.map(file => `require("${resolve(file)}");`).join('\n')}
+
+    window.browserMocha__initFinished()
     
-    mocha.run(window.testsDone);
+    mocha.run(window.browserMocha__testsDone);
   `;
 
   await fs.writeFile(mainFile, mainContents);
