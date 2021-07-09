@@ -6,7 +6,7 @@
  * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
  * @license  MIT
  */
-/* eslint-disable no-proto */
+/* eslint-disable */
 
 var lookup = []
 var revLookup = []

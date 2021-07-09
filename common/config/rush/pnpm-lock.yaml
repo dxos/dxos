@@ -820,6 +820,7 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/messenger-model': link:../../echo/messenger-model
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/protocol-plugin-bot': link:../../bot/protocol-plugin-bot
@@ -835,6 +836,7 @@ importers:
       debug: 4.3.1
       dotenv: 8.6.0
       download: 7.1.0
+      esbuild: 0.11.23
       fs-extra: 8.1.0
       hypercore-crypto: 1.0.0
       js-yaml: 3.14.1
@@ -872,6 +874,7 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/esbuild-plugins': workspace:*
       '@dxos/messenger-model': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/protocol-plugin-bot': workspace:*
@@ -890,6 +893,7 @@ importers:
       debug: ^4.1.1
       dotenv: ^8.2.0
       download: ^7.1.0
+      esbuild: ^0.11.23
       expect: ~27.0.2
       fs-extra: ^8.1.0
       hypercore-crypto: ^1.0.0
@@ -2022,9 +2026,16 @@ importers:
       readable-stream: 3.6.0
       tty-browserify: 0.0.1
       util: 0.12.4
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../node-library
+      '@types/node': 14.14.45
+      esbuild: 0.11.23
     specifiers:
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/node': ^14.0.9
       assert: ^2.0.0
       debug: ^4.1.1
+      esbuild: ^0.11.23
       events: ~3.3.0
       path-browserify: ~1.0.1
       readable-stream: ^3.6.0
