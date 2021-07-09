@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { it as test } from 'mocha';
 import path from 'path';
 import { sync as findPkgJson } from 'pkg-up';
 
