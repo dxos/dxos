@@ -51,7 +51,7 @@ export class Bot extends EventEmitter {
   private readonly _options: any;
   private readonly _config: any;
 
-  private _plugin?: any /* BotPlugin */;
+  private _plugin?: BotPlugin;
   protected _client?: Client;
 
   private _leaveControlSwarm?: () => void;
@@ -75,10 +75,14 @@ export class Bot extends EventEmitter {
     this._config = config;
   }
 
+  get client () {
+    return this._client;
+  }
+
   /**
    * Called before `client.initialize()` useful to register custom models.
    */
-  async _preInit () {}
+  protected async _preInit () {}
 
   /**
    * Start the bot.
@@ -129,7 +133,7 @@ export class Bot extends EventEmitter {
   }
 
   async emitBotEvent (type: any, data: any) {
-    await this._plugin.sendCommand(this._botFactoryPeerKey, createEvent(this._uid, type, data));
+    await this._plugin!.sendCommand(this._botFactoryPeerKey, createEvent(this._uid, type, data));
   }
 
   /**
@@ -137,7 +141,7 @@ export class Bot extends EventEmitter {
    * @param {Protocol} protocol
    * @param {{ message }} command.
    */
-  async _botMessageHandler (protocol: any, { message }: Message) {
+  private async _botMessageHandler (protocol: any, { message }: Message) {
     assert(message);
     let result;
     switch (message.__type_url) {
@@ -169,12 +173,12 @@ export class Bot extends EventEmitter {
     return result;
   }
 
-  async _joinParty (invitation: InvitationMessage.Invitation | undefined) {
+  private async _joinParty (invitation: InvitationMessage.Invitation | undefined) {
     if (invitation) {
       const secretProvider = async () => {
         log('secretProvider begin.');
         const message = randomBytes(32);
-        const { message: { signature } } = await this._plugin.sendCommand(this._botFactoryPeerKey, createSignCommand(message));
+        const { message: { signature } } = await this._plugin!.sendCommand(this._botFactoryPeerKey, createSignCommand(message));
         const secret = Buffer.alloc(signature.length + message.length);
         signature.copy(secret);
         message.copy(secret, signature.length);
@@ -190,7 +194,7 @@ export class Bot extends EventEmitter {
     }
   }
 
-  _onJoin (parties: Party[] = []) {
+  private _onJoin (parties: Party[] = []) {
     parties.map(party => {
       const topic = party.key.toString();
       if (!this._parties.has(topic)) {
@@ -200,10 +204,10 @@ export class Bot extends EventEmitter {
     });
   }
 
-  async _connectToControlTopic () {
+  private async _connectToControlTopic () {
     const promise = new Promise<void>(resolve => {
       // TODO(egorgripasov): Factor out.
-      this._plugin.on('peer:joined', (peerId: Buffer) => {
+      this._plugin!.on('peer:joined', (peerId: Buffer) => {
         if (peerId.equals(this._botFactoryPeerKey)) {
           log('Bot factory peer connected');
           resolve();
@@ -221,7 +225,7 @@ export class Bot extends EventEmitter {
     await promiseTimeout(promise, CONNECT_TIMEOUT, new Error(`Bot failed to connect to control topic: Timed out in ${CONNECT_TIMEOUT} ms.`));
   }
 
-  async _startHeartbeat () {
+  private async _startHeartbeat () {
     setInterval(() => {
       const used: any = process.memoryUsage();
       for (const key in used) {

@@ -10,15 +10,14 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
-      '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       '@types/lodash.defaultsdeep': 4.6.6
-      assert: 2.0.0
       debug: 4.3.1
-      eslint: 7.26.0
       lodash.defaultsdeep: 4.6.1
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
@@ -28,12 +27,11 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-bot': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
       '@types/lodash.defaultsdeep': ^4.6.6
-      assert: ^2.0.0
+      '@types/mocha': ~8.2.2
       debug: ^4.1.1
-      eslint: ^7.7.0
+      expect: ~27.0.2
       lodash.defaultsdeep: ^4.6.1
   ../../packages/bot/botkit:
     dependencies:
