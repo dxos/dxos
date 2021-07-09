@@ -178,7 +178,9 @@ export class Bot extends EventEmitter {
       const secretProvider = async () => {
         log('secretProvider begin.');
         const message = randomBytes(32);
-        const { message: { signature } } = await this._plugin!.sendCommand(this._botFactoryPeerKey, createSignCommand(message));
+        const response = await this._plugin!.sendCommand(this._botFactoryPeerKey, createSignCommand(message));
+        const signature = (response as any).message.signature;
+        assert(signature);
         const secret = Buffer.alloc(signature.length + message.length);
         signature.copy(secret);
         message.copy(secret, signature.length);
