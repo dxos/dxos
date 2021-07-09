@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@dxos/crypto": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@testing-library/jest-dom": "^5.11.4",
@@ -27,15 +28,27 @@
     "babel-plugin-import": "~1.13.3",
     "@jackwilsdon/craco-use-babelrc": "~1.0.0",
     "@babel/preset-react": "7.9.4",
-    "@dxos/toolchain-node-library": "workspace:*"
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.9",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.5.6",
+    "@storybook/addon-actions": "^6.2.9",
+    "@storybook/addon-knobs": "^6.2.9",
+    "@storybook/react": "^6.2.9",
+    "@types/react": "^16.14.0",
+    "react-docgen-typescript-loader": "^3.7.2",
+    "ts-loader": "~8.1.0",
+    "webpack": "4.44.2"
   },
   "scripts": {
     "start": "SKIP_PREFLIGHT_CHECK=true craco start",
     "build": "npm run lint && SKIP_PREFLIGHT_CHECK=true craco build",
     "build:test": "npm run build && npm run test",
     "lint": "toolchain lint",
-    "test": "SKIP_PREFLIGHT_CHECK=true react-scripts test --passWithNoTests --watchAll=false",
-    "eject": "react-scripts eject"
+    "test": "SKIP_PREFLIGHT_CHECK=true craco test --passWithNoTests --watchAll=false",
+    "test:playwright": "jest --rootDir ./playwright --runInBand --passWithNoTests --verbose",
+    "eject": "craco eject"
   },
   "browserslist": {
     "production": [

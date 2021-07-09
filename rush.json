@@ -503,7 +503,9 @@
     },
     {
       "packageName": "@dxos/rpc",
-      "projectFolder": "packages/common/rpc"
+      "projectFolder": "packages/common/rpc",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
 
     //
@@ -710,20 +712,16 @@
 
     {
       "packageName": "@dxos/wallet-extension",
-      "projectFolder": "packages/wallet/extension",
-      "shouldPublish": false,
-      "versionPolicyName": "lockStepPolicy"
+      "projectFolder": "packages/wallet/extension"
     },
     {
       "packageName": "@dxos/wallet-playground",
-      "projectFolder": "packages/wallet/playground",
-      "shouldPublish": false,
-      "versionPolicyName": "lockStepPolicy"
+      "projectFolder": "packages/wallet/playground"
     },
     {
       "packageName": "@dxos/wallet-core",
       "projectFolder": "packages/wallet/core",
-      "shouldPublish": false,
+      "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     }
   ]

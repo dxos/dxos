@@ -119,10 +119,11 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
     setContactsInvitations((old) => [...old, { id: Date.now(), contact }]);
   };
 
-  const handleBotInviteClick = () => {
-    setBotDialogVisible(true);
-    setBotInvitationError(undefined);
-  };
+  // issue(grazianoramiro): https://github.com/dxos/protocols/issues/196
+  // const handleBotInviteClick = () => {
+  //   setBotDialogVisible(true);
+  //   setBotInvitationError(undefined);
+  // };
 
   const handleBotInvite = async (botId: string | undefined, spec: Record<string, unknown> = {}) => {
     setBotInvitationError(undefined);
@@ -233,9 +234,11 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
             <Button size='small' onClick={createInvitation}>
               Invite User
             </Button>
+            {/*
+            // issue(grazianoramiro): https://github.com/dxos/protocols/issues/196
             <Button size='small' onClick={() => handleBotInviteClick()}>
               Invite Bot
-            </Button>
+            </Button> */}
           </div>
         </Toolbar>
 

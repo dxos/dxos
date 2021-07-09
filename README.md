@@ -1,3 +1,5 @@
+[![publish](https://github.com/dxos/protocols/actions/workflows/publish.yaml/badge.svg)](https://github.com/dxos/protocols/actions/workflows/publish.yaml)
+
 ![js-dxos](./docs/images/github-repo-banner.png)
 
 ## DXOS Protocols 
@@ -13,6 +15,17 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 
 ## Troubleshooting
 
+## Documentation
+
+To spin up this repo documentation on your local environment please follow this steps:
+
+```bash
+$ cd docs
+$ yarn
+$ yarn dev
+```
+
 ## Contributing
+
 
 ## License

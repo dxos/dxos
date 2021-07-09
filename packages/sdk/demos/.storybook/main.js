@@ -3,11 +3,12 @@
 //
 
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   stories: [
-    '../stories/**/*.jsx',
-    '../stories/**/*.tsx'
+    '../stories/**/*.(jsx|tsx)',
+    '../../tutorials/apps/tasks-app/stories/**/*.(jsx|tsx)'
   ],
   addons: [
     '@storybook/addon-essentials',
@@ -27,6 +28,12 @@ module.exports = {
       ],
     });
     config.resolve.extensions.push('.ts', '.tsx');
+    config.node = {
+      Buffer: false
+    };
+    config.plugins.push(new webpack.ProvidePlugin({
+      Buffer: [require.resolve('buffer/'), 'Buffer']
+    }));
     return config;
   },
 };

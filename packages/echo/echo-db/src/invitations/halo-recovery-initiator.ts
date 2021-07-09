@@ -21,7 +21,7 @@ import { keyToBuffer, keyToString, PublicKey, randomBytes, verify } from '@dxos/
 import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { Identity } from '../halo';
+import { Identity, IdentityProvider } from '../halo';
 import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
@@ -155,8 +155,9 @@ export class HaloRecoveryInitiator {
     ));
   }
 
-  static createHaloInvitationClaimHandler (identity: Identity) {
+  static createHaloInvitationClaimHandler (identityProvider: IdentityProvider) {
     const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer, remotePeerId: Buffer, peerId: Buffer) => {
+      const identity = identityProvider();
       assert(identity.halo, 'HALO is required');
       assert(identity.identityKey);
 

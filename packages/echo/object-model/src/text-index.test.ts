@@ -2,6 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import expect from 'expect';
+import { it as test } from 'mocha';
+
 import { Matcher } from './matcher';
 import { Predicate } from './proto';
 import { TextIndex } from './text-index';
@@ -47,92 +50,94 @@ const items = [
   }
 ];
 
-test('indexer query', async () => {
-  const getter = (item: any, key: string) => item[key];
-  const indexer = new TextIndex({ fields: ['title', 'description'], getter });
+describe('text-index', () => {
+  test('indexer query', async () => {
+    const getter = (item: any, key: string) => item[key];
+    const indexer = new TextIndex({ fields: ['title', 'description'], getter });
 
-  indexer.update(items);
-  const results = indexer.search('william');
-  expect(results.filter(item => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
-});
-
-test('indexer query with update cache', async () => {
-  const getter = (item: any, key: string) => item[key];
-  const indexer = new TextIndex({ fields: ['title', 'description'], getter });
-
-  {
     indexer.update(items);
     const results = indexer.search('william');
     expect(results.filter(item => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
-  }
+  });
 
-  {
-    indexer.update(items.slice(3, 4));
-    const results = indexer.search('william');
-    expect(results.filter(item => ['item-3'].indexOf(item.id) !== -1)).toHaveLength(1);
-  }
-});
+  test('indexer query with update cache', async () => {
+    const getter = (item: any, key: string) => item[key];
+    const indexer = new TextIndex({ fields: ['title', 'description'], getter });
 
-test('simple text query', () => {
-  const getter = (item: any, key: string) => item[key];
-  const textIndex = new TextIndex({ fields: ['title', 'description'], getter });
-  const matcher = new Matcher({ getter, textIndex });
-
-  const query = {
-    root: {
-      op: Predicate.Operation.TEXT_MATCH,
-      value: {
-        string: 'william'
-      }
+    {
+      indexer.update(items);
+      const results = indexer.search('william');
+      expect(results.filter(item => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
     }
-  };
 
-  textIndex.update(items);
-  const results = matcher.matchItems(query, items);
-  expect(results.filter(item => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
-});
+    {
+      indexer.update(items.slice(3, 4));
+      const results = indexer.search('william');
+      expect(results.filter(item => ['item-3'].indexOf(item.id) !== -1)).toHaveLength(1);
+    }
+  });
 
-test('complex text query', () => {
-  const getter = (item: any, key: string) => item[key];
-  const textIndex = new TextIndex({ fields: ['title', 'description'], getter });
-  const matcher = new Matcher({ getter, textIndex });
+  test('simple text query', () => {
+    const getter = (item: any, key: string) => item[key];
+    const textIndex = new TextIndex({ fields: ['title', 'description'], getter });
+    const matcher = new Matcher({ getter, textIndex });
 
-  const query = {
-    root: {
-      op: Predicate.Operation.AND,
-      predicates: [
-        {
-          op: Predicate.Operation.TEXT_MATCH,
-          value: {
-            string: 'william'
-          }
-        },
-        {
-          op: Predicate.Operation.NOT,
-          predicates: [
-            {
-              op: Predicate.Operation.IN,
-              key: 'category',
-              value: {
-                array: {
-                  values: [
-                    {
-                      string: 'comedy'
-                    },
-                    {
-                      string: 'history'
-                    }
-                  ]
+    const query = {
+      root: {
+        op: Predicate.Operation.TEXT_MATCH,
+        value: {
+          string: 'william'
+        }
+      }
+    };
+
+    textIndex.update(items);
+    const results = matcher.matchItems(query, items);
+    expect(results.filter(item => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
+  });
+
+  test('complex text query', () => {
+    const getter = (item: any, key: string) => item[key];
+    const textIndex = new TextIndex({ fields: ['title', 'description'], getter });
+    const matcher = new Matcher({ getter, textIndex });
+
+    const query = {
+      root: {
+        op: Predicate.Operation.AND,
+        predicates: [
+          {
+            op: Predicate.Operation.TEXT_MATCH,
+            value: {
+              string: 'william'
+            }
+          },
+          {
+            op: Predicate.Operation.NOT,
+            predicates: [
+              {
+                op: Predicate.Operation.IN,
+                key: 'category',
+                value: {
+                  array: {
+                    values: [
+                      {
+                        string: 'comedy'
+                      },
+                      {
+                        string: 'history'
+                      }
+                    ]
+                  }
                 }
               }
-            }
-          ]
-        }
-      ]
-    }
-  };
+            ]
+          }
+        ]
+      }
+    };
 
-  textIndex.update(items);
-  const results = matcher.matchItems(query, items);
-  expect(results.filter(item => ['item-1', 'item-2'].indexOf(item.id) !== -1)).toHaveLength(2);
+    textIndex.update(items);
+    const results = matcher.matchItems(query, items);
+    expect(results.filter(item => ['item-1', 'item-2'].indexOf(item.id) !== -1)).toHaveLength(2);
+  });
 });

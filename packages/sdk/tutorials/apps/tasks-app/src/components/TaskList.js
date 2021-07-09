@@ -73,7 +73,7 @@ const TASK_TYPE = 'example.com/type/task';
 // TODO(burdon): Editable list items.
 // TODO(burdon): Scrolling list.
 
-const TaskList = ({ partyKey }) => {
+const TaskList = ({ partyKey, hideShare = false }) => {
   const classes = useStyles();
   const [shareDialog, setShareDialog] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
@@ -145,7 +145,7 @@ const TaskList = ({ partyKey }) => {
               <IconButton
                 size="small"
                 edge="end"
-                aria-label="delete"
+                aria-label="create"
                 onClick={handleCreateTask}
               >
                 <AddIcon />
@@ -189,17 +189,19 @@ const TaskList = ({ partyKey }) => {
         </List>
       </div>
 
-      <div className={classes.actions}>
-        <Fab
-          size="small"
-          color="secondary"
-          aria-label="invite"
-          title="Invite people"
-          onClick={handleShare}
-        >
-          <ShareIcon />
-        </Fab>
-      </div>
+      {!hideShare && (
+        <div className={classes.actions}>
+          <Fab
+            size="small"
+            color="secondary"
+            aria-label="invite"
+            title="Invite people"
+            onClick={handleShare}
+          >
+            <ShareIcon />
+          </Fab>
+        </div>
+      )}
     </div>
   );
 };

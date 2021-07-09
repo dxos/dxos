@@ -1,5 +1,4 @@
-const { NodeModulesPolyfillPlugin } = require('@esbuild-plugins/node-modules-polyfill')
-const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin } = require('@dxos/esbuild-plugins')
+const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = require('@dxos/esbuild-plugins')
 const { build } = require('esbuild')
 const rmdir = require('rmdir');
 const { promisify } = require('util')
@@ -28,7 +27,7 @@ const publicDir = join(__dirname, '../public')
       write: true,
       bundle: true,
       plugins: [
-        NodeModulesPolyfillPlugin(),
+        NodeModulesPlugin(),
         NodeGlobalsPolyfillPlugin(),
         FixMemdownPlugin(),
       ],

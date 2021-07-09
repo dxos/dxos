@@ -5,11 +5,9 @@
 import React, { useState } from 'react';
 
 import Button from '@material-ui/core/Button';
-import Checkbox from '@material-ui/core/Checkbox';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
@@ -32,7 +30,9 @@ const useStyles = makeStyles((theme) => ({
 
 const RedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => {
   const classes = useStyles();
-  const [isOffline, setIsOffline] = useState(false);
+  const [isOffline] = useState(false);
+  // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
+  // const [isOffline, setIsOffline] = useState(false);
   const [error, setError] = useState<string>();
   const [step, setStep] = useState(0); // TODO(burdon): Const.
   const [invitationCode, setInvitationCode] = useState('');
@@ -109,11 +109,14 @@ const RedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => {
               onKeyDown={handleKeyDown}
               rows={6}
             />
+
+            {/*
+            issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
             <FormControlLabel
               className={classes.marginTop}
               control={<Checkbox checked={isOffline} onChange={(event) => setIsOffline(event.target.checked)} />}
               label='Offline'
-            />
+            /> */}
           </DialogContent>
           <DialogActions>
             <Button color='secondary' onClick={handleDone}>

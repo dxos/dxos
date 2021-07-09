@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol",
-  "version": "2.10.11",
+  "version": "2.10.12",
   "description": "Protocol.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol#readme",
   "bugs": {
@@ -24,6 +24,7 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",

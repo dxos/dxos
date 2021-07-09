@@ -21,7 +21,7 @@ import { keyToBuffer, keyToString, PublicKey, randomBytes } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
-import { IdentityManager } from '../halo';
+import { Identity } from '../halo';
 import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
@@ -166,15 +166,15 @@ export class OfflineInvitationClaimer {
   }
 
   // The secretProvider should provide an `Auth` message signed directly by the Identity key.
-  static createSecretProvider (identityManager: IdentityManager): SecretProvider {
+  static createSecretProvider (identity: Identity): SecretProvider {
     return async (info: any) => Buffer.from(Authenticator.encodePayload(
       // The signed portion of the Auth message includes the ID and authNonce provided
       // by "info". These values will be validated on the other end.
       createAuthMessage(
-        identityManager.keyring,
+        identity.keyring,
         info.id.value,
-        identityManager.identityKey ?? raise(new Error('No identity key')),
-        identityManager.deviceKeyChain ?? raise(new Error('No device keychain')),
+        identity.identityKey ?? raise(new Error('No identity key')),
+        identity.deviceKeyChain ?? raise(new Error('No device keychain')),
         undefined,
         info.authNonce.value)
     ));

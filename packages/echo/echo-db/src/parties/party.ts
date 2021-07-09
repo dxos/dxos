@@ -110,7 +110,7 @@ export class Party {
       this._internal.processor.keyOrInfoAdded.discardParameter(),
       () => this._internal.processor.memberKeys
         .filter(publicKey => !this._internal.processor.partyKey.equals(publicKey))
-        .map((publicKey: PublicKey) => {
+        .map((publicKey: PublicKey): PartyMember => {
           const displayName = this._internal.processor.getMemberInfo(publicKey)?.displayName;
           return {
             publicKey,
