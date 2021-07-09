@@ -9,6 +9,11 @@ import { chromium } from 'playwright';
 
 import { Lock, trigger } from '@dxos/async';
 
+/**
+ * Timeout for testing framework to initialize and to load tests.
+ */
+const INIT_TIMEOUT = 10_000;
+
 export async function runTests (bundleFile: string, show: boolean): Promise<number> {
   const browser = await chromium.launch({
     headless: !show,
@@ -44,10 +49,18 @@ export async function runTests (bundleFile: string, show: boolean): Promise<numb
   await page.goto(`file://${join(packageDir, './src/index.html')}`);
 
   const [getPromise, resolve] = trigger<number>();
-  await page.exposeFunction('testsDone', async (exitCode: number) => {
+  await page.exposeFunction('browserMocha__testsDone', async (exitCode: number) => {
     await lock.executeSynchronized(async () => {
       resolve(exitCode);
     });
+  });
+
+  const exitTimeout = setTimeout(() => {
+    console.log(`\n\nTests failed to load in ${INIT_TIMEOUT} ms.`);
+    process.exit(-1);
+  }, INIT_TIMEOUT);
+  await page.exposeFunction('browserMocha__initFinished', () => {
+    clearTimeout(exitTimeout);
   });
 
   await page.addScriptTag({
