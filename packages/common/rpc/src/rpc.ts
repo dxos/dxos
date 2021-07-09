@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import { synchronized, Trigger } from '@dxos/async';
+import { Stream } from '@dxos/codec-protobuf';
 
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
@@ -14,6 +15,7 @@ type MaybePromise<T> = Promise<T> | T
 
 export interface RpcPeerOptions {
   messageHandler: (method: string, request: Uint8Array) => MaybePromise<Uint8Array>
+  streamHandler?: (method: string, request: Uint8Array) => Stream<Uint8Array>
   port: RpcPort
 }
 
@@ -28,7 +30,8 @@ export interface RpcPort {
 class RequestItem {
   constructor (
     public readonly resolve: (response: Response) => void,
-    public readonly reject: (error: Error) => void
+    public readonly reject: (error: Error) => void,
+    public readonly stream: boolean
   ) {}
 }
 
@@ -103,9 +106,15 @@ export class RpcPeer {
       }
 
       const req = decoded.request;
-      const response = await this._callHandler(req);
+      if (req.stream) {
+        this._callStreamHandler(req, response => {
+          this._options.port.send(codec.encode({ response }));
+        });
+      } else {
+        const response = await this._callHandler(req);
 
-      await this._options.port.send(codec.encode({ response }));
+        await this._options.port.send(codec.encode({ response }));
+      }
     } else if (decoded.response) {
       if (!this._open) {
         return; // Ignore when not open.
@@ -117,7 +126,10 @@ export class RpcPeer {
       }
 
       const item = this._requests.get(decoded.response.id)!;
-      this._requests.delete(decoded.response.id);
+      // Delete the request record if no more responses are expected.
+      if (!item.stream) {
+        this._requests.delete(decoded.response.id);
+      }
 
       item.resolve(decoded.response);
     } else if (decoded.open) {
@@ -140,7 +152,7 @@ export class RpcPeer {
     const id = this._nextId++;
 
     const promise = new Promise<Response>((resolve, reject) => {
-      this._requests.set(id, new RequestItem(resolve, reject));
+      this._requests.set(id, new RequestItem(resolve, reject, false));
     });
 
     // If a promise is rejected before it's awaited or an error handler is attached, node will print a warning.
@@ -170,6 +182,39 @@ export class RpcPeer {
     }
   }
 
+  /**
+   * Make RPC call with a streaming response. Will trigger a handler on the other side.
+   *
+   * Peer should be open before making this call.
+   */
+  callStream (method: string, request: Uint8Array): Stream<Uint8Array> {
+    if (!this._open) {
+      throw new RpcNotOpenError();
+    }
+
+    const id = this._nextId++;
+
+    return new Stream(({ next, close }) => {
+      const onResponse = (response: Response) => {
+        if (response.close) {
+          close();
+        } else if (response.error) {
+          assert(response.error.name);
+          assert(response.error.message);
+          assert(response.error.stack);
+          // TODO(marik-d): Stack trace might be lost because the stream producer function is called asynchronously.
+          close(new SerializedRpcError(response.error.name, response.error.message, response.error.stack, method));
+        } else if (response.payload) {
+          next(response.payload);
+        } else {
+          throw new Error('Malformed response.');
+        }
+      };
+
+      this._requests.set(id, new RequestItem(onResponse, close, true));
+    });
+  }
+
   private async _callHandler (req: Request): Promise<Response> {
     try {
       assert(typeof req.id === 'number');
@@ -185,6 +230,42 @@ export class RpcPeer {
         id: req.id,
         error: encodeError(err)
       };
+    }
+  }
+
+  private _callStreamHandler (req: Request, callback: (response: Response) => void) {
+    try {
+      assert(this._options.streamHandler, 'Requests with streaming responses are not supported.');
+      assert(typeof req.id === 'number');
+      assert(req.payload);
+      assert(req.method);
+      const responseStream = this._options.streamHandler(req.method, req.payload);
+      responseStream.subscribe(
+        msg => {
+          callback({
+            id: req.id,
+            payload: msg
+          });
+        },
+        error => {
+          if (error) {
+            callback({
+              id: req.id,
+              error: encodeError(error)
+            });
+          } else {
+            callback({
+              id: req.id,
+              close: true
+            });
+          }
+        }
+      );
+    } catch (err) {
+      callback({
+        id: req.id,
+        error: encodeError(err)
+      });
     }
   }
 }

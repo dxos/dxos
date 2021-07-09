@@ -13,6 +13,7 @@ type Producer<T> = (callbacks: {
  * 
  * `close` must be called to clean-up the resources.
  */
+// TODO(marik-d): Either implement buffering or make streams lazy (invoke producer on subscription).
 export class Stream<T> {
   private _messageHandler?: (msg: T) => void;
   private _closeHandler?: (error?: Error) => void;

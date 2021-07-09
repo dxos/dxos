@@ -36,7 +36,8 @@ export function createRpcClient<S> (serviceDef: ServiceDescriptor<S>, options: O
   });
 
   const client = serviceDef.createClient({
-    call: peer.call.bind(peer)
+    call: peer.call.bind(peer),
+    callStream: peer.callStream.bind(peer)
   });
 
   return new ProtoRpcClient(client, peer);
@@ -55,7 +56,8 @@ export function createRpcServer<S> ({ service, handlers, ...rest }: ProtoRpcServ
 
   const peer = new RpcPeer({
     ...rest,
-    messageHandler: server.call.bind(server)
+    messageHandler: server.call.bind(server),
+    streamHandler: server.callStream.bind(server)
   });
 
   return peer;
