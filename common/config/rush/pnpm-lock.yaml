@@ -77,7 +77,8 @@ importers:
       uuidv4: 6.2.8
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
-      '@types/jest': 26.0.23
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
@@ -93,10 +94,10 @@ importers:
       '@types/debug': ^4.1.1
       '@types/download': ^6.2.4
       '@types/fs-extra': ^9.0.4
-      '@types/jest': ^26.0.7
       '@types/js-yaml': ^3.12.5
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.get': ^4.4.6
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@wirelineio/registry-client': ~1.1.0-beta.3
       assert: ^2.0.0
@@ -104,6 +105,7 @@ importers:
       cpy-cli: ^2.0.0
       debug: ^4.1.1
       download: ^7.1.0
+      expect: ~27.0.2
       fs-extra: ^8.1.0
       hypercore-crypto: ^1.0.0
       js-yaml: ^3.13.1
