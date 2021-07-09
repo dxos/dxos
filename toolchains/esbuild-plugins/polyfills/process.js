@@ -1,5 +1,6 @@
 // shim for using process in browser
 // based off https://github.com/defunctzombie/node-process/blob/master/browser.js
+/* eslint-disable */
 
 window.global = window
 

@@ -27,7 +27,7 @@ const publicDir = join(__dirname, '../public')
       write: true,
       bundle: true,
       plugins: [
-        NodeModulesPolyfillPlugin(),
+        NodeModulesPlugin(),
         NodeGlobalsPolyfillPlugin(),
         FixMemdownPlugin(),
       ],

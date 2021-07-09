@@ -2,41 +2,37 @@
 // Copyright 2020 DXOS.org
 //
 
-const themeOptions = require('@dxos/docs-theme/theme-options');
+const themeOptions = require("@dxos/docs-theme/theme-options");
 
 module.exports = {
-  pathPrefix: '/sdk',
+  pathPrefix: "/sdk",
   plugins: [
     {
-      resolve: 'gatsby-theme-apollo-docs',
+      resolve: "gatsby-theme-apollo-docs",
       options: {
         ...themeOptions,
         root: __dirname,
-        description: 'DXOS - The Decentralized Operating System',
-        subtitle: 'SDK',
-        githubRepo: 'dxos/sdk',
+        description: "DXOS - The Decentralized Operating System",
+        subtitle: "SDK",
+        githubRepo: "dxos/sdk",
         sidebarCategories: {
-          null: [
-            'index',
-            'getting-started',
-            'need-help'
-          ],
           Tutorial: [
-            'tutorial/introduction',
-            'tutorial/client',
-            'tutorial/profile',
-            'tutorial/party',
-            'tutorial/invite',
-            'tutorial/data',
-            'tutorial/summary',
-          ],
+            "tutorial/introduction",
+            "tutorial/client",
+            "tutorial/profile",
+            "tutorial/party",
+            "tutorial/invite",
+            "tutorial/data",
+            "tutorial/deployment",
+            "tutorial/summary"
+          ]
         }
       }
     },
     {
-      resolve: 'gatsby-source-filesystem',
+      resolve: "gatsby-source-filesystem",
       options: {
-        name: 'images',
+        name: "images",
         path: `${__dirname}/src/assets/img`
       }
     },
@@ -45,7 +41,7 @@ module.exports = {
     // https://www.gatsbyjs.org/packages/gatsby-plugin-sharp
     // https://www.gatsbyjs.org/packages/gatsby-transformer-sharp
     // https://github.com/lovell/sharp
-    'gatsby-plugin-sharp',
-    'gatsby-transformer-sharp'
+    "gatsby-plugin-sharp",
+    "gatsby-transformer-sharp"
   ]
 };
