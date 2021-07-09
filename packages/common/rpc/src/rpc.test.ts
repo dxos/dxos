@@ -266,11 +266,48 @@ describe('RpcPeer', () => {
 
       const stream = await bob.callStream('method', Buffer.from('request'));
       expect(stream).toBeA(Stream)
+
+      expect(await consumeStream(stream)).toEqual([
+        { data: Buffer.from('res1') },
+        { data: Buffer.from('res2') },
+        { closed: true, error: undefined }
+      ])
     })
 
-    test('server closes cleanly')
+    test('server closes with an error', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
 
-    test('server closes with an error')
+      const alice = new RpcPeer({
+        messageHandler: async msg => new Uint8Array(),
+        streamHandler: (method, msg) => {
+          expect(method).toEqual('method');
+          expect(msg).toEqual(Buffer.from('request'));
+          return new Stream<Uint8Array>(({ next, close }) => {
+            close(new Error('Test error'))
+          })
+        },
+        port: alicePort
+      });
+      const bob = new RpcPeer({
+        messageHandler: async msg => new Uint8Array(),
+        port: bobPort
+      });
+
+      await Promise.all([
+        alice.open(),
+        bob.open()
+      ]);
+
+      const stream = await bob.callStream('method', Buffer.from('request'));
+      expect(stream).toBeA(Stream)
+
+      const msgs = await consumeStream(stream);
+      expect(msgs).toEqual([
+        { closed: true, error: expect.a(Error) }
+      ])
+
+      expect((msgs[0] as any).error.message).toEqual('Test error')
+    })
 
     test('client closes')
   })
@@ -280,13 +317,20 @@ type StreamItem<T> =
   | { data: T }
   | { closed: true, error?: Error }
 
-const consumeStream = async <T> (stream: Stream<T>): Promise<StreamItem<T>[]> => {
-  const items: StreamItem<T>[] = []
-  
-  stream.subscribe(
-    data => { items.push({ data }) },
-    error => { items.push({ closed: true, error })}
-  )
+const consumeStream = <T> (stream: Stream<T>): Promise<StreamItem<T>[]> => {
+  return new Promise(resolve => {
+    const items: StreamItem<T>[] = []
 
-  return items
+    stream.subscribe(
+      data => {
+        items.push({ data })
+        console.log(items)
+      },
+      error => {
+        items.push({ closed: true, error });
+        resolve(items)
+        console.log(items)
+      }
+    )
+  })
 }

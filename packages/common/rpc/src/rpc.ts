@@ -4,12 +4,12 @@
 
 import assert from 'assert';
 
-import { synchronized, Trigger } from '@dxos/async';
+import { synchronized, trigger, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
-import { Request, Response, Error as ErrorResponse } from './proto/gen/dxos/rpc';
+import { Request, Response, Error as ErrorResponse, RpcMessage } from './proto/gen/dxos/rpc';
 
 type MaybePromise<T> = Promise<T> | T
 
@@ -73,11 +73,11 @@ export class RpcPeer {
 
     this._unsubscribe = this._options.port.subscribe(this._receive.bind(this)) as any;
 
-    await this._options.port.send(codec.encode({ open: true }));
+    await this._sendMessage({ open: true });
     await this._remoteOpenTrigger.wait();
 
     // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
-    await this._options.port.send(codec.encode({ open: true }));
+    await this._sendMessage({ open: true });
 
     this._open = true;
   }
@@ -99,21 +99,22 @@ export class RpcPeer {
    */
   private async _receive (msg: Uint8Array): Promise<void> {
     const decoded = codec.decode(msg);
+    console.log('_receive', { decoded })
     if (decoded.request) {
       if (!this._open) {
-        await this._options.port.send(codec.encode({ response: { error: encodeError(new RpcClosedError()) } }));
+        await this._sendMessage({ response: { error: encodeError(new RpcClosedError()) } });
         return;
       }
 
       const req = decoded.request;
       if (req.stream) {
         this._callStreamHandler(req, response => {
-          this._options.port.send(codec.encode({ response }));
+          this._sendMessage({ response });
         });
       } else {
         const response = await this._callHandler(req);
 
-        await this._options.port.send(codec.encode({ response }));
+        await this._sendMessage({ response });
       }
     } else if (decoded.response) {
       if (!this._open) {
@@ -159,13 +160,13 @@ export class RpcPeer {
     // Here we're attaching a dummy handler that will not interfere with error handling to avoid that warning.
     promise.catch(() => {});
 
-    await this._options.port.send(codec.encode({
+    await this._sendMessage({
       request: {
         id,
         method,
         payload: request
       }
-    }));
+    });
 
     const response = await promise;
     assert(response.id === id);
@@ -212,7 +213,21 @@ export class RpcPeer {
       };
 
       this._requests.set(id, new RequestItem(onResponse, close, true));
+
+      this._sendMessage({
+        request: {
+          id,
+          method,
+          payload: request,
+          stream: true,
+        }
+      }).catch(error => close(error));
     });
+  }
+
+  private async _sendMessage(message: RpcMessage) {
+    console.log('send', message)
+    this._options.port.send(codec.encode(message))
   }
 
   private async _callHandler (req: Request): Promise<Response> {
