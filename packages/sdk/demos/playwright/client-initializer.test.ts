@@ -61,15 +61,15 @@ describe('ClientInitializer', () => {
     await bob.closeBrowser();
   });
 
-  test('Profile creation and party creation', async () => {
+  it('Profile creation and party creation', async () => {
     await alice.page!.goto(memoryUrl);
     await alice.page!.click('//span[text()=\'Create profile\']')
   })
 
-  test('Party creation', async () => {
+  it('Party creation', async () => {
   });
 
-  test('Persistence', async () => {
+  it('Persistence', async () => {
   });
 
 });

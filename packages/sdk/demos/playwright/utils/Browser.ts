@@ -31,6 +31,8 @@ export class Browser {
       ...options,
       args: [`--app=${url}`, ...(options?.args ?? [])]
     });
+    this.context = this.browser.contexts()[0]
+    this.page = this.context.pages()[0]
   }
 
   async closeBrowser () {
