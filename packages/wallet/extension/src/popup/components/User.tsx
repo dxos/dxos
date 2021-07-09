@@ -3,12 +3,13 @@
 //
 
 import React, { useRef, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 
 import { Card, CardHeader, Typography, makeStyles, IconButton, Menu, MenuItem, ListItemIcon } from '@material-ui/core';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
 import GroupIcon from '@material-ui/icons/Group';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
+
 import type { Profile } from '../utils';
-import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles({
   card: {
@@ -51,20 +52,20 @@ const User = ({ profile } : UserProps) => {
             <MoreVertIcon />
           </IconButton>
         }/>
-        <Menu
-          open={menuOpen}
-          anchorEl={actions.current} // https://github.com/mui-org/material-ui/issues/7961
-          getContentAnchorEl={null}
-          anchorOrigin={{ vertical: 'center', horizontal: 'left'}}
-          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-          onClose={() => setMenuOpen(false)}>
-          <MenuItem button={true} onClick={onPartiesClick}>
-            <ListItemIcon>
-              <GroupIcon fontSize='small' />
-            </ListItemIcon>
-            <Typography variant="inherit"> Parties </Typography>
-          </MenuItem>
-        </Menu>
+      <Menu
+        open={menuOpen}
+        anchorEl={actions.current} // https://github.com/mui-org/material-ui/issues/7961
+        getContentAnchorEl={null}
+        anchorOrigin={{ vertical: 'center', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        onClose={() => setMenuOpen(false)}>
+        <MenuItem button={true} onClick={onPartiesClick}>
+          <ListItemIcon>
+            <GroupIcon fontSize='small' />
+          </ListItemIcon>
+          <Typography variant="inherit"> Parties </Typography>
+        </MenuItem>
+      </Menu>
     </Card>
   );
 };

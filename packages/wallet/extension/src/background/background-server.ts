@@ -5,9 +5,9 @@
 import { Client, ClientConfig } from '@dxos/client';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
+import { InvitationDescriptor } from '@dxos/echo-db';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/wallet-core';
-import { InvitationDescriptor } from '@dxos/echo-db';
 
 const config: ClientConfig = {
   storage: {
@@ -23,12 +23,12 @@ const config: ClientConfig = {
         urls: 'turn:apollo3.kube.moon.dxos.network:3478',
         username: 'dxos',
         credential: 'dxos'
-      },
+      }
     ]
   }
 };
 
-const encodeInvitation = (invitation: InvitationDescriptor) => btoa(JSON.stringify(invitation.toQueryParameters()));
+// const encodeInvitation = (invitation: InvitationDescriptor) => btoa(JSON.stringify(invitation.toQueryParameters()));
 const decodeInvitation = (code: string) => InvitationDescriptor.fromQueryParameters(JSON.parse(atob(code)));
 
 export class BackgroundServer {
@@ -85,20 +85,20 @@ export class BackgroundServer {
           const parties = this._client.echo.queryParties().value;
           return {
             partyKeys: parties.map(party => party.key.toHex())
-          }
+          };
         },
         JoinParty: async request => {
           if (!request.invitation) {
-            throw new Error('Invitation is missing.')
+            throw new Error('Invitation is missing.');
           }
-          const invitation = decodeInvitation(request.invitation)
+          const invitation = decodeInvitation(request.invitation);
           try {
-            const joinedParty = await this._client.echo.joinParty(invitation, request.passcode ? (async () => Buffer.from(request.passcode!)) : undefined)
+            const joinedParty = await this._client.echo.joinParty(invitation, request.passcode ? async () => Buffer.from(request.passcode!) : undefined);
             return {
               partyKey: joinedParty.key.toHex()
             };
-          } catch(err) {
-            console.error('Joining party failed')
+          } catch (err) {
+            console.error('Joining party failed');
             console.error(err);
             throw err;
           }

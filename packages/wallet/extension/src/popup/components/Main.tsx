@@ -9,10 +9,10 @@ import { useBackgroundContext } from '../contexts/BackgroundContext';
 import type { Profile } from '../utils/types';
 import CreateProfile from './CreateProfile';
 import Import from './Import';
-import Login from './Login';
-import User from './User';
-import Parties from './Parties';
 import JoinParty from './JoinParty';
+import Login from './Login';
+import Parties from './Parties';
+import User from './User';
 
 const Main = () => {
   const [profile, setProfile] = useState<Profile | undefined>(undefined);

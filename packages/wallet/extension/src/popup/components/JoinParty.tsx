@@ -3,11 +3,11 @@
 //
 
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 
 import { Button, Container, Grid, makeStyles, TextField, Typography } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
-import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles({
   container: {
@@ -41,11 +41,11 @@ const JoinParty = () => {
     } catch (e) {
       console.error(e);
     } finally {
-      setInvitation('')
-      setPasscode('')
+      setInvitation('');
+      setPasscode('');
       setInProgress(false);
     }
-  }
+  };
 
   return (
     <Container className={classes.container}>
@@ -80,9 +80,9 @@ const JoinParty = () => {
         </Grid>
         <Grid item xs={12}>
           <Grid container justify='flex-end'>
-            <Button 
-              variant='contained' 
-              color='primary' 
+            <Button
+              variant='contained'
+              color='primary'
               onClick={onJoin}
               disabled={inProgress}>
               {inProgress ? 'Joining...' : 'Join'}
@@ -92,6 +92,6 @@ const JoinParty = () => {
       </Grid>
     </Container>
   );
-}
+};
 
 export default JoinParty;

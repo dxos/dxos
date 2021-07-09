@@ -2,17 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-//
-// Copyright 2021 DXOS.org
-//
-
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
-import { List, ListItem, Typography, Container, makeStyles, Button, Grid } from '@material-ui/core';
+import { Typography, Container, makeStyles, Button, Grid } from '@material-ui/core';
+
 import type { GetPartiesResponse } from '@dxos/wallet-core';
 
 import { useBackgroundContext } from '../contexts';
-import { Link, useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles({
   container: {
@@ -27,15 +24,13 @@ const Parties = () => {
 
   const backgroundService = useBackgroundContext();
 
-  const history = useHistory();
-
   useEffect(() => {
     if (backgroundService === undefined) {
       return;
     }
 
     setImmediate(async () => {
-      setParties(await backgroundService.rpc.GetParties({}))
+      setParties(await backgroundService.rpc.GetParties({}));
     });
   }, [backgroundService]);
 
@@ -52,9 +47,9 @@ const Parties = () => {
         {(parties?.partyKeys ?? ['You have no parties']).map(key => <Grid item xs={12} key={key}> {key} </Grid>)}
         <Grid item xs={12}>
           <Grid container justify='flex-end'>
-            <Button 
-              variant='contained' 
-              color='primary' 
+            <Button
+              variant='contained'
+              color='primary'
               component={Link}
               to='/joinparty'>
               Join new party
@@ -64,6 +59,6 @@ const Parties = () => {
       </Grid>
     </Container>
   );
-}
+};
 
 export default Parties;

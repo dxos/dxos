@@ -83,9 +83,9 @@ const Import = ({ onProfileCreated } : ImportProps) => {
         </Grid>
         <Grid item xs={12}>
           <Grid container justify='flex-end'>
-            <Button 
-              variant='contained' 
-              color='primary' 
+            <Button
+              variant='contained'
+              color='primary'
               onClick={onRestore}
               disabled={inProgress}>
               {inProgress ? 'Restoring...' : 'Restore'}

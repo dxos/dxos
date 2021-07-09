@@ -59,12 +59,12 @@ const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
         </Grid>
         <Grid item xs={12}>
           <Grid container justify='flex-end'>
-            <Button 
-              variant='contained' 
-              color='primary' 
+            <Button
+              variant='contained'
+              color='primary'
               onClick={onCreate}
-              disabled={inProgress}> 
-              {inProgress ? 'Creating...' : 'Create'} 
+              disabled={inProgress}>
+              {inProgress ? 'Creating...' : 'Create'}
             </Button>
           </Grid>
         </Grid>
