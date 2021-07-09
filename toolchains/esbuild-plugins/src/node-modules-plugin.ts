@@ -38,22 +38,22 @@ export function NodeModulesPlugin (): Plugin {
       });
       onResolve({ filter: /^http$/ }, arg => {
         return {
-          path: require.resolve('./polyfills/empty-module-stub.js')
+          path: require.resolve('../../polyfills/empty-module-stub.js')
         };
       });
       onResolve({ filter: /^https$/ }, arg => {
         return {
-          path: require.resolve('./polyfills/empty-module-stub.js')
+          path: require.resolve('../../polyfills/empty-module-stub.js')
         };
       });
       onResolve({ filter: /^module$/ }, arg => {
         return {
-          path: require.resolve('./polyfills/module.js')
+          path: require.resolve('../../polyfills/module.js')
         };
       });
       onResolve({ filter: /^crypto$/ }, arg => { // TODO
         return {
-          path: require.resolve('./polyfills/empty-module-stub.js')
+          path: require.resolve('../../polyfills/empty-module-stub.js')
         };
       });
       onResolve({ filter: /^debug$/ }, arg => {
@@ -68,7 +68,7 @@ export function NodeModulesPlugin (): Plugin {
       });
       onResolve({ filter: /^fs$/ }, arg => {
         return {
-          path: require.resolve('./polyfills/empty-module-stub.js')
+          path: require.resolve('../../polyfills/empty-module-stub.js')
         };
       });
     }
