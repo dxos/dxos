@@ -45,7 +45,7 @@ export class Replicator extends EventEmitter {
     }, options);
   }
 
-  toString () {
+  override toString () {
     const meta = {};
 
     return `Replicator(${JSON.stringify(meta)})`;

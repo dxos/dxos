@@ -31,11 +31,11 @@ class TestAgent extends Bot {
     });
   }
 
-  async _preInit () {
+  override async _preInit () {
     this._client!.registerModel(MessengerModel);
   }
 
-  async botCommandHandler (command:any) {
+  override async botCommandHandler (command:any) {
     log('Received command:', JSON.stringify(command));
     await waitForCondition(() => !!this._item);
     switch (command.type) {

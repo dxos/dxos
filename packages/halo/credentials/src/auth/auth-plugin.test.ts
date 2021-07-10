@@ -48,7 +48,7 @@ class ExpectedKeyAuthenticator extends Authenticator {
     super();
   }
 
-  async authenticate (credentials: any) { // TODO(marik-d): Use more specific type
+  override async authenticate (credentials: any) { // TODO(marik-d): Use more specific type
     if (this._keyring.verify(credentials)) {
       if (this._expectedKey.equals(credentials.signatures[0].key)) {
         return true;
