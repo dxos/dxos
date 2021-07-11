@@ -144,7 +144,7 @@ test('complete: broadcast a message.', async () => {
 
   time = Date.now() - time;
   if (time < 2000) {
-    await new Promise(resolve => setTimeout(resolve, 2000 - time));
+    await new Promise(resolve => setTimeout(resolve, 2000 - time, {}));
   }
 
   network.peers.forEach((peer: any) => peer.prune());

@@ -29,7 +29,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/model-factory": "workspace:*",
-    "@types/node": "^14.0.9",
+    "@types/node": "^16.3.1",
     "protobufjs": "^6.9.0",
     "yjs": "^13.4.1"
   },

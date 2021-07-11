@@ -16,7 +16,7 @@ import { Protocol } from './protocol';
 const log = debug('test');
 debug.enable('test,protocol');
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms, {}));
 
 test('protocol sessions', async () => {
   const topic = crypto.randomBytes(32);

@@ -71,7 +71,7 @@ rush add --dev -p @dxos/toolchain-node-library --make-consistent
 
 ```
 "deps": {
-  "@types/node": "^14.0.9",
+  "@types/node": "^16.3.1",
 }
 ```
 

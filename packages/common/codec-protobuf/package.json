@@ -35,7 +35,7 @@
     "@types/assert": "^1.5.4",
     "@types/jest": "^26.0.7",
     "@types/lodash.merge": "~4.6.6",
-    "@types/node": "^14.0.9",
+    "@types/node": "^16.3.1",
     "eslint": "^7.7.0",
     "jest": "^26.6.3",
     "ts-jest": "^26.5.6",

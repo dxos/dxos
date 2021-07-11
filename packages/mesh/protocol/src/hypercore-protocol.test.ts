@@ -10,7 +10,7 @@ import pump from 'pump';
 
 debug.enable('test,protocol');
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms, {}));
 
 test('Basic connection of two hypercore protocols', async () => {
   const topic = crypto.randomBytes(32);

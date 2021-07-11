@@ -93,11 +93,15 @@ export abstract class ChildProcessContainer implements BotContainer {
     log(`Spawned bot: ${JSON.stringify({ pid: botProcess.pid, command, args, dxEnv, cwd: storageDirectory })}`);
 
     botProcess.stdout!.on('data', (data) => {
-      logBot[botProcess.pid](`${data}`);
+      if (botProcess.pid) {
+        logBot[botProcess.pid](`${data}`);
+      }
     });
 
     botProcess.stderr!.on('data', (data) => {
-      logBot[botProcess.pid](`${data}`);
+      if (botProcess.pid) {
+        logBot[botProcess.pid](`${data}`);
+      }
     });
 
     botProcess.on('close', exitCode => {
@@ -106,7 +110,9 @@ export abstract class ChildProcessContainer implements BotContainer {
     });
 
     botProcess.on('error', (err) => {
-      logBot[botProcess.pid](`Error: ${err}`);
+      if (botProcess.pid) {
+        logBot[botProcess.pid](`Error: ${err}`);
+      }
     });
 
     this._bots.set(botId, {
@@ -121,9 +127,13 @@ export abstract class ChildProcessContainer implements BotContainer {
     const { process } = this._bots.get(botInfo.botId)!;
 
     return new Promise(resolve => {
-      kill(process.pid, 'SIGKILL', () => {
+      if (process.pid) {
+        kill(process.pid, 'SIGKILL', () => {
+          resolve();
+        });
+      } else {
         resolve();
-      });
+      }
     });
   }
 }
