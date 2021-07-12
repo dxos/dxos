@@ -9,7 +9,7 @@
     ],
     "types": [
       "node",
-      "jest"
+      "mocha"
     ],
     "module": "commonjs",
     "moduleResolution": "node",

@@ -4,6 +4,7 @@
 //
 
 import { firefox, Page } from 'playwright';
+import expect from 'expect'
 
 import { Browser } from './utils';
 
@@ -47,27 +48,27 @@ describe('Demo - Primary and Peers', () => {
   let alice: Browser;
   let bob: Browser;
 
-  beforeAll(async () => {
-    jest.setTimeout(30000);
-    jest.retryTimes(1);
+  before(async function () {
+    this.timeout(30000);
+    this.retries(1);
     alice = new Browser();
     bob = new Browser();
     await alice.launchBrowser(browser, 'about:blank');
     await bob.launchBrowser(browser, 'about:blank');
   });
 
-  afterAll(async () => {
+  after(async () => {
     await alice.closeBrowser();
     await bob.closeBrowser();
   });
 
-  test('Primary - item creation', async () => {
+  it('Primary - item creation', async () => {
     await alice.page!.goto(primaryUrl);
     const itemName = await createItem(alice.page!);
     await alice.page!.waitForSelector(`//span[text()='${itemName}']`)
   })
 
-  test('Peers - Alice creates a party', async () => {
+  it('Peers - Alice creates a party', async () => {
     expect(alice.page).toBeDefined();
     await alice.page!.goto(peersUrl);
     await createParty(alice.page!)
@@ -75,7 +76,7 @@ describe('Demo - Primary and Peers', () => {
     await alice.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
   });
 
-  test('Peers - Alice invites Bob to a party', async () => {
+  it('Peers - Alice invites Bob to a party', async () => {
     await alice.page!.goto(peersUrl);
     await createParty(alice.page!)
     const invitationFromAlice = await createInvitation(alice.page!);
@@ -87,7 +88,7 @@ describe('Demo - Primary and Peers', () => {
     await bob.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
   });
 
-  test('Peers - Replication in party', async () => {
+  it('Peers - Replication in party', async () => {
     await alice.page!.goto(peersUrl);
     await createParty(alice.page!)
     const invitationFromAlice = await createInvitation(alice.page!);

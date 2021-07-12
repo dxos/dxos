@@ -4,6 +4,7 @@
 //
 
 import { firefox, Page } from 'playwright';
+import expect from 'expect';
 
 import { Browser } from './utils';
 
@@ -47,15 +48,15 @@ describe('ClientInitializer', () => {
   let alice: Browser;
   let bob: Browser;
 
-  beforeAll(async () => {
-    jest.setTimeout(30000);
+  before(async function() {
+    this.setTimeout(30000);
     alice = new Browser();
     bob = new Browser();
     await alice.launchBrowser(browser, 'about:blank');
     await bob.launchBrowser(browser, 'about:blank');
   });
 
-  afterAll(async () => {
+  after(async () => {
     await alice.closeBrowser();
     await bob.closeBrowser();
   });
