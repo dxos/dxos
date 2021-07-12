@@ -8,8 +8,8 @@ import { useHistory } from 'react-router-dom';
 import { Button, Container, Grid, makeStyles, TextField, Typography } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
-import type { Profile } from '../utils/types';
 import { useUIError } from '../hooks';
+import type { Profile } from '../utils/types';
 import BackButton from './BackButton';
 
 const useStyles = makeStyles({
@@ -49,7 +49,6 @@ const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
         onProfileCreated(result);
         history.push('/user');
       }
-
     }
   };
 

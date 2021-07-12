@@ -8,9 +8,9 @@ import { useHistory } from 'react-router-dom';
 import { TextField, Container, Button, Grid, Typography, Checkbox, FormControlLabel, makeStyles } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
+import { useUIError } from '../hooks';
 import type { Profile } from '../utils/types';
 import BackButton from './BackButton';
-import { useUIError } from '../hooks';
 
 const useStyles = makeStyles({
   container: {

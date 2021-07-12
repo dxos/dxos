@@ -8,8 +8,8 @@ import { useHistory } from 'react-router-dom';
 import { Button, Container, Grid, makeStyles, TextField, Typography } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
-import BackButton from './BackButton';
 import { useUIError } from '../hooks';
+import BackButton from './BackButton';
 
 const useStyles = makeStyles({
   container: {
