@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@dxos/feed-store": "workspace:*",
-    "@dxos/signal": "~1.0.3-alpha.0",
+    "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/debug": "^4.1.1",
