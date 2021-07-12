@@ -63,11 +63,11 @@ const Parties = () => {
         </Grid>
         <Grid item xs={12}>
           <List>
-            {!parties?.partyKeys?.length ?
-            <ListItem>
+            {!parties?.partyKeys?.length
+              ? <ListItem>
               You have no parties
-            </ListItem>
-            : null}
+              </ListItem>
+              : null}
             {parties?.partyKeys?.map(key =>
               <ListItem key={key}>
                 <ListItemIcon>

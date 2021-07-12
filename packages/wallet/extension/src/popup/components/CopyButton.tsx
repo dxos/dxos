@@ -2,10 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { IconButton, Tooltip } from '@material-ui/core';
-import FileCopyOutlinedIcon from '@material-ui/icons/FileCopyOutlined';
 import React, { useState, useEffect } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+
+import { IconButton, Tooltip } from '@material-ui/core';
+import FileCopyOutlinedIcon from '@material-ui/icons/FileCopyOutlined';
 
 interface CopyButtonProps {
   text: string
@@ -36,6 +37,6 @@ const CopyButton = ({ text } : CopyButtonProps) => {
       </CopyToClipboard>
     </Tooltip>
   );
-}
+};
 
 export default CopyButton;
