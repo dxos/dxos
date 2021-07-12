@@ -6,7 +6,7 @@ import React from 'react';
 
 import { AppBar, makeStyles, Toolbar, Typography } from '@material-ui/core';
 
-import { WithBackgroundContext } from '../contexts';
+import { WithBackgroundContext, WithSnackbarContext } from '../contexts';
 import Main from './Main';
 
 const useStyles = makeStyles({
@@ -21,13 +21,15 @@ const Root = () => {
 
   return (
     <WithBackgroundContext>
-      <AppBar position='static' color='default'>
-        <Toolbar>
-          <img src='../dxos.png' alt="logo" className={classes.logo} />
-          <Typography variant='h6'> Welcome to DXOS! </Typography>
-        </Toolbar>
-      </AppBar>
-      <Main/>
+      <WithSnackbarContext>
+        <AppBar position='static' color='default'>
+          <Toolbar>
+            <img src='../dxos.png' alt="logo" className={classes.logo} />
+            <Typography variant='h6'> Welcome to DXOS! </Typography>
+          </Toolbar>
+        </AppBar>
+        <Main/>
+      </WithSnackbarContext>
     </WithBackgroundContext>
   );
 };

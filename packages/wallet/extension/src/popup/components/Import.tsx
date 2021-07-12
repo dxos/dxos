@@ -10,6 +10,7 @@ import { TextField, Container, Button, Grid, Typography, Checkbox, FormControlLa
 import { useBackgroundContext } from '../contexts';
 import type { Profile } from '../utils/types';
 import BackButton from './BackButton';
+import { useUIError } from '../hooks';
 
 const useStyles = makeStyles({
   container: {
@@ -32,14 +33,24 @@ const Import = ({ onProfileCreated } : ImportProps) => {
   const history = useHistory();
 
   const backgroundService = useBackgroundContext();
+  const withUIError = useUIError();
 
   const onRestore = async () => {
     setInProgress(true);
-    const response = await backgroundService?.rpc.RestoreProfile({ username, seedPhrase });
+    const response = await withUIError(
+      () => backgroundService?.rpc.RestoreProfile({ username, seedPhrase }),
+      {
+        successMessage: 'Succesfully imported profile',
+        errorMessage: 'Couldn\'t import profile'
+      }
+    );
     setInProgress(false);
-    if (response && response.publicKey) {
-      onProfileCreated(response);
-      history.push('/user');
+    if (response) {
+      const { result } = response;
+      if (result && result.publicKey) {
+        onProfileCreated(result);
+        history.push('/user');
+      }
     }
   };
 
