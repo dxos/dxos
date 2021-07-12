@@ -14,7 +14,7 @@ export class Browser {
 
   async launchBrowser (_browser: BrowserType, _startUrl: string, options?: LaunchOptions | undefined) {
     this.browser = await _browser.launch({ headless, slowMo, ...options });
-    this.context = await this.browser.newContext();
+    this.context = await this.browser.newContext({viewport: null});
     this.page = await this.context.newPage();
     await this.page.goto(_startUrl, { waitUntil: 'load' });
   }
@@ -31,8 +31,6 @@ export class Browser {
       ...options,
       args: [`--app=${url}`, ...(options?.args ?? [])]
     });
-    this.context = this.browser.contexts()[0]
-    this.page = this.context.pages()[0]
   }
 
   async closeBrowser () {
