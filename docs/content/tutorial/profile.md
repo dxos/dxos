@@ -7,7 +7,7 @@ Once we connected our Client into our React Application, the very first step is 
 
 ## Check if a Profile is created
 
-The Client holds the profile for you, so you can easily check if the user created a profile by using the react hook `useProfile` provided by `@dxos/react-client` as you can see in the `Root.js` file:
+The Client holds the profile for you. You can easily check if the user created a profile by using the react hook `useProfile` provided by `@dxos/react-client` in the `Root.js` file:
 
 ```js
 import React from 'react';

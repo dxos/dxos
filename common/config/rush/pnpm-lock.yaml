@@ -10,15 +10,14 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
-      '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       '@types/lodash.defaultsdeep': 4.6.6
-      assert: 2.0.0
       debug: 4.3.1
-      eslint: 7.26.0
       lodash.defaultsdeep: 4.6.1
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
@@ -28,12 +27,11 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-bot': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
       '@types/lodash.defaultsdeep': ^4.6.6
-      assert: ^2.0.0
+      '@types/mocha': ~8.2.2
       debug: ^4.1.1
-      eslint: ^7.7.0
+      expect: ~27.0.2
       lodash.defaultsdeep: ^4.6.1
   ../../packages/bot/botkit:
     dependencies:
@@ -79,7 +77,8 @@ importers:
       uuidv4: 6.2.8
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
-      '@types/jest': 26.0.23
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
@@ -95,10 +94,10 @@ importers:
       '@types/debug': ^4.1.1
       '@types/download': ^6.2.4
       '@types/fs-extra': ^9.0.4
-      '@types/jest': ^26.0.7
       '@types/js-yaml': ^3.12.5
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.get': ^4.4.6
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@wirelineio/registry-client': ~1.1.0-beta.3
       assert: ^2.0.0
@@ -106,6 +105,7 @@ importers:
       cpy-cli: ^2.0.0
       debug: ^4.1.1
       download: ^7.1.0
+      expect: ~27.0.2
       fs-extra: ^8.1.0
       hypercore-crypto: ^1.0.0
       js-yaml: ^3.13.1
@@ -857,11 +857,14 @@ importers:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/mocha': 8.2.2
       '@types/tar': 4.0.4
+      bip32: 2.0.6
       expect: 27.0.2
       playwright: 1.11.0
       process-exists: 4.0.0
       pstree.remy: 1.1.8
+      sodium-universal: 3.0.4
       typescript: 4.2.4
+      wrtc: 0.4.7
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/bot': workspace:*
@@ -887,6 +890,7 @@ importers:
       '@types/tar': ^4.0.4
       '@types/webpack': ^4.41.27
       assert: ^2.0.0
+      bip32: ~2.0.6
       chance: ^1.1.6
       debug: ^4.1.1
       dotenv: ^8.2.0
@@ -910,11 +914,13 @@ importers:
       pstree.remy: ^1.1.8
       random-access-memory: ~3.1.2
       read-pkg-up: ^7.0.1
+      sodium-universal: ~3.0.4
       tar: ^6.0.5
       tree-kill: ^1.2.2
       ts-node: ^9.1.1
       typescript: ^4.2.4
       webpack: 4.44.2
+      wrtc: ^0.4.6
   ../../packages/halo/credentials:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -5131,7 +5137,6 @@ packages:
       rimraf: 3.0.2
       semver: 7.3.5
       tar: 6.1.0
-    dev: false
     hasBin: true
     resolution:
       integrity: sha512-9dTIfQW8HVCxLku5QrJ/ysS/b2MdYngs9+/oPrOTLvp3TrggdANYVW2h8FGJGDf0J7MYfp44W+c90cVJx+ASuA==
@@ -7475,7 +7480,6 @@ packages:
     resolution:
       integrity: sha512-IpkX0AasN44hgEad0gEF/V6EgR5n69VEqPEgnmoM8GsIGro3PowbWs4tR6IhxUTyPLpOn+fiGG6nrQhcmoCuIQ==
   /@types/node/10.12.18:
-    dev: false
     resolution:
       integrity: sha512-fh+pAqt4xRzPfqA6eh3Z2y6fyZavRIumvjhaCL753+TVkGKGhpPeyrJG2JftD0T9q4GF00KjefsQ+PQNDdWQaQ==
   /@types/node/10.17.60:
@@ -8225,7 +8229,6 @@ packages:
     resolution:
       integrity: sha512-9IK9EadsbHo6jLWIpxpR6pL0sazTXV6+SQv25ZB+F7Bj9mJNaOc4nCRabwd5M/JwmUa8idz6Eci6eKfJryPs6Q==
   /abbrev/1.1.1:
-    dev: false
     resolution:
       integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==
   /abstract-leveldown/2.7.2:
@@ -9404,7 +9407,6 @@ packages:
   /base-x/3.0.8:
     dependencies:
       safe-buffer: 5.2.1
-    dev: false
     resolution:
       integrity: sha512-Rl/1AWP4J/zRrk54hhlxH4drNxPJXYUaKffODVI53/dAsV4t9fBxyxYKAVPU1XBHxYwOWP9h9H0hM2MVw4YfJA==
   /base/0.11.2:
@@ -9495,7 +9497,6 @@ packages:
       tiny-secp256k1: 1.1.6
       typeforce: 1.18.0
       wif: 2.0.6
-    dev: false
     engines:
       node: '>=6.0.0'
     resolution:
@@ -9745,7 +9746,6 @@ packages:
   /bs58/4.0.1:
     dependencies:
       base-x: 3.0.8
-    dev: false
     resolution:
       integrity: sha1-vhYedsNU9veIrkBx9j806MTwpCo=
   /bs58check/2.1.2:
@@ -9753,7 +9753,6 @@ packages:
       bs58: 4.0.1
       create-hash: 1.2.0
       safe-buffer: 5.2.1
-    dev: false
     resolution:
       integrity: sha512-0TS1jicxdU09dwJMNZtVAfzPi6Q6QeN0pM1Fkzrjn+XYHvzMKPU3pHVpva+769iNVSfIYWf7LJ6WR+BuuMf8cA==
   /bser/2.1.1:
@@ -12049,7 +12048,6 @@ packages:
     resolution:
       integrity: sha512-8zdsQA5bIkoRECvCrNKPla84lyoR7DSAyf7p0YgXzBO9PDJx8KntPUay7NS6yp+KdxdVtiE5SpHKtbp2ZQyA9g==
   /detect-libc/1.0.3:
-    dev: false
     engines:
       node: '>=0.10'
     hasBin: true
@@ -12242,7 +12240,6 @@ packages:
   /domexception/1.0.1:
     dependencies:
       webidl-conversions: 4.0.2
-    dev: false
     optional: true
     resolution:
       integrity: sha512-raigMkn7CJNNo6Ihro1fzG7wr3fHuYVytzquZKX5n0yizGsTcYgzdIUwj1X9pK0VvjeihV+XiclP+DjwbsSKug==
@@ -18741,7 +18738,6 @@ packages:
   /nopt/5.0.0:
     dependencies:
       abbrev: 1.1.1
-    dev: false
     engines:
       node: '>=6'
     hasBin: true
@@ -23516,7 +23512,6 @@ packages:
       create-hmac: 1.1.7
       elliptic: 6.5.4
       nan: 2.14.2
-    dev: false
     engines:
       node: '>=6.0.0'
     requiresBuild: true
@@ -23926,7 +23921,6 @@ packages:
     resolution:
       integrity: sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
   /typeforce/1.18.0:
-    dev: false
     resolution:
       integrity: sha512-7uc1O8h1M1g0rArakJdf0uLRSSgFcYexrVoKo+bzJd32gd4gDy2L/Z+8/FjPnU9ydY3pEnVPtr9FyscYY60K1g==
   /typescript/4.2.4:
@@ -24532,7 +24526,6 @@ packages:
     resolution:
       integrity: sha512-su48BkMLxqzTTvPSE1eWxKToPS2Tv5DLGxKexLEVpwFd6Po6N8hhSLIvG6acPAg7qERoEaDL+Y5HQJeJeml5Aw==
   /webidl-conversions/4.0.2:
-    dev: false
     optional: true
     resolution:
       integrity: sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg==
@@ -24957,7 +24950,6 @@ packages:
   /wif/2.0.6:
     dependencies:
       bs58check: 2.1.2
-    dev: false
     resolution:
       integrity: sha1-CNP1IFbGZnkplyb63g1DKudLRwQ=
   /wildcard/2.0.0:
@@ -25185,7 +25177,6 @@ packages:
       - node-pre-gyp
     dependencies:
       '@mapbox/node-pre-gyp': 1.0.3
-    dev: false
     engines:
       node: ^8.11.2 || >=10.0.0
     optionalDependencies:

@@ -5,7 +5,7 @@
 import debug from 'debug';
 import { build } from 'esbuild';
 import fetch from 'node-fetch';
-import path from 'path';
+import { resolve } from 'path';
 import tar from 'tar';
 
 import { createId } from '@dxos/crypto';
@@ -16,7 +16,7 @@ const BUILD_PATH = './out/builds/';
 const log = debug('dxos:testing:distributor');
 
 export const buildBot = async (botPath: string, browser: boolean) => {
-  const buildPath = path.join(BUILD_PATH, createId());
+  const buildPath = resolve(BUILD_PATH, `${createId()}.js`);
 
   await build({
     entryPoints: [botPath],
@@ -24,7 +24,7 @@ export const buildBot = async (botPath: string, browser: boolean) => {
     bundle: true,
     platform: browser ? 'browser' : 'node',
     format: 'cjs',
-    sourcemap: 'inline',
+    // sourcemap: 'inline',
     outfile: buildPath,
     external: browser
       ? ['read-pkg-up']
@@ -33,7 +33,8 @@ export const buildBot = async (botPath: string, browser: boolean) => {
         'runtimejs',
         'wrtc',
         'bip32',
-        'typeforce'
+        'typeforce',
+        'sodium-universal'
       ],
     plugins: browser
       ? [

@@ -70,7 +70,10 @@
     "pstree.remy": "^1.1.8",
     "typescript": "^4.2.4",
     "@types/mocha": "~8.2.2",
-    "expect": "~27.0.2"
+    "expect": "~27.0.2",
+    "sodium-universal": "~3.0.4",
+    "wrtc": "^0.4.6",
+    "bip32": "~2.0.6"
   },
   "publishConfig": {
     "access": "restricted"

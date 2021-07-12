@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import expect from 'expect';
 import { existsSync } from 'fs-extra';
+import { it as test } from 'mocha';
 
 import { Config } from '@dxos/config';
 import { createId } from '@dxos/crypto';
@@ -25,4 +27,4 @@ test.skip('Download & install bot', async () => {
   const installDirectory = await sourceManager.downloadAndInstallBot(createId(), 'QmPTxbghFFjz59NyXMJwYCAAbhK4etNagybWUKJGaEFU5F', {});
 
   expect(existsSync(installDirectory)).toBe(true);
-}, 20_000);
+}).timeout(20_000);
