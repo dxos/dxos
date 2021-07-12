@@ -11,6 +11,7 @@ import type { GetPartiesResponse } from '@dxos/wallet-core';
 
 import { useBackgroundContext } from '../contexts';
 import BackButton from './BackButton';
+import { useUIError } from '../hooks';
 
 const useStyles = makeStyles({
   container: {
@@ -24,6 +25,7 @@ const Parties = () => {
   const [parties, setParties] = useState<GetPartiesResponse | undefined>(undefined);
 
   const backgroundService = useBackgroundContext();
+  const withUIError = useUIError();
 
   useEffect(() => {
     if (backgroundService === undefined) {
@@ -31,7 +33,14 @@ const Parties = () => {
     }
 
     setImmediate(async () => {
-      setParties(await backgroundService.rpc.GetParties({}));
+      const response = await withUIError(
+        () => backgroundService.rpc.GetParties({}),
+        { errorMessage: 'Couldn\'t load parties' }
+      );
+      if (response) {
+        const { result } = response;
+        setParties(result); 
+      }
     });
   }, [backgroundService]);
 

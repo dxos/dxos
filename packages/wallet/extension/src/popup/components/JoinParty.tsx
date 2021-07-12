@@ -34,8 +34,8 @@ const JoinParty = () => {
       return;
     }
     setInProgress(true);
-    const result = await withUIError(async () => {
-      await backgroundService.rpc.JoinParty({
+    const result = await withUIError(() => {
+      return backgroundService.rpc.JoinParty({
         invitation,
         passcode
       });

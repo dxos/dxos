@@ -5,8 +5,8 @@
 import { useSnackbar } from "../contexts";
 
 interface Messages {
-  successMessage: string | undefined, 
-  errorMessage: string | undefined
+  successMessage?: string, 
+  errorMessage?: string
 }
 
 export const useUIError = () =>  {
