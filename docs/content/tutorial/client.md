@@ -24,7 +24,7 @@ const App = () => {
 
 This `ClientInitializer` is a React component that facilitates the process of initializing and providing a client instance, given a config object or generator function.
 
-Behind the scenes creates a new `Client` instance and uses [React Context](https://reactjs.org/docs/context.html) feature to make the instance accessible anywhere in the app.
+It creates a new `Client` instance and uses [React Context](https://reactjs.org/docs/context.html) feature to make the instance accessible anywhere in the app.
 
 An example config object would look like:
 
