@@ -4,8 +4,9 @@
 
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import { browser } from 'webextension-polyfill-ts';
 
-import { Button, Container, Grid, makeStyles, TextField, Typography } from '@material-ui/core';
+import { Button, Container, Grid, makeStyles, TextField, Typography, Link } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
 import type { Profile } from '../utils/types';
@@ -32,6 +33,10 @@ const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
 
   const backgroundService = useBackgroundContext();
   const withUIError = useUIError();
+
+  const onImport = async () => {
+    await browser.tabs.create({ active: true, url: location.toString().replace('create', 'import') });
+  };
 
   const onCreate = async () => {
     setInProgress(true);
@@ -60,20 +65,19 @@ const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
           <Typography variant='h6' align='center'> Create new profile </Typography>
         </Grid>
         <Grid item xs={12}>
-          <TextField
-            label='Your new username'
-            placeholder='Type in username'
-            spellCheck={false}
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            variant='outlined'
-            required
-            helperText={<div> This will be your username visible for everyone. </div>}/>
+          <Grid container justify='center'>
+            <TextField
+              label='Your new username'
+              placeholder='Type in username'
+              spellCheck={false}
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              variant='outlined'
+              required
+              helperText={<div> This will be your username visible to everyone. </div>}/>
+            </Grid>
         </Grid>
-        <Grid item xs={6}>
-          <BackButton />
-        </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={12}>
           <Grid container justify='flex-end'>
             <Button
               variant='contained'
@@ -82,6 +86,11 @@ const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
               disabled={inProgress}>
               {inProgress ? 'Creating...' : 'Create'}
             </Button>
+          </Grid>
+        </Grid>
+        <Grid item xs={12}>
+          <Grid container justify='center' onClick={onImport}>
+            or &nbsp; <Link component='button'> Import using seedphrase</Link>
           </Grid>
         </Grid>
       </Grid>
