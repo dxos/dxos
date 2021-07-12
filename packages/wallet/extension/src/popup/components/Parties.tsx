@@ -10,8 +10,8 @@ import { Typography, Container, makeStyles, Button, Grid } from '@material-ui/co
 import type { GetPartiesResponse } from '@dxos/wallet-core';
 
 import { useBackgroundContext } from '../contexts';
-import BackButton from './BackButton';
 import { useUIError } from '../hooks';
+import BackButton from './BackButton';
 
 const useStyles = makeStyles({
   container: {
@@ -39,7 +39,7 @@ const Parties = () => {
       );
       if (response) {
         const { result } = response;
-        setParties(result); 
+        setParties(result);
       }
     });
   }, [backgroundService]);
