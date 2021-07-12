@@ -9,6 +9,7 @@ import { Button, Container, Grid, makeStyles, TextField, Typography } from '@mat
 
 import { useBackgroundContext } from '../contexts';
 import type { Profile } from '../utils/types';
+import BackButton from './BackButton';
 
 const useStyles = makeStyles({
   container: {
@@ -24,13 +25,16 @@ const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
   const classes = useStyles();
 
   const [username, setUsername] = useState('');
+  const [inProgress, setInProgress] = useState(false);
 
   const history = useHistory();
 
   const backgroundService = useBackgroundContext();
 
   const onCreate = async () => {
+    setInProgress(true);
     const response = await backgroundService?.rpc.CreateProfile({ username });
+    setInProgress(false);
     if (response && response.publicKey) {
       onProfileCreated(response);
       history.push('/user');
@@ -54,9 +58,18 @@ const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
             required
             helperText={<div> This will be your username visible for everyone. </div>}/>
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={6}>
+          <BackButton />
+        </Grid>
+        <Grid item xs={6}>
           <Grid container justify='flex-end'>
-            <Button variant='contained' color='primary' onClick={onCreate}> Create </Button>
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={onCreate}
+              disabled={inProgress}>
+              {inProgress ? 'Creating...' : 'Create'}
+            </Button>
           </Grid>
         </Grid>
       </Grid>

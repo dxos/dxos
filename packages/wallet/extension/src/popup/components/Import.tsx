@@ -9,6 +9,7 @@ import { TextField, Container, Button, Grid, Typography, Checkbox, FormControlLa
 
 import { useBackgroundContext } from '../contexts';
 import type { Profile } from '../utils/types';
+import BackButton from './BackButton';
 
 const useStyles = makeStyles({
   container: {
@@ -26,13 +27,16 @@ const Import = ({ onProfileCreated } : ImportProps) => {
   const [seedPhrase, setSeedPhrase] = useState('');
   const [username, setUsername] = useState('');
   const [showSeed, setShowseed] = useState(false);
+  const [inProgress, setInProgress] = useState(false);
 
   const history = useHistory();
 
   const backgroundService = useBackgroundContext();
 
   const onRestore = async () => {
+    setInProgress(true);
     const response = await backgroundService?.rpc.RestoreProfile({ username, seedPhrase });
+    setInProgress(false);
     if (response && response.publicKey) {
       onProfileCreated(response);
       history.push('/user');
@@ -78,9 +82,18 @@ const Import = ({ onProfileCreated } : ImportProps) => {
             required
             helperText={<div> We cannot restore your username using your seedphrase, so you need to create a new one. </div>}/>
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={6}>
+          <BackButton />
+        </Grid>
+        <Grid item xs={6}>
           <Grid container justify='flex-end'>
-            <Button variant='contained' color='primary' onClick={onRestore}> Restore </Button>
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={onRestore}
+              disabled={inProgress}>
+              {inProgress ? 'Restoring...' : 'Restore'}
+            </Button>
           </Grid>
         </Grid>
       </Grid>

@@ -9,7 +9,9 @@ import { useBackgroundContext } from '../contexts/BackgroundContext';
 import type { Profile } from '../utils/types';
 import CreateProfile from './CreateProfile';
 import Import from './Import';
+import JoinParty from './JoinParty';
 import Login from './Login';
+import Parties from './Parties';
 import User from './User';
 
 const Main = () => {
@@ -45,9 +47,17 @@ const Main = () => {
           <CreateProfile onProfileCreated={setProfile} />
         </Route>
         {profile && profile.username && profile.publicKey
-          ? <Route path='/user'>
-            <User profile={profile} />
-          </Route>
+          ? <Switch>
+            <Route path='/user'>
+              <User profile={profile} />
+            </Route>
+            <Route path='/parties'>
+              <Parties />
+            </Route>
+            <Route path='/joinparty'>
+              <JoinParty />
+            </Route>
+          </Switch>
           : null}
         <Redirect to='/login' />
       </Switch>
