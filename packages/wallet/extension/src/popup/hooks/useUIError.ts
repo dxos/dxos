@@ -2,20 +2,19 @@
 // Copyright 2021 DXOS.org
 //
 
-import { useSnackbar } from "../contexts";
+import { useSnackbar } from '../contexts';
 
 interface Messages {
-  successMessage?: string, 
+  successMessage?: string,
   errorMessage?: string
 }
 
-export const useUIError = () =>  {
+export const useUIError = () => {
   const setSnackbar = useSnackbar();
 
   return async <T>(
     tryBlock: () => (Promise<T> | T),
     messages: Messages | undefined = undefined) => {
-
     try {
       const result = await tryBlock();
       if (setSnackbar && messages?.successMessage) {
@@ -34,5 +33,5 @@ export const useUIError = () =>  {
         });
       }
     }
-  }
+  };
 };
