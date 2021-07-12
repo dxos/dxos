@@ -1,0 +1,29 @@
+name: Publish DXOS docker containers to GitHub Registry
+
+on:
+  workflow_dispatch
+
+jobs:
+  # Push @dxos/signal to GitHub Packages.
+  signal_docker_publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.CONTAINER_REGISTRY_TOKEN }}
+    - name: Build docker image
+      id: docker_build
+      uses: docker/build-push-action@v2
+      with:
+        context: ./packages/mesh/signal
+        file: ./packages/mesh/signal/Dockerfile
+        push: true
+        tags: ghcr.io/dxos/signal:latest
+        build-args: |
+            NPM_TOKEN=${{ secrets.NPM_TOKEN }}
