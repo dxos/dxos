@@ -30,7 +30,7 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/protocol-plugin-bot": "workspace:*",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
-    "@dxos/signal": "~1.0.3-alpha.0",
+    "@dxos/signal": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/fs-extra": "^9.0.4",

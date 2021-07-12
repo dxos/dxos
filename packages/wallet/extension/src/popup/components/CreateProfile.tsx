@@ -9,6 +9,7 @@ import { Button, Container, Grid, makeStyles, TextField, Typography } from '@mat
 
 import { useBackgroundContext } from '../contexts';
 import type { Profile } from '../utils/types';
+import { useUIError } from '../hooks';
 import BackButton from './BackButton';
 
 const useStyles = makeStyles({
@@ -30,14 +31,25 @@ const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
   const history = useHistory();
 
   const backgroundService = useBackgroundContext();
+  const withUIError = useUIError();
 
   const onCreate = async () => {
     setInProgress(true);
-    const response = await backgroundService?.rpc.CreateProfile({ username });
+    const response = await withUIError(
+      () => backgroundService?.rpc.CreateProfile({ username }),
+      {
+        successMessage: 'Succesfully created profile',
+        errorMessage: 'Couldn\'t create profile'
+      }
+    );
     setInProgress(false);
-    if (response && response.publicKey) {
-      onProfileCreated(response);
-      history.push('/user');
+    if (response) {
+      const { result } = response;
+      if (result && result.publicKey) {
+        onProfileCreated(result);
+        history.push('/user');
+      }
+
     }
   };
 
