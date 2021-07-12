@@ -4,7 +4,7 @@
 
 import { ClientConfig } from '@dxos/client';
 
-export * from './Browser'
+export * from './Browser';
 
 export const ONLINE_CONFIG: ClientConfig = {
   swarm: {

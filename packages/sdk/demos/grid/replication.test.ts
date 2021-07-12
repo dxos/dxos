@@ -4,26 +4,27 @@
 //
 
 import { chromium } from 'playwright';
-import robot from 'robotjs'
+import robot from 'robotjs';
 
-import { Browser, ONLINE_CONFIG} from '../playwright/utils';
 import { Client } from '@dxos/client';
-import { Party } from '@dxos/echo-db';
 import { createKeyPair } from '@dxos/crypto';
+import { Party } from '@dxos/echo-db';
 
-const ROWS = parseInt(process.env.GRID_DEMO_ROWS ?? '2')
-const COLUMNS = parseInt(process.env.GRID_DEMO_COLUMS ?? '4')
+import { Browser, ONLINE_CONFIG } from '../playwright/utils';
+
+const ROWS = parseInt(process.env.GRID_DEMO_ROWS ?? '2');
+const COLUMNS = parseInt(process.env.GRID_DEMO_COLUMS ?? '4');
 
 describe('Replication in a grid', function () {
   this.timeout(0);
-  const primaryUrl = 'http://localhost:9001/iframe.html?id=demo--replication-grid&viewMode=story'
+  const primaryUrl = 'http://localhost:9001/iframe.html?id=demo--replication-grid&viewMode=story';
   const screenWidth = robot.getScreenSize().width;
   const screenHeight = robot.getScreenSize().height;
-  const clientWidth = screenWidth / COLUMNS
-  const clientHeight = screenHeight / ROWS
+  const clientWidth = screenWidth / COLUMNS;
+  const clientHeight = screenHeight / ROWS;
   let inviter: Client;
   let party: Party;
-  let invitation: string
+  let invitation: string;
 
   before(async function () {
     inviter = new Client(ONLINE_CONFIG);
@@ -39,23 +40,25 @@ describe('Replication in a grid', function () {
   });
 
   const createGrid = async (): Promise<Browser[]> => {
-    const result: Browser[] = []
-    
+    const result: Browser[] = [];
+
     for (let row = 0; row < ROWS; row++) {
       for (let col = 0; col < COLUMNS; col++) {
-        const gridUser = new Browser()
-        await gridUser.launchBrowser(chromium, primaryUrl, {args: [
-          `--window-position=${clientWidth*col},${clientHeight*row}`,
+        const gridUser = new Browser();
+        await gridUser.launchBrowser(chromium, primaryUrl, {
+          args: [
+          `--window-position=${clientWidth * col},${clientHeight * row}`,
           `--window-size=${clientWidth},${clientHeight}`
-        ]})
-        await gridUser.page!.fill('#start-dialog-invitation-input', invitation)
-        gridUser.page!.click('//span[text()=\'Join Party\']') // no await, go to next client
-        result.push(gridUser)
+          ]
+        });
+        await gridUser.page!.fill('#start-dialog-invitation-input', invitation);
+        gridUser.page!.click('//span[text()=\'Join Party\']'); // no await, go to next client
+        result.push(gridUser);
       }
     }
 
     return result;
-  }
+  };
 
   after(async () => {
     // Close the browsers manually...
@@ -63,5 +66,5 @@ describe('Replication in a grid', function () {
 
   it('Opens 8 clients', async () => {
     await createGrid();
-  })
+  });
 });

@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
-import { Generator } from '@dxos/echo-testing';
-import { useClient, ClientInitializer, ProfileInitializer, useProfile } from '@dxos/react-client';
+import { useClient, ClientInitializer, ProfileInitializer } from '@dxos/react-client';
 
 import { ONLINE_CONFIG } from '../../src';
 import Main from './Main';

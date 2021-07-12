@@ -18,7 +18,7 @@
     "build-storybook": "build-storybook --quiet",
     "build-storybook-docs": "build-storybook --quiet --docs",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
-    "lint": "eslint --format codeframe './{src,test,stories}/**/*.{ts,tsx}'",
+    "lint": "eslint --format codeframe './{src,test,stories,playwright,grid}/**/*.{ts,tsx}'",
     "test": "exit 0",
     "test:playwright": "mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts'",
     "grid:demo": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
