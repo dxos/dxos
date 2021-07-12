@@ -9,6 +9,7 @@ import { Button, Container, Grid, makeStyles, TextField, Typography } from '@mat
 
 import { useBackgroundContext } from '../contexts';
 import BackButton from './BackButton';
+import { useUIError } from '../hooks';
 
 const useStyles = makeStyles({
   container: {
@@ -23,6 +24,7 @@ const JoinParty = () => {
   const [passcode, setPasscode] = useState('');
 
   const backgroundService = useBackgroundContext();
+  const withUIError = useUIError();
   const [inProgress, setInProgress] = useState(false);
 
   const history = useHistory();
@@ -31,21 +33,21 @@ const JoinParty = () => {
     if (!backgroundService) {
       return;
     }
-
-    try {
-      setInProgress(true);
-      await backgroundService.rpc.JoinParty({
+    setInProgress(true);
+    const result = await withUIError(() => {
+      return backgroundService.rpc.JoinParty({
         invitation,
         passcode
       });
+    }, { successMessage: 'Joined the party', errorMessage: 'Couldn\'t join the party' });
+
+    if (result) {
       history.goBack();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setInvitation('');
-      setPasscode('');
-      setInProgress(false);
     }
+
+    setInvitation('');
+    setPasscode('');
+    setInProgress(false);
   };
 
   return (

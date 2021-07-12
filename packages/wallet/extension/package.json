@@ -25,7 +25,8 @@
     "@dxos/rpc": "workspace:*",
     "react-router-dom": "^5.1.2",
     "@dxos/echo-db": "workspace:*",
-    "@material-ui/icons": "^4.11.2"
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.58"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
