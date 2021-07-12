@@ -23,6 +23,8 @@ export class Browser {
   /**
    * Launches a web page with minimal UI, in an app mode.
    * Only chromium.
+   * The problem is, that the app doesn't have a `page` object
+   * and cannot be controlled further.
    */
   async launchApp (url: string, options?: LaunchOptions | undefined) {
     this.browser = await chromium.launch({

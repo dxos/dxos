@@ -3,18 +3,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import { firefox, chromium, Page, webkit, _electron } from 'playwright';
-import expect from 'expect'
-import ScreenSizeDetector from 'screen-size-detector';
+import { chromium } from 'playwright';
 import robot from 'robotjs'
 
-import { Browser } from './utils';
+import { Browser, ONLINE_CONFIG} from '../playwright/utils';
 import { Client } from '@dxos/client';
 import { Party } from '@dxos/echo-db';
-import { ONLINE_CONFIG } from './utils';
 import { createKeyPair } from '@dxos/crypto';
 
-// Skipped - it is supposed to be run locally manually for visual demos.
+const ROWS = parseInt(process.env.GRID_DEMO_ROWS ?? '2')
+const COLUMNS = parseInt(process.env.GRID_DEMO_COLUMS ?? '4')
+
 describe('Replication in a grid', function () {
   this.timeout(0);
   const primaryUrl = 'http://localhost:9001/iframe.html?id=demo--replication-grid&viewMode=story'
@@ -35,12 +34,10 @@ describe('Replication in a grid', function () {
   });
 
   it('Opens 8 clients', async () => {
-    const rows = 2
-    const columns = 4
-    const clientWidth = screenWidth / columns
-    const clientHeight = screenHeight / rows
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < columns; col++) {
+    const clientWidth = screenWidth / COLUMNS
+    const clientHeight = screenHeight / ROWS
+    for (let row = 0; row < ROWS; row++) {
+      for (let col = 0; col < COLUMNS; col++) {
         const invitation = await party.createInvitation({
           secretProvider: async () => Buffer.from('0000'),
           secretValidator: async () => true

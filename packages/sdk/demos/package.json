@@ -21,6 +21,7 @@
     "lint": "eslint --format codeframe './{src,test,stories}/**/*.{ts,tsx}'",
     "test": "exit 0",
     "test:playwright": "mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts'",
+    "grid:demo": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "storybook-docs": "start-storybook --docs --no-manager-cache",
     "prepublishOnly": "npm run test && npm run build",
@@ -107,8 +108,8 @@
     "expect": "~27.0.2",
     "mocha": "~8.4.0",
     "ts-node": "^9.1.1",
-    "screen-size-detector": "~1.0.4",
-    "robotjs": "~0.6.0"
+    "robotjs": "~0.6.0",
+    "dotenv": "^8.2.0"
   },
   "publishConfig": {
     "access": "restricted"
