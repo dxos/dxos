@@ -9,8 +9,8 @@ import { browser } from 'webextension-polyfill-ts';
 import { Button, Container, Grid, makeStyles, TextField, Typography, Link } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
-import type { Profile } from '../utils/types';
 import { useUIError } from '../hooks';
+import type { Profile } from '../utils/types';
 
 const useStyles = makeStyles({
   container: {
@@ -54,7 +54,6 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
         onProfileCreated(result);
         history.push('/user');
       }
-
     }
   };
 
@@ -79,7 +78,7 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
               variant='outlined'
               required
               helperText={<div> This will be your username visible to everyone. </div>}/>
-            </Grid>
+          </Grid>
         </Grid>
         <Grid item xs={12}>
           <Grid container justify='flex-end'>
