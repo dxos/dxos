@@ -4,32 +4,77 @@
 
 import assert from 'assert';
 import HumanHasher from 'humanhash';
-import crypto from 'hypercore-crypto';
+// TODO(wittjosiah): node webcrypto types
+import { webcrypto as crypto } from 'crypto';
+
+// @ts-ignore TODO
+const { subtle, CryptoKey } = crypto;
 
 import { PublicKey, PublicKeyLike } from './public-key';
 
 export const hasher = new HumanHasher();
 
-export const PUBLIC_KEY_LENGTH = 32;
-export const SECRET_KEY_LENGTH = 64;
-export const SIGNATURE_LENGTH = 64;
+export const PUBLIC_KEY_LENGTH = 97;
+// export const SECRET_KEY_LENGTH = 64;
+export const KEY_GENERATION_ALGORITHM = {
+  name: 'ECDSA',
+  namedCurve: 'P-384'
+};
+export const SIGNATURE_LENGTH = 96;
+export const SIGNATURE_ALGORITHM = {
+  name: 'ECDSA',
+  hash: {name: 'SHA-384'},
+};
 
 export const zeroKey = () => new Uint8Array(32);
 
 //
 // The purpose of this module is to assure consistent use of keys throughout the project.
-// NOTE: keys should be maintained as buffers in objects and proto definitions, and converted to hex
+// NOTE: keys should be maintained as CryptoKeys in objects and proto definitions, and converted to hex
 // strings as late as possible (e.g., to log/display).
 //
 
-export interface KeyPair {
-  publicKey: Buffer
-  secretKey: Buffer
+export interface KeySeed {
+  publicKey: Buffer | JsonWebKey,
+  privateKey: JsonWebKey
 }
 
-export const createKeyPair = (seed?: Buffer): KeyPair => crypto.keyPair(seed);
+export const createKeyPair = async (seed?: KeySeed): Promise<CryptoKeyPair> => {
+  if (seed) {
+    const publicKey = await subtle.importKey(
+      typeof Buffer.isBuffer(seed.publicKey) ? 'raw' : 'jwk',
+      seed.publicKey,
+      KEY_GENERATION_ALGORITHM,
+      true,
+      ["verify"]
+    );
 
-export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer());
+    const privateKey = await subtle.importKey(
+      'jwk',
+      seed.privateKey,
+      KEY_GENERATION_ALGORITHM,
+      true,
+      ["sign"]
+    );
+
+    return { publicKey, privateKey };
+  }
+
+  return subtle.generateKey(KEY_GENERATION_ALGORITHM, true, ["sign", "verify"]);
+}
+
+export const discoveryKey = async (key: PublicKeyLike): Promise<Buffer> => {
+  // TODO
+  return Buffer.from('todo');
+}
+
+/**
+ * @param {CryptoKey} key - Key instance.
+ * @return {Promise<JsonWebKey>} WebKey object.
+ */
+export async function keyToJson (key: CryptoKey): Promise<JsonWebKey> {
+  return subtle.exportKey('jwk', key);
+}
 
 /**
  * @param {string} str - Hex string representation of key.
@@ -38,16 +83,27 @@ export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(
 export function keyToBuffer (str: string): Buffer {
   assert(typeof str === 'string', 'Invalid type');
   const buffer = Buffer.from(str, 'hex');
-  assert(buffer.length === PUBLIC_KEY_LENGTH || buffer.length === SECRET_KEY_LENGTH,
-    `Invalid key length: ${buffer.length}`);
+  assert(buffer.length === PUBLIC_KEY_LENGTH, `Invalid key length: ${buffer.length}`);
   return buffer;
+}
+
+/**
+ * @param {CryptoKey} key - Key instance.
+ * @return {Promise<string>} Hex string representation of key.
+ */
+export async function keyToString (key: CryptoKey): Promise<string> {
+  assert(key instanceof CryptoKey, 'Invalid type');
+
+  const rawKey = await subtle.exportKey('raw', key);
+  const buffer = Buffer.from(rawKey);
+  return _keyToString(buffer);
 }
 
 /**
  * @param {Buffer | Uint8Array} buffer - Key buffer.
  * @return {string} Hex string representation of key.
  */
-export function keyToString (buffer: Buffer | Uint8Array): string {
+function _keyToString (buffer: Buffer | Uint8Array): string {
   if (buffer instanceof Uint8Array) {
     buffer = Buffer.from(buffer);
   }
@@ -56,9 +112,9 @@ export function keyToString (buffer: Buffer | Uint8Array): string {
   return buffer.toString('hex');
 }
 
-export function humanize (value: Buffer | Uint8Array | string): string {
-  if (value instanceof Buffer || value instanceof Uint8Array) {
-    value = keyToString(value);
+export async function humanize (value: CryptoKey | string): Promise<string> {
+  if (value instanceof CryptoKey) {
+    value = await keyToString(value as CryptoKey);
   }
 
   return hasher.humanize(value);
@@ -70,27 +126,30 @@ export function humanize (value: Buffer | Uint8Array | string): string {
  * @return {Buffer}
  */
 export function randomBytes (length = 32): Buffer {
-  return crypto.randomBytes(length);
+  const buffer = Buffer.allocUnsafe(length);
+  // @ts-ignore TODO
+  crypto.getRandomValues(buffer);
+  return buffer;
 }
 
 /**
  * @return {string}
  */
 export function createId (): string {
-  return keyToString(randomBytes(32));
+  return _keyToString(randomBytes(32));
 }
 
 /**
  * Sign the contents of message with secretKey
  * @param {Buffer} message
  * @param {Buffer} secretKey
- * @returns {Buffer} signature
+ * @return {Promise<Buffer>} signature
  */
-export function sign (message: Buffer, secretKey: Buffer): Buffer {
+export async function sign (message: Buffer, secretKey: CryptoKey): Promise<Buffer> {
   assert(Buffer.isBuffer(message));
-  assert(Buffer.isBuffer(secretKey) && secretKey.length === SECRET_KEY_LENGTH);
+  // assert(Buffer.isBuffer(secretKey) && secretKey.length === SECRET_KEY_LENGTH);
 
-  return crypto.sign(message, secretKey);
+  return subtle.sign(SIGNATURE_ALGORITHM, secretKey, message);
 }
 
 /**
@@ -98,12 +157,12 @@ export function sign (message: Buffer, secretKey: Buffer): Buffer {
  * @param {Buffer} message
  * @param {Buffer} publicKey
  * @param {Buffer} signature
- * @return {boolean}
+ * @return {Promise<boolean>}
  */
-export function verify (message: Buffer, signature: Buffer, publicKey: Buffer): boolean {
+export async function verify (message: Buffer, signature: Buffer, publicKey: CryptoKey): Promise<boolean> {
   assert(Buffer.isBuffer(message));
-  assert(Buffer.isBuffer(signature) && signature.length === SIGNATURE_LENGTH);
-  assert(Buffer.isBuffer(publicKey) && publicKey.length === PUBLIC_KEY_LENGTH);
+  // assert(Buffer.isBuffer(signature) && signature.length === SIGNATURE_LENGTH);
+  // assert(Buffer.isBuffer(publicKey) && publicKey.length === PUBLIC_KEY_LENGTH);
 
-  return crypto.verify(message, signature, publicKey);
+  return subtle.verify(SIGNATURE_ALGORITHM, publicKey, signature, message);
 }
