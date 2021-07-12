@@ -3,6 +3,7 @@
 //
 
 import React, { useContext, useState } from 'react';
+
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
 
@@ -23,7 +24,7 @@ const WithSnackbarContext = ({ children } : { children: React.ReactNode }) => {
 
   const handleClose = () => {
     setOpen(false);
-  }
+  };
 
   const setSnackbar = (msg: SnackbarMessage) => {
     setMessage(msg);
@@ -32,16 +33,16 @@ const WithSnackbarContext = ({ children } : { children: React.ReactNode }) => {
 
   return (
     <SnackbarContext.Provider value={setSnackbar}>
-      {message ? 
-        <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+      {message
+        ? <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
           <Alert onClose={handleClose} severity={message.severity}>
             {message.message}
           </Alert>
         </Snackbar>
-      : null}
+        : null}
       {children}
     </SnackbarContext.Provider>
   );
-}
+};
 
 export { useSnackbar, WithSnackbarContext };
