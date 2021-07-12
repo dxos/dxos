@@ -1,8 +1,6 @@
 # @dxos/signal
 > DxOS signal server.
 
-[![Build Status](https://travis-ci.com/dxos/signal.svg?branch=master)](https://travis-ci.com/dxos/signal)
-[![Coverage Status](https://coveralls.io/repos/github/dxos/signal/badge.svg?branch=master)](https://coveralls.io/github/dxos/signal?branch=master)
 ![npm (scoped)](https://img.shields.io/npm/v/@dxos/signal)
 [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/standard/semistandard)
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)

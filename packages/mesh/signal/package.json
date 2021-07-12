@@ -1,16 +1,15 @@
 {
   "name": "@dxos/signal",
-  "version": "1.0.3-alpha.0",
+  "version": "2.10.12",
   "description": "DxOS signal server.",
-  "homepage": "https://github.com/dxos/signal#readme",
+  "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
-    "url": "https://github.com/dxos/signal/issues"
+    "url": "https://github.com/dxos/protocol/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dxos/signal.git"
+    "url": "git+https://github.com/dxos/protocol.git"
   },
-  "license": "AGPLv3",
   "bin": {
     "dxos-signal": "bin/signal.js",
     "signal": "bin/signal.js"
@@ -22,16 +21,10 @@
   ],
   "main": "index.js",
   "scripts": {
-    "coverage": "npm test -- --coverage",
-    "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls",
-    "lint": "semistandard '**/*.js'",
-    "lint:lockfile": "lockfile-lint --path yarn.lock --allowed-hosts yarn npm codeload.github.com --validate-https",
-    "prepublishOnly": "npm run test",
-    "test": "DEBUG=\"dxos:test*\" jest --verbose --passWithNoTests",
-    "posttest": "npm run lint"
-  },
-  "jest": {
-    "testEnvironment": "node"
+    "build": "exit 0",
+    "build:test": "toolchain test",
+    "test": "toolchain test",
+    "lint": "toolchain lint"
   },
   "dependencies": {
     "@azure/abort-controller": "^1.0.1",
@@ -70,22 +63,13 @@
     "yargs": "^15.3.1"
   },
   "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.0",
     "graphology-canvas": "^0.1.1",
     "graphology-shortest-path": "^1.3.4",
-    "jest": "^26.4.2",
-    "lockfile-lint": "^4.3.7",
-    "semistandard": "^14.2.0",
     "wrtc": "^0.4.6"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "semistandard": {
-    "env": [
-      "jest",
-      "node",
-      "browser"
-    ]
   }
 }
