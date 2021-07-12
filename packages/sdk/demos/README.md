@@ -61,6 +61,7 @@ Edit `.env` if necessary
 2. Run storybooks
 
 ```bash
+rush update && rush build --to @dxos/demos
 rushx storybook
 ```
 
