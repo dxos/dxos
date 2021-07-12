@@ -7,11 +7,11 @@ A Party is a DXOS component responsible for sharing content between invited clie
 
 ## Create a Party
 
-In this example we use the Parties to create a Task List that we'll share and invite other peers to read and collaborate later on.
+In this example, we use the Parties to create a Task List that we'll share and invite other peers to read and collaborate later on.
 
 Pay attention to the `PartySettings.js` component rendered by `PartyList.js`. It contains the logic to create new parties.
 
-Party creation is handled through the `Echo` object that is contained by the Client instance. After creating the party it's required to set the title property through the `setProperty` function.
+Party creation is handled through the `Echo` object that is contained by the Client instance. After creating the party, set the title property through the `setProperty` function.
 
 ```js
 const PartySettings = ({ partyKey, onClose }) => {
@@ -49,7 +49,7 @@ const TaskList = ({ partyKey }) => {
 
 ## Retrieve all the Parties
 
-We can also retrieve all the Parties created under the same `Echo` object contained by the Client instance. You can watch this on the `PartyList.js` component.
+We can also retrieve all the Parties created under the same `Echo` object contained by the Client instance. You can do this in the `PartyList.js` component.
 
 ```js
 import { useParties } from '@dxos/react-client';

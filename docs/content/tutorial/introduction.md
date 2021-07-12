@@ -5,13 +5,13 @@ description: Learn how to build apps with DXOS
 
 Welcome! This tutorial will lead you through the process of building shareable task list app using [DXOS](https://github.com/dxos).
 
-We have created a full-stack example as much "real-world" as possible, to demonstrate the main aspects of the architecture and to make you feel comfortable building your own applications.
+We have created a full-stack "real-world" example to demonstrate the main aspects of the architecture and to make you feel comfortable building your own applications.
 
 ## What's the Task List App?
 
 The Tasks App is a demo of the capabilities of the DXOS platform.
-It implements a simple collaborative task tracking applications.
-On this section, you will be guided through a step-by-step tutorial to building, debugging, and deploying the application.
+It implements a simple collaborative task tracking application.
+In this section, you will be guided through a step-by-step tutorial to building, debugging, and deploying the application.
 
 ### Prerequisites
 
@@ -41,7 +41,7 @@ yarn
 
 The application has been created with [Create React App](https://reactjs.org/docs/create-a-new-react-app.html) and its config has been extended through [CRACO](https://github.com/gsoft-inc/craco).
 
-Run within the tasks-app folder the following command to start the Tasks App Webpack development server.
+Run the following command within the tasks-app folder to start the Tasks App Webpack development server.
 
 ```bash
 yarn start
@@ -54,4 +54,4 @@ Now open the browser at [http://localhost:3000/](http://localhost:3000/) and you
 You should see the page with a modal _Create Profile_ and input field for username below.
 
 Go ahead and create a profile with your name to be able to see the tasks app working.
-Play around with it a little bit if you want. We will start breaking things into pieces on the next section.
+Play around with it a little bit if you want. We will go more in depth in the next section.
