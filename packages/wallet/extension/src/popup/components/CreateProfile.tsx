@@ -3,7 +3,7 @@
 //
 
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, Redirect } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
 
 import { Button, Container, Grid, makeStyles, TextField, Typography, Link } from '@material-ui/core';
@@ -11,7 +11,6 @@ import { Button, Container, Grid, makeStyles, TextField, Typography, Link } from
 import { useBackgroundContext } from '../contexts';
 import type { Profile } from '../utils/types';
 import { useUIError } from '../hooks';
-import BackButton from './BackButton';
 
 const useStyles = makeStyles({
   container: {
@@ -20,10 +19,11 @@ const useStyles = makeStyles({
 });
 
 interface CreateProfileProps {
+  profile?: Profile,
   onProfileCreated: (profile: Profile | undefined) => void
 }
 
-const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
+const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
   const classes = useStyles();
 
   const [username, setUsername] = useState('');
@@ -57,6 +57,10 @@ const CreateProfile = ({ onProfileCreated } : CreateProfileProps) => {
 
     }
   };
+
+  if (profile && profile.username && profile.publicKey) {
+    return <Redirect to='/user'/>;
+  }
 
   return (
     <Container className={classes.container}>

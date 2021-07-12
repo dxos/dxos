@@ -40,7 +40,7 @@ const Main = () => {
           <Import onProfileCreated={setProfile} />
         </Route>
         <Route path='/create'>
-          <CreateProfile onProfileCreated={setProfile} />
+          <CreateProfile profile={profile} onProfileCreated={setProfile} />
         </Route>
         {profile && profile.username && profile.publicKey
           ? <Switch>
