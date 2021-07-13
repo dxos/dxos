@@ -1662,7 +1662,6 @@ importers:
       react-docgen-typescript-loader: 3.7.2_typescript@4.2.4+webpack@4.44.2
       react-dom: 16.14.0_react@16.14.0
       robotjs: 0.6.0
-      screen-size-detector: 1.0.4
       tempy: 1.0.1
       ts-loader: 8.1.0_typescript@4.2.4+webpack@4.44.2
       ts-node: 9.1.1_typescript@4.2.4
@@ -1733,7 +1732,6 @@ importers:
       react-dom: ^16.14.0
       react-resize-aware: ^3.0.0
       robotjs: ~0.6.0
-      screen-size-detector: ~1.0.4
       source-map-support: ^0.5.12
       stream-buffers: ^3.0.2
       tempy: ~1.0.1
@@ -22422,10 +22420,6 @@ packages:
       node: '>= 10.13.0'
     resolution:
       integrity: sha512-6D82/xSzO094ajanoOSbe4YvXWMfn2A//8Y1+MUqFAJul5Bs+yn36xbK9OtNDcRVSBJ9jjeoXftM6CfztsjOAA==
-  /screen-size-detector/1.0.4:
-    dev: true
-    resolution:
-      integrity: sha512-0oDPNt4klYzcWnxe04l/lNv0BSdJWFhilwNFSpQ9Bn3y3R12MsN4dc1bZnKnjRUV1HfVF54sRCAxdbxFa5sr5w==
   /secp256k1/3.8.0:
     dependencies:
       bindings: 1.5.0
