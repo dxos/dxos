@@ -41,6 +41,7 @@ const createItem = async (page: Page): Promise<string> => {
   return itemName;
 };
 
+// eslint-disable-next-line jest/valid-describe
 describe('Demo - Primary and Peers', async function () {
   this.timeout(30000);
   this.retries(1);
