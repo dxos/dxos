@@ -5,15 +5,21 @@
 import React, { useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
-import { Card, CardHeader, Typography, makeStyles, IconButton, Menu, MenuItem, ListItemIcon } from '@material-ui/core';
+import { Card, CardHeader, Typography, makeStyles, IconButton, Menu, MenuItem, ListItemIcon, Grid } from '@material-ui/core';
 import GroupIcon from '@material-ui/icons/Group';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
+import CopyButton from './CopyButton';
 
 import type { Profile } from '../utils';
 
 const useStyles = makeStyles({
   card: {
     margin: 15
+  },
+  ellipsis: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
   }
 });
 
@@ -43,9 +49,16 @@ const User = ({ profile } : UserProps) => {
           </Typography>
         }
         subheader={
-          <Typography variant="body2" color="textSecondary">
-            {profile.publicKey}
-          </Typography>
+          <Grid container alignContent="space-between" alignItems="center">
+            <Grid item xs={11}>
+              <Typography variant="body2" color="textSecondary" className={classes.ellipsis}>
+                {profile.publicKey}
+              </Typography>
+            </Grid>
+            <Grid item xs={1}>
+              <CopyButton text={profile.publicKey ?? ''}/>
+            </Grid>
+          </Grid>
         }
         action={
           <IconButton aria-label="settings" ref={actions} onClick={() => setMenuOpen(m => !m)}>

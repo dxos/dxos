@@ -35,7 +35,8 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
   const withUIError = useUIError();
 
   const onImport = async () => {
-    await browser.tabs.create({ active: true, url: location.toString().replace('create', 'import') });
+    const fullScreenUrl = location.href.replace('popup/popup.html', 'popup/fullscreen.html').replace('create', 'import')
+    await browser.tabs.create({ active: true, url: fullScreenUrl });
   };
 
   const onCreate = async () => {

@@ -6,7 +6,7 @@ import EventEmitter from 'events';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import App from './components/App';
+import Fullscreen from './components/Fullscreen';
 import { inDev } from './utils/helpers';
 
 const ee = new EventEmitter();
@@ -15,7 +15,7 @@ if (!ee.off) {
 } // Check if `node` polyfills are correct
 
 // Application to Render
-const app = <App />;
+const app = <Fullscreen />;
 
 // Render application in DOM
 ReactDOM.render(app, document.getElementById('app'));
