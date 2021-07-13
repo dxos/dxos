@@ -14,6 +14,7 @@ module.exports = {
     '@storybook/addon-essentials',
     '@storybook/addon-links'
   ],
+  exclude: [/node_modules/],
   webpackFinal: async config => {
     config.module.rules.push({
       test: /\.(ts|tsx)$/,
