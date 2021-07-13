@@ -7,6 +7,7 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 module.exports = {
   stories: ['../stories/**/*.{tsx,jsx}'],
   addons: ['@storybook/addon-knobs'],
+  exclude: [/node_modules/],
   webpackFinal: async config => {
     // The version shipped with storybook is outdated so we are using our own.
     config.plugins.push(new ForkTsCheckerWebpackPlugin({
