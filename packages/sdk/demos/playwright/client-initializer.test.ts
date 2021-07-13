@@ -15,7 +15,7 @@ describe('ClientInitializer', () => {
   let bob: Browser;
 
   before(async function () {
-    this.setTimeout(30000);
+    this.timeout(30000);
     alice = new Browser();
     bob = new Browser();
     await alice.launchBrowser(browser, 'about:blank');
