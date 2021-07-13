@@ -5,17 +5,24 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Typography, Container, makeStyles, Button, Grid } from '@material-ui/core';
+import { Typography, Container, makeStyles, Button, Grid, List, ListItem, ListItemIcon, ListItemText, ListItemSecondaryAction } from '@material-ui/core';
+import FolderIcon from '@material-ui/icons/FolderOpen';
 
 import type { GetPartiesResponse } from '@dxos/wallet-core';
 
 import { useBackgroundContext } from '../contexts';
 import { useUIError } from '../hooks';
 import BackButton from './BackButton';
+import CopyButton from './CopyButton';
 
 const useStyles = makeStyles({
   container: {
     marginTop: 20
+  },
+  ellipsis: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
   }
 });
 
@@ -54,7 +61,31 @@ const Parties = () => {
         <Grid item xs={12}>
           <Typography variant='h4' align='center'> Your parties </Typography>
         </Grid>
-        {(parties?.partyKeys ?? ['You have no parties']).map(key => <Grid item xs={12} key={key}> {key} </Grid>)}
+        <Grid item xs={12}>
+          <List>
+            {!parties?.partyKeys?.length
+              ? <ListItem>
+              You have no parties
+              </ListItem>
+              : null}
+            {parties?.partyKeys?.map(key =>
+              <ListItem key={key}>
+                <ListItemIcon>
+                  <FolderIcon />
+                </ListItemIcon>
+                <ListItemText
+                  classes={{
+                    secondary: classes.ellipsis
+                  }}
+                  secondary={key}
+                />
+                <ListItemSecondaryAction>
+                  <CopyButton text={key} />
+                </ListItemSecondaryAction>
+              </ListItem>
+            )}
+          </List>
+        </Grid>
         <Grid item xs={6}>
           <BackButton />
         </Grid>
