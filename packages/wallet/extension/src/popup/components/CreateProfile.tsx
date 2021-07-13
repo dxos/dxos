@@ -11,6 +11,7 @@ import { Button, Container, Grid, makeStyles, TextField, Typography, Link } from
 import { useBackgroundContext } from '../contexts';
 import { useUIError } from '../hooks';
 import type { Profile } from '../utils/types';
+import { inFullScreenMode } from '../utils';
 
 const useStyles = makeStyles({
   container: {
@@ -35,7 +36,11 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
   const withUIError = useUIError();
 
   const onImport = async () => {
-    const fullScreenUrl = location.href.replace('popup/popup.html', 'popup/fullscreen.html').replace('create', 'import')
+    if (inFullScreenMode()) {
+      history.push('/import');
+      return;
+    }
+    const fullScreenUrl = location.href.replace('popup/popup.html', 'popup/fullscreen.html').replace('create', 'import');
     await browser.tabs.create({ active: true, url: fullScreenUrl });
   };
 
@@ -63,7 +68,7 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
   }
 
   return (
-    <Container className={classes.container}>
+    <Container className={classes.container} maxWidth='md'>
       <Grid container spacing={4}>
         <Grid item xs={12}>
           <Typography variant='h6' align='center'> Create new profile </Typography>

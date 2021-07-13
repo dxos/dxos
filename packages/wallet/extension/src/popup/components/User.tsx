@@ -50,12 +50,12 @@ const User = ({ profile } : UserProps) => {
         }
         subheader={
           <Grid container alignContent="space-between" alignItems="center">
-            <Grid item xs={11}>
+            <Grid item xs={11} md={8} lg={6}>
               <Typography variant="body2" color="textSecondary" className={classes.ellipsis}>
                 {profile.publicKey}
               </Typography>
             </Grid>
-            <Grid item xs={1}>
+            <Grid item xs={1} md={4} lg={6}>
               <CopyButton text={profile.publicKey ?? ''}/>
             </Grid>
           </Grid>
