@@ -10,7 +10,6 @@ import type { Profile } from '../utils/types';
 import CreateProfile from './CreateProfile';
 import Import from './Import';
 import JoinParty from './JoinParty';
-import Login from './Login';
 import Parties from './Parties';
 import User from './User';
 
@@ -37,14 +36,11 @@ const Main = () => {
   return (
     <HashRouter hashType="noslash">
       <Switch>
-        <Route path='/login'>
-          <Login profile={profile} />
-        </Route>
         <Route path='/import'>
           <Import onProfileCreated={setProfile} />
         </Route>
         <Route path='/create'>
-          <CreateProfile onProfileCreated={setProfile} />
+          <CreateProfile profile={profile} onProfileCreated={setProfile} />
         </Route>
         {profile && profile.username && profile.publicKey
           ? <Switch>
@@ -59,7 +55,7 @@ const Main = () => {
             </Route>
           </Switch>
           : null}
-        <Redirect to='/login' />
+        <Redirect to='/create' />
       </Switch>
     </HashRouter>
   );
