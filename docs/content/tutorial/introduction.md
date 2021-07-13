@@ -27,8 +27,6 @@ To create the visual side of the app and style react components we will be using
 
 ## Clone the Tutorial Repository
 
-// todo(grazianoramiro): set the proper URL to where the tasks-app repo will be.
-
 Clone the [tutorial repository](https://github.com/dxos/dxos-tutorial-tasks-app) and install dependencies.
 
 ```bash
