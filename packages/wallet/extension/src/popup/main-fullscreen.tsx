@@ -2,25 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import EventEmitter from 'events';
 import React from 'react';
-import ReactDOM from 'react-dom';
-
 import Fullscreen from './components/Fullscreen';
-import { inDev } from './utils/helpers';
+import render from './render';
 
-const ee = new EventEmitter();
-if (!ee.off) {
-  throw new Error('off is missing on EventEmitter - insufficient node polyfills.');
-} // Check if `node` polyfills are correct
-
-// Application to Render
-const app = <Fullscreen />;
-
-// Render application in DOM
-ReactDOM.render(app, document.getElementById('app'));
-
-// Hot module replacement
-if (inDev() && module.hot) {
-  module.hot.accept();
-}
+render(<Fullscreen />);
