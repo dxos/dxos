@@ -103,7 +103,7 @@ const Import = ({ onProfileCreated } : ImportProps) => {
               color='primary'
               onClick={onRestore}
               disabled={inProgress}>
-              {inProgress ? 'Restoring...' : 'Restore'}
+              {inProgress ? 'Importing...' : 'Import'}
             </Button>
           </Grid>
         </Grid>
