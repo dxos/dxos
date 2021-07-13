@@ -24,19 +24,20 @@ describe('Replication in a grid', function () {
   const clientHeight = screenHeight / ROWS;
   let inviter: Client;
   let party: Party;
-  let invitation: string;
+
+  const createInvitation = async () => {
+    const invitationDescriptor = await party.createInvitation({
+      secretProvider: async () => Buffer.from('0000'),
+      secretValidator: async () => true
+    });
+    return JSON.stringify(invitationDescriptor.toQueryParameters());
+  }
 
   before(async function () {
     inviter = new Client(ONLINE_CONFIG);
     await inviter.initialize();
     await inviter.createProfile({ ...createKeyPair(), username: 'inviter' });
     party = await inviter.echo.createParty();
-
-    const invitationDescriptor = await party.createInvitation({
-      secretProvider: async () => Buffer.from('0000'),
-      secretValidator: async () => true
-    });
-    invitation = JSON.stringify(invitationDescriptor.toQueryParameters());
   });
 
   const createGrid = async (): Promise<Browser[]> => {
@@ -51,7 +52,7 @@ describe('Replication in a grid', function () {
           `--window-size=${clientWidth},${clientHeight}`
           ]
         });
-        await gridUser.page!.fill('#start-dialog-invitation-input', invitation);
+        await gridUser.page!.fill('#start-dialog-invitation-input', await createInvitation());
         gridUser.page!.click('//span[text()=\'Join Party\']'); // no await, go to next client
         result.push(gridUser);
       }
