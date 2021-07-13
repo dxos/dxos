@@ -41,16 +41,16 @@ const createItem = async (page: Page): Promise<string> => {
   return itemName;
 };
 
-describe('Demo - Primary and Peers', () => {
+describe('Demo - Primary and Peers', async function () {
+  this.timeout(30000);
+  this.retries(1);
   const browser = firefox;
   const primaryUrl = 'http://localhost:9001/iframe.html?id=demo--primary&viewMode=story';
   const peersUrl = 'http://localhost:9001/iframe.html?id=demo--peers&viewMode=story';
   let alice: Browser;
   let bob: Browser;
 
-  before(async function () {
-    this.timeout(30000);
-    this.retries(1);
+  before(async () => {
     alice = new Browser();
     bob = new Browser();
     await alice.launchBrowser(browser, 'about:blank');
