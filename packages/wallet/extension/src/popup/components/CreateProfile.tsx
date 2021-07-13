@@ -10,8 +10,8 @@ import { Button, Container, Grid, makeStyles, TextField, Typography, Link } from
 
 import { useBackgroundContext } from '../contexts';
 import { useUIError } from '../hooks';
-import type { Profile } from '../utils/types';
 import { inFullScreenMode } from '../utils';
+import type { Profile } from '../utils/types';
 
 const useStyles = makeStyles({
   container: {

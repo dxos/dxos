@@ -18,7 +18,7 @@ const useStyles = makeStyles({
     margin: 5
   },
   title: {
-    flexGrow: 1,
+    flexGrow: 1
   }
 });
 
@@ -31,7 +31,7 @@ const Root = () => {
     }
     const fullScreenUrl = location.href.replace('popup/popup.html', 'popup/fullscreen.html');
     await browser.tabs.create({ active: true, url: fullScreenUrl });
-  }
+  };
 
   return (
     <WithBackgroundContext>

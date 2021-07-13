@@ -8,9 +8,9 @@ import { useHistory } from 'react-router-dom';
 import { Card, CardHeader, Typography, makeStyles, IconButton, Menu, MenuItem, ListItemIcon, Grid } from '@material-ui/core';
 import GroupIcon from '@material-ui/icons/Group';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-import CopyButton from './CopyButton';
 
 import type { Profile } from '../utils';
+import CopyButton from './CopyButton';
 
 const useStyles = makeStyles({
   card: {
