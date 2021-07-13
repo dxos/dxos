@@ -31,7 +31,7 @@ describe('Replication in a grid', function () {
       secretValidator: async () => true
     });
     return JSON.stringify(invitationDescriptor.toQueryParameters());
-  }
+  };
 
   before(async function () {
     inviter = new Client(ONLINE_CONFIG);
