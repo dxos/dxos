@@ -17,11 +17,11 @@
     "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
     "build-storybook": "build-storybook --quiet",
     "build-storybook-docs": "build-storybook --quiet --docs",
-    "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged,jest",
-    "coverage": "jest --coverage --verbose  --rootDir=./src --passWithNoTests",
-    "lint": "eslint --format codeframe './{src,test,stories}/**/*.{ts,tsx}'",
-    "test": "jest --rootDir=./src --verbose --passWithNoTests",
-    "test:playwright": "jest --rootDir ./playwright --runInBand",
+    "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
+    "lint": "eslint --format codeframe './{src,test,stories,playwright,grid}/**/*.{ts,tsx}'",
+    "test": "exit 0",
+    "test:playwright": "mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts'",
+    "grid:demo": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "storybook-docs": "start-storybook --docs --no-manager-cache",
     "prepublishOnly": "npm run test && npm run build",
@@ -34,10 +34,6 @@
   ],
   "eslintConfig": {
     "extends": "plugin:@dxos/react"
-  },
-  "jest": {
-    "preset": "ts-jest/presets/default",
-    "testEnvironment": "node"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
@@ -88,7 +84,6 @@
     "@storybook/addon-links": "^6.2.9",
     "@storybook/react": "^6.2.9",
     "@types/faker": "~5.5.1",
-    "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
     "@types/react": "^16.14.0",
     "babel-loader": "8.1.0",
@@ -98,20 +93,23 @@
     "chromatic": "^5.8.0",
     "del-cli": "^3.0.0",
     "eslint": "^7.7.0",
-    "eslint-plugin-jest": "^24.0.2",
     "eslint-plugin-react": "^7.22.0",
-    "jest": "^26.6.3",
     "react": "^16.14.0",
     "react-docgen-typescript-loader": "^3.7.2",
     "react-dom": "^16.14.0",
     "tempy": "~1.0.1",
-    "ts-jest": "^26.5.6",
     "ts-loader": "~8.1.0",
     "typescript": "^4.2.4",
     "webpack": "4.44.2",
     "pump": "^3.0.0",
     "@types/pump": "^1.1.0",
-    "@dxos/async": "workspace:*"
+    "@dxos/async": "workspace:*",
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2",
+    "mocha": "~8.4.0",
+    "ts-node": "^9.1.1",
+    "robotjs": "~0.6.0",
+    "dotenv": "^8.2.0"
   },
   "publishConfig": {
     "access": "restricted"
