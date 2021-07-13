@@ -12,10 +12,10 @@ const render = (app: JSX.Element) => {
   if (!ee.off) {
     throw new Error('off is missing on EventEmitter - insufficient node polyfills.');
   } // Check if `node` polyfills are correct
-  
+
   // Render application in DOM
   ReactDOM.render(app, document.getElementById('app'));
-  
+
   // Hot module replacement
   if (inDev() && module.hot) {
     module.hot.accept();
