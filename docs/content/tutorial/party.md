@@ -3,11 +3,11 @@ title: 3. Create a Party
 description: Add a Space for Sharing Data
 ---
 
-A Party is a DXOS component responsible for sharing content between invited clients. Each Party is identified by a `publicKey`.
+A Party is the DXOS component responsible for sharing content between invited clients. Each Party is identified by a `publicKey`.
 
 ## Create a Party
 
-In this example, we use the Parties to create a Task List that we'll share and invite other peers to read and collaborate later on.
+In this example, we use the Parties to create a Task List that we'll share and invite other peers to read and then collaborate on.
 
 Pay attention to the `PartySettings.js` component rendered by `PartyList.js`. It contains the logic to create new parties.
 
@@ -33,7 +33,7 @@ const PartySettings = ({ partyKey, onClose }) => {
 };
 ```
 
-## Retrieve a single Party
+## Retrieve a Single Party
 
 Once we have a party created, we can retrieve it using its public key (`partyKey`) with the `useParty` hook. This is showcased in the `TaskList.js` component.
 
