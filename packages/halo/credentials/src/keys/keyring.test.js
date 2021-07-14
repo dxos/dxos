@@ -336,13 +336,13 @@ test('To/from Protobuf', async () => {
   expect(copy.keys).toEqual(original.keys);
 });
 
-test('Sign and verify a message using a key chain', async () => {
+test('Authenticate flow for Kube/Keyhole authentication', async () => {
   const kubeKeyring = new Keyring();
   const kubeIdentity = await kubeKeyring.createKeyRecord({ type: KeyType.IDENTITY });
 
   const userKeyring = new Keyring();
   const userIdentity = await userKeyring.createKeyRecord({ type: KeyType.IDENTITY });
-  const userDevice = await userKeyring.createKeyRecord({ type: KeyType.IDENTITY });
+  const userDevice = await userKeyring.createKeyRecord({ type: KeyType.DEVICE });
 
   // Admit user device key with a signature from identity key. This is done when inviting user device to HALO. 
   const deviceAdmit = userKeyring.sign({ message: 'Test' }, [userIdentity, userDevice])
