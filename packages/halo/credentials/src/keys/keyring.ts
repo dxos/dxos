@@ -160,7 +160,9 @@ export class Keyring {
   static buildKeyChain (publicKey: PublicKeyLike, signedMessageMap: Map<string, Message | SignedMessage>, exclude: PublicKey[] = []): KeyChain {
     publicKey = PublicKey.from(publicKey);
 
-    const message = unwrapMessage(signedMessageMap.get(publicKey.toHex()));
+    const wrappedMessage = signedMessageMap.get(publicKey.toHex())
+    assert(wrappedMessage, 'No such message.')
+    const message = unwrapMessage(wrappedMessage);
     if (!message) {
       throw Error('No such message.');
     }
