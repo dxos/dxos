@@ -335,3 +335,36 @@ test('To/from Protobuf', async () => {
   expect(original.toJSON()).toEqual(copy.toJSON());
   expect(copy.keys).toEqual(original.keys);
 });
+
+test('Sign and verify a message using a key chain', async () => {
+  const kubeKeyring = new Keyring();
+  const kubeIdentity = await kubeKeyring.createKeyRecord({ type: KeyType.IDENTITY });
+
+  const userKeyring = new Keyring();
+  const userIdentity = await userKeyring.createKeyRecord({ type: KeyType.IDENTITY });
+  const userDevice = await userKeyring.createKeyRecord({ type: KeyType.IDENTITY });
+
+  // Admit user device key with a signature from identity key. This is done when inviting user device to HALO. 
+  const deviceAdmit = userKeyring.sign({ message: 'Test' }, [userIdentity, userDevice])
+
+  // KUBE give user a signed credential and trust his identity.
+  const kubeCredential = kubeKeyring.sign({ admit: userIdentity.publicKey.toHex() }, [kubeIdentity])
+  kubeKeyring.addPublicKey(userIdentity)
+
+  // User's device builds a keychain
+
+  const keyMessages = new Map();
+  keyMessages.set(userDevice.publicKey.toHex(), deviceAdmit);
+
+  const keychain = Keyring.buildKeyChain(userDevice.publicKey, keyMessages);
+  
+  // User's device signes the credential using a keychain with a challenge token given by KUBE
+  const signedCrendetial = userKeyring.sign(kubeCredential, [keychain], 'challenge token')
+
+  // KUBE verifies user's credential
+  expect(signed.signatures.length).toBe(1);
+  expect(signed.signatures[0].key.toHex()).toEqual(userDevice.publicKey.toHex());
+  expect(signed.signatures[0].keyChain).toBeTruthy();
+  expect(signed.signed.nonce).toBe('challenge token');
+  expect(kubeKeyring.verify(signedCrendetial)).toBe(true)
+});
