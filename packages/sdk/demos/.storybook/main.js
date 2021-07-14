@@ -12,8 +12,7 @@ module.exports = {
   ],
   addons: [
     '@storybook/addon-essentials',
-    '@storybook/addon-links',
-    'storybook-addon-turbo-build'
+    '@storybook/addon-links'
   ],
   exclude: [/node_modules/],
   webpackFinal: async config => {

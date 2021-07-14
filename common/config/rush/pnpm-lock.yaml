@@ -1662,7 +1662,6 @@ importers:
       react-docgen-typescript-loader: 3.7.2_typescript@4.2.4+webpack@4.44.2
       react-dom: 16.14.0_react@16.14.0
       robotjs: 0.6.0
-      storybook-addon-turbo-build: 1.0.0-beta.0_webpack@4.44.2
       tempy: 1.0.1
       ts-loader: 8.1.0_typescript@4.2.4+webpack@4.44.2
       ts-node: 9.1.1_typescript@4.2.4
@@ -1734,7 +1733,6 @@ importers:
       react-resize-aware: ^3.0.0
       robotjs: ~0.6.0
       source-map-support: ^0.5.12
-      storybook-addon-turbo-build: ~1.0.0-beta.0
       stream-buffers: ^3.0.2
       tempy: ~1.0.1
       ts-loader: ~8.1.0
@@ -1796,7 +1794,6 @@ importers:
       react-docgen-typescript-loader: 3.7.2_typescript@4.2.4+webpack@4.44.2
       react-dom: 16.14.0_react@16.14.0
       react-test-renderer: 16.12.0_react@16.14.0
-      storybook-addon-turbo-build: 1.0.0-beta.0_webpack@4.44.2
       ts-jest: 26.5.6_jest@26.6.3+typescript@4.2.4
       typescript: 4.2.4
       webpack: 4.44.2
@@ -1851,7 +1848,6 @@ importers:
       react-dom: ^16.14.0
       react-router-dom: ^5.1.2
       react-test-renderer: 16.12.0
-      storybook-addon-turbo-build: ~1.0.0-beta.0
       ts-jest: ^26.5.6
       typescript: ^4.2.4
       use-deep-compare-effect: ^1.3.0
@@ -12859,21 +12855,6 @@ packages:
     dev: false
     resolution:
       integrity: sha1-cGzvnpmqI2undmwjnIueKG6n0ig=
-  /esbuild-loader/2.13.1_webpack@4.44.2:
-    dependencies:
-      esbuild: 0.11.23
-      joycon: 3.0.1
-      json5: 2.2.0
-      loader-utils: 2.0.0
-      tapable: 2.2.0
-      type-fest: 1.2.2
-      webpack: 4.44.2
-      webpack-sources: 2.3.0
-    dev: true
-    peerDependencies:
-      webpack: ^4.40.0 || ^5.0.0
-    resolution:
-      integrity: sha512-Tzc5nB5tVUmigXz6m4j1OYozJCjdix7E9vtd5RaE54fqz2Rz34Is9S8FbAf8uqR4xvQUBAXIi6Jkn1OeMxw2aQ==
   /esbuild/0.11.23:
     hasBin: true
     requiresBuild: true
@@ -17042,12 +17023,6 @@ packages:
       ts-node: '*'
     resolution:
       integrity: sha512-lGS5PXGAzR4RF7V5+XObhqz2KZIDUA1yD0DG6pBVmy10eh0ZIXQImRuzocsI/N2XZ1GrLFwTS27In2i2jlpq1Q==
-  /joycon/3.0.1:
-    dev: true
-    engines:
-      node: '>=10'
-    resolution:
-      integrity: sha512-SJcJNBg32dGgxhPtM0wQqxqV0ax9k/9TaUskGDSJkSFSQOEWWvQ3zzWdGQRIUry2j1zA5+ReH13t0Mf3StuVZA==
   /jpeg-js/0.4.3:
     resolution:
       integrity: sha512-ru1HWKek8octvUHFHvE5ZzQ1yAsJmIvRdGWvSoKV52XKyuyYA437QWDttXT8eZXDSbuMpHlLzPDZUPd6idIz+Q==
@@ -23190,14 +23165,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-7t+/wpKLanLzSnQPX8WAcuLCCeuSHoWdQuh9SB3xD0kNOM38DNf+0Oa+wmvxmYueRzkmh6IcdKFtvTa+ecgPDw==
-  /storybook-addon-turbo-build/1.0.0-beta.0_webpack@4.44.2:
-    dependencies:
-      esbuild-loader: 2.13.1_webpack@4.44.2
-    dev: true
-    peerDependencies:
-      webpack: '*'
-    resolution:
-      integrity: sha512-mUqs41D+3+4IlburEQEPgXOZCwRgDMd8yEFvYD6qP1LVFQBH49FVr5aATQ6edSdKx3KnR6vE7XFAKVHymyaE/Q==
   /stream-browserify/2.0.2:
     dependencies:
       inherits: 2.0.4
@@ -23651,12 +23618,6 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-4WK/bYZmj8xLr+HUCODHGF1ZFzsYffasLUgEiMBY4fgtltdO6B4WJtlSbPaDTLpYTcGVwM2qLnFTICEcNxs3kA==
-  /tapable/2.2.0:
-    dev: true
-    engines:
-      node: '>=6'
-    resolution:
-      integrity: sha512-FBk4IesMV1rBxX2tfiK8RAmogtWn53puLOQlvO8XuwlgxcYbP4mVPS9Ph4aeamSyyVjOl24aYWAuc8U5kCVwMw==
   /tar-fs/2.1.1:
     dependencies:
       chownr: 1.1.4
@@ -24349,12 +24310,6 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
-  /type-fest/1.2.2:
-    dev: true
-    engines:
-      node: '>=10'
-    resolution:
-      integrity: sha512-pfkPYCcuV0TJoo/jlsUeWNV8rk7uMU6ocnYNvca1Vu+pyKi8Rl8Zo2scPt9O72gCsXIm+dMxOOWuA3VFDSdzWA==
   /type-is/1.6.18:
     dependencies:
       media-typer: 0.3.0
@@ -25241,15 +25196,6 @@ packages:
       source-map: 0.6.1
     resolution:
       integrity: sha512-lgTS3Xhv1lCOKo7SA5TjKXMjpSM4sBjNV5+q2bqesbSPs5FjGmU6jjtBSkX9b4qW87vDIsCIlUPOEhbZrMdjeQ==
-  /webpack-sources/2.3.0:
-    dependencies:
-      source-list-map: 2.0.1
-      source-map: 0.6.1
-    dev: true
-    engines:
-      node: '>=10.13.0'
-    resolution:
-      integrity: sha512-WyOdtwSvOML1kbgtXbTDnEW0jkJ7hZr/bDByIwszhWd/4XX1A3XMkrbFMsuH4+/MfLlZCUzlAdg4r7jaGKEIgQ==
   /webpack-virtual-modules/0.2.2:
     dependencies:
       debug: 3.2.7
