@@ -14,4 +14,4 @@ Steps to follow:
 - Define your deployment environment variables in `config.yml`
 - Define your project info in `app.yml`
 - [Deploy using the CLI](https://dxos-docs.netlify.app/cli/cli-app/app-deployment/)
-- Check your app into the Kube Network
+- Check that your app is in the Kube Network
