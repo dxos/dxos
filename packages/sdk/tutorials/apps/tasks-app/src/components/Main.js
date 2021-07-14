@@ -59,7 +59,6 @@ const Main = () => {
   const handleResetStorage = async () => {
     const reset = confirm('Are you sure you want to reset storage?');
     if (reset) {
-      localStorage.clear();
       await client.reset();
       window.location.reload();
     }
