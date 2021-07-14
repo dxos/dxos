@@ -15,3 +15,4 @@ Steps to follow:
 - Define your project info in `app.yml`
 - [Deploy using the CLI](https://dxos-docs.netlify.app/cli/cli-app/app-deployment/)
 - Check that your app is in the Kube Network
+  - How to access? [See the Kube Docs](https://dxos-docs.netlify.app/kube/console-access/)
