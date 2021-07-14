@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
@@ -20,7 +19,10 @@ module.exports = {
       test: /\.(ts|tsx)$/,
       use: [
         {
-          loader: require.resolve('ts-loader'),
+          loader: require.resolve('esbuild-loader'),
+          options: {
+            loader: 'tsx'
+          }
         },
         // Optional
         {
