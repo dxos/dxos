@@ -355,6 +355,7 @@ test('Authenticate flow for Kube/Keyhole authentication', async () => {
 
   const keyMessages = new Map();
   keyMessages.set(userDevice.publicKey.toHex(), deviceAdmit);
+  keyMessages.set(userIdentity.publicKey.toHex(), deviceAdmit);
 
   const keychain = Keyring.buildKeyChain(userDevice.publicKey, keyMessages);
   
