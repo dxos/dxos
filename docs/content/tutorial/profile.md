@@ -1,6 +1,6 @@
 ---
 title: 2. Create a Profile
-description: Set Up a User Profile For Your Application
+description: Set Up a user profile for your application
 ---
 
 After we connect our Client to our React Application, the very first step is to get the created user's profile.
