@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-//
-// Copyright 2020 DxOS.
-//
 
 const crypto = require('crypto');
 const yargs = require('yargs');

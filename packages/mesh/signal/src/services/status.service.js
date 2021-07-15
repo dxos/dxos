@@ -1,10 +1,11 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const moment = require('moment');
-const { AbortController } = require('@azure/abort-controller');
-const { getSystemInfo, getServiceInfo } = require('../system-information');
+import { AbortController } from '@azure/abort-controller';
+import moment from 'moment';
+
+import { getSystemInfo, getServiceInfo } from '../system-information';
 
 const delay = (ms, signal) => {
   return new Promise((resolve, reject) => {
@@ -189,7 +190,9 @@ exports.StatusService = {
       return this._status;
     },
     updateKubeStatus (nodeID, { system, services }) {
-      if (!this._status.nodes.has(nodeID)) return;
+      if (!this._status.nodes.has(nodeID)) {
+        return;
+      }
 
       const node = this._status.nodes.get(nodeID);
       node.kubeStatus = { system, services: services || [] };
@@ -215,7 +218,9 @@ exports.StatusService = {
               peersByTopic.set(topicStr, value);
             }
 
-            if (value.peers.includes(peer.id)) return;
+            if (value.peers.includes(peer.id)) {
+              return;
+            }
             value.peers.push(peer.id);
           });
       });
@@ -249,6 +254,8 @@ exports.StatusService = {
     })().catch(() => {});
   },
   stopped () {
-    if (this._controller) this._controller.abort();
+    if (this._controller) {
+      this._controller.abort();
+    }
   }
 };

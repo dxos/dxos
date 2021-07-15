@@ -1,12 +1,12 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const crypto = require('crypto');
-const pEvent = require('p-event');
-const debug = require('debug');
+import crypto from 'crypto';
+import debug from 'debug';
+import pEvent from 'p-event';
 
-const { createBroker } = require('./broker');
+import { createBroker } from './broker';
 
 const log = debug('dxos:test:broker');
 
