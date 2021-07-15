@@ -6,4 +6,4 @@
   base = "docs/"
   publish = "public/"
   command = "yarn build"
-  ignore = "git diff --quiet master ."
+  ignore = "git diff --quiet main ."
