@@ -21,7 +21,8 @@
     "@dxos/react-ux": "workspace:*",
     "@dxos/config": "workspace:*",
     "@material-ui/styles": "^4.11.4",
-    "playwright": "^1.7.0"
+    "playwright": "^1.7.0",
+    "buffer": "^6.0.3"
   },
   "devDependencies": {
     "typescript": "^4.2.4",
