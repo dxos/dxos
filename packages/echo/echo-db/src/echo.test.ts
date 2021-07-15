@@ -7,7 +7,7 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch, sleep, waitForCondition } from '@dxos/async';
+import { latch, waitForCondition } from '@dxos/async';
 import { generateSeedPhrase, keyPairFromSeedPhrase, testSecretProvider, testSecretValidator } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
@@ -182,8 +182,6 @@ describe('ECHO', () => {
 
     const party1 = await echo1.createParty();
     await inviteTestPeer(party1, echo2);
-
-    await sleep(1000); // TODO(marik-d): Figure out why this is needed.
 
     await echo1.close();
     await echo2.close();
@@ -414,7 +412,6 @@ describe('ECHO', () => {
     }
   }).timeout(20_000);
 
-  // TODO(marik-d): Move to ECHO tests.
   test('Join new device to HALO by recovering from identity seed phrase', async () => {
     const a = new ECHO();
     await a.open();

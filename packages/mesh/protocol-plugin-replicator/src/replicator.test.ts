@@ -41,16 +41,18 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     getDescriptors () {
       return feedStore.getDescriptors();
     },
-    createStream () {
+    createStream ({ initiator }) {
       return new Protocol({
+        initiator: !!initiator,
+        discoveryKey: discoveryKey(topic),
         streamOptions: {
           live: true
-        }
+        },
+        userSession: { peerId: 'session1' }
       })
-        .setSession({ id: 'session1' })
         .setContext({ name: 'foo' })
         .setExtensions([replicator.createExtension()])
-        .init(discoveryKey(topic))
+        .init()
         .stream;
     },
     append (msg: any) {

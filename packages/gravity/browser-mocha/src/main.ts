@@ -9,6 +9,7 @@ import { Browser, run } from '.';
 interface Argv {
   files: string[]
   show: boolean
+  debug: boolean
   setup?: string
 }
 
@@ -18,13 +19,15 @@ yargs(process.argv.slice(2))
     yargs => yargs
       .positional('files', {})
       .boolean('show')
+      .boolean('debug')
       .string('setup'),
     async (argv) => {
       await run({
         files: argv.files as string[],
         browsers: [Browser.CHROMIUM],
         show: argv.show,
-        setup: argv.setup
+        setup: argv.setup,
+        debug: argv.debug
       });
     }
   )

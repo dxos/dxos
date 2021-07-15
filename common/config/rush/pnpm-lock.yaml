@@ -337,7 +337,7 @@ importers:
       '@types/stream-buffers': 3.0.3
       '@types/through2': 2.0.36
       debug: 4.3.1
-      hypercore: 7.7.1
+      hypercore: 9.10.0
       js-data-structs: 1.1.3
       lodash.merge: 4.6.2
       protobufjs: 6.11.2
@@ -358,7 +358,7 @@ importers:
       '@types/stream-buffers': ^3.0.2
       '@types/through2': ^2.0.36
       debug: ^4.1.1
-      hypercore: ^7.7.1
+      hypercore: ^9.10.0
       js-data-structs: ^1.1.2
       lodash.merge: ^4.6.2
       protobufjs: ^6.9.0
@@ -386,7 +386,7 @@ importers:
       '@types/lodash': 4.14.169
       '@types/node': 14.14.45
       debug: 4.3.1
-      hypercore: 7.7.1
+      hypercore: 9.10.0
       js-data-structs: 1.1.3
       json-stable-stringify: 1.0.1
       lodash.merge: 4.6.2
@@ -430,7 +430,7 @@ importers:
       '@types/node': ^14.0.9
       debug: ^4.1.1
       expect: ~27.0.2
-      hypercore: ^7.7.1
+      hypercore: ^9.10.0
       js-data-structs: ^1.1.2
       json-stable-stringify: ^1.0.1
       lodash: 4.17.21
@@ -457,7 +457,7 @@ importers:
       '@types/stream-buffers': 3.0.3
       '@types/through2': 2.0.36
       debug: 4.3.1
-      hypercore: 7.7.1
+      hypercore: 9.10.0
       js-data-structs: 1.1.3
       lodash.merge: 4.6.2
       protobufjs: 6.11.2
@@ -491,7 +491,7 @@ importers:
       '@types/through2': ^2.0.36
       debug: ^4.1.1
       faker: ^5.1.0
-      hypercore: ^7.7.1
+      hypercore: ^9.10.0
       js-data-structs: ^1.1.2
       lodash.merge: ^4.6.2
       pify: ~5.0.0
@@ -535,7 +535,7 @@ importers:
       debug: 4.3.1
       end-of-stream: 1.4.4
       from2: 2.3.0
-      hypercore: 7.7.1
+      hypercore: 9.10.0
       hypercore-crypto: 1.0.0
       hypertrie: 3.8.0
       multi-read-stream: 2.0.0
@@ -570,7 +570,7 @@ importers:
       end-of-stream: ^1.4.1
       end-of-stream-promise: ^1.0.0
       from2: ^2.3.0
-      hypercore: ^7.7.1
+      hypercore: ^9.10.0
       hypercore-crypto: ^1.0.0
       hypertrie: ^3.8.0
       multi-read-stream: ^2.0.0
@@ -623,7 +623,7 @@ importers:
       '@types/stream-buffers': 3.0.3
       '@types/through2': 2.0.36
       debug: 4.3.1
-      hypercore: 7.7.1
+      hypercore: 9.10.0
       js-data-structs: 1.1.3
       lodash.merge: 4.6.2
       protobufjs: 6.11.2
@@ -649,7 +649,7 @@ importers:
       '@types/stream-buffers': ^3.0.2
       '@types/through2': ^2.0.36
       debug: ^4.1.1
-      hypercore: ^7.7.1
+      hypercore: ^9.10.0
       js-data-structs: ^1.1.2
       lodash.merge: ^4.6.2
       protobufjs: ^6.9.0
@@ -670,7 +670,7 @@ importers:
       '@types/stream-buffers': 3.0.3
       '@types/through2': 2.0.36
       debug: 4.3.1
-      hypercore: 7.7.1
+      hypercore: 9.10.0
       js-data-structs: 1.1.3
       lodash: 4.17.21
       lodash.merge: 4.6.2
@@ -703,7 +703,7 @@ importers:
       chance: ^1.1.6
       debug: ^4.1.1
       expect: ~27.0.2
-      hypercore: ^7.7.1
+      hypercore: ^9.10.0
       js-data-structs: ^1.1.2
       lodash: 4.17.21
       lodash.merge: ^4.6.2
@@ -941,7 +941,7 @@ importers:
       encoding-down: 6.3.0
       end-of-stream: 1.4.4
       hypercore-crypto: 1.0.0
-      hypercore-protocol: 6.12.0
+      hypercore-protocol: 8.0.7
       hypertrie: 3.8.0
       json-stable-stringify: 1.0.1
       leveldown: 5.6.0
@@ -1002,7 +1002,7 @@ importers:
       encoding-down: ^6.3.0
       end-of-stream: ^1.4.1
       hypercore-crypto: ^1.0.0
-      hypercore-protocol: ^6.11.1
+      hypercore-protocol: ^8.0.7
       hypertrie: ^3.8.0
       json-stable-stringify: ^1.0.1
       leveldown: ^5.4.1
@@ -1193,12 +1193,13 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/crypto': link:../../common/crypto
       assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
       end-of-stream: 1.4.4
       humanhash: 1.0.4
-      hypercore-protocol: 6.12.0
+      hypercore-protocol: 8.0.7
       nanoerror: 1.2.1
       nanomessage: 5.4.0
       nanoresource-promise: 2.0.0
@@ -1208,27 +1209,30 @@ importers:
       '@types/assert': 1.5.4
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
-      '@types/jest': 26.0.23
+      '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       '@types/pump': 1.1.1
+      expect: 27.0.2
       pump: 3.0.0
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/assert': ^1.5.4
       '@types/debug': ^4.1.1
       '@types/end-of-stream': ^1.4.0
-      '@types/jest': ^26.0.7
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/pump': ^1.1.0
       assert: ^2.0.0
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
       end-of-stream: ^1.4.1
+      expect: ~27.0.2
       humanhash: ^1.0.4
-      hypercore-protocol: ^6.11.1
+      hypercore-protocol: ^8.0.7
       nanoerror: ^1.2.1
       nanomessage: ^5.4.0
       nanoresource-promise: ^2.0.0
@@ -1259,6 +1263,7 @@ importers:
     dependencies:
       '@dxos/broadcast': link:../broadcast
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/protocol': link:../protocol
       debug: 4.3.1
     devDependencies:
@@ -1272,6 +1277,7 @@ importers:
     specifiers:
       '@dxos/broadcast': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -1285,11 +1291,13 @@ importers:
     dependencies:
       '@dxos/broadcast': link:../broadcast
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/protocol': link:../protocol
       '@types/debug': 4.1.5
       '@types/node': 14.14.45
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
+      hypercore-protocol: 8.0.7
       ngraph.graph: 19.1.0
       p-limit: 3.1.0
       queue-microtask: 1.2.3
@@ -1302,6 +1310,7 @@ importers:
     specifiers:
       '@dxos/broadcast': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
@@ -1311,6 +1320,7 @@ importers:
       '@types/node': ^14.0.9
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
+      hypercore-protocol: ^8.0.7
       ngraph.graph: ^19.0.1
       p-limit: ^3.1.0
       queue-microtask: ^1.1.2
@@ -1619,7 +1629,6 @@ importers:
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/lodash': 4.14.169
-      '@types/node': 14.14.45
       '@types/stream-buffers': 3.0.3
       clsx: 1.1.1
       d3: 5.16.0
@@ -1644,6 +1653,7 @@ importers:
       '@storybook/react': 6.2.9_1568a4a4371cca35bea7fd1ef25c77f4
       '@types/faker': 5.5.5
       '@types/mocha': 8.2.2
+      '@types/node': 14.14.45
       '@types/pump': 1.1.1
       '@types/react': 16.14.6
       babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
@@ -1931,6 +1941,7 @@ importers:
       '@testing-library/jest-dom': 5.12.0
       '@testing-library/react': 11.2.6_react-dom@16.14.0+react@16.14.0
       '@testing-library/user-event': 12.8.3_@testing-library+dom@7.31.2
+      buffer: 6.0.3
       playwright: 1.11.0
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
@@ -1980,6 +1991,7 @@ importers:
       '@types/node': ^14.0.9
       '@types/react': ^16.14.0
       babel-plugin-import: ~1.13.3
+      buffer: ^6.0.3
       jest: ^26.6.3
       playwright: ^1.7.0
       react: ^16.14.0
@@ -8333,6 +8345,12 @@ packages:
   /abbrev/1.1.1:
     resolution:
       integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==
+  /abstract-extension/3.1.1:
+    dependencies:
+      codecs: 2.2.0
+    dev: false
+    resolution:
+      integrity: sha512-qmUIqQEh6ZZBKN6JfysKgCEBqI4qVexE6/N/MUJjqtQhhuGR8a16GKnK6SGFKv/n1cAlbYxLDXbtyhkxSnVYRQ==
   /abstract-leveldown/2.7.2:
     dependencies:
       xtend: 4.0.2
@@ -13619,6 +13637,10 @@ packages:
   /fast-deep-equal/3.1.3:
     resolution:
       integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==
+  /fast-fifo/1.0.0:
+    dev: false
+    resolution:
+      integrity: sha512-4VEXmjxLj7sbs8J//cn2qhRap50dGzF5n8fjay8mau+Jn4hxSeR3xPFwxMaQq/pDaq7+KQk0PAbC2+nWDkJrmQ==
   /fast-glob/2.2.7:
     dependencies:
       '@mrmlnc/readdir-enhanced': 2.2.1
@@ -14210,6 +14232,15 @@ packages:
   /fs.realpath/1.0.0:
     resolution:
       integrity: sha1-FQStJSMVjKpA20onh8sBQRmU6k8=
+  /fsctl/1.0.0:
+    dependencies:
+      napi-macros: 2.0.0
+      node-gyp-build: 4.2.3
+    dev: false
+    optional: true
+    requiresBuild: true
+    resolution:
+      integrity: sha512-uNHlfhyUJiVO2kHA6ZBnDkBhG1wM8fII+xGfCi5aBoWR7DLh9Q3nOAWe4fEETQzkptahITI1xbe5r23HuA5ECA==
   /fsevents/1.2.13:
     dependencies:
       bindings: 1.5.0
@@ -15317,6 +15348,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-fxOhEl/Ezv7PobYOTomDmQKWaSC0hk0mzl5et5McPtr+6LRBP7LYoeFLPjKW6xOSGmMNLj50BufrrgX+M5EvEA==
+  /hypercore-cache/1.0.2:
+    dev: false
+    resolution:
+      integrity: sha512-AJ/q7y6EOrXnOH/4+DVcfDygsh1ZXMRGvNc67GBNqwCt22oSCOWhRI6EJ+3HEJciM9M2oSm1WX3qg6kgRhT/Gw==
   /hypercore-crypto/1.0.0:
     dependencies:
       buffer-alloc-unsafe: 1.1.0
@@ -15333,6 +15368,14 @@ packages:
     dev: false
     resolution:
       integrity: sha512-HdI0VKwPHVIsbkJ2kFot5XRJoQOO1rGg0G2X+Z/mrP8vfZPFD5H1wwJ5nBDp0QYsZfHjOq0nOuUoW/NgdOZofA==
+  /hypercore-default-storage/1.1.1:
+    dependencies:
+      random-access-file: 2.2.0
+    dev: false
+    optionalDependencies:
+      fsctl: 1.0.0
+    resolution:
+      integrity: sha512-y7dSX3VUT4I/X5Cj0h6hcKN2R+/QQIi1HnElnCqY3tQYbVaWYljdbVe3aBQIvkRCfOgWMfe2RbCLX4N78D5syg==
   /hypercore-protocol/6.12.0:
     dependencies:
       buffer-alloc-unsafe: 1.1.0
@@ -15340,12 +15383,33 @@ packages:
       inherits: 2.0.4
       protocol-buffers-encodings: 1.1.1
       readable-stream: 2.3.7
+      simple-hypercore-protocol: github.com/dxos/simple-hypercore-protocol/bc23f0747e55954ec0bd94754910c92f88ec561c
       sodium-universal: 2.0.0
       sorted-indexof: 1.0.0
       varint: 5.0.2
     dev: false
     resolution:
       integrity: sha512-T3oy9/7QFejqJX2RGcCUU1944e5/eKbLlSz9JPTNN1QbYFJgat/r7eTyOO8SMSLUimUmQx6YBMKhgYbdKzp7Bw==
+  /hypercore-protocol/8.0.7:
+    dependencies:
+      abstract-extension: 3.1.1
+      debug: 4.3.1
+      hypercore-crypto: 2.3.0
+      inspect-custom-symbol: 1.1.1
+      nanoguard: 1.3.0
+      pretty-hash: 1.0.1
+      simple-hypercore-protocol: github.com/dxos/simple-hypercore-protocol/bc23f0747e55954ec0bd94754910c92f88ec561c
+      streamx: 2.10.3
+      timeout-refresh: 1.0.3
+    dev: false
+    resolution:
+      integrity: sha512-b5TXhqXUZ+Z7M/5/PlCTgElfufDRa3EzACd7y7BA7owLkxQreaUQ58wUO7nzJppDP1bnC2Hz6Hg7nlRPc75bKw==
+  /hypercore-streams/1.0.1:
+    dependencies:
+      streamx: 2.10.3
+    dev: false
+    resolution:
+      integrity: sha512-OcN2zq9DEoArC84q9VCSrf9Hx1QUkR6ineCOwyOwhE4v/8aUTOx87mAk1nyjMOf76DQmF+tl2vnS2FssLx5N+Q==
   /hypercore/7.7.1:
     dependencies:
       array-lru: 1.1.1
@@ -15377,6 +15441,35 @@ packages:
       fd-lock: 1.2.0
     resolution:
       integrity: sha512-boEiPCK848pNGACW1j111tJApu530e/UPpwbHytJZlrVf3YdgUIP1KL3aSi5xJFLUnuO8GLGl4lIsSeH8TaQQA==
+  /hypercore/9.10.0:
+    dependencies:
+      abstract-extension: 3.1.1
+      atomic-batcher: 1.0.2
+      bitfield-rle: 2.2.1
+      codecs: 2.2.0
+      fast-bitfield: 1.2.2
+      flat-tree: 1.8.0
+      hypercore-cache: 1.0.2
+      hypercore-crypto: 2.3.0
+      hypercore-default-storage: 1.1.1
+      hypercore-protocol: 8.0.7
+      hypercore-streams: 1.0.1
+      inherits: 2.0.4
+      inspect-custom-symbol: 1.1.1
+      last-one-wins: 1.0.4
+      memory-pager: 1.5.0
+      merkle-tree-stream: 4.0.0
+      nanoguard: 1.3.0
+      nanoresource: 1.3.0
+      pretty-hash: 1.0.1
+      sparse-bitfield: 3.0.3
+      timeout-refresh: 1.0.3
+      uint64be: 2.0.2
+      unordered-array-remove: 1.0.2
+      unordered-set: 2.0.1
+    dev: false
+    resolution:
+      integrity: sha512-vMaUNcYvtiiXbnjjhj3YbBK/KZEofXfrajiJxJ8rlWVXSyh2fIJcyxTJewfh58IW5bVYNrBPui/CpPyBZiXuZQ==
   /hyperid/2.1.0:
     dependencies:
       uuid: 3.4.0
@@ -18208,6 +18301,13 @@ packages:
     dev: false
     resolution:
       integrity: sha1-+KBkdg0355eK1fn208EZpJT1cIE=
+  /merkle-tree-stream/4.0.0:
+    dependencies:
+      flat-tree: 1.8.0
+      streamx: 2.10.3
+    dev: false
+    resolution:
+      integrity: sha512-TIurLf/ustQNMXi5foClGTcEsRvH6DCvxeAKu68OrwHMOSM/M1pgPXb7qe52Svk1ClvmZuAVpLtP5FWKzPr/sw==
   /methods/1.1.2:
     engines:
       node: '>= 0.6'
@@ -23214,6 +23314,12 @@ packages:
       node: '>=0.8.0'
     resolution:
       integrity: sha1-gIudDlb8Jz2Am6VzOOkpkZoanxo=
+  /streamx/2.10.3:
+    dependencies:
+      fast-fifo: 1.0.0
+    dev: false
+    resolution:
+      integrity: sha512-Ss4rEDWlTAUrIqaQsX6tNBNANHxSmbyrA5PlCji0a6xdJtVzfkEMLLrkVW5OSyr4TshiSb1WA2TqMGMUpGnouQ==
   /strict-uri-encode/1.1.0:
     dev: false
     engines:
@@ -25850,3 +25956,17 @@ packages:
     resolution:
       tarball: https://codeload.github.com/dxos/jsondown/tar.gz/0bec0436f00973e7f2528115c72a5ab96dc45576
     version: 1.0.0
+  github.com/dxos/simple-hypercore-protocol/bc23f0747e55954ec0bd94754910c92f88ec561c:
+    dependencies:
+      hypercore-crypto: 2.3.0
+      noise-protocol: 3.0.1
+      protocol-buffers-encodings: 1.1.1
+      simple-handshake: 3.0.0
+      simple-message-channels: 1.2.1
+      varint: 5.0.2
+      xsalsa20-universal: 1.0.0
+    dev: false
+    name: simple-hypercore-protocol
+    resolution:
+      tarball: https://codeload.github.com/dxos/simple-hypercore-protocol/tar.gz/bc23f0747e55954ec0bd94754910c92f88ec561c
+    version: 2.1.1
