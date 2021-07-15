@@ -5,6 +5,7 @@
 import crypto from 'crypto';
 import waitForExpect from 'wait-for-expect';
 
+import { keyToString } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 
@@ -28,9 +29,9 @@ const generator = new ProtocolNetworkGenerator((topic, peerId) => {
       return new Protocol({
         streamOptions: {
           live: true
-        }
+        },
+        userSession: { peerId: keyToString(peerId) }
       })
-        .setSession({ peerId })
         .setExtensions([chat.createExtension()])
         .init(topic)
         .stream;

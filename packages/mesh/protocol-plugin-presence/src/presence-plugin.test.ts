@@ -8,6 +8,7 @@ import { Graph } from 'ngraph.graph';
 import path from 'ngraph.path';
 import waitForExpect from 'wait-for-expect';
 
+import { keyToString } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 
@@ -27,14 +28,16 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     metadata: { shareStr: 'test1', shareBuf: Buffer.from('test2') }
   });
 
-  const createStream = () => new Protocol({
+  const createStream = ({ initiator }: {initiator: boolean}) => new Protocol({
     streamOptions: {
       live: true
-    }
+    },
+    discoveryKey: topic,
+    initiator,
+    userSession: { peerId: keyToString(peerId) }
   })
-    .setSession({ peerId })
     .setExtension(presence.createExtension())
-    .init(topic)
+    .init()
     .stream;
 
   return { id: peerId, presence, createStream };

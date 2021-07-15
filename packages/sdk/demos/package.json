@@ -59,7 +59,6 @@
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
     "@types/lodash": "^4.14.159",
-    "@types/node": "^14.0.9",
     "@types/stream-buffers": "^3.0.2",
     "clsx": "^1.1.0",
     "d3": "^5.9.2",

@@ -100,8 +100,8 @@ export class WebrtcTransport implements Transport {
     log('Closed.');
   }
 
-  private _closeStream () {
-    this._stream.unpipe(this._peer).unpipe(this._stream);
+  private async _closeStream () {
+    this._stream.unpipe?.(this._peer)?.unpipe?.(this._stream); // TODO(rzadp): Find a way of unpiping this?
   }
 }
 

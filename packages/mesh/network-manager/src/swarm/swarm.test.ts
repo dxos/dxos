@@ -56,8 +56,10 @@ const setup = () => {
     createWebRtcTransportFactory(),
     undefined
   );
-  afterTest(() => swarm1.destroy());
-  afterTest(() => swarm2.destroy());
+  afterTest(() => {
+    swarm1.destroy();
+    swarm2.destroy();
+  });
 
   return { swarm1, swarm2, peerId1, peerId2 };
 };
