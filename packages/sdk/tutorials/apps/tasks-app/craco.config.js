@@ -3,6 +3,8 @@ const path = require('path');
 const { ConfigPlugin } = require('@dxos/config/ConfigPlugin');
 const BabelRcPlugin = require('@jackwilsdon/craco-use-babelrc');
 
+const PUBLIC_URL = process.env.PUBLIC_URL || '';
+
 module.exports = {
   plugins: [
     {
@@ -10,6 +12,23 @@ module.exports = {
     }
   ],
   webpack: {
+    configure: (webpackConfig, { env, paths }) => {
+      const buildFolder = path.join(__dirname, 'dist')
+
+      webpackConfig.entry = './src/index.js'
+
+      webpackConfig.output = {
+        ...webpackConfig.output,
+        path: buildFolder,
+        filename: '[name].bundle.js',
+        chunkFilename: '[name].[contenthash:8].chunk.js',
+        publicPath: PUBLIC_URL,
+      };
+
+      paths.appBuild = buildFolder;
+
+      return webpackConfig;
+    },
     plugins: {
       add: [
         new ConfigPlugin({
@@ -26,7 +45,6 @@ module.exports = {
           data.dependencies.forEach(dependency => delete dependency.critical)
           return data;
         }),
-
         new webpack.ProvidePlugin({
           Buffer: [require.resolve('buffer/'), 'Buffer']
         })
