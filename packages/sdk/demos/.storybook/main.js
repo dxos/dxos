@@ -20,11 +20,11 @@ module.exports = {
       test: /\.(ts|tsx)$/,
       use: [
         {
-          loader: require.resolve('ts-loader'),
-        },
-        // Optional
-        {
-          loader: require.resolve('react-docgen-typescript-loader'),
+          loader: require.resolve('esbuild-loader'),
+          options : {
+            loader: 'tsx',
+            target: 'es2018'
+          }
         }
       ],
     });
