@@ -54,7 +54,7 @@
     "p-limit": "^3.1.0",
     "public-ip": "^4.0.1",
     "pump": "^3.0.0",
-    "simple-hypercore-protocol": "^2.1.0",
+    "simple-hypercore-protocol": "dxos/simple-hypercore-protocol#bc23f0747e55954ec0bd94754910c92f88ec561c",
     "simple-websocket": "^9.0.0",
     "socket-signal": "^9.0.0",
     "systeminformation": "^4.27.5",

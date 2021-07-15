@@ -35,10 +35,6 @@ function readPackage(packageJson, context) {
   } else if(packageJson.name === 'ts-essentials') {
     // This peer dependency is not required at runtime
     delete packageJson.peerDependencies['typescript']
-  } else if (packageJson.name === 'hypercore-protocol') {
-    // We have a fix for Buffer issues.
-    packageJson.dependencies['simple-hypercore-protocol'] = 'dxos/simple-hypercore-protocol#bc23f0747e55954ec0bd94754910c92f88ec561c'
   }
-
   return packageJson;
 }
