@@ -1,6 +1,6 @@
 ---
 title: 1. Set Up a DXOS Client
-description: Create a Client and connect a React Application.
+description: Create a Client and connect a React application.
 ---
 
 Every DXOS Application starts by creating a Client. The `@dxos/client` is your entry point to save and share data with peers in your network.
