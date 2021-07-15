@@ -12,7 +12,16 @@ module.exports = {
   ],
   addons: [
     '@storybook/addon-essentials',
-    '@storybook/addon-links'
+    '@storybook/addon-links',
+    {
+      name: 'storybook-addon-turbo-build',
+      options: {
+        loader: 'tsx',
+        esbuildMinifyOptions: {
+          target: 'es2018'
+        }
+      }
+    }
   ],
   exclude: [/node_modules/],
   webpackFinal: async config => {
