@@ -45,7 +45,15 @@ module.exports = {
           data.dependencies.forEach(dependency => delete dependency.critical)
           return data;
         }),
+        new webpack.ProvidePlugin({
+          Buffer: [require.resolve('buffer/'), 'Buffer']
+        })
       ],
     },
+    config: {
+      node: {
+        Buffer: false
+      }
+    }
   },
 };
