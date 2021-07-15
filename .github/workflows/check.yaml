@@ -73,5 +73,5 @@ jobs:
           pnpm test:playwright
           echo "::endgroup::"
       - name: Cleanup
-        run: pkill -f "storybook" || true
+        run: kill $(lsof -t -i:9001) || true
         if: always()
