@@ -48,7 +48,8 @@
     "build:test": "npm run build && npm run test",
     "test": "SKIP_PREFLIGHT_CHECK=true craco test --passWithNoTests --watchAll=false",
     "test:playwright": "jest --rootDir ./playwright --runInBand --passWithNoTests --verbose",
-    "eject": "craco eject"
+    "eject": "craco eject",
+    "pack:app": "pnpm pack"
   },
   "browserslist": {
     "production": [
