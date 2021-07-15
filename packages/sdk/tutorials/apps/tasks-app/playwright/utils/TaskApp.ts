@@ -27,9 +27,9 @@ export class TaskApp extends AppSimulator {
 
     expect(createListModal).toBeDefined();
 
-    await this.browser.getPage().fill('.MuiDialog-root .MuiInputBase-input', listName);
+    await this.browser.getPage().fill('input:above(:text("Create"))', listName);
 
-    await this.browser.getPage().click('.MuiButtonBase-root :text("Create")');
+    await this.browser.getPage().click('button :text("Create")');
 
     const createdList = await this.browser.getPage().waitForSelector(`text="${listName}"`)
 
@@ -48,7 +48,7 @@ export class TaskApp extends AppSimulator {
   async createTask(listName: string, taskName: string) {
     await this.browser.getPage().click(`li :text("${listName}")`);
 
-    await this.browser.getPage().fill('.MuiInputBase-input', taskName);
+    await this.browser.getPage().fill('input', taskName);
 
     await this.browser.getPage().click('[aria-label="create"]');
 
