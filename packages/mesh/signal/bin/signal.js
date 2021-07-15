@@ -7,7 +7,7 @@
 const crypto = require('crypto');
 const yargs = require('yargs');
 
-const { createBroker } = require('../index.js');
+const { createBroker } = require('../dist/index.js');
 
 yargs
   .command('$0', 'start a signal server', {
