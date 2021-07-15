@@ -15,14 +15,15 @@ const baseTheme = createMuiTheme({
         body: {
           margin: 0,
           overflow: 'hidden',
-          minWidth: 400
+          width: 600,
+          height: 450
         }
       }
     }
   }
 });
 
-function App () {
+function Popup () {
   return (
     <ThemeProvider theme={baseTheme}>
       <CssBaseline />
@@ -31,4 +32,4 @@ function App () {
   );
 }
 
-export default App;
+export default Popup;
