@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { Selection } from '@dxos/echo-db';
+import { SelectionResult } from '@dxos/echo-db';
 
 /**
  * Hook to generate values from a selection using a selector function.
@@ -14,22 +14,18 @@ import { Selection } from '@dxos/echo-db';
  * @param [deps] Array of values that trigger the selector when changed.
  */
 export function useSelection<T> (
-  selection: Selection<any> | undefined,
-  selector: (selection: Selection<any>) => T,
+  selectionResult: SelectionResult<T>,
   deps: readonly any[] = []
 ): T | undefined {
-  const [data, setData] = useState(() => selection && selector(selection));
-
-  // Subscribe to mutation events from source.
-  useEffect(() => {
-    return selection && selection.update.on(() => {
-      setData(selector(selection));
-    });
-  }, [selection]);
+  const [data, setData] = useState(() => selectionResult.getValue());
 
   // Update data when deps change.
   useEffect(() => {
-    selection && setData(selector(selection));
+    const unsub = selectionResult.update.on(() => {
+      setData(selectionResult.getValue())
+    });
+    setData(selectionResult.getValue())
+    return unsub;
   }, deps);
 
   return data;

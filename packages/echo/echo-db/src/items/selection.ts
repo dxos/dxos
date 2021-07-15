@@ -148,7 +148,7 @@ export class SelectionResult<T> {
 
   readonly update = this._selection.update;
 
-  getValue(): T {
-    return this._selector(this._selection)
+  getValue (): T {
+    return this._selector(this._selection);
   }
 }
