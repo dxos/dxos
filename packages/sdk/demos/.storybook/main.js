@@ -14,6 +14,9 @@ module.exports = {
     '@storybook/addon-essentials',
     '@storybook/addon-links'
   ],
+  core: {
+      builder: 'storybook-builder-vite',
+  },
   exclude: [/node_modules/],
   webpackFinal: async config => {
     config.module.rules.push({
@@ -21,10 +24,6 @@ module.exports = {
       use: [
         {
           loader: require.resolve('ts-loader'),
-        },
-        // Optional
-        {
-          loader: require.resolve('react-docgen-typescript-loader'),
         }
       ],
     });
