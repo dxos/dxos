@@ -22,9 +22,9 @@ export function useSelection<T> (
   // Update data when deps change.
   useEffect(() => {
     const unsub = selectionResult.update.on(() => {
-      setData(selectionResult.getValue())
+      setData(selectionResult.getValue());
     });
-    setData(selectionResult.getValue())
+    setData(selectionResult.getValue());
     return unsub;
   }, deps);
 
