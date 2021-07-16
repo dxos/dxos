@@ -1,9 +1,9 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const debounce = require('lodash.debounce');
-const pLimit = require('p-limit');
+import debounce from 'lodash.debounce';
+import pLimit from 'p-limit';
 
 exports.DiscoveryService = {
   name: 'discovery',
@@ -21,7 +21,9 @@ exports.DiscoveryService = {
         .filter(p => p.owner.equals(owner))
         .map(peerMap.encode);
 
-      if (peers.length === 0) return;
+      if (peers.length === 0) {
+        return;
+      }
       return this.broker.broadcast('discovery.update', { peers }).catch(() => {});
     },
     'discovery.update' (ctx) {
@@ -45,7 +47,9 @@ exports.DiscoveryService = {
       const { remoteId } = ctx.params;
 
       const peer = peerMap.peers.find(p => p.id.equals(remoteId) && p.rpc);
-      if (!peer) throw new Error('rpc not found');
+      if (!peer) {
+        throw new Error('rpc not found');
+      }
 
       return peer.rpc.call('offer', ctx.params);
     },
@@ -56,7 +60,9 @@ exports.DiscoveryService = {
       const { remoteId } = ctx.params;
 
       const peer = peerMap.peers.find(p => p.id.equals(remoteId) && p.rpc);
-      if (!peer) throw new Error('rpc not found');
+      if (!peer) {
+        throw new Error('rpc not found');
+      }
 
       return peer.rpc.emit('signal', ctx.params);
     }

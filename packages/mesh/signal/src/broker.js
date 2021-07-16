@@ -1,22 +1,19 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const assert = require('assert');
-const crypto = require('crypto');
+import assert from 'assert';
+import crypto from 'crypto';
+import { ServiceBroker } from 'moleculer';
 
-const { ServiceBroker } = require('moleculer');
-
-const { PeerMap } = require('./signal');
-const { ProtocolTransporter } = require('./transporter');
-const { Serializer } = require('./serializer');
-const packageJSON = require('../package.json');
-
-// Services
-const { WebService } = require('./services/web.service');
-const { DiscoveryService } = require('./services/discovery.service');
-const { PresenceService } = require('./services/presence.service');
-const { StatusService } = require('./services/status.service');
+import packageJSON from '../package.json';
+import { Serializer } from './serializer';
+import { DiscoveryService } from './services/discovery.service';
+import { PresenceService } from './services/presence.service';
+import { StatusService } from './services/status.service';
+import { WebService } from './services/web.service';
+import { PeerMap } from './signal';
+import { ProtocolTransporter } from './transporter';
 
 const SIGNAL_PROTOCOL_VERSION = 4;
 

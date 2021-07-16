@@ -1,13 +1,12 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const crypto = require('crypto');
-
-const dht = require('@hyperswarm/dht');
-const publicIp = require('public-ip');
-const internalIp = require('internal-ip');
-const pEvent = require('p-event');
+import dht from '@hyperswarm/dht';
+import crypto from 'crypto';
+import internalIp from 'internal-ip';
+import pEvent from 'p-event';
+import publicIp from 'public-ip';
 
 class BootstrapNode {
   constructor (options = {}) {
@@ -21,9 +20,13 @@ class BootstrapNode {
   }
 
   async getAddress () {
-    if (this._address) return this._address;
+    if (this._address) {
+      return this._address;
+    }
 
-    if (!this._dht) throw new Error('dht not found');
+    if (!this._dht) {
+      throw new Error('dht not found');
+    }
 
     const address = this._dht.socket.address();
 
@@ -80,7 +83,9 @@ class BootstrapNode {
   }
 
   stop () {
-    if (this._stop || this._dht.destroyed) return;
+    if (this._stop || this._dht.destroyed) {
+      return;
+    }
 
     this._stop = true;
     if (this._dht) {
@@ -90,7 +95,9 @@ class BootstrapNode {
   }
 
   _getBootstrapIp () {
-    if (!this._dht) throw new Error('dht not found');
+    if (!this._dht) {
+      throw new Error('dht not found');
+    }
 
     return publicIp.v4().catch(() => {
       this._broker.logger.error('BOOTSTRAP_NODE: error trying to get external ip');
