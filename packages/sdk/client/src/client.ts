@@ -8,7 +8,7 @@ import leveljs from 'level-js';
 import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
-import { Invitation, Keyring } from '@dxos/credentials';
+import { Invitation } from '@dxos/credentials';
 import { humanize, PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import * as debug from '@dxos/debug';
@@ -54,12 +54,6 @@ export interface ClientConfig {
   snapshots?: boolean
   snapshotInterval?: number,
   invitationExpiration?: number,
-}
-
-export interface CreateProfileOptions {
-  publicKey?: Buffer
-  secretKey?: Buffer
-  username?: string
 }
 
 /**
@@ -110,6 +104,10 @@ export class Client {
 
   get echo () {
     return this._echo;
+  }
+
+  get halo () {
+    return this._echo.halo;
   }
 
   get registry () {
@@ -170,63 +168,6 @@ export class Client {
   async reset () {
     await this._echo.reset();
     await this._destroy();
-  }
-
-  //
-  // HALO Profile
-  //
-
-  /**
-   * Create Profile. Add Identity key if public and secret key are provided. Then initializes profile with given username.
-   * If not public and secret key are provided it relies on keyring to contain an identity key.
-   * @returns {ProfileInfo} User profile info.
-   */
-  // TODO(burdon): Breaks if profile already exists.
-  // TODO(burdon): ProfileInfo is not imported or defined.
-  @synchronized
-  async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}) {
-    if (this.getProfile()) {
-      throw new Error('Profile already exists.');
-    }
-
-    // TODO(burdon): What if not set?
-    if (publicKey && secretKey) {
-      await this._echo.createIdentity({ publicKey, secretKey });
-    }
-
-    await this._echo.createHalo(username);
-
-    return this.getProfile();
-  }
-
-  /**
-   * @returns true if the profile exists.
-   * @deprecated Use getProfile.
-   */
-  // TODO(burdon): Remove?
-  hasProfile () {
-    return this._echo.identityKey;
-  }
-
-  /**
-   * @returns {ProfileInfo} User profile info.
-   */
-  // TODO(burdon): Change to property (currently returns a new object each time).
-  getProfile () {
-    if (!this._echo.identityKey) {
-      return;
-    }
-
-    return {
-      username: this._echo.identityDisplayName,
-      // TODO(burdon): Why convert to string?
-      publicKey: this._echo.identityKey.publicKey
-    };
-  }
-
-  // TODO(burdon): Should be part of profile object. Or use standard Result object.
-  subscribeToProfile (cb: () => void): () => void {
-    return this._echo.identityReady.on(cb);
   }
 
   //
@@ -354,7 +295,7 @@ export class Client {
 
   // TODO(rzadp): Uncomment after updating ECHO.
   // async createHaloInvitation (secretProvider: SecretProvider, options?: InvitationOptions) {
-  //   return this.echo.createHaloInvitation(
+  //   return this.echo.halo.createInvitation(
   //     {
   //       secretProvider,
   //       secretValidator: (invitation: any, secret: any) => secret && secret.equals(invitation.secret)
@@ -405,17 +346,10 @@ export class Client {
       feedStore: this._echo.feedStore,
       networkManager: this._echo.networkManager,
       modelFactory: this._echo.modelFactory,
-      keyring: this._echo.keyring,
+      keyring: this._echo.halo.keyring,
       debug
     };
     return devtoolsContext;
-  }
-
-  /**
-   * @deprecated Use echo.keyring
-   */
-  get keyring (): Keyring {
-    return this._echo.keyring;
   }
 
   /**

@@ -29,7 +29,7 @@ describe('ClientProvider', () => {
     client = new Client();
     await client.initialize();
     const keypair = createKeyPair();
-    await client.createProfile({ ...keypair, username: 'test-user' });
+    await client.halo.createProfile({ ...keypair, username: 'test-user' });
     await client.echo.open();
   });
 

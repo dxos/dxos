@@ -36,7 +36,7 @@ describe('Replication in a grid', function () {
   before(async function () {
     inviter = new Client(ONLINE_CONFIG);
     await inviter.initialize();
-    await inviter.createProfile({ ...createKeyPair(), username: 'inviter' });
+    await inviter.halo.createProfile({ ...createKeyPair(), username: 'inviter' });
     party = await inviter.echo.createParty();
   });
 

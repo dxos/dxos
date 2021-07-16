@@ -57,11 +57,11 @@ export const createTestInstance = async ({
 
   if (initialize) {
     await echo.open();
-    if (!echo.identityKey) {
-      await echo.createIdentity(createKeyPair());
+    if (!echo.halo.identityKey) {
+      await echo.halo.createIdentity(createKeyPair());
     }
-    if (!echo.isHaloInitialized) {
-      await echo.createHalo();
+    if (!echo.halo.isInitialized) {
+      await echo.halo.create();
     }
   }
 
