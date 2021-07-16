@@ -1,15 +1,15 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const { EventEmitter } = require('events');
-const { NanoresourcePromise } = require('nanoresource-promise/emitter');
-const eos = require('end-of-stream');
-const varint = require('varint');
-const Protocol = require('simple-hypercore-protocol');
-const crypto = require('hypercore-crypto');
+import eos from 'end-of-stream';
+import { EventEmitter } from 'events';
+import crypto from 'hypercore-crypto';
+import { NanoresourcePromise } from 'nanoresource-promise/emitter';
+import Protocol from 'simple-hypercore-protocol';
+import varint from 'varint';
 
-const { Broadcast } = require('@dxos/broadcast');
+import { Broadcast } from '@dxos/broadcast';
 
 const BROADCAST_CHANNEL = 0;
 const DIRECT_CHANNEL = 1;
@@ -66,17 +66,23 @@ class Peer extends EventEmitter {
   }
 
   broadcast (buf) {
-    if (this._socket.destroyed) return;
+    if (this._socket.destroyed) {
+      return;
+    }
     this._protocol.extension(BROADCAST_CHANNEL, 0, buf);
   }
 
   send (buf) {
-    if (this._socket.destroyed) return;
+    if (this._socket.destroyed) {
+      return;
+    }
     this._protocol.extension(DIRECT_CHANNEL, 0, buf);
   }
 
   destroy () {
-    if (this._socket.destroyed) return;
+    if (this._socket.destroyed) {
+      return;
+    }
     return this._socket.destroy();
   }
 
@@ -89,7 +95,9 @@ class Peer extends EventEmitter {
         socket.write(data);
       },
       onclose () {
-        if (socket.destroyed) return;
+        if (socket.destroyed) {
+          return;
+        }
         socket.destroy();
       },
       onhandshake: () => this.emit('handshake'),
@@ -134,8 +142,12 @@ class Messenger extends NanoresourcePromise {
     });
 
     peer.on('handshake', () => {
-      if (socket.destroyed) return;
-      if (info.deduplicate(peer.remotePublicKey, peer.publicKey)) return;
+      if (socket.destroyed) {
+        return;
+      }
+      if (info.deduplicate(peer.remotePublicKey, peer.publicKey)) {
+        return;
+      }
       this._peers.add(peer);
       this._broadcast.updatePeers(this.peers);
       this.emit('peer-added', { initiator: peer.initiator, sessionKey: peer.sessionKey, peerId: peer.id });

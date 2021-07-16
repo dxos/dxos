@@ -11,7 +11,7 @@ import debug from 'debug';
 import { EventEmitter } from 'events';
 
 import { WithTypeUrl } from '@dxos/codec-protobuf';
-import { keyToString } from '@dxos/crypto';
+import { keyToBuffer, keyToString } from '@dxos/crypto';
 import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/protocol';
 
 import { wrapMessage } from '../party';
@@ -25,9 +25,9 @@ const DEFAULT_TIMEOUT = 30000;
 
 export type GreetingCommandMessageHandler = (message: any, remotePeerId: Buffer, peerId: Buffer) => Promise<any>;
 
-const getPeerId = (protocol: any) => {
-  const { peerId = undefined } = protocol && protocol.getSession ? protocol.getSession() : {};
-  return peerId;
+const getPeerId = (protocol: Protocol) => {
+  const { peerId } = protocol.getSession() ?? {};
+  return keyToBuffer(peerId);
 };
 
 /**

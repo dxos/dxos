@@ -163,20 +163,20 @@ export class Messenger extends EventEmitter {
    * @private
    */
   _addPeer (protocol) {
-    const session = protocol.getSession();
-    if (!session.peerId) {
+    const { peerId } = protocol.getSession();
+    if (!peerId) {
       throw new Error('missing peerId');
     }
 
-    const idStr = session.peerId.toString('hex');
+    const idStr = peerId.toString('hex');
 
     let peer = this._peers.get(idStr);
     if (!peer) {
-      peer = { id: session.peerId, protocols: new Set() };
+      peer = { id: peerId, protocols: new Set() };
       this._peers.set(idStr, peer);
     }
     peer.protocols.add(protocol);
-    this.emit('peer:joined', session.peerId, protocol);
+    this.emit('peer:joined', peerId, protocol);
   }
 
   /**
@@ -185,12 +185,12 @@ export class Messenger extends EventEmitter {
    * @private
    */
   _removePeer (protocol) {
-    const session = protocol.getSession();
-    if (!session.peerId) {
+    const { peerId } = protocol.getSession();
+    if (!peerId) {
       return;
     }
 
-    const idStr = session.peerId.toString('hex');
+    const idStr = peerId.toString('hex');
 
     const peer = this._peers.get(idStr);
     if (!peer) {
@@ -201,6 +201,6 @@ export class Messenger extends EventEmitter {
     if (peer.protocols.size === 0) {
       this._peers.delete(idStr);
     }
-    this.emit('peer:left', session.peerId);
+    this.emit('peer:left', peerId);
   }
 }

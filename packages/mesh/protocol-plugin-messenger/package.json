@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-messenger",
-  "version": "2.10.12",
+  "version": "2.10.13",
   "description": "Protocol plugin messenger.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-messenger#readme",
   "bugs": {
@@ -27,7 +27,8 @@
     "@dxos/broadcast": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protocol": "workspace:*",
-    "debug": "^4.1.1"
+    "debug": "^4.1.1",
+    "@dxos/crypto": "workspace:*"
   },
   "devDependencies": {
     "@dxos/protocol-network-generator": "workspace:*",

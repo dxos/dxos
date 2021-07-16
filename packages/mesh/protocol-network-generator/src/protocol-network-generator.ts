@@ -11,7 +11,7 @@ import { getProtocolFromStream, ProtocolOptions } from '@dxos/protocol';
 
 interface Peer {
   id: Buffer,
-  createStream: () => void,
+  createStream: (...args: any) => void,
 }
 
 /**

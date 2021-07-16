@@ -34,7 +34,7 @@ const Demo = () => {
   const parties = useParties();
 
   const handleCreateProfile = async () => {
-    await client.createProfile({
+    await client.halo.createProfile({
       ...createKeyPair(),
       username: faker.internet.userName()
     });

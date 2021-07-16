@@ -1,6 +1,6 @@
 {
   "name": "@dxos/feed-store",
-  "version": "2.10.12",
+  "version": "2.10.13",
   "description": "A consistent store for your hypercore feeds.",
   "homepage": "https://github.com/dxos/feed-store#readme",
   "bugs": {
@@ -31,7 +31,7 @@
     "debug": "^4.1.1",
     "end-of-stream": "^1.4.1",
     "from2": "^2.3.0",
-    "hypercore": "^7.7.1",
+    "hypercore": "^9.10.0",
     "hypercore-crypto": "^1.0.0",
     "hypertrie": "^3.8.0",
     "multi-read-stream": "^2.0.0",

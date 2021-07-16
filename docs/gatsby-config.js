@@ -14,7 +14,7 @@ module.exports = {
         root: __dirname,
         description: "DXOS - The Decentralized Operating System",
         subtitle: "SDK",
-        githubRepo: "dxos/sdk",
+        githubRepo: "dxos/protocols",
         sidebarCategories: {
           Tutorial: [
             "tutorial/introduction",

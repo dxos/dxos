@@ -1,14 +1,13 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const { EventEmitter } = require('events');
-
-const pLimit = require('p-limit');
-const Graph = require('graphology');
-const timestamp = require('monotonic-timestamp');
-const lru = require('tiny-lru');
-const debounce = require('lodash.debounce');
+import { EventEmitter } from 'events';
+import Graph from 'graphology';
+import debounce from 'lodash.debounce';
+import timestamp from 'monotonic-timestamp';
+import pLimit from 'p-limit';
+import lru from 'tiny-lru';
 
 const MAX_WAIT = 2 * 1000;
 
@@ -39,7 +38,9 @@ class Network extends EventEmitter {
 
   getConnections (id = this._owner) {
     const connections = [];
-    if (!this._graph.hasNode(id)) return [];
+    if (!this._graph.hasNode(id)) {
+      return [];
+    }
 
     this._graph.forEachEdge(id, (key, attr, source, target) => {
       if (source === id) {
@@ -53,7 +54,9 @@ class Network extends EventEmitter {
   update (id, timestamp, connections = []) {
     // ignore old messages
     const lastTimestamp = this._lastUpdate.get(id) || 0;
-    if (lastTimestamp > timestamp) return;
+    if (lastTimestamp > timestamp) {
+      return;
+    }
     this._lastUpdate.set(id, timestamp);
 
     if (!this._graph.hasNode(id)) {
@@ -103,7 +106,9 @@ class Network extends EventEmitter {
   }
 
   deleteConnection (sessionKey) {
-    if (!this._graph.hasEdge(sessionKey)) return;
+    if (!this._graph.hasEdge(sessionKey)) {
+      return;
+    }
     this._graph.dropEdge(sessionKey);
     this.publish();
   }
@@ -122,7 +127,9 @@ exports.PresenceService = {
       this._network.publish();
     },
     'presence.update' (ctx) {
-      if (ctx.nodeID === this.broker.nodeID) return;
+      if (ctx.nodeID === this.broker.nodeID) {
+        return;
+      }
 
       const { timestamp, connections } = ctx.params;
       return this._network.update(ctx.nodeID, timestamp, connections);
@@ -163,7 +170,9 @@ exports.PresenceService = {
     });
 
     transporter.on('peer-deleted', ({ sessionKey }) => {
-      if (!sessionKey) return;
+      if (!sessionKey) {
+        return;
+      }
 
       try {
         this._network.deleteConnection(sessionKey.toString('hex'));

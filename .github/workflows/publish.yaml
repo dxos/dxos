@@ -64,7 +64,7 @@ jobs:
         echo "::endgroup::"
 
         # Quick build
-        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to @dxos/demos
+        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to-except @dxos/demos
     - name: Chromatic
       run:  |
         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}

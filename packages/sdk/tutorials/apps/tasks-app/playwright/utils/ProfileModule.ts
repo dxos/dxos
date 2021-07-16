@@ -8,9 +8,9 @@ export class ProfileModule extends AppSimulator {
   }
 
   async create(username: string) {
-    await this.browser.getPage().fill('.MuiInputBase-input', username);
+    await this.browser.getPage().fill('input:below(:text("Create Profile"))', username);
 
-    const submitButton = await this.browser.getPage().$('.MuiButtonBase-root :text("Create")');
+    const submitButton = await this.browser.getPage().$('button :text("Create")');
 
     expect(submitButton).toBeDefined();
 

@@ -31,7 +31,7 @@ function createPair () {
     peer2Id,
     sessionId,
     topic,
-    protocolProvider1({ channel: discoveryKey(topic) }).stream
+    protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream
   );
   afterTest(() => connection1.close());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
@@ -43,7 +43,7 @@ function createPair () {
     peer1Id,
     sessionId,
     topic,
-    protocolProvider2({ channel: discoveryKey(topic) }).stream
+    protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream
   );
   afterTest(() => connection2.close());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());

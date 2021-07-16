@@ -8,10 +8,12 @@ import { join, resolve } from 'path';
 
 import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
-export async function buildTests (files: string[], outDir: string) {
+export async function buildTests (files: string[], outDir: string, debug: boolean) {
   const mainFile = join(outDir, 'main.js');
   const mainContents = `
     import debug from 'debug';
+
+    ${debug ? 'debugger;' : ''}
     
     debug.enable('${process.env.DEBUG}');
 

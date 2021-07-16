@@ -7,7 +7,9 @@
 # This script waits in app on the whatever web server is used
 # Until it starts actually serving the proper index.html file
 
-rushx storybook --quiet & 
+cd ./storybook-static
+npx http-server -s -p 9001 &
+cd ..
 set +e
 i=0
 until curl "http://localhost:9001" | grep -q "Storybook"
