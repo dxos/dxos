@@ -14,11 +14,12 @@ import { Lock, trigger } from '@dxos/async';
  */
 const INIT_TIMEOUT = 10_000;
 
-export async function runTests (bundleFile: string, show: boolean): Promise<number> {
+export async function runTests (bundleFile: string, show: boolean, debug: boolean): Promise<number> {
   const browser = await chromium.launch({
     headless: !show,
     args: [
-      '--disable-web-security'
+      '--disable-web-security',
+      ...(debug ? ['--auto-open-devtools-for-tabs'] : [])
     ]
   });
   const context = await browser.newContext();
@@ -56,6 +57,10 @@ export async function runTests (bundleFile: string, show: boolean): Promise<numb
   });
 
   const exitTimeout = setTimeout(() => {
+    if (debug) {
+      return;
+    }
+
     console.log(`\n\nTests failed to load in ${INIT_TIMEOUT} ms.`);
     process.exit(-1);
   }, INIT_TIMEOUT);

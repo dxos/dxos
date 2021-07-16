@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ux",
-  "version": "2.10.12",
+  "version": "2.10.13",
   "description": "React components",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -36,16 +36,21 @@
   "devDependencies": {
     "@babel/core": "~7.13.15",
     "@dxos/toolchain-node-library": "workspace:*",
-    "@storybook/addon-actions": "^6.2.9",
-    "@storybook/addon-knobs": "^6.2.9",
-    "@storybook/react": "^6.2.9",
+    "@storybook/addon-actions": "^6.3.4",
+    "@storybook/addon-knobs": "^6.3.0",
+    "@storybook/addons": "^6.3.4",
+    "@storybook/api": "^6.3.4",
+    "@storybook/components": "^6.3.4",
+    "@storybook/core-events": "^6.3.4",
+    "@storybook/react": "^6.3.4",
+    "@storybook/theming": "^6.3.4",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.0.4",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.3.5"
   },
   "peerDependencies": {
     "react": "*"

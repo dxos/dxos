@@ -78,7 +78,7 @@ export class InMemoryTransport implements Transport {
       InMemoryTransport._connections.delete(this._remoteKey);
 
       const stream = this._stream;
-      stream.unpipe(this._remoteConnection._stream).unpipe(stream);
+      stream.unpipe?.(this._remoteConnection._stream)?.unpipe(stream);
 
       this._remoteConnection.closed.emit();
 

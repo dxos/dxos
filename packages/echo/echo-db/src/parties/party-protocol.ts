@@ -86,7 +86,7 @@ export class PartyProtocol {
 
     log('Starting...', this._partyKey.toHex());
     return this._networkManager.joinProtocolSwarm({
-      protocol: ({ channel }: any) => this._createProtocol(channel),
+      protocol: ({ channel, initiator }) => this._createProtocol(channel, { initiator }),
       peerId: this._peerId,
       topic: this._partyKey,
       presence: this._presence,
@@ -105,7 +105,7 @@ export class PartyProtocol {
     await this._networkManager.leaveProtocolSwarm(this._partyKey);
   }
 
-  private _createProtocol (channel: any) {
+  private _createProtocol (channel: any, opts: {initiator: boolean}) {
     assert(this._identityProvider().deviceKey);
 
     const plugins = [
@@ -119,6 +119,8 @@ export class PartyProtocol {
         live: true
       },
 
+      discoveryKey: channel,
+
       discoveryToPublicKey: (dk: any) => {
         if (!discoveryKey(this._partyKey.asBuffer()).equals(dk)) {
           return undefined;
@@ -129,20 +131,23 @@ export class PartyProtocol {
         protocol.setContext({ topic: this._partyKey.toHex() });
 
         // TODO(burdon): Inconsistent use of toHex and asBuffer.
-        //   Need to progressively clean-up all uses of Keys via Typscript.
+        //   Need to progressively clean-up all uses of Keys via Typescript.
         return this._partyKey.asBuffer();
-      }
+      },
+
+      userSession: {
+        // TODO(burdon): See deprecated `protocolFactory` in HALO.
+        peerId: keyToString(this._identityProvider().deviceKey!.publicKey.asBuffer()),
+        // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
+        credentials: this._credentials.get().toString('base64')
+      },
+
+      initiator: opts.initiator
     });
 
     protocol
-      .setSession({
-        // TODO(burdon): See deprecated `protocolFactory` in HALO.
-        peerId: this._identityProvider().deviceKey!.publicKey.asBuffer(),
-        // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
-        credentials: this._credentials.get().toString('base64')
-      })
       .setExtensions(plugins.map(plugin => plugin.createExtension()))
-      .init(channel);
+      .init();
 
     return protocol;
   }
@@ -179,7 +184,7 @@ class ReplicatorProtocolPluginFactory {
         replicate: async (remoteFeeds: any, info: any) => {
           // We can ignore remoteFeeds entirely, since the set of feeds we want to replicate is dictated by the Party.
           // TODO(telackey): why are we opening feeds? Necessary or belt/braces thinking, or because open party does it?
-          log(`Replicating: peerId=${info.session.peerId.toString('hex')}; feeds=${this._activeFeeds.get().map(key => key.toHex())}`);
+          log(`Replicating: peerId=${info.session.peerId}; feeds=${this._activeFeeds.get().map(key => key.toHex())}`);
           return Promise.all(this._activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
         }
       })

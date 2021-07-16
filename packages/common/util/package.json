@@ -1,6 +1,6 @@
 {
   "name": "@dxos/util",
-  "version": "2.10.12",
+  "version": "2.10.13",
   "description": "Temporary bucket for misc functions, which should graduate into separate packages.",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
@@ -33,7 +33,7 @@
     "@types/stream-buffers": "^3.0.2",
     "@types/through2": "^2.0.36",
     "debug": "^4.1.1",
-    "hypercore": "^7.7.1",
+    "hypercore": "^9.10.0",
     "js-data-structs": "^1.1.2",
     "lodash.merge": "^4.6.2",
     "protobufjs": "^6.9.0"

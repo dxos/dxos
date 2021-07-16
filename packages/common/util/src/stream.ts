@@ -134,7 +134,7 @@ export class WritableArray<T> extends Writable {
     return this._objects;
   }
 
-  _write (object: any, _: BufferEncoding, next: (error?: Error | null) => void): void {
+  override _write (object: any, _: BufferEncoding, next: (error?: Error | null) => void): void {
     this._objects.push(object);
     next();
   }

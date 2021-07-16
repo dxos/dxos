@@ -45,7 +45,7 @@ export class Replicator extends EventEmitter {
     }, options);
   }
 
-  toString () {
+  override toString () {
     const meta = {};
 
     return `Replicator(${JSON.stringify(meta)})`;
@@ -87,7 +87,7 @@ export class Replicator extends EventEmitter {
     const peer = this._peers.get(protocol);
 
     const context = protocol.getContext();
-    const session = protocol.getSession();
+    const { peerId: session } = protocol.getSession() ?? {};
     const info = { context, session };
 
     try {
@@ -128,7 +128,7 @@ export class Replicator extends EventEmitter {
   async _replicateHandler (protocol: Protocol, data: any) {
     const peer = this._peers.get(protocol);
     const context = protocol.getContext();
-    const session = protocol.getSession();
+    const { peerId: session } = protocol.getSession() ?? {};
     const info = { context, session };
 
     try {

@@ -6,7 +6,7 @@ import { expect } from 'earljs';
 import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
-import { PublicKey } from '@dxos/crypto';
+import { keyToString, PublicKey } from '@dxos/crypto';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { afterTest } from '@dxos/testutils';
 
@@ -26,7 +26,7 @@ const createPeer = (topic: PublicKey) => {
     getTopics: () => {
       return [topic.asBuffer()];
     },
-    session: { peerId: peerId.asBuffer() },
+    session: { peerId: keyToString(peerId.asBuffer()) },
     plugins: [presencePlugin]
   });
 
