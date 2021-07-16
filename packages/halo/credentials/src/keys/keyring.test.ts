@@ -347,20 +347,21 @@ test('Authenticate flow for Kube/Keyhole authentication', async () => {
   // Admit user device key with a signature from identity key. This is done when inviting user device to HALO.
   const deviceAdmit = userKeyring.sign({ message: 'Test' }, [userIdentity, userDevice]);
 
-  // KUBE give user a signed credential and trust his identity.
-  const kubeCredential = kubeKeyring.sign({ admit: userIdentity.publicKey.toHex() }, [kubeIdentity]);
-  kubeKeyring.addPublicKey(userIdentity);
+  // User signs a message to give his identity access to KUBE.
+  const credential = userKeyring.sign({ admit: userIdentity.publicKey.toHex() }, [userIdentity])
+  // KUBE adds his own signature producing a verifiable credential that the user stores.
+  const kubeCredential = kubeKeyring.sign(credential, [kubeIdentity]);
 
-  // User's device builds a keychain
-
+  // User's device builds a keychain that includes that verifiable credential signed from KUBE.
   const keyMessages = new Map();
-  keyMessages.set(userDevice.publicKey.toHex(), deviceAdmit);
-  keyMessages.set(userIdentity.publicKey.toHex(), deviceAdmit);
+  keyMessages.set(userDevice.publicKey.toHex(), deviceAdmit); // Device is admitted by identity.
+  keyMessages.set(userIdentity.publicKey.toHex(), kubeCredential); // Identity is validated by KUBE.
+  keyMessages.set(kubeIdentity.publicKey.toHex(), kubeCredential); // KUBE's identity is referenced in the credential.
 
   const keychain = Keyring.buildKeyChain(userDevice.publicKey, keyMessages);
 
-  // User's device signes the credential using a keychain with a challenge token given by KUBE
-  const signedCredential = userKeyring.sign(kubeCredential, [keychain], Buffer.from('challenge token'));
+  // User's device signs a message using the keychain with a challenge token given by KUBE
+  const signedCredential = userKeyring.sign({ message: 'Let me in!' }, [keychain], Buffer.from('challenge token'));
 
   // KUBE verifies user's credential
   expect(signedCredential.signatures!.length).toBe(1);
