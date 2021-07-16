@@ -15,7 +15,7 @@ import { WebService } from './services/web.service';
 import { PeerMap } from './signal';
 import { ProtocolTransporter } from './transporter';
 
-const SIGNAL_PROTOCOL_VERSION = 4;
+export const SIGNAL_PROTOCOL_VERSION = 4;
 
 export type LogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
 export type LogFormat = 'full' | 'short' | 'simple' | 'json'
@@ -119,5 +119,3 @@ export function createBroker (topic: Buffer, opts: CreateBrokerOpts = {}) {
 
   return broker;
 }
-
-module.exports = { SIGNAL_PROTOCOL_VERSION, ProtocolTransporter };
