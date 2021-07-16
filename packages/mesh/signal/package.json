@@ -57,7 +57,7 @@
     "simple-hypercore-protocol": "dxos/simple-hypercore-protocol#bc23f0747e55954ec0bd94754910c92f88ec561c",
     "simple-websocket": "^9.0.0",
     "socket-signal": "^9.0.0",
-    "systeminformation": "^4.27.5",
+    "systeminformation": "^5.7.7",
     "tiny-lru": "^7.0.6",
     "varint": "^5.0.0",
     "yargs": "~16.2.0"
@@ -68,7 +68,9 @@
     "graphology-canvas": "^0.3.2",
     "graphology-types": "^0.19.2",
     "graphology-shortest-path": "^1.3.4",
-    "wrtc": "^0.4.6"
+    "wrtc": "^0.4.6",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4"
   },
   "publishConfig": {
     "access": "public"
