@@ -17,7 +17,7 @@ export function useContacts () {
   const [contacts, setContacts] = useState<PartyMember[]>([]);
 
   useEffect(() => {
-    const result = client.echo.queryContacts();
+    const result = client.echo.halo.queryContacts();
     setContacts(result.value);
 
     const unsubscribe = result.subscribe(() => {

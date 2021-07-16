@@ -43,7 +43,7 @@ export class BackgroundServer {
       service,
       handlers: {
         GetProfile: async () => {
-          const profile = this._client.getProfile();
+          const profile = this._client.halo.getProfile();
           return {
             publicKey: profile?.publicKey.toHex(),
             username: profile?.username
@@ -56,18 +56,18 @@ export class BackgroundServer {
           };
         },
         SignMessage: async request => {
-          const profile = this._client.getProfile();
+          const profile = this._client.halo.getProfile();
           return {
             publicKey: profile?.publicKey.toHex(),
             username: profile?.username,
-            signedMessage: this._client.echo.keyring.sign(request.message, this._client.echo.keyring.keys).signed.payload
+            signedMessage: this._client.echo.halo.keyring.sign(request.message, this._client.echo.halo.keyring.keys).signed.payload
           };
         },
         CreateProfile: async request => {
-          await this._client.createProfile({ ...createKeyPair(), ...request });
+          await this._client.halo.createProfile({ ...createKeyPair(), ...request });
           return {
-            username: this._client.getProfile()?.username,
-            publicKey: this._client.getProfile()?.publicKey.toHex()
+            username: this._client.halo.getProfile()?.username,
+            publicKey: this._client.halo.getProfile()?.publicKey.toHex()
           };
         },
         RestoreProfile: async request => {
@@ -75,10 +75,10 @@ export class BackgroundServer {
             throw new Error('Seedphrase and username are required.');
           }
           const keyPair = keyPairFromSeedPhrase(request.seedPhrase);
-          await this._client.createProfile({ ...keyPair, username: request.username });
+          await this._client.halo.createProfile({ ...keyPair, username: request.username });
           return {
-            username: this._client.getProfile()?.username,
-            publicKey: this._client.getProfile()?.publicKey.toHex()
+            username: this._client.halo.getProfile()?.username,
+            publicKey: this._client.halo.getProfile()?.publicKey.toHex()
           };
         },
         GetParties: async request => {

@@ -28,8 +28,8 @@ describe('ECHO', () => {
     afterTest(() => echo.close());
 
     if (createProfile) {
-      await echo.createIdentity(createKeyPair());
-      await echo.createHalo();
+      await echo.halo.createIdentity(createKeyPair());
+      await echo.halo.create();
     }
 
     return echo;
@@ -221,22 +221,22 @@ describe('ECHO', () => {
   test('open and create profile', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.createIdentity(createKeyPair());
-    await echo.createHalo();
-    expect(echo.identityKey).toBeDefined();
+    await echo.halo.createIdentity(createKeyPair());
+    await echo.halo.create();
+    expect(echo.halo.identityKey).toBeDefined();
   });
 
   test('close and open again', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.createIdentity(createKeyPair());
-    await echo.createHalo();
-    expect(echo.identityKey).toBeDefined();
+    await echo.halo.createIdentity(createKeyPair());
+    await echo.halo.create();
+    expect(echo.halo.identityKey).toBeDefined();
     await echo.close();
 
     await echo.open();
     expect(echo.isOpen).toBe(true);
-    expect(echo.identityKey).toBeDefined();
+    expect(echo.halo.identityKey).toBeDefined();
   });
 
   test('cant create party on closed echo', async () => {
@@ -248,9 +248,9 @@ describe('ECHO', () => {
   test('reset', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.createIdentity(createKeyPair());
-    await echo.createHalo();
-    expect(echo.identityKey).toBeDefined();
+    await echo.halo.createIdentity(createKeyPair());
+    await echo.halo.create();
+    expect(echo.halo.identityKey).toBeDefined();
 
     return echo.reset();
   });
@@ -259,23 +259,23 @@ describe('ECHO', () => {
     const a = await setup(true);
     const b = await setup(false);
 
-    expect(a.isHaloInitialized).toEqual(true);
-    expect(b.isHaloInitialized).toEqual(false);
+    expect(a.halo.isInitialized).toEqual(true);
+    expect(b.halo.isInitialized).toEqual(false);
 
     expect(a.queryParties().value.length).toBe(0);
     await a.createParty();
     expect(a.queryParties().value.length).toBe(1);
 
     // Issue the invitation on nodeA.
-    const invitation = await a.createHaloInvitation({ secretValidator: testSecretValidator, secretProvider: testSecretProvider });
+    const invitation = await a.halo.createInvitation({ secretValidator: testSecretValidator, secretProvider: testSecretProvider });
 
     // Should not have any parties.
     expect(b.queryParties().value.length).toBe(0);
 
     // And then redeem it on nodeB.
-    await b.joinHalo(invitation, testSecretProvider);
-    expect(a.isHaloInitialized).toEqual(true);
-    expect(b.isHaloInitialized).toEqual(true);
+    await b.halo.join(invitation, testSecretProvider);
+    expect(a.halo.isInitialized).toEqual(true);
+    expect(b.halo.isInitialized).toEqual(true);
 
     // Check the initial party is opened.
     await waitForCondition(() => b.queryParties().value.length === 1, 1000);
@@ -323,26 +323,26 @@ describe('ECHO', () => {
     const b1 = await setup(true);
     const b2 = await setup(false);
 
-    expect(a1.isHaloInitialized).toBeTruthy();
-    expect(a2.isHaloInitialized).toBeFalsy();
+    expect(a1.halo.isInitialized).toBeTruthy();
+    expect(a2.halo.isInitialized).toBeFalsy();
 
-    expect(b1.isHaloInitialized).toBeTruthy();
-    expect(b2.isHaloInitialized).toBeFalsy();
+    expect(b1.halo.isInitialized).toBeTruthy();
+    expect(b2.halo.isInitialized).toBeFalsy();
 
     await Promise.all([
       (async () => {
         // Issue the invitation on nodeA.
-        const invitation = await a1.createHaloInvitation(testInvitationAuthenticator);
+        const invitation = await a1.halo.createInvitation(testInvitationAuthenticator);
 
         // And then redeem it on nodeB.
-        await a2.joinHalo(invitation, testSecretProvider);
+        await a2.halo.join(invitation, testSecretProvider);
       })(),
       (async () => {
         // Issue the invitation on nodeA.
-        const invitation = await b1.createHaloInvitation(testInvitationAuthenticator);
+        const invitation = await b1.halo.createInvitation(testInvitationAuthenticator);
 
         // And then redeem it on nodeB.
-        await b2.joinHalo(invitation, testSecretProvider);
+        await b2.halo.join(invitation, testSecretProvider);
       })()
     ]);
 
@@ -418,18 +418,18 @@ describe('ECHO', () => {
     afterTest(() => a.close());
 
     const seedPhrase = generateSeedPhrase();
-    await a.createIdentity(keyPairFromSeedPhrase(seedPhrase));
-    await a.createHalo();
+    await a.halo.createIdentity(keyPairFromSeedPhrase(seedPhrase));
+    await a.halo.create();
 
     const b = await setup(false);
 
-    expect(a.isHaloInitialized).toBeTruthy();
-    expect(b.isHaloInitialized).toBeFalsy();
+    expect(a.halo.isInitialized).toBeTruthy();
+    expect(b.halo.isInitialized).toBeFalsy();
 
     // And then redeem it on nodeB.
-    await b.recoverHalo(seedPhrase);
-    expect(a.isHaloInitialized).toBeTruthy();
-    expect(b.isHaloInitialized).toBeTruthy();
+    await b.halo.recover(seedPhrase);
+    expect(a.halo.isInitialized).toBeTruthy();
+    expect(b.halo.isInitialized).toBeTruthy();
 
     // Now create a Party on A and make sure it gets opened on both A and B.
     expect(a.queryParties().value.length).toBe(0);
@@ -466,14 +466,14 @@ describe('ECHO', () => {
     const a = await setup(true);
     const b = await setup(true);
 
-    const updatedA = a.queryContacts().update.waitFor(contacts => contacts.some(c => b.identityKey?.publicKey.equals(c.publicKey)));
-    const updatedB = b.queryContacts().update.waitFor(contacts => contacts.some(c => a.identityKey?.publicKey.equals(c.publicKey)));
+    const updatedA = a.halo.queryContacts().update.waitFor(contacts => contacts.some(c => b.halo.identityKey?.publicKey.equals(c.publicKey)));
+    const updatedB = b.halo.queryContacts().update.waitFor(contacts => contacts.some(c => a.halo.identityKey?.publicKey.equals(c.publicKey)));
 
     // Create the Party.
     const partyA = await a.createParty();
     log(`Created ${partyA.key.toHex()}`);
 
-    const invitationDescriptor = await partyA.createOfflineInvitation(b.identityKey!.publicKey);
+    const invitationDescriptor = await partyA.createOfflineInvitation(b.halo.identityKey!.publicKey);
 
     // Redeem the invitation on B.
     const partyB = await b.joinParty(invitationDescriptor);
@@ -483,8 +483,8 @@ describe('ECHO', () => {
     await updatedA;
     await updatedB;
 
-    expect(a.queryContacts().value.length).toBe(1);
-    expect(b.queryContacts().value.length).toBe(1);
+    expect(a.halo.queryContacts().value.length).toBe(1);
+    expect(b.halo.queryContacts().value.length).toBe(1);
   });
 
   test('Deactivating and activating party.', async () => {
@@ -608,8 +608,8 @@ describe('ECHO', () => {
     const b = await setup(false);
 
     {
-      const invitation = await a.createHaloInvitation(testInvitationAuthenticator);
-      await b.joinHalo(invitation, testSecretProvider);
+      const invitation = await a.halo.createInvitation(testInvitationAuthenticator);
+      await b.halo.join(invitation, testSecretProvider);
     }
 
     await a.createParty();
@@ -645,8 +645,8 @@ describe('ECHO', () => {
     afterTest(() => a.close());
 
     const seedPhrase = generateSeedPhrase();
-    await a.createIdentity(keyPairFromSeedPhrase(seedPhrase));
-    await a.createHalo();
+    await a.halo.createIdentity(keyPairFromSeedPhrase(seedPhrase));
+    await a.halo.create();
 
     // User's other device, joined by device invitation
     const b = await setup(false);
@@ -663,19 +663,19 @@ describe('ECHO', () => {
 
     // B joins as another device of A, device invitation.
 
-    const invitation = await a.createHaloInvitation(testInvitationAuthenticator);
+    const invitation = await a.halo.createInvitation(testInvitationAuthenticator);
 
     expect(b.queryParties().value.length).toBe(0);
-    await b.joinHalo(invitation, testSecretProvider);
-    expect(b.isHaloInitialized).toBeTruthy();
+    await b.halo.join(invitation, testSecretProvider);
+    expect(b.halo.isInitialized).toBeTruthy();
     await waitForCondition(() => b.queryParties().value.length, 1000);
     expect(b.queryParties().value.length).toBe(1);
     const partyB = b.queryParties().value[0];
 
     // C joins as another device of A, seed phrase recovery.
 
-    await c.recoverHalo(seedPhrase);
-    expect(c.isHaloInitialized).toBeTruthy();
+    await c.halo.recover(seedPhrase);
+    expect(c.halo.isInitialized).toBeTruthy();
     await waitForCondition(() => c.queryParties().value.length, 1000);
     expect(c.queryParties().value.length).toBe(1);
     const partyC = c.queryParties().value[0];

@@ -18,7 +18,7 @@ const ProfileInitializer = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!profile) {
-      client.createProfile(createKeyPair());
+      client.halo.createProfile(createKeyPair());
     }
   }, []);
 
