@@ -85,7 +85,7 @@ export class PartyModule extends AppSimulator {
   }
 
   async enterPinCode(pinCode: string) {
-    await this.browser.getPage().fill('.MuiInputBase-input', pinCode);
+    await this.browser.getPage().fill('input:above(:text("Submit"))', pinCode);
 
     const submitButton = await this.browser.getPage().$('button :text("Submit")');
 

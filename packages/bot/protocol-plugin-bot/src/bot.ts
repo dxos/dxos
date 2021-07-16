@@ -72,7 +72,7 @@ export class BotPlugin extends EventEmitter {
           const { peerId } = peer.getSession();
 
           return {
-            id: peerId,
+            id: keyToBuffer(peerId),
             protocol: peer
           };
         });
@@ -115,10 +115,10 @@ export class BotPlugin extends EventEmitter {
         this._addPeer(protocol);
       })
       .setHandshakeHandler(async protocol => {
-        const { peerId } = protocol.getSession();
+        const { peerId } = protocol.getSession() ?? {};
 
-        if (this._peers.has(keyToString(peerId))) {
-          this.emit('peer:joined', peerId, protocol);
+        if (peerId && this._peers.has(peerId)) {
+          this.emit('peer:joined', Buffer.from(peerId, 'hex'), protocol);
         }
       })
       .setMessageHandler(this._commandHandler)
@@ -166,12 +166,12 @@ export class BotPlugin extends EventEmitter {
    * Add peer.
    */
   private _addPeer (protocol: Protocol) {
-    const { peerId } = protocol.getSession();
-    if (this._peers.has(keyToString(peerId))) {
+    const { peerId } = protocol.getSession() ?? {};
+    if (!peerId || this._peers.has(peerId)) {
       return;
     }
 
-    this._peers.set(keyToString(peerId), protocol);
+    this._peers.set(peerId, protocol);
   }
 
   /**
@@ -180,12 +180,12 @@ export class BotPlugin extends EventEmitter {
   private _removePeer (protocol: Protocol) {
     assert(protocol);
 
-    const { peerId } = protocol.getSession();
+    const { peerId } = protocol.getSession() ?? {};
     if (!peerId) {
       return;
     }
 
-    this._peers.delete(keyToString(peerId));
+    this._peers.delete(peerId);
     this.emit('peer:exited', peerId);
   }
 }

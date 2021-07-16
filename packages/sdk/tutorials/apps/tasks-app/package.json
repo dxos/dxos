@@ -20,7 +20,9 @@
     "@craco/craco": "~6.1.2",
     "@dxos/react-ux": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@material-ui/styles": "^4.11.4"
+    "@material-ui/styles": "^4.11.4",
+    "playwright": "^1.7.0",
+    "buffer": "^6.0.3"
   },
   "devDependencies": {
     "typescript": "^4.3.5",
@@ -28,7 +30,6 @@
     "babel-plugin-import": "~1.13.3",
     "@jackwilsdon/craco-use-babelrc": "~1.0.0",
     "@babel/preset-react": "7.9.4",
-    "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
     "jest": "^26.6.3",
@@ -48,12 +49,12 @@
   },
   "scripts": {
     "start": "SKIP_PREFLIGHT_CHECK=true craco start",
-    "build": "npm run lint && SKIP_PREFLIGHT_CHECK=true craco build",
+    "build": "SKIP_PREFLIGHT_CHECK=true craco build",
     "build:test": "npm run build && npm run test",
-    "lint": "toolchain lint",
     "test": "SKIP_PREFLIGHT_CHECK=true craco test --passWithNoTests --watchAll=false",
     "test:playwright": "jest --rootDir ./playwright --runInBand --passWithNoTests --verbose",
-    "eject": "craco eject"
+    "eject": "craco eject",
+    "pack:app": "pnpm pack"
   },
   "browserslist": {
     "production": [

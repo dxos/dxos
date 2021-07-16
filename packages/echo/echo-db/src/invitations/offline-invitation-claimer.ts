@@ -17,7 +17,7 @@ import {
   createGreetingClaimMessage,
   SignedMessage
 } from '@dxos/credentials';
-import { keyToString, PublicKey, randomBytes } from '@dxos/crypto';
+import { keyToBuffer, keyToString, PublicKey, randomBytes } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
@@ -97,7 +97,7 @@ export class OfflineInvitationClaimer {
     const { invitation: invitationID } = this._invitationDescriptor;
 
     // Send to the first peer (any peer will do).
-    const { peerId: responderPeerId } = this._greeterPlugin.peers[0].getSession();
+    const responderPeerId = keyToBuffer(this._greeterPlugin.peers[0].getSession().peerId);
 
     // We expect to receive a new swarm/rendezvousKey to use for the full Greeting process.
     const claimResponse = await this._greeterPlugin.send(
