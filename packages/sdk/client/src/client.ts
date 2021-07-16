@@ -8,7 +8,7 @@ import leveljs from 'level-js';
 import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
-import { Invitation, Keyring } from '@dxos/credentials';
+import { Invitation } from '@dxos/credentials';
 import { humanize, PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import * as debug from '@dxos/debug';
