@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
-//
-// Copyright 2020 DxOS.
-//
 
 const crypto = require('crypto');
 const yargs = require('yargs');
 
-const { createBroker } = require('../index.js');
+const { createBroker } = require('../dist/src/index.js');
 
 yargs
   .command('$0', 'start a signal server', {

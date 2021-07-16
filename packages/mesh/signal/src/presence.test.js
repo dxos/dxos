@@ -1,19 +1,21 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const crypto = require('crypto');
-const pEvent = require('p-event');
-const debug = require('debug');
+import crypto from 'crypto';
+import debug from 'debug';
+import pEvent from 'p-event';
 
-const { createBroker } = require('./broker');
+import { createBroker } from './broker';
 
 const log = debug('dxos:test:presence');
 
 jest.setTimeout(100 * 1000);
 
 function complete (nodeID, graph, max) {
-  if (graph.nodes().length !== max) return false;
+  if (graph.nodes().length !== max) {
+    return false;
+  }
 
   const nodes = graph.nodes().filter(id => id !== nodeID);
 
@@ -24,10 +26,14 @@ function complete (nodeID, graph, max) {
     edges.push(source === nodeID ? target : source);
   }
 
-  if (edges.length < (max - 1)) return false;
+  if (edges.length < (max - 1)) {
+    return false;
+  }
 
   for (const id of nodes) {
-    if (!edges.includes(id)) return false;
+    if (!edges.includes(id)) {
+      return false;
+    }
   }
 
   return true;

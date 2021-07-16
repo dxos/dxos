@@ -1,13 +1,13 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const WebService = require('moleculer-web');
-const { ApolloService } = require('moleculer-apollo-server');
-const moment = require('moment');
-const { Kind } = require('graphql');
+import { Kind } from 'graphql';
+import { ApolloService } from 'moleculer-apollo-server';
+import WebService from 'moleculer-web';
+import moment from 'moment';
 
-const { SignalServer } = require('../signal');
+import { SignalServer } from '../signal';
 
 exports.WebService = {
   name: 'web',

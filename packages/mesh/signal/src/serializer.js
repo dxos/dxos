@@ -1,9 +1,10 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const { Serializers: { Base: BaseSerializer } } = require('moleculer');
-const jsonCodec = require('buffer-json-encoding');
+import jsonCodec from 'buffer-json-encoding';
+
+const { Serializers: { Base: BaseSerializer } } = require('moleculer'); // eslint-disable-line @typescript-eslint/no-var-requires
 
 class Serializer extends BaseSerializer {
   serialize (obj) {

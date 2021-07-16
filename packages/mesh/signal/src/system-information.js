@@ -1,17 +1,18 @@
-//
-// Copyright 2020 DxOS.
-//
 
 /**
  * Copy from https://github.com/dxos/console/tree/master/packages/console-server
  */
 
-const { spawnSync } = require('child_process');
-const fs = require('fs');
-const moment = require('moment');
-const pick = require('lodash.pick');
-const os = require('os');
-const si = require('systeminformation');
+//
+// Copyright 2021 DXOS.org
+//
+
+import { spawnSync } from 'child_process';
+import fs from 'fs';
+import pick from 'lodash.pick';
+import moment from 'moment';
+import os from 'os';
+import si from 'systeminformation';
 
 const num = new Intl.NumberFormat('en', { maximumSignificantDigits: 3 });
 
