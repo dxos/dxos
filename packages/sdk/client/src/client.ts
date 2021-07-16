@@ -353,13 +353,6 @@ export class Client {
   }
 
   /**
-   * @deprecated Use echo.keyring
-   */
-  get keyring (): Keyring {
-    return this._echo.halo.keyring;
-  }
-
-  /**
    * @deprecated Use echo.feedStore
    */
   get feedStore (): FeedStore {
