@@ -35,7 +35,7 @@ export class Link<M extends Model<any>, L extends Model<any>, R extends Model<an
     assert(!!link, 'Links must have link data.');
   }
 
-  get isLink (): true {
+  override get isLink (): true {
     assert(super.isLink);
     return true;
   }

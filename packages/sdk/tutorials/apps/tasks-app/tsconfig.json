@@ -1,10 +1,18 @@
 {
-  "extends": "../../../../../tsconfig.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ES6"
-    ],
+    "allowJs": true,
+    "composite": true,
+    "incremental": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2018",
+    "experimentalDecorators": true,
+    "lib": ["DOM", "ESNext", "ES6"],
     "outDir": "dist",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
@@ -14,9 +22,5 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": [
-    "playwright",
-    "src",
-    "stories"
-  ]
+  "include": ["playwright", "src", "stories"]
 }

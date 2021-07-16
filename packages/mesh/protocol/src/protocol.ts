@@ -3,10 +3,9 @@
 //
 
 import assert from 'assert';
-import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
 import eos from 'end-of-stream';
-import protocol from 'hypercore-protocol';
+import ProtocolStream, { ProtocolStreamCtorOpts } from 'hypercore-protocol';
 
 import { Event, synchronized } from '@dxos/async';
 import type { Codec } from '@dxos/codec-protobuf';
@@ -16,7 +15,7 @@ import {
   ERR_PROTOCOL_HANDSHAKE_FAILED,
   ERR_PROTOCOL_EXTENSION_MISSING
 } from './errors';
-import { Extension, HandshakeHandler } from './extension';
+import { Extension } from './extension';
 import { ExtensionInit } from './extension-init';
 import { keyToHuman } from './utils';
 
@@ -24,7 +23,7 @@ const log = debug('dxos:protocol');
 
 const kProtocol = Symbol('dxos.protocol');
 
-export interface ProtocolStreamOptions {
+export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtorOpts {
   /**
    * You can use this to detect if you connect to yourself.
    */
@@ -40,11 +39,13 @@ export interface ProtocolStreamOptions {
 }
 
 export interface ProtocolOptions {
-  discoveryToPublicKey?: (discoveryKey: Buffer) => Buffer
+  discoveryToPublicKey?: (discoveryKey: Buffer) => (Buffer | undefined)
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-stream--protocoloptions
    */
   streamOptions?: ProtocolStreamOptions,
+
+  discoveryKey?: Buffer,
 
   initTimeout?: number
 
@@ -52,6 +53,9 @@ export interface ProtocolOptions {
    * Define a codec to encode/decode messages from extensions.
    */
   codec?: Codec
+
+  initiator: boolean,
+  userSession?: Record<string, any>,
 }
 
 /**
@@ -65,8 +69,8 @@ export class Protocol {
   readonly extensionsHandshake = new Event()
   readonly handshake = new Event<this>()
 
-  private _discoveryToPublicKey: (discoveryKey: Buffer) => Buffer;
-  private _streamOptions: ProtocolStreamOptions | undefined;
+  private _discoveryToPublicKey: ProtocolOptions['discoveryToPublicKey'];
+  private _streamOptions: ProtocolStreamCtorOpts | undefined;
   private _initTimeout: number;
   private _extensionInit: ExtensionInit;
   private _init = false;
@@ -82,28 +86,46 @@ export class Protocol {
 
   /**
    * https://github.com/mafintosh/hypercore-protocol
-   * @type {{ on, once, feed, remoteId, remoteUserData }}
    */
-  private _stream?: any = undefined;
+  private _stream: ProtocolStream;
 
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-feed--streamfeedkey
    * @type {Feed}
    */
-  private _feed?: any = undefined;
+  private _channel?: any = undefined;
 
   /**
    * Local object to store data for extensions.
    */
   private _context: Record<string, any> = {}
 
-  constructor (options: ProtocolOptions = {}) {
+  constructor (options: ProtocolOptions = { initiator: false }) {
     const { discoveryToPublicKey = key => key, streamOptions, initTimeout = 5 * 1000 } = options;
     this._discoveryToPublicKey = discoveryToPublicKey;
     this._streamOptions = streamOptions;
     this._initTimeout = initTimeout;
 
-    this._stream = protocol(this._streamOptions);
+    this._discoveryKey = options.discoveryKey;
+    this._initiator = !!options.initiator;
+
+    this._stream = new ProtocolStream(this._initiator, {
+      ...this._streamOptions,
+      onhandshake: async () => {
+        try {
+          await this.open();
+
+          await this._initExtensions(options.userSession);
+          this.extensionsInitialized.emit();
+
+          await this.streamOptions?.onhandshake?.(this);
+          await this._handshakeExtensions();
+          this.extensionsHandshake.emit();
+        } catch (err) {
+          process.nextTick(() => this._stream.destroy(err));
+        }
+      }
+    });
     (this._stream as any)[kProtocol] = this;
     this._stream.on('error', (err: any) => this.error.emit(err));
     this.error.on(error => log(error));
@@ -113,7 +135,7 @@ export class Protocol {
 
   toString () {
     const meta = {
-      id: keyToHuman(this._stream!.id),
+      id: keyToHuman(this._stream.publicKey),
       extensions: Array.from(this._extensionMap.keys())
     };
 
@@ -121,15 +143,15 @@ export class Protocol {
   }
 
   get id () {
-    return this._stream.id;
+    return this._stream.publicKey;
   }
 
   get stream () {
     return this._stream;
   }
 
-  get feed () {
-    return this._feed;
+  get channel () {
+    return this._channel;
   }
 
   get extensions () {
@@ -137,7 +159,7 @@ export class Protocol {
   }
 
   get streamOptions () {
-    return Object.assign({}, { id: this._stream!.id }, this._streamOptions);
+    return Object.assign({}, { id: this._stream!.publicKey }, this._streamOptions);
   }
 
   get connected () {
@@ -149,23 +171,13 @@ export class Protocol {
   }
 
   /**
-   * Sets session data which is exchanged with the peer during the handshake.
-   */
-  // TODO(burdon): Define type.
-  setSession (data: any) {
-    this._stream.userData = bufferJson.encode(data);
-
-    return this;
-  }
-
-  /**
    * Get remote session data.
    */
-  getSession (): any | {} {
+  getSession (): Record<string, any> | null {
     try {
-      return bufferJson.decode(this._stream.remoteUserData);
+      return this._extensionInit.remoteUserSession;
     } catch (err) {
-      return {};
+      return null;
     }
   }
 
@@ -213,10 +225,8 @@ export class Protocol {
 
   /**
    * Set protocol handshake handler.
-   * @param {Function<{protocol}>} handler - Async handshake handler.
-   * @returns {Protocol}
    */
-  setHandshakeHandler (handler: HandshakeHandler) {
+  setHandshakeHandler (handler: (protocol: Protocol) => void): Protocol {
     this._handshakes.push(async (protocol: Protocol) => {
       try {
         await handler(protocol);
@@ -227,16 +237,10 @@ export class Protocol {
     return this;
   }
 
-  /**
-   * Initializes the protocol stream, creating a feed.
-   * https://github.com/mafintosh/hypercore-protocol
-   */
-  init (discoveryKey?: Buffer) {
+  init () {
     assert(!this._init);
 
     this._init = true;
-    this._discoveryKey = discoveryKey;
-    this._initiator = !!discoveryKey;
     this.open().catch((err: any) => process.nextTick(() => this._stream.destroy(err)));
 
     return this;
@@ -249,25 +253,11 @@ export class Protocol {
     }
     await this._openExtensions();
 
-    // Handshake.
-    this._stream.once('handshake', async () => {
-      try {
-        await this._initExtensions();
-        this.extensionsInitialized.emit();
-        await this._handshakeExtensions();
-        this.extensionsHandshake.emit();
-      } catch (err) {
-        process.nextTick(() => this._stream.destroy(err));
-      }
-    });
-
-    this._openConnection();
-
-    eos(this._stream, () => {
+    eos(this._stream as any, () => {
       this.close();
     });
 
-    log(keyToHuman(this._stream.id, 'node'), 'initialized');
+    log(keyToHuman(this._stream.publicKey, 'node'), 'initialized');
 
     this._isOpen = true;
   }
@@ -299,23 +289,19 @@ export class Protocol {
   private async _openExtensions () {
     await this._extensionInit.openWithProtocol(this);
 
-    const sortedExtensions = [this._extensionInit.name];
-
     for (const [name, extension] of this._extensionMap) {
-      log(`open extension "${name}": ${keyToHuman(this._stream.id, 'node')}`);
+      log(`open extension "${name}": ${keyToHuman(this._stream.publicKey, 'node')}`);
       await extension.openWithProtocol(this);
-      sortedExtensions.push(name);
     }
-
-    sortedExtensions.sort().forEach(name => {
-      this._stream.extensions.push(name);
-    });
   }
 
-  private async _initExtensions () {
+  private async _initExtensions (userSession?: Record<string, any>) {
     try {
+      // Exchanging sessions, because other extensions (like Bot Plugin) might depend on the session being already there.
+      await this._extensionInit.sendSession(userSession);
+
       for (const [name, extension] of this._extensionMap) {
-        log(`init extension "${name}": ${keyToHuman(this._stream.id)} <=> ${keyToHuman(this._stream.remoteId)}`);
+        log(`init extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
         await extension.onInit();
       }
 
@@ -332,18 +318,19 @@ export class Protocol {
     }
 
     for (const [name, extension] of this._extensionMap) {
-      log(`handshake extension "${name}": ${keyToHuman(this._stream.id)} <=> ${keyToHuman(this._stream.remoteId)}`);
+      log(`handshake extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
       await extension.onHandshake();
     }
 
-    log(`handshake: ${keyToHuman(this._stream.id)} <=> ${keyToHuman(this._stream.remoteId)}`);
+    log(`handshake: ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
     this.handshake.emit(this);
     this._connected = true;
 
+    // TODO: Redo this
     this._stream.on('feed', async (discoveryKey: Buffer) => {
       try {
         for (const [name, extension] of this._extensionMap) {
-          log(`feed extension "${name}": ${keyToHuman(this._stream.id)} <=> ${keyToHuman(this._stream.remoteId)}`);
+          log(`feed extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
           await extension.onFeed(discoveryKey);
         }
       } catch (err) {
@@ -355,16 +342,18 @@ export class Protocol {
   private _openConnection () {
     let initialKey = null;
 
-    const openFeed = async (discoveryKey: Buffer) => {
+    const openChannel = (discoveryKey: Buffer) => {
       try {
-        initialKey = await this._discoveryToPublicKey(discoveryKey);
+        initialKey = this._discoveryToPublicKey?.(discoveryKey);
         if (!initialKey) {
           throw new ERR_PROTOCOL_CONNECTION_INVALID('key not found');
         }
 
         // init stream
-        this._feed = this._stream.feed(initialKey);
-        this._feed.on('extension', this._extensionHandler);
+        this._channel = this._stream.open(initialKey, {
+          onextension: this._extensionHandler
+
+        }); // needs a list of extension right away.
       } catch (err) {
         let newErr = err;
         if (!ERR_PROTOCOL_CONNECTION_INVALID.equals(newErr)) {
@@ -377,10 +366,10 @@ export class Protocol {
     // If this protocol stream is being created via a swarm connection event,
     // only the client side will know the topic (i.e. initial feed key to share).
     if (this._discoveryKey) {
-      openFeed(this._discoveryKey);
+      openChannel(this._discoveryKey);
     } else {
       // Wait for the peer to share the initial feed and see if we have the public key for that.
-      this._stream.once('feed', openFeed);
+      this._stream.once('feed', openChannel); // TODO: probably not working anymore.
     }
   }
 

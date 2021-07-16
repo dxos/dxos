@@ -1,6 +1,6 @@
 ---
 title: 3. Create a Party
-description: Add a Space for Sharing Data
+description: Add a space for sharing data
 ---
 
 A Party is the DXOS component responsible for sharing content between invited clients. Each Party is identified by a `publicKey`.

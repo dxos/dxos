@@ -1,9 +1,10 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const Server = require('simple-websocket/server');
-const { SocketSignalServer, errors: { ERR_PEER_NOT_FOUND } } = require('socket-signal');
+import Server from 'simple-websocket/server';
+
+const { SocketSignalServer, errors: { ERR_PEER_NOT_FOUND } } = require('socket-signal'); // eslint-disable-line @typescript-eslint/no-var-requires
 
 class SignalServer extends SocketSignalServer {
   constructor (server, broker, opts = {}) {
@@ -67,11 +68,15 @@ class SignalServer extends SocketSignalServer {
 
   async _onOffer (rpc, data) {
     const remotePeer = this._peerMap.peers.find(p => p.topic.equals(data.topic) && p.id.equals(data.remoteId));
-    if (!remotePeer) throw new ERR_PEER_NOT_FOUND(data.remoteId.toString('hex'));
+    if (!remotePeer) {
+      throw new ERR_PEER_NOT_FOUND(data.remoteId.toString('hex'));
+    }
 
     if (remotePeer.owner.equals(this._keyPair.publicKey)) {
       const rpc = remotePeer.rpc;
-      if (!rpc) throw new Error('rpc not found');
+      if (!rpc) {
+        throw new Error('rpc not found');
+      }
       return rpc.call('offer', data);
     }
 
@@ -80,11 +85,15 @@ class SignalServer extends SocketSignalServer {
 
   async _onSignal (rpc, data) {
     const remotePeer = this._peerMap.peers.find(p => p.topic.equals(data.topic) && p.id.equals(data.remoteId));
-    if (!remotePeer) throw new ERR_PEER_NOT_FOUND(data.remoteId.toString('hex'));
+    if (!remotePeer) {
+      throw new ERR_PEER_NOT_FOUND(data.remoteId.toString('hex'));
+    }
 
     if (remotePeer.owner.equals(this._keyPair.publicKey)) {
       const rpc = remotePeer.rpc;
-      if (!rpc) throw new Error('rpc not found');
+      if (!rpc) {
+        throw new Error('rpc not found');
+      }
       return rpc.emit('signal', data);
     }
 

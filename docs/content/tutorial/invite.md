@@ -1,6 +1,6 @@
 ---
 title: 4. Invite Peers
-description: Share Your Data With Peers
+description: Share your data with peers
 ---
 
 Before we can share the data we create in a party, we have to invite or grant access to other peers into the party. There are two steps required in this process: creating an invitation and redeeming it.

@@ -1,8 +1,8 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const { PeerMap } = require('./peer-map');
-const { SignalServer } = require('./signal-server');
+import { PeerMap } from './peer-map';
+import { SignalServer } from './signal-server';
 
 module.exports = { PeerMap, SignalServer };

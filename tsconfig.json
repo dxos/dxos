@@ -11,6 +11,7 @@
     "jsx": "react",
     "module": "commonjs",
     "moduleResolution": "node",
+    "noImplicitOverride": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,

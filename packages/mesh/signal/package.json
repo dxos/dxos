@@ -19,10 +19,10 @@
     "src",
     "index.js"
   ],
-  "main": "index.js",
+  "main": "dist/src/index.js",
   "scripts": {
-    "build": "exit 0",
-    "build:test": "toolchain test",
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
     "test": "toolchain test",
     "lint": "toolchain lint"
   },
@@ -54,10 +54,10 @@
     "p-limit": "^3.1.0",
     "public-ip": "^4.0.1",
     "pump": "^3.0.0",
-    "simple-hypercore-protocol": "^2.1.0",
+    "simple-hypercore-protocol": "dxos/simple-hypercore-protocol#bc23f0747e55954ec0bd94754910c92f88ec561c",
     "simple-websocket": "^9.0.0",
     "socket-signal": "^9.0.0",
-    "systeminformation": "^4.27.5",
+    "systeminformation": "^5.7.7",
     "tiny-lru": "^7.0.6",
     "varint": "^5.0.0",
     "yargs": "~16.2.0"

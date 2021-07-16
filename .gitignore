@@ -85,3 +85,7 @@ storybook-static
 **/gravity/testing/out/*
 **/out/bots/*
 **/.bots/*
+
+
+# public repo
+dxos-tutorial-tasks-app/

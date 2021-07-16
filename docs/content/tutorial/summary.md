@@ -1,6 +1,6 @@
 ---
 title: 7. Summary
-description: Building a simple task list application
+description: Building a simple tasks list application
 ---
 
 ### Congratulations!

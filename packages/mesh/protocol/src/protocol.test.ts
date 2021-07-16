@@ -4,7 +4,10 @@
 
 import crypto from 'crypto';
 import debug from 'debug';
+import expect from 'expect';
+import { it as test } from 'mocha';
 import pump from 'pump';
+import waitForExpect from 'wait-for-expect';
 
 import { ERR_EXTENSION_RESPONSE_FAILED, ERR_EXTENSION_RESPONSE_TIMEOUT } from './errors';
 import { Extension } from './extension';
@@ -13,11 +16,142 @@ import { Protocol } from './protocol';
 const log = debug('test');
 debug.enable('test,protocol');
 
-jest.setTimeout(10 * 1000);
-
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-test('basic', async () => {
+test('protocol sessions', async () => {
+  const topic = crypto.randomBytes(32);
+
+  const protocol1 = new Protocol({
+    discoveryKey: topic,
+    initiator: true,
+    streamOptions: {
+      onhandshake: async (protocol) => {
+        expect(protocol.getSession().peerId).toEqual('user2');
+      }
+    },
+    userSession: { peerId: 'user1' }
+  })
+    .init();
+
+  const protocol2 = new Protocol({
+    discoveryKey: topic,
+    initiator: false,
+    streamOptions: {
+      onhandshake: async (protocol) => {
+        expect(protocol.getSession().peerId).toEqual('user1');
+      }
+    },
+    userSession: { peerId: 'user2' }
+  })
+    .init();
+
+  protocol1.error.on(err => console.log('protocol1', err));
+  protocol2.error.on(err => console.log('protocol2', err));
+
+  pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any);
+}).timeout(1 * 1000);
+
+test('basic without extensions', async () => {
+  const topic = crypto.randomBytes(32);
+  let onInitCalled = 0;
+  const onInit = () => onInitCalled++;
+
+  const protocol1 = new Protocol({
+    discoveryKey: topic,
+    initiator: true,
+    streamOptions: {
+      onhandshake: async () => {
+        onInit();
+      }
+    },
+    userSession: { peerId: 'user1' }
+  })
+    .init();
+
+  const protocol2 = new Protocol({
+    discoveryKey: topic,
+    initiator: false,
+    streamOptions: {
+      onhandshake: async () => {
+        onInit();
+      }
+    },
+    userSession: { peerId: 'user2' }
+  })
+    .init();
+
+  protocol1.error.on(err => console.log('protocol1', err));
+  protocol2.error.on(err => console.log('protocol2', err));
+
+  pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any);
+
+  await waitForExpect(async () => {
+    expect(onInitCalled).toBe(2);
+  });
+}).timeout(1 * 1000);
+
+test('basic with a buffer ping-pong extension', async () => {
+  const topic = crypto.randomBytes(32);
+  const bufferExtension = 'buffer';
+  const timeout = 1000;
+
+  const protocol1 = new Protocol({
+    discoveryKey: topic,
+    initiator: true,
+    streamOptions: {
+      onhandshake: async () => {}
+    },
+    userSession: { peerId: 'user1' }
+  })
+    .setExtension(
+      new Extension(bufferExtension, { timeout })
+        .setInitHandler(async () => {})
+    )
+    .init();
+
+  const protocol2 = new Protocol({
+    discoveryKey: topic,
+    initiator: false,
+    streamOptions: {
+      onhandshake: async () => {}
+    },
+    userSession: { peerId: 'user2' }
+  })
+    .setExtension(new Extension(bufferExtension, { timeout })
+      .setInitHandler(async () => {})
+      .setMessageHandler(async (protocol, message) => {
+        const { data } = message;
+
+        switch (Buffer.from(data).toString()) {
+          case 'ping': {
+            return Buffer.from('pong');
+          }
+          default: {
+            throw new Error('Invalid data.');
+          }
+        }
+      }))
+    .init();
+
+  protocol1.error.on(err => console.log('protocol1', err));
+  protocol2.error.on(err => console.log('protocol2', err));
+
+  protocol1.setHandshakeHandler(async (protocol) => {
+    const bufferMessages = protocol.getExtension(bufferExtension)!;
+    expect(bufferMessages).toBeDefined();
+
+    {
+      const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
+      expect(data).toEqual(Buffer.from('pong'));
+      protocol1.close();
+    }
+  });
+  return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
+    resolve();
+  }));
+}).timeout(1 * 1000);
+
+test('basic ping and oneway', async () => {
   expect.assertions(9);
 
   const bufferExtension = 'buffer';
@@ -29,26 +163,68 @@ test('basic', async () => {
   });
 
   const topic = crypto.randomBytes(32);
-  const onInit = jest.fn();
+  let onInitCalled = 0;
+  const onInit = () => onInitCalled++;
 
-  const protocol1 = new Protocol()
-    .setSession({ user: 'user1' })
+  const protocol1 = new Protocol({ discoveryKey: topic, initiator: true, userSession: { peerId: 'user1' } })
     .setExtension(
       new Extension(bufferExtension, { timeout })
         .setInitHandler(async () => {
           onInit();
         })
     )
-    .init(topic);
+    .setHandshakeHandler(async (protocol) => {
+      expect(onInitCalled).toBe(2);
 
-  const protocol2 = new Protocol()
-    .setSession({ user: 'user2' })
+      const bufferMessages = protocol.getExtension(bufferExtension)!;
+
+      bufferMessages.on('error', (err: any) => {
+        log('Error: %o', err);
+      });
+
+      const { peerId: session } = protocol.getSession() ?? {};
+      expect(session).toBe('user2');
+
+      {
+        const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
+        expect(data).toEqual(Buffer.from('pong'));
+      }
+
+      {
+        const result = await bufferMessages.send(Buffer.from('oneway'), { oneway: true });
+        expect(result).toBeUndefined();
+        const data = await waitOneWayMessage.promise;
+        expect(data).toEqual(Buffer.from('oneway'));
+      }
+
+      try {
+        await bufferMessages.send(Buffer.from('crash'));
+      } catch (err) {
+        // eslint-disable-next-line
+        expect(ERR_EXTENSION_RESPONSE_FAILED.equals(err)).toBe(true);
+        // eslint-disable-next-line
+        expect(err.responseMessage).toBe('Invalid data.');
+      }
+
+      try {
+        await bufferMessages.send(Buffer.from('timeout'));
+      } catch (err) {
+        // eslint-disable-next-line
+        expect(ERR_EXTENSION_RESPONSE_TIMEOUT.equals(err)).toBe(true); // timeout.
+      }
+
+      log('%o', bufferMessages.stats);
+      protocol1.close();
+    })
+    .init();
+
+  const protocol2 = new Protocol({ discoveryKey: topic, initiator: false, userSession: { peerId: 'user2' } })
     .setHandshakeHandler(async () => {
-      expect(onInit).toHaveBeenCalledTimes(2);
+      expect(onInitCalled).toBe(2);
     })
     .setExtension(new Extension(bufferExtension, { timeout })
       .setInitHandler(async () => {
-        await sleep(2 * 1000);
+        await sleep(200);
         onInit();
       })
       .setMessageHandler(async (protocol, message) => {
@@ -77,57 +253,15 @@ test('basic', async () => {
           }
         }
       }))
-    .init(topic);
+    .init();
 
   protocol1.error.on(err => console.log('protocol1', err));
   protocol2.error.on(err => console.log('protocol2', err));
 
-  protocol1.setHandshakeHandler(async (protocol) => {
-    expect(onInit).toHaveBeenCalledTimes(2);
+  expect(protocol1.id).toBeDefined();
+  expect(protocol2.id).toBeDefined();
 
-    const bufferMessages = protocol.getExtension(bufferExtension)!;
-
-    bufferMessages.on('error', (err: any) => {
-      log('Error: %o', err);
-    });
-
-    const session = protocol.getSession();
-
-    expect(session.user).toBe('user2');
-
-    {
-      const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
-      expect(data).toEqual(Buffer.from('pong'));
-    }
-
-    {
-      const result = await bufferMessages.send(Buffer.from('oneway'), { oneway: true });
-      expect(result).toBeUndefined();
-      const data = await waitOneWayMessage.promise;
-      expect(data).toEqual(Buffer.from('oneway'));
-    }
-
-    try {
-      await bufferMessages.send(Buffer.from('crash'));
-    } catch (err) {
-      // eslint-disable-next-line
-      expect(ERR_EXTENSION_RESPONSE_FAILED.equals(err)).toBe(true);
-      // eslint-disable-next-line
-      expect(err.responseMessage).toBe('Invalid data.');
-    }
-
-    try {
-      await bufferMessages.send(Buffer.from('timeout'));
-    } catch (err) {
-      // eslint-disable-next-line
-      expect(ERR_EXTENSION_RESPONSE_TIMEOUT.equals(err)).toBe(true); // timeout.
-    }
-
-    log('%o', bufferMessages.stats);
-    protocol1.stream.destroy();
-  });
-
-  return new Promise<void>(resolve => pump(protocol1.stream, protocol2.stream, protocol1.stream, () => {
+  return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
     resolve();
   }));
 });
@@ -143,9 +277,10 @@ test('protocol init error', async () => {
   });
 
   const topic = crypto.randomBytes(32);
-  const onHandshake = jest.fn();
+  let onHandshakeCalled = 0;
+  const onHandshake = () => onHandshakeCalled++;
 
-  const protocol = (name: string, error?: any) => new Protocol()
+  const protocol = (name: string, error?: any, initiator?: boolean) => new Protocol({ discoveryKey: topic, initiator: !!initiator })
     .setContext({ name })
     .setHandshakeHandler(async () => {
       onHandshake();
@@ -159,13 +294,13 @@ test('protocol init error', async () => {
           }
         })
     )
-    .init(topic);
+    .init();
 
   const protocol1 = protocol('protocol1');
-  const protocol2 = protocol('protocol2', new Error('big error'));
+  const protocol2 = protocol('protocol2', new Error('big error'), true);
 
-  return new Promise<void>(resolve => pump(protocol1.stream, protocol2.stream, protocol1.stream, () => {
-    expect(onHandshake).not.toHaveBeenCalled();
+  return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
+    expect(onHandshakeCalled).toBe(0);
     resolve();
   }));
 });

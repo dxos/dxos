@@ -6,8 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 
-import { keyToString } from '@dxos/crypto';
-import { Extension, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
+import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/protocol';
 
 import { codec } from '../proto';
 import { Authenticator } from './authenticator';
@@ -55,8 +54,6 @@ export class AuthPlugin extends EventEmitter {
   /**
    * Handler to be called when the 'handshake' event is emitted.
    * If the session can not be authenticated, a ERR_EXTENSION_RESPONSE_FAILED will be thrown.
-   * @param protocol
-   * @private
    * @fires AuthPlugin#authenticated
    */
   // TODO(dboreham): Improve Protocol to avoid this:
@@ -65,19 +62,18 @@ export class AuthPlugin extends EventEmitter {
   // This is done because there is no known way using the current lower layer
   // implementation (Protocol, dependencies) to explicitly send such a response message.
   // TODO(telackey): supply further background/detail and correct anything incorrect above.
-  async _onHandshake (protocol: any /* , context */) { // TODO(burdon): ???
+  private async _onHandshake (protocol: Protocol /* , context */) { // TODO(burdon): ???
     assert(protocol);
 
     // Obtain the credentials from the session.
     // At this point credentials is protobuf encoded and base64-encoded
     // Note protocol.session.credentials is our data
-    const { credentials = undefined, peerId: sessionPeerId = undefined } = protocol?.getSession() ?? {};
+    const { credentials, peerId: sessionPeerId } = protocol?.getSession() ?? {};
     if (!credentials) {
       // If we only require auth when certain extensions are active, check if those are present.
       if (this._requiredForExtensions.size) {
         let authRequired = false;
-        for (const index of protocol.stream.remoteExtensions) {
-          const name = protocol.stream.extensions[index];
+        for (const name of protocol.stream.remoteExtensions.names) {
           if (this._requiredForExtensions.has(name)) {
             log(`Auth required for extension: ${name}`);
             authRequired = true;
@@ -88,7 +84,7 @@ export class AuthPlugin extends EventEmitter {
         // We can allow the unauthenticated connection, because none of the extensions which
         // require authentication to use are active on this connection.
         if (!authRequired) {
-          log(`Unauthenticated access allowed for ${keyToString(sessionPeerId)};`,
+          log(`Unauthenticated access allowed for ${sessionPeerId};`,
             'no extensions which require authentication are active on remote Protocol.');
           this.emit('allowed-unauthenticated', sessionPeerId);
           return;

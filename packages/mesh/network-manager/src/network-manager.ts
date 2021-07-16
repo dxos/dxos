@@ -15,7 +15,7 @@ import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { createWebRtcTransportFactory, inMemoryTransportFactory } from './transport';
 
-export type ProtocolProvider = (opts: { channel: Buffer }) => Protocol;
+export type ProtocolProvider = (opts: { channel: Buffer, initiator: boolean}) => Protocol;
 
 export interface NetworkManagerOptions {
   signal?: string[],

@@ -12,13 +12,15 @@ test('basic generator', async () => {
   const generator = new ProtocolNetworkGenerator(async (topic, id) => {
     return {
       id,
-      createStream () {
+      createStream ({ initiator }) {
         return new Protocol({
+          discoveryKey: topic,
+          initiator,
           streamOptions: {
             live: true
           }
         })
-          .init(topic)
+          .init()
           .stream;
       }
     };
