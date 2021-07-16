@@ -344,12 +344,12 @@ test('Authenticate flow for Kube/Keyhole authentication', async () => {
   const userIdentity = await userKeyring.createKeyRecord({ type: KeyType.IDENTITY });
   const userDevice = await userKeyring.createKeyRecord({ type: KeyType.DEVICE });
 
-  // Admit user device key with a signature from identity key. This is done when inviting user device to HALO. 
-  const deviceAdmit = userKeyring.sign({ message: 'Test' }, [userIdentity, userDevice])
+  // Admit user device key with a signature from identity key. This is done when inviting user device to HALO.
+  const deviceAdmit = userKeyring.sign({ message: 'Test' }, [userIdentity, userDevice]);
 
   // KUBE give user a signed credential and trust his identity.
-  const kubeCredential = kubeKeyring.sign({ admit: userIdentity.publicKey.toHex() }, [kubeIdentity])
-  kubeKeyring.addPublicKey(userIdentity)
+  const kubeCredential = kubeKeyring.sign({ admit: userIdentity.publicKey.toHex() }, [kubeIdentity]);
+  kubeKeyring.addPublicKey(userIdentity);
 
   // User's device builds a keychain
 
@@ -358,14 +358,14 @@ test('Authenticate flow for Kube/Keyhole authentication', async () => {
   keyMessages.set(userIdentity.publicKey.toHex(), deviceAdmit);
 
   const keychain = Keyring.buildKeyChain(userDevice.publicKey, keyMessages);
-  
+
   // User's device signes the credential using a keychain with a challenge token given by KUBE
-  const signedCredential = userKeyring.sign(kubeCredential, [keychain], Buffer.from('challenge token'))
+  const signedCredential = userKeyring.sign(kubeCredential, [keychain], Buffer.from('challenge token'));
 
   // KUBE verifies user's credential
   expect(signedCredential.signatures!.length).toBe(1);
   expect(signedCredential.signatures![0].key.toHex()).toEqual(userDevice.publicKey.toHex());
   expect(signedCredential.signatures![0].keyChain).toBeTruthy();
   expect(Buffer.from(signedCredential.signed.nonce).toString()).toBe(Buffer.from('challenge token').toString());
-  expect(kubeKeyring.verify(signedCredential)).toBe(true)
+  expect(kubeKeyring.verify(signedCredential)).toBe(true);
 });
