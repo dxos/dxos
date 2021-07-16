@@ -1,6 +1,6 @@
 {
   "name": "@dxos/model-factory",
-  "version": "2.10.12",
+  "version": "2.10.13",
   "description": "ECHO model factory.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
