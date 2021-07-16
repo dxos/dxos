@@ -30,6 +30,9 @@ export interface CreateBrokerOpts {
   logLevel?: LogLevel,
   logFormat?: LogFormat,
   logDir?: string,
+  discoveryService?: boolean,
+  presenceService?: boolean,
+  statusService?: boolean,
 }
 
 /**
@@ -51,7 +54,10 @@ export function createBroker (topic: Buffer, opts: CreateBrokerOpts = {}) {
     logger: loggerEnabled = true,
     logLevel,
     logFormat = 'full',
-    logDir
+    logDir,
+    discoveryService = true,
+    presenceService = true,
+    statusService = true,
   } = opts;
 
   const logger: {type: string, options: any} | undefined = loggerEnabled ? {
@@ -113,9 +119,15 @@ export function createBroker (topic: Buffer, opts: CreateBrokerOpts = {}) {
   });
 
   broker.createService(WebService);
-  broker.createService(DiscoveryService);
-  broker.createService(PresenceService);
-  broker.createService(StatusService);
 
+  if (discoveryService) {
+    broker.createService(DiscoveryService);
+  }
+  if (presenceService) {
+    broker.createService(PresenceService);
+  }
+  if (statusService) {
+    broker.createService(StatusService);
+  }
   return broker;
 }
