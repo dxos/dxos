@@ -57,7 +57,7 @@ export function createBroker (topic: Buffer, opts: CreateBrokerOpts = {}) {
     logDir,
     discoveryService = true,
     presenceService = true,
-    statusService = true,
+    statusService = true
   } = opts;
 
   const logger: {type: string, options: any} | undefined = loggerEnabled ? {
