@@ -139,7 +139,8 @@ export class ECHO {
       keyStorage: keyStorage,
       partyFactory,
       networkManager: this._networkManager,
-      partyManager: this._partyManager
+      partyManager: this._partyManager,
+      subscriptionGroup: this._subs
     });
   }
 
