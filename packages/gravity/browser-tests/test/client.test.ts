@@ -84,4 +84,26 @@ describe('Client', () => {
     await client.destroy();
     await otherClient.destroy();
   }).timeout(10_000).retries(2);
+
+  it('reset storage', async () => {
+    const client = new Client();
+    await client.initialize();
+    await client.createProfile({
+      ...createKeyPair(),
+      username: 'Reset test 1'
+    });
+
+    expect(client.echo.queryParties().value.length).toBe(0);
+    await client.echo.createParty();
+    expect(client.echo.queryParties().value.length).toBe(1);
+
+    await client.reset();
+
+    await client.initialize();
+    await client.createProfile({
+      ...createKeyPair(),
+      username: 'Reset test 2'
+    });
+    expect(client.echo.queryParties().value.length).toBe(0);
+  });
 });
