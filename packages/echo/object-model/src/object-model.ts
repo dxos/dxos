@@ -118,13 +118,13 @@ export class ObjectModel extends Model<ObjectMutationSet> {
     });
   }
 
-  createSnapshot () {
+  override createSnapshot () {
     return {
       root: ValueUtil.createMessage(this._object)
     };
   }
 
-  async restoreFromSnapshot (snapshot: ObjectSnapshot) {
+  override async restoreFromSnapshot (snapshot: ObjectSnapshot) {
     const obj: any = {};
     assert(snapshot.root);
     ValueUtil.applyValue(obj, 'root', snapshot.root);

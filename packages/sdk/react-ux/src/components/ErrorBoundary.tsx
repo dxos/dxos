@@ -25,7 +25,7 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  state = {
+  override state = {
     error: null
   };
 
@@ -41,7 +41,7 @@ class ErrorBoundary extends Component<Props, State> {
     return { error };
   }
 
-  componentDidCatch (error: Error, errorInfo: ErrorInfo) {
+  override componentDidCatch (error: Error, errorInfo: ErrorInfo) {
     const { onError } = this.props;
 
     // TODO(burdon): Show error indicator.
@@ -49,7 +49,7 @@ class ErrorBoundary extends Component<Props, State> {
     onError(error, errorInfo);
   }
 
-  render () {
+  override render () {
     const { children, onRestart, onReset } = this.props;
     const { error } = this.state;
 

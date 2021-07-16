@@ -74,7 +74,7 @@ export class PartyAuthenticator extends Authenticator {
    */
   // TODO(dboreham): verify that credentials is a message of type dxos.credentials.SignedMessage signing a
   //  message of type dxos.credentials.auth.Auth.
-  async authenticate (credentials: any) {
+  override async authenticate (credentials: any) {
     if (!credentials || !isSignedMessage(credentials)) {
       log('Bad credentials:', credentials);
       return false;
