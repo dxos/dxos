@@ -940,8 +940,6 @@ importers:
       debug: 4.3.1
       encoding-down: 6.3.0
       end-of-stream: 1.4.4
-      hypercore-crypto: 1.0.0
-      hypercore-protocol: 8.0.7
       hypertrie: 3.8.0
       json-stable-stringify: 1.0.1
       leveldown: 5.6.0
@@ -1001,8 +999,6 @@ importers:
       debug: ^4.1.1
       encoding-down: ^6.3.0
       end-of-stream: ^1.4.1
-      hypercore-crypto: ^1.0.0
-      hypercore-protocol: ^8.0.7
       hypertrie: ^3.8.0
       json-stable-stringify: ^1.0.1
       leveldown: ^5.4.1
@@ -1199,7 +1195,7 @@ importers:
       debug: 4.3.1
       end-of-stream: 1.4.4
       humanhash: 1.0.4
-      hypercore-protocol: 8.0.7
+      hypercore-protocol: github.com/dxos/hypercore-protocol/05513f9266f8bec4d29b144b72c59257c2d7bd60
       nanoerror: 1.2.1
       nanomessage: 5.4.0
       nanoresource-promise: 2.0.0
@@ -1232,7 +1228,7 @@ importers:
       end-of-stream: ^1.4.1
       expect: ~27.0.2
       humanhash: ^1.0.4
-      hypercore-protocol: ^8.0.7
+      hypercore-protocol: dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60
       nanoerror: ^1.2.1
       nanomessage: ^5.4.0
       nanoresource-promise: ^2.0.0
@@ -1297,7 +1293,7 @@ importers:
       '@types/node': 14.14.45
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
-      hypercore-protocol: 8.0.7
+      hypercore-protocol: github.com/dxos/hypercore-protocol/05513f9266f8bec4d29b144b72c59257c2d7bd60
       ngraph.graph: 19.1.0
       p-limit: 3.1.0
       queue-microtask: 1.2.3
@@ -1320,7 +1316,7 @@ importers:
       '@types/node': ^14.0.9
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
-      hypercore-protocol: ^8.0.7
+      hypercore-protocol: dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60
       ngraph.graph: ^19.0.1
       p-limit: ^3.1.0
       queue-microtask: ^1.1.2
@@ -1396,10 +1392,10 @@ importers:
       p-limit: 3.1.0
       public-ip: 4.0.3
       pump: 3.0.0
-      simple-hypercore-protocol: 2.1.1
+      simple-hypercore-protocol: github.com/dxos/simple-hypercore-protocol/bc23f0747e55954ec0bd94754910c92f88ec561c
       simple-websocket: 9.1.0
       socket-signal: 9.2.1
-      systeminformation: 4.34.23
+      systeminformation: 5.7.7
       tiny-lru: 7.0.6
       varint: 5.0.2
       yargs: 16.2.0
@@ -1409,6 +1405,8 @@ importers:
       graphology-canvas: 0.3.2_graphology-types@0.19.2
       graphology-shortest-path: 1.4.1_graphology-types@0.19.2
       graphology-types: 0.19.2
+      ts-node: 9.1.1_typescript@4.2.4
+      typescript: 4.2.4
       wrtc: 0.4.7
     specifiers:
       '@azure/abort-controller': ^1.0.1
@@ -1443,11 +1441,13 @@ importers:
       p-limit: ^3.1.0
       public-ip: ^4.0.1
       pump: ^3.0.0
-      simple-hypercore-protocol: ^2.1.0
+      simple-hypercore-protocol: dxos/simple-hypercore-protocol#bc23f0747e55954ec0bd94754910c92f88ec561c
       simple-websocket: ^9.0.0
       socket-signal: ^9.0.0
-      systeminformation: ^4.27.5
+      systeminformation: ^5.7.7
       tiny-lru: ^7.0.6
+      ts-node: ^9.1.1
+      typescript: ^4.2.4
       varint: ^5.0.0
       wrtc: ^0.4.6
       yargs: ~16.2.0
@@ -1950,7 +1950,6 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
-      '@dxos/toolchain-node-library': link:../../../../../toolchains/node-library
       '@jackwilsdon/craco-use-babelrc': 1.0.0_react-scripts@4.0.3
       '@storybook/addon-actions': 6.2.9_79cda1d42d14e5224ea88731ba484d0d
       '@storybook/addon-knobs': 6.2.9_79cda1d42d14e5224ea88731ba484d0d
@@ -1975,7 +1974,6 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ux': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
       '@jackwilsdon/craco-use-babelrc': ~1.0.0
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
@@ -22825,18 +22823,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-8Te0vlxvhpNCMgwnWFTbRR6Re2l8hq8wyXQc3lY9dPYXFxYwVkh79LhDQHFCOWRavmbiOdfqq1l5HT/73Rn2/w==
-  /simple-hypercore-protocol/2.1.1:
-    dependencies:
-      hypercore-crypto: 2.3.0
-      noise-protocol: 3.0.1
-      protocol-buffers-encodings: 1.1.1
-      simple-handshake: 3.0.0
-      simple-message-channels: 1.2.1
-      varint: 5.0.2
-      xsalsa20-universal: 1.0.0
-    dev: false
-    resolution:
-      integrity: sha512-xKuomRCfDDf+r6PDOD3RD88cjOLcbJ0E3Iz9Z+daB4Sq3FVv6efKYsOytgzTfSZMzkszF9EpYHGIILdVI669qA==
   /simple-message-channels/1.2.1:
     dependencies:
       varint: 5.0.2
@@ -23683,7 +23669,7 @@ packages:
       node: '>= 0.11.15'
     resolution:
       integrity: sha512-fZkHwJ8ZNRVRzF/+/2OtygyyH06CjC0YZAQRHu9jKKw8RXlJpbizEHvGRUu22Qkg182wJk1ugb5Aovcv3UPrww==
-  /systeminformation/4.34.23:
+  /systeminformation/5.7.7:
     dev: false
     engines:
       node: '>=4.0.0'
@@ -23697,7 +23683,7 @@ packages:
       - netbsd
       - sunos
     resolution:
-      integrity: sha512-33+lQwlLxXoxy0o9WLOgw8OjbXeS3Jv+pSl+nxKc2AOClBI28HsdRPpH0u9Xa9OVjHLT9vonnOMw1ug7YXI0dA==
+      integrity: sha512-aQ7MBeVI2MKPYOi3YJAoZ45JVlRkBA7IXoqGgtVBamvtE0I6JLOyJzD/VVc9pnMXDb3yqaMwssAjhwtJax4/Rw==
   /table/5.4.6:
     dependencies:
       ajv: 6.12.6
@@ -25943,6 +25929,22 @@ packages:
     dev: true
     resolution:
       integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==
+  github.com/dxos/hypercore-protocol/05513f9266f8bec4d29b144b72c59257c2d7bd60:
+    dependencies:
+      abstract-extension: 3.1.1
+      debug: 4.3.1
+      hypercore-crypto: 2.3.0
+      inspect-custom-symbol: 1.1.1
+      nanoguard: 1.3.0
+      pretty-hash: 1.0.1
+      simple-hypercore-protocol: github.com/dxos/simple-hypercore-protocol/bc23f0747e55954ec0bd94754910c92f88ec561c
+      streamx: 2.10.3
+      timeout-refresh: 1.0.3
+    dev: false
+    name: hypercore-protocol
+    resolution:
+      tarball: https://codeload.github.com/dxos/hypercore-protocol/tar.gz/05513f9266f8bec4d29b144b72c59257c2d7bd60
+    version: 8.0.7
   github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0:
     dependencies:
       abstract-leveldown: 7.0.0
