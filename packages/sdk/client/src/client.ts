@@ -56,12 +56,6 @@ export interface ClientConfig {
   invitationExpiration?: number,
 }
 
-export interface CreateProfileOptions {
-  publicKey?: Buffer
-  secretKey?: Buffer
-  username?: string
-}
-
 /**
  * Data client.
  */
@@ -110,6 +104,10 @@ export class Client {
 
   get echo () {
     return this._echo;
+  }
+
+  get halo () {
+    return this._echo.halo;
   }
 
   get registry () {
@@ -170,63 +168,6 @@ export class Client {
   async reset () {
     await this._echo.reset();
     await this._destroy();
-  }
-
-  //
-  // HALO Profile
-  //
-
-  /**
-   * Create Profile. Add Identity key if public and secret key are provided. Then initializes profile with given username.
-   * If not public and secret key are provided it relies on keyring to contain an identity key.
-   * @returns {ProfileInfo} User profile info.
-   */
-  // TODO(burdon): Breaks if profile already exists.
-  // TODO(burdon): ProfileInfo is not imported or defined.
-  @synchronized
-  async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}) {
-    if (this.getProfile()) {
-      throw new Error('Profile already exists.');
-    }
-
-    // TODO(burdon): What if not set?
-    if (publicKey && secretKey) {
-      await this._echo.halo.createIdentity({ publicKey, secretKey });
-    }
-
-    await this._echo.halo.create(username);
-
-    return this.getProfile();
-  }
-
-  /**
-   * @returns true if the profile exists.
-   * @deprecated Use getProfile.
-   */
-  // TODO(burdon): Remove?
-  hasProfile () {
-    return this._echo.halo.identityKey;
-  }
-
-  /**
-   * @returns {ProfileInfo} User profile info.
-   */
-  // TODO(burdon): Change to property (currently returns a new object each time).
-  getProfile () {
-    if (!this._echo.halo.identityKey) {
-      return;
-    }
-
-    return {
-      username: this._echo.halo.identityDisplayName,
-      // TODO(burdon): Why convert to string?
-      publicKey: this._echo.halo.identityKey.publicKey
-    };
-  }
-
-  // TODO(burdon): Should be part of profile object. Or use standard Result object.
-  subscribeToProfile (cb: () => void): () => void {
-    return this._echo.halo.identityReady.on(cb);
   }
 
   //

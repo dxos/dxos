@@ -79,7 +79,7 @@ export interface EchoCreationOptions {
  */
 // TODO(burdon): Create ECHOError class for public errors.
 export class ECHO {
-  readonly halo: HALO;
+  private readonly _halo: HALO;
 
   private readonly _feedStore: FeedStoreAdapter;
   private readonly _modelFactory: ModelFactory;
@@ -135,7 +135,7 @@ export class ECHO {
       partyFactory
     );
 
-    this.halo = new HALO({
+    this._halo = new HALO({
       keyStorage: keyStorage,
       partyFactory,
       networkManager: this._networkManager,
@@ -152,6 +152,10 @@ export class ECHO {
 
   get isOpen () {
     return this._partyManager.isOpen;
+  }
+
+  get halo () {
+    return this._halo;
   }
 
   //

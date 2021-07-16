@@ -20,7 +20,7 @@ const Test = () => {
       <h1>Client</h1>
       <pre>{JSON.stringify(client.config)}</pre>
       <pre>{JSON.stringify(profile)}</pre>
-      <button onClick={() => client.createProfile({ ...createKeyPair(), username: 'foo' })}>Create profile</button>
+      <button onClick={() => client.halo.createProfile({ ...createKeyPair(), username: 'foo' })}>Create profile</button>
       <button onClick={() => client.createParty()}>Create party</button>
       {parties.map((party: any) => <PartyView key={party.key.toString()} party={party} />)}
     </div>

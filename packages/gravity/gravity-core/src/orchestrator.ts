@@ -75,7 +75,7 @@ export class Orchestrator {
     const { publicKey, secretKey } = createKeyPair();
     const username = ORCHESTRATOR_NAME;
 
-    await this._client.createProfile({ publicKey, secretKey, username });
+    await this._client.halo.createProfile({ publicKey, secretKey, username });
 
     // Create control party.
     this._party = await this._client.echo.createParty();

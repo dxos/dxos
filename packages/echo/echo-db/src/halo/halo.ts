@@ -6,6 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import memdown from 'memdown';
 
+import { synchronized } from '@dxos/async';
 import { KeyRecord, Keyring, KeyStore, KeyType } from '@dxos/credentials';
 import { KeyPair, PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
@@ -20,6 +21,7 @@ import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';
 import { IdentityManager } from './identity-manager';
 import { autoPartyOpener } from './party-opener';
+import type { CreateProfileOptions } from './types';
 
 const log = debug('dxos:echo');
 
@@ -190,5 +192,58 @@ export class HALO {
     assert(this.identity.halo, 'Invalid HALO.');
 
     return this.identity.halo.contacts.queryContacts();
+  }
+
+  /**
+   * Create Profile. Add Identity key if public and secret key are provided. Then initializes profile with given username.
+   * If not public and secret key are provided it relies on keyring to contain an identity key.
+   * @returns {ProfileInfo} User profile info.
+   */
+  // TODO(burdon): Breaks if profile already exists.
+  // TODO(burdon): ProfileInfo is not imported or defined.
+  @synchronized
+  async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}) {
+    if (this.getProfile()) {
+      throw new Error('Profile already exists.');
+    }
+
+    // TODO(burdon): What if not set?
+    if (publicKey && secretKey) {
+      await this.createIdentity({ publicKey, secretKey });
+    }
+
+    await this.create(username);
+
+    return this.getProfile();
+  }
+
+  /**
+   * @returns true if the profile exists.
+   * @deprecated Use getProfile.
+   */
+  // TODO(burdon): Remove?
+  hasProfile () {
+    return this.identityKey;
+  }
+
+  /**
+   * @returns {ProfileInfo} User profile info.
+   */
+  // TODO(burdon): Change to property (currently returns a new object each time).
+  getProfile () {
+    if (!this.identityKey) {
+      return;
+    }
+
+    return {
+      username: this.identityDisplayName,
+      // TODO(burdon): Why convert to string?
+      publicKey: this.identityKey.publicKey
+    };
+  }
+
+  // TODO(burdon): Should be part of profile object. Or use standard Result object.
+  subscribeToProfile (cb: () => void): () => void {
+    return this.identityReady.on(cb);
   }
 }

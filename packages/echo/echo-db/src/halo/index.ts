@@ -10,3 +10,4 @@ export * from './identity';
 export * from './identity-manager';
 export * from './preferences';
 export * from './halo';
+export * from './types';

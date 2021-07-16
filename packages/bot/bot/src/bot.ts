@@ -101,9 +101,9 @@ export class Bot extends EventEmitter {
     await this._preInit();
     await this._client.initialize();
 
-    if (!this._persistent || !this._client.getProfile()) {
+    if (!this._persistent || !this._client.halo.getProfile()) {
       const { publicKey, secretKey } = createKeyPair();
-      await this._client.createProfile({ publicKey, secretKey, username: this._name });
+      await this._client.halo.createProfile({ publicKey, secretKey, username: this._name });
       log(`Identity initialized: ${keyToString(publicKey)}`);
     }
 

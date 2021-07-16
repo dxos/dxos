@@ -30,10 +30,10 @@ test('initialize', async () => {
   // TODO(burdon): Open promises.
   //   On test close: A worker process has failed to exit gracefully and has been force exited.
   const keypair = createKeyPair();
-  await client.createProfile({ ...keypair, username: 'test-user' });
+  await client.halo.createProfile({ ...keypair, username: 'test-user' });
 
-  expect(client.hasProfile()).toBeTruthy();
-  expect(client.getProfile()).toBeDefined();
+  expect(client.halo.hasProfile()).toBeTruthy();
+  expect(client.halo.getProfile()).toBeDefined();
 
   await client.destroy();
 });
@@ -43,7 +43,7 @@ test('creating profile returns the profile', async () => {
   await client.initialize();
 
   const keypair = createKeyPair();
-  const profile = await client.createProfile({ ...keypair, username: 'test-user' });
+  const profile = await client.halo.createProfile({ ...keypair, username: 'test-user' });
 
   expect(profile).toBeDefined();
   expect(profile?.username).toEqual('test-user');
@@ -64,9 +64,9 @@ test('persistent storage', async () => {
     await client.initialize();
 
     const keypair = createKeyPair();
-    await client.createProfile({ ...keypair, username: 'test-user' });
+    await client.halo.createProfile({ ...keypair, username: 'test-user' });
 
-    expect(client.getProfile()).toBeDefined();
+    expect(client.halo.getProfile()).toBeDefined();
 
     await client.destroy();
   }
@@ -75,7 +75,7 @@ test('persistent storage', async () => {
     const client = new Client(config);
     await client.initialize();
 
-    expect(client.getProfile()).toBeDefined();
+    expect(client.halo.getProfile()).toBeDefined();
   }
 });
 
@@ -84,11 +84,11 @@ test('creating profile twice throws an error', async () => {
   await client.initialize();
 
   const keypair = createKeyPair();
-  await client.createProfile({ ...keypair, username: 'test-user' });
-  expect(client.hasProfile()).toBeTruthy();
+  await client.halo.createProfile({ ...keypair, username: 'test-user' });
+  expect(client.halo.hasProfile()).toBeTruthy();
 
-  await expect(client.createProfile({ ...keypair, username: 'test-user' })).rejects.toThrow();
-  expect(client.hasProfile()).toBeTruthy();
+  await expect(client.halo.createProfile({ ...keypair, username: 'test-user' })).rejects.toThrow();
+  expect(client.halo.hasProfile()).toBeTruthy();
 
   await client.destroy();
 });
@@ -98,7 +98,7 @@ test.skip('recreating party based on snapshot does not fail', async () => {
   await client.initialize();
 
   const keypair = createKeyPair();
-  await client.createProfile({ ...keypair, username: 'test-user' });
+  await client.halo.createProfile({ ...keypair, username: 'test-user' });
 
   const party = await client.echo.createParty();
 
