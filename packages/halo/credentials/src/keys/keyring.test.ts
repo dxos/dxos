@@ -348,7 +348,7 @@ test('Authenticate flow for Kube/Keyhole authentication', async () => {
   const deviceAdmit = userKeyring.sign({ message: 'Test' }, [userIdentity, userDevice]);
 
   // User signs a message to give his identity access to KUBE.
-  const credential = userKeyring.sign({ admit: userIdentity.publicKey.toHex() }, [userIdentity])
+  const credential = userKeyring.sign({ admit: userIdentity.publicKey.toHex() }, [userIdentity]);
   // KUBE adds his own signature producing a verifiable credential that the user stores.
   const kubeCredential = kubeKeyring.sign(credential, [kubeIdentity]);
 
