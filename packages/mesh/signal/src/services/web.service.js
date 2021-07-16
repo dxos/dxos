@@ -9,7 +9,7 @@ import moment from 'moment';
 
 import { SignalServer } from '../signal';
 
-exports.WebService = {
+export const WebService = {
   name: 'web',
   mixins: [
     WebService,

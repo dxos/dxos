@@ -17,22 +17,22 @@ import { ProtocolTransporter } from './transporter';
 
 const SIGNAL_PROTOCOL_VERSION = 4;
 
+export interface CreateBrokerOpts {
+  port?: string | number,
+  keyPair?: { publicKey: Buffer, secretKey: Buffer },
+  hyperswarm?: any,
+  asBootstrap?: boolean,
+  repl?: boolean,
+  logger?: boolean,
+  logLevel?: "fatal" | "error" | "warn" | "info" | "debug" | "trace",
+  logFormat?: 'full' | string,
+  logDir?: string,
+}
+
 /**
  * Create a ServiceBroker
- *
- * @param {Buffer} topic
- * @param {Object} opts
- * @param {number} [opts.port=4000]
- * @param {{ publicKey: Buffer, secretKey: Buffer }} opts.keyPair
- * @param {Object} opts.hyperswarm Hyperswarm options
- * @param {boolean} [opts.asBootstrap=false]
- * @param {boolean} [opts.repl=false]
- * @param {boolean} [opts.logger=true]
- * @param {string} [opts.logLevel='info']
- * @param {string} [opts.logFormat='full']
- * @param {string} [opts.logDir]
  */
-function createBroker (topic, opts = {}) {
+export function createBroker (topic: Buffer, opts: CreateBrokerOpts = {}) {
   assert(Buffer.isBuffer(topic) && topic.length === 32, 'topic is required and must be a buffer of 32 bytes');
 
   topic = crypto.createHash('sha256')
@@ -40,7 +40,7 @@ function createBroker (topic, opts = {}) {
     .digest();
 
   const {
-    port = process.env.PORT || 4000,
+    port = process.env.PORT ?? 4000,
     keyPair = ProtocolTransporter.keyPair(),
     hyperswarm,
     asBootstrap = false,
@@ -51,12 +51,13 @@ function createBroker (topic, opts = {}) {
     logDir
   } = opts;
 
-  const logger = loggerEnabled && {
+  let logger: {type: string, options: any} | undefined;
+  logger = loggerEnabled ? {
     type: 'Console',
     options: {
       formatter: logFormat
     }
-  };
+  } : undefined;
 
   if (logger && logDir) {
     logger.type = 'File';
@@ -71,7 +72,7 @@ function createBroker (topic, opts = {}) {
     nodeID: keyPair.publicKey.toString('hex'),
     logger,
     logLevel,
-    repl,
+    // repl,
     transporter: new ProtocolTransporter({
       topic,
       keyPair,
@@ -98,14 +99,14 @@ function createBroker (topic, opts = {}) {
         return broker.repl();
       }
     },
-    errorHandler (err, info) {
+    errorHandler (err: any, info) {
       // Handle the error
       if (err.code) {
         // ignore webrtc peer errors
-        this.logger.debug('GLOBAL_ERROR:', err);
+        (this.logger as any).debug('GLOBAL_ERROR:', err);
         return;
       }
-      this.logger.warn('GLOBAL_ERROR:', err);
+      (this.logger as any).warn('GLOBAL_ERROR:', err);
     }
   });
 
@@ -117,4 +118,4 @@ function createBroker (topic, opts = {}) {
   return broker;
 }
 
-module.exports = { createBroker, SIGNAL_PROTOCOL_VERSION, ProtocolTransporter };
+module.exports = { SIGNAL_PROTOCOL_VERSION, ProtocolTransporter };
