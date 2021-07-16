@@ -191,10 +191,10 @@ export class Client {
 
     // TODO(burdon): What if not set?
     if (publicKey && secretKey) {
-      await this._echo.createIdentity({ publicKey, secretKey });
+      await this._echo.halo.createIdentity({ publicKey, secretKey });
     }
 
-    await this._echo.createHalo(username);
+    await this._echo.halo.create(username);
 
     return this.getProfile();
   }
@@ -205,7 +205,7 @@ export class Client {
    */
   // TODO(burdon): Remove?
   hasProfile () {
-    return this._echo.identityKey;
+    return this._echo.halo.identityKey;
   }
 
   /**
@@ -213,20 +213,20 @@ export class Client {
    */
   // TODO(burdon): Change to property (currently returns a new object each time).
   getProfile () {
-    if (!this._echo.identityKey) {
+    if (!this._echo.halo.identityKey) {
       return;
     }
 
     return {
-      username: this._echo.identityDisplayName,
+      username: this._echo.halo.identityDisplayName,
       // TODO(burdon): Why convert to string?
-      publicKey: this._echo.identityKey.publicKey
+      publicKey: this._echo.halo.identityKey.publicKey
     };
   }
 
   // TODO(burdon): Should be part of profile object. Or use standard Result object.
   subscribeToProfile (cb: () => void): () => void {
-    return this._echo.identityReady.on(cb);
+    return this._echo.halo.identityReady.on(cb);
   }
 
   //
@@ -354,7 +354,7 @@ export class Client {
 
   // TODO(rzadp): Uncomment after updating ECHO.
   // async createHaloInvitation (secretProvider: SecretProvider, options?: InvitationOptions) {
-  //   return this.echo.createHaloInvitation(
+  //   return this.echo.halo.createInvitation(
   //     {
   //       secretProvider,
   //       secretValidator: (invitation: any, secret: any) => secret && secret.equals(invitation.secret)
@@ -405,7 +405,7 @@ export class Client {
       feedStore: this._echo.feedStore,
       networkManager: this._echo.networkManager,
       modelFactory: this._echo.modelFactory,
-      keyring: this._echo.keyring,
+      keyring: this._echo.halo.keyring,
       debug
     };
     return devtoolsContext;
@@ -415,7 +415,7 @@ export class Client {
    * @deprecated Use echo.keyring
    */
   get keyring (): Keyring {
-    return this._echo.keyring;
+    return this._echo.halo.keyring;
   }
 
   /**

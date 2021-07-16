@@ -60,7 +60,7 @@ export class BackgroundServer {
           return {
             publicKey: profile?.publicKey.toHex(),
             username: profile?.username,
-            signedMessage: this._client.echo.keyring.sign(request.message, this._client.echo.keyring.keys).signed.payload
+            signedMessage: this._client.echo.halo.keyring.sign(request.message, this._client.echo.halo.keyring.keys).signed.payload
           };
         },
         CreateProfile: async request => {

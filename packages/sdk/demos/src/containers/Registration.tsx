@@ -39,7 +39,7 @@ const Registration = () => {
     // TODO(rzadp): Recovering halo requires another device to be online.
     // No point in having real recovering in storybook as long as we don't have device initiations as well.
     await sleep(2000); // Simulate recovering.
-    // await client.echo.recoverHalo(seedPhrase);
+    // await client.echo.halo.recover(seedPhrase);
 
     await client.createProfile(keyPairFromSeedPhrase(seedPhrase)); // We don't have device recovery, so just recreating halo from scratch.
 
