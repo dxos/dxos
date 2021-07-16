@@ -1,14 +1,14 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const crypto = require('crypto');
-const debug = require('debug');
-const swarm = require('@geut/discovery-swarm-webrtc');
-const wrtc = require('wrtc');
-const pEvent = require('p-event');
+import swarm from '@geut/discovery-swarm-webrtc';
+import crypto from 'crypto';
+import debug from 'debug';
+import pEvent from 'p-event';
+import wrtc from 'wrtc';
 
-const { createBroker } = require('./broker');
+import { createBroker } from './broker';
 
 const log = debug('dxos:test:signal');
 
@@ -46,7 +46,9 @@ test.skip('join/leave/connection webrtc peer', async () => {
   const waitForPeerConnections = new Promise(resolve => {
     let connections = 0;
     const done = (conn, { initiator }) => {
-      if (initiator) connections++;
+      if (initiator) {
+        connections++;
+      }
       if (connections >= 2) {
         clients.forEach(client => client.off('connection', done));
         resolve();

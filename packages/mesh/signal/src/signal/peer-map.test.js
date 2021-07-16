@@ -1,8 +1,8 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const { PeerMap } = require('./peer-map');
+import { PeerMap } from './peer-map';
 
 const bf = str => Buffer.from(str);
 

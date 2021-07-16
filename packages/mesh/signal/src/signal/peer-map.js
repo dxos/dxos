@@ -1,9 +1,9 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const { EventEmitter } = require('events');
-const assert = require('assert');
+import assert from 'assert';
+import { EventEmitter } from 'events';
 
 /**
  * @typedef Peer
@@ -112,7 +112,9 @@ class PeerMap extends EventEmitter {
    */
   getPeersByTopic (topic) {
     const topicStr = topic.toString('hex');
-    if (!this._peersByTopic.has(topicStr)) return [];
+    if (!this._peersByTopic.has(topicStr)) {
+      return [];
+    }
     const peers = this._peersByTopic.get(topicStr);
     return Array.from(peers.values());
   }
@@ -122,7 +124,9 @@ class PeerMap extends EventEmitter {
    */
   deletePeersByOwner (owner) {
     for (const peer of this.peers) {
-      if (!peer.owner.equals(owner)) continue;
+      if (!peer.owner.equals(owner)) {
+        continue;
+      }
       this._delete(peer.topic, peer.id);
     }
   }
@@ -132,7 +136,9 @@ class PeerMap extends EventEmitter {
    */
   deletePeersByRPC (rpc) {
     for (const peer of this.peers) {
-      if (peer.rpc !== rpc) continue;
+      if (peer.rpc !== rpc) {
+        continue;
+      }
       this._delete(peer.topic, peer.id);
     }
   }

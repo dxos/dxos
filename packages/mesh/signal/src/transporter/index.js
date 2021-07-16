@@ -1,17 +1,18 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
-const assert = require('assert');
-const { EventEmitter } = require('events');
-const { Transporters: { Base: BaseTransporter } } = require('moleculer');
-const hyperswarm = require('hyperswarm');
-const pEvent = require('p-event');
-const { discoveryKey } = require('hypercore-crypto');
-const Protocol = require('simple-hypercore-protocol');
+import assert from 'assert';
+import { EventEmitter } from 'events';
+import { discoveryKey } from 'hypercore-crypto';
+import hyperswarm from 'hyperswarm';
+import pEvent from 'p-event';
+import Protocol from 'simple-hypercore-protocol';
 
-const { Messenger } = require('./messenger');
-const { BootstrapNode } = require('./bootstrap-node');
+import { BootstrapNode } from './bootstrap-node';
+import { Messenger } from './messenger';
+
+const { Transporters: { Base: BaseTransporter } } = require('moleculer'); // eslint-disable-line @typescript-eslint/no-var-requires
 
 class ProtocolTransporter extends BaseTransporter {
   static keyPair () {
@@ -68,7 +69,9 @@ class ProtocolTransporter extends BaseTransporter {
   }
 
   waitForConnected () {
-    if (this.connected) return;
+    if (this.connected) {
+      return;
+    }
     return pEvent(this, 'connected');
   }
 
@@ -156,7 +159,9 @@ class ProtocolTransporter extends BaseTransporter {
    * @returns {Promise}
    */
   send (topic, data, { packet }) {
-    if (!this._swarm || this._messenger.closed || this._messenger.closing || this._messenger.peers.length === 0) return Promise.resolve();
+    if (!this._swarm || this._messenger.closed || this._messenger.closing || this._messenger.peers.length === 0) {
+      return Promise.resolve();
+    }
 
     const sended = this._messenger.send(packet.target, { topic, data });
     if (!sended) {
