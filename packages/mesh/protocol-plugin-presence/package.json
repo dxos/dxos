@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-presence",
-  "version": "2.10.12",
+  "version": "2.10.13",
   "description": "Protocol plugin presence.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-presence#readme",
   "bugs": {
