@@ -85,7 +85,7 @@ describe('Client', () => {
     await otherClient.destroy();
   }).timeout(10_000).retries(2);
 
-  it('reset storage', async () => {
+  it.skip('reset storage', async () => {
     const client = new Client();
     await client.initialize();
     await client.createProfile({
