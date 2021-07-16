@@ -10,7 +10,6 @@ import { synchronized } from '@dxos/async';
 import { KeyRecord, Keyring, KeyStore, KeyType } from '@dxos/credentials';
 import { KeyPair, PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
-import { SubscriptionGroup } from '@dxos/util';
 
 import {
   InvitationAuthenticator, InvitationDescriptor, InvitationOptions, SecretProvider
@@ -20,7 +19,6 @@ import { ResultSet } from '../result';
 import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';
 import { IdentityManager } from './identity-manager';
-import { autoPartyOpener } from './party-opener';
 import type { CreateProfileOptions } from './types';
 
 const log = debug('dxos:echo');
@@ -29,25 +27,21 @@ export interface HaloConfiguration {
   keyStorage?: any,
   partyFactory: PartyFactory,
   networkManager: NetworkManager,
-  partyManager: PartyManager,
-  subscriptionGroup: SubscriptionGroup
+  partyManager: PartyManager
 }
 
 export class HALO {
   private readonly _identityManager: IdentityManager;
   private readonly _keyring: Keyring;
   private readonly _partyManager: PartyManager;
-  private readonly _subs: SubscriptionGroup;
 
   constructor ({
     keyStorage = memdown(),
     partyFactory,
     networkManager,
-    partyManager,
-    subscriptionGroup
+    partyManager
   }: HaloConfiguration) {
     this._keyring = new Keyring(new KeyStore(keyStorage));
-    this._subs = subscriptionGroup;
 
     const haloFactory = new HaloFactory(
       partyFactory,
@@ -57,13 +51,6 @@ export class HALO {
 
     this._identityManager = new IdentityManager(this._keyring, haloFactory);
     this._partyManager = partyManager;
-
-    this._identityManager.ready.once(() => {
-      // It might be the case that halo gets closed before this has a chance to execute.
-      if (this._identityManager.identity.halo?.isOpen) {
-        this._subs.push(autoPartyOpener(this._identityManager.identity.halo!, this._partyManager));
-      }
-    });
   }
 
   get identity () {

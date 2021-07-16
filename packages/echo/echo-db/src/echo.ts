@@ -15,6 +15,7 @@ import { Storage } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { HALO } from './halo';
+import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer, SecretProvider } from './invitations';
 import { DefaultModel } from './items';
 import { OpenProgress, Party, PartyFactory, PartyFilter, PartyManager } from './parties';
@@ -139,8 +140,14 @@ export class ECHO {
       keyStorage: keyStorage,
       partyFactory,
       networkManager: this._networkManager,
-      partyManager: this._partyManager,
-      subscriptionGroup: this._subs
+      partyManager: this._partyManager
+    });
+
+    this._halo.identityReady.once(() => {
+      // It might be the case that halo gets closed before this has a chance to execute.
+      if (this.halo.identity.halo?.isOpen) {
+        this._subs.push(autoPartyOpener(this.halo.identity.halo, this._partyManager));
+      }
     });
   }
 
