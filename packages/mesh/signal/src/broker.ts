@@ -17,6 +17,9 @@ import { ProtocolTransporter } from './transporter';
 
 const SIGNAL_PROTOCOL_VERSION = 4;
 
+export type LogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
+export type LogFormat = 'full' | 'short' | 'simple' | 'json'
+
 export interface CreateBrokerOpts {
   port?: string | number,
   keyPair?: { publicKey: Buffer, secretKey: Buffer },
@@ -24,8 +27,8 @@ export interface CreateBrokerOpts {
   asBootstrap?: boolean,
   repl?: boolean,
   logger?: boolean,
-  logLevel?: "fatal" | "error" | "warn" | "info" | "debug" | "trace",
-  logFormat?: 'full' | string,
+  logLevel?: LogLevel,
+  logFormat?: LogFormat,
   logDir?: string,
 }
 
@@ -51,8 +54,7 @@ export function createBroker (topic: Buffer, opts: CreateBrokerOpts = {}) {
     logDir
   } = opts;
 
-  let logger: {type: string, options: any} | undefined;
-  logger = loggerEnabled ? {
+  const logger: {type: string, options: any} | undefined = loggerEnabled ? {
     type: 'Console',
     options: {
       formatter: logFormat

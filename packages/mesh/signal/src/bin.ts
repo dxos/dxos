@@ -1,10 +1,19 @@
 #!/usr/bin/env node
 
+//
+// Copyright 2021 DXOS.org
+//
 
 import crypto from 'crypto';
 import yargs from 'yargs';
 
-import { createBroker } from './broker'
+import { createBroker, LogFormat, LogLevel } from './broker';
+
+const LOG_LEVELS: LogLevel[] = ['debug', 'info', 'warn', 'error'];
+const DEFAULT_LOG_LEVEL: LogLevel = 'info';
+
+const LOG_FORMATS: LogFormat[] = ['full', 'short', 'simple', 'json'];
+const DEFAULT_LOG_FORMAT: LogFormat = 'full';
 
 yargs
   .command('$0', 'start a signal server', {
@@ -36,13 +45,13 @@ yargs
     logLevel: {
       alias: 'l',
       describe: 'defines the log level',
-      default: 'info',
-      choices: ['debug', 'info', 'warn', 'error']
+      default: DEFAULT_LOG_LEVEL,
+      choices: LOG_LEVELS
     },
     logFormat: {
       describe: 'defines the log format',
-      default: 'full',
-      choices: ['full', 'short', 'simple', 'json']
+      default: DEFAULT_LOG_FORMAT,
+      choices: LOG_FORMATS
     },
     logDir: {
       describe: 'defines a log directory',
