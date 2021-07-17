@@ -51,7 +51,11 @@ test('Signing', async () => {
   const message = Buffer.from('hello world');
   const signature = await sign(message, privateKey);
 
+  expect(sign(message, 'not-a-key' as any)).rejects.toThrowError();
+
   expect(signature.byteLength).toBe(SIGNATURE_LENGTH);
   expect(verify(message, signature, publicKey)).resolves.toBe(true);
   expect(verify(message, Buffer.alloc(64), publicKey)).resolves.toBe(false);
+  expect(verify(message, 'not-a-signature' as any, publicKey)).resolves.toBe(false);
+  expect(verify(message, signature, 'not-a-key' as any)).rejects.toThrowError();
 });

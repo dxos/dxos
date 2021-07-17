@@ -146,7 +146,6 @@ export function createId (): string {
  */
 export async function sign (message: Buffer, secretKey: CryptoKey): Promise<Buffer> {
   assert(Buffer.isBuffer(message));
-  // assert(Buffer.isBuffer(secretKey) && secretKey.length === SECRET_KEY_LENGTH);
 
   return subtle.sign(SIGNATURE_ALGORITHM, secretKey, message);
 }
@@ -160,8 +159,6 @@ export async function sign (message: Buffer, secretKey: CryptoKey): Promise<Buff
  */
 export async function verify (message: Buffer, signature: Buffer, publicKey: CryptoKey): Promise<boolean> {
   assert(Buffer.isBuffer(message));
-  // assert(Buffer.isBuffer(signature) && signature.length === SIGNATURE_LENGTH);
-  // assert(Buffer.isBuffer(publicKey) && publicKey.length === PUBLIC_KEY_LENGTH);
 
   return subtle.verify(SIGNATURE_ALGORITHM, publicKey, signature, message);
 }
