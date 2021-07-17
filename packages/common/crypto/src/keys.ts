@@ -15,7 +15,6 @@ import { PublicKey, PublicKeyLike } from './public-key';
 export const hasher = new HumanHasher();
 
 export const PUBLIC_KEY_LENGTH = 97;
-// export const SECRET_KEY_LENGTH = 64;
 export const KEY_GENERATION_ALGORITHM = {
   name: 'ECDSA',
   namedCurve: 'P-384'

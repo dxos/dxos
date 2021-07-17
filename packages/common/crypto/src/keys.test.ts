@@ -25,22 +25,24 @@ test('Basic key operations', async () => {
     privateKey: await keyToJson(keyPair.privateKey)
   };
 
-  expect(await createKeyPair(keySeed)).toEqual(keyPair);
+  expect(createKeyPair(keySeed)).resolves.toEqual(keyPair);
 
-  // expect(() => keyToString('not-a-cryptokey' as any)).toThrowError();
-  // expect(() => keyToBuffer('not-a-value-hex-key')).toThrowError();
+  expect(keyToString('not-a-cryptokey' as any)).rejects.toThrowError();
+  expect(() => keyToBuffer('not-a-value-hex-key')).toThrowError();
   expect(() => keyToBuffer(keyPair.publicKey as any)).toThrowError();
 });
 
 test('Hashing', async () => {
   const keyPairA = await createKeyPair();
   const keyPairB = await createKeyPair();
-  const { publicKey } = keyPairA;
 
   expect(createId()).not.toEqual(createId());
 
-  expect(await humanize(publicKey)).not.toEqual(await humanize(keyPairB.publicKey));
-  expect(await humanize(publicKey)).toEqual(hasher.humanize(await keyToString(publicKey)));
+  const humanizedPublicKeyA = await humanize(keyPairA.publicKey);
+  const humanizedPublicKeyB = await humanize(keyPairB.publicKey);
+
+  expect(humanizedPublicKeyA).not.toEqual(humanizedPublicKeyB);
+  expect(humanizedPublicKeyA).toEqual(hasher.humanize(await keyToString(keyPairA.publicKey)));
   expect(hasher.humanize(createId())).toBeDefined();
 });
 
@@ -50,6 +52,6 @@ test('Signing', async () => {
   const signature = await sign(message, privateKey);
 
   expect(signature.byteLength).toBe(SIGNATURE_LENGTH);
-  expect(await verify(message, signature, publicKey)).toBe(true);
-  expect(await verify(message, Buffer.alloc(64), publicKey)).toBe(false);
+  expect(verify(message, signature, publicKey)).resolves.toBe(true);
+  expect(verify(message, Buffer.alloc(64), publicKey)).resolves.toBe(false);
 });
