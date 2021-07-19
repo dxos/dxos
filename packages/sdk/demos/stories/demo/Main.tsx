@@ -86,14 +86,14 @@ const Main = ({ party, code }: MainProps) => {
 
   const [adapter] = useState(createAdapter(party.database));
   const [search, setSearch] = useState<string | undefined>(undefined);
-  const items: any[] = useSelection(party.database.select(), searchSelector(search), [search]);
+  const items: any[] = useSelection(party.database.select(searchSelector(search)), [search]);
   if (adapter.sort) {
     items.sort(adapter.sort);
   }
 
   // TODO(burdon): Use subset.
   // const data = useSelection(items && new Selection(items, new Event()), graphSelector);
-  const data = useSelection(party.database.select(), graphSelector(adapter));
+  const data = useSelection(party.database.select(graphSelector(adapter)));
   const [selected, setSelected] = useState();
   const [view, setView] = useState(VIEW_LIST);
 

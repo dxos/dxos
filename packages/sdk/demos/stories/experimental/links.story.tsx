@@ -118,8 +118,8 @@ const Component = ({ generator }: {generator: Generator}) => {
   const classes = useStyles();
   const graphClasses = useGraphStyles();
 
-  const data = useSelection(generator.database.select(), graphSelector(itemAdapter));
-  const items = useSelection(generator.database.select(), selection => selection.items);
+  const data = useSelection(generator.database.select(graphSelector(itemAdapter)));
+  const items = useSelection(generator.database.select(selection => selection.items));
 
   const handleCreate = (data: GraphData) => {
     if (data.nodes.length) {
