@@ -23,7 +23,7 @@ import {
 } from '@material-ui/icons';
 
 import { ObjectModel } from '@dxos/object-model';
-import { useParty, useItems } from '@dxos/react-client';
+import { useParty, useSelection } from '@dxos/react-client';
 import { PartySharingDialog } from '@dxos/react-ux';
 
 const useStyles = makeStyles(theme => ({
@@ -79,7 +79,7 @@ const TaskList = ({ partyKey, hideShare = false }) => {
   const [taskTitle, setTaskTitle] = useState('');
   const scrollListRef = useRef(null);
   const party = useParty(partyKey);
-  const items = useItems({ partyKey, type: TASK_TYPE });
+  const items = useSelection(party.database.select(s => s.filter({ type: TASK_TYPE }).items), [partyKey]);
 
   useEffect(() => {
     scrollListRef.current.scrollTop = -scrollListRef.current.scrollHeight;
