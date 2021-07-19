@@ -1412,6 +1412,7 @@ importers:
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@geut/discovery-swarm-webrtc': 4.3.0
+      '@types/yargs': 16.0.1
       graphology-canvas: 0.3.2_graphology-types@0.19.2
       graphology-shortest-path: 1.4.1_graphology-types@0.19.2
       graphology-types: 0.19.2
@@ -1422,6 +1423,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@geut/discovery-swarm-webrtc': ^4.0.2
       '@hyperswarm/dht': ^4.0.1
+      '@types/yargs': ~16.0.1
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
       end-of-stream: ^1.4.1

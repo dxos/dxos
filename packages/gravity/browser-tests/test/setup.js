@@ -10,5 +10,5 @@ const { createBroker } = require('@dxos/signal');
 module.exports = async () => {
   const topic = randomBytes();
 
-  await createBroker(topic, { logLevel: 'warn' }).start();
+  await createBroker(topic, { logLevel: 'warn', hyperswarm: { bootstrap: false } }).start();
 };

@@ -136,3 +136,19 @@ export class Selection<I extends Item<any>> {
     return new Selection(() => deduplicate(this._getItems().map(link => link.target)), this._update);
   }
 }
+
+/**
+ * Live query returned after performing the selection.
+ */
+export class SelectionResult<T> {
+  constructor (
+    private readonly _selection: Selection<any>,
+    private readonly _selector: (selection: Selection<any>) => T
+  ) {}
+
+  readonly update = this._selection.update;
+
+  getValue (): T {
+    return this._selector(this._selection);
+  }
+}

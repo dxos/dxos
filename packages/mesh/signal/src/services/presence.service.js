@@ -114,7 +114,7 @@ class Network extends EventEmitter {
   }
 }
 
-exports.PresenceService = {
+export const PresenceService = {
   name: 'presence',
   events: {
     '$node.disconnected' (ctx) {
@@ -181,7 +181,7 @@ exports.PresenceService = {
       }
     });
   },
-  started () {
+  async started () {
     this._network.publish();
   }
 };

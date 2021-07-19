@@ -32,7 +32,7 @@ export const useAuthenticator = (invitation: InvitationDescriptor) => {
       if (invitation.identityKey) {
         // An invitation for this device to join an existing Identity.
         // Join the Identity
-        await client.echo.joinHalo(invitation, secretProvider);
+        await client.echo.halo.join(invitation, secretProvider);
         if (!signal.aborted) {
           setState({ identity: invitation.identityKey.toString() });
         }

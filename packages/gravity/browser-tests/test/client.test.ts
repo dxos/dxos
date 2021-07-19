@@ -25,12 +25,12 @@ describe('Client', () => {
 
     await client.initialize();
 
-    await client.createProfile({
+    await client.halo.createProfile({
       ...createKeyPair(),
       username: 'DXOS test'
     });
 
-    const profile = client.getProfile();
+    const profile = client.halo.getProfile();
     expect(profile?.username).toEqual('DXOS test');
 
     await client.destroy();
@@ -41,7 +41,7 @@ describe('Client', () => {
 
     await client.initialize();
 
-    await client.createProfile({
+    await client.halo.createProfile({
       ...createKeyPair(),
       username: 'DXOS test'
     });
@@ -59,7 +59,7 @@ describe('Client', () => {
   it('invitations', async () => {
     const client = new Client();
     await client.initialize();
-    await client.createProfile({
+    await client.halo.createProfile({
       ...createKeyPair(),
       username: 'DXOS test'
     });
@@ -70,7 +70,7 @@ describe('Client', () => {
 
     const otherClient = new Client();
     await otherClient.initialize();
-    await otherClient.createProfile({
+    await otherClient.halo.createProfile({
       ...createKeyPair(),
       username: 'DXOS test 2'
     });
