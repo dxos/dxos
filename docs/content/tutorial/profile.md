@@ -54,7 +54,7 @@ const Root = () => {
     const handleRegistration = async ({ username }) => {
       if (username) {
         const { publicKey, secretKey } = createKeyPair();
-        await client.createProfile({ publicKey, secretKey, username });
+        await client.halo.createProfile({ publicKey, secretKey, username });
       }
     };
 
