@@ -9,7 +9,7 @@
     "build": "toolchain build && node scripts/build.js",
     "test": "toolchain test",
     "build:test": "pnpm run build:test",
-    "browser-mocha": "browser-mocha --setup browser-mocha/setup.js 'browser-mocha/*.test.ts'"
+    "browser-mocha": "browser-mocha --setup browser-mocha/setup.js 'browser-mocha/*.test.ts' --browserArg='--disable-extensions-except=./dist' --browserArg='--load-extension=./dist'"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
