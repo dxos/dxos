@@ -8,6 +8,7 @@ import { v4 } from 'uuid';
 import { BrowserContext, chromium, Page, Browser } from 'playwright';
 
 const EXTENSION_PATH = `${process.cwd()}/dist`
+const EXTENSION_ID = 'nlblcnolkmdjhafclifedafnifbcmpph' // TODO(rzadp): When will this change?
 
 describe('Playwright tests for Wallet Extension', async function () {
   this.timeout(30000);
@@ -31,7 +32,8 @@ describe('Playwright tests for Wallet Extension', async function () {
   })
 
   it('Installs properly', async () => {
-    await page.goto('chrome://extensions/')
+    await page.goto(`chrome-extension://${EXTENSION_ID}/popup/fullscreen.html`)
+    await page.waitForSelector("//*[contains(text(),'Welcome to DXOS')]")
   })
 
   after(async() => {
