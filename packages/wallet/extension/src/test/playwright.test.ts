@@ -20,10 +20,8 @@ describe('Playwright tests for Wallet Extension', function () {
     context = await chromium.launchPersistentContext(userDataDir, {
       headless: !!process.env.CI,
       args: [
-        '--enable-remote-extensions',
         `--disable-extensions-except=${EXTENSION_PATH}`,
-        `--load-extension=${EXTENSION_PATH}`,
-        '--no-sandbox'
+        `--load-extension=${EXTENSION_PATH}`
       ]
     });
     page = await context.newPage();
