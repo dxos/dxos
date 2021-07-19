@@ -8,21 +8,27 @@ import pkgUp from 'pkg-up';
 import { chromium } from 'playwright';
 
 import { Lock, trigger } from '@dxos/async';
+import { v4 } from 'uuid';
+
 
 /**
  * Timeout for testing framework to initialize and to load tests.
  */
 const INIT_TIMEOUT = 10_000;
 
-export async function runTests (bundleFile: string, show: boolean, debug: boolean): Promise<number> {
-  const browser = await chromium.launch({
-    headless: !show,
-    args: [
-      '--disable-web-security',
-      ...(debug ? ['--auto-open-devtools-for-tabs'] : [])
-    ]
-  });
-  const context = await browser.newContext();
+export async function runTests (bundleFile: string, show: boolean, debug: boolean, args: string[] = []): Promise<number> {
+  const userDataDir = `/tmp/browser-mocha/${v4()}`;
+  const context = await chromium.launchPersistentContext(
+    userDataDir,
+    {
+      headless: !show,
+      args: [
+        '--disable-web-security',
+        ...(debug ? ['--auto-open-devtools-for-tabs'] : []),
+        ...args
+      ]
+    }
+  );
   const page = await context.newPage();
 
   const lock = new Lock();
