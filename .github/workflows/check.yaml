@@ -75,3 +75,4 @@ jobs:
         run: |
           sudo apt-get install -y lsof
           kill $(lsof -t -i:9001) || true
+          echo 'Test'
