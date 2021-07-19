@@ -72,5 +72,6 @@ jobs:
           pnpm test:playwright
           echo "::endgroup::"
       - name: Cleanup
-        run: kill $(lsof -t -i:9001) || true
-        if: always()
+        run: |
+          sudo apt-get install -y lsof
+          kill $(lsof -t -i:9001) || true
