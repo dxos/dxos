@@ -36,11 +36,12 @@ export async function run (options: RunOptions) {
     await runSetup(options.setup);
   }
 
-  const tempDir = 'dist/browser-tests';
+  const tempDir = 'dist/browser-mocha';
   try {
-    await fs.mkdir('dist');
-    await fs.mkdir(tempDir);
-  } catch {}
+    await fs.mkdir(tempDir, {recursive: true});
+  } catch (e) {
+    console.error(e)
+  }
 
   const files = await resolveFiles(options.files);
 

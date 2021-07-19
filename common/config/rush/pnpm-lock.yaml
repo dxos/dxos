@@ -758,8 +758,10 @@ importers:
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/glob': 7.1.3
+      '@types/uuid': 8.3.1
       '@types/yargs': 16.0.1
       stream-buffers: 3.0.2
+      uuid: 3.4.0
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/debug': workspace:*
@@ -773,6 +775,7 @@ importers:
       '@types/node': ^14.0.9
       '@types/stream-buffers': ^3.0.2
       '@types/through2': ^2.0.36
+      '@types/uuid': ~8.3.1
       '@types/yargs': ~16.0.1
       esbuild: ^0.11.23
       glob: ~7.1.6
@@ -780,6 +783,7 @@ importers:
       pkg-up: ^3.1.0
       playwright: ^1.7.0
       stream-buffers: ^3.0.2
+      uuid: ^3.3.2
       yargs: ~16.2.0
   ../../packages/gravity/browser-tests:
     dependencies:
