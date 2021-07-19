@@ -7,7 +7,8 @@
   "scripts": {
     "lint": "toolchain lint",
     "build": "toolchain build && node scripts/build.js",
-    "build:test": "pnpm run build && pnpm run lint"
+    "test": "toolchain test",
+    "build:test": "pnpm run build:test"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
@@ -44,6 +45,12 @@
     "chalk": "^4.1.0",
     "@material-ui/core": "^4.11.4",
     "@types/react-router-dom": "~5.1.7",
-    "@types/react-copy-to-clipboard": "~5.0.1"
+    "@types/react-copy-to-clipboard": "~5.0.1",
+    "playwright": "^1.7.0",
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

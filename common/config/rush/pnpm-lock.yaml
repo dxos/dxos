@@ -2079,6 +2079,7 @@ importers:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
+      '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       '@types/react': 16.14.6
       '@types/react-copy-to-clipboard': 5.0.1
@@ -2088,6 +2089,8 @@ importers:
       chalk: 4.1.1
       copy: 0.3.2
       esbuild: 0.11.23
+      expect: 27.0.2
+      playwright: 1.11.0
       rmdir: 1.2.0
       typescript: 4.3.5
       webextension-polyfill-ts: 0.25.0
@@ -2108,6 +2111,7 @@ importers:
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/react': ^16.14.0
       '@types/react-copy-to-clipboard': ~5.0.1
@@ -2117,6 +2121,8 @@ importers:
       chalk: ^4.1.0
       copy: ~0.3.2
       esbuild: ^0.11.23
+      expect: ~27.0.2
+      playwright: ^1.7.0
       protobufjs: ^6.9.0
       react: ^16.14.0
       react-copy-to-clipboard: ~5.0.3

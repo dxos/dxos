@@ -9,13 +9,15 @@
     "outDir": "dist",
     "types": [
       "node",
-      "webpack-env"
+      "webpack-env",
+      "mocha"
     ],
     "noEmit": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },
   "include": [
     "src/**/*",
+    "test",
     "tools/**/*"
   ],
   "references": [
