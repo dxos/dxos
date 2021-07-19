@@ -29,7 +29,8 @@
     "@dxos/echo-db": "workspace:*",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",
-    "react-copy-to-clipboard": "~5.0.3"
+    "react-copy-to-clipboard": "~5.0.3",
+    "mocha": "~8.4.0"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

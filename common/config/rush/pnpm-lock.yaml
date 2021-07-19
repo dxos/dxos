@@ -2074,12 +2074,14 @@ importers:
       '@hot-loader/react-dom': 16.13.0_react@16.14.0
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
+      mocha: 8.4.0
       protobufjs: 6.11.2
       react: 16.14.0
       react-copy-to-clipboard: 5.0.3_react@16.14.0
       react-dom: 16.14.0_react@16.14.0
       react-router-dom: 5.2.0_react@16.14.0
     devDependencies:
+      '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
@@ -2102,6 +2104,7 @@ importers:
       webextension-polyfill-ts: 0.25.0
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/browser-mocha': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
@@ -2129,6 +2132,7 @@ importers:
       copy: ~0.3.2
       esbuild: ^0.11.23
       expect: ~27.0.2
+      mocha: ~8.4.0
       playwright: ^1.7.0
       protobufjs: ^6.9.0
       react: ^16.14.0
