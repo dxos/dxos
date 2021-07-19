@@ -23,7 +23,7 @@ export type LogFormat = 'full' | 'short' | 'simple' | 'json'
 export interface CreateBrokerOpts {
   port?: string | number,
   keyPair?: { publicKey: Buffer, secretKey: Buffer },
-  hyperswarm?: any,
+  hyperswarm?: { bootstrap?: boolean | string[], maxPeers?: number },
   asBootstrap?: boolean,
   repl?: boolean,
   logger?: boolean,

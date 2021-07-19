@@ -31,7 +31,7 @@ describe('SignalApi', () => {
   before(async function () {
     this.timeout(0);
     const brokerTopic = PublicKey.random();
-    broker = createBroker(brokerTopic.asBuffer(), { port: signalApiPort, logger: false });
+    broker = createBroker(brokerTopic.asBuffer(), { port: signalApiPort, logger: false, hyperswarm: { bootstrap: false } });
     // broker2 = createBroker(brokerTopic.asBuffer(), { port: signalApiPort2, logger: false });
     await Promise.all([
       broker.start()
