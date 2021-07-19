@@ -65,7 +65,7 @@ describe('Remote network manager', () => {
   before(async function () {
     this.timeout(0); // Broker start/stop is extremely slow.
     const brokerTopic = PublicKey.random();
-    broker = createBroker(brokerTopic.asBuffer(), { port: signalApiPort, logger: false });
+    broker = createBroker(brokerTopic.asBuffer(), { port: signalApiPort, logger: false, hyperswarm: { bootstrap: false } });
     await broker.start();
   });
 

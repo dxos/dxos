@@ -17,7 +17,7 @@ const MAX_BROKERS = 10;
 test(`${MAX_BROKERS} brokers connectivity`, async () => {
   const topic = crypto.randomBytes(32);
 
-  const brokers = [...Array(MAX_BROKERS).keys()].map(i => createBroker(topic, { port: 4000 + i, logger: false }));
+  const brokers = [...Array(MAX_BROKERS).keys()].map(i => createBroker(topic, { port: 4000 + i, logger: false, hyperswarm: { bootstrap: false } }));
 
   const waitForConnected = Promise.all(brokers.map(broker => {
     const nodes = brokers.filter(b => b.nodeID !== broker.nodeID).map(b => b.nodeID);
