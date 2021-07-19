@@ -22,7 +22,7 @@ const checkDiscoveryUpdate = (brokers, check) => Promise.all(brokers.map(broker 
 test.skip('join/leave/connection webrtc peer', async () => {
   const topic = crypto.randomBytes(32);
 
-  const brokers = [...Array(10).keys()].map(i => createBroker(topic, { port: 5000 + i, logger: false }));
+  const brokers = [...Array(10).keys()].map(i => createBroker(topic, { port: 5000 + i, logger: false, hyperswarm: { bootstrap: false } }));
 
   log('> starting brokers');
   await Promise.all(brokers.map(b => b.start()));

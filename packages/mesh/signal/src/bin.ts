@@ -65,7 +65,7 @@ yargs
     createBroker(topic, {
       port: argv.port,
       hyperswarm: {
-        bootstrap: argv.bootstrap && argv.bootstrap.split(','),
+        bootstrap: argv.bootstrap ? argv.bootstrap.split(',') : undefined,
         maxPeers: 5
       },
       asBootstrap: argv.asBootstrap,
