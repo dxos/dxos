@@ -21,7 +21,7 @@ export const Stage2 = () => {
       if (username) {
         // TODO(burdon): Default keyPair?
         const { publicKey, secretKey } = createKeyPair();
-        await client.createProfile({ publicKey, secretKey, username });
+        await client.halo.createProfile({ publicKey, secretKey, username });
       }
     };
 
