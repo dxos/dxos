@@ -85,10 +85,10 @@ describe('Client', () => {
     await otherClient.destroy();
   }).timeout(10_000).retries(2);
 
-  it.skip('reset storage', async () => {
-    const client = new Client();
-    await client.initialize();
-    await client.createProfile({
+  it.only('reset storage', async () => {
+    const client = new Client({ storage: { persistent: true } });
+    await client.initialize(); // TODO(marik-d): This line does not work.
+    await client.halo.createProfile({
       ...createKeyPair(),
       username: 'Reset test 1'
     });
@@ -98,12 +98,16 @@ describe('Client', () => {
     expect(client.echo.queryParties().value.length).toBe(1);
 
     await client.reset();
+    
+    // We create another client instance after reset here because the first one becomes unusable.
+    // In a browser this would be modeled as a page reload.
+    const client2 = new Client({ storage: { persistent: true } });
 
-    await client.initialize();
-    await client.createProfile({
+    await client2.initialize();
+    await client2.halo.createProfile({
       ...createKeyPair(),
       username: 'Reset test 2'
     });
-    expect(client.echo.queryParties().value.length).toBe(0);
-  });
+    expect(client2.echo.queryParties().value.length).toBe(0);
+  }).timeout(1000000);
 });
