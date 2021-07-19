@@ -89,3 +89,5 @@ storybook-static
 
 # public repo
 dxos-tutorial-tasks-app/
+
+**/test/temp
