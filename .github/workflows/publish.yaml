@@ -72,3 +72,32 @@ jobs:
 
         cd packages/sdk/demos
         rushx chromatic-docs
+  publish-extension:
+    runs-on: [self-hosted, dind-actions-runner]
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        node-version: [16.0]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Check, install and build
+      run: |
+        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+
+        npm install -g @microsoft/rush pnpm
+        sudo apt-get install -y autoconf automake make g++ libtool libxtst-dev
+        
+        # Install dependencies
+        echo "::group::Install"
+        node common/scripts/install-run-rush.js install
+        echo "::endgroup::"
+
+        # Quick build
+        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose
+    - name: Upload wallet
+      uses: actions/upload-artifact@v2
+      with:
+        name: Wallet
+        path: packages/wallet/extension/dist
