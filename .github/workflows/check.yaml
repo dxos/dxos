@@ -72,5 +72,5 @@ jobs:
           pnpm test:playwright
           echo "::endgroup::"
       - name: Cleanup
-        run: kill $(lsof -t -i:9001) || true
+        run: fuser -k 9001/tcp || true
         if: always()
