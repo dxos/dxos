@@ -13,7 +13,7 @@ import { EventEmitter } from 'events';
  * @prop {NanomessageRPC} [rpc]
  */
 
-class PeerMap extends EventEmitter {
+export class PeerMap extends EventEmitter {
   constructor (owner) {
     super();
 
@@ -185,5 +185,3 @@ class PeerMap extends EventEmitter {
     return null;
   }
 }
-
-module.exports = { PeerMap };

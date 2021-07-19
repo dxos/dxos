@@ -6,7 +6,7 @@ import jsonCodec from 'buffer-json-encoding';
 
 const { Serializers: { Base: BaseSerializer } } = require('moleculer'); // eslint-disable-line @typescript-eslint/no-var-requires
 
-class Serializer extends BaseSerializer {
+export class Serializer extends BaseSerializer {
   serialize (obj) {
     return jsonCodec.encode(obj);
   }
@@ -15,5 +15,3 @@ class Serializer extends BaseSerializer {
     return jsonCodec.decode(buf);
   }
 }
-
-module.exports = { Serializer };

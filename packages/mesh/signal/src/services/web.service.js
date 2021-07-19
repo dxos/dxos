@@ -4,15 +4,15 @@
 
 import { Kind } from 'graphql';
 import { ApolloService } from 'moleculer-apollo-server';
-import WebService from 'moleculer-web';
+import MoleculerWebService from 'moleculer-web';
 import moment from 'moment';
 
 import { SignalServer } from '../signal';
 
-exports.WebService = {
+export const WebService = {
   name: 'web',
   mixins: [
-    WebService,
+    MoleculerWebService,
     ApolloService({
       serverOptions: {
         subscriptions: false

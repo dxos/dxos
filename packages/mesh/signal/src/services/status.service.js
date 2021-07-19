@@ -23,7 +23,7 @@ const delay = (ms, signal) => {
   });
 };
 
-exports.StatusService = {
+export const StatusService = {
   name: 'status',
   settings: {
     graphql: {
@@ -235,7 +235,7 @@ exports.StatusService = {
       nodes: new Map()
     };
   },
-  started () {
+  async started () {
     this.getStatus();
 
     this._controller = new AbortController();
@@ -253,7 +253,7 @@ exports.StatusService = {
       }
     })().catch(() => {});
   },
-  stopped () {
+  async stopped () {
     if (this._controller) {
       this._controller.abort();
     }

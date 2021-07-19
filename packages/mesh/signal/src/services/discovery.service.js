@@ -5,7 +5,7 @@
 import debounce from 'lodash.debounce';
 import pLimit from 'p-limit';
 
-exports.DiscoveryService = {
+export const DiscoveryService = {
   name: 'discovery',
   events: {
     '$node.disconnected' (ctx) {
@@ -88,13 +88,13 @@ exports.DiscoveryService = {
       this.broker.broadcastLocal('$broker.discovery-update');
     }, 1000);
   },
-  started () {
+  async started () {
     const { peerMap } = this.broker.shared;
 
     peerMap.on('peer-added', this._updatePeers);
     peerMap.on('peer-deleted', this._updatePeers);
   },
-  stopped () {
+  async stopped () {
     const { peerMap } = this.broker.shared;
 
     peerMap.off('peer-added', this._updatePeers);
