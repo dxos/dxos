@@ -8,7 +8,8 @@
     "lint": "toolchain lint",
     "build": "toolchain build && node scripts/build.js",
     "test": "toolchain test",
-    "build:test": "pnpm run build:test"
+    "build:test": "pnpm run build:test",
+    "browser-mocha": "browser-mocha --setup browser-mocha/setup.js 'browser-mocha/*.test.ts'"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
@@ -50,7 +51,8 @@
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2",
     "uuid": "^3.3.2",
-    "@types/uuid": "~8.3.1"
+    "@types/uuid": "~8.3.1",
+    "@dxos/browser-mocha": "workspace:*"
   },
   "toolchain": {
     "testingFramework": "mocha"

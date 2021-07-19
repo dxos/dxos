@@ -17,8 +17,9 @@
   },
   "include": [
     "src/**/*",
-    "test",
-    "tools/**/*"
+    "browser-tests",
+    "tools/**/*",
+    "browser-mocha"
   ],
   "references": [
     {
