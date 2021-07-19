@@ -14,7 +14,7 @@ import { Messenger } from './messenger';
 
 const { Transporters: { Base: BaseTransporter } } = require('moleculer'); // eslint-disable-line @typescript-eslint/no-var-requires
 
-class ProtocolTransporter extends BaseTransporter {
+export class ProtocolTransporter extends BaseTransporter {
   static keyPair () {
     return Protocol.keyPair();
   }
@@ -177,5 +177,3 @@ class ProtocolTransporter extends BaseTransporter {
     }
   }
 }
-
-module.exports = { ProtocolTransporter };
