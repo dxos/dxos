@@ -9,6 +9,8 @@ import { chromium } from 'playwright';
 
 import { Lock, trigger } from '@dxos/async';
 import { v4 } from 'uuid';
+import { RunOptions } from '.';
+
 
 
 /**
@@ -16,16 +18,16 @@ import { v4 } from 'uuid';
  */
 const INIT_TIMEOUT = 10_000;
 
-export async function runTests (bundleFile: string, show: boolean, debug: boolean, args: string[] = []): Promise<number> {
+export async function runTests (bundleFile: string, options: RunOptions): Promise<number> {
   const userDataDir = `/tmp/browser-mocha/${v4()}`;
   const context = await chromium.launchPersistentContext(
     userDataDir,
     {
-      headless: !show,
+      headless: !options.show,
       args: [
         '--disable-web-security',
-        ...(debug ? ['--auto-open-devtools-for-tabs'] : []),
-        ...args
+        ...(options.debug ? ['--auto-open-devtools-for-tabs'] : []),
+        ...(options.browserArgs ?? [])
       ]
     }
   );
@@ -63,7 +65,7 @@ export async function runTests (bundleFile: string, show: boolean, debug: boolea
   });
 
   const exitTimeout = setTimeout(() => {
-    if (debug) {
+    if (options.debug) {
       return;
     }
 

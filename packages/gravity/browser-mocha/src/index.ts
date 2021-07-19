@@ -26,7 +26,8 @@ export interface RunOptions {
   browsers: Browser[]
   show?: boolean
   setup?: string
-  debug?: boolean
+  debug?: boolean,
+  browserArgs?: string[]
 }
 
 export async function run (options: RunOptions) {
@@ -46,7 +47,7 @@ export async function run (options: RunOptions) {
   const files = await resolveFiles(options.files);
 
   await buildTests(files, tempDir, !!options.debug);
-  const exitCode = await runTests(join(tempDir, 'bundle.js'), !!options.show, !!options.debug);
+  const exitCode = await runTests(join(tempDir, 'bundle.js'), options);
   if (!options.show) {
     process.exit(exitCode);
   } else {
