@@ -37,6 +37,7 @@ describe('Playwright tests for Wallet Extension', async function () {
   })
 
   after(async() => {
-
+    await page.close();
+    await context.close();
   })
 });
