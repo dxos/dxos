@@ -10,7 +10,8 @@ interface Argv {
   files: string[]
   show: boolean
   debug: boolean
-  setup?: string
+  setup?: string,
+  browserArg?: string[]
 }
 
 // eslint-disable-next-line no-unused-expressions
@@ -20,14 +21,17 @@ yargs(process.argv.slice(2))
       .positional('files', {})
       .boolean('show')
       .boolean('debug')
-      .string('setup'),
+      .string('setup')
+      .string('browserArg')
+      .array('browserArg'),
     async (argv) => {
       await run({
         files: argv.files as string[],
         browsers: [Browser.CHROMIUM],
         show: argv.show,
         setup: argv.setup,
-        debug: argv.debug
+        debug: argv.debug,
+        browserArgs: argv.browserArg
       });
     }
   )
