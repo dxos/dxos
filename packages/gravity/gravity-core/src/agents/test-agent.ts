@@ -29,8 +29,8 @@ class TestAgent extends Bot {
         .getValue()[0];
       this._client!.echo!.getParty(partyKey)!
         .database.select(s => s.filter({ type: ITEM_TYPE }).items).update.on(items => {
-        this._item = items[0];
-      });
+          this._item = items[0];
+        });
     });
   }
 
