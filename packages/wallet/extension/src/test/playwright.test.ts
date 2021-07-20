@@ -19,7 +19,7 @@ describe('Playwright tests for Wallet Extension', function () {
   before(async () => {
     const userDataDir = `/tmp/browser-mocha/${v4()}`;
     context = await chromium.launchPersistentContext(userDataDir, {
-      headless: !!process.env.CI,
+      headless: false, // extensions do not work in headless mode.
       args: [
         `--disable-extensions-except=${EXTENSION_PATH}`,
         `--load-extension=${EXTENSION_PATH}`
