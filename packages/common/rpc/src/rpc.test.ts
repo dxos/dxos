@@ -309,7 +309,34 @@ describe('RpcPeer', () => {
       expect((msgs[0] as any).error.message).toEqual('Test error')
     })
 
-    test('client closes')
+    test('client closes', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      let closeCalled = false;
+      const alice = new RpcPeer({
+        messageHandler: async msg => new Uint8Array(),
+        streamHandler: (method, msg) => {
+          return new Stream<Uint8Array>(({ next, close }) => {
+            return () => {
+              closeCalled = true;
+            }
+          })
+        },
+        port: alicePort
+      })
+
+      const bob = new RpcPeer({
+        messageHandler: async msg => new Uint8Array(),  
+        port: bobPort
+      })
+
+      const stream = await bob.callStream('method', Buffer.from('request'));
+      stream.close()
+
+      await sleep(1);
+
+      expect(closeCalled).toEqual(true);
+    })
   })
 });
 
