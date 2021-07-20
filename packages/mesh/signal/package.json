@@ -17,7 +17,8 @@
   "files": [
     "bin",
     "src",
-    "index.js"
+    "index.js",
+    "dist"
   ],
   "main": "dist/src/index.js",
   "scripts": {
