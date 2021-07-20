@@ -31,7 +31,7 @@ export interface RunOptions {
 }
 
 export async function run (options: RunOptions) {
-  assert(options.browsers.length === 1 && options.browsers[0] === Browser.CHROMIUM, 'Only chromium is supported.');
+  assert(options.browsers.length === 1 && [Browser.CHROMIUM, Browser.FIREFOX].includes(options.browsers[0]), 'Only single chromium or firefox supported.');
 
   if (options.setup) {
     await runSetup(options.setup);

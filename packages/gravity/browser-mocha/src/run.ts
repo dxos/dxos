@@ -5,12 +5,12 @@
 import assert from 'assert';
 import { dirname, join } from 'path';
 import pkgUp from 'pkg-up';
-import { chromium } from 'playwright';
+import { chromium, firefox } from 'playwright';
 import { v4 } from 'uuid';
 
 import { Lock, trigger } from '@dxos/async';
 
-import { RunOptions } from '.';
+import { Browser, RunOptions } from '.';
 
 /**
  * Timeout for testing framework to initialize and to load tests.
@@ -19,7 +19,11 @@ const INIT_TIMEOUT = 10_000;
 
 export async function runTests (bundleFile: string, options: RunOptions): Promise<number> {
   const userDataDir = `/tmp/browser-mocha/${v4()}`;
-  const context = await chromium.launchPersistentContext(
+  let browser = chromium
+  if (options.browsers[0] === Browser.FIREFOX) {
+    browser = firefox;
+  }
+  const context = await browser.launchPersistentContext(
     userDataDir,
     {
       headless: !options.show,
