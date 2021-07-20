@@ -13,20 +13,25 @@ import { EventEmitter } from 'events';
  * @prop {NanomessageRPC} [rpc]
  */
 
+interface Peer {
+  id: Buffer,
+  topic: Buffer,
+  owner: Buffer,
+  rpc: any[]
+}
+
 export class PeerMap extends EventEmitter {
-  constructor (owner) {
+  private readonly _owner: Buffer;
+  private readonly _peersByTopic: Map<string, Map<string, Peer>>;
+
+  constructor (owner: Buffer) {
     super();
 
-    /** @type {Buffer} */
     this._owner = owner;
-    /** @type {Map<string, Map<string, Peer>>} */
     this._peersByTopic = new Map();
   }
 
-  /**
-   * @type {Array<Peer>}
-   */
-  get peers () {
+  get peers () : Peer[] {
     const result = [];
     for (const peers of this._peersByTopic.values()) {
       for (const peer of peers.values()) {
@@ -36,24 +41,19 @@ export class PeerMap extends EventEmitter {
     return result;
   }
 
-  /**
-   * @type {Array<Buffer>}
-   */
-  get topics () {
+  get topics (): Array<Buffer> {
     return Array.from(this._peersByTopic.keys()).map(topic => Buffer.from(topic, 'hex'));
   }
 
   /**
    * Add a new peer
-   *
-   * @param {Object} [opts={}]
-   * @param {Buffer} opts.id
-   * @param {Buffer} opts.topic
-   * @param {Buffer} [opts.owner=this._owner]
-   * @param {NanomessageRPC} [opts.rpc]
-   * @returns Peer
    */
-  add (opts = {}) {
+  add (opts: {
+    id?: Buffer,
+    topic?: Buffer,
+    owner?: Buffer,
+    rpc?: any,
+  } = {}): Peer {
     const { id, topic, owner = this._owner, rpc } = opts;
 
     assert(id && Buffer.isBuffer(id));
@@ -77,7 +77,7 @@ export class PeerMap extends EventEmitter {
       rpc
     };
 
-    peers.set(idStr, peer);
+    peers?.set(idStr, peer);
     if (this._owner.equals(owner)) {
       this.emit('peer-added', peer);
     }
@@ -87,12 +87,8 @@ export class PeerMap extends EventEmitter {
 
   /**
    * Delete a peer by topic and id
-   *
-   * @param {Buffer} topic
-   * @param {Buffer} id
-   * @returns {boolean}
    */
-  delete (topic, id) {
+  delete (topic: Buffer, id: Buffer): boolean {
     const peer = this._delete(topic, id);
 
     if (peer) {
@@ -106,23 +102,16 @@ export class PeerMap extends EventEmitter {
     return false;
   }
 
-  /**
-   * @param {Buffer} topic
-   * @returns {Array<Peer>}
-   */
-  getPeersByTopic (topic) {
+  getPeersByTopic (topic: Buffer): Peer[] {
     const topicStr = topic.toString('hex');
     if (!this._peersByTopic.has(topicStr)) {
       return [];
     }
     const peers = this._peersByTopic.get(topicStr);
-    return Array.from(peers.values());
+    return Array.from(peers?.values() ?? []);
   }
 
-  /**
-   * @param {Buffer} owner
-   */
-  deletePeersByOwner (owner) {
+  deletePeersByOwner (owner: Buffer) {
     for (const peer of this.peers) {
       if (!peer.owner.equals(owner)) {
         continue;
@@ -134,7 +123,7 @@ export class PeerMap extends EventEmitter {
   /**
    * @param {NanomessageRPC} rpc
    */
-  deletePeersByRPC (rpc) {
+  deletePeersByRPC (rpc: any) {
     for (const peer of this.peers) {
       if (peer.rpc !== rpc) {
         continue;
@@ -143,11 +132,7 @@ export class PeerMap extends EventEmitter {
     }
   }
 
-  /**
-   * @param {Buffer} owner
-   * @param {Array<{ id: Buffer, topic: Buffer }>} peers
-   */
-  updatePeersByOwner (owner, peers) {
+  updatePeersByOwner (owner: Buffer, peers: Array<{ id: Buffer, topic: Buffer }>) {
     this.deletePeersByOwner(owner);
     peers.forEach(peer => this.add({
       id: peer.id,
@@ -156,20 +141,23 @@ export class PeerMap extends EventEmitter {
     }));
   }
 
-  encode (peer) {
+  encode (peer: Peer) {
     return { id: peer.id.toString('hex'), topic: peer.topic.toString('hex'), owner: peer.owner.toString('hex') };
   }
 
-  decode (peer) {
+  decode (peer: {id: string, topic: string, owner: string}) {
     return { id: Buffer.from(peer.id, 'hex'), topic: Buffer.from(peer.topic, 'hex'), owner: Buffer.from(peer.owner, 'hex') };
   }
 
-  _delete (topic, id) {
+  _delete (topic: Buffer, id: Buffer): Peer | null {
     const topicStr = topic.toString('hex');
     const idStr = id.toString('hex');
 
     if (this._peersByTopic.has(topicStr)) {
       const peers = this._peersByTopic.get(topicStr);
+      if (!peers) {
+        return null;
+      }
       const peer = peers.get(idStr);
       if (peer) {
         peers.delete(idStr);
