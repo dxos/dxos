@@ -25,7 +25,6 @@ export async function runTests (bundleFile: string, options: RunOptions): Promis
     {
       headless: !options.show,
       args: [
-        '--disable-web-security',
         ...(options.debug ? ['--auto-open-devtools-for-tabs'] : []),
         ...(options.browserArgs ?? [])
       ]

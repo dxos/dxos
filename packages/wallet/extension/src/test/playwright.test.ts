@@ -16,7 +16,7 @@ describe('Playwright tests for Wallet Extension', function () {
   let page: Page;
 
   before(async () => {
-    const userDataDir = `${process.cwd()}/src/test/temp/${v4()}`;
+    const userDataDir = `/tmp/browser-mocha/${v4()}`;
     context = await chromium.launchPersistentContext(userDataDir, {
       headless: !!process.env.CI,
       args: [
