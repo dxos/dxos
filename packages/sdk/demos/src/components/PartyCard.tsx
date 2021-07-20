@@ -10,7 +10,7 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import { Party } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-import { useItems } from '@dxos/react-client';
+import { useSelection } from '@dxos/react-client';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -29,7 +29,9 @@ const useStyles = makeStyles(theme => ({
 
 const PartyCard = ({ party }: { party: Party }) => {
   const classes = useStyles();
-  const items = useItems({ partyKey: party.key }) as any;
+  const items = useSelection(
+    party.database.select(s => s.filter(item => item.model.getProperty('partyKey') === party.key).items)
+    , [party.key]);
 
   const handleCreateItem = async () => {
     const item = await party.database.createItem({ model: ObjectModel });
@@ -45,7 +47,7 @@ const PartyCard = ({ party }: { party: Party }) => {
         subheader={party.key.toString()}
       />
       <CardContent>
-        {items.map((item: any) => (
+        {(items ?? []).map((item: any) => (
           <Typography key={item.id}>
             {item.model.getProperty('title')}
           </Typography>

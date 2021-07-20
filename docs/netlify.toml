@@ -4,6 +4,6 @@
 
 [build]
   base = "docs/"
-  publish = "docs/public/"
+  publish = "public/"
   command = "yarn build"
   ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF . ../packages/"
