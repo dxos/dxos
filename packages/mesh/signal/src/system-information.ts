@@ -16,7 +16,7 @@ import si from 'systeminformation';
 
 const num = new Intl.NumberFormat('en', { maximumSignificantDigits: 3 });
 
-const size = (n, unit) => {
+const size = (n: number, unit: 'K' | 'M' | 'G' | 'T') => {
   const units = {
     K: 3,
     M: 6,
@@ -33,7 +33,7 @@ const getVersionInfo = () => {
   // TODO(telackey): Get from config (or figure out a better way to do this).
   const versionFile = '/opt/kube/VERSION';
   if (fs.existsSync(versionFile)) {
-    return fs.readFileSync(versionFile, { encoding: 'UTF8' }).replace(/^\s+|\s+$/g, '');
+    return fs.readFileSync(versionFile, { encoding: 'utf8' }).replace(/^\s+|\s+$/g, '');
   }
   return undefined;
 };
@@ -45,7 +45,7 @@ const getVersionInfo = () => {
 const getSystemInfo = async () => {
   const ifaces = os.networkInterfaces();
   const addresses = Object.entries(ifaces).reduce((result, [, values]) => {
-    values.forEach(({ family, address }) => {
+    (values ?? []).forEach(({ family, address }) => {
       address = address.toLowerCase();
       // TODO(telackey): Include link-local IPv6?
       if (!address.startsWith('127.') && !address.startsWith('fe80::') && !address.startsWith('::1')) {
@@ -53,7 +53,7 @@ const getSystemInfo = async () => {
       }
     });
     return result;
-  }, []);
+  }, [] as string[]);
 
   const cpu = await si.cpu();
   const memory = await si.mem();
