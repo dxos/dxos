@@ -26,7 +26,7 @@ export const Stage3 = () => {
     const handleCreateProfile = async ({ username }: { username: string }) => {
       if (username) {
         const { publicKey, secretKey } = createKeyPair();
-        await client.createProfile({ publicKey, secretKey, username });
+        await client.halo.createProfile({ publicKey, secretKey, username });
       }
     };
 

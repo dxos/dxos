@@ -23,7 +23,7 @@ const Root = () => {
         const { publicKey, secretKey } = createKeyPair();
         // TODO(burdon): Return profile object.
         // ISSUE(rzadp): https://github.com/dxos/sdk/pull/318
-        await client.createProfile({ publicKey, secretKey, username });
+        await client.halo.createProfile({ publicKey, secretKey, username });
       }
     };
 
