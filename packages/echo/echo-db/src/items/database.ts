@@ -9,10 +9,9 @@ import { EchoEnvelope, FeedWriter, ItemID, ItemType, DatabaseSnapshot } from '@d
 import { Model, ModelConstructor, validateModelClass, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { ResultSet } from '../result';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
-import { ItemFilter, ItemManager } from './item-manager';
+import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { SelectFilter, Selection, SelectionResult } from './selection';
 import { TimeframeClock } from './timeframe-clock';
