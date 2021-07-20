@@ -6,12 +6,11 @@ import assert from 'assert';
 import { dirname, join } from 'path';
 import pkgUp from 'pkg-up';
 import { chromium } from 'playwright';
+import { v4 } from 'uuid';
 
 import { Lock, trigger } from '@dxos/async';
-import { v4 } from 'uuid';
+
 import { RunOptions } from '.';
-
-
 
 /**
  * Timeout for testing framework to initialize and to load tests.

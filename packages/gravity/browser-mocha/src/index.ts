@@ -39,9 +39,9 @@ export async function run (options: RunOptions) {
 
   const tempDir = 'dist/browser-mocha';
   try {
-    await fs.mkdir(tempDir, {recursive: true});
+    await fs.mkdir(tempDir, { recursive: true });
   } catch (e) {
-    console.error(e)
+    console.error(e);
   }
 
   const files = await resolveFiles(options.files);
