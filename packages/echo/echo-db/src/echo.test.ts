@@ -398,12 +398,12 @@ describe('ECHO', () => {
         const [otherParty] = otherNode.queryParties().value;
         const [updated, onUpdate] = latch();
         otherParty.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
-          .update.on((items => {
+          .update.on(items => {
             if (items.find(current => current.id === item?.id)) {
               log(`other has ${item?.id}`);
               onUpdate();
             }
-          }));
+          });
         itemPromises.push(updated);
       }
 
