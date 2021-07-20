@@ -78,7 +78,7 @@ describe('Client', () => {
     const invite = await party.createInvitation(testInvitationAuthenticator);
     const otherParty = await otherClient.echo.joinParty(invite, testSecretProvider);
 
-    const otherItem = otherParty.database.queryItems({ type: 'dxn://test' }).first;
+    const otherItem = otherParty.database.select(s => s.filter({ type: 'dxn://test' }).items).getValue()[0];
     expect(otherItem.model.getProperty('foo')).toEqual('bar');
 
     await client.destroy();
