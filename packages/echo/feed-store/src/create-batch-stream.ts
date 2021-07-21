@@ -24,7 +24,7 @@ export default function createBatchStream (feed, opts = {}) {
 
   return streamFrom.obj(read).on('end', cleanup).on('close', cleanup);
 
-  function read (size, cb) {
+  function read (size, cb?) {
     if (!feed.opened) {
       return open(size, cb);
     }

@@ -18,6 +18,23 @@ import Locker from './locker';
  * Abstract handler for an Hypercore instance.
  */
 export class FeedDescriptor {
+	public _storage: any;
+	public _path: any;
+	public _key: any;
+	public _secretKey: any;
+	public _valueEncoding: any;
+	public _hypercore: any;
+	public _codecs: any;
+	public _metadata: any;
+	public _discoveryKey: any;
+	public _locker: any;
+	public _feed: any;
+	public _listener: any;
+	public storage: any;
+	public hypercore: any;
+	public codecs: any;
+	public publicKey: any;
+
   /**
    * constructor
    *
@@ -30,7 +47,7 @@ export class FeedDescriptor {
    * @param {*} options.metadata
    * @param {Hypercore} options.hypercore
    */
-  constructor (path, options = {}) {
+  constructor (path?, options = {}) {
     const {
       storage,
       key,

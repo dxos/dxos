@@ -326,7 +326,7 @@ describe('FeedStore', () => {
     return [feed1, feed2, feed3];
   }
 
-  function asc (a, b) {
+  function asc (a, b?) {
     if (a.data > b.data) {
       return 1;
     }

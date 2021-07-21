@@ -5,6 +5,8 @@
 import mutexify from 'mutexify';
 
 class Locker {
+	public _lock: any;
+
   constructor () {
     this._lock = mutexify();
   }

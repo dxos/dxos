@@ -41,6 +41,29 @@ const STORE_NAMESPACE = '@feedstore';
  * @extends {EventEmitter}
  */
 export class FeedStore extends EventEmitter {
+	public _storage: any;
+	public _database: any;
+	public _defaultFeedOptions: any;
+	public _codecs: any;
+	public _hypercore: any;
+	public _descriptors: any;
+	public _readers: any;
+	public _indexDB: any;
+	public _resource: any;
+	public on: any;
+	public emit: any;
+	public database: any;
+	public feedOptions: any;
+	public codecs: any;
+	public hypercore: any;
+	public key: any;
+	public path: any;
+	public options: any;
+	public secretKey: any;
+	public valueEncoding: any;
+	public metadata: any;
+	public feed: any;
+
   /**
    * Create and initialize a new FeedStore
    *
@@ -54,7 +77,7 @@ export class FeedStore extends EventEmitter {
    * @returns {Promise<FeedStore>}
    * @deprecated
    */
-  static async create (storage, options = {}) {
+  static async create (storage?, options = {}) {
     const feedStore = new FeedStore(storage, options);
     await feedStore.open();
     return feedStore;
@@ -192,7 +215,7 @@ export class FeedStore extends EventEmitter {
    * @param {DescriptorCallback} [callback]
    * @returns {Hypercore[]}
    */
-  getOpenFeeds (callback) {
+  getOpenFeeds (callback?) {
     return this.getDescriptors()
       .filter(descriptor => descriptor.opened && (!callback || callback(descriptor)))
       .map(descriptor => descriptor.feed);

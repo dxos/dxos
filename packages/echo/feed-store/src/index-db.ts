@@ -9,6 +9,9 @@ import pify from 'pify';
  * Index feed descriptors.
  */
 class IndexDB {
+	public _hypertrie: any;
+	public _db: any;
+
   /**
    * @constructor
    * @param {Hypertrie} hypertrie

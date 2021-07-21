@@ -10,6 +10,8 @@ import createBatchStream from './create-batch-stream';
  * Creates a multi ReadableStream for feed streams.
  */
 export default class SelectiveReader extends Readable {
+	public _needsData: any;
+	public push: any;
   /** @type {(feedDescriptor, message) => Promise<boolean>} */
   _evaluator;
 
