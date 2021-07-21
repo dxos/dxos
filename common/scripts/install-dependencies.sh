@@ -1,5 +1,5 @@
 #/bin/sh
 
-set -euo pipefail
+set -e
 
 apt-get install -y autoconf automake make g++ libtool libxtst-dev
