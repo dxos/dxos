@@ -20,7 +20,7 @@ jobs:
       - name: Check, install and build
         run: |
           npm install -g @microsoft/rush pnpm
-          sudo ./common/scripts/install-dependencies.sh
+          ./common/scripts/install-dependencies.sh
           
           # Install dependencies
           echo "::group::Install"
