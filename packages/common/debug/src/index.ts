@@ -13,3 +13,4 @@ export * from './stack-trace';
 export * from './throw';
 export * from './timeout-warning';
 export * from './log-method';
+export * from './errors';

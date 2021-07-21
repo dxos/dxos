@@ -12,6 +12,7 @@ import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
+import { IdentityNotInitializedError } from '../errors';
 import { ActivationOptions, PartyActivator, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
 import { Database } from '../items';
@@ -241,8 +242,8 @@ export class PartyInternal {
         return Buffer.from(Authenticator.encodePayload(createAuthMessage(
           identity.keyring,
           partyKey,
-          identity.identityKey ?? raise(new Error('No identity key')),
-          identity.deviceKeyChain ?? identity.deviceKey ?? raise(new Error('No device key')),
+          identity.identityKey ?? raise(new IdentityNotInitializedError()),
+          identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError()),
           identity.keyring.getKey(feedKey)
         )));
       }
