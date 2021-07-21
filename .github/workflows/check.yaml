@@ -15,6 +15,7 @@ jobs:
         with:
           fetch-depth: 0
           clean: false
+      - run: env
       - name: Check, install and build
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use 14.16.1
