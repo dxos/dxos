@@ -21,6 +21,7 @@ import { keyToBuffer, keyToString, PublicKey, randomBytes, verify } from '@dxos/
 import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
+import { IdentityNotInitializedError, InvalidInvitationError } from '../errors';
 import { Identity, IdentityProvider } from '../halo';
 import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
@@ -148,8 +149,8 @@ export class HaloRecoveryInitiator {
       createAuthMessage(
         this._identity.keyring,
         info.id.value,
-        this._identity.identityKey ?? raise(new Error('No identity key')),
-        this._identity.identityKey ?? raise(new Error('No identity key')),
+        this._identity.identityKey ?? raise(new IdentityNotInitializedError()),
+        this._identity.identityKey ?? raise(new IdentityNotInitializedError()),
         undefined,
         info.authNonce.value)
     ));
@@ -164,7 +165,7 @@ export class HaloRecoveryInitiator {
       // The invitationtId is the signature of both peerIds, signed by the Identity key.
       const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationID, identity.identityKey.publicKey.asBuffer());
       if (!ok) {
-        throw new Error(`Invalid invitation ${keyToString(invitationID)}`);
+        throw new InvalidInvitationError();
       }
 
       // Create a Keyring containing only our own PublicKey. Only a message signed by the matching private key,
