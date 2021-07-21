@@ -17,8 +17,7 @@ jobs:
           clean: false
       - name: Check, install and build
         run: |
-          Xvfb :99 -screen 0 1024x768x24 &
-          export DISPLAY=:99
+          pkill Xvfb
 
           \. "$NVM_DIR/nvm.sh" && nvm use 14.16.1
           npm install -g @microsoft/rush pnpm
