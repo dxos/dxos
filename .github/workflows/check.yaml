@@ -7,6 +7,7 @@ name: check
 jobs:
   check-extension:
     runs-on: [self-hosted, dind-actions-runner]
+    container: mcr.microsoft.com/playwright:v1.11.0-focal
     timeout-minutes: 25
     strategy:
       matrix:
@@ -33,7 +34,7 @@ jobs:
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to-except @dxos/wallet-extension
 
           cd packages/wallet/extension
-          rushx test
+          xvfb-run rushx browser-mocha
 
 # jobs:
 #   check:
