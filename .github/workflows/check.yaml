@@ -29,7 +29,7 @@ jobs:
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to-except @dxos/wallet-extension
 
           cd packages/wallet/extension
-          xvfb-run rushx browser-mocha
+          rushx browser-mocha
 
 # jobs:
 #   check:
