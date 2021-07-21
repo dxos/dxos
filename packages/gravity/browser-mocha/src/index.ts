@@ -24,7 +24,8 @@ export interface RunOptions {
    */
   files: string[]
   browsers: Browser[]
-  show?: boolean
+  headless: boolean
+  stayOpen?: boolean
   setup?: string
   debug?: boolean,
   browserArgs?: string[]
@@ -48,7 +49,7 @@ export async function run (options: RunOptions) {
 
   await buildTests(files, tempDir, !!options.debug);
   const exitCode = await runTests(join(tempDir, 'bundle.js'), options);
-  if (!options.show) {
+  if (!options.stayOpen) {
     process.exit(exitCode);
   } else {
     console.log(`\nCompleted with exit code ${exitCode}. Browser window stays open.`);
