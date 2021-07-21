@@ -17,7 +17,7 @@ jobs:
           clean: false
       - name: Check, install and build
         run: |
-          sudo chown -R $USER /usr/local/lib/node_modules
+          \. "$NVM_DIR/nvm.sh" && nvm use 14.16.1
           npm install -g @microsoft/rush pnpm
           
           # Install dependencies
