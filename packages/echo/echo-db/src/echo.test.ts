@@ -601,10 +601,9 @@ describe('ECHO', () => {
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive).toBe(true);
 
-    await waitForCondition(() => partyA.database
+    await partyA.database
       .select(s => s.filter({ type: 'dxn://example/item/test' }).items)
-      .getValue().length > 0,
-    5000);
+      .update.waitFor(items => items.length > 0);
     expect((partyA.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items))
       .getValue()
       .length
