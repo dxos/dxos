@@ -17,6 +17,7 @@ jobs:
           clean: false
       - name: Check, install and build
         run: |
+          sudo chown -R $USER /usr/local/lib/node_modules
           npm install -g @microsoft/rush pnpm
           
           # Install dependencies
