@@ -9,12 +9,11 @@ import { EchoEnvelope, FeedWriter, ItemID, ItemType, DatabaseSnapshot } from '@d
 import { Model, ModelConstructor, validateModelClass, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { ResultSet } from '../result';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
-import { ItemFilter, ItemManager } from './item-manager';
+import { ItemManager } from './item-manager';
 import { Link } from './link';
-import { Selection, SelectionResult } from './selection';
+import { SelectFilter, Selection, SelectionResult } from './selection';
 import { TimeframeClock } from './timeframe-clock';
 
 export interface ItemCreationOptions<M> {
@@ -152,25 +151,14 @@ export class Database {
   /**
    * Waits for item matching the filter to be present and returns it.
    */
-  async waitForItem<T extends Model<any> = any> (filter: ItemFilter): Promise<Item<T>> {
-    const query = this.queryItems(filter);
-    if (query.value.length > 0) {
-      return query.value[0];
+  async waitForItem<T extends Model<any> = any> (filter: SelectFilter): Promise<Item<T>> {
+    const query = this.select(s => s.filter(filter).items);
+    if (query.getValue().length > 0) {
+      return query.getValue()[0];
     } else {
       const [item] = await query.update.waitFor(items => items.length > 0);
       return item;
     }
-  }
-
-  /**
-   * Queries for a set of Items matching the optional filter.
-   * @param filter
-   * @deprecated Use the select method.
-   */
-  // TODO(burdon): Replace `ResultSet` with select.
-  queryItems (filter?: ItemFilter): ResultSet<Item<any>> {
-    this._assertInitialized();
-    return this._itemManager.queryItems(filter);
   }
 
   /**
