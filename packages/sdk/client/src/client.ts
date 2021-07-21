@@ -12,7 +12,7 @@ import { Invitation } from '@dxos/credentials';
 import { humanize, PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import * as debug from '@dxos/debug';
-import { ECHO, InvitationOptions, OpenProgress, SecretProvider, sortItemsTopologically } from '@dxos/echo-db';
+import { ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, SecretProvider, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelConstructor } from '@dxos/model-factory';
@@ -23,6 +23,9 @@ import { Registry } from '@wirelineio/registry-client';
 
 import { DevtoolsContext } from './devtools-context';
 import { isNode } from './platform';
+import { TimeoutError } from '@dxos/debug';
+import { InvalidParameterError } from '@dxos/debug';
+import { InvalidConfigurationError } from './errors';
 
 export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
@@ -129,7 +132,7 @@ export class Client {
 
     const t = 10;
     const timeout = setTimeout(() => {
-      throw new Error(`Initialize timed out after ${t}s.`);
+      throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
 
     await this._echo.open(onProgressCallback);
@@ -259,7 +262,7 @@ export class Client {
 
         await createdItem.model.restoreFromSnapshot(decodedItemSnapshot);
       } else {
-        throw new Error(`Unhandled model type: ${item.modelType}`);
+        throw new InvalidParameterError(`Unhandled model type: ${item.modelType}`);
       }
     }
 
@@ -272,7 +275,7 @@ export class Client {
    * @param options
    */
   async createInvitation (partyKey: PublicKey, secretProvider: SecretProvider, options?: InvitationOptions) {
-    const party = await this.echo.getParty(partyKey) ?? raise(new Error(`Party not found: ${partyKey.toString()}`));
+    const party = await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createInvitation({
       // TODO(marik-d): Probably an error here.
       secretValidator:
@@ -289,7 +292,7 @@ export class Client {
   // TODO(burdon): Move to party.
   async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
     const party =
-      await this.echo.getParty(partyKey) ?? raise(new Error(`Party not found: ${humanize(partyKey.toString())}`));
+      await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createOfflineInvitation(recipientKey);
   }
 
@@ -390,16 +393,16 @@ function createStorageObjects (config: ClientConfig['storage'], snapshotsEnabled
   } = config ?? {};
 
   if (persistent && type === 'ram') {
-    throw new Error('RAM storage cannot be used in persistent mode.');
+    throw new InvalidConfigurationError('RAM storage cannot be used in persistent mode.');
   }
   if (!persistent && (type !== undefined && type !== 'ram')) {
-    throw new Error('Cannot use a persistent storage in not persistent mode.');
+    throw new InvalidConfigurationError('Cannot use a persistent storage in not persistent mode.');
   }
   if (persistent && keyStorage === 'ram') {
-    throw new Error('RAM key storage cannot be used in persistent mode.');
+    throw new InvalidConfigurationError('RAM key storage cannot be used in persistent mode.');
   }
   if (!persistent && (keyStorage !== 'ram' && keyStorage !== undefined)) {
-    throw new Error('Cannot use a persistent key storage in not persistent mode.');
+    throw new InvalidConfigurationError('Cannot use a persistent key storage in not persistent mode.');
   }
 
   return {
@@ -416,6 +419,6 @@ function createKeyStorage (path: string, type?: KeyStorageType) {
     case 'leveljs': return leveljs(path);
     case 'jsondown': return jsondown(path);
     case 'ram': return memdown();
-    default: throw new Error(`Invalid type: ${defaultedType}`);
+    default: throw new InvalidConfigurationError(`Invalid key storage type: ${defaultedType}`);
   }
 }

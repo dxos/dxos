@@ -17,6 +17,7 @@ import { ResultSet } from '../result';
 import { DefaultModel } from './default-model';
 import { Item } from './item';
 import { Link } from './link';
+import { UnknownModelError } from '../errors';
 
 const log = debug('dxos:echo:item-manager');
 
@@ -81,7 +82,7 @@ export class ItemManager {
     assert(modelType);
 
     if (!this._modelFactory.hasModel(modelType)) {
-      throw new Error(`Unknown model: ${modelType}`);
+      throw new UnknownModelError(modelType);
     }
 
     let mutation: Uint8Array | undefined;
@@ -124,7 +125,7 @@ export class ItemManager {
     assert(modelType);
 
     if (!this._modelFactory.hasModel(modelType)) {
-      throw new Error(`Unknown model: ${modelType}`);
+      throw new UnknownModelError(modelType);
     }
 
     let mutation: Uint8Array | undefined;
@@ -196,7 +197,7 @@ export class ItemManager {
 
     // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
     if (!this._modelFactory.hasModel(modelType)) {
-      throw new Error(`Unknown model: ${modelType}`);
+      throw new UnknownModelError(modelType);
     }
     const modelMeta = this._modelFactory.getModelMeta(modelType);
 

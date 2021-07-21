@@ -27,6 +27,7 @@ import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
 import { InvitationManager } from './invitation-manager';
+import { IdentityNotInitializedError, InvalidInvitationError } from '../errors';
 
 const log = debug('dxos:party-manager:party-invitation-claimer');
 
@@ -135,7 +136,7 @@ export class OfflineInvitationClaimer {
     const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer) => {
       const invitationMessage = invitationManager.getOfflineInvitation(invitationID);
       if (!invitationMessage) {
-        throw new Error(`Invalid invitation ${keyToString(invitationID)}`);
+        throw new InvalidInvitationError();
       }
 
       // The Party will have validated the Invitation already, so we only need to extract the bits we need.
@@ -173,8 +174,8 @@ export class OfflineInvitationClaimer {
       createAuthMessage(
         identity.keyring,
         info.id.value,
-        identity.identityKey ?? raise(new Error('No identity key')),
-        identity.deviceKeyChain ?? raise(new Error('No device keychain')),
+        identity.identityKey ?? raise(new IdentityNotInitializedError()),
+        identity.deviceKeyChain ?? raise(new IdentityNotInitializedError()),
         undefined,
         info.authNonce.value)
     ));

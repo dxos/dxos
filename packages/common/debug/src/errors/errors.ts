@@ -5,3 +5,9 @@ export class InvalidParameterError extends DXOSError {
     super('INVALID_PARAMETER', message);
   }
 }
+
+export class TimeoutError extends DXOSError {
+  constructor(message?: string) {
+    super('TIMEOUT', message);
+  }
+}

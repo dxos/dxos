@@ -19,6 +19,7 @@ import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
 import { PartyCore, PartyOptions } from './party-core';
 import { CredentialsProvider, PartyProtocol } from './party-protocol';
+import { IdentityNotInitializedError } from '../errors';
 
 export const PARTY_ITEM_TYPE = 'dxn://dxos/item/party';
 export const PARTY_TITLE_PROPERTY = 'title';
@@ -241,8 +242,8 @@ export class PartyInternal {
         return Buffer.from(Authenticator.encodePayload(createAuthMessage(
           identity.keyring,
           partyKey,
-          identity.identityKey ?? raise(new Error('No identity key')),
-          identity.deviceKeyChain ?? identity.deviceKey ?? raise(new Error('No device key')),
+          identity.identityKey ?? raise(new IdentityNotInitializedError()),
+          identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError()),
           identity.keyring.getKey(feedKey)
         )));
       }
