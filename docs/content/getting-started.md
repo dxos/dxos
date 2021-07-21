@@ -10,6 +10,7 @@ To install dependencies:
 ```bash
 npm install -g @microsoft/rush pnpm
 nodenv install 16.1.0
+sudo ./common/scripts/install-dependencies.sh
 ```
 
 ## Rush
