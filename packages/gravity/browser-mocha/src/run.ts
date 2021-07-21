@@ -6,23 +6,29 @@ import assert from 'assert';
 import { dirname, join } from 'path';
 import pkgUp from 'pkg-up';
 import { chromium } from 'playwright';
+import { v4 } from 'uuid';
 
 import { Lock, trigger } from '@dxos/async';
+
+import { RunOptions } from '.';
 
 /**
  * Timeout for testing framework to initialize and to load tests.
  */
 const INIT_TIMEOUT = 10_000;
 
-export async function runTests (bundleFile: string, show: boolean, debug: boolean): Promise<number> {
-  const browser = await chromium.launch({
-    headless: !show,
-    args: [
-      '--disable-web-security',
-      ...(debug ? ['--auto-open-devtools-for-tabs'] : [])
-    ]
-  });
-  const context = await browser.newContext();
+export async function runTests (bundleFile: string, options: RunOptions): Promise<number> {
+  const userDataDir = `/tmp/browser-mocha/${v4()}`;
+  const context = await chromium.launchPersistentContext(
+    userDataDir,
+    {
+      headless: !options.show,
+      args: [
+        ...(options.debug ? ['--auto-open-devtools-for-tabs'] : []),
+        ...(options.browserArgs ?? [])
+      ]
+    }
+  );
   const page = await context.newPage();
 
   const lock = new Lock();
@@ -57,7 +63,7 @@ export async function runTests (bundleFile: string, show: boolean, debug: boolea
   });
 
   const exitTimeout = setTimeout(() => {
-    if (debug) {
+    if (options.debug) {
       return;
     }
 
