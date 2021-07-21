@@ -21,6 +21,7 @@ jobs:
           clean: false
       - name: Check, install and build
         run: |
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js purge
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
           npm install -g @microsoft/rush pnpm
           sudo apt-get install -y autoconf automake make g++ libtool libxtst-dev
