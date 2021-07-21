@@ -8,7 +8,7 @@
     "src/proto/*.json"
   ],
   "types": [
-    "jest"
+    "mocha"
   ],
   "references": [
     {

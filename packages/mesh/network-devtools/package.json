@@ -46,7 +46,7 @@
     "@storybook/core-events": "^6.3.4",
     "@storybook/react": "^6.3.4",
     "@storybook/theming": "^6.3.4",
-    "eslint": "^7.7.0",
+    "eslint": "7.18.0",
     "eslint-plugin-react": "^7.22.0",
     "fork-ts-checker-webpack-plugin": "~6.2.5",
     "react": "^16.14.0",

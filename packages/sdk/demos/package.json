@@ -94,7 +94,7 @@
     "chance": "^1.1.6",
     "chromatic": "^5.8.0",
     "del-cli": "^3.0.0",
-    "eslint": "^7.7.0",
+    "eslint": "7.18.0",
     "eslint-plugin-react": "^7.22.0",
     "react": "^16.14.0",
     "react-docgen-typescript-loader": "^3.7.2",
