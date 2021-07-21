@@ -92,8 +92,8 @@ export class Party {
    */
   getProperty (key: string) {
     const resultSet = this._internal.getPropertiesSet();
-    if (resultSet.value.length) {
-      const [item] = resultSet.value;
+    if (resultSet.getValue().length) {
+      const [item] = resultSet.getValue();
       return item.model.getProperty(key);
     }
 

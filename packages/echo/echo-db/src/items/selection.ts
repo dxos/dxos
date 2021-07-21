@@ -141,12 +141,16 @@ export class Selection<I extends Item<any>> {
  * Live query returned after performing the selection.
  */
 export class SelectionResult<T> {
+  readonly update = new Event<T>();
+
   constructor (
     private readonly _selection: Selection<any>,
     private readonly _selector: (selection: Selection<any>) => T
-  ) {}
-
-  readonly update = this._selection.update;
+  ) {
+    this.update.addEffect(() =>
+      this._selection.update.on(() =>
+        this.update.emit(this.getValue())));
+  }
 
   getValue (): T {
     return this._selector(this._selection);

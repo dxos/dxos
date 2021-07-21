@@ -24,10 +24,13 @@ class TestAgent extends Bot {
     super(config, options);
 
     this.on('party', partyKey => {
-      this._item = this._client!.echo!.getParty(partyKey)!.database.queryItems({ type: ITEM_TYPE }).value[0];
-      this._client!.echo!.getParty(partyKey)!.database.queryItems({ type: ITEM_TYPE }).subscribe(items => {
-        this._item = items[0];
-      });
+      this._item = this._client!.echo!.getParty(partyKey)!
+        .database.select(s => s.filter({ type: ITEM_TYPE }).items)
+        .getValue()[0];
+      this._client!.echo!.getParty(partyKey)!
+        .database.select(s => s.filter({ type: ITEM_TYPE }).items).update.on(items => {
+          this._item = items[0];
+        });
     });
   }
 

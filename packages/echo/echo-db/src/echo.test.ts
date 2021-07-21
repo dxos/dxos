@@ -37,7 +37,7 @@ describe('ECHO', () => {
 
   test('create party and update properties.', async () => {
     const echo = await setup(true);
-    const parties = await echo.queryParties({ open: true });
+    const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
@@ -49,7 +49,7 @@ describe('ECHO', () => {
 
   test('create party and items.', async () => {
     const echo = await setup(true);
-    const parties = await echo.queryParties({ open: true });
+    const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
@@ -60,14 +60,14 @@ describe('ECHO', () => {
       // TODO(burdon): Update currentybly called after all mutations below have completed?
       expect(parties).toHaveLength(1);
       parties.map(async party => {
-        const items = await party.database.queryItems();
-        items.value.forEach(item => {
+        const items = party.database.select(s => s.items).getValue();
+        items.forEach(item => {
           log('Item:', String(item));
         });
 
         // TODO(burdon): Check item mutations.
-        const result = await party.database.queryItems({ type: 'dxn://dxos/item/document' });
-        expect(result.value).toHaveLength(2);
+        const result = party.database.select(s => s.filter({ type: 'dxn://dxos/item/document' }).items).getValue();
+        expect(result).toHaveLength(2);
         onUpdate();
       });
     });
@@ -92,7 +92,7 @@ describe('ECHO', () => {
   test('create party and item with child item.', async () => {
     const echo = await setup(true);
 
-    const parties = await echo.queryParties({ open: true });
+    const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
@@ -102,12 +102,12 @@ describe('ECHO', () => {
 
       expect(parties).toHaveLength(1);
       parties.map(async party => {
-        const items = await party.database.queryItems();
-        items.value.forEach(item => {
+        const items = party.database.select(s => s.items).getValue();
+        items.forEach(item => {
           log('Item:', String(item));
         });
 
-        const { first: item } = await party.database.queryItems({ type: 'dxn://dxos/item/document' });
+        const item = party.database.select(s => s.filter({ type: 'dxn://dxos/item/document' }).items).getValue()[0];
         expect(item.children).toHaveLength(1);
         expect(item.children[0].type).toBe(undefined);
         // TODO(burdon): Test parent.
@@ -133,7 +133,7 @@ describe('ECHO', () => {
   test('create party, two items with child items, and then move child.', async () => {
     const echo = await setup(true);
 
-    const parties = await echo.queryParties({ open: true });
+    const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
@@ -169,8 +169,8 @@ describe('ECHO', () => {
     await echo.close();
     await echo.open();
 
-    await waitForCondition(async () => (await echo.getParty(party.key)) !== undefined);
-    const party2 = await echo.getParty(party.key)!;
+    await waitForCondition(async () => (echo.getParty(party.key)) !== undefined);
+    const party2 = echo.getParty(party.key)!;
 
     expect(party2.key).toEqual(party.key);
     expect(party2.isOpen).toBe(true);
@@ -187,15 +187,15 @@ describe('ECHO', () => {
     await echo2.close();
 
     await echo2.open();
-    await waitForCondition(async () => (await echo2.getParty(party1.key)) !== undefined);
+    await waitForCondition(async () => (echo2.getParty(party1.key)) !== undefined);
 
-    const party = await echo2.getParty(party1.key);
+    const party = echo2.getParty(party1.key);
     assert(party);
     log('Initialized party');
 
-    const items = await party.database.queryItems();
-    await waitForCondition(() => items.value.length > 0);
-    expect(items.value.length).toBeGreaterThan(0);
+    const items = party.database.select(s => s.items).getValue();
+    await waitForCondition(() => items.length > 0);
+    expect(items.length).toBeGreaterThan(0);
   });
 
   test('create party and items with props', async () => {
@@ -289,7 +289,7 @@ describe('ECHO', () => {
       let itemA: Item<any> | null = null;
 
       // Subscribe to Item updates on B.
-      const updated = partyB.database.queryItems({ type: 'dxn://example/item/test' })
+      const updated = partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
         .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id));
 
       // Create a new Item on A.
@@ -386,7 +386,7 @@ describe('ECHO', () => {
     // Empty across the board.
     for (const node of [a1, a2, b1, b2]) {
       const [party] = node.queryParties().value;
-      expect(party.database.queryItems({ type: 'dxn://example/item/test' }).value.length).toBe(0);
+      expect(party.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items).getValue().length).toBe(0);
     }
 
     for await (const node of [a1, a2, b1, b2]) {
@@ -397,9 +397,9 @@ describe('ECHO', () => {
       for (const otherNode of [a1, a2, b1, b2].filter(x => x !== node)) {
         const [otherParty] = otherNode.queryParties().value;
         const [updated, onUpdate] = latch();
-        otherParty.database.queryItems({ type: 'dxn://example/item/test' })
-          .subscribe((result) => {
-            if (result.find(current => current.id === item?.id)) {
+        otherParty.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+          .update.on(items => {
+            if (items.find(current => current.id === item?.id)) {
               log(`other has ${item?.id}`);
               onUpdate();
             }
@@ -448,7 +448,7 @@ describe('ECHO', () => {
       let itemA: Item<any> | null = null;
 
       // Subscribe to Item updates on B.
-      const updated = b.queryParties().value[0].database.queryItems({ type: 'dxn://example/item/test' })
+      const updated = b.queryParties().value[0].database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
         .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id));
 
       // Create a new Item on A.
@@ -578,10 +578,10 @@ describe('ECHO', () => {
     let itemA: Item<any> | null = null;
     const [updated, onUpdate] = latch();
 
-    partyA.database.queryItems({ type: 'dxn://example/item/test' })
-      .subscribe((result) => {
-        if (result.length) {
-          const [receivedItem] = result;
+    partyA.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.on(items => {
+        if (items.length) {
+          const [receivedItem] = items;
           if (itemA && itemA.id === receivedItem.id) {
             onUpdate();
           }
@@ -591,7 +591,9 @@ describe('ECHO', () => {
     itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
     await updated; // Wait for update.
 
-    expect((await partyA.database.queryItems({ type: 'dxn://example/item/test' })).value.length).toEqual(1);
+    expect((partyA.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items))
+      .getValue().length)
+      .toEqual(1);
 
     await partyA.deactivate({ global: true });
     await partyA.activate({ global: true });
@@ -599,8 +601,13 @@ describe('ECHO', () => {
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive).toBe(true);
 
-    await waitForCondition(() => partyA.database.queryItems({ type: 'dxn://example/item/test' }).value.length > 0, 5000);
-    expect((await partyA.database.queryItems({ type: 'dxn://example/item/test' })).value.length).toEqual(1);
+    await partyA.database
+      .select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.waitFor(items => items.length > 0);
+    expect((partyA.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items))
+      .getValue()
+      .length
+    ).toEqual(1);
   }).timeout(10_000);
 
   test('Deactivate Party - multi device', async () => {

@@ -249,12 +249,12 @@ describe('Party manager', () => {
     // TODO(burdon): Adding this causes the worker process to hang AND partyManger.close to throw.
     /*
     const [updated, onUpdate] = latch();
-    partyB.database.queryItems({ type: 'dxn://example/item/test' })
-      .subscribe((result) => {
-        if (result.length) {
-          const [itemB] = result;
+    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.on((items) => {
+        if (items.length) {
+          const [itemB] = items;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${result[0].id}`);
+            log(`B has ${items[0].id}`);
             onUpdate();
           }
         }
@@ -302,12 +302,12 @@ describe('Party manager', () => {
 
     // Subscribe to Item updates on B.
     const [updated, onUpdate] = latch();
-    partyB.database.queryItems({ type: 'dxn://example/item/test' })
-      .subscribe((result) => {
-        if (result.length) {
-          const [itemB] = result;
+    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.on((items) => {
+        if (items.length) {
+          const [itemB] = items;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${result[0].id}`);
+            log(`B has ${items[0].id}`);
             onUpdate();
           }
         }
@@ -387,12 +387,12 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.queryItems({ type: 'dxn://example/item/test' })
-      .subscribe((result) => {
-        if (result.length) {
-          const [itemB] = result;
+    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.on((items) => {
+        if (items.length) {
+          const [itemB] = items;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${result[0].id}`);
+            log(`B has ${items[0].id}`);
             onUpdate();
           }
         }
@@ -454,12 +454,12 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.queryItems({ type: 'dxn://example/item/test' })
-      .subscribe((result) => {
-        if (result.length) {
-          const [itemB] = result;
+    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.on((items) => {
+        if (items.length) {
+          const [itemB] = items;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${result[0].id}`);
+            log(`B has ${items[0].id}`);
             onUpdate();
           }
         }
