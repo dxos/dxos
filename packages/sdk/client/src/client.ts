@@ -9,8 +9,8 @@ import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
 import { Invitation } from '@dxos/credentials';
-import { humanize, PublicKey } from '@dxos/crypto';
-import { raise } from '@dxos/debug';
+import { PublicKey } from '@dxos/crypto';
+import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
 import * as debug from '@dxos/debug';
 import { ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, SecretProvider, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
@@ -22,10 +22,8 @@ import { createStorage } from '@dxos/random-access-multi-storage';
 import { Registry } from '@wirelineio/registry-client';
 
 import { DevtoolsContext } from './devtools-context';
-import { isNode } from './platform';
-import { TimeoutError } from '@dxos/debug';
-import { InvalidParameterError } from '@dxos/debug';
 import { InvalidConfigurationError } from './errors';
+import { isNode } from './platform';
 
 export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';

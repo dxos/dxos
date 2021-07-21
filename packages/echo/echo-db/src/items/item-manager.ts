@@ -13,11 +13,11 @@ import { EchoEnvelope, FeedWriter, IEchoStream, ItemID, ItemType, LinkData, mapF
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
 import { createTransform } from '@dxos/util';
 
+import { UnknownModelError } from '../errors';
 import { ResultSet } from '../result';
 import { DefaultModel } from './default-model';
 import { Item } from './item';
 import { Link } from './link';
-import { UnknownModelError } from '../errors';
 
 const log = debug('dxos:echo:item-manager');
 

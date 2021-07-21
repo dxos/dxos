@@ -7,6 +7,7 @@ import stableStringify from 'json-stable-stringify';
 
 import { keyToBuffer, keyToString, ripemd160, PublicKey } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
+
 import { InvalidInvitationError } from '../errors';
 
 /**
