@@ -4,6 +4,8 @@
 
 import mutexify from 'mutexify';
 
+type PromiseFunction = () => Promise<void>;
+
 class Locker {
 	public _lock: any;
 
@@ -12,7 +14,7 @@ class Locker {
   }
 
   lock () {
-    return new Promise<() => Promise<void>>((resolve) => {
+    return new Promise<PromiseFunction>((resolve) => {
       this._lock((cbRelease: (resolve: () => void) => void) => {
         const release = () => new Promise<void>(resolve => cbRelease(resolve));
         resolve(release);
