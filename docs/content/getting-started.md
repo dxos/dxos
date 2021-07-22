@@ -109,10 +109,13 @@ ncu --deep -u '@storybook/*'
 
 1. Go to a clean `main` branch.
 2. Determine the bump type:
-  * Run `rush version --bump --target-branch main` for breaking changes.
-  * Run `rush version --bump --target-branch main --override-bump minor` for non-breaking changes.
-3. The CI will publish the changes to NPM.
-4. Create a github release.
+  * Run `rush version --bump` for breaking changes.
+  * Run `rush version --bump --override-bump minor` for non-breaking changes.
+4. Rush created changelog files. Remove them using `git status --porcelain | awk '($1=="??" && ($2 ~ /\/CHANGELOG.md/ || $2 ~ /\/CHANGELOG.json/)) {print $2}' | xargs rm`.
+5. Commit the changes with `git commit -a -m "Release vX.Y.Z"`.
+6. Push the changes to the remote.
+7. The CI will publish the changes to NPM.
+8. Create a github release.
   * Run `git log --pretty=format:"* %s"` to get the release notes.
 
 ### Troubleshooting Storybooks
