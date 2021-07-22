@@ -100,8 +100,8 @@ export class HALO {
 
   /**
    * @internal
-   * 
-   * Loads the saved identity from disk. Is called by client. 
+   *
+   * Loads the saved identity from disk. Is called by client.
    */
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     await this._keyring.load();
@@ -136,7 +136,7 @@ export class HALO {
 
   /**
    * Create Profile. Add Identity key if public and secret key are provided.
-   * 
+   *
    * NOTE: This method does not initialize the HALO party.
    */
   // TODO(burdon): Why is this separate from createHalo?

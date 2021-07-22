@@ -44,7 +44,7 @@ export class Party {
 
   /**
    * Whether party is currently open.
-   * 
+   *
    * Party needs to be open to be able to query data from it, make mutations, or replicate with other peers.
    */
   get isOpen (): boolean {
@@ -81,7 +81,7 @@ export class Party {
 
   /**
    * Opens the pipeline and connects the streams.
-   * 
+   *
    * Party needs to be open to be able to query data from it, make mutations, or replicate with other peers.
    */
   async open () {
@@ -144,7 +144,7 @@ export class Party {
 
   /**
    * Creates an invitation for a remote peer.
-   * 
+   *
    * @param authenticationDetails Authenticator for a shared secret (usually a PIN code) to validate the peer accepting the invitation.
    */
   async createInvitation (authenticationDetails: InvitationAuthenticator, options: InvitationOptions = {}) {
@@ -153,9 +153,9 @@ export class Party {
 
   /**
    * Creates an offline invitation for a known remote peer.
-   * 
+   *
    * The peer's key should already be known to the current peer. E.g. they have been in the same party before.
-   * 
+   *
    * This invitation does not require a shared secret (PIN code) because the peer's identity is known beforehand.
    */
   async createOfflineInvitation (publicKey: PublicKey) {

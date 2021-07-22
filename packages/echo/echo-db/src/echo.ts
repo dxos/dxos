@@ -184,7 +184,7 @@ export class ECHO {
 
   /**
    * Opens the ECHO instance and reads the saved state from storage.
-   * 
+   *
    * Previously active parties will be opened and will begin replication.
    */
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
@@ -219,7 +219,7 @@ export class ECHO {
 
   /**
    * Removes all data and closes this ECHO instance.
-   * 
+   *
    * The instance will be in an unusable state at this point and a page refresh is recommended.
    */
   // TODO(burdon): Enable re-open.
