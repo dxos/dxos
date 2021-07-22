@@ -11,7 +11,7 @@ import type { FeedDescriptor } from './feed-descriptor';
  * Creates a multi ReadableStream for feed streams.
  */
 export default class SelectiveReader extends Readable {
-	private _needsData: boolean;
+  private _needsData: boolean;
   private _evaluator: (fd: FeedDescriptor, message: object) => Promise<boolean>;
   private _feeds: Set<{ descriptor: FeedDescriptor, stream: any, buffer: any[] }>;
   private _wakeUpReader?: () => void;
@@ -55,7 +55,8 @@ export default class SelectiveReader extends Readable {
         }
 
         let message;
-        while ((message = feed.buffer.shift())) {
+        // eslint-disable-next-line no-cond-assign
+        while (message = feed.buffer.shift()) {
           if (await this._evaluator(feed.descriptor, message)) {
             process.nextTick(() => {
               if (this._wakeUpReader) {

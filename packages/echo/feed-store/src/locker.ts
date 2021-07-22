@@ -7,7 +7,7 @@ import mutexify from 'mutexify';
 type PromiseFunction = () => Promise<void>;
 
 class Locker {
-	public _lock: any;
+  public _lock: any;
 
   constructor () {
     this._lock = mutexify();

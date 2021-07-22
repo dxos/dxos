@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-/* eslint-disable jest/no-test-callback */
+/* eslint-disable jest/no-done-callback */
 
 import eos from 'end-of-stream-promise';
 import hypercore from 'hypercore';
@@ -177,7 +177,7 @@ describe('FeedStore', () => {
     expect(feedStore.getDescriptors().length).toBe(3);
 
     booksFeed = await feedStore.openFeed('/books');
-    ([usersFeed] = await feedStore.openFeeds(fd => fd.path === '/users'));
+    [usersFeed] = await feedStore.openFeeds(fd => fd.path === '/users');
     expect(feedStore.getDescriptors().filter(fd => fd.opened).length).toBe(2);
 
     await expect(pify(booksFeed.head.bind(booksFeed))()).resolves.toBe('Foundation and Empire');
@@ -258,11 +258,14 @@ describe('FeedStore', () => {
     await expect(feedStore.openFeed('/foo')).rejects.toThrow(/open error/);
 
     const fd = feedStore.getDescriptors().find(fd => fd.path === '/foo');
-    if (fd) {
-      const release = await fd.lock();
-      expect(release).toBeDefined();
-      await release();
+
+    if (!fd) {
+      throw new Error('Descriptor not found');
     }
+
+    const release = await fd.lock();
+    expect(release).toBeDefined();
+    await release();
   });
 
   test('on close error should unlock the descriptor', async () => {
@@ -285,11 +288,13 @@ describe('FeedStore', () => {
     await expect(feedStore.closeFeed('/foo')).rejects.toThrow(/close error/);
     await expect(feedStore.close()).rejects.toThrow(/close error/);
 
-    if (fd) {
-      const release = await fd.lock();
-      expect(release).toBeDefined();
-      await release();
+    if (!fd) {
+      throw new Error('Descriptor not found');
     }
+
+    const release = await fd.lock();
+    expect(release).toBeDefined();
+    await release();
   });
 
   // test('on delete descriptor error should unlock the descriptor', async () => {
@@ -392,7 +397,7 @@ describe('FeedStore', () => {
 
     const onSync = jest.fn();
     const messages: any[] = [];
-    const stream = feedStore.createReadStream(descriptor => (!descriptor.key.equals(feed2.key) && { feedStoreInfo: true }));
+    const stream = feedStore.createReadStream(descriptor => !descriptor.key.equals(feed2.key) && { feedStoreInfo: true });
     stream.on('data', (msg: any) => messages.push(msg));
     stream.on('sync', onSync);
     await new Promise<void>(resolve => eos(stream, () => resolve()));

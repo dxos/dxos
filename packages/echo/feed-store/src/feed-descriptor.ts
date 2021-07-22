@@ -35,18 +35,18 @@ type Listener = ((...args: any) => Promise<void> | void) | null;
  * Abstract handler for an Hypercore instance.
  */
 export class FeedDescriptor {
-	private _storage: any;
-	private _path: string;
-	private _key: Buffer;
-	private _secretKey: Buffer;
-	private _valueEncoding?: string | ValueEncoding;
-	private _hypercore: any;
-	private _codecs: any;
-	private _metadata: any;
-	private _discoveryKey: Buffer;
-	private _locker: Locker;
-	private _feed: any;
-	private _listener: Listener;
+  private _storage: any;
+  private _path: string;
+  private _key: Buffer;
+  private _secretKey: Buffer;
+  private _valueEncoding?: string | ValueEncoding;
+  private _hypercore: any;
+  private _codecs: any;
+  private _metadata: any;
+  private _discoveryKey: Buffer;
+  private _locker: Locker;
+  private _feed: any;
+  private _listener: Listener;
 
   /**
    * constructor
@@ -212,7 +212,7 @@ export class FeedDescriptor {
    * Defines the real path where the Hypercore is going
    * to work with the RandomAccessStorage specified.
    */
-  private _createStorage (dir: string = ''): (name: string) => any {
+  private _createStorage (dir = ''): (name: string) => any {
     const ras = this._storage;
 
     return (name) => {

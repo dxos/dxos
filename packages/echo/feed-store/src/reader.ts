@@ -17,17 +17,17 @@ const all = () => true;
  * Creates a multi ReadableStream for feed streams.
  */
 export default class Reader {
-	public _filter: any;
-	public _options: any;
-	public _inBatch: any;
-	public _stream: any;
-	public _state: any;
-	public _feeds: any;
-	public _feedsToSync: any;
-	public _initialState: any;
-	public feed: any;
-	public path: any;
-	public metadata: any;
+  public _filter: any;
+  public _options: any;
+  public _inBatch: any;
+  public _stream: any;
+  public _state: any;
+  public _feeds: any;
+  public _feedsToSync: any;
+  public _initialState: any;
+  public feed: any;
+  public path: any;
+  public metadata: any;
 
   /**
    * constructor

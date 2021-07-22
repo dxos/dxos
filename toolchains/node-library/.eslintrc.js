@@ -3,7 +3,13 @@ module.exports = {
   rules: { // TODO(marik-d): Move them to DXOS eslint config
     'import/export': 'off',
     'no-extra-parens': 'off',
-    '@typescript-eslint/no-extra-parens': ['error'],
+    '@typescript-eslint/no-extra-parens': [
+      'error',
+      'all',
+      {
+        nestedBinaryExpressions: false
+      }
+    ],
     '@typescript-eslint/no-namespace': 'off',
     '@typescript-eslint/no-unused-vars': [
       'error',

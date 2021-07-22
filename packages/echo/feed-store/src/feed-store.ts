@@ -44,26 +44,26 @@ interface OpenFeedOptions {
  * @extends {EventEmitter}
  */
 export class FeedStore extends EventEmitter {
-	private _storage: any;
-	private _database: any;
-	private _defaultFeedOptions: any;
-	private _codecs: any;
-	private _hypercore: any;
-	private _descriptors: Map<string, FeedDescriptor>;
-	private _readers: Set<SelectiveReader | Reader>;
-	private _indexDB: any;
-	private _resource: any;
-	public database: any;
-	public feedOptions: any;
-	public codecs: any;
-	public hypercore: any;
-	public key: any;
-	public path: any;
-	public options: any;
-	public secretKey: any;
-	public valueEncoding: any;
-	public metadata: any;
-	public feed: any;
+  private _storage: any;
+  private _database: any;
+  private _defaultFeedOptions: any;
+  private _codecs: any;
+  private _hypercore: any;
+  private _descriptors: Map<string, FeedDescriptor>;
+  private _readers: Set<SelectiveReader | Reader>;
+  private _indexDB: any;
+  private _resource: any;
+  public database: any;
+  public feedOptions: any;
+  public codecs: any;
+  public hypercore: any;
+  public key: any;
+  public path: any;
+  public options: any;
+  public secretKey: any;
+  public valueEncoding: any;
+  public metadata: any;
+  public feed: any;
 
   /**
    * Create and initialize a new FeedStore
@@ -357,11 +357,11 @@ export class FeedStore extends EventEmitter {
     if (descriptor) {
       try {
         release = await descriptor.lock();
-  
+
         await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key?.toString('hex')}`);
-  
+
         this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
-  
+
         this.emit('descriptor-remove', descriptor);
         await release();
         this._resource.inactive();
@@ -527,7 +527,7 @@ export class FeedStore extends EventEmitter {
       metadata: descriptor.metadata
     };
 
-    if (!oldData || (JSON.stringify(oldData.metadata) !== JSON.stringify(newData.metadata))) {
+    if (!oldData || JSON.stringify(oldData.metadata) !== JSON.stringify(newData.metadata)) {
       await this._indexDB.put(key, newData);
     }
   }
