@@ -69,14 +69,14 @@ export interface EchoCreationOptions {
 /**
  * This is the root object for the ECHO database.
  * It is used to query and mutate the state of all data accessible to the containing node.
- * Shared datasets are contained within `Parties` which consiste of immutable messages within multiple `Feeds`.
+ * Shared datasets are contained within `Parties` which consists of immutable messages within multiple `Feeds`.
  * These feeds are replicated across peers in the network and stored in the `FeedStore`.
  * Parties contain queryable data `Items` which are reconstituted from an ordered stream of mutations by
  * different `Models`. The `Model` also handles `Item` mutations, which are streamed back to the `FeedStore`.
  * When opened, `Parties` construct a pair of inbound and outbound pipelines that connects each `Party` specific
  * `ItemManager` to the `FeedStore`.
  * Messages are streamed into the pipeline (from the `FeedStore`) in logical order, determined by the
- * `Spactime` `Timeframe` (which implements a vector clock).
+ * `Timeframe` (which implements a vector clock).
  */
 // TODO(burdon): Create ECHOError class for public errors.
 export class ECHO {
@@ -183,7 +183,9 @@ export class ECHO {
   }
 
   /**
-   * Opens the party and constructs the inbound/outbound mutation streams.
+   * Opens the ECHO instance and reads the saved state from storage.
+   * 
+   * Previously active parties will be opened and will begin replication.
    */
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     if (this.isOpen) {
@@ -197,7 +199,7 @@ export class ECHO {
   }
 
   /**
-   * Closes the party and associated streams.
+   * Closes the ECHO instance.
    */
   async close () {
     if (!this.isOpen) {
@@ -217,6 +219,8 @@ export class ECHO {
 
   /**
    * Removes all data and closes this ECHO instance.
+   * 
+   * The instance will be in an unusable state at this point and a page refresh is recommended.
    */
   // TODO(burdon): Enable re-open.
   async reset () {
@@ -283,8 +287,8 @@ export class ECHO {
 
   /**
    * Joins a party that was created by another peer and starts replicating with it.
-   * @param invitationDescriptor
-   * @param secretProvider
+   * @param invitationDescriptor Invitation descriptor passed from another peer.
+   * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
    */
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<Party> {
     assert(this._partyManager.isOpen, 'ECHO not open.');
