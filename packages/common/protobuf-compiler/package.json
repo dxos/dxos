@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protobuf-compiler",
-  "version": "2.10.14",
+  "version": "2.10.15",
   "license": "MIT",
   "bin": {
     "build-protobuf": "./bin/main.js"
