@@ -1,0 +1,11 @@
+{
+  "name": "@dxos/protocol-plugin-replicator",
+  "entries": [
+    {
+      "version": "2.10.15",
+      "tag": "@dxos/protocol-plugin-replicator_v2.10.15",
+      "date": "Thu, 22 Jul 2021 11:13:35 GMT",
+      "comments": {}
+    }
+  ]
+}
