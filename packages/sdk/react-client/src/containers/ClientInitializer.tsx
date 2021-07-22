@@ -16,7 +16,8 @@ interface ClientInitializerProperties {
 }
 
 /**
- * Initializes and provides a client instance given a config object or generator.
+ * Initializes and provides a client instance given a config object or config generator.
+ * To be used with `useClient` hook.
  */
 const ClientInitializer = ({ children, config = {} }: ClientInitializerProperties) => {
   const [client, setClient] = useState<Client | undefined>();
