@@ -235,7 +235,7 @@ test('Wrong partyKey', async () => {
   }).toThrow(ERR_EXTENSION_RESPONSE_FAILED);
 });
 
-test('Create Invitation message ', async () => {
+test('Create Invitation message', async () => {
   const keyring = await createKeyring();
 
   const partyKey = keyring.findKey(Filter.matches({ type: KeyType.PARTY }));

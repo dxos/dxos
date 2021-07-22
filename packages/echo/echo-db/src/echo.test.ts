@@ -169,7 +169,7 @@ describe('ECHO', () => {
     await echo.close();
     await echo.open();
 
-    await waitForCondition(async () => (await echo.getParty(party.key)) !== undefined);
+    await waitForCondition(async () => await echo.getParty(party.key) !== undefined);
     const party2 = await echo.getParty(party.key)!;
 
     expect(party2.key).toEqual(party.key);
@@ -187,7 +187,7 @@ describe('ECHO', () => {
     await echo2.close();
 
     await echo2.open();
-    await waitForCondition(async () => (await echo2.getParty(party1.key)) !== undefined);
+    await waitForCondition(async () => await echo2.getParty(party1.key) !== undefined);
 
     const party = await echo2.getParty(party1.key);
     assert(party);
