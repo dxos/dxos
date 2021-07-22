@@ -10,6 +10,11 @@ import { QueryRecord, WRN_TYPE_BOT_FACTORY } from './types';
 
 const log = debug('dxos:react-client');
 
+/**
+ * A hook returning all bot factories registered on the DXNS registry.
+ * Bot factories are used for spawning bots into Parties.
+ * See also: `useRegistryBots` hook.
+ */
 interface RegistryBotFactoryRecord {
   topic: string,
   name?: string,
