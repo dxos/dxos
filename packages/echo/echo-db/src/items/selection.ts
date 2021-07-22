@@ -96,7 +96,7 @@ export class Selection<I extends Item<any>> {
    * @param filter
    */
   filter (filter: SelectFilter): Selection<I> {
-    const fn = (typeof filter === 'function') ? filter : createArrayFilter(filter as SelectFilterByValue);
+    const fn = typeof filter === 'function' ? filter : createArrayFilter(filter as SelectFilterByValue);
     return new Selection(() => this._getItems().filter(fn), this._update);
   }
 
@@ -106,7 +106,7 @@ export class Selection<I extends Item<any>> {
    */
   // TODO(burdon): Optional filter.
   links (filter: SelectFilter): Selection<any> {
-    const fn = (typeof filter === 'function') ? filter : createArrayFilter(filter as SelectFilterByValue);
+    const fn = typeof filter === 'function' ? filter : createArrayFilter(filter as SelectFilterByValue);
     return new Selection(() => deduplicate(this._getItems().flatMap(item => item.links.filter(fn))), this._update);
   }
 
@@ -116,7 +116,7 @@ export class Selection<I extends Item<any>> {
    */
   // TODO(burdon): Optional filter.
   refs (filter: SelectFilter): Selection<any> {
-    const fn = (typeof filter === 'function') ? filter : createArrayFilter(filter as SelectFilterByValue);
+    const fn = typeof filter === 'function' ? filter : createArrayFilter(filter as SelectFilterByValue);
     return new Selection(() => deduplicate(this._getItems().flatMap(item => item.refs.filter(fn))), this._update);
   }
 

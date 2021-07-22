@@ -52,7 +52,7 @@ test('Basic store operations', async () => {
   }
 });
 
-test('Test reloading', async () => {
+test('reloading', async () => {
   const db = memdown();
   const keyRecords = [];
 

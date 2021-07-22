@@ -94,7 +94,7 @@ export class Client {
       keyStorage,
       snapshotStorage,
       networkManagerOptions: {
-        signal: swarm?.signal ? (Array.isArray(swarm.signal) ? swarm.signal : [swarm.signal]) : undefined,
+        signal: swarm?.signal ? Array.isArray(swarm.signal) ? swarm.signal : [swarm.signal] : undefined,
         ice: swarm?.ice
       },
       snapshots,
@@ -249,7 +249,7 @@ export class Client {
       oldToNewIdMap.set(item.itemId, createdItem.id);
 
       if (item.model.array) {
-        for (const mutation of (item.model.array.mutations || [])) {
+        for (const mutation of item.model.array.mutations || []) {
           const decodedMutation = model.meta.mutation.decode(mutation.mutation);
           await (createdItem.model as any).write(decodedMutation);
         }
