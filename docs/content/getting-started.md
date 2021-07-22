@@ -105,27 +105,15 @@ ncu --deep -u '<PACKAGE>'
 ncu --deep -u '@storybook/*'
 ```
 
-### Publishing packages
+### Release process
 
-To publish all packages you need to bump the version.
-
-#### Publishing non-breaking changes
-
-In order to publish **non-breaking changes**, bump the patch version:
-
-```bash
-  rush version --bump --target-branch <YOUR_CURRENT_BRANCH>
-```
-
-#### Publishing breaking changes
-
-In order to publish **non-breaking changes**, bump the minor version:
-
-```bash
-  rush version --bump --target-branch <YOUR_CURRENT_BRANCH> --override-bump minor
-```
-
-This will create a new commit with all packages' versions bumped up on your current branch. When the branch gets merged to main, changes will automatically get published to NPM.
+1. Go to a clean `main` branch.
+2. Determine the bump type:
+  * Run `rush version --bump --target-branch main` for breaking changes.
+  * Run `rush version --bump --target-branch main --override-bump minor` for non-breaking changes.
+3. The CI will publish the changes to NPM.
+4. Create a github release.
+  * Run `git log --pretty=format:"* %s"` to get the release notes.
 
 ### Troubleshooting Storybooks
 
