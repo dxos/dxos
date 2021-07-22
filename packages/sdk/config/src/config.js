@@ -8,7 +8,7 @@ import get from 'lodash.get';
 import set from 'lodash.set';
 
 /**
- * Maps the given objects onto a flattend set of (key x values).
+ * Maps the given objects onto a flattened set of (key x values).
  * @param {object} spec
  * @param {object} values
  * @return {object}
