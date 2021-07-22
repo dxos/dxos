@@ -88,6 +88,7 @@ function execBuild () {
     execTool('build-protobuf', [
       '-o',
       join(packageDir, 'src/proto/gen'),
+      // eslint-disable-next-line @typescript-eslint/no-extra-parens
       ...(substitutions ? ['-s', substitutions] : []),
       ...protoFiles
     ]);
