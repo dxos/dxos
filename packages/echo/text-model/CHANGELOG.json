@@ -2,12 +2,6 @@
   "name": "@dxos/text-model",
   "entries": [
     {
-      "version": "2.10.16",
-      "tag": "@dxos/text-model_v2.10.16",
-      "date": "Thu, 22 Jul 2021 11:21:07 GMT",
-      "comments": {}
-    },
-    {
       "version": "2.10.15",
       "tag": "@dxos/text-model_v2.10.15",
       "date": "Thu, 22 Jul 2021 11:13:35 GMT",
