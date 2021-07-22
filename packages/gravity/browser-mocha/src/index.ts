@@ -25,7 +25,7 @@ export interface RunOptions {
   files: string[]
   browsers: Browser[]
   headless: boolean
-  stayOpen?: boolean
+  stayOpen: boolean
   setup?: string
   debug?: boolean,
   browserArgs?: string[]

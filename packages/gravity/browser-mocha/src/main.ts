@@ -8,8 +8,8 @@ import { Browser, run } from '.';
 
 interface Argv {
   files: string[]
-  stayOpen: boolean
-  headless: boolean
+  stayOpen?: boolean
+  headless?: boolean
   debug: boolean
   setup?: string,
   browserArg?: string[]
@@ -30,11 +30,11 @@ yargs(process.argv.slice(2))
       await run({
         files: argv.files as string[],
         browsers: [Browser.CHROMIUM],
-        stayOpen: !!argv.stayOpen,
+        stayOpen: argv.stayOpen ?? false,
         setup: argv.setup,
         debug: argv.debug,
         browserArgs: argv.browserArg,
-        headless: !!argv.headless
+        headless: argv.headless ?? true
       });
     }
   )
