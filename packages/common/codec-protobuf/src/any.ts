@@ -4,6 +4,9 @@
 
 import type { Schema } from './schema';
 
+// eslint-disable-next-line camelcase
+export type WithTypeUrl<T extends {}> = T & { __type_url: string };
+
 export const anySubstitutions = {
   'google.protobuf.Any': {
     encode: (value: WithTypeUrl<{}>, schema: Schema<any>): any => {
@@ -28,6 +31,3 @@ export const anySubstitutions = {
     }
   }
 };
-
-// eslint-disable-next-line camelcase
-export type WithTypeUrl<T extends {}> = T & { __type_url: string };
