@@ -71,7 +71,8 @@ const ClientContextProvider = ({ config, children }) => {
 
         try {
           feedStorage = createStorage(clientConfig.feedStorage.root, clientConfig.feedStorage.type);
-          keyStorage = clientConfig.keyStorage.type === 'memory' ? memdown()
+          keyStorage = clientConfig.keyStorage.type === 'memory'
+            ? memdown()
             : leveljs(`${clientConfig.keyStorage.root}/keystore`);
 
           const keyring = new Keyring(new KeyStore(keyStorage));

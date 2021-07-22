@@ -324,17 +324,19 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
                       <span className={classes.label}>Contact</span>
                     </TableCell>
                     <TableCell classes={{ root: classes.colActions }}>
-                      {contactsInvitations.find((p) => p.contact === contact) === undefined ? (
+                      {contactsInvitations.find((p) => p.contact === contact) === undefined
+                        ? (
                         <IconButton size='small'>
                           <InviteIcon onClick={() => createOfflineInvitation(contact)} />
                         </IconButton>
-                      ) : (
+                          )
+                        : (
                         <PendingOfflineInvitation
                           handleCopy={handleCopy}
                           party={party}
                           invitation={contactsInvitations.find((p) => p.contact === contact)}
                         />
-                      )}
+                          )}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -43,7 +43,7 @@ export class InvitationDescriptor {
     const { hash, swarmKey, invitation, identityKey, type } = queryParameters;
 
     const descriptor = new InvitationDescriptor(type as InvitationDescriptorType, keyToBuffer(swarmKey),
-      keyToBuffer(invitation), (identityKey) ? PublicKey.from(identityKey) : undefined);
+      keyToBuffer(invitation), identityKey ? PublicKey.from(identityKey) : undefined);
 
     if (hash !== descriptor.hash) {
       throw new Error('Invalid hash.');

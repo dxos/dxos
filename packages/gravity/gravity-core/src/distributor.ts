@@ -29,20 +29,20 @@ export const buildBot = async (botPath: string, browser: boolean) => {
     external: browser
       ? ['read-pkg-up']
       : [
-        'fatfs',
-        'runtimejs',
-        'wrtc',
-        'bip32',
-        'typeforce',
-        'sodium-universal'
-      ],
+          'fatfs',
+          'runtimejs',
+          'wrtc',
+          'bip32',
+          'typeforce',
+          'sodium-universal'
+        ],
     plugins: browser
       ? [
-        NodeModulesPlugin(),
-        NodeGlobalsPolyfillPlugin(),
-        FixMemdownPlugin(),
-        FixGracefulFsPlugin()
-      ]
+          NodeModulesPlugin(),
+          NodeGlobalsPolyfillPlugin(),
+          FixMemdownPlugin(),
+          FixGracefulFsPlugin()
+        ]
       : []
   });
 
