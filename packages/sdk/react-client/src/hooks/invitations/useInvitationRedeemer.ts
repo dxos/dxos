@@ -11,13 +11,20 @@ import { useClient } from '../client';
 import { decodeInvitation, noOp } from './utils';
 
 type UseInvitationRedeemerProps = {
-  onDone?: (party: Party) => void; // called once the redeem flow finishes successfully.
-  onError?: (error?: string) => void | never; // called if the invite flow produces an error.
+  onDone?: (party: Party) => void;
+  onError?: (error?: string) => void | never;
   isOffline?: boolean;
 };
 
 /**
- * Hook to redeem an invitation Code and provide the PIN authentication if needed.
+ * Hook to redeem an Invitation Code and provide the PIN authentication (if needed).
+ * Works with both regular and `Offline` invitations.
+ * 
+ * Works with `useInvitation` and `useOfflineInvitation` hooks on the inviter side.
+ * 
+ * @param onDone called once the redeem flow finishes successfully.
+ * @param onError called if the invite flow produces an error.
+ * @param isOffline Is this an `Offline` invitation?
  */
 export const useInvitationRedeemer = ({
   onDone = noOp,
