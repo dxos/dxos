@@ -12,9 +12,9 @@ class Locker {
   }
 
   lock () {
-    return new Promise((resolve) => {
-      this._lock((cbRelease) => {
-        const release = () => new Promise(resolve => cbRelease(resolve));
+    return new Promise<() => Promise<void>>((resolve) => {
+      this._lock((cbRelease: (resolve: () => void) => void) => {
+        const release = () => new Promise<void>(resolve => cbRelease(resolve));
         resolve(release);
       });
     });

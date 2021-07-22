@@ -12,28 +12,41 @@ import sodium from 'sodium-universal';
 
 import Locker from './locker';
 
+interface ValueEncoding {
+  encode: string,
+  decode: string
+}
+
+interface FeedDescriptorOptions {
+  storage?: any,
+  key?: Buffer,
+  secretKey?: Buffer,
+  valueEncoding?: string | ValueEncoding,
+  metadata?: any,
+  codecs?: object,
+  hypercore?: any
+}
+
+type Listener = ((...args: any) => Promise<void> | void) | null;
+
 /**
  * FeedDescriptor
  *
  * Abstract handler for an Hypercore instance.
  */
 export class FeedDescriptor {
-	public _storage: any;
-	public _path: any;
-	public _key: any;
-	public _secretKey: any;
-	public _valueEncoding: any;
-	public _hypercore: any;
-	public _codecs: any;
-	public _metadata: any;
-	public _discoveryKey: any;
-	public _locker: any;
-	public _feed: any;
-	public _listener: any;
-	public storage: any;
-	public hypercore: any;
-	public codecs: any;
-	public publicKey: any;
+	private _storage: any;
+	private _path: string;
+	private _key?: Buffer;
+	private _secretKey?: Buffer;
+	private _valueEncoding?: string | ValueEncoding;
+	private _hypercore: any;
+	private _codecs: any;
+	private _metadata: any;
+	private _discoveryKey: Buffer;
+	private _locker: Locker;
+	private _feed: any;
+	private _listener: Listener;
 
   /**
    * constructor
@@ -47,7 +60,7 @@ export class FeedDescriptor {
    * @param {*} options.metadata
    * @param {Hypercore} options.hypercore
    */
-  constructor (path?, options = {}) {
+  constructor (path: string, options: FeedDescriptorOptions = {}) {
     const {
       storage,
       key,
@@ -58,14 +71,10 @@ export class FeedDescriptor {
       metadata
     } = options;
 
-    assert(path && typeof path === 'string' && path.length > 0,
-      'path is required and must be a valid string.');
-    assert(!key || (Buffer.isBuffer(key) && key.length === sodium.crypto_sign_PUBLICKEYBYTES),
-      'key must be a buffer of size crypto_sign_PUBLICKEYBYTES.');
-    assert(!secretKey || (Buffer.isBuffer(secretKey) && secretKey.length === sodium.crypto_sign_SECRETKEYBYTES),
-      'secretKey must be a buffer of size crypto_sign_SECRETKEYBYTES.');
-    assert(!secretKey || (secretKey && key),
-      'missing publicKey.');
+    assert(path, 'path is required and must be a valid string.');
+    assert(!key || key.length === sodium.crypto_sign_PUBLICKEYBYTES, 'key must be a buffer of size crypto_sign_PUBLICKEYBYTES.');
+    assert(!secretKey || secretKey.length === sodium.crypto_sign_SECRETKEYBYTES, 'secretKey must be a buffer of size crypto_sign_SECRETKEYBYTES.');
+    assert(!secretKey || (secretKey && key), 'missing publicKey.');
     assert(!valueEncoding || typeof valueEncoding === 'string' || (valueEncoding.encode && valueEncoding.decode),
       'valueEncoding must be a string or implement abstract-encoding.');
 
@@ -92,9 +101,6 @@ export class FeedDescriptor {
     this._listener = null;
   }
 
-  /**
-   * @type {string}
-   */
   get path () {
     return this._path;
   }
@@ -106,53 +112,31 @@ export class FeedDescriptor {
     return this._feed;
   }
 
-  /**
-   * @type {Boolean}
-   */
   get opened () {
     return !!(this._feed && this._feed.opened && !this._feed.closed);
   }
 
-  /**
-   * @type {Buffer}
-   */
   get key () {
     return this._key;
   }
 
-  /**
-   * @type {Buffer}
-   */
   get secretKey () {
     return this._secretKey;
   }
 
-  /**
-   * @type {Buffer}
-   */
   get discoveryKey () {
     return this._discoveryKey;
   }
 
-  /**
-   * @type {Object|string}
-   */
   get valueEncoding () {
     return this._valueEncoding;
   }
 
-  /**
-   * @type {*}
-   */
   get metadata () {
     return this._metadata;
   }
 
-  /**
-   * @param {*} metadata
-   * @returns {Promise}
-   */
-  async setMetadata (metadata) {
+  async setMetadata (metadata: any) {
     this._metadata = metadata;
     await this._emit('updated');
   }
@@ -195,8 +179,6 @@ export class FeedDescriptor {
 
   /**
    * Close the Hypercore referenced by the descriptor.
-   *
-   * @returns {Promise}
    */
   async close () {
     const release = await this.lock();
@@ -221,19 +203,15 @@ export class FeedDescriptor {
    *
    * @param {function} listener
    */
-  watch (listener) {
+  watch (listener: Listener) {
     this._listener = listener;
   }
 
   /**
    * Defines the real path where the Hypercore is going
    * to work with the RandomAccessStorage specified.
-   *
-   * @private
-   * @param {string} dir
-   * @returns {Function}
    */
-  _createStorage (dir) {
+  private _createStorage (dir: string = ''): (name: string) => any {
     const ras = this._storage;
 
     return (name) => {
@@ -244,9 +222,9 @@ export class FeedDescriptor {
     };
   }
 
-  async _open () {
+  private async _open () {
     this._feed = this._hypercore(
-      this._createStorage(this._key.toString('hex')),
+      this._createStorage(this._key?.toString('hex')),
       this._key,
       {
         secretKey: this._secretKey,
@@ -261,7 +239,7 @@ export class FeedDescriptor {
   /**
    * Asynchronous emitter.
    */
-  async _emit (event, ...args) {
+  private async _emit (event: any, ...args: any) {
     if (this._listener) {
       await this._listener(event, ...args);
     }

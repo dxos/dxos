@@ -9,6 +9,7 @@ import pump from 'pump';
 import through from 'through2';
 
 import createBatchStream from './create-batch-stream';
+import type { FeedDescriptor } from './feed-descriptor';
 
 const all = () => true;
 
@@ -34,7 +35,7 @@ export default class Reader {
    * @param {StreamCallback|Object} [callback] Filter function to return options for each feed.createReadStream
    * (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
    */
-  constructor (filter, inBatch = false) {
+  constructor (filter: any, inBatch = false) {
     assert(typeof filter === 'function' || typeof filter === 'object');
 
     if (typeof filter === 'function') {
@@ -73,19 +74,17 @@ export default class Reader {
 
   /**
    * Destroy stream.
-   *
-   * @param {Error} [err] Optional error object.
    */
-  destroy (err) {
+  destroy (err: Error) {
     process.nextTick(() => {
       this._stream.destroy(err);
     });
   }
 
-  async addInitialFeedStreams (descriptors) {
+  async addInitialFeedStreams (descriptors: FeedDescriptor[]) {
     const validFeeds = await Promise.all(descriptors.map(async descriptor => {
       const streamOptions = await this._getFeedStreamOptions(descriptor);
-      if (!streamOptions) {
+      if (!streamOptions || !descriptor.key) {
         return null;
       }
 
@@ -102,7 +101,9 @@ export default class Reader {
       return { descriptor, streamOptions };
     }));
 
-    validFeeds.filter(Boolean).forEach(({ descriptor, streamOptions }) => {
+    const notNull = <T>(value: T | null): value is T => Boolean(value);
+
+    validFeeds.filter(notNull).forEach(({ descriptor, streamOptions }) => {
       this._addFeedStream(descriptor, streamOptions);
     });
 
@@ -114,12 +115,10 @@ export default class Reader {
 
   /**
    * Adds a feed stream and stream the block data, seq, key and metadata.
-   *
-   * @param {FeedDescriptor} descriptor
    */
-  async addFeedStream (descriptor) {
+  async addFeedStream (descriptor: FeedDescriptor) {
     let streamOptions = await this._getFeedStreamOptions(descriptor);
-    if (!streamOptions) {
+    if (!streamOptions || !descriptor.key) {
       return false;
     }
 
@@ -139,16 +138,14 @@ export default class Reader {
 
   /**
    * Execute a callback on end of the stream.
-   *
-   * @param {function} [callback]
    */
-  onEnd (callback) {
+  onEnd (callback: (err: Error | null | undefined) => void) {
     eos(this._stream, (err) => {
       callback(err);
     });
   }
 
-  _checkFeedSync (feed, seq, sync) {
+  private _checkFeedSync (feed: any, seq: any, sync = false) {
     const feedKey = feed.key.toString('hex');
     this._state[feedKey] = seq;
     if (this.sync) {
@@ -163,7 +160,7 @@ export default class Reader {
     }
   }
 
-  async _getFeedStreamOptions (descriptor) {
+  private async _getFeedStreamOptions (descriptor: FeedDescriptor) {
     const { feed } = descriptor;
 
     if (!feed || this._feeds.has(feed) || this._stream.destroyed) {
@@ -182,7 +179,7 @@ export default class Reader {
     return { ...this._options };
   }
 
-  _addFeedStream (descriptor, streamOptions) {
+  private _addFeedStream (descriptor: FeedDescriptor, streamOptions: any) {
     const { feed, path, metadata } = descriptor;
 
     streamOptions.metadata = { path, metadata };

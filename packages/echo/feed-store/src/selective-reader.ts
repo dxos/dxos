@@ -5,41 +5,36 @@
 import { Readable } from 'stream';
 
 import createBatchStream from './create-batch-stream';
+import type { FeedDescriptor } from './feed-descriptor';
 
 /**
  * Creates a multi ReadableStream for feed streams.
  */
 export default class SelectiveReader extends Readable {
-	public _needsData: any;
-	public push: any;
-  /** @type {(feedDescriptor, message) => Promise<boolean>} */
-  _evaluator;
-
-  /** @type {Set<{ descriptor: FeedDescriptor, stream: any, buffer: any[] }>} */
-  _feeds = new Set();
-
-  /** @type {() => void} */
-  _wakeUpReader;
-
-  /** @type {Promise} */
-  _hasData;
+	private _needsData: boolean;
+  private _evaluator: (fd: FeedDescriptor, message: object) => Promise<boolean>;
+  private _feeds: Set<{ descriptor: FeedDescriptor, stream: any, buffer: any[] }>;
+  private _wakeUpReader?: () => void;
+  private _hasData?: Promise<void>;
 
   _reading = false;
 
-  constructor (evaluator) {
+  constructor (evaluator: (fd: FeedDescriptor, message: object) => Promise<boolean>) {
     super({ objectMode: true });
 
     this._evaluator = evaluator;
     this._resetDataLock();
+    this._feeds = new Set();
+    this._needsData = false;
   }
 
   _resetDataLock () {
-    this._hasData = new Promise(resolve => {
+    this._hasData = new Promise<void>(resolve => {
       this._wakeUpReader = resolve;
     });
   }
 
-  async _read () {
+  override async _read () {
     if (this._reading) {
       this._needsData = true;
       return;
@@ -62,7 +57,11 @@ export default class SelectiveReader extends Readable {
         let message;
         while ((message = feed.buffer.shift())) {
           if (await this._evaluator(feed.descriptor, message)) {
-            process.nextTick(() => this._wakeUpReader());
+            process.nextTick(() => {
+              if (this._wakeUpReader) {
+                this._wakeUpReader();
+              }
+            });
             this._needsData = false;
             if (!this.push(message)) {
               this._reading = false;
@@ -84,7 +83,7 @@ export default class SelectiveReader extends Readable {
     }
   }
 
-  async addInitialFeedStreams (descriptors) {
+  async addInitialFeedStreams (descriptors: FeedDescriptor[]) {
     for (const descriptor of descriptors) {
       this.addFeedStream(descriptor);
     }
@@ -92,14 +91,14 @@ export default class SelectiveReader extends Readable {
 
   /**
    * Adds a feed stream and stream the block data, seq, key and metadata.
-   *
-   * @param {FeedDescriptor} descriptor
    */
-  async addFeedStream (descriptor) {
+  async addFeedStream (descriptor: FeedDescriptor) {
     const stream = createBatchStream(descriptor.feed, { live: true });
 
     stream.on('readable', () => {
-      this._wakeUpReader();
+      if (this._wakeUpReader) {
+        this._wakeUpReader();
+      }
       this._read();
     });
 
