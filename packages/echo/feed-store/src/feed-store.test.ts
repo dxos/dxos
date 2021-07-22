@@ -132,7 +132,7 @@ describe('FeedStore', () => {
     const { booksFeed, usersFeed, groupsFeed } = await defaultFeeds(feedStore);
 
     expect(feedStore.getOpenFeeds().map(f => f.key)).toEqual([booksFeed.key, usersFeed.key, groupsFeed.key]);
-    expect(feedStore.getOpenFeed(fd => fd.key?.equals(booksFeed.key) ?? false)).toBe(booksFeed);
+    expect(feedStore.getOpenFeed(fd => fd.key.equals(booksFeed.key))).toBe(booksFeed);
     expect(feedStore.getOpenFeed(() => false)).toBeUndefined();
     expect(feedStore.getOpenFeeds(fd => fd.path === '/books')).toEqual([booksFeed]);
   });
@@ -392,7 +392,7 @@ describe('FeedStore', () => {
 
     const onSync = jest.fn();
     const messages: any[] = [];
-    const stream = feedStore.createReadStream(descriptor => (!descriptor.key?.equals(feed2.key) && { feedStoreInfo: true }));
+    const stream = feedStore.createReadStream(descriptor => (!descriptor.key.equals(feed2.key) && { feedStoreInfo: true }));
     stream.on('data', (msg: any) => messages.push(msg));
     stream.on('sync', onSync);
     await new Promise<void>(resolve => eos(stream, () => resolve()));

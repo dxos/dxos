@@ -37,8 +37,8 @@ type Listener = ((...args: any) => Promise<void> | void) | null;
 export class FeedDescriptor {
 	private _storage: any;
 	private _path: string;
-	private _key?: Buffer;
-	private _secretKey?: Buffer;
+	private _key: Buffer;
+	private _secretKey: Buffer;
 	private _valueEncoding?: string | ValueEncoding;
 	private _hypercore: any;
 	private _codecs: any;
@@ -80,16 +80,17 @@ export class FeedDescriptor {
 
     this._storage = storage;
     this._path = path;
-    this._key = key;
-    this._secretKey = secretKey;
     this._valueEncoding = valueEncoding;
     this._hypercore = hypercore;
     this._codecs = codecs;
     this._metadata = metadata;
 
-    if (!this._key) {
+    if (!key || !secretKey) {
       const { publicKey, secretKey } = crypto.keyPair();
       this._key = publicKey;
+      this._secretKey = secretKey;
+    } else {
+      this._key = key;
       this._secretKey = secretKey;
     }
 
