@@ -1362,11 +1362,14 @@ importers:
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/debug': 4.1.5
+      '@types/expect': 24.3.0
       '@types/jest': 26.0.23
+      '@types/mocha': 8.2.2
       coveralls: 3.1.0
       cpy-cli: 2.0.0
       del-cli: 3.0.1
       end-of-stream: 1.4.4
+      expect: 27.0.2
       jest: 26.6.3
       pify: 5.0.0
       random-access-memory: 3.1.2
@@ -1380,13 +1383,16 @@ importers:
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.1
+      '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
+      '@types/mocha': ~8.2.2
       buffer-json-encoding: ^1.0.2
       coveralls: ^3.0.7
       cpy-cli: ^2.0.0
       debug: ^4.1.1
       del-cli: ^3.0.0
       end-of-stream: ^1.4.1
+      expect: ~27.0.2
       jest: ^26.6.3
       pify: ~5.0.0
       random-access-memory: ~3.1.2
@@ -7506,6 +7512,13 @@ packages:
     dev: false
     resolution:
       integrity: sha512-LfZwXoGUDo0C3me81HXgkBg5CTQYb6xzEl+fNmbO4JdRiSKQ8A0GD1OBBvKAIsbCUgoyAty7m99GqqMQe784ew==
+  /@types/expect/24.3.0:
+    dependencies:
+      expect: 27.0.2
+    deprecated: This is a stub types definition. expect provides its own type definitions, so you do not need this installed.
+    dev: true
+    resolution:
+      integrity: sha512-aq5Z+YFBz5o2b6Sp1jigx5nsmoZMK5Ceurjwy6PZmRv7dEi1jLtkARfvB1ME+OXJUG+7TZUDcv3WoCr/aor6dQ==
   /@types/express-serve-static-core/4.17.19:
     dependencies:
       '@types/node': 14.14.45

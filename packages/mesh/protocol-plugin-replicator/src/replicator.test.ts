@@ -4,6 +4,7 @@
 
 import crypto from 'crypto';
 import eos from 'end-of-stream';
+import expect from 'expect';
 import pify from 'pify';
 import ram from 'random-access-memory';
 import waitForExpect from 'wait-for-expect';
@@ -14,8 +15,6 @@ import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 
 import { DefaultReplicator } from '.';
-
-jest.setTimeout(30000);
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const feedStore = await FeedStore.create(ram, { feedOptions: { valueEncoding: 'utf8' } });
@@ -84,14 +83,14 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
   const topic = crypto.randomBytes(32);
   let network: any;
 
-  beforeAll(async () => {
+  before(async () => {
     network = await generator.balancedBinTree({
       topic,
       parameters: [3]
     });
   });
 
-  test('feed synchronization', async () => {
+  it('feed synchronization', async () => {
     expect(network.peers.length).toBe(15);
 
     await waitForExpect(() => {
@@ -110,7 +109,7 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
     expect(metadataOk).toBe(true);
   });
 
-  test('message synchronization', async () => {
+  it('message synchronization', async () => {
     const messages: any[] = [];
     const wait: any[] = [];
     network.peers.forEach((peer: any) => {
@@ -147,4 +146,4 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
 
     await end;
   });
-});
+}).timeout(30000);
