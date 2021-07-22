@@ -24,6 +24,9 @@ interface State {
   error: Error | null
 }
 
+/**
+ * https://reactjs.org/docs/error-boundaries.html
+ */
 class ErrorBoundary extends Component<Props, State> {
   override state = {
     error: null
