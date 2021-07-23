@@ -62,11 +62,11 @@ export function createBroker (topic: Buffer, opts: CreateBrokerOpts = {}) {
 
   const logger: {type: string, options: any} | undefined = loggerEnabled
     ? {
-      type: 'Console',
-      options: {
-        formatter: logFormat
+        type: 'Console',
+        options: {
+          formatter: logFormat
+        }
       }
-    }
     : undefined;
 
   if (logger && logDir) {

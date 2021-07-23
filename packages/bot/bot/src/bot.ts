@@ -197,7 +197,7 @@ export class Bot extends EventEmitter {
   }
 
   private _onJoin (parties: Party[] = []) {
-    parties.map(party => {
+    parties.forEach(party => {
       const topic = party.key.toString();
       if (!this._parties.has(topic)) {
         this._parties.add(topic);
