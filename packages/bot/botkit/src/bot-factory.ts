@@ -75,9 +75,9 @@ export class BotFactory {
 
     this._botContainers = this._localDev
       ? {
-          [NODE_ENV]: new LocalDevBotContainer(config.get('cli.nodePath')),
-          [NATIVE_ENV]: new LocalDevBotContainer(config.get('cli.nodePath'))
-        }
+        [NODE_ENV]: new LocalDevBotContainer(config.get('cli.nodePath')),
+        [NATIVE_ENV]: new LocalDevBotContainer(config.get('cli.nodePath'))
+      }
       : botContainers;
 
     const { platform, arch } = getPlatformInfo();

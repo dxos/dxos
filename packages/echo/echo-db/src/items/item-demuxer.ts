@@ -8,7 +8,7 @@ import { Readable } from 'stream';
 
 import { raise } from '@dxos/debug';
 import {
-  DatabaseSnapshot, EchoEnvelope, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
+  DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
 } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { createReadable, createWritable, jsonReplacer } from '@dxos/util';
