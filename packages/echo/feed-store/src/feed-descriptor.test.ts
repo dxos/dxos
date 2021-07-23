@@ -27,6 +27,14 @@ describe('FeedDescriptor', () => {
     expect(() => new FeedDescriptor('/foo', { secretKey: crypto.keyPair().secretKey })).toThrow(/missing publicKey/);
   });
 
+  test('Can create feed descriptor with public key but without private key', async () => {
+    // When this behaviour was changed, suddenly `protocol-plugin-replicator` tests started hanging forever on network generation.
+    const { publicKey } = crypto.keyPair();
+    const fd = new FeedDescriptor('/foo', { key: publicKey });
+    expect(fd.key).toEqual(publicKey);
+    expect(fd.secretKey).toBeUndefined();
+  });
+
   test('Create custom options', () => {
     const { publicKey, secretKey } = crypto.keyPair();
 
