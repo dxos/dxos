@@ -12,7 +12,7 @@ import tempy from 'tempy';
 import FeedDescriptor from './feed-descriptor';
 
 describe('FeedDescriptor', () => {
-  let fd = null;
+  let fd: FeedDescriptor;
 
   test('Create', () => {
     const fd = new FeedDescriptor('/foo');
@@ -24,14 +24,15 @@ describe('FeedDescriptor', () => {
   });
 
   test('Validate asserts', () => {
-    expect(() => new FeedDescriptor()).toThrow(/path is required/);
-    expect(() => new FeedDescriptor('/foo', { key: 'foo' })).toThrow(/key must be a buffer/);
-    expect(() => new FeedDescriptor('/foo', {
-      key: crypto.keyPair().publicKey,
-      secretKey: 'foo'
-    })).toThrow(/secretKey must be a buffer/);
     expect(() => new FeedDescriptor('/foo', { secretKey: crypto.keyPair().secretKey })).toThrow(/missing publicKey/);
-    expect(() => new FeedDescriptor('/foo', { valueEncoding: {} })).toThrow(/valueEncoding must be a string/);
+  });
+
+  test('Can create feed descriptor with public key but without private key', async () => {
+    // When this behaviour was changed, suddenly `protocol-plugin-replicator` tests started hanging forever on network generation.
+    const { publicKey } = crypto.keyPair();
+    const fd = new FeedDescriptor('/foo', { key: publicKey });
+    expect(fd.key).toEqual(publicKey);
+    expect(fd.secretKey).toBeUndefined();
   });
 
   test('Create custom options', () => {
@@ -75,7 +76,7 @@ describe('FeedDescriptor', () => {
     await Promise.all([fd.close(), fd.close()]);
     expect(fd.opened).toBe(false);
 
-    fd.feed.append('test', (err) => {
+    fd.feed.append('test', (err: Error) => {
       expect(err.message).toContain('This feed is not writable');
     });
 
@@ -147,7 +148,7 @@ describe('FeedDescriptor', () => {
       hypercore: () => ({
         opened: true,
         on () {},
-        ready (cb) {
+        ready (cb: () => void) {
           cb();
         },
         close () {

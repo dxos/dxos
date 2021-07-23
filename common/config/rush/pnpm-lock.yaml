@@ -554,7 +554,14 @@ importers:
       '@dxos/browser-runner': 1.0.0-beta.13
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/end-of-stream': 1.4.0
+      '@types/from2': 2.3.1
+      '@types/jest': 26.0.23
+      '@types/mutexify': 1.2.0
       '@types/node': 14.14.45
+      '@types/pify': 3.0.2
+      '@types/pump': 1.1.1
+      '@types/through2': 2.0.36
       end-of-stream-promise: 1.0.0
       random-access-memory: 3.1.2
       tempy: 1.0.1
@@ -564,7 +571,14 @@ importers:
       '@dxos/browser-runner': ^1.0.0-beta.8
       '@dxos/random-access-multi-storage': ~1.1.0-beta.8
       '@dxos/toolchain-node-library': workspace:*
+      '@types/end-of-stream': ^1.4.0
+      '@types/from2': ~2.3.1
+      '@types/jest': ^26.0.7
+      '@types/mutexify': ~1.2.0
       '@types/node': ^14.0.9
+      '@types/pify': ^3.0.2
+      '@types/pump': ^1.1.0
+      '@types/through2': ^2.0.36
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
       end-of-stream: ^1.4.1
@@ -7534,6 +7548,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-TNR5SjCg8sSfU4bdXsPJlpLXOH4YGBCVggvdZnttD2SMiONSxfJm231Nxn1VaQWWF2Twl4Wr2KC1hYaNd4M5Zw==
+  /@types/from2/2.3.1:
+    dependencies:
+      '@types/node': 14.14.45
+    dev: true
+    resolution:
+      integrity: sha512-l7kKtohAc5h0CKh6vFMv5WcWvQx40KE6dQneUg22i8c1mwxhVPbN781bYts/mYXxSBrQMhNxkhwg18QY0MfeOg==
   /@types/fs-capacitor/2.0.0:
     dependencies:
       '@types/node': 14.14.45
@@ -7764,6 +7784,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-Lwh0lzzqT5Pqh6z61P3c3P5nm6fzQK/MMHl9UKeneAeInVflBSz1O2EkX6gM6xfJd7FBXBY5purtLx7fUiZ7Hw==
+  /@types/mutexify/1.2.0:
+    dev: true
+    resolution:
+      integrity: sha512-rHQCddccktnPLPlUtD1b+Mb5QfHq1FtY1IaVNYqKIEjSVXne87F6i7jFgy01vf40BrmXhGIpxNL1ucWGRzv39A==
   /@types/node-fetch/2.5.10:
     dependencies:
       '@types/node': 14.14.45
@@ -7803,7 +7827,6 @@ packages:
     resolution:
       integrity: sha512-kUNnecmtkunAoQ3CnjmMkzNU/gtxG8guhi+Fk2U/kOpIKjIMKnXGp4IJCgQJrXSgMsWYimYG4TGjz/UzbGEBTw==
   /@types/pify/3.0.2:
-    dev: false
     resolution:
       integrity: sha512-a5AKF1/9pCU3HGMkesgY6LsBdXHUY3WU+I2qgpU0J+I8XuJA1aFr59eS84/HP0+dxsyBSNbt+4yGI2adUpHwSg==
   /@types/prettier/2.2.3:
@@ -7962,7 +7985,6 @@ packages:
   /@types/through2/2.0.36:
     dependencies:
       '@types/node': 14.14.45
-    dev: false
     resolution:
       integrity: sha512-vuifQksQHJXhV9McpVsXKuhnf3lsoX70PnhcqIAbs9dqLH2NgrGz0DzZPDY3+Yh6eaRqcE1gnCQ6QhBn1/PT5A==
   /@types/uglify-js/3.13.0:
