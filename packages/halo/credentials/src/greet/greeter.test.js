@@ -120,7 +120,7 @@ test('Good invitation', async () => {
   }
 });
 
-// eslint-disable-next-line jest/no-test-callback
+// eslint-disable-next-line jest/no-done-callback
 test('Bad invitation secret', async (done) => {
   const keyring = await createKeyring();
   const greeter = createGreeter(keyring);
@@ -159,7 +159,7 @@ test('Bad invitation secret', async (done) => {
   done();
 });
 
-// eslint-disable-next-line jest/no-test-callback
+// eslint-disable-next-line jest/no-done-callback
 test('Attempt to re-use invitation', async (done) => {
   const keyring = await createKeyring();
   const greeter = createGreeter(keyring);
