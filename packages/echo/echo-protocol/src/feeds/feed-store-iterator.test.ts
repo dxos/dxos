@@ -52,7 +52,7 @@ describe('feed store iterator', () => {
         const { data: { echo: { timeframe } } } = candidate;
         const dependencies = Timeframe.dependencies(timeframe, currentTimeframe);
         if (!dependencies.isEmpty()) {
-          return;
+          return undefined;
         }
 
         return { i, candidate };

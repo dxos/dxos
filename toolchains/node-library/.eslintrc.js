@@ -6,6 +6,7 @@ module.exports = {
     '@typescript-eslint/no-extra-parens': ['off'],
     'no-use-before-define': 'off',
     '@typescript-eslint/no-namespace': 'off',
+    "jest/no-conditional-expect": 'off',
     '@typescript-eslint/no-unused-vars': [
       'error',
       {
