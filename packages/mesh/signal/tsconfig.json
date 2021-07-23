@@ -9,5 +9,10 @@
   ],
   "types": [
     "jest"
+  ],
+  "references": [
+    {
+      "path": "../broadcast"
+    }
   ]
 }

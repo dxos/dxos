@@ -14,40 +14,13 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../sdk/client"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../echo/echo-db"
-    },
-    {
-      "path": "../../echo/echo-protocol"
-    },
-    {
-      "path": "../../echo/feed-store"
-    },
-    {
-      "path": "../../echo/model-factory"
-    },
-    {
-      "path": "../../mesh/network-manager"
-    },
-    {
-      "path": "../../echo/object-model"
-    },
-    {
-      "path": "../../mesh/protocol"
-    },
-    {
-      "path": "../../mesh/protocol-plugin-replicator"
-    },
-    {
-      "path": "../../common/util"
+      "path": "../../common/rpc"
     }
   ]
 }

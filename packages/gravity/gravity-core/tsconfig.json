@@ -54,6 +54,9 @@
       "path": "../../bot/protocol-plugin-bot"
     },
     {
+      "path": "../../mesh/signal"
+    },
+    {
       "path": "../../common/util"
     }
   ]
