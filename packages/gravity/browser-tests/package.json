@@ -19,9 +19,7 @@
     "build": "",
     "build:test": "browser-mocha --setup test/setup.js 'test/*.test.ts'",
     "lint": "toolchain lint",
-    "test": "pnpm run test:chromium && pnpm run test:firefox",
-    "test:chromium": "browser-mocha --setup test/setup.js 'test/**/*.test.ts' --browsers=chromium",
-    "test:firefox": "browser-mocha --setup test/setup.js 'test/**/*.test.ts' --browsers=firefox"
+    "test": "browser-mocha --setup test/setup.js 'test/**/*.test.ts' --browser=chromium --browser=firefox"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

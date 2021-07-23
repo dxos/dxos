@@ -743,12 +743,14 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/signal': link:../../mesh/signal
+      '@types/chalk': 2.2.0
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/lodash': 4.14.169
       '@types/node': 14.14.45
       '@types/stream-buffers': 3.0.3
       '@types/through2': 2.0.36
+      chalk: 4.1.1
       esbuild: 0.11.23
       glob: 7.1.7
       lodash.merge: 4.6.2
@@ -768,6 +770,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/chalk': ~2.2.0
       '@types/debug': ^4.1.1
       '@types/end-of-stream': ^1.4.0
       '@types/glob': ~7.1.3
@@ -777,6 +780,7 @@ importers:
       '@types/through2': ^2.0.36
       '@types/uuid': ~8.3.1
       '@types/yargs': ~16.0.1
+      chalk: ^4.1.0
       esbuild: ^0.11.23
       glob: ~7.1.6
       lodash.merge: ^4.6.2
@@ -7250,6 +7254,13 @@ packages:
     dev: true
     resolution:
       integrity: sha512-TbH79tcyi9FHwbyboOKeRachRq63mSuWYXOflsNO9ZyE5ClQ/JaozNKl+aWUq87qPNsXasXxi2AbgfwIJ+8GQw==
+  /@types/chalk/2.2.0:
+    dependencies:
+      chalk: 4.1.1
+    deprecated: This is a stub types definition for chalk (https://github.com/chalk/chalk). chalk provides its own type definitions, so you don't need @types/chalk installed!
+    dev: false
+    resolution:
+      integrity: sha512-1zzPV9FDe1I/WHhRkf9SNgqtRJWZqrBWgu7JGveuHmmyR9CnAPCie2N/x+iHrgnpYBIcCJWHBoMRv2TRWktsvw==
   /@types/chance/1.1.1:
     dev: false
     resolution:
