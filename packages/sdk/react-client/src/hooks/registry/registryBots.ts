@@ -21,7 +21,15 @@ export interface UseRegistryBotsProps {
   sortByKeywords?: string[],
 }
 
-export const useRegistryBots = ({ sortByKeywords }: UseRegistryBotsProps = {}) => {
+/**
+ * A hook returning all bots registered on the DXNS registry.
+ * Bots can be spawned into Parties through bot factories.
+ * See also: `useRegistryBotFactories` hook.
+ * @param props.sortByKeywords sort the registries by keywords of interest
+ * @returns an array of registered bots
+ */
+export const useRegistryBots = (props: UseRegistryBotsProps = {}) => {
+  const { sortByKeywords } = props;
   const registry = useRegistry();
   const [registryBots, setRegistryBots] = useState<RegistryBotRecord[]>([]);
 

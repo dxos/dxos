@@ -25,7 +25,6 @@ function PendingOfflineInvitation ({
   }
 
   const [inviteCode] = useOfflineInvitation(party.key.asBuffer(), invitation.contact, {
-    onDone: () => null,
     onError: (e) => {
       throw e;
     }
