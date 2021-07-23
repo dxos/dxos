@@ -27,12 +27,12 @@ yargs(process.argv.slice(2))
       .string('setup')
       .string('browserArg')
       .array('browserArg')
-      .string('browser')
-      .array('browser'),
+      .string('browsers')
+      .array('browsers'),
     async (argv) => {
       await run({
         files: argv.files as string[],
-        browsers: [Browser.CHROMIUM],
+        browsers: argv.browsers ?? [Browser.CHROMIUM],
         stayOpen: argv.stayOpen ?? false,
         setup: argv.setup,
         debug: argv.debug,

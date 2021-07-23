@@ -19,10 +19,10 @@ const INIT_TIMEOUT = 10_000;
 
 export async function runTests (bundleFile: string, options: RunOptions): Promise<number> {
   const userDataDir = `/tmp/browser-mocha/${v4()}`;
-  let browser = chromium
-  if (options.browsers[0] === Browser.FIREFOX) {
-    browser = firefox;
-  }
+
+  assert(options.browsers.length === 1, 'Only one browser is supported');
+  const browser = getBrowser(options.browsers[0]);
+
   const context = await browser.launchPersistentContext(
     userDataDir,
     {
@@ -83,4 +83,12 @@ export async function runTests (bundleFile: string, options: RunOptions): Promis
   });
 
   return getPromise();
+}
+
+function getBrowser (browser: Browser) {
+  switch (browser) {
+    case Browser.CHROMIUM: return chromium;
+    case Browser.FIREFOX: return firefox;
+    default: throw new Error(`Unsupported browser: ${browser}`);
+  }
 }
