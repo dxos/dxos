@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-/* eslint-disable jest/no-export, jest/no-disabled-tests, jest/expect-expect */
+/* eslint-disable jest/no-export, jest/no-disabled-tests, jest/expect-expect, jest/valid-title */
 
 import { promiseTimeout } from './async';
 
