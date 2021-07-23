@@ -12,7 +12,8 @@ interface Argv {
   headless?: boolean
   debug: boolean
   setup?: string,
-  browserArg?: string[]
+  browserArg?: string[],
+  browsers?: Browser[]
 }
 
 // eslint-disable-next-line no-unused-expressions
@@ -25,11 +26,13 @@ yargs(process.argv.slice(2))
       .boolean('debug')
       .string('setup')
       .string('browserArg')
-      .array('browserArg'),
+      .array('browserArg')
+      .string('browsers')
+      .array('browsers'),
     async (argv) => {
       await run({
         files: argv.files as string[],
-        browsers: [Browser.CHROMIUM],
+        browsers: argv.browsers ?? [Browser.CHROMIUM],
         stayOpen: argv.stayOpen ?? false,
         setup: argv.setup,
         debug: argv.debug,
