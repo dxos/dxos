@@ -2,10 +2,11 @@
 // Copyright 2019 DXOS.org
 //
 
-const { createStorage } = require('@dxos/random-access-multi-storage');
-const { Suite } = require('@dxos/benchmark-suite');
+import { createStorage } from '@dxos/random-access-multi-storage';
+import { Suite } from '@dxos/benchmark-suite';
+import process from 'process'
 
-const { FeedStore } = require('.');
+import { FeedStore } from './src';
 
 const range = n => [...Array(n).keys()];
 
@@ -29,7 +30,7 @@ const range = n => [...Array(n).keys()];
       const feed = await fs.openFeed(name);
 
       for (let i = 0; i < maxMessages; i++) {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
           feed.append(`${name}/${i}`, (err) => {
             if (err) return reject(err);
             resolve();
@@ -45,7 +46,7 @@ const range = n => [...Array(n).keys()];
     let count = 0;
 
     await Promise.all(fs.getOpenFeeds().map(feed => {
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         feed.getBatch(0, maxMessages, (err, result) => {
           count += result.length;
           if (err) return reject(err);
@@ -61,7 +62,7 @@ const range = n => [...Array(n).keys()];
     const stream = fs.createReadStream({ batch: 1 });
     let count = 0;
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       stream.on('data', (data) => {
         count++;
         if (count === expectedMessages) resolve();
@@ -77,7 +78,7 @@ const range = n => [...Array(n).keys()];
     const stream = fs.createReadStream({ batch: 100 });
     let count = 0;
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       stream.on('data', (data) => {
         count++;
         if (count === expectedMessages) resolve();
@@ -93,7 +94,7 @@ const range = n => [...Array(n).keys()];
     const stream = fs.createBatchStream({ batch: 100 });
     let count = 0;
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       stream.on('data', (data) => {
         count += data.length;
         if (count === expectedMessages) resolve();

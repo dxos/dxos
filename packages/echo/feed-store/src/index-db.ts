@@ -9,11 +9,14 @@ import pify from 'pify';
  * Index feed descriptors.
  */
 class IndexDB {
+  public _hypertrie: any;
+  public _db: any;
+
   /**
    * @constructor
    * @param {Hypertrie} hypertrie
    */
-  constructor (hypertrie) {
+  constructor (hypertrie: any) {
     assert(hypertrie);
 
     this._hypertrie = hypertrie;
@@ -27,21 +30,21 @@ class IndexDB {
     };
   }
 
-  async list (path) {
+  async list (path: string) {
     const list = await this._db.list(`${path}/`);
-    return list.map(({ value }) => value);
+    return list.map((x: any) => x.value);
   }
 
-  async get (key) {
+  async get (key: string) {
     const item = await this._db.get(key);
     return item && item.value;
   }
 
-  async put (key, value) {
+  async put (key: string, value: any) {
     return this._db.put(key, value);
   }
 
-  async delete (key) {
+  async delete (key: string) {
     return this._db.delete(key);
   }
 

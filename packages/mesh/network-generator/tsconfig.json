@@ -14,5 +14,9 @@
     "src/**/*.d.ts",
     "src/**/*.json"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    }
+  ]
 }

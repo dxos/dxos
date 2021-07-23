@@ -554,7 +554,14 @@ importers:
       '@dxos/browser-runner': 1.0.0-beta.13
       '@dxos/random-access-multi-storage': 1.1.0-beta.8
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/end-of-stream': 1.4.0
+      '@types/from2': 2.3.1
+      '@types/jest': 26.0.23
+      '@types/mutexify': 1.2.0
       '@types/node': 14.14.45
+      '@types/pify': 3.0.2
+      '@types/pump': 1.1.1
+      '@types/through2': 2.0.36
       end-of-stream-promise: 1.0.0
       random-access-memory: 3.1.2
       tempy: 1.0.1
@@ -564,7 +571,14 @@ importers:
       '@dxos/browser-runner': ^1.0.0-beta.8
       '@dxos/random-access-multi-storage': ~1.1.0-beta.8
       '@dxos/toolchain-node-library': workspace:*
+      '@types/end-of-stream': ^1.4.0
+      '@types/from2': ~2.3.1
+      '@types/jest': ^26.0.7
+      '@types/mutexify': ~1.2.0
       '@types/node': ^14.0.9
+      '@types/pify': ^3.0.2
+      '@types/pump': ^1.1.0
+      '@types/through2': ^2.0.36
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
       end-of-stream: ^1.4.1
@@ -1065,7 +1079,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
-      '@dxos/eslint-plugin': 1.0.11_eslint@7.26.0+typescript@4.3.5
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@storybook/addon-knobs': 6.3.0_9fe2f5047078a168846616cf239cdfbf
       '@storybook/addons': 6.3.4_react-dom@16.14.0+react@16.14.0
       '@storybook/api': 6.3.4_react-dom@16.14.0+react@16.14.0
@@ -1073,8 +1087,6 @@ importers:
       '@storybook/core-events': 6.3.4
       '@storybook/react': 6.3.4_13bdf7ef9d150ac204a66aec2f663d59
       '@storybook/theming': 6.3.4_react-dom@16.14.0+react@16.14.0
-      eslint: 7.26.0
-      eslint-plugin-react: 7.23.2_eslint@7.26.0
       fork-ts-checker-webpack-plugin: 6.2.7
       react: 16.14.0
       react-docgen-typescript-loader: 3.7.2_typescript@4.3.5+webpack@4.44.2
@@ -1086,12 +1098,12 @@ importers:
       '@babel/core': ~7.13.15
       '@babel/plugin-transform-runtime': ^7.11.5
       '@dxos/crypto': workspace:*
-      '@dxos/eslint-plugin': ~1.0.11
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/react-ux': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
       '@geut/discovery-swarm-webrtc': ^4.0.2
       '@material-ui/core': ^4.11.4
       '@storybook/addon-knobs': ^6.3.0
@@ -1103,8 +1115,6 @@ importers:
       '@storybook/theming': ^6.3.4
       '@types/react': ^16.14.0
       '@wirelineio/discovery-swarm-memory': ^0.2.17
-      eslint: ^7.7.0
-      eslint-plugin-react: ^7.22.0
       fork-ts-checker-webpack-plugin: ~6.2.5
       react: ^16.14.0
       react-docgen-typescript-loader: ^3.7.2
@@ -1671,7 +1681,7 @@ importers:
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
-      '@dxos/eslint-plugin': 1.0.11_eslint@7.26.0+typescript@4.3.5
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@storybook/addon-essentials': 6.3.4_0a06b1dccf131d2278036f9c8c7227a0
       '@storybook/addon-links': 6.3.4_react-dom@16.14.0+react@16.14.0
       '@storybook/components': 6.3.4_79cda1d42d14e5224ea88731ba484d0d
@@ -1690,8 +1700,6 @@ importers:
       chromatic: 5.8.0
       del-cli: 3.0.1
       dotenv: 8.6.0
-      eslint: 7.26.0
-      eslint-plugin-react: 7.23.2_eslint@7.26.0
       expect: 27.0.2
       mocha: 8.4.0
       pump: 3.0.0
@@ -1716,7 +1724,6 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
-      '@dxos/eslint-plugin': ~1.0.11
       '@dxos/feed-store': workspace:*
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
@@ -1727,6 +1734,7 @@ importers:
       '@dxos/random-access-multi-storage': ~1.1.0-beta.8
       '@dxos/react-client': workspace:*
       '@dxos/react-ux': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
@@ -1756,8 +1764,6 @@ importers:
       debug: ^4.1.1
       del-cli: ^3.0.0
       dotenv: ^8.2.0
-      eslint: ^7.7.0
-      eslint-plugin-react: ^7.22.0
       expect: ~27.0.2
       immutability-helper: ^3.0.2
       level-js: ^5.0.2
@@ -1810,7 +1816,6 @@ importers:
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
       '@babel/preset-env': 7.14.2_@babel+core@7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
-      '@dxos/eslint-plugin': 1.0.11_eslint@7.26.0+typescript@4.3.5
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@testing-library/react': 11.2.6_react-dom@16.14.0+react@16.14.0
       '@testing-library/react-hooks': 5.1.2_9401ae9fb57dbd78b81bdcffc67a316d
@@ -1823,8 +1828,6 @@ importers:
       babel-jest: 26.6.3_@babel+core@7.13.16
       babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
       babel-plugin-add-module-exports: 1.0.4
-      eslint: 7.26.0
-      eslint-plugin-react: 7.23.2_eslint@7.26.0
       fork-ts-checker-webpack-plugin: 6.2.7
       jest: 26.6.3
       react: 16.14.0
@@ -1848,7 +1851,6 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/eslint-plugin': ~1.0.11
       '@dxos/metrics': ~1.0.0-beta.9
       '@dxos/object-model': workspace:*
       '@dxos/random-access-multi-storage': ~1.1.0-beta.8
@@ -1869,8 +1871,6 @@ importers:
       babel-loader: 8.1.0
       babel-plugin-add-module-exports: ^1.0.4
       debug: ^4.1.1
-      eslint: ^7.7.0
-      eslint-plugin-react: ^7.22.0
       fork-ts-checker-webpack-plugin: ~6.2.5
       jest: ^26.6.3
       level-js: ^5.0.2
@@ -7531,6 +7531,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-TNR5SjCg8sSfU4bdXsPJlpLXOH4YGBCVggvdZnttD2SMiONSxfJm231Nxn1VaQWWF2Twl4Wr2KC1hYaNd4M5Zw==
+  /@types/from2/2.3.1:
+    dependencies:
+      '@types/node': 14.14.45
+    dev: true
+    resolution:
+      integrity: sha512-l7kKtohAc5h0CKh6vFMv5WcWvQx40KE6dQneUg22i8c1mwxhVPbN781bYts/mYXxSBrQMhNxkhwg18QY0MfeOg==
   /@types/fs-capacitor/2.0.0:
     dependencies:
       '@types/node': 14.14.45
@@ -7761,6 +7767,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-Lwh0lzzqT5Pqh6z61P3c3P5nm6fzQK/MMHl9UKeneAeInVflBSz1O2EkX6gM6xfJd7FBXBY5purtLx7fUiZ7Hw==
+  /@types/mutexify/1.2.0:
+    dev: true
+    resolution:
+      integrity: sha512-rHQCddccktnPLPlUtD1b+Mb5QfHq1FtY1IaVNYqKIEjSVXne87F6i7jFgy01vf40BrmXhGIpxNL1ucWGRzv39A==
   /@types/node-fetch/2.5.10:
     dependencies:
       '@types/node': 14.14.45
@@ -7800,7 +7810,6 @@ packages:
     resolution:
       integrity: sha512-kUNnecmtkunAoQ3CnjmMkzNU/gtxG8guhi+Fk2U/kOpIKjIMKnXGp4IJCgQJrXSgMsWYimYG4TGjz/UzbGEBTw==
   /@types/pify/3.0.2:
-    dev: false
     resolution:
       integrity: sha512-a5AKF1/9pCU3HGMkesgY6LsBdXHUY3WU+I2qgpU0J+I8XuJA1aFr59eS84/HP0+dxsyBSNbt+4yGI2adUpHwSg==
   /@types/prettier/2.2.3:
@@ -7959,7 +7968,6 @@ packages:
   /@types/through2/2.0.36:
     dependencies:
       '@types/node': 14.14.45
-    dev: false
     resolution:
       integrity: sha512-vuifQksQHJXhV9McpVsXKuhnf3lsoX70PnhcqIAbs9dqLH2NgrGz0DzZPDY3+Yh6eaRqcE1gnCQ6QhBn1/PT5A==
   /@types/uglify-js/3.13.0:
@@ -12596,6 +12604,7 @@ packages:
   /doctrine/2.1.0:
     dependencies:
       esutils: 2.0.3
+    dev: false
     engines:
       node: '>=0.10.0'
     resolution:
@@ -13362,6 +13371,7 @@ packages:
       prop-types: 15.7.2
       resolve: 2.0.0-next.3
       string.prototype.matchall: 4.0.4
+    dev: false
     engines:
       node: '>=4'
     peerDependencies:
@@ -17574,6 +17584,7 @@ packages:
     dependencies:
       array-includes: 3.1.3
       object.assign: 4.1.2
+    dev: false
     engines:
       node: '>=4.0'
     resolution:
@@ -22460,6 +22471,7 @@ packages:
     dependencies:
       is-core-module: 2.4.0
       path-parse: 1.0.6
+    dev: false
     resolution:
       integrity: sha512-W8LucSynKUIDu9ylraa7ueVZ7hc0uAgJBxVsQSKOXOyle8a93qXhcz+XAXZ8bIq2d6i4Ehddn6Evt+0/UwKk6Q==
   /responselike/1.0.2:
