@@ -17,14 +17,19 @@ const COLUMNS = parseInt(process.env.GRID_DEMO_COLUMS ?? '4');
 
 describe('Replication in a grid', function () {
   this.timeout(0);
+
   const primaryUrl = 'http://localhost:9001/iframe.html?id=demo--replication-grid&viewMode=story';
+
+  const marginX = 16;
+  const marginY = 36;
   const screenWidth = robot.getScreenSize().width;
   const screenHeight = robot.getScreenSize().height;
-  const clientWidth = screenWidth / COLUMNS;
-  const clientHeight = screenHeight / ROWS;
+  const clientWidth = Math.round((screenWidth - (COLUMNS - 1) * marginX) / COLUMNS);
+  const clientHeight = Math.round((screenHeight - (ROWS - 1) * marginY) / ROWS);
+
   let inviter: Client;
   let party: Party;
-
+ 
   const createInvitation = async () => {
     const invitationDescriptor = await party.createInvitation({
       secretProvider: async () => Buffer.from('0000'),
@@ -48,8 +53,8 @@ describe('Replication in a grid', function () {
         const gridUser = new Browser();
         await gridUser.launchBrowser(chromium, primaryUrl, {
           args: [
-          `--window-position=${clientWidth * col},${clientHeight * row}`,
-          `--window-size=${clientWidth},${clientHeight}`
+            `--window-position=${(clientWidth + marginX) * col},${(clientHeight + marginY) * row}`,
+            `--window-size=${clientWidth},${clientHeight}`
           ]
         });
         await gridUser.page!.fill('#start-dialog-invitation-input', await createInvitation());
