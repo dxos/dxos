@@ -19,9 +19,9 @@ type UseInvitationRedeemerProps = {
 /**
  * Hook to redeem an Invitation Code and provide the PIN authentication (if needed).
  * Works with both regular and `Offline` invitations.
- * 
+ *
  * Works with `useInvitation` and `useOfflineInvitation` hooks on the inviter side.
- * 
+ *
  * @param onDone called once the redeem flow finishes successfully.
  * @param onError called if the invite flow produces an error.
  * @param isOffline Is this an `Offline` invitation?

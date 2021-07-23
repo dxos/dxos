@@ -21,9 +21,9 @@ type UseOfflineInvitationOpts = {
  * the inviter and invitee to be online at the same time - hence `Offline` Invitation.
  * The invitee (recipient) needs to be known ahead of time.
  * Invitation it not valid for other users.
- * 
+ *
  * Works with `useInvitationRedeemer` hooks on the invitee side.
- * 
+ *
  * @param partyKey the Party to create the invitation for.
  * @param recipient the invitee (recipient for the invitation).
  * @param opts.onError called if the invite flow produces an error.

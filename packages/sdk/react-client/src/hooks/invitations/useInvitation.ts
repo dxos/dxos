@@ -23,9 +23,9 @@ type UseInvitationOpts = {
  * The Invitation flow requires the inviter and invitee to be online at the same time.
  * If the invitee is known ahead of time, `useOfflineInvitation` can be used instead.
  * The invitation flow is protected by a generated pin code.
- * 
+ *
  * Works with `useInvitationRedeemer` hooks on the invitee side.
- * 
+ *
  * @param partyKey the Party to create the invitation for.
  * @param opts.onDone called once the invite flow finishes successfully.
  * @param opts.onError called if the invite flow produces an error.

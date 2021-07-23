@@ -291,9 +291,9 @@ export class Client {
    * The Invitation flow requires the inviter and invitee to be online at the same time.
    * If the invitee is known ahead of time, `createOfflineInvitation` can be used instead.
    * The invitation flow is protected by a generated pin code.
-   * 
+   *
    * To be used with `client.echo.joinParty` on the invitee side.
-   * 
+   *
    * @param partyKey the Party to create the invitation for.
    * @param secretProvider supplies the pin code
    * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
@@ -316,9 +316,9 @@ export class Client {
    * the inviter and invitee to be online at the same time - hence `Offline` Invitation.
    * The invitee (recipient) needs to be known ahead of time.
    * Invitation it not valid for other users.
-   * 
+   *
    * To be used with `client.echo.joinParty` on the invitee side.
-   * 
+   *
    * @param partyKey the Party to create the invitation for.
    * @param recipientKey the invitee (recipient for the invitation).
    */
