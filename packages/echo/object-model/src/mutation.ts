@@ -71,7 +71,7 @@ export class ValueUtil {
     } else if (typeof value === 'boolean') {
       return ValueUtil.bool(value);
     } else if (typeof value === 'number') {
-      return (value % 1 === 0) ? ValueUtil.integer(value) : ValueUtil.float(value);
+      return value % 1 === 0 ? ValueUtil.integer(value) : ValueUtil.float(value);
     } else if (typeof value === 'string') {
       return ValueUtil.string(value);
     } else if (value instanceof Uint8Array || Buffer.isBuffer(value)) {

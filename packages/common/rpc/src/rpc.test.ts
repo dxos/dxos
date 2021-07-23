@@ -211,7 +211,7 @@ describe('RpcPeer', () => {
     await promise;
   });
 
-  test('one peer can open before the other is created ', async () => {
+  test('one peer can open before the other is created', async () => {
     const [alicePort, bobPort] = createLinkedPorts();
 
     // eslint-disable-next-line prefer-const

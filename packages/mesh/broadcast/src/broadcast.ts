@@ -189,7 +189,7 @@ export class Broadcast<P extends Peer = Peer> {
     /** @deprecated */
     this._lookup && this.updatePeers(await this._lookup());
 
-    const peers = this._peers.filter(peer => (!Buffer.from(packet.origin!).equals(peer.id) && (!packet.from || !Buffer.from(packet.from).equals(peer.id))));
+    const peers = this._peers.filter(peer => !Buffer.from(packet.origin!).equals(peer.id) && (!packet.from || !Buffer.from(packet.from).equals(peer.id)));
     if (peers.length === 0) {
       return;
     }

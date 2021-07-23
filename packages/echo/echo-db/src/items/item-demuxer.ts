@@ -8,7 +8,7 @@ import { Readable } from 'stream';
 
 import { raise } from '@dxos/debug';
 import {
-  DatabaseSnapshot, EchoEnvelope, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
+  DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
 } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { createReadable, createWritable, jsonReplacer } from '@dxos/util';
@@ -65,7 +65,7 @@ export class ItemDemuxer {
         assert(modelType);
 
         // Create inbound stream for item.
-        const itemStream = createReadable<EchoEnvelope>();
+        const itemStream = createReadable();
         this._itemStreams.set(itemId, itemStream);
 
         // Create item.
@@ -164,7 +164,7 @@ export class ItemDemuxer {
       assert(item.model);
 
       assert(!this._itemStreams.has(item.itemId));
-      const itemStream = createReadable<EchoEnvelope>();
+      const itemStream = createReadable();
       this._itemStreams.set(item.itemId, itemStream);
 
       if (this._options.snapshots && item.model?.array) {

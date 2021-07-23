@@ -25,7 +25,7 @@ debug.enable('dxos:echo:*');
 faker.seed(1);
 
 describe('feed store iterator', () => {
-  test('test message order', async () => {
+  test('message order', async () => {
     const config = {
       numFeeds: 2,
       numMessages: 10
@@ -52,7 +52,7 @@ describe('feed store iterator', () => {
         const { data: { echo: { timeframe } } } = candidate;
         const dependencies = Timeframe.dependencies(timeframe, currentTimeframe);
         if (!dependencies.isEmpty()) {
-          return;
+          return undefined;
         }
 
         return { i, candidate };

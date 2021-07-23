@@ -16,7 +16,7 @@ export const BROWSER_ENV = 'browser';
  */
 export const getPlatformInfo = () => {
   let platform = os.type().toLowerCase();
-  platform = (platform === 'darwin' ? 'macos' : platform);
+  platform = platform === 'darwin' ? 'macos' : platform;
 
   const arch = os.arch();
 

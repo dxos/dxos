@@ -28,8 +28,8 @@ export async function runTests (bundleFile: string, options: RunOptions): Promis
     {
       headless: options.headless,
       args: [
-        ...(options.debug ? ['--auto-open-devtools-for-tabs'] : []),
-        ...(options.browserArgs ?? [])
+        ...options.debug ? ['--auto-open-devtools-for-tabs'] : [],
+        ...options.browserArgs ?? []
       ]
     }
   );

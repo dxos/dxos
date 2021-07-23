@@ -60,12 +60,14 @@ export function createBroker (topic: Buffer, opts: CreateBrokerOpts = {}) {
     statusService = true
   } = opts;
 
-  const logger: {type: string, options: any} | undefined = loggerEnabled ? {
-    type: 'Console',
-    options: {
-      formatter: logFormat
-    }
-  } : undefined;
+  const logger: {type: string, options: any} | undefined = loggerEnabled
+    ? {
+        type: 'Console',
+        options: {
+          formatter: logFormat
+        }
+      }
+    : undefined;
 
   if (logger && logDir) {
     logger.type = 'File';
