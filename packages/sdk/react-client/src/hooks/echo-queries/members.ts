@@ -9,8 +9,7 @@ import { Party } from '@dxos/echo-db';
 import { useResultSet } from '../util';
 
 /**
- * Get members for party.
- * @param party
+ * Get all known members of a Party.
  */
 export const usePartyMembers = (party: Party) => {
   return useResultSet(useMemo(() => party.queryMembers(), [party.key.toHex()]));

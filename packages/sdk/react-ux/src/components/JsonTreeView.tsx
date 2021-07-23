@@ -120,6 +120,13 @@ interface JsonTreeViewProperties {
   size?: string
 }
 
+/**
+ * Visualizes an object as a tree view of all properties.
+ * Works with JSON and other objects with nested values.
+ * @param data The object to be visualized
+ * @param depth Maximum nest depth to be visualized. Unlimited by default.
+ * @param onSelect Callback for when one or more nodes are selected by the user.
+ */
 const JsonTreeView = ({
   className = undefined,
   data = {},

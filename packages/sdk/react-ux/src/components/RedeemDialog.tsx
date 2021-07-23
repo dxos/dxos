@@ -28,6 +28,10 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+/**
+ * Component used for claiming invitations to Parties.
+ * Works for both regular and `Offline` invitations.
+ */
 const RedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => {
   const classes = useStyles();
   const [isOffline] = useState(false);
