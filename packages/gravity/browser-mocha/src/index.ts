@@ -48,7 +48,7 @@ export async function run (options: RunOptions) {
   const files = await resolveFiles(options.files);
 
   await buildTests(files, tempDir, !!options.debug);
-  const exitCode = await runTests(join(tempDir, 'bundle.js'), options);
+  const exitCode = await runTests(join(tempDir, 'bundle.js'), options.browsers[0], options);
   if (!options.stayOpen) {
     process.exit(exitCode);
   } else {

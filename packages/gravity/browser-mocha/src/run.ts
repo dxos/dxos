@@ -17,13 +17,12 @@ import { Browser, RunOptions } from '.';
  */
 const INIT_TIMEOUT = 10_000;
 
-export async function runTests (bundleFile: string, options: RunOptions): Promise<number> {
+export async function runTests (bundleFile: string, browser: Browser, options: Omit<RunOptions, 'browsers' | 'files'>): Promise<number> {
   const userDataDir = `/tmp/browser-mocha/${v4()}`;
 
-  assert(options.browsers.length === 1, 'Only one browser is supported');
-  const browser = getBrowser(options.browsers[0]);
+  const browserRunner = getBrowser(browser);
 
-  const context = await browser.launchPersistentContext(
+  const context = await browserRunner.launchPersistentContext(
     userDataDir,
     {
       headless: options.headless,
@@ -77,6 +76,10 @@ export async function runTests (bundleFile: string, options: RunOptions): Promis
   await page.exposeFunction('browserMocha__initFinished', () => {
     clearTimeout(exitTimeout);
   });
+
+  await page.exposeFunction('browserMocha__getEnv', () => { 
+    return { browser }
+  })
 
   await page.addScriptTag({
     path: bundleFile

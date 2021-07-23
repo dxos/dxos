@@ -6,13 +6,14 @@ import expect from 'expect';
 import 'source-map-support/register';
 
 import { Client } from '@dxos/client';
-import { testSecretProvider } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
-import { testInvitationAuthenticator } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
 
 describe('Client - persistent', () => {
-  it('reset storage', async () => {
+  it('reset storage', async function() {
+    if(browserMocha.context.browser !== 'firefox') {
+      this.skip();
+    }
+
     const client = new Client({ storage: { persistent: true } });
     await client.initialize(); // TODO(marik-d): This line does not work.
     await client.halo.createProfile({
