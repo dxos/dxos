@@ -5,7 +5,7 @@
 import assert from 'assert';
 import { dirname, join } from 'path';
 import pkgUp from 'pkg-up';
-import { chromium, firefox } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
 import { v4 } from 'uuid';
 
 import { Lock, trigger } from '@dxos/async';
@@ -92,6 +92,7 @@ function getBrowser (browser: Browser) {
   switch (browser) {
     case Browser.CHROMIUM: return chromium;
     case Browser.FIREFOX: return firefox;
+    case Browser.WEBKIT: return webkit;
     default: throw new Error(`Unsupported browser: ${browser}`);
   }
 }
