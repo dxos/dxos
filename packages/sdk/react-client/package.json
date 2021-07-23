@@ -46,7 +46,6 @@
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@babel/preset-env": "^7.12.7",
     "@babel/preset-react": "7.9.4",
-    "@dxos/eslint-plugin": "~1.0.11",
     "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
     "@dxos/toolchain-node-library": "workspace:*",
     "@testing-library/react": "^11.0.4",
