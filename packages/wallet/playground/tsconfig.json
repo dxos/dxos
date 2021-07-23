@@ -15,5 +15,13 @@
   "exclude": [
     "/node_modules/",
     "/dist/"
+  ],
+  "references": [
+    {
+      "path": "../extension"
+    },
+    {
+      "path": "../core"
+    }
   ]
 }
