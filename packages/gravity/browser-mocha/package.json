@@ -41,7 +41,9 @@
     "pkg-up": "^3.1.0",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/signal": "workspace:*"
+    "@dxos/signal": "workspace:*",
+    "chalk": "^4.1.0",
+    "@types/chalk": "~2.2.0"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

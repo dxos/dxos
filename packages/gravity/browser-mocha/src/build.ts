@@ -19,15 +19,23 @@ export async function buildTests (files: string[], outDir: string, debug: boolea
 
     import { mocha } from 'mocha';
 
-    mocha.reporter('spec');
-    mocha.setup('bdd');
-    mocha.checkLeaks();
+    async function run() {
+      const context = await window.browserMocha__getEnv();
 
-    ${files.map(file => `require("${resolve(file)}");`).join('\n')}
+      window.browserMocha = { context };
 
-    window.browserMocha__initFinished()
-    
-    mocha.run(window.browserMocha__testsDone);
+      mocha.reporter('spec');
+      mocha.setup('bdd');
+      mocha.checkLeaks();
+
+      ${files.map(file => `require("${resolve(file)}");`).join('\n')}
+
+      window.browserMocha__initFinished()
+      
+      mocha.run(window.browserMocha__testsDone);
+    }
+
+    run();
   `;
 
   await fs.writeFile(mainFile, mainContents);

@@ -19,9 +19,7 @@
     "build": "",
     "build:test": "browser-mocha --setup test/setup.js 'test/*.test.ts'",
     "lint": "toolchain lint",
-    "test": "pnpm run test:nonpersistent && pnpm run test:persistent",
-    "test:nonpersistent": "browser-mocha --setup test/setup.js 'test/nonpersistent/*.test.ts' --browsers=chromium",
-    "test:persistent": "browser-mocha --setup test/setup.js 'test/persistent/*.test.ts' --browsers=firefox"
+    "test": "browser-mocha --setup test/setup.js 'test/**/*.test.ts' --browser=chromium --browser=firefox --browser=webkit"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

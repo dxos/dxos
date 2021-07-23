@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { assert } from 'console';
+import chalk from 'chalk';
 import { promises as fs } from 'fs';
 import glob from 'glob';
 import { join } from 'path';
@@ -32,8 +32,6 @@ export interface RunOptions {
 }
 
 export async function run (options: RunOptions) {
-  assert(options.browsers.length === 1 && [Browser.CHROMIUM, Browser.FIREFOX].includes(options.browsers[0]), 'Only single chromium or firefox supported.');
-
   if (options.setup) {
     await runSetup(options.setup);
   }
@@ -48,12 +46,27 @@ export async function run (options: RunOptions) {
   const files = await resolveFiles(options.files);
 
   await buildTests(files, tempDir, !!options.debug);
-  const exitCode = await runTests(join(tempDir, 'bundle.js'), options);
-  if (!options.stayOpen) {
-    process.exit(exitCode);
-  } else {
-    console.log(`\nCompleted with exit code ${exitCode}. Browser window stays open.`);
+
+  let shouldFail = false;
+  for (const browser of options.browsers) {
+    console.log(chalk`\n\nRunning in {blue {bold ${browser}}}\n\n`);
+
+    const exitCode = await runTests(join(tempDir, 'bundle.js'), browser, options);
+
+    if (exitCode !== 0) {
+      console.log(chalk`\n\n{red Failed with exit code ${exitCode} in {blue {bold ${browser}}}}\n\n`);
+    } else {
+      console.log(chalk`\n\n{green Passed in {blue {bold ${browser}}}}\n\n`);
+    }
+
+    if (!options.stayOpen) {
+      shouldFail ||= (exitCode !== 0);
+    } else {
+      console.log(`\nCompleted with exit code ${exitCode}. Browser window stays open.`);
+    }
   }
+
+  process.exit(shouldFail ? 1 : 0);
 }
 
 async function resolveFiles (globs: string[]): Promise<string[]> {
