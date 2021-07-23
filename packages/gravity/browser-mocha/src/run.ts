@@ -26,7 +26,7 @@ export async function runTests (bundleFile: string, options: RunOptions): Promis
   const context = await browser.launchPersistentContext(
     userDataDir,
     {
-      headless: !options.show,
+      headless: options.headless,
       args: [
         ...(options.debug ? ['--auto-open-devtools-for-tabs'] : []),
         ...(options.browserArgs ?? [])

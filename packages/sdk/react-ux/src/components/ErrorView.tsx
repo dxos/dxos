@@ -42,6 +42,11 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+/**
+ * View component used to handle crashed app situations.
+ * Allows the user to either restart the app or reset storage.
+ * Used in `ErrorBoundary`
+ */
 export const ErrorView = ({
   onRestart,
   onReset,

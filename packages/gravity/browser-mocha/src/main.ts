@@ -8,7 +8,8 @@ import { Browser, run } from '.';
 
 interface Argv {
   files: string[]
-  show: boolean
+  stayOpen?: boolean
+  headless?: boolean
   debug: boolean
   setup?: string,
   browserArg?: string[],
@@ -20,7 +21,8 @@ yargs(process.argv.slice(2))
   .command<Argv>('* <files...>', 'run tests on files',
     yargs => yargs
       .positional('files', {})
-      .boolean('show')
+      .boolean('stayOpen')
+      .boolean('headless')
       .boolean('debug')
       .string('setup')
       .string('browserArg')
@@ -30,11 +32,12 @@ yargs(process.argv.slice(2))
     async (argv) => {
       await run({
         files: argv.files as string[],
-        browsers: argv.browsers ?? [Browser.CHROMIUM],
-        show: argv.show,
+        browsers: [Browser.CHROMIUM],
+        stayOpen: argv.stayOpen ?? false,
         setup: argv.setup,
         debug: argv.debug,
-        browserArgs: argv.browserArg
+        browserArgs: argv.browserArg,
+        headless: argv.headless ?? true
       });
     }
   )

@@ -14,7 +14,8 @@ export interface ClientProviderProps {
 }
 
 /**
- * Root component initializes and provides the client instance to child components.
+ * Root component that provides the DXOS client instance to child components.
+ * To be used with `useClient` hook.
  */
 const ClientProvider = ({ client, children }: ClientProviderProps) => {
   useEffect(() => {
