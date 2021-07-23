@@ -11,6 +11,8 @@ import { useClient } from '../client';
 
 /**
  * Handles the invitation handshake.
+ * Used to implement a Device invitation flow.
+ * @param invitation Invitation descriptor.
  */
 export const useAuthenticator = (invitation: InvitationDescriptor) => {
   const client = useClient();

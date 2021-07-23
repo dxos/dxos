@@ -8,5 +8,16 @@
   ],
   "include": [
     "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../mesh/signal"
+    }
   ]
 }

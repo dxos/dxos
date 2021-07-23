@@ -18,6 +18,9 @@
       "path": "../protocol"
     },
     {
+      "path": "../../common/crypto"
+    },
+    {
       "path": "../protocol-network-generator"
     }
   ]
