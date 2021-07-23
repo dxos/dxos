@@ -48,7 +48,7 @@ export function createWritableFeedStream (feed: Feed) {
 /**
  * Creates a readStream stream that can be used as a buffer into which messages can be pushed.
  */
-export function createReadable<T> (): Readable {
+export function createReadable (): Readable {
   return new Readable({
     objectMode: true,
     read () {}
