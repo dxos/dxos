@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+/* eslint-disable jest/no-conditional-expect */
+
 import assert from 'assert';
 import debug from 'debug';
 import expect from 'expect';
