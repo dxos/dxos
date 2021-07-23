@@ -163,7 +163,7 @@ const JsonTreeView = ({
         ? items
         : (
           <TreeItem size={size} key={path} nodeId={path || '.'} label={key}>{items}</TreeItem>
-        );
+          );
     }
 
     if (Array.isArray(value)) {
@@ -172,7 +172,7 @@ const JsonTreeView = ({
         ? items
         : (
           <TreeItem size={size} key={path} nodeId={path} label={key}>{items}</TreeItem>
-        );
+          );
     }
 
     // TODO(burdon): Pluggable types (e.g., date, string, number, boolean, etc).

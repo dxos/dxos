@@ -334,14 +334,14 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
                           <IconButton size='small'>
                             <InviteIcon onClick={() => createOfflineInvitation(contact)} />
                           </IconButton>
-                        )
+                          )
                         : (
                           <PendingOfflineInvitation
                             handleCopy={handleCopy}
                             party={party}
                             invitation={contactsInvitations.find((p) => p.contact === contact)}
                           />
-                        )}
+                          )}
                     </TableCell>
                   </TableRow>
                 ))}
