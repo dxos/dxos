@@ -297,21 +297,25 @@ describe('FeedStore', () => {
     await release();
   });
 
-  // test('on delete descriptor error should unlock the descriptor', async () => {
-  //   const feedStore = await FeedStore.create(ram);
+  test('on delete descriptor error should unlock the descriptor', async () => {
+    const feedStore = await FeedStore.create(ram);
 
-  //   await feedStore.openFeed('/foo');
-  //   const fd = feedStore.getDescriptors().find(fd => fd.path === '/foo');
+    await feedStore.openFeed('/foo');
+    const fd = feedStore.getDescriptors().find(fd => fd.path === '/foo');
 
-  //   // We remove the indexDB to force an error.
-  //   feedStore._indexDB = null;
+    if (!fd) {
+      throw new Error('Descriptor not found');
+    }
 
-  //   await expect(feedStore.deleteDescriptor('/foo')).rejects.toThrow(Error);
+    // We remove the indexDB to force an error.
+    (feedStore as any)._indexDB = null;
 
-  //   const release = await fd.lock();
-  //   expect(release).toBeDefined();
-  //   await release();
-  // });
+    await expect(feedStore.deleteDescriptor('/foo')).rejects.toThrow(Error);
+
+    const release = await fd.lock();
+    expect(release).toBeDefined();
+    await release();
+  });
 
   async function generateStreamData (feedStore: FeedStore, maxMessages = 200) {
     const [feed1, feed2, feed3] = await Promise.all([
