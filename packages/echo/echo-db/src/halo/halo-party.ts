@@ -101,8 +101,9 @@ export class HaloParty {
   //
 
   async recordPartyJoining (joinedParty: JoinedParty) {
-    // TODO(burdon): Is this async?
-    const knownParties = await this._party.database.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE }).value;
+    const knownParties = this._party.database
+      .select(s => s.filter({ type: HALO_PARTY_DESCRIPTOR_TYPE }).items)
+      .getValue();
     const partyDesc = knownParties.find(
       partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')));
     assert(!partyDesc, `Descriptor already exists for Party: ${joinedParty.partyKey.toHex()}`);
@@ -130,13 +131,13 @@ export class HaloParty {
       };
     };
 
-    const query = this.database.queryItems({ type: HALO_PARTY_DESCRIPTOR_TYPE });
+    const query = this.database.select(s => s.filter({ type: HALO_PARTY_DESCRIPTOR_TYPE }).items);
 
     // Wrap the query event so we can have manual control.
     const event = new Event();
     query.update.on(() => event.emit());
 
-    const result = new ResultSet<JoinedParty>(event, () => query.value.map(converter));
+    const result = new ResultSet<JoinedParty>(event, () => query.getValue().map(converter));
     const unsubscribe = result.subscribe(callback);
     if (result.value.length) {
       event.emit();

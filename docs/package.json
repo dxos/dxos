@@ -17,7 +17,8 @@
     "moveSocialCardBackground": "cp -f ./node_modules/@dxos/docs-theme/src/assets/img/social-bg.jpg ./node_modules/gatsby-theme-apollo-docs/src/assets/social-bg.jpg",
     "postinstall": "yarn moveSocialCard && yarn moveSocialCardBackground",
     "build": "yarn clean && gatsby build --prefix-paths && mkdir -p sdk && mv public/* sdk && mv sdk public/",
-    "test": "jest --rootDir ./content --passWithNoTests"
+    "test": "jest --rootDir ./content --passWithNoTests",
+    "generate:docs": "typedoc --out content/api --packages '../packages/{sdk,echo,halo,mesh}/*' --tsconfig tsconfig.typedoc.json"
   },
   "dependencies": {
     "@dxos/docs-theme": "^1.0.0-beta.22",
@@ -31,6 +32,9 @@
     "react-dom": "^16.11.0"
   },
   "devDependencies": {
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "typedoc": "^0.21.4",
+    "typedoc-plugin-markdown": "^3.10.4",
+    "typescript": "^4.3.5"
   }
 }

@@ -10,6 +10,7 @@ To install dependencies:
 ```bash
 npm install -g @microsoft/rush pnpm
 nodenv install 16.1.0
+sudo ./common/scripts/install-dependencies.sh
 ```
 
 ## Rush
@@ -104,27 +105,18 @@ ncu --deep -u '<PACKAGE>'
 ncu --deep -u '@storybook/*'
 ```
 
-### Publishing packages
+### Release process
 
-To publish all packages you need to bump the version.
-
-#### Publishing non-breaking changes
-
-In order to publish **non-breaking changes**, bump the patch version:
-
-```bash
-  rush version --bump --target-branch <YOUR_CURRENT_BRANCH>
-```
-
-#### Publishing breaking changes
-
-In order to publish **non-breaking changes**, bump the minor version:
-
-```bash
-  rush version --bump --target-branch <YOUR_CURRENT_BRANCH> --override-bump minor
-```
-
-This will create a new commit with all packages' versions bumped up on your current branch. When the branch gets merged to main, changes will automatically get published to NPM.
+1. Go to a clean `main` branch.
+2. Determine the bump type:
+    * Run `rush version --bump` for **non-breaking** changes.
+    * Run `rush version --bump --override-bump minor` for **breaking** changes.
+4. Rush created changelog files. Remove them using `git status --porcelain | awk '($1=="??" && ($2 ~ /\/CHANGELOG.md/ || $2 ~ /\/CHANGELOG.json/)) {print $2}' | xargs rm`.
+5. Commit the changes with `git commit -a -m "Release vX.Y.Z"`.
+6. Push the changes to the remote.
+7. The CI will publish the changes to NPM.
+8. Create a github release.
+    * Run `git log --pretty=format:"* %s"` to get the release notes.
 
 ### Troubleshooting Storybooks
 

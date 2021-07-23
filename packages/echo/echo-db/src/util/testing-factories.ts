@@ -67,7 +67,7 @@ export const createModelTestBench = async<M extends Model<any>> (
       return;
     }
 
-    await party.database.queryItems().update.waitFor(() => !!party.database.getItem(item.id));
+    await party.database.select(s => s.items).update.waitFor(() => !!party.database.getItem(item.id));
   }));
 
   const items = parties

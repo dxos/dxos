@@ -18,12 +18,12 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          clean: false
+          clean: true
       - name: Check, install and build
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
           npm install -g @microsoft/rush pnpm
-          sudo apt-get install -y autoconf automake make g++ libtool libxtst-dev
+          sudo ./common/scripts/install-dependencies.sh
           
           # Install dependencies
           echo "::group::Install"
@@ -51,7 +51,7 @@ jobs:
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
           npm install -g @microsoft/rush pnpm
-          sudo apt-get install -y autoconf automake make g++ libtool libxtst-dev
+          sudo ./common/scripts/install-dependencies.sh
           
           # Install dependencies
           echo "::group::Install"

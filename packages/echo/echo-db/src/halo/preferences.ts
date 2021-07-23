@@ -38,14 +38,14 @@ export class Preferences {
   }
 
   subscribeToPreferences (callback: (preferences: any) => void) {
-    const globalResults = this._party.database.queryItems({ type: HALO_PARTY_PREFERENCES_TYPE });
-    const deviceResults = this._party.database.queryItems({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE });
+    const globalResults = this._party.database.select(s => s.filter({ type: HALO_PARTY_PREFERENCES_TYPE }).items);
+    const deviceResults = this._party.database.select(s => s.filter({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).items);
 
     const event = new Event<any>();
 
     let before = stableStringify(this.values);
 
-    const unsubscribeGlobal = globalResults.subscribe(() => {
+    const unsubscribeGlobal = globalResults.update.on(() => {
       const after = stableStringify(this.values);
       if (before !== after) {
         before = after;
@@ -53,7 +53,7 @@ export class Preferences {
       }
     });
 
-    const unsubscribeDevice = deviceResults.subscribe(() => {
+    const unsubscribeDevice = deviceResults.update.on(() => {
       const after = stableStringify(this.values);
       if (before !== after) {
         before = after;
@@ -73,7 +73,7 @@ export class Preferences {
     if (!this._party.isOpen) {
       return null;
     }
-    const [globalItem] = this._party.database.queryItems({ type: HALO_PARTY_PREFERENCES_TYPE }).value;
+    const [globalItem] = this._party.database.select(s => s.filter({ type: HALO_PARTY_PREFERENCES_TYPE }).items).getValue();
     return globalItem;
   }
 
@@ -81,7 +81,7 @@ export class Preferences {
     if (!this._party.isOpen) {
       return null;
     }
-    const deviceItems = this._party.database.queryItems({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).value ?? [];
+    const deviceItems = this._party.database.select(s => s.filter({ type: HALO_PARTY_DEVICE_PREFERENCES_TYPE }).items).getValue();
     return deviceItems.find(item => this._deviceKey.equals(item.model.getProperty('publicKey')));
   }
 

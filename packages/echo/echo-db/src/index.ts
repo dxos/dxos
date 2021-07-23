@@ -12,3 +12,4 @@ export * from './result';
 export * from './snapshots';
 export * from './util';
 export * from './halo';
+export * from './errors';

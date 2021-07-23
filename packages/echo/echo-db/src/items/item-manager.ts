@@ -13,6 +13,7 @@ import { EchoEnvelope, FeedWriter, IEchoStream, ItemID, ItemType, LinkData, mapF
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
 import { createTransform } from '@dxos/util';
 
+import { UnknownModelError } from '../errors';
 import { ResultSet } from '../result';
 import { DefaultModel } from './default-model';
 import { Item } from './item';
@@ -81,7 +82,7 @@ export class ItemManager {
     assert(modelType);
 
     if (!this._modelFactory.hasModel(modelType)) {
-      throw new Error(`Unknown model: ${modelType}`);
+      throw new UnknownModelError(modelType);
     }
 
     let mutation: Uint8Array | undefined;
@@ -124,7 +125,7 @@ export class ItemManager {
     assert(modelType);
 
     if (!this._modelFactory.hasModel(modelType)) {
-      throw new Error(`Unknown model: ${modelType}`);
+      throw new UnknownModelError(modelType);
     }
 
     let mutation: Uint8Array | undefined;
@@ -196,7 +197,7 @@ export class ItemManager {
 
     // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
     if (!this._modelFactory.hasModel(modelType)) {
-      throw new Error(`Unknown model: ${modelType}`);
+      throw new UnknownModelError(modelType);
     }
     const modelMeta = this._modelFactory.getModelMeta(modelType);
 
@@ -238,11 +239,11 @@ export class ItemManager {
     //
     const item = link
       ? new Link(itemId, itemType, modelMeta, model, this._writeStream, parent, {
-        sourceId: link.source!,
-        targetId: link.target!,
-        source: this.getItem(link.source!),
-        target: this.getItem(link.target!)
-      })
+          sourceId: link.source!,
+          targetId: link.target!,
+          source: this.getItem(link.source!),
+          target: this.getItem(link.target!)
+        })
       : new Item(itemId, itemType, modelMeta, model, this._writeStream, parent);
 
     if (modelSnapshot) {

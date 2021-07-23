@@ -28,14 +28,25 @@ export class Party {
     return `Party(${JSON.stringify({ key: this.key, open: this.isOpen })})`;
   }
 
+  /**
+   * Event that is emitted when party state changes or metadata is updated.
+   */
   get update () {
     return this._internal.update;
   }
 
+  /**
+   * Party key. Each party is identified by it's key.
+   */
   get key (): PartyKey {
     return this._internal.key;
   }
 
+  /**
+   * Whether party is currently open.
+   *
+   * Party needs to be open to be able to query data from it, make mutations, or replicate with other peers.
+   */
   get isOpen (): boolean {
     return this._internal.isOpen;
   }
@@ -47,20 +58,31 @@ export class Party {
     return this._internal.isActive;
   }
 
+  /**
+   * Database instance of the current party.
+   */
   get database () {
     return this._internal.database;
   }
 
+  /**
+   * Party title.
+   */
   get title () {
     return this._internal.title;
   }
 
+  /**
+   * Sets party title.
+   */
   async setTitle (title: string) {
     return this._internal.setTitle(title);
   }
 
   /**
    * Opens the pipeline and connects the streams.
+   *
+   * Party needs to be open to be able to query data from it, make mutations, or replicate with other peers.
    */
   async open () {
     await this._internal.open();
@@ -76,7 +98,7 @@ export class Party {
   }
 
   /**
-   * Sets a party property.
+   * Sets a party metadata property.
    * @param {string} key
    * @param value
    */
@@ -87,13 +109,13 @@ export class Party {
   }
 
   /**
-   * Returns a party property value.
+   * Returns a party metadata property value.
    * @param key
    */
   getProperty (key: string) {
     const resultSet = this._internal.getPropertiesSet();
-    if (resultSet.value.length) {
-      const [item] = resultSet.value;
+    if (resultSet.getValue().length) {
+      const [item] = resultSet.getValue();
       return item.model.getProperty(key);
     }
 
@@ -122,6 +144,8 @@ export class Party {
 
   /**
    * Creates an invitation for a remote peer.
+   *
+   * @param authenticationDetails Authenticator for a shared secret (usually a PIN code) to validate the peer accepting the invitation.
    */
   async createInvitation (authenticationDetails: InvitationAuthenticator, options: InvitationOptions = {}) {
     return this._internal.invitationManager.createInvitation(authenticationDetails, options);
@@ -129,6 +153,10 @@ export class Party {
 
   /**
    * Creates an offline invitation for a known remote peer.
+   *
+   * The peer's key should already be known to the current peer. E.g. they have been in the same party before.
+   *
+   * This invitation does not require a shared secret (PIN code) because the peer's identity is known beforehand.
    */
   async createOfflineInvitation (publicKey: PublicKey) {
     return this._internal.invitationManager.createOfflineInvitation(publicKey);

@@ -30,6 +30,9 @@ export interface HaloConfiguration {
   partyManager: PartyManager
 }
 
+/**
+ * Interface to manage user's identity and devices.
+ */
 export class HALO {
   private readonly _identityManager: IdentityManager;
   private readonly _keyring: Keyring;
@@ -53,30 +56,53 @@ export class HALO {
     this._partyManager = partyManager;
   }
 
+  /**
+   * Get user's identity.
+   */
   get identity () {
     return this._identityManager.identity;
   }
 
+  /**
+   * Whether the current identity manager has been initialized.
+   */
   get isInitialized (): boolean {
     return this.identity.halo !== undefined;
   }
 
+  /**
+   * Event that is fired when the user's identity has been initialized.
+   */
   get identityReady () {
     return this._identityManager.ready;
   }
 
+  /**
+   * User's IDENTITY keypair.
+   */
   get identityKey (): KeyRecord | undefined {
     return this.identity.identityKey;
   }
 
+  /**
+   * User's identity display name.
+   */
   get identityDisplayName (): string | undefined {
     return this.identity.displayName;
   }
 
+  /**
+   * Local keyring. Stores locally known keypairs.
+   */
   get keyring (): Keyring {
     return this._keyring;
   }
 
+  /**
+   * @internal
+   *
+   * Loads the saved identity from disk. Is called by client.
+   */
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     await this._keyring.load();
 
@@ -89,11 +115,17 @@ export class HALO {
     onProgressCallback?.({ haloOpened: true });
   }
 
+  /**
+   * Closes HALO. Automatically called when client is destroyed.
+   */
   async close () {
     // TODO(marik-d): Should be _identityManager.close().
     await this.identity.halo?.close();
   }
 
+  /**
+   * Reset the identity and delete all key records.
+   */
   async reset () {
     try {
       await this._keyring.deleteAllKeyRecords();
@@ -104,6 +136,8 @@ export class HALO {
 
   /**
    * Create Profile. Add Identity key if public and secret key are provided.
+   *
+   * NOTE: This method does not initialize the HALO party.
    */
   // TODO(burdon): Why is this separate from createHalo?
   async createIdentity (keyPair: KeyPair) {

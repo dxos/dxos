@@ -7,7 +7,10 @@
   "scripts": {
     "lint": "toolchain lint",
     "build": "toolchain build && node scripts/build.js",
-    "build:test": "pnpm run build && pnpm run lint"
+    "build:test": "pnpm run build && pnpm run test",
+    "test": "pnpm run lint",
+    "test:e2e": "toolchain test",
+    "browser-mocha": "browser-mocha --headless=false --setup browser-mocha/setup.js 'browser-mocha/*.test.ts' --browserArg=--disable-extensions-except=$(pwd)/dist --browserArg=--load-extension=$(pwd)/dist"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
@@ -27,7 +30,8 @@
     "@dxos/echo-db": "workspace:*",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",
-    "react-copy-to-clipboard": "~5.0.3"
+    "react-copy-to-clipboard": "~5.0.3",
+    "mocha": "~8.4.0"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
@@ -44,6 +48,17 @@
     "chalk": "^4.1.0",
     "@material-ui/core": "^4.11.4",
     "@types/react-router-dom": "~5.1.7",
-    "@types/react-copy-to-clipboard": "~5.0.1"
+    "@types/react-copy-to-clipboard": "~5.0.1",
+    "playwright": "^1.7.0",
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2",
+    "uuid": "^3.3.2",
+    "@types/uuid": "~8.3.1",
+    "@dxos/browser-mocha": "workspace:*",
+    "faker": "^5.1.0",
+    "@types/faker": "~5.5.1"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }
