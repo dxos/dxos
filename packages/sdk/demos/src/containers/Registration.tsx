@@ -8,11 +8,11 @@ import { Dialog, DialogContent, DialogContentText, LinearProgress } from '@mater
 import { makeStyles } from '@material-ui/core/styles';
 import RestoreIcon from '@material-ui/icons/Restore';
 
+import { sleep } from '@dxos/async';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { useClient } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-ux';
 
-import { sleep } from '../../../client/node_modules/@dxos/async/dist/src';
 import DialogHeading from '../components/DialogHeading';
 import RegistrationDialog from '../components/RegistrationDialog';
 

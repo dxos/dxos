@@ -47,7 +47,7 @@ function execLint (additionalArgs: string[] = []) {
   const packageJson = JSON.parse(fs.readFileSync(join(getPackageDir(), 'package.json'), 'utf-8'));
   const isReactLib = !!(packageJson.dependencies?.react ?? packageJson.devDependencies?.react ?? packageJson.peerDependencies?.react);
   const config = isReactLib ? join(selfDir, '.eslintrc.react.js') : join(selfDir, '.eslintrc.js');
-  execTool('eslint', ['--config', config, '{src,test}/**/*.{js,ts,jsx,tsx}', ...additionalArgs]);
+  execTool('eslint', ['--config', config, '{src,test,stories,playwright}/**/*.{js,ts,jsx,tsx}', ...additionalArgs]);
 }
 
 function execJest (pkgDir: string, additionalArgs: string[] = []) {
