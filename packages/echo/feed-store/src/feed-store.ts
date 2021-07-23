@@ -39,15 +39,13 @@ interface OpenFeedOptions {
  *
  * Management of multiple feeds to create, update, load, find and delete feeds
  * into a persist repository storage.
- *
- * @extends {EventEmitter}
  */
 export class FeedStore extends EventEmitter {
   private _storage: any;
   private _database: any;
   private _defaultFeedOptions: any;
   private _codecs: any;
-  private _hypercore: any;
+  private _hypercore: Hypercore;
   private _descriptors: Map<string, FeedDescriptor>;
   private _readers: Set<Reader>;
   private _indexDB: any;
@@ -55,7 +53,7 @@ export class FeedStore extends EventEmitter {
   public database: any;
   public feedOptions: any;
   public codecs: any;
-  public hypercore: any;
+  public hypercore: Hypercore;
   public key: any;
   public path: any;
   public options: any;
@@ -65,14 +63,11 @@ export class FeedStore extends EventEmitter {
   public feed: any;
 
   /**
-   * constructor
-   *
-   * @param {RandomAccessStorage} storage RandomAccessStorage to use by default by the feeds.
-   * @param {Object} options
-   * @param {function=} options.database Defines a custom hypertrie database to index the feeds.
-   * @param {Object=} options.feedOptions Default options for each feed.
-   * @param {Object=} options.codecs Defines a list of available codecs to work with the feeds.
-   * @param {Hypercore=} options.hypercore Hypercore class to use.
+   * @param storage RandomAccessStorage to use by default by the feeds.
+   * @param options.database Defines a custom hypertrie database to index the feeds.
+   * @param options.feedOptions Default options for each feed.
+   * @param options.codecs Defines a list of available codecs to work with the feeds.
+   * @param options.hypercore Hypercore class to use.
    */
   constructor (storage: any, options: any = {}) {
     assert(storage, 'The storage is required.');
@@ -178,9 +173,8 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Get the list of opened feeds, with optional filter.
-   * @returns {Hypercore[]}
    */
-  getOpenFeeds (callback?: DescriptorCallback) {
+  getOpenFeeds (callback?: DescriptorCallback): Hypercore[] {
     return this.getDescriptors()
       .filter(descriptor => descriptor.opened && (!callback || callback(descriptor)))
       .map(descriptor => descriptor.feed);
@@ -188,9 +182,8 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Find an opened feed using a filter callback.
-   * @returns {Hypercore}
    */
-  getOpenFeed (callback: DescriptorCallback) {
+  getOpenFeed (callback: DescriptorCallback): Hypercore {
     const descriptor = this.getDescriptors()
       .find(descriptor => descriptor.opened && callback(descriptor));
 
@@ -201,10 +194,8 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Open multiple feeds using a filter callback.
-   *
-   * @returns {Promise<Hypercore[]>}
    */
-  async openFeeds (callback: DescriptorCallback) {
+  async openFeeds (callback: DescriptorCallback): Promise<Hypercore[]> {
     await this._isOpen();
 
     const descriptors = this.getDescriptors()
@@ -220,14 +211,8 @@ export class FeedStore extends EventEmitter {
    * creating a new one.
    *
    * Similar to fs.open
-   *
-   * @param options.key
-   * @param options.secretKey
-   * @param options.valueEncoding
-   * @param {*} options.metadata
-   * @returns {Hypercore}
    */
-  async openFeed (path: string, options: OpenFeedOptions = {}) {
+  async openFeed (path: string, options: OpenFeedOptions = {}): Promise<Hypercore> {
     assert(path, 'Missing path');
 
     await this._isOpen();
@@ -341,9 +326,8 @@ export class FeedStore extends EventEmitter {
    * Creates a ReadableStream from the loaded feeds.
    *
    * @param callback Filter function to return options for each feed.createReadStream (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
-   * @returns {ReadableStream}
    */
-  createReadStream (callback: StreamCallback | object = () => true) {
+  createReadStream (callback: StreamCallback | object = () => true): ReadableStream {
     return this._createReadStream(callback);
   }
 
@@ -351,9 +335,8 @@ export class FeedStore extends EventEmitter {
    * Creates a ReadableStream from the loaded feeds and returns the messages in batch.
    *
    * @param callback Filter function to return options for each feed.createReadStream (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
-   * @returns {ReadableStream}
    */
-  createBatchStream (callback: StreamCallback | object = () => true) {
+  createBatchStream (callback: StreamCallback | object = () => true): ReadableStream {
     return this._createReadStream(callback, true);
   }
 
@@ -484,7 +467,7 @@ export class FeedStore extends EventEmitter {
     return this.ready();
   }
 
-  private _createReadStream (callback: any, inBatch = false) {
+  private _createReadStream (callback: any, inBatch = false): ReadableStream {
     const reader = new Reader(callback, inBatch);
 
     this._readers.add(reader);

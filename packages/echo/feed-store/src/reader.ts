@@ -57,10 +57,7 @@ export default class Reader {
     this._state = {};
   }
 
-  /**
-   * @type {ReadableStream}
-   */
-  get stream () {
+  get stream (): ReadableStream {
     return this._stream;
   }
 
