@@ -13,7 +13,6 @@ class IndexDB {
   public _db: any;
 
   /**
-   * @constructor
    * @param {Hypertrie} hypertrie
    */
   constructor (hypertrie: any) {

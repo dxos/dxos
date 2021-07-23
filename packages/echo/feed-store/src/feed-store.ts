@@ -13,7 +13,6 @@ import pEvent from 'p-event';
 import FeedDescriptor from './feed-descriptor';
 import IndexDB from './index-db';
 import Reader from './reader';
-import SelectiveReader from './selective-reader';
 
 // TODO(burdon): Change to "dxos.feedstore"?
 const STORE_NAMESPACE = '@feedstore';
@@ -50,7 +49,7 @@ export class FeedStore extends EventEmitter {
   private _codecs: any;
   private _hypercore: any;
   private _descriptors: Map<string, FeedDescriptor>;
-  private _readers: Set<SelectiveReader | Reader>;
+  private _readers: Set<Reader>;
   private _indexDB: any;
   private _resource: any;
   public database: any;
@@ -64,25 +63,6 @@ export class FeedStore extends EventEmitter {
   public valueEncoding: any;
   public metadata: any;
   public feed: any;
-
-  /**
-   * Create and initialize a new FeedStore
-   *
-   * @static
-   * @param {RandomAccessStorage} storage RandomAccessStorage to use by default by the feeds.
-   * @param {Object} options
-   * @param {Hypertrie=} options.database Defines a custom hypertrie database to index the feeds.
-   * @param {Object=} options.feedOptions Default options for each feed.
-   * @param {Object=} options.codecs Defines a list of available codecs to work with the feeds.
-   * @param {Hypercore=} options.hypercore Hypercore class to use.
-   * @returns {Promise<FeedStore>}
-   * @deprecated
-   */
-  static async create (storage: any, options = {}) {
-    const feedStore = new FeedStore(storage, options);
-    await feedStore.open();
-    return feedStore;
-  }
 
   /**
    * constructor
@@ -160,23 +140,14 @@ export class FeedStore extends EventEmitter {
     return this._storage;
   }
 
-  /**
-   * @returns {Promise}
-   */
-  open () {
+  async open () {
     return this._resource.open();
   }
 
-  /**
-   * @returns {Promise}
-   */
-  close () {
+  async close () {
     return this._resource.close();
   }
 
-  /**
-   * @returns {Promise}
-   */
   async ready () {
     if (this.opened) {
       return;
@@ -207,8 +178,6 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Get the list of opened feeds, with optional filter.
-   *
-   * @param {DescriptorCallback} [callback]
    * @returns {Hypercore[]}
    */
   getOpenFeeds (callback?: DescriptorCallback) {
@@ -219,8 +188,6 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Find an opened feed using a filter callback.
-   *
-   * @param {DescriptorCallback} callback
    * @returns {Hypercore}
    */
   getOpenFeed (callback: DescriptorCallback) {
@@ -235,7 +202,6 @@ export class FeedStore extends EventEmitter {
   /**
    * Open multiple feeds using a filter callback.
    *
-   * @param {DescriptorCallback} callback
    * @returns {Promise<Hypercore[]>}
    */
   async openFeeds (callback: DescriptorCallback) {
@@ -255,11 +221,9 @@ export class FeedStore extends EventEmitter {
    *
    * Similar to fs.open
    *
-   * @param {string} path
-   * @param {Object} options
-   * @param {Buffer} options.key
-   * @param {Buffer} options.secretKey
-   * @param {string} options.valueEncoding
+   * @param options.key
+   * @param options.secretKey
+   * @param options.valueEncoding
    * @param {*} options.metadata
    * @returns {Hypercore}
    */
@@ -330,8 +294,6 @@ export class FeedStore extends EventEmitter {
    * Remove all descriptors from the indexDB.
    *
    * NOTE: This operation would not close the feeds.
-   *
-   * @returns {Promise<Promise[]>}
    */
   async deleteAllDescriptors () {
     return Promise.all(this.getDescriptors().map(({ path }) => this.deleteDescriptor(path)));
@@ -378,36 +340,17 @@ export class FeedStore extends EventEmitter {
   /**
    * Creates a ReadableStream from the loaded feeds.
    *
-   * @param {StreamCallback|Object} [callback] Filter function to return options for each feed.createReadStream (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
+   * @param callback Filter function to return options for each feed.createReadStream (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
    * @returns {ReadableStream}
    */
   createReadStream (callback: StreamCallback | object = () => true) {
     return this._createReadStream(callback);
   }
 
-  createSelectiveStream (evaluator: (feedDescriptor: FeedDescriptor, message: object) => Promise<boolean>) {
-    const reader = new SelectiveReader(evaluator);
-
-    this._readers.add(reader);
-
-    this
-      ._isOpen()
-      .then(() => {
-        return reader.addInitialFeedStreams(this
-          .getDescriptors()
-          .filter(descriptor => descriptor.opened));
-      })
-      .catch(err => {
-        reader.destroy(err);
-      });
-
-    return reader;
-  }
-
   /**
    * Creates a ReadableStream from the loaded feeds and returns the messages in batch.
    *
-   * @param {StreamCallback|Object} [callback] Filter function to return options for each feed.createReadStream (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
+   * @param callback Filter function to return options for each feed.createReadStream (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
    * @returns {ReadableStream}
    */
   createBatchStream (callback: StreamCallback | object = () => true) {
@@ -416,8 +359,6 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Initialized FeedStore reading the persisted options and created each FeedDescriptor.
-   *
-   * @returns {Promise}
    */
   async _open () {
     this._indexDB = new IndexDB(this._database(this._storage, { valueEncoding: jsonBuffer }));
@@ -437,7 +378,6 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Close the hypertrie and their feeds.
-   *
    */
   async _close () {
     this._readers.forEach(reader => {
@@ -565,12 +505,5 @@ export class FeedStore extends EventEmitter {
       });
 
     return reader.stream;
-  }
-
-  /**
-   * Old initialize method keep it for backward compatibility
-   */
-  initialize () {
-    return this.open();
   }
 }
