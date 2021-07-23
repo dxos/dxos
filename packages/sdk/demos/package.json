@@ -18,7 +18,7 @@
     "build-storybook": "build-storybook --quiet",
     "build-storybook-docs": "build-storybook --quiet --docs",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
-    "lint": "eslint --format codeframe './{src,test,stories,playwright,grid}/**/*.{ts,tsx}'",
+    "lint": "toolchain lint",
     "test": "exit 0",
     "test:playwright": "mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts'",
     "grid:demo": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
@@ -32,9 +32,6 @@
   "browserslist": [
     "> 5%"
   ],
-  "eslintConfig": {
-    "extends": "plugin:@dxos/react"
-  },
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -75,10 +72,10 @@
     "@dxos/protocol": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
     "@babel/core": "~7.13.15",
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@dxos/debug": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.10",
     "@storybook/addon-essentials": "^6.3.4",
     "@storybook/addon-links": "^6.3.4",
     "@storybook/components": "^6.3.4",
@@ -94,8 +91,6 @@
     "chance": "^1.1.6",
     "chromatic": "^5.8.0",
     "del-cli": "^3.0.0",
-    "eslint": "^7.7.0",
-    "eslint-plugin-react": "^7.22.0",
     "react": "^16.14.0",
     "react-docgen-typescript-loader": "^3.7.2",
     "react-dom": "^16.14.0",
