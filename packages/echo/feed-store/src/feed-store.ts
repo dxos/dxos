@@ -18,19 +18,22 @@ import SelectiveReader from './selective-reader';
 // TODO(burdon): Change to "dxos.feedstore"?
 const STORE_NAMESPACE = '@feedstore';
 
-/**
- *
- * @callback DescriptorCallback
- * @param {FeedDescriptor} descriptor
- * @returns {boolean}
- */
+type DescriptorCallback = (descriptor: FeedDescriptor) => boolean;
+type StreamCallback = (descriptor: FeedDescriptor) => Object | undefined;
 
-/**
- *
- * @callback StreamCallback
- * @param {FeedDescriptor} descriptor
- * @returns {(Object|undefined)}
- */
+interface CreateDescriptorOptions {
+  key?: Buffer,
+  secretKey?: Buffer,
+  valueEncoding?: string,
+  metadata?: any
+}
+
+interface OpenFeedOptions {
+  key?: Buffer,
+  secretKey?: Buffer,
+  valueEncoding?: string,
+  metadata?: any
+}
 
 /**
  * FeedStore
@@ -41,6 +44,27 @@ const STORE_NAMESPACE = '@feedstore';
  * @extends {EventEmitter}
  */
 export class FeedStore extends EventEmitter {
+  private _storage: any;
+  private _database: any;
+  private _defaultFeedOptions: any;
+  private _codecs: any;
+  private _hypercore: any;
+  private _descriptors: Map<string, FeedDescriptor>;
+  private _readers: Set<SelectiveReader | Reader>;
+  private _indexDB: any;
+  private _resource: any;
+  public database: any;
+  public feedOptions: any;
+  public codecs: any;
+  public hypercore: any;
+  public key: any;
+  public path: any;
+  public options: any;
+  public secretKey: any;
+  public valueEncoding: any;
+  public metadata: any;
+  public feed: any;
+
   /**
    * Create and initialize a new FeedStore
    *
@@ -54,7 +78,7 @@ export class FeedStore extends EventEmitter {
    * @returns {Promise<FeedStore>}
    * @deprecated
    */
-  static async create (storage, options = {}) {
+  static async create (storage: any, options = {}) {
     const feedStore = new FeedStore(storage, options);
     await feedStore.open();
     return feedStore;
@@ -70,7 +94,7 @@ export class FeedStore extends EventEmitter {
    * @param {Object=} options.codecs Defines a list of available codecs to work with the feeds.
    * @param {Hypercore=} options.hypercore Hypercore class to use.
    */
-  constructor (storage, options = {}) {
+  constructor (storage: any, options: any = {}) {
     assert(storage, 'The storage is required.');
 
     super();
@@ -78,7 +102,7 @@ export class FeedStore extends EventEmitter {
     this._storage = storage;
 
     const {
-      database = (...args) => hypertrie(...args),
+      database = (...args: any) => hypertrie(...args),
       feedOptions = {},
       codecs = {},
       hypercore = defaultHypercore
@@ -169,8 +193,6 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Get the list of descriptors.
-   *
-   * @returns {FeedDescriptor[]}
    */
   getDescriptors () {
     return Array.from(this._descriptors.values());
@@ -178,11 +200,8 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Fast access to a descriptor
-   *
-   * @param {Buffer} discoverKey
-   * @returns {FeedDescriptor|undefined}
    */
-  getDescriptorByDiscoveryKey (discoverKey) {
+  getDescriptorByDiscoveryKey (discoverKey: Buffer) {
     return this._descriptors.get(discoverKey.toString('hex'));
   }
 
@@ -192,7 +211,7 @@ export class FeedStore extends EventEmitter {
    * @param {DescriptorCallback} [callback]
    * @returns {Hypercore[]}
    */
-  getOpenFeeds (callback) {
+  getOpenFeeds (callback?: DescriptorCallback) {
     return this.getDescriptors()
       .filter(descriptor => descriptor.opened && (!callback || callback(descriptor)))
       .map(descriptor => descriptor.feed);
@@ -204,7 +223,7 @@ export class FeedStore extends EventEmitter {
    * @param {DescriptorCallback} callback
    * @returns {Hypercore}
    */
-  getOpenFeed (callback) {
+  getOpenFeed (callback: DescriptorCallback) {
     const descriptor = this.getDescriptors()
       .find(descriptor => descriptor.opened && callback(descriptor));
 
@@ -219,7 +238,7 @@ export class FeedStore extends EventEmitter {
    * @param {DescriptorCallback} callback
    * @returns {Promise<Hypercore[]>}
    */
-  async openFeeds (callback) {
+  async openFeeds (callback: DescriptorCallback) {
     await this._isOpen();
 
     const descriptors = this.getDescriptors()
@@ -244,7 +263,7 @@ export class FeedStore extends EventEmitter {
    * @param {*} options.metadata
    * @returns {Hypercore}
    */
-  async openFeed (path, options = {}) {
+  async openFeed (path: string, options: OpenFeedOptions = {}) {
     assert(path, 'Missing path');
 
     await this._isOpen();
@@ -258,11 +277,11 @@ export class FeedStore extends EventEmitter {
 
       let descriptor = this.getDescriptors().find(fd => fd.path === path);
 
-      if (descriptor && key && !key.equals(descriptor.key)) {
+      if (descriptor && key && descriptor.key && !key.equals(descriptor.key)) {
         throw new Error(`Invalid public key "${key.toString('hex')}"`);
       }
 
-      if (!descriptor && key && this.getDescriptors().find(fd => fd.key.equals(key))) {
+      if (!descriptor && key && this.getDescriptors().find(fd => fd.key?.equals(key))) {
         throw new Error(`Feed exists with same public key "${key.toString('hex')}"`);
       }
 
@@ -282,11 +301,8 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Close a feed by the path.
-   *
-   * @param {string} path
-   * @returns {Promise}
    */
-  async closeFeed (path) {
+  async closeFeed (path: string) {
     assert(path, 'Missing path');
 
     await this._isOpen();
@@ -325,11 +341,8 @@ export class FeedStore extends EventEmitter {
    * Remove a descriptor from the indexDB by the path.
    *
    * NOTE: This operation would not close the feed.
-   *
-   * @param {string} path
-   * @returns {Promise}
    */
-  async deleteDescriptor (path) {
+  async deleteDescriptor (path: string) {
     assert(path, 'Missing path');
 
     await this._isOpen();
@@ -341,20 +354,24 @@ export class FeedStore extends EventEmitter {
     const descriptor = this.getDescriptors().find(fd => fd.path === path);
 
     let release;
-    try {
-      release = await descriptor.lock();
+    if (descriptor) {
+      try {
+        release = await descriptor.lock();
 
-      await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key.toString('hex')}`);
+        await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key?.toString('hex')}`);
 
-      this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
+        this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
 
-      this.emit('descriptor-remove', descriptor);
-      await release();
-      this._resource.inactive();
-    } catch (err) {
-      await release();
-      this._resource.inactive();
-      throw err;
+        this.emit('descriptor-remove', descriptor);
+        await release();
+        this._resource.inactive();
+      } catch (err) {
+        if (release) {
+          await release();
+        }
+        this._resource.inactive();
+        throw err;
+      }
     }
   }
 
@@ -364,15 +381,11 @@ export class FeedStore extends EventEmitter {
    * @param {StreamCallback|Object} [callback] Filter function to return options for each feed.createReadStream (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
    * @returns {ReadableStream}
    */
-  createReadStream (callback = () => true) {
+  createReadStream (callback: StreamCallback | object = () => true) {
     return this._createReadStream(callback);
   }
 
-  /**
-   *
-   * @param {(feedDescriptor: FeedDescriptor, message: object) => Promise<boolean>} evaluator
-   */
-  createSelectiveStream (evaluator) {
+  createSelectiveStream (evaluator: (feedDescriptor: FeedDescriptor, message: object) => Promise<boolean>) {
     const reader = new SelectiveReader(evaluator);
 
     this._readers.add(reader);
@@ -397,7 +410,7 @@ export class FeedStore extends EventEmitter {
    * @param {StreamCallback|Object} [callback] Filter function to return options for each feed.createReadStream (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
    * @returns {ReadableStream}
    */
-  createBatchStream (callback = () => true) {
+  createBatchStream (callback: StreamCallback | object = () => true) {
     return this._createReadStream(callback, true);
   }
 
@@ -411,7 +424,7 @@ export class FeedStore extends EventEmitter {
 
     const list = await this._indexDB.list(STORE_NAMESPACE);
 
-    list.forEach(data => {
+    list.forEach((data: any) => {
       const { path, ...options } = data;
       this._createDescriptor(path, options);
     });
@@ -449,17 +462,8 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Factory to create a new FeedDescriptor.
-   *
-   * @private
-   * @param path
-   * @param {Object} options
-   * @param {Buffer} options.key
-   * @param {Buffer} options.secretKey
-   * @param {string} options.valueEncoding
-   * @param {*} options.metadata
-   * @returns {FeedDescriptor}
    */
-  _createDescriptor (path, options) {
+  private _createDescriptor (path: string, options: CreateDescriptorOptions) {
     const defaultOptions = this._defaultFeedOptions;
 
     const { key, secretKey, valueEncoding = defaultOptions.valueEncoding, metadata } = options;
@@ -480,7 +484,7 @@ export class FeedStore extends EventEmitter {
     );
 
     const append = () => this.emit('append', descriptor.feed, descriptor);
-    const download = (...args) => this.emit('download', ...args, descriptor.feed, descriptor);
+    const download = (...args: any) => this.emit('download', ...args, descriptor.feed, descriptor);
 
     descriptor.watch(async (event) => {
       if (event === 'updated') {
@@ -509,13 +513,9 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Persist in the db the FeedDescriptor.
-   *
-   * @private
-   * @param {FeedDescriptor} descriptor
-   * @returns {Promise}
    */
-  async _persistDescriptor (descriptor) {
-    const key = `${STORE_NAMESPACE}/${descriptor.key.toString('hex')}`;
+  private async _persistDescriptor (descriptor: FeedDescriptor) {
+    const key = `${STORE_NAMESPACE}/${descriptor.key?.toString('hex')}`;
 
     const oldData = await this._indexDB.get(key);
 
@@ -527,12 +527,12 @@ export class FeedStore extends EventEmitter {
       metadata: descriptor.metadata
     };
 
-    if (!oldData || (JSON.stringify(oldData.metadata) !== JSON.stringify(newData.metadata))) {
+    if (!oldData || JSON.stringify(oldData.metadata) !== JSON.stringify(newData.metadata)) {
       await this._indexDB.put(key, newData);
     }
   }
 
-  async _isOpen () {
+  private async _isOpen () {
     if (this.closing || this.closed) {
       throw new Error('FeedStore closed');
     }
@@ -544,7 +544,7 @@ export class FeedStore extends EventEmitter {
     return this.ready();
   }
 
-  _createReadStream (callback, inBatch = false) {
+  private _createReadStream (callback: any, inBatch = false) {
     const reader = new Reader(callback, inBatch);
 
     this._readers.add(reader);
