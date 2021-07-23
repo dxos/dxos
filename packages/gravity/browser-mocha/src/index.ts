@@ -3,7 +3,6 @@
 //
 
 import chalk from 'chalk';
-import { assert } from 'console';
 import { promises as fs } from 'fs';
 import glob from 'glob';
 import { join } from 'path';
@@ -49,13 +48,12 @@ export async function run (options: RunOptions) {
   await buildTests(files, tempDir, !!options.debug);
 
   let shouldFail = false;
-  for(const browser of options.browsers) {
-
+  for (const browser of options.browsers) {
     console.log(chalk`\n\nRunning in {blue {bold ${browser}}}\n\n`);
 
     const exitCode = await runTests(join(tempDir, 'bundle.js'), browser, options);
 
-    if(exitCode !== 0) {
+    if (exitCode !== 0) {
       console.log(chalk`\n\n{red Failed with exit code ${exitCode} in {blue {bold ${browser}}}}\n\n`);
     } else {
       console.log(chalk`\n\n{green Passed in {blue {bold ${browser}}}}\n\n`);

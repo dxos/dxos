@@ -77,9 +77,9 @@ export async function runTests (bundleFile: string, browser: Browser, options: O
     clearTimeout(exitTimeout);
   });
 
-  await page.exposeFunction('browserMocha__getEnv', () => { 
-    return { browser }
-  })
+  await page.exposeFunction('browserMocha__getEnv', () => {
+    return { browser };
+  });
 
   await page.addScriptTag({
     path: bundleFile

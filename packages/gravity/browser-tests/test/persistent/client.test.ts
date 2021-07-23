@@ -9,8 +9,8 @@ import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
 describe('Client - persistent', () => {
-  it('reset storage', async function() {
-    if(browserMocha.context.browser !== 'firefox') {
+  it('reset storage', async function () {
+    if (browserMocha.context.browser !== 'firefox') {
       this.skip();
     }
 
@@ -26,12 +26,12 @@ describe('Client - persistent', () => {
     expect(client.echo.queryParties().value.length).toBe(1);
 
     await client.reset();
-    
+
     // We create another client instance after reset here because the first one becomes unusable.
     // In a browser this would be modeled as a page reload.
     // TODO(marik-d): Second client fails to initialize.
     // const client2 = new Client({ storage: { persistent: true } });
-    
+
     // await client2.initialize();
     // await client2.halo.createProfile({
     //   ...createKeyPair(),
