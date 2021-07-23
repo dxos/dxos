@@ -29,6 +29,9 @@
       "path": "../../common/crypto"
     },
     {
+      "path": "../core"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -38,7 +41,19 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../../halo/credentials"
+    },
+    {
       "path": "../../common/async"
+    },
+    {
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../gravity/browser-mocha"
     }
   ]
 }

@@ -70,7 +70,13 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../mesh/protocol"
+    },
+    {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/async"
     }
   ]
 }

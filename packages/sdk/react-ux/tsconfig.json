@@ -13,10 +13,19 @@
   ],
   "references": [
     {
+      "path": "../../bot/botkit-client"
+    },
+    {
       "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../react-client"
     }
   ]
 }

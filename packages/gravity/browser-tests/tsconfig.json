@@ -10,5 +10,25 @@
   "include": [
     "src",
     "test"
+  ],
+  "references": [
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../browser-mocha"
+    }
   ]
 }
