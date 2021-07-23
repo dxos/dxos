@@ -26,9 +26,10 @@ $ npm install @dxos/feed-store
 import { FeedStore } from '@dxos/feed-store';
 
 (async () => {
-  const feedStore = await FeedStore.create('./db', {
+  const feedStore = new FeedStore('./db', {
     feedOptions: { valueEncoding: 'utf-8' }
   });
+  await feedStore.open();
 
   // Open a feed. If the feed doesn't exist, it would be created.
   const foo = await feedStore.openFeed('/foo');
@@ -49,9 +50,7 @@ import { FeedStore } from '@dxos/feed-store';
 
 ## API
 
-#### `const feedStore = await feedStore.create(storage, [options])`
-
-Creates and initializes a new FeedStore.
+#### `const feedStore = new FeedStore(storage, [options])`
 
 - `storage: RandomAccessStorage`: Storage used by the feeds to store their data.
 - `options`:
@@ -60,11 +59,9 @@ Creates and initializes a new FeedStore.
   - `codecs: Object`: Defines a list of available codecs to work with the feeds.
   - `hypercore: Hypercore`: Defines the Hypercore class to create feeds.
 
-#### `const feedStore = new FeedStore(storage, [options])`
-
 Creates a new FeedStore `without wait for their initialization.`
 
-> The initialization happens by running: `await feedStore.initialize()`
+> The initialization happens by running: `await feedStore.open()`
 
 #### `feedStore.openFeed(path, [options]) -> Promise<Hypercore>`
 
