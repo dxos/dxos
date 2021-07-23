@@ -5,7 +5,17 @@
 import assert from 'assert';
 import streamFrom from 'from2';
 
-export default function createBatchStream (feed, opts = {}) {
+interface CreateBatchStreamOptions {
+  start?: number,
+  end?: number,
+  live?: any,
+  snapshot?: boolean,
+  batch?: number,
+  metadata?: any,
+  tail?: boolean
+}
+
+export default function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {}) {
   assert(!opts.batch || opts.batch > 0, 'batch must be major or equal to 1');
 
   let start = opts.start || 0;
@@ -24,7 +34,7 @@ export default function createBatchStream (feed, opts = {}) {
 
   return streamFrom.obj(read).on('end', cleanup).on('close', cleanup);
 
-  function read (size, cb) {
+  function read (size: any, cb?: any) {
     if (!feed.opened) {
       return open(size, cb);
     }
@@ -56,7 +66,7 @@ export default function createBatchStream (feed, opts = {}) {
 
     if (batch === 1) {
       seq = setStart(start + 1);
-      feed.get(seq, opts, (err, data) => {
+      feed.get(seq, opts, (err: any, data: any) => {
         if (err) {
           return cb(err);
         }
@@ -73,7 +83,7 @@ export default function createBatchStream (feed, opts = {}) {
 
     if (!feed.downloaded(start, batchEnd)) {
       seq = setStart(start + 1);
-      feed.get(seq, opts, (err, data) => {
+      feed.get(seq, opts, (err: Error, data: any) => {
         if (err) {
           return cb(err);
         }
@@ -83,7 +93,7 @@ export default function createBatchStream (feed, opts = {}) {
     }
 
     seq = setStart(batchEnd);
-    feed.getBatch(seq, batchEnd, opts, (err, messages) => {
+    feed.getBatch(seq, batchEnd, opts, (err: Error, messages: any[]) => {
       if (err || messages.length === 0) {
         cb(err);
         return;
@@ -93,18 +103,14 @@ export default function createBatchStream (feed, opts = {}) {
     });
   }
 
-  function buildMessage (data) {
+  function buildMessage (data: object) {
     const message = {
       key: feed.key,
       seq: seq++,
       data,
-      sync: (firstSyncEnd === false && feed.length === seq) || firstSyncEnd === 0 || firstSyncEnd === seq,
+      sync: feed.length === seq || firstSyncEnd === 0 || firstSyncEnd === seq,
       ...metadata
     };
-
-    if (message.sync && firstSyncEnd !== false) {
-      firstSyncEnd = false;
-    }
 
     return message;
   }
@@ -117,8 +123,8 @@ export default function createBatchStream (feed, opts = {}) {
     range = null;
   }
 
-  function open (size, cb) {
-    feed.ready(function (err) {
+  function open (size: any, cb: (err: Error) => void) {
+    feed.ready(function (err: Error) {
       if (err) {
         return cb(err);
       }
@@ -126,7 +132,7 @@ export default function createBatchStream (feed, opts = {}) {
     });
   }
 
-  function setStart (value) {
+  function setStart (value: number) {
     const prevStart = start;
     start = value;
     range.start = start;

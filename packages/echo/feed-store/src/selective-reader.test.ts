@@ -8,11 +8,11 @@ import waitForExpect from 'wait-for-expect';
 
 import { FeedStore } from './feed-store';
 
-function append (feed, message) {
+function append (feed: any, message: any) {
   return pify(feed.append.bind(feed))(message);
 }
 
-async function generateStreamData (feedStore, maxMessages = 200) {
+async function generateStreamData (feedStore: FeedStore, maxMessages = 200) {
   const [feed1, feed2] = await Promise.all([
     feedStore.openFeed('/feed1'),
     feedStore.openFeed('/feed2')
@@ -37,7 +37,7 @@ describe('SelectiveReader', () => {
 
     const [feed1] = await generateStreamData(feedStore, MESSAGE_COUNT);
 
-    const messages = [];
+    const messages: any[] = [];
 
     const allowedFeeds = new Set(['/feed1']);
     const stream = feedStore.createSelectiveStream(
@@ -71,7 +71,7 @@ describe('SelectiveReader', () => {
 
     await generateStreamData(feedStore, MESSAGE_COUNT);
 
-    const messages = [];
+    const messages: any[] = [];
 
     const allowedFeeds = new Set(['/feed1', '/feed3']);
     const stream = feedStore.createSelectiveStream(
