@@ -11,7 +11,7 @@ import { createKeyPair } from '@dxos/crypto';
 import { testInvitationAuthenticator } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-describe('Client', () => {
+describe('Client - nonpersistent', () => {
   it('open & close', async () => {
     const client = new Client();
 
