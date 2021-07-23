@@ -4,6 +4,11 @@
 
 import { useClient } from '../client';
 
+/**
+ * Low-level hook returning DXNS registry object.
+ * See `useRegistryBots` and `useBotFactories` for higher-level hooks.
+ * @returns DXNS registry
+ */
 export const useRegistry = () => {
   const { registry } = useClient();
   if (!registry) {

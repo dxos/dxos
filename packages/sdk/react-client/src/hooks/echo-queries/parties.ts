@@ -10,7 +10,8 @@ import { Party } from '@dxos/echo-db';
 import { useClient } from '../client';
 
 /**
- * Get party.
+ * Get a specific Party.
+ * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
  */
 export const useParty = (partyKey: Uint8Array) => {
   const client = useClient();
@@ -18,7 +19,8 @@ export const useParty = (partyKey: Uint8Array) => {
 };
 
 /**
- * Get parties.
+ * Get all Parties available to current user.
+ * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
  */
 export const useParties = () => {
   const client = useClient();

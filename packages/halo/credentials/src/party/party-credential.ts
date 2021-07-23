@@ -19,11 +19,11 @@ export const TYPE_URL_PARTY_INVITATION = 'dxos.credentials.party.PartyInvitation
  * The start-of-authority record for the Party, admitting a single key (usually a identity) and a single feed.
  * It must be signed by all three keys (party, key, feed). The Party private key should be destroyed after
  * signing this message.
- * @param {Keyring} keyring
- * @param {KeyRecord} partyKeyPair
- * @param {KeyRecord} feedKeyPair
- * @param {KeyRecord} admitKeyPair
- * @returns {SignedMessage}
+ * @param keyring
+ * @param partyKeyPair
+ * @param feedKeyPair
+ * @param admitKeyPair
+ * @returns Signed message
  */
 export const createPartyGenesisMessage = (keyring: Keyring,
   partyKeyPair: KeyRecord,
@@ -100,7 +100,7 @@ export const createFeedAdmitMessage = (keyring: Keyring,
  * A signed message containing a signed message. This is used when wishing to write a message on behalf of another,
  * as in Greeting, or when copying a message from Party to another, such as copying an IdentityInfo message from the
  * HALO to a Party that is being joined.
- * @returns {SignedMessage}
+ * @returns Signed message.
  */
 // TODO(burdon): What is an envelope, distinct from above?
 export const createEnvelopeMessage = (keyring: Keyring,

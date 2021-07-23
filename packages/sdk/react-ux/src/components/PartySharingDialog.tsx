@@ -81,6 +81,11 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+/**
+ * Component used for:
+ * - Inviting members to the party
+ * - Spawning bots into the party
+ */
 const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: boolean; onClose: () => void }) => {
   const classes = useStyles();
   const client = useClient();

@@ -2,6 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+/**
+ * A Selector used for finding items based on a search pattern.
+ * @param search Searched value.
+ */
 // TODO(burdon): Create index.
 export const searchSelector = (search: any) => (selection: any) => {
   const match = (pattern: any, text: any) => {
