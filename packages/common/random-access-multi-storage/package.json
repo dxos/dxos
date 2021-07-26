@@ -13,7 +13,7 @@
     "build": "toolchain build",
     "build:test": "toolchain build && npm run lint && npm run test",
     "lint": "toolchain lint",
-    "test": "jest --verbose --passWithNoTests",
+    "test": "jest --verbose --passWithNoTests 2&>1",
     "test:serve": "webpack serve --mode development"
   },
   "browserslist": [

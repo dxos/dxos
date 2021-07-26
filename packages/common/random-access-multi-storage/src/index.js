@@ -5,3 +5,4 @@
 // The default module is for Node (otherwise import browser).
 
 export * from './node';
+export * from './types';

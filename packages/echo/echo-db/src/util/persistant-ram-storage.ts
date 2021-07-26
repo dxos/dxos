@@ -17,7 +17,7 @@ export function createRamStorage (): Storage {
       return files.get(name)!;
     }
     const file = storage(name);
-    file.close = cb => cb?.(null); // fix
+    file.close = (cb: any) => cb?.(null); // fix
     files.set(name, file);
     return file;
   };
