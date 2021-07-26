@@ -32,7 +32,7 @@ export default class Reader {
   /**
    * constructor
    *
-   * @param {StreamCallback|Object} [callback] Filter function to return options for each feed.createReadStream
+   * @param filter Filter function to return options for each feed.createReadStream
    * (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
    */
   constructor (filter: any, inBatch = false) {
@@ -57,10 +57,7 @@ export default class Reader {
     this._state = {};
   }
 
-  /**
-   * @type {ReadableStream}
-   */
-  get stream () {
+  get stream (): ReadableStream {
     return this._stream;
   }
 
