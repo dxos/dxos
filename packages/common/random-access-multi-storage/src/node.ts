@@ -12,5 +12,4 @@ const storageTypes = {
   [STORAGE_NODE]: File
 };
 
-export * from './storage-types';
 export const createStorage = createStorageFactory(storageTypes);

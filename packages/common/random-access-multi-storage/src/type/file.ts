@@ -11,7 +11,7 @@ import { RandomAccessAbstract } from '../random-access-abstract';
  * Node specific file storage.
  */
 export class File extends RandomAccessAbstract {
-  _create (filename, opts = {}) {
+  _create (filename: string, opts: any = {}) {
     return raf(filename, {
       directory: this._root,
       ...opts

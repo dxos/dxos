@@ -15,11 +15,11 @@ const defaultStorageType = () => {
   }
 
   if (isBrowser) {
-    if (window.requestFileSystem || window.webkitRequestFileSystem) {
+    if ((window as any).requestFileSystem || (window as any).webkitRequestFileSystem) {
       return STORAGE_CHROME;
     }
 
-    if (window.IDBMutableFile) {
+    if ((window as any).IDBMutableFile) {
       return STORAGE_FIREFOX;
     }
 
@@ -40,14 +40,13 @@ const defaultStorageType = () => {
  * @param {Object} storageTypes
  * @returns {StorageFactory}
  */
-export const createStorageFactory = storageTypes => (root, type = defaultStorageType()) => {
-  assert(typeof root === 'string');
+export const createStorageFactory = (storageTypes: any) => (root: string, type = defaultStorageType()) => {
   assert(storageTypes[type], `Invalid type: ${type}`);
 
   /** @type {RandomAccessAbstract} */
   const storage = new storageTypes[type](root);
 
-  function factory (file, opts = {}) {
+  function factory (file: string, opts = {}) {
     return storage.create(file, opts);
   }
 

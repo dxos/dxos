@@ -5,9 +5,14 @@
     "lib": [
       "DOM",
       "es2019"
-    ]
+    ],
+    "skipLibCheck": true
   },
   "include": [
     "src"
-  ]
+  ],
+  "exclude": [
+    "/node_modules/",
+    "/dist/"
+  ],
 }
