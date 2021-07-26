@@ -1,0 +1,6 @@
+{
+  "preset": "jest-puppeteer",
+  "globals": {
+    "PATH": "http://localhost:8099"
+  }
+}

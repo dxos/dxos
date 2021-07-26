@@ -20,12 +20,6 @@
     "> 5%"
   ],
   "license": "AGPL-3.0",
-  "jest": {
-    "preset": "jest-puppeteer",
-    "globals": {
-      "PATH": "http://localhost:8099"
-    }
-  },
   "dependencies": {
     "@dxos/random-access-chrome-file": "^2.0.0-beta.0",
     "del": "^5.1.0",
