@@ -1,4 +1,5 @@
 {
+  "testMatch": ["<rootDir>/src/**/*.test.{js,ts}"],
   "preset": "jest-puppeteer",
   "globals": {
     "PATH": "http://localhost:8099"
