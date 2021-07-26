@@ -4,7 +4,7 @@
 
 module.exports = {
   server: {
-    command: 'yarn test:serve',
+    command: 'rushx test:serve',
     port: 8099,
     usedPortAction: 'kill',
     launchTimeout: 50000
