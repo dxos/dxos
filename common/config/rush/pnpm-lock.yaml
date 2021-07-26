@@ -42,7 +42,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
-      '@dxos/random-access-multi-storage': 1.1.0-beta.8
+      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/util': link:../../common/util
       '@types/chance': 1.1.1
       '@types/debug': 4.1.5
@@ -87,7 +87,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-bot': workspace:*
-      '@dxos/random-access-multi-storage': ~1.1.0-beta.8
+      '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@types/chance': ^1.1.0
@@ -299,6 +299,52 @@ importers:
       ts-morph: ~10.0.2
       ts-node: ^9.1.1
       typescript: ^4.3.5
+  ../../packages/common/random-access-multi-storage:
+    dependencies:
+      '@dxos/random-access-chrome-file': 2.0.0-beta.3
+      del: 5.1.0
+      pify: 5.0.0
+      random-access-file: 2.2.0
+      random-access-idb: 1.2.1
+      random-access-memory: 3.1.2
+      random-access-web: 2.0.3
+    devDependencies:
+      '@dxos/browser-runner': 1.0.0-beta.13_webpack-cli@4.7.2
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      bowser: 2.11.0
+      browser-process-hrtime: 1.0.0
+      del-cli: 3.0.1
+      html-webpack-plugin: 4.5.2_webpack@4.44.2
+      jest: 26.6.3
+      jest-puppeteer: 4.4.0_puppeteer@2.1.1
+      puppeteer: 2.1.1
+      tempy: 1.0.1
+      ts-loader: 8.1.0_typescript@4.3.5+webpack@4.44.2
+      typescript: 4.3.5
+      webpack: 4.44.2_webpack-cli@4.7.2
+      webpack-cli: 4.7.2_webpack@4.44.2
+    specifiers:
+      '@dxos/browser-runner': ^1.0.0-beta.8
+      '@dxos/random-access-chrome-file': ^2.0.0-beta.0
+      '@dxos/toolchain-node-library': workspace:*
+      bowser: ^2.9.0
+      browser-process-hrtime: ^1.0.0
+      del: ^5.1.0
+      del-cli: ^3.0.0
+      html-webpack-plugin: ^4.3.0
+      jest: ^26.6.3
+      jest-puppeteer: ^4.4.0
+      pify: ~5.0.0
+      puppeteer: ^2.0.0
+      random-access-file: ^2.1.0
+      random-access-idb: ^1.2.1
+      random-access-memory: ~3.1.2
+      random-access-web: ^2.0.3
+      tempy: ~1.0.1
+      ts-loader: ~8.1.0
+      typescript: ^4.3.5
+      webpack: 4.44.2
+      webpack-cli: ^4.7.0
   ../../packages/common/rpc:
     dependencies:
       '@dxos/async': link:../async
@@ -378,7 +424,7 @@ importers:
       '@dxos/protocol': link:../../mesh/protocol
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
-      '@dxos/random-access-multi-storage': 1.1.0-beta.8
+      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
@@ -417,7 +463,7 @@ importers:
       '@dxos/protocol': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
-      '@dxos/random-access-multi-storage': ~1.1.0-beta.8
+      '@dxos/random-access-multi-storage': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
@@ -552,7 +598,7 @@ importers:
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
-      '@dxos/random-access-multi-storage': 1.1.0-beta.8
+      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/end-of-stream': 1.4.0
       '@types/from2': 2.3.1
@@ -569,7 +615,7 @@ importers:
     specifiers:
       '@dxos/benchmark-suite': ^1.0.0-beta.1
       '@dxos/browser-runner': ^1.0.0-beta.8
-      '@dxos/random-access-multi-storage': ~1.1.0-beta.8
+      '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/end-of-stream': ^1.4.0
       '@types/from2': ~2.3.1
@@ -844,7 +890,7 @@ importers:
       '@dxos/messenger-model': link:../../echo/messenger-model
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/protocol-plugin-bot': link:../../bot/protocol-plugin-bot
-      '@dxos/random-access-multi-storage': 1.1.0-beta.8
+      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/signal': link:../../mesh/signal
       '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
@@ -901,7 +947,7 @@ importers:
       '@dxos/messenger-model': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/protocol-plugin-bot': workspace:*
-      '@dxos/random-access-multi-storage': ~1.1.0-beta.8
+      '@dxos/random-access-multi-storage': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
@@ -1535,7 +1581,7 @@ importers:
       through2: 3.0.2
       wrtc: 0.4.7
     devDependencies:
-      '@dxos/random-access-multi-storage': 1.1.0-beta.8
+      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.23
       '@types/level-js': 4.0.1
@@ -1557,7 +1603,7 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
-      '@dxos/random-access-multi-storage': ~1.1.0-beta.8
+      '@dxos/random-access-multi-storage': workspace:*
       '@dxos/registry-client': ~1.1.1
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
@@ -1657,7 +1703,7 @@ importers:
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocol': link:../../mesh/protocol
-      '@dxos/random-access-multi-storage': 1.1.0-beta.8
+      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/react-client': link:../react-client
       '@dxos/react-ux': link:../react-ux
       '@dxos/util': link:../../common/util
@@ -1735,7 +1781,7 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocol': workspace:*
-      '@dxos/random-access-multi-storage': ~1.1.0-beta.8
+      '@dxos/random-access-multi-storage': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ux': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -1799,7 +1845,7 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/metrics': 1.0.0-beta.9
       '@dxos/object-model': link:../../echo/object-model
-      '@dxos/random-access-multi-storage': 1.1.0-beta.8
+      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/util': link:../../common/util
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@types/debug': 4.1.5
@@ -1857,7 +1903,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/metrics': ~1.0.0-beta.9
       '@dxos/object-model': workspace:*
-      '@dxos/random-access-multi-storage': ~1.1.0-beta.8
+      '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@material-ui/core': ^4.11.4
@@ -2811,7 +2857,7 @@ packages:
   /@babel/plugin-proposal-export-default-from/7.12.13_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
       '@babel/plugin-syntax-export-default-from': 7.12.13_@babel+core@7.13.16
     dev: true
     peerDependencies:
@@ -3093,7 +3139,7 @@ packages:
   /@babel/plugin-syntax-bigint/7.8.3_@babel+core@7.12.3:
     dependencies:
       '@babel/core': 7.12.3
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     dev: false
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -3102,7 +3148,7 @@ packages:
   /@babel/plugin-syntax-bigint/7.8.3_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     peerDependencies:
       '@babel/core': ^7.0.0-0
     resolution:
@@ -3170,7 +3216,7 @@ packages:
   /@babel/plugin-syntax-export-default-from/7.12.13_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     dev: true
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -3214,7 +3260,7 @@ packages:
   /@babel/plugin-syntax-import-meta/7.10.4_@babel+core@7.12.3:
     dependencies:
       '@babel/core': 7.12.3
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     dev: false
     peerDependencies:
       '@babel/core': ^7.0.0-0
@@ -3223,7 +3269,7 @@ packages:
   /@babel/plugin-syntax-import-meta/7.10.4_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
     peerDependencies:
       '@babel/core': ^7.0.0-0
     resolution:
@@ -4639,6 +4685,29 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-9m1Ftf+1RsQvf9JIDOZTJouHyT3X4kdqn1/tDSL9NrvOgLFjp/cA/vzyMcPAZTJCBkcF+xIkR/Peu2/jhwy0gQ==
+  /@dxos/browser-runner/1.0.0-beta.13_webpack-cli@4.7.2:
+    dependencies:
+      '@babel/core': 7.13.16
+      babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
+      debug: 4.3.1
+      dotenv-webpack: 1.8.0_webpack@4.44.2
+      get-port: 5.1.1
+      html-webpack-plugin: 4.5.2_webpack@4.44.2
+      http-server: 0.12.3_debug@4.3.1
+      p-limit: 2.3.0
+      puppeteer: 3.3.0
+      serve-handler: 6.1.3
+      source-map-support: 0.5.19
+      tempy: 0.5.0
+      webpack: 4.44.2_webpack-cli@4.7.2
+      webpack-inject-plugin: 1.5.5_webpack@4.44.2
+      yargs: 15.4.1
+    dev: true
+    hasBin: true
+    peerDependencies:
+      webpack-cli: '*'
+    resolution:
+      integrity: sha512-9m1Ftf+1RsQvf9JIDOZTJouHyT3X4kdqn1/tDSL9NrvOgLFjp/cA/vzyMcPAZTJCBkcF+xIkR/Peu2/jhwy0gQ==
   /@dxos/eslint-plugin/1.0.11_eslint@7.26.0+typescript@4.3.5:
     dependencies:
       '@rushstack/eslint-patch': 1.0.6
@@ -4713,19 +4782,9 @@ packages:
     dependencies:
       mutexify: 1.3.1
       random-access-storage: 1.4.1
+    dev: false
     resolution:
       integrity: sha512-ItHpFY2hNBYpGboY/L/4nsSkREW5Hcdr1KPrQx5zqpe8FFTjpC9HmKGPiLlsTBr1fkcYLc+FOsG05QnojmYRlQ==
-  /@dxos/random-access-multi-storage/1.1.0-beta.8:
-    dependencies:
-      '@dxos/random-access-chrome-file': 2.0.0-beta.3
-      del: 5.1.0
-      pify: 4.0.1
-      random-access-file: 2.2.0
-      random-access-idb: 1.2.1
-      random-access-memory: 3.1.2
-      random-access-web: 2.0.3
-    resolution:
-      integrity: sha512-bIm9WTeu/KN19+Q2OLn4Fw73mDGazyqhw/cAzM/EmGe1vr1YCcF1jL+MutE8L/T9bxphZnKlJbKcpqaxmBga3g==
   /@dxos/registry-client/1.1.2:
     dependencies:
       '@babel/runtime': 7.14.0
@@ -4911,7 +4970,6 @@ packages:
       integrity: sha512-soThGB+QMgfxlh0Vzhzlf3ZOEOPk5biEwcOXhkF0Eedqx8VnhGiggL9UYHrIsOb1rUg3Be3K8kp0iDL2wbVSOQ==
   /@hapi/address/2.1.4:
     deprecated: Moved to 'npm install @sideway/address'
-    dev: false
     resolution:
       integrity: sha512-QD1PhQk+s31P1ixsX0H0Suoupp3VMXzIVMSwobR3F3MSUO2YCV0B7xqLcUw/Bh8yuvd3LhpyqLQWTNcRmp6IdQ==
   /@hapi/boom/7.4.11:
@@ -4923,12 +4981,10 @@ packages:
       integrity: sha512-VSU/Cnj1DXouukYxxkes4nNJonCnlogHvIff1v1RVoN4xzkKhMXX+GRmb3NyH1iar10I9WFPDv2JPwfH3GaV0A==
   /@hapi/bourne/1.3.2:
     deprecated: This version has been deprecated and is no longer supported or maintained
-    dev: false
     resolution:
       integrity: sha512-1dVNHT76Uu5N3eJNTYcvxee+jzX4Z9lfciqRRHCU27ihbUcYi+iSc2iml5Ke1LXe1SyJCLA0+14Jh4tXJgOppA==
   /@hapi/hoek/8.5.1:
     deprecated: This version has been deprecated and is no longer supported or maintained
-    dev: false
     resolution:
       integrity: sha512-yN7kbciD87WzLGc5539Tn0sApjyiGHAJgKvG9W8C7O+6c7qmoQMfVs0W4bX17eqz6C78QJqqFrtgdK5EWf6Qow==
   /@hapi/joi/15.1.1:
@@ -4938,14 +4994,12 @@ packages:
       '@hapi/hoek': 8.5.1
       '@hapi/topo': 3.1.6
     deprecated: Switch to 'npm install joi'
-    dev: false
     resolution:
       integrity: sha512-entf8ZMOK8sc+8YfeOlM8pCfg3b5+WZIKBfUaaJT8UsjAAPjartzxIYm3TIbjvA4u+u++KbcXD38k682nVHDAQ==
   /@hapi/topo/3.1.6:
     dependencies:
       '@hapi/hoek': 8.5.1
     deprecated: This version has been deprecated and is no longer supported or maintained
-    dev: false
     resolution:
       integrity: sha512-tAag0jEcjwH+P2quUfipd7liWCNX2F8NvYjQp2wtInsZxnMlypdw0FtAOLxtvvkO+GSRRbmNi8m/5y42PQJYCQ==
   /@hot-loader/react-dom/16.13.0_react@16.14.0:
@@ -5842,6 +5896,7 @@ packages:
     dependencies:
       buffer: 5.1.0
       random-access-storage: 1.3.0
+    dev: false
     resolution:
       integrity: sha512-jHnpuu2qtFgwCmhgrpCCk3/hU3XqXTqhidh4XmcTijkVsGwh1c2T0+r2hkHs1PRfsxeimx8qDAotphpRoYB2eg==
   /@samverschueren/stream-to-observable/0.3.1_rxjs@6.6.7:
@@ -7757,6 +7812,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-my6fLBvpY70KattTNzYOK6KU1oR1+UCz9ug/JbcF5UrEmeCt9P7DV2t7L8+t18mMPINqGQCE4O8PLOPbI84gxw==
+  /@types/mime-types/2.1.0:
+    dev: true
+    resolution:
+      integrity: sha1-nKUs2jY/aZxpRmwqbM2q2RPqenM=
   /@types/mime/1.3.2:
     dev: false
     resolution:
@@ -8472,7 +8531,7 @@ packages:
   /@webpack-cli/configtest/1.0.4_webpack-cli@4.7.2+webpack@4.44.2:
     dependencies:
       webpack: 4.44.2_webpack-cli@4.7.2
-      webpack-cli: 4.7.2_b24347012da62a72aee59d51298aa452
+      webpack-cli: 4.7.2_webpack@4.44.2
     dev: true
     peerDependencies:
       webpack: 4.x.x || 5.x.x
@@ -8482,7 +8541,7 @@ packages:
   /@webpack-cli/info/1.3.0_webpack-cli@4.7.2:
     dependencies:
       envinfo: 7.8.1
-      webpack-cli: 4.7.2_b24347012da62a72aee59d51298aa452
+      webpack-cli: 4.7.2_webpack@4.44.2
     dev: true
     peerDependencies:
       webpack-cli: 4.x.x
@@ -8492,6 +8551,18 @@ packages:
     dependencies:
       webpack-cli: 4.7.2_b24347012da62a72aee59d51298aa452
       webpack-dev-server: 3.11.2_webpack-cli@4.7.2+webpack@4.44.2
+    dev: true
+    peerDependencies:
+      webpack-cli: 4.x.x
+      webpack-dev-server: '*'
+    peerDependenciesMeta:
+      webpack-dev-server:
+        optional: true
+    resolution:
+      integrity: sha512-4vSVUiOPJLmr45S8rMGy7WDvpWxfFxfP/Qx/cxZFCfvoypTYpPPL1X8VIZMe0WTA+Jr7blUxwUSEZNkjoMTgSw==
+  /@webpack-cli/serve/1.5.1_webpack-cli@4.7.2:
+    dependencies:
+      webpack-cli: 4.7.2_webpack@4.44.2
     dev: true
     peerDependencies:
       webpack-cli: 4.x.x
@@ -9557,7 +9628,7 @@ packages:
       integrity: sha512-thnykl4FMb8QjMjVCuZoUmAM7r2mnTn5qJwrryCvDv6rugbJlTHZMctdjDtEgD0WBAXJOLJSGXN3loooEwx7UQ==
   /babel-plugin-istanbul/6.0.0:
     dependencies:
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
       '@istanbuljs/load-nyc-config': 1.1.0
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-instrument: 4.0.3
@@ -9995,6 +10066,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-5pyOr+w2LNN72F2mAq6J0ckHUfJYSgRKma7e/wlcMMhgOLV9OI0ERhERYXxUqo+dPyVxcbXKy9n+wg13+LpNnA==
+  /bowser/2.11.0:
+    dev: true
+    resolution:
+      integrity: sha512-AlcaJBi/pqqJBIQ8U9Mcpc9i8Aqxn88Skv5d+xBX006BY5u8N3mGLHa5Lgppa7L/HfwgwLgZ6NYs+Ag6uUmJRA==
   /boxen/4.2.0:
     dependencies:
       ansi-align: 3.0.0
@@ -10145,12 +10220,14 @@ packages:
     resolution:
       integrity: sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==
   /buffer-alloc-unsafe/1.1.0:
+    dev: false
     resolution:
       integrity: sha512-TEM2iMIEQdJ2yjPJoSIsldnleVaAk1oW3DBVUykyOLsEsFmEc9kn+SFFPz+gl54KQNxlDnAwCXosOS9Okx2xAg==
   /buffer-alloc/1.2.0:
     dependencies:
       buffer-alloc-unsafe: 1.1.0
       buffer-fill: 1.0.0
+    dev: false
     resolution:
       integrity: sha512-CFsHQgjtW1UChdXgbyJGtnm+O/uLQeZdtbDo8mfUgYXCHSM1wgrVxXm6bSyrUuErEb+4sYVGCzASBRot7zyrow==
   /buffer-crc32/0.2.13:
@@ -10161,9 +10238,11 @@ packages:
     resolution:
       integrity: sha1-8mNHuC33b9N+GLy1KIxJcM/VxAQ=
   /buffer-fill/1.0.0:
+    dev: false
     resolution:
       integrity: sha1-+PeLdniYiO858gXNY39o5wISKyw=
   /buffer-from/0.1.2:
+    dev: false
     resolution:
       integrity: sha512-RiWIenusJsmI2KcvqQABB83tLxCByE3upSP8QU3rJDMVFGPWLvPQJt/O1Su9moRWeH7d+Q2HYb68f6+v+tw2vg==
   /buffer-from/1.1.1:
@@ -10196,6 +10275,7 @@ packages:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
+    dev: false
     resolution:
       integrity: sha512-YkIRgwsZwJWTnyQrsBTWefizHh+8GYj3kbL1BTiAQ/9pwpino0G7B2gp5tx/FUBqUlvtxV85KNR3mwfAtv15Yw==
   /buffer/5.7.1:
@@ -10803,6 +10883,18 @@ packages:
       wrap-ansi: 7.0.0
     resolution:
       integrity: sha512-OcRE68cOsVMXp1Yvonl/fzkQOyjLSu/8bhPDfQt0e0/Eb283TKP20Fs2MqoPsr9SwA595rRCA+QMzYc9nBP+JQ==
+  /clone-deep/0.2.4:
+    dependencies:
+      for-own: 0.1.5
+      is-plain-object: 2.0.4
+      kind-of: 3.2.2
+      lazy-cache: 1.0.4
+      shallow-clone: 0.1.2
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-TnPdCen7lxzDhnDF3O2cGJZIHMY=
   /clone-deep/4.0.1:
     dependencies:
       is-plain-object: 2.0.4
@@ -10944,11 +11036,21 @@ packages:
   /commander/2.20.3:
     resolution:
       integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==
+  /commander/3.0.2:
+    dev: true
+    resolution:
+      integrity: sha512-Gar0ASD4BDyKC4hl4DwHqDrmvjoxWKZigVnAbn5H1owvm4CxCPdb0HQDehwNYMJpla5+M2tPmPARzhtYuwpHow==
   /commander/4.1.1:
     engines:
       node: '>= 6'
     resolution:
       integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==
+  /commander/5.1.0:
+    dev: true
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg==
   /commander/6.2.1:
     engines:
       node: '>= 6'
@@ -11134,7 +11236,6 @@ packages:
       integrity: sha512-1cch+qads4JnDSWsvc7d6nzlKAippwjUlf6vykkTLW53VSV+NkE6muGBToAjEA8pG90cSfcud3JgVmW2ds5TaQ==
   /core-js/2.6.12:
     deprecated: core-js@<3.3 is no longer maintained and not recommended for usage due to the number of issues. Because of the V8 engine whims, feature detection in old core-js versions could cause a slowdown up to 100x even if nothing is polyfilled. Please, upgrade your dependencies to the actual version of core-js.
-    dev: false
     requiresBuild: true
     resolution:
       integrity: sha512-Kb2wC0fvsWfQrgk8HU5lW6U/Lcs8+9aaYcy4ZFc6DDlo4nZ7n70dEgE5rtR0oG6ufKDUnrwfWL1mXR5ljDatrQ==
@@ -11630,6 +11731,15 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-mI3zP+qxke95mmE2nddsF635V+o=
+  /cwd/0.10.0:
+    dependencies:
+      find-pkg: 0.1.2
+      fs-exists-sync: 0.1.0
+    dev: true
+    engines:
+      node: '>=0.8'
+    resolution:
+      integrity: sha1-FyQAaUBXwioTsM8WFix+S3p/5Wc=
   /cyclist/1.0.1:
     resolution:
       integrity: sha1-WW6WmP0MgOEgOMK4LW6xs1tiJNk=
@@ -12713,7 +12823,7 @@ packages:
   /dotenv-webpack/1.8.0_webpack@4.44.2:
     dependencies:
       dotenv-defaults: 1.1.1
-      webpack: 4.44.2
+      webpack: 4.44.2_webpack-cli@4.7.2
     dev: true
     peerDependencies:
       webpack: ^1 || ^2 || ^3 || ^4
@@ -13705,6 +13815,10 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-C4HrqJflo9MdHD0QL48BRB5VlEk=
+  /expect-puppeteer/4.4.0:
+    dev: true
+    resolution:
+      integrity: sha512-6Ey4Xy2xvmuQu7z7YQtMsaMV0EHJRpVxIDOd5GRrm04/I3nkTKIutELfECsLp6le+b3SSa3cXhPiw6PgqzxYWA==
   /expect/26.6.2:
     dependencies:
       '@jest/types': 26.6.2
@@ -13836,6 +13950,16 @@ packages:
       node: ^10.17.0 || ^12.0.0 || >= 13.7.0
     resolution:
       integrity: sha512-CvdFfHkC95B4bBBk36hcEmvdR2awOdhhVUYH6S/zrVj3477zven/fJMYg7121h4T1xHZC+tetUpubpAhxwI7hQ==
+  /extract-zip/1.7.0:
+    dependencies:
+      concat-stream: 1.6.2
+      debug: 2.6.9
+      mkdirp: 0.5.5
+      yauzl: 2.10.0
+    dev: true
+    hasBin: true
+    resolution:
+      integrity: sha512-xoh5G1W/PB0/27lXgMQyIhP5DSY/LhoCsOyZgb+6iMmRtCwVBo55uKaMoEYrDCKQhWvqEip5ZPKAc6eFNyf/MA==
   /extract-zip/2.0.1:
     dependencies:
       debug: 4.3.1
@@ -14201,6 +14325,32 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-t2GDMt3oGC/v+BMwzmllWDuJF/xcDtE5j/fCGbqDD7OLuJkj0cfh1YSA5VKPvwMeLFLNDBkwOKZ2X85jGLVftQ==
+  /find-file-up/0.1.3:
+    dependencies:
+      fs-exists-sync: 0.1.0
+      resolve-dir: 0.1.1
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-z2gJG8+fMApA2kEbN9pczlovvqA=
+  /find-pkg/0.1.2:
+    dependencies:
+      find-file-up: 0.1.3
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-G9wiwG42NlUy4qJIBGhUuXiNpVc=
+  /find-process/1.4.4:
+    dependencies:
+      chalk: 4.1.1
+      commander: 5.1.0
+      debug: 4.3.1
+    dev: true
+    hasBin: true
+    resolution:
+      integrity: sha512-rRSuT1LE4b+BFK588D2V8/VG9liW0Ark1XJgroxZXI0LtwmQJOb490DvDYvbm+Hek9ETFzTutGfJ90gumITPhQ==
   /find-root/1.1.0:
     dev: true
     resolution:
@@ -14288,11 +14438,25 @@ packages:
     dev: false
     resolution:
       integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==
+  /for-in/0.1.8:
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-2Hc5COMSVhCZUrH9ubP6hn0ndeE=
   /for-in/1.0.2:
     engines:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-gQaNKVqBQuwKxybG4iAMMPttXoA=
+  /for-own/0.1.5:
+    dependencies:
+      for-in: 1.0.2
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-UmXGgaTylNq78XyVCbZ2OqhFEM4=
   /foreach/2.0.5:
     dev: false
     resolution:
@@ -16816,6 +16980,18 @@ packages:
         optional: true
     resolution:
       integrity: sha512-t5qdIj/bCj2j7NFVHb2nFB4aUdfucDn3JRKgrZnplb8nieAirAzRSHP8uDEd+qV6ygzg9Pz4YG7UTJf94LPSyg==
+  /jest-dev-server/4.4.0:
+    dependencies:
+      chalk: 3.0.0
+      cwd: 0.10.0
+      find-process: 1.4.4
+      prompts: 2.4.1
+      spawnd: 4.4.0
+      tree-kill: 1.2.2
+      wait-on: 3.3.0
+    dev: true
+    resolution:
+      integrity: sha512-STEHJ3iPSC8HbrQ3TME0ozGX2KT28lbT4XopPxUm2WimsX3fcB3YOptRh12YphQisMhfqNSNTZUmWyT3HEXS2A==
   /jest-diff/26.6.2:
     dependencies:
       chalk: 4.1.1
@@ -16880,6 +17056,15 @@ packages:
       node: '>= 10.14.2'
     resolution:
       integrity: sha512-zhtMio3Exty18dy8ee8eJ9kjnRyZC1N4C1Nt/VShN1apyXc8rWGtJ9lI7vqiWcyyXS4BVSEn9lxAM2D+07/Tag==
+  /jest-environment-puppeteer/4.4.0:
+    dependencies:
+      chalk: 3.0.0
+      cwd: 0.10.0
+      jest-dev-server: 4.4.0
+      merge-deep: 3.0.3
+    dev: true
+    resolution:
+      integrity: sha512-iV8S8+6qkdTM6OBR/M9gKywEk8GDSOe05hspCs5D8qKSwtmlUfdtHfB4cakdc68lC6YfK3AUsLirpfgodCHjzQ==
   /jest-get-type/26.3.0:
     engines:
       node: '>= 10.14.2'
@@ -17055,6 +17240,16 @@ packages:
         optional: true
     resolution:
       integrity: sha512-olV41bKSMm8BdnuMsewT4jqlZ8+3TCARAXjZGT9jcoSnrfUnRCqnMoF9XEeoWjbzObpqF9dRhHQj0Xb9QdF6/w==
+  /jest-puppeteer/4.4.0_puppeteer@2.1.1:
+    dependencies:
+      expect-puppeteer: 4.4.0
+      jest-environment-puppeteer: 4.4.0
+      puppeteer: 2.1.1
+    dev: true
+    peerDependencies:
+      puppeteer: '>= 1.5.0 < 3'
+    resolution:
+      integrity: sha512-ZaiCTlPZ07B9HW0erAWNX6cyzBqbXMM7d2ugai4epBDKpKvRDpItlRQC6XjERoJELKZsPziFGS0OhhUvTvQAXA==
   /jest-regex-util/26.0.0:
     engines:
       node: '>= 10.14.2'
@@ -17638,6 +17833,14 @@ packages:
   /killable/1.0.1:
     resolution:
       integrity: sha512-LzqtLKlUwirEUyl/nicirVmNiPvYs7l5n8wOPP7fyJVpUPkvCnW/vuiXGpylGUlnPDnB7311rARzAt3Mhswpjg==
+  /kind-of/2.0.1:
+    dependencies:
+      is-buffer: 1.1.6
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-AY7HpM5+OobLkUG+UZ0kyPqpgbU=
   /kind-of/3.2.2:
     dependencies:
       is-buffer: 1.1.6
@@ -17711,6 +17914,12 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-f+3fLctu23fRHvHRF6tf/fCrG2U=
+  /lazy-cache/1.0.4:
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-odePw6UEdMuAhF07O24dpJpEbo4=
   /lazy-cache/2.0.2:
     dependencies:
       set-getter: 0.1.0
@@ -18530,6 +18739,16 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-r85E3NdZ+mpYk1C6RjPFEMSE+s1iZMuHtsHAqY0DT3jZczl0diWUZ8g6oU7h0M9cD2EL+PzaYghhCLzR0ZNn5Q==
+  /merge-deep/3.0.3:
+    dependencies:
+      arr-union: 3.1.0
+      clone-deep: 0.2.4
+      kind-of: 3.2.2
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha512-qtmzAS6t6grwEkNrunqTBdn0qKwFgNWvlxUbAV8es9M7Ot1EbyApytCnvE0jALPa46ZpKDUo527kKiaWplmlFA==
   /merge-descriptors/1.0.1:
     resolution:
       integrity: sha1-sAqqVW3YtEVoFQ7J0blT8/kMu2E=
@@ -18794,6 +19013,15 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-WRoDn//mXBiJ1H40rqa3vH0toePwSsGb45iInWlTySa+Uu4k3tYUSxa2v1KqAiLtvlrSzaExqS1gtk96A9zvEA==
+  /mixin-object/2.0.1:
+    dependencies:
+      for-in: 0.1.8
+      is-extendable: 0.1.1
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-T7lJRB2rGCVA8f4DW6YOGUel5X4=
   /mkdirp-classic/0.5.3:
     resolution:
       integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==
@@ -19217,6 +19445,7 @@ packages:
     resolution:
       integrity: sha1-yobR/ogoFpsBICCOPchCS524NCw=
   /next-tick/1.1.0:
+    dev: false
     resolution:
       integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==
   /ngraph.events/0.0.3:
@@ -21342,6 +21571,24 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
+  /puppeteer/2.1.1:
+    dependencies:
+      '@types/mime-types': 2.1.0
+      debug: 4.3.1
+      extract-zip: 1.7.0
+      https-proxy-agent: 4.0.0
+      mime: 2.5.2
+      mime-types: 2.1.30
+      progress: 2.0.3
+      proxy-from-env: 1.1.0
+      rimraf: 2.7.1
+      ws: 6.2.1
+    dev: true
+    engines:
+      node: '>=8.16.0'
+    requiresBuild: true
+    resolution:
+      integrity: sha512-LWzaDVQkk1EPiuYeTOj+CZRIjda4k2s5w4MK4xoH2+kgWV/SDlkYHmxatDdtYrciHUKSXTsGgPgPP8ILVdBsxg==
   /puppeteer/3.3.0:
     dependencies:
       debug: 4.3.1
@@ -21456,18 +21703,21 @@ packages:
   /random-access-chrome-file/1.1.4:
     dependencies:
       random-access-storage: 1.4.1
+    dev: false
     resolution:
       integrity: sha512-xZW1BT26g+gl8AF1kC/oXX97jCMVoLIbf6yx4eVMwLgOddGhhkJygimnfERSEmhUKiGs3DTymNao6wf/P23Nkg==
   /random-access-file/2.2.0:
     dependencies:
       mkdirp-classic: 0.5.3
       random-access-storage: 1.4.1
+    dev: false
     resolution:
       integrity: sha512-B744003Mj7v3EcuPl9hCiB2Ot4aZjgtU2mV6yFY1THiWU/XfGf1uSadR+SlQdJcwHgAWeG7Lbos0aUqjtj8FQg==
   /random-access-idb-mutable-file/0.3.0:
     dependencies:
       buffer: 5.1.0
       random-access-storage: 1.3.0
+    dev: false
     resolution:
       integrity: sha512-CdVAoFNNDn5uAgYOJ8J3ICSaFzaMOa95XnYcX+taj4jirJuRASiTyQSOGR+Z0K8ZkBGuj0A8ivyeRAWuxRCgQA==
   /random-access-idb/1.2.1:
@@ -21478,6 +21728,7 @@ packages:
       next-tick: 1.1.0
       once: 1.4.0
       random-access-storage: 1.4.1
+    dev: false
     resolution:
       integrity: sha512-5rZRPhjgfR222n+dmZtRYhu0CF9dDEwxaS+UgeWursIWPmNirR6BajzOB4wG5I7WAeYZea9HCqYKk/Tin3s9cA==
   /random-access-memory/3.1.2:
@@ -21490,6 +21741,7 @@ packages:
   /random-access-storage/1.3.0:
     dependencies:
       inherits: 2.0.4
+    dev: false
     resolution:
       integrity: sha512-pdS9Mcb9TB7oICypPRALlheaSuszuAKmLVEPKJMuYor7R/zDuHh5ALuQoS+ox31XRwQUL+tDwWH2GPdyspwelA==
   /random-access-storage/1.4.1:
@@ -21505,6 +21757,7 @@ packages:
       random-access-idb-mutable-file: 0.3.0
       random-access-memory: 3.1.2
       random-access-storage: 1.4.1
+    dev: false
     resolution:
       integrity: sha512-nN3AAgl4/lTOYMk5Qm44SzFsglOmaG2d0Kh0603umh35+rk9QXYLFf0nFJ0GOv9INBsP9iT1lub24r8PjyCtvA==
   /randombytes/2.1.0:
@@ -22654,6 +22907,10 @@ packages:
     dev: false
     resolution:
       integrity: sha1-P4Yt+pGrdmsUiF700BEkv9oHT7Q=
+  /rx/4.1.0:
+    dev: true
+    resolution:
+      integrity: sha1-pfE/957zt0D+MKqAP7CfmIBdR4I=
   /rxjs/6.6.7:
     dependencies:
       tslib: 1.14.1
@@ -22991,6 +23248,17 @@ packages:
       nanoassert: 2.0.0
     resolution:
       integrity: sha512-YxBYNsaHzTJh5gmk6AbD5aAvXktHy5LsjqbaEVdL60XslC4C7U23w2Mt8g+UDcvidr/K9aFZy3V71Y86Ech27A==
+  /shallow-clone/0.1.2:
+    dependencies:
+      is-extendable: 0.1.1
+      kind-of: 2.0.1
+      lazy-cache: 0.2.7
+      mixin-object: 2.0.1
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-WQnodLp3EG1zrEFM/sH/yofZcGA=
   /shallow-clone/3.0.1:
     dependencies:
       kind-of: 6.0.3
@@ -23381,6 +23649,15 @@ packages:
     dev: false
     resolution:
       integrity: sha1-/0rm5oZWBWuks+eSqzM004JzyhE=
+  /spawnd/4.4.0:
+    dependencies:
+      exit: 0.1.2
+      signal-exit: 3.0.3
+      tree-kill: 1.2.2
+      wait-port: 0.2.9
+    dev: true
+    resolution:
+      integrity: sha512-jLPOfB6QOEgMOQY15Z6+lwZEhH3F5ncXxIaZ7WHPIapwNNLyjrs61okj3VJ3K6tmP5TZ6cO0VAu9rEY4MD4YQg==
   /spdx-correct/3.1.1:
     dependencies:
       spdx-expression-parse: 3.0.1
@@ -24490,7 +24767,7 @@ packages:
       micromatch: 4.0.4
       semver: 7.3.5
       typescript: 4.3.5
-      webpack: 4.44.2
+      webpack: 4.44.2_webpack-cli@4.7.2
     dev: true
     engines:
       node: '>=10.0.0'
@@ -25240,6 +25517,30 @@ packages:
     dev: true
     resolution:
       integrity: sha512-cfS1+DZxuav1aBYbaO/kE06EOS8yRw7qOFoD3XtjTkYvCvh3zUvNST8DXK/nPaeqIzIv3P3kL3lRJn8iwOiSag==
+  /wait-on/3.3.0:
+    dependencies:
+      '@hapi/joi': 15.1.1
+      core-js: 2.6.12
+      minimist: 1.2.5
+      request: 2.88.2
+      rx: 4.1.0
+    dev: true
+    engines:
+      node: '>=4.0.0'
+    hasBin: true
+    resolution:
+      integrity: sha512-97dEuUapx4+Y12aknWZn7D25kkjMk16PbWoYzpSdA8bYpVfS6hpl2a2pOWZ3c+Tyt3/i4/pglyZctG3J4V1hWQ==
+  /wait-port/0.2.9:
+    dependencies:
+      chalk: 2.4.2
+      commander: 3.0.2
+      debug: 4.3.1
+    dev: true
+    engines:
+      node: '>=8'
+    hasBin: true
+    resolution:
+      integrity: sha512-hQ/cVKsNqGZ/UbZB/oakOGFqic00YAMM5/PEj3Bt4vKarv2jWIWzDbqlwT94qMs/exAQAsvMOq99sZblV92zxQ==
   /walker/1.0.7:
     dependencies:
       makeerror: 1.0.11
@@ -25321,6 +25622,43 @@ packages:
       v8-compile-cache: 2.3.0
       webpack: 4.44.2_webpack-cli@4.7.2
       webpack-dev-server: 3.11.2_webpack-cli@4.7.2+webpack@4.44.2
+      webpack-merge: 5.8.0
+    dev: true
+    engines:
+      node: '>=10.13.0'
+    hasBin: true
+    peerDependencies:
+      '@webpack-cli/generators': '*'
+      '@webpack-cli/migrate': '*'
+      webpack: 4.x.x || 5.x.x
+      webpack-bundle-analyzer: '*'
+      webpack-dev-server: '*'
+    peerDependenciesMeta:
+      '@webpack-cli/generators':
+        optional: true
+      '@webpack-cli/migrate':
+        optional: true
+      webpack-bundle-analyzer:
+        optional: true
+      webpack-dev-server:
+        optional: true
+    resolution:
+      integrity: sha512-mEoLmnmOIZQNiRl0ebnjzQ74Hk0iKS5SiEEnpq3dRezoyR3yPaeQZCMCe+db4524pj1Pd5ghZXjT41KLzIhSLw==
+  /webpack-cli/4.7.2_webpack@4.44.2:
+    dependencies:
+      '@discoveryjs/json-ext': 0.5.3
+      '@webpack-cli/configtest': 1.0.4_webpack-cli@4.7.2+webpack@4.44.2
+      '@webpack-cli/info': 1.3.0_webpack-cli@4.7.2
+      '@webpack-cli/serve': 1.5.1_webpack-cli@4.7.2
+      colorette: 1.2.2
+      commander: 7.2.0
+      execa: 5.0.0
+      fastest-levenshtein: 1.0.12
+      import-local: 3.0.2
+      interpret: 2.2.0
+      rechoir: 0.7.0
+      v8-compile-cache: 2.3.0
+      webpack: 4.44.2_webpack-cli@4.7.2
       webpack-merge: 5.8.0
     dev: true
     engines:
@@ -25476,7 +25814,7 @@ packages:
   /webpack-inject-plugin/1.5.5_webpack@4.44.2:
     dependencies:
       loader-utils: 1.2.3
-      webpack: 4.44.2
+      webpack: 4.44.2_webpack-cli@4.7.2
     dev: true
     peerDependencies:
       webpack: '>=4.0.0'
@@ -25610,7 +25948,7 @@ packages:
       tapable: 1.1.3
       terser-webpack-plugin: 1.4.5_webpack@4.44.2
       watchpack: 1.7.5
-      webpack-cli: 4.7.2_b24347012da62a72aee59d51298aa452
+      webpack-cli: 4.7.2_webpack@4.44.2
       webpack-sources: 1.4.3
     dev: true
     engines:
