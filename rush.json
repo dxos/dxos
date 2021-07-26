@@ -507,6 +507,12 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
+    {
+      "packageName": "@dxos/random-access-multi-storage",
+      "projectFolder": "packages/common/random-access-multi-storage",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
 
     //
     // sdk

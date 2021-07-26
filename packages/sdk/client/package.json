@@ -61,7 +61,7 @@
     "wrtc": "^0.4.6"
   },
   "devDependencies": {
-    "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
+    "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/level-js": "~4.0.1",

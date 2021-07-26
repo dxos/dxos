@@ -1,0 +1,51 @@
+{
+  "name": "@dxos/random-access-multi-storage",
+  "version": "2.10.14",
+  "description": "Multiple random storage types.",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "browser": "dist/src/browser.js",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build && npm run lint && npm run test",
+    "lint": "toolchain lint",
+    "test": "jest --verbose --passWithNoTests 2&>1",
+    "test:serve": "webpack serve --mode development"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "@dxos/random-access-chrome-file": "^2.0.0-beta.0",
+    "del": "^5.1.0",
+    "pify": "~5.0.0",
+    "random-access-file": "^2.1.0",
+    "random-access-idb": "^1.2.1",
+    "random-access-memory": "~3.1.2",
+    "random-access-web": "^2.0.3"
+  },
+  "devDependencies": {
+    "@dxos/browser-runner": "^1.0.0-beta.8",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "bowser": "^2.9.0",
+    "browser-process-hrtime": "^1.0.0",
+    "del-cli": "^3.0.0",
+    "html-webpack-plugin": "^4.3.0",
+    "jest": "^26.6.3",
+    "jest-puppeteer": "^4.4.0",
+    "puppeteer": "^2.0.0",
+    "tempy": "~1.0.1",
+    "webpack": "4.44.2",
+    "webpack-cli": "^4.7.0",
+    "typescript": "^4.3.5",
+    "ts-loader": "~8.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
