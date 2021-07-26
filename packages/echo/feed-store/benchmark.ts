@@ -21,7 +21,8 @@ const range = n => [...Array(n).keys()];
     }
   };
 
-  const fs = await FeedStore.create(createStorage('.benchmark'), { feedOptions: { valueEncoding: 'utf8' } });
+  const fs = new FeedStore(createStorage('.benchmark'), { feedOptions: { valueEncoding: 'utf8' } });
+  await fs.open();
   const suite = new Suite(fs, { maxFeeds, maxMessages });
 
   suite.beforeAll(() => {

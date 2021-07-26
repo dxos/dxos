@@ -12,3 +12,6 @@ declare module 'random-access-file';
 declare module 'sodium-universal';
 declare module 'random-access-memory';
 declare module 'end-of-stream-promise';
+
+type Hypercore = any;
+type ReadableStream = any;

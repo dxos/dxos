@@ -24,7 +24,7 @@ interface FeedDescriptorOptions {
   valueEncoding?: string | ValueEncoding,
   metadata?: any,
   codecs?: object,
-  hypercore?: any
+  hypercore?: Hypercore
 }
 
 type Listener = ((...args: any) => Promise<void> | void) | null;
@@ -40,7 +40,7 @@ export class FeedDescriptor {
   private _key: Buffer;
   private _secretKey?: Buffer;
   private _valueEncoding?: string | ValueEncoding;
-  private _hypercore: any;
+  private _hypercore: Hypercore;
   private _codecs: any;
   private _metadata: any;
   private _discoveryKey: Buffer;
@@ -48,18 +48,6 @@ export class FeedDescriptor {
   private _feed: any;
   private _listener: Listener;
 
-  /**
-   * constructor
-   *
-   * @param {string} path
-   * @param {Object} options
-   * @param {RandomAccessStorage} options.storage
-   * @param {Buffer} options.key
-   * @param {Buffer} options.secretKey
-   * @param {Object|string} options.valueEncoding
-   * @param {*} options.metadata
-   * @param {Hypercore} options.hypercore
-   */
   constructor (path: string, options: FeedDescriptorOptions = {}) {
     const {
       storage,
@@ -106,10 +94,7 @@ export class FeedDescriptor {
     return this._path;
   }
 
-  /**
-   * @type {Hypercore|null}
-   */
-  get feed () {
+  get feed (): Hypercore | null {
     return this._feed;
   }
 
@@ -156,10 +141,8 @@ export class FeedDescriptor {
    *
    * This is an atomic operation, FeedDescriptor makes
    * sure that the feed is not going to open again.
-   *
-   * @returns {Promise<Hypercore>}
    */
-  async open () {
+  async open (): Promise<Hypercore> {
     const release = await this.lock();
 
     if (this.opened) {
