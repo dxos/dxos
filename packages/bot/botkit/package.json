@@ -21,7 +21,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-bot": "workspace:*",
-    "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
+    "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/chance": "^1.1.0",
     "@types/debug": "^4.1.1",

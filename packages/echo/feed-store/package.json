@@ -49,7 +49,7 @@
   "devDependencies": {
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
     "@dxos/browser-runner": "^1.0.0-beta.8",
-    "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
+    "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/node": "^14.0.9",
     "end-of-stream-promise": "^1.0.0",

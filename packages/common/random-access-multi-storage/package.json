@@ -1,0 +1,72 @@
+{
+  "name": "@dxos/random-access-multi-storage",
+  "version": "1.1.0-beta.8",
+  "description": "Multiple random storage types.",
+  "main": "index.js",
+  "browser": "dist/es/browser.js",
+  "types": "index.d.ts",
+  "files": [
+    "dist",
+    "index.d.ts",
+    "index.js"
+  ],
+  "scripts": {
+    "build": "yarn run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\" --source-maps inline",
+    "build:watch": "yarn run clean && yarn run build --watch",
+    "clean": "del-cli dist",
+    "coverage": "npm test -- --coverage",
+    "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls",
+    "lint": "toolchain lint",
+    "prepublishOnly": "npm run test && npm run build",
+    "test": "jest --verbose --passWithNoTests",
+    "test:serve": "webpack-dev-server --mode development",
+    "posttest": "npm run lint",
+    "benchmark": "browser-runner benchmark.js && browser-runner benchmark.js --product firefox && node benchmark.js"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "license": "AGPL-3.0",
+  "jest": {
+    "preset": "jest-puppeteer",
+    "globals": {
+      "PATH": "http://localhost:8099"
+    }
+  },
+  "dependencies": {
+    "@dxos/random-access-chrome-file": "^2.0.0-beta.0",
+    "del": "^5.1.0",
+    "pify": "~5.0.0",
+    "random-access-file": "^2.1.0",
+    "random-access-idb": "^1.2.1",
+    "random-access-memory": "~3.1.2",
+    "random-access-web": "^2.0.3"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "~7.13.15",
+    "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "@babel/plugin-proposal-export-default-from": "^7.2.0",
+    "@babel/preset-env": "^7.12.7",
+    "@dxos/browser-runner": "^1.0.0-beta.8",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "babel-jest": "^26.6.0",
+    "babel-loader": "8.1.0",
+    "babel-plugin-add-module-exports": "^1.0.4",
+    "bowser": "^2.9.0",
+    "browser-process-hrtime": "^1.0.0",
+    "coveralls": "^3.0.7",
+    "del-cli": "^3.0.0",
+    "html-webpack-plugin": "^4.3.0",
+    "jest": "^26.6.3",
+    "jest-puppeteer": "^4.4.0",
+    "puppeteer": "^2.0.0",
+    "tempy": "~1.0.1",
+    "webpack": "4.44.2",
+    "webpack-cli": "^4.7.0",
+    "webpack-dev-server": "^3.11.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
