@@ -30,11 +30,10 @@
     "random-access-web": "^2.0.3"
   },
   "devDependencies": {
+    "@babel/core": "~7.13.15",
     "@dxos/browser-runner": "^1.0.0-beta.8",
     "@dxos/toolchain-node-library": "workspace:*",
-    "babel-jest": "^26.6.0",
     "babel-loader": "8.1.0",
-    "babel-plugin-add-module-exports": "^1.0.4",
     "bowser": "^2.9.0",
     "browser-process-hrtime": "^1.0.0",
     "del-cli": "^3.0.0",
