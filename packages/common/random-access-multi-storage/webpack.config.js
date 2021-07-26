@@ -37,20 +37,11 @@ module.exports = {
 
   module: {
     rules: [
-      // js/mjs
       {
-        test: /\.js$/,
-        exclude: /(node_modules)/,
-        use: {
-          loader: 'babel-loader'
-        }
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
       },
-
-      {
-        test: /\.mjs$/,
-        include: /node_modules/,
-        type: 'javascript/auto'
-      }
-    ]
+    ],
   }
 };
