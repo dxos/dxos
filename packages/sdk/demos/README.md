@@ -46,9 +46,13 @@ open dist/APP-darwin-x64/APP.app
 
 NOTE: This is large -- don't check it in.
 
+
+
 ## Grid demo
 
-The grid demo allows to demonstrate replication by opening multiple windows in a grid and joining them in a party.
+The grid demo demonstrates replication by opening multiple windows in a grid and joining them in a party.
+
+![Demo](./images/grid-demo.png "Grid Demo")
 
 1. Configuration
 
@@ -58,7 +62,7 @@ cp .env.example .env
 
 Edit `.env` if necessary
 
-2. Run storybooks
+2. Run the storybook
 
 ```bash
 rush update && rush build --to @dxos/demos
@@ -73,4 +77,4 @@ In a different terminal window, run:
 rushx grid:demo
 ```
 
-You can end the demo by hitting `CTRL+C` in the terminal window.
+You can end the demo by hitting `CTRL+C`.

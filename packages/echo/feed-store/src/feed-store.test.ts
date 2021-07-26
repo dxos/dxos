@@ -13,12 +13,18 @@ import tempy from 'tempy';
 
 import { FeedStore } from './feed-store';
 
+const createFeedStore = async (storage: any, options = {}) => {
+  const feedStore = new FeedStore(storage, options);
+  await feedStore.open();
+  return feedStore;
+};
+
 async function createDefault () {
   const directory = tempy.directory();
 
   return {
     directory,
-    feedStore: await FeedStore.create(directory, { feedOptions: { valueEncoding: 'utf-8' } })
+    feedStore: await createFeedStore(directory, { feedOptions: { valueEncoding: 'utf-8' } })
   };
 }
 
@@ -40,7 +46,7 @@ function head (feed: any) {
 
 describe('FeedStore', () => {
   test('Config default', async () => {
-    const feedStore = await FeedStore.create(ram);
+    const feedStore = await createFeedStore(ram);
     expect(feedStore).toBeInstanceOf(FeedStore);
     expect(feedStore.opened).toBeTruthy();
     expect(feedStore.storage).toBe(ram);
@@ -62,7 +68,7 @@ describe('FeedStore', () => {
     const database = hypertrie(ram, { valueEncoding: 'json' });
     database.list = jest.fn((_, cb) => cb(null, []));
 
-    const feedStore = await FeedStore.create(ram, {
+    const feedStore = await createFeedStore(ram, {
       database: () => database,
       hypercore: customHypercore
     });
@@ -197,7 +203,7 @@ describe('FeedStore', () => {
   });
 
   test('Default codec: binary', async () => {
-    const feedStore = await FeedStore.create(ram);
+    const feedStore = await createFeedStore(ram);
     expect(feedStore).toBeInstanceOf(FeedStore);
 
     const feed = await feedStore.openFeed('/test');
@@ -231,7 +237,7 @@ describe('FeedStore', () => {
         }
       }
     };
-    const feedStore = await FeedStore.create(ram, options);
+    const feedStore = await createFeedStore(ram, options);
     expect(feedStore).toBeInstanceOf(FeedStore);
 
     {
@@ -249,7 +255,7 @@ describe('FeedStore', () => {
   });
 
   test('on open error should unlock the descriptor', async () => {
-    const feedStore = await FeedStore.create(ram, {
+    const feedStore = await createFeedStore(ram, {
       hypercore: () => {
         throw new Error('open error');
       }
@@ -269,7 +275,7 @@ describe('FeedStore', () => {
   });
 
   test('on close error should unlock the descriptor', async () => {
-    const feedStore = await FeedStore.create(ram, {
+    const feedStore = await createFeedStore(ram, {
       hypercore: () => ({
         opened: true,
         ready (cb: () => void) {
@@ -298,7 +304,7 @@ describe('FeedStore', () => {
   });
 
   test('on delete descriptor error should unlock the descriptor', async () => {
-    const feedStore = await FeedStore.create(ram);
+    const feedStore = await createFeedStore(ram);
 
     await feedStore.openFeed('/foo');
     const fd = feedStore.getDescriptors().find(fd => fd.path === '/foo');
@@ -347,7 +353,7 @@ describe('FeedStore', () => {
   }
 
   test('createReadStream with empty messages', async () => {
-    const feedStore = await FeedStore.create(ram, { feedOptions: { valueEncoding: 'utf-8' } });
+    const feedStore = await createFeedStore(ram, { feedOptions: { valueEncoding: 'utf-8' } });
 
     await generateStreamData(feedStore, 0);
     const onSync = jest.fn();
@@ -365,7 +371,7 @@ describe('FeedStore', () => {
   });
 
   test('createReadStream with 200 messages', async () => {
-    const feedStore = await FeedStore.create(ram, { feedOptions: { valueEncoding: 'utf-8' } });
+    const feedStore = await createFeedStore(ram, { feedOptions: { valueEncoding: 'utf-8' } });
 
     const [feed1, feed2] = await generateStreamData(feedStore);
 
@@ -395,7 +401,7 @@ describe('FeedStore', () => {
   });
 
   test('createReadStream filter [feed2=false]', async () => {
-    const feedStore = await FeedStore.create(ram, { feedOptions: { valueEncoding: 'utf-8' } });
+    const feedStore = await createFeedStore(ram, { feedOptions: { valueEncoding: 'utf-8' } });
 
     const [feed1, feed2] = await generateStreamData(feedStore);
 
@@ -421,7 +427,7 @@ describe('FeedStore', () => {
   });
 
   test.skip('createReadStream [live=true]', async () => {
-    const feedStore = await FeedStore.create(ram, { feedOptions: { valueEncoding: 'utf-8' } });
+    const feedStore = await createFeedStore(ram, { feedOptions: { valueEncoding: 'utf-8' } });
 
     const [feed1, feed2, feed3] = await generateStreamData(feedStore);
 
@@ -454,7 +460,7 @@ describe('FeedStore', () => {
   });
 
   test('createBatchStream with 200 messages and [batch=50]', async () => {
-    const feedStore = await FeedStore.create(ram, { feedOptions: { valueEncoding: 'utf-8' } });
+    const feedStore = await createFeedStore(ram, { feedOptions: { valueEncoding: 'utf-8' } });
 
     const [feed1, feed2] = await generateStreamData(feedStore);
 
@@ -550,7 +556,7 @@ describe('FeedStore', () => {
   });
 
   test('append event', async (done) => {
-    const feedStore = await FeedStore.create(ram);
+    const feedStore = await createFeedStore(ram);
     const feed = await feedStore.openFeed('/test');
 
     feedStore.on('append', (f) => {
@@ -563,7 +569,7 @@ describe('FeedStore', () => {
 
   test('update metadata', async () => {
     const root = tempy.directory();
-    const feedStore = await FeedStore.create(root);
+    const feedStore = await createFeedStore(root);
     await feedStore.openFeed('/test', { metadata: { tag: 0 } });
     let descriptor = feedStore.getDescriptors().find(fd => fd.path === '/test');
     if (!descriptor) {
@@ -604,7 +610,7 @@ describe('FeedStore', () => {
   });
 
   test('createReadStream should destroy if filter throws an error', async () => {
-    const feedStore = await FeedStore.create(ram);
+    const feedStore = await createFeedStore(ram);
     await feedStore.openFeed('/test');
 
     const stream = feedStore.createReadStream(async () => {

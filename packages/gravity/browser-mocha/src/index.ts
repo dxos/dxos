@@ -59,14 +59,14 @@ export async function run (options: RunOptions) {
       console.log(chalk`\n\n{green Passed in {blue {bold ${browser}}}}\n\n`);
     }
 
-    if (!options.stayOpen) {
-      shouldFail ||= (exitCode !== 0);
-    } else {
-      console.log(`\nCompleted with exit code ${exitCode}. Browser window stays open.`);
-    }
+    shouldFail ||= (exitCode !== 0);
   }
 
-  process.exit(shouldFail ? 1 : 0);
+  if (!options.stayOpen) {
+    process.exit(shouldFail ? 1 : 0);
+  } else {
+    console.log(`\nCompleted with ${shouldFail ? 'failure' : 'success'}. Browser window stays open.`);
+  }
 }
 
 async function resolveFiles (globs: string[]): Promise<string[]> {

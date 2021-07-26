@@ -71,7 +71,8 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();
-  const feedStore = await FeedStore.create(ram, { feedOptions: { valueEncoding: 'utf8' } });
+  const feedStore = await new FeedStore(ram, { feedOptions: { valueEncoding: 'utf8' } });
+  await feedStore.open();
   const feed = await feedStore.openFeed(`/topic/${topic}/writable`, { metadata: { topic } });
   const append = pify(feed.append.bind(feed));
 
