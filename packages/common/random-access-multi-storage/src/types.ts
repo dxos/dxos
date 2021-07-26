@@ -1,3 +1,7 @@
+//
+// Copyright 2021 DXOS.org
+//
+
 export declare const STORAGE_RAM: 'ram';
 export declare const STORAGE_IDB: 'idb';
 export declare const STORAGE_CHROME: 'chrome';
