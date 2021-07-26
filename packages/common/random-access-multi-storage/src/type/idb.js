@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
 import randomAccessIdb from 'random-access-idb';
@@ -40,6 +40,7 @@ export class IDB extends RandomAccessAbstract {
   }
 
   async _destroy () {
+    // eslint-disable-next-line no-undef
     return indexedDB.deleteDatabase(this._root);
   }
 

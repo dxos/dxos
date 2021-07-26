@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
 import del from 'del';

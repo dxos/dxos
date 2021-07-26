@@ -1,14 +1,13 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
 import { createStorageFactory } from './storage-factory';
 import { STORAGE_RAM, STORAGE_IDB, STORAGE_CHROME, STORAGE_FIREFOX } from './storage-types';
-
-import { Memory } from './type/memory';
-import { IDB } from './type/idb';
 import { Chrome } from './type/chrome';
 import { Firefox } from './type/firefox';
+import { IDB } from './type/idb';
+import { Memory } from './type/memory';
 
 // Extensions to manage and inspect storage.
 // https://addons.mozilla.org/en-US/firefox/addon/clear-browsing-data/?src=search

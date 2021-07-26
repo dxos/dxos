@@ -1,12 +1,11 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
 import { createStorageFactory } from './storage-factory';
 import { STORAGE_NODE, STORAGE_RAM } from './storage-types';
-
-import { Memory } from './type/memory';
 import { File } from './type/file';
+import { Memory } from './type/memory';
 
 const storageTypes = {
   [STORAGE_RAM]: Memory,

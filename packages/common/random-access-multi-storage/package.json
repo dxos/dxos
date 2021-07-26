@@ -2,26 +2,19 @@
   "name": "@dxos/random-access-multi-storage",
   "version": "1.1.0-beta.8",
   "description": "Multiple random storage types.",
-  "main": "index.js",
-  "browser": "dist/es/browser.js",
-  "types": "index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "browser": "dist/src/browser.js",
   "files": [
     "dist",
-    "index.d.ts",
-    "index.js"
+    "src"
   ],
   "scripts": {
-    "build": "yarn run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\" --source-maps inline",
-    "build:watch": "yarn run clean && yarn run build --watch",
-    "clean": "del-cli dist",
-    "coverage": "npm test -- --coverage",
-    "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls",
+    "build": "toolchain build",
+    "build:test": "toolchain build && npm run lint && npm run test",
     "lint": "toolchain lint",
-    "prepublishOnly": "npm run test && npm run build",
     "test": "jest --verbose --passWithNoTests",
-    "test:serve": "webpack-dev-server --mode development",
-    "posttest": "npm run lint",
-    "benchmark": "browser-runner benchmark.js && browser-runner benchmark.js --product firefox && node benchmark.js"
+    "test:serve": "webpack serve --mode development"
   },
   "browserslist": [
     "> 5%"
@@ -63,8 +56,7 @@
     "puppeteer": "^2.0.0",
     "tempy": "~1.0.1",
     "webpack": "4.44.2",
-    "webpack-cli": "^4.7.0",
-    "webpack-dev-server": "^3.11.2"
+    "webpack-cli": "^4.7.0"
   },
   "publishConfig": {
     "access": "public"

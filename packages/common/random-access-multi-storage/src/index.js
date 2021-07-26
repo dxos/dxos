@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
 // The default module is for Node (otherwise import browser).

@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DxOS.
+// Copyright 2021 DXOS.org
 //
 
 import randomAccessChrome from '@dxos/random-access-chrome-file';
@@ -14,7 +14,9 @@ const DEFAULT_MAX_SIZE = Number.MAX_SAFE_INTEGER;
 const requestQuota = async (n) => {
   return new Promise((resolve, reject) => {
     persistentStorage.queryUsageAndQuota((used, quota) => {
-      if (quota) return resolve(quota);
+      if (quota) {
+        return resolve(quota);
+      }
       persistentStorage.requestQuota(n, (quota) => {
         resolve(quota);
       }, reject);
