@@ -4,12 +4,12 @@
 
 import assert from 'assert';
 
-import { STORAGE_NODE, STORAGE_CHROME, STORAGE_FIREFOX, STORAGE_IDB } from './storage-types';
+import { STORAGE_NODE, STORAGE_CHROME, STORAGE_FIREFOX, STORAGE_IDB, StorageType } from './storage-types';
 
 const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 const isBrowser = typeof window !== 'undefined';
 
-const defaultStorageType = () => {
+const defaultStorageType: () => StorageType = () => {
   if (isNode) {
     return STORAGE_NODE;
   }

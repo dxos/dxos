@@ -1,7 +1,0 @@
-{
-  "testMatch": ["<rootDir>/src/**/*.test.{js,ts}"],
-  "preset": "./preset",
-  "globals": {
-    "PATH": "http://localhost:8099"
-  }
-}

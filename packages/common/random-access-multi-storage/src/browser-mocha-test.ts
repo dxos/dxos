@@ -9,7 +9,7 @@ import pify from 'pify';
 import { createStorage } from './browser';
 import { STORAGE_CHROME, STORAGE_IDB, STORAGE_RAM } from './storage-types';
 
-const ROOT_DIRECTORY = `testing${Math.random().toString()}`;
+const ROOT_DIRECTORY = 'testing';
 
 describe('testing browser storages', () => {
   let storage: any;
