@@ -18,7 +18,8 @@ interface ValueEncoding {
 }
 
 interface FeedDescriptorOptions {
-  storage?: any,
+  // TODO(marik-d): Remove the string case.
+  storage?: string | ((path: string) => any),
   key?: Buffer,
   secretKey?: Buffer,
   valueEncoding?: string | ValueEncoding,
@@ -35,7 +36,8 @@ type Listener = ((...args: any) => Promise<void> | void) | null;
  * Abstract handler for an Hypercore instance.
  */
 export class FeedDescriptor {
-  private _storage: any;
+  // TODO(marik-d): Remove the string case.
+  private _storage: string | ((path: string) => any);
   private _path: string;
   private _key: Buffer;
   private _secretKey?: Buffer;
@@ -65,6 +67,7 @@ export class FeedDescriptor {
     assert(!secretKey || (secretKey && key), 'missing publicKey.');
     assert(!valueEncoding || typeof valueEncoding === 'string' || (valueEncoding.encode && valueEncoding.decode),
       'valueEncoding must be a string or implement abstract-encoding.');
+    assert(storage);
 
     this._storage = storage;
     this._path = path;
