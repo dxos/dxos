@@ -10,6 +10,8 @@ import hypertrie from 'hypertrie';
 import nanoresource from 'nanoresource-promise';
 import pEvent from 'p-event';
 
+import { Storage } from '@dxos/random-access-multi-storage';
+
 import FeedDescriptor from './feed-descriptor';
 import IndexDB from './index-db';
 import Reader from './reader';
@@ -41,7 +43,7 @@ interface OpenFeedOptions {
  * into a persist repository storage.
  */
 export class FeedStore extends EventEmitter {
-  private _storage: any;
+  private _storage: Storage;
   private _database: any;
   private _defaultFeedOptions: any;
   private _codecs: any;

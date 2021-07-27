@@ -5,10 +5,10 @@
 import assert from 'assert';
 import defaultHypercore from 'hypercore';
 import crypto from 'hypercore-crypto';
-import path from 'path';
 import pify from 'pify';
-import raf from 'random-access-file';
 import sodium from 'sodium-universal';
+
+import type { File, Storage } from '@dxos/random-access-multi-storage';
 
 import Locker from './locker';
 
@@ -18,8 +18,7 @@ interface ValueEncoding {
 }
 
 interface FeedDescriptorOptions {
-  // TODO(marik-d): Remove the string case.
-  storage?: string | ((path: string) => any),
+  storage?: Storage,
   key?: Buffer,
   secretKey?: Buffer,
   valueEncoding?: string | ValueEncoding,
@@ -36,8 +35,7 @@ type Listener = ((...args: any) => Promise<void> | void) | null;
  * Abstract handler for an Hypercore instance.
  */
 export class FeedDescriptor {
-  // TODO(marik-d): Remove the string case.
-  private _storage: string | ((path: string) => any);
+  private _storage: Storage;
   private _path: string;
   private _key: Buffer;
   private _secretKey?: Buffer;
@@ -198,14 +196,9 @@ export class FeedDescriptor {
    * Defines the real path where the Hypercore is going
    * to work with the RandomAccessStorage specified.
    */
-  private _createStorage (dir = ''): (name: string) => any {
-    const ras = this._storage;
-
+  private _createStorage (dir = ''): (name: string) => File {
     return (name) => {
-      if (typeof ras === 'string') {
-        return raf(path.join(ras, dir, name));
-      }
-      return ras(`${dir}/${name}`);
+      return this._storage(`${dir}/${name}`);
     };
   }
 

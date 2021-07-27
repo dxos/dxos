@@ -11,9 +11,11 @@ import pify from 'pify';
 import ram from 'random-access-memory';
 import tempy from 'tempy';
 
+import { Storage, STORAGE_NODE, createStorage } from '@dxos/random-access-multi-storage';
+
 import { FeedStore } from './feed-store';
 
-const createFeedStore = async (storage: any, options = {}) => {
+const createFeedStore = async (storage: Storage, options = {}) => {
   const feedStore = new FeedStore(storage, options);
   await feedStore.open();
   return feedStore;
@@ -24,7 +26,7 @@ async function createDefault () {
 
   return {
     directory,
-    feedStore: await createFeedStore(directory, { feedOptions: { valueEncoding: 'utf-8' } })
+    feedStore: await createFeedStore(createStorage(directory, STORAGE_NODE), { feedOptions: { valueEncoding: 'utf-8' } })
   };
 }
 
@@ -569,7 +571,7 @@ describe('FeedStore', () => {
 
   test('update metadata', async () => {
     const root = tempy.directory();
-    const feedStore = await createFeedStore(root);
+    const feedStore = await createFeedStore(createStorage(root, STORAGE_NODE));
     await feedStore.openFeed('/test', { metadata: { tag: 0 } });
     let descriptor = feedStore.getDescriptors().find(fd => fd.path === '/test');
     if (!descriptor) {
