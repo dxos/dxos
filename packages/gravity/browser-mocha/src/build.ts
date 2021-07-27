@@ -8,12 +8,18 @@ import { join, resolve } from 'path';
 
 import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
-export async function buildTests (files: string[], outDir: string, debug: boolean) {
-  const mainFile = join(outDir, 'main.js');
+export interface BuildTestsOpts {
+  outDir: string,
+  debug: boolean,
+  checkLeaks: boolean 
+}
+
+export async function buildTests (files: string[], opts: BuildTestsOpts) {
+  const mainFile = join(opts.outDir, 'main.js');
   const mainContents = `
     import debug from 'debug';
 
-    ${debug ? 'debugger;' : ''}
+    ${opts.debug ? 'debugger;' : ''}
     
     debug.enable('${process.env.DEBUG}');
 
@@ -26,7 +32,7 @@ export async function buildTests (files: string[], outDir: string, debug: boolea
 
       mocha.reporter('spec');
       mocha.setup('bdd');
-      mocha.checkLeaks();
+      ${opts.checkLeaks ? 'mocha.checkLeaks();' : ''}
 
       ${files.map(file => `require("${resolve(file)}");`).join('\n')}
 
@@ -47,7 +53,7 @@ export async function buildTests (files: string[], outDir: string, debug: boolea
     platform: 'browser',
     format: 'iife',
     sourcemap: 'inline',
-    outfile: join(outDir, 'bundle.js'),
+    outfile: join(opts.outDir, 'bundle.js'),
     plugins: [
       NodeModulesPlugin(),
       NodeGlobalsPolyfillPlugin(),
