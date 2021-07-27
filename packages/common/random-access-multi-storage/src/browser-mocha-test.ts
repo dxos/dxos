@@ -29,7 +29,10 @@ describe('testing browser storages', () => {
   beforeEach(async () => {
   });
 
-  it('idb storage', async () => {
+  it('idb storage', async function () {
+    if (browserMocha.context.browser === 'webkit') {
+      this.skip();
+    }
     storage = createStorage(ROOT_DIRECTORY, STORAGE_IDB);
 
     expect(storage.root).toBe(ROOT_DIRECTORY);
@@ -59,7 +62,7 @@ describe('testing browser storages', () => {
     await testDestroy();
 
     await expect(testExists()).resolves.toBe(false);
-  });
+  }).timeout(20000);
 
   it.skip('chrome file storage by default', async function () {
     if (browserMocha.context.browser !== 'chromium') {
