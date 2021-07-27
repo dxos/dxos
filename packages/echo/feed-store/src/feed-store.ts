@@ -71,7 +71,7 @@ export class FeedStore extends EventEmitter {
    * @param options.codecs Defines a list of available codecs to work with the feeds.
    * @param options.hypercore Hypercore class to use.
    */
-  constructor (storage: any, options: any = {}) {
+  constructor (storage: Storage, options: any = {}) {
     assert(storage, 'The storage is required.');
 
     super();
