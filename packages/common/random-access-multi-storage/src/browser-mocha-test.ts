@@ -37,31 +37,28 @@ describe('testing browser storages', () => {
 
     await testWrite();
 
-    // Test database exists
-    // await page.evaluate(() => {
-    //   window.testExists = (root) => {
-    //     let exists = true;
-    //     const request = window.indexedDB.open(root);
-    //     request.onupgradeneeded = (e) => {
-    //       e.target.transaction.abort();
-    //       exists = false;
-    //     };
-    //     return new Promise(resolve => {
-    //       request.onsuccess = () => {
-    //         resolve(exists);
-    //       };
-    //       request.onerror = () => {
-    //         resolve(exists);
-    //       };
-    //     });
-    //   };
-    // });
+    const testExists = () => {
+      let exists = true;
+      const request = window.indexedDB.open(ROOT_DIRECTORY);
+      request.onupgradeneeded = (e: any) => {
+        e.target.transaction.abort();
+        exists = false;
+      };
+      return new Promise(resolve => {
+        request.onsuccess = () => {
+          resolve(exists);
+        };
+        request.onerror = () => {
+          resolve(exists);
+        };
+      });
+    };
 
-    // await expect(page.evaluate(root => window.testExists(root), ROOT_DIRECTORY)).resolves.toBe(true);
+    await expect(testExists()).resolves.toBe(true);
 
     await testDestroy();
 
-    // await expect(page.evaluate(root => window.testExists(root), ROOT_DIRECTORY)).resolves.toBe(false);
+    await expect(testExists()).resolves.toBe(false);
   });
 
   it.skip('chrome file storage by default', async function () {
