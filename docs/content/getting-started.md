@@ -108,14 +108,16 @@ ncu --deep -u '@storybook/*'
 ### Release process
 
 1. Go to a clean `main` branch.
-2. Determine the bump type:
+2. The `main` branch is protected, branch off of `main` in order to commit version bumps
+3. Determine the bump type:
     * Run `rush version --bump` for **non-breaking** changes.
     * Run `rush version --bump --override-bump minor` for **breaking** changes.
 4. Rush created changelog files. Remove them using `git status --porcelain | awk '($1=="??" && ($2 ~ /\/CHANGELOG.md/ || $2 ~ /\/CHANGELOG.json/)) {print $2}' | xargs rm`.
 5. Commit the changes with `git commit -a -m "Release vX.Y.Z"`.
 6. Push the changes to the remote.
-7. The CI will publish the changes to NPM.
-8. Create a github release.
+7. Create a PR back into `main`.
+8. The CI will publish the changes to NPM once the PR is merged.
+9. Create a github release.
     * Run `git log --pretty=format:"* %s"` to get the release notes.
 
 ### Troubleshooting Storybooks
