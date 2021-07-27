@@ -6,7 +6,10 @@
       "DOM",
       "es2019"
     ],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": [
+      "mocha"
+    ]
   },
   "include": [
     "src"

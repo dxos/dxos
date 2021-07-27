@@ -10,15 +10,11 @@
     "src"
   ],
   "scripts": {
-    "build": "webpack --mode production && toolchain build",
+    "build": "toolchain build",
     "build:test": "toolchain build && npm run lint && npm run test",
     "lint": "toolchain lint",
-    "test": "jest --verbose --passWithNoTests 2>&1",
-    "test:serve": "webpack serve --mode development"
+    "test": "browser-mocha 'src/**/browser-mocha.test.ts' --browser=chromium --browser=firefox --browser=webkit"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "license": "AGPL-3.0",
   "dependencies": {
     "@dxos/random-access-chrome-file": "^2.0.0-beta.0",
@@ -34,18 +30,15 @@
     "@dxos/toolchain-node-library": "workspace:*",
     "bowser": "^2.9.0",
     "browser-process-hrtime": "^1.0.0",
-    "del-cli": "^3.0.0",
-    "html-webpack-plugin": "^4.3.0",
-    "jest": "^26.6.3",
-    "jest-puppeteer": "^4.4.0",
-    "puppeteer": "^2.0.0",
     "tempy": "~1.0.1",
-    "webpack": "4.44.2",
-    "webpack-cli": "^4.7.0",
-    "typescript": "^4.3.5",
-    "ts-loader": "~8.1.0",
     "@types/node": "^14.0.9",
-    "@types/pify": "^3.0.2"
+    "@types/pify": "^3.0.2",
+    "@dxos/browser-mocha": "workspace:*",
+    "@types/mocha": "~8.2.2",
+    "@types/expect": "~24.3.0",
+    "expect": "~27.0.2",
+    "mocha": "~8.4.0",
+    "source-map-support": "^0.5.12"
   },
   "publishConfig": {
     "access": "public"
