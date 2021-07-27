@@ -8,7 +8,7 @@ import multi from 'multi-read-stream';
 import pump from 'pump';
 import through from 'through2';
 
-import createBatchStream from './create-batch-stream';
+import { createBatchStream } from './create-batch-stream';
 import type { FeedDescriptor } from './feed-descriptor';
 
 const all = () => true;

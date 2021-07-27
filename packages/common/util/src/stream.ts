@@ -6,8 +6,6 @@ import debug from 'debug';
 import { Feed } from 'hypercore';
 import { PassThrough, Readable, Transform, Writable } from 'stream';
 
-import { any } from '@dxos/codec-protobuf';
-
 const log = debug('dxos:stream');
 const error = debug('dxos:stream:error');
 
@@ -17,18 +15,6 @@ const error = debug('dxos:stream:error');
 // NOTE: Turn on 'dxox:*:error' to see errors within callbacks that cause the following error:
 // Error [ERR_MULTIPLE_CALLBACK]: Callback called multiple times
 //
-
-/**
- * NOTE: The parameterized type `T` should be the generated interface, whereas the `typeUrl` should be the classnae.
- * @param data
- * @param typeUrl
- */
-// TODO(burdon): Move to @dxos/codec.
-// TODO(burdon): The parent should call this (not the message creator).
-// TODO(burdon): Create version with short into code (for system types); Make compatable with google any.
-export function createAny<T> (data: T, typeUrl: string) {
-  return any(typeUrl, data);
-}
 
 /**
  * Returns a stream that appends messages directly to a hypercore feed.
