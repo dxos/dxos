@@ -13,7 +13,9 @@
     "build": "toolchain build",
     "build:test": "toolchain build && npm run lint && npm run test",
     "lint": "toolchain lint",
-    "test": "browser-mocha 'src/**/browser-mocha.test.ts' --browser=chromium --browser=firefox --browser=webkit"
+    "test": "pnpm run test:node && pnpm run test:browser",
+    "test:node": "toolchain test",
+    "test:browser": "browser-mocha 'src/**/browser-mocha.test.ts' --browser=chromium --browser=firefox --browser=webkit"
   },
   "license": "AGPL-3.0",
   "dependencies": {
@@ -42,5 +44,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

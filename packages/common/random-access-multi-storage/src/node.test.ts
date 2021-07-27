@@ -2,28 +2,30 @@
 // Copyright 2021 DXOS.org
 //
 
+import expect from 'expect';
 import crypto from 'crypto';
 import del from 'del';
 import { promises as fs, constants } from 'fs';
 import path from 'path';
 import pify from 'pify';
 
-import { createStorage, STORAGE_RAM, STORAGE_NODE, STORAGE_IDB } from './node';
+import { createStorage } from './node';
+import { STORAGE_RAM, STORAGE_NODE, STORAGE_IDB } from './storage-types';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '..', 'out', 'index.test'));
 
 const temp = () => path.join(ROOT_DIRECTORY, crypto.randomBytes(32).toString('hex'));
 
-const write = async (file) => {
+const write = async (file: any) => {
   const buffer = Buffer.from('test');
   await pify(file.write.bind(file))(10, buffer);
   await expect(pify(file.read.bind(file))(10, 4)).resolves.toEqual(buffer);
 };
 
-afterAll(() => del(ROOT_DIRECTORY));
+after(() => del(ROOT_DIRECTORY));
 
 describe('testing node storage types', () => {
-  test('create storage with node file by default', async () => {
+  it('create storage with node file by default', async () => {
     const directory = temp();
     const storage = createStorage(directory);
     expect(storage.root).toBe(directory);
@@ -39,7 +41,7 @@ describe('testing node storage types', () => {
     await expect(fs.access(directory, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  test('create a storage with ram type', async () => {
+  it('create a storage with ram type', async () => {
     const storage = createStorage('testing', STORAGE_RAM);
     expect(storage.root).toBe('testing');
     expect(storage.type).toBe(STORAGE_RAM);
@@ -53,7 +55,7 @@ describe('testing node storage types', () => {
     expect(storage._storage._files.size).toBe(0);
   });
 
-  test('should throw an assert error if invalid type for platform', () => {
+  it('should throw an assert error if invalid type for platform', () => {
     expect(() => createStorage('error', STORAGE_IDB)).toThrow(/Invalid type/);
   });
 });
