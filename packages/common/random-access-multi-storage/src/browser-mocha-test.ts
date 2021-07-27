@@ -8,7 +8,7 @@ import { STORAGE_CHROME, STORAGE_IDB, STORAGE_RAM } from './storage-types';
 import pify from 'pify';
 import { createStorage } from './browser';
 
-const ROOT_DIRECTORY = 'testing';
+const ROOT_DIRECTORY = `testing${Math.random().toString()}`;
 
 describe('testing browser storages', () => {
   let storage: any;
