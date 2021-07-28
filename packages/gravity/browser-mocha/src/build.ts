@@ -4,7 +4,7 @@
 
 import { build } from 'esbuild';
 import { promises as fs } from 'fs';
-import { join, resolve } from 'path';
+import { join, resolve, relative } from 'path';
 
 import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
@@ -34,7 +34,7 @@ export async function buildTests (files: string[], opts: BuildTestsOpts) {
       mocha.setup('bdd');
       ${opts.checkLeaks ? 'mocha.checkLeaks();' : ''}
 
-      ${files.map(file => `require("${resolve(file)}");`).join('\n')}
+      ${files.map(file => `require("${relative(opts.outDir,resolve(file))}");`).join('\n')}
 
       window.browserMocha__initFinished()
       
