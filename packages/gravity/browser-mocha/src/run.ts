@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import pkgUp from 'pkg-up';
 import { chromium, firefox, webkit } from 'playwright';
@@ -19,6 +20,8 @@ const INIT_TIMEOUT = 10_000;
 
 export async function runTests (bundleFile: string, browser: Browser, options: Omit<RunOptions, 'browsers' | 'files'>): Promise<number> {
   const userDataDir = `/tmp/browser-mocha/${v4()}`;
+
+  await fs.mkdir(userDataDir, { recursive: true });
 
   const browserRunner = getBrowser(browser);
 
