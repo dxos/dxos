@@ -1,9 +1,7 @@
 ---
 title: 7. Deployment
-description: Deploy your app
+description: Deploy your app to a Kube
 ---
-
-## Deployment
 
 It's time to make our app public to anyone. We leave you here below with the required steps to follow:
 
