@@ -271,9 +271,7 @@ describe('FeedStore', () => {
       throw new Error('Descriptor not found');
     }
 
-    const release = await fd.lock();
-    expect(release).toBeDefined();
-    await release();
+    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   test('on close error should unlock the descriptor', async () => {
@@ -293,16 +291,14 @@ describe('FeedStore', () => {
     await feedStore.openFeed('/foo');
     const fd = feedStore.getDescriptors().find(fd => fd.path === '/foo');
 
-    await expect(feedStore.closeFeed('/foo')).rejects.toThrow(/close error/);
-    await expect(feedStore.close()).rejects.toThrow(/close error/);
-
     if (!fd) {
       throw new Error('Descriptor not found');
     }
 
-    const release = await fd.lock();
-    expect(release).toBeDefined();
-    await release();
+    await expect(feedStore.closeFeed('/foo')).rejects.toThrow(/close error/);
+    await expect(feedStore.close()).rejects.toThrow(/close error/);
+
+    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   test('on delete descriptor error should unlock the descriptor', async () => {
@@ -320,9 +316,7 @@ describe('FeedStore', () => {
 
     await expect(feedStore.deleteDescriptor('/foo')).rejects.toThrow(Error);
 
-    const release = await fd.lock();
-    expect(release).toBeDefined();
-    await release();
+    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   async function generateStreamData (feedStore: FeedStore, maxMessages = 200) {

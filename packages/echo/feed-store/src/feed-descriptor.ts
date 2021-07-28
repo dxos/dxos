@@ -9,8 +9,7 @@ import pify from 'pify';
 import sodium from 'sodium-universal';
 
 import type { File, Storage } from '@dxos/random-access-multi-storage';
-
-import Locker from './locker';
+import { Lock } from '@dxos/async';
 
 interface ValueEncoding {
   encode: string,
@@ -44,7 +43,7 @@ export class FeedDescriptor {
   private _codecs: any;
   private _metadata: any;
   private _discoveryKey: Buffer;
-  private _locker: Locker;
+  public readonly lock: Lock;
   private _feed: any;
   private _listener: Listener;
 
@@ -85,7 +84,7 @@ export class FeedDescriptor {
 
     this._discoveryKey = crypto.discoveryKey(this._key);
 
-    this._locker = new Locker();
+    this.lock = new Lock();
 
     this._feed = null;
     this._listener = null;
@@ -128,15 +127,6 @@ export class FeedDescriptor {
     await this._emit('updated');
   }
 
-  /*
-   * Lock the resource.
-   *
-   * @returns {function} release
-   */
-  async lock () {
-    return this._locker.lock();
-  }
-
   /**
    * Open an Hypercore feed based on the related feed options.
    *
@@ -144,20 +134,17 @@ export class FeedDescriptor {
    * sure that the feed is not going to open again.
    */
   async open (): Promise<Hypercore> {
-    const release = await this.lock();
-
     if (this.opened) {
-      await release();
       return this._feed;
     }
 
     try {
-      await this._open();
-      await this._emit('opened');
-      await release();
+      await this.lock.executeSynchronized(async () => {
+        await this._open();
+        await this._emit('opened');
+      });
       return this._feed;
     } catch (err) {
-      await release();
       throw err;
     }
   }
@@ -166,19 +153,16 @@ export class FeedDescriptor {
    * Close the Hypercore referenced by the descriptor.
    */
   async close () {
-    const release = await this.lock();
-
     if (!this.opened) {
-      await release();
       return;
     }
 
     try {
-      await pify(this._feed.close.bind(this._feed))();
-      await this._emit('closed');
-      await release();
+      await this.lock.executeSynchronized(async () => {
+        await pify(this._feed.close.bind(this._feed))();
+        await this._emit('closed');
+      });
     } catch (err) {
-      await release();
       throw err;
     }
   }

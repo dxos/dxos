@@ -302,25 +302,20 @@ export class FeedStore extends EventEmitter {
 
     const descriptor = this.getDescriptors().find(fd => fd.path === path);
 
-    let release;
     if (descriptor) {
-      try {
-        release = await descriptor.lock();
-
-        await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key?.toString('hex')}`);
-
-        this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
-
-        this.emit('descriptor-remove', descriptor);
-        await release();
-        this._resource.inactive();
-      } catch (err) {
-        if (release) {
-          await release();
+      await descriptor.lock.executeSynchronized(async () => {
+        try {
+          await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key?.toString('hex')}`);
+  
+          this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
+  
+          this.emit('descriptor-remove', descriptor);
+          this._resource.inactive();
+        } catch (err) {
+          this._resource.inactive();
+          throw err;
         }
-        this._resource.inactive();
-        throw err;
-      }
+      });
     }
   }
 

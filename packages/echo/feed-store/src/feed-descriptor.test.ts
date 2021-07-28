@@ -139,9 +139,7 @@ describe('FeedDescriptor', () => {
 
     await expect(fd.open()).rejects.toThrow(/open error/);
 
-    const release = await fd.lock();
-    expect(release).toBeDefined();
-    await release();
+    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   test('on close error should unlock the resource', async () => {
@@ -163,8 +161,6 @@ describe('FeedDescriptor', () => {
 
     await expect(fd.close()).rejects.toThrow(/close error/);
 
-    const release = await fd.lock();
-    expect(release).toBeDefined();
-    await release();
+    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 });

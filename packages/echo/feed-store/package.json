@@ -41,7 +41,8 @@
     "pify": "~5.0.0",
     "pump": "^3.0.0",
     "sodium-universal": "~3.0.4",
-    "through2": "^3.0.1"
+    "through2": "^3.0.1",
+    "@dxos/async": "workspace:*"
   },
   "devDependencies": {
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
