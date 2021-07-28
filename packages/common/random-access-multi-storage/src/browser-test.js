@@ -4,7 +4,7 @@
 
 /* global page, PATH */
 
-import { STORAGE_RAM, STORAGE_CHROME, STORAGE_IDB } from './storage-types';
+import { STORAGE_RAM, STORAGE_CHROME } from './storage-types';
 
 jest.setTimeout(50000);
 

@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-
 import 'source-map-support/register';
 import pify from 'pify';
 
