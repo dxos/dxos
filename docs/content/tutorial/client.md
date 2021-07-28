@@ -7,59 +7,84 @@ Every DXOS Application starts by creating a Client. The `@dxos/client` is your e
 
 ## Create a Client
 
-Take a look at the component `src/App.js`, the root component of the application.
+Take a look at the component `src/App.js`, the top most component of your application.
 
-The first component being rendered is `ClientInitializer` from `@dxos/react-client`.
+Remove everything that's within the render section and place a `ClientInitializer` from `@dxos/react-client`.
+We are providing you the necessary config object for you to start the app. We will move this config to its corresponding place in a further step.
 
-```js
+```jsx:title=src/App.js
 import React from 'react';
 import { ClientInitializer } from '@dxos/react-client';
 
-import { initConfig } from './config';
-
-const App = () => {
-  return <ClientInitializer config={initConfig}></ClientInitializer>;
-};
-```
-
-This `ClientInitializer` is a React component that facilitates the process of initializing and providing a client instance, given a config object or generator function.
-
-It creates a new `Client` instance and uses the [React Context](https://reactjs.org/docs/context.html) feature to make the instance accessible anywhere in the app.
-
-An example config object looks like:
-
-```js
 const config = {
+  app: { title: 'Tasks App' },
   storage: { persistent: true },
+  swarm: { signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal' },
   wns: {
-    server: 'https://wns1.kube.moon.dxos.network/api',
+    server: 'https://apollo3.kube.moon.dxos.network/dxos/wns/api',
     chainId: 'devnet-2',
   },
-  swarm: { signal: 'wss://apollo1.kube.moon.dxos.network/dxos/signal' },
 };
+
+const App = () => {
+  return (
+    <ClientInitializer config={config}>
+      <h1>DXOS</h1>
+    </ClientInitializer>
+  );
+};
+
+export default App;
 ```
 
-Short explanation of parameters:
+This `ClientInitializer` is a React component that facilitates the process of initializing and providing a DXOS client instance to the application.
 
+It creates a new `Client` from `@dxos/client` and uses [React Context](https://reactjs.org/docs/context.html) to make the instance accessible anywhere in the app.
+
+Short explanation of the config object:
+
+- `app.title` - application's title to display on the screen
 - `storage` - storage for feeds and keyring
 - `wns` - connection to WNS registry
 - `swarm.signal` - signaling server URL. Used to establish WebRTC connections with other peers.
 
 ## Retrieve the Client Instance
 
-Once we have our client constructed using ClientInitializer, we will be able to access the client instance through the `useClient` custom hook provided by the `@dxos/react-client` package. Take a look at src/components/Root.js and you will find:
+Once we have our client built, we will be able to access the instance through the `useClient` hook provided by the `@dxos/react-client` package.
 
-```js
+Go ahead and create a new `Root` component to see `useClient` in action:
+
+```jsx:title=src/components/Root.js
 import React from 'react';
 import { useClient } from '@dxos/react-client';
-
-import Main from './Main';
 
 const Root = () => {
   const client = useClient();
 
-  return <Main />;
+  return JSON.stringify(client.config);
 };
 
 export default Root;
 ```
+
+We are stringifying the `client.config` property, so you see how you will be able to access the config from the `Client` instance.
+
+In your `src/App.js` file, import your Root component and place it within the `ClientInitializer`:
+
+```jsx:title=src/App.js
+//...
+
+import Root from './components/Root';
+
+const App = () => {
+  return (
+    <ClientInitializer config={config}>
+      <Root />
+    </ClientInitializer>
+  );
+};
+```
+
+Having the app running, take a look at your browser and you should see printed on the screen the information we had sent to the client.
+
+![config](./client-00.png)
