@@ -3,13 +3,13 @@ title: 3. Create a Party
 description: Add a space for sharing data
 ---
 
-A Party is the DXOS element responsible for sharing content between invited members. Each Party is identified by a `publicKey`.
+A Party is the DXOS element responsible for sharing content among the invited members. Each Party is identified by a `publicKey`.
 
 ## Create a Party
 
-In this example, we use Parties to create a Task List that we'll share and invite other peers to read and then collaborate on.
+In this example, each Party will represent a Task List that we'll share and invite other peers to collaborate on.
 
-Party creation is handled through the `Echo` object that is contained by the `Client` instance. After creating the party, set the title property through the `setProperty` function.
+Party creation is handled through the `client.echo` object. After creating the party, we need to set the title property through the `setProperty` function.
 
 Let's create a new dialog component to handle this logic:
 
@@ -142,7 +142,7 @@ const PartyList = ({ onSelectParty }) => {
 export default PartyList;
 ```
 
-Time to display this in our app. We will add some basic MUI components to make our app look prettier.
+Time to display this in our app. We will add some basic Material UI components to make our app look prettier. Create a `Main` component with:
 
 ```jsx:title=src/components/Main.js
 import React, { useState } from 'react';
@@ -220,16 +220,17 @@ Go to your `src/components/Root.js` and render this `Main` component on the crea
 
 If you go to your app in the browser, you should now see something like:
 
-// todo(grazianoramiro): add picture
+![party](./party-00.png)
 
 And you should be able to open the dialog and create a new party:
 
-// todo(grazianoramiro): add picture
+![party](./party-01.png)
 
-## Retrieve all the Parties
+## Fetch Parties
 
-You now realize that even though we are able to create a party, there's no way to see it. So let's go with it.
-We can retrieve all the created Parties using the `useParties` hook provided by `@dxos/react-client`.
+You may have realized that even though we are able to create a party, there's no way to see it yet. So let's make it happen.
+
+We can fetch all the created Parties using the `useParties` hook provided by `@dxos/react-client`.
 
 ```jsx:title=src/components/PartyList.js
 import React, { useState } from 'react';
@@ -239,6 +240,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Add as AddIcon, Assignment as PartyIcon } from '@material-ui/icons';
 
 import { useParties } from '@dxos/react-client';
+
 import PartySettings from './PartySettings';
 
 const useStyles = makeStyles((theme) => ({
@@ -272,9 +274,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const PartyList = ({ selectedPartyKey, onSelectParty }) => {
-  const classes = useStyles();
   const parties = useParties();
-  const [{ settingsDialog, settingsPartyKey }, setSettingsDialog] = useState({});
+
+  const classes = useStyles();
+  const [{ settingsDialog }, setSettingsDialog] = useState({});
 
   const handleCreateParty = () => setSettingsDialog({ settingsDialog: true });
 
@@ -282,7 +285,6 @@ const PartyList = ({ selectedPartyKey, onSelectParty }) => {
     <div className={classes.root}>
       {settingsDialog && (
         <PartySettings
-          partyKey={settingsPartyKey}
           onClose={({ partyKey }) => {
             setSettingsDialog({});
 
@@ -332,7 +334,7 @@ const PartyList = ({ selectedPartyKey, onSelectParty }) => {
 export default PartyList;
 ```
 
-And in your `src/components/Main.js` send the `selectedPartyKey` prop to `PartyList`:
+And in your `src/components/Main.js` send the `partyKey` from the `useState` as `selectedPartyKey` prop to `PartyList`:
 
 ```jsx:title=src/components/Main.js
 <PartyList selectedPartyKey={partyKey} onSelectParty={(partyKey) => setPartyKey(partyKey)} />
@@ -340,9 +342,9 @@ And in your `src/components/Main.js` send the `selectedPartyKey` prop to `PartyL
 
 You should now be able to see your created party:
 
-// todo(grazianoramiro): add picture
+![party](./party-02.png)
 
-## Retrieve a Single Party
+## Fetch Single Party
 
 Now that we have our party created and listed, let's add the possibility to update its name. For that to happen, we will slightly tweak our `PartySettings` dialog to also support modification apart from creation.
 
@@ -361,7 +363,7 @@ const PartySettings = ({ partyKey, onClose }) => {
 
   const [title, setTitle] = useState(party ? party.getProperty('title') : '');
 
-  const handleUpdate = async () => {
+  const handleSubmit = async () => {
     if (!title.length) {
       return;
     }
@@ -380,7 +382,7 @@ const PartySettings = ({ partyKey, onClose }) => {
   return (
     <Dialog open fullWidth maxWidth='xs'>
       <DialogTitle>
-        <Typography>{partyKey ? 'Party Settings' : 'Create Party'}</Typography>
+        <Typography>{partyKey ? 'Update Party' : 'Create Party'}</Typography>
       </DialogTitle>
 
       <DialogContent>
@@ -390,14 +392,14 @@ const PartySettings = ({ partyKey, onClose }) => {
           label='Title'
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          onKeyPress={(event) => event.key === 'Enter' && handleUpdate()}
+          onKeyPress={(event) => event.key === 'Enter' && handleSubmit()}
         />
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
 
-        <Button onClick={handleUpdate} color='primary'>
+        <Button onClick={handleSubmit} color='primary'>
           {partyKey ? 'Update' : 'Create'}
         </Button>
       </DialogActions>
@@ -460,7 +462,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
+const PartyList = ({ selectedPartyKey, onSelectParty }) => {
   const classes = useStyles();
   const [{ settingsDialog, settingsPartyKey }, setSettingsDialog] = useState({});
   const parties = useParties();
@@ -474,6 +476,7 @@ const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
           partyKey={settingsPartyKey}
           onClose={({ partyKey }) => {
             setSettingsDialog({});
+
             if (partyKey) {
               onSelectParty(partyKey);
             }
@@ -534,4 +537,4 @@ export default PartyList;
 
 You will see a `Settings` button right next to the party name and clicking on it will open the dialog with the party name already filled in.
 
-// todo(grazianoramiro): add picture
+![party](./party-03.png)
