@@ -35,8 +35,6 @@ Let's start by installing the required dependencies from the DXOS Stack:
 yarn add @dxos/config @dxos/crypto @dxos/object-model @dxos/react-client @dxos/react-ux
 ```
 
-// todo(grazianoramiro): add short description for each package
-
 - `@dxos/config`
 - `@dxos/crypto`
 - `@dxos/object-model`

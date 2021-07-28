@@ -45,7 +45,6 @@ Short explanation of the config object:
 
 - `app.title` - application's title to display on the screen
 - `storage` - storage for feeds and keyring
-- `storage.persistent` - todo(grazianoramiro): fill in definition
 - `wns` - connection to WNS registry
 - `swarm.signal` - signaling server URL. Used to establish WebRTC connections with other peers.
 
