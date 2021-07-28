@@ -15757,7 +15757,7 @@ typedoc-plugin-markdown@^3.10.4:
 
 typedoc@^0.21.4:
   version "0.21.4"
-  resolved "https://registry.npmjs.org/typedoc/-/typedoc-0.21.4.tgz#fced3cffdc30180db60a5dbfec9dbbb273cb5b31"
+  resolved "https://registry.yarnpkg.com/typedoc/-/typedoc-0.21.4.tgz#fced3cffdc30180db60a5dbfec9dbbb273cb5b31"
   integrity sha512-slZQhvD9U0d9KacktYAyuNMMOXJRFNHy+Gd8xY2Qrqq3eTTTv3frv3N4au/cFnab9t3T5WA0Orb6QUjMc+1bDA==
   dependencies:
     glob "^7.1.7"
