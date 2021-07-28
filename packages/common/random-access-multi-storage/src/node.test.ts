@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import expect from 'expect';
 import crypto from 'crypto';
 import del from 'del';
+import expect from 'expect';
 import { promises as fs, constants } from 'fs';
 import path from 'path';
 import pify from 'pify';

@@ -3,10 +3,12 @@
 //
 
 import expect from 'expect';
+
 import 'source-map-support/register';
-import { STORAGE_CHROME, STORAGE_IDB, STORAGE_RAM } from './storage-types';
 import pify from 'pify';
+
 import { createStorage } from './browser';
+import { STORAGE_CHROME, STORAGE_IDB, STORAGE_RAM } from './storage-types';
 
 const ROOT_DIRECTORY = `testing${Math.random().toString()}`;
 
@@ -18,9 +20,9 @@ describe('testing browser storages', () => {
     const buffer = Buffer.from('test');
     await pify(file.write.bind(file))(10, buffer);
     const bufferRead = await pify(file.read.bind(file))(10, 4);
-    const result = buffer.equals(bufferRead)
+    const result = buffer.equals(bufferRead);
     expect(result).toBeTruthy();
-  }
+  };
 
   const testDestroy = async () => {
     await storage.destroy();
@@ -83,18 +85,18 @@ describe('testing browser storages', () => {
     const getDir = async (): Promise<string> => {
       try {
         await storage._storage.getDirectory();
-        return ''
+        return '';
       } catch (err) {
         return err.message;
       }
-    }
+    };
 
     const errorMessage = await getDir();
-    expect(errorMessage).toMatch(/directory could not be found/)
+    expect(errorMessage).toMatch(/directory could not be found/);
   });
 
   it('ram storage', async () => {
-    storage = createStorage(ROOT_DIRECTORY, STORAGE_RAM)
+    storage = createStorage(ROOT_DIRECTORY, STORAGE_RAM);
 
     expect(storage.root).toBe(ROOT_DIRECTORY);
     expect(storage.type).toBe(STORAGE_RAM);

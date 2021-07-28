@@ -72,8 +72,6 @@ describe('testing browser storages', () => {
     })).resolves.toMatch(/directory could not be found/);
   });
 
-
-
   test('ram storage', async () => {
     const storage = await page.evaluate((root, type) => {
       const { createStorage } = window.testModule;
