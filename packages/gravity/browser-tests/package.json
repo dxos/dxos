@@ -16,8 +16,8 @@
     "src"
   ],
   "scripts": {
-    "build": "",
-    "build:test": "pnpm run build && pnpm run lint && pnpm run test",
+    "build": "toolchain build",
+    "build:test": "toolchain build && toolchain lint && pnpm run test",
     "lint": "toolchain lint",
     "test": "browser-mocha --setup test/setup.js 'test/**/*.test.ts' --browser=chromium --browser=firefox --browser=webkit"
   },
@@ -26,7 +26,8 @@
     "@dxos/browser-mocha": "workspace:*",
     "mocha": "~8.4.0",
     "@types/mocha": "~8.2.2",
-    "expect": "~27.0.2"
+    "expect": "~27.0.2",
+    "@dxos/signal": "workspace:*"
   },
   "publishConfig": {
     "access": "restricted"
