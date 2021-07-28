@@ -23,13 +23,13 @@ jobs:
       - name: Check, install and build
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-          npx playwright@1.7.0 install-deps
           npm install -g @microsoft/rush pnpm
           sudo ./common/scripts/install-dependencies.sh
           
           # Install dependencies
           echo "::group::Install"
           node common/scripts/install-run-rush.js install
+          npx playwright@1.7.0 install-deps
           echo "::endgroup::"
           
           # Build with tests
