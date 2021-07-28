@@ -8,8 +8,8 @@ import crypto from 'hypercore-crypto';
 import pify from 'pify';
 import sodium from 'sodium-universal';
 
-import type { File, Storage } from '@dxos/random-access-multi-storage';
 import { Lock } from '@dxos/async';
+import type { File, Storage } from '@dxos/random-access-multi-storage';
 
 interface ValueEncoding {
   encode: string,
@@ -138,15 +138,11 @@ export class FeedDescriptor {
       return this._feed;
     }
 
-    try {
-      await this.lock.executeSynchronized(async () => {
-        await this._open();
-        await this._emit('opened');
-      });
-      return this._feed;
-    } catch (err) {
-      throw err;
-    }
+    await this.lock.executeSynchronized(async () => {
+      await this._open();
+      await this._emit('opened');
+    });
+    return this._feed;
   }
 
   /**
@@ -157,14 +153,10 @@ export class FeedDescriptor {
       return;
     }
 
-    try {
-      await this.lock.executeSynchronized(async () => {
-        await pify(this._feed.close.bind(this._feed))();
-        await this._emit('closed');
-      });
-    } catch (err) {
-      throw err;
-    }
+    await this.lock.executeSynchronized(async () => {
+      await pify(this._feed.close.bind(this._feed))();
+      await this._emit('closed');
+    });
   }
 
   /**

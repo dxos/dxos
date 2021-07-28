@@ -7,10 +7,9 @@ import jsonBuffer from 'buffer-json-encoding';
 import { EventEmitter } from 'events';
 import defaultHypercore from 'hypercore';
 import hypertrie from 'hypertrie';
-import pEvent from 'p-event';
 
-import { Storage } from '@dxos/random-access-multi-storage';
 import { synchronized } from '@dxos/async';
+import { Storage } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
 import IndexDB from './index-db';
@@ -111,7 +110,7 @@ export class FeedStore extends EventEmitter {
   }
 
   get opened () {
-    return this._open
+    return this._open;
   }
 
   get closed () {
@@ -235,29 +234,25 @@ export class FeedStore extends EventEmitter {
     assert(path, 'Missing path');
     assert(this._open, 'FeedStore closed');
 
-    try {
-      const { key } = options;
+    const { key } = options;
 
-      let descriptor = this.getDescriptors().find(fd => fd.path === path);
+    let descriptor = this.getDescriptors().find(fd => fd.path === path);
 
-      if (descriptor && key && descriptor.key && !key.equals(descriptor.key)) {
-        throw new Error(`Invalid public key "${key.toString('hex')}"`);
-      }
-
-      if (!descriptor && key && this.getDescriptors().find(fd => fd.key?.equals(key))) {
-        throw new Error(`Feed exists with same public key "${key.toString('hex')}"`);
-      }
-
-      if (!descriptor) {
-        descriptor = this._createDescriptor(path, options);
-      }
-
-      const feed = await descriptor.open();
-
-      return feed;
-    } catch (err) {
-      throw err;
+    if (descriptor && key && descriptor.key && !key.equals(descriptor.key)) {
+      throw new Error(`Invalid public key "${key.toString('hex')}"`);
     }
+
+    if (!descriptor && key && this.getDescriptors().find(fd => fd.key?.equals(key))) {
+      throw new Error(`Feed exists with same public key "${key.toString('hex')}"`);
+    }
+
+    if (!descriptor) {
+      descriptor = this._createDescriptor(path, options);
+    }
+
+    const feed = await descriptor.open();
+
+    return feed;
   }
 
   /**
@@ -268,17 +263,13 @@ export class FeedStore extends EventEmitter {
     assert(path, 'Missing path');
     assert(this._open, 'FeedStore closed');
 
-    try {
-      const descriptor = this.getDescriptors().find(fd => fd.path === path);
+    const descriptor = this.getDescriptors().find(fd => fd.path === path);
 
-      if (!descriptor) {
-        throw new Error(`Feed not found: ${path}`);
-      }
-
-      await descriptor.close();
-    } catch (err) {
-      throw err;
+    if (!descriptor) {
+      throw new Error(`Feed not found: ${path}`);
     }
+
+    await descriptor.close();
   }
 
   /**
@@ -304,15 +295,11 @@ export class FeedStore extends EventEmitter {
 
     if (descriptor) {
       await descriptor.lock.executeSynchronized(async () => {
-        try {
-          await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key?.toString('hex')}`);
-  
-          this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
-  
-          this.emit('descriptor-remove', descriptor);
-        } catch (err) {
-          throw err;
-        }
+        await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key?.toString('hex')}`);
+
+        this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
+
+        this.emit('descriptor-remove', descriptor);
       });
     }
   }
