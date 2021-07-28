@@ -57,7 +57,7 @@ yarn add @material-ui/core @material-ui/styles @material-ui/icons
 
 "_Create React App Configuration Override is an easy and comprehensible configuration layer for create-react-app._"
 
-This tool will be used to override some Webpack settings that are required for DXOS.
+This tool will be used to override some Webpack settings that are required for DXOS. You can read more about it [here](https://github.com/gsoft-inc/craco)
 
 ```bash
 yarn add @craco/craco
