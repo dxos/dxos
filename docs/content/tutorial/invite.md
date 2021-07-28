@@ -7,7 +7,7 @@ In order to share data we add to the party, we have to invite other peers to it.
 
 ## Create an Invitation
 
-We have to create an invitation code that we will share with the peer we want to invite. This process is called _interactive_ since it requires the invitee to redeem the invitation code and provide a pin code that will be generated once the invitation is redeemed.
+We have to create an invitation code that we will share with the peer we want to invite. This process is called _interactive_ since it requires the invitee to redeem the invitation code and provide a pin code that will be generated once the invitation code is validated.
 
 We will then create a new component `src/components/TaskList.js` that will handle the invitations process and also the actual app logic:
 
@@ -41,7 +41,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const TaskList = ({ partyKey, hideShare = false }) => {
+const TaskList = ({ partyKey }) => {
   const classes = useStyles();
   const [shareDialog, setShareDialog] = useState(false);
   const party = useParty(partyKey);
@@ -72,7 +72,7 @@ const TaskList = ({ partyKey, hideShare = false }) => {
 export default TaskList;
 ```
 
-The `TaskList.js` component renders the `PartySharingDialog` component from `@dxos/react-client`. This component will present a Dialog to create new invitations. It receives the `party` and it generates the invitation code when clicking on the "Invite User" button.
+The `TaskList.js` component renders the `PartySharingDialog` component from `@dxos/react-ux`. This component will present a dialog to create new invitations. It receives a `party` and it generates the invitation code when clicking on the "Invite User" button.
 
 Go to your `src/components/Main.js` component and render the `TaskList` component in a main section:
 
@@ -165,7 +165,9 @@ export default Main;
 
 On your browser, when selecting your party from the list, you will see a share button at the bottom of the page. Clicking on it will open the `PartySharingDialog`, and you will be able to invite new users:
 
-![Invite Dialog](./invite-00.png)
+![Invite Button](./invite-00.png)
+
+![Invite Dialog](./invite-01.png)
 
 To create an invitation, the component makes use of the `useInvitation` hook provided by `@dxos/react-client`:
 
@@ -185,13 +187,13 @@ const [inviteCode, pin] = useInvitation(party.key, {
 
 At this point, clicking on the "link" icon we can copy to clipboard the `inviteCode` which is the code we have to share with the peer we want to invite.
 
-![Invite Dialog Show Code](./invite-01.png)
+![Invite Dialog Show Code](./invite-02.png)
 
 As mentioned before, this process is interactive. Once the code is redeemed by the peer, we will get notified and the `pin` value, provided by the `useInvitation` hook, will be available. The peer will be required to enter the `pin` value to finish the invitation process.
 
-In the code, the `PartySharingDialog` component shows the `inviteCode` until the `pin` is available and then switch to display the `pin` code.
+The `PartySharingDialog` component shows the `inviteCode` until the `pin` is available and then switch to display the `pin` code.
 
-![Invite Dialog Show Pin](./invite-02.png)
+![Invite Dialog Show Pin](./invite-03.png)
 
 ## Redeem Invitation
 
@@ -255,7 +257,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
+const PartyList = ({ selectedPartyKey, onSelectParty }) => {
   const classes = useStyles();
   const [redeemDialog, setRedeemDialog] = useState(false);
   const [{ settingsDialog, settingsPartyKey }, setSettingsDialog] = useState({});
@@ -325,11 +327,9 @@ const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
           <AddIcon />
         </Fab>
 
-        {!hideRedeem && (
-          <Fab size='small' color='secondary' aria-label='redeem' title='Redeem invitation' onClick={handleRedeemParty}>
-            <RedeemIcon />
-          </Fab>
-        )}
+        <Fab size='small' color='secondary' aria-label='redeem' title='Redeem invitation' onClick={handleRedeemParty}>
+          <RedeemIcon />
+        </Fab>
       </div>
     </div>
   );
@@ -342,9 +342,9 @@ We are rendering now the `RedeemDialog` and also a button to show it.
 
 If you go to your app in the browser, you will see that button next to the create party button. Go ahead and try it yourself.
 
-![Redeem Dialog Enter Code](./invite-03.png)
+![Redeem Dialog Enter Code](./invite-04.png)
 
-The redeem process consists of 2 steps: redeeming the code and validating the pin number. The Dialog displays a simple form with a text area to introduce the invitation code.
+The redeem process consists of 2 steps: redeeming the code and validating the pin number. The dialog displays a simple form with a text area to introduce the invitation code.
 
 The `RedeemDialog` component uses a `useInvitationRedeemer` hook from `@dxos/react-client` to handle the process.
 
@@ -367,3 +367,14 @@ Once the user submits the `invitationCode`, it will be sent to the `redeemCode` 
 We then switch to the next step and display an input field to provide the pin number. Once the user presses the send button, we call the `setPin` passing the `pinCode` value. If everything goes well, then `onDone` will be called.
 
 ![Redeem Dialog Enter PIN](./invite-05.png)
+
+## Test it yourself
+
+Open your app in two different browser sessions. It could be an incognito window with a separate session or a different browser.
+We will simulate the actions of two users:
+
+- In one window, with a party created, click the invitation button, **invite a user** and copy the invitation code to the clipboard.
+- In the other browser choose _Redeem invitation_. **Paste the invitation code** and submit. The app will require a passcode.
+- After some seconds it should appear in the Party Sharing Dialog of the first browser.
+- Copy the passcode from the first, complete it in the second browser, and click _Send_. You should notice **the newly created party appearing in the lists column of the second browser**.
+- That list is now shared between those two users.
