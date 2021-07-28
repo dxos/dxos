@@ -4,16 +4,21 @@
 
 import pify from 'pify';
 
+import { File } from './types';
+
 /**
  * Base class for all storage types.
  */
-export class RandomAccessAbstract {
-  constructor (root) {
+export abstract class RandomAccessAbstract {
+  protected readonly _root: string;
+  protected readonly _files: Set<File>;
+
+  constructor (root: string) {
     this._root = root;
     this._files = new Set();
   }
 
-  create (filename, opts = {}) {
+  create (filename: string, opts = {}) {
     const file = this._create(filename, opts);
     this._files.add(file);
     return file;
@@ -36,13 +41,6 @@ export class RandomAccessAbstract {
     }
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  _create () {
-    throw new Error('Not implemented.');
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  async _destroy () {
-    throw new Error('Not implemented.');
-  }
+  protected abstract _create (filename: string, opts: any): File;
+  protected abstract _destroy (): Promise<any>;
 }

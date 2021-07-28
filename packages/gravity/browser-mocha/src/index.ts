@@ -28,7 +28,8 @@ export interface RunOptions {
   stayOpen: boolean
   setup?: string
   debug?: boolean,
-  browserArgs?: string[]
+  browserArgs?: string[],
+  checkLeaks: boolean
 }
 
 export async function run (options: RunOptions) {
@@ -45,7 +46,7 @@ export async function run (options: RunOptions) {
 
   const files = await resolveFiles(options.files);
 
-  await buildTests(files, tempDir, !!options.debug);
+  await buildTests(files, { debug: !!options.debug, outDir: tempDir, checkLeaks: options.checkLeaks });
 
   let shouldFail = false;
   for (const browser of options.browsers) {

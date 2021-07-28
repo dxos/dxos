@@ -6,3 +6,4 @@
 
 export * from './node';
 export * from './types';
+export * from './storage-types';

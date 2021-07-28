@@ -5,6 +5,7 @@
 import randomAccessIdb from 'random-access-idb';
 
 import { RandomAccessAbstract } from '../random-access-abstract';
+import { Storage } from '../types';
 
 /**
  * IndexedDB implementation.
@@ -12,15 +13,21 @@ import { RandomAccessAbstract } from '../random-access-abstract';
  * https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API
  */
 export class IDB extends RandomAccessAbstract {
-  constructor (root) {
+  private _fileStorage: Storage | null;
+
+  constructor (root: string) {
     super(root);
 
     this._fileStorage = null;
   }
 
-  _create (filename, opts = {}) {
+  protected override _create (filename: string, opts: any = {}) {
     if (this._files.size === 0) {
       this._fileStorage = this._createFileStorage();
+    }
+
+    if (!this._fileStorage) {
+      throw new Error('Set file storage first');
     }
 
     const file = this._fileStorage(filename, opts);
@@ -33,18 +40,20 @@ export class IDB extends RandomAccessAbstract {
         return defaultClose(cb);
       }
 
-      return cb();
+      if (cb) {
+        cb(null);
+      }
     };
 
     return file;
   }
 
-  async _destroy () {
+  protected override async _destroy () {
     // eslint-disable-next-line no-undef
     return indexedDB.deleteDatabase(this._root);
   }
 
-  _createFileStorage () {
+  protected _createFileStorage () {
     return randomAccessIdb(this._root);
   }
 }

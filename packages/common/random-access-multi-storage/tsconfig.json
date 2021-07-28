@@ -1,9 +1,21 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "lib": [
+      "DOM",
+      "es2019"
+    ],
+    "skipLibCheck": true,
+    "types": [
+      "mocha"
+    ]
   },
   "include": [
     "src"
-  ]
+  ],
+  "exclude": [
+    "/node_modules/",
+    "/dist/"
+  ],
 }

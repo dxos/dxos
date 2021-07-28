@@ -10,7 +10,7 @@ import { IDB } from './idb';
  * IndexedDB for Firefox.
  */
 export class Firefox extends IDB {
-  _createFileStorage () {
+  protected override _createFileStorage () {
     return randomAccessMutable({ name: this._root });
   }
 }
