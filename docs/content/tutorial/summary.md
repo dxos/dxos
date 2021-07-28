@@ -1,5 +1,5 @@
 ---
-title: 7. Summary
+title: 8. Summary
 description: Building a simple tasks list application
 ---
 

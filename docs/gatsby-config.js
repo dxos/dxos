@@ -23,6 +23,7 @@ module.exports = {
             "tutorial/party",
             "tutorial/invite",
             "tutorial/data",
+            "tutorial/environment",
             "tutorial/deployment",
             "tutorial/summary"
           ]

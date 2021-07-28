@@ -1,5 +1,5 @@
 ---
-title: 6. Deployment
+title: 7. Deployment
 description: Deploy your app
 ---
 
