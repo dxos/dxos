@@ -17,22 +17,21 @@ describe('FeedDescriptor', () => {
   let fd: FeedDescriptor;
 
   test('Create', () => {
-    const fd = new FeedDescriptor('/foo', { storage: createStorage('', STORAGE_NODE) });
+    const fd = new FeedDescriptor({ storage: createStorage('', STORAGE_NODE) });
 
     expect(fd).toBeInstanceOf(FeedDescriptor);
-    expect(fd.path).toBe('/foo');
     expect(fd.key).toBeDefined();
     expect(fd.secretKey).toBeDefined();
   });
 
   test('Validate asserts', () => {
-    expect(() => new FeedDescriptor('/foo', { secretKey: crypto.keyPair().secretKey })).toThrow(/missing publicKey/);
+    expect(() => new FeedDescriptor({ secretKey: crypto.keyPair().secretKey })).toThrow(/missing publicKey/);
   });
 
   test('Can create feed descriptor with public key but without private key', async () => {
     // When this behaviour was changed, suddenly `protocol-plugin-replicator` tests started hanging forever on network generation.
     const { publicKey } = crypto.keyPair();
-    const fd = new FeedDescriptor('/foo', { key: publicKey, storage: createStorage('', STORAGE_NODE) });
+    const fd = new FeedDescriptor({ key: publicKey, storage: createStorage('', STORAGE_NODE) });
     expect(fd.key).toEqual(publicKey);
     expect(fd.secretKey).toBeUndefined();
   });
@@ -44,7 +43,7 @@ describe('FeedDescriptor', () => {
       subject: 'books'
     };
 
-    fd = new FeedDescriptor('/books', {
+    fd = new FeedDescriptor({
       storage: ram,
       key: publicKey,
       secretKey,
@@ -53,7 +52,6 @@ describe('FeedDescriptor', () => {
     });
 
     expect(fd).toBeInstanceOf(FeedDescriptor);
-    expect(fd.path).toBe('/books');
     expect(fd.key).toBeInstanceOf(Buffer);
     expect(fd.secretKey).toBeInstanceOf(Buffer);
     expect(fd.metadata).toEqual(metadata);
@@ -83,7 +81,7 @@ describe('FeedDescriptor', () => {
     });
 
     // If we try to close a feed that is opening should wait for the open result.
-    const fd2 = new FeedDescriptor('/feed2', {
+    const fd2 = new FeedDescriptor({
       storage: ram
     });
 
@@ -95,7 +93,7 @@ describe('FeedDescriptor', () => {
   test('Close and open again', async () => {
     const root = tempy.directory();
 
-    const fd = new FeedDescriptor('/feed1', {
+    const fd = new FeedDescriptor({
       storage: createStorage(root, STORAGE_NODE),
       valueEncoding: 'utf-8'
     });
@@ -116,7 +114,7 @@ describe('FeedDescriptor', () => {
   });
 
   test('Watch data', async (done) => {
-    const fd = new FeedDescriptor('/feed', {
+    const fd = new FeedDescriptor({
       storage: ram
     });
 
@@ -130,7 +128,7 @@ describe('FeedDescriptor', () => {
   });
 
   test('on open error should unlock the resource', async () => {
-    const fd = new FeedDescriptor('/foo', {
+    const fd = new FeedDescriptor({
       storage: ram,
       hypercore: () => {
         throw new Error('open error');
@@ -143,7 +141,7 @@ describe('FeedDescriptor', () => {
   });
 
   test('on close error should unlock the resource', async () => {
-    const fd = new FeedDescriptor('/foo', {
+    const fd = new FeedDescriptor({
       storage: ram,
       hypercore: () => ({
         opened: true,

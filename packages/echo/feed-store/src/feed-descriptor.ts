@@ -35,7 +35,6 @@ type Listener = ((...args: any) => Promise<void> | void) | null;
  */
 export class FeedDescriptor {
   private _storage: Storage;
-  private _path: string;
   private _key: Buffer;
   private _secretKey?: Buffer;
   private _valueEncoding?: string | ValueEncoding;
@@ -47,7 +46,7 @@ export class FeedDescriptor {
   private _feed: any;
   private _listener: Listener;
 
-  constructor (path: string, options: FeedDescriptorOptions = {}) {
+  constructor (options: FeedDescriptorOptions = {}) {
     const {
       storage,
       key,
@@ -58,7 +57,6 @@ export class FeedDescriptor {
       metadata
     } = options;
 
-    assert(path, 'path is required and must be a valid string.');
     assert(!key || key.length === sodium.crypto_sign_PUBLICKEYBYTES, 'key must be a buffer of size crypto_sign_PUBLICKEYBYTES.');
     assert(!secretKey || secretKey.length === sodium.crypto_sign_SECRETKEYBYTES, 'secretKey must be a buffer of size crypto_sign_SECRETKEYBYTES.');
     assert(!secretKey || (secretKey && key), 'missing publicKey.');
@@ -67,7 +65,6 @@ export class FeedDescriptor {
     assert(storage);
 
     this._storage = storage;
-    this._path = path;
     this._valueEncoding = valueEncoding;
     this._hypercore = hypercore;
     this._codecs = codecs;
@@ -88,10 +85,6 @@ export class FeedDescriptor {
 
     this._feed = null;
     this._listener = null;
-  }
-
-  get path () {
-    return this._path;
   }
 
   get feed (): Hypercore | null {

@@ -10,6 +10,7 @@ import hypertrie from 'hypertrie';
 import pify from 'pify';
 import ram from 'random-access-memory';
 import tempy from 'tempy';
+import crypto from 'hypercore-crypto';
 
 import { Storage, STORAGE_NODE, createStorage } from '@dxos/random-access-multi-storage';
 
@@ -31,10 +32,14 @@ async function createDefault () {
 }
 
 async function defaultFeeds (feedStore: FeedStore) {
+  const { publicKey1, secretKey1 } = crypto.keyPair();
+  const { publicKey2, secretKey2 } = crypto.keyPair();
+  const { publicKey3, secretKey3 } = crypto.keyPair();
+
   return {
-    booksFeed: await feedStore.openFeed('/books', { metadata: { topic: 'books' } }),
-    usersFeed: await feedStore.openFeed('/users'),
-    groupsFeed: await feedStore.openFeed('/groups')
+    booksFeed: await feedStore.openFeed({ key: publicKey1, secretKey: secretKey1, metadata: { topic: 'books' } }),
+    usersFeed: await feedStore.openFeed({ key: publicKey2, secretKey: secretKey2 }),
+    groupsFeed: await feedStore.openFeed({ key: publicKey3, secretKey: secretKey3 })
   };
 }
 
@@ -76,7 +81,7 @@ describe('FeedStore', () => {
     expect(feedStore).toBeInstanceOf(FeedStore);
     expect(database.list.mock.calls.length).toBe(1);
 
-    await feedStore.openFeed('/test');
+    await feedStore.openFeed({ key: crypto.keyPair().publicKey });
 
     expect(customHypercore.mock.calls.length).toBe(1);
   });
@@ -87,19 +92,19 @@ describe('FeedStore', () => {
 
     expect(booksFeed).toBeInstanceOf(hypercore);
 
-    const booksFeedDescriptor = feedStore.getDescriptors().find(fd => fd.path === '/books');
-    expect(booksFeedDescriptor).toHaveProperty('path', '/books');
+    const booksFeedDescriptor = feedStore.getDescriptors().find(fd => fd.key.equals(booksFeed.key));
+    expect(booksFeedDescriptor).toHaveProperty('key', booksFeed.key);
     expect(booksFeedDescriptor?.metadata).toHaveProperty('topic', 'books');
 
     await append(booksFeed, 'Foundation and Empire');
     await expect(head(booksFeed)).resolves.toBe('Foundation and Empire');
 
     // It should return the same opened instance.
-    await expect(feedStore.openFeed('/books')).resolves.toBe(booksFeed);
+    await expect(feedStore.openFeed(booksFeed.key)).resolves.toBe(booksFeed);
 
     // You can't open a feed with a different key.
-    await expect(feedStore.openFeed('/books', { key: Buffer.from('...') })).rejects.toThrow(/Invalid public key/);
-    await expect(feedStore.openFeed('/foo', { key: booksFeed.key })).rejects.toThrow(/Feed exists/);
+    await expect(feedStore.openFeed({ key: Buffer.from('...') })).rejects.toThrow(/Invalid public key/);
+    await expect(feedStore.openFeed({ key: booksFeed.key })).rejects.toThrow(/Feed exists/);
   });
 
   test('Create duplicate feed', async () => {
