@@ -33,7 +33,9 @@ jobs:
           echo "::endgroup::"
           
           # Build with tests
-          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --to @dxos/browser-tests --verbose
+          cd packages/gravity/browser-tests
+          rushx build:test
 
   check-storybooks:
     runs-on: [self-hosted, dind-actions-runner]
