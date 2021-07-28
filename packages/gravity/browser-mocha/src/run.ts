@@ -6,7 +6,7 @@ import assert from 'assert';
 import { dirname, join } from 'path';
 import pkgUp from 'pkg-up';
 import { chromium, firefox, webkit } from 'playwright';
-import { v4 } from 'uuid';
+// import { v4 } from 'uuid';
 
 import { Lock, trigger } from '@dxos/async';
 
@@ -18,12 +18,11 @@ import { Browser, RunOptions } from '.';
 const INIT_TIMEOUT = 10_000;
 
 export async function runTests (bundleFile: string, browser: Browser, options: Omit<RunOptions, 'browsers' | 'files'>): Promise<number> {
-  const userDataDir = `/tmp/browser-mocha/${v4()}`;
+  // const userDataDir = `/tmp/browser-mocha/${v4()}`;
 
   const browserRunner = getBrowser(browser);
 
-  const context = await browserRunner.launchPersistentContext(
-    userDataDir,
+  const context = await (await browserRunner.launch(
     {
       headless: options.headless,
       args: [
@@ -31,7 +30,7 @@ export async function runTests (bundleFile: string, browser: Browser, options: O
         ...options.browserArgs ?? []
       ]
     }
-  );
+  )).newContext();
   const page = await context.newPage();
 
   const lock = new Lock();
