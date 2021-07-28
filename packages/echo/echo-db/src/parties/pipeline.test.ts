@@ -28,6 +28,7 @@ describe('pipeline', () => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
     const feedKeys: Uint8Array[] = [];
     const feedSelector: FeedSelector = descriptor => !!feedKeys.find(key => descriptor.key.equals(key));
+    await feedStore.open();
     const feedReadStream = await createIterator(feedStore, feedSelector);
     const feed = await feedStore.openFeed('test-feed');
     feedKeys.push(feed.key);
@@ -83,6 +84,7 @@ describe('pipeline', () => {
 
   test('writing', async () => {
     const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    await feedStore.open();
     const feedReadStream = await createIterator(feedStore);
     const feed: Feed = await feedStore.openFeed('test-feed');
 
