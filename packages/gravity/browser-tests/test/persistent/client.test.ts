@@ -10,9 +10,9 @@ import { createKeyPair } from '@dxos/crypto';
 
 describe('Client - persistent', () => {
   it('reset storage', async function () {
-    if (browserMocha.context.browser !== 'firefox') {
-      this.skip();
-    }
+    // if (browserMocha.context.browser !== 'firefox') {
+    //   this.skip();
+    // }
 
     const client = new Client({ storage: { persistent: true } });
     await client.initialize(); // TODO(marik-d): This line does not work.

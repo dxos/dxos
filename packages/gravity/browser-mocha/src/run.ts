@@ -22,15 +22,17 @@ export async function runTests (bundleFile: string, browser: Browser, options: O
 
   const browserRunner = getBrowser(browser);
 
+  const contextOptions = {
+    headless: options.headless,
+    args: [
+      ...options.debug ? ['--auto-open-devtools-for-tabs'] : [],
+      ...options.browserArgs ?? []
+    ]
+  };
+
   const context = await browserRunner.launchPersistentContext(
     userDataDir,
-    {
-      headless: options.headless,
-      args: [
-        ...options.debug ? ['--auto-open-devtools-for-tabs'] : [],
-        ...options.browserArgs ?? []
-      ]
-    }
+    browser == Browser.CHROMIUM ? {...contextOptions, channel: 'chrome'} : contextOptions
   );
   const page = await context.newPage();
 
