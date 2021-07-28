@@ -3,18 +3,15 @@ title: 2. Create a Profile
 description: Set Up a user profile for your application
 ---
 
-After we connect our Client to our React Application, the very first step is to get the created user's profile.
+After we connect a Client to our React Application, the very first step is to get the user's profile.
 
 ## Check If a Profile Is Created
 
-The Client stores the profile for you. You can easily check if the user created a profile by using the react hook `useProfile` provided by `@dxos/react-client`:
+The Client stores the profile for you. You can easily check if the user has already created a profile by using the react hook `useProfile` provided by `@dxos/react-client`:
 
-```js
+```jsx:title=src/components/Root.js
 import React from 'react';
 import { useClient, useProfile } from '@dxos/react-client';
-
-import Main from './Main';
-import ProfileDialog from './ProfileDialog';
 
 const Root = () => {
   const client = useClient();
@@ -32,11 +29,11 @@ export default Root;
 
 ## Create a Profile
 
-To create a new profile we just need call the `createProfile` method from the `Halo` object contained by the `Client` instance, sending a username provided by the user and a key pair the we will generate for this specific user.
+Profile creation is handled through the `client.halo` object. We need to send a username provided by the user and a key pair the we will generate for it.
 
-Let's create first a `ProfileDialog` to prompt the user to fill a username:
+Let's first create a `ProfileDialog` to prompt the user to fill in a username:
 
-```jsx:title=src/components/ProfileDialog.jsx
+```jsx:title=src/components/ProfileDialog.js
 import React, { useState } from 'react';
 
 import {
@@ -64,7 +61,7 @@ const ProfileDialog = ({ open, onClose }) => {
   const classes = useStyles();
   const [username, setUsername] = useState('');
 
-  const handleUpdate = () => onClose({ username });
+  const handleSubmit = () => onClose({ username });
 
   return (
     <Dialog open={open} fullWidth maxWidth='xs'>
@@ -87,7 +84,7 @@ const ProfileDialog = ({ open, onClose }) => {
           required
           value={username}
           onChange={(event) => setUsername(event.target.value)}
-          onKeyPress={(event) => event.key === 'Enter' && handleUpdate()}
+          onKeyPress={(event) => event.key === 'Enter' && handleSubmit()}
           label='Username'
           variant='outlined'
           spellCheck={false}
@@ -95,7 +92,7 @@ const ProfileDialog = ({ open, onClose }) => {
       </DialogContent>
 
       <DialogActions>
-        <Button color='primary' disabled={!username} onClick={handleUpdate}>
+        <Button color='primary' disabled={!username} onClick={handleSubmit}>
           Create
         </Button>
       </DialogActions>
@@ -106,8 +103,9 @@ const ProfileDialog = ({ open, onClose }) => {
 export default ProfileDialog;
 ```
 
-If you pay attention, we are using Material UI components to build this dialog, and for it to properly work, we will need to implement Material UI's `ThemeProvider`.
-Go to your `src/App.js` component and:
+As we are starting to use Material UI components, we would also add a [ThemeProvider](https://material-ui.com/customization/theming/#theme-provider) to our app to be able to customize the theme.
+
+In your `src/App.js` component add:
 
 ```jsx:title=src/App.js
 //...
@@ -153,7 +151,6 @@ import React from 'react';
 import { createKeyPair } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
 
-import Main from './Main';
 import ProfileDialog from './ProfileDialog';
 
 const Root = () => {
@@ -177,41 +174,10 @@ const Root = () => {
 export default Root;
 ```
 
+As mentioned above, we are using `client.halo.createProfile()` function to create a new profile for the user, and `createKeyPair` from `@dxos/crypto` to generate a new public and secret key for this user.
+
 See your app again, you should now see:
 
 ![Tasks App - Create Profile](./introduction-00.png)
 
 Complete with a profile name of your choice and submit the form.
-
-<!--
-This is very similar to a login or a sign up page. Jump into `ProfileModal.js`. This component is a very simple sign up form. The user has to provide a username in order to create a profile. The input element will save the state in the `username` variable and then `handleRegistration` is the invoked method when the user clicks on the `Create` button.
-
-
-`handleRegistration` generates a `keypair` and sets the profile using the client. The client is retrieved by the react hook `useClient`.
-
-```js
-import React from 'react';
-import { createKeyPair } from '@dxos/crypto';
-import { useClient, useProfile } from '@dxos/react-client';
-
-import Main from './Main';
-import ProfileDialog from './ProfileDialog';
-
-const Root = () => {
-  const client = useClient();
-  const profile = useProfile();
-
-  if (!profile) {
-    const handleRegistration = async ({ username }) => {
-      if (username) {
-        const { publicKey, secretKey } = createKeyPair();
-        await client.createProfile({ publicKey, secretKey, username });
-      }
-    };
-
-    return <ProfileDialog open onClose={handleRegistration} />;
-  }
-
-  return <Main />;
-};
-``` -->
