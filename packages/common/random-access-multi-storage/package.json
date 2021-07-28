@@ -19,7 +19,6 @@
   },
   "license": "AGPL-3.0",
   "dependencies": {
-    "@dxos/random-access-chrome-file": "^2.0.0-beta.0",
     "del": "^5.1.0",
     "pify": "~5.0.0",
     "random-access-file": "^2.1.0",
