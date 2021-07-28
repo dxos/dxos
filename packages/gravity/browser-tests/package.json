@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "build": "",
-    "build:test": "browser-mocha --setup test/setup.js 'test/*.test.ts'",
+    "build:test": "pnpm run test",
     "lint": "toolchain lint",
     "test": "browser-mocha --setup test/setup.js 'test/**/*.test.ts' --browser=chromium --browser=firefox --browser=webkit"
   },
