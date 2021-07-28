@@ -50,7 +50,21 @@ export class IDB extends RandomAccessAbstract {
 
   protected override async _destroy () {
     // eslint-disable-next-line no-undef
-    return indexedDB.deleteDatabase(this._root);
+    return new Promise<void>((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(this._root);
+      request.onupgradeneeded = () => {
+        resolve(); // TODO: or reject?
+      };
+      request.onblocked = () => {
+        resolve(); // TODO: or reject?
+      };
+      request.onsuccess = () => {
+        resolve();
+      };
+      request.onerror = () => {
+        reject(new Error('Couldn\'t clear indexedDB'));
+      };
+    });
   }
 
   protected _createFileStorage () {
