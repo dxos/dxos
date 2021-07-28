@@ -83,5 +83,5 @@ describe('Client - nonpersistent', () => {
 
     await client.destroy();
     await otherClient.destroy();
-  }).timeout(10_000).retries(2);
+  }).timeout(20_000).retries(2);
 });
