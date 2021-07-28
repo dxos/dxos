@@ -1,17 +1,14 @@
 ---
-title: 6. Deployment
-description: Deploy your app
+title: 7. Deployment
+description: Deploy your app to a Kube
 ---
 
-## Time to deploy the app
-
-Steps to follow:
+It's time to make our app public to anyone. We leave you here below with the required steps to follow:
 
 - [Install the CLI](https://dxos-docs.netlify.app/cli/installation/)
 - [Create your profile](https://dxos-docs.netlify.app/cli/profile-creation/)
-- [Set up your keys bondId and userKey](https://dxos-docs.netlify.app/cli/profile-keys-setup/)
+- [Set up your profile keys](https://dxos-docs.netlify.app/cli/profile-keys-setup/)
 - [Claim your Authority](https://dxos-docs.netlify.app/cli/profile-authority/)
-- Define your deployment environment variables in `config.yml`
 - Define your project info in `app.yml`
 - [Deploy using the CLI](https://dxos-docs.netlify.app/cli/cli-app/app-deployment/)
 - Check that your app is in the Kube Network
