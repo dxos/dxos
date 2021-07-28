@@ -31,15 +31,11 @@ async function createDefault () {
   };
 }
 
-async function defaultFeeds (feedStore: FeedStore) {
-  const { publicKey1, secretKey1 } = crypto.keyPair();
-  const { publicKey2, secretKey2 } = crypto.keyPair();
-  const { publicKey3, secretKey3 } = crypto.keyPair();
-
+async function defaultFeeds (feedStore: FeedStore, keyPairs: any[]) {
   return {
-    booksFeed: await feedStore.openFeed({ key: publicKey1, secretKey: secretKey1, metadata: { topic: 'books' } }),
-    usersFeed: await feedStore.openFeed({ key: publicKey2, secretKey: secretKey2 }),
-    groupsFeed: await feedStore.openFeed({ key: publicKey3, secretKey: secretKey3 })
+    booksFeed: await feedStore.openFeed({ key: keyPairs[0].publicKey, secretKey: keyPairs[0].secretKey, metadata: { topic: 'books' } }),
+    usersFeed: await feedStore.openFeed({ key: keyPairs[1].publicKey, secretKey: keyPairs[1].secretKey }),
+    groupsFeed: await feedStore.openFeed({ key: keyPairs[2].publicKey, secretKey: keyPairs[2].secretKey })
   };
 }
 
@@ -51,7 +47,16 @@ function head (feed: any) {
   return pify(feed.head.bind(feed))();
 }
 
+const createKeyPairs = () => {
+  return ['booksFeed', 'usersFeed', 'groupsFeed'].map(feed => {
+    const { publicKey, secretKey } = crypto.keyPair();
+    return { key: publicKey, secretKey}
+  });
+}
+
 describe('FeedStore', () => {
+  const keys = createKeyPairs();
+
   test('Config default', async () => {
     const feedStore = await createFeedStore(ram);
     expect(feedStore).toBeInstanceOf(FeedStore);
@@ -88,7 +93,7 @@ describe('FeedStore', () => {
 
   test('Create feed', async () => {
     const { feedStore } = await createDefault();
-    const { booksFeed } = await defaultFeeds(feedStore);
+    const { booksFeed } = await defaultFeeds(feedStore, keys);
 
     expect(booksFeed).toBeInstanceOf(hypercore);
 
@@ -132,7 +137,7 @@ describe('FeedStore', () => {
 
   test('Descriptors', async () => {
     const { feedStore } = await createDefault();
-    const { booksFeed } = await defaultFeeds(feedStore);
+    const { booksFeed } = await defaultFeeds(feedStore, keys);
 
     expect(feedStore.getDescriptors().map(fd => fd.path)).toEqual(['/books', '/users', '/groups']);
     expect(feedStore.getDescriptorByDiscoveryKey(booksFeed.discoveryKey)?.path).toEqual('/books');
