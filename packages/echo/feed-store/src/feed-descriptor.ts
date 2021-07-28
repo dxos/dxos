@@ -5,12 +5,11 @@
 import assert from 'assert';
 import defaultHypercore from 'hypercore';
 import crypto from 'hypercore-crypto';
-import path from 'path';
 import pify from 'pify';
-import raf from 'random-access-file';
 import sodium from 'sodium-universal';
 
-import Locker from './locker';
+import { Lock } from '@dxos/async';
+import type { File, Storage } from '@dxos/random-access-multi-storage';
 
 interface ValueEncoding {
   encode: string,
@@ -18,7 +17,7 @@ interface ValueEncoding {
 }
 
 interface FeedDescriptorOptions {
-  storage?: any,
+  storage?: Storage,
   key?: Buffer,
   secretKey?: Buffer,
   valueEncoding?: string | ValueEncoding,
@@ -35,7 +34,7 @@ type Listener = ((...args: any) => Promise<void> | void) | null;
  * Abstract handler for an Hypercore instance.
  */
 export class FeedDescriptor {
-  private _storage: any;
+  private _storage: Storage;
   private _path: string;
   private _key: Buffer;
   private _secretKey?: Buffer;
@@ -44,7 +43,7 @@ export class FeedDescriptor {
   private _codecs: any;
   private _metadata: any;
   private _discoveryKey: Buffer;
-  private _locker: Locker;
+  public readonly lock: Lock;
   private _feed: any;
   private _listener: Listener;
 
@@ -65,6 +64,7 @@ export class FeedDescriptor {
     assert(!secretKey || (secretKey && key), 'missing publicKey.');
     assert(!valueEncoding || typeof valueEncoding === 'string' || (valueEncoding.encode && valueEncoding.decode),
       'valueEncoding must be a string or implement abstract-encoding.');
+    assert(storage);
 
     this._storage = storage;
     this._path = path;
@@ -84,7 +84,7 @@ export class FeedDescriptor {
 
     this._discoveryKey = crypto.discoveryKey(this._key);
 
-    this._locker = new Locker();
+    this.lock = new Lock();
 
     this._feed = null;
     this._listener = null;
@@ -127,15 +127,6 @@ export class FeedDescriptor {
     await this._emit('updated');
   }
 
-  /*
-   * Lock the resource.
-   *
-   * @returns {function} release
-   */
-  async lock () {
-    return this._locker.lock();
-  }
-
   /**
    * Open an Hypercore feed based on the related feed options.
    *
@@ -143,43 +134,29 @@ export class FeedDescriptor {
    * sure that the feed is not going to open again.
    */
   async open (): Promise<Hypercore> {
-    const release = await this.lock();
-
     if (this.opened) {
-      await release();
       return this._feed;
     }
 
-    try {
+    await this.lock.executeSynchronized(async () => {
       await this._open();
       await this._emit('opened');
-      await release();
-      return this._feed;
-    } catch (err) {
-      await release();
-      throw err;
-    }
+    });
+    return this._feed;
   }
 
   /**
    * Close the Hypercore referenced by the descriptor.
    */
   async close () {
-    const release = await this.lock();
-
     if (!this.opened) {
-      await release();
       return;
     }
 
-    try {
+    await this.lock.executeSynchronized(async () => {
       await pify(this._feed.close.bind(this._feed))();
       await this._emit('closed');
-      await release();
-    } catch (err) {
-      await release();
-      throw err;
-    }
+    });
   }
 
   /**
@@ -195,14 +172,9 @@ export class FeedDescriptor {
    * Defines the real path where the Hypercore is going
    * to work with the RandomAccessStorage specified.
    */
-  private _createStorage (dir = ''): (name: string) => any {
-    const ras = this._storage;
-
+  private _createStorage (dir = ''): (name: string) => File {
     return (name) => {
-      if (typeof ras === 'string') {
-        return raf(path.join(ras, dir, name));
-      }
-      return ras(`${dir}/${name}`);
+      return this._storage(`${dir}/${name}`);
     };
   }
 

@@ -12,6 +12,7 @@ import tempy from 'tempy';
 import { latch, sink } from '@dxos/async';
 import { createId, keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
+import { createStorage, STORAGE_NODE } from '@dxos/random-access-multi-storage';
 import { createWritableFeedStream } from '@dxos/util';
 
 import { codec, createTestItemMutation, FeedMessage } from '../proto';
@@ -32,7 +33,7 @@ describe('Stream tests', () => {
     let feedKey: FeedKey;
 
     {
-      const feedStore = new FeedStore(directory, { feedOptions: { valueEncoding: codec } });
+      const feedStore = new FeedStore(createStorage(directory, STORAGE_NODE), { feedOptions: { valueEncoding: codec } });
       await feedStore.open();
 
       const feed = await feedStore.openFeed('test-feed');
@@ -45,7 +46,7 @@ describe('Stream tests', () => {
     }
 
     {
-      const feedStore = new FeedStore(directory, { feedOptions: { valueEncoding: codec } });
+      const feedStore = new FeedStore(createStorage(directory, STORAGE_NODE), { feedOptions: { valueEncoding: codec } });
       await feedStore.open();
 
       const feed = await feedStore.openFeed('test-feed');

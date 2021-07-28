@@ -5,7 +5,7 @@
 import assert from 'assert';
 import streamFrom from 'from2';
 
-interface CreateBatchStreamOptions {
+export interface CreateBatchStreamOptions {
   start?: number,
   end?: number,
   live?: any,
@@ -15,7 +15,7 @@ interface CreateBatchStreamOptions {
   tail?: boolean
 }
 
-export default function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {}) {
+export function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {}) {
   assert(!opts.batch || opts.batch > 0, 'batch must be major or equal to 1');
 
   let start = opts.start || 0;

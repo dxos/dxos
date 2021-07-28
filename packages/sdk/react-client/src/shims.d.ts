@@ -3,4 +3,3 @@
 //
 
 declare module '@dxos/metrics';
-declare module '@dxos/random-access-multi-storage';

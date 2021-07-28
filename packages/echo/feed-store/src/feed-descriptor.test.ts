@@ -9,13 +9,15 @@ import pify from 'pify';
 import ram from 'random-access-memory';
 import tempy from 'tempy';
 
+import { createStorage, STORAGE_NODE } from '@dxos/random-access-multi-storage';
+
 import FeedDescriptor from './feed-descriptor';
 
 describe('FeedDescriptor', () => {
   let fd: FeedDescriptor;
 
   test('Create', () => {
-    const fd = new FeedDescriptor('/foo');
+    const fd = new FeedDescriptor('/foo', { storage: createStorage('', STORAGE_NODE) });
 
     expect(fd).toBeInstanceOf(FeedDescriptor);
     expect(fd.path).toBe('/foo');
@@ -30,7 +32,7 @@ describe('FeedDescriptor', () => {
   test('Can create feed descriptor with public key but without private key', async () => {
     // When this behaviour was changed, suddenly `protocol-plugin-replicator` tests started hanging forever on network generation.
     const { publicKey } = crypto.keyPair();
-    const fd = new FeedDescriptor('/foo', { key: publicKey });
+    const fd = new FeedDescriptor('/foo', { key: publicKey, storage: createStorage('', STORAGE_NODE) });
     expect(fd.key).toEqual(publicKey);
     expect(fd.secretKey).toBeUndefined();
   });
@@ -94,7 +96,7 @@ describe('FeedDescriptor', () => {
     const root = tempy.directory();
 
     const fd = new FeedDescriptor('/feed1', {
-      storage: root,
+      storage: createStorage(root, STORAGE_NODE),
       valueEncoding: 'utf-8'
     });
 
@@ -137,9 +139,7 @@ describe('FeedDescriptor', () => {
 
     await expect(fd.open()).rejects.toThrow(/open error/);
 
-    const release = await fd.lock();
-    expect(release).toBeDefined();
-    await release();
+    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   test('on close error should unlock the resource', async () => {
@@ -161,8 +161,6 @@ describe('FeedDescriptor', () => {
 
     await expect(fd.close()).rejects.toThrow(/close error/);
 
-    const release = await fd.lock();
-    expect(release).toBeDefined();
-    await release();
+    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 });
