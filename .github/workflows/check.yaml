@@ -29,7 +29,7 @@ jobs:
           # Install dependencies
           echo "::group::Install"
           node common/scripts/install-run-rush.js install
-          npx playwright@1.7.0 install-deps
+          npx playwright@1.11.0 install-deps
           echo "::endgroup::"
           
           # Build with tests
