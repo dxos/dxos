@@ -8,6 +8,8 @@ import 'source-map-support/register';
 import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
+// xxx
+
 describe('Client - persistent', () => {
   it('reset storage', async function () {
     if (browserMocha.context.browser !== 'firefox') {
