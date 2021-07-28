@@ -11,7 +11,7 @@ import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeM
 export interface BuildTestsOpts {
   outDir: string,
   debug: boolean,
-  checkLeaks: boolean 
+  checkLeaks: boolean
 }
 
 export async function buildTests (files: string[], opts: BuildTestsOpts) {

@@ -46,7 +46,7 @@ export async function run (options: RunOptions) {
 
   const files = await resolveFiles(options.files);
 
-  await buildTests(files, {debug: !!options.debug, outDir: tempDir, checkLeaks: options.checkLeaks});
+  await buildTests(files, { debug: !!options.debug, outDir: tempDir, checkLeaks: options.checkLeaks });
 
   let shouldFail = false;
   for (const browser of options.browsers) {
