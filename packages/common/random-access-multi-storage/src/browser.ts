@@ -20,5 +20,4 @@ const storageTypes = {
   [STORAGE_FIREFOX]: Firefox
 };
 
-export * from './storage-types';
 export const createStorage = createStorageFactory(storageTypes);

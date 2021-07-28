@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { createStorage, File, Storage } from '@dxos/random-access-multi-storage';
+import { createStorage, File, Storage, StorageType } from '@dxos/random-access-multi-storage';
 
 /**
  * A wrapper around RAM storage that preserves file data when closing and re-opening files.
@@ -23,7 +23,7 @@ export function createRamStorage (): Storage {
   };
 
   fn.root = storage.root;
-  fn.type = storage.type;
+  fn.type = storage.type as StorageType;
   fn.destroy = storage.destroy;
 
   return fn;

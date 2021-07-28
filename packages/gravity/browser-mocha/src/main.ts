@@ -13,6 +13,7 @@ interface Argv {
   debug: boolean
   setup?: string,
   browserArg?: string[],
+  checkLeaks: boolean,
   browser?: Browser[]
 }
 
@@ -27,6 +28,7 @@ yargs(process.argv.slice(2))
       .string('setup')
       .string('browserArg')
       .array('browserArg')
+      .boolean('checkLeaks')
       .string('browser')
       .array('browser'),
     async (argv) => {
@@ -37,7 +39,8 @@ yargs(process.argv.slice(2))
         setup: argv.setup,
         debug: argv.debug,
         browserArgs: argv.browserArg,
-        headless: argv.headless ?? true
+        headless: argv.headless ?? true,
+        checkLeaks: argv.checkLeaks ?? true
       });
     }
   )

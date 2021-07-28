@@ -4,7 +4,7 @@
 
 /* global page, PATH */
 
-import { STORAGE_RAM, STORAGE_CHROME, STORAGE_IDB } from './storage-types';
+import { STORAGE_RAM, STORAGE_CHROME } from './storage-types';
 
 jest.setTimeout(50000);
 
@@ -70,45 +70,6 @@ describe('testing browser storages', () => {
         return err.message;
       }
     })).resolves.toMatch(/directory could not be found/);
-  });
-
-  test('idb storage', async () => {
-    const storage = await page.evaluate((root, type) => {
-      const { createStorage } = window.testModule;
-      window.storage = createStorage(root, type);
-      return window.storage;
-    }, ROOT_DIRECTORY, STORAGE_IDB);
-
-    expect(storage.root).toBe(ROOT_DIRECTORY);
-    expect(storage.type).toBe(STORAGE_IDB);
-
-    await testWrite(page);
-
-    // Test database exists
-    await page.evaluate(() => {
-      window.testExists = (root) => {
-        let exists = true;
-        const request = window.indexedDB.open(root);
-        request.onupgradeneeded = (e) => {
-          e.target.transaction.abort();
-          exists = false;
-        };
-        return new Promise(resolve => {
-          request.onsuccess = () => {
-            resolve(exists);
-          };
-          request.onerror = () => {
-            resolve(exists);
-          };
-        });
-      };
-    });
-
-    await expect(page.evaluate(root => window.testExists(root), ROOT_DIRECTORY)).resolves.toBe(true);
-
-    await testDestroy(page);
-
-    await expect(page.evaluate(root => window.testExists(root), ROOT_DIRECTORY)).resolves.toBe(false);
   });
 
   test('ram storage', async () => {
