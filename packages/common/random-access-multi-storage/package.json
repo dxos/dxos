@@ -15,7 +15,7 @@
     "lint": "toolchain lint",
     "test": "pnpm run test:node && pnpm run test:browser",
     "test:node": "toolchain test",
-    "test:browser": "browser-mocha 'src/**/browser-mocha-test.ts' --browser=chromium --browser=firefox --checkLeaks false"
+    "test:browser": "browser-mocha 'src/**/browser-mocha-test.ts' --browser=chromium --browser=firefox --browser=webkit --checkLeaks false"
   },
   "license": "AGPL-3.0",
   "dependencies": {

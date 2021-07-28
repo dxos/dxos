@@ -24,6 +24,7 @@ jobs:
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
           npm install -g @microsoft/rush pnpm
           sudo ./common/scripts/install-dependencies.sh
+          npx playwright@1.11.0 install-deps
           
           # Install dependencies
           echo "::group::Install"
