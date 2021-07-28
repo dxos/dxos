@@ -11,9 +11,11 @@ import pify from 'pify';
 import ram from 'random-access-memory';
 import tempy from 'tempy';
 
+import { Storage, STORAGE_NODE, createStorage } from '@dxos/random-access-multi-storage';
+
 import { FeedStore } from './feed-store';
 
-const createFeedStore = async (storage: any, options = {}) => {
+const createFeedStore = async (storage: Storage, options = {}) => {
   const feedStore = new FeedStore(storage, options);
   await feedStore.open();
   return feedStore;
@@ -24,7 +26,7 @@ async function createDefault () {
 
   return {
     directory,
-    feedStore: await createFeedStore(directory, { feedOptions: { valueEncoding: 'utf-8' } })
+    feedStore: await createFeedStore(createStorage(directory, STORAGE_NODE), { feedOptions: { valueEncoding: 'utf-8' } })
   };
 }
 
@@ -50,13 +52,11 @@ describe('FeedStore', () => {
     expect(feedStore).toBeInstanceOf(FeedStore);
     expect(feedStore.opened).toBeTruthy();
     expect(feedStore.storage).toBe(ram);
-    await expect(feedStore.ready()).resolves.toBeUndefined();
 
     const feedStore2 = new FeedStore(ram);
     expect(feedStore2).toBeInstanceOf(FeedStore);
     expect(feedStore2.opened).toBeFalsy();
-    feedStore2.open();
-    await expect(feedStore2.ready()).resolves.toBeUndefined();
+    await feedStore2.open();
     expect(feedStore2.opened).toBeTruthy();
   });
 
@@ -269,9 +269,7 @@ describe('FeedStore', () => {
       throw new Error('Descriptor not found');
     }
 
-    const release = await fd.lock();
-    expect(release).toBeDefined();
-    await release();
+    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   test('on close error should unlock the descriptor', async () => {
@@ -291,16 +289,14 @@ describe('FeedStore', () => {
     await feedStore.openFeed('/foo');
     const fd = feedStore.getDescriptors().find(fd => fd.path === '/foo');
 
-    await expect(feedStore.closeFeed('/foo')).rejects.toThrow(/close error/);
-    await expect(feedStore.close()).rejects.toThrow(/close error/);
-
     if (!fd) {
       throw new Error('Descriptor not found');
     }
 
-    const release = await fd.lock();
-    expect(release).toBeDefined();
-    await release();
+    await expect(feedStore.closeFeed('/foo')).rejects.toThrow(/close error/);
+    await expect(feedStore.close()).rejects.toThrow(/close error/);
+
+    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   test('on delete descriptor error should unlock the descriptor', async () => {
@@ -318,9 +314,7 @@ describe('FeedStore', () => {
 
     await expect(feedStore.deleteDescriptor('/foo')).rejects.toThrow(Error);
 
-    const release = await fd.lock();
-    expect(release).toBeDefined();
-    await release();
+    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   async function generateStreamData (feedStore: FeedStore, maxMessages = 200) {
@@ -569,7 +563,7 @@ describe('FeedStore', () => {
 
   test('update metadata', async () => {
     const root = tempy.directory();
-    const feedStore = await createFeedStore(root);
+    const feedStore = await createFeedStore(createStorage(root, STORAGE_NODE));
     await feedStore.openFeed('/test', { metadata: { tag: 0 } });
     let descriptor = feedStore.getDescriptors().find(fd => fd.path === '/test');
     if (!descriptor) {

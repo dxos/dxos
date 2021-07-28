@@ -49,10 +49,9 @@ export async function createIterator (
   messageSelector: MessageSelector = () => 0,
   skipTimeframe?: Timeframe
 ): Promise<FeedStoreIterator> {
-  assert(!feedStore.closing && !feedStore.closed);
+  assert(!feedStore.closed);
   if (!feedStore.opened) {
     await feedStore.open();
-    await feedStore.ready();
   }
 
   const iterator = new FeedStoreIterator(feedSelector, messageSelector, skipTimeframe ?? new Timeframe());
