@@ -7,13 +7,7 @@ So far, we have been preparing our app to be able to interact with DXOS Stack, b
 
 ## Create items
 
-On our app the `items` that we are going to create are going to be Tasks. Place the following code in your `TaskList` component and take a look at the function `handleCreateItem`. We are calling to `party.database.createItem` function, sending some required options:
-
-- `type`
-- `model`
-- `props`
-
-// todo(grazianoramiro): definition of ObjectModel
+On our app the `items` that we are going to create are going to be Tasks. Place the following code in your `TaskList` component and take a look at the function `handleCreateItem`. We are calling to `party.database.createItem` function, sending some required information.
 
 ```jsx:title=src/components/TaskList.js
 import React, { useState } from 'react';
@@ -122,9 +116,11 @@ export default TaskList;
 
 Go to your browser app now. After selecting one of your parties, you should be able to see an input on the main section of the screen, that will handle the creation of a new task.
 
+![data](./data-02.png)
+
 ## List items
 
-We should add now some more code so we are able to see the created tasks. For this we will use the `useSelection` hook provided by `@dxos/react-client` that will allow us to filter items by some criteria:
+We should add now some more code to be able to see the created tasks. For this we will use the `useSelection` hook provided by `@dxos/react-client` that will allow us to filter items by some criteria:
 
 ```jsx:title=src/components/TaskList.js
 import React, { useState } from 'react';
@@ -259,6 +255,8 @@ export default TaskList;
 
 Check again your browser, you should now see your created tasks.
 
+![data](./data-03.png)
+
 ## Update items
 
 Let's add the possibility to check/uncheck our tasks to mark which ones are already completed. Pay attention to `handleToggleComplete` and you will see how we update a property of an item:
@@ -377,7 +375,6 @@ const TaskList = ({ partyKey }) => {
             </ListItemSecondaryAction>
           </ListItem>
 
-          {/* Current tasks. */}
           <div className={classes.reverseList}>
             {items.map((item) => (
               <ListItem button key={item.id}>
@@ -410,6 +407,8 @@ export default TaskList;
 ```
 
 If you go back to your app, you should now be able to check and uncheck them.
+
+![data](./data-04.png)
 
 ## Delete a Task
 
@@ -570,21 +569,13 @@ const TaskList = ({ partyKey }) => {
 export default TaskList;
 ```
 
-And that's it! Now you are able to Create, List, Update and Delete tasks in your own application. Congratulations!
+One last time, go back to your app and you should now be able to delete your tasks.
 
-## Let's test everything out
+![data](./data-05.png)
 
-Now that you have seen how DXOS works, let's give it a proper try! Open the app in two different browser sessions. We will simulate the actions of two users:
+And that's it! You have completed your DXOS application to Create, List, Update and Delete tasks. Congratulations!
 
-- In one window **create a party** and click the invitation button. **Invite a user** and copy the invitation key to the clipboard.
-- In another browser choose _Redeem invitation_. **Paste the invitation key**. The app will require a passcode.
-- After some seconds it should appear in the Party Sharing Dialog of the first browser.
-- Copy and **paste the passcode** in the second browser, and click _Send_. You should notice **the newly created party appearing in the lists column of the second browser**.
-- That list is now shared between those two users.
-- **Play with the tasks**, add, check, and delete some of them on one side and **verify that all the changes appear** in the other user's browser.
+## Next steps
 
-![Task App](./data-00.png)
-
-- Click the _Invite_ icon button again (for either user). See that there are already **two members on this party**.
-
-![Task App - Invitations](./data-01.png)
+On every application, the last step of the development process is making the app available for anyone on the Internet.
+You will find out how can you achieve that in the last section of the tutorial, but first, we need to set up the Environment.
