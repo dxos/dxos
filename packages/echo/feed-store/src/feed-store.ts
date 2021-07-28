@@ -7,10 +7,10 @@ import jsonBuffer from 'buffer-json-encoding';
 import { EventEmitter } from 'events';
 import defaultHypercore from 'hypercore';
 import hypertrie from 'hypertrie';
-import nanoresource from 'nanoresource-promise';
 import pEvent from 'p-event';
 
 import { Storage } from '@dxos/random-access-multi-storage';
+import { synchronized } from '@dxos/async';
 
 import FeedDescriptor from './feed-descriptor';
 import IndexDB from './index-db';
@@ -51,7 +51,7 @@ export class FeedStore extends EventEmitter {
   private _descriptors: Map<string, FeedDescriptor>;
   private _readers: Set<Reader>;
   private _indexDB: any;
-  private _resource: any;
+  private _open: boolean;
   public database: any;
   public feedOptions: any;
   public codecs: any;
@@ -99,11 +99,7 @@ export class FeedStore extends EventEmitter {
 
     this._indexDB = null;
 
-    this._resource = nanoresource({
-      reopen: true,
-      open: this._open.bind(this),
-      close: this._close.bind(this)
-    });
+    this._open = false;
 
     this.on('feed', (_, descriptor) => {
       this._readers.forEach(reader => {
@@ -115,19 +111,11 @@ export class FeedStore extends EventEmitter {
   }
 
   get opened () {
-    return this._resource.opened && !this._resource.closed;
+    return this._open
   }
 
   get closed () {
-    return this._resource.closed;
-  }
-
-  get opening () {
-    return this._resource.opening;
-  }
-
-  get closing () {
-    return this._resource.closing;
+    return !this._open;
   }
 
   /**
@@ -137,26 +125,53 @@ export class FeedStore extends EventEmitter {
     return this._storage;
   }
 
+  @synchronized
   async open () {
-    return this._resource.open();
-  }
-
-  async close () {
-    return this._resource.close();
-  }
-
-  async ready () {
-    if (this.opened) {
+    if (this._open) {
       return;
     }
+    this._open = true;
 
-    try {
-      await pEvent(this, 'opened', {
-        rejectionEvents: ['closed']
-      });
-    } catch (err) {
-      throw new Error('FeedStore closed');
+    this._indexDB = new IndexDB(this._database(this._storage, { valueEncoding: jsonBuffer }));
+
+    const list = await this._indexDB.list(STORE_NAMESPACE);
+
+    list.forEach((data: any) => {
+      const { path, ...options } = data;
+      this._createDescriptor(path, options);
+    });
+
+    this.emit('opened');
+
+    // backward compatibility
+    this.emit('ready');
+  }
+
+  @synchronized
+  async close () {
+    if (!this._open) {
+      return;
     }
+    this._open = false;
+
+    this._readers.forEach(reader => {
+      try {
+        reader.destroy(new Error('FeedStore closed'));
+      } catch (err) {
+        // ignore
+      }
+    });
+
+    await Promise.all(this
+      .getDescriptors()
+      .map(descriptor => descriptor.close())
+    );
+
+    this._descriptors.clear();
+
+    await this._indexDB.close();
+
+    this.emit('closed');
   }
 
   /**
@@ -197,8 +212,9 @@ export class FeedStore extends EventEmitter {
   /**
    * Open multiple feeds using a filter callback.
    */
+  @synchronized
   async openFeeds (callback: DescriptorCallback): Promise<Hypercore[]> {
-    await this._isOpen();
+    assert(this._open, 'FeedStore closed');
 
     const descriptors = this.getDescriptors()
       .filter(descriptor => callback(descriptor));
@@ -214,14 +230,10 @@ export class FeedStore extends EventEmitter {
    *
    * Similar to fs.open
    */
+  @synchronized
   async openFeed (path: string, options: OpenFeedOptions = {}): Promise<Hypercore> {
     assert(path, 'Missing path');
-
-    await this._isOpen();
-
-    if (!this._resource.active()) {
-      throw new Error('FeedStore closed');
-    }
+    assert(this._open, 'FeedStore closed');
 
     try {
       const { key } = options;
@@ -242,10 +254,8 @@ export class FeedStore extends EventEmitter {
 
       const feed = await descriptor.open();
 
-      this._resource.inactive();
       return feed;
     } catch (err) {
-      this._resource.inactive();
       throw err;
     }
   }
@@ -253,14 +263,10 @@ export class FeedStore extends EventEmitter {
   /**
    * Close a feed by the path.
    */
+  @synchronized
   async closeFeed (path: string) {
     assert(path, 'Missing path');
-
-    await this._isOpen();
-
-    if (!this._resource.active()) {
-      throw new Error('FeedStore closed');
-    }
+    assert(this._open, 'FeedStore closed');
 
     try {
       const descriptor = this.getDescriptors().find(fd => fd.path === path);
@@ -270,9 +276,7 @@ export class FeedStore extends EventEmitter {
       }
 
       await descriptor.close();
-      this._resource.inactive();
     } catch (err) {
-      this._resource.inactive();
       throw err;
     }
   }
@@ -291,14 +295,10 @@ export class FeedStore extends EventEmitter {
    *
    * NOTE: This operation would not close the feed.
    */
+  @synchronized
   async deleteDescriptor (path: string) {
     assert(path, 'Missing path');
-
-    await this._isOpen();
-
-    if (!this._resource.active()) {
-      throw new Error('FeedStore closed');
-    }
+    assert(this._open, 'FeedStore closed');
 
     const descriptor = this.getDescriptors().find(fd => fd.path === path);
 
@@ -310,9 +310,7 @@ export class FeedStore extends EventEmitter {
           this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
   
           this.emit('descriptor-remove', descriptor);
-          this._resource.inactive();
         } catch (err) {
-          this._resource.inactive();
           throw err;
         }
       });
@@ -335,49 +333,6 @@ export class FeedStore extends EventEmitter {
    */
   createBatchStream (callback: StreamCallback | object = () => true): ReadableStream {
     return this._createReadStream(callback, true);
-  }
-
-  /**
-   * Initialized FeedStore reading the persisted options and created each FeedDescriptor.
-   */
-  async _open () {
-    this._indexDB = new IndexDB(this._database(this._storage, { valueEncoding: jsonBuffer }));
-
-    const list = await this._indexDB.list(STORE_NAMESPACE);
-
-    list.forEach((data: any) => {
-      const { path, ...options } = data;
-      this._createDescriptor(path, options);
-    });
-
-    this.emit('opened');
-
-    // backward compatibility
-    this.emit('ready');
-  }
-
-  /**
-   * Close the hypertrie and their feeds.
-   */
-  async _close () {
-    this._readers.forEach(reader => {
-      try {
-        reader.destroy(new Error('FeedStore closed'));
-      } catch (err) {
-        // ignore
-      }
-    });
-
-    await Promise.all(this
-      .getDescriptors()
-      .map(descriptor => descriptor.close())
-    );
-
-    this._descriptors.clear();
-
-    await this._indexDB.close();
-
-    this.emit('closed');
   }
 
   /**
@@ -452,19 +407,9 @@ export class FeedStore extends EventEmitter {
     }
   }
 
-  private async _isOpen () {
-    if (this.closing || this.closed) {
-      throw new Error('FeedStore closed');
-    }
-
-    if (this.opened) {
-      return;
-    }
-
-    return this.ready();
-  }
-
   private _createReadStream (callback: any, inBatch = false): ReadableStream {
+    assert(this._open, 'FeedStore closed');
+
     const reader = new Reader(callback, inBatch);
 
     this._readers.add(reader);
@@ -473,16 +418,15 @@ export class FeedStore extends EventEmitter {
       this._readers.delete(reader);
     });
 
-    this
-      ._isOpen()
-      .then(() => {
-        return reader.addInitialFeedStreams(this
+    (async () => {
+      try {
+        await reader.addInitialFeedStreams(this
           .getDescriptors()
           .filter(descriptor => descriptor.opened));
-      })
-      .catch(err => {
+      } catch (err) {
         reader.destroy(err);
-      });
+      }
+    })();
 
     return reader.stream;
   }

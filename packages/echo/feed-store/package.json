@@ -35,7 +35,6 @@
     "hypertrie": "^3.8.0",
     "multi-read-stream": "^2.0.0",
     "mutexify": "^1.2.0",
-    "nanoresource-promise": "^2.0.0",
     "p-event": "^4.2.0",
     "p-timeout": "^3.2.0",
     "pify": "~5.0.0",

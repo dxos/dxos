@@ -52,13 +52,11 @@ describe('FeedStore', () => {
     expect(feedStore).toBeInstanceOf(FeedStore);
     expect(feedStore.opened).toBeTruthy();
     expect(feedStore.storage).toBe(ram);
-    await expect(feedStore.ready()).resolves.toBeUndefined();
 
     const feedStore2 = new FeedStore(ram);
     expect(feedStore2).toBeInstanceOf(FeedStore);
     expect(feedStore2.opened).toBeFalsy();
-    feedStore2.open();
-    await expect(feedStore2.ready()).resolves.toBeUndefined();
+    await feedStore2.open();
     expect(feedStore2.opened).toBeTruthy();
   });
 
