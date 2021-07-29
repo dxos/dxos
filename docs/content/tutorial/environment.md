@@ -108,18 +108,29 @@ export default App;
 
 ## ConfigPlugin
 
-To make this package work properly, we need to add the `ConfigPlugin` from `@dxos/config` to our Webpack settings. For this, we will use, the npm package [CRACO](https://github.com/gsoft-inc/craco) that we mentioned on the beginning of the tutorial, to be able to override Webpack's options that are provided by CRA.
+To make this package work properly, we need to add to our Webpack settings the `ConfigPlugin` from `@dxos/config` to load the config files.
 
-Create a file `craco.config.js` at the root of your project:
+Go to your `craco.config.js` file and add the following:
 
 ```jsx:title=<root>/craco.config.js
+const webpack = require('webpack');
 const path = require('path');
 const { ConfigPlugin } = require('@dxos/config/ConfigPlugin');
 
 module.exports = {
   webpack: {
+    config: {
+      node: {
+        Buffer: false,
+      },
+    },
+
     plugins: {
       add: [
+        new webpack.ProvidePlugin({
+          Buffer: [require.resolve('buffer/'), 'Buffer'],
+        }),
+
         new ConfigPlugin({
           path: path.resolve(__dirname, 'config'),
           dynamic: process.env.CONFIG_DYNAMIC,
@@ -130,20 +141,7 @@ module.exports = {
 };
 ```
 
-Go to your `package.json` and in your npm scripts replace `react-scripts` with `craco`.
-
-```json
-{
-  "scripts": {
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test",
-    "eject": "craco eject"
-  }
-}
-```
-
-That's all! If you have your app running, you are going to need to stop it and start it again, so it takes new craco config into account.
+Remember, if you have your app running, you are going to need to stop it and start it again, so it takes new craco config into account. That's all!
 
 ---
 
