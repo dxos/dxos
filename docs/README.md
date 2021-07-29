@@ -1,5 +1,10 @@
 # Protocols Docs
 
-## ECHO Design
+## Documentation
 
-![ECHO](./diagrams/echo-architecture.png)
+To spin up this repo documentation on your local environment please follow this steps:
+
+```bash
+$ yarn
+$ yarn dev
+```
