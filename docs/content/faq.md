@@ -1,4 +1,8 @@
-# DXOS Frequently Asked Questions
+# DXOS Help Guide
+
+## Frequently Asked Questions
+
+---
 
 ## Troubleshooting
 
