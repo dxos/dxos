@@ -5,6 +5,48 @@ description: Share your data with peers
 
 In order to share data we add to the party, we have to invite other peers to it. There are two steps required in this process: creating an invitation and redeeming an invitation.
 
+## Webpack Settings
+
+Before starting, we need to configure some settings for Webpack so our internal packages are able to properly use Node Buffer when running in a browser.
+
+To achieve this, we will use the npm package [CRACO](https://github.com/gsoft-inc/craco) that we mentioned on the beginning of the tutorial, that allows us to override Webpack's options provided by CRA.
+
+Create a file `craco.config.js` at the root of your project and place the following:
+
+```jsx:title=<root>/craco.config.js
+module.exports = {
+  webpack: {
+    config: {
+      node: {
+        Buffer: false,
+      },
+    },
+    plugins: {
+      add: [
+        new webpack.ProvidePlugin({
+          Buffer: [require.resolve('buffer/'), 'Buffer'],
+        }),
+      ],
+    },
+  },
+};
+```
+
+Then go to your `package.json` and in your npm scripts replace `react-scripts` with `craco`:
+
+```json
+{
+  "scripts": {
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "eject": "craco eject"
+  }
+}
+```
+
+If you have your app running, stop it and start it again so it takes the new changes above. You are ready to go!
+
 ## Create an Invitation
 
 We have to create an invitation code that we will share with the peer we want to invite. This process is called _interactive_ since it requires the invitee to redeem the invitation code and provide a pin code that will be generated once the invitation code is validated.
