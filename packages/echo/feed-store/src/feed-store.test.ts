@@ -50,7 +50,6 @@ describe('FeedStore', () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
     expect(feedStore.opened).toBeTruthy();
-    expect(feedStore.storage).toBe(createStorage('', STORAGE_RAM));
 
     const feedStore2 = new FeedStore(createStorage('', STORAGE_RAM));
     expect(feedStore2).toBeInstanceOf(FeedStore);
@@ -64,7 +63,8 @@ describe('FeedStore', () => {
       return hypercore(...args);
     });
 
-    const database = hypertrie(createStorage('', STORAGE_RAM), { valueEncoding: 'json' });
+    const storage = createStorage('', STORAGE_RAM)
+    const database = hypertrie(storage.createOrOpen.bind(storage), { valueEncoding: 'json' });
     database.list = jest.fn((_, cb) => cb(null, []));
 
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), {
