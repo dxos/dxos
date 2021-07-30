@@ -8,7 +8,7 @@ import { IFile } from './IFile';
 export interface IStorage {
   readonly type: StorageType
 
-  createOrOpen: (filename: string) => IFile
+  createOrOpen: (filename: string, opts?: any) => IFile
   delete: (filename: string) => Promise<void>
   subDir (path: string): IStorage
   destroy: () => Promise<void>

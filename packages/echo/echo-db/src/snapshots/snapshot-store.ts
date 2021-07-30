@@ -8,7 +8,7 @@ import pify from 'pify';
 
 import { keyToString } from '@dxos/crypto';
 import { schema, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
-import { Storage } from '@dxos/random-access-multi-storage';
+import { IStorage } from '@dxos/random-access-multi-storage';
 
 const log = debug('dxos:snapshot-store');
 
@@ -19,11 +19,11 @@ const log = debug('dxos:snapshot-store');
  */
 export class SnapshotStore {
   constructor (
-    private readonly _storage: Storage
+    private readonly _storage: IStorage
   ) {}
 
   async load (partyKey: PartyKey): Promise<PartySnapshot | undefined> {
-    const file = this._storage(partyKey.toHex());
+    const file = this._storage.createOrOpen(partyKey.toHex());
 
     try {
       const { size } = await pify(file.stat.bind(file))();
@@ -46,7 +46,7 @@ export class SnapshotStore {
 
   async save (snapshot: PartySnapshot) {
     assert(snapshot.partyKey);
-    const file = this._storage(keyToString(snapshot.partyKey), { truncate: true, size: 0 });
+    const file = this._storage.createOrOpen(keyToString(snapshot.partyKey), { truncate: true, size: 0 });
 
     try {
       const data = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').encode(snapshot);
