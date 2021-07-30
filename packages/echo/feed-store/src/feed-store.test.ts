@@ -63,7 +63,7 @@ describe('FeedStore', () => {
       return hypercore(...args);
     });
 
-    const storage = createStorage('', STORAGE_RAM)
+    const storage = createStorage('', STORAGE_RAM);
     const database = hypertrie(storage.createOrOpen.bind(storage), { valueEncoding: 'json' });
     database.list = jest.fn((_, cb) => cb(null, []));
 
