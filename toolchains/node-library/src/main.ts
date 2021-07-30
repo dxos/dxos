@@ -10,6 +10,8 @@ import { join } from 'path';
 import { sync as pkgDir } from 'pkg-dir';
 import yargs from 'yargs';
 
+import { Project } from './project';
+
 const selfDir = pkgDir(__dirname)!;
 
 function execTool (name: string, args: string[] = [], opts?: SpawnSyncOptionsWithBufferEncoding) {
@@ -43,9 +45,8 @@ function execCommand (command: string, args: string[]) {
   }
 }
 
-function execLint (additionalArgs: string[] = []) {
-  const packageJson = JSON.parse(fs.readFileSync(join(getPackageDir(), 'package.json'), 'utf-8'));
-  const isReactLib = !!(packageJson.dependencies?.react ?? packageJson.devDependencies?.react ?? packageJson.peerDependencies?.react);
+function execLint (project: Project, additionalArgs: string[] = []) {
+  const isReactLib = !!(project.packageJsonContents.dependencies?.react ?? project.packageJsonContents.devDependencies?.react ?? project.packageJsonContents.peerDependencies?.react);
   const config = isReactLib ? join(selfDir, '.eslintrc.react.js') : join(selfDir, '.eslintrc.js');
   execTool('eslint', ['--config', config, '{src,test,stories,playwright}/**/*.{js,ts,jsx,tsx}', ...additionalArgs]);
 }
@@ -70,24 +71,24 @@ function execMocha (additionalArgs: string[] = []) {
 }
 
 function execBuild () {
-  const { packageDir, packageJson } = getPackage();
+  const project = Project.load();
 
-  if (packageJson.jest) {
+  if (project.packageJsonContents.jest) {
     process.stderr.write(chalk`{yellow warn}: jest config in package.json is ignored\n`);
   }
 
-  if (packageJson.eslintConfig) {
+  if (project.packageJsonContents.eslintConfig) {
     process.stderr.write(chalk`{yellow warn}: eslint config in package.json is ignored\n`);
   }
 
-  const protoFiles = glob('src/proto/**/*.proto', { cwd: packageDir });
+  const protoFiles = glob('src/proto/**/*.proto', { cwd: project.packageRoot });
   if (protoFiles.length > 0) {
     console.log(chalk.bold`\nprotobuf`);
-    const substitutions = fs.existsSync(join(packageDir, 'src/proto/substitutions.ts')) ? join(packageDir, 'src/proto/substitutions.ts') : undefined;
+    const substitutions = fs.existsSync(join(project.packageRoot, 'src/proto/substitutions.ts')) ? join(project.packageRoot, 'src/proto/substitutions.ts') : undefined;
 
     execTool('build-protobuf', [
       '-o',
-      join(packageDir, 'src/proto/gen'),
+      join(project.packageRoot, 'src/proto/gen'),
       ...(substitutions ? ['-s', substitutions] : []),
       ...protoFiles
     ]);
@@ -98,14 +99,14 @@ function execBuild () {
 }
 
 function execTest (additionalArgs?: string[]) {
-  const { packageDir, packageJson } = getPackage();
+  const project = Project.load();
 
-  if (packageJson.toolchain?.testingFramework === 'mocha') {
+  if (project.toolchainConfig.testingFramework === 'mocha') {
     console.log(chalk.bold`\nmocha`);
     execMocha(additionalArgs);
   } else {
     console.log(chalk.bold`\njest`);
-    execJest(packageDir, additionalArgs);
+    execJest(project.packageRoot, additionalArgs);
   }
 }
 
@@ -128,11 +129,13 @@ yargs(process.argv.slice(2))
     yargs => yargs
       .strict(),
     () => {
+      const project = Project.load();
+
       const before = Date.now();
       execBuild();
 
       console.log(chalk.bold`\neslint`);
-      execLint();
+      execLint(project);
 
       execTest();
 
@@ -144,7 +147,8 @@ yargs(process.argv.slice(2))
     'run linter',
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
     ({ _ }) => {
-      execLint(_.slice(1).map(String));
+      const project = Project.load();
+      execLint(project, _.slice(1).map(String));
     }
   )
   .command(
@@ -160,33 +164,13 @@ yargs(process.argv.slice(2))
     'run script or a tool',
     yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
     ({ command, _ }) => {
-      const packageJson = getPackageJson();
+      const project = Project.load();
 
-      if (packageJson.scripts?.[command]) {
-        execCommand(packageJson.scripts?.[command], _.map(String));
+      if (project.packageJsonContents.scripts?.[command]) {
+        execCommand(project.packageJsonContents.scripts?.[command], _.map(String));
       } else {
         execCommand(command, _.map(String));
       }
     }
   )
   .argv;
-
-function getPackageDir () {
-  const packageDir = pkgDir(process.cwd());
-  if (!packageDir) {
-    process.stderr.write(chalk`{red error}: must be executed inside a package\n`);
-    process.exit(-1);
-  }
-  return packageDir;
-}
-
-function getPackageJson () {
-  return JSON.parse(fs.readFileSync(join(getPackageDir(), 'package.json'), 'utf-8'));
-}
-
-function getPackage () {
-  return {
-    packageDir: getPackageDir(),
-    packageJson: getPackageJson()
-  };
-}
