@@ -25,7 +25,7 @@ module.exports = {
             "tutorial/data",
             "tutorial/environment",
             "tutorial/deployment",
-            "tutorial/summary"
+            "tutorial/next-steps"
           ]
         }
       }
