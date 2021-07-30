@@ -9,7 +9,6 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { latch } from '@dxos/async';
 import {
   createPartyGenesisMessage,
@@ -31,6 +30,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 import { createWritableFeedStream } from '@dxos/util';
 

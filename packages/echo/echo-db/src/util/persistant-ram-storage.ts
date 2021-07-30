@@ -13,7 +13,7 @@ export function createRamStorage (): IStorage {
   const storage = createStorage(root, 'ram');
   const files = new Map<string, IFile>();
 
-  const fn: any = {}
+  const fn: any = {};
 
   fn.createOrOpen = (name: string) => {
     if (files.has(name)) {

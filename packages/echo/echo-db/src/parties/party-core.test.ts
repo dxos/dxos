@@ -11,12 +11,12 @@ import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
 import { PartyCore } from './party-core';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 const setup = async () => {
   const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
