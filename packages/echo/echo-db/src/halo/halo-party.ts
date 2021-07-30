@@ -2,16 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-
-import { Event } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { ObjectModel } from '@dxos/object-model';
 
-import { Item } from '../items';
 import { PartyInternal } from '../parties';
-import { ResultSet } from '../result';
 import { ContactManager } from './contact-manager';
 import { Preferences } from './preferences';
 

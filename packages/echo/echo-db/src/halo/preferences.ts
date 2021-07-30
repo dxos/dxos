@@ -7,14 +7,14 @@ import stableStringify from 'json-stable-stringify';
 import defaultsDeep from 'lodash/defaultsDeep';
 
 import { Event } from '@dxos/async';
+import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
+import { ObjectModel } from '@dxos/object-model';
 
 import { Item } from '../items';
 import { PartyInternal } from '../parties';
-import { HALO_PARTY_DESCRIPTOR_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE, JoinedParty } from './halo-party';
-import { ObjectModel } from '@dxos/object-model';
-import { KeyHint } from '@dxos/credentials';
 import { ResultSet } from '../result';
+import { HALO_PARTY_DESCRIPTOR_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE, JoinedParty } from './halo-party';
 
 /**
  * Manage settings.

@@ -210,9 +210,9 @@ export class HALO {
    */
   // TODO(burdon): Expose ContactManager directly.
   queryContacts (): ResultSet<Contact> {
-    assert(this.identity.halo, 'Invalid HALO.');
+    assert(this.identity.contacts, 'HALO not initialized.');
 
-    return this.identity.halo.contacts.queryContacts();
+    return this.identity.contacts.queryContacts();
   }
 
   /**
