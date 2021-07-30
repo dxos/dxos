@@ -1,6 +1,5 @@
 ---
-title: 7. Publishing the App
-description: Deploy your app to a Kube
+title: Deploying the app
 ---
 
 ## Build Settings

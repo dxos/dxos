@@ -1,6 +1,5 @@
 ---
-title: 4. Invite Peers
-description: Share your data with peers
+title: Inviting peers
 ---
 
 In order to share data we add to the party, we have to invite other peers to it. There are two steps required in this process: creating an invitation and redeeming an invitation.
@@ -207,9 +206,9 @@ export default Main;
 
 On your browser, when selecting your party from the list, you will see a share button at the bottom of the page. Clicking on it will open the `PartySharingDialog`, and you will be able to invite new users:
 
-![Invite Button](./invite-00.png)
+![Invite Button](./images/invite-00.png)
 
-![Invite Dialog](./invite-01.png)
+![Invite Dialog](./images/invite-01.png)
 
 To create an invitation, the component makes use of the `useInvitation` hook provided by `@dxos/react-client`:
 
@@ -229,13 +228,13 @@ const [inviteCode, pin] = useInvitation(party.key, {
 
 At this point, clicking on the "link" icon we can copy to clipboard the `inviteCode` which is the code we have to share with the peer we want to invite.
 
-![Invite Dialog Show Code](./invite-02.png)
+![Invite Dialog Show Code](./images/invite-02.png)
 
 As mentioned before, this process is interactive. Once the code is redeemed by the peer, we will get notified and the `pin` value, provided by the `useInvitation` hook, will be available. The peer will be required to enter the `pin` value to finish the invitation process.
 
 The `PartySharingDialog` component shows the `inviteCode` until the `pin` is available and then switch to display the `pin` code.
 
-![Invite Dialog Show Pin](./invite-03.png)
+![Invite Dialog Show Pin](./images/invite-03.png)
 
 ## Redeem Invitation
 
@@ -384,7 +383,7 @@ We are rendering now the `RedeemDialog` and also a button to show it.
 
 If you go to your app in the browser, you will see that button next to the create party button. Go ahead and try it yourself.
 
-![Redeem Dialog Enter Code](./invite-04.png)
+![Redeem Dialog Enter Code](./images/invite-04.png)
 
 The redeem process consists of 2 steps: redeeming the code and validating the pin number. The dialog displays a simple form with a text area to introduce the invitation code.
 
@@ -408,7 +407,7 @@ Once the user submits the `invitationCode`, it will be sent to the `redeemCode` 
 
 We then switch to the next step and display an input field to provide the pin number. Once the user presses the send button, we call the `setPin` passing the `pinCode` value. If everything goes well, then `onDone` will be called.
 
-![Redeem Dialog Enter PIN](./invite-05.png)
+![Redeem Dialog Enter PIN](./images/invite-05.png)
 
 ## Test it yourself
 

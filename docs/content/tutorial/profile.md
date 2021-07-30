@@ -1,6 +1,5 @@
 ---
-title: 2. Create a Profile
-description: Set Up a user profile for your application
+title: Creating the user's profile
 ---
 
 After we connect a Client to our React Application, the very first step is to get the user's profile.
@@ -160,6 +159,7 @@ const Root = () => {
   if (!profile) {
     const handleRegistration = async ({ username }) => {
       if (username) {
+        // TODO(burdon): API should have defaults for keys (not require crypto).
         const { publicKey, secretKey } = createKeyPair();
         await client.halo.createProfile({ publicKey, secretKey, username });
       }
@@ -178,6 +178,6 @@ As mentioned above, we are using `client.halo.createProfile()` function to creat
 
 See your app again, you should now see:
 
-![Tasks App - Create Profile](./introduction-00.png)
+![Tasks App - Create Profile](./images/introduction-00.png)
 
 Complete with a profile name of your choice and submit the form.

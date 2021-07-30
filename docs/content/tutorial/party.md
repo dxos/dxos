@@ -1,6 +1,5 @@
 ---
-title: 3. Create a Party
-description: Add a space for sharing data
+title: Creating parties
 ---
 
 A Party is the DXOS element responsible for sharing content among the invited members. Each Party is identified by a `publicKey`.
@@ -220,11 +219,11 @@ Go to your `src/components/Root.js` and render this `Main` component on the crea
 
 If you go to your app in the browser, you should now see something like:
 
-![party](./party-00.png)
+![party](./images/party-00.png)
 
 And you should be able to open the dialog and create a new party:
 
-![party](./party-01.png)
+![party](./images/party-01.png)
 
 ## Fetch Parties
 
@@ -342,7 +341,7 @@ And in your `src/components/Main.js` send the `partyKey` from the `useState` as 
 
 You should now be able to see your created party:
 
-![party](./party-02.png)
+![party](./images/party-02.png)
 
 ## Fetch Single Party
 
@@ -537,4 +536,4 @@ export default PartyList;
 
 You will see a `Settings` button right next to the party name and clicking on it will open the dialog with the party name already filled in.
 
-![party](./party-03.png)
+![party](./images/party-03.png)

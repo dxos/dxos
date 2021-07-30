@@ -15,16 +15,6 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 
 ## Troubleshooting
 
-## Documentation
-
-To spin up this repo documentation on your local environment please follow this steps:
-
-```bash
-$ cd docs
-$ yarn
-$ yarn dev
-```
-
 ## Pack Tasks App
 <!-- TODO: Let's try to make an script for this (zarco)  -->
 <!-- 
