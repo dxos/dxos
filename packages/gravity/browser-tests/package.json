@@ -17,9 +17,15 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build && toolchain lint && pnpm run test",
+    "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "browser-mocha --setup test/setup.js 'test/**/*.test.ts' --browser=chromium --browser=firefox --browser=webkit"
+    "test": "toolchain test",
+    "test:browser": "browser-mocha --setup browser-test/setup.js 'browser-test/**/*.test.ts' --browser=chromium --browser=firefox --browser=webkit"
+  },
+  "toolchain": {
+    "additionalTestSteps": [
+      "test:browser"
+    ]
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

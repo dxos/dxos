@@ -11,11 +11,17 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build && npm run lint && npm run test",
+    "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "pnpm run test:node && pnpm run test:browser",
+    "test": "toolchain test",
     "test:node": "toolchain test",
     "test:browser": "browser-mocha 'src/**/browser-mocha-test.ts' --browser=chromium --browser=firefox --browser=webkit --checkLeaks false"
+  },
+  "toolchain": {
+    "testingFramework": "mocha",
+    "additionalTestSteps": [
+      "test:browser"
+    ]
   },
   "license": "AGPL-3.0",
   "dependencies": {
@@ -44,8 +50,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "toolchain": {
-    "testingFramework": "mocha"
   }
 }
