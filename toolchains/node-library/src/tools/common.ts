@@ -4,7 +4,8 @@
 
 import chalk from 'chalk';
 import { spawnSync, SpawnSyncOptionsWithBufferEncoding } from 'child_process';
-import { TOOLCHAIN_PACKAGE_DIR } from '../common'
+
+import { TOOLCHAIN_PACKAGE_DIR } from '../common';
 
 export function execTool (name: string, args: string[] = [], opts?: SpawnSyncOptionsWithBufferEncoding) {
   const before = Date.now();

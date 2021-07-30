@@ -6,12 +6,13 @@ import chalk from 'chalk';
 import * as fs from 'fs';
 import { sync as glob } from 'glob';
 import { join } from 'path';
+import yargs from 'yargs';
+
 import { Project } from './project';
 import { execCommand, execTool } from './tools/common';
 import { execJest } from './tools/jest';
-import { execMocha } from './tools/mocha';
-import yargs from 'yargs'
 import { execLint } from './tools/lint';
+import { execMocha } from './tools/mocha';
 
 function execBuild () {
   const project = Project.load();

@@ -1,7 +1,12 @@
-import { join } from "path";
-import { TOOLCHAIN_PACKAGE_DIR } from "../common";
-import { Project } from "../project";
-import { execTool } from "./common";
+//
+// Copyright 2021 DXOS.org
+//
+
+import { join } from 'path';
+
+import { TOOLCHAIN_PACKAGE_DIR } from '../common';
+import { Project } from '../project';
+import { execTool } from './common';
 
 export function execLint (project: Project, additionalArgs: string[] = []) {
   const config = project.isReactPackage
