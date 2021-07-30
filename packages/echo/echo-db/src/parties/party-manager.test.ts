@@ -96,7 +96,7 @@ const setup = async (open = true, createIdentity = true) => {
 
   identityManager.ready.once(() => {
     assert(identityManager.identity.halo?.isOpen);
-    const unsub = autoPartyOpener(identityManager.identity.halo!, partyManager);
+    const unsub = autoPartyOpener(identityManager.identity.preferences!, partyManager);
     afterTest(unsub);
   });
 
