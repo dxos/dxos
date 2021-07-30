@@ -34,7 +34,7 @@ export async function buildTests (files: string[], opts: BuildTestsOpts) {
       mocha.setup('bdd');
       ${opts.checkLeaks ? 'mocha.checkLeaks();' : ''}
 
-      ${files.map(file => `require("${relative(opts.outDir,resolve(file))}");`).join('\n')}
+      ${files.map(file => `require("${relative(opts.outDir, resolve(file))}");`).join('\n')}
 
       window.browserMocha__initFinished()
       
