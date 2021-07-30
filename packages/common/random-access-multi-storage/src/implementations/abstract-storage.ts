@@ -3,8 +3,9 @@
 //
 
 import pify from 'pify';
-import { IStorage } from '../interfaces/IStorage';
+
 import { IFile } from '../interfaces/IFile';
+import { IStorage } from '../interfaces/IStorage';
 import { StorageType } from './storage-types';
 
 /**
@@ -20,14 +21,14 @@ export abstract class AbstractStorage implements IStorage {
     this._files = new Set();
   }
 
-  public createOrOpen(filename: string) {
+  public createOrOpen (filename: string) {
     const file = this._create(filename);
     this._files.add(file);
     return file as any;
   }
 
   public async delete (filename: string) {
-    throw new Error('not implemented')
+    throw new Error('not implemented');
   }
 
   private _close () {
@@ -46,7 +47,6 @@ export abstract class AbstractStorage implements IStorage {
       console.error(err.message);
     }
   }
-
 
   public abstract subDir (path: string): IStorage
   protected abstract _create (filename: string): IFile;

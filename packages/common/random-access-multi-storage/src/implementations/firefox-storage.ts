@@ -3,7 +3,8 @@
 //
 
 import randomAccessMutable from 'random-access-web/mutable-file-wrapper';
-import { IDbStorage } from "./idb-storage";
+
+import { IDbStorage } from './idb-storage';
 
 export class FirefoxStorage extends IDbStorage {
   protected override _createFileStorage () {

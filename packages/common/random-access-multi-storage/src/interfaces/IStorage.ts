@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { StorageType } from "../implementations/storage-types";
-import { IFile } from "./IFile";
+import { StorageType } from '../implementations/storage-types';
+import { IFile } from './IFile';
 
 export interface IStorage {
   readonly type: StorageType

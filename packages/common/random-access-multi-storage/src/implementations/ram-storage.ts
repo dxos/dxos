@@ -2,10 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { AbstractStorage } from "./abstract-storage";
-import { StorageType, STORAGE_RAM } from "./storage-types";
 import pify from 'pify';
 import ram from 'random-access-memory';
+
+import { AbstractStorage } from './abstract-storage';
+import { StorageType, STORAGE_RAM } from './storage-types';
 
 export class RamStorage extends AbstractStorage {
   public override type: StorageType = STORAGE_RAM;
@@ -14,8 +15,8 @@ export class RamStorage extends AbstractStorage {
     super(rootPath);
   }
 
-  subDir(path: string) {
-    return new RamStorage(`${this.rootPath}${path}`)
+  subDir (path: string) {
+    return new RamStorage(`${this.rootPath}${path}`);
   }
 
   protected override _create () {

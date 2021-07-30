@@ -20,9 +20,9 @@ describe('Tests for different storage types in different browsers', () => {
     const bufferRead = await pify(file.read.bind(file))(10, 4);
     const result = buffer.equals(bufferRead);
     expect(result).toBeTruthy();
-  }
+  };
 
-  for(const storageType of [STORAGE_RAM, STORAGE_IDB]) {
+  for (const storageType of [STORAGE_RAM, STORAGE_IDB]) {
     it(`${storageType}`, async function () {
       if (browserMocha.context.browser === 'webkit' && storageType === STORAGE_IDB) {
         this.skip();
@@ -31,13 +31,13 @@ describe('Tests for different storage types in different browsers', () => {
       const storage = createStorage(ROOT_DIRECTORY, STORAGE_IDB);
 
       await write(storage);
-      
+
       await storage.destroy();
-    })
+    });
   }
 
-  it.skip(`Used ${STORAGE_IDB} by default`, async function () {
+  it(`Used ${STORAGE_IDB} by default`, async function () {
     const storage = createStorage(ROOT_DIRECTORY);
     expect(storage.type).toBe(STORAGE_IDB);
-  })
-})
+  });
+});

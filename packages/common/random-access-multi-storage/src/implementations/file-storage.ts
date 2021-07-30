@@ -4,8 +4,9 @@
 
 import del from 'del';
 import raf from 'random-access-file';
-import { AbstractStorage } from "./abstract-storage";
-import { StorageType, STORAGE_NODE } from "./storage-types";
+
+import { AbstractStorage } from './abstract-storage';
+import { StorageType, STORAGE_NODE } from './storage-types';
 
 export class NodeStorage extends AbstractStorage {
   public override type: StorageType = STORAGE_NODE;
@@ -14,8 +15,8 @@ export class NodeStorage extends AbstractStorage {
     super(rootPath);
   }
 
-  subDir(path: string) {
-    return new NodeStorage(`${this.rootPath}${path}`)
+  subDir (path: string) {
+    return new NodeStorage(`${this.rootPath}${path}`);
   }
 
   _create (filename: string, opts: any = {}) {

@@ -17,7 +17,7 @@ export const createStorage = (
   type?: typeof STORAGE_RAM | typeof STORAGE_IDB | typeof STORAGE_CHROME | typeof STORAGE_FIREFOX
 ) => {
   if (type === undefined) {
-    return defaultBrowserImplementation(root)
+    return defaultBrowserImplementation(root);
   }
   if (type === STORAGE_RAM) {
     return new RamStorage(root);
@@ -29,9 +29,7 @@ export const createStorage = (
     return new FirefoxStorage(root);
   }
   throw new Error(`Unsupported storage: ${type}`);
-}
-
-
+};
 
 const defaultBrowserImplementation = (root: string): IStorage => {
   if ((window as any).IDBMutableFile) {

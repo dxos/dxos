@@ -21,4 +21,4 @@ export const createStorage = (
     return new NodeStorage(root);
   }
   throw new Error(`Unsupported storage: ${type}`);
-}
+};

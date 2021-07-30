@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { IStorage } from "../interfaces/IStorage";
-import { AbstractStorage } from "./abstract-storage";
-import { StorageType, STORAGE_IDB } from "./storage-types";
 import randomAccessIdb from 'random-access-idb';
-import { RandomAccessStorage } from "../interfaces/random-access-storage";
+
+import { RandomAccessStorage } from '../interfaces/random-access-storage';
+import { AbstractStorage } from './abstract-storage';
+import { StorageType, STORAGE_IDB } from './storage-types';
 
 export class IDbStorage extends AbstractStorage {
   public override type: StorageType = STORAGE_IDB;
@@ -14,11 +14,11 @@ export class IDbStorage extends AbstractStorage {
 
   constructor (protected rootPath: string) {
     super(rootPath);
-    this._fileStorage = this._createFileStorage()
+    this._fileStorage = this._createFileStorage();
   }
 
-  subDir(path: string) {
-    return new IDbStorage(`${this.rootPath}${path}`)
+  subDir (path: string) {
+    return new IDbStorage(`${this.rootPath}${path}`);
   }
 
   protected override _create (filename: string) {

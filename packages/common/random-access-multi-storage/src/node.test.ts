@@ -9,9 +9,9 @@ import { promises as fs, constants } from 'fs';
 import path from 'path';
 import pify from 'pify';
 
-import { createStorage } from './node';
 import { STORAGE_RAM, STORAGE_NODE, STORAGE_IDB } from './implementations/storage-types';
 import { IFile } from './interfaces/IFile';
+import { createStorage } from './node';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '..', 'out', 'index.test'));
 
