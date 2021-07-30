@@ -5,10 +5,10 @@
 import del from 'del';
 import raf from 'random-access-file';
 import { AbstractStorage } from "./abstract-storage";
-import { STORAGE_NODE } from "./storage-types";
+import { StorageType, STORAGE_NODE } from "./storage-types";
 
 export class NodeStorage extends AbstractStorage {
-  public override type = STORAGE_NODE;
+  public override type: StorageType = STORAGE_NODE;
 
   constructor (protected rootPath: string) {
     super(rootPath);

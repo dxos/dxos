@@ -2,17 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import { defaultImplementation } from './implementations/default-implementation';
 import { NodeStorage } from './implementations/file-storage';
 import { RamStorage } from './implementations/ram-storage';
-import { STORAGE_RAM, STORAGE_NODE } from './implementations/storage-types';
+import { STORAGE_RAM, STORAGE_NODE, StorageType } from './implementations/storage-types';
+import { IStorage } from './interfaces/IStorage';
 
-export const createStorage = async (
+export const createStorage = (
   root: string,
-  type: typeof STORAGE_RAM | typeof STORAGE_NODE
-) => {
+  type?: StorageType
+): IStorage => {
   if (type === undefined) {
-    return defaultImplementation(root)
+    return new NodeStorage(root);
   }
   if (type === STORAGE_RAM) {
     return new RamStorage(root);

@@ -5,6 +5,7 @@
 import pify from 'pify';
 import { IStorage } from '../interfaces/IStorage';
 import { IFile } from '../interfaces/IFile';
+import { StorageType } from './storage-types';
 
 /**
  * Base class for all storage implementations.
@@ -12,15 +13,15 @@ import { IFile } from '../interfaces/IFile';
 export abstract class AbstractStorage implements IStorage {
   protected readonly _root: string;
   protected readonly _files: Set<IFile>;
-  public abstract type = 'abstract'
+  public abstract type: StorageType
 
   constructor (root: string) {
     this._root = root;
     this._files = new Set();
   }
 
-  public async createOrOpen(filename: string) {
-    const file = await this._create(filename);
+  public createOrOpen(filename: string) {
+    const file = this._create(filename);
     this._files.add(file);
     return file as any;
   }
@@ -48,6 +49,6 @@ export abstract class AbstractStorage implements IStorage {
 
 
   public abstract subDir (path: string): IStorage
-  protected abstract _create (filename: string): Promise<IFile>;
+  protected abstract _create (filename: string): IFile;
   protected abstract _destroy (): Promise<void>;
 }

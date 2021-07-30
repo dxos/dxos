@@ -3,12 +3,12 @@
 //
 
 import { AbstractStorage } from "./abstract-storage";
-import { STORAGE_RAM } from "./storage-types";
+import { StorageType, STORAGE_RAM } from "./storage-types";
 import pify from 'pify';
 import ram from 'random-access-memory';
 
 export class RamStorage extends AbstractStorage {
-  public override type = STORAGE_RAM;
+  public override type: StorageType = STORAGE_RAM;
 
   constructor (protected rootPath: string) {
     super(rootPath);

@@ -4,12 +4,12 @@
 
 import { IStorage } from "../interfaces/IStorage";
 import { AbstractStorage } from "./abstract-storage";
-import { STORAGE_IDB } from "./storage-types";
+import { StorageType, STORAGE_IDB } from "./storage-types";
 import randomAccessIdb from 'random-access-idb';
 import { RandomAccessStorage } from "../interfaces/random-access-storage";
 
 export class IDbStorage extends AbstractStorage {
-  public override type = STORAGE_IDB;
+  public override type: StorageType = STORAGE_IDB;
   private _fileStorage: RandomAccessStorage;
 
   constructor (protected rootPath: string) {
@@ -21,7 +21,7 @@ export class IDbStorage extends AbstractStorage {
     return new IDbStorage(`${this.rootPath}${path}`)
   }
 
-  protected override async _create (filename: string) {
+  protected override _create (filename: string) {
     const file = this._fileStorage(filename);
 
     // Monkeypatch close function.
