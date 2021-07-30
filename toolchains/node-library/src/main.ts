@@ -3,72 +3,15 @@
 //
 
 import chalk from 'chalk';
-import { spawnSync, SpawnSyncOptionsWithBufferEncoding } from 'child_process';
 import * as fs from 'fs';
 import { sync as glob } from 'glob';
 import { join } from 'path';
-import { sync as pkgDir } from 'pkg-dir';
-import yargs from 'yargs';
-
 import { Project } from './project';
-
-const selfDir = pkgDir(__dirname)!;
-
-function execTool (name: string, args: string[] = [], opts?: SpawnSyncOptionsWithBufferEncoding) {
-  const before = Date.now();
-
-  const child = spawnSync(`${selfDir}/node_modules/.bin/${name}`, args, { stdio: 'inherit', ...opts });
-  if (child.status !== 0) {
-    process.stderr.write(chalk`{red error}: ${name} exited with code ${child.status}\n`);
-    process.exit(child.status ?? 1);
-  } else {
-    console.log(chalk`{green.bold OK} in {bold ${Date.now() - before}} ms`);
-  }
-}
-
-function execCommand (command: string, args: string[]) {
-  const before = Date.now();
-
-  const child = spawnSync(command, args, {
-    shell: true,
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      PATH: `${selfDir}/node_modules/.bin:${process.cwd()}/node_modules/.bin:${process.env.PATH}`
-    }
-  });
-  if (child.status !== 0) {
-    process.stderr.write(chalk`{red error}: ${command} exited with code ${child.status}\n`);
-    process.exit(child.status ?? 1);
-  } else {
-    console.log(chalk`{green.bold OK} in {bold ${Date.now() - before}} ms`);
-  }
-}
-
-function execLint (project: Project, additionalArgs: string[] = []) {
-  const isReactLib = !!(project.packageJsonContents.dependencies?.react ?? project.packageJsonContents.devDependencies?.react ?? project.packageJsonContents.peerDependencies?.react);
-  const config = isReactLib ? join(selfDir, '.eslintrc.react.js') : join(selfDir, '.eslintrc.js');
-  execTool('eslint', ['--config', config, '{src,test,stories,playwright}/**/*.{js,ts,jsx,tsx}', ...additionalArgs]);
-}
-
-function execJest (pkgDir: string, additionalArgs: string[] = []) {
-  const packageJson = JSON.parse(fs.readFileSync(join(pkgDir, 'package.json'), 'utf-8'));
-  const isReactLib = !!(
-    packageJson.dependencies?.['@testing-library/react'] ??
-    packageJson.devDependencies?.['@testing-library/react'] ??
-    packageJson.peerDependencies?.['@testing-library/react']
-  );
-  const config = isReactLib ? join(selfDir, 'jest.config.react.json') : join(selfDir, 'jest.config.json');
-  execTool('jest', ['--config', config, '--passWithNoTests', '--rootDir', pkgDir, ...additionalArgs], {
-    stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
-  });
-}
-
-function execMocha (additionalArgs: string[] = []) {
-  execTool('mocha', ['-r', 'ts-node/register/transpile-only', '--exit', '-t', '15000', 'src/**/*.test.ts', ...additionalArgs], {
-    stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
-  });
-}
+import { execCommand, execTool } from './tools/common';
+import { execJest } from './tools/jest';
+import { execMocha } from './tools/mocha';
+import yargs from 'yargs'
+import { execLint } from './tools/lint';
 
 function execBuild () {
   const project = Project.load();
@@ -106,7 +49,7 @@ function execTest (additionalArgs?: string[]) {
     execMocha(additionalArgs);
   } else {
     console.log(chalk.bold`\njest`);
-    execJest(project.packageRoot, additionalArgs);
+    execJest(project, additionalArgs);
   }
 }
 

@@ -26,6 +26,13 @@ export class Project {
   get toolchainConfig (): ToolchainConfig {
     return this.packageJsonContents.toolchain ?? {};
   }
+
+  /**
+   * Uses heuristics to determine if the project is a react package.
+   */
+  get isReactPackage(): boolean {
+    return !!(this.packageJsonContents.dependencies?.react ?? this.packageJsonContents.devDependencies?.react ?? this.packageJsonContents.peerDependencies?.react);
+  }
 }
 
 export interface ToolchainConfig {
