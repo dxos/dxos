@@ -4,7 +4,6 @@
 
 import expect from 'expect';
 import { it as test } from 'mocha';
-import ram from 'random-access-memory';
 
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
@@ -17,16 +16,17 @@ import { afterTest } from '@dxos/testutils';
 import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
 import { PartyCore } from './party-core';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 const setup = async () => {
-  const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
   await feedStore.open();
   afterTest(async () => feedStore.close());
 
   const feedStoreAdapter = new FeedStoreAdapter(feedStore);
   const keyring = new Keyring();
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
-  const snapshotStore = new SnapshotStore(ram);
+  const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
 
   const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
