@@ -146,7 +146,7 @@ export class ECHO {
     this._halo.identityReady.once(() => {
       // It might be the case that halo gets closed before this has a chance to execute.
       if (this.halo.identity.halo?.isOpen) {
-        this._subs.push(autoPartyOpener(this.halo.identity.halo, this._partyManager));
+        this._subs.push(autoPartyOpener(this.halo.identity.preferences!, this._partyManager));
       }
     });
   }

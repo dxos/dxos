@@ -95,7 +95,7 @@ export class PartyManager {
           ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
           : await this._partyFactory.constructParty(partyKey);
 
-        const isActive = identity.halo?.preferences.isPartyActive(partyKey) ?? true;
+        const isActive = identity.preferences?.isPartyActive(partyKey) ?? true;
         if (isActive) {
           await party.open();
           // TODO(marik-d): Might not be required if separately snapshot this item.
@@ -246,10 +246,10 @@ export class PartyManager {
 
     const item = await party.getPropertiesItem();
     const currentTitle = item.model.getProperty(PARTY_TITLE_PROPERTY);
-    const storedTitle = identity.halo?.preferences.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY);
+    const storedTitle = identity.preferences?.getGlobalPartyPreference(party.key, PARTY_TITLE_PROPERTY);
     if (storedTitle !== currentTitle) {
       log(`Updating stored name from ${storedTitle} to ${currentTitle} for Party ${party.key.toHex()}`);
-      await identity.halo?.preferences.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, currentTitle);
+      await identity.preferences?.setGlobalPartyPreference(party, PARTY_TITLE_PROPERTY, currentTitle);
     }
   }
 
@@ -263,7 +263,7 @@ export class PartyManager {
 
     const identity = this._identityProvider();
 
-    const contactListItem = identity.halo?.contacts.getContactListItem();
+    const contactListItem = identity.contacts?.getContactListItem();
     if (!contactListItem) {
       return;
     }
@@ -299,7 +299,7 @@ export class PartyManager {
     const identity = this._identityProvider();
 
     // TODO(marik-d): Extract HALO functionality from this class.
-    if (!identity.halo) {
+    if (!identity.preferences) {
       return;
     }
 
@@ -308,7 +308,7 @@ export class PartyManager {
       ...party.processor.feedKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.FEED }))
     ];
 
-    await identity.halo.recordPartyJoining({
+    await identity.preferences.recordPartyJoining({
       partyKey: party.key,
       keyHints
     });
