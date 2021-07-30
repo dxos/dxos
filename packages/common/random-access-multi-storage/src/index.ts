@@ -6,3 +6,5 @@
 
 export * from './node';
 export * from './implementations/storage-types';
+export * from './interfaces/IFile'
+export * from './interfaces/IStorage'

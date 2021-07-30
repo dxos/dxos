@@ -8,14 +8,13 @@ import eos from 'end-of-stream-promise';
 import hypercore from 'hypercore';
 import hypertrie from 'hypertrie';
 import pify from 'pify';
-import ram from 'random-access-memory';
 import tempy from 'tempy';
 
-import { Storage, STORAGE_NODE, createStorage } from '@dxos/random-access-multi-storage';
+import { IStorage, STORAGE_NODE, STORAGE_RAM, createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedStore } from './feed-store';
 
-const createFeedStore = async (storage: Storage, options = {}) => {
+const createFeedStore = async (storage: IStorage, options = {}) => {
   const feedStore = new FeedStore(storage, options);
   await feedStore.open();
   return feedStore;
@@ -48,12 +47,12 @@ function head (feed: any) {
 
 describe('FeedStore', () => {
   test('Config default', async () => {
-    const feedStore = await createFeedStore(ram);
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
     expect(feedStore.opened).toBeTruthy();
-    expect(feedStore.storage).toBe(ram);
+    expect(feedStore.storage).toBe(createStorage('', STORAGE_RAM));
 
-    const feedStore2 = new FeedStore(ram);
+    const feedStore2 = new FeedStore(createStorage('', STORAGE_RAM));
     expect(feedStore2).toBeInstanceOf(FeedStore);
     expect(feedStore2.opened).toBeFalsy();
     await feedStore2.open();
@@ -65,10 +64,10 @@ describe('FeedStore', () => {
       return hypercore(...args);
     });
 
-    const database = hypertrie(ram, { valueEncoding: 'json' });
+    const database = hypertrie(createStorage('', STORAGE_RAM), { valueEncoding: 'json' });
     database.list = jest.fn((_, cb) => cb(null, []));
 
-    const feedStore = await createFeedStore(ram, {
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), {
       database: () => database,
       hypercore: customHypercore
     });
@@ -203,7 +202,7 @@ describe('FeedStore', () => {
   });
 
   test('Default codec: binary', async () => {
-    const feedStore = await createFeedStore(ram);
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
     const feed = await feedStore.openFeed('/test');
@@ -237,7 +236,7 @@ describe('FeedStore', () => {
         }
       }
     };
-    const feedStore = await createFeedStore(ram, options);
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), options);
     expect(feedStore).toBeInstanceOf(FeedStore);
 
     {
@@ -255,7 +254,7 @@ describe('FeedStore', () => {
   });
 
   test('on open error should unlock the descriptor', async () => {
-    const feedStore = await createFeedStore(ram, {
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), {
       hypercore: () => {
         throw new Error('open error');
       }
@@ -273,7 +272,7 @@ describe('FeedStore', () => {
   });
 
   test('on close error should unlock the descriptor', async () => {
-    const feedStore = await createFeedStore(ram, {
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), {
       hypercore: () => ({
         opened: true,
         ready (cb: () => void) {
@@ -300,7 +299,7 @@ describe('FeedStore', () => {
   });
 
   test('on delete descriptor error should unlock the descriptor', async () => {
-    const feedStore = await createFeedStore(ram);
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
 
     await feedStore.openFeed('/foo');
     const fd = feedStore.getDescriptors().find(fd => fd.path === '/foo');
@@ -347,7 +346,7 @@ describe('FeedStore', () => {
   }
 
   test('createReadStream with empty messages', async () => {
-    const feedStore = await createFeedStore(ram, { feedOptions: { valueEncoding: 'utf-8' } });
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf-8' } });
 
     await generateStreamData(feedStore, 0);
     const onSync = jest.fn();
@@ -365,7 +364,7 @@ describe('FeedStore', () => {
   });
 
   test('createReadStream with 200 messages', async () => {
-    const feedStore = await createFeedStore(ram, { feedOptions: { valueEncoding: 'utf-8' } });
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf-8' } });
 
     const [feed1, feed2] = await generateStreamData(feedStore);
 
@@ -395,7 +394,7 @@ describe('FeedStore', () => {
   });
 
   test('createReadStream filter [feed2=false]', async () => {
-    const feedStore = await createFeedStore(ram, { feedOptions: { valueEncoding: 'utf-8' } });
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf-8' } });
 
     const [feed1, feed2] = await generateStreamData(feedStore);
 
@@ -421,7 +420,7 @@ describe('FeedStore', () => {
   });
 
   test.skip('createReadStream [live=true]', async () => {
-    const feedStore = await createFeedStore(ram, { feedOptions: { valueEncoding: 'utf-8' } });
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf-8' } });
 
     const [feed1, feed2, feed3] = await generateStreamData(feedStore);
 
@@ -454,7 +453,7 @@ describe('FeedStore', () => {
   });
 
   test('createBatchStream with 200 messages and [batch=50]', async () => {
-    const feedStore = await createFeedStore(ram, { feedOptions: { valueEncoding: 'utf-8' } });
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf-8' } });
 
     const [feed1, feed2] = await generateStreamData(feedStore);
 
@@ -550,7 +549,7 @@ describe('FeedStore', () => {
   });
 
   test('append event', async (done) => {
-    const feedStore = await createFeedStore(ram);
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     const feed = await feedStore.openFeed('/test');
 
     feedStore.on('append', (f) => {
@@ -583,14 +582,14 @@ describe('FeedStore', () => {
   });
 
   test('openFeed should wait until FeedStore is ready', async () => {
-    const feedStore = new FeedStore(ram);
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
     feedStore.open();
     const feed = await feedStore.openFeed('/test');
     expect(feed).toBeDefined();
   });
 
   test('createReadStream should destroy if FeedStore is closed', async (done) => {
-    const feedStore = new FeedStore(ram);
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
 
     await feedStore.open();
 
@@ -604,7 +603,7 @@ describe('FeedStore', () => {
   });
 
   test('createReadStream should destroy if filter throws an error', async () => {
-    const feedStore = await createFeedStore(ram);
+    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     await feedStore.openFeed('/test');
 
     const stream = feedStore.createReadStream(async () => {
