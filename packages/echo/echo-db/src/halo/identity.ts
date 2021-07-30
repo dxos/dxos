@@ -6,7 +6,9 @@ import debug from 'debug';
 
 import { Filter, KeyChain, KeyRecord, Keyring, KeyType } from '@dxos/credentials';
 
+import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
+import { Preferences } from './preferences';
 
 const log = debug('dxos:echo:parties:identity');
 
@@ -69,6 +71,14 @@ export class Identity {
 
   get halo (): HaloParty | undefined {
     return this._halo;
+  }
+
+  get preferences (): Preferences | undefined {
+    return this._halo?.preferences;
+  }
+
+  get contacts (): ContactManager | undefined {
+    return this._halo?.contacts;
   }
 
   get displayName (): string | undefined {
