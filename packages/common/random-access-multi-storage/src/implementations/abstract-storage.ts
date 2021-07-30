@@ -21,8 +21,8 @@ export abstract class AbstractStorage implements IStorage {
     this._files = new Set();
   }
 
-  public createOrOpen (filename: string) {
-    const file = this._create(filename);
+  public createOrOpen (filename: string, opts = {}) {
+    const file = this._create(filename, opts);
     this._files.add(file);
     return file as any;
   }
@@ -49,6 +49,6 @@ export abstract class AbstractStorage implements IStorage {
   }
 
   public abstract subDir (path: string): IStorage
-  protected abstract _create (filename: string): IFile;
+  protected abstract _create (filename: string, opts?: any): IFile;
   protected abstract _destroy (): Promise<void>;
 }
