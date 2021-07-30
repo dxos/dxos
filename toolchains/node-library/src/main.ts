@@ -13,6 +13,7 @@ import { execCommand, execTool } from './tools/common';
 import { execJest } from './tools/jest';
 import { execLint } from './tools/lint';
 import { execMocha } from './tools/mocha';
+import { execPackageScript } from './tools/packageScript';
 
 function execBuild () {
   const project = Project.load();
@@ -82,6 +83,11 @@ yargs(process.argv.slice(2))
       execLint(project);
 
       execTest();
+
+      for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
+        console.log(chalk.bold`\n${step}`);
+        execPackageScript(project, step, []);
+      }
 
       console.log(chalk`\n{green.bold CHECK COMPLETE} in {bold ${Date.now() - before}} ms`);
     }

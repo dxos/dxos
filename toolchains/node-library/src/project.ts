@@ -37,4 +37,5 @@ export class Project {
 
 export interface ToolchainConfig {
   testingFramework?: 'mocha' | 'jest';
+  additionalTestSteps?: string[];
 }

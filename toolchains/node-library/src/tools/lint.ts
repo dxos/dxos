@@ -12,5 +12,5 @@ export function execLint (project: Project, additionalArgs: string[] = []) {
   const config = project.isReactPackage
     ? join(TOOLCHAIN_PACKAGE_DIR, '.eslintrc.react.js')
     : join(TOOLCHAIN_PACKAGE_DIR, '.eslintrc.js');
-  execTool('eslint', ['--config', config, '{src,test,stories,playwright}/**/*.{js,ts,jsx,tsx}', ...additionalArgs]);
+  execTool('eslint', ['--config', config, '{src,test,browser-test,stories,playwright}/**/*.{js,ts,jsx,tsx}', ...additionalArgs]);
 }
