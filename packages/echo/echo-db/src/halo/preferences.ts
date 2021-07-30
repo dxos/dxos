@@ -7,11 +7,14 @@ import stableStringify from 'json-stable-stringify';
 import defaultsDeep from 'lodash/defaultsDeep';
 
 import { Event } from '@dxos/async';
+import { KeyHint } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
+import { ObjectModel } from '@dxos/object-model';
 
 import { Item } from '../items';
 import { PartyInternal } from '../parties';
-import { HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE } from './halo-party';
+import { ResultSet } from '../result';
+import { HALO_PARTY_DESCRIPTOR_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE, JoinedParty } from './halo-party';
 
 /**
  * Manage settings.
@@ -123,5 +126,51 @@ export class Preferences {
     partyPrefs[key] = value;
     await preferences.model.setProperty(party.key.toHex(), partyPrefs);
     party.update.emit(); // TODO(burdon): Should subscribe to database changes only?
+  }
+
+  async recordPartyJoining (joinedParty: JoinedParty) {
+    const knownParties = this._party.database
+      .select(s => s.filter({ type: HALO_PARTY_DESCRIPTOR_TYPE }).items)
+      .getValue();
+    const partyDesc = knownParties.find(
+      partyMarker => joinedParty.partyKey.equals(partyMarker.model.getProperty('publicKey')));
+    assert(!partyDesc, `Descriptor already exists for Party: ${joinedParty.partyKey.toHex()}`);
+
+    await this._party.database.createItem({
+      model: ObjectModel,
+      type: HALO_PARTY_DESCRIPTOR_TYPE,
+      props: {
+        publicKey: joinedParty.partyKey.asBuffer(),
+        subscribed: true,
+        hints: joinedParty.keyHints.map(hint => ({ ...hint, publicKey: hint.publicKey?.toHex() }))
+      }
+    });
+  }
+
+  subscribeToJoinedPartyList (callback: (parties: JoinedParty[]) => void): () => void {
+    const converter = (partyDesc: Item<any>) => {
+      // TODO(burdon): Define type.
+      return {
+        partyKey: PublicKey.from(partyDesc.model.getProperty('publicKey')),
+        keyHints: Object.values(partyDesc.model.getProperty('hints')).map((hint: any) => ({
+          ...hint,
+          publicKey: PublicKey.from(hint.publicKey)
+        } as KeyHint))
+      };
+    };
+
+    const query = this._party.database.select(s => s.filter({ type: HALO_PARTY_DESCRIPTOR_TYPE }).items);
+
+    // Wrap the query event so we can have manual control.
+    const event = new Event();
+    query.update.on(() => event.emit());
+
+    const result = new ResultSet<JoinedParty>(event, () => query.getValue().map(converter));
+    const unsubscribe = result.subscribe(callback);
+    if (result.value.length) {
+      event.emit();
+    }
+
+    return unsubscribe;
   }
 }
