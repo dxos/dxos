@@ -9,14 +9,15 @@ import { promises as fs, constants } from 'fs';
 import path from 'path';
 import pify from 'pify';
 
+import { STORAGE_RAM, STORAGE_NODE, STORAGE_IDB } from './implementations/storage-types';
+import { IFile } from './interfaces/IFile';
 import { createStorage } from './node';
-import { STORAGE_RAM, STORAGE_NODE, STORAGE_IDB } from './storage-types';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '..', 'out', 'index.test'));
 
 const temp = () => path.join(ROOT_DIRECTORY, crypto.randomBytes(32).toString('hex'));
 
-const write = async (file: any) => {
+const write = async (file: IFile) => {
   const buffer = Buffer.from('test');
   await pify(file.write.bind(file))(10, buffer);
   await expect(pify(file.read.bind(file))(10, 4)).resolves.toEqual(buffer);
@@ -28,11 +29,10 @@ describe('testing node storage types', () => {
   it('create storage with node file by default', async () => {
     const directory = temp();
     const storage = createStorage(directory);
-    expect(storage.root).toBe(directory);
     expect(storage.type).toBe(STORAGE_NODE);
 
     // Check write a file
-    const file = storage('file1');
+    const file = storage.createOrOpen('file1');
     await write(file);
     await expect(fs.access(path.join(directory, 'file1'), constants.F_OK)).resolves.toBeUndefined();
 
@@ -43,19 +43,16 @@ describe('testing node storage types', () => {
 
   it('create a storage with ram type', async () => {
     const storage = createStorage('testing', STORAGE_RAM);
-    expect(storage.root).toBe('testing');
     expect(storage.type).toBe(STORAGE_RAM);
 
-    const file = storage('file1');
+    const file = storage.createOrOpen('file1');
     await write(file);
-    expect(storage._storage._files.size).toBe(1);
 
     // Check destroy
     await storage.destroy();
-    expect(storage._storage._files.size).toBe(0);
   });
 
   it('should throw an assert error if invalid type for platform', () => {
-    expect(() => createStorage('error', STORAGE_IDB)).toThrow(/Invalid type/);
+    expect(() => createStorage('error', STORAGE_IDB)).toThrow(/Unsupported storage/);
   });
 });

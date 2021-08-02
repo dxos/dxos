@@ -11,7 +11,7 @@ import {
   codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
 } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
-import { Storage } from '@dxos/random-access-multi-storage';
+import { IStorage } from '@dxos/random-access-multi-storage';
 
 /**
  * An adapter class to better define the API surface of FeedStore we use.
@@ -19,7 +19,7 @@ import { Storage } from '@dxos/random-access-multi-storage';
  */
 // TODO(burdon): Temporary: will replace FeedStore.
 export class FeedStoreAdapter {
-  static create (storage: Storage) {
+  static create (storage: IStorage) {
     return new FeedStoreAdapter(new FeedStore(storage, { feedOptions: { valueEncoding: patchBufferCodec(codec) } }));
   }
 

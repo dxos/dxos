@@ -6,7 +6,7 @@ import debug from 'debug';
 
 import { createKeyPair } from '@dxos/crypto';
 import { NetworkManagerOptions } from '@dxos/network-manager';
-import { Storage } from '@dxos/random-access-multi-storage';
+import { IStorage } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
 import { ECHO } from '../echo';
@@ -28,7 +28,7 @@ export interface TestOptions {
   // TODO(burdon): Group properties by hierarchical object.
   snapshots?: boolean
   snapshotInterval?: number
-  snapshotStorage?: Storage
+  snapshotStorage?: IStorage
 }
 
 /**

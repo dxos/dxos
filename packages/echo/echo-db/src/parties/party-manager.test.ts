@@ -8,7 +8,6 @@ import assert from 'assert';
 import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
-import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import {
@@ -31,6 +30,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 import { createWritableFeedStream } from '@dxos/util';
 
@@ -57,7 +57,7 @@ const log = debug('dxos:echo:parties:party-manager:test');
  * @param createIdentity - Create the identity key record.
  */
 const setup = async (open = true, createIdentity = true) => {
-  const feedStore = FeedStoreAdapter.create(ram);
+  const feedStore = FeedStoreAdapter.create(createStorage('', STORAGE_RAM));
   await feedStore.open();
   const keyring = new Keyring();
 
@@ -74,7 +74,7 @@ const setup = async (open = true, createIdentity = true) => {
     assert(keyring.keys.length === 1);
   }
 
-  const snapshotStore = new SnapshotStore(ram);
+  const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
   const partyFactory = new PartyFactory(
@@ -175,7 +175,7 @@ describe('Party manager', () => {
   });
 
   test('Create from cold start', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
     const keyring = new Keyring();
@@ -183,7 +183,7 @@ describe('Party manager', () => {
     await keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(ram);
+    const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
     const networkManager = new NetworkManager();
     const partyFactory: PartyFactory = new PartyFactory(() => identityManager.identity, networkManager, feedStoreAdapter, modelFactory, snapshotStore);
     const haloFactory = new HaloFactory(partyFactory, networkManager, keyring);

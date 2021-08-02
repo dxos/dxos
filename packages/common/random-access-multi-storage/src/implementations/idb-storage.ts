@@ -4,37 +4,29 @@
 
 import randomAccessIdb from 'random-access-idb';
 
-import { RandomAccessAbstract } from '../random-access-abstract';
-import { Storage } from '../types';
+import { RandomAccessStorage } from '../interfaces/random-access-storage';
+import { AbstractStorage } from './abstract-storage';
+import { StorageType, STORAGE_IDB } from './storage-types';
 
-/**
- * IndexedDB implementation.
- * To inspect storage: Dev tools > Application > IndexedDB.
- * https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API
- */
-export class IDB extends RandomAccessAbstract {
-  private _fileStorage: Storage | null;
+export class IDbStorage extends AbstractStorage {
+  public override type: StorageType = STORAGE_IDB;
+  private _fileStorage: RandomAccessStorage;
 
-  constructor (root: string) {
-    super(root);
-
-    this._fileStorage = null;
+  constructor (protected rootPath: string) {
+    super(rootPath);
+    this._fileStorage = this._createFileStorage();
   }
 
-  protected override _create (filename: string, opts: any = {}) {
-    if (this._files.size === 0) {
-      this._fileStorage = this._createFileStorage();
-    }
+  subDir (path: string) {
+    return new IDbStorage(`${this.rootPath}${path}`);
+  }
 
-    if (!this._fileStorage) {
-      throw new Error('Set file storage first');
-    }
-
-    const file = this._fileStorage(filename, opts);
+  protected override _create (filename: string) {
+    const file = this._fileStorage(filename);
 
     // Monkeypatch close function.
     const defaultClose = file.close.bind(file);
-    file.close = (cb) => {
+    file.close = (cb: any) => {
       this._files.delete(file);
       if (this._files.size === 0) {
         return defaultClose(cb);

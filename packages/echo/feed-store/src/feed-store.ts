@@ -9,7 +9,7 @@ import defaultHypercore from 'hypercore';
 import hypertrie from 'hypertrie';
 
 import { synchronized } from '@dxos/async';
-import { Storage } from '@dxos/random-access-multi-storage';
+import { IStorage } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
 import IndexDB from './index-db';
@@ -42,7 +42,7 @@ interface OpenFeedOptions {
  * into a persist repository storage.
  */
 export class FeedStore extends EventEmitter {
-  private _storage: Storage;
+  private _storage: IStorage;
   private _database: any;
   private _defaultFeedOptions: any;
   private _codecs: any;
@@ -70,7 +70,7 @@ export class FeedStore extends EventEmitter {
    * @param options.codecs Defines a list of available codecs to work with the feeds.
    * @param options.hypercore Hypercore class to use.
    */
-  constructor (storage: Storage, options: any = {}) {
+  constructor (storage: IStorage, options: any = {}) {
     assert(storage, 'The storage is required.');
 
     super();
@@ -131,7 +131,7 @@ export class FeedStore extends EventEmitter {
     }
     this._open = true;
 
-    this._indexDB = new IndexDB(this._database(this._storage, { valueEncoding: jsonBuffer }));
+    this._indexDB = new IndexDB(this._database(this._storage.createOrOpen.bind(this._storage), { valueEncoding: jsonBuffer }));
 
     const list = await this._indexDB.list(STORE_NAMESPACE);
 
