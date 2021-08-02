@@ -6,13 +6,13 @@
 
 import crypto from 'hypercore-crypto';
 import pify from 'pify';
-import ram from 'random-access-memory';
 import tempy from 'tempy';
 
-import { createStorage, STORAGE_NODE } from '@dxos/random-access-multi-storage';
+import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
 
+// Caution: the tests depend on each other in sequence.
 describe('FeedDescriptor', () => {
   let fd: FeedDescriptor;
 
@@ -45,7 +45,7 @@ describe('FeedDescriptor', () => {
     };
 
     fd = new FeedDescriptor('/books', {
-      storage: ram,
+      storage: createStorage('', STORAGE_RAM),
       key: publicKey,
       secretKey,
       valueEncoding: 'json',
@@ -84,7 +84,7 @@ describe('FeedDescriptor', () => {
 
     // If we try to close a feed that is opening should wait for the open result.
     const fd2 = new FeedDescriptor('/feed2', {
-      storage: ram
+      storage: createStorage('', STORAGE_RAM)
     });
 
     fd2.open();
@@ -117,7 +117,7 @@ describe('FeedDescriptor', () => {
 
   test('Watch data', async (done) => {
     const fd = new FeedDescriptor('/feed', {
-      storage: ram
+      storage: createStorage('', STORAGE_RAM)
     });
 
     fd.watch(event => {
@@ -131,7 +131,7 @@ describe('FeedDescriptor', () => {
 
   test('on open error should unlock the resource', async () => {
     const fd = new FeedDescriptor('/foo', {
-      storage: ram,
+      storage: createStorage('', STORAGE_RAM),
       hypercore: () => {
         throw new Error('open error');
       }
@@ -144,7 +144,7 @@ describe('FeedDescriptor', () => {
 
   test('on close error should unlock the resource', async () => {
     const fd = new FeedDescriptor('/foo', {
-      storage: ram,
+      storage: createStorage('', STORAGE_RAM),
       hypercore: () => ({
         opened: true,
         on () {},

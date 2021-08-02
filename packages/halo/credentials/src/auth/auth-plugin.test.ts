@@ -8,13 +8,13 @@ import debug from 'debug';
 import eos from 'end-of-stream';
 import pify from 'pify';
 import pump from 'pump';
-import ram from 'random-access-memory';
 import waitForExpect from 'wait-for-expect';
 
 import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { Keyring } from '../keys';
 import { codec, codecLoop, KeyType } from '../proto';
@@ -71,7 +71,7 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();
-  const feedStore = await new FeedStore(ram, { feedOptions: { valueEncoding: 'utf8' } });
+  const feedStore = await new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
   await feedStore.open();
   const feed = await feedStore.openFeed(`/topic/${topic}/writable`, { metadata: { topic } });
   const append = pify(feed.append.bind(feed));

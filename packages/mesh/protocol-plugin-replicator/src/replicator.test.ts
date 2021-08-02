@@ -5,20 +5,20 @@
 import crypto from 'crypto';
 import eos from 'end-of-stream';
 import pify from 'pify';
-import ram from 'random-access-memory';
 import waitForExpect from 'wait-for-expect';
 
 import { discoveryKey } from '@dxos/crypto';
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { DefaultReplicator } from '.';
 
 jest.setTimeout(30000);
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
-  const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: 'utf8' } });
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
   await feedStore.open();
   const feed = await feedStore.openFeed('/feed', {
     metadata: { topic: topic.toString('hex') }

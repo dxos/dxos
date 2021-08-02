@@ -3,9 +3,9 @@
 //
 
 import pify from 'pify';
-import ram from 'random-access-memory';
 
 import { FeedStore } from '@dxos/feed-store';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { codec, FeedMessage } from '../proto';
 import { createFeedWriter } from './feed-writer';
@@ -22,7 +22,7 @@ describe('Feed tests:', () => {
   });
 
   test('hypercore', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
     const feed = await feedStore.openFeed('test-feed');
@@ -38,7 +38,7 @@ describe('Feed tests:', () => {
   });
 
   test('feed writer', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
     const feed = await feedStore.openFeed('test-feed');

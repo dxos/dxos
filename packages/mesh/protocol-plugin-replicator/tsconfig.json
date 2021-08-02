@@ -28,6 +28,9 @@
     },
     {
       "path": "../protocol-network-generator"
+    },
+    {
+      "path": "../../common/random-access-multi-storage"
     }
   ]
 }
