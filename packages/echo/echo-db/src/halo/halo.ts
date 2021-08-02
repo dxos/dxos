@@ -228,7 +228,7 @@ export class HALO {
       throw new Error('Profile already exists.');
     }
 
-    if(!!publicKey !== !!secretKey) {
+    if (!!publicKey !== !!secretKey) {
       throw new Error('Both publicKey and secretKey must be provided or neither.');
     }
 
@@ -238,7 +238,7 @@ export class HALO {
     await this.create(username);
 
     const profile = this.getProfile();
-    assert(profile)
+    assert(profile);
     return profile;
   }
 
