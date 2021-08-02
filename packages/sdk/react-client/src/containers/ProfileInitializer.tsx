@@ -4,8 +4,6 @@
 
 import React, { ReactNode, useEffect } from 'react';
 
-import { createKeyPair } from '@dxos/crypto';
-
 import { useClient, useProfile } from '../hooks';
 
 /**
@@ -18,7 +16,7 @@ const ProfileInitializer = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!profile) {
-      client.halo.createProfile(createKeyPair());
+      client.halo.createProfile();
     }
   }, []);
 

@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 
 import { Drawer } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { createKeyPair } from '@dxos/crypto';
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
 import ProfileDialog from '../src/components/ProfileDialog';
 import PartyList from '../src/components/PartyList';
@@ -44,8 +43,7 @@ export const Stage4 = () => {
 
     const handleCreateProfile = async ({ username }: { username: string }) => {
       if (username) {
-        const { publicKey, secretKey } = createKeyPair();
-        await client.halo.createProfile({ publicKey, secretKey, username });
+        await client.halo.createProfile({ username });
       }
     };
 

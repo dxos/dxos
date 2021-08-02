@@ -39,6 +39,9 @@
       "path": "../../echo/object-model"
     },
     {
+      "path": "../../common/random-access-multi-storage"
+    },
+    {
       "path": "../../common/util"
     }
   ]

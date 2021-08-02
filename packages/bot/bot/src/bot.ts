@@ -9,7 +9,7 @@ import { join } from 'path';
 
 import { promiseTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { randomBytes, keyToBuffer, keyToString, createKeyPair, PublicKey } from '@dxos/crypto';
+import { randomBytes, keyToBuffer, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { StarTopology, transportProtocolProvider } from '@dxos/network-manager';
 import {
@@ -102,9 +102,8 @@ export class Bot extends EventEmitter {
     await this._client.initialize();
 
     if (!this._persistent || !this._client.halo.getProfile()) {
-      const { publicKey, secretKey } = createKeyPair();
-      await this._client.halo.createProfile({ publicKey, secretKey, username: this._name });
-      log(`Identity initialized: ${keyToString(publicKey)}`);
+      const { publicKey } = await this._client.halo.createProfile({ username: this._name });
+      log(`Identity initialized: ${publicKey}`);
     }
 
     // Join control swarm.
