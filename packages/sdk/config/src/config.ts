@@ -7,6 +7,8 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
 import set from 'lodash.set';
 
+import { validateConfig } from './schema-validator';
+
 type MappingSpec = Record<string, { path: string, type: string }>;
 
 /**
@@ -94,6 +96,8 @@ export class Config {
    */
   constructor (...objects: [any, ...any]) {
     this._config = defaultsDeep(...objects);
+
+    validateConfig(this._config);
   }
 
   /**
@@ -109,7 +113,7 @@ export class Config {
    * @param {string} key
    * @param {any} [defaultValue]
    */
-  get <T>(key: string, defaultValue: T): T {
+  get <T> (key: string, defaultValue: T): T {
     return get(this._config, key, defaultValue);
   }
 }
