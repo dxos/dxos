@@ -6,10 +6,10 @@
 
 import eos from 'end-of-stream-promise';
 import hypercore from 'hypercore';
+import crypto from 'hypercore-crypto';
 import hypertrie from 'hypertrie';
 import pify from 'pify';
 import tempy from 'tempy';
-import crypto from 'hypercore-crypto';
 
 import { IStorage, STORAGE_NODE, STORAGE_RAM, createStorage } from '@dxos/random-access-multi-storage';
 
@@ -17,7 +17,7 @@ import { FeedStore } from './feed-store';
 
 const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
 
-interface KeyPair { 
+interface KeyPair {
   key: Buffer,
   secretKey: Buffer
 }
@@ -39,9 +39,9 @@ async function createDefault () {
 
 async function defaultFeeds (feedStore: FeedStore, keys: { [k: string]: KeyPair }) {
   return Object.fromEntries(await Promise.all(Object.entries<any>(keys).map(async ([feed, keyPair]) =>
-    feed === 'booksFeed' ?
-    [feed, await feedStore.openFeed({ key: keyPair.key, secretKey: keyPair.secretKey, metadata : { topic: 'books' }})] :
-    [feed, await feedStore.openFeed({ key: keyPair.key, secretKey: keyPair.secretKey})]
+    feed === 'booksFeed'
+      ? [feed, await feedStore.openFeed({ key: keyPair.key, secretKey: keyPair.secretKey, metadata: { topic: 'books' } })]
+      : [feed, await feedStore.openFeed({ key: keyPair.key, secretKey: keyPair.secretKey })]
   )));
   // return {
   //   booksFeed: await feedStore.openFeed({ key: keys['booksFeed'].key, metadata: { topic: 'books' } }),
@@ -61,9 +61,9 @@ function head (feed: any) {
 const createKeyPairs = () => {
   return Object.fromEntries<KeyPair>(feedNames.map(feed => {
     const { publicKey, secretKey } = crypto.keyPair();
-    return [feed, { key: publicKey, secretKey}]
+    return [feed, { key: publicKey, secretKey }];
   }));
-}
+};
 
 describe('FeedStore', () => {
   const keys = createKeyPairs();
@@ -116,7 +116,7 @@ describe('FeedStore', () => {
     await expect(head(booksFeed)).resolves.toBe('Foundation and Empire');
 
     // It should return the same opened instance.
-    await expect(feedStore.openFeed({ key: booksFeed.key})).resolves.toBe(booksFeed);
+    await expect(feedStore.openFeed({ key: booksFeed.key })).resolves.toBe(booksFeed);
 
     // You can't open a feed with an invalid key.
     await expect(feedStore.openFeed({ key: Buffer.from('...') })).rejects.toThrow(/key must be/);
@@ -126,8 +126,8 @@ describe('FeedStore', () => {
     const { feedStore } = await createDefault();
 
     const [usersFeed, feed2] = await Promise.all([
-      feedStore.openFeed({ key: keys['usersFeed'].key, secretKey: keys['usersFeed'].secretKey }),
-      feedStore.openFeed({ key: keys['usersFeed'].key, secretKey: keys['usersFeed'].secretKey })
+      feedStore.openFeed({ key: keys.usersFeed.key, secretKey: keys.usersFeed.secretKey }),
+      feedStore.openFeed({ key: keys.usersFeed.key, secretKey: keys.usersFeed.secretKey })
     ]);
     expect(usersFeed).toBe(feed2);
 
@@ -141,7 +141,7 @@ describe('FeedStore', () => {
 
     await expect(feedStore.closeFeed(publicKey)).rejects.toThrow(/Feed not found/);
 
-    const foo = await feedStore.openFeed({ key: publicKey});
+    const foo = await feedStore.openFeed({ key: publicKey });
     expect(foo.opened).toBeTruthy();
     expect(foo.closed).toBeFalsy();
 
@@ -154,7 +154,7 @@ describe('FeedStore', () => {
     const { booksFeed } = await defaultFeeds(feedStore, keys);
 
     expect(feedStore.getDescriptors().map(fd => fd.key)).toEqual(Object.entries(keys).map(([, keyPair]) => keyPair.key));
-    expect(feedStore.getDescriptorByDiscoveryKey(booksFeed.discoveryKey)?.key).toEqual(keys['booksFeed'].key);
+    expect(feedStore.getDescriptorByDiscoveryKey(booksFeed.discoveryKey)?.key).toEqual(keys.booksFeed.key);
   });
 
   test('Feeds', async () => {
@@ -164,20 +164,20 @@ describe('FeedStore', () => {
     expect(feedStore.getOpenFeeds().map(f => f.key)).toEqual([booksFeed.key, usersFeed.key, groupsFeed.key]);
     expect(feedStore.getOpenFeed(fd => fd.key.equals(booksFeed.key))).toBe(booksFeed);
     expect(feedStore.getOpenFeed(() => false)).toBeUndefined();
-    expect(feedStore.getOpenFeeds(fd => fd.key.equals(keys['booksFeed'].key))).toEqual([booksFeed]);
+    expect(feedStore.getOpenFeeds(fd => fd.key.equals(keys.booksFeed.key))).toEqual([booksFeed]);
   });
 
   test('Close/Load feed', async () => {
     const { feedStore } = await createDefault();
     const { booksFeed } = await defaultFeeds(feedStore, keys);
 
-    await feedStore.closeFeed(keys['booksFeed'].key);
-    expect(feedStore.getDescriptors().find(fd => fd.key.equals(keys['booksFeed'].key))).toHaveProperty('opened', false);
+    await feedStore.closeFeed(keys.booksFeed.key);
+    expect(feedStore.getDescriptors().find(fd => fd.key.equals(keys.booksFeed.key))).toHaveProperty('opened', false);
 
-    const [feed] = await feedStore.openFeeds(fd => fd.key.equals(keys['booksFeed'].key));
+    const [feed] = await feedStore.openFeeds(fd => fd.key.equals(keys.booksFeed.key));
     expect(feed).toBeDefined();
     expect(feed.key).toEqual(booksFeed.key);
-    expect(feedStore.getDescriptors().find(fd => fd.key.equals(keys['booksFeed'].key))).toHaveProperty('opened', true);
+    expect(feedStore.getDescriptors().find(fd => fd.key.equals(keys.booksFeed.key))).toHaveProperty('opened', true);
   });
 
   test('Close feedStore and their feeds', async () => {
@@ -206,8 +206,8 @@ describe('FeedStore', () => {
     expect(feedStore.opened).toBe(true);
     expect(feedStore.getDescriptors().length).toBe(3);
 
-    booksFeed = await feedStore.openFeed({ key: keys['booksFeed'].key });
-    [usersFeed] = await feedStore.openFeeds(fd => fd.key.equals(keys['usersFeed'].key));
+    booksFeed = await feedStore.openFeed({ key: keys.booksFeed.key });
+    [usersFeed] = await feedStore.openFeeds(fd => fd.key.equals(keys.usersFeed.key));
     expect(feedStore.getDescriptors().filter(fd => fd.opened).length).toBe(2);
 
     await expect(pify(booksFeed.head.bind(booksFeed))()).resolves.toBe('Foundation and Empire');
@@ -215,14 +215,14 @@ describe('FeedStore', () => {
 
     // The metadata of /books should be recreate too.
     const metadata = { topic: 'books' };
-    expect(feedStore.getDescriptors().find(fd => fd.key.equals(keys['booksFeed'].key))?.metadata).toEqual(metadata);
+    expect(feedStore.getDescriptors().find(fd => fd.key.equals(keys.booksFeed.key))?.metadata).toEqual(metadata);
   });
 
   test('Delete descriptor', async () => {
     const { feedStore } = await createDefault();
     await defaultFeeds(feedStore, keys);
 
-    await feedStore.deleteDescriptor(keys['booksFeed'].key);
+    await feedStore.deleteDescriptor(keys.booksFeed.key);
     expect(feedStore.getDescriptors().length).toBe(2);
   });
 
