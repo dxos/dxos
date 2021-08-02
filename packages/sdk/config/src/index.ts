@@ -4,3 +4,4 @@
 
 export * from './config';
 export * from './loaders/index';
+export * from './types';
