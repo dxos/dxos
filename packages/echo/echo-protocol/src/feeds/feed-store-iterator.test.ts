@@ -7,11 +7,11 @@ import debug from 'debug';
 import faker from 'faker';
 import hypercore from 'hypercore';
 import pify from 'pify';
-import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import { createId, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { ComplexMap } from '@dxos/util';
 
 import { codec, createTestItemMutation, schema } from '../proto';
@@ -31,7 +31,7 @@ describe('feed store iterator', () => {
       numMessages: 10
     };
 
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
     //
@@ -152,7 +152,7 @@ describe('feed store iterator', () => {
   });
 
   test('skipping initial messages', async () => {
-    const feedStore = new FeedStore(ram, {
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), {
       feedOptions: {
         valueEncoding: schema.getCodecForType('dxos.echo.testing.TestItemMutation')
       }

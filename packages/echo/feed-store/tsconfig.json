@@ -13,5 +13,9 @@
   "exclude": [
     "src/**/*.test.js"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/random-access-multi-storage"
+    }
+  ]
 }

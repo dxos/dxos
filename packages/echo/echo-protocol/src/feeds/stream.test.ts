@@ -5,14 +5,13 @@
 import assert from 'assert';
 import faker from 'faker';
 import pify from 'pify';
-import ram from 'random-access-memory';
 import { Writable } from 'stream';
 import tempy from 'tempy';
 
 import { latch, sink } from '@dxos/async';
 import { createId, keyToString, randomBytes, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
-import { createStorage, STORAGE_NODE } from '@dxos/random-access-multi-storage';
+import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { createWritableFeedStream } from '@dxos/util';
 
 import { codec, createTestItemMutation, FeedMessage } from '../proto';
@@ -60,7 +59,7 @@ describe('Stream tests', () => {
   });
 
   test('feed streams', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
     const feed = await feedStore.openFeed('test-feed');
@@ -96,7 +95,7 @@ describe('Stream tests', () => {
       numBlocks: 100
     };
 
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
     // Create feeds.
