@@ -41,7 +41,12 @@
     "babel-plugin-inline-import": "^3.0.0",
     "del-cli": "^3.0.0",
     "jest": "^26.6.3",
-    "webpack": "4.44.2"
+    "webpack": "4.44.2",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/lodash.set": "~4.3.6",
+    "@types/lodash.get": "^4.4.6",
+    "@types/node": "^14.0.9",
+    "@types/js-yaml": "^3.12.5"
   },
   "publishConfig": {
     "access": "restricted"

@@ -3,7 +3,7 @@
   "compilerOptions": {
     "lib": [
       "DOM",
-      "ES6"
+      "ESNext"
     ],
     "outDir": "dist"
   },

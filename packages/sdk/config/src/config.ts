@@ -7,13 +7,15 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
 import set from 'lodash.set';
 
+type MappingSpec = Record<string, { path: string, type: string }>;
+
 /**
  * Maps the given objects onto a flattened set of (key x values).
  * @param {object} spec
  * @param {object} values
  * @return {object}
  */
-export function mapFromKeyValues (spec, values) {
+export function mapFromKeyValues (spec: MappingSpec, values: Record<string, any>) {
   const config = {};
 
   for (const [key, { path, type }] of Object.entries(spec)) {
@@ -59,8 +61,8 @@ export function mapFromKeyValues (spec, values) {
  * @param {object} spec
  * @param {object} values
  */
-export function mapToKeyValues (spec, values) {
-  const config = {};
+export function mapToKeyValues (spec: MappingSpec, values: any) {
+  const config: Record<string, any> = {};
 
   for (const [key, { path, type }] of Object.entries(spec)) {
     const value = get(values, path);
@@ -83,12 +85,14 @@ export function mapToKeyValues (spec, values) {
  * NOTE: Config objects are immutable.
  */
 export class Config {
+  private readonly _config: any;
+
   /**
    * Creates an immutable instance.
    * @constructor
    * @param objects
    */
-  constructor (...objects) {
+  constructor (...objects: [any, ...any]) {
     this._config = defaultsDeep(...objects);
   }
 
@@ -105,7 +109,7 @@ export class Config {
    * @param {string} key
    * @param {any} [defaultValue]
    */
-  get (key, defaultValue) {
+  get <T>(key: string, defaultValue: T): T {
     return get(this._config, key, defaultValue);
   }
 }
