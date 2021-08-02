@@ -1,33 +1,37 @@
-import { readFileSync, readdirSync, promises as fs } from 'fs';
-import { extname, join } from 'path';
-import chalk from 'chalk';
+//
+// Copyright 2021 DXOS.org
+//
 
-async function main() {
-  console.log(chalk`{bold ${process.cwd()}/package.json}:\n`)
+import chalk from 'chalk';
+import { readFileSync, readdirSync } from 'fs';
+import { extname, join } from 'path';
+
+async function main () {
+  console.log(chalk`{bold ${process.cwd()}/package.json}:\n`);
 
   const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
 
   const allDeps = Object.keys({
     ...(packageJson.dependencies ?? {}),
     ...(packageJson.devDependencies ?? {}),
-    ...(packageJson.peerDependencies ?? {}),
-  })
+    ...(packageJson.peerDependencies ?? {})
+  });
 
-  const sourceFiles = Array.from(getAllSourceFiles())
-  const sourceFilesContent = await readFiles(sourceFiles)
+  const sourceFiles = Array.from(getAllSourceFiles());
+  const sourceFilesContent = await readFiles(sourceFiles);
 
-  for(const dep of allDeps) {
-    if(IGNORE_PACKAGES.includes(dep)) {
-      continue
+  for (const dep of allDeps) {
+    if (IGNORE_PACKAGES.includes(dep)) {
+      continue;
     }
 
-    const searchStrings = [dep]
-    if(dep.startsWith('@types/')) {
-      searchStrings.push(dep.slice('@types/'.length))
+    const searchStrings = [dep];
+    if (dep.startsWith('@types/')) {
+      searchStrings.push(dep.slice('@types/'.length));
     }
 
     const depExists = Object.values(sourceFilesContent).some(content => searchStrings.some(ss => content.includes(ss)));
-    if(!depExists) {
+    if (!depExists) {
       console.log(chalk`{blue ${dep}} is not used in the code.`);
     }
   }
@@ -35,47 +39,46 @@ async function main() {
 
 const IGNORE_PACKAGES = [
   '@types/node',
-  '@dxos/toolchain-node-library',
-]
+  '@dxos/toolchain-node-library'
+];
 
 const ALLOWED_EXTENSIONS = [
   '.ts',
   '.tsx',
   '.js',
-  '.jsx',
-]
+  '.jsx'
+];
 
 const BLACKLISTED_NAMES = [
   'node_modules',
   'build',
   '.rush',
   'temp',
-  'dist',
-]
+  'dist'
+];
 
-function* getAllSourceFiles(dir: string = process.cwd()): Generator<string> {
-  for(const entry of readdirSync(dir, { withFileTypes: true })) {
-    if(BLACKLISTED_NAMES.includes(entry.name)) {
+function * getAllSourceFiles (dir: string = process.cwd()): Generator<string> {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (BLACKLISTED_NAMES.includes(entry.name)) {
       continue;
     }
 
-    if(entry.isDirectory()) {
-      yield* getAllSourceFiles(join(dir, entry.name));
-    } else if(entry.isFile()) {
-
-      if(ALLOWED_EXTENSIONS.includes(extname(entry.name))) {
+    if (entry.isDirectory()) {
+      yield * getAllSourceFiles(join(dir, entry.name));
+    } else if (entry.isFile()) {
+      if (ALLOWED_EXTENSIONS.includes(extname(entry.name))) {
         yield join(dir, entry.name);
       }
     }
   }
 }
 
-async function readFiles(files: string[]): Promise<Record<string, string>> {
-  const res: Record<string, string> = {}
+async function readFiles (files: string[]): Promise<Record<string, string>> {
+  const res: Record<string, string> = {};
   await Promise.all(files.map(async (file) => {
-    res[file] = await readFileSync(file, 'utf8')
-  }))
-  return res
+    res[file] = await readFileSync(file, 'utf8');
+  }));
+  return res;
 }
 
-main()
+main();
