@@ -25,7 +25,8 @@
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "ajv": "~8.6.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
