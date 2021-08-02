@@ -10,7 +10,7 @@ import set from 'lodash.set';
 import { validateConfig } from './schema-validator';
 import { ConfigSchema } from './types';
 
-type MappingSpec = Record<string, { path: string, type: string }>;
+type MappingSpec = Record<string, { path: string, type?: string }>;
 
 /**
  * Maps the given objects onto a flattened set of (key x values).
