@@ -61,6 +61,9 @@
       "path": "../../echo/object-model"
     },
     {
+      "path": "../../common/random-access-multi-storage"
+    },
+    {
       "path": "../react-client"
     },
     {

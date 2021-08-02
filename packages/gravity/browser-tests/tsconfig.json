@@ -30,6 +30,9 @@
     },
     {
       "path": "../browser-mocha"
+    },
+    {
+      "path": "../../mesh/signal"
     }
   ]
 }
