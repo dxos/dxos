@@ -8,7 +8,7 @@ import Ajv from 'ajv';
 import { InvalidConfigError } from './errors';
 import schema from './schema.json';
 
-const ajv = new Ajv();
+const ajv = new Ajv({ allowUnionTypes: true, allErrors: true });
 
 const validateSchema = ajv.compile(schema);
 
