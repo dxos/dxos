@@ -235,14 +235,6 @@ export class FeedStore extends EventEmitter {
 
     let descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
 
-    if (descriptor && key && descriptor.key && !key.equals(descriptor.key)) {
-      throw new Error(`Invalid public key "${key.toString('hex')}"`);
-    }
-
-    if (!descriptor && key && this.getDescriptors().find(fd => fd.key?.equals(key))) {
-      throw new Error(`Feed exists with same public key "${key.toString('hex')}"`);
-    }
-
     if (!descriptor) {
       descriptor = this._createDescriptor(options);
     }
