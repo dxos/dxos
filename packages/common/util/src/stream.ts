@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import { Feed } from 'hypercore';
+import type { Feed } from 'hypercore';
 import { PassThrough, Readable, Transform, Writable } from 'stream';
 
 const log = debug('dxos:stream');
