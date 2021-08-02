@@ -15,6 +15,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/random-access-multi-storage"
     }
   ]

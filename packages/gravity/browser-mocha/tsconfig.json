@@ -15,9 +15,6 @@
     },
     {
       "path": "../../common/async"
-    },
-    {
-      "path": "../../mesh/signal"
     }
   ]
 }

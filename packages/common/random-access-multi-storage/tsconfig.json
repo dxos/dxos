@@ -18,4 +18,9 @@
     "/node_modules/",
     "/dist/"
   ],
+  "references": [
+    {
+      "path": "../../gravity/browser-mocha"
+    }
+  ]
 }
