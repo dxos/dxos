@@ -51,16 +51,6 @@ export class FeedStore extends EventEmitter {
   private _readers: Set<Reader>;
   private _indexDB: any;
   private _open: boolean;
-  public database: any;
-  public feedOptions: any;
-  public codecs: any;
-  public hypercore: Hypercore;
-  public key: any;
-  public options: any;
-  public secretKey: any;
-  public valueEncoding: any;
-  public metadata: any;
-  public feed: any;
 
   /**
    * @param storage RandomAccessStorage to use by default by the feeds.
