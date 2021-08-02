@@ -7,12 +7,13 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { LinearProgress } from '@material-ui/core';
 
 import { Client, ClientConfig } from '@dxos/client';
+import { MaybePromise } from '@dxos/util';
 
 import ClientProvider from './ClientProvider';
 
 interface ClientInitializerProperties {
   children?: ReactNode
-  config?: ClientConfig | Function
+  config?: ClientConfig | (() => MaybePromise<ClientConfig>)
 }
 
 /**

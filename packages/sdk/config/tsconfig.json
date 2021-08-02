@@ -3,12 +3,13 @@
   "compilerOptions": {
     "lib": [
       "DOM",
-      "ES6"
+      "ESNext"
     ],
     "outDir": "dist"
   },
   "include": [
-    "src"
+    "src",
+    "src/**/*.json"
   ],
   "references": []
 }
