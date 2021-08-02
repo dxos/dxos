@@ -8,7 +8,7 @@ import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
 import { KeyRecord, Keyring, KeyStore, KeyType } from '@dxos/credentials';
-import { KeyPair, PublicKey } from '@dxos/crypto';
+import { createKeyPair, KeyPair, PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
 import {
@@ -210,9 +210,9 @@ export class HALO {
    */
   // TODO(burdon): Expose ContactManager directly.
   queryContacts (): ResultSet<Contact> {
-    assert(this.identity.halo, 'Invalid HALO.');
+    assert(this.identity.contacts, 'HALO not initialized.');
 
-    return this.identity.halo.contacts.queryContacts();
+    return this.identity.contacts.queryContacts();
   }
 
   /**
@@ -228,14 +228,18 @@ export class HALO {
       throw new Error('Profile already exists.');
     }
 
-    // TODO(burdon): What if not set?
-    if (publicKey && secretKey) {
-      await this.createIdentity({ publicKey, secretKey });
+    if (!!publicKey !== !!secretKey) {
+      throw new Error('Both publicKey and secretKey must be provided or neither.');
     }
+
+    const keyPair = publicKey ? { publicKey, secretKey: secretKey! } : createKeyPair();
+    await this.createIdentity(keyPair);
 
     await this.create(username);
 
-    return this.getProfile();
+    const profile = this.getProfile();
+    assert(profile);
+    return profile;
   }
 
   /**

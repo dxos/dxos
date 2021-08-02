@@ -50,8 +50,7 @@
     "json-stable-stringify": "^1.0.1",
     "lodash.merge": "^4.6.2",
     "pify": "~5.0.0",
-    "protobufjs": "^6.9.0",
-    "random-access-memory": "~3.1.2"
+    "protobufjs": "^6.9.0"
   },
   "devDependencies": {
     "@dxos/testutils": "workspace:*",

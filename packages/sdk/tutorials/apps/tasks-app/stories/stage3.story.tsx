@@ -5,7 +5,6 @@
 import React, { useState } from 'react';
 
 import { Button, Toolbar } from '@material-ui/core';
-import { createKeyPair } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-ux';
@@ -25,8 +24,7 @@ export const Stage3 = () => {
 
     const handleCreateProfile = async ({ username }: { username: string }) => {
       if (username) {
-        const { publicKey, secretKey } = createKeyPair();
-        await client.halo.createProfile({ publicKey, secretKey, username });
+        await client.halo.createProfile({ username });
       }
     };
 

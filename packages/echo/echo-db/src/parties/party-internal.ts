@@ -72,8 +72,8 @@ export class PartyInternal {
     );
 
     const identity = this._identityProvider();
-    if (identity.halo) {
-      this._activator = new PartyActivator(identity.halo, this);
+    if (identity.preferences) {
+      this._activator = new PartyActivator(identity.preferences, this);
     }
   }
 

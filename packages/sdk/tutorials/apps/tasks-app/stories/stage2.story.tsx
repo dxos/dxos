@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { createKeyPair } from '@dxos/crypto';
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-ux';
 import ProfileDialog from '../src/components/ProfileDialog';
@@ -19,9 +18,7 @@ export const Stage2 = () => {
 
     const handleCreateProfile = async ({ username }: { username: string }) => {
       if (username) {
-        // TODO(burdon): Default keyPair?
-        const { publicKey, secretKey } = createKeyPair();
-        await client.halo.createProfile({ publicKey, secretKey, username });
+        await client.halo.createProfile({ username });
       }
     };
 

@@ -1,6 +1,5 @@
 ---
-title: 5. Manage Shared Items
-description: Sharing data between party members.
+title: Manage Shared Items
 ---
 
 So far, we have been preparing our app to be able to interact with DXOS Stack, but we haven't added any fun logic yet. Let's add some more stuff to our `src/components/TaskList.js` file.
@@ -116,7 +115,7 @@ export default TaskList;
 
 Go to your browser app now. After selecting one of your parties, you should be able to see an input on the main section of the screen, that will handle the creation of a new task.
 
-![data](./data-02.png)
+![data](./images/data-02.png)
 
 ## List items
 
@@ -255,7 +254,7 @@ export default TaskList;
 
 Check again your browser, you should now see your created tasks.
 
-![data](./data-03.png)
+![data](./images/data-03.png)
 
 ## Update items
 
@@ -408,7 +407,7 @@ export default TaskList;
 
 If you go back to your app, you should now be able to check and uncheck them.
 
-![data](./data-04.png)
+![data](./images/data-04.png)
 
 ## Delete a Task
 
@@ -571,7 +570,7 @@ export default TaskList;
 
 One last time, go back to your app and you should now be able to delete your tasks.
 
-![data](./data-05.png)
+![data](./images/data-05.png)
 
 And that's it! You have completed your DXOS application to Create, List, Update and Delete tasks. Congratulations!
 

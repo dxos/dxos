@@ -7,17 +7,17 @@ import debug from 'debug';
 import { SubscriptionGroup, Unsubscribe } from '@dxos/util';
 
 import { PartyManager } from '../parties';
-import { HaloParty } from './halo-party';
+import { Preferences } from './preferences';
 
 const log = debug('dxos:echo:halo:party-opener');
 
 /**
  * Automatically adds, opens, and clothes parties from HALO preferences.
  */
-export function autoPartyOpener (halo: HaloParty, partyManager: PartyManager): Unsubscribe {
+export function autoPartyOpener (preferences: Preferences, partyManager: PartyManager): Unsubscribe {
   const subs = new SubscriptionGroup();
 
-  subs.push(halo.subscribeToJoinedPartyList(async values => {
+  subs.push(preferences.subscribeToJoinedPartyList(async values => {
     if (!partyManager.isOpen) {
       return;
     }
@@ -30,9 +30,9 @@ export function autoPartyOpener (halo: HaloParty, partyManager: PartyManager): U
     }
   }));
 
-  subs.push(halo.preferences.subscribeToPreferences(async () => {
+  subs.push(preferences.subscribeToPreferences(async () => {
     for (const party of partyManager.parties) {
-      const shouldBeOpen = halo.preferences.isPartyActive(party.key);
+      const shouldBeOpen = preferences.isPartyActive(party.key);
       if (party.isOpen && !shouldBeOpen) {
         log(`Auto-closing deactivated party: ${party.key.toHex()}`);
 

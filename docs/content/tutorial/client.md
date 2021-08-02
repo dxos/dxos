@@ -1,6 +1,5 @@
 ---
-title: 1. Set Up a DXOS Client
-description: Create a Client and connect a React application.
+title: Initializing the DXOS Client
 ---
 
 Every DXOS Application starts by creating a Client. The `@dxos/client` is your entry point to save and share data with peers in your network.
@@ -13,6 +12,7 @@ Remove everything that's within the render section and place a `ClientInitialize
 We are providing you the necessary config object for you to start the app. We will move this config to its corresponding place in a further step.
 
 ```jsx:title=src/App.js
+// TODO(burdon): Remove unnecessary config (ideally wns and apollo references).
 import React from 'react';
 import { ClientInitializer } from '@dxos/react-client';
 
@@ -87,4 +87,4 @@ const App = () => {
 
 Having the app running, take a look at your browser and you should see printed on the screen the information we had sent to the client.
 
-![config](./client-00.png)
+![config](./images/client-00.png)

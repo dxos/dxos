@@ -13,5 +13,12 @@
   "exclude": [
     "src/**/*.test.js"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/random-access-multi-storage"
+    }
+  ]
 }

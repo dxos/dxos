@@ -1,6 +1,8 @@
 ---
-title: 6. Environment Configuration
+title: Environment configuration
 ---
+
+TODO(burdon): Ask Dmytro to simplify (remove) configuration across entire tutorial.
 
 Do you remember the `config` object we created on the very first sections?
 
@@ -8,11 +10,7 @@ Do you remember the `config` object we created on the very first sections?
 const config = {
   app: { title: 'Tasks App' },
   storage: { persistent: true },
-  swarm: { signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal' },
-  wns: {
-    server: 'https://apollo3.kube.moon.dxos.network/dxos/wns/api',
-    chainId: 'devnet-2',
-  },
+  swarm: { signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal' }
 };
 ```
 
@@ -39,9 +37,6 @@ storage:
   persistent: true
 swarm:
   signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal'
-wns:
-  server: 'https://apollo3.kube.moon.dxos.network/dxos/wns/api'
-  chainId: 'devnet-2'
 ```
 
 ## Importing the Config in the App

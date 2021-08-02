@@ -54,6 +54,9 @@
       "path": "../../bot/protocol-plugin-bot"
     },
     {
+      "path": "../../common/random-access-multi-storage"
+    },
+    {
       "path": "../../mesh/signal"
     },
     {

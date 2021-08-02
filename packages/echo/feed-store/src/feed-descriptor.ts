@@ -9,7 +9,7 @@ import pify from 'pify';
 import sodium from 'sodium-universal';
 
 import { Lock } from '@dxos/async';
-import type { File, Storage } from '@dxos/random-access-multi-storage';
+import type { IFile, IStorage } from '@dxos/random-access-multi-storage';
 
 interface ValueEncoding {
   encode: string,
@@ -17,7 +17,7 @@ interface ValueEncoding {
 }
 
 interface FeedDescriptorOptions {
-  storage?: Storage,
+  storage?: IStorage,
   key?: Buffer,
   secretKey?: Buffer,
   valueEncoding?: string | ValueEncoding,
@@ -34,7 +34,7 @@ type Listener = ((...args: any) => Promise<void> | void) | null;
  * Abstract handler for an Hypercore instance.
  */
 export class FeedDescriptor {
-  private _storage: Storage;
+  private _storage: IStorage;
   private _key: Buffer;
   private _secretKey?: Buffer;
   private _valueEncoding?: string | ValueEncoding;
@@ -165,9 +165,9 @@ export class FeedDescriptor {
    * Defines the real path where the Hypercore is going
    * to work with the RandomAccessStorage specified.
    */
-  private _createStorage (dir = ''): (name: string) => File {
+  private _createStorage (dir = ''): (name: string) => IFile {
     return (name) => {
-      return this._storage(`${dir}/${name}`);
+      return this._storage.createOrOpen(`${dir}/${name}`);
     };
   }
 

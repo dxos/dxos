@@ -6,7 +6,6 @@ import assert from 'assert';
 import { spawn } from 'child_process';
 import debug from 'debug';
 import path from 'path';
-import ram from 'random-access-memory';
 import kill from 'tree-kill';
 
 import { promiseTimeout } from '@dxos/async';
@@ -16,6 +15,7 @@ import { Invitation } from '@dxos/credentials';
 import { SIGNATURE_LENGTH, keyToBuffer, createKeyPair, keyToString, verify, sha256 } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 import { SpawnOptions } from '@dxos/protocol-plugin-bot';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { Agent } from './agent';
 import { FACTORY_OUT_DIR, getTestConfig, mapConfigToEnv } from './config';
@@ -59,7 +59,7 @@ export class Orchestrator {
 
     const { local = true } = options;
     this._client = new Client({
-      storage: ram,
+      storage: createStorage('', STORAGE_RAM),
       // TODO(egorgripasov): Factor out (use main config).
       swarm: {
         signal: this._config.get('services.signal.server'),

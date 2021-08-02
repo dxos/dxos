@@ -11,7 +11,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { Storage } from '@dxos/random-access-multi-storage';
+import { IStorage } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { HALO } from './halo';
@@ -33,7 +33,7 @@ export interface EchoCreationOptions {
   /**
    * Storage used for feeds. Defaults to in-memory.
    */
-  feedStorage?: Storage
+  feedStorage?: IStorage
 
   /**
    * Storage used for keys. Defaults to in-memory.
@@ -43,7 +43,7 @@ export interface EchoCreationOptions {
   /**
    * Storage used for snapshots. Defaults to in-memory.
    */
-  snapshotStorage?: Storage
+  snapshotStorage?: IStorage
 
   /**
    * Networking provider. Defaults to in-memory networking.
@@ -146,7 +146,7 @@ export class ECHO {
     this._halo.identityReady.once(() => {
       // It might be the case that halo gets closed before this has a chance to execute.
       if (this.halo.identity.halo?.isOpen) {
-        this._subs.push(autoPartyOpener(this.halo.identity.halo, this._partyManager));
+        this._subs.push(autoPartyOpener(this.halo.identity.preferences!, this._partyManager));
       }
     });
   }

@@ -37,3 +37,19 @@ new webpack.ProvidePlugin({
   Buffer: [require.resolve('buffer/'), 'Buffer'],
 });
 ```
+
+## Common workflows
+
+### Run command in each package
+
+---
+
+```
+npm i -g @sfomin/for-each-package
+```
+
+From repo root:
+
+```
+for-each-package "yarn lint --fix || true"
+```

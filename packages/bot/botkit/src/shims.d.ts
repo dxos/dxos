@@ -3,5 +3,4 @@
 //
 
 declare module 'jsondown';
-declare module 'random-access-memory';
 declare module '@wirelineio/registry-client';
