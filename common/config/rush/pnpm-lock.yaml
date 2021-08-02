@@ -1622,6 +1622,7 @@ importers:
   ../../packages/sdk/config:
     dependencies:
       '@babel/runtime': 7.14.0
+      '@dxos/debug': link:../../common/debug
       ajv: 8.6.2
       boolean: 3.0.4
       debug: 4.3.1
@@ -1657,6 +1658,7 @@ importers:
       '@babel/plugin-transform-runtime': ^7.11.5
       '@babel/preset-env': ^7.12.7
       '@babel/runtime': ^7.10.4
+      '@dxos/debug': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/js-yaml': ^3.12.5
       '@types/lodash.defaultsdeep': ^4.6.6
@@ -2229,6 +2231,18 @@ importers:
       webpack: 4.44.2
       webpack-cli: ^4.7.0
       webpack-dev-server: ^3.11.2
+  ../../toolchains/deps-checker:
+    dependencies:
+      chalk: 4.1.1
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../node-library
+      '@types/chalk': 2.2.0
+      '@types/node': 14.14.45
+    specifiers:
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/chalk': ~2.2.0
+      '@types/node': ^14.0.9
+      chalk: ^4.1.0
   ../../toolchains/esbuild-plugins:
     dependencies:
       assert: 2.0.0
@@ -7276,7 +7290,6 @@ packages:
     dependencies:
       chalk: 4.1.1
     deprecated: This is a stub types definition for chalk (https://github.com/chalk/chalk). chalk provides its own type definitions, so you don't need @types/chalk installed!
-    dev: false
     resolution:
       integrity: sha512-1zzPV9FDe1I/WHhRkf9SNgqtRJWZqrBWgu7JGveuHmmyR9CnAPCie2N/x+iHrgnpYBIcCJWHBoMRv2TRWktsvw==
   /@types/chance/1.1.1:
