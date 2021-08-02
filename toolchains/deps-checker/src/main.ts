@@ -3,7 +3,7 @@ import { extname, join } from 'path';
 import chalk from 'chalk';
 
 async function main() {
-  console.log(chalk`{bold ${process.cwd()}}:\n`)
+  console.log(chalk`{bold ${process.cwd()}/package.json}:\n`)
 
   const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
 
