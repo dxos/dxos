@@ -9,10 +9,11 @@ import { LinearProgress } from '@material-ui/core';
 import { Client, ClientConfig } from '@dxos/client';
 
 import ClientProvider from './ClientProvider';
+import { MaybePromise } from '@dxos/util';
 
 interface ClientInitializerProperties {
   children?: ReactNode
-  config?: ClientConfig | Function
+  config?: ClientConfig | (() => MaybePromise<ClientConfig>)
 }
 
 /**
