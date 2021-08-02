@@ -8,6 +8,7 @@ import get from 'lodash.get';
 import set from 'lodash.set';
 
 import { validateConfig } from './schema-validator';
+import { ConfigSchema } from './types';
 
 type MappingSpec = Record<string, { path: string, type: string }>;
 
@@ -102,18 +103,15 @@ export class Config {
 
   /**
    * Returns an immutable config JSON object.
-   * @return {object}
    */
-  get values () {
+  get values (): ConfigSchema {
     return this._config;
   }
 
   /**
    * Returns the given config property.
-   * @param {string} key
-   * @param {any} [defaultValue]
    */
-  get <T> (key: string, defaultValue: T): T {
+  get <T> (key: string, defaultValue?: T): T {
     return get(this._config, key, defaultValue);
   }
 }

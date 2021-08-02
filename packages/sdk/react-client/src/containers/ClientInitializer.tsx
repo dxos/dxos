@@ -7,9 +7,9 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { LinearProgress } from '@material-ui/core';
 
 import { Client, ClientConfig } from '@dxos/client';
+import { MaybePromise } from '@dxos/util';
 
 import ClientProvider from './ClientProvider';
-import { MaybePromise } from '@dxos/util';
 
 interface ClientInitializerProperties {
   children?: ReactNode
