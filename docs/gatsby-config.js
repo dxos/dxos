@@ -26,7 +26,15 @@ module.exports = {
             "tutorial/environment",
             "tutorial/deployment",
             "tutorial/next-steps"
-          ]
+          ],
+          "Core Concepts": [
+            "core-concepts/client",
+            "core-concepts/party",
+            "core-concepts/mutations",
+            "core-concepts/queries",
+            "core-concepts/invitations",
+            "core-concepts/deployment",
+          ],
         }
       }
     },
