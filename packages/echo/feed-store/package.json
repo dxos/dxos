@@ -34,9 +34,6 @@
     "hypercore-crypto": "^1.0.0",
     "hypertrie": "^3.8.0",
     "multi-read-stream": "^2.0.0",
-    "mutexify": "^1.2.0",
-    "p-event": "^4.2.0",
-    "p-timeout": "^3.2.0",
     "pify": "~5.0.0",
     "pump": "^3.0.0",
     "sodium-universal": "~3.0.4",
@@ -51,13 +48,11 @@
     "@types/node": "^14.0.9",
     "end-of-stream-promise": "^1.0.0",
     "tempy": "~1.0.1",
-    "wait-for-expect": "^3.0.2",
     "@types/pify": "^3.0.2",
     "@types/end-of-stream": "^1.4.0",
     "@types/pump": "^1.1.0",
     "@types/through2": "^2.0.36",
     "@types/from2": "~2.3.1",
-    "@types/mutexify": "~1.2.0",
     "@types/jest": "^26.0.7"
   },
   "publishConfig": {

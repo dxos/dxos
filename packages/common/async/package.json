@@ -23,18 +23,11 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/debug": "workspace:*",
-    "@types/debug": "^4.1.1",
-    "@types/end-of-stream": "^1.4.0",
-    "@types/lodash": "^4.14.159",
-    "@types/stream-buffers": "^3.0.2",
-    "@types/through2": "^2.0.36",
-    "lodash.merge": "^4.6.2"
+    "@dxos/debug": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/jest": "^26.0.7",
-    "stream-buffers": "^3.0.2"
+    "@types/jest": "^26.0.7"
   },
   "publishConfig": {
     "access": "restricted"

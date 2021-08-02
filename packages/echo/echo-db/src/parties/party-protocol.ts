@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import hypercore from 'hypercore';
+import type { Feed } from 'hypercore';
 
 import { synchronized } from '@dxos/async';
 import {
@@ -192,7 +192,7 @@ class ReplicatorProtocolPluginFactory {
   }
 
   @synchronized
-  private async _openFeed (key: FeedKey): Promise<hypercore.Feed> {
+  private async _openFeed (key: FeedKey): Promise<Feed> {
     return this._feedStore.getFeed(key) ?? await this._feedStore.createReadOnlyFeed(key, this._partyKey);
   }
 }

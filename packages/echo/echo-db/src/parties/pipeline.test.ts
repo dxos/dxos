@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 import expect from 'expect';
-import { Feed } from 'hypercore';
+import type { Feed } from 'hypercore';
 import { it as test } from 'mocha';
 
 import { waitForCondition, latch } from '@dxos/async';
