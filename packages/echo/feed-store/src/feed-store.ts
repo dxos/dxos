@@ -22,14 +22,14 @@ type DescriptorCallback = (descriptor: FeedDescriptor) => boolean;
 type StreamCallback = (descriptor: FeedDescriptor) => Object | undefined;
 
 interface CreateDescriptorOptions {
-  key: Buffer,
+  key?: Buffer,
   secretKey?: Buffer,
   valueEncoding?: string,
   metadata?: any
 }
 
 interface OpenFeedOptions {
-  key: Buffer,
+  key?: Buffer,
   secretKey?: Buffer,
   valueEncoding?: string,
   metadata?: any
@@ -218,12 +218,12 @@ export class FeedStore extends EventEmitter {
    * Similar to fs.open
    */
   @synchronized
-  async openFeed (options: OpenFeedOptions): Promise<Hypercore> {
+  async openFeed (options: OpenFeedOptions = {}): Promise<Hypercore> {
     assert(this._open, 'FeedStore closed');
 
     const { key } = options;
 
-    let descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
+    let descriptor = key && this.getDescriptors().find(fd => fd.key.equals(key));
 
     if (!descriptor) {
       descriptor = this._createDescriptor(options);
@@ -241,10 +241,10 @@ export class FeedStore extends EventEmitter {
   async closeFeed (key: Buffer) {
     assert(this._open, 'FeedStore closed');
 
-    const descriptor = this.getDescriptors().find(fd => fd.key === key);
+    const descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
 
     if (!descriptor) {
-      throw new Error(`Feed not found: ${key.toString()}`);
+      throw new Error(`Feed not found: ${key.toString('hex')}`);
     }
 
     await descriptor.close();

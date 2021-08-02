@@ -38,12 +38,16 @@ async function createDefault () {
 }
 
 async function defaultFeeds (feedStore: FeedStore, keys: { [k: string]: KeyPair }) {
-  const feeds = Object.fromEntries(await Promise.all(Object.entries<any>(keys).map(async ([feed, keyPair]) =>
+  return Object.fromEntries(await Promise.all(Object.entries<any>(keys).map(async ([feed, keyPair]) =>
     feed === 'booksFeed' ?
     [feed, await feedStore.openFeed({ key: keyPair.key, secretKey: keyPair.secretKey, metadata : { topic: 'books' }})] :
     [feed, await feedStore.openFeed({ key: keyPair.key, secretKey: keyPair.secretKey})]
   )));
-  return feeds;
+  // return {
+  //   booksFeed: await feedStore.openFeed({ key: keys['booksFeed'].key, metadata: { topic: 'books' } }),
+  //   usersFeed: await feedStore.openFeed({ key: keys['usersFeed'].key }),
+  //   groupsFeed: await feedStore.openFeed({ key: keys['groupsFeed'].key })
+  // };
 }
 
 function append (feed: any, message: any) {
@@ -121,7 +125,10 @@ describe('FeedStore', () => {
   test('Create duplicate feed', async () => {
     const { feedStore } = await createDefault();
 
-    const [usersFeed, feed2] = await Promise.all([feedStore.openFeed({ key: keys['usersFeed'].key }), feedStore.openFeed({ key: keys['usersFeed'].key })]);
+    const [usersFeed, feed2] = await Promise.all([
+      feedStore.openFeed({ key: keys['usersFeed'].key, secretKey: keys['usersFeed'].secretKey }),
+      feedStore.openFeed({ key: keys['usersFeed'].key, secretKey: keys['usersFeed'].secretKey })
+    ]);
     expect(usersFeed).toBe(feed2);
 
     await append(usersFeed, 'alice');
@@ -223,8 +230,8 @@ describe('FeedStore', () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
-    const { publicKey } = crypto.keyPair();
-    const feed = await feedStore.openFeed({ key: publicKey });
+    const { publicKey, secretKey } = crypto.keyPair();
+    const feed = await feedStore.openFeed({ key: publicKey, secretKey });
     expect(feed).toBeInstanceOf(hypercore);
     await append(feed, 'test');
     await expect(head(feed)).resolves.toBeInstanceOf(Buffer);
@@ -259,15 +266,15 @@ describe('FeedStore', () => {
     expect(feedStore).toBeInstanceOf(FeedStore);
 
     {
-      const { publicKey } = crypto.keyPair();
-      const feed = await feedStore.openFeed({ key: publicKey });
+      const { publicKey, secretKey } = crypto.keyPair();
+      const feed = await feedStore.openFeed({ key: publicKey, secretKey });
       expect(feed).toBeInstanceOf(hypercore);
       await append(feed, 'test');
       await expect(head(feed)).resolves.toBe('test');
     }
     {
-      const { publicKey } = crypto.keyPair();
-      const feed = await feedStore.openFeed({ key: publicKey, valueEncoding: 'codecA' });
+      const { publicKey, secretKey } = crypto.keyPair();
+      const feed = await feedStore.openFeed({ key: publicKey, secretKey, valueEncoding: 'codecA' });
       expect(feed).toBeInstanceOf(hypercore);
       await append(feed, { msg: 'test' });
       await expect(head(feed)).resolves.toEqual({ msg: 'test', encodedBy: 'codecA' });
@@ -343,9 +350,9 @@ describe('FeedStore', () => {
   async function generateStreamData (feedStore: FeedStore, maxMessages = 200) {
     const keyPairs = Array.from(Array(3).keys()).map(() => crypto.keyPair());
     const [feed1, feed2, feed3] = await Promise.all([
-      feedStore.openFeed({ key: keyPairs[0].publicKey }),
-      feedStore.openFeed({ key: keyPairs[1].publicKey }),
-      feedStore.openFeed({ key: keyPairs[2].publicKey })
+      feedStore.openFeed({ key: keyPairs[0].publicKey, secretKey: keyPairs[0].secretKey }),
+      feedStore.openFeed({ key: keyPairs[1].publicKey, secretKey: keyPairs[1].secretKey }),
+      feedStore.openFeed({ key: keyPairs[2].publicKey, secretKey: keyPairs[2].secretKey })
     ]);
 
     const messages = [];
@@ -549,9 +556,9 @@ describe('FeedStore', () => {
       [feed3.key.toString('hex')]: 0
     });
 
-    const { publicKey } = crypto.keyPair();
-    await feedStore.closeFeed(publicKey);
-    const reopenFeed2 = await feedStore.openFeed({ key: publicKey });
+    const { key, secretKey } = feed2;
+    await feedStore.closeFeed(key);
+    const reopenFeed2 = await feedStore.openFeed({ key, secretKey });
     await append(reopenFeed2, `feed2/message${reopenFeed2.length}`);
     await append(reopenFeed2, `feed2/message${reopenFeed2.length}`);
 
@@ -576,8 +583,7 @@ describe('FeedStore', () => {
 
   test('append event', async (done) => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
-    const { publicKey } = crypto.keyPair();
-    const feed = await feedStore.openFeed({ key: publicKey });
+    const feed = await feedStore.openFeed();
 
     feedStore.on('append', (f) => {
       expect(f).toBe(feed);
