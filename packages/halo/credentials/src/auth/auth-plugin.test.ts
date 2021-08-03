@@ -71,9 +71,9 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();
-  const feedStore = await new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
   await feedStore.open();
-  const feed = await feedStore.openFeed(`/topic/${topic}/writable`, { metadata: { topic } });
+  const feed = await feedStore.openFeed({ metadata: { topic } });
   const append = pify(feed.append.bind(feed));
 
   const credentials = Buffer.from(codec.encode(
@@ -90,7 +90,7 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
 
   const openFeed = async (key: Buffer) => {
     return feedStore.getOpenFeed((desc: any) => desc.feed.key.equals(key)) ||
-      feedStore.openFeed(`/topic/${topic}/readable/${keyToString(key)}`, { key, metadata: { topic } });
+      feedStore.openFeed({ key, metadata: { topic } });
   };
 
   // Share and replicate all known feeds.
