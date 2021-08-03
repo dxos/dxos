@@ -12,18 +12,12 @@ Remove everything that's within the render section and place a `ClientInitialize
 We are providing you the necessary config object for you to start the app. We will move this config to its corresponding place in a further step.
 
 ```jsx:title=src/App.js
-// TODO(burdon): Remove unnecessary config (ideally wns and apollo references).
-import React from 'react';
 import { ClientInitializer } from '@dxos/react-client';
 
 const config = {
   app: { title: 'Tasks App' },
   storage: { persistent: true },
   swarm: { signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal' },
-  wns: {
-    server: 'https://apollo3.kube.moon.dxos.network/dxos/wns/api',
-    chainId: 'devnet-2',
-  },
 };
 
 const App = () => {
@@ -40,13 +34,6 @@ export default App;
 This `ClientInitializer` is a React component that facilitates the process of initializing and providing a DXOS client instance to the application.
 
 It creates a new `Client` from `@dxos/client` and uses [React Context](https://reactjs.org/docs/context.html) to make the instance accessible anywhere in the app.
-
-Short explanation of the config object:
-
-- `app.title` - application's title to display on the screen
-- `storage` - storage for feeds and keyring
-- `wns` - connection to WNS registry
-- `swarm.signal` - signaling server URL. Used to establish WebRTC connections with other peers.
 
 ## Retrieve the Client Instance
 
@@ -69,22 +56,6 @@ export default Root;
 
 We are stringifying the `client.config` property, so you see how you will be able to access the config from the `Client` instance.
 
-In your `src/App.js` file, import your Root component and place it within the `ClientInitializer`:
-
-```jsx:title=src/App.js
-//...
-
-import Root from './components/Root';
-
-const App = () => {
-  return (
-    <ClientInitializer config={config}>
-      <Root />
-    </ClientInitializer>
-  );
-};
-```
+In your `src/App.js` file, import your Root component and render it within the `ClientInitializer`.
 
 Having the app running, take a look at your browser and you should see printed on the screen the information we had sent to the client.
-
-![config](./images/client-00.png)
