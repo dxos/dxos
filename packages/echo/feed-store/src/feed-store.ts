@@ -51,17 +51,6 @@ export class FeedStore extends EventEmitter {
   private _readers: Set<Reader>;
   private _indexDB: any;
   private _open: boolean;
-  public database: any;
-  public feedOptions: any;
-  public codecs: any;
-  public hypercore: Hypercore;
-  public key: any;
-  public path: any;
-  public options: any;
-  public secretKey: any;
-  public valueEncoding: any;
-  public metadata: any;
-  public feed: any;
 
   /**
    * @param storage RandomAccessStorage to use by default by the feeds.
@@ -136,8 +125,7 @@ export class FeedStore extends EventEmitter {
     const list = await this._indexDB.list(STORE_NAMESPACE);
 
     list.forEach((data: any) => {
-      const { path, ...options } = data;
-      this._createDescriptor(path, options);
+      this._createDescriptor(data);
     });
 
     this.emit('opened');
@@ -230,24 +218,15 @@ export class FeedStore extends EventEmitter {
    * Similar to fs.open
    */
   @synchronized
-  async openFeed (path: string, options: OpenFeedOptions = {}): Promise<Hypercore> {
-    assert(path, 'Missing path');
+  async openFeed (options: OpenFeedOptions = {}): Promise<Hypercore> {
     assert(this._open, 'FeedStore closed');
 
     const { key } = options;
 
-    let descriptor = this.getDescriptors().find(fd => fd.path === path);
-
-    if (descriptor && key && descriptor.key && !key.equals(descriptor.key)) {
-      throw new Error(`Invalid public key "${key.toString('hex')}"`);
-    }
-
-    if (!descriptor && key && this.getDescriptors().find(fd => fd.key?.equals(key))) {
-      throw new Error(`Feed exists with same public key "${key.toString('hex')}"`);
-    }
+    let descriptor = key && this.getDescriptors().find(fd => fd.key.equals(key));
 
     if (!descriptor) {
-      descriptor = this._createDescriptor(path, options);
+      descriptor = this._createDescriptor(options);
     }
 
     const feed = await descriptor.open();
@@ -256,17 +235,16 @@ export class FeedStore extends EventEmitter {
   }
 
   /**
-   * Close a feed by the path.
+   * Close a feed by the key.
    */
   @synchronized
-  async closeFeed (path: string) {
-    assert(path, 'Missing path');
+  async closeFeed (key: Buffer) {
     assert(this._open, 'FeedStore closed');
 
-    const descriptor = this.getDescriptors().find(fd => fd.path === path);
+    const descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
 
     if (!descriptor) {
-      throw new Error(`Feed not found: ${path}`);
+      throw new Error(`Feed not found: ${key.toString('hex')}`);
     }
 
     await descriptor.close();
@@ -278,20 +256,19 @@ export class FeedStore extends EventEmitter {
    * NOTE: This operation would not close the feeds.
    */
   async deleteAllDescriptors () {
-    return Promise.all(this.getDescriptors().map(({ path }) => this.deleteDescriptor(path)));
+    return Promise.all(this.getDescriptors().map(({ key }) => this.deleteDescriptor(key)));
   }
 
   /**
-   * Remove a descriptor from the indexDB by the path.
+   * Remove a descriptor from the indexDB by the key.
    *
    * NOTE: This operation would not close the feed.
    */
   @synchronized
-  async deleteDescriptor (path: string) {
-    assert(path, 'Missing path');
+  async deleteDescriptor (key: Buffer) {
     assert(this._open, 'FeedStore closed');
 
-    const descriptor = this.getDescriptors().find(fd => fd.path === path);
+    const descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
 
     if (descriptor) {
       await descriptor.lock.executeSynchronized(async () => {
@@ -325,12 +302,12 @@ export class FeedStore extends EventEmitter {
   /**
    * Factory to create a new FeedDescriptor.
    */
-  private _createDescriptor (path: string, options: CreateDescriptorOptions) {
+  private _createDescriptor (options: CreateDescriptorOptions) {
     const defaultOptions = this._defaultFeedOptions;
 
     const { key, secretKey, valueEncoding = defaultOptions.valueEncoding, metadata } = options;
 
-    const descriptor = new FeedDescriptor(path, {
+    const descriptor = new FeedDescriptor({
       storage: this._storage,
       key,
       secretKey,
@@ -382,7 +359,6 @@ export class FeedStore extends EventEmitter {
     const oldData = await this._indexDB.get(key);
 
     const newData = {
-      path: descriptor.path,
       key: descriptor.key,
       secretKey: descriptor.secretKey,
       valueEncoding: typeof descriptor.valueEncoding === 'string' ? descriptor.valueEncoding : undefined,

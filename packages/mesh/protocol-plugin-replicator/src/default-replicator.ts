@@ -59,7 +59,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
             return feed;
           }
 
-          return feedStore.openFeed(`/remote/${key.toString()}`, {
+          return feedStore.openFeed({
             key: Buffer.from(key),
             metadata
           } as any);

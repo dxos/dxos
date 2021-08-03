@@ -153,10 +153,12 @@ importers:
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.23
+      '@types/node': 14.14.45
     specifiers:
       '@dxos/debug': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
   ../../packages/common/codec-protobuf:
     dependencies:
       assert: 2.0.0

@@ -16,7 +16,7 @@ describe('items', () => {
   test('item construction', async () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
     await feedStore.open();
-    const feed = await feedStore.openFeed('test-feed');
+    const feed = await feedStore.openFeed();
 
     const modelFactory = new ModelFactory();
     const itemManager = new ItemManager(modelFactory, createFeedWriter(feed));
