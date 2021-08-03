@@ -93,6 +93,7 @@ function PendingInvitation ({
     expiration: pending.expiration
   });
 
+
   return (
     <TableRow>
       <TableCell classes={{ root: classes.colAvatar }}>
