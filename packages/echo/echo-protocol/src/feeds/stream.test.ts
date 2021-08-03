@@ -112,9 +112,11 @@ describe('Stream tests', () => {
     for (let i = 0; i < config.numBlocks; i++) {
       // Randomly create items.
       const { feed } = faker.random.arrayElement(descriptors);
-      count.set(feed.key, (count.get(feed.key) ?? 0) + 1);
-      const itemId = createId();
-      await feed.append(createTestItemMutation(itemId, 'value', String(i)));
+      if (feed) {
+        count.set(feed.key, (count.get(feed.key) ?? 0) + 1);
+        const itemId = createId();
+        feed.append(createTestItemMutation(itemId, 'value', String(i)));
+      }
     }
 
     // Test stream.
@@ -131,6 +133,7 @@ describe('Stream tests', () => {
     expect(ids.size).toBe(config.numBlocks);
     for (const descriptor of descriptors) {
       const { feed } = descriptor;
+      assert(feed);
       expect(feed.length).toBe(count.get(feed.key));
     }
 

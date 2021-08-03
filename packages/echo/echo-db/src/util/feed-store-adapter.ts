@@ -3,14 +3,13 @@
 //
 
 import assert from 'assert';
-import type { Feed } from 'hypercore';
 
 import { patchBufferCodec } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/crypto';
 import {
   codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
 } from '@dxos/echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedStore, Feed } from '@dxos/feed-store';
 import { IStorage } from '@dxos/random-access-multi-storage';
 
 /**
@@ -63,12 +62,12 @@ export class FeedStoreAdapter {
     ).values());
   }
 
-  getFeed (feedKey: FeedKey): Feed | undefined {
+  getFeed (feedKey: FeedKey): Feed | null | undefined {
     const descriptor = this._feedStore.getDescriptors().find(descriptor => feedKey.equals(descriptor.key));
     return descriptor?.feed;
   }
 
-  queryWritableFeed (partyKey: PartyKey): Feed | undefined {
+  queryWritableFeed (partyKey: PartyKey): Feed | null | undefined {
     // TODO(telackey): 'writable' is true property of the Feed, not just its Descriptor's metadata.
     // Using that real value would be preferable to using metadata, but I think it requires the Feed be open.
     const descriptor = this._feedStore.getDescriptors()

@@ -4,14 +4,13 @@
 
 import debug from 'debug';
 import expect from 'expect';
-import type { Feed } from 'hypercore';
 import { it as test } from 'mocha';
 
 import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId, PublicKey } from '@dxos/crypto';
 import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream, Timeframe } from '@dxos/echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedStore, Feed } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { createWritable, createWritableFeedStream, jsonReplacer, WritableArray } from '@dxos/util';

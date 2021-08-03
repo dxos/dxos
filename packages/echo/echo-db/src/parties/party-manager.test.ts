@@ -167,7 +167,7 @@ describe('Party manager', () => {
 
     await partyManager.addParty(partyKey.publicKey, [{
       type: KeyType.FEED,
-      publicKey: feed.key
+      publicKey: PublicKey.from(feed.key)
     }]);
 
     await update;
