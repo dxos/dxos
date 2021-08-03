@@ -20,6 +20,9 @@ const Root = () => {
     const handleRegistration = async ({ username }) => {
       if (username) {
         await client.halo.createProfile({ username });
+        const partyDemoTitle = 'My First Party!';
+        const party = await client.echo.createParty({ title: partyDemoTitle });
+        await party.setProperty('title', partyDemoTitle);
       }
     };
 
