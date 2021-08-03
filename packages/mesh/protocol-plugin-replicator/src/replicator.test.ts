@@ -20,7 +20,7 @@ jest.setTimeout(30000);
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
   await feedStore.open();
-  const feed = await feedStore.openFeed('/feed', {
+  const feed = await feedStore.openFeed({
     metadata: { topic: topic.toString('hex') }
   } as any);
   const append = pify(feed.append.bind(feed));

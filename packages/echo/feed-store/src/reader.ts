@@ -177,9 +177,9 @@ export default class Reader {
   }
 
   private _addFeedStream (descriptor: FeedDescriptor, streamOptions: any) {
-    const { feed, path, metadata } = descriptor;
+    const { feed, key, metadata } = descriptor;
 
-    streamOptions.metadata = { path, metadata };
+    streamOptions.metadata = { key, metadata };
 
     const transform = through.obj((messages, _, next) => {
       if (this._inBatch) {

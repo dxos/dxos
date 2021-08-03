@@ -6,6 +6,7 @@
 
 import eos from 'end-of-stream-promise';
 import hypercore from 'hypercore';
+import crypto from 'hypercore-crypto';
 import hypertrie from 'hypertrie';
 import pify from 'pify';
 import tempy from 'tempy';
@@ -13,6 +14,13 @@ import tempy from 'tempy';
 import { IStorage, STORAGE_NODE, STORAGE_RAM, createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedStore } from './feed-store';
+
+const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
+
+interface KeyPair {
+  key: Buffer,
+  secretKey: Buffer
+}
 
 const createFeedStore = async (storage: IStorage, options = {}) => {
   const feedStore = new FeedStore(storage, options);
@@ -29,12 +37,17 @@ async function createDefault () {
   };
 }
 
-async function defaultFeeds (feedStore: FeedStore) {
-  return {
-    booksFeed: await feedStore.openFeed('/books', { metadata: { topic: 'books' } }),
-    usersFeed: await feedStore.openFeed('/users'),
-    groupsFeed: await feedStore.openFeed('/groups')
-  };
+async function defaultFeeds (feedStore: FeedStore, keys: { [k: string]: KeyPair }) {
+  return Object.fromEntries(await Promise.all(Object.entries<any>(keys).map(async ([feed, keyPair]) =>
+    feed === 'booksFeed'
+      ? [feed, await feedStore.openFeed({ key: keyPair.key, secretKey: keyPair.secretKey, metadata: { topic: 'books' } })]
+      : [feed, await feedStore.openFeed({ key: keyPair.key, secretKey: keyPair.secretKey })]
+  )));
+  // return {
+  //   booksFeed: await feedStore.openFeed({ key: keys['booksFeed'].key, metadata: { topic: 'books' } }),
+  //   usersFeed: await feedStore.openFeed({ key: keys['usersFeed'].key }),
+  //   groupsFeed: await feedStore.openFeed({ key: keys['groupsFeed'].key })
+  // };
 }
 
 function append (feed: any, message: any) {
@@ -45,7 +58,16 @@ function head (feed: any) {
   return pify(feed.head.bind(feed))();
 }
 
+const createKeyPairs = () => {
+  return Object.fromEntries<KeyPair>(feedNames.map(feed => {
+    const { publicKey, secretKey } = crypto.keyPair();
+    return [feed, { key: publicKey, secretKey }];
+  }));
+};
+
 describe('FeedStore', () => {
+  const keys = createKeyPairs();
+
   test('Config default', async () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
@@ -75,36 +97,38 @@ describe('FeedStore', () => {
     expect(feedStore).toBeInstanceOf(FeedStore);
     expect(database.list.mock.calls.length).toBe(1);
 
-    await feedStore.openFeed('/test');
+    await feedStore.openFeed({ key: crypto.keyPair().publicKey });
 
     expect(customHypercore.mock.calls.length).toBe(1);
   });
 
   test('Create feed', async () => {
     const { feedStore } = await createDefault();
-    const { booksFeed } = await defaultFeeds(feedStore);
+    const { booksFeed } = await defaultFeeds(feedStore, keys);
 
     expect(booksFeed).toBeInstanceOf(hypercore);
 
-    const booksFeedDescriptor = feedStore.getDescriptors().find(fd => fd.path === '/books');
-    expect(booksFeedDescriptor).toHaveProperty('path', '/books');
+    const booksFeedDescriptor = feedStore.getDescriptors().find(fd => fd.key.equals(booksFeed.key));
+    expect(booksFeedDescriptor).toHaveProperty('key', booksFeed.key);
     expect(booksFeedDescriptor?.metadata).toHaveProperty('topic', 'books');
 
     await append(booksFeed, 'Foundation and Empire');
     await expect(head(booksFeed)).resolves.toBe('Foundation and Empire');
 
     // It should return the same opened instance.
-    await expect(feedStore.openFeed('/books')).resolves.toBe(booksFeed);
+    await expect(feedStore.openFeed({ key: booksFeed.key })).resolves.toBe(booksFeed);
 
-    // You can't open a feed with a different key.
-    await expect(feedStore.openFeed('/books', { key: Buffer.from('...') })).rejects.toThrow(/Invalid public key/);
-    await expect(feedStore.openFeed('/foo', { key: booksFeed.key })).rejects.toThrow(/Feed exists/);
+    // You can't open a feed with an invalid key.
+    await expect(feedStore.openFeed({ key: Buffer.from('...') })).rejects.toThrow(/key must be/);
   });
 
   test('Create duplicate feed', async () => {
     const { feedStore } = await createDefault();
 
-    const [usersFeed, feed2] = await Promise.all([feedStore.openFeed('/users'), feedStore.openFeed('/users')]);
+    const [usersFeed, feed2] = await Promise.all([
+      feedStore.openFeed({ key: keys.usersFeed.key, secretKey: keys.usersFeed.secretKey }),
+      feedStore.openFeed({ key: keys.usersFeed.key, secretKey: keys.usersFeed.secretKey })
+    ]);
     expect(usersFeed).toBe(feed2);
 
     await append(usersFeed, 'alice');
@@ -113,51 +137,52 @@ describe('FeedStore', () => {
 
   test('Create and close a feed', async () => {
     const { feedStore } = await createDefault();
+    const { publicKey } = crypto.keyPair();
 
-    await expect(feedStore.closeFeed('/foo')).rejects.toThrow(/Feed not found/);
+    await expect(feedStore.closeFeed(publicKey)).rejects.toThrow(/Feed not found/);
 
-    const foo = await feedStore.openFeed('/foo');
+    const foo = await feedStore.openFeed({ key: publicKey });
     expect(foo.opened).toBeTruthy();
     expect(foo.closed).toBeFalsy();
 
-    await feedStore.closeFeed('/foo');
+    await feedStore.closeFeed(publicKey);
     expect(foo.closed).toBeTruthy();
   });
 
   test('Descriptors', async () => {
     const { feedStore } = await createDefault();
-    const { booksFeed } = await defaultFeeds(feedStore);
+    const { booksFeed } = await defaultFeeds(feedStore, keys);
 
-    expect(feedStore.getDescriptors().map(fd => fd.path)).toEqual(['/books', '/users', '/groups']);
-    expect(feedStore.getDescriptorByDiscoveryKey(booksFeed.discoveryKey)?.path).toEqual('/books');
+    expect(feedStore.getDescriptors().map(fd => fd.key)).toEqual(Object.entries(keys).map(([, keyPair]) => keyPair.key));
+    expect(feedStore.getDescriptorByDiscoveryKey(booksFeed.discoveryKey)?.key).toEqual(keys.booksFeed.key);
   });
 
   test('Feeds', async () => {
     const { feedStore } = await createDefault();
-    const { booksFeed, usersFeed, groupsFeed } = await defaultFeeds(feedStore);
+    const { booksFeed, usersFeed, groupsFeed } = await defaultFeeds(feedStore, keys);
 
     expect(feedStore.getOpenFeeds().map(f => f.key)).toEqual([booksFeed.key, usersFeed.key, groupsFeed.key]);
     expect(feedStore.getOpenFeed(fd => fd.key.equals(booksFeed.key))).toBe(booksFeed);
     expect(feedStore.getOpenFeed(() => false)).toBeUndefined();
-    expect(feedStore.getOpenFeeds(fd => fd.path === '/books')).toEqual([booksFeed]);
+    expect(feedStore.getOpenFeeds(fd => fd.key.equals(keys.booksFeed.key))).toEqual([booksFeed]);
   });
 
   test('Close/Load feed', async () => {
     const { feedStore } = await createDefault();
-    const { booksFeed } = await defaultFeeds(feedStore);
+    const { booksFeed } = await defaultFeeds(feedStore, keys);
 
-    await feedStore.closeFeed('/books');
-    expect(feedStore.getDescriptors().find(fd => fd.path === '/books')).toHaveProperty('opened', false);
+    await feedStore.closeFeed(keys.booksFeed.key);
+    expect(feedStore.getDescriptors().find(fd => fd.key.equals(keys.booksFeed.key))).toHaveProperty('opened', false);
 
-    const [feed] = await feedStore.openFeeds(fd => fd.path === '/books');
+    const [feed] = await feedStore.openFeeds(fd => fd.key.equals(keys.booksFeed.key));
     expect(feed).toBeDefined();
     expect(feed.key).toEqual(booksFeed.key);
-    expect(feedStore.getDescriptors().find(fd => fd.path === '/books')).toHaveProperty('opened', true);
+    expect(feedStore.getDescriptors().find(fd => fd.key.equals(keys.booksFeed.key))).toHaveProperty('opened', true);
   });
 
   test('Close feedStore and their feeds', async () => {
     const { feedStore } = await createDefault();
-    await defaultFeeds(feedStore);
+    await defaultFeeds(feedStore, keys);
 
     expect(feedStore.opened).toBe(true);
     expect(feedStore.closed).toBe(false);
@@ -171,7 +196,7 @@ describe('FeedStore', () => {
 
   test('Reopen feedStore and recreate feeds from the indexDB', async () => {
     const { feedStore } = await createDefault();
-    let { booksFeed, usersFeed } = await defaultFeeds(feedStore);
+    let { booksFeed, usersFeed } = await defaultFeeds(feedStore, keys);
 
     await append(booksFeed, 'Foundation and Empire');
     await append(usersFeed, 'alice');
@@ -181,8 +206,8 @@ describe('FeedStore', () => {
     expect(feedStore.opened).toBe(true);
     expect(feedStore.getDescriptors().length).toBe(3);
 
-    booksFeed = await feedStore.openFeed('/books');
-    [usersFeed] = await feedStore.openFeeds(fd => fd.path === '/users');
+    booksFeed = await feedStore.openFeed({ key: keys.booksFeed.key });
+    [usersFeed] = await feedStore.openFeeds(fd => fd.key.equals(keys.usersFeed.key));
     expect(feedStore.getDescriptors().filter(fd => fd.opened).length).toBe(2);
 
     await expect(pify(booksFeed.head.bind(booksFeed))()).resolves.toBe('Foundation and Empire');
@@ -190,14 +215,14 @@ describe('FeedStore', () => {
 
     // The metadata of /books should be recreate too.
     const metadata = { topic: 'books' };
-    expect(feedStore.getDescriptors().find(fd => fd.path === '/books')?.metadata).toEqual(metadata);
+    expect(feedStore.getDescriptors().find(fd => fd.key.equals(keys.booksFeed.key))?.metadata).toEqual(metadata);
   });
 
   test('Delete descriptor', async () => {
     const { feedStore } = await createDefault();
-    await defaultFeeds(feedStore);
+    await defaultFeeds(feedStore, keys);
 
-    await feedStore.deleteDescriptor('/books');
+    await feedStore.deleteDescriptor(keys.booksFeed.key);
     expect(feedStore.getDescriptors().length).toBe(2);
   });
 
@@ -205,7 +230,8 @@ describe('FeedStore', () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
-    const feed = await feedStore.openFeed('/test');
+    const { publicKey, secretKey } = crypto.keyPair();
+    const feed = await feedStore.openFeed({ key: publicKey, secretKey });
     expect(feed).toBeInstanceOf(hypercore);
     await append(feed, 'test');
     await expect(head(feed)).resolves.toBeInstanceOf(Buffer);
@@ -240,13 +266,15 @@ describe('FeedStore', () => {
     expect(feedStore).toBeInstanceOf(FeedStore);
 
     {
-      const feed = await feedStore.openFeed('/test');
+      const { publicKey, secretKey } = crypto.keyPair();
+      const feed = await feedStore.openFeed({ key: publicKey, secretKey });
       expect(feed).toBeInstanceOf(hypercore);
       await append(feed, 'test');
       await expect(head(feed)).resolves.toBe('test');
     }
     {
-      const feed = await feedStore.openFeed('/a', { valueEncoding: 'codecA' });
+      const { publicKey, secretKey } = crypto.keyPair();
+      const feed = await feedStore.openFeed({ key: publicKey, secretKey, valueEncoding: 'codecA' });
       expect(feed).toBeInstanceOf(hypercore);
       await append(feed, { msg: 'test' });
       await expect(head(feed)).resolves.toEqual({ msg: 'test', encodedBy: 'codecA' });
@@ -260,9 +288,10 @@ describe('FeedStore', () => {
       }
     });
 
-    await expect(feedStore.openFeed('/foo')).rejects.toThrow(/open error/);
+    const { publicKey } = crypto.keyPair();
+    await expect(feedStore.openFeed({ key: publicKey })).rejects.toThrow(/open error/);
 
-    const fd = feedStore.getDescriptors().find(fd => fd.path === '/foo');
+    const fd = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
 
     if (!fd) {
       throw new Error('Descriptor not found');
@@ -285,14 +314,15 @@ describe('FeedStore', () => {
       })
     });
 
-    await feedStore.openFeed('/foo');
-    const fd = feedStore.getDescriptors().find(fd => fd.path === '/foo');
+    const { publicKey } = crypto.keyPair();
+    await feedStore.openFeed({ key: publicKey });
+    const fd = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
 
     if (!fd) {
       throw new Error('Descriptor not found');
     }
 
-    await expect(feedStore.closeFeed('/foo')).rejects.toThrow(/close error/);
+    await expect(feedStore.closeFeed(publicKey)).rejects.toThrow(/close error/);
     await expect(feedStore.close()).rejects.toThrow(/close error/);
 
     await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
@@ -301,8 +331,9 @@ describe('FeedStore', () => {
   test('on delete descriptor error should unlock the descriptor', async () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
 
-    await feedStore.openFeed('/foo');
-    const fd = feedStore.getDescriptors().find(fd => fd.path === '/foo');
+    const { publicKey } = crypto.keyPair();
+    await feedStore.openFeed({ key: publicKey });
+    const fd = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
 
     if (!fd) {
       throw new Error('Descriptor not found');
@@ -311,16 +342,17 @@ describe('FeedStore', () => {
     // We remove the indexDB to force an error.
     (feedStore as any)._indexDB = null;
 
-    await expect(feedStore.deleteDescriptor('/foo')).rejects.toThrow(Error);
+    await expect(feedStore.deleteDescriptor(publicKey)).rejects.toThrow(Error);
 
     await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   async function generateStreamData (feedStore: FeedStore, maxMessages = 200) {
+    const keyPairs = Array.from(Array(3).keys()).map(() => crypto.keyPair());
     const [feed1, feed2, feed3] = await Promise.all([
-      feedStore.openFeed('/feed1'),
-      feedStore.openFeed('/feed2'),
-      feedStore.openFeed('/feed3')
+      feedStore.openFeed({ key: keyPairs[0].publicKey, secretKey: keyPairs[0].secretKey }),
+      feedStore.openFeed({ key: keyPairs[1].publicKey, secretKey: keyPairs[1].secretKey }),
+      feedStore.openFeed({ key: keyPairs[2].publicKey, secretKey: keyPairs[2].secretKey })
     ]);
 
     const messages = [];
@@ -524,8 +556,9 @@ describe('FeedStore', () => {
       [feed3.key.toString('hex')]: 0
     });
 
-    await feedStore.closeFeed('/feed2');
-    const reopenFeed2 = await feedStore.openFeed('/feed2');
+    const { key, secretKey } = feed2;
+    await feedStore.closeFeed(key);
+    const reopenFeed2 = await feedStore.openFeed({ key, secretKey });
     await append(reopenFeed2, `feed2/message${reopenFeed2.length}`);
     await append(reopenFeed2, `feed2/message${reopenFeed2.length}`);
 
@@ -550,7 +583,7 @@ describe('FeedStore', () => {
 
   test('append event', async (done) => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
-    const feed = await feedStore.openFeed('/test');
+    const feed = await feedStore.openFeed();
 
     feedStore.on('append', (f) => {
       expect(f).toBe(feed);
@@ -563,8 +596,9 @@ describe('FeedStore', () => {
   test('update metadata', async () => {
     const root = tempy.directory();
     const feedStore = await createFeedStore(createStorage(root, STORAGE_NODE));
-    await feedStore.openFeed('/test', { metadata: { tag: 0 } });
-    let descriptor = feedStore.getDescriptors().find(fd => fd.path === '/test');
+    const { publicKey } = crypto.keyPair();
+    await feedStore.openFeed({ key: publicKey, metadata: { tag: 0 } });
+    let descriptor = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
     if (!descriptor) {
       throw new Error('No descriptor found');
     }
@@ -574,7 +608,7 @@ describe('FeedStore', () => {
     // Check that the metadata was updated in indexdb.
     await feedStore.close();
     await feedStore.open();
-    descriptor = feedStore.getDescriptors().find(fd => fd.path === '/test');
+    descriptor = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
     if (!descriptor) {
       throw new Error('No descriptor found');
     }
@@ -584,7 +618,8 @@ describe('FeedStore', () => {
   test('openFeed should wait until FeedStore is ready', async () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
     feedStore.open();
-    const feed = await feedStore.openFeed('/test');
+    const { publicKey } = crypto.keyPair();
+    const feed = await feedStore.openFeed({ key: publicKey });
     expect(feed).toBeDefined();
   });
 
@@ -604,7 +639,8 @@ describe('FeedStore', () => {
 
   test('createReadStream should destroy if filter throws an error', async () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
-    await feedStore.openFeed('/test');
+    const { publicKey } = crypto.keyPair();
+    await feedStore.openFeed({ key: publicKey });
 
     const stream = feedStore.createReadStream(async () => {
       throw new Error('filter error');
@@ -617,7 +653,7 @@ describe('FeedStore', () => {
 
   test('Delete all', async () => {
     const { feedStore } = await createDefault();
-    await defaultFeeds(feedStore);
+    await defaultFeeds(feedStore, keys);
 
     expect(feedStore.getDescriptors().length).toBe(3);
     await feedStore.deleteAllDescriptors();

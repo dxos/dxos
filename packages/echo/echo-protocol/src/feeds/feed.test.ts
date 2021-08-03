@@ -25,7 +25,7 @@ describe('Feed tests:', () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
-    const feed = await feedStore.openFeed('test-feed');
+    const feed = await feedStore.openFeed();
     expect(feed.length).toBe(0);
 
     const data: FeedMessage = {};
@@ -41,7 +41,7 @@ describe('Feed tests:', () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
-    const feed = await feedStore.openFeed('test-feed');
+    const feed = await feedStore.openFeed();
     const writer = createFeedWriter<FeedMessage>(feed);
 
     const data: FeedMessage = {

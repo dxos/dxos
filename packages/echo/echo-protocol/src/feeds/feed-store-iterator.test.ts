@@ -78,10 +78,10 @@ describe('feed store iterator', () => {
     //
 
     const feeds = new ComplexMap<FeedKey, hypercore.Feed>(key => key.toHex());
-    for await (const i of Array.from({ length: config.numFeeds }, (_, i) => i + 1)) {
-      const feed = await feedStore.openFeed(`feed-${i}`);
+    await Promise.all(Array.from({ length: config.numFeeds }, (_, i) => i + 1).map(async () => {
+      const feed = await feedStore.openFeed();
       feeds.set(PublicKey.from(feed.key), feed);
-    }
+    }));
 
     log(JSON.stringify({
       config,
@@ -160,8 +160,8 @@ describe('feed store iterator', () => {
 
     await feedStore.open();
 
-    const feed1 = await feedStore.openFeed('feed-1');
-    const feed2 = await feedStore.openFeed('feed-2');
+    const feed1 = await feedStore.openFeed();
+    const feed2 = await feedStore.openFeed();
 
     await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '0' });
     await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '1' });
