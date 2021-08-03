@@ -32,8 +32,7 @@ module.exports = {
             "core-concepts/party",
             "core-concepts/mutations",
             "core-concepts/queries",
-            "core-concepts/invitations",
-            "core-concepts/deployment",
+            "core-concepts/invitations"
           ],
         }
       }
