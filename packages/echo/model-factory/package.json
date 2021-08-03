@@ -23,7 +23,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/util": "workspace:*",
+    "@dxos/feed-store": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/node": "^14.0.9",
     "debug": "^4.1.1"

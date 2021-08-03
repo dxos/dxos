@@ -10,10 +10,10 @@ import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId, PublicKey } from '@dxos/crypto';
 import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream, Timeframe } from '@dxos/echo-protocol';
-import { FeedStore, Feed } from '@dxos/feed-store';
+import { FeedStore, Feed, createWritableFeedStream, createWritable, WritableArray } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
-import { createWritable, createWritableFeedStream, jsonReplacer, WritableArray } from '@dxos/util';
+import { jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../items';
 import { PartyProcessor } from './party-processor';

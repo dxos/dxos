@@ -10,9 +10,8 @@ import tempy from 'tempy';
 
 import { latch, sink } from '@dxos/async';
 import { createId, keyToString, randomBytes, PublicKey } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
 import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-multi-storage';
-import { createWritableFeedStream } from '@dxos/util';
 
 import { codec, createTestItemMutation, FeedMessage } from '../proto';
 import { Timeframe } from '../spacetime';

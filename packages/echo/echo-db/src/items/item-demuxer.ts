@@ -10,8 +10,9 @@ import { raise } from '@dxos/debug';
 import {
   DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
 } from '@dxos/echo-protocol';
+import { createReadable, createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
-import { createReadable, createWritable, jsonReplacer } from '@dxos/util';
+import { jsonReplacer } from '@dxos/util';
 
 import { DefaultModel } from './default-model';
 import { Item } from './item';

@@ -38,7 +38,8 @@
     "pump": "^3.0.0",
     "sodium-universal": "~3.0.4",
     "through2": "^3.0.1",
-    "@dxos/async": "workspace:*"
+    "@dxos/async": "workspace:*",
+    "debug": "^4.1.1"
   },
   "devDependencies": {
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
@@ -53,7 +54,8 @@
     "@types/pump": "^1.1.0",
     "@types/through2": "^2.0.36",
     "@types/from2": "~2.3.1",
-    "@types/jest": "^26.0.7"
+    "@types/jest": "^26.0.7",
+    "@types/debug": "^4.1.1"
   },
   "publishConfig": {
     "access": "restricted"
