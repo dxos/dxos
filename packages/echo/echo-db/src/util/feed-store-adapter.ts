@@ -6,7 +6,7 @@ import assert from 'assert';
 import { Feed } from 'hypercore';
 
 import { patchBufferCodec } from '@dxos/codec-protobuf';
-import { createId, PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/crypto';
 import {
   codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
 } from '@dxos/echo-protocol';
@@ -45,7 +45,7 @@ export class FeedStoreAdapter {
     // we don't have any feeds we don't need to be open.
     for await (const descriptor of this._feedStore.getDescriptors()) {
       if (!descriptor.opened) {
-        await this._feedStore.openFeed(descriptor.metadata);
+        await this._feedStore.openFeed({ key: descriptor.key, secretKey: descriptor.secretKey, metadata: descriptor.metadata });
       }
     }
   }
