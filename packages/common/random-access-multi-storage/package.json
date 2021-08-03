@@ -35,9 +35,6 @@
   "devDependencies": {
     "@dxos/browser-runner": "^1.0.0-beta.8",
     "@dxos/toolchain-node-library": "workspace:*",
-    "bowser": "^2.9.0",
-    "browser-process-hrtime": "^1.0.0",
-    "tempy": "~1.0.1",
     "@types/node": "^14.0.9",
     "@types/pify": "^3.0.2",
     "@dxos/browser-mocha": "workspace:*",

@@ -27,15 +27,11 @@
     "@dxos/broadcast": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protocol": "workspace:*",
-    "debug": "^4.1.1",
     "@dxos/crypto": "workspace:*"
   },
   "devDependencies": {
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
-    "coveralls": "^3.0.7",
-    "cpy-cli": "^2.0.0",
-    "del-cli": "^3.0.0",
     "jest": "^26.6.3",
     "wait-for-expect": "^3.0.2"
   },

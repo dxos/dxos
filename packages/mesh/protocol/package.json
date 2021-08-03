@@ -35,8 +35,7 @@
     "nanoerror": "^1.2.1",
     "nanomessage": "^5.4.0",
     "nanoresource-promise": "^2.0.0",
-    "signal-promise": "^1.0.3",
-    "@dxos/crypto": "workspace:*"
+    "signal-promise": "^1.0.3"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

@@ -450,6 +450,10 @@
       "packageName": "@dxos/esbuild-plugins",
       "projectFolder": "toolchains/esbuild-plugins"
     },
+    {
+      "packageName": "@dxos/deps-checker",
+      "projectFolder": "toolchains/deps-checker"
+    },
 
     //
     // common

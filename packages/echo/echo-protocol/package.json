@@ -31,17 +31,10 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
-    "@types/end-of-stream": "^1.4.0",
-    "@types/lodash": "^4.14.159",
     "@types/node": "^14.0.9",
     "@types/readable-stream": "^2.3.9",
-    "@types/stream-buffers": "^3.0.2",
-    "@types/through2": "^2.0.36",
     "debug": "^4.1.1",
     "hypercore": "^9.10.0",
-    "js-data-structs": "^1.1.2",
-    "lodash.merge": "^4.6.2",
-    "protobufjs": "^6.9.0",
     "readable-stream": "^3.6.0"
   },
   "devDependencies": {
@@ -50,9 +43,7 @@
     "@types/jest": "^26.0.7",
     "faker": "^5.1.0",
     "pify": "~5.0.0",
-    "stream-buffers": "^3.0.2",
     "tempy": "~1.0.1",
-    "wait-for-expect": "^3.0.2",
     "@dxos/random-access-multi-storage": "workspace:*"
   },
   "publishConfig": {

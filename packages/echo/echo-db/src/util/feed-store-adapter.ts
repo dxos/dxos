@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import { Feed } from 'hypercore';
+import type { Feed } from 'hypercore';
 
 import { patchBufferCodec } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/crypto';
