@@ -15,7 +15,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import RedeemIcon from '@material-ui/icons/Redeem';
 import Alert from '@material-ui/lab/Alert';
 
-import { useClient, useInvitationRedeemer } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 
 import DialogHeading from './DialogHeading';
 import { InvitationDescriptor } from '@dxos/echo-db';
@@ -38,41 +38,19 @@ const PinlessRedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => 
   const [isOffline] = useState(false);
   // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
   // const [isOffline, setIsOffline] = useState(false);
-  const [error, setError] = useState<string>();
   const [step, setStep] = useState(0); // TODO(burdon): Const.
   const [invitationCode, setInvitationCode] = useState('');
-  const [pinCode, setPinCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const client = useClient();
   const handleDone = () => {
-    console.log("ACAA???");
-    
     setStep(0);
     setInvitationCode('');
-    setPinCode('');
     setIsProcessing(false);
     onClose();
   };
 
-  const handleInvitationError = (error: string) => {
-    setStep(2);
-    if (error.includes('SyntaxError: Unexpected token') || error.includes('InvalidCharacterError')) {
-      setError('Invalid invitation code.');
-    } else if (error.includes('ERR_GREET_INVALID_INVITATION')) {
-      setError('Invitation not authorized.');
-    } else {
-      setError(error);
-    }
-  };
 
-  const [redeemCode, setPin] = useInvitationRedeemer({
-    onDone: () => {
-      handleDone();
-    },
-    onError: (ex?: string) => handleInvitationError(String(ex)),
-    isOffline
-  });
-
+  // (zarco) TODO: add error handling
   const handleJoinParty = async (invitationCode: string) => {
     const party = await client.echo.joinParty(
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitationCode)),
@@ -91,10 +69,6 @@ const PinlessRedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => 
     handleDone();
   };
 
-  const handleEnterPinCode = async () => {
-    setIsProcessing(true);
-    setPin(pinCode);
-  };
 
   const handleKeyDown = (event: { key: string }) => {
     if (event.key === 'Enter') {
@@ -146,55 +120,6 @@ const PinlessRedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => 
         </>
       )}
 
-      {step === 1 && setPin && (
-        <>
-          <DialogContent>
-            <Typography variant='body1' gutterBottom>
-              Enter the PIN number.
-            </Typography>
-            <TextField
-              value={pinCode}
-              onChange={(event) => setPinCode(event.target.value)}
-              variant='outlined'
-              margin='normal'
-              required
-              fullWidth
-              label='PIN Code'
-              autoFocus
-              disabled={isProcessing}
-            />
-            {isProcessing && <LinearProgress />}
-          </DialogContent>
-          <DialogActions>
-            <Button color='secondary' onClick={handleDone}>
-              Cancel
-            </Button>
-            <Button variant='contained' color='primary' onClick={handleEnterPinCode} disabled={isProcessing}>
-              Submit
-            </Button>
-          </DialogActions>
-        </>
-      )}
-
-      {step === 1 && !setPin && (
-        <DialogContent>
-          <LinearProgress />
-          <Typography className={classes.marginTop} variant='body1' gutterBottom>
-            Processing...
-          </Typography>
-        </DialogContent>
-      )}
-
-      {step === 2 && error && (
-        <DialogContent>
-          <Alert severity='error'>{error}</Alert>
-          <DialogActions>
-            <Button autoFocus color='secondary' onClick={handleDone}>
-              Cancel
-            </Button>
-          </DialogActions>
-        </DialogContent>
-      )}
     </Dialog>
   );
 };
