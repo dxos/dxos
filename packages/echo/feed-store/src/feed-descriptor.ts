@@ -11,6 +11,8 @@ import sodium from 'sodium-universal';
 import { Lock } from '@dxos/async';
 import type { IFile, IStorage } from '@dxos/random-access-multi-storage';
 
+import type { Feed, Hypercore } from './hypercore-types';
+
 interface ValueEncoding {
   encode: string,
   decode: string
@@ -87,7 +89,7 @@ export class FeedDescriptor {
     this._listener = null;
   }
 
-  get feed (): Hypercore | null {
+  get feed (): Feed | null {
     return this._feed;
   }
 
@@ -126,7 +128,7 @@ export class FeedDescriptor {
    * This is an atomic operation, FeedDescriptor makes
    * sure that the feed is not going to open again.
    */
-  async open (): Promise<Hypercore> {
+  async open (): Promise<Feed> {
     if (this.opened) {
       return this._feed;
     }

@@ -4,6 +4,7 @@
 
 /* eslint-disable jest/no-done-callback */
 
+import assert from 'assert';
 import crypto from 'hypercore-crypto';
 import pify from 'pify';
 import tempy from 'tempy';
@@ -66,6 +67,8 @@ describe('FeedDescriptor', () => {
     const [feed1, feed2] = await Promise.all([fd.open(), fd.open()]);
     expect(feed1).toBe(feed2);
 
+    assert(fd.feed);
+
     expect(fd.feed).toBe(feed1);
     expect(fd.feed.key).toBeInstanceOf(Buffer);
     expect(fd.opened).toBe(true);
@@ -76,7 +79,9 @@ describe('FeedDescriptor', () => {
     await Promise.all([fd.close(), fd.close()]);
     expect(fd.opened).toBe(false);
 
-    fd.feed.append('test', (err: Error) => {
+    assert(fd.feed);
+
+    fd.feed.append('test', (err: any) => {
       expect(err.message).toContain('This feed is not writable');
     });
 
@@ -100,6 +105,8 @@ describe('FeedDescriptor', () => {
 
     await fd.open();
     expect(fd.opened).toBe(true);
+
+    assert(fd.feed);
 
     await pify(fd.feed.append.bind(fd.feed))('test');
 
@@ -152,7 +159,7 @@ describe('FeedDescriptor', () => {
         close () {
           throw new Error('close error');
         }
-      })
+      } as any)
     });
 
     await fd.open();

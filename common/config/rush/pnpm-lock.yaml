@@ -317,9 +317,7 @@ importers:
     dependencies:
       '@dxos/crypto': link:../crypto
       '@dxos/debug': link:../debug
-      '@types/debug': 4.1.5
       '@types/node': 14.14.45
-      debug: 4.3.1
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.23
@@ -327,10 +325,8 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.1
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
-      debug: ^4.1.1
   ../../packages/echo/echo-db:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -405,7 +401,6 @@ importers:
       '@types/node': 14.14.45
       '@types/readable-stream': 2.3.9
       debug: 4.3.1
-      hypercore: 9.10.0
       readable-stream: 3.6.0
     devDependencies:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
@@ -431,7 +426,6 @@ importers:
       '@types/readable-stream': ^2.3.9
       debug: ^4.1.1
       faker: ^5.1.0
-      hypercore: ^9.10.0
       pify: ~5.0.0
       readable-stream: ^3.6.0
       tempy: ~1.0.1
@@ -459,6 +453,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       buffer-json-encoding: 1.0.2
+      debug: 4.3.1
       end-of-stream: 1.4.4
       from2: 2.3.0
       hypercore: 9.10.0
@@ -474,6 +469,7 @@ importers:
       '@dxos/browser-runner': 1.0.0-beta.13
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/from2': 2.3.1
       '@types/jest': 26.0.23
@@ -489,6 +485,7 @@ importers:
       '@dxos/browser-runner': ^1.0.0-beta.8
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/debug': ^4.1.1
       '@types/end-of-stream': ^1.4.0
       '@types/from2': ~2.3.1
       '@types/jest': ^26.0.7
@@ -497,6 +494,7 @@ importers:
       '@types/pump': ^1.1.0
       '@types/through2': ^2.0.36
       buffer-json-encoding: ^1.0.2
+      debug: ^4.1.1
       end-of-stream: ^1.4.1
       end-of-stream-promise: ^1.0.0
       from2: ^2.3.0
@@ -527,7 +525,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-protocol': link:../echo-protocol
-      '@dxos/util': link:../../common/util
+      '@dxos/feed-store': link:../feed-store
       '@types/debug': 4.1.5
       '@types/node': 14.14.45
       debug: 4.3.1
@@ -539,8 +537,8 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-protocol': workspace:*
+      '@dxos/feed-store': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
@@ -698,12 +696,14 @@ importers:
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/mocha': 8.2.2
+      '@types/node': 14.14.45
       '@types/tar': 4.0.4
       bip32: 2.0.6
       expect: 27.0.2
       process-exists: 4.0.0
       pstree.remy: 1.1.8
       sodium-universal: 3.0.4
+      typescript: 4.3.5
       wrtc: 0.4.7
     specifiers:
       '@dxos/async': workspace:*
@@ -724,6 +724,7 @@ importers:
       '@types/debug': ^4.1.1
       '@types/fs-extra': ^9.0.4
       '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
       '@types/node-fetch': ^2.5.10
       '@types/tar': ^4.0.4
       assert: ^2.0.0
@@ -742,6 +743,7 @@ importers:
       sodium-universal: ~3.0.4
       tar: ^6.0.5
       tree-kill: ^1.2.2
+      typescript: ^4.3.5
       wrtc: ^0.4.6
   ../../packages/halo/credentials:
     dependencies:

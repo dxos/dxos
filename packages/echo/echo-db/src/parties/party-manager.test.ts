@@ -26,13 +26,12 @@ import {
 } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
-import { createWritableFeedStream } from '@dxos/util';
 
 import { HaloFactory, IdentityManager } from '../halo';
 import { autoPartyOpener } from '../halo/party-opener';
@@ -167,7 +166,7 @@ describe('Party manager', () => {
 
     await partyManager.addParty(partyKey.publicKey, [{
       type: KeyType.FEED,
-      publicKey: feed.key
+      publicKey: PublicKey.from(feed.key)
     }]);
 
     await update;

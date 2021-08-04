@@ -90,7 +90,7 @@ export default class Reader {
       this._state[feedKey] = 0;
 
       // feeds to sync
-      if (descriptor.feed.length > 0) {
+      if (descriptor.feed && descriptor.feed.length > 0) {
         this._feedsToSync.add(feedKey);
         this._initialState[feedKey] = 0;
       }

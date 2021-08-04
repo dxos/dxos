@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { FeedWriter, ItemID, MutationMeta, WriteReceipt } from '@dxos/echo-protocol';
-import { createWritable } from '@dxos/util';
+import { createWritable } from '@dxos/feed-store';
 
 import { ModelMessage, ModelMeta } from './types';
 

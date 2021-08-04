@@ -5,7 +5,7 @@
 import { latch } from '@dxos/async';
 import { createKeyPair, createId, zeroKey } from '@dxos/crypto';
 import { TestItemMutation, createMockFeedWriterFromStream } from '@dxos/echo-protocol';
-import { createTransform } from '@dxos/util';
+import { createTransform } from '@dxos/feed-store';
 
 import { ModelMessage } from '../types';
 import { TestModel } from './test-model';
