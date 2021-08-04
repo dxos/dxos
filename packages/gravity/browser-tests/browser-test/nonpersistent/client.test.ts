@@ -95,7 +95,7 @@ describe('Client - nonpersistent', () => {
       // TODO: Doesn't work on CI for unknown reason.
       this.skip();
     }
-    
+
     const clientA = new Client();
     await clientA.initialize();
     await clientA.halo.createProfile({
