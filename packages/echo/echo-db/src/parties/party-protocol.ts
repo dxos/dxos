@@ -4,7 +4,6 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import type { Feed } from 'hypercore';
 
 import { synchronized } from '@dxos/async';
 import {
@@ -14,6 +13,7 @@ import {
 } from '@dxos/credentials';
 import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
+import type { Feed } from '@dxos/feed-store';
 import { MMSTTopology, NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';

@@ -10,9 +10,9 @@ import { latch } from '@dxos/async';
 import { createId, createKeyPair, PublicKey, randomBytes } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream } from '@dxos/echo-protocol';
+import { createTransform } from '@dxos/feed-store';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { createTransform } from '@dxos/util';
 
 import { DefaultModel } from './default-model';
 import { Item } from './item';

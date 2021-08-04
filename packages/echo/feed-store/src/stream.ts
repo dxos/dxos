@@ -3,10 +3,10 @@
 //
 
 import debug from 'debug';
-import type { Feed } from 'hypercore';
-import { PassThrough, Readable, Transform, Writable } from 'stream';
+import { Readable, Transform, Writable } from 'stream';
 
-const log = debug('dxos:stream');
+import type { Feed } from './hypercore-types';
+
 const error = debug('dxos:stream:error');
 
 //
@@ -61,18 +61,6 @@ export function createWritable<T> (callback: (message: T) => Promise<void>): Nod
 }
 
 /**
- * Creates a no-op transform.
- */
-export function createPassThrough<T> (): PassThrough {
-  return new PassThrough({
-    objectMode: true,
-    transform: async (message: T, _, next) => {
-      next(null, message);
-    }
-  });
-}
-
-/**
  * Creates a transform object stream.
  * @param callback
  */
@@ -88,17 +76,6 @@ export function createTransform<R, W> (callback: (message: R) => Promise<W | und
         next(err);
       }
     }
-  });
-}
-
-/**
- * Injectable logger.
- * @param logger
- */
-export function createLoggingTransform (logger: Function = log): Transform {
-  return createTransform<any, any>(message => {
-    logger(message);
-    return message;
   });
 }
 

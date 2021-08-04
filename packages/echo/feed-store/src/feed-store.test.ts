@@ -82,7 +82,7 @@ describe('FeedStore', () => {
 
   test('Config default + custom database + custom hypercore', async () => {
     const customHypercore = jest.fn((...args) => {
-      return hypercore(...args);
+      return hypercore(args[0], args[1], args[2]);
     });
 
     const storage = createStorage('', STORAGE_RAM);

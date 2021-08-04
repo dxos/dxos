@@ -10,8 +10,8 @@ import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { EchoEnvelope, FeedWriter, IEchoStream, ItemID, ItemType, LinkData, mapFeedWriter } from '@dxos/echo-protocol';
+import { createTransform } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
-import { createTransform } from '@dxos/util';
 
 import { UnknownModelError } from '../errors';
 import { ResultSet } from '../result';

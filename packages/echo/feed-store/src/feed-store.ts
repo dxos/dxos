@@ -12,6 +12,7 @@ import { synchronized } from '@dxos/async';
 import { IStorage } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
+import type { Feed, Hypercore } from './hypercore-types';
 import IndexDB from './index-db';
 import Reader from './reader';
 
@@ -178,29 +179,33 @@ export class FeedStore extends EventEmitter {
   /**
    * Get the list of opened feeds, with optional filter.
    */
-  getOpenFeeds (callback?: DescriptorCallback): Hypercore[] {
+  getOpenFeeds (callback?: DescriptorCallback): Feed[] {
+    const notNull = <T>(value: T | null): value is T => Boolean(value);
     return this.getDescriptors()
       .filter(descriptor => descriptor.opened && (!callback || callback(descriptor)))
-      .map(descriptor => descriptor.feed);
+      .map(descriptor => descriptor.feed)
+      .filter(notNull);
   }
 
   /**
    * Find an opened feed using a filter callback.
    */
-  getOpenFeed (callback: DescriptorCallback): Hypercore {
+  getOpenFeed (callback: DescriptorCallback): Feed | undefined {
     const descriptor = this.getDescriptors()
       .find(descriptor => descriptor.opened && callback(descriptor));
 
-    if (descriptor) {
+    if (descriptor && descriptor.feed) {
       return descriptor.feed;
     }
+
+    return undefined;
   }
 
   /**
    * Open multiple feeds using a filter callback.
    */
   @synchronized
-  async openFeeds (callback: DescriptorCallback): Promise<Hypercore[]> {
+  async openFeeds (callback: DescriptorCallback): Promise<Feed[]> {
     assert(this._open, 'FeedStore closed');
 
     const descriptors = this.getDescriptors()
@@ -218,7 +223,7 @@ export class FeedStore extends EventEmitter {
    * Similar to fs.open
    */
   @synchronized
-  async openFeed (options: OpenFeedOptions = {}): Promise<Hypercore> {
+  async openFeed (options: OpenFeedOptions = {}): Promise<Feed> {
     assert(this._open, 'FeedStore closed');
 
     const { key } = options;
@@ -333,7 +338,7 @@ export class FeedStore extends EventEmitter {
 
       const { feed } = descriptor;
 
-      if (event === 'opened') {
+      if (event === 'opened' && feed) {
         await this._persistDescriptor(descriptor);
         feed.on('append', append);
         feed.on('download', download);
@@ -341,7 +346,7 @@ export class FeedStore extends EventEmitter {
         return;
       }
 
-      if (event === 'closed') {
+      if (event === 'closed' && feed) {
         feed.removeListener('append', append);
         feed.removeListener('download', download);
       }
