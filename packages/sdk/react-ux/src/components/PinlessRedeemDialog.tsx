@@ -34,16 +34,10 @@ const useStyles = makeStyles((theme) => ({
  * Works for both regular and `Offline` invitations.
  */
 const PinlessRedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => {
-  const classes = useStyles();
-  const [isOffline] = useState(false);
-  // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
-  // const [isOffline, setIsOffline] = useState(false);
-  const [step, setStep] = useState(0); // TODO(burdon): Const.
   const [invitationCode, setInvitationCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const client = useClient();
   const handleDone = () => {
-    setStep(0);
     setInvitationCode('');
     setIsProcessing(false);
     onClose();
@@ -81,13 +75,12 @@ const PinlessRedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => 
       fullWidth
       maxWidth='xs'
       open
-      onClose={step === 0 ? handleDone : undefined} // No click away when in the middle of a flow
+      onClose={handleDone} // No click away when in the middle of a flow
       {...props}
     >
       <DialogHeading title='Redeem Invitation' icon={RedeemIcon} />
 
-      {step === 0 && (
-        <>
+      <>
           <DialogContent>
             <TextField
               autoFocus
@@ -101,13 +94,6 @@ const PinlessRedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => 
               rows={6}
             />
             {isProcessing && <LinearProgress />}
-            {/*
-            issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
-            <FormControlLabel
-              className={classes.marginTop}
-              control={<Checkbox checked={isOffline} onChange={(event) => setIsOffline(event.target.checked)} />}
-              label='Offline'
-            /> */}
           </DialogContent>
           <DialogActions>
             <Button color='secondary' onClick={handleDone}>
@@ -118,7 +104,6 @@ const PinlessRedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => 
             </Button>
           </DialogActions>
         </>
-      )}
 
     </Dialog>
   );
