@@ -10,24 +10,12 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import { makeStyles } from '@material-ui/core/styles';
 import RedeemIcon from '@material-ui/icons/Redeem';
 import Alert from '@material-ui/lab/Alert';
-
 import { useClient } from '@dxos/react-client';
 
 import DialogHeading from './DialogHeading';
 import { InvitationDescriptor } from '@dxos/echo-db';
-
-const useStyles = makeStyles((theme) => ({
-  marginTop: {
-    marginTop: theme.spacing(2)
-  },
-  title: {
-    marginLeft: theme.spacing(2)
-  }
-}));
 
 /**
  * Component used for claiming invitations to Parties.
@@ -35,12 +23,26 @@ const useStyles = makeStyles((theme) => ({
  */
 const PinlessRedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => {
   const [invitationCode, setInvitationCode] = useState('');
+  const [invitationError, setInvitationError] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const client = useClient();
   const handleDone = () => {
     setInvitationCode('');
+    setInvitationError('');
     setIsProcessing(false);
     onClose();
+  };
+
+
+  const handleInvitationError = (error: string) => {
+    if (error.includes('SyntaxError: Unexpected token') || error.includes('InvalidCharacterError')) {
+      setInvitationError('Invalid invitation code.');
+    } else if (error.includes('ERR_GREET_INVALID_INVITATION')) {
+      setInvitationError('Invitation not authorized.');
+    } else {
+      setInvitationError('Something went wrong. Please try again later.');
+      console.log(error);
+    }
   };
 
 
@@ -50,7 +52,6 @@ const PinlessRedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => 
       InvitationDescriptor.fromQueryParameters(JSON.parse(invitationCode)),
       async () => Buffer.from('0000')
     );
-
     await party.open();
   };
 
@@ -59,8 +60,13 @@ const PinlessRedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => 
       return;
     }
     setIsProcessing(true);
-    await handleJoinParty(invitationCode);
-    handleDone();
+    setInvitationError('');
+    try {
+      await handleJoinParty(invitationCode);
+      handleDone();
+    } catch (error) {
+      handleInvitationError(JSON.stringify(error));
+    }
   };
 
 
@@ -80,31 +86,44 @@ const PinlessRedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => 
     >
       <DialogHeading title='Redeem Invitation' icon={RedeemIcon} />
 
-      <>
-          <DialogContent>
-            <TextField
-              autoFocus
-              fullWidth
-              multiline
-              placeholder='Paste invitation code.'
-              spellCheck={false}
-              value={invitationCode}
-              onChange={(event) => setInvitationCode(event.target.value)}
-              onKeyDown={handleKeyDown}
-              rows={6}
-            />
-            {isProcessing && <LinearProgress />}
-          </DialogContent>
-          <DialogActions>
-            <Button color='secondary' onClick={handleDone}>
-              Cancel
-            </Button>
-            <Button variant='contained' color='primary' onClick={handleEnterInvitationCode} disabled={isProcessing}>
-              Submit
-            </Button>
-          </DialogActions>
-        </>
-
+      {
+        invitationError === '' && (
+          <>
+            <DialogContent>
+              <TextField
+                autoFocus
+                fullWidth
+                multiline
+                placeholder='Paste invitation code.'
+                spellCheck={false}
+                value={invitationCode}
+                onChange={(event) => setInvitationCode(event.target.value)}
+                onKeyDown={handleKeyDown}
+                rows={6}
+              />
+              {isProcessing && <LinearProgress />}
+            </DialogContent>
+            <DialogActions>
+              <Button color='secondary' onClick={handleDone}>
+                Cancel
+              </Button>
+              <Button variant='contained' color='primary' onClick={handleEnterInvitationCode} disabled={isProcessing}>
+                Submit
+              </Button>
+            </DialogActions>
+          </>
+        )
+      }
+      {invitationError && (
+            <DialogContent>
+              <Alert severity='error'>{invitationError}</Alert>
+              <DialogActions>
+                <Button autoFocus color='secondary' onClick={handleDone}>
+                  Cancel
+                </Button>
+              </DialogActions>
+            </DialogContent>
+          )}
     </Dialog>
   );
 };
