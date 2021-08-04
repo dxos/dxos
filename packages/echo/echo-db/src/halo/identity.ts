@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { Filter, KeyChain, KeyRecord, Keyring, KeyType } from '@dxos/credentials';
+import { Filter, KeyChain, KeyRecord, Keyring, KeyType, Signer } from '@dxos/credentials';
 
 import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
@@ -41,7 +41,7 @@ export class Identity {
     private _halo: HaloParty | undefined
   ) {}
 
-  get keyring () {
+  get signer (): Signer {
     return this._keyring;
   }
 
@@ -69,10 +69,6 @@ export class Identity {
     return this._deviceKeyChain;
   }
 
-  get halo (): HaloParty | undefined {
-    return this._halo;
-  }
-
   get preferences (): Preferences | undefined {
     return this._halo?.preferences;
   }
@@ -91,6 +87,14 @@ export class Identity {
 
   get identityGenesis () {
     return this._halo?.identityGenesis;
+  }
+
+  get halo (): HaloParty | undefined {
+    return this._halo;
+  }
+
+  get keyring () {
+    return this._keyring;
   }
 
   /**
