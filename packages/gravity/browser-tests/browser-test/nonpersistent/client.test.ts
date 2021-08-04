@@ -58,9 +58,10 @@ describe('Client - nonpersistent', () => {
 
   it('invitations', async function () {
     if (browserMocha.context.browser === 'webkit') {
-      // TODO: Doesn't work for unknown reason.
+      // TODO: Doesn't work on CI for unknown reason.
       this.skip();
     }
+
     const client = new Client();
     await client.initialize();
     await client.halo.createProfile({
@@ -87,5 +88,42 @@ describe('Client - nonpersistent', () => {
 
     await client.destroy();
     await otherClient.destroy();
+  }).timeout(10_000).retries(2);
+
+  it('offline invitations', async function () {
+    if (browserMocha.context.browser === 'webkit') {
+      // TODO: Doesn't work on CI for unknown reason.
+      this.skip();
+    }
+
+    const clientA = new Client();
+    await clientA.initialize();
+    await clientA.halo.createProfile({
+      ...createKeyPair(),
+      username: 'DXOS test'
+    });
+
+    const party1A = await clientA.echo.createParty();
+
+    const clientB = new Client();
+    await clientB.initialize();
+    await clientB.halo.createProfile({
+      ...createKeyPair(),
+      username: 'DXOS test 2'
+    });
+
+    const invite1 = await party1A.createInvitation(testInvitationAuthenticator);
+    await clientB.echo.joinParty(invite1, testSecretProvider);
+
+    const contact = clientA.halo.queryContacts().value.find(x => x.displayName === 'DXOS test 2');
+    expect(contact).toBeTruthy();
+
+    const party2A = await clientA.echo.createParty();
+
+    const invite2 = await party2A.createOfflineInvitation(contact!.publicKey);
+    await clientB.echo.joinParty(invite2);
+
+    await clientA.destroy();
+    await clientB.destroy();
   }).timeout(10_000).retries(2);
 });
