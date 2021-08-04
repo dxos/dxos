@@ -2,20 +2,19 @@
 // Copyright 2019 DXOS.org
 //
 
-import { createStorage } from '@dxos/random-access-multi-storage';
 import { Suite } from '@dxos/benchmark-suite';
-import process from 'process'
+import { createStorage } from '@dxos/random-access-multi-storage';
 
-import { FeedStore } from './src';
+import { FeedStore } from './feed-store';
 
-const range = n => [...Array(n).keys()];
+const range = (n: number) => [...Array(n).keys()];
 
 (async () => {
   const maxFeeds = 5;
   const maxMessages = 1000;
   const expectedMessages = maxFeeds * maxMessages;
 
-  const check = count => {
+  const check = (count: number) => {
     if (count !== expectedMessages) {
       throw new Error('messages amount expected incorrect');
     }
@@ -28,12 +27,14 @@ const range = n => [...Array(n).keys()];
   suite.beforeAll(() => {
     return Promise.all(range(maxFeeds).map(async i => {
       const name = `feed/${i}`;
-      const feed = await fs.openFeed(name);
+      const feed = await fs.openFeed();
 
       for (let i = 0; i < maxMessages; i++) {
         await new Promise<void>((resolve, reject) => {
           feed.append(`${name}/${i}`, (err) => {
-            if (err) return reject(err);
+            if (err) {
+              return reject(err);
+            }
             resolve();
           });
         });
@@ -50,7 +51,9 @@ const range = n => [...Array(n).keys()];
       return new Promise<void>((resolve, reject) => {
         feed.getBatch(0, maxMessages, (err, result) => {
           count += result.length;
-          if (err) return reject(err);
+          if (err) {
+            return reject(err);
+          }
           resolve();
         });
       });
@@ -64,9 +67,11 @@ const range = n => [...Array(n).keys()];
     let count = 0;
 
     await new Promise<void>((resolve, reject) => {
-      stream.on('data', (data) => {
+      stream.on('data', (data: any) => {
         count++;
-        if (count === expectedMessages) resolve();
+        if (count === expectedMessages) {
+          resolve();
+        }
       });
     });
 
@@ -80,9 +85,11 @@ const range = n => [...Array(n).keys()];
     let count = 0;
 
     await new Promise<void>((resolve, reject) => {
-      stream.on('data', (data) => {
+      stream.on('data', (data: any) => {
         count++;
-        if (count === expectedMessages) resolve();
+        if (count === expectedMessages) {
+          resolve();
+        }
       });
     });
 
@@ -96,9 +103,11 @@ const range = n => [...Array(n).keys()];
     let count = 0;
 
     await new Promise<void>((resolve, reject) => {
-      stream.on('data', (data) => {
+      stream.on('data', (data: any) => {
         count += data.length;
-        if (count === expectedMessages) resolve();
+        if (count === expectedMessages) {
+          resolve();
+        }
       });
     });
 
@@ -110,6 +119,4 @@ const range = n => [...Array(n).keys()];
   const results = await suite.run();
 
   suite.print(results);
-
-  process.exit(0);
 })();
