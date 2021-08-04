@@ -41,10 +41,6 @@ export class Identity {
     private _halo: HaloParty | undefined
   ) {}
 
-  get keyring () {
-    return this._keyring;
-  }
-
   get signer (): Signer {
     return this._keyring;
   }
@@ -73,10 +69,6 @@ export class Identity {
     return this._deviceKeyChain;
   }
 
-  get halo (): HaloParty | undefined {
-    return this._halo;
-  }
-
   get preferences (): Preferences | undefined {
     return this._halo?.preferences;
   }
@@ -95,6 +87,14 @@ export class Identity {
 
   get identityGenesis () {
     return this._halo?.identityGenesis;
+  }
+
+  get halo (): HaloParty | undefined {
+    return this._halo;
+  }
+
+  get keyring () {
+    return this._keyring;
   }
 
   /**
