@@ -2,8 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
-import { createStorage } from '@dxos/random-access-multi-storage';
 import { Suite } from '@dxos/benchmark-suite';
+import { createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedStore } from './feed-store';
 
@@ -32,7 +32,9 @@ const range = (n: number) => [...Array(n).keys()];
       for (let i = 0; i < maxMessages; i++) {
         await new Promise<void>((resolve, reject) => {
           feed.append(`${name}/${i}`, (err) => {
-            if (err) return reject(err);
+            if (err) {
+              return reject(err);
+            }
             resolve();
           });
         });
@@ -49,7 +51,9 @@ const range = (n: number) => [...Array(n).keys()];
       return new Promise<void>((resolve, reject) => {
         feed.getBatch(0, maxMessages, (err, result) => {
           count += result.length;
-          if (err) return reject(err);
+          if (err) {
+            return reject(err);
+          }
           resolve();
         });
       });
@@ -65,7 +69,9 @@ const range = (n: number) => [...Array(n).keys()];
     await new Promise<void>((resolve, reject) => {
       stream.on('data', (data: any) => {
         count++;
-        if (count === expectedMessages) resolve();
+        if (count === expectedMessages) {
+          resolve();
+        }
       });
     });
 
@@ -81,7 +87,9 @@ const range = (n: number) => [...Array(n).keys()];
     await new Promise<void>((resolve, reject) => {
       stream.on('data', (data: any) => {
         count++;
-        if (count === expectedMessages) resolve();
+        if (count === expectedMessages) {
+          resolve();
+        }
       });
     });
 
@@ -97,7 +105,9 @@ const range = (n: number) => [...Array(n).keys()];
     await new Promise<void>((resolve, reject) => {
       stream.on('data', (data: any) => {
         count += data.length;
-        if (count === expectedMessages) resolve();
+        if (count === expectedMessages) {
+          resolve();
+        }
       });
     });
 
