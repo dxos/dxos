@@ -11,14 +11,14 @@ import { createDateTimeString } from '../proto';
  */
 export type SecretProvider = (info: any) => Promise<Buffer>;
 
-export const testSecretProvider: SecretProvider = async () => Buffer.from('0000');
+export const defaultSecretProvider: SecretProvider = async () => Buffer.from('0000');
 
 /**
  * Validates the shared secret during an invitation process.
  */
 export type SecretValidator = (invitation: Invitation, secret: Buffer) => Promise<boolean>;
 
-export const testSecretValidator: SecretValidator = async (invitation, secret) =>
+export const defaultSecretValidator: SecretValidator = async (invitation, secret) =>
   secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
 
 export type InvitationOnFinish = () => Promise<void>;

@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
 
 import { ActivationOptions } from '../halo';
-import { InvitationAuthenticator, InvitationOptions, testInvitationAuthenticator } from '../invitations';
+import { InvitationAuthenticator, InvitationOptions, defaultInvitationAuthenticator } from '../invitations';
 import { ResultSet } from '../result';
 import { PartyInternal, PartyMember } from './party-internal';
 
@@ -147,7 +147,7 @@ export class Party {
    *
    * @param authenticationDetails Authenticator for a shared secret (usually a PIN code) to validate the peer accepting the invitation. When not providing it, use `0000` as pinCode.
    */
-  async createInvitation (authenticationDetails: InvitationAuthenticator = testInvitationAuthenticator, options: InvitationOptions = {}) {
+  async createInvitation (authenticationDetails: InvitationAuthenticator = defaultInvitationAuthenticator, options: InvitationOptions = {}) {
     return this._internal.invitationManager.createInvitation(authenticationDetails, options);
   }
 
