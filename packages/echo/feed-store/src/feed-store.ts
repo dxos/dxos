@@ -29,9 +29,15 @@ interface CreateDescriptorOptions {
   metadata?: any
 }
 
-interface OpenFeedOptions {
-  key?: Buffer,
-  secretKey?: Buffer,
+interface CreateReadWriteFeedOptions {
+  key: Buffer,
+  secretKey: Buffer
+  valueEncoding?: string,
+  metadata?: any
+}
+
+interface CreateReadOnlyFeedOptions {
+  key: Buffer
   valueEncoding?: string,
   metadata?: any
 }
@@ -216,28 +222,38 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Open a feed to FeedStore.
-   *
-   * If the feed already exists but is not loaded it will load the feed instead of
-   * creating a new one.
-   *
-   * Similar to fs.open
    */
   @synchronized
-  async openFeed (options: OpenFeedOptions = {}): Promise<Feed> {
+  async openFeed (key: Buffer): Promise<Feed> {
     assert(this._open, 'FeedStore closed');
 
-    const { key } = options;
+    let descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
 
-    let descriptor = key && this.getDescriptors().find(fd => fd.key.equals(key));
-
-    if (!descriptor) {
-      descriptor = this._createDescriptor(options);
-    }
+    assert(descriptor, 'Descriptor not found');
 
     const feed = await descriptor.open();
 
     return feed;
   }
+
+  /**
+   * Create a feed to Feedstore
+   */
+  createReadWriteFeed (options: CreateReadWriteFeedOptions): FeedDescriptor {
+    const descriptor = this._createDescriptor(options);
+
+    return descriptor;
+  }
+
+  /**
+   * Create a readonly feed to Feedstore
+   */
+  createReadOnlyFeed (options: CreateReadOnlyFeedOptions): FeedDescriptor {
+    const descriptor = this._createDescriptor(options);
+
+    return descriptor;
+  }
+
 
   /**
    * Close a feed by the key.

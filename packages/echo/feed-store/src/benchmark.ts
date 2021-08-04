@@ -4,6 +4,7 @@
 
 import { Suite } from '@dxos/benchmark-suite';
 import { createStorage } from '@dxos/random-access-multi-storage';
+import crypto from 'hypercore-crypto';
 
 import { FeedStore } from './feed-store';
 
@@ -27,7 +28,9 @@ const range = (n: number) => [...Array(n).keys()];
   suite.beforeAll(() => {
     return Promise.all(range(maxFeeds).map(async i => {
       const name = `feed/${i}`;
-      const feed = await fs.openFeed();
+      const { publicKey, secretKey } = crypto.keyPair();
+      const feedDescriptor = fs.createReadWriteFeed({ key: publicKey, secretKey });
+      const feed = await fs.openFeed(feedDescriptor.key);
 
       for (let i = 0; i < maxMessages; i++) {
         await new Promise<void>((resolve, reject) => {
