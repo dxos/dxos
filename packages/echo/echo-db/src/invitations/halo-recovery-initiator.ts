@@ -105,7 +105,7 @@ export class HaloRecoveryInitiator {
     const responderPeerId = keyToBuffer(peer.getSession().peerId);
 
     // Synthesize an "invitationID" which is the signature of both peerIds signed by our Identity key.
-    const signature = this._identity.keyring.rawSign(
+    const signature = this._identity.signer.rawSign(
       Buffer.concat([this._peerId, responderPeerId]),
       this._identity.identityKey
     );
@@ -147,7 +147,7 @@ export class HaloRecoveryInitiator {
       // The signed portion of the Auth message includes the ID and authNonce provided
       // by "info". These values will be validated on the other end.
       createAuthMessage(
-        this._identity.keyring,
+        this._identity.signer,
         info.id.value,
         this._identity.identityKey ?? raise(new IdentityNotInitializedError()),
         this._identity.identityKey ?? raise(new IdentityNotInitializedError()),

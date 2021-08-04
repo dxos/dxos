@@ -89,7 +89,7 @@ export class PartyFactory {
 
     // PartyGenesis (self-signed by Party).
     await party.processor.writeHaloMessage(createPartyGenesisMessage(
-      identity.keyring,
+      identity.signer,
       partyKey,
       feedKey,
       partyKey)
@@ -97,7 +97,7 @@ export class PartyFactory {
 
     // KeyAdmit (IdentityGenesis in an Envelope signed by Party).
     await party.processor.writeHaloMessage(createEnvelopeMessage(
-      identity.keyring,
+      identity.signer,
       partyKey.publicKey,
       wrapMessage(identity.identityGenesis),
       [partyKey])
@@ -105,7 +105,7 @@ export class PartyFactory {
 
     // FeedAdmit (signed by the Device KeyChain).
     await party.processor.writeHaloMessage(createFeedAdmitMessage(
-      identity.keyring,
+      identity.signer,
       partyKey.publicKey,
       feedKey,
       [identity.deviceKeyChain]
@@ -114,7 +114,7 @@ export class PartyFactory {
     // IdentityInfo in an Envelope signed by the Device KeyChain.
     if (identity.identityInfo) {
       await party.processor.writeHaloMessage(createEnvelopeMessage(
-        identity.keyring,
+        identity.signer,
         partyKey.publicKey,
         wrapMessage(identity.identityInfo),
         [identity.deviceKeyChain]
@@ -159,7 +159,7 @@ export class PartyFactory {
 
     // Write the Feed genesis message.
     await party.processor.writeHaloMessage(createFeedAdmitMessage(
-      identity.keyring,
+      identity.signer,
       partyKey,
       feedKey,
       [signingKey]
@@ -244,7 +244,7 @@ export class PartyFactory {
       const infoMessage = identity.identityInfo;
       if (infoMessage) {
         await party.processor.writeHaloMessage(createEnvelopeMessage(
-          identity.keyring,
+          identity.signer,
           partyKey,
           wrapMessage(infoMessage),
           [identity.deviceKeyChain]

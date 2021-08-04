@@ -172,7 +172,7 @@ export class OfflineInvitationClaimer {
       // The signed portion of the Auth message includes the ID and authNonce provided
       // by "info". These values will be validated on the other end.
       createAuthMessage(
-        identity.keyring,
+        identity.signer,
         info.id.value,
         identity.identityKey ?? raise(new IdentityNotInitializedError()),
         identity.deviceKeyChain ?? raise(new IdentityNotInitializedError()),

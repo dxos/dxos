@@ -216,7 +216,7 @@ export class GreetingResponder {
       };
 
       const envelope = createEnvelopeMessage(
-        this._identity.keyring,
+        this._identity.signer,
         this._partyProcessor.partyKey,
         message,
         [this._identity.deviceKeyChain]
