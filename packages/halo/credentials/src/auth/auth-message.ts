@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 
-import { Keyring } from '../keys';
+import { Signer } from '../keys';
 import { wrapMessage } from '../party';
 import { Auth, KeyChain, KeyRecord, Message, WithTypeUrl } from '../proto';
 
@@ -14,14 +14,14 @@ import { Auth, KeyChain, KeyRecord, Message, WithTypeUrl } from '../proto';
  * Create `dxos.credentials.auth.Auth` credentials.
  */
 export const createAuthMessage = (
-  keyring: Keyring,
+  signer: Signer,
   partyKey: PublicKeyLike,
   identityKey: KeyRecord,
   deviceKey: KeyRecord | KeyChain,
   feedKey?: KeyRecord,
   nonce?: Buffer
 ): WithTypeUrl<Message> => {
-  assert(keyring);
+  assert(signer);
 
   partyKey = PublicKey.from(partyKey);
 
@@ -38,5 +38,5 @@ export const createAuthMessage = (
     feedKey: feedKey?.publicKey
   };
 
-  return wrapMessage(keyring.sign(authMessage, signingKeys, nonce));
+  return wrapMessage(signer.sign(authMessage, signingKeys, nonce));
 };

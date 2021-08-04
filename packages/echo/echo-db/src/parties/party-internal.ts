@@ -240,7 +240,7 @@ export class PartyInternal {
       get: () => {
         const identity = this._identityProvider();
         return Buffer.from(Authenticator.encodePayload(createAuthMessage(
-          identity.keyring,
+          identity.signer,
           partyKey,
           identity.identityKey ?? raise(new IdentityNotInitializedError()),
           identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError()),

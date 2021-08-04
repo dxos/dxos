@@ -42,7 +42,7 @@ export class InvitationManager {
     assert(this._identity.deviceKeyChain, 'Device keychain is required.');
 
     const invitationMessage = createPartyInvitationMessage(
-      this._identity.keyring,
+      this._identity.signer,
       this._partyProcessor.partyKey,
       publicKey,
       this._identity.identityKey,

@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { Filter, KeyChain, KeyRecord, Keyring, KeyType } from '@dxos/credentials';
+import { Filter, KeyChain, KeyRecord, Keyring, KeyType, Signer } from '@dxos/credentials';
 
 import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
@@ -45,6 +45,10 @@ export class Identity {
     return this._keyring;
   }
 
+  get signer (): Signer {
+    return this._keyring;
+  }
+    
   get identityKey (): KeyRecord | undefined {
     if (!this._identityKey) {
       this._identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));

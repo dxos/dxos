@@ -8,3 +8,4 @@ export * from './keyring-helpers';
 export * from './keystore';
 export * from './keytype';
 export * from './simple-metrics';
+export * from './signer';

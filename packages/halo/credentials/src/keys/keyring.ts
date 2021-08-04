@@ -31,8 +31,7 @@ import {
 } from './keyring-helpers';
 import { KeyStore } from './keystore';
 import { SimpleMetrics, createMeter } from './simple-metrics';
-
-const log = debug('dxos:creds:keys'); // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Signer } from './signer';
 
 const metrics = new SimpleMetrics();
 const meter = createMeter(metrics);
@@ -77,7 +76,7 @@ class SignatureValidationCache {
  * A class for generating and managing keys, signing and verifying messages with them.
  * NOTE: This implements a write-through cache.
  */
-export class Keyring {
+export class Keyring implements Signer {
   static _signatureValidationCache = new SignatureValidationCache();
 
   // TODO(burdon): Relocate static methods.
