@@ -27,8 +27,8 @@ const Root = () => {
     const handleRegistration = async ({ username }) => {
       if (username) {
         await client.halo.createProfile({ username });
-        // Default Party Creation
-        createFirstParty();
+        // TODO(zarco): add a get parameter to trigger the first party so we avoid triggering all the time.
+        // createFirstParty();
       }
     };
 
