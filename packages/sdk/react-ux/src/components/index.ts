@@ -11,6 +11,7 @@ import JsonTreeView from './JsonTreeView';
 import PartySharingDialog from './PartySharingDialog';
 import Passcode from './Passcode';
 import RedeemDialog from './RedeemDialog';
+import PinlessRedeemDialog from './PinlessRedeemDialog';
 import ReactUXTheme from './Theme';
 export * from './Drawer';
 
@@ -23,6 +24,7 @@ export {
   DeleteConfirmation,
   ErrorView,
   RedeemDialog,
+  PinlessRedeemDialog,
   PartySharingDialog,
   ReactUXTheme
 };
