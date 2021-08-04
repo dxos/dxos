@@ -21,11 +21,10 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Share as ShareIcon,
-  // FileCopy as FileCopyIcon,
 } from '@material-ui/icons';
 
 import { ObjectModel } from '@dxos/object-model';
-import { useParty, useSelection } from '@dxos/react-client';
+import { useParty, useSelection, useInvitation } from '@dxos/react-client';
 
 const useStyles = makeStyles(theme => ({
   toolbar: {
@@ -120,12 +119,8 @@ const TaskList = ({ partyKey, hideShare = false }) => {
     await item.model.setProperty('complete', event.target.checked);
   };
 
-  const sampleCode = '0000';
   const handleCopyInvite = async () => {
-    const invitation = await party.createInvitation({
-      secretProvider: async () => Buffer.from(sampleCode),
-      secretValidator: async () => true
-    });
+    const invitation = await party.createInvitation();
 
     const invitationText = JSON.stringify(invitation.toQueryParameters());
     await navigator.clipboard.writeText(invitationText);
@@ -133,9 +128,11 @@ const TaskList = ({ partyKey, hideShare = false }) => {
     setCopiedSnackBarOpen(true);
   };
 
+
   if (!partyKey) {
     return null;
   }
+
 
   return (
     <div className={classes.fillVertically}>
@@ -213,7 +210,7 @@ const TaskList = ({ partyKey, hideShare = false }) => {
         </div>
       )}
 
-      <Snackbar open={copiedSnackBarOpen} onClose={() => setCopiedSnackBarOpen(false)} autoHideDuration={15000} message={`Invite code copied to your clipboard. PIN: ${sampleCode}`}>
+      <Snackbar open={copiedSnackBarOpen} onClose={() => setCopiedSnackBarOpen(false)} autoHideDuration={15000} message={`Invite code copied to your clipboard.`}>
       </Snackbar>
     </div>
   );

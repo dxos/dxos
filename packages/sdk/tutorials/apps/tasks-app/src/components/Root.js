@@ -15,14 +15,20 @@ import ProfileDialog from './ProfileDialog';
 const Root = () => {
   const client = useClient();
   const profile = useProfile();
+  
+  const createFirstParty = async () => {
+    // Default Party Creation
+    const partyDemoTitle = 'My First Party!';
+    const party = await client.echo.createParty({ title: partyDemoTitle });
+    await party.setProperty('title', partyDemoTitle);
+  };
 
   if (!profile) {
     const handleRegistration = async ({ username }) => {
       if (username) {
         await client.halo.createProfile({ username });
-        const partyDemoTitle = 'My First Party!';
-        const party = await client.echo.createParty({ title: partyDemoTitle });
-        await party.setProperty('title', partyDemoTitle);
+        // Default Party Creation
+        createFirstParty();
       }
     };
 
