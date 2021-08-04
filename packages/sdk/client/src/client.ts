@@ -338,13 +338,11 @@ export class Client {
   //
 
   /**
-   * [Temporarily not implemented]
    * Returns an Array of all known Contacts across all Parties.
+   * @deprecated Use halo.queryContacts instead.
    */
-  // TODO(burdon): Not implemented.
   async getContacts () {
     console.warn('client.getContacts not impl. Returning []');
-    // return this._partyManager.getContacts();
     return [];
   }
 
