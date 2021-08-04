@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
 
-import { Keyring, assertValidPublicKey, Signer } from '../keys';
+import { assertValidPublicKey, Signer } from '../keys';
 import { KeyChain, KeyRecord, Message, SignedMessage, PartyCredential, Command, Auth, WithTypeUrl } from '../proto';
 
 // TODO(burdon): Remove dependencies on ANY?

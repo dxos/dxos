@@ -1,4 +1,8 @@
-import { KeyChain, KeyRecord, SignedMessage, WithTypeUrl } from "../proto";
+//
+// Copyright 2021 DXOS.org
+//
+
+import { KeyChain, KeyRecord, SignedMessage, WithTypeUrl } from '../proto';
 
 export interface Signer {
   /**

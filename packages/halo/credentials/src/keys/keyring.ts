@@ -3,7 +3,6 @@
 //
 
 import assert from 'assert';
-import debug from 'debug';
 import memdown from 'memdown';
 
 import {
@@ -30,8 +29,8 @@ import {
   stripSecrets
 } from './keyring-helpers';
 import { KeyStore } from './keystore';
-import { SimpleMetrics, createMeter } from './simple-metrics';
 import { Signer } from './signer';
+import { SimpleMetrics, createMeter } from './simple-metrics';
 
 const metrics = new SimpleMetrics();
 const meter = createMeter(metrics);

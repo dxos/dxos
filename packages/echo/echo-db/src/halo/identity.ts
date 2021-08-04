@@ -48,7 +48,7 @@ export class Identity {
   get signer (): Signer {
     return this._keyring;
   }
-    
+
   get identityKey (): KeyRecord | undefined {
     if (!this._identityKey) {
       this._identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
