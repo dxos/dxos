@@ -23,8 +23,8 @@
     "lint": "toolchain lint",
     "test": "toolchain test",
     "benchmark": "pnpm run build && pnpm run benchmark:node && pnpm run benchmark:browser",
-    "benchmark:node": "del-cli .benchmark && node benchmark.js",
-    "benchmark:browser": "browser-runner benchmark.js --timeout 0"
+    "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js",
+    "benchmark:browser": "browser-runner dist/src/benchmark.js --timeout 0"
   },
   "dependencies": {
     "buffer-json-encoding": "^1.0.2",
