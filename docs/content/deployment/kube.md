@@ -68,7 +68,6 @@ It's time to make our app public for anyone. These are the steps to follow:
 - [Create your profile](https://dxos-docs.netlify.app/cli/profile-creation/)
 - [Set up your profile keys](https://dxos-docs.netlify.app/cli/profile-keys-setup/)
 - [Claim your Authority](https://dxos-docs.netlify.app/cli/profile-authority/)
-- Define your project info in `app.yml`
 - [Deploy using the CLI](https://dxos-docs.netlify.app/cli/cli-app/app-deployment/)
 - Check that your app is in the Kube Network
   - How to access? [See the Kube Docs](https://dxos-docs.netlify.app/kube/console-access/)
