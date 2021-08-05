@@ -15,3 +15,7 @@ You have become familiar with the inviting process and know that there are ready
 Please take the time to learn more about the DXOS capabilities and come up with new ideas for apps that share content. As you have seen, it's fast and easy to construct those apps using DXOS.
 
 You can find all the code for this tutorial on this [Github repository](https://github.com/dxos/dxos-tutorial-tasks-app).
+
+After this section, we recommend moving on to:
+
+- [Deployment](../deployment/environment): Learn how to make your app public for anyone on the Internet.
