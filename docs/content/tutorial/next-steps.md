@@ -18,4 +18,4 @@ You can find all the code for this tutorial on this [Github repository](https://
 
 After this section, we recommend moving on to:
 
-- [Deployment](./deployment/environment): Learn how to make your app public for anyone on the Internet.
+- [Deployment](../deployment/environment): Learn how to make your app public for anyone on the Internet.
