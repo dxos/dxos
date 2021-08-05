@@ -144,7 +144,7 @@ export default class Reader {
   }
 
   private _checkFeedSync (feed: Feed, seq: any, sync = false) {
-    const feedKey = feed.key.toString();
+    const feedKey = feed.key.toString('hex');
     this._state[feedKey] = seq;
     if (this.sync) {
       return;

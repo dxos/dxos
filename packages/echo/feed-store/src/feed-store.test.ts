@@ -439,10 +439,10 @@ describe('FeedStore', () => {
     // sync test
     const syncMessages = messages.filter(m => m.sync);
     expect(syncMessages.length).toBe(1);
-    expect(syncMessages[0].key).toEqual(feed1.key);
+    expect(syncMessages[0].key).toEqual(PublicKey.from(feed1.key));
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString()]: 199
+      [feed1.key.toString('hex')]: 199
     });
   });
 
@@ -474,8 +474,8 @@ describe('FeedStore', () => {
     expect(syncMessages[1].key).toEqual(PublicKey.from(feed2.key));
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString()]: 199,
-      [feed2.key.toString()]: 199
+      [feed1.key.toString('hex')]: 199,
+      [feed2.key.toString('hex')]: 199
     });
   });
 
@@ -509,12 +509,12 @@ describe('FeedStore', () => {
     expect(syncMessages[1].key).toEqual(PublicKey.from(feed2.key));
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString()]: 199,
-      [feed2.key.toString()]: 199
+      [feed1.key.toString('hex')]: 199,
+      [feed2.key.toString('hex')]: 199
     });
   });
 
-  test.only('createReadStream and check re-open a feed [live=true]', async () => {
+  test('createReadStream and check re-open a feed [live=true]', async () => {
     const { feedStore } = await createDefault();
 
     const [feed1, feed2, feed3] = await generateStreamData(feedStore, 2);
@@ -541,14 +541,14 @@ describe('FeedStore', () => {
     expect(messages.length).toBe(4);
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString()]: 1,
-      [feed2.key.toString()]: 1
+      [feed1.key.toString('hex')]: 1,
+      [feed2.key.toString('hex')]: 1
     });
 
     expect(stream.state()).toStrictEqual({
-      [feed1.key.toString()]: 1,
-      [feed2.key.toString()]: 1,
-      [feed3.key.toString()]: 0
+      [feed1.key.toString('hex')]: 1,
+      [feed2.key.toString('hex')]: 1,
+      [feed3.key.toString('hex')]: 0
     });
 
     const { key } = feed2;
@@ -570,9 +570,9 @@ describe('FeedStore', () => {
       'feed2/message3'
     ]);
     expect(stream.state()).toStrictEqual({
-      [feed1.key.toString()]: 1,
-      [feed2.key.toString()]: 3,
-      [feed3.key.toString()]: 0
+      [feed1.key.toString('hex')]: 1,
+      [feed2.key.toString('hex')]: 3,
+      [feed3.key.toString('hex')]: 0
     });
   });
 

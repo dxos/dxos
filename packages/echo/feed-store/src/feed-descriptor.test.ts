@@ -14,7 +14,7 @@ import { PublicKey, createKeyPair } from '@dxos/crypto';
 import FeedDescriptor from './feed-descriptor';
 
 // Caution: the tests depend on each other in sequence.
-describe.skip('FeedDescriptor', () => {
+describe('FeedDescriptor', () => {
   let fd: FeedDescriptor;
 
   test('Create', () => {
