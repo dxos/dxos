@@ -11,8 +11,8 @@ export interface Message {
 
 export interface Feed {
   ready: any;
-  key: PublicKey;
-  secretKey: PublicKey;
+  key: Buffer;
+  secretKey: Buffer;
   discoveryKey: Buffer;
   length: number;
   opened: Boolean;

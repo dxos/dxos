@@ -10,7 +10,7 @@ import hypertrie from 'hypertrie';
 
 import { synchronized } from '@dxos/async';
 import { IStorage } from '@dxos/random-access-multi-storage';
-import type { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/crypto';
 
 import FeedDescriptor from './feed-descriptor';
 import type { Feed, Hypercore } from './hypercore-types';
@@ -25,14 +25,14 @@ type StreamCallback = (descriptor: FeedDescriptor) => Object | undefined;
 
 interface CreateDescriptorOptions {
   key: PublicKey,
-  secretKey?: PublicKey,
+  secretKey?: Buffer,
   valueEncoding?: string,
   metadata?: any
 }
 
 interface CreateReadWriteFeedOptions {
   key: PublicKey,
-  secretKey: PublicKey
+  secretKey: Buffer
   valueEncoding?: string,
   metadata?: any
 }
@@ -133,7 +133,7 @@ export class FeedStore extends EventEmitter {
     const list = await this._indexDB.list(STORE_NAMESPACE);
 
     list.forEach((data: any) => {
-      this._createDescriptor(data);
+      this._createDescriptor({ ...data, key: PublicKey.from(new Uint8Array(Object.values(data.key._value))) }); // cause we don't have PublicKey deserialization
     });
 
     this.emit('opened');

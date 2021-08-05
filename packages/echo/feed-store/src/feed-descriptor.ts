@@ -3,12 +3,11 @@
 //
 
 import defaultHypercore from 'hypercore';
-import crypto from 'hypercore-crypto';
 import pify from 'pify';
 
 import { Lock } from '@dxos/async';
 import type { IFile, IStorage } from '@dxos/random-access-multi-storage';
-import type { PublicKey } from '@dxos/crypto';
+import { PublicKey, discoveryKey } from '@dxos/crypto';
 
 import type { Feed, Hypercore } from './hypercore-types';
 
@@ -20,7 +19,7 @@ interface ValueEncoding {
 interface FeedDescriptorOptions {
   storage: IStorage,
   key: PublicKey,
-  secretKey?: PublicKey,
+  secretKey?: Buffer,
   valueEncoding?: string | ValueEncoding,
   metadata?: any,
   codecs?: object,
@@ -37,7 +36,7 @@ type Listener = ((...args: any) => Promise<void> | void) | null;
 export class FeedDescriptor {
   private _storage: IStorage;
   private _key: PublicKey;
-  private _secretKey?: PublicKey;
+  private _secretKey?: Buffer;
   private _valueEncoding?: string | ValueEncoding;
   private _hypercore: Hypercore;
   private _codecs: any;
@@ -66,7 +65,7 @@ export class FeedDescriptor {
     this._key = key;
     this._secretKey = secretKey;
 
-    this._discoveryKey = crypto.discoveryKey(this._key);
+    this._discoveryKey = discoveryKey(this._key);
 
     this.lock = new Lock();
 
@@ -161,7 +160,7 @@ export class FeedDescriptor {
   private async _open () {
     this._feed = this._hypercore(
       this._createStorage(this._key.toString()),
-      this._key,
+      this._key.asBuffer(),
       {
         secretKey: this._secretKey,
         valueEncoding: (typeof this._valueEncoding === 'string' && this._codecs[this._valueEncoding]) ||

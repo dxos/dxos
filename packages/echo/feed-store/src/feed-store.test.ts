@@ -6,7 +6,6 @@
 
 import eos from 'end-of-stream-promise';
 import hypercore from 'hypercore';
-import crypto from 'hypercore-crypto';
 import hypertrie from 'hypertrie';
 import pify from 'pify';
 import tempy from 'tempy';
@@ -15,10 +14,11 @@ import { IStorage, STORAGE_NODE, STORAGE_RAM, createStorage } from '@dxos/random
 
 import { FeedStore } from './feed-store';
 import { PublicKey, createKeyPair } from '@dxos/crypto';
+import { Feed } from './hypercore-types';
 
 interface KeyPair {
   key: PublicKey,
-  secretKey: PublicKey
+  secretKey: Buffer
 }
 
 const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
@@ -38,8 +38,8 @@ async function createDefault () {
   };
 }
 
-async function defaultFeeds (feedStore: FeedStore, keys: { [k: string]: KeyPair }) {
-  return Object.fromEntries(await Promise.all(Object.entries<any>(keys).map(async ([feed, keyPair]) =>
+async function defaultFeeds (feedStore: FeedStore, keys: { [k: string]: KeyPair }) : Promise<{ [k: string] : Feed }> {
+  return Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
     feed === 'booksFeed'
       ? [feed, await feedStore.openFeed(feedStore.createReadWriteFeed({ key: keyPair.key, secretKey: keyPair.secretKey, metadata: { topic: 'books' } }).key)]
       : [feed, await feedStore.openFeed(feedStore.createReadWriteFeed({ key: keyPair.key, secretKey: keyPair.secretKey }).key)]
@@ -57,7 +57,7 @@ function head (feed: any) {
 const createKeyPairs = () => {
   return Object.fromEntries<KeyPair>(feedNames.map(feed => {
     const { publicKey, secretKey } = createKeyPair();
-    return [feed, { key: PublicKey.from(publicKey), secretKey: PublicKey.from(secretKey) }];
+    return [feed, { key: PublicKey.from(publicKey), secretKey }];
   }));
 };
 
@@ -93,7 +93,7 @@ describe('FeedStore', () => {
     expect(feedStore).toBeInstanceOf(FeedStore);
     expect(database.list.mock.calls.length).toBe(1);
 
-    await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: crypto.keyPair().publicKey }).key);
+    await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: PublicKey.from(createKeyPair().publicKey) }).key);
 
     expect(customHypercore.mock.calls.length).toBe(1);
   });
@@ -105,14 +105,14 @@ describe('FeedStore', () => {
     expect(booksFeed).toBeInstanceOf(hypercore);
 
     const booksFeedDescriptor = feedStore.getDescriptors().find(fd => fd.key.equals(booksFeed.key));
-    expect(booksFeedDescriptor).toHaveProperty('key', booksFeed.key);
+    expect(booksFeedDescriptor).toHaveProperty('key', PublicKey.from(booksFeed.key));
     expect(booksFeedDescriptor?.metadata).toHaveProperty('topic', 'books');
 
     await append(booksFeed, 'Foundation and Empire');
     await expect(head(booksFeed)).resolves.toBe('Foundation and Empire');
 
     // It should return the same opened instance.
-    await expect(feedStore.openFeed(booksFeed.key)).resolves.toBe(booksFeed);
+    await expect(feedStore.openFeed(PublicKey.from(booksFeed.key))).resolves.toBe(booksFeed);
   });
 
   test('Create duplicate feed', async () => {
@@ -132,7 +132,7 @@ describe('FeedStore', () => {
 
   test('Create and close a feed', async () => {
     const { feedStore } = await createDefault();
-    const { publicKey } = crypto.keyPair();
+    const publicKey = PublicKey.from(createKeyPair().publicKey);
 
     await expect(feedStore.closeFeed(publicKey)).rejects.toThrow(/Feed not found/);
 
@@ -225,8 +225,8 @@ describe('FeedStore', () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
-    const { publicKey, secretKey } = crypto.keyPair();
-    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: publicKey, secretKey }).key);
+    const { publicKey, secretKey } = createKeyPair();
+    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
     expect(feed).toBeInstanceOf(hypercore);
     await append(feed, 'test');
     await expect(head(feed)).resolves.toBeInstanceOf(Buffer);
@@ -261,15 +261,15 @@ describe('FeedStore', () => {
     expect(feedStore).toBeInstanceOf(FeedStore);
 
     {
-      const { publicKey, secretKey } = crypto.keyPair();
-      const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: publicKey, secretKey }).key);
+      const { publicKey, secretKey } = createKeyPair();
+      const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
       expect(feed).toBeInstanceOf(hypercore);
       await append(feed, 'test');
       await expect(head(feed)).resolves.toBe('test');
     }
     {
-      const { publicKey, secretKey } = crypto.keyPair();
-      const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: publicKey, secretKey, valueEncoding: 'codecA' }).key);
+      const { publicKey, secretKey } = createKeyPair();
+      const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey, valueEncoding: 'codecA' }).key);
       expect(feed).toBeInstanceOf(hypercore);
       await append(feed, { msg: 'test' });
       await expect(head(feed)).resolves.toEqual({ msg: 'test', encodedBy: 'codecA' });
@@ -283,7 +283,7 @@ describe('FeedStore', () => {
       }
     });
 
-    const { publicKey } = crypto.keyPair();
+    const publicKey= PublicKey.from(createKeyPair().publicKey);
     await expect(feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey }).key)).rejects.toThrow(/open error/);
 
     const fd = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
@@ -309,7 +309,7 @@ describe('FeedStore', () => {
       })
     });
 
-    const { publicKey } = crypto.keyPair();
+    const publicKey= PublicKey.from(createKeyPair().publicKey);
     await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey }).key);
     const fd = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
 
@@ -326,7 +326,7 @@ describe('FeedStore', () => {
   test('on delete descriptor error should unlock the descriptor', async () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
 
-    const { publicKey } = crypto.keyPair();
+    const publicKey= PublicKey.from(createKeyPair().publicKey);
     await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey }).key);
     const fd = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
 
@@ -343,11 +343,11 @@ describe('FeedStore', () => {
   });
 
   async function generateStreamData (feedStore: FeedStore, maxMessages = 200) {
-    const keyPairs = Array.from(Array(3).keys()).map(() => crypto.keyPair());
+    const keyPairs = Array.from(Array(3).keys()).map(() => createKeyPair());
     const [feed1, feed2, feed3] = await Promise.all([
-      feedStore.openFeed(feedStore.createReadWriteFeed({ key: keyPairs[0].publicKey, secretKey: keyPairs[0].secretKey }).key),
-      feedStore.openFeed(feedStore.createReadWriteFeed({ key: keyPairs[1].publicKey, secretKey: keyPairs[1].secretKey }).key),
-      feedStore.openFeed(feedStore.createReadWriteFeed({ key: keyPairs[2].publicKey, secretKey: keyPairs[2].secretKey }).key)
+      feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(keyPairs[0].publicKey), secretKey: keyPairs[0].secretKey }).key),
+      feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(keyPairs[1].publicKey), secretKey: keyPairs[1].secretKey }).key),
+      feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(keyPairs[2].publicKey), secretKey: keyPairs[2].secretKey }).key)
     ]);
 
     const messages = [];
@@ -411,12 +411,12 @@ describe('FeedStore', () => {
     // sync test
     const syncMessages = messages.filter(m => m.sync);
     expect(syncMessages.length).toBe(2);
-    expect(syncMessages[0].key).toEqual(feed1.key);
-    expect(syncMessages[1].key).toEqual(feed2.key);
+    expect(syncMessages[0].key).toEqual(PublicKey.from(feed1.key));
+    expect(syncMessages[1].key).toEqual(PublicKey.from(feed2.key));
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString()]: 199,
-      [feed2.key.toString()]: 199
+      [feed1.key.toString('hex')]: 199,
+      [feed2.key.toString('hex')]: 199
     });
   });
 
@@ -470,8 +470,8 @@ describe('FeedStore', () => {
     // sync test
     const syncMessages = messages.filter(m => m.sync);
     expect(syncMessages.length).toBe(2002);
-    expect(syncMessages[0].key).toEqual(feed1.key);
-    expect(syncMessages[1].key).toEqual(feed2.key);
+    expect(syncMessages[0].key).toEqual(PublicKey.from(feed1.key));
+    expect(syncMessages[1].key).toEqual(PublicKey.from(feed2.key));
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
       [feed1.key.toString()]: 199,
@@ -505,8 +505,8 @@ describe('FeedStore', () => {
     // sync test
     const syncMessages = messages.filter((m: any) => m.sync);
     expect(syncMessages.length).toBe(2);
-    expect(syncMessages[0].key).toEqual(feed1.key);
-    expect(syncMessages[1].key).toEqual(feed2.key);
+    expect(syncMessages[0].key).toEqual(PublicKey.from(feed1.key));
+    expect(syncMessages[1].key).toEqual(PublicKey.from(feed2.key));
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
       [feed1.key.toString()]: 199,
@@ -514,7 +514,7 @@ describe('FeedStore', () => {
     });
   });
 
-  test('createReadStream and check re-open a feed [live=true]', async () => {
+  test.only('createReadStream and check re-open a feed [live=true]', async () => {
     const { feedStore } = await createDefault();
 
     const [feed1, feed2, feed3] = await generateStreamData(feedStore, 2);
@@ -552,8 +552,8 @@ describe('FeedStore', () => {
     });
 
     const { key } = feed2;
-    await feedStore.closeFeed(key);
-    const reopenFeed2 = await feedStore.openFeed(key);
+    await feedStore.closeFeed(PublicKey.from(key));
+    const reopenFeed2 = await feedStore.openFeed(PublicKey.from(key));
     await append(reopenFeed2, `feed2/message${reopenFeed2.length}`);
     await append(reopenFeed2, `feed2/message${reopenFeed2.length}`);
 
@@ -578,8 +578,8 @@ describe('FeedStore', () => {
 
   test('append event', async (done) => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
-    const { publicKey, secretKey } = crypto.keyPair();
-    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: publicKey, secretKey }).key);
+    const { publicKey, secretKey } = createKeyPair();
+    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
 
     feedStore.on('append', (f) => {
       expect(f).toBe(feed);
@@ -592,7 +592,7 @@ describe('FeedStore', () => {
   test('update metadata', async () => {
     const root = tempy.directory();
     const feedStore = await createFeedStore(createStorage(root, STORAGE_NODE));
-    const { publicKey } = crypto.keyPair();
+    const publicKey= PublicKey.from(createKeyPair().publicKey);
     await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey, metadata: { tag: 0 } }).key);
     let descriptor = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
     if (!descriptor) {
@@ -614,7 +614,7 @@ describe('FeedStore', () => {
   test('openFeed should wait until FeedStore is ready', async () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
     feedStore.open();
-    const { publicKey } = crypto.keyPair();
+    const publicKey= PublicKey.from(createKeyPair().publicKey);
     const feed = await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey }).key);
     expect(feed).toBeDefined();
   });
@@ -635,7 +635,7 @@ describe('FeedStore', () => {
 
   test('createReadStream should destroy if filter throws an error', async () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
-    const { publicKey } = crypto.keyPair();
+    const publicKey= PublicKey.from(createKeyPair().publicKey);
     await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey }).key);
 
     const stream = feedStore.createReadStream(async () => {
