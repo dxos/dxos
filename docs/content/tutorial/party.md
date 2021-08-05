@@ -26,11 +26,37 @@ const PartySettings = ({}) => {
     await party.setProperty('title', title);
   };
 
-  // ...
+  return <Dialog />;
 };
 ```
 
-Now create a [`Main`](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/src/components/Main.js) component to give our app some layout and a [`PartyList`](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/src/components/PartyList.js) with a button to open the dialog (we will later display the created parties here).
+Now, create a `PartyList` with a button to open the dialog (we will later display the created parties here):
+
+```jsx:title=src/components/PartyList.js
+import { useParties } from '@dxos/react-client';
+
+import PartySettings from './PartySettings';
+
+const PartyList = ({}) => {
+  const [{ settingsDialog }, setSettingsDialog] = useState({});
+
+  const handleCreateParty = () => setSettingsDialog({ settingsDialog: true });
+
+  return (
+    <div>
+      {settingsDialog && <PartySettings />}
+
+      <div>
+        <Fab size='small' color='primary' aria-label='add' title='Create list' onClick={handleCreateParty}>
+          <AddIcon />
+        </Fab>
+      </div>
+    </div>
+  );
+};
+```
+
+Finally, create a [`Main`](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/src/components/Main.js) component to give our app some layout.
 
 Go to your `src/components/Root.js` and render the `Main` component on the created profile section.
 
@@ -53,7 +79,7 @@ const PartyList = ({}) => {
   // ...
 
   return (
-    <div className={classes.root}>
+    <div>
       {/* ...  */}
 
       <List disablePadding>
@@ -64,7 +90,7 @@ const PartyList = ({}) => {
         ))}
       </List>
 
-      {/* ...  */}
+      {/* ... Fab Button  */}
     </div>
   );
 };
@@ -100,12 +126,50 @@ const PartySettings = ({ partyKey, onClose }) => {
     onClose({ partyKey });
   };
 
-  // ...
+  return <Dialog />;
 };
-
-export default PartySettings;
 ```
 
 You are going to need to add a button to each party to trigger the dialog and send the `partyKey` of the selected party to the `PartySettings` dialog.
+
+```jsx:title=src/components/PartyList.js
+import { useParties } from '@dxos/react-client';
+
+const PartyList = ({}) => {
+  const [{ settingsDialog, settingsPartyKey }, setSettingsDialog] = useState({});
+
+  const parties = useParties();
+
+  // ...
+
+  return (
+    <div>
+      {settingsDialog && <PartySettings partyKey={settingsPartyKey} onClose={({}) => setSettingsDialog({})} />}
+
+      <List disablePadding>
+        {parties.map((party) => (
+          <ListItem button key={party.key}>
+            <ListItemText primary={party.getProperty('title')} />
+
+            <ListItemSecondaryAction className='actions'>
+              <IconButton
+                size='small'
+                edge='end'
+                aria-label='settings'
+                title='Settings'
+                onClick={() => setSettingsDialog({ settingsDialog: true, settingsPartyKey: party.key })}
+              >
+                <SettingsIcon />
+              </IconButton>
+            </ListItemSecondaryAction>
+          </ListItem>
+        ))}
+      </List>
+
+      {/* ... Fab Button  */}
+    </div>
+  );
+};
+```
 
 ![party](./images/party-03.png)
