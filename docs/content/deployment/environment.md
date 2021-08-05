@@ -4,17 +4,17 @@ title: Environment configuration
 
 TODO(burdon): Ask Dmytro to simplify (remove) configuration across entire tutorial.
 
-Do you remember the `config` object we created on the very first sections?
+The `config` object we send to our client during initialization shouldn't be directly define on our code, but rather provided on each environment.
 
-```jsx:title=src/App.js
+```jsx
 const config = {
   app: { title: 'Tasks App' },
   storage: { persistent: true },
-  swarm: { signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal' }
+  swarm: { signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal' },
 };
 ```
 
-Well, that shouldn't be defined on code but rather provided on each environment. Let's prepare the ground.
+Let's prepare the ground for this.
 
 ## Config Files
 
@@ -59,53 +59,11 @@ Envs() -> envs-map.yml
 Defaults() -> defaults.yml
 ```
 
-Finally, on our `src/App.js` component, we should replace the `config` object with the `initConfig` function we are exporting above.
-
-```jsx:title=src/App.js
-import React from 'react';
-
-import { ClientInitializer } from '@dxos/react-client';
-import { CssBaseline } from '@material-ui/core';
-import { createTheme } from '@material-ui/core/styles';
-import { ThemeProvider } from '@material-ui/styles';
-import Root from './components/Root';
-import { initConfig } from './config';
-
-const baseTheme = createTheme({
-  overrides: {
-    MuiCssBaseline: {
-      '@global': {
-        body: {
-          margin: 0,
-          overflow: 'hidden',
-        },
-      },
-    },
-  },
-  sidebar: {
-    width: 300,
-  },
-});
-
-const App = () => {
-  return (
-    <ClientInitializer config={initConfig}>
-      <ThemeProvider theme={baseTheme}>
-        <CssBaseline />
-        <Root />
-      </ThemeProvider>
-    </ClientInitializer>
-  );
-};
-
-export default App;
-```
+Finally, on our app, we should replace the `config` object with the `initConfig` function we are exporting above.
 
 ## ConfigPlugin
 
-To make this package work properly, we need to add to our Webpack settings the `ConfigPlugin` from `@dxos/config` to load the config files.
-
-Go to your `craco.config.js` file and add the following:
+To make this package work properly, we need to make sure our Webpack settings have the `ConfigPlugin` from `@dxos/config` to load the config files.
 
 ```jsx:title=<root>/craco.config.js
 const webpack = require('webpack');
@@ -136,7 +94,7 @@ module.exports = {
 };
 ```
 
-Remember, if you have your app running, you are going to need to stop it and start it again, so it takes new craco config into account. That's all!
+> Remember, if you have your app running, you are going to need to stop it and start it again, so it takes new craco config into account. That's all!
 
 ---
 

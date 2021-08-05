@@ -13,215 +13,54 @@ Party creation is handled through the `client.echo` object. After creating the p
 Let's create a new dialog component to handle this logic:
 
 ```jsx:title=src/components/PartySettings.js
-import React, { useState } from 'react';
-
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@material-ui/core';
-
 import { useClient } from '@dxos/react-client';
 
-const PartySettings = ({ onClose }) => {
+const PartySettings = ({}) => {
   const client = useClient();
+
   const [title, setTitle] = useState('');
 
   const handleSubmit = async () => {
-    if (!title.length) {
-      return;
-    }
-
     const party = await client.echo.createParty({ title });
-    await party.setProperty('title', title);
-    const partyKey = party.key;
 
-    onClose({ partyKey });
+    await party.setProperty('title', title);
   };
 
-  return (
-    <Dialog open fullWidth maxWidth='xs'>
-      <DialogTitle>
-        <Typography>Create Party</Typography>
-      </DialogTitle>
-
-      <DialogContent>
-        <TextField
-          fullWidth
-          autoFocus
-          label='Title'
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          onKeyPress={(event) => event.key === 'Enter' && handleSubmit()}
-        />
-      </DialogContent>
-
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-
-        <Button onClick={handleSubmit} color='primary'>
-          Create
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
+  return <Dialog />;
 };
-
-export default PartySettings;
 ```
 
-Now create a `PartyList` component to display a button to open the dialog (we will later display the created parties here):
+Now, create a `PartyList` with a button to open the dialog (we will later display the created parties here):
 
 ```jsx:title=src/components/PartyList.js
-import React, { useState } from 'react';
-
-import { Fab } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import { Add as AddIcon } from '@material-ui/icons';
+import { useParties } from '@dxos/react-client';
 
 import PartySettings from './PartySettings';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-  },
-  grow: {
-    flex: 1,
-  },
-  listItem: {
-    '& .actions': {
-      opacity: 0.2,
-    },
-    '&:hover .actions': {
-      opacity: 1,
-    },
-  },
-  listItemText: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  actions: {
-    margin: theme.spacing(2),
-    '& button': {
-      marginRight: theme.spacing(1),
-    },
-  },
-}));
-
-const PartyList = ({ onSelectParty }) => {
-  const classes = useStyles();
+const PartyList = ({}) => {
   const [{ settingsDialog }, setSettingsDialog] = useState({});
 
   const handleCreateParty = () => setSettingsDialog({ settingsDialog: true });
 
   return (
-    <div className={classes.root}>
-      {settingsDialog && (
-        <PartySettings
-          onClose={({ partyKey }) => {
-            setSettingsDialog({});
+    <div>
+      {settingsDialog && <PartySettings />}
 
-            if (partyKey) {
-              onSelectParty(partyKey);
-            }
-          }}
-        />
-      )}
-
-      <div className={classes.grow} />
-
-      <div className={classes.actions}>
-        <Fab size='small' color='primary' aria-label='add' title='Create party' onClick={handleCreateParty}>
+      <div>
+        <Fab size='small' color='primary' aria-label='add' title='Create list' onClick={handleCreateParty}>
           <AddIcon />
         </Fab>
       </div>
     </div>
   );
 };
-
-export default PartyList;
 ```
 
-Time to display this in our app. We will add some basic Material UI components to make our app look prettier. Create a `Main` component with:
+Finally, create a [`Main`](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/src/components/Main.js) component to give our app some layout.
 
-```jsx:title=src/components/Main.js
-import React, { useState } from 'react';
+Go to your `src/components/Root.js` and render the `Main` component on the created profile section.
 
-import { AppBar, Drawer, Toolbar, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import { Work as WorkIcon } from '@material-ui/icons';
-
-import { useClient } from '@dxos/react-client';
-
-import PartyList from './PartyList';
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    display: 'flex',
-  },
-  appBar: {
-    zIndex: theme.zIndex.drawer + 1,
-  },
-  logo: {
-    marginRight: theme.spacing(2),
-  },
-  toolbarShift: theme.mixins.toolbar,
-  flexGrow: {
-    flex: 1,
-  },
-  drawer: {
-    flexShrink: 0,
-    width: theme.sidebar.width,
-  },
-  drawerPaper: {
-    width: theme.sidebar.width,
-    overflow: 'auto',
-  },
-}));
-
-const Main = () => {
-  const classes = useStyles();
-  const client = useClient();
-  const [partyKey, setPartyKey] = useState();
-
-  return (
-    <div className={classes.root}>
-      <AppBar position='fixed' className={classes.appBar}>
-        <Toolbar>
-          <WorkIcon className={classes.logo} />
-
-          <Typography variant='h6' noWrap>
-            {client.config.app.title}
-          </Typography>
-
-          <div className={classes.flexGrow} />
-        </Toolbar>
-      </AppBar>
-
-      <Drawer
-        variant='permanent'
-        className={classes.drawer}
-        classes={{
-          paper: classes.drawerPaper,
-        }}
-      >
-        <div className={classes.toolbarShift} />
-
-        <PartyList onSelectParty={(partyKey) => setPartyKey(partyKey)} />
-      </Drawer>
-    </div>
-  );
-};
-
-export default Main;
-```
-
-Go to your `src/components/Root.js` and render this `Main` component on the created profile section.
-
-If you go to your app in the browser, you should now see something like:
-
-![party](./images/party-00.png)
-
-And you should be able to open the dialog and create a new party:
+If you go to your app in the browser, you should be able to open the dialog and create a new party:
 
 ![party](./images/party-01.png)
 
@@ -232,114 +71,32 @@ You may have realized that even though we are able to create a party, there's no
 We can fetch all the created Parties using the `useParties` hook provided by `@dxos/react-client`.
 
 ```jsx:title=src/components/PartyList.js
-import React, { useState } from 'react';
-
-import { Avatar, Fab, List, ListItem, ListItemAvatar, ListItemText } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import { Add as AddIcon, Assignment as PartyIcon } from '@material-ui/icons';
-
 import { useParties } from '@dxos/react-client';
 
-import PartySettings from './PartySettings';
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-  },
-  grow: {
-    flex: 1,
-  },
-  listItem: {
-    '& .actions': {
-      opacity: 0.2,
-    },
-    '&:hover .actions': {
-      opacity: 1,
-    },
-  },
-  listItemText: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  actions: {
-    margin: theme.spacing(2),
-    '& button': {
-      marginRight: theme.spacing(1),
-    },
-  },
-}));
-
-const PartyList = ({ selectedPartyKey, onSelectParty }) => {
+const PartyList = ({}) => {
   const parties = useParties();
 
-  const classes = useStyles();
-  const [{ settingsDialog }, setSettingsDialog] = useState({});
-
-  const handleCreateParty = () => setSettingsDialog({ settingsDialog: true });
+  // ...
 
   return (
-    <div className={classes.root}>
-      {settingsDialog && (
-        <PartySettings
-          onClose={({ partyKey }) => {
-            setSettingsDialog({});
-
-            if (partyKey) {
-              onSelectParty(partyKey);
-            }
-          }}
-        />
-      )}
+    <div>
+      {/* ...  */}
 
       <List disablePadding>
         {parties.map((party) => (
-          <ListItem
-            button
-            key={party.key}
-            selected={selectedPartyKey === party.key}
-            onClick={() => onSelectParty(party.key)}
-            classes={{ container: classes.listItem }}
-          >
-            <ListItemAvatar>
-              <Avatar>
-                <PartyIcon />
-              </Avatar>
-            </ListItemAvatar>
-
-            <ListItemText
-              primary={party.getProperty('title')}
-              classes={{
-                primary: classes.listItemText,
-              }}
-            />
+          <ListItem button key={party.key}>
+            <ListItemText primary={party.getProperty('title')} />
           </ListItem>
         ))}
       </List>
 
-      <div className={classes.grow} />
-
-      <div className={classes.actions}>
-        <Fab size='small' color='primary' aria-label='add' title='Create party' onClick={handleCreateParty}>
-          <AddIcon />
-        </Fab>
-      </div>
+      {/* ... Fab Button  */}
     </div>
   );
 };
-
-export default PartyList;
 ```
 
-And in your `src/components/Main.js` send the `partyKey` from the `useState` as `selectedPartyKey` prop to `PartyList`:
-
-```jsx:title=src/components/Main.js
-<PartyList selectedPartyKey={partyKey} onSelectParty={(partyKey) => setPartyKey(partyKey)} />
-```
-
-You should now be able to see your created party:
+You should now be able to see your created party. You can add your own icons and styling to the list.
 
 ![party](./images/party-02.png)
 
@@ -350,10 +107,6 @@ Now that we have our party created and listed, let's add the possibility to upda
 Take a look at the code below, we are using the `useParty` hook to be able to just fetch a single party:
 
 ```jsx:title=src/components/PartySettings.js
-import React, { useState } from 'react';
-
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@material-ui/core';
-
 import { useClient, useParty } from '@dxos/react-client';
 
 const PartySettings = ({ partyKey, onClose }) => {
@@ -363,147 +116,40 @@ const PartySettings = ({ partyKey, onClose }) => {
   const [title, setTitle] = useState(party ? party.getProperty('title') : '');
 
   const handleSubmit = async () => {
-    if (!title.length) {
-      return;
-    }
-
     if (party) {
       await party.setProperty('title', title);
     } else {
       const party = await client.echo.createParty({ title });
       await party.setProperty('title', title);
-      partyKey = party.key;
     }
 
     onClose({ partyKey });
   };
 
-  return (
-    <Dialog open fullWidth maxWidth='xs'>
-      <DialogTitle>
-        <Typography>{partyKey ? 'Update Party' : 'Create Party'}</Typography>
-      </DialogTitle>
-
-      <DialogContent>
-        <TextField
-          fullWidth
-          autoFocus
-          label='Title'
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          onKeyPress={(event) => event.key === 'Enter' && handleSubmit()}
-        />
-      </DialogContent>
-
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-
-        <Button onClick={handleSubmit} color='primary'>
-          {partyKey ? 'Update' : 'Create'}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
+  return <Dialog />;
 };
-
-export default PartySettings;
 ```
 
-The only remaining thing is to add a button to trigger this modal with the corresponding `partyKey`:
+You are going to need to add a button to each party to trigger the dialog and send the `partyKey` of the selected party to the `PartySettings` dialog.
 
 ```jsx:title=src/components/PartyList.js
-import React, { useState } from 'react';
-
-import {
-  Avatar,
-  Fab,
-  IconButton,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemSecondaryAction,
-  ListItemText,
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import { Add as AddIcon, Assignment as PartyIcon, Settings as SettingsIcon } from '@material-ui/icons';
-
 import { useParties } from '@dxos/react-client';
 
-import PartySettings from './PartySettings';
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-  },
-  grow: {
-    flex: 1,
-  },
-  listItem: {
-    '& .actions': {
-      opacity: 0.2,
-    },
-    '&:hover .actions': {
-      opacity: 1,
-    },
-  },
-  listItemText: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  actions: {
-    margin: theme.spacing(2),
-    '& button': {
-      marginRight: theme.spacing(1),
-    },
-  },
-}));
-
-const PartyList = ({ selectedPartyKey, onSelectParty }) => {
-  const classes = useStyles();
+const PartyList = ({}) => {
   const [{ settingsDialog, settingsPartyKey }, setSettingsDialog] = useState({});
+
   const parties = useParties();
 
-  const handleCreateParty = () => setSettingsDialog({ settingsDialog: true });
+  // ...
 
   return (
-    <div className={classes.root}>
-      {settingsDialog && (
-        <PartySettings
-          partyKey={settingsPartyKey}
-          onClose={({ partyKey }) => {
-            setSettingsDialog({});
-
-            if (partyKey) {
-              onSelectParty(partyKey);
-            }
-          }}
-        />
-      )}
+    <div>
+      {settingsDialog && <PartySettings partyKey={settingsPartyKey} onClose={({}) => setSettingsDialog({})} />}
 
       <List disablePadding>
         {parties.map((party) => (
-          <ListItem
-            button
-            key={party.key}
-            selected={selectedPartyKey === party.key}
-            onClick={() => onSelectParty(party.key)}
-            classes={{ container: classes.listItem }}
-          >
-            <ListItemAvatar>
-              <Avatar>
-                <PartyIcon />
-              </Avatar>
-            </ListItemAvatar>
-
-            <ListItemText
-              primary={party.getProperty('title')}
-              classes={{
-                primary: classes.listItemText,
-              }}
-            />
+          <ListItem button key={party.key}>
+            <ListItemText primary={party.getProperty('title')} />
 
             <ListItemSecondaryAction className='actions'>
               <IconButton
@@ -520,20 +166,10 @@ const PartyList = ({ selectedPartyKey, onSelectParty }) => {
         ))}
       </List>
 
-      <div className={classes.grow} />
-
-      <div className={classes.actions}>
-        <Fab size='small' color='primary' aria-label='add' title='Create Party' onClick={handleCreateParty}>
-          <AddIcon />
-        </Fab>
-      </div>
+      {/* ... Fab Button  */}
     </div>
   );
 };
-
-export default PartyList;
 ```
-
-You will see a `Settings` button right next to the party name and clicking on it will open the dialog with the party name already filled in.
 
 ![party](./images/party-03.png)

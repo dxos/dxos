@@ -16,6 +16,7 @@ module.exports = {
         subtitle: "SDK",
         githubRepo: "dxos/protocols",
         sidebarCategories: {
+          null: ["get-started"],
           Tutorial: [
             "tutorial/introduction",
             "tutorial/client",
@@ -24,16 +25,20 @@ module.exports = {
             "tutorial/invite",
             "tutorial/data",
             "tutorial/environment",
-            "tutorial/deployment",
             "tutorial/next-steps"
           ],
           "Core Concepts": [
-            "core-concepts/client",
             "core-concepts/party",
             "core-concepts/mutations",
             "core-concepts/queries",
-            "core-concepts/invitations",
-            "core-concepts/deployment",
+            "core-concepts/invitations"
+          ],
+          "Deployment": [
+            "deployment/kube",
+            "deployment/environment",
+          ],
+          "API Reference": [
+            "api-reference/dxos-client",
           ],
         }
       }
