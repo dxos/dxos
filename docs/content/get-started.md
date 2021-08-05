@@ -129,6 +129,8 @@ Congrats, you just made your first component that creates a Party through your o
 
 Now that you've learned how to create a party with DXOS Client, you're ready to dive deeper into creating queries, mutations and inviting peers to join your party. After this section, we recommend moving on to:
 
+- [Tutorial](./tutorial/introduction): Learn how to build a real-world application with our guided tutorial that will walk you through all the concepts of DXOS.
+
 - [Queries](./core-concepts/queries): Learn how to fetch queries with arguments and dive deeper into configuration options. For a full list of options, check out the API reference for `useSelection`.
 
 - [Mutations](./core-concepts/mutations): Learn how to update data with mutations and when you'll need to update the Apollo cache. For a full list of options, check out the API reference for `createItem`.
