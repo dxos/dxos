@@ -12,7 +12,7 @@ Before proceeding, make sure your system meets the following requirements:
 - Node.js v12+
 - npm v6+ or yarn v1.20+ (We'll use `yarn` here.)
 
-## 1: Setup
+## Step 1: Setup
 
 We will be using [Create React App](https://reactjs.org/docs/create-a-new-react-app.html) to start the new application.
 
@@ -24,7 +24,7 @@ yarn start
 
 You should now see your app running on [http://localhost:3000](http://localhost:3000) with React logo.
 
-## 2: Install DXOS Dependencies
+## Step 2: Install DXOS Dependencies
 
 Let's start by installing the required dependencies from the DXOS Stack:
 
@@ -39,7 +39,7 @@ Applications depend on the following libraries.
 | `@dxos/react-client` | Main API          |
 | `@dxos/object-model` | ECHO Object model |
 
-## 3: Create a DXOS Client
+## Step 3: Create a DXOS Client
 
 ```jsx:title=index.js
 import { Client } from '@dxos/client';
@@ -55,7 +55,7 @@ await client.initialize();
 
 That's it! Our client is ready to start interacting with DXOS. Now let's connect our client to our React app.
 
-## 4: Connect your client to React
+## Step 4: Connect your client to React
 
 You connect DXOS Client to React with the `ClientInitializer` component. Similar to React's [Context.Provider](), `ClientInitializer` not only wraps your React app and places DXOS Client on the context, which enables you to access it from anywhere in your component tree but also creates the instance for you. So we can simplify the step above as follows.
 
@@ -84,7 +84,7 @@ render(
 );
 ```
 
-## 5: Create a Party
+## Step 5: Create a Party
 
 After your `ClientInitializer` is hooked up, you can create your first `Party`. You can do so by interacting with the [`ECHO`]() object, responsible for storing information in DXOS.
 
