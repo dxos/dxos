@@ -25,7 +25,6 @@ module.exports = {
             "tutorial/invite",
             "tutorial/data",
             "tutorial/environment",
-            "tutorial/deployment",
             "tutorial/next-steps"
           ],
           "Core Concepts": [
