@@ -1,12 +1,10 @@
 ---
-title: Getting Started
+title: Introduction
 ---
 
-This short tutorial gets you up and running with the DXOS Client.
+This tutorial leads you through building a shareable task list app powered by [DXOS](https://github.com/dxos).
 
-It will lead you through the process of building a shareable task list app using [DXOS](https://github.com/dxos).
-
-We have created a full-stack, real world example application to demonstrate the main aspects of the DXOS architecture 
+We have created a full-stack, real world example application to demonstrate the main aspects of the DXOS architecture
 and to make you feel comfortable building your own applications.
 
 ### Prerequisites
@@ -19,8 +17,7 @@ Before proceeding, make sure your system meets the following requirements:
 
 ## Create an empty application
 
-We will be using [Create React App](https://reactjs.org/docs/create-a-new-react-app.html) to start the new application. 
-You can read the docs to understand how it works or directly run:
+We will be using [Create React App](https://reactjs.org/docs/create-a-new-react-app.html) to start the new application.
 
 ```bash
 npx create-react-app tasks-app
@@ -40,20 +37,20 @@ yarn add @dxos/react-client @dxos/react-ux @dxos/config @dxos/object-model
 
 Applications depend on the following libraries.
 
-| Syntax                | Description |
-| --------------------- | ----------- |
-| `@dxos/react-client`  | Main API |
-| `@dxos/react-ux`      | Main React (UX) API |
-| `@dxos/config`        | Configuration support |
-| `@dxos/object-model`  | ECHO Object model |
+| Syntax               | Description           |
+| -------------------- | --------------------- |
+| `@dxos/react-client` | Main API              |
+| `@dxos/react-ux`     | Main React (UX) API   |
+| `@dxos/config`       | Configuration support |
+| `@dxos/object-model` | ECHO Object model     |
 
 ## Additional Dependencies
 
 ### Material-UI
 
-To create the visual side of the app and style React components we will be using Material-UI. 
-It will be easier for you if you are familiar with this framework, 
-but that is not required as we will be focusing on DXOS and provide all required styling. 
+To create the visual side of the app and style React components we will be using Material-UI.
+It will be easier for you if you are familiar with this framework,
+but that is not required as we will be focusing on DXOS and provide all required styling.
 You can find out more about Material-UI [here](https://material-ui.com/).
 
 ```bash
@@ -64,15 +61,11 @@ yarn add @material-ui/core @material-ui/styles @material-ui/icons
 
 "_Create React App Configuration Override is an easy and comprehensible configuration layer for create-react-app._"
 
-This tool will be used to override some Webpack settings that are required for DXOS. 
+This tool will be used to override some Webpack settings that are required for DXOS.
 You can read more about it [here](https://github.com/gsoft-inc/craco)
 
 ```bash
 yarn add @craco/craco
 ```
 
-We will provide you the specific settings in the next sections.
-
-## Next Steps
-
-You are all set up! Go to the next section to start writing some real code.
+Create a `craco.config.js` file at the root of your project with [this](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/craco.config.js) settings. We will explain the specific settings on later sections.
