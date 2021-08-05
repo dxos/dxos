@@ -6,7 +6,7 @@ So far, we have been preparing our app to be able to interact with DXOS Stack, b
 
 ## Create items
 
-On our app the `items` that we are going to create are going to be Tasks. Place the following code in your `TaskList` component and take a look at the function `handleCreateItem`. We are calling to `party.database.createItem` function, sending some required information.
+On our app the `items` that we are going to create are going to be Tasks. Add the following code to your `TaskList` component and take a look at the function `handleCreateItem`. We are calling to `party.database.createItem` function, sending some required information.
 
 ```jsx:title=src/components/TaskList.js
 import { ObjectModel } from '@dxos/object-model';
@@ -29,31 +29,35 @@ const TaskList = ({ partyKey }) => {
     setTaskTitle('');
   };
 
+  // ...
+
   return (
-    <List dense>
-      <ListItem>
-        <ListItemIcon />
+    <div>
+      <List dense>
+        <ListItem>
+          <ListItemIcon />
 
-        <TextField
-          fullWidth
-          autoFocus
-          value={taskTitle}
-          onChange={(event) => setTaskTitle(event.target.value)}
-          onKeyPress={(event) => event.key === 'Enter' && handleCreateTask()}
-        />
+          <TextField
+            fullWidth
+            autoFocus
+            value={taskTitle}
+            onChange={(event) => setTaskTitle(event.target.value)}
+            onKeyPress={(event) => event.key === 'Enter' && handleCreateTask()}
+          />
 
-        <ListItemSecondaryAction>
-          <IconButton size='small' edge='end' aria-label='create' onClick={handleCreateTask}>
-            <AddIcon />
-          </IconButton>
-        </ListItemSecondaryAction>
-      </ListItem>
-    </List>
+          <ListItemSecondaryAction>
+            <IconButton size='small' edge='end' aria-label='create' onClick={handleCreateTask}>
+              <AddIcon />
+            </IconButton>
+          </ListItemSecondaryAction>
+        </ListItem>
+      </List>
+
+      {/* ... Share Button */}
+    </div>
   );
 };
 ```
-
-Go ahead and add an input with a submit button that will call `handleCreateTask` when submitting.
 
 ![data](./images/data-02.png)
 
@@ -80,31 +84,19 @@ const TaskList = ({ partyKey }) => {
   // ...
 
   return (
-    <List dense>
-      <ListItem>
-        <ListItemIcon />
+    <div>
+      <List dense>
+        {/* ... Creation Input */}
 
-        <TextField
-          fullWidth
-          autoFocus
-          value={taskTitle}
-          onChange={(event) => setTaskTitle(event.target.value)}
-          onKeyPress={(event) => event.key === 'Enter' && handleCreateTask()}
-        />
+        {items.map((item) => (
+          <ListItem button key={item.id}>
+            <ListItemText primary={item.model.getProperty('title')} />
+          </ListItem>
+        ))}
+      </List>
 
-        <ListItemSecondaryAction>
-          <IconButton size='small' edge='end' aria-label='create' onClick={handleCreateTask}>
-            <AddIcon />
-          </IconButton>
-        </ListItemSecondaryAction>
-      </ListItem>
-
-      {items.map((item) => (
-        <ListItem button key={item.id}>
-          <ListItemText primary={item.model.getProperty('title')} />
-        </ListItem>
-      ))}
-    </List>
+      {/* ... Share Button */}
+    </div>
   );
 };
 ```
@@ -132,24 +124,28 @@ const TaskList = ({ partyKey }) => {
   };
 
   return (
-    <List dense>
-      {/* ... */}
+    <div>
+      <List dense>
+        {/* ... Creation Input */}
 
-      {items.map((item) => (
-        <ListItem button key={item.id}>
-          <ListItemIcon>
-            <Checkbox
-              edge='start'
-              tabIndex={-1}
-              checked={item.model.getProperty('complete') || false}
-              onChange={handleToggleComplete(item)}
-            />
-          </ListItemIcon>
+        {items.map((item) => (
+          <ListItem button key={item.id}>
+            <ListItemIcon>
+              <Checkbox
+                edge='start'
+                tabIndex={-1}
+                checked={item.model.getProperty('complete') || false}
+                onChange={handleToggleComplete(item)}
+              />
+            </ListItemIcon>
 
-          <ListItemText primary={item.model.getProperty('title')} />
-        </ListItem>
-      ))}
-    </List>
+            <ListItemText primary={item.model.getProperty('title')} />
+          </ListItem>
+        ))}
+      </List>
+
+      {/* ... Share Button */}
+    </div>
   );
 };
 ```
@@ -177,30 +173,34 @@ const TaskList = ({ partyKey }) => {
   };
 
   return (
-    <List dense>
-      {/* ... */}
+    <div>
+      <List dense>
+        {/* ... Creation Input */}
 
-      {items.map((item) => (
-        <ListItem button key={item.id}>
-          <ListItemIcon>
-            <Checkbox
-              edge='start'
-              tabIndex={-1}
-              checked={item.model.getProperty('complete') || false}
-              onChange={handleToggleComplete(item)}
-            />
-          </ListItemIcon>
+        {items.map((item) => (
+          <ListItem button key={item.id}>
+            <ListItemIcon>
+              <Checkbox
+                edge='start'
+                tabIndex={-1}
+                checked={item.model.getProperty('complete') || false}
+                onChange={handleToggleComplete(item)}
+              />
+            </ListItemIcon>
 
-          <ListItemText primary={item.model.getProperty('title')} />
+            <ListItemText primary={item.model.getProperty('title')} />
 
-          <ListItemSecondaryAction>
-            <IconButton size='small' edge='end' aria-label='delete' onClick={handleDeleteTask(item)}>
-              <DeleteIcon />
-            </IconButton>
-          </ListItemSecondaryAction>
-        </ListItem>
-      ))}
-    </List>
+            <ListItemSecondaryAction>
+              <IconButton size='small' edge='end' aria-label='delete' onClick={handleDeleteTask(item)}>
+                <DeleteIcon />
+              </IconButton>
+            </ListItemSecondaryAction>
+          </ListItem>
+        ))}
+      </List>
+
+      {/* ... Share Button */}
+    </div>
   );
 };
 ```
@@ -208,11 +208,3 @@ const TaskList = ({ partyKey }) => {
 One last time, go back to your app and you should now be able to delete your tasks.
 
 ![data](./images/data-05.png)
-
-And that's it! You have completed your DXOS application to Create, List, Update and Delete tasks. Congratulations!
-
-## Next steps
-
-After this section, we recommend moving on to:
-
-- [Deployment](./deployment/environment): Learn how to make your app public for anyone on the Internet.
