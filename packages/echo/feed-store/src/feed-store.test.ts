@@ -14,13 +14,14 @@ import tempy from 'tempy';
 import { IStorage, STORAGE_NODE, STORAGE_RAM, createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedStore } from './feed-store';
-
-const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
+import { PublicKey, createKeyPair } from '@dxos/crypto';
 
 interface KeyPair {
-  key: Buffer,
-  secretKey: Buffer
+  key: PublicKey,
+  secretKey: PublicKey
 }
+
+const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
 
 const createFeedStore = async (storage: IStorage, options = {}) => {
   const feedStore = new FeedStore(storage, options);
@@ -55,8 +56,8 @@ function head (feed: any) {
 
 const createKeyPairs = () => {
   return Object.fromEntries<KeyPair>(feedNames.map(feed => {
-    const { publicKey, secretKey } = crypto.keyPair();
-    return [feed, { key: publicKey, secretKey }];
+    const { publicKey, secretKey } = createKeyPair();
+    return [feed, { key: PublicKey.from(publicKey), secretKey: PublicKey.from(secretKey) }];
   }));
 };
 
@@ -112,9 +113,6 @@ describe('FeedStore', () => {
 
     // It should return the same opened instance.
     await expect(feedStore.openFeed(booksFeed.key)).resolves.toBe(booksFeed);
-
-    // You can't open a feed with an invalid key.
-    expect(() => feedStore.createReadOnlyFeed({ key: Buffer.from('...') })).toThrow(/key must be/);
   });
 
   test('Create duplicate feed', async () => {
@@ -417,8 +415,8 @@ describe('FeedStore', () => {
     expect(syncMessages[1].key).toEqual(feed2.key);
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString('hex')]: 199,
-      [feed2.key.toString('hex')]: 199
+      [feed1.key.toString()]: 199,
+      [feed2.key.toString()]: 199
     });
   });
 
@@ -444,7 +442,7 @@ describe('FeedStore', () => {
     expect(syncMessages[0].key).toEqual(feed1.key);
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString('hex')]: 199
+      [feed1.key.toString()]: 199
     });
   });
 
@@ -476,8 +474,8 @@ describe('FeedStore', () => {
     expect(syncMessages[1].key).toEqual(feed2.key);
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString('hex')]: 199,
-      [feed2.key.toString('hex')]: 199
+      [feed1.key.toString()]: 199,
+      [feed2.key.toString()]: 199
     });
   });
 
@@ -511,8 +509,8 @@ describe('FeedStore', () => {
     expect(syncMessages[1].key).toEqual(feed2.key);
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString('hex')]: 199,
-      [feed2.key.toString('hex')]: 199
+      [feed1.key.toString()]: 199,
+      [feed2.key.toString()]: 199
     });
   });
 
@@ -543,14 +541,14 @@ describe('FeedStore', () => {
     expect(messages.length).toBe(4);
     expect(onSync).toHaveBeenCalledTimes(1);
     expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString('hex')]: 1,
-      [feed2.key.toString('hex')]: 1
+      [feed1.key.toString()]: 1,
+      [feed2.key.toString()]: 1
     });
 
     expect(stream.state()).toStrictEqual({
-      [feed1.key.toString('hex')]: 1,
-      [feed2.key.toString('hex')]: 1,
-      [feed3.key.toString('hex')]: 0
+      [feed1.key.toString()]: 1,
+      [feed2.key.toString()]: 1,
+      [feed3.key.toString()]: 0
     });
 
     const { key } = feed2;
@@ -572,9 +570,9 @@ describe('FeedStore', () => {
       'feed2/message3'
     ]);
     expect(stream.state()).toStrictEqual({
-      [feed1.key.toString('hex')]: 1,
-      [feed2.key.toString('hex')]: 3,
-      [feed3.key.toString('hex')]: 0
+      [feed1.key.toString()]: 1,
+      [feed2.key.toString()]: 3,
+      [feed3.key.toString()]: 0
     });
   });
 

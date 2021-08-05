@@ -5,11 +5,11 @@
 /* eslint-disable jest/no-done-callback */
 
 import assert from 'assert';
-import crypto from 'hypercore-crypto';
 import pify from 'pify';
 import tempy from 'tempy';
 
 import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { PublicKey, createKeyPair } from '@dxos/crypto';
 
 import FeedDescriptor from './feed-descriptor';
 
@@ -18,27 +18,28 @@ describe('FeedDescriptor', () => {
   let fd: FeedDescriptor;
 
   test('Create', () => {
-    const fd = new FeedDescriptor({ storage: createStorage('', STORAGE_NODE) });
+    const { publicKey, secretKey } = createKeyPair();
+    const fd = new FeedDescriptor({ 
+      storage: createStorage('', STORAGE_NODE),
+      key: PublicKey.from(publicKey),
+      secretKey: PublicKey.from(secretKey)
+    });
 
     expect(fd).toBeInstanceOf(FeedDescriptor);
     expect(fd.key).toBeDefined();
     expect(fd.secretKey).toBeDefined();
   });
 
-  test('Validate asserts', () => {
-    expect(() => new FeedDescriptor({ secretKey: crypto.keyPair().secretKey })).toThrow(/missing publicKey/);
-  });
-
   test('Can create feed descriptor with public key but without private key', async () => {
     // When this behaviour was changed, suddenly `protocol-plugin-replicator` tests started hanging forever on network generation.
-    const { publicKey } = crypto.keyPair();
-    const fd = new FeedDescriptor({ key: publicKey, storage: createStorage('', STORAGE_NODE) });
+    const { publicKey } = createKeyPair();
+    const fd = new FeedDescriptor({ key: PublicKey.from(publicKey), storage: createStorage('', STORAGE_NODE) });
     expect(fd.key).toEqual(publicKey);
     expect(fd.secretKey).toBeUndefined();
   });
 
   test('Create custom options', () => {
-    const { publicKey, secretKey } = crypto.keyPair();
+    const { publicKey, secretKey } = createKeyPair();
 
     const metadata = {
       subject: 'books'
@@ -46,8 +47,8 @@ describe('FeedDescriptor', () => {
 
     fd = new FeedDescriptor({
       storage: createStorage('', STORAGE_RAM),
-      key: publicKey,
-      secretKey,
+      key: PublicKey.from(publicKey),
+      secretKey: PublicKey.from(secretKey),
       valueEncoding: 'json',
       metadata
     });
@@ -86,8 +87,11 @@ describe('FeedDescriptor', () => {
     });
 
     // If we try to close a feed that is opening should wait for the open result.
+    const { publicKey, secretKey } = createKeyPair();
     const fd2 = new FeedDescriptor({
-      storage: createStorage('', STORAGE_RAM)
+      storage: createStorage('', STORAGE_RAM),
+      key: PublicKey.from(publicKey),
+      secretKey: PublicKey.from(secretKey)
     });
 
     fd2.open();
@@ -98,8 +102,11 @@ describe('FeedDescriptor', () => {
   test('Close and open again', async () => {
     const root = tempy.directory();
 
+    const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
       storage: createStorage(root, STORAGE_NODE),
+      key: PublicKey.from(publicKey),
+      secretKey: PublicKey.from(secretKey),
       valueEncoding: 'utf-8'
     });
 
@@ -121,8 +128,11 @@ describe('FeedDescriptor', () => {
   });
 
   test('Watch data', async (done) => {
+    const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      storage: createStorage('', STORAGE_RAM)
+      storage: createStorage('', STORAGE_RAM),
+      key: PublicKey.from(publicKey),
+      secretKey: PublicKey.from(secretKey)
     });
 
     fd.watch(event => {
@@ -135,8 +145,11 @@ describe('FeedDescriptor', () => {
   });
 
   test('on open error should unlock the resource', async () => {
+    const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
       storage: createStorage('', STORAGE_RAM),
+      key: PublicKey.from(publicKey),
+      secretKey: PublicKey.from(secretKey),
       hypercore: () => {
         throw new Error('open error');
       }
@@ -148,8 +161,11 @@ describe('FeedDescriptor', () => {
   });
 
   test('on close error should unlock the resource', async () => {
+    const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
       storage: createStorage('', STORAGE_RAM),
+      key: PublicKey.from(publicKey),
+      secretKey: PublicKey.from(secretKey),
       hypercore: () => ({
         opened: true,
         on () {},

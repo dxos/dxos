@@ -10,6 +10,7 @@ import through from 'through2';
 
 import { createBatchStream } from './create-batch-stream';
 import type { FeedDescriptor } from './feed-descriptor';
+import type { Feed } from './hypercore-types';
 
 const all = () => true;
 
@@ -85,7 +86,7 @@ export default class Reader {
         return null;
       }
 
-      const feedKey = descriptor.key.toString('hex');
+      const feedKey = descriptor.key.toString();
 
       this._state[feedKey] = 0;
 
@@ -119,7 +120,7 @@ export default class Reader {
       return false;
     }
 
-    const feedKey = descriptor.key.toString('hex');
+    const feedKey = descriptor.key.toString();
     if (streamOptions.live && this._state[feedKey]) {
       streamOptions = {
         ...streamOptions,
@@ -142,8 +143,8 @@ export default class Reader {
     });
   }
 
-  private _checkFeedSync (feed: any, seq: any, sync = false) {
-    const feedKey = feed.key.toString('hex');
+  private _checkFeedSync (feed: Feed, seq: any, sync = false) {
+    const feedKey = feed.key.toString();
     this._state[feedKey] = seq;
     if (this.sync) {
       return;
@@ -191,6 +192,7 @@ export default class Reader {
       }
 
       const last = messages[messages.length - 1];
+      assert(feed, 'Feed is null');
       this._checkFeedSync(feed, last.seq, last.sync);
       next();
     });

@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import type { PublicKey } from "@dxos/crypto";
+
 export interface Message {
   seq: number;
   data: Buffer;
@@ -9,8 +11,8 @@ export interface Message {
 
 export interface Feed {
   ready: any;
-  key: Buffer;
-  secretKey: Buffer;
+  key: PublicKey;
+  secretKey: PublicKey;
   discoveryKey: Buffer;
   length: number;
   opened: Boolean;

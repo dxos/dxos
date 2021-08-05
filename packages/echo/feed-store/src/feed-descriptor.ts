@@ -2,14 +2,13 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import defaultHypercore from 'hypercore';
 import crypto from 'hypercore-crypto';
 import pify from 'pify';
-import sodium from 'sodium-universal';
 
 import { Lock } from '@dxos/async';
 import type { IFile, IStorage } from '@dxos/random-access-multi-storage';
+import type { PublicKey } from '@dxos/crypto';
 
 import type { Feed, Hypercore } from './hypercore-types';
 
@@ -19,9 +18,9 @@ interface ValueEncoding {
 }
 
 interface FeedDescriptorOptions {
-  storage?: IStorage,
-  key?: Buffer,
-  secretKey?: Buffer,
+  storage: IStorage,
+  key: PublicKey,
+  secretKey?: PublicKey,
   valueEncoding?: string | ValueEncoding,
   metadata?: any,
   codecs?: object,
@@ -37,8 +36,8 @@ type Listener = ((...args: any) => Promise<void> | void) | null;
  */
 export class FeedDescriptor {
   private _storage: IStorage;
-  private _key: Buffer;
-  private _secretKey?: Buffer;
+  private _key: PublicKey;
+  private _secretKey?: PublicKey;
   private _valueEncoding?: string | ValueEncoding;
   private _hypercore: Hypercore;
   private _codecs: any;
@@ -48,7 +47,7 @@ export class FeedDescriptor {
   private _feed: any;
   private _listener: Listener;
 
-  constructor (options: FeedDescriptorOptions = {}) {
+  constructor (options: FeedDescriptorOptions) {
     const {
       storage,
       key,
@@ -59,27 +58,13 @@ export class FeedDescriptor {
       metadata
     } = options;
 
-    assert(!key || key.length === sodium.crypto_sign_PUBLICKEYBYTES, 'key must be a buffer of size crypto_sign_PUBLICKEYBYTES.');
-    assert(!secretKey || secretKey.length === sodium.crypto_sign_SECRETKEYBYTES, 'secretKey must be a buffer of size crypto_sign_SECRETKEYBYTES.');
-    assert(!secretKey || (secretKey && key), 'missing publicKey.');
-    assert(!valueEncoding || typeof valueEncoding === 'string' || (valueEncoding.encode && valueEncoding.decode),
-      'valueEncoding must be a string or implement abstract-encoding.');
-    assert(storage);
-
     this._storage = storage;
     this._valueEncoding = valueEncoding;
     this._hypercore = hypercore;
     this._codecs = codecs;
     this._metadata = metadata;
-
-    if (!key) {
-      const { publicKey, secretKey } = crypto.keyPair();
-      this._key = publicKey;
-      this._secretKey = secretKey;
-    } else {
-      this._key = key;
-      this._secretKey = secretKey;
-    }
+    this._key = key;
+    this._secretKey = secretKey;
 
     this._discoveryKey = crypto.discoveryKey(this._key);
 
@@ -175,7 +160,7 @@ export class FeedDescriptor {
 
   private async _open () {
     this._feed = this._hypercore(
-      this._createStorage(this._key?.toString('hex')),
+      this._createStorage(this._key.toString()),
       this._key,
       {
         secretKey: this._secretKey,
