@@ -31,7 +31,7 @@ const PartySettings = ({ partyKey = undefined, onClose }) => {
   const party = useParty(partyKey);
   const [title, setTitle] = useState(party ? party.getProperty('title') : '');
 
-  const handleUpdate = async () => {
+  const handleSubmit = async () => {
     if (!title.length) {
       return;
     }
@@ -67,14 +67,14 @@ const PartySettings = ({ partyKey = undefined, onClose }) => {
           label="Title"
           value={title}
           onChange={event => setTitle(event.target.value)}
-          onKeyPress={event => (event.key === 'Enter') && handleUpdate()}
+          onKeyPress={event => (event.key === 'Enter') && handleSubmit()}
         />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={handleUpdate} color="primary">
+        <Button onClick={handleSubmit} color="primary">
           {partyKey ? 'Update' : 'Create'}
         </Button>
       </DialogActions>
