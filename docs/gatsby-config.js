@@ -34,6 +34,10 @@ module.exports = {
             "core-concepts/queries",
             "core-concepts/invitations"
           ],
+          "Deployment": [
+            "deployment/kube",
+            "deployment/environment",
+          ],
           "API Reference": [
             "api-reference/dxos-client",
           ],

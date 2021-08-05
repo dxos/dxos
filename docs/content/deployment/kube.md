@@ -1,6 +1,8 @@
 ---
-title: Deploying the app
+title: Deploying the app to a Kube
 ---
+
+> Make sure to have read [Environment Configuration](./environment) section first.
 
 ## Build Settings
 
