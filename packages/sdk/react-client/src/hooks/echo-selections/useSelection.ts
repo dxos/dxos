@@ -9,8 +9,8 @@ import { Falsy } from '@dxos/util';
 
 /**
  * Hook to generate values from a selection using a selector function.
- * 
- * NOTE: 
+ *
+ * NOTE:
  * All values that may change the selection result,
  * apart from changes in ECHO database itself, must be passed to deps array
  * for updates to work correctly.
@@ -22,11 +22,11 @@ export function useSelection<T> (
   selectionResult: SelectionResult<T> | Falsy,
   deps: readonly any[] = []
 ): T | undefined {
-  const [data, setData] = useState(() => !!selectionResult ? selectionResult.getValue() : undefined);
+  const [data, setData] = useState(() => selectionResult ? selectionResult.getValue() : undefined);
 
   // Update data when deps change.
   useEffect(() => {
-    if(selectionResult) {
+    if (selectionResult) {
       const unsub = selectionResult.update.on(() => {
         setData(selectionResult.getValue());
       });
