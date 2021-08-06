@@ -36,7 +36,7 @@ describe('Stream tests', () => {
       await feedStore.open();
 
       const { publicKey, secretKey } = createKeyPair();
-      feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
+      feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
       feedKey = PublicKey.from(feed.key);
 
       const itemId = createId();
@@ -64,7 +64,7 @@ describe('Stream tests', () => {
     await feedStore.open();
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
+    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
     const inputStream = feedStore.createReadStream({ live: true, feedStoreInfo: true });
 
     const count = 5;
@@ -103,7 +103,7 @@ describe('Stream tests', () => {
     // Create feeds.
     for (let i = 0; i < config.numFeeds; i++) {
       const { publicKey, secretKey } = createKeyPair();
-      await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
+      await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
     }
 
     const descriptors = feedStore.getDescriptors();

@@ -30,8 +30,7 @@ const range = (n: number) => [...Array(n).keys()];
     return Promise.all(range(maxFeeds).map(async i => {
       const name = `feed/${i}`;
       const { publicKey, secretKey } = crypto.keyPair();
-      const feedDescriptor = fs.createReadWriteFeed({ key: publicKey, secretKey });
-      const feed = await fs.openFeed(feedDescriptor.key);
+      const feed = await fs.createReadWriteFeed({ key: publicKey, secretKey });
 
       for (let i = 0; i < maxMessages; i++) {
         await new Promise<void>((resolve, reject) => {

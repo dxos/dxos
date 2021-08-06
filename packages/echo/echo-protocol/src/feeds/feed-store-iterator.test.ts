@@ -79,7 +79,7 @@ describe('feed store iterator', () => {
     const feeds = new ComplexMap<FeedKey, Feed>(key => key.toHex());
     await Promise.all(Array.from({ length: config.numFeeds }, (_, i) => i + 1).map(async () => {
       const { publicKey, secretKey } = createKeyPair();
-      const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
+      const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
       feeds.set(PublicKey.from(feed.key), feed);
     }));
 
@@ -161,8 +161,8 @@ describe('feed store iterator', () => {
     await feedStore.open();
 
     const [keyPair1, keyPair2] = [createKeyPair(), createKeyPair()];
-    const feed1 = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(keyPair1.publicKey), secretKey: keyPair1.secretKey }).key);
-    const feed2 = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(keyPair2.publicKey), secretKey: keyPair2.secretKey }).key);
+    const feed1 = await feedStore.createReadWriteFeed({ key: PublicKey.from(keyPair1.publicKey), secretKey: keyPair1.secretKey });
+    const feed2 = await feedStore.createReadWriteFeed({ key: PublicKey.from(keyPair2.publicKey), secretKey: keyPair2.secretKey });
 
     await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '0' });
     await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '1' });

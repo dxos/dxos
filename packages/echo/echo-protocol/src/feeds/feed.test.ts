@@ -27,7 +27,7 @@ describe('Feed tests:', () => {
     await feedStore.open();
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
+    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
     expect(feed.length).toBe(0);
 
     const data: FeedMessage = {};
@@ -44,7 +44,7 @@ describe('Feed tests:', () => {
     await feedStore.open();
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
+    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
     const writer = createFeedWriter<FeedMessage>(feed);
 
     const data: FeedMessage = {

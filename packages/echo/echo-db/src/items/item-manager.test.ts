@@ -18,7 +18,7 @@ describe('items', () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
     await feedStore.open();
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
+    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
 
     const modelFactory = new ModelFactory();
     const itemManager = new ItemManager(modelFactory, createFeedWriter(feed));

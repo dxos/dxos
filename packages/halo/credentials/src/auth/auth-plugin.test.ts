@@ -12,7 +12,7 @@ import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
 import { keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
-import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
+import { FeedStore } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
@@ -75,7 +75,7 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
   await feedStore.open();
   const { publicKey, secretKey } = createKeyPair();
-  const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey, metadata: { topic } }).key);
+  const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey, metadata: { topic } });
   const append = pify(feed.append.bind(feed));
 
   const credentials = Buffer.from(codec.encode(

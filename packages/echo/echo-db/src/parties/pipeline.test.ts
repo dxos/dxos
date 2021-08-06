@@ -31,7 +31,7 @@ describe('pipeline', () => {
     const feedReadStream = await createIterator(feedStore, feedSelector);
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
+    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
     feedKeys.push(feed.key);
     const writeStream = createWritableFeedStream(feed);
 
@@ -89,7 +89,7 @@ describe('pipeline', () => {
     const feedReadStream = await createIterator(feedStore);
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed: Feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
+    const feed: Feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
 
     const keyring = new Keyring();
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });

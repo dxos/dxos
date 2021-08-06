@@ -133,7 +133,7 @@ export class FeedStore extends EventEmitter {
     const list = await this._indexDB.list(STORE_NAMESPACE);
 
     list.forEach((data: any) => {
-      this._createDescriptor({ ...data, key: PublicKey.from(new Uint8Array(Object.values(data.key._value))) }); // cause we don't have PublicKey deserialization
+      this._createDescriptor({ ...data, key: PublicKey.from(data.key) }); // cause we don't have PublicKey deserialization
     });
 
     this.emit('opened');
@@ -240,19 +240,17 @@ export class FeedStore extends EventEmitter {
   /**
    * Create a feed to Feedstore
    */
-  createReadWriteFeed (options: CreateReadWriteFeedOptions): FeedDescriptor {
-    const descriptor = this._createDescriptor(options);
-
-    return descriptor;
+  createReadWriteFeed (options: CreateReadWriteFeedOptions): Promise<Feed> {
+    this._createDescriptor(options);
+    return this.openFeed(options.key);
   }
 
   /**
    * Create a readonly feed to Feedstore
    */
-  createReadOnlyFeed (options: CreateReadOnlyFeedOptions): FeedDescriptor {
-    const descriptor = this._createDescriptor(options);
-
-    return descriptor;
+  createReadOnlyFeed (options: CreateReadOnlyFeedOptions): Promise<Feed> {
+    this._createDescriptor(options);
+    return this.openFeed(options.key);
   }
 
   /**
@@ -380,7 +378,7 @@ export class FeedStore extends EventEmitter {
     const oldData = await this._indexDB.get(key);
 
     const newData = {
-      key: descriptor.key,
+      key: descriptor.key.asBuffer(),
       secretKey: descriptor.secretKey,
       valueEncoding: typeof descriptor.valueEncoding === 'string' ? descriptor.valueEncoding : undefined,
       metadata: descriptor.metadata
