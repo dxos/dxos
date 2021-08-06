@@ -112,8 +112,8 @@ describe('Client - nonpersistent', () => {
       username: 'DXOS test 2'
     });
 
-    const invite1 = await party1A.createInvitation(testInvitationAuthenticator);
-    await clientB.echo.joinParty(invite1, testSecretProvider);
+    const invite1 = await party1A.createInvitation(defaultInvitationAuthenticator);
+    await clientB.echo.joinParty(invite1, defaultSecretProvider);
 
     const contact = clientA.halo.queryContacts().value.find(x => x.displayName === 'DXOS test 2');
     expect(contact).toBeTruthy();

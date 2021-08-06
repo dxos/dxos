@@ -84,7 +84,7 @@ export class Orchestrator {
     // TODO(egorgripasov): Generally, we might want to use a set of already running factories.
     // This could be turned into the list as well;
     this._factory = await this._startBotFactory();
-    this._factoryClient = new BotFactoryClient(this._client.networkManager, this._factory.topic);
+    this._factoryClient = new BotFactoryClient(this._client.echo.networkManager, this._factory.topic);
   }
 
   get client () {
