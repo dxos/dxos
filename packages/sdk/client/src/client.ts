@@ -12,7 +12,7 @@ import { Invitation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
 import * as debug from '@dxos/debug';
-import { ECHO, InvitationOptions, OpenProgress, Party, PartyNotFoundError, SecretProvider, sortItemsTopologically } from '@dxos/echo-db';
+import { ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, SecretProvider, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
@@ -179,20 +179,6 @@ export class Client {
   async reset () {
     await this._echo.reset();
     this._initialized = false;
-  }
-
-  //
-  // Parties
-  //
-
-  /**
-   * @deprecated Use client.echo.createParty() instead.
-   * Create a new Party.
-   * @returns The new Party.
-   */
-  @synchronized
-  async createParty (): Promise<Party> {
-    return this._echo.createParty();
   }
 
   /**
