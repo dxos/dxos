@@ -8,13 +8,13 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { latch, waitForCondition } from '@dxos/async';
-import { generateSeedPhrase, keyPairFromSeedPhrase, testSecretProvider, testSecretValidator } from '@dxos/credentials';
+import { generateSeedPhrase, keyPairFromSeedPhrase, defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
 import { ECHO } from './echo';
-import { testInvitationAuthenticator } from './invitations';
+import { defaultInvitationAuthenticator } from './invitations';
 import { Item } from './items';
 import { inviteTestPeer } from './util';
 
@@ -267,13 +267,13 @@ describe('ECHO', () => {
     expect(a.queryParties().value.length).toBe(1);
 
     // Issue the invitation on nodeA.
-    const invitation = await a.halo.createInvitation({ secretValidator: testSecretValidator, secretProvider: testSecretProvider });
+    const invitation = await a.halo.createInvitation({ secretValidator: defaultSecretValidator, secretProvider: defaultSecretProvider });
 
     // Should not have any parties.
     expect(b.queryParties().value.length).toBe(0);
 
     // And then redeem it on nodeB.
-    await b.halo.join(invitation, testSecretProvider);
+    await b.halo.join(invitation, defaultSecretProvider);
     expect(a.halo.isInitialized).toEqual(true);
     expect(b.halo.isInitialized).toEqual(true);
 
@@ -332,17 +332,17 @@ describe('ECHO', () => {
     await Promise.all([
       (async () => {
         // Issue the invitation on nodeA.
-        const invitation = await a1.halo.createInvitation(testInvitationAuthenticator);
+        const invitation = await a1.halo.createInvitation(defaultInvitationAuthenticator);
 
         // And then redeem it on nodeB.
-        await a2.halo.join(invitation, testSecretProvider);
+        await a2.halo.join(invitation, defaultSecretProvider);
       })(),
       (async () => {
         // Issue the invitation on nodeA.
-        const invitation = await b1.halo.createInvitation(testInvitationAuthenticator);
+        const invitation = await b1.halo.createInvitation(defaultInvitationAuthenticator);
 
         // And then redeem it on nodeB.
-        await b2.halo.join(invitation, testSecretProvider);
+        await b2.halo.join(invitation, defaultSecretProvider);
       })()
     ]);
 
@@ -371,8 +371,8 @@ describe('ECHO', () => {
       const [partyUpdatedB, onPartyUpdateB] = latch();
       b2.queryParties().update.on(onPartyUpdateB);
 
-      const invitation = await partyA.createInvitation(testInvitationAuthenticator);
-      await b1.joinParty(invitation, testSecretProvider);
+      const invitation = await partyA.createInvitation();
+      await b1.joinParty(invitation, defaultSecretProvider);
 
       await partyUpdatedB;
       expect(b1.queryParties().value.length).toBe(1);
@@ -615,8 +615,8 @@ describe('ECHO', () => {
     const b = await setup(false);
 
     {
-      const invitation = await a.halo.createInvitation(testInvitationAuthenticator);
-      await b.halo.join(invitation, testSecretProvider);
+      const invitation = await a.halo.createInvitation(defaultInvitationAuthenticator);
+      await b.halo.join(invitation, defaultSecretProvider);
     }
 
     await a.createParty();
@@ -670,10 +670,10 @@ describe('ECHO', () => {
 
     // B joins as another device of A, device invitation.
 
-    const invitation = await a.halo.createInvitation(testInvitationAuthenticator);
+    const invitation = await a.halo.createInvitation(defaultInvitationAuthenticator);
 
     expect(b.queryParties().value.length).toBe(0);
-    await b.halo.join(invitation, testSecretProvider);
+    await b.halo.join(invitation, defaultSecretProvider);
     expect(b.halo.isInitialized).toBeTruthy();
     await waitForCondition(() => b.queryParties().value.length, 1000);
     expect(b.queryParties().value.length).toBe(1);
@@ -688,9 +688,9 @@ describe('ECHO', () => {
     const partyC = c.queryParties().value[0];
 
     // D joins as another member of the party.
-    const invitationDescriptor = await a.queryParties().value[0].createInvitation(testInvitationAuthenticator);
+    const invitationDescriptor = await a.queryParties().value[0].createInvitation();
     expect(d.queryParties().value).toHaveLength(0);
-    const partyD = await d.joinParty(invitationDescriptor, testSecretProvider);
+    const partyD = await d.joinParty(invitationDescriptor, defaultSecretProvider);
     expect(partyD).toBeDefined();
     expect(d.queryParties().value).toHaveLength(1);
 

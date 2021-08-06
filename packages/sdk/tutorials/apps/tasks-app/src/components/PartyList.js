@@ -23,7 +23,7 @@ import {
 } from '@material-ui/icons';
 
 import { useParties } from '@dxos/react-client';
-import { RedeemDialog } from '@dxos/react-ux';
+import { PinlessRedeemDialog } from '@dxos/react-ux';
 
 import { getPartyTitle } from '../utils/hacks.utils';
 import PartySettings from './PartySettings';
@@ -99,7 +99,7 @@ const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
       )}
 
       {redeemDialog && (
-        <RedeemDialog
+        <PinlessRedeemDialog
           onClose={() => setRedeemDialog(false)}
         // TODO(burdon): Get party key from dialog.
         />
