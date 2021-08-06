@@ -13,7 +13,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { IdentityNotInitializedError } from '../errors';
-import { ActivationOptions, PartyActivator, IdentityProvider } from '../halo';
+import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
 import { Database } from '../items';
 import { SnapshotStore } from '../snapshots';
@@ -44,7 +44,7 @@ export class PartyInternal {
   // TODO(burdon): Merge with PartyInternal.
   private readonly _partyCore: PartyCore;
 
-  private readonly _activator?: PartyActivator;
+  private readonly _preferences?: PartyPreferences;
 
   private _invitationManager?: InvitationManager;
   private _protocol?: PartyProtocol;
@@ -73,7 +73,7 @@ export class PartyInternal {
 
     const identity = this._identityProvider();
     if (identity.preferences) {
-      this._activator = new PartyActivator(identity.preferences, this);
+      this._preferences = new PartyPreferences(identity.preferences, this);
     }
   }
 
@@ -103,13 +103,18 @@ export class PartyInternal {
   }
 
   get title () {
-    return this._activator?.getLastKnownTitle();
+    return this._preferences?.getLastKnownTitle();
+  }
+
+  get preferences (): PartyPreferences {
+    assert(this._preferences, 'Preferences not available');
+    return this._preferences;
   }
 
   async setTitle (title: string) {
     const item = await this.getPropertiesItem();
     await item.model.setProperty(PARTY_TITLE_PROPERTY, title);
-    await this._activator?.setLastKnownTitle(title);
+    await this._preferences?.setLastKnownTitle(title);
   }
 
   /**
@@ -178,13 +183,13 @@ export class PartyInternal {
   }
 
   get isActive (): boolean {
-    assert(this._activator, 'PartyActivator required');
-    return this._activator.isActive;
+    assert(this._preferences, 'PartyActivator required');
+    return this._preferences.isActive;
   }
 
   async activate (options: ActivationOptions) {
-    assert(this._activator, 'PartyActivator required');
-    await this._activator.activate(options);
+    assert(this._preferences, 'PartyActivator required');
+    await this._preferences.activate(options);
 
     if (!this.isOpen) {
       await this.open();
@@ -194,8 +199,8 @@ export class PartyInternal {
   }
 
   async deactivate (options: ActivationOptions) {
-    assert(this._activator, 'PartyActivator required');
-    await this._activator.deactivate(options);
+    assert(this._preferences, 'PartyActivator required');
+    await this._preferences.deactivate(options);
 
     if (this.isOpen) {
       await this.close();
