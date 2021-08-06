@@ -4,6 +4,7 @@
 
 import bufferJson from 'buffer-json-encoding';
 
+import { PublicKey } from '@dxos/crypto';
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 
 import { Feed } from './proto/gen/dxos/protocol/replicator';
@@ -58,11 +59,9 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
           if (feed) {
             return feed;
           }
-
-          return feedStore.openFeed({
-            key: Buffer.from(key),
-            metadata
-          } as any);
+          const publicKey = PublicKey.from(key);
+          feedStore.createReadOnlyFeed({ key: publicKey, metadata });
+          return feedStore.openFeed(publicKey);
         }
 
         if (discoveryKey) {

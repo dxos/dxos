@@ -7,7 +7,7 @@ import eos from 'end-of-stream';
 import pify from 'pify';
 import waitForExpect from 'wait-for-expect';
 
-import { discoveryKey } from '@dxos/crypto';
+import { createKeyPair, discoveryKey, PublicKey } from '@dxos/crypto';
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
@@ -20,9 +20,12 @@ jest.setTimeout(30000);
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
   await feedStore.open();
-  const feed = await feedStore.openFeed({
+  const { publicKey, secretKey } = createKeyPair();
+  const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({
+    key: PublicKey.from(publicKey),
+    secretKey,
     metadata: { topic: topic.toString('hex') }
-  } as any);
+  }).key);
   const append = pify(feed.append.bind(feed));
   let closed = false;
 
