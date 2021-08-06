@@ -41,7 +41,7 @@ const Demo = () => {
   };
 
   const handleCreateParty = async () => {
-    const party = await client.createParty();
+    const party = await client.echo.createParty();
     await party.setTitle(faker.company.companyName());
   };
 
