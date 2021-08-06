@@ -14,9 +14,7 @@ import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
 import * as debug from '@dxos/debug';
 import { ECHO, InvitationOptions, OpenProgress, Party, PartyNotFoundError, SecretProvider, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
 import { ModelConstructor } from '@dxos/model-factory';
-import { NetworkManager } from '@dxos/network-manager';
 import { ValueUtil } from '@dxos/object-model';
 import { createStorage } from '@dxos/random-access-multi-storage';
 import { Registry } from '@wirelineio/registry-client';
@@ -188,7 +186,7 @@ export class Client {
   //
 
   /**
-   * @deprecated
+   * @deprecated Use client.echo.createParty() instead.
    * Create a new Party.
    * @returns The new Party.
    */
@@ -322,30 +320,6 @@ export class Client {
     return party.createOfflineInvitation(recipientKey);
   }
 
-  // TODO(rzadp): Uncomment after updating ECHO.
-  // async createHaloInvitation (secretProvider: SecretProvider, options?: InvitationOptions) {
-  //   return this.echo.halo.createInvitation(
-  //     {
-  //       secretProvider,
-  //       secretValidator: (invitation: any, secret: any) => secret && secret.equals(invitation.secret)
-  //     }
-  //     , options
-  //   );
-  // }
-
-  //
-  // Contacts
-  //
-
-  /**
-   * Returns an Array of all known Contacts across all Parties.
-   * @deprecated Use halo.queryContacts instead.
-   */
-  async getContacts () {
-    console.warn('client.getContacts not impl. Returning []');
-    return [];
-  }
-
   //
   // ECHO
   //
@@ -378,28 +352,6 @@ export class Client {
       debug
     };
     return devtoolsContext;
-  }
-
-  /**
-   * @deprecated Use echo.feedStore
-   */
-  get feedStore (): FeedStore {
-    return this._echo.feedStore;
-  }
-
-  /**
-   * @deprecated Use echo.networkManager.
-   */
-  get networkManager (): NetworkManager {
-    return this._echo.networkManager;
-  }
-
-  /**
-   * @deprecated
-   */
-  get modelFactory () {
-    console.warn('client.modelFactory is deprecated.');
-    return this._echo.modelFactory;
   }
 }
 
