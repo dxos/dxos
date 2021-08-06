@@ -60,8 +60,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
             return feed;
           }
           const publicKey = PublicKey.from(key);
-          feedStore.createReadOnlyFeed({ key: publicKey, metadata });
-          return feedStore.openFeed(publicKey);
+          return feedStore.createReadOnlyFeed({ key: publicKey, metadata });
         }
 
         if (discoveryKey) {

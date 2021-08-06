@@ -12,7 +12,7 @@ import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
 import { keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
+import { Feed, FeedStore } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
@@ -90,11 +90,6 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
     });
   });
 
-  const openFeed = async (key: PublicKey) => {
-    return feedStore.getOpenFeed((desc: any) => desc.feed.key.equals(key)) ||
-      feedStore.openFeed(key);
-  };
-
   // Share and replicate all known feeds.
   const repl = new Replicator({
     load: async () => {
@@ -109,10 +104,10 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
       };
     },
 
-    replicate: async (feeds: any[]) => {
+    replicate: async (feeds: Feed[]) => {
       for await (const feed of feeds) {
         if (feed.key) {
-          await openFeed(feed.key);
+          await feedStore.createReadOnlyFeed({ key: PublicKey.from(feed.key) });
         }
       }
 
