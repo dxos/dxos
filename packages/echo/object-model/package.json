@@ -1,6 +1,6 @@
 {
   "name": "@dxos/object-model",
-  "version": "2.11.0",
+  "version": "2.11.1",
   "private": false,
   "description": "ECHO object model.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
