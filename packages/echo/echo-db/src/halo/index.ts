@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './party-activator';
+export * from './party-preferences';
 export * from './contact-manager';
 export * from './halo-factory';
 export * from './halo-party';
