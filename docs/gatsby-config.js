@@ -12,11 +12,11 @@ module.exports = {
       options: {
         ...themeOptions,
         root: __dirname,
-        description: "DXOS - The Decentralized Operating System",
+        description: "DXOS: The Decentralized Operating System",
         subtitle: "SDK",
         githubRepo: "dxos/protocols",
         sidebarCategories: {
-          null: ["get-started"],
+          null: ["getting-started"],
           Tutorial: [
             "tutorial/introduction",
             "tutorial/client",
