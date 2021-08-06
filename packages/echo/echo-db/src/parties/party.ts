@@ -66,6 +66,13 @@ export class Party {
   }
 
   /**
+   * Party preferences.
+   */
+  get preferences () {
+    return this._internal.preferences;
+  }
+
+  /**
    * Party title.
    */
   get title () {
