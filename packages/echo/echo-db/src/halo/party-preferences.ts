@@ -14,7 +14,7 @@ export interface ActivationOptions {
 
 /**
  * Wrapper for party preferences. Preferences can be global or device specific.
- * 
+ *
  * Includes party activation state.
  */
 // TODO(burdon): Rename.
@@ -30,11 +30,11 @@ export class PartyPreferences {
     return this._preferences.isPartyActive(this._party.key);
   }
 
-  async setGlobalPreference(property: string, value: any) {
+  async setGlobalPreference (property: string, value: any) {
     await this._preferences.setGlobalPartyPreference(this._party, property, value);
   }
 
-  async setDevicePreference(property: string, value: any) {
+  async setDevicePreference (property: string, value: any) {
     await this._preferences.setDevicePartyPreference(this._party, property, value);
   }
 
