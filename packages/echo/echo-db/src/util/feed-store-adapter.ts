@@ -44,7 +44,7 @@ export class FeedStoreAdapter {
     // we don't have any feeds we don't need to be open.
     for await (const descriptor of this._feedStore.getDescriptors()) {
       if (!descriptor.opened) {
-        await this._feedStore.openFeed({ key: descriptor.key, secretKey: descriptor.secretKey, metadata: descriptor.metadata });
+        await this._feedStore.openFeed(descriptor.key);
       }
     }
   }

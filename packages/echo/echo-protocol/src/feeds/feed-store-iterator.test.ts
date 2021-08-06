@@ -8,7 +8,7 @@ import faker from 'faker';
 import pify from 'pify';
 
 import { latch } from '@dxos/async';
-import { createId, keyToString, PublicKey } from '@dxos/crypto';
+import { createId, createKeyPair, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedStore, Feed } from '@dxos/feed-store';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { ComplexMap } from '@dxos/util';
@@ -78,7 +78,8 @@ describe('feed store iterator', () => {
 
     const feeds = new ComplexMap<FeedKey, Feed>(key => key.toHex());
     await Promise.all(Array.from({ length: config.numFeeds }, (_, i) => i + 1).map(async () => {
-      const feed = await feedStore.openFeed();
+      const { publicKey, secretKey } = createKeyPair();
+      const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
       feeds.set(PublicKey.from(feed.key), feed);
     }));
 
@@ -159,8 +160,9 @@ describe('feed store iterator', () => {
 
     await feedStore.open();
 
-    const feed1 = await feedStore.openFeed();
-    const feed2 = await feedStore.openFeed();
+    const [keyPair1, keyPair2] = [createKeyPair(), createKeyPair()];
+    const feed1 = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(keyPair1.publicKey), secretKey: keyPair1.secretKey }).key);
+    const feed2 = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(keyPair2.publicKey), secretKey: keyPair2.secretKey }).key);
 
     await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '0' });
     await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '1' });

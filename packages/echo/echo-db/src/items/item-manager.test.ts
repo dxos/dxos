@@ -11,12 +11,14 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { ItemManager } from './item-manager';
+import { createKeyPair, PublicKey } from '@dxos/crypto';
 
 describe('items', () => {
   test('item construction', async () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
     await feedStore.open();
-    const feed = await feedStore.openFeed();
+    const { publicKey, secretKey } = createKeyPair();
+    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
 
     const modelFactory = new ModelFactory();
     const itemManager = new ItemManager(modelFactory, createFeedWriter(feed));

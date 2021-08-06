@@ -9,6 +9,7 @@ import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { codec, FeedMessage } from '../proto';
 import { createFeedWriter } from './feed-writer';
+import { createKeyPair, PublicKey } from '@dxos/crypto';
 
 describe('Feed tests:', () => {
   test('codec', () => {
@@ -25,7 +26,8 @@ describe('Feed tests:', () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
-    const feed = await feedStore.openFeed();
+    const { publicKey, secretKey } = createKeyPair(); 
+    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
     expect(feed.length).toBe(0);
 
     const data: FeedMessage = {};
@@ -41,7 +43,8 @@ describe('Feed tests:', () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
-    const feed = await feedStore.openFeed();
+    const { publicKey, secretKey } = createKeyPair(); 
+    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
     const writer = createFeedWriter<FeedMessage>(feed);
 
     const data: FeedMessage = {

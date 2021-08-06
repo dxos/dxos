@@ -9,7 +9,7 @@ import { Writable } from 'stream';
 import tempy from 'tempy';
 
 import { latch, sink } from '@dxos/async';
-import { createId, keyToString, randomBytes, PublicKey } from '@dxos/crypto';
+import { createId, keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
 import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
 import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
@@ -35,7 +35,8 @@ describe('Stream tests', () => {
       const feedStore = new FeedStore(createStorage(directory, STORAGE_NODE), { feedOptions: { valueEncoding: codec } });
       await feedStore.open();
 
-      feed = await feedStore.openFeed();
+      const { publicKey, secretKey } = createKeyPair(); 
+      feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
       feedKey = PublicKey.from(feed.key);
 
       const itemId = createId();
@@ -48,7 +49,7 @@ describe('Stream tests', () => {
       const feedStore = new FeedStore(createStorage(directory, STORAGE_NODE), { feedOptions: { valueEncoding: codec } });
       await feedStore.open();
 
-      const feed2 = await feedStore.openFeed({ key: feed.key, secretKey: feed.secretKey });
+      const feed2 = await feedStore.openFeed(feed.key);
       expect(feedKey.toHex()).toBe(keyToString(feed2.key));
 
       const readStream = feedStore.createReadStream({ live: true });
@@ -62,7 +63,8 @@ describe('Stream tests', () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
-    const feed = await feedStore.openFeed();
+    const { publicKey, secretKey } = createKeyPair(); 
+    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
     const inputStream = feedStore.createReadStream({ live: true, feedStoreInfo: true });
 
     const count = 5;
@@ -100,7 +102,8 @@ describe('Stream tests', () => {
 
     // Create feeds.
     for (let i = 0; i < config.numFeeds; i++) {
-      await feedStore.openFeed();
+      const { publicKey, secretKey } = createKeyPair(); 
+      await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
     }
 
     const descriptors = feedStore.getDescriptors();

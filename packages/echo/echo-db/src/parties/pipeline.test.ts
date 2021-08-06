@@ -8,7 +8,7 @@ import { it as test } from 'mocha';
 
 import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { createId, PublicKey } from '@dxos/crypto';
+import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
 import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore, Feed, createWritableFeedStream, createWritable, WritableArray } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
@@ -29,7 +29,9 @@ describe('pipeline', () => {
     const feedSelector: FeedSelector = descriptor => !!feedKeys.find(key => descriptor.key.equals(key));
     await feedStore.open();
     const feedReadStream = await createIterator(feedStore, feedSelector);
-    const feed = await feedStore.openFeed();
+
+    const { publicKey, secretKey } = createKeyPair();
+    const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
     feedKeys.push(feed.key);
     const writeStream = createWritableFeedStream(feed);
 
@@ -85,7 +87,9 @@ describe('pipeline', () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
     const feedReadStream = await createIterator(feedStore);
-    const feed: Feed = await feedStore.openFeed();
+
+    const { publicKey, secretKey } = createKeyPair();
+    const feed: Feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
 
     const keyring = new Keyring();
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
