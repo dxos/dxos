@@ -2,9 +2,10 @@
 // Copyright 2019 DXOS.org
 //
 
+import crypto from 'hypercore-crypto';
+
 import { Suite } from '@dxos/benchmark-suite';
 import { createStorage } from '@dxos/random-access-multi-storage';
-import crypto from 'hypercore-crypto';
 
 import { FeedStore } from './feed-store';
 

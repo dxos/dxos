@@ -5,13 +5,13 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { createKeyPair, PublicKey } from '@dxos/crypto';
 import { createFeedWriter } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { ItemManager } from './item-manager';
-import { createKeyPair, PublicKey } from '@dxos/crypto';
 
 describe('items', () => {
   test('item construction', async () => {

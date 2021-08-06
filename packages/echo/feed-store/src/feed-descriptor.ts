@@ -6,8 +6,8 @@ import defaultHypercore from 'hypercore';
 import pify from 'pify';
 
 import { Lock } from '@dxos/async';
-import type { IFile, IStorage } from '@dxos/random-access-multi-storage';
 import { PublicKey, discoveryKey } from '@dxos/crypto';
+import type { IFile, IStorage } from '@dxos/random-access-multi-storage';
 
 import type { Feed, Hypercore } from './hypercore-types';
 

@@ -8,8 +8,8 @@ import assert from 'assert';
 import pify from 'pify';
 import tempy from 'tempy';
 
-import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { PublicKey, createKeyPair } from '@dxos/crypto';
+import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
 
@@ -19,7 +19,7 @@ describe('FeedDescriptor', () => {
 
   test('Create', () => {
     const { publicKey, secretKey } = createKeyPair();
-    const fd = new FeedDescriptor({ 
+    const fd = new FeedDescriptor({
       storage: createStorage('', STORAGE_NODE),
       key: PublicKey.from(publicKey),
       secretKey

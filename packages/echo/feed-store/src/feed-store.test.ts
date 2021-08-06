@@ -10,10 +10,10 @@ import hypertrie from 'hypertrie';
 import pify from 'pify';
 import tempy from 'tempy';
 
+import { PublicKey, createKeyPair } from '@dxos/crypto';
 import { IStorage, STORAGE_NODE, STORAGE_RAM, createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedStore } from './feed-store';
-import { PublicKey, createKeyPair } from '@dxos/crypto';
 import { Feed } from './hypercore-types';
 
 interface KeyPair {
@@ -283,7 +283,7 @@ describe('FeedStore', () => {
       }
     });
 
-    const publicKey= PublicKey.from(createKeyPair().publicKey);
+    const publicKey = PublicKey.from(createKeyPair().publicKey);
     await expect(feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey }).key)).rejects.toThrow(/open error/);
 
     const fd = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
@@ -309,7 +309,7 @@ describe('FeedStore', () => {
       })
     });
 
-    const publicKey= PublicKey.from(createKeyPair().publicKey);
+    const publicKey = PublicKey.from(createKeyPair().publicKey);
     await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey }).key);
     const fd = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
 
@@ -326,7 +326,7 @@ describe('FeedStore', () => {
   test('on delete descriptor error should unlock the descriptor', async () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
 
-    const publicKey= PublicKey.from(createKeyPair().publicKey);
+    const publicKey = PublicKey.from(createKeyPair().publicKey);
     await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey }).key);
     const fd = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
 
@@ -592,7 +592,7 @@ describe('FeedStore', () => {
   test('update metadata', async () => {
     const root = tempy.directory();
     const feedStore = await createFeedStore(createStorage(root, STORAGE_NODE));
-    const publicKey= PublicKey.from(createKeyPair().publicKey);
+    const publicKey = PublicKey.from(createKeyPair().publicKey);
     await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey, metadata: { tag: 0 } }).key);
     let descriptor = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
     if (!descriptor) {
@@ -614,7 +614,7 @@ describe('FeedStore', () => {
   test('openFeed should wait until FeedStore is ready', async () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
     feedStore.open();
-    const publicKey= PublicKey.from(createKeyPair().publicKey);
+    const publicKey = PublicKey.from(createKeyPair().publicKey);
     const feed = await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey }).key);
     expect(feed).toBeDefined();
   });
@@ -635,7 +635,7 @@ describe('FeedStore', () => {
 
   test('createReadStream should destroy if filter throws an error', async () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
-    const publicKey= PublicKey.from(createKeyPair().publicKey);
+    const publicKey = PublicKey.from(createKeyPair().publicKey);
     await feedStore.openFeed(feedStore.createReadOnlyFeed({ key: publicKey }).key);
 
     const stream = feedStore.createReadStream(async () => {

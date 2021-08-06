@@ -35,7 +35,7 @@ describe('Stream tests', () => {
       const feedStore = new FeedStore(createStorage(directory, STORAGE_NODE), { feedOptions: { valueEncoding: codec } });
       await feedStore.open();
 
-      const { publicKey, secretKey } = createKeyPair(); 
+      const { publicKey, secretKey } = createKeyPair();
       feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
       feedKey = PublicKey.from(feed.key);
 
@@ -63,7 +63,7 @@ describe('Stream tests', () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
-    const { publicKey, secretKey } = createKeyPair(); 
+    const { publicKey, secretKey } = createKeyPair();
     const feed = await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
     const inputStream = feedStore.createReadStream({ live: true, feedStoreInfo: true });
 
@@ -102,7 +102,7 @@ describe('Stream tests', () => {
 
     // Create feeds.
     for (let i = 0; i < config.numFeeds; i++) {
-      const { publicKey, secretKey } = createKeyPair(); 
+      const { publicKey, secretKey } = createKeyPair();
       await feedStore.openFeed(feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey }).key);
     }
 

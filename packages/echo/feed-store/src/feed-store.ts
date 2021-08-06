@@ -9,8 +9,8 @@ import defaultHypercore from 'hypercore';
 import hypertrie from 'hypertrie';
 
 import { synchronized } from '@dxos/async';
-import { IStorage } from '@dxos/random-access-multi-storage';
 import { PublicKey } from '@dxos/crypto';
+import { IStorage } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
 import type { Feed, Hypercore } from './hypercore-types';
@@ -228,7 +228,7 @@ export class FeedStore extends EventEmitter {
   async openFeed (key: PublicKey): Promise<Feed> {
     assert(this._open, 'FeedStore closed');
 
-    let descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
+    const descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
 
     assert(descriptor, 'Descriptor not found');
 
@@ -254,7 +254,6 @@ export class FeedStore extends EventEmitter {
 
     return descriptor;
   }
-
 
   /**
    * Close a feed by the key.
