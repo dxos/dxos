@@ -4,9 +4,7 @@
 
 import React from 'react';
 
-import { CssBaseline } from '@material-ui/core';
 import { createMuiTheme } from '@material-ui/core/styles';
-import { ThemeProvider } from '@material-ui/styles';
 
 import { ClientInitializer } from '@dxos/react-client';
 import { ReactUXTheme } from '@dxos/react-ux';
@@ -37,10 +35,7 @@ const App = () => {
   return (
     <ClientInitializer config={initConfig}>
       <ReactUXTheme base={baseTheme}>
-        <ThemeProvider theme={baseTheme}>
-          <CssBaseline />
-          <Root />
-        </ThemeProvider>
+        <Root />
       </ReactUXTheme>
     </ClientInitializer>
   );

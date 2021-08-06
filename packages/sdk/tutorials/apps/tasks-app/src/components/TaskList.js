@@ -13,18 +13,18 @@ import {
   ListItemIcon,
   ListItemSecondaryAction,
   ListItemText,
-  TextField
+  TextField,
+  Snackbar,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
-  Share as ShareIcon
+  Share as ShareIcon,
 } from '@material-ui/icons';
 
 import { ObjectModel } from '@dxos/object-model';
-import { useParty, useSelection } from '@dxos/react-client';
-import { PartySharingDialog } from '@dxos/react-ux';
+import { useParty, useSelection, useInvitation } from '@dxos/react-client';
 
 const useStyles = makeStyles(theme => ({
   toolbar: {
@@ -74,8 +74,8 @@ const TASK_TYPE = 'example.com/type/task';
 // TODO(burdon): Scrolling list.
 
 const TaskList = ({ partyKey, hideShare = false }) => {
+  const [copiedSnackBarOpen, setCopiedSnackBarOpen] = useState(false);
   const classes = useStyles();
-  const [shareDialog, setShareDialog] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
   const scrollListRef = useRef(null);
   const party = useParty(partyKey);
@@ -90,7 +90,7 @@ const TaskList = ({ partyKey, hideShare = false }) => {
   }, [items]);
 
   const handleShare = () => {
-    setShareDialog(true);
+    handleCopyInvite();
   };
 
   const handleCreateTask = async () => {
@@ -119,19 +119,23 @@ const TaskList = ({ partyKey, hideShare = false }) => {
     await item.model.setProperty('complete', event.target.checked);
   };
 
+  const handleCopyInvite = async () => {
+    const invitation = await party.createInvitation();
+
+    const invitationText = JSON.stringify(invitation.toQueryParameters());
+    await navigator.clipboard.writeText(invitationText);
+    console.log(invitationText); // Console log is required for E2E tests.
+    setCopiedSnackBarOpen(true);
+  };
+
+
   if (!partyKey) {
     return null;
   }
 
+
   return (
     <div className={classes.fillVertically}>
-      {shareDialog && (
-        <PartySharingDialog
-          open
-          party={party}
-          onClose={() => setShareDialog(false)}
-        />
-      )}
 
       <div className={classes.container}>
         {/* Create task. */}
@@ -205,6 +209,9 @@ const TaskList = ({ partyKey, hideShare = false }) => {
           </Fab>
         </div>
       )}
+
+      <Snackbar open={copiedSnackBarOpen} onClose={() => setCopiedSnackBarOpen(false)} autoHideDuration={15000} message={`Invite code copied to your clipboard.`}>
+      </Snackbar>
     </div>
   );
 };
