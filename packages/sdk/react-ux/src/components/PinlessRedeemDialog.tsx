@@ -12,22 +12,21 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import TextField from '@material-ui/core/TextField';
 import RedeemIcon from '@material-ui/icons/Redeem';
 import Alert from '@material-ui/lab/Alert';
+
+import { defaultInvitationAuthenticator, InvitationDescriptor } from '@dxos/echo-db';
 import { useClient } from '@dxos/react-client';
 
 import DialogHeading from './DialogHeading';
-import { defaultInvitationAuthenticator, InvitationDescriptor } from '@dxos/echo-db';
-
 
 interface PinlessRedeemDialogProps extends DialogProps {
   onClose: () => void
 }
 
-
 /**
  * Component used for claiming invitations to Parties.
  * Works for both regular and `Offline` invitations.
  */
-const PinlessRedeemDialog = ({ onClose, ...props }: PinlessRedeemDialogProps ) => {
+const PinlessRedeemDialog = ({ onClose, ...props }: PinlessRedeemDialogProps) => {
   const [invitationCode, setInvitationCode] = useState('');
   const [invitationError, setInvitationError] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -39,7 +38,6 @@ const PinlessRedeemDialog = ({ onClose, ...props }: PinlessRedeemDialogProps ) =
     onClose();
   };
 
-
   const handleInvitationError = (error: string) => {
     if (error.includes('SyntaxError: Unexpected token') || error.includes('InvalidCharacterError')) {
       setInvitationError('Invalid invitation code.');
@@ -50,7 +48,6 @@ const PinlessRedeemDialog = ({ onClose, ...props }: PinlessRedeemDialogProps ) =
       console.log(error);
     }
   };
-
 
   // (zarco) TODO: add error handling
   const handleJoinParty = async (invitationCode: string) => {
@@ -74,7 +71,6 @@ const PinlessRedeemDialog = ({ onClose, ...props }: PinlessRedeemDialogProps ) =
       handleInvitationError(JSON.stringify(error));
     }
   };
-
 
   const handleKeyDown = (event: { key: string }) => {
     if (event.key === 'Enter') {
@@ -129,7 +125,7 @@ const PinlessRedeemDialog = ({ onClose, ...props }: PinlessRedeemDialogProps ) =
                 </Button>
               </DialogActions>
             </DialogContent>
-          )}
+      )}
     </Dialog>
   );
 };
