@@ -17,40 +17,41 @@ module.exports = {
         githubRepo: 'dxos/protocols',
         sidebarCategories: {
           null: [
-            'test'
+            'index' // Required.
           ],
-          // 'Full-Stack Tutorial': [
-          //   'tutorial/introduction',
-          //   'tutorial/client',
-          //   'tutorial/profile',
-          //   'tutorial/parties',
-          //   'tutorial/invitations',
-          //   'tutorial/data',
-          //   'tutorial/next-steps'
-          // ],
-          // 'Core Concepts': [
-          //   'core-concepts/party',
-          //   'core-concepts/mutations',
-          //   'core-concepts/queries',
-          //   'core-concepts/invitations'
-          // ],
-          // 'Deployment': [
-          //   'deployment/kube',
-          //   'deployment/environment',
-          // ],
-          // 'API Reference': [
-          //   'api-reference/dxos-client',
-          // ],
+          'Full-Stack Tutorial': [
+            'tutorial/introduction',
+            'tutorial/client',
+            'tutorial/profile',
+            'tutorial/parties',
+            'tutorial/mutations',
+            'tutorial/queries',
+            'tutorial/invitations',
+            'tutorial/next'
+          ],
+          'Core Concepts': [
+            'core-concepts/party',
+            'core-concepts/queries',
+            'core-concepts/mutations',
+            'core-concepts/invitations'
+          ],
+          'Publishing': [
+            'publishing/kube',
+            'publishing/configuration',
+          ],
+          'API Reference': [
+            'api-reference/dxos-client',
+          ],
         }
       }
     },
-    // {
-    //   resolve: 'gatsby-source-filesystem',
-    //   options: {
-    //     name: 'images',
-    //     path: `${__dirname}/src/assets/img`
-    //   }
-    // },
+    {
+      resolve: 'gatsby-source-filesystem',
+      options: {
+        name: 'images',
+        path: `${__dirname}/src/assets/img`
+      }
+    },
 
     // Image processing
     // https://www.gatsbyjs.org/packages/gatsby-plugin-sharp

@@ -1,10 +1,12 @@
 ---
-title: Initializing the DXOS Client
+title: Creating the Client
+sidebar_title: 1. Creating the Client
+description: Configuring and initializing the applications
 ---
 
 Every DXOS Application starts by creating a Client. The `@dxos/client` is your entry point to save and share data with peers in your network.
 
-## Create the DXOS Client
+## Create the Client
 
 Take a look at the component `src/App.js`, the top most component of your application.
 
@@ -17,7 +19,7 @@ import { ClientInitializer } from '@dxos/react-client';
 const config = {
   app: { title: 'Tasks App' },
   storage: { persistent: true },
-  swarm: { signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal' },
+  swarm: { signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal' }
 };
 
 const App = () => {
@@ -48,7 +50,6 @@ import { useClient } from '@dxos/react-client';
 
 const Root = () => {
   const client = useClient();
-
   return JSON.stringify(client.config);
 };
 
