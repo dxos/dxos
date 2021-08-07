@@ -2,7 +2,7 @@
 
 ## Documentation
 
-To spin up this repo documentation on your local environment please follow this steps:
+To spin up this repo documentation on your local environment:
 
 ```bash
 $ yarn

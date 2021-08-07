@@ -17,7 +17,7 @@ module.exports = {
         githubRepo: 'dxos/protocols',
         sidebarCategories: {
           null: [
-            'index'
+            'test'
           ],
           // 'Full-Stack Tutorial': [
           //   'tutorial/introduction',
