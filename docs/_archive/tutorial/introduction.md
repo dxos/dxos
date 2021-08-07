@@ -2,14 +2,26 @@
 title: Introduction
 ---
 
-This tutorial leads you through building a shareable task list app powered by [DXOS](https://github.com/dxos).
-
 We have created a full-stack, real world example application to demonstrate the main aspects of the DXOS architecture
 and to make you feel comfortable building your own applications.
 
-### Prerequisites
+## What we'll build
 
-This tutorial assumes you are familiar with ES6, Node, and React.
+This tutorial will lead you through the process of building a collaborative task list app powered by DXOS.
+
+<br/>
+
+![data](./images/data-05.png)
+
+<br/>
+
+TL;DR. If you want to jump ahead and look at the code directly, here is the Github
+[@dxos/dxos-tutorial-tasks-app](https://github.com/dxos/dxos-tutorial-tasks-app) repository.
+
+
+## Prerequisites
+
+This tutorial assumes you are familiar with ES6, NodeJS, and React.
 Before proceeding, make sure your system meets the following requirements:
 
 - Node.js v12+

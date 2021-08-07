@@ -17,12 +17,10 @@ import { useClient } from '@dxos/react-client';
 
 const PartySettings = ({}) => {
   const client = useClient();
-
   const [title, setTitle] = useState('');
 
   const handleSubmit = async () => {
     const party = await client.echo.createParty({ title });
-
     await party.setProperty('title', title);
   };
 
@@ -56,7 +54,8 @@ const PartyList = ({}) => {
 };
 ```
 
-Finally, create a [`Main`](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/src/components/Main.js) component to give our app some layout.
+Finally, create a [`Main`](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/src/components/Main.js) 
+component to give our app some layout.
 
 Go to your `src/components/Root.js` and render the `Main` component on the created profile section.
 

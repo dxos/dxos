@@ -4,7 +4,7 @@ title: Initializing the DXOS Client
 
 Every DXOS Application starts by creating a Client. The `@dxos/client` is your entry point to save and share data with peers in your network.
 
-## Create a Client
+## Create the DXOS Client
 
 Take a look at the component `src/App.js`, the top most component of your application.
 
@@ -34,6 +34,7 @@ export default App;
 This `ClientInitializer` is a React component that facilitates the process of initializing and providing a DXOS client instance to the application.
 
 It creates a new `Client` from `@dxos/client` and uses [React Context](https://reactjs.org/docs/context.html) to make the instance accessible anywhere in the app.
+
 
 ## Retrieve the Client Instance
 
