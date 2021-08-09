@@ -93,11 +93,17 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   // Share and replicate all known feeds.
   const repl = new Replicator({
     load: async () => {
+      console.log('load')
       return feedStore.getOpenFeeds();
     },
 
     subscribe: (add: (feed: any) => void) => {
-      const onFeed = (feed: any) => add(feed);
+      console.log('subscribe')
+      const onFeed = (feed: any) => {
+        console.log('onFeed', feed)
+
+        add(feed)
+      };
       feedStore.on('feed', onFeed);
       return () => {
         feedStore.removeListener('feed', onFeed);
@@ -105,7 +111,8 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
     },
 
     replicate: async (feeds: Feed[]) => {
-      for await (const feed of feeds) {
+      console.log('replicate')
+      for (const feed of feeds) {
         if (feed.key) {
           await feedStore.createReadOnlyFeed({ key: PublicKey.from(feed.key) });
         }

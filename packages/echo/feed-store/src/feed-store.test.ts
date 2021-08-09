@@ -15,6 +15,7 @@ import { IStorage, STORAGE_NODE, STORAGE_RAM, createStorage } from '@dxos/random
 
 import { FeedStore } from './feed-store';
 import { Feed } from './hypercore-types';
+import { sleep } from '@dxos/async';
 
 interface KeyPair {
   key: PublicKey,
@@ -655,4 +656,43 @@ describe('FeedStore', () => {
     await feedStore.deleteAllDescriptors();
     expect(feedStore.getDescriptors().length).toBe(0);
   });
+
+  test('creating same feed twice should error', async () => {
+    const { feedStore } = await createDefault()
+
+    const key = PublicKey.random()
+    await feedStore.createReadOnlyFeed({ key })
+
+    await expect(feedStore.createReadOnlyFeed({ key })).rejects.toBeInstanceOf(Error);
+  })
+
+  // test('creating same feed twice should error', async () => {
+  //   const { feedStore } = await createDefault()
+
+  //   const key = PublicKey.random()
+  //   const secretKey = PublicKey.random()
+  //   await feedStore.createReadWriteFeed({ key, secretKey })
+
+  //   await expect(feedStore.createReadWriteFeed({ key, secretKey })).rejects.toBeInstanceOf(Error);
+  // })
+
+  test('feed event does not get called twice', async () => {
+    const { feedStore } = await createDefault()
+
+    let timesCalled = 0;
+    feedStore.on('feed', () => {
+      timesCalled++;
+    })
+
+    const key = PublicKey.random()
+    await feedStore.createReadOnlyFeed({ key })
+
+    await feedStore.openFeed(key)
+    await feedStore.openFeed(key)
+    await feedStore.openFeed(key)
+
+    await sleep(20) // To flush events
+
+    expect(timesCalled).toEqual(1)
+  })
 });
