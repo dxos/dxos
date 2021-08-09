@@ -16,9 +16,7 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 import { Client } from '@dxos/client';
 
 const client = new Client({
-  app,
-  storage,
-  swarm,
+  swarm: { signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal' }
 });
 ```
 

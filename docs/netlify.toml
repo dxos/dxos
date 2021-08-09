@@ -2,6 +2,8 @@
 # https://docs.netlify.com/configure-builds/file-based-configuration
 #
 
+# TODO(burdon): Is this used or configured via the Netlify dashboard?
+
 [build]
   base = "docs/"
   publish = "public/"
