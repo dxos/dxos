@@ -198,7 +198,7 @@ it('Attempt to add a badly formatted key', async () => {
     secretKey: keyToString(good.secretKey)
   };
 
-  await expect(() => keyring.addKeyRecord(bad as any)).toThrow(assert.AssertionError as any);
+  await expect(() => keyring.addKeyRecord(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
 });
 
 it('Attempt to add a keyRecord missing its secretKey', async () => {
@@ -208,7 +208,7 @@ it('Attempt to add a keyRecord missing its secretKey', async () => {
     publicKey: good.publicKey
   };
 
-  await expect(() => keyring.addKeyRecord(bad as any)).toThrow(assert.AssertionError as any);
+  await expect(() => keyring.addKeyRecord(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
 });
 
 it('Attempt to add a keyRecord missing its publicKey', async () => {
@@ -218,7 +218,7 @@ it('Attempt to add a keyRecord missing its publicKey', async () => {
     secretKey: good.secretKey
   };
 
-  await expect(() => keyring.addKeyRecord(bad as any)).toThrow(assert.AssertionError as any);
+  await expect(() => keyring.addKeyRecord(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
 });
 
 it('Attempt to add keyRecord with reversed publicKey/secretKey', async () => {
@@ -229,7 +229,7 @@ it('Attempt to add keyRecord with reversed publicKey/secretKey', async () => {
     publicKey: good.secretKey
   };
 
-  await expect(() => keyring.addKeyRecord(bad as any)).toThrow(assert.AssertionError as any);
+  await expect(() => keyring.addKeyRecord(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
 });
 
 it('Attempt to add secretKey as a publicKey', async () => {
@@ -239,7 +239,7 @@ it('Attempt to add secretKey as a publicKey', async () => {
     publicKey: secretKey
   };
 
-  await expect(() => keyring.addPublicKey(bad as any)).toThrow(assert.AssertionError as any);
+  await expect(() => keyring.addPublicKey(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
 });
 
 it('Tamper with the contents of a signed message', async () => {
