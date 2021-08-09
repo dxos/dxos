@@ -45,13 +45,13 @@ export class FeedStoreAdapter {
     for await (const descriptor of this._feedStore.getDescriptors()) {
       if (!descriptor.opened) {
         if (descriptor.secretKey) {
-          await this._feedStore.createReadWriteFeed({ 
+          await this._feedStore.createReadWriteFeed({
             key: descriptor.key,
             secretKey: descriptor.secretKey,
             metadata: descriptor.metadata
           });
         } else {
-          await this._feedStore.createReadOnlyFeed({ 
+          await this._feedStore.createReadOnlyFeed({
             key: descriptor.key,
             metadata: descriptor.metadata
           });
