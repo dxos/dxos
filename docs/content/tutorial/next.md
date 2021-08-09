@@ -19,4 +19,4 @@ You can find all the code for this tutorial on this Github [@dxos/dxos-tutorial-
 
 After this section, we recommend moving on to:
 
-- [Deployment](../deployment/configuration): Learn how to make your app public for anyone on the Internet.
+- [Deployment](../publishing/configuration): Learn how to make your app public for anyone on the Internet.
