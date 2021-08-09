@@ -4,12 +4,14 @@
 
 import React, { useState } from 'react';
 
-import { AppBar, Drawer, IconButton, Toolbar, Typography, Tooltip } from '@material-ui/core';
+import { AppBar, Drawer, IconButton, Toolbar, Typography, Tooltip, List, ListItem, ListItemText, Popover, ListItemIcon } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import {
   AccountCircle as AccountIcon,
   DeleteForever as ResetIcon,
-  Work as WorkIcon
+  FormatListBulleted,
+  Work as WorkIcon,
+  MoreVert as MoreVertIcon,
 } from '@material-ui/icons';
 
 import { useClient, useProfile } from '@dxos/react-client';
@@ -55,7 +57,13 @@ const Main = () => {
   const client = useClient();
   const profile = useProfile();
   const [partyKey, setPartyKey] = useState();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = React.useState(null);
 
+  const handleButtonClick = (event) => {
+    setAnchorEl(event.currentTarget);
+    setProfileMenuOpen(true);
+  };
   const handleResetStorage = async () => {
     const reset = confirm('Are you sure you want to reset storage?');
     if (reset) {
@@ -81,11 +89,34 @@ const Main = () => {
               <AccountIcon className='account-icon' />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Reset Storage">
-            <IconButton color='inherit' onClick={handleResetStorage}>
-              <ResetIcon className='reset-icon' />
-            </IconButton>
-          </Tooltip>
+          <IconButton variant="contained" color="inherit" onClick={handleButtonClick}>
+            <MoreVertIcon></MoreVertIcon>
+          </IconButton>
+          <Popover
+            open={profileMenuOpen}
+            anchorEl={anchorEl}
+            onClose={() => {
+              setProfileMenuOpen(false);
+            }}
+            // anchorEl={mediaSourceAnchorEl}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left'
+            }}
+            transformOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left'
+            }}
+          >
+            <List dense>
+              <ListItem button onClick={handleResetStorage}>
+                <ListItemIcon>
+                  <ResetIcon className='reset-icon' />
+                </ListItemIcon>
+                <ListItemText primary="Reset Storage"></ListItemText>
+              </ListItem>
+            </List>
+          </Popover>
         </Toolbar>
       </AppBar>
 
