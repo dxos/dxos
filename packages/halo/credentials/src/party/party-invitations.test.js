@@ -5,6 +5,7 @@
 // dxos-testing-browser
 
 import debug from 'debug';
+import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { randomBytes } from '@dxos/crypto';
@@ -44,7 +45,7 @@ const createPartyKeyrings = async () => {
   };
 };
 
-test('PartyInvitation messages', async () => {
+it('PartyInvitation messages', async () => {
   const rendezvousKey = randomBytes();
   const { keyring, partyKey, identityKey, feedKey } = await createPartyKeyrings();
   const { keyring: inviteeKeyring, identityKey: inviteeKey } = await createPartyKeyrings();
