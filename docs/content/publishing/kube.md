@@ -2,7 +2,7 @@
 title: Publishing to DXNS
 ---
 
-> Make sure to have read [Environment Configuration](./environment) section first.
+> Make sure to have read [Environment Configuration](./configuration) section first.
 
 ## Build Settings
 

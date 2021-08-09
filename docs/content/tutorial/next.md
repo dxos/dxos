@@ -4,8 +4,8 @@ sidebar_title: 7. Next Steps
 description:
 ---
 
-Congratulations! 🎉 You've completed the DXOS full-stack tutorial. 
-You're now ready to dive into each individual part of the DXOS platform. 
+Congratulations! 🎉 You've completed the DXOS full-stack tutorial.
+You're now ready to dive into each individual part of the DXOS platform.
 
 Let's review what we've covered:
 
@@ -19,4 +19,4 @@ You can find all the code for this tutorial on this Github [@dxos/dxos-tutorial-
 
 After this section, we recommend moving on to:
 
-- [Deployment](../../content/deployment/environment): Learn how to make your app public for anyone on the Internet.
+- [Deployment](../deployment/configuration): Learn how to make your app public for anyone on the Internet.
