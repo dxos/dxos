@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { patchBufferCodec } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey, createKeyPair } from '@dxos/crypto';
 import {
   codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
 } from '@dxos/echo-protocol';
@@ -44,7 +44,18 @@ export class FeedStoreAdapter {
     // we don't have any feeds we don't need to be open.
     for await (const descriptor of this._feedStore.getDescriptors()) {
       if (!descriptor.opened) {
-        await this._feedStore.openFeed(descriptor.key);
+        if (descriptor.secretKey) {
+          await this._feedStore.createReadWriteFeed({ 
+            key: descriptor.key,
+            secretKey: descriptor.secretKey,
+            metadata: descriptor.metadata
+          });
+        } else {
+          await this._feedStore.createReadOnlyFeed({ 
+            key: descriptor.key,
+            metadata: descriptor.metadata
+          });
+        }
       }
     }
   }
@@ -81,11 +92,19 @@ export class FeedStoreAdapter {
 
     // TODO(telackey): 'writable' is true property of the Feed, not just its Descriptor's metadata.
     // Using that real value would be preferable to using metadata, but I think it requires the Feed be open.
-    return this._feedStore.openFeed({ metadata: { partyKey: partyKey.asBuffer(), writable: true } } as any);
+    const { publicKey, secretKey } = createKeyPair();
+    return this._feedStore.createReadWriteFeed({
+      key: PublicKey.from(publicKey),
+      secretKey,
+      metadata: { partyKey: partyKey.asBuffer(), writable: true }
+    });
   }
 
   createReadOnlyFeed (feedKey: FeedKey, partyKey: PartyKey): Promise<Feed> {
-    return this._feedStore.openFeed({ key: feedKey.asBuffer(), metadata: { partyKey: partyKey.asBuffer() } } as any);
+    return this._feedStore.createReadOnlyFeed({
+      key: feedKey,
+      metadata: { partyKey: partyKey.asBuffer() }
+    });
   }
 
   createIterator (

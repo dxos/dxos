@@ -154,7 +154,12 @@ describe('Party manager', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     // TODO(burdon): Create multiple feeds.
-    const feed = await feedStore.feedStore.openFeed({ metadata: { partyKey: partyKey.publicKey } } as any);
+    const { publicKey, secretKey } = createKeyPair();
+    const feed = await feedStore.feedStore.createReadWriteFeed({
+      key: PublicKey.from(publicKey),
+      secretKey,
+      metadata: { partyKey: partyKey.publicKey }
+    });
     const feedKey = await keyring.addKeyRecord({
       publicKey: PublicKey.from(feed.key),
       secretKey: feed.secretKey,
@@ -203,7 +208,12 @@ describe('Party manager', () => {
       const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
       // TODO(burdon): Create multiple feeds.
-      const feed = await feedStore.openFeed({ metadata: { partyKey: partyKey.publicKey, writable: true } } as any);
+    const { publicKey, secretKey } = createKeyPair();
+    const feed = await feedStore.createReadWriteFeed({
+      key: PublicKey.from(publicKey),
+      secretKey,
+      metadata: { partyKey: partyKey.publicKey, writable: true }
+    });
       const feedKey = await keyring.addKeyRecord({
         publicKey: PublicKey.from(feed.key),
         secretKey: feed.secretKey,
