@@ -98,7 +98,6 @@ const Main = () => {
             onClose={() => {
               setProfileMenuOpen(false);
             }}
-            // anchorEl={mediaSourceAnchorEl}
             anchorOrigin={{
               vertical: 'bottom',
               horizontal: 'left'
