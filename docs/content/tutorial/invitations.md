@@ -1,33 +1,10 @@
 ---
-title: Inviting peers
+title: Sharing and replication
+sidebar_title: 6. Sharing and replication
+description: Managing peers and replication
 ---
 
 In order to share data we add to the party, we have to invite other peers to it. There are two steps required in this process: creating an invitation and redeeming an invitation.
-
-> ### Webpack Settings
->
-> Before starting, we need to make sure we have the following Webpack settings to be able to polyfill Node Buffer to run in the browser.
->
-> ```jsx:title=<root>/craco.config.js
-> module.exports = {
->   webpack: {
->     config: {
->       node: {
->         Buffer: false,
->       },
->     },
->     plugins: {
->       add: [
->         new webpack.ProvidePlugin({
->           Buffer: [require.resolve('buffer/'), 'Buffer'],
->         }),
->       ],
->     },
->   },
-> };
-> ```
->
-> If you have your app running, stop it and start it again so it takes the new changes above. You are ready to go!
 
 ## Create an Invitation
 
@@ -83,7 +60,7 @@ const Main = () => {
 
 On your browser, when selecting your party from the list, you will see a share button at the bottom of the page. Clicking on it will copy the invitation code to clipboard:
 
-![Invite Button](./images/invite-00.png)
+![Invite Button](images/invite-00.png)
 
 ## Redeem Invitation
 
@@ -126,7 +103,7 @@ We are rendering now the `PinlessRedeemDialog` and also a button to show it.
 
 If you go to your app in the browser, you will see that button next to the create party button. Go ahead and try it yourself.
 
-![Redeem Dialog Enter Code](./images/invite-04.png)
+![Redeem Dialog Enter Code](images/invite-04.png)
 
 ## Test it yourself
 

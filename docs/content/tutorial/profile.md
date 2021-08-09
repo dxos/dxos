@@ -1,10 +1,12 @@
 ---
-title: Creating the user's profile
+title: Creating the user profile
+sidebar_title: 2. Creating the user profile
+description: Managing users
 ---
 
 After we connect a Client to our React Application, the very first step is to get the user's profile.
 
-## Check If a Profile Is Created
+## Check If a profile exists
 
 The Client stores the profile for you. You can easily check if the user has already created a profile by using the react hook `useProfile` provided by `@dxos/react-client`:
 
@@ -23,7 +25,7 @@ const Root = () => {
 };
 ```
 
-## Create a Profile
+## Create a profile
 
 Profile creation is handled through the `client.halo` object. We need to send a username provided by the user.
 
@@ -54,6 +56,6 @@ const Root = () => {
 
 See your app again, you should now see:
 
-![Tasks App - Create Profile](./images/introduction-00.png)
+![Tasks App - Create Profile](images/introduction-00.png)
 
 Complete with a profile name of your choice and submit the form.
