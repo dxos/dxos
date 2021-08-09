@@ -78,10 +78,67 @@ This tool will be used to override some Webpack settings that are required for D
 You can read more about it [here](https://github.com/gsoft-inc/craco)
 
 ```bash
-yarn add @craco/craco
+yarn add @craco/craco @jackwilsdon/craco-use-babelrc'
 ```
 
-Create a `craco.config.js` file at the root of your project with [this](https://github.com/dxos/tutorial-tasks-app/blob/master/craco.config.js) settings. We will explain the specific settings on later sections.
+Create a `craco.config.js` file at the root of your project with the following script:
+
+```js
+const webpack = require('webpack');
+const path = require('path');
+const { ConfigPlugin } = require('@dxos/config/ConfigPlugin');
+const BabelRcPlugin = require('@jackwilsdon/craco-use-babelrc');
+
+const PUBLIC_URL = process.env.PUBLIC_URL || '';
+
+module.exports = {
+  plugins: [
+    {
+      plugin: BabelRcPlugin
+    }
+  ],
+  webpack: {
+    configure: (webpackConfig, { env, paths }) => {
+      const buildFolder = path.join(__dirname, 'dist')
+
+      webpackConfig.entry = './src/index.js'
+
+      webpackConfig.output = {
+        ...webpackConfig.output,
+        path: buildFolder,
+        filename: '[name].bundle.js',
+        chunkFilename: '[name].[contenthash:8].chunk.js',
+        publicPath: PUBLIC_URL,
+      };
+
+      paths.appBuild = buildFolder;
+
+      return webpackConfig;
+    },
+    plugins: {
+      add: [
+        new ConfigPlugin({
+          path: path.resolve(__dirname, 'config'),
+          dynamic: process.env.CONFIG_DYNAMIC
+        }),
+        new webpack.ContextReplacementPlugin(/\/common\/temp\/node_modules\/.pnpm\//, (data) => {
+          data.dependencies.forEach(dependency => delete dependency.critical)
+          return data;
+        }),
+        new webpack.ProvidePlugin({
+          Buffer: [require.resolve('buffer/'), 'Buffer']
+        })
+      ],
+    },
+    config: {
+      node: {
+        Buffer: false
+      }
+    }
+  },
+};
+```
+> The Webpack settings are required to polyfill the NodeJS Buffer object to run in the browser.
 
 Then go to your `package.json` and in your npm scripts replace `react-scripts` with `craco`:
 
@@ -96,27 +153,12 @@ Then go to your `package.json` and in your npm scripts replace `react-scripts` w
 }
 ```
 
-## Webpack Settings
+After that, create a `.babelrc` file at the root of your project with the following code:
 
-The following Webpack settings are required to polyfill the NodeJS `Buffer` object to run in the browser.
-
-```jsx:title=<root>/craco.config.js
-module.exports = {
-  webpack: {
-    config: {
-      node: {
-        Buffer: false,
-      },
-    },
-    plugins: {
-      add: [
-        new webpack.ProvidePlugin({
-          Buffer: [require.resolve('buffer/'), 'Buffer'],
-        }),
-      ],
-    },
-  },
-};
+```json
+{
+  "presets": ["@babel/preset-env", "@babel/preset-react"]
+}
 ```
 
 If you have your app running, stop it and start it again so it takes the new changes above. You are ready to go!

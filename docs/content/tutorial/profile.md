@@ -11,6 +11,8 @@ After we connect a Client to our React Application, the very first step is to ge
 The Client stores the profile for you. You can easily check if the user has already created a profile by using the react hook `useProfile` provided by `@dxos/react-client`:
 
 ```jsx:title=src/components/Root.js
+/*  React imports  */ 
+
 import { useClient, useProfile } from '@dxos/react-client';
 
 const Root = () => {
@@ -45,7 +47,7 @@ const Root = () => {
       }
     };
 
-    return <ProfileDialog open onSubmit={handleRegistration} />;
+    return <ProfileDialog open onClose={handleRegistration} />;
   }
 
   return JSON.stringify(profile);
