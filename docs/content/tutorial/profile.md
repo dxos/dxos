@@ -54,7 +54,7 @@ const Root = () => {
 };
 ```
 
-> You can see our ProfileDialog component on [Github](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/src/components/ProfileDialog.js).
+> You can see our ProfileDialog component on [Github](https://github.com/dxos/tutorial-tasks-app/blob/master/src/components/ProfileDialog.js).
 
 See your app again, you should now see:
 

@@ -60,8 +60,7 @@ const PartyList = ({}) => {
 };
 ```
 
-Finally, create a [`Main`](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/src/components/Main.js) 
-component to give our app some layout.
+Finally, create a [`Main`](https://github.com/dxos/tutorial-tasks-app/blob/master/src/components/Main.js) component to give our app some layout.
 
 > - At this point, we haven't created the `TaskList` component yet. Therefore, you can skip this import by now commenting out its respective codes on `line 18` and `line 110`;
 >  - Since we don't have any Material theme settings by now, you can use any value in the style variables you want;

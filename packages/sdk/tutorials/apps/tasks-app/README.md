@@ -6,6 +6,13 @@ This project is meant to be a guideline for new developers to build an applicati
 
 The application has been created with [Create React App](https://reactjs.org/docs/create-a-new-react-app.html) and its config has been extended through [CRACO](https://github.com/gsoft-inc/craco).
 
+- [NVM](https://github.com/nvm-sh/nvm) (optional)
+
+You could use our suggested version by running:
+```bash
+$ nvm use
+```
+
 ## Configuration
 
 Take a look at our `@dxos/config` package to understand how the configuration is loaded on the application.
