@@ -1,8 +1,6 @@
 ---
-title: Environment configuration
+title: Configuration
 ---
-
-TODO(burdon): Ask Dmytro to simplify (remove) configuration across entire tutorial.
 
 The `config` object we send to our client during initialization shouldn't be directly define on our code, but rather provided on each environment.
 
@@ -61,7 +59,7 @@ Defaults() -> defaults.yml
 
 Finally, on our app, we should replace the `config` object with the `initConfig` function we are exporting above.
 
-## ConfigPlugin
+## Webpack ConfigPlugin
 
 To make this package work properly, we need to make sure our Webpack settings have the `ConfigPlugin` from `@dxos/config` to load the config files.
 

@@ -1,8 +1,12 @@
 ---
-title: Creating parties
+title: Managing realtime data
+sidebar_title: 3. Managing realtime data
+description: Creating and managing parties
 ---
 
-A Party is the DXOS element responsible for sharing content among the invited members. Each Party is identified by a `publicKey`.
+DXOS applications store realtime data within secure ECHO database instances called parties.
+
+Parties can be shared between users and applications synchronize updates to parties in real time across the peer-to-peer MESH network.
 
 ## Create a Party
 
@@ -17,12 +21,10 @@ import { useClient } from '@dxos/react-client';
 
 const PartySettings = ({}) => {
   const client = useClient();
-
   const [title, setTitle] = useState('');
 
   const handleSubmit = async () => {
     const party = await client.echo.createParty({ title });
-
     await party.setProperty('title', title);
   };
 
@@ -56,13 +58,14 @@ const PartyList = ({}) => {
 };
 ```
 
-Finally, create a [`Main`](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/src/components/Main.js) component to give our app some layout.
+Finally, create a [`Main`](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/src/components/Main.js) 
+component to give our app some layout.
 
 Go to your `src/components/Root.js` and render the `Main` component on the created profile section.
 
 If you go to your app in the browser, you should be able to open the dialog and create a new party:
 
-![party](./images/party-01.png)
+![party](images/party-01.png)
 
 ## Fetch Parties
 
@@ -98,7 +101,7 @@ const PartyList = ({}) => {
 
 You should now be able to see your created party. You can add your own icons and styling to the list.
 
-![party](./images/party-02.png)
+![party](images/party-02.png)
 
 ## Fetch Single Party
 
@@ -172,4 +175,4 @@ const PartyList = ({}) => {
 };
 ```
 
-![party](./images/party-03.png)
+![party](images/party-03.png)

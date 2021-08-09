@@ -2,51 +2,53 @@
 // Copyright 2020 DXOS.org
 //
 
-const themeOptions = require("@dxos/docs-theme/theme-options");
+const themeOptions = require('@dxos/docs-theme/theme-options');
 
 module.exports = {
-  pathPrefix: "/sdk",
+  pathPrefix: '/sdk',
   plugins: [
     {
-      resolve: "gatsby-theme-apollo-docs",
+      resolve: 'gatsby-theme-apollo-docs',
       options: {
         ...themeOptions,
         root: __dirname,
-        description: "DXOS - The Decentralized Operating System",
-        subtitle: "SDK",
-        githubRepo: "dxos/protocols",
+        subtitle: 'SDK',
+        description: 'DXOS: The Decentralized Operating System',
+        githubRepo: 'dxos/protocols',
         sidebarCategories: {
-          null: ["get-started"],
-          Tutorial: [
-            "tutorial/introduction",
-            "tutorial/client",
-            "tutorial/profile",
-            "tutorial/party",
-            "tutorial/invite",
-            "tutorial/data",
-            "tutorial/environment",
-            "tutorial/next-steps"
+          null: [
+            'index' // Required.
           ],
-          "Core Concepts": [
-            "core-concepts/party",
-            "core-concepts/mutations",
-            "core-concepts/queries",
-            "core-concepts/invitations"
+          'Full-Stack Tutorial': [
+            'tutorial/introduction',
+            'tutorial/client',
+            'tutorial/profile',
+            'tutorial/parties',
+            'tutorial/mutations',
+            'tutorial/queries',
+            'tutorial/invitations',
+            'tutorial/next'
           ],
-          "Deployment": [
-            "deployment/kube",
-            "deployment/environment",
+          'Core Concepts': [
+            'core-concepts/party',
+            'core-concepts/queries',
+            'core-concepts/mutations',
+            'core-concepts/invitations'
           ],
-          "API Reference": [
-            "api-reference/dxos-client",
+          'Publishing': [
+            'publishing/kube',
+            'publishing/configuration',
+          ],
+          'API Reference': [
+            'api-reference/dxos-client',
           ],
         }
       }
     },
     {
-      resolve: "gatsby-source-filesystem",
+      resolve: 'gatsby-source-filesystem',
       options: {
-        name: "images",
+        name: 'images',
         path: `${__dirname}/src/assets/img`
       }
     },
@@ -55,7 +57,7 @@ module.exports = {
     // https://www.gatsbyjs.org/packages/gatsby-plugin-sharp
     // https://www.gatsbyjs.org/packages/gatsby-transformer-sharp
     // https://github.com/lovell/sharp
-    "gatsby-plugin-sharp",
-    "gatsby-transformer-sharp"
+    'gatsby-plugin-sharp',
+    'gatsby-transformer-sharp'
   ]
 };
