@@ -81,7 +81,7 @@ You can read more about it [here](https://github.com/gsoft-inc/craco)
 yarn add @craco/craco
 ```
 
-Create a `craco.config.js` file at the root of your project with [this](https://github.com/dxos/dxos-tutorial-tasks-app/blob/master/craco.config.js) settings. We will explain the specific settings on later sections.
+Create a `craco.config.js` file at the root of your project with [this](https://github.com/dxos/tutorial-tasks-app/blob/master/craco.config.js) settings. We will explain the specific settings on later sections.
 
 Then go to your `package.json` and in your npm scripts replace `react-scripts` with `craco`:
 
