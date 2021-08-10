@@ -5,15 +5,15 @@
 // dxos-testing-browser
 
 import assert from 'assert';
+import expect from 'expect';
 
 import { createKeyPair, keyToString, randomBytes, verify, PublicKey } from '@dxos/crypto';
-import { expectToThrow } from '@dxos/debug';
 
 import { KeyType, schema } from '../proto';
 import { Filter } from './filter';
 import { Keyring } from './keyring';
 
-test('Generate keys', async () => {
+it('Generate keys', async () => {
   const keyring = new Keyring();
 
   const byType = new Map();
@@ -33,7 +33,7 @@ test('Generate keys', async () => {
   }
 });
 
-test('Update a key', async () => {
+it('Update a key', async () => {
   const keyring = new Keyring();
   const record = await keyring.createKeyRecord({ type: KeyType.DEVICE });
 
@@ -55,12 +55,12 @@ test('Update a key', async () => {
   }
 });
 
-test('Bad key attributes', async () => {
+it('Bad key attributes', async () => {
   const keyring = new Keyring();
   await expect(() => keyring.createKeyRecord({ id: 'xxx' })).rejects.toThrow();
 });
 
-test('Add/retrieve single keyRecord from an external source', async () => {
+it('Add/retrieve single keyRecord from an external source', async () => {
   const external = createKeyPair();
   const keyring = new Keyring();
   await keyring.addKeyRecord(external as any);
@@ -70,14 +70,14 @@ test('Add/retrieve single keyRecord from an external source', async () => {
   expect(keyring.hasSecretKey(internal!)).toBe(true);
 });
 
-test('Try to add/retrieve a publicKey from an external source (with secret present)', async () => {
+it('Try to add/retrieve a publicKey from an external source (with secret present)', async () => {
   const external = createKeyPair();
   const keyring = new Keyring();
 
   await expect(() => keyring.addPublicKey(external as any)).rejects.toThrow();
 });
 
-test('Add/retrieve a publicKey from an external source (without secret present)', async () => {
+it('Add/retrieve a publicKey from an external source (without secret present)', async () => {
   const external = { publicKey: createKeyPair().publicKey };
   const keyring = new Keyring();
   await keyring.addPublicKey(external as any);
@@ -87,13 +87,13 @@ test('Add/retrieve a publicKey from an external source (without secret present)'
   expect(keyring.hasSecretKey(stored!)).toBe(false);
 });
 
-test('Retrieve a non-existent key', async () => {
+it('Retrieve a non-existent key', async () => {
   const keyring = new Keyring();
   const internal = keyring.findKey(Filter.matches({ key: keyToString(randomBytes(32)) }));
   expect(internal).toBeUndefined();
 });
 
-test('Sign and verify a message with a single key', async () => {
+it('Sign and verify a message with a single key', async () => {
   const keyring = new Keyring();
   const original = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
@@ -107,7 +107,7 @@ test('Sign and verify a message with a single key', async () => {
   expect(verified).toBe(true);
 });
 
-test('Sign and verify a message with multiple keys', async () => {
+it('Sign and verify a message with multiple keys', async () => {
   const keyring = new Keyring();
   await keyring.createKeyRecord({ type: KeyType.IDENTITY });
   await keyring.createKeyRecord({ type: KeyType.DEVICE });
@@ -129,7 +129,7 @@ test('Sign and verify a message with multiple keys', async () => {
   expect(verified).toBe(true);
 });
 
-test('Sign and verify a message using a key chain', async () => {
+it('Sign and verify a message using a key chain', async () => {
   const keyringA = new Keyring();
   const identityA = await keyringA.createKeyRecord({ type: KeyType.IDENTITY });
   const deviceAA = await keyringA.createKeyRecord({ type: KeyType.DEVICE });
@@ -165,7 +165,7 @@ test('Sign and verify a message using a key chain', async () => {
   }
 });
 
-test('Attempt to sign a message with a publicKey', async () => {
+it('Attempt to sign a message with a publicKey', async () => {
   const keyring = new Keyring();
   const original = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
@@ -185,11 +185,11 @@ test('Attempt to sign a message with a publicKey', async () => {
     expect(keyring.hasSecretKey(stored!)).toBe(false);
     expect(() => {
       keyring.sign({ message: 'Test' }, [stored!]);
-    }).toThrow(assert.AssertionError);
+    }).toThrow(assert.AssertionError as any);
   }
 });
 
-test('Attempt to add a badly formatted key', async () => {
+it('Attempt to add a badly formatted key', async () => {
   const keyring = new Keyring();
   const good = createKeyPair();
   const bad = {
@@ -197,30 +197,30 @@ test('Attempt to add a badly formatted key', async () => {
     secretKey: keyToString(good.secretKey)
   };
 
-  await expectToThrow(() => keyring.addKeyRecord(bad as any), assert.AssertionError as any);
+  await expect(() => keyring.addKeyRecord(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
 });
 
-test('Attempt to add a keyRecord missing its secretKey', async () => {
+it('Attempt to add a keyRecord missing its secretKey', async () => {
   const keyring = new Keyring();
   const good = createKeyPair();
   const bad = {
     publicKey: good.publicKey
   };
 
-  await expectToThrow(() => keyring.addKeyRecord(bad as any), assert.AssertionError as any);
+  await expect(() => keyring.addKeyRecord(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
 });
 
-test('Attempt to add a keyRecord missing its publicKey', async () => {
+it('Attempt to add a keyRecord missing its publicKey', async () => {
   const keyring = new Keyring();
   const good = createKeyPair();
   const bad = {
     secretKey: good.secretKey
   };
 
-  await expectToThrow(() => keyring.addKeyRecord(bad as any), assert.AssertionError as any);
+  await expect(() => keyring.addKeyRecord(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
 });
 
-test('Attempt to add keyRecord with reversed publicKey/secretKey', async () => {
+it('Attempt to add keyRecord with reversed publicKey/secretKey', async () => {
   const keyring = new Keyring();
   const good = createKeyPair();
   const bad = {
@@ -228,20 +228,20 @@ test('Attempt to add keyRecord with reversed publicKey/secretKey', async () => {
     publicKey: good.secretKey
   };
 
-  await expectToThrow(() => keyring.addKeyRecord(bad as any), assert.AssertionError as any);
+  await expect(() => keyring.addKeyRecord(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
 });
 
-test('Attempt to add secretKey as a publicKey', async () => {
+it('Attempt to add secretKey as a publicKey', async () => {
   const { secretKey } = createKeyPair();
   const keyring = new Keyring();
   const bad = {
     publicKey: secretKey
   };
 
-  await expectToThrow(() => keyring.addPublicKey(bad as any), assert.AssertionError as any);
+  await expect(() => keyring.addPublicKey(bad as any)).rejects.toBeInstanceOf(assert.AssertionError);
 });
 
-test('Tamper with the contents of a signed message', async () => {
+it('Tamper with the contents of a signed message', async () => {
   const keyring = new Keyring();
   const message = { a: 'A', b: 'B', c: 'C' };
 
@@ -259,7 +259,7 @@ test('Tamper with the contents of a signed message', async () => {
   expect(keyring.verify(signedCopy)).toBe(false);
 });
 
-test('Tamper with the signature of a signed message', async () => {
+it('Tamper with the signature of a signed message', async () => {
   const keyring = new Keyring();
   const message = { a: 'A', b: 'B', c: 'C' };
 
@@ -277,7 +277,7 @@ test('Tamper with the signature of a signed message', async () => {
   expect(keyring.verify(signedCopy)).toBe(false);
 });
 
-test('Tamper with the signature key of a signed message', async () => {
+it('Tamper with the signature key of a signed message', async () => {
   const keyring = new Keyring();
   await keyring.createKeyRecord({ type: KeyType.IDENTITY });
   await keyring.createKeyRecord({ type: KeyType.DEVICE });
@@ -293,7 +293,7 @@ test('Tamper with the signature key of a signed message', async () => {
   expect(keyring.verify(signedCopy)).toBe(false);
 });
 
-test('To/from JSON', async () => {
+it('To/from JSON', async () => {
   const original = new Keyring();
   for (const type of Object.values(KeyType)) {
     if (typeof type === 'string') {
@@ -308,7 +308,7 @@ test('To/from JSON', async () => {
   expect(copy.keys).toEqual(original.keys);
 });
 
-test('Raw sign', async () => {
+it('Raw sign', async () => {
   const keyring = new Keyring();
   const key = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
@@ -318,7 +318,7 @@ test('Raw sign', async () => {
   expect(verify(message, signature, key.publicKey.asBuffer())).toBe(true);
 });
 
-test('To/from Protobuf', async () => {
+it('To/from Protobuf', async () => {
   const original = new Keyring();
   for (const type of Object.values(KeyType)) {
     if (typeof type === 'string') {
@@ -336,7 +336,7 @@ test('To/from Protobuf', async () => {
   expect(copy.keys).toEqual(original.keys);
 });
 
-test('Authenticate flow for Kube/Keyhole authentication', async () => {
+it('Authenticate flow for Kube/Keyhole authentication', async () => {
   const kubeKeyring = new Keyring();
   const kubeIdentity = await kubeKeyring.createKeyRecord({ type: KeyType.IDENTITY });
 

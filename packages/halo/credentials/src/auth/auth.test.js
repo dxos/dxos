@@ -5,6 +5,7 @@
 // dxos-testing-browser
 
 import debug from 'debug';
+import expect from 'expect';
 import moment from 'moment';
 
 import { randomBytes } from '@dxos/crypto';
@@ -86,7 +87,7 @@ const getIdentityKeyChainForDevice = (keyring, devicePublicKey, messages) => {
     keyring.findKeys(Filter.matches({ type: KeyType.FEED })).map(key => key.publicKey));
 };
 
-test('Chain of Keys', async () => {
+it('Chain of Keys', async () => {
   const haloKeyring = new Keyring();
   const identityKey = await haloKeyring.createKeyRecord({ type: KeyType.PARTY });
   const deviceKeyA = await haloKeyring.createKeyRecord({ type: KeyType.DEVICE });
@@ -135,7 +136,7 @@ test('Chain of Keys', async () => {
   }
 });
 
-test('PartyAuthenticator - good direct', async () => {
+it('PartyAuthenticator - good direct', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
@@ -166,7 +167,7 @@ test('PartyAuthenticator - good direct', async () => {
   expect(ok).toBe(true);
 });
 
-test('PartyAuthenticator - good chain', async () => {
+it('PartyAuthenticator - good chain', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
@@ -208,7 +209,7 @@ test('PartyAuthenticator - good chain', async () => {
   expect(ok).toBe(true);
 });
 
-test('PartyAuthenticator - bad chain', async () => {
+it('PartyAuthenticator - bad chain', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
@@ -254,7 +255,7 @@ test('PartyAuthenticator - bad chain', async () => {
 });
 
 // TODO(dboreham): This test isn't discriminating errors because when I broke the code entirely it still passed.
-test('PartyAuthenticator - wrong key', async () => {
+it('PartyAuthenticator - wrong key', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
@@ -282,7 +283,7 @@ test('PartyAuthenticator - wrong key', async () => {
   expect(ok).toBe(false);
 });
 
-test('PartyAuthenticator - wrong party', async () => {
+it('PartyAuthenticator - wrong party', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
@@ -310,7 +311,7 @@ test('PartyAuthenticator - wrong party', async () => {
   expect(ok).toBe(false);
 });
 
-test('PartyAuthenticator - missing deviceKey', async () => {
+it('PartyAuthenticator - missing deviceKey', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
@@ -340,7 +341,7 @@ test('PartyAuthenticator - missing deviceKey', async () => {
   expect(ok).toBe(false);
 });
 
-test('PartyAuthenticator - tampered message', async () => {
+it('PartyAuthenticator - tampered message', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
@@ -374,7 +375,7 @@ test('PartyAuthenticator - tampered message', async () => {
   expect(after).toBe(false);
 });
 
-test('PartyAuthenticator - tampered signature', async () => {
+it('PartyAuthenticator - tampered signature', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
@@ -408,7 +409,7 @@ test('PartyAuthenticator - tampered signature', async () => {
   expect(after).toBe(false);
 });
 
-test('PartyAuthenticator - signature too old', async () => {
+it('PartyAuthenticator - signature too old', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
@@ -444,7 +445,7 @@ test('PartyAuthenticator - signature too old', async () => {
   expect(ok).toBe(false);
 });
 
-test('PartyAuthenticator - signature too far in future', async () => {
+it('PartyAuthenticator - signature too far in future', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
@@ -480,7 +481,7 @@ test('PartyAuthenticator - signature too far in future', async () => {
   expect(ok).toBe(false);
 });
 
-test('PartyAuthenticator - signature date invalid', async () => {
+it('PartyAuthenticator - signature date invalid', async () => {
   const { keyring, partyKey } = await createPartyKeyrings();
   const party = new PartyState(partyKey);
   const auth = new PartyAuthenticator(party);
