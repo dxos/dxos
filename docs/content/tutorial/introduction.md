@@ -8,7 +8,7 @@ We have created a full-stack, real world example application to demonstrate the 
 and to make you feel comfortable building your own applications.
 
 TL;DR. If you want to jump ahead and look at the code directly, here is the Github
-[@dxos/dxos-tutorial-tasks-app](https://github.com/dxos/dxos-tutorial-tasks-app) repository.
+[@dxos/tutorial-tasks-app](https://github.com/dxos/tutorial-tasks-app) repository.
 
 ## What we'll build
 
