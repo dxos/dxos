@@ -777,13 +777,16 @@ importers:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/encoding-down': 5.0.0
+      '@types/expect': 24.3.0
       '@types/jest': 26.0.23
       '@types/json-stable-stringify': 1.0.32
       '@types/levelup': 4.3.1
       '@types/lodash.matches': 4.6.6
       '@types/memdown': 3.0.0
+      '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       '@types/stream-to-array': 2.3.0
+      expect: 27.0.2
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/async': workspace:*
@@ -799,11 +802,13 @@ importers:
       '@types/debug': ^4.1.1
       '@types/encoding-down': ^5.0.0
       '@types/end-of-stream': ^1.4.0
+      '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
       '@types/json-stable-stringify': ^1.0.32
       '@types/levelup': ^4.3.0
       '@types/lodash.matches': ^4.6.6
       '@types/memdown': ^3.0.0
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/pify': ^3.0.2
       '@types/pump': ^1.1.0
@@ -813,6 +818,7 @@ importers:
       debug: ^4.1.1
       encoding-down: ^6.3.0
       end-of-stream: ^1.4.1
+      expect: ~27.0.2
       json-stable-stringify: ^1.0.1
       leveldown: ^5.4.1
       levelup: ^4.3.2

@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import expect from 'expect';
+
 import { Filter } from './filter';
 
 const values = [
@@ -12,7 +14,7 @@ const values = [
   { z: false }
 ];
 
-test('Basic filter', () => {
+it('Basic filter', () => {
   expect(Filter.filter(values, Filter.matches({ z: true }))).toHaveLength(3);
   expect(Filter.filter(values, Filter.hasProperty('x'))).toHaveLength(2);
   expect(Filter.filter(values, Filter.propertyIn('x', [100, 200]))).toHaveLength(2);
@@ -22,7 +24,7 @@ test('Basic filter', () => {
   ))).toHaveLength(1);
 });
 
-test('Basic AND filter', () => {
+it('Basic AND filter', () => {
   expect(Filter.filter(values, Filter.and(
     Filter.matches({ z: true }),
     Filter.hasProperty('y'))

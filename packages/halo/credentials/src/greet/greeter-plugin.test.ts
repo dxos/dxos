@@ -3,6 +3,7 @@
 //
 
 import debug from 'debug';
+import expect from 'expect';
 import pump from 'pump';
 
 import { trigger } from '@dxos/async';
@@ -98,7 +99,7 @@ const connect = (source: Protocol, target: Protocol) => {
   return pump(source.stream, target.stream, source.stream);
 };
 
-test('Greeting Flow using GreetingCommandPlugin', async () => {
+it('Greeting Flow using GreetingCommandPlugin', async () => {
   const targetPartyKey = PublicKey.from(randomBytes(32));
   const secret = '0000';
 
