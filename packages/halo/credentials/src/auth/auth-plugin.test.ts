@@ -93,17 +93,11 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   // Share and replicate all known feeds.
   const repl = new Replicator({
     load: async () => {
-      console.log('load')
       return feedStore.getOpenFeeds();
     },
 
     subscribe: (add: (feed: any) => void) => {
-      console.log('subscribe')
-      const onFeed = (feed: any) => {
-        console.log('onFeed', feed)
-
-        add(feed)
-      };
+      const onFeed = (feed: any) => add(feed);
       feedStore.on('feed', onFeed);
       return () => {
         feedStore.removeListener('feed', onFeed);
@@ -111,10 +105,13 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
     },
 
     replicate: async (feeds: Feed[]) => {
-      console.log('replicate')
       for (const feed of feeds) {
-        if (feed.key) {
-          await feedStore.createReadOnlyFeed({ key: PublicKey.from(feed.key) });
+        try {
+          await feedStore.openFeed(PublicKey.from(feed.key));
+        } catch {
+          await feedStore.createReadOnlyFeed({
+            key: PublicKey.from(feed.key)
+          });
         }
       }
 
@@ -193,18 +190,19 @@ it('Auth & Repl (GOOD)', async () => {
 
   const message1 = randomBytes(32).toString('hex');
   await node1.append(message1);
-  const num = 1;
-
   await waitForExpect(async () => {
-    expect(num).toBe(1);
+    const msgs = await node2.getMessages();
+    expect(msgs).toContain(message1);
+    log(`${message1} on ${keyToString(node2.id)}.`);
   });
-  connection.destroy();
 
-  // const message2 = randomBytes(32).toString('hex');
-  // await node2.append(message2);
-  // await waitForExpect(async () => {
-  //   const msgs = await node1.getMessages();
-  //   expect(msgs).toContain(message2);
-  //   log(`${message2} on ${keyToString(node1.id)}.`);
-  // });
+  const message2 = randomBytes(32).toString('hex');
+  await node2.append(message2);
+  await waitForExpect(async () => {
+    const msgs = await node1.getMessages();
+    expect(msgs).toContain(message2);
+    log(`${message2} on ${keyToString(node1.id)}.`);
+  });
+
+  connection.destroy();
 });
