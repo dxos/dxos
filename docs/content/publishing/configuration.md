@@ -67,27 +67,46 @@ To make this package work properly, we need to make sure our Webpack settings ha
 const webpack = require('webpack');
 const path = require('path');
 const { ConfigPlugin } = require('@dxos/config/ConfigPlugin');
+const BabelRcPlugin = require('@jackwilsdon/craco-use-babelrc');
+
+const PUBLIC_URL = process.env.PUBLIC_URL || '';
 
 module.exports = {
+  plugins: [
+    {
+      plugin: BabelRcPlugin
+    }
+  ],
   webpack: {
-    config: {
-      node: {
-        Buffer: false,
-      },
+    configure: (webpackConfig, { env, paths }) => {
+      const buildFolder = path.join(__dirname, 'dist')
+      webpackConfig.entry = './src/index.js'
+      webpackConfig.output = {
+        ...webpackConfig.output,
+        path: buildFolder,
+        filename: '[name].bundle.js',
+        chunkFilename: '[name].[contenthash:8].chunk.js',
+        publicPath: PUBLIC_URL,
+      };
+      paths.appBuild = buildFolder;
+      return webpackConfig;
     },
-
     plugins: {
       add: [
-        new webpack.ProvidePlugin({
+       new webpack.ProvidePlugin({
           Buffer: [require.resolve('buffer/'), 'Buffer'],
         }),
 
-        new ConfigPlugin({
-          path: path.resolve(__dirname, 'config'),
-          dynamic: process.env.CONFIG_DYNAMIC,
-        }),
+        new webpack.ProvidePlugin({
+          Buffer: [require.resolve('buffer/'), 'Buffer']
+        })
       ],
     },
+    config: {
+      node: {
+        Buffer: false
+      }
+    }
   },
 };
 ```
