@@ -119,7 +119,7 @@ describe('Client - nonpersistent', () => {
     await waitForExpect(() => {
       const contact = clientA.halo.queryContacts().value.find(x => x.displayName === 'DXOS test 2');
       expect(contact).toBeTruthy();
-    });
+    }, 10000);
 
     const contact = clientA.halo.queryContacts().value.find(x => x.displayName === 'DXOS test 2');
 
