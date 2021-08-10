@@ -4,6 +4,7 @@
 
 // dxos-testing-browser
 
+import expect from 'expect';
 import memdown from 'memdown';
 
 import { KeyType } from '../proto';
@@ -11,7 +12,7 @@ import { Keyring } from './keyring';
 import { createKeyRecord, stripSecrets } from './keyring-helpers';
 import { KeyStore } from './keystore';
 
-test('Basic store operations', async () => {
+it('Basic store operations', async () => {
   const keystore = new KeyStore();
   const keyRecords = [];
 
@@ -52,7 +53,7 @@ test('Basic store operations', async () => {
   }
 });
 
-test('reloading', async () => {
+it('reloading', async () => {
   const db = memdown();
   const keyRecords = [];
 
