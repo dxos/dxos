@@ -1,0 +1,36 @@
+name: Pack the Tutorial and publish to separate repo
+
+on:
+  push
+
+jobs:
+  pack_tutorial:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 16.1
+    - name: Login to GitHub Container Registry
+      run: |
+        set -e
+        npm install -g @microsoft/rush pnpm
+
+        cd packages/sdk/tutorials/apps/tasks-app/
+        rushx pack:app
+
+        # Undo package.json changes that are made for packing purposes
+        git checkout -- package.json
+
+        tar -xvzf dxos-tutorials-tasks-app-0.1.0.tgz
+        git clone git@github.com:dxos/tutorial-tasks-app.git
+        # Copy including dotfiles
+        cp -R package/{.*,*} tutorial-tasks-app/
+        rm -rf package/
+
+        cd tutorial-tasks-app/
+        git add -A
+        git commit -m "Release"
+        git push origin rzadp/release-test
