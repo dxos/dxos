@@ -120,7 +120,7 @@ describe('Client - nonpersistent', () => {
       const contact = clientA.halo.queryContacts().value.find(x => x.displayName === 'DXOS test 2');
       expect(contact).toBeTruthy();
     });
-    
+
     const contact = clientA.halo.queryContacts().value.find(x => x.displayName === 'DXOS test 2');
 
     const party2A = await clientA.echo.createParty();
