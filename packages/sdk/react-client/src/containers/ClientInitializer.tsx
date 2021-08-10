@@ -8,6 +8,7 @@ import { LinearProgress } from '@material-ui/core';
 
 import { Client, ClientConfig } from '@dxos/client';
 import { MaybePromise } from '@dxos/util';
+import { ErrorBoundary, ErrorView } from '@dxos/react-ux';
 
 import ClientProvider from './ClientProvider';
 
@@ -22,24 +23,50 @@ interface ClientInitializerProperties {
  */
 const ClientInitializer = ({ children, config = {} }: ClientInitializerProperties) => {
   const [client, setClient] = useState<Client | undefined>();
-
-  useEffect(() => {
-    setImmediate(async () => {
+  const [error, setError] = useState<undefined | Error>(undefined);
+  const createClient = async () => {
+    try {
       const client = new Client(typeof config === 'function' ? await config() : config);
       await client.initialize();
-
       setClient(client);
-    });
+    } catch (error) {
+      setError(error);
+      console.error(error);
+    }
+  }
+  useEffect(() => {
+    setImmediate(createClient);
   }, []);
+
+  const handleRestart = () => {
+    window.location.reload();
+  };
+
+  const handleReset = async () => {
+    if (client) {
+      await client.reset();
+    }
+  };
+
+  if (error) {
+    return <ErrorView onRestart={handleRestart} onReset={handleReset} error={error} />;
+  }
 
   if (!client) {
     return <LinearProgress />;
   }
 
   return (
-    <ClientProvider client={client}>
-      {children}
-    </ClientProvider>
+    <ErrorBoundary
+      // It's important to print the error to the console here so sentry can report it.
+      onError={console.error}
+      onRestart={handleRestart}
+      onReset={handleReset}
+    >
+      <ClientProvider client={client}>
+        {children}
+      </ClientProvider>
+    </ErrorBoundary>
   );
 };
 
