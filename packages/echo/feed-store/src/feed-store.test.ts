@@ -39,7 +39,7 @@ async function createDefault () {
   };
 }
 
-async function defaultFeeds (feedStore: FeedStore, keys: { [k: string]: KeyPair }) : Promise<{ [k: string] : Feed }> {
+async function defaultFeeds (feedStore: FeedStore, keys: Record<string, KeyPair>) : Promise<Record<string, Feed>> {
   return Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
     feed === 'booksFeed'
       ? [feed, await feedStore.createReadWriteFeed({ key: keyPair.key, secretKey: keyPair.secretKey, metadata: { topic: 'books' } })]

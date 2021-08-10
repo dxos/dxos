@@ -4,7 +4,6 @@
 
 import expect from 'expect';
 import 'source-map-support/register';
-import waitForExpect from 'wait-for-expect';
 
 import { Client } from '@dxos/client';
 import { defaultSecretProvider } from '@dxos/credentials';
@@ -116,16 +115,11 @@ describe('Client - nonpersistent', () => {
     const invite1 = await party1A.createInvitation(defaultInvitationAuthenticator);
     await clientB.echo.joinParty(invite1, defaultSecretProvider);
 
-    await waitForExpect(() => {
-      const contact = clientA.halo.queryContacts().value.find(x => x.displayName === 'DXOS test 2');
-      expect(contact).toBeTruthy();
-    }, 10000);
-
-    const contact = clientA.halo.queryContacts().value.find(x => x.displayName === 'DXOS test 2');
+    const contact = (await clientA.halo.queryContacts().update.waitFor(contacts => !!contacts.find(x => x.displayName === 'DXOS test 2')))[0];
 
     const party2A = await clientA.echo.createParty();
 
-    const invite2 = await party2A.createOfflineInvitation(contact!.publicKey);
+    const invite2 = await party2A.createOfflineInvitation(contact.publicKey);
     await clientB.echo.joinParty(invite2);
 
     await clientA.destroy();

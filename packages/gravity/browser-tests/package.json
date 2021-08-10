@@ -33,8 +33,7 @@
     "mocha": "~8.4.0",
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2",
-    "@dxos/signal": "workspace:*",
-    "wait-for-expect": "^3.0.2"
+    "@dxos/signal": "workspace:*"
   },
   "publishConfig": {
     "access": "restricted"
