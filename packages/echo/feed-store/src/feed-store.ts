@@ -9,7 +9,7 @@ import defaultHypercore from 'hypercore';
 import hypertrie from 'hypertrie';
 
 import { synchronized } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { IStorage } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
@@ -206,6 +206,13 @@ export class FeedStore extends EventEmitter {
     }
 
     return undefined;
+  }
+
+  /**
+   * Checks if feedstore has a feed with specified key.
+   */
+  hasFeed (key: PublicKeyLike): boolean {
+    return this.getDescriptors().some(fd => fd.key.equals(key));
   }
 
   /**

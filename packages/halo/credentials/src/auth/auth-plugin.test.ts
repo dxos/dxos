@@ -106,9 +106,9 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
 
     replicate: async (feeds: Feed[]) => {
       for (const feed of feeds) {
-        try {
+        if (feedStore.hasFeed(feed.key)) {
           await feedStore.openFeed(PublicKey.from(feed.key));
-        } catch {
+        } else {
           await feedStore.createReadOnlyFeed({
             key: PublicKey.from(feed.key)
           });

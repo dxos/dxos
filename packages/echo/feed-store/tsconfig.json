@@ -19,6 +19,9 @@
     },
     {
       "path": "../../common/random-access-multi-storage"
+    },
+    {
+      "path": "../../common/crypto"
     }
   ]
 }

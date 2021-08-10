@@ -44,18 +44,7 @@ export class FeedStoreAdapter {
     // we don't have any feeds we don't need to be open.
     for await (const descriptor of this._feedStore.getDescriptors()) {
       if (!descriptor.opened) {
-        if (descriptor.secretKey) {
-          await this._feedStore.createReadWriteFeed({
-            key: descriptor.key,
-            secretKey: descriptor.secretKey,
-            metadata: descriptor.metadata
-          });
-        } else {
-          await this._feedStore.createReadOnlyFeed({
-            key: descriptor.key,
-            metadata: descriptor.metadata
-          });
-        }
+        await this._feedStore.openFeed(descriptor.key);
       }
     }
   }
