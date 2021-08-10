@@ -4,6 +4,8 @@
 
 // dxos-testing-browser
 
+import expect from 'expect';
+
 import { randomBytes } from '@dxos/crypto';
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
 import { arraysEqual } from '@dxos/util';
@@ -28,7 +30,7 @@ const createGreeter = (keyring, hints = []) => new Greeter(
   () => hints
 );
 
-test('Good invitation', async () => {
+it('Good invitation', async () => {
   const keyring = await createKeyring();
   const secret = '0000';
 
@@ -121,7 +123,7 @@ test('Good invitation', async () => {
 });
 
 // eslint-disable-next-line jest/no-done-callback
-test('Bad invitation secret', async (done) => {
+it('Bad invitation secret', async (done) => {
   const keyring = await createKeyring();
   const greeter = createGreeter(keyring);
 
@@ -160,7 +162,7 @@ test('Bad invitation secret', async (done) => {
 });
 
 // eslint-disable-next-line jest/no-done-callback
-test('Attempt to re-use invitation', async (done) => {
+it('Attempt to re-use invitation', async (done) => {
   const keyring = await createKeyring();
   const greeter = createGreeter(keyring);
 
@@ -222,7 +224,7 @@ test('Attempt to re-use invitation', async (done) => {
   done();
 });
 
-test('Wrong partyKey', async () => {
+it('Wrong partyKey', async () => {
   const keyring = await createKeyring();
   const greeter = createGreeter(keyring);
 
@@ -235,7 +237,7 @@ test('Wrong partyKey', async () => {
   }).toThrow(ERR_EXTENSION_RESPONSE_FAILED);
 });
 
-test('Create Invitation message', async () => {
+it('Create Invitation message', async () => {
   const keyring = await createKeyring();
 
   const partyKey = keyring.findKey(Filter.matches({ type: KeyType.PARTY }));
@@ -246,7 +248,7 @@ test('Create Invitation message', async () => {
   expect(keyring.verify(message.payload)).toBe(true);
 });
 
-test('WellKnownType params - BytesValue', async () => {
+it('WellKnownType params - BytesValue', async () => {
   const value = randomBytes();
 
   const command = codecLoop({

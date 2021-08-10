@@ -6,6 +6,7 @@
 
 import debug from 'debug';
 import eos from 'end-of-stream';
+import expect from 'expect';
 import pify from 'pify';
 import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
@@ -156,7 +157,7 @@ const connect = (source: any, target: any) => {
   return pump(source.stream, target.stream, source.stream) as any;
 };
 
-test('Auth Plugin (GOOD)', async () => {
+it('Auth Plugin (GOOD)', async () => {
   const keyring = await createTestKeyring();
   const partyKey = PublicKey.from(randomBytes(32));
   const node1 = await createProtocol(partyKey,
@@ -173,7 +174,7 @@ test('Auth Plugin (GOOD)', async () => {
   connection.destroy();
 });
 
-test('Auth & Repl (GOOD)', async () => {
+it('Auth & Repl (GOOD)', async () => {
   const keyring = await createTestKeyring();
   const partyKey = PublicKey.from(randomBytes(32));
   const node2 = await createProtocol(partyKey,
