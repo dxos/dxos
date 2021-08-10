@@ -96,10 +96,10 @@ module.exports = {
        new webpack.ProvidePlugin({
           Buffer: [require.resolve('buffer/'), 'Buffer'],
         }),
-
-        new webpack.ProvidePlugin({
-          Buffer: [require.resolve('buffer/'), 'Buffer']
-        })
+        new ConfigPlugin({
+          path: path.resolve(__dirname, 'config'),
+          dynamic: process.env.CONFIG_DYNAMIC
+        }),
       ],
     },
     config: {

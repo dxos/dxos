@@ -78,7 +78,7 @@ This tool will be used to override some Webpack settings that are required for D
 You can read more about it [here](https://github.com/gsoft-inc/craco)
 
 ```bash
-yarn add @craco/craco @jackwilsdon/craco-use-babelrc'
+yarn add @craco/craco @jackwilsdon/craco-use-babelrc webpack
 ```
 
 Create a `craco.config.js` file at the root of your project with the following script:
