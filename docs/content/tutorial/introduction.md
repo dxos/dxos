@@ -85,7 +85,6 @@ Create a `craco.config.js` file at the root of your project with the following s
 
 ```js
 const webpack = require('webpack');
-const path = require('path');
 const BabelRcPlugin = require('@jackwilsdon/craco-use-babelrc');
 
 module.exports = {
