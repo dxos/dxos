@@ -134,3 +134,6 @@ After that, create a `.babelrc` file at the root of your project with the follow
 ```
 
 If you have your app running, stop it and start it again so it takes the new changes above. You are ready to go!
+
+---
+> To keep the tutorial simple, we are going to omit the imports of React and its respective hooks during the sections, so don't forget to import them yourself.

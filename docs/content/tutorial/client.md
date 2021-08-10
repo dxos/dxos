@@ -13,10 +13,7 @@ Take a look at the component `src/App.js`, the top most component of your applic
 Remove everything that's within the render section and place a `ClientInitializer` from `@dxos/react-client`.
 We are providing you the necessary config object for you to start the app. We will move this config to its corresponding place in a further step.
 
-> Don't forget to import the React lib and its respective hooks into the following scripts and steps in this tutorial.
-
 ```jsx:title=src/App.js
-import React from 'react';
 import { ClientInitializer } from '@dxos/react-client';
 
 const config = {
@@ -48,7 +45,6 @@ Once we have our client built, we will be able to access the instance through th
 Go ahead and create a new `Root` component to see `useClient` in action:
 
 ```jsx:title=src/components/Root.js
-import React from 'react';
 import { useClient } from '@dxos/react-client';
 
 const Root = () => {
