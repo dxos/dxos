@@ -5,11 +5,10 @@
 // dxos-testing-browser
 
 import assert from 'assert';
+import expect from 'expect';
 
 import { createKeyPair, keyToString, randomBytes, verify, PublicKey } from '@dxos/crypto';
-import { expectToThrow } from '@dxos/debug';
 
-import expect from 'expect';
 import { KeyType, schema } from '../proto';
 import { Filter } from './filter';
 import { Keyring } from './keyring';
