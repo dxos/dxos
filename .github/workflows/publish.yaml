@@ -7,7 +7,7 @@ name: publish
 jobs:
   publish:
     runs-on: [self-hosted, dind-actions-runner]
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       matrix:
         node-version: [16.0]
@@ -40,7 +40,7 @@ jobs:
         node common/scripts/install-run-rush.js publish --publish --include-all
   publish-storybooks:
     runs-on: [self-hosted, dind-actions-runner]
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       matrix:
         node-version: [16.0]
@@ -74,7 +74,7 @@ jobs:
         rushx chromatic-docs
   publish-extension:
     runs-on: [self-hosted, dind-actions-runner]
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       matrix:
         node-version: [16.0]
