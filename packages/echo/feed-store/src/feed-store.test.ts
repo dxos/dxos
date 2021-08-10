@@ -657,7 +657,7 @@ describe('FeedStore', () => {
     expect(feedStore.getDescriptors().length).toBe(0);
   });
 
-  test('creating same feed twice should error', async () => {
+  test('creating same readonly feed twice should error', async () => {
     const { feedStore } = await createDefault();
 
     const key = PublicKey.random();
@@ -666,7 +666,7 @@ describe('FeedStore', () => {
     await expect(feedStore.createReadOnlyFeed({ key })).rejects.toBeInstanceOf(Error);
   })
 
-  test('creating same feed twice should error', async () => {
+  test('creating same read/write feed twice should error', async () => {
     const { feedStore } = await createDefault()
 
     const key = PublicKey.random();
