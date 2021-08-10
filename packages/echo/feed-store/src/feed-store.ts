@@ -240,7 +240,7 @@ export class FeedStore extends EventEmitter {
   /**
    * Create a feed to Feedstore
    */
-  createReadWriteFeed (options: CreateReadWriteFeedOptions): Promise<Feed> {
+  async createReadWriteFeed (options: CreateReadWriteFeedOptions): Promise<Feed> {
     this._createDescriptor(options);
     return this.openFeed(options.key);
   }
@@ -248,7 +248,7 @@ export class FeedStore extends EventEmitter {
   /**
    * Create a readonly feed to Feedstore
    */
-  createReadOnlyFeed (options: CreateReadOnlyFeedOptions): Promise<Feed> {
+  async createReadOnlyFeed (options: CreateReadOnlyFeedOptions): Promise<Feed> {
     this._createDescriptor(options);
     return this.openFeed(options.key);
   }
@@ -325,6 +325,11 @@ export class FeedStore extends EventEmitter {
     const defaultOptions = this._defaultFeedOptions;
 
     const { key, secretKey, valueEncoding = defaultOptions.valueEncoding, metadata } = options;
+
+    const existing = this.getDescriptors().find(fd => fd.key.equals(key));
+    if (existing) {
+      throw new Error('Desciptor with given key already exists');
+    }
 
     const descriptor = new FeedDescriptor({
       storage: this._storage,
