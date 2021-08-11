@@ -54,7 +54,8 @@ jobs:
         set -e
 
         # Copy including dotfiles
-        cp -R protocols/packages/sdk/tutorials/apps/tasks-app/package/{.*,*} tutorial-tasks-app/
+        cp -R protocols/packages/sdk/tutorials/apps/tasks-app/package/* tutorial-tasks-app/
+        cp -R protocols/packages/sdk/tutorials/apps/tasks-app/package/.* tutorial-tasks-app/
         cd tutorial-tasks-app
         git status
         git checkout -b ci/release-test
