@@ -21,6 +21,7 @@ jobs:
       with:
         persist-credentials: true
         token: ${{ secrets.CREATE_PR_TOKEN }}
+        fetch-depth: 0
     - uses: actions/setup-node@v1
       with:
         node-version: 16.1
