@@ -61,7 +61,7 @@ jobs:
         cp -R protocols/packages/sdk/tutorials/apps/tasks-app/package/.[a-zA-Z0-9]* tutorial-tasks-app
         cd tutorial-tasks-app
         git status
-        git checkout -b ci/release-test
+        git checkout -b ci/release
         git add -A
         git commit -m "Release"
-        git push -u origin ci/release-test
+        git push -u origin ci/release
