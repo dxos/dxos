@@ -37,7 +37,7 @@ export class PartyModule extends AppSimulator {
     let invitationText: string;
 
     const invitationPromise = this.browser.getPage().waitForEvent('console', message => {
-      if (message.text().match(/^.{200,}$/) && !/\s/.test(message.text())) {
+      if (message.text().match(/^(.*?(\bswarmKey\b)[^$]*)$/) && !/\s/.test(message.text())) {
         invitationText = message.text();
         return true;
       }
@@ -45,9 +45,9 @@ export class PartyModule extends AppSimulator {
       return false;
     });
 
-    await this.browser.getPage().click('[title="Copy to clipboard"]');
+    await this.browser.getPage().click('[title="Invite people"]');
 
-    await this.browser.getPage().$('text="Invite code copied"');
+    await this.browser.getPage().$('text="Invite code copied to your clipboard."');
 
     await invitationPromise;
 
