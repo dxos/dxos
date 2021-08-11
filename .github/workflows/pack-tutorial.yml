@@ -48,6 +48,7 @@ jobs:
         persist-credentials: true
         path: tutorial-tasks-app
         ref: master
+        token: ${{ secrets.CREATE_PR_TOKEN }}
     - name: Copy and push packed app
       run: |
         set -e
