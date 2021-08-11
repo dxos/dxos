@@ -465,6 +465,7 @@ importers:
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/debug': 4.1.5
@@ -481,6 +482,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/benchmark-suite': ^1.0.0-beta.1
       '@dxos/browser-runner': ^1.0.0-beta.8
+      '@dxos/crypto': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.1
@@ -648,6 +650,7 @@ importers:
       '@types/mocha': 8.2.2
       expect: 27.0.2
       mocha: 8.4.0
+      wait-for-expect: 3.0.2
     specifiers:
       '@dxos/browser-mocha': workspace:*
       '@dxos/client': workspace:*
@@ -661,6 +664,7 @@ importers:
       expect: ~27.0.2
       mocha: ~8.4.0
       source-map-support: ^0.5.12
+      wait-for-expect: ^3.0.2
   ../../packages/gravity/gravity-core:
     dependencies:
       '@dxos/async': link:../../common/async

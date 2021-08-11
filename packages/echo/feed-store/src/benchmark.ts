@@ -3,6 +3,7 @@
 //
 
 import { Suite } from '@dxos/benchmark-suite';
+import { createKeyPair, PublicKey } from '@dxos/crypto';
 import { createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedStore } from './feed-store';
@@ -27,7 +28,8 @@ const range = (n: number) => [...Array(n).keys()];
   suite.beforeAll(() => {
     return Promise.all(range(maxFeeds).map(async i => {
       const name = `feed/${i}`;
-      const feed = await fs.openFeed();
+      const { publicKey, secretKey } = createKeyPair();
+      const feed = await fs.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
 
       for (let i = 0; i < maxMessages; i++) {
         await new Promise<void>((resolve, reject) => {

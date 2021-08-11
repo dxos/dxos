@@ -4,6 +4,7 @@
 
 import pify from 'pify';
 
+import { createKeyPair, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
@@ -25,7 +26,8 @@ describe('Feed tests:', () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
-    const feed = await feedStore.openFeed();
+    const { publicKey, secretKey } = createKeyPair();
+    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
     expect(feed.length).toBe(0);
 
     const data: FeedMessage = {};
@@ -41,7 +43,8 @@ describe('Feed tests:', () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
-    const feed = await feedStore.openFeed();
+    const { publicKey, secretKey } = createKeyPair();
+    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
     const writer = createFeedWriter<FeedMessage>(feed);
 
     const data: FeedMessage = {

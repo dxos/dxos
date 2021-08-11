@@ -9,6 +9,7 @@ import defaultHypercore from 'hypercore';
 import hypertrie from 'hypertrie';
 
 import { synchronized } from '@dxos/async';
+import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { IStorage } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
@@ -23,15 +24,21 @@ type DescriptorCallback = (descriptor: FeedDescriptor) => boolean;
 type StreamCallback = (descriptor: FeedDescriptor) => Object | undefined;
 
 interface CreateDescriptorOptions {
-  key?: Buffer,
+  key: PublicKey,
   secretKey?: Buffer,
   valueEncoding?: string,
   metadata?: any
 }
 
-interface OpenFeedOptions {
-  key?: Buffer,
-  secretKey?: Buffer,
+interface CreateReadWriteFeedOptions {
+  key: PublicKey,
+  secretKey: Buffer
+  valueEncoding?: string,
+  metadata?: any
+}
+
+interface CreateReadOnlyFeedOptions {
+  key: PublicKey
   valueEncoding?: string,
   metadata?: any
 }
@@ -126,7 +133,7 @@ export class FeedStore extends EventEmitter {
     const list = await this._indexDB.list(STORE_NAMESPACE);
 
     list.forEach((data: any) => {
-      this._createDescriptor(data);
+      this._createDescriptor({ ...data, key: PublicKey.from(data.key) }); // cause we don't have PublicKey deserialization
     });
 
     this.emit('opened');
@@ -202,6 +209,13 @@ export class FeedStore extends EventEmitter {
   }
 
   /**
+   * Checks if feedstore has a feed with specified key.
+   */
+  hasFeed (key: PublicKeyLike): boolean {
+    return this.getDescriptors().some(fd => fd.key.equals(key));
+  }
+
+  /**
    * Open multiple feeds using a filter callback.
    */
   @synchronized
@@ -216,23 +230,14 @@ export class FeedStore extends EventEmitter {
 
   /**
    * Open a feed to FeedStore.
-   *
-   * If the feed already exists but is not loaded it will load the feed instead of
-   * creating a new one.
-   *
-   * Similar to fs.open
    */
   @synchronized
-  async openFeed (options: OpenFeedOptions = {}): Promise<Feed> {
+  async openFeed (key: PublicKey): Promise<Feed> {
     assert(this._open, 'FeedStore closed');
 
-    const { key } = options;
+    const descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
 
-    let descriptor = key && this.getDescriptors().find(fd => fd.key.equals(key));
-
-    if (!descriptor) {
-      descriptor = this._createDescriptor(options);
-    }
+    assert(descriptor, 'Descriptor not found');
 
     const feed = await descriptor.open();
 
@@ -240,16 +245,32 @@ export class FeedStore extends EventEmitter {
   }
 
   /**
+   * Create a feed to Feedstore
+   */
+  async createReadWriteFeed (options: CreateReadWriteFeedOptions): Promise<Feed> {
+    this._createDescriptor(options);
+    return this.openFeed(options.key);
+  }
+
+  /**
+   * Create a readonly feed to Feedstore
+   */
+  async createReadOnlyFeed (options: CreateReadOnlyFeedOptions): Promise<Feed> {
+    this._createDescriptor(options);
+    return this.openFeed(options.key);
+  }
+
+  /**
    * Close a feed by the key.
    */
   @synchronized
-  async closeFeed (key: Buffer) {
+  async closeFeed (key: PublicKey) {
     assert(this._open, 'FeedStore closed');
 
     const descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
 
     if (!descriptor) {
-      throw new Error(`Feed not found: ${key.toString('hex')}`);
+      throw new Error(`Feed not found: ${key.toString()}`);
     }
 
     await descriptor.close();
@@ -270,14 +291,14 @@ export class FeedStore extends EventEmitter {
    * NOTE: This operation would not close the feed.
    */
   @synchronized
-  async deleteDescriptor (key: Buffer) {
+  async deleteDescriptor (key: PublicKey) {
     assert(this._open, 'FeedStore closed');
 
     const descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
 
     if (descriptor) {
       await descriptor.lock.executeSynchronized(async () => {
-        await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key?.toString('hex')}`);
+        await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key.toString()}`);
 
         this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
 
@@ -311,6 +332,11 @@ export class FeedStore extends EventEmitter {
     const defaultOptions = this._defaultFeedOptions;
 
     const { key, secretKey, valueEncoding = defaultOptions.valueEncoding, metadata } = options;
+
+    const existing = this.getDescriptors().find(fd => fd.key.equals(key));
+    if (existing) {
+      throw new Error('Desciptor with given key already exists');
+    }
 
     const descriptor = new FeedDescriptor({
       storage: this._storage,
@@ -359,12 +385,12 @@ export class FeedStore extends EventEmitter {
    * Persist in the db the FeedDescriptor.
    */
   private async _persistDescriptor (descriptor: FeedDescriptor) {
-    const key = `${STORE_NAMESPACE}/${descriptor.key?.toString('hex')}`;
+    const key = `${STORE_NAMESPACE}/${descriptor.key?.toString()}`;
 
     const oldData = await this._indexDB.get(key);
 
     const newData = {
-      key: descriptor.key,
+      key: descriptor.key.asBuffer(),
       secretKey: descriptor.secretKey,
       valueEncoding: typeof descriptor.valueEncoding === 'string' ? descriptor.valueEncoding : undefined,
       metadata: descriptor.metadata

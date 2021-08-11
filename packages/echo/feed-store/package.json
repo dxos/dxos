@@ -55,7 +55,8 @@
     "@types/through2": "^2.0.36",
     "@types/from2": "~2.3.1",
     "@types/jest": "^26.0.7",
-    "@types/debug": "^4.1.1"
+    "@types/debug": "^4.1.1",
+    "@dxos/crypto": "workspace:*"
   },
   "publishConfig": {
     "access": "restricted"
