@@ -20,6 +20,8 @@ jobs:
       run: |
         set -e
         npm install -g @microsoft/rush pnpm
+        sudo ./common/scripts/install-dependencies.sh
+
         echo "::group::Install"
         node common/scripts/install-run-rush.js install
         echo "::endgroup::"
