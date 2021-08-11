@@ -1,7 +1,7 @@
-name: Pack the Tutorial and publish to separate repo
+name: Pack the Tutorial and publish to its separate repo
 
 on:
-  push
+  workflow_dispatch
 
 jobs:
   pack_tutorial:
