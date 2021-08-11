@@ -15,7 +15,7 @@ Let's review what we've covered:
 
 Please take the time to learn more about the DXOS capabilities and come up with new ideas for apps that share content. As you have seen, it's fast and easy to construct those apps using DXOS.
 
-You can find all the code for this tutorial on this Github [@dxos/dxos-tutorial-tasks-app](https://github.com/dxos/dxos-tutorial-tasks-app) repository.
+You can find all the code for this tutorial on this Github [@dxos/tutorial-tasks-app](https://github.com/dxos/tutorial-tasks-app) repository.
 
 After this section, we recommend moving on to:
 

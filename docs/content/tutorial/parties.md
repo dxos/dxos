@@ -32,6 +32,8 @@ const PartySettings = ({}) => {
 };
 ```
 
+> You can access [this](https://github.com/dxos/tutorial-tasks-app/blob/master/src/components/PartySettings.js) link to get the code of `Dialog`.
+
 Now, create a `PartyList` with a button to open the dialog (we will later display the created parties here):
 
 ```jsx:title=src/components/PartyList.js
@@ -59,6 +61,9 @@ const PartyList = ({}) => {
 ```
 
 Finally, create a [`Main`](https://github.com/dxos/tutorial-tasks-app/blob/master/src/components/Main.js) component to give our app some layout.
+
+> - Up to this point, we haven't created the `TaskList` component. Therefore, you can skip this import by commenting out the corresponding lines of code;
+> - Since we don't have any Material UI Theme, you can use any value in the style variables you need;
 
 Go to your `src/components/Root.js` and render the `Main` component on the created profile section.
 
@@ -137,7 +142,7 @@ You are going to need to add a button to each party to trigger the dialog and se
 ```jsx:title=src/components/PartyList.js
 import { useParties } from '@dxos/react-client';
 
-const PartyList = ({}) => {
+const PartyList = ({ onSelectParty }) => {
   const [{ settingsDialog, settingsPartyKey }, setSettingsDialog] = useState({});
 
   const parties = useParties();
@@ -150,7 +155,7 @@ const PartyList = ({}) => {
 
       <List disablePadding>
         {parties.map((party) => (
-          <ListItem button key={party.key}>
+          <ListItem button key={party.key} onClick={() => { onSelectParty(party.key) }}>
             <ListItemText primary={party.getProperty('title')} />
 
             <ListItemSecondaryAction className='actions'>
