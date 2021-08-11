@@ -47,6 +47,7 @@ jobs:
         repository: dxos/tutorial-tasks-app
         persist-credentials: true
         path: tutorial-tasks-app
+        ref: master
     - name: Copy and push packed app
       run: |
         set -e
