@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto",
-  "version": "2.12.0",
+  "version": "2.12.1",
   "description": "Basic crypto key utils",
   "license": "GPL-3.0",
   "main": "dist/src/index.js",
