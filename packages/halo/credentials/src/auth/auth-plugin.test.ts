@@ -11,8 +11,8 @@ import pify from 'pify';
 import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
-import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
+import { keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
+import { Feed, FeedStore } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
@@ -74,7 +74,8 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const peerId = deviceKey!.publicKey.asBuffer();
   const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
   await feedStore.open();
-  const feed = await feedStore.openFeed({ metadata: { topic } });
+  const { publicKey, secretKey } = createKeyPair();
+  const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey, metadata: { topic } });
   const append = pify(feed.append.bind(feed));
 
   const credentials = Buffer.from(codec.encode(
@@ -88,11 +89,6 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
       resolve(true);
     });
   });
-
-  const openFeed = async (key: Buffer) => {
-    return feedStore.getOpenFeed((desc: any) => desc.feed.key.equals(key)) ||
-      feedStore.openFeed({ key, metadata: { topic } });
-  };
 
   // Share and replicate all known feeds.
   const repl = new Replicator({
@@ -108,10 +104,14 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
       };
     },
 
-    replicate: async (feeds: any[]) => {
-      for await (const feed of feeds) {
-        if (feed.key) {
-          await openFeed(feed.key);
+    replicate: async (feeds: Feed[]) => {
+      for (const feed of feeds) {
+        if (feedStore.hasFeed(feed.key)) {
+          await feedStore.openFeed(PublicKey.from(feed.key));
+        } else {
+          await feedStore.createReadOnlyFeed({
+            key: PublicKey.from(feed.key)
+          });
         }
       }
 

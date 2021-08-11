@@ -53,6 +53,11 @@ function execTest (additionalArgs?: string[]) {
     console.log(chalk.bold`\njest`);
     execJest(project, additionalArgs);
   }
+
+  for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
+    console.log(chalk.bold`\n${step}`);
+    execPackageScript(project, step, []);
+  }
 }
 
 // eslint-disable-next-line no-unused-expressions
@@ -83,11 +88,6 @@ yargs(process.argv.slice(2))
       execLint(project);
 
       execTest();
-
-      for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
-        console.log(chalk.bold`\n${step}`);
-        execPackageScript(project, step, []);
-      }
 
       console.log(chalk`\n{green.bold CHECK COMPLETE} in {bold ${Date.now() - before}} ms`);
     }

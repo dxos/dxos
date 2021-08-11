@@ -24,6 +24,7 @@ $ npm install @dxos/feed-store
 
 ```javascript
 import { FeedStore } from '@dxos/feed-store';
+import { PublicKey, createKeyPair } from '@dxos/crypto';
 
 (async () => {
   const feedStore = new FeedStore('./db', {
@@ -31,17 +32,22 @@ import { FeedStore } from '@dxos/feed-store';
   });
   await feedStore.open();
 
-  // Open a feed. If the feed doesn't exist, it would be created.
-  const foo = await feedStore.openFeed('/foo');
+  // Create a writebale feed.
+  const keypair1 = createKeyPair();
+  const foo = await feedStore.createReadWriteFeed({
+    key: PublicKey.from(keypair1.publicKey),
+    secretKey: keypair1.secretKey
+  });
 
   foo.append('foo', () => {
     foo.head(console.log);
   });
 
   // You can open a feed with custom hypercore options.
-  const bar = await feedStore.openFeed('/bar', {
-    key: Buffer.from('...'),
-    secretKey: Buffer.from('...'),
+  const keypair2 = createKeyPair();
+  const bar = await feedStore.createReadWriteFeed({
+    key: PublicKey.from(keypair2.publicKey),
+    secretKey: keypair2.secretKey
     valueEncoding: 'json',
     metadata: { tag: 'bar' } // Save serializable feed metadata.
   });
@@ -63,7 +69,7 @@ Creates a new FeedStore `without wait for their initialization.`
 
 > The initialization happens by running: `await feedStore.open()`
 
-#### `feedStore.openFeed(path, [options]) -> Promise<Hypercore>`
+#### `feedStore.openFeed(key) -> Promise<Hypercore>`
 
 Creates a new hypercore feed identified by a string path.
 
@@ -74,11 +80,11 @@ Creates a new hypercore feed identified by a string path.
   - `metadata: *`: Serializable value with custom data about the feed.
   - `[...hypercoreOptions]`: Hypercore options.
 
-#### `feedStore.closeFeed(path) -> Promise`
+#### `feedStore.closeFeed(key) -> Promise`
 
 Close a feed by the path.
 
-#### `feedStore.deleteDescriptor(path) -> Promise`
+#### `feedStore.deleteDescriptor(key) -> Promise`
 
 Remove a descriptor from the database by the path.
 
@@ -106,8 +112,7 @@ For each feed created, FeedStore maintain `FeedDescriptor` object.
 
 A `FeedDescriptor` provides the next information:
 
-- `path: string`
-- `key: Buffer`
+- `key: PublicKey`
 - `secretKey: Buffer`
 - `discoveryKey: Buffer`
 - `feed: (Hypercore|null)`
