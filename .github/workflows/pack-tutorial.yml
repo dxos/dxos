@@ -16,7 +16,7 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: 16.1
-    - name: Pack the tutorial app
+    - name: Prerequisites and dependencies
       run: |
         set -e
         npm install -g @microsoft/rush pnpm
@@ -25,6 +25,9 @@ jobs:
         echo "::group::Install"
         node common/scripts/install-run-rush.js install
         echo "::endgroup::"
+    - name: Pack the tutorial app
+      run: |
+        set -e
 
         cd packages/sdk/tutorials/apps/tasks-app/
         rushx pack:app
@@ -39,6 +42,7 @@ jobs:
         rm -rf package/
 
         cd tutorial-tasks-app/
+        git checkout -b ci/release-test
         git add -A
         git commit -m "Release"
-        git push origin rzadp/release-test
+        git push -u origin ci/release-test
