@@ -45,7 +45,6 @@ Once we have our client built, we will be able to access the instance through th
 Go ahead and create a new `Root` component to see `useClient` in action:
 
 ```jsx:title=src/components/Root.js
-import React from 'react';
 import { useClient } from '@dxos/react-client';
 
 const Root = () => {

@@ -72,7 +72,7 @@ Let's got now to our `src/components/PartyList.js` component and place the follo
 // ...
 import { PinlessRedeemDialog } from '@dxos/react-ux';
 
-const PartyList = ({}) => {
+const PartyList = ({ onSelectParty }) => {
   const [redeemDialog, setRedeemDialog] = useState(false);
 
   const handleRedeemParty = () => setRedeemDialog(true);

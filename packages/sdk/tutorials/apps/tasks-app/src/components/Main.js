@@ -65,7 +65,7 @@ const Main = () => {
     setProfileMenuOpen(true);
   };
   const handleResetStorage = async () => {
-    const reset = confirm('Are you sure you want to reset storage?');
+    const reset = window.confirm('Are you sure you want to reset storage?');
     if (reset) {
       await client.reset();
       window.location.reload();
