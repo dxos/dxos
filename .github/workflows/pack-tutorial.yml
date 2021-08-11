@@ -64,3 +64,4 @@ jobs:
         git checkout -b ci/release-test
         git add -A
         git commit -m "Release"
+        git push -u origin ci/release-test
