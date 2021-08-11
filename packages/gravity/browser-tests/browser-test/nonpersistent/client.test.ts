@@ -113,9 +113,12 @@ describe('Client - nonpersistent', () => {
     });
 
     const invite1 = await party1A.createInvitation(defaultInvitationAuthenticator);
+
+    const contactPromise = clientA.halo.queryContacts().update.waitFor(contacts => !!contacts.find(x => x.displayName === 'DXOS test 2'))
+
     await clientB.echo.joinParty(invite1, defaultSecretProvider);
 
-    const contact = (await clientA.halo.queryContacts().update.waitFor(contacts => !!contacts.find(x => x.displayName === 'DXOS test 2')))[0];
+    const contact = (await contactPromise)[0];
 
     const party2A = await clientA.echo.createParty();
 
