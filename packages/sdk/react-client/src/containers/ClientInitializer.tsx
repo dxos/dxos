@@ -7,8 +7,8 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { LinearProgress } from '@material-ui/core';
 
 import { Client, ClientConfig } from '@dxos/client';
-import { MaybePromise } from '@dxos/util';
 import { ErrorBoundary, ErrorView } from '@dxos/react-ux';
+import { MaybePromise } from '@dxos/util';
 
 import ClientProvider from './ClientProvider';
 
@@ -24,7 +24,6 @@ interface ClientInitializerProperties {
 const ClientInitializer = ({ children, config = {} }: ClientInitializerProperties) => {
   const [client, setClient] = useState<Client | undefined>();
   const [error, setError] = useState<undefined | Error>(undefined);
-  
   useEffect(() => {
     const createClient = async () => {
       try {
@@ -35,7 +34,7 @@ const ClientInitializer = ({ children, config = {} }: ClientInitializerPropertie
         setError(error);
         console.error(error);
       }
-    }
+    };
     setImmediate(createClient);
   }, []);
 
