@@ -6,6 +6,9 @@ on:
 jobs:
   pack_tutorial:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     steps:
     - name: Checkout code
