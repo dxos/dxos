@@ -24,17 +24,18 @@ interface ClientInitializerProperties {
 const ClientInitializer = ({ children, config = {} }: ClientInitializerProperties) => {
   const [client, setClient] = useState<Client | undefined>();
   const [error, setError] = useState<undefined | Error>(undefined);
-  const createClient = async () => {
-    try {
-      const client = new Client(typeof config === 'function' ? await config() : config);
-      await client.initialize();
-      setClient(client);
-    } catch (error) {
-      setError(error);
-      console.error(error);
-    }
-  }
+  
   useEffect(() => {
+    const createClient = async () => {
+      try {
+        const client = new Client(typeof config === 'function' ? await config() : config);
+        await client.initialize();
+        setClient(client);
+      } catch (error) {
+        setError(error);
+        console.error(error);
+      }
+    }
     setImmediate(createClient);
   }, []);
 
