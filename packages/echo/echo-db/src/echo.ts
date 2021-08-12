@@ -234,7 +234,7 @@ export class ECHO {
       log('Error clearing feed storage:', err);
     }
 
-    this.halo.reset();
+    await this.halo.reset();
 
     try {
       await this._snapshotStore.clear();
