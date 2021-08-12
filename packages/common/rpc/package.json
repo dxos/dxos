@@ -32,10 +32,10 @@
     "@types/node": "^14.0.9",
     "earljs": "~0.1.10"
   },
-  "toolchain": {
-    "testingFramework": "mocha"
-  },
   "publishConfig": {
     "access": "restricted"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

@@ -45,10 +45,10 @@
     "fast-check": "~2.14.0",
     "wait-for-expect": "^3.0.2"
   },
-  "toolchain": {
-    "testingFramework": "mocha"
-  },
   "publishConfig": {
     "access": "restricted"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

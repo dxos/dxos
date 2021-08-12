@@ -11,9 +11,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/crypto"
     },
     {
@@ -24,9 +21,6 @@
     },
     {
       "path": "../feed-store"
-    },
-    {
-      "path": "../../common/util"
     }
   ]
 }

@@ -18,10 +18,10 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/random-access-multi-storage"
+      "path": "../../common/crypto"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/random-access-multi-storage"
     }
   ]
 }

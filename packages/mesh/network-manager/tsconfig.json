@@ -33,9 +33,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/feed-store"
-    },
-    {
       "path": "../signal"
     },
     {

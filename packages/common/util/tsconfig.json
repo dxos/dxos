@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../codec-protobuf"
-    },
-    {
       "path": "../crypto"
     },
     {

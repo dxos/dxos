@@ -49,10 +49,10 @@
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2"
   },
-  "toolchain": {
-    "testingFramework": "mocha"
-  },
   "publishConfig": {
     "access": "restricted"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

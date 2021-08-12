@@ -45,14 +45,14 @@
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
     "@types/pump": "^1.1.0",
+    "expect": "~27.0.2",
     "pump": "^3.0.0",
-    "wait-for-expect": "^3.0.2",
-    "expect": "~27.0.2"
-  },
-  "toolchain": {
-    "testingFramework": "mocha"
+    "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "restricted"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

@@ -11,12 +11,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
       "path": "../../common/codec-protobuf"
     },
     {

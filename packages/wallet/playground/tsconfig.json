@@ -18,10 +18,10 @@
   ],
   "references": [
     {
-      "path": "../extension"
+      "path": "../core"
     },
     {
-      "path": "../core"
+      "path": "../extension"
     }
   ]
 }

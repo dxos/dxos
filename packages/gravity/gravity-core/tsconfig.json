@@ -48,9 +48,6 @@
       "path": "../../echo/messenger-model"
     },
     {
-      "path": "../../echo/model-factory"
-    },
-    {
       "path": "../../bot/protocol-plugin-bot"
     },
     {
@@ -58,9 +55,6 @@
     },
     {
       "path": "../../mesh/signal"
-    },
-    {
-      "path": "../../common/util"
     }
   ]
 }

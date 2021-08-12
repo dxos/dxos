@@ -15,12 +15,6 @@
     },
     {
       "path": "../model-factory"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../common/protobuf-compiler"
     }
   ]
 }
