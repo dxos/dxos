@@ -19,7 +19,7 @@ Let's create a new dialog component to handle this logic:
 ```jsx:title=src/components/PartySettings.js
 import { useClient } from '@dxos/react-client';
 
-const PartySettings = ({}) => {
+const PartySettings = ({ partyKey = undefined, onClose }) => {
   const client = useClient();
   const [title, setTitle] = useState('');
 
@@ -63,7 +63,6 @@ const PartyList = ({}) => {
 Finally, create a [`Main`](https://github.com/dxos/tutorial-tasks-app/blob/master/src/components/Main.js) component to give our app some layout.
 
 > - At this point, we haven't created the `TaskList` component yet. Therefore, you can skip this import by now commenting out its respective codes;
->  - Since we don't have any Material theme settings by now, you can use any value in the style variables you want;
 >  - If you face any problem with `confirm()` function, you can try using `window.confirm()`.
 
 Go to your `src/components/Root.js` and render the `Main` component on the created profile section.
@@ -117,7 +116,7 @@ Take a look at the code below, we are using the `useParty` hook to be able to ju
 ```jsx:title=src/components/PartySettings.js
 import { useClient, useParty } from '@dxos/react-client';
 
-const PartySettings = ({ partyKey, onClose }) => {
+const PartySettings = ({ partyKey = undefined, onClose }) => {
   const client = useClient();
   const party = useParty(partyKey);
 

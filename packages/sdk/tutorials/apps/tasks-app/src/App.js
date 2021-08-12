@@ -3,40 +3,19 @@
 //
 
 import React from 'react';
-
-import { createMuiTheme } from '@material-ui/core/styles';
-
 import { ClientInitializer } from '@dxos/react-client';
-import { ReactUXTheme } from '@dxos/react-ux';
 
 import Root from './components/Root';
 import { initConfig } from './config';
 
-const baseTheme = createMuiTheme({
-  overrides: {
-    MuiCssBaseline: {
-      '@global': {
-        body: {
-          margin: 0,
-          overflow: 'hidden'
-        }
-      }
-    }
-  },
-  sidebar: {
-    width: 300
-  }
-});
-
 /**
  * Root container.
  */
+
 const App = () => {
   return (
     <ClientInitializer config={initConfig}>
-      <ReactUXTheme base={baseTheme}>
-        <Root />
-      </ReactUXTheme>
+      <Root />
     </ClientInitializer>
   );
 };

@@ -35,10 +35,10 @@ const useStyles = makeStyles(theme => ({
   },
   drawer: {
     flexShrink: 0,
-    width: theme.sidebar.width
+    width: 300
   },
   drawerPaper: {
-    width: theme.sidebar.width,
+    width: 300,
     overflow: 'auto'
   },
   main: {
