@@ -12,7 +12,6 @@ import React, { Component, ErrorInfo } from 'react';
  * https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
  */
 
-
 interface ErrorComponentType {
   error: Error | null,
   onRestart?: () => void,
@@ -72,4 +71,4 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-export { ErrorBoundary };
+export { ErrorBoundary, ErrorComponentType };
