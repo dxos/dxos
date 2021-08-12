@@ -4,7 +4,7 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { Config, mapFromKeyValues } from '@dxos/config';
+import { Config, mapFromKeyValues, mapToKeyValues } from '@dxos/config';
 import { createId, createKeyPair, keyToString } from '@dxos/crypto';
 
 import defaults from './defaults.json';
@@ -43,3 +43,7 @@ export const getClientConfig = (config: any) => {
   };
   return defaultsDeep({}, clientConf, client);
 };
+
+export function mapConfigToEnv(config: Config) {
+  return mapToKeyValues(envmap, config.values)
+}

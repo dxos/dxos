@@ -16,6 +16,7 @@ import { BotContainer, BotExitEventArgs, ContainerStartOptions } from './common'
 import assert from 'assert';
 import { Config, mapToKeyValues } from '@dxos/config';
 import { config } from 'process';
+import { mapConfigToEnv } from '../config';
 
 export interface CommandInfo {
   command: string
@@ -78,7 +79,7 @@ export abstract class ChildProcessContainer implements BotContainer {
       env: {
         ...process.env,
         NODE_OPTIONS: '',
-        DX_SIGNAL_ENDPOINT: this._config.get('services.signal.server'),
+        ...mapConfigToEnv(this._config),
         ...childEnv,
         ...dxEnv
       },
