@@ -3,6 +3,7 @@
 //
 
 import Bridge, { Stream } from 'crx-bridge';
+import { HandlerProps } from "./handler-props";
 
 function getData (echo: any) {
   // TODO(marik-d): Display items hierarchically

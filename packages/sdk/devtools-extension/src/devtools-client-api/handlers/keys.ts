@@ -4,8 +4,9 @@
 
 import { KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
+import { HandlerProps } from "./handler-props";
 
-export default ({ hook, bridge }) => {
+export default ({ hook, bridge }: HandlerProps) => {
   bridge.onMessage('party.keys', async ({ data: { topic } }) => {
     try {
       const { keyring, client } = hook;

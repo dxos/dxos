@@ -3,6 +3,7 @@
 //
 
 import Bridge, { Stream } from 'crx-bridge';
+import { HandlerProps } from "./handler-props";
 
 function getData (client: any) {
   return Promise.all(
@@ -52,7 +53,7 @@ async function subscribeToEcho (client: any, stream: Stream) {
   }
 }
 
-export default ({ hook, bridge }: {hook: any, bridge: typeof Bridge }) => {
+export default ({ hook, bridge }: HandlerProps) => {
   bridge.onOpenStreamChannel('echo.snapshots', (stream) => {
     subscribeToEcho(hook.client, stream);
   });

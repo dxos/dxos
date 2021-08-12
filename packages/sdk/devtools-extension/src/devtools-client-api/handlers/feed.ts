@@ -2,9 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import { HandlerProps } from "./handler-props";
+
 const feedListeners = new Map();
 
-export default ({ hook, bridge }) => {
+export default ({ hook, bridge }: HandlerProps) => {
   bridge.onMessage('feed.subscribe', async ({ sender, data: { topic } }) => {
     try {
       const feedMessages = [];

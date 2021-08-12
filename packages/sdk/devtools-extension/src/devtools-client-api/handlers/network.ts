@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import Bridge, { Stream } from 'crx-bridge';
+import { Stream } from 'crx-bridge';
+import { HandlerProps } from "./handler-props";
 
-import { DevtoolsContext } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { SignalApi } from '@dxos/network-manager';
 
-async function subscribeToNetworkStatus (hook: DevtoolsContext, stream: Stream) {
+async function subscribeToNetworkStatus (hook: HandlerProps['hook'], stream: Stream) {
   async function update () {
     const status = hook.networkManager.signal.getStatus();
     stream.send(status);
@@ -19,7 +19,7 @@ async function subscribeToNetworkStatus (hook: DevtoolsContext, stream: Stream) 
   setTimeout(() => update(), 30);
 }
 
-async function subscribeToNetworkTrace (hook: DevtoolsContext, stream: Stream) {
+async function subscribeToNetworkTrace (hook: HandlerProps['hook'], stream: Stream) {
   const trace: SignalApi.CommandTrace[] = [];
   hook.networkManager.signal.commandTrace.on(msg => {
     reportError(() => {
@@ -29,7 +29,7 @@ async function subscribeToNetworkTrace (hook: DevtoolsContext, stream: Stream) {
   });
 }
 
-async function subscribeToNetworkTopics (hook: DevtoolsContext, stream: Stream) {
+async function subscribeToNetworkTopics (hook: HandlerProps['hook'], stream: Stream) {
   async function update () {
     const topics = hook.networkManager.topics;
     const labeledTopics = topics.map(topic => ({
@@ -44,7 +44,7 @@ async function subscribeToNetworkTopics (hook: DevtoolsContext, stream: Stream) 
   setTimeout(() => update(), 30);
 }
 
-export default ({ hook, bridge }: {hook: DevtoolsContext, bridge: typeof Bridge }) => {
+export default ({ hook, bridge }: HandlerProps) => {
   bridge.onOpenStreamChannel('network.signal.status', (stream) => {
     reportError(subscribeToNetworkStatus)(hook, stream);
   });

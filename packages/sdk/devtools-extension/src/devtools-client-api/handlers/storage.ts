@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-export default ({ hook, bridge }) => {
+import { HandlerProps } from "./handler-props";
+
+export default ({ hook, bridge }: HandlerProps) => {
   bridge.onMessage('storage.reset', async () => {
     try {
       await hook.client.reset();

@@ -3,10 +3,11 @@
 //
 
 import metrics from '@dxos/metrics';
+import { HandlerProps } from "./handler-props";
 
 const metricslisteners = new Map();
 
-export default ({ bridge }) => {
+export default ({ bridge }: HandlerProps) => {
   const onMetrics = senderName => () => {
     const data = {
       values: metrics.values,
