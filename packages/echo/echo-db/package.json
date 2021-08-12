@@ -56,10 +56,10 @@
     "lodash": "4.17.21",
     "memdown": "^5.1.0"
   },
-  "toolchain": {
-    "testingFramework": "mocha"
-  },
   "publishConfig": {
     "access": "restricted"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

@@ -17,16 +17,10 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../feed-store"
-    },
-    {
       "path": "../model-factory"
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../common/async"
     }
   ]
 }

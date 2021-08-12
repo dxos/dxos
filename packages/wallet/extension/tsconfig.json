@@ -26,31 +26,25 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../common/crypto"
-    },
-    {
-      "path": "../core"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-ux"
-    },
-    {
       "path": "../../common/codec-protobuf"
     },
     {
       "path": "../../halo/credentials"
     },
     {
-      "path": "../../common/async"
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../sdk/react-client"
     },
     {
       "path": "../../common/rpc"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../core"
     },
     {
       "path": "../../gravity/browser-mocha"

@@ -37,13 +37,13 @@
     "readable-stream": "^3.6.0"
   },
   "devDependencies": {
+    "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/faker": "~5.5.1",
     "@types/jest": "^26.0.7",
     "faker": "^5.1.0",
     "pify": "~5.0.0",
-    "tempy": "~1.0.1",
-    "@dxos/random-access-multi-storage": "workspace:*"
+    "tempy": "~1.0.1"
   },
   "publishConfig": {
     "access": "restricted"

@@ -17,6 +17,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../halo/credentials"
+    },
+    {
       "path": "../../common/crypto"
     },
     {
@@ -24,9 +27,6 @@
     },
     {
       "path": "../../echo/object-model"
-    },
-    {
-      "path": "../../halo/credentials"
     },
     {
       "path": "../browser-mocha"
