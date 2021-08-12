@@ -35,7 +35,7 @@ function createPanel () {
 
       chrome.devtools.panels.create(
         'DXOS',
-        null,
+        '',
         'main-panel.html'
       );
     }
