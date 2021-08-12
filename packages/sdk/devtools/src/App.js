@@ -12,7 +12,6 @@ import ListItemText from '@material-ui/core/ListItemText';
 import * as colors from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 import AccountTreeIcon from '@material-ui/icons/AccountTree';
-import MetricsIcon from '@material-ui/icons/BugReport';
 import StorageIcon from '@material-ui/icons/Dns';
 import FeedIcon from '@material-ui/icons/Pageview';
 import SwarmIcon from '@material-ui/icons/Router';
@@ -34,7 +33,6 @@ import Signal from './containers/Signal';
 import SnapshotsView from './containers/SnapsotsView';
 import StorageTab from './containers/StorageTab';
 import SwarmGraph from './containers/SwarmGraph';
-import { useMetrics } from './hooks/metrics';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -70,16 +68,6 @@ const items = [
         id: 'config',
         title: 'Config',
         icon: ConfigIcon
-      },
-      {
-        id: 'metrics.values',
-        title: 'Metrics',
-        icon: MetricsIcon
-      },
-      {
-        id: 'metrics.events',
-        title: 'Events',
-        icon: EventsIcon
       },
       {
         id: 'storage',
@@ -153,7 +141,6 @@ const items = [
 const App = () => {
   const classes = useStyles();
   const [selected, setSelected] = useState(items[0].items[0].id);
-  const metrics = useMetrics();
 
   const handleListItemClick = (event, index) => {
     setSelected(index);
@@ -193,20 +180,6 @@ const App = () => {
 
       <div className={className('config')}>
         <ConfigView />
-      </div>
-      <div className={className('metrics.values')}>
-        <JsonTreeView
-          size='small'
-          data={{ ...metrics.values }}
-          depth={4}
-        />
-      </div>
-      <div className={className('metrics.events')}>
-        <JsonTreeView
-          size='small'
-          data={{ ...metrics.events }}
-          depth={4}
-        />
       </div>
       <div className={className('storage')}>
         <StorageTab />

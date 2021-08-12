@@ -2,14 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-export default ({ hook, bridge }) => {
+import { HandlerProps } from "./handler-props";
+
+export default ({ hook, bridge }: HandlerProps) => {
   bridge.onMessage('config', () => {
     try {
       return {
         config: JSON.parse(JSON.stringify(hook.client.config)), // make sure the config is serializable
         profile: {
-          username: hook.client.getProfile()?.username,
-          publicKey: hook.client.getProfile()?.publicKey.toHex()
+          username: hook.client.halo.getProfile()?.username,
+          publicKey: hook.client.halo.getProfile()?.publicKey.toHex()
         }
       };
     } catch (e) {

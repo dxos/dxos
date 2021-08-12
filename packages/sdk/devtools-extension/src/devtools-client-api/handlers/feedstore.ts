@@ -9,7 +9,7 @@ export default ({ hook, bridge }: HandlerProps) => {
     try {
       return hook.feedStore
         .getDescriptors()
-        .map(({ feed, path, opened, metadata }) => ({ path, opened, metadata, blocks: feed.length }));
+        .map(({ feed, opened, metadata, key }) => ({ key: key.toHex(), opened, metadata, blocks: feed?.length ?? 0 }));
     } catch (e) {
       console.error('DXOS DevTools: feedstore handler failed to respond');
       console.log(e);

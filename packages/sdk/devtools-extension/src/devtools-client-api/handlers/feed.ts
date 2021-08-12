@@ -9,12 +9,12 @@ const feedListeners = new Map();
 export default ({ hook, bridge }: HandlerProps) => {
   bridge.onMessage('feed.subscribe', async ({ sender, data: { topic } }) => {
     try {
-      const feedMessages = [];
+      const feedMessages: any[] = [];
 
       const feedDescriptors = hook.feedStore.getDescriptors().filter(d => d.metadata.partyKey.toString('hex') === topic);
       feedDescriptors.forEach(feedDescriptor => {
-        const stream = feedDescriptor.feed.createReadStream({ live: true });
-        stream.on('data', (data) => {
+        const stream = feedDescriptor.feed?.createReadStream({ live: true });
+        stream?.on('data', (data) => {
           feedMessages.push({ data });
           bridge.sendMessage('feed.data', feedMessages, sender.name);
         });
