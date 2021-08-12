@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '* 6 * * *'
+  push:
+    branches-ignore:
+      - main
 
 name: Standardize configs
 
