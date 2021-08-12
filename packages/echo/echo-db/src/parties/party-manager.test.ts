@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
+/* eslint-disable jest/no-conditional-expect */
+
 import assert from 'assert';
 import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
-import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import {
@@ -25,12 +26,12 @@ import {
 } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
-import { createWritableFeedStream } from '@dxos/util';
 
 import { HaloFactory, IdentityManager } from '../halo';
 import { autoPartyOpener } from '../halo/party-opener';
@@ -55,7 +56,7 @@ const log = debug('dxos:echo:parties:party-manager:test');
  * @param createIdentity - Create the identity key record.
  */
 const setup = async (open = true, createIdentity = true) => {
-  const feedStore = FeedStoreAdapter.create(ram);
+  const feedStore = FeedStoreAdapter.create(createStorage('', STORAGE_RAM));
   await feedStore.open();
   const keyring = new Keyring();
 
@@ -72,7 +73,7 @@ const setup = async (open = true, createIdentity = true) => {
     assert(keyring.keys.length === 1);
   }
 
-  const snapshotStore = new SnapshotStore(ram);
+  const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
   const partyFactory = new PartyFactory(
@@ -94,7 +95,7 @@ const setup = async (open = true, createIdentity = true) => {
 
   identityManager.ready.once(() => {
     assert(identityManager.identity.halo?.isOpen);
-    const unsub = autoPartyOpener(identityManager.identity.halo!, partyManager);
+    const unsub = autoPartyOpener(identityManager.identity.preferences!, partyManager);
     afterTest(unsub);
   });
 
@@ -153,8 +154,12 @@ describe('Party manager', () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     // TODO(burdon): Create multiple feeds.
-    const feed = await feedStore.feedStore.openFeed(
-      partyKey.publicKey.toHex(), { metadata: { partyKey: partyKey.publicKey } } as any);
+    const { publicKey, secretKey } = createKeyPair();
+    const feed = await feedStore.feedStore.createReadWriteFeed({
+      key: PublicKey.from(publicKey),
+      secretKey,
+      metadata: { partyKey: partyKey.publicKey }
+    });
     const feedKey = await keyring.addKeyRecord({
       publicKey: PublicKey.from(feed.key),
       secretKey: feed.secretKey,
@@ -166,14 +171,14 @@ describe('Party manager', () => {
 
     await partyManager.addParty(partyKey.publicKey, [{
       type: KeyType.FEED,
-      publicKey: feed.key
+      publicKey: PublicKey.from(feed.key)
     }]);
 
     await update;
   });
 
   test('Create from cold start', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
     const keyring = new Keyring();
@@ -181,7 +186,7 @@ describe('Party manager', () => {
     await keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(ram);
+    const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
     const networkManager = new NetworkManager();
     const partyFactory: PartyFactory = new PartyFactory(() => identityManager.identity, networkManager, feedStoreAdapter, modelFactory, snapshotStore);
     const haloFactory = new HaloFactory(partyFactory, networkManager, keyring);
@@ -203,8 +208,12 @@ describe('Party manager', () => {
       const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
       // TODO(burdon): Create multiple feeds.
-      const feed = await feedStore.openFeed(
-        partyKey.publicKey.toHex(), { metadata: { partyKey: partyKey.publicKey, writable: true } } as any);
+      const { publicKey, secretKey } = createKeyPair();
+      const feed = await feedStore.createReadWriteFeed({
+        key: PublicKey.from(publicKey),
+        secretKey,
+        metadata: { partyKey: partyKey.publicKey, writable: true }
+      });
       const feedKey = await keyring.addKeyRecord({
         publicKey: PublicKey.from(feed.key),
         secretKey: feed.secretKey,
@@ -249,12 +258,12 @@ describe('Party manager', () => {
     // TODO(burdon): Adding this causes the worker process to hang AND partyManger.close to throw.
     /*
     const [updated, onUpdate] = latch();
-    partyB.database.queryItems({ type: 'dxn://example/item/test' })
-      .subscribe((result) => {
-        if (result.length) {
-          const [itemB] = result;
+    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.on((items) => {
+        if (items.length) {
+          const [itemB] = items;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${result[0].id}`);
+            log(`B has ${items[0].id}`);
             onUpdate();
           }
         }
@@ -302,12 +311,12 @@ describe('Party manager', () => {
 
     // Subscribe to Item updates on B.
     const [updated, onUpdate] = latch();
-    partyB.database.queryItems({ type: 'dxn://example/item/test' })
-      .subscribe((result) => {
-        if (result.length) {
-          const [itemB] = result;
+    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.on((items) => {
+        if (items.length) {
+          const [itemB] = items;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${result[0].id}`);
+            log(`B has ${items[0].id}`);
             onUpdate();
           }
         }
@@ -387,12 +396,12 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.queryItems({ type: 'dxn://example/item/test' })
-      .subscribe((result) => {
-        if (result.length) {
-          const [itemB] = result;
+    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.on((items) => {
+        if (items.length) {
+          const [itemB] = items;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${result[0].id}`);
+            log(`B has ${items[0].id}`);
             onUpdate();
           }
         }
@@ -454,12 +463,12 @@ describe('Party manager', () => {
     const [updated, onUpdate] = latch();
 
     // Subscribe to Item updates on B.
-    partyB.database.queryItems({ type: 'dxn://example/item/test' })
-      .subscribe((result) => {
-        if (result.length) {
-          const [itemB] = result;
+    partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.on((items) => {
+        if (items.length) {
+          const [itemB] = items;
           if (itemA && itemA.id === itemB.id) {
-            log(`B has ${result[0].id}`);
+            log(`B has ${items[0].id}`);
             onUpdate();
           }
         }

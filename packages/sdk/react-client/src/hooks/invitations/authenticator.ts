@@ -11,6 +11,8 @@ import { useClient } from '../client';
 
 /**
  * Handles the invitation handshake.
+ * Used to implement a Device invitation flow.
+ * @param invitation Invitation descriptor.
  */
 export const useAuthenticator = (invitation: InvitationDescriptor) => {
   const client = useClient();
@@ -32,7 +34,7 @@ export const useAuthenticator = (invitation: InvitationDescriptor) => {
       if (invitation.identityKey) {
         // An invitation for this device to join an existing Identity.
         // Join the Identity
-        await client.echo.joinHalo(invitation, secretProvider);
+        await client.echo.halo.join(invitation, secretProvider);
         if (!signal.aborted) {
           setState({ identity: invitation.identityKey.toString() });
         }

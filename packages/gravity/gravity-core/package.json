@@ -13,9 +13,6 @@
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
-  "toolchain": {
-    "testingFramework": "mocha"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/bot": "workspace:*",
@@ -26,51 +23,44 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/messenger-model": "workspace:*",
-    "@dxos/model-factory": "workspace:*",
     "@dxos/protocol-plugin-bot": "workspace:*",
-    "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
-    "@dxos/signal": "~1.0.3-alpha.0",
-    "@dxos/util": "workspace:*",
+    "@dxos/random-access-multi-storage": "workspace:*",
+    "@dxos/signal": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/fs-extra": "^9.0.4",
     "@types/node-fetch": "^2.5.10",
-    "@types/webpack": "^4.41.27",
     "assert": "^2.0.0",
-    "chance": "^1.1.6",
     "debug": "^4.1.1",
     "dotenv": "^8.2.0",
     "download": "^7.1.0",
+    "esbuild": "^0.11.23",
     "fs-extra": "^8.1.0",
-    "hypercore-crypto": "^1.0.0",
     "js-yaml": "^3.13.1",
-    "lodash.defaults": "^4.2.0",
-    "lodash.defaultsdeep": "^4.6.1",
-    "lodash.get": "^4.4.2",
-    "lodash.isempty": "^4.4.0",
-    "memdown": "^5.1.0",
-    "moment": "^2.24.0",
     "node-fetch": "^2.6.0",
-    "node-libs-browser": "^2.2.1",
-    "node-watch": "^0.6.4",
-    "random-access-memory": "~3.1.2",
     "read-pkg-up": "^7.0.1",
     "tar": "^6.0.5",
-    "tree-kill": "^1.2.2",
-    "ts-node": "^9.1.1",
-    "webpack": "4.44.2"
+    "tree-kill": "^1.2.2"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
+    "@types/mocha": "~8.2.2",
+    "@types/node": "^14.0.9",
     "@types/tar": "^4.0.4",
-    "playwright-chromium": "^1.7.0",
+    "bip32": "~2.0.6",
+    "expect": "~27.0.2",
     "process-exists": "^4.0.0",
     "pstree.remy": "^1.1.8",
-    "typescript": "^4.2.4",
-    "@types/mocha": "~8.2.2",
-    "expect": "~27.0.2"
+    "sodium-universal": "~3.0.4",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.3.5",
+    "wrtc": "^0.4.6"
   },
   "publishConfig": {
     "access": "restricted"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

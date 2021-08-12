@@ -17,10 +17,11 @@ import {
   createGreetingClaimMessage,
   SignedMessage
 } from '@dxos/credentials';
-import { keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
+import { keyToBuffer, keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
+import { IdentityNotInitializedError, InvalidInvitationError } from '../errors';
 import { Identity, IdentityProvider } from '../halo';
 import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
@@ -101,10 +102,10 @@ export class HaloRecoveryInitiator {
 
     // Send to the first peer (any peer will do).
     const peer = this._greeterPlugin.peers[0];
-    const { peerId: responderPeerId } = peer.getSession();
+    const responderPeerId = keyToBuffer(peer.getSession().peerId);
 
     // Synthesize an "invitationID" which is the signature of both peerIds signed by our Identity key.
-    const signature = this._identity.keyring.rawSign(
+    const signature = this._identity.signer.rawSign(
       Buffer.concat([this._peerId, responderPeerId]),
       this._identity.identityKey
     );
@@ -146,10 +147,10 @@ export class HaloRecoveryInitiator {
       // The signed portion of the Auth message includes the ID and authNonce provided
       // by "info". These values will be validated on the other end.
       createAuthMessage(
-        this._identity.keyring,
+        this._identity.signer,
         info.id.value,
-        this._identity.identityKey ?? raise(new Error('No identity key')),
-        this._identity.identityKey ?? raise(new Error('No identity key')),
+        this._identity.identityKey ?? raise(new IdentityNotInitializedError()),
+        this._identity.identityKey ?? raise(new IdentityNotInitializedError()),
         undefined,
         info.authNonce.value)
     ));
@@ -164,7 +165,7 @@ export class HaloRecoveryInitiator {
       // The invitationtId is the signature of both peerIds, signed by the Identity key.
       const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationID, identity.identityKey.publicKey.asBuffer());
       if (!ok) {
-        throw new Error(`Invalid invitation ${keyToString(invitationID)}`);
+        throw new InvalidInvitationError();
       }
 
       // Create a Keyring containing only our own PublicKey. Only a message signed by the matching private key,

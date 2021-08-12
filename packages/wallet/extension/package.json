@@ -7,35 +7,55 @@
   "scripts": {
     "lint": "toolchain lint",
     "build": "toolchain build && node scripts/build.js",
-    "build:test": "pnpm run build && pnpm run lint"
+    "build:test": "pnpm run build && pnpm run test",
+    "test": "pnpm run lint",
+    "test:e2e": "toolchain test",
+    "browser-mocha": "browser-mocha --headless=false --setup browser-mocha/setup.js 'browser-mocha/*.test.ts' --browserArg=--disable-extensions-except=$(pwd)/dist --browserArg=--load-extension=$(pwd)/dist"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/crypto": "workspace:*",
-    "@dxos/wallet-core": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@hot-loader/react-dom": "16.13.0",
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0",
-    "@dxos/react-ux": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "protobufjs": "^6.9.0",
-    "@dxos/async": "workspace:*",
-    "@dxos/rpc": "workspace:*"
+    "@dxos/credentials": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/wallet-core": "workspace:*",
+    "@hot-loader/react-dom": "16.13.0",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.58",
+    "mocha": "~8.4.0",
+    "react": "^16.14.0",
+    "react-copy-to-clipboard": "~5.0.3",
+    "react-dom": "^16.14.0",
+    "react-router-dom": "^5.1.2"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/browser-mocha": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "esbuild": "^0.11.23",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@material-ui/core": "^4.11.4",
+    "@types/faker": "~5.5.1",
+    "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
     "@types/react": "^16.14.0",
+    "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/react-dom": "^17.0.2",
+    "@types/react-router-dom": "~5.1.7",
+    "@types/uuid": "~8.3.1",
     "@types/webpack-env": "^1.16.0",
-    "typescript": "^4.2.4",
-    "@esbuild-plugins/node-modules-polyfill": "~0.1.1",
+    "chalk": "^4.1.0",
     "copy": "~0.3.2",
+    "esbuild": "^0.11.23",
+    "expect": "~27.0.2",
+    "faker": "^5.1.0",
+    "playwright": "^1.7.0",
     "rmdir": "~1.2.0",
-    "webextension-polyfill-ts": "~0.25.0",
-    "chalk": "^4.1.0"
+    "typescript": "^4.3.5",
+    "uuid": "^3.3.2",
+    "webextension-polyfill-ts": "~0.25.0"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

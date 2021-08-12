@@ -4,26 +4,44 @@
 
 import { build } from 'esbuild';
 import { promises as fs } from 'fs';
-import { join, resolve } from 'path';
+import { join, resolve, relative } from 'path';
 
 import { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
-export async function buildTests (files: string[], outDir: string) {
-  const mainFile = join(outDir, 'main.js');
+export interface BuildTestsOpts {
+  outDir: string,
+  debug: boolean,
+  checkLeaks: boolean
+}
+
+export async function buildTests (files: string[], opts: BuildTestsOpts) {
+  const mainFile = join(opts.outDir, 'main.js');
   const mainContents = `
     import debug from 'debug';
+
+    ${opts.debug ? 'debugger;' : ''}
     
     debug.enable('${process.env.DEBUG}');
 
     import { mocha } from 'mocha';
 
-    mocha.reporter('spec');
-    mocha.setup('bdd');
-    mocha.checkLeaks();
+    async function run() {
+      const context = await window.browserMocha__getEnv();
 
-    ${files.map(file => `require("${resolve(file)}");`).join('\n')}
-    
-    mocha.run(window.testsDone);
+      window.browserMocha = { context };
+
+      mocha.reporter('spec');
+      mocha.setup('bdd');
+      ${opts.checkLeaks ? 'mocha.checkLeaks();' : ''}
+
+      ${files.map(file => `require("${relative(opts.outDir, resolve(file))}");`).join('\n')}
+
+      window.browserMocha__initFinished()
+      
+      mocha.run(window.browserMocha__testsDone);
+    }
+
+    run();
   `;
 
   await fs.writeFile(mainFile, mainContents);
@@ -35,7 +53,7 @@ export async function buildTests (files: string[], outDir: string) {
     platform: 'browser',
     format: 'iife',
     sourcemap: 'inline',
-    outfile: join(outDir, 'bundle.js'),
+    outfile: join(opts.outDir, 'bundle.js'),
     plugins: [
       NodeModulesPlugin(),
       NodeGlobalsPolyfillPlugin(),

@@ -36,6 +36,5 @@ function readPackage(packageJson, context) {
     // This peer dependency is not required at runtime
     delete packageJson.peerDependencies['typescript']
   }
-
   return packageJson;
 }

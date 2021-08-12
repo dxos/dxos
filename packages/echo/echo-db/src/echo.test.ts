@@ -7,14 +7,14 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch, sleep, waitForCondition } from '@dxos/async';
-import { generateSeedPhrase, keyPairFromSeedPhrase, testSecretProvider, testSecretValidator } from '@dxos/credentials';
+import { latch, waitForCondition } from '@dxos/async';
+import { generateSeedPhrase, keyPairFromSeedPhrase, defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
 import { ECHO } from './echo';
-import { testInvitationAuthenticator } from './invitations';
+import { defaultInvitationAuthenticator } from './invitations';
 import { Item } from './items';
 import { inviteTestPeer } from './util';
 
@@ -28,8 +28,8 @@ describe('ECHO', () => {
     afterTest(() => echo.close());
 
     if (createProfile) {
-      await echo.createIdentity(createKeyPair());
-      await echo.createHalo();
+      await echo.halo.createIdentity(createKeyPair());
+      await echo.halo.create();
     }
 
     return echo;
@@ -37,7 +37,7 @@ describe('ECHO', () => {
 
   test('create party and update properties.', async () => {
     const echo = await setup(true);
-    const parties = await echo.queryParties({ open: true });
+    const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
@@ -49,7 +49,7 @@ describe('ECHO', () => {
 
   test('create party and items.', async () => {
     const echo = await setup(true);
-    const parties = await echo.queryParties({ open: true });
+    const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
@@ -60,14 +60,14 @@ describe('ECHO', () => {
       // TODO(burdon): Update currentybly called after all mutations below have completed?
       expect(parties).toHaveLength(1);
       parties.map(async party => {
-        const items = await party.database.queryItems();
-        items.value.forEach(item => {
+        const items = party.database.select(s => s.items).getValue();
+        items.forEach(item => {
           log('Item:', String(item));
         });
 
         // TODO(burdon): Check item mutations.
-        const result = await party.database.queryItems({ type: 'dxn://dxos/item/document' });
-        expect(result.value).toHaveLength(2);
+        const result = party.database.select(s => s.filter({ type: 'dxn://dxos/item/document' }).items).getValue();
+        expect(result).toHaveLength(2);
         onUpdate();
       });
     });
@@ -92,7 +92,7 @@ describe('ECHO', () => {
   test('create party and item with child item.', async () => {
     const echo = await setup(true);
 
-    const parties = await echo.queryParties({ open: true });
+    const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
@@ -102,12 +102,12 @@ describe('ECHO', () => {
 
       expect(parties).toHaveLength(1);
       parties.map(async party => {
-        const items = await party.database.queryItems();
-        items.value.forEach(item => {
+        const items = party.database.select(s => s.items).getValue();
+        items.forEach(item => {
           log('Item:', String(item));
         });
 
-        const { first: item } = await party.database.queryItems({ type: 'dxn://dxos/item/document' });
+        const item = party.database.select(s => s.filter({ type: 'dxn://dxos/item/document' }).items).getValue()[0];
         expect(item.children).toHaveLength(1);
         expect(item.children[0].type).toBe(undefined);
         // TODO(burdon): Test parent.
@@ -133,7 +133,7 @@ describe('ECHO', () => {
   test('create party, two items with child items, and then move child.', async () => {
     const echo = await setup(true);
 
-    const parties = await echo.queryParties({ open: true });
+    const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
 
@@ -169,8 +169,8 @@ describe('ECHO', () => {
     await echo.close();
     await echo.open();
 
-    await waitForCondition(async () => (await echo.getParty(party.key)) !== undefined);
-    const party2 = await echo.getParty(party.key)!;
+    await waitForCondition(async () => echo.getParty(party.key) !== undefined);
+    const party2 = echo.getParty(party.key)!;
 
     expect(party2.key).toEqual(party.key);
     expect(party2.isOpen).toBe(true);
@@ -183,21 +183,19 @@ describe('ECHO', () => {
     const party1 = await echo1.createParty();
     await inviteTestPeer(party1, echo2);
 
-    await sleep(1000); // TODO(marik-d): Figure out why this is needed.
-
     await echo1.close();
     await echo2.close();
 
     await echo2.open();
-    await waitForCondition(async () => (await echo2.getParty(party1.key)) !== undefined);
+    await waitForCondition(async () => echo2.getParty(party1.key) !== undefined);
 
-    const party = await echo2.getParty(party1.key);
+    const party = echo2.getParty(party1.key);
     assert(party);
     log('Initialized party');
 
-    const items = await party.database.queryItems();
-    await waitForCondition(() => items.value.length > 0);
-    expect(items.value.length).toBeGreaterThan(0);
+    const items = party.database.select(s => s.items).getValue();
+    await waitForCondition(() => items.length > 0);
+    expect(items.length).toBeGreaterThan(0);
   });
 
   test('create party and items with props', async () => {
@@ -223,22 +221,22 @@ describe('ECHO', () => {
   test('open and create profile', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.createIdentity(createKeyPair());
-    await echo.createHalo();
-    expect(echo.identityKey).toBeDefined();
+    await echo.halo.createIdentity(createKeyPair());
+    await echo.halo.create();
+    expect(echo.halo.identityKey).toBeDefined();
   });
 
   test('close and open again', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.createIdentity(createKeyPair());
-    await echo.createHalo();
-    expect(echo.identityKey).toBeDefined();
+    await echo.halo.createIdentity(createKeyPair());
+    await echo.halo.create();
+    expect(echo.halo.identityKey).toBeDefined();
     await echo.close();
 
     await echo.open();
     expect(echo.isOpen).toBe(true);
-    expect(echo.identityKey).toBeDefined();
+    expect(echo.halo.identityKey).toBeDefined();
   });
 
   test('cant create party on closed echo', async () => {
@@ -250,9 +248,9 @@ describe('ECHO', () => {
   test('reset', async () => {
     const echo = new ECHO();
     await echo.open();
-    await echo.createIdentity(createKeyPair());
-    await echo.createHalo();
-    expect(echo.identityKey).toBeDefined();
+    await echo.halo.createIdentity(createKeyPair());
+    await echo.halo.create();
+    expect(echo.halo.identityKey).toBeDefined();
 
     return echo.reset();
   });
@@ -261,23 +259,23 @@ describe('ECHO', () => {
     const a = await setup(true);
     const b = await setup(false);
 
-    expect(a.isHaloInitialized).toEqual(true);
-    expect(b.isHaloInitialized).toEqual(false);
+    expect(a.halo.isInitialized).toEqual(true);
+    expect(b.halo.isInitialized).toEqual(false);
 
     expect(a.queryParties().value.length).toBe(0);
     await a.createParty();
     expect(a.queryParties().value.length).toBe(1);
 
     // Issue the invitation on nodeA.
-    const invitation = await a.createHaloInvitation({ secretValidator: testSecretValidator, secretProvider: testSecretProvider });
+    const invitation = await a.halo.createInvitation({ secretValidator: defaultSecretValidator, secretProvider: defaultSecretProvider });
 
     // Should not have any parties.
     expect(b.queryParties().value.length).toBe(0);
 
     // And then redeem it on nodeB.
-    await b.joinHalo(invitation, testSecretProvider);
-    expect(a.isHaloInitialized).toEqual(true);
-    expect(b.isHaloInitialized).toEqual(true);
+    await b.halo.join(invitation, defaultSecretProvider);
+    expect(a.halo.isInitialized).toEqual(true);
+    expect(b.halo.isInitialized).toEqual(true);
 
     // Check the initial party is opened.
     await waitForCondition(() => b.queryParties().value.length === 1, 1000);
@@ -291,7 +289,7 @@ describe('ECHO', () => {
       let itemA: Item<any> | null = null;
 
       // Subscribe to Item updates on B.
-      const updated = partyB.database.queryItems({ type: 'dxn://example/item/test' })
+      const updated = partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
         .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id));
 
       // Create a new Item on A.
@@ -325,26 +323,26 @@ describe('ECHO', () => {
     const b1 = await setup(true);
     const b2 = await setup(false);
 
-    expect(a1.isHaloInitialized).toBeTruthy();
-    expect(a2.isHaloInitialized).toBeFalsy();
+    expect(a1.halo.isInitialized).toBeTruthy();
+    expect(a2.halo.isInitialized).toBeFalsy();
 
-    expect(b1.isHaloInitialized).toBeTruthy();
-    expect(b2.isHaloInitialized).toBeFalsy();
+    expect(b1.halo.isInitialized).toBeTruthy();
+    expect(b2.halo.isInitialized).toBeFalsy();
 
     await Promise.all([
       (async () => {
         // Issue the invitation on nodeA.
-        const invitation = await a1.createHaloInvitation(testInvitationAuthenticator);
+        const invitation = await a1.halo.createInvitation(defaultInvitationAuthenticator);
 
         // And then redeem it on nodeB.
-        await a2.joinHalo(invitation, testSecretProvider);
+        await a2.halo.join(invitation, defaultSecretProvider);
       })(),
       (async () => {
         // Issue the invitation on nodeA.
-        const invitation = await b1.createHaloInvitation(testInvitationAuthenticator);
+        const invitation = await b1.halo.createInvitation(defaultInvitationAuthenticator);
 
         // And then redeem it on nodeB.
-        await b2.joinHalo(invitation, testSecretProvider);
+        await b2.halo.join(invitation, defaultSecretProvider);
       })()
     ]);
 
@@ -373,8 +371,8 @@ describe('ECHO', () => {
       const [partyUpdatedB, onPartyUpdateB] = latch();
       b2.queryParties().update.on(onPartyUpdateB);
 
-      const invitation = await partyA.createInvitation(testInvitationAuthenticator);
-      await b1.joinParty(invitation, testSecretProvider);
+      const invitation = await partyA.createInvitation();
+      await b1.joinParty(invitation, defaultSecretProvider);
 
       await partyUpdatedB;
       expect(b1.queryParties().value.length).toBe(1);
@@ -388,7 +386,7 @@ describe('ECHO', () => {
     // Empty across the board.
     for (const node of [a1, a2, b1, b2]) {
       const [party] = node.queryParties().value;
-      expect(party.database.queryItems({ type: 'dxn://example/item/test' }).value.length).toBe(0);
+      expect(party.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items).getValue().length).toBe(0);
     }
 
     for await (const node of [a1, a2, b1, b2]) {
@@ -399,9 +397,9 @@ describe('ECHO', () => {
       for (const otherNode of [a1, a2, b1, b2].filter(x => x !== node)) {
         const [otherParty] = otherNode.queryParties().value;
         const [updated, onUpdate] = latch();
-        otherParty.database.queryItems({ type: 'dxn://example/item/test' })
-          .subscribe((result) => {
-            if (result.find(current => current.id === item?.id)) {
+        otherParty.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+          .update.on(items => {
+            if (items.find(current => current.id === item?.id)) {
               log(`other has ${item?.id}`);
               onUpdate();
             }
@@ -414,25 +412,24 @@ describe('ECHO', () => {
     }
   }).timeout(20_000);
 
-  // TODO(marik-d): Move to ECHO tests.
   test('Join new device to HALO by recovering from identity seed phrase', async () => {
     const a = new ECHO();
     await a.open();
     afterTest(() => a.close());
 
     const seedPhrase = generateSeedPhrase();
-    await a.createIdentity(keyPairFromSeedPhrase(seedPhrase));
-    await a.createHalo();
+    await a.halo.createIdentity(keyPairFromSeedPhrase(seedPhrase));
+    await a.halo.create();
 
     const b = await setup(false);
 
-    expect(a.isHaloInitialized).toBeTruthy();
-    expect(b.isHaloInitialized).toBeFalsy();
+    expect(a.halo.isInitialized).toBeTruthy();
+    expect(b.halo.isInitialized).toBeFalsy();
 
     // And then redeem it on nodeB.
-    await b.recoverHalo(seedPhrase);
-    expect(a.isHaloInitialized).toBeTruthy();
-    expect(b.isHaloInitialized).toBeTruthy();
+    await b.halo.recover(seedPhrase);
+    expect(a.halo.isInitialized).toBeTruthy();
+    expect(b.halo.isInitialized).toBeTruthy();
 
     // Now create a Party on A and make sure it gets opened on both A and B.
     expect(a.queryParties().value.length).toBe(0);
@@ -451,7 +448,7 @@ describe('ECHO', () => {
       let itemA: Item<any> | null = null;
 
       // Subscribe to Item updates on B.
-      const updated = b.queryParties().value[0].database.queryItems({ type: 'dxn://example/item/test' })
+      const updated = b.queryParties().value[0].database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
         .update.waitFor(items => !!itemA && !!items.find(item => item.id === itemA?.id));
 
       // Create a new Item on A.
@@ -469,14 +466,14 @@ describe('ECHO', () => {
     const a = await setup(true);
     const b = await setup(true);
 
-    const updatedA = a.queryContacts().update.waitFor(contacts => contacts.some(c => b.identityKey?.publicKey.equals(c.publicKey)));
-    const updatedB = b.queryContacts().update.waitFor(contacts => contacts.some(c => a.identityKey?.publicKey.equals(c.publicKey)));
+    const updatedA = a.halo.queryContacts().update.waitFor(contacts => contacts.some(c => b.halo.identityKey?.publicKey.equals(c.publicKey)));
+    const updatedB = b.halo.queryContacts().update.waitFor(contacts => contacts.some(c => a.halo.identityKey?.publicKey.equals(c.publicKey)));
 
     // Create the Party.
     const partyA = await a.createParty();
     log(`Created ${partyA.key.toHex()}`);
 
-    const invitationDescriptor = await partyA.createOfflineInvitation(b.identityKey!.publicKey);
+    const invitationDescriptor = await partyA.createOfflineInvitation(b.halo.identityKey!.publicKey);
 
     // Redeem the invitation on B.
     const partyB = await b.joinParty(invitationDescriptor);
@@ -486,8 +483,8 @@ describe('ECHO', () => {
     await updatedA;
     await updatedB;
 
-    expect(a.queryContacts().value.length).toBe(1);
-    expect(b.queryContacts().value.length).toBe(1);
+    expect(a.halo.queryContacts().value.length).toBe(1);
+    expect(b.halo.queryContacts().value.length).toBe(1);
   });
 
   test('Deactivating and activating party.', async () => {
@@ -581,10 +578,10 @@ describe('ECHO', () => {
     let itemA: Item<any> | null = null;
     const [updated, onUpdate] = latch();
 
-    partyA.database.queryItems({ type: 'dxn://example/item/test' })
-      .subscribe((result) => {
-        if (result.length) {
-          const [receivedItem] = result;
+    partyA.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.on(items => {
+        if (items.length) {
+          const [receivedItem] = items;
           if (itemA && itemA.id === receivedItem.id) {
             onUpdate();
           }
@@ -594,7 +591,9 @@ describe('ECHO', () => {
     itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' }) as Item<any>;
     await updated; // Wait for update.
 
-    expect((await partyA.database.queryItems({ type: 'dxn://example/item/test' })).value.length).toEqual(1);
+    expect((partyA.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items))
+      .getValue().length)
+      .toEqual(1);
 
     await partyA.deactivate({ global: true });
     await partyA.activate({ global: true });
@@ -602,8 +601,13 @@ describe('ECHO', () => {
     expect(partyA.isOpen).toBe(true);
     expect(partyA.isActive).toBe(true);
 
-    await waitForCondition(() => partyA.database.queryItems({ type: 'dxn://example/item/test' }).value.length > 0, 5000);
-    expect((await partyA.database.queryItems({ type: 'dxn://example/item/test' })).value.length).toEqual(1);
+    await partyA.database
+      .select(s => s.filter({ type: 'dxn://example/item/test' }).items)
+      .update.waitFor(items => items.length > 0);
+    expect((partyA.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items))
+      .getValue()
+      .length
+    ).toEqual(1);
   }).timeout(10_000);
 
   test('Deactivate Party - multi device', async () => {
@@ -611,8 +615,8 @@ describe('ECHO', () => {
     const b = await setup(false);
 
     {
-      const invitation = await a.createHaloInvitation(testInvitationAuthenticator);
-      await b.joinHalo(invitation, testSecretProvider);
+      const invitation = await a.halo.createInvitation(defaultInvitationAuthenticator);
+      await b.halo.join(invitation, defaultSecretProvider);
     }
 
     await a.createParty();
@@ -648,8 +652,8 @@ describe('ECHO', () => {
     afterTest(() => a.close());
 
     const seedPhrase = generateSeedPhrase();
-    await a.createIdentity(keyPairFromSeedPhrase(seedPhrase));
-    await a.createHalo();
+    await a.halo.createIdentity(keyPairFromSeedPhrase(seedPhrase));
+    await a.halo.create();
 
     // User's other device, joined by device invitation
     const b = await setup(false);
@@ -666,27 +670,27 @@ describe('ECHO', () => {
 
     // B joins as another device of A, device invitation.
 
-    const invitation = await a.createHaloInvitation(testInvitationAuthenticator);
+    const invitation = await a.halo.createInvitation(defaultInvitationAuthenticator);
 
     expect(b.queryParties().value.length).toBe(0);
-    await b.joinHalo(invitation, testSecretProvider);
-    expect(b.isHaloInitialized).toBeTruthy();
+    await b.halo.join(invitation, defaultSecretProvider);
+    expect(b.halo.isInitialized).toBeTruthy();
     await waitForCondition(() => b.queryParties().value.length, 1000);
     expect(b.queryParties().value.length).toBe(1);
     const partyB = b.queryParties().value[0];
 
     // C joins as another device of A, seed phrase recovery.
 
-    await c.recoverHalo(seedPhrase);
-    expect(c.isHaloInitialized).toBeTruthy();
+    await c.halo.recover(seedPhrase);
+    expect(c.halo.isInitialized).toBeTruthy();
     await waitForCondition(() => c.queryParties().value.length, 1000);
     expect(c.queryParties().value.length).toBe(1);
     const partyC = c.queryParties().value[0];
 
     // D joins as another member of the party.
-    const invitationDescriptor = await a.queryParties().value[0].createInvitation(testInvitationAuthenticator);
+    const invitationDescriptor = await a.queryParties().value[0].createInvitation();
     expect(d.queryParties().value).toHaveLength(0);
-    const partyD = await d.joinParty(invitationDescriptor, testSecretProvider);
+    const partyD = await d.joinParty(invitationDescriptor, defaultSecretProvider);
     expect(partyD).toBeDefined();
     expect(d.queryParties().value).toHaveLength(1);
 

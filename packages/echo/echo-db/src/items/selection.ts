@@ -96,7 +96,7 @@ export class Selection<I extends Item<any>> {
    * @param filter
    */
   filter (filter: SelectFilter): Selection<I> {
-    const fn = (typeof filter === 'function') ? filter : createArrayFilter(filter as SelectFilterByValue);
+    const fn = typeof filter === 'function' ? filter : createArrayFilter(filter as SelectFilterByValue);
     return new Selection(() => this._getItems().filter(fn), this._update);
   }
 
@@ -106,7 +106,7 @@ export class Selection<I extends Item<any>> {
    */
   // TODO(burdon): Optional filter.
   links (filter: SelectFilter): Selection<any> {
-    const fn = (typeof filter === 'function') ? filter : createArrayFilter(filter as SelectFilterByValue);
+    const fn = typeof filter === 'function' ? filter : createArrayFilter(filter as SelectFilterByValue);
     return new Selection(() => deduplicate(this._getItems().flatMap(item => item.links.filter(fn))), this._update);
   }
 
@@ -116,7 +116,7 @@ export class Selection<I extends Item<any>> {
    */
   // TODO(burdon): Optional filter.
   refs (filter: SelectFilter): Selection<any> {
-    const fn = (typeof filter === 'function') ? filter : createArrayFilter(filter as SelectFilterByValue);
+    const fn = typeof filter === 'function' ? filter : createArrayFilter(filter as SelectFilterByValue);
     return new Selection(() => deduplicate(this._getItems().flatMap(item => item.refs.filter(fn))), this._update);
   }
 
@@ -134,5 +134,25 @@ export class Selection<I extends Item<any>> {
   target (this: Selection<Link<any, any, any>>) {
     // TODO(burdon): Assert links (or sub-class Object/LinkSelection classes?)
     return new Selection(() => deduplicate(this._getItems().map(link => link.target)), this._update);
+  }
+}
+
+/**
+ * Live query returned after performing the selection.
+ */
+export class SelectionResult<T> {
+  readonly update = new Event<T>();
+
+  constructor (
+    private readonly _selection: Selection<any>,
+    private readonly _selector: (selection: Selection<any>) => T
+  ) {
+    this.update.addEffect(() =>
+      this._selection.update.on(() =>
+        this.update.emit(this.getValue())));
+  }
+
+  getValue (): T {
+    return this._selector(this._selection);
   }
 }

@@ -2,4 +2,5 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './useExtensionToBackground';
+export * from './useExtensionBackground';
+export * from './useUIError';

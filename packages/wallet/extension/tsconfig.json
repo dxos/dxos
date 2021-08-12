@@ -9,33 +9,45 @@
     "outDir": "dist",
     "types": [
       "node",
-      "webpack-env"
+      "webpack-env",
+      "mocha"
     ],
     "noEmit": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
   },
   "include": [
     "src/**/*",
-    "tools/**/*"
+    "browser-tests",
+    "tools/**/*",
+    "browser-mocha"
   ],
   "references": [
     {
       "path": "../../sdk/client"
     },
     {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
       "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-ux"
+      "path": "../../common/rpc"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../core"
     },
     {
-      "path": "../../common/async"
+      "path": "../../gravity/browser-mocha"
     }
   ]
 }

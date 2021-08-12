@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Feed } from 'hypercore';
 import pify from 'pify';
 
 import { PublicKey } from '@dxos/crypto';
+import type { Feed } from '@dxos/feed-store';
 import { MaybePromise } from '@dxos/util';
 
 import { FeedKey } from '../types';

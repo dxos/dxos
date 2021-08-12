@@ -25,9 +25,6 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../halo/credentials"
-    },
-    {
       "path": "../../common/crypto"
     },
     {
@@ -35,9 +32,6 @@
     },
     {
       "path": "../protocol-plugin-bot"
-    },
-    {
-      "path": "../../common/util"
     }
   ]
 }

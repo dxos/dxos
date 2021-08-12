@@ -1,0 +1,26 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": [
+      "DOM",
+      "es2019"
+    ],
+    "skipLibCheck": true,
+    "types": [
+      "mocha"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "/node_modules/",
+    "/dist/"
+  ],
+  "references": [
+    {
+      "path": "../../gravity/browser-mocha"
+    }
+  ]
+}

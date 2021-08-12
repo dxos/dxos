@@ -5,23 +5,27 @@
 import crypto from 'crypto';
 import eos from 'end-of-stream';
 import pify from 'pify';
-import ram from 'random-access-memory';
 import waitForExpect from 'wait-for-expect';
 
-import { discoveryKey } from '@dxos/crypto';
+import { createKeyPair, discoveryKey, PublicKey } from '@dxos/crypto';
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { DefaultReplicator } from '.';
 
 jest.setTimeout(30000);
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
-  const feedStore = await FeedStore.create(ram, { feedOptions: { valueEncoding: 'utf8' } });
-  const feed = await feedStore.openFeed('/feed', {
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
+  await feedStore.open();
+  const { publicKey, secretKey } = createKeyPair();
+  const feed = await feedStore.createReadWriteFeed({
+    key: PublicKey.from(publicKey),
+    secretKey,
     metadata: { topic: topic.toString('hex') }
-  } as any);
+  });
   const append = pify(feed.append.bind(feed));
   let closed = false;
 
@@ -41,16 +45,18 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     getDescriptors () {
       return feedStore.getDescriptors();
     },
-    createStream () {
+    createStream ({ initiator }) {
       return new Protocol({
+        initiator: !!initiator,
+        discoveryKey: discoveryKey(topic),
         streamOptions: {
           live: true
-        }
+        },
+        userSession: { peerId: 'session1' }
       })
-        .setSession({ id: 'session1' })
         .setContext({ name: 'foo' })
         .setExtensions([replicator.createExtension()])
-        .init(discoveryKey(topic))
+        .init()
         .stream;
     },
     append (msg: any) {

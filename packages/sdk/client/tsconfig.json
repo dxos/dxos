@@ -41,13 +41,7 @@
       "path": "../../echo/object-model"
     },
     {
-      "path": "../../mesh/protocol"
-    },
-    {
-      "path": "../../mesh/protocol-plugin-replicator"
-    },
-    {
-      "path": "../../common/util"
+      "path": "../../common/random-access-multi-storage"
     }
   ]
 }

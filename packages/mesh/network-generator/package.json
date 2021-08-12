@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-generator",
-  "version": "2.10.11",
+  "version": "2.12.2",
   "description": "Network generator.",
   "homepage": "https://github.com/dxos/network-generator#readme",
   "bugs": {
@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "debug": "^4.1.1",
     "end-of-stream": "^1.4.1",
     "ngraph.generators": "^18.0.1",
     "ngraph.graph": "^19.0.1"

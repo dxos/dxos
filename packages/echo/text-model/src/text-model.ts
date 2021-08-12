@@ -125,13 +125,13 @@ export class TextModel extends Model<Mutation> {
     return true;
   }
 
-  createSnapshot (): Snapshot {
+  override createSnapshot (): Snapshot {
     return {
       data: encodeStateAsUpdate(this._doc)
     };
   }
 
-  async restoreFromSnapshot (snapshot: Snapshot) {
+  override async restoreFromSnapshot (snapshot: Snapshot) {
     assert(snapshot.data);
 
     applyUpdate(this._doc, snapshot.data);

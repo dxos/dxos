@@ -18,18 +18,20 @@ import { useClient, useParty } from '@dxos/react-client';
 
 /**
  * Settings dialog.
- * @param {Buffer} [partyKey] Key of party to edit or undefined to create a new one.
- * @param {requestCallback} onClose
+ * @param {Object} props
+ * @param {Buffer} [props.partyKey] Key of party to edit or undefined to create a new one.
+ * @param {requestCallback} props.onClose
  *
  * @callback requestCallback
- * @param {Buffer} partyKey
+ * @param {Object} params
+ * @param {Buffer} params.partyKey
  */
 const PartySettings = ({ partyKey = undefined, onClose }) => {
   const client = useClient();
   const party = useParty(partyKey);
   const [title, setTitle] = useState(party ? party.getProperty('title') : '');
 
-  const handleUpdate = async () => {
+  const handleSubmit = async () => {
     if (!title.length) {
       return;
     }
@@ -65,14 +67,14 @@ const PartySettings = ({ partyKey = undefined, onClose }) => {
           label="Title"
           value={title}
           onChange={event => setTitle(event.target.value)}
-          onKeyPress={event => (event.key === 'Enter') && handleUpdate()}
+          onKeyPress={event => (event.key === 'Enter') && handleSubmit()}
         />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={handleUpdate} color="primary">
+        <Button onClick={handleSubmit} color="primary">
           {partyKey ? 'Update' : 'Create'}
         </Button>
       </DialogActions>

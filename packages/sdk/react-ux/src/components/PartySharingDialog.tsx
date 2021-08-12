@@ -81,6 +81,11 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+/**
+ * Component used for:
+ * - Inviting members to the party
+ * - Spawning bots into the party
+ */
 const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: boolean; onClose: () => void }) => {
   const classes = useStyles();
   const client = useClient();
@@ -119,10 +124,11 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
     setContactsInvitations((old) => [...old, { id: Date.now(), contact }]);
   };
 
-  const handleBotInviteClick = () => {
-    setBotDialogVisible(true);
-    setBotInvitationError(undefined);
-  };
+  // issue(grazianoramiro): https://github.com/dxos/protocols/issues/196
+  // const handleBotInviteClick = () => {
+  //   setBotDialogVisible(true);
+  //   setBotInvitationError(undefined);
+  // };
 
   const handleBotInvite = async (botId: string | undefined, spec: Record<string, unknown> = {}) => {
     setBotInvitationError(undefined);
@@ -233,9 +239,11 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
             <Button size='small' onClick={createInvitation}>
               Invite User
             </Button>
+            {/*
+            // issue(grazianoramiro): https://github.com/dxos/protocols/issues/196
             <Button size='small' onClick={() => handleBotInviteClick()}>
               Invite Bot
-            </Button>
+            </Button> */}
           </div>
         </Toolbar>
 
@@ -321,17 +329,19 @@ const PartySharingDialog = ({ party, open, onClose }: { party: Party; open: bool
                       <span className={classes.label}>Contact</span>
                     </TableCell>
                     <TableCell classes={{ root: classes.colActions }}>
-                      {contactsInvitations.find((p) => p.contact === contact) === undefined ? (
-                        <IconButton size='small'>
-                          <InviteIcon onClick={() => createOfflineInvitation(contact)} />
-                        </IconButton>
-                      ) : (
-                        <PendingOfflineInvitation
-                          handleCopy={handleCopy}
-                          party={party}
-                          invitation={contactsInvitations.find((p) => p.contact === contact)}
-                        />
-                      )}
+                      {contactsInvitations.find((p) => p.contact === contact) === undefined
+                        ? (
+                          <IconButton size='small'>
+                            <InviteIcon onClick={() => createOfflineInvitation(contact)} />
+                          </IconButton>
+                          )
+                        : (
+                          <PendingOfflineInvitation
+                            handleCopy={handleCopy}
+                            party={party}
+                            invitation={contactsInvitations.find((p) => p.contact === contact)}
+                          />
+                          )}
                     </TableCell>
                   </TableRow>
                 ))}

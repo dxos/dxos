@@ -34,14 +34,14 @@ const Demo = () => {
   const parties = useParties();
 
   const handleCreateProfile = async () => {
-    await client.createProfile({
+    await client.halo.createProfile({
       ...createKeyPair(),
       username: faker.internet.userName()
     });
   };
 
   const handleCreateParty = async () => {
-    const party = await client.createParty();
+    const party = await client.echo.createParty();
     await party.setTitle(faker.company.companyName());
   };
 

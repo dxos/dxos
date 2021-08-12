@@ -26,6 +26,9 @@ function getSubstitutionType (substitutionProperty: Symbol, typeChecker: TypeChe
   return decodeType.getCallSignatures()[0].getReturnType();
 }
 
+/**
+ * Parse a protobuf-substitutions file and return a map of protobuf FQN => Typescript identifier.
+ */
 export function parseSubstitutionsFile (fileName: string): SubstitutionsMap {
   const project = new Project({
     tsConfigFilePath: ts.findConfigFile(fileName, ts.sys.fileExists)

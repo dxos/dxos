@@ -12,25 +12,36 @@ module.exports = {
       options: {
         ...themeOptions,
         root: __dirname,
-        description: 'DXOS - The Decentralized Operating System',
         subtitle: 'SDK',
-        githubRepo: 'dxos/sdk',
+        description: 'DXOS: The Decentralized Operating System',
+        githubRepo: 'dxos/protocols',
         sidebarCategories: {
           null: [
-            'index',
-            'getting-started'
+            'index' // Required.
           ],
-          Tutorial: [
+          'Full-Stack Tutorial': [
             'tutorial/introduction',
             'tutorial/client',
             'tutorial/profile',
-            'tutorial/party',
-            'tutorial/invite',
-            'tutorial/data'
+            'tutorial/parties',
+            'tutorial/mutations',
+            'tutorial/queries',
+            'tutorial/invitations',
+            'tutorial/next'
           ],
-          Botkit: [
-            'botkit/index'
-          ]
+          'Core Concepts': [
+            'core-concepts/party',
+            'core-concepts/queries',
+            'core-concepts/mutations',
+            'core-concepts/invitations'
+          ],
+          'Publishing': [
+            'publishing/kube',
+            'publishing/configuration',
+          ],
+          'API Reference': [
+            'api-reference/dxos-client',
+          ],
         }
       }
     },

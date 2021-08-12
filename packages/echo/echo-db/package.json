@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.10.11",
+  "version": "2.12.2",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
@@ -37,21 +37,15 @@
     "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/protocol-plugin-replicator": "workspace:*",
-    "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
+    "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
-    "@types/end-of-stream": "^1.4.0",
     "@types/json-stable-stringify": "^1.0.32",
     "@types/lodash": "^4.14.159",
     "@types/node": "^14.0.9",
     "debug": "^4.1.1",
-    "hypercore": "^7.7.1",
-    "js-data-structs": "^1.1.2",
     "json-stable-stringify": "^1.0.1",
-    "lodash.merge": "^4.6.2",
-    "pify": "~5.0.0",
-    "protobufjs": "^6.9.0",
-    "random-access-memory": "~3.1.2"
+    "pify": "~5.0.0"
   },
   "devDependencies": {
     "@dxos/testutils": "workspace:*",
@@ -60,14 +54,12 @@
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2",
     "lodash": "4.17.21",
-    "memdown": "^5.1.0",
-    "tempy": "~1.0.1",
-    "ws": "^7.4.4"
-  },
-  "toolchain": {
-    "testingFramework": "mocha"
+    "memdown": "^5.1.0"
   },
   "publishConfig": {
     "access": "restricted"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

@@ -157,6 +157,15 @@
       "summary": "Build, lint and test.",
       "incremental": true,
       "enableParallelism": true
+    },
+    {
+      "commandKind": "bulk",
+      "name": "lint",
+      "description": "Lint",
+      "summary": "Lint",
+      "ignoreMissingScript": true,
+      "enableParallelism": true,
+      "ignoreDependencyOrder": true
     }
   ],
 

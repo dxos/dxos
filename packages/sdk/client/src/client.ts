@@ -8,26 +8,26 @@ import leveljs from 'level-js';
 import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
-import { Invitation, Keyring } from '@dxos/credentials';
-import { humanize, PublicKey } from '@dxos/crypto';
-import { raise } from '@dxos/debug';
+import { Invitation } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
+import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
 import * as debug from '@dxos/debug';
-import { ECHO, InvitationOptions, OpenProgress, SecretProvider, sortItemsTopologically } from '@dxos/echo-db';
+import { ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, SecretProvider, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
 import { ModelConstructor } from '@dxos/model-factory';
-import { NetworkManager } from '@dxos/network-manager';
 import { ValueUtil } from '@dxos/object-model';
 import { createStorage } from '@dxos/random-access-multi-storage';
 import { Registry } from '@wirelineio/registry-client';
 
 import { DevtoolsContext } from './devtools-context';
+import { InvalidConfigurationError } from './errors';
 import { isNode } from './platform';
 
 export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
 
 // CAUTION: Breaking changes to this interface require corresponding changes in https://github.com/dxos/kube/blob/main/remote.yml
+// TODO(marik-d): For now these types are duplicates of ones in @dxos/config. Think about a way to unify them.
 export interface ClientConfig {
   storage?: {
     persistent?: boolean,
@@ -56,14 +56,9 @@ export interface ClientConfig {
   invitationExpiration?: number,
 }
 
-export interface CreateProfileOptions {
-  publicKey?: Buffer
-  secretKey?: Buffer
-  username?: string
-}
-
 /**
- * Data client.
+ * Main DXOS client object.
+ * An entrypoint to ECHO, HALO, DXNS.
  */
 export class Client {
   private readonly _config: ClientConfig;
@@ -74,8 +69,11 @@ export class Client {
 
   private _initialized = false;
 
+  /**
+   * Creates the client object based on supplied configuration.
+   * Requires initialization after creating by calling `.initialize()`.
+   */
   constructor (config: ClientConfig = {}) {
-    this._config = config;
     // TODO(burdon): Make hierarchical (e.g., snapshot.[enabled, interval])
     const {
       storage = {},
@@ -85,6 +83,8 @@ export class Client {
       snapshotInterval
     } = config;
 
+    this._config = { storage, swarm, wns, snapshots, snapshotInterval, ...config };
+
     const { feedStorage, keyStorage, snapshotStorage } = createStorageObjects(storage, snapshots);
 
     // TODO(burdon): Extract constants.
@@ -93,7 +93,7 @@ export class Client {
       keyStorage,
       snapshotStorage,
       networkManagerOptions: {
-        signal: swarm?.signal ? (Array.isArray(swarm.signal) ? swarm.signal : [swarm.signal]) : undefined,
+        signal: swarm?.signal ? Array.isArray(swarm.signal) ? swarm.signal : [swarm.signal] : undefined,
         ice: swarm?.ice
       },
       snapshots,
@@ -107,20 +107,38 @@ export class Client {
     return this._config;
   }
 
+  /**
+   * ECHO database.
+   */
   get echo () {
     return this._echo;
   }
 
+  /**
+   * HALO credentials.
+   */
+  get halo () {
+    return this._echo.halo;
+  }
+
+  /**
+   * DXNS registry.
+   */
   get registry () {
     return this._registry;
   }
 
+  /**
+   * Has the Client been initialized?
+   * Initialize by calling `.initialize()`
+   */
   get initialized () {
     return this._initialized;
   }
 
   /**
-   * Initializes internal resources.
+   * Initializes internal resources in an idempotent way.
+   * Required before using the Client instance.
    */
   @synchronized
   async initialize (onProgressCallback?: (progress: OpenProgress) => void) {
@@ -130,7 +148,7 @@ export class Client {
 
     const t = 10;
     const timeout = setTimeout(() => {
-      throw new Error(`Initialize timed out after ${t}s.`);
+      throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
 
     await this._echo.open(onProgressCallback);
@@ -144,14 +162,6 @@ export class Client {
    */
   @synchronized
   async destroy () {
-    return this._destroy();
-  }
-
-  /**
-   * Cleanup, release resources.
-   * (To be called from @synchronized method)
-   */
-  private async _destroy () {
     if (!this._initialized) {
       return;
     }
@@ -168,78 +178,7 @@ export class Client {
   @synchronized
   async reset () {
     await this._echo.reset();
-    await this._destroy();
-  }
-
-  //
-  // HALO Profile
-  //
-
-  /**
-   * Create Profile. Add Identity key if public and secret key are provided. Then initializes profile with given username.
-   * If not public and secret key are provided it relies on keyring to contain an identity key.
-   * @returns {ProfileInfo} User profile info.
-   */
-  // TODO(burdon): Breaks if profile already exists.
-  // TODO(burdon): ProfileInfo is not imported or defined.
-  @synchronized
-  async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}) {
-    if (this.getProfile()) {
-      throw new Error('Profile already exists.');
-    }
-
-    // TODO(burdon): What if not set?
-    if (publicKey && secretKey) {
-      await this._echo.createIdentity({ publicKey, secretKey });
-    }
-
-    await this._echo.createHalo(username);
-
-    return this.getProfile();
-  }
-
-  /**
-   * @returns true if the profile exists.
-   * @deprecated Use getProfile.
-   */
-  // TODO(burdon): Remove?
-  hasProfile () {
-    return this._echo.identityKey;
-  }
-
-  /**
-   * @returns {ProfileInfo} User profile info.
-   */
-  // TODO(burdon): Change to property (currently returns a new object each time).
-  getProfile () {
-    if (!this._echo.identityKey) {
-      return;
-    }
-
-    return {
-      username: this._echo.identityDisplayName,
-      // TODO(burdon): Why convert to string?
-      publicKey: this._echo.identityKey.publicKey
-    };
-  }
-
-  // TODO(burdon): Should be part of profile object. Or use standard Result object.
-  subscribeToProfile (cb: () => void): () => void {
-    return this._echo.identityReady.on(cb);
-  }
-
-  //
-  // Parties
-  //
-
-  /**
-   * @deprecated
-   * Create a new party.
-   * @return {Promise<Party>} The new Party.
-   */
-  @synchronized
-  async createParty () {
-    return this._echo.createParty();
+    this._initialized = false;
   }
 
   /**
@@ -287,7 +226,7 @@ export class Client {
       oldToNewIdMap.set(item.itemId, createdItem.id);
 
       if (item.model.array) {
-        for (const mutation of (item.model.array.mutations || [])) {
+        for (const mutation of item.model.array.mutations || []) {
           const decodedMutation = model.meta.mutation.decode(mutation.mutation);
           await (createdItem.model as any).write(decodedMutation);
         }
@@ -317,7 +256,7 @@ export class Client {
 
         await createdItem.model.restoreFromSnapshot(decodedItemSnapshot);
       } else {
-        throw new Error(`Unhandled model type: ${item.modelType}`);
+        throw new InvalidParameterError(`Unhandled model type: ${item.modelType}`);
       }
     }
 
@@ -325,12 +264,20 @@ export class Client {
   }
 
   /**
-   * @param partyKey Party publicKey
-   * @param secretProvider
-   * @param options
+   * Creates an invitation to a given party.
+   * The Invitation flow requires the inviter and invitee to be online at the same time.
+   * If the invitee is known ahead of time, `createOfflineInvitation` can be used instead.
+   * The invitation flow is protected by a generated pin code.
+   *
+   * To be used with `client.echo.joinParty` on the invitee side.
+   *
+   * @param partyKey the Party to create the invitation for.
+   * @param secretProvider supplies the pin code
+   * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
+   * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
   async createInvitation (partyKey: PublicKey, secretProvider: SecretProvider, options?: InvitationOptions) {
-    const party = await this.echo.getParty(partyKey) ?? raise(new Error(`Party not found: ${partyKey.toString()}`));
+    const party = await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createInvitation({
       // TODO(marik-d): Probably an error here.
       secretValidator:
@@ -341,40 +288,22 @@ export class Client {
   }
 
   /**
-   * @param {PublicKey} partyKey Party publicKey
-   * @param {PublicKey} recipientKey Recipient publicKey
+   * Hook to create an Offline Invitation for a recipient to a given party.
+   * Offline Invitation, unlike regular invitation, does NOT require
+   * the inviter and invitee to be online at the same time - hence `Offline` Invitation.
+   * The invitee (recipient) needs to be known ahead of time.
+   * Invitation it not valid for other users.
+   *
+   * To be used with `client.echo.joinParty` on the invitee side.
+   *
+   * @param partyKey the Party to create the invitation for.
+   * @param recipientKey the invitee (recipient for the invitation).
    */
   // TODO(burdon): Move to party.
   async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
     const party =
-      await this.echo.getParty(partyKey) ?? raise(new Error(`Party not found: ${humanize(partyKey.toString())}`));
+      await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createOfflineInvitation(recipientKey);
-  }
-
-  // TODO(rzadp): Uncomment after updating ECHO.
-  // async createHaloInvitation (secretProvider: SecretProvider, options?: InvitationOptions) {
-  //   return this.echo.createHaloInvitation(
-  //     {
-  //       secretProvider,
-  //       secretValidator: (invitation: any, secret: any) => secret && secret.equals(invitation.secret)
-  //     }
-  //     , options
-  //   );
-  // }
-
-  //
-  // Contacts
-  //
-
-  /**
-   * Returns an Array of all known Contacts across all Parties.
-   * @returns {Contact[]}
-   */
-  // TODO(burdon): Not implemented.
-  async getContacts () {
-    console.warn('client.getContacts not impl. Returning []');
-    // return this._partyManager.getContacts();
-    return [];
   }
 
   //
@@ -382,7 +311,7 @@ export class Client {
   //
 
   /**
-   * Registers a new model.
+   * Registers a new ECHO model.
    */
   // TODO(burdon): Expose echo directly?
   registerModel (constructor: ModelConstructor<any>): this {
@@ -396,7 +325,8 @@ export class Client {
   //
 
   /**
-   * Returns devtools context
+   * Returns devtools context.
+   * Used by the DXOS DevTool Extension.
    */
   getDevtoolsContext (): DevtoolsContext {
     const devtoolsContext: DevtoolsContext = {
@@ -404,39 +334,10 @@ export class Client {
       feedStore: this._echo.feedStore,
       networkManager: this._echo.networkManager,
       modelFactory: this._echo.modelFactory,
-      keyring: this._echo.keyring,
+      keyring: this._echo.halo.keyring,
       debug
     };
     return devtoolsContext;
-  }
-
-  /**
-   * @deprecated Use echo.keyring
-   */
-  get keyring (): Keyring {
-    return this._echo.keyring;
-  }
-
-  /**
-   * @deprecated Use echo.feedStore
-   */
-  get feedStore (): FeedStore {
-    return this._echo.feedStore;
-  }
-
-  /**
-   * @deprecated Use echo.networkManager.
-   */
-  get networkManager (): NetworkManager {
-    return this._echo.networkManager;
-  }
-
-  /**
-   * @deprecated
-   */
-  get modelFactory () {
-    console.warn('client.modelFactory is deprecated.');
-    return this._echo.modelFactory;
   }
 }
 
@@ -455,16 +356,16 @@ function createStorageObjects (config: ClientConfig['storage'], snapshotsEnabled
   } = config ?? {};
 
   if (persistent && type === 'ram') {
-    throw new Error('RAM storage cannot be used in persistent mode.');
+    throw new InvalidConfigurationError('RAM storage cannot be used in persistent mode.');
   }
   if (!persistent && (type !== undefined && type !== 'ram')) {
-    throw new Error('Cannot use a persistent storage in not persistent mode.');
+    throw new InvalidConfigurationError('Cannot use a persistent storage in not persistent mode.');
   }
   if (persistent && keyStorage === 'ram') {
-    throw new Error('RAM key storage cannot be used in persistent mode.');
+    throw new InvalidConfigurationError('RAM key storage cannot be used in persistent mode.');
   }
   if (!persistent && (keyStorage !== 'ram' && keyStorage !== undefined)) {
-    throw new Error('Cannot use a persistent key storage in not persistent mode.');
+    throw new InvalidConfigurationError('Cannot use a persistent key storage in not persistent mode.');
   }
 
   return {
@@ -481,6 +382,6 @@ function createKeyStorage (path: string, type?: KeyStorageType) {
     case 'leveljs': return leveljs(path);
     case 'jsondown': return jsondown(path);
     case 'ram': return memdown();
-    default: throw new Error(`Invalid type: ${defaultedType}`);
+    default: throw new InvalidConfigurationError(`Invalid key storage type: ${defaultedType}`);
   }
 }

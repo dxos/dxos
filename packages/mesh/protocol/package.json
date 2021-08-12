@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol",
-  "version": "2.10.11",
+  "version": "2.12.2",
   "description": "Protocol.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol#readme",
   "bugs": {
@@ -24,31 +24,35 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.1.1",
     "end-of-stream": "^1.4.1",
     "humanhash": "^1.0.4",
-    "hypercore-protocol": "^6.11.1",
+    "hypercore-protocol": "dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60",
     "nanoerror": "^1.2.1",
     "nanomessage": "^5.4.0",
     "nanoresource-promise": "^2.0.0",
-    "signal-promise": "^1.0.3",
-    "@dxos/async": "workspace:*"
+    "signal-promise": "^1.0.3"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/assert": "^1.5.4",
     "@types/debug": "^4.1.1",
     "@types/end-of-stream": "^1.4.0",
-    "@types/jest": "^26.0.7",
+    "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
     "@types/pump": "^1.1.0",
+    "expect": "~27.0.2",
     "pump": "^3.0.0",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "restricted"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

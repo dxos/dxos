@@ -231,7 +231,7 @@ export class Swarm {
       sessionId,
       initiator,
       this._sendSignal,
-      this._protocol({ channel: discoveryKey(this._topic) }),
+      this._protocol({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );
 

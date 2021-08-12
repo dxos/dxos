@@ -13,7 +13,8 @@ import { checkType } from '@dxos/debug';
 import {
   createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter
 } from '@dxos/echo-protocol';
-import { createReadable, jsonReplacer } from '@dxos/util';
+import { createReadable } from '@dxos/feed-store';
+import { jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../items';
 import { PartyProcessor } from './party-processor';

@@ -1,0 +1,20 @@
+{
+  "name": "@dxos/deps-checker",
+  "version": "2.10.10",
+  "private": true,
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint"
+  },
+  "dependencies": {
+    "chalk": "^4.1.0"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/chalk": "~2.2.0",
+    "@types/node": "^14.0.9"
+  }
+}

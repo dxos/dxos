@@ -6,15 +6,16 @@
 
 import debug from 'debug';
 import eos from 'end-of-stream';
+import expect from 'expect';
 import pify from 'pify';
 import pump from 'pump';
-import ram from 'random-access-memory';
 import waitForExpect from 'wait-for-expect';
 
-import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
-import { Protocol } from '@dxos/protocol';
+import { keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
+import { Feed, FeedStore } from '@dxos/feed-store';
+import { Protocol, ProtocolOptions } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { Keyring } from '../keys';
 import { codec, codecLoop, KeyType } from '../proto';
@@ -48,7 +49,7 @@ class ExpectedKeyAuthenticator extends Authenticator {
     super();
   }
 
-  async authenticate (credentials: any) { // TODO(marik-d): Use more specific type
+  override async authenticate (credentials: any) { // TODO(marik-d): Use more specific type
     if (this._keyring.verify(credentials)) {
       if (this._expectedKey.equals(credentials.signatures[0].key)) {
         return true;
@@ -66,13 +67,15 @@ class ExpectedKeyAuthenticator extends Authenticator {
  * Basically, we need all of data-client but in one fairly small function.
  * @listens AuthPlugin#authenticated
  */
-const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator, keyring: Keyring) => {
+const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator, keyring: Keyring, protocolOptions?: ProtocolOptions) => {
   const topic = partyKey.toHex();
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();
-  const feedStore = await FeedStore.create(ram, { feedOptions: { valueEncoding: 'utf8' } });
-  const feed = await feedStore.openFeed(`/topic/${topic}/writable`, { metadata: { topic } });
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
+  await feedStore.open();
+  const { publicKey, secretKey } = createKeyPair();
+  const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey, metadata: { topic } });
   const append = pify(feed.append.bind(feed));
 
   const credentials = Buffer.from(codec.encode(
@@ -86,11 +89,6 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
       resolve(true);
     });
   });
-
-  const openFeed = async (key: Buffer) => {
-    return feedStore.getOpenFeed((desc: any) => desc.feed.key.equals(key)) ||
-      feedStore.openFeed(`/topic/${topic}/readable/${keyToString(key)}`, { key, metadata: { topic } });
-  };
 
   // Share and replicate all known feeds.
   const repl = new Replicator({
@@ -106,10 +104,14 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
       };
     },
 
-    replicate: async (feeds: any[]) => {
-      for await (const feed of feeds) {
-        if (feed.key) {
-          await openFeed(feed.key);
+    replicate: async (feeds: Feed[]) => {
+      for (const feed of feeds) {
+        if (feedStore.hasFeed(feed.key)) {
+          await feedStore.openFeed(PublicKey.from(feed.key));
+        } else {
+          await feedStore.createReadOnlyFeed({
+            key: PublicKey.from(feed.key)
+          });
         }
       }
 
@@ -136,12 +138,14 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   };
 
   const proto = new Protocol({
-    streamOptions: { live: true }
+    streamOptions: { live: true },
+    discoveryKey: partyKey.asBuffer(),
+    userSession: { peerId: keyToString(peerId), credentials },
+    initiator: !!protocolOptions?.initiator
   })
-    .setSession({ peerId, credentials })
     .setExtension(auth.createExtension())
     .setExtension(repl.createExtension())
-    .init(partyKey.asBuffer());
+    .init();
 
   return { id: peerId, auth, authPromise, proto, repl, feed, feedStore, append, getMessages };
 };
@@ -153,15 +157,15 @@ const connect = (source: any, target: any) => {
   return pump(source.stream, target.stream, source.stream) as any;
 };
 
-test('Auth Plugin (GOOD)', async () => {
+it('Auth Plugin (GOOD)', async () => {
   const keyring = await createTestKeyring();
   const partyKey = PublicKey.from(randomBytes(32));
   const node1 = await createProtocol(partyKey,
     new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring);
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: true });
   const node2 = await createProtocol(partyKey,
     new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring);
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: false });
 
   const connection = connect(node1.proto, node2.proto);
   await node1.authPromise;
@@ -170,15 +174,15 @@ test('Auth Plugin (GOOD)', async () => {
   connection.destroy();
 });
 
-test('Auth & Repl (GOOD)', async () => {
+it('Auth & Repl (GOOD)', async () => {
   const keyring = await createTestKeyring();
   const partyKey = PublicKey.from(randomBytes(32));
   const node2 = await createProtocol(partyKey,
     new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring);
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: true });
   const node1 = await createProtocol(partyKey,
     new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring);
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: false });
 
   const connection = connect(node1.proto, node2.proto);
   await node1.authPromise;

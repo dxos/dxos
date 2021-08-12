@@ -12,7 +12,8 @@ import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { ActivationOptions, PartyActivator, IdentityProvider } from '../halo';
+import { IdentityNotInitializedError } from '../errors';
+import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
 import { Database } from '../items';
 import { SnapshotStore } from '../snapshots';
@@ -43,7 +44,7 @@ export class PartyInternal {
   // TODO(burdon): Merge with PartyInternal.
   private readonly _partyCore: PartyCore;
 
-  private readonly _activator?: PartyActivator;
+  private readonly _preferences?: PartyPreferences;
 
   private _invitationManager?: InvitationManager;
   private _protocol?: PartyProtocol;
@@ -71,8 +72,8 @@ export class PartyInternal {
     );
 
     const identity = this._identityProvider();
-    if (identity.halo) {
-      this._activator = new PartyActivator(identity.halo, this);
+    if (identity.preferences) {
+      this._preferences = new PartyPreferences(identity.preferences, this);
     }
   }
 
@@ -102,13 +103,18 @@ export class PartyInternal {
   }
 
   get title () {
-    return this._activator?.getLastKnownTitle();
+    return this._preferences?.getLastKnownTitle();
+  }
+
+  get preferences (): PartyPreferences {
+    assert(this._preferences, 'Preferences not available');
+    return this._preferences;
   }
 
   async setTitle (title: string) {
     const item = await this.getPropertiesItem();
     await item.model.setProperty(PARTY_TITLE_PROPERTY, title);
-    await this._activator?.setLastKnownTitle(title);
+    await this._preferences?.setLastKnownTitle(title);
   }
 
   /**
@@ -150,7 +156,7 @@ export class PartyInternal {
     await this._protocol.start();
 
     // Issue an 'update' whenever the properties change.
-    this.database.queryItems({ type: PARTY_ITEM_TYPE }).update.on(() => this.update.emit());
+    this.database.select(s => s.filter({ type: PARTY_ITEM_TYPE }).items).update.on(() => this.update.emit());
 
     this.update.emit();
     return this;
@@ -177,13 +183,13 @@ export class PartyInternal {
   }
 
   get isActive (): boolean {
-    assert(this._activator, 'PartyActivator required');
-    return this._activator.isActive;
+    assert(this._preferences, 'PartyActivator required');
+    return this._preferences.isActive;
   }
 
   async activate (options: ActivationOptions) {
-    assert(this._activator, 'PartyActivator required');
-    await this._activator.activate(options);
+    assert(this._preferences, 'PartyActivator required');
+    await this._preferences.activate(options);
 
     if (!this.isOpen) {
       await this.open();
@@ -193,8 +199,8 @@ export class PartyInternal {
   }
 
   async deactivate (options: ActivationOptions) {
-    assert(this._activator, 'PartyActivator required');
-    await this._activator.deactivate(options);
+    assert(this._preferences, 'PartyActivator required');
+    await this._preferences.deactivate(options);
 
     if (this.isOpen) {
       await this.close();
@@ -210,7 +216,7 @@ export class PartyInternal {
     assert(this.isOpen, 'Party not open.');
 
     await this.database.waitForItem({ type: PARTY_ITEM_TYPE });
-    const { value: items } = this.database.queryItems({ type: PARTY_ITEM_TYPE });
+    const items = this.database.select(s => s.filter({ type: PARTY_ITEM_TYPE }).items).getValue();
     assert(items.length === 1, 'Party properties missing.');
     return items[0];
   }
@@ -220,7 +226,7 @@ export class PartyInternal {
    */
   getPropertiesSet () {
     assert(this.isOpen, 'Party not open.');
-    return this.database.queryItems({ type: PARTY_ITEM_TYPE });
+    return this.database.select(s => s.filter({ type: PARTY_ITEM_TYPE }).items);
   }
 
   /**
@@ -239,10 +245,10 @@ export class PartyInternal {
       get: () => {
         const identity = this._identityProvider();
         return Buffer.from(Authenticator.encodePayload(createAuthMessage(
-          identity.keyring,
+          identity.signer,
           partyKey,
-          identity.identityKey ?? raise(new Error('No identity key')),
-          identity.deviceKeyChain ?? identity.deviceKey ?? raise(new Error('No device key')),
+          identity.identityKey ?? raise(new IdentityNotInitializedError()),
+          identity.deviceKeyChain ?? identity.deviceKey ?? raise(new IdentityNotInitializedError()),
           identity.keyring.getKey(feedKey)
         )));
       }

@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
 
-import { Keyring, assertValidPublicKey } from '../keys';
+import { assertValidPublicKey, Signer } from '../keys';
 import { KeyChain, KeyRecord, Message, SignedMessage, PartyCredential, Command, Auth, WithTypeUrl } from '../proto';
 
 // TODO(burdon): Remove dependencies on ANY?
@@ -19,17 +19,18 @@ export const TYPE_URL_PARTY_INVITATION = 'dxos.credentials.party.PartyInvitation
  * The start-of-authority record for the Party, admitting a single key (usually a identity) and a single feed.
  * It must be signed by all three keys (party, key, feed). The Party private key should be destroyed after
  * signing this message.
- * @param {Keyring} keyring
- * @param {KeyRecord} partyKeyPair
- * @param {KeyRecord} feedKeyPair
- * @param {KeyRecord} admitKeyPair
- * @returns {SignedMessage}
+ * @param signer
+ * @param partyKeyPair
+ * @param feedKeyPair
+ * @param admitKeyPair
+ * @returns Signed message
  */
-export const createPartyGenesisMessage = (keyring: Keyring,
+export const createPartyGenesisMessage = (
+  signer: Signer,
   partyKeyPair: KeyRecord,
   feedKeyPair: KeyRecord,
-  admitKeyPair: KeyRecord): Message => {
-  assert(keyring.hasSecretKey(admitKeyPair));
+  admitKeyPair: KeyRecord
+): Message => {
   assert(typeof admitKeyPair.type !== 'undefined');
 
   const message: WithTypeUrl<PartyCredential> = {
@@ -43,7 +44,7 @@ export const createPartyGenesisMessage = (keyring: Keyring,
     }
   };
 
-  return wrapMessage(keyring.sign(message, [partyKeyPair, feedKeyPair, admitKeyPair]));
+  return wrapMessage(signer.sign(message, [partyKeyPair, feedKeyPair, admitKeyPair]));
 };
 
 /**
@@ -51,12 +52,11 @@ export const createPartyGenesisMessage = (keyring: Keyring,
  * of an Envelope, also by a key which has already been admitted.
  */
 export const createKeyAdmitMessage = (
-  keyring: Keyring,
+  signer: Signer,
   partyKey: PublicKeyLike,
   admitKeyPair: KeyRecord,
   signingKeys: (KeyRecord | KeyChain)[] = [],
   nonce?: Buffer): Message => {
-  assert(keyring.hasSecretKey(admitKeyPair));
   assert(typeof admitKeyPair.type !== 'undefined');
   partyKey = PublicKey.from(partyKey);
 
@@ -70,18 +70,20 @@ export const createKeyAdmitMessage = (
     }
   };
 
-  return wrapMessage(keyring.sign(message, [admitKeyPair, ...signingKeys], nonce));
+  return wrapMessage(signer.sign(message, [admitKeyPair, ...signingKeys], nonce));
 };
 
 /**
  * Admit a single feed to the Party. This message must be signed by the feed key to be admitted, also by some other
  * key which has already been admitted (usually by a device identity key).
  */
-export const createFeedAdmitMessage = (keyring: Keyring,
+export const createFeedAdmitMessage = (
+  signer: Signer,
   partyKey: PublicKeyLike,
   feedKeyPair: KeyRecord,
   signingKeys: (KeyRecord | KeyChain)[] = [],
-  nonce?: Buffer): Message => {
+  nonce?: Buffer
+): Message => {
   partyKey = PublicKey.from(partyKey);
 
   const message: WithTypeUrl<PartyCredential> = {
@@ -93,21 +95,23 @@ export const createFeedAdmitMessage = (keyring: Keyring,
     }
   };
 
-  return wrapMessage(keyring.sign(message, [feedKeyPair, ...signingKeys], nonce));
+  return wrapMessage(signer.sign(message, [feedKeyPair, ...signingKeys], nonce));
 };
 
 /**
  * A signed message containing a signed message. This is used when wishing to write a message on behalf of another,
  * as in Greeting, or when copying a message from Party to another, such as copying an IdentityInfo message from the
  * HALO to a Party that is being joined.
- * @returns {SignedMessage}
+ * @returns Signed message.
  */
 // TODO(burdon): What is an envelope, distinct from above?
-export const createEnvelopeMessage = (keyring: Keyring,
+export const createEnvelopeMessage = (
+  signer: Signer,
   partyKey: PublicKeyLike,
   contents: Message,
   signingKeys: (KeyRecord | KeyChain)[] = [],
-  nonce?: Buffer): Message => {
+  nonce?: Buffer
+): Message => {
   partyKey = PublicKey.from(partyKey);
 
   const message: WithTypeUrl<PartyCredential> = {
@@ -119,7 +123,7 @@ export const createEnvelopeMessage = (keyring: Keyring,
     }
   };
 
-  return wrapMessage(keyring.sign(message, [...signingKeys], nonce));
+  return wrapMessage(signer.sign(message, [...signingKeys], nonce));
 };
 
 /**
@@ -256,26 +260,27 @@ export const admitsKeys = (message: Message | SignedMessage): PublicKey[] => {
 
 /**
  * Create a `dxos.credentials.party.PartyInvitation` message.
- * @param {Keyring} keyring
+ * @param {Signer} signer
  * @param {PublicKeyLike} partyKey
  * @param {PublicKeyLike} inviteeKey
  * @param {KeyRecord|KeyChain} issuerKey
  * @param {KeyRecord|KeyChain} [signingKey]
  * @returns {Message}
  */
-export const createPartyInvitationMessage = (keyring: Keyring,
+export const createPartyInvitationMessage = (
+  signer: Signer,
   partyKey: PublicKeyLike,
   inviteeKey: PublicKeyLike,
   issuerKey: KeyRecord | KeyChain,
-  signingKey?: KeyRecord | KeyChain) => {
-  assert(keyring);
+  signingKey?: KeyRecord | KeyChain
+) => {
+  assert(signer);
   assertValidPublicKey(issuerKey.publicKey);
   if (!signingKey) {
     signingKey = issuerKey;
   }
   assert(signingKey);
   assertValidPublicKey(signingKey.publicKey);
-  assert(keyring.hasSecretKey(signingKey));
 
   partyKey = PublicKey.from(partyKey);
   inviteeKey = PublicKey.from(inviteeKey);
@@ -283,7 +288,7 @@ export const createPartyInvitationMessage = (keyring: Keyring,
   return {
     __type_url: TYPE_URL_MESSAGE,
     payload:
-      keyring.sign({
+      signer.sign({
         __type_url: TYPE_URL_PARTY_INVITATION,
         id: randomBytes(),
         partyKey,

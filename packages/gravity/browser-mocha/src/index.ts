@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { assert } from 'console';
+import chalk from 'chalk';
 import { promises as fs } from 'fs';
 import glob from 'glob';
 import { join } from 'path';
@@ -24,31 +24,49 @@ export interface RunOptions {
    */
   files: string[]
   browsers: Browser[]
-  show?: boolean
+  headless: boolean
+  stayOpen: boolean
   setup?: string
+  debug?: boolean,
+  browserArgs?: string[],
+  checkLeaks: boolean
 }
 
 export async function run (options: RunOptions) {
-  assert(options.browsers.length === 1 && options.browsers[0] === Browser.CHROMIUM, 'Only chromium is supported.');
-
   if (options.setup) {
     await runSetup(options.setup);
   }
 
-  const tempDir = 'dist/browser-tests';
+  const tempDir = 'dist/browser-mocha';
   try {
-    await fs.mkdir('dist');
-    await fs.mkdir(tempDir);
-  } catch {}
+    await fs.mkdir(tempDir, { recursive: true });
+  } catch (e) {
+    console.error(e);
+  }
 
   const files = await resolveFiles(options.files);
 
-  await buildTests(files, tempDir);
-  const exitCode = await runTests(join(tempDir, 'bundle.js'), !!options.show);
-  if (!options.show) {
-    process.exit(exitCode);
+  await buildTests(files, { debug: !!options.debug, outDir: tempDir, checkLeaks: options.checkLeaks });
+
+  let shouldFail = false;
+  for (const browser of options.browsers) {
+    console.log(chalk`\n\nRunning in {blue {bold ${browser}}}\n\n`);
+
+    const exitCode = await runTests(join(tempDir, 'bundle.js'), browser, options);
+
+    if (exitCode !== 0) {
+      console.log(chalk`\n\n{red Failed with exit code ${exitCode} in {blue {bold ${browser}}}}\n\n`);
+    } else {
+      console.log(chalk`\n\n{green Passed in {blue {bold ${browser}}}}\n\n`);
+    }
+
+    shouldFail ||= (exitCode !== 0);
+  }
+
+  if (!options.stayOpen) {
+    process.exit(shouldFail ? 1 : 0);
   } else {
-    console.log(`\nCompleted with exit code ${exitCode}. Browser window stays open.`);
+    console.log(`\nCompleted with ${shouldFail ? 'failure' : 'success'}. Browser window stays open.`);
   }
 }
 

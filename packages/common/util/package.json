@@ -1,6 +1,6 @@
 {
   "name": "@dxos/util",
-  "version": "2.10.11",
+  "version": "2.12.2",
   "description": "Temporary bucket for misc functions, which should graduate into separate packages.",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
@@ -23,25 +23,13 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@types/debug": "^4.1.1",
-    "@types/end-of-stream": "^1.4.0",
-    "@types/lodash": "^4.14.159",
-    "@types/node": "^14.0.9",
-    "@types/stream-buffers": "^3.0.2",
-    "@types/through2": "^2.0.36",
-    "debug": "^4.1.1",
-    "hypercore": "^7.7.1",
-    "js-data-structs": "^1.1.2",
-    "lodash.merge": "^4.6.2",
-    "protobufjs": "^6.9.0"
+    "@types/node": "^14.0.9"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/jest": "^26.0.7",
-    "stream-buffers": "^3.0.2"
+    "@types/jest": "^26.0.7"
   },
   "publishConfig": {
     "access": "restricted"

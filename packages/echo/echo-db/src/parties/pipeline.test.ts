@@ -4,17 +4,16 @@
 
 import debug from 'debug';
 import expect from 'expect';
-import { Feed } from 'hypercore';
 import { it as test } from 'mocha';
-import ram from 'random-access-memory';
 
 import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { createId, PublicKey } from '@dxos/crypto';
+import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
 import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream, Timeframe } from '@dxos/echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedStore, Feed, createWritableFeedStream, createWritable, WritableArray } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
-import { createWritable, createWritableFeedStream, jsonReplacer, WritableArray } from '@dxos/util';
+import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../items';
 import { PartyProcessor } from './party-processor';
@@ -25,11 +24,14 @@ const log = debug('dxos:echo:pipeline:test');
 // TODO(burdon): Test read-only.
 describe('pipeline', () => {
   test('streams', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     const feedKeys: Uint8Array[] = [];
     const feedSelector: FeedSelector = descriptor => !!feedKeys.find(key => descriptor.key.equals(key));
+    await feedStore.open();
     const feedReadStream = await createIterator(feedStore, feedSelector);
-    const feed = await feedStore.openFeed('test-feed');
+
+    const { publicKey, secretKey } = createKeyPair();
+    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
     feedKeys.push(feed.key);
     const writeStream = createWritableFeedStream(feed);
 
@@ -82,9 +84,12 @@ describe('pipeline', () => {
   });
 
   test('writing', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
+    await feedStore.open();
     const feedReadStream = await createIterator(feedStore);
-    const feed: Feed = await feedStore.openFeed('test-feed');
+
+    const { publicKey, secretKey } = createKeyPair();
+    const feed: Feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
 
     const keyring = new Keyring();
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });

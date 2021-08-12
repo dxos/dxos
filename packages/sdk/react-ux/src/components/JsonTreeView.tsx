@@ -120,6 +120,13 @@ interface JsonTreeViewProperties {
   size?: string
 }
 
+/**
+ * Visualizes an object as a tree view of all properties.
+ * Works with JSON and other objects with nested values.
+ * @param data The object to be visualized
+ * @param depth Maximum nest depth to be visualized. Unlimited by default.
+ * @param onSelect Callback for when one or more nodes are selected by the user.
+ */
 const JsonTreeView = ({
   className = undefined,
   data = {},
@@ -152,16 +159,20 @@ const JsonTreeView = ({
 
     if (isPlainObject(value)) {
       const items = Object.entries(value).map(([key, value]) => renderNode(value, key, level + 1, `${path}.${key}`)).filter(Boolean);
-      return (!root && level === 0) ? items : (
-        <TreeItem size={size} key={path} nodeId={path || '.'} label={key}>{items}</TreeItem>
-      );
+      return (!root && level === 0)
+        ? items
+        : (
+          <TreeItem size={size} key={path} nodeId={path || '.'} label={key}>{items}</TreeItem>
+          );
     }
 
     if (Array.isArray(value)) {
       const items = value.map((value, key) => renderNode(value, `[${key}]`, level + 1, `${path}.${key}`)).filter(Boolean);
-      return (!root && level === 0) ? items : (
-        <TreeItem size={size} key={path} nodeId={path} label={key}>{items}</TreeItem>
-      );
+      return (!root && level === 0)
+        ? items
+        : (
+          <TreeItem size={size} key={path} nodeId={path} label={key}>{items}</TreeItem>
+          );
     }
 
     // TODO(burdon): Pluggable types (e.g., date, string, number, boolean, etc).

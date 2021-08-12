@@ -4,26 +4,31 @@
 
 import React from 'react';
 
-import { createKeyPair } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
 
 import Main from './Main';
 import ProfileDialog from './ProfileDialog';
 
 /**
- * Main component.
+ * Root component.
  */
 const Root = () => {
   const client = useClient();
   const profile = useProfile();
+  // TODO(zarco): add a get parameter to trigger the first party so we avoid triggering all the time.
+  // const createFirstParty = async () => {
+  //   // Default Party Creation
+  //   const partyDemoTitle = 'My First Party!';
+  //   const party = await client.echo.createParty({ title: partyDemoTitle });
+  //   await party.setProperty('title', partyDemoTitle);
+  // };
 
   if (!profile) {
     const handleRegistration = async ({ username }) => {
       if (username) {
-        const { publicKey, secretKey } = createKeyPair();
-        // TODO(burdon): Return profile object.
-        // ISSUE(rzadp): https://github.com/dxos/sdk/pull/318
-        await client.createProfile({ publicKey, secretKey, username });
+        await client.halo.createProfile({ username });
+        // TODO(zarco): add a get parameter to trigger the first party so we avoid triggering all the time.
+        // createFirstParty();
       }
     };
 

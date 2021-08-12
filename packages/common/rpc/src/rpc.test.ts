@@ -338,7 +338,31 @@ describe('RpcPeer', () => {
       expect(closeCalled).toEqual(true);
     })
   })
+
+  test('one peer can open before the other is created', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
+
+    // eslint-disable-next-line prefer-const
+    const alice: RpcPeer = new RpcPeer({
+      messageHandler: async msg => new Uint8Array(),
+      port: alicePort
+    });
+    const aliceOpen = alice.open();
+
+    await sleep(5);
+
+    const bob = new RpcPeer({
+      messageHandler: async msg => new Uint8Array(),
+      port: bobPort
+    });
+
+    await Promise.all([
+      aliceOpen,
+      bob.open()
+    ]);
+  })
 });
+
 
 type StreamItem<T> = 
   | { data: T }

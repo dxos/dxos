@@ -5,18 +5,18 @@
 import { browser } from 'webextension-polyfill-ts';
 
 (() => {
-  const port = browser.runtime.connect(); // Port to extension's background script.
+  const port = browser.runtime.connect();
 
   port.onMessage.addListener((message, port) => {
-    // Passing through a message from background script back to the app.
+    // passing through back to the app
+    // TODO: Find out and document what is the type of message, and whether it is supported in chrome, firefox & safari.
     window.postMessage({ payloadFromContentScriptToApp: message }, '*');
   });
 
   window.addEventListener('message', (event) => {
-    const ourPayload = event?.data?.payloadFromAppToContentScript;
-    if (ourPayload) {
-      // passing through a message from the App to the background script.
-      port.postMessage(ourPayload);
+    const payload = event?.data?.payloadFromAppToContentScript;
+    if (payload) {
+      port.postMessage(payload); // passing through the payload to background script
     }
   });
 })();

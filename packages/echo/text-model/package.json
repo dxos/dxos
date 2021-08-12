@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "2.10.11",
+  "version": "2.12.2",
   "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
@@ -21,6 +21,7 @@
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
+    "test": "toolchain test",
     "lint": "toolchain lint"
   },
   "dependencies": {
@@ -29,14 +30,18 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@types/node": "^14.0.9",
-    "protobufjs": "^6.9.0",
     "yjs": "^13.4.1"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/jest": "^26.0.7"
+    "@types/jest": "^26.0.7",
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2"
   },
   "publishConfig": {
     "access": "restricted"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

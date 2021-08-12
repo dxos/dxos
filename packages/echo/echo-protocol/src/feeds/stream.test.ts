@@ -5,14 +5,13 @@
 import assert from 'assert';
 import faker from 'faker';
 import pify from 'pify';
-import ram from 'random-access-memory';
 import { Writable } from 'stream';
 import tempy from 'tempy';
 
 import { latch, sink } from '@dxos/async';
-import { createId, keyToString, randomBytes, PublicKey } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
-import { createWritableFeedStream } from '@dxos/util';
+import { createId, keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
+import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
+import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { codec, createTestItemMutation, FeedMessage } from '../proto';
 import { Timeframe } from '../spacetime';
@@ -30,12 +29,14 @@ describe('Stream tests', () => {
     const directory = tempy.directory();
 
     let feedKey: FeedKey;
+    let feed: any;
 
     {
-      const feedStore = new FeedStore(directory, { feedOptions: { valueEncoding: codec } });
+      const feedStore = new FeedStore(createStorage(directory, STORAGE_NODE), { feedOptions: { valueEncoding: codec } });
       await feedStore.open();
 
-      const feed = await feedStore.openFeed('test-feed');
+      const { publicKey, secretKey } = createKeyPair();
+      feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
       feedKey = PublicKey.from(feed.key);
 
       const itemId = createId();
@@ -45,11 +46,11 @@ describe('Stream tests', () => {
     }
 
     {
-      const feedStore = new FeedStore(directory, { feedOptions: { valueEncoding: codec } });
+      const feedStore = new FeedStore(createStorage(directory, STORAGE_NODE), { feedOptions: { valueEncoding: codec } });
       await feedStore.open();
 
-      const feed = await feedStore.openFeed('test-feed');
-      expect(feedKey.toHex()).toBe(keyToString(feed.key));
+      const feed2 = await feedStore.openFeed(feed.key);
+      expect(feedKey.toHex()).toBe(keyToString(feed2.key));
 
       const readStream = feedStore.createReadStream({ live: true });
       await sink(readStream, 'data', 1);
@@ -59,10 +60,11 @@ describe('Stream tests', () => {
   });
 
   test('feed streams', async () => {
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
-    const feed = await feedStore.openFeed('test-feed');
+    const { publicKey, secretKey } = createKeyPair();
+    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
     const inputStream = feedStore.createReadStream({ live: true, feedStoreInfo: true });
 
     const count = 5;
@@ -95,12 +97,13 @@ describe('Stream tests', () => {
       numBlocks: 100
     };
 
-    const feedStore = new FeedStore(ram, { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
     await feedStore.open();
 
     // Create feeds.
     for (let i = 0; i < config.numFeeds; i++) {
-      await feedStore.openFeed(`feed-${i}`);
+      const { publicKey, secretKey } = createKeyPair();
+      await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
     }
 
     const descriptors = feedStore.getDescriptors();
@@ -110,10 +113,12 @@ describe('Stream tests', () => {
     const count = new Map();
     for (let i = 0; i < config.numBlocks; i++) {
       // Randomly create items.
-      const { path, feed } = faker.random.arrayElement(descriptors);
-      count.set(path, (count.get(path) ?? 0) + 1);
-      const itemId = createId();
-      await feed.append(createTestItemMutation(itemId, 'value', String(i)));
+      const { feed } = faker.random.arrayElement(descriptors);
+      if (feed) {
+        count.set(feed.key, (count.get(feed.key) ?? 0) + 1);
+        const itemId = createId();
+        feed.append(createTestItemMutation(itemId, 'value', String(i)));
+      }
     }
 
     // Test stream.
@@ -129,8 +134,9 @@ describe('Stream tests', () => {
 
     expect(ids.size).toBe(config.numBlocks);
     for (const descriptor of descriptors) {
-      const { path, feed } = descriptor;
-      expect(feed.length).toBe(count.get(path));
+      const { feed } = descriptor;
+      assert(feed);
+      expect(feed.length).toBe(count.get(feed.key));
     }
 
     feedStore.close();

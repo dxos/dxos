@@ -48,13 +48,13 @@
       "path": "../../echo/messenger-model"
     },
     {
-      "path": "../../echo/model-factory"
-    },
-    {
       "path": "../../bot/protocol-plugin-bot"
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/random-access-multi-storage"
+    },
+    {
+      "path": "../../mesh/signal"
     }
   ]
 }

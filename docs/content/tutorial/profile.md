@@ -1,50 +1,63 @@
 ---
-title: Creating a Profile
-description: Setting up a User Profile for your Application.
+title: Creating the user profile
+sidebar_title: 2. Creating the user profile
+description: Managing users
 ---
 
-Once we connected our client into our React Application, the very first step is to create a User Profile.
+After we connect a Client to our React Application, the very first step is to get the user's profile.
 
-This is very similar to a login or signup page. The Client holds the profile for you, so you can easily check if the user created a profile by using the react hook `useProfile` as you can see in the `App.js` file:
+## Check If a profile exists
 
-```js
-import React from 'react';
+The Client stores the profile for you. You can easily check if the user has already created a profile by using the react hook `useProfile` provided by `@dxos/react-client`:
 
-import { useProfile } from '@dxos/react-client';
+```jsx:title=src/components/Root.js
+/*  React imports  */ 
 
-import SignUp from './containers/SignUp';
-import Main from './containers/Main';
+import { useClient, useProfile } from '@dxos/react-client';
 
-export default function App () {
+const Root = () => {
+  const client = useClient();
   const profile = useProfile();
 
-  return (!profile ? <SignUp /> : <Main />);
-}
-
-```
-
-Here we decide to show the `SignUp` component if there is no profile in the system yet.
-
-## Create a Profile
-
-Jump into `containers/SignUp.js`. This component is a very simple Sign up form. The user have to provide a username in order to create a profile. The input element will save the state in the `username` variable and then `handleSignUp` is the invoked method when the user clicks on the `Sign Up` button.
-
-![Registration](./profile-00.png)
-
-The `handleSignUp` generates a `keypair` and sets the profile using the client. The client is retrieved by the react hook `useClient`.
-
-```js
-export default function SignUp() {
-  const client = useClient();
-  const [username, setUsername] = useState('');
-  
-  const handleSignUp = async (username) => {
-    const { publicKey, secretKey } = createKeyPair();
-    await client.createProfile({ publicKey, secretKey, username });
+  if (!profile) {
+    return <h1>No profile created yet</h1>;
   }
 
-  return (
-    // ... 
-  );
+  return <h1>Profile created</h1>;
+};
 ```
- 
+
+## Create a profile
+
+Profile creation is handled through the `client.halo` object. We need to send a username provided by the user.
+
+Now let's go to our `src/components/Root.js` file and add the code to actually create the profile:
+
+```jsx:title=src/components/Root.js
+import { useClient, useProfile } from '@dxos/react-client';
+
+const Root = () => {
+  const client = useClient();
+  const profile = useProfile();
+
+  if (!profile) {
+    const handleRegistration = async ({ username }) => {
+      if (username) {
+        await client.halo.createProfile({ username });
+      }
+    };
+
+    return <ProfileDialog open onClose={handleRegistration} />;
+  }
+
+  return JSON.stringify(profile);
+};
+```
+
+> You can see our ProfileDialog component on [Github](https://github.com/dxos/tutorial-tasks-app/blob/master/src/components/ProfileDialog.js).
+
+See your app again, you should now see:
+
+![Tasks App - Create Profile](images/introduction-00.png)
+
+Complete with a profile name of your choice and submit the form.

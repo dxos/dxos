@@ -87,7 +87,7 @@ export class GreetingInitiator {
     // TODO(dboreham): invitation is actually invitationID.
     const localPeerId = invitation;
     log('Local PeerId:', keyToString(localPeerId));
-    this._greeterPlugin = new GreetingCommandPlugin(localPeerId, (new Greeter()).createMessageHandler());
+    this._greeterPlugin = new GreetingCommandPlugin(localPeerId, new Greeter().createMessageHandler());
 
     log(keyToString(localPeerId), 'connecting to', keyToString(swarmKey));
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
@@ -158,7 +158,7 @@ export class GreetingInitiator {
       // For the HALO, add the DEVICE directly.
       credentialMessages.push(
         createKeyAdmitMessage(
-          this._identity.keyring,
+          this._identity.signer,
           partyKey,
           this._identity.deviceKey,
           [],
@@ -168,7 +168,7 @@ export class GreetingInitiator {
       // And Feed, signed for by the FEED and the DEVICE.
       credentialMessages.push(
         createFeedAdmitMessage(
-          this._identity.keyring,
+          this._identity.signer,
           partyKey,
           feedKey,
           [this._identity.deviceKey],
@@ -181,7 +181,7 @@ export class GreetingInitiator {
       // For any other Party, add the IDENTITY, signed by the DEVICE keychain, which links back to that IDENTITY.
       credentialMessages.push(
         createEnvelopeMessage(
-          this._identity.keyring,
+          this._identity.signer,
           partyKey,
           wrapMessage(this._identity.identityGenesis),
           [this._identity.deviceKeyChain],
@@ -191,7 +191,7 @@ export class GreetingInitiator {
       // And the Feed, signed for by the FEED and by the DEVICE keychain, as above.
       credentialMessages.push(
         createFeedAdmitMessage(
-          this._identity.keyring,
+          this._identity.signer,
           partyKey,
           feedKey,
           [this._identity.deviceKeyChain],

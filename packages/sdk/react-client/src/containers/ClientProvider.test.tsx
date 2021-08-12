@@ -7,7 +7,6 @@ import { screen, render } from '@testing-library/react';
 import React from 'react';
 
 import { Client } from '@dxos/client';
-import { createKeyPair } from '@dxos/crypto';
 
 import { useClient } from '../hooks';
 import ClientProvider from './ClientProvider';
@@ -28,8 +27,7 @@ describe('ClientProvider', () => {
   beforeAll(async () => {
     client = new Client();
     await client.initialize();
-    const keypair = createKeyPair();
-    await client.createProfile({ ...keypair, username: 'test-user' });
+    await client.halo.createProfile({ username: 'test-user' });
     await client.echo.open();
   });
 

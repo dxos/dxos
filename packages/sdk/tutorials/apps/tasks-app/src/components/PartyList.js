@@ -23,7 +23,7 @@ import {
 } from '@material-ui/icons';
 
 import { useParties } from '@dxos/react-client';
-import { RedeemDialog } from '@dxos/react-ux';
+import { PinlessRedeemDialog } from '@dxos/react-ux';
 
 import { getPartyTitle } from '../utils/hacks.utils';
 import PartySettings from './PartySettings';
@@ -63,7 +63,7 @@ const useStyles = makeStyles(theme => ({
  * @param selectedPartyKey
  * @param onSelectParty
  */
-const PartyList = ({ selectedPartyKey, onSelectParty }) => {
+const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
   const classes = useStyles();
   const [redeemDialog, setRedeemDialog] = useState(false);
   const [{ settingsDialog, settingsPartyKey }, setSettingsDialog] = useState({});
@@ -99,7 +99,7 @@ const PartyList = ({ selectedPartyKey, onSelectParty }) => {
       )}
 
       {redeemDialog && (
-        <RedeemDialog
+        <PinlessRedeemDialog
           onClose={() => setRedeemDialog(false)}
         // TODO(burdon): Get party key from dialog.
         />
@@ -150,15 +150,17 @@ const PartyList = ({ selectedPartyKey, onSelectParty }) => {
         >
           <AddIcon />
         </Fab>
-        <Fab
-          size="small"
-          color="secondary"
-          aria-label="redeem"
-          title="Redeem invitation"
-          onClick={handleRedeemParty}
-        >
-          <RedeemIcon />
-        </Fab>
+        {!hideRedeem && (
+          <Fab
+            size="small"
+            color="secondary"
+            aria-label="redeem"
+            title="Redeem invitation"
+            onClick={handleRedeemParty}
+          >
+            <RedeemIcon />
+          </Fab>
+        )}
       </div>
     </div>
   );

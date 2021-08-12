@@ -8,5 +8,13 @@
   ],
   "include": [
     "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
+    }
   ]
 }

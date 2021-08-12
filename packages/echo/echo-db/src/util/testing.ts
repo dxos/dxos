@@ -6,7 +6,7 @@ import debug from 'debug';
 
 import { createKeyPair } from '@dxos/crypto';
 import { NetworkManagerOptions } from '@dxos/network-manager';
-import { Storage } from '@dxos/random-access-multi-storage';
+import { IStorage } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
 import { ECHO } from '../echo';
@@ -28,7 +28,7 @@ export interface TestOptions {
   // TODO(burdon): Group properties by hierarchical object.
   snapshots?: boolean
   snapshotInterval?: number
-  snapshotStorage?: Storage
+  snapshotStorage?: IStorage
 }
 
 /**
@@ -57,11 +57,11 @@ export const createTestInstance = async ({
 
   if (initialize) {
     await echo.open();
-    if (!echo.identityKey) {
-      await echo.createIdentity(createKeyPair());
+    if (!echo.halo.identityKey) {
+      await echo.halo.createIdentity(createKeyPair());
     }
-    if (!echo.isHaloInitialized) {
-      await echo.createHalo();
+    if (!echo.halo.isInitialized) {
+      await echo.halo.create();
     }
   }
 

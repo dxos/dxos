@@ -4,12 +4,10 @@
 
 import React, { ReactNode, useEffect } from 'react';
 
-import { createKeyPair } from '@dxos/crypto';
-
 import { useClient, useProfile } from '../hooks';
 
 /**
- * Automatically creates a profile.
+ * Automatically creates a random DXOS profile.
  */
 // TODO(burdon): Trigger HALO?
 const ProfileInitializer = ({ children }: { children: ReactNode }) => {
@@ -18,7 +16,7 @@ const ProfileInitializer = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!profile) {
-      client.createProfile(createKeyPair());
+      client.halo.createProfile();
     }
   }, []);
 

@@ -9,7 +9,7 @@
     ],
     "types": [
       "node",
-      "jest"
+      "mocha"
     ],
     "module": "commonjs",
     "moduleResolution": "node",
@@ -23,14 +23,12 @@
   "include": [
     "src",
     "stories",
-    "playwright"
+    "playwright",
+    "grid"
   ],
   "references": [
     {
       "path": "../client"
-    },
-    {
-      "path": "../../common/codec-protobuf"
     },
     {
       "path": "../../halo/credentials"
@@ -48,15 +46,6 @@
       "path": "../../echo/echo-testing"
     },
     {
-      "path": "../../echo/feed-store"
-    },
-    {
-      "path": "../../echo/model-factory"
-    },
-    {
-      "path": "../../mesh/network-manager"
-    },
-    {
       "path": "../../echo/object-model"
     },
     {
@@ -67,6 +56,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../common/async"
     },
     {
       "path": "../../common/debug"

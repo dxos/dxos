@@ -121,7 +121,7 @@
    * Specify a SemVer range to ensure developers use a Node.js version that is appropriate
    * for your repo.
    */
-  "nodeSupportedVersionRange": ">=12.17.0 <13.0.0 || >=16.0.0",
+  "nodeSupportedVersionRange": ">=12.17.0 <13.0.0 || ^14.16.0 || >=16.0.0",
 
   /**
    * Odd-numbered major versions of Node.js are experimental.  Even-numbered releases
@@ -450,6 +450,10 @@
       "packageName": "@dxos/esbuild-plugins",
       "projectFolder": "toolchains/esbuild-plugins"
     },
+    {
+      "packageName": "@dxos/deps-checker",
+      "projectFolder": "toolchains/deps-checker"
+    },
 
     //
     // common
@@ -503,7 +507,15 @@
     },
     {
       "packageName": "@dxos/rpc",
-      "projectFolder": "packages/common/rpc"
+      "projectFolder": "packages/common/rpc",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/random-access-multi-storage",
+      "projectFolder": "packages/common/random-access-multi-storage",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
 
     //
@@ -657,6 +669,12 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
+    {
+      "packageName": "@dxos/signal",
+      "projectFolder": "packages/mesh/signal",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
 
     //
     // bot
@@ -710,20 +728,16 @@
 
     {
       "packageName": "@dxos/wallet-extension",
-      "projectFolder": "packages/wallet/extension",
-      "shouldPublish": false,
-      "versionPolicyName": "lockStepPolicy"
+      "projectFolder": "packages/wallet/extension"
     },
     {
       "packageName": "@dxos/wallet-playground",
-      "projectFolder": "packages/wallet/playground",
-      "shouldPublish": false,
-      "versionPolicyName": "lockStepPolicy"
+      "projectFolder": "packages/wallet/playground"
     },
     {
       "packageName": "@dxos/wallet-core",
       "projectFolder": "packages/wallet/core",
-      "shouldPublish": false,
+      "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     }
   ]

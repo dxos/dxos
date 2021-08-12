@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/codec-protobuf"
     },
     {
@@ -25,6 +28,9 @@
     },
     {
       "path": "../protocol-network-generator"
+    },
+    {
+      "path": "../../common/random-access-multi-storage"
     }
   ]
 }

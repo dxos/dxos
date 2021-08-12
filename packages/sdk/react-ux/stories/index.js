@@ -2,20 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
-import { storiesOf } from '@storybook/react';
 import { withKnobs } from '@storybook/addon-knobs';
+import { storiesOf } from '@storybook/react';
+import React from 'react';
 
 import {
   EditableText,
   Passcode
 } from '../src';
-
+import { WithErrorBoundary } from './ErrorsStory';
 import LayoutStory from './LayoutStory';
 import LeftLayoutStory from './LeftLayoutStory';
 import RightLayoutStory from './RightLayoutStory';
-import { WithErrorBoundary } from './ErrorsStory';
 
 storiesOf('UX', module)
 

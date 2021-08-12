@@ -7,6 +7,7 @@ import { sync as readPackageJson } from 'read-pkg-up';
 
 import { waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
+import { Config } from '@dxos/config';
 import { keyToBuffer, keyToString, PublicKey, sign } from '@dxos/crypto';
 import { StarTopology, transportProtocolProvider } from '@dxos/network-manager';
 import {
@@ -60,7 +61,7 @@ export class BotFactory {
   private _botManager?: BotManager;
   private _leaveSwarm?: () => void;
 
-  constructor (config: any, botContainers: Record<string, BotContainer>) {
+  constructor (config: Config, botContainers: Record<string, BotContainer>) {
     assert(config);
 
     log(`Started BotFactory with ${Object.keys(botContainers)} containers.`);
@@ -74,9 +75,9 @@ export class BotFactory {
 
     this._botContainers = this._localDev
       ? {
-        [NODE_ENV]: new LocalDevBotContainer(config.get('cli.nodePath')),
-        [NATIVE_ENV]: new LocalDevBotContainer(config.get('cli.nodePath'))
-      }
+          [NODE_ENV]: new LocalDevBotContainer(config.get('cli.nodePath')),
+          [NATIVE_ENV]: new LocalDevBotContainer(config.get('cli.nodePath'))
+        }
       : botContainers;
 
     const { platform, arch } = getPlatformInfo();
@@ -110,7 +111,7 @@ export class BotFactory {
     }
     await this._botManager.start();
 
-    this._leaveSwarm = await this._client.networkManager.joinProtocolSwarm({
+    this._leaveSwarm = await this._client.echo.networkManager.joinProtocolSwarm({
       topic: PublicKey.from(this._topic),
       protocol: transportProtocolProvider(this._topic, this._peerKey, this._plugin),
       peerId: PublicKey.from(this._peerKey),

@@ -33,7 +33,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/feed-store"
+      "path": "../signal"
     },
     {
       "path": "../../common/testutils"

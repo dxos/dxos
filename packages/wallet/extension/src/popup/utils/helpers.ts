@@ -8,3 +8,7 @@
 export function inDev (): boolean {
   return process.env.NODE_ENV === 'development';
 }
+
+export function inFullScreenMode (): boolean {
+  return window.location.href.includes('popup/fullscreen.html');
+}

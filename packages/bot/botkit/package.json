@@ -1,6 +1,6 @@
 {
   "name": "@dxos/botkit",
-  "version": "2.10.11",
+  "version": "2.12.2",
   "description": "Botkit",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -17,12 +17,9 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-bot": "workspace:*",
-    "@dxos/random-access-multi-storage": "~1.1.0-beta.8",
-    "@dxos/util": "workspace:*",
     "@types/chance": "^1.1.0",
     "@types/debug": "^4.1.1",
     "@types/download": "^6.2.4",
@@ -34,32 +31,28 @@
     "@wirelineio/registry-client": "~1.1.0-beta.3",
     "assert": "^2.0.0",
     "chance": "^1.1.6",
-    "cpy-cli": "^2.0.0",
     "debug": "^4.1.1",
     "download": "^7.1.0",
     "fs-extra": "^8.1.0",
-    "hypercore-crypto": "^1.0.0",
     "js-yaml": "^3.13.1",
     "lodash.defaults": "^4.2.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
-    "lodash.isempty": "^4.4.0",
-    "memdown": "^5.1.0",
     "moment": "^2.24.0",
-    "node-watch": "^0.6.4",
     "pkg-up": "^3.1.0",
     "playwright": "^1.7.0",
-    "random-access-memory": "~3.1.2",
     "read-pkg-up": "^7.0.1",
-    "tcp-port-used": "^1.0.1",
-    "tree-kill": "^1.2.2",
-    "uuidv4": "^6.0.2"
+    "tree-kill": "^1.2.2"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/jest": "^26.0.7"
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2"
   },
   "publishConfig": {
     "access": "restricted"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

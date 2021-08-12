@@ -87,8 +87,8 @@ function PendingInvitation ({
     },
     onExpiration: pending.expiration
       ? () => {
-        setExpired(true);
-      }
+          setExpired(true);
+        }
       : undefined,
     expiration: pending.expiration
   });

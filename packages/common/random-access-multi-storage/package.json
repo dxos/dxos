@@ -1,0 +1,49 @@
+{
+  "name": "@dxos/random-access-multi-storage",
+  "version": "2.12.2",
+  "description": "Multiple random storage types.",
+  "license": "AGPL-3.0",
+  "main": "dist/src/index.js",
+  "browser": "dist/src/browser.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint",
+    "test": "toolchain test",
+    "test:node": "toolchain test",
+    "test:browser": "browser-mocha 'src/**/browser-mocha-test.ts' --browser=chromium --browser=firefox --browser=webkit --checkLeaks false"
+  },
+  "dependencies": {
+    "del": "^5.1.0",
+    "pify": "~5.0.0",
+    "random-access-file": "^2.1.0",
+    "random-access-idb": "^1.2.1",
+    "random-access-memory": "~3.1.2",
+    "random-access-web": "^2.0.3"
+  },
+  "devDependencies": {
+    "@dxos/browser-mocha": "workspace:*",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/expect": "~24.3.0",
+    "@types/mocha": "~8.2.2",
+    "@types/node": "^14.0.9",
+    "@types/pify": "^3.0.2",
+    "expect": "~27.0.2",
+    "mocha": "~8.4.0",
+    "source-map-support": "^0.5.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "toolchain": {
+    "testingFramework": "mocha",
+    "additionalTestSteps": [
+      "test:browser"
+    ]
+  }
+}

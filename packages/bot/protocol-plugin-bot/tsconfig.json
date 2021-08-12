@@ -18,12 +18,6 @@
     },
     {
       "path": "../../mesh/protocol"
-    },
-    {
-      "path": "../../echo/feed-store"
-    },
-    {
-      "path": "../../common/protobuf-compiler"
     }
   ]
 }

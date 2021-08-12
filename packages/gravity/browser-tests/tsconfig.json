@@ -9,6 +9,30 @@
   ],
   "include": [
     "src",
-    "test"
+    "test",
+    "browser-test"
+  ],
+  "references": [
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../browser-mocha"
+    },
+    {
+      "path": "../../mesh/signal"
+    }
   ]
 }

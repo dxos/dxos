@@ -1,5 +1,4 @@
-const { NodeModulesPolyfillPlugin } = require('@esbuild-plugins/node-modules-polyfill')
-const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin } = require('@dxos/esbuild-plugins')
+const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = require('@dxos/esbuild-plugins')
 const { build } = require('esbuild')
 const rmdir = require('rmdir');
 const { promisify } = require('util')
@@ -21,14 +20,15 @@ const publicDir = join(__dirname, '../public')
     await build({
       entryPoints: [
         join(srcDir, 'background/background.ts'),
-        join(srcDir, 'popup/main.tsx'),
+        join(srcDir, 'popup/main-popup.tsx'),
+        join(srcDir, 'popup/main-fullscreen.tsx'),
         join(srcDir, 'content/content.ts')
       ],
       outdir: distDir,
       write: true,
       bundle: true,
       plugins: [
-        NodeModulesPolyfillPlugin(),
+        NodeModulesPlugin(),
         NodeGlobalsPolyfillPlugin(),
         FixMemdownPlugin(),
       ],
@@ -40,7 +40,8 @@ const publicDir = join(__dirname, '../public')
         }
        })} : false,
     })
-  } catch {
+  } catch (err) {
+    console.error(err); // \/ Turns out, they're not always printed.
     process.exit(-1); // Diagnostics are already printed.
   }
   

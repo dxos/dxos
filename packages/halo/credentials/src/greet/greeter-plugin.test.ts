@@ -3,6 +3,7 @@
 //
 
 import debug from 'debug';
+import expect from 'expect';
 import pump from 'pump';
 
 import { trigger } from '@dxos/async';
@@ -47,11 +48,13 @@ const createGreeter = async (targetPartyKey: PublicKeyLike) => {
   const protocol = new Protocol({
     streamOptions: {
       live: true
-    }
+    },
+    discoveryKey: peerId,
+    userSession: { peerId: keyToString(peerId) },
+    initiator: true
   })
-    .setSession({ peerId })
     .setExtension(plugin.createExtension())
-    .init(peerId);
+    .init();
 
   return { greeter, rendezvousKey: peerId, plugin, protocol, writePromise: writePromise(), hints };
 };
@@ -77,11 +80,13 @@ const createInvitee = async (rendezvousKey: Buffer, invitationId: Buffer) => {
   const protocol = new Protocol({
     streamOptions: {
       live: true
-    }
+    },
+    discoveryKey: rendezvousKey,
+    userSession: { peerId: keyToString(peerId) },
+    initiator: false
   })
-    .setSession({ peerId })
     .setExtension(plugin.createExtension())
-    .init(rendezvousKey);
+    .init();
 
   // TODO(burdon): Bad return object (too many things).
   return { protocol, invitee, plugin, peerId, connectionPromise };
@@ -94,7 +99,7 @@ const connect = (source: Protocol, target: Protocol) => {
   return pump(source.stream, target.stream, source.stream);
 };
 
-test('Greeting Flow using GreetingCommandPlugin', async () => {
+it('Greeting Flow using GreetingCommandPlugin', async () => {
   const targetPartyKey = PublicKey.from(randomBytes(32));
   const secret = '0000';
 
