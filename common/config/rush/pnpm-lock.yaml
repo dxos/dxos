@@ -65,11 +65,15 @@ importers:
       read-pkg-up: 7.0.1
       tree-kill: 1.2.2
     devDependencies:
+      '@dxos/bot': link:../bot
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/mocha': 8.2.2
       expect: 27.0.2
+      ts-node: 9.1.1_typescript@4.3.5
+      typescript: 4.3.5
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/bot': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
@@ -101,6 +105,8 @@ importers:
       playwright: ^1.7.0
       read-pkg-up: ^7.0.1
       tree-kill: ^1.2.2
+      ts-node: ^9.1.1
+      typescript: ^4.3.5
   ../../packages/bot/botkit-client:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -650,7 +656,6 @@ importers:
       '@types/mocha': 8.2.2
       expect: 27.0.2
       mocha: 8.4.0
-      wait-for-expect: 3.0.2
     specifiers:
       '@dxos/browser-mocha': workspace:*
       '@dxos/client': workspace:*
@@ -664,7 +669,6 @@ importers:
       expect: ~27.0.2
       mocha: ~8.4.0
       source-map-support: ^0.5.12
-      wait-for-expect: ^3.0.2
   ../../packages/gravity/gravity-core:
     dependencies:
       '@dxos/async': link:../../common/async

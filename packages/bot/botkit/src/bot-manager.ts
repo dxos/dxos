@@ -107,6 +107,7 @@ export class BotManager {
 
     for (const container of Object.values(this._botContainers)) {
       container.botExit.on(async ({ botId, exitCode }: { botId: string, exitCode: number }) => {
+        logInfo(`Bot exited botId=${botId} exitCode=${exitCode}`)
         const botInfo = this._bots.get(botId);
         if (!exitCode && botInfo) {
           botInfo.stopped = true;
@@ -143,6 +144,7 @@ export class BotManager {
     } else {
       for await (const { botId, stopped } of this._bots.values()) {
         if (!stopped) {
+          logInfo(`Starting previously working bot ${botId}`);
           await this._startBot(botId);
         }
       }
@@ -369,6 +371,7 @@ export class BotManager {
    * Handle incoming messages from bot processes.
    */
   private async _botMessageHandler (protocol: any, { message }: any) {
+    logInfo(`Received message from bot ${message.botId}`);
     let result;
     switch (message.__type_url) {
       case COMMAND_SIGN: {
