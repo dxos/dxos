@@ -1,6 +1,6 @@
 {
   "name": "@dxos/random-access-multi-storage",
-  "version": "2.12.1",
+  "version": "2.12.2",
   "description": "Multiple random storage types.",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
