@@ -7,7 +7,7 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { LinearProgress } from '@material-ui/core';
 
 import { Client, ClientConfig } from '@dxos/client';
-import { ErrorBoundary, ErrorView } from '@dxos/react-ux';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { MaybePromise } from '@dxos/util';
 
 import ClientProvider from './ClientProvider';
@@ -47,10 +47,6 @@ const ClientInitializer = ({ children, config = {} }: ClientInitializerPropertie
       await client.reset();
     }
   };
-
-  if (error) {
-    return <ErrorView onRestart={handleRestart} onReset={handleReset} error={error} />;
-  }
 
   if (!client) {
     return <LinearProgress />;
