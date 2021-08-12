@@ -2,21 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import { spawn, SpawnOptions, ChildProcess } from 'child_process';
 import fs from 'fs-extra';
 import kill from 'tree-kill';
 
 import { Event } from '@dxos/async';
+import { Config } from '@dxos/config';
 import { keyToString } from '@dxos/crypto';
 import { SpawnOptions as BotSpawnOptions } from '@dxos/protocol-plugin-bot';
 
 import { BotId, BotInfo } from '../bot-manager';
+import { mapConfigToEnv } from '../config';
 import { log, logBot } from '../log';
 import { BotContainer, BotExitEventArgs, ContainerStartOptions } from './common';
-import assert from 'assert';
-import { Config, mapToKeyValues } from '@dxos/config';
-import { config } from 'process';
-import { mapConfigToEnv } from '../config';
 
 export interface CommandInfo {
   command: string
@@ -64,7 +63,7 @@ export abstract class ChildProcessContainer implements BotContainer {
     const { command, args, env: childEnv } = this._getCommand(installDirectory, spawnOptions);
 
     assert(this._controlTopic, 'controlTopic is required. Make sure container is started.');
-    
+
     const dxEnv = {
       DX_BOT_CONTROL_TOPIC: keyToString(this._controlTopic),
       DX_BOT_UID: botId,

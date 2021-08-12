@@ -17,11 +17,11 @@ describe('BotFactory', () => {
       bot: {
         topic: PublicKey.random().toHex(),
         localDev: false,
-        dumpFile: `/out/${createId()}/bots.json`,
+        dumpFile: `/out/${createId()}/bots.json`
       },
       services: {
         signal: {
-          server: TEST_SIGNAL_URL,
+          server: TEST_SIGNAL_URL
         },
         ice: undefined,
         wns: {
@@ -41,7 +41,7 @@ describe('BotFactory', () => {
       bot: {
         topic: PublicKey.random().toHex(),
         localDev: true,
-        dumpFile: `/out/${createId()}/bots.json`,
+        dumpFile: `/out/${createId()}/bots.json`
       },
       services: {
         signal: {
@@ -52,12 +52,12 @@ describe('BotFactory', () => {
           server: 'https://node1.dxos.network/wns/api', // Who knows if this is a valid URL but it's not used so whatever.
           chainId: 'wireline'
         }
-      },
+      }
     }), {});
 
     await botFactory.start();
 
-    const bot = await botFactory.spawnBot('testbot', {
+    await botFactory.spawnBot('testbot', {
       botPath: require.resolve('@dxos/bot/src/default-bot.ts'),
       env: NODE_ENV
     });

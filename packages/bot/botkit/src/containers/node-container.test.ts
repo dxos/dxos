@@ -6,12 +6,12 @@ import { it as test } from 'mocha';
 import path from 'path';
 import { sync as findPkgJson } from 'pkg-up';
 
+import { Config } from '@dxos/config';
 import { createId, randomBytes } from '@dxos/crypto';
 
 import { BotInfo } from '../bot-manager';
 import { NODE_ENV } from '../env';
 import { NodeBotContainer } from './node-container';
-import { Config } from '@dxos/config';
 
 test('Start & stop bot', async () => {
   const container = new NodeBotContainer(process.argv0);

@@ -107,7 +107,7 @@ export class BotManager {
 
     for (const container of Object.values(this._botContainers)) {
       container.botExit.on(async ({ botId, exitCode }: { botId: string, exitCode: number }) => {
-        logInfo(`Bot exited botId=${botId} exitCode=${exitCode}`)
+        logInfo(`Bot exited botId=${botId} exitCode=${exitCode}`);
         const botInfo = this._bots.get(botId);
         if (!exitCode && botInfo) {
           botInfo.stopped = true;

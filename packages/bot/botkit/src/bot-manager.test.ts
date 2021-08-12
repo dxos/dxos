@@ -1,23 +1,28 @@
-import { Client } from "@dxos/client";
-import { Config } from "@dxos/config";
-import { createId, keyToBuffer, PublicKey, randomBytes, sign } from "@dxos/crypto";
-import { BotManager } from "./bot-manager";
-import { getClientConfig } from "./config";
-import { LocalDevBotContainer } from "./containers";
-import { NATIVE_ENV, NODE_ENV } from "./env";
-import { it as test } from 'mocha'
-import expect from 'expect'
-import { waitForCondition } from "@dxos/async";
-import { TEST_SIGNAL_URL } from "./test-setup";
+//
+// Copyright 2021 DXOS.org
+//
+
+import expect from 'expect';
+import { it as test } from 'mocha';
+
+import { waitForCondition } from '@dxos/async';
+import { Client } from '@dxos/client';
+import { Config } from '@dxos/config';
+import { createId, keyToBuffer, PublicKey, sign } from '@dxos/crypto';
+
+import { BotManager } from './bot-manager';
+import { getClientConfig } from './config';
+import { LocalDevBotContainer } from './containers';
+import { NATIVE_ENV, NODE_ENV } from './env';
+import { TEST_SIGNAL_URL } from './test-setup';
 
 describe('BotManager', () => {
   test('start a bot locally', async () => {
-    
     const config = new Config({
       bot: {
         topic: PublicKey.random().toHex(),
         localDev: true,
-        dumpFile: `/out/${createId()}/bots.json`,
+        dumpFile: `/out/${createId()}/bots.json`
       },
       services: {
         signal: {
@@ -28,8 +33,8 @@ describe('BotManager', () => {
           server: 'https://node1.dxos.network/wns/api', // Who knows if this is a valid URL but it's not used so whatever.
           chainId: 'wireline'
         }
-      },
-    })
+      }
+    });
 
     const client = new Client({
       swarm: getClientConfig(config).swarm
@@ -42,7 +47,7 @@ describe('BotManager', () => {
       config,
       {
         [NODE_ENV]: botContainer,
-        [NATIVE_ENV]: botContainer,
+        [NATIVE_ENV]: botContainer
       },
       client,
       {
@@ -51,7 +56,7 @@ describe('BotManager', () => {
       }
     );
 
-    expect(botManager.controlTopic).toBeDefined()
+    expect(botManager.controlTopic).toBeDefined();
 
     await botContainer.start({ controlTopic: botManager.controlTopic, botConfig: config });
     await botManager.start();
@@ -63,8 +68,8 @@ describe('BotManager', () => {
 
     await waitForCondition(() => botManager.botReady(bot), 10_000);
 
-    await botManager.stopBot(bot)
+    await botManager.stopBot(bot);
 
     await botManager.stop();
   }).timeout(15_000);
-})
+});

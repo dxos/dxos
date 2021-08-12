@@ -6,6 +6,7 @@ import { it as test } from 'mocha';
 import path from 'path';
 import { sync as findPkgJson } from 'pkg-up';
 
+import { Config } from '@dxos/config';
 import { createId, randomBytes } from '@dxos/crypto';
 
 import { BotInfo } from '../bot-manager';
@@ -14,7 +15,7 @@ import { BrowserContainer } from './browser-container';
 
 test.skip('Start & stop bot', async () => {
   const container = new BrowserContainer();
-  await container.start({ controlTopic: randomBytes() });
+  await container.start({ controlTopic: randomBytes(), botConfig: new Config({}) });
 
   const botInfo: BotInfo = {
     botId: createId(),
