@@ -1,6 +1,7 @@
 {
   "name": "@dxos/sdk-docs",
   "version": "1.0.0-beta.117",
+  "private": true,
   "description": "DXOS Documentation",
   "keywords": [
     "dxos",
@@ -9,7 +10,6 @@
   ],
   "license": "AGPL-3.0",
   "author": "info@dxos.org",
-  "private": true,
   "scripts": {
     "clean": "rimraf .cache && rimraf public",
     "dev": "yarn clean && gatsby develop --port 8003 --verbose",

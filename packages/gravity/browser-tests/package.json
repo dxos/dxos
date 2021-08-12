@@ -22,28 +22,28 @@
     "test": "toolchain test",
     "test:browser": "browser-mocha --setup browser-test/setup.js 'browser-test/**/*.test.ts' --checkLeaks=false --browser=chromium --browser=firefox --browser=webkit"
   },
-  "toolchain": {
-    "additionalTestSteps": [
-      "test:browser"
-    ]
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/credentials": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/object-model": "workspace:*",
+    "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/browser-mocha": "workspace:*",
-    "mocha": "~8.4.0",
+    "@dxos/signal": "workspace:*",
+    "@dxos/toolchain-node-library": "workspace:*",
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2",
-    "@dxos/signal": "workspace:*"
+    "mocha": "~8.4.0"
   },
   "publishConfig": {
     "access": "restricted"
   },
-  "dependencies": {
-    "@dxos/client": "workspace:*",
-    "@dxos/crypto": "workspace:*",
-    "source-map-support": "^0.5.12",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/object-model": "workspace:*",
-    "@dxos/credentials": "workspace:*"
+  "toolchain": {
+    "additionalTestSteps": [
+      "test:browser"
+    ]
   }
 }

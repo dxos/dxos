@@ -16,9 +16,6 @@
     },
     {
       "path": "../../common/codec-protobuf"
-    },
-    {
-      "path": "../../common/crypto"
     }
   ]
 }

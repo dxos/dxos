@@ -31,9 +31,6 @@
       "path": "../client"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../halo/credentials"
     },
     {
@@ -49,19 +46,7 @@
       "path": "../../echo/echo-testing"
     },
     {
-      "path": "../../echo/feed-store"
-    },
-    {
-      "path": "../../echo/model-factory"
-    },
-    {
-      "path": "../../mesh/network-manager"
-    },
-    {
       "path": "../../echo/object-model"
-    },
-    {
-      "path": "../../common/random-access-multi-storage"
     },
     {
       "path": "../react-client"
@@ -73,13 +58,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../mesh/protocol"
+      "path": "../../common/async"
     },
     {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/async"
     }
   ]
 }

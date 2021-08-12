@@ -11,16 +11,16 @@
   },
   "dependencies": {
     "assert": "^2.0.0",
-    "readable-stream": "^3.6.0",
-    "path-browserify": "~1.0.1",
-    "events": "~3.3.0",
-    "util": "~0.12.4",
     "debug": "^4.1.1",
-    "tty-browserify": "~0.0.1"
+    "events": "~3.3.0",
+    "path-browserify": "~1.0.1",
+    "readable-stream": "^3.6.0",
+    "tty-browserify": "~0.0.1",
+    "util": "~0.12.4"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "esbuild": "^0.11.23",
-    "@types/node": "^14.0.9"
+    "@types/node": "^14.0.9",
+    "esbuild": "^0.11.23"
   }
 }

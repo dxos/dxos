@@ -30,16 +30,7 @@
       "path": "../../common/crypto"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../echo/echo-db"
-    },
-    {
-      "path": "../../echo/object-model"
-    },
-    {
-      "path": "../../common/random-access-multi-storage"
     },
     {
       "path": "../../common/util"
