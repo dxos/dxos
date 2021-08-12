@@ -11,17 +11,19 @@ name: Standardize configs
 
 jobs:
   update:
-    name: Update package.json and tscnofig.josn files
+    name: Update package.json and tsconfig.json files
     runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 5
-    uses: technote-space/create-pr-action@v2
-      with:
-        EXECUTE_COMMANDS: |
-          npx @sfomin/for-each-package -n "@dxos/*" "npx sort-package-json"
-          npx @monorepo-utils/workspaces-to-typescript-project-references
-        COMMIT_MESSAGE: 'Sort package.json and update references in tsconfig.json files'
-        COMMIT_NAME: 'GitHub Actions'
-        COMMIT_EMAIL: 'ci@dxos.org'
-        PR_BRANCH_NAME: 'standardize-configs-${PR_ID}'
-        PR_TITLE: 'Automatic: sort package.json and update references in tsconfig.json files'
-        GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+    steps:
+      - name: Update package.json and tsconfig.json files
+        uses: technote-space/create-pr-action@v2
+        with:
+          EXECUTE_COMMANDS: |
+            npx @sfomin/for-each-package -n "@dxos/*" "npx sort-package-json"
+            npx @monorepo-utils/workspaces-to-typescript-project-references
+          COMMIT_MESSAGE: 'Sort package.json and update references in tsconfig.json files'
+          COMMIT_NAME: 'GitHub Actions'
+          COMMIT_EMAIL: 'ci@dxos.org'
+          PR_BRANCH_NAME: 'standardize-configs-${PR_ID}'
+          PR_TITLE: 'Automatic: sort package.json and update references in tsconfig.json files'
+          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
