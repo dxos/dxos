@@ -5,7 +5,6 @@
 import assert from 'assert';
 import { sync as readPackageJson } from 'read-pkg-up';
 
-import { waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { keyToBuffer, keyToString, PublicKey, sign } from '@dxos/crypto';
@@ -37,9 +36,6 @@ import { NATIVE_ENV, NODE_ENV, getPlatformInfo } from './env';
 import { log } from './log';
 
 const botkitPackage = readPackageJson({ cwd: __dirname }) as any;
-
-const BOT_SPAWN_TIMEOUT = 50000;
-const BOT_SPAWN_CHECK_INTERVAL = 500;
 
 /**
  * Accepts bot control commands. Creates and manages bots using BotContainer.
@@ -242,7 +238,7 @@ export class BotFactory {
   async spawnBot (botName: string | undefined, options?: SpawnOptions) {
     const botId = await this._botManager!.spawnBot(botName, options);
     // TODO(egorgripasov): Move down.
-    await waitForCondition(() => this._botManager!.botReady(botId), BOT_SPAWN_TIMEOUT, BOT_SPAWN_CHECK_INTERVAL);
+    
     return botId;
   }
 

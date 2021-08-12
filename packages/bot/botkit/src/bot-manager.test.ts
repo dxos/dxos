@@ -5,7 +5,6 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { createId, keyToBuffer, PublicKey, sign } from '@dxos/crypto';
@@ -65,8 +64,6 @@ describe('BotManager', () => {
       botPath: require.resolve('@dxos/bot/src/default-bot.ts'),
       env: NODE_ENV
     });
-
-    await waitForCondition(() => botManager.botReady(bot), 10_000);
 
     await botManager.stopBot(bot);
 

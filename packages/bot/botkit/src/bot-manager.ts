@@ -31,6 +31,7 @@ import { BotContainer } from './containers';
 import { NATIVE_ENV, getBotCID } from './env';
 import { log } from './log';
 import { BOT_PACKAGE_DOWNLOAD_DIR, SourceManager } from './source-manager';
+import { waitForCondition } from '@dxos/async';
 
 const chance = new Chance();
 
@@ -60,6 +61,9 @@ interface Options {
   signChallenge: (message: any) => any
   emitBotEvent: (event: any) => Promise<void>
 }
+
+const BOT_SPAWN_TIMEOUT = 50000;
+const BOT_SPAWN_CHECK_INTERVAL = 500;
 
 /**
  * Manages bot instances; provides bot lifecycle operations.
@@ -203,7 +207,11 @@ export class BotManager {
       lastActive: 0
     });
 
-    return this._startBot(botId);
+    await this._startBot(botId);
+
+    await waitForCondition(() => this.botReady(botId), BOT_SPAWN_TIMEOUT, BOT_SPAWN_CHECK_INTERVAL);
+
+    return botId;
   }
 
   /**
