@@ -4,7 +4,7 @@
 
 import Bridge from 'crx-bridge';
 
-import { DevtoolsContext } from '@dxos/client/dist/src/devtools-context';
+import { DevtoolsContext } from '@dxos/client';
 
 export default ({ hook, bridge }: {hook: DevtoolsContext, bridge: typeof Bridge}) => {
   bridge.onMessage('topics', () => {

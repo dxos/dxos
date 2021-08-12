@@ -4,7 +4,7 @@
 
 import Bridge, { Stream } from 'crx-bridge';
 
-import { DevtoolsContext } from '@dxos/client/dist/src/devtools-context';
+import { DevtoolsContext } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { SignalApi } from '@dxos/network-manager';
 

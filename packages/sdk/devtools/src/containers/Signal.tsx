@@ -60,11 +60,13 @@ export default function Signal () {
 
   return (
     <div className={classes.root}>
-      {status.length < 1 ? (
+      {status.length < 1
+        ? (
         <p>Status unknown.</p>
-      ) : (
+          )
+        : (
         <SignalStatus status={status} />
-      )}
+          )}
       <SignalTrace trace={trace} />
     </div>
   );

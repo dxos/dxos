@@ -8,7 +8,7 @@ import { makeStyles } from '@material-ui/core';
 
 import { PublicKey } from '@dxos/crypto';
 import { PeerGraph } from '@dxos/network-devtools';
-import { PeerState } from '@dxos/network-manager';
+import { PeerInfo } from '@dxos/network-manager';
 
 import AutocompleteFilter from '../components/AutocompleteFilter';
 import { useAsyncEffect } from '../hooks/async-effect';
@@ -46,7 +46,7 @@ export default function Signal () {
   const [bridge] = useBridge();
   const [networkTopics, setNetworkTopics] = useState<{topic: string, label: string}[]>([]);
   const [selectedTopic, setSelectedTopic] = useState('');
-  const [peers, setPeers] = useState<PeerState[]>([]);
+  const [peers, setPeers] = useState<PeerInfo[]>([]);
 
   useAsyncEffect(async () => {
     const stream = await bridge.openStream('network.topics');
@@ -81,14 +81,16 @@ export default function Signal () {
       <div className={classes.filter}>
         <AutocompleteFilter label='Topic' options={options} onChange={setSelectedTopic} value={selectedTopic} />
       </div>
-      {selectedTopic ? (
+      {selectedTopic
+        ? (
         <PeerGraph
           peers={peers}
           size={{ width: 400, height: 400 }}
         />
-      ) : (
+          )
+        : (
         <p>Topic not selected</p>
-      )}
+          )}
     </div>
   );
 }

@@ -131,10 +131,10 @@ function getType (message) {
       return 'model mutation';
     }
   } else if (message.halo) {
-    if (message.halo.payload?.['__type_url'] === 'dxos.credentials.SignedMessage') {
-      return message.halo.payload.signed?.payload?.['__type_url'] ?? 'dxos.credentials.SignedMessage';
+    if (message.halo.payload?.__type_url === 'dxos.credentials.SignedMessage') {
+      return message.halo.payload.signed?.payload?.__type_url ?? 'dxos.credentials.SignedMessage';
     } else {
-      return message.halo.payload?.['__type_url'] ?? 'halo message';
+      return message.halo.payload?.__type_url ?? 'halo message';
     }
   } else {
     return 'empty message';

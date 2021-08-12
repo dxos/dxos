@@ -1,6 +1,10 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ES6"
+    ],
     "composite": false,
     "declaration": false,
     "declarationMap": false,

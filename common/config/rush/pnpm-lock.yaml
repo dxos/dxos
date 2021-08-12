@@ -650,7 +650,6 @@ importers:
       '@types/mocha': 8.2.2
       expect: 27.0.2
       mocha: 8.4.0
-      wait-for-expect: 3.0.2
     specifiers:
       '@dxos/browser-mocha': workspace:*
       '@dxos/client': workspace:*
@@ -664,7 +663,6 @@ importers:
       expect: ~27.0.2
       mocha: ~8.4.0
       source-map-support: ^0.5.12
-      wait-for-expect: ^3.0.2
   ../../packages/gravity/gravity-core:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -1447,6 +1445,142 @@ importers:
       ts-node: ^9.1.1
       typescript: ^4.3.5
       webpack: 4.44.2
+  ../../packages/sdk/devtools:
+    dependencies:
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/network-devtools': link:../../mesh/network-devtools
+      '@dxos/react-ux': link:../react-ux
+      '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
+      '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
+      '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
+      clsx: 1.1.1
+      color-hash: 1.1.1
+      crx-bridge: 2.2.0
+      moment: 2.29.1
+      react: 16.14.0
+      react-copy-to-clipboard: 5.0.3_react@16.14.0
+      react-dom: 16.14.0_react@16.14.0
+    devDependencies:
+      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/react': 16.14.6
+      '@types/react-dom': 17.0.5
+      jest: 26.6.3
+      ts-jest: 26.5.6_jest@26.6.3+typescript@4.3.5
+      typescript: 4.3.5
+    specifiers:
+      '@dxos/credentials': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/network-devtools': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/react-ux': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@material-ui/core': ^4.11.4
+      '@material-ui/icons': ^4.11.2
+      '@material-ui/lab': ^4.0.0-alpha.58
+      '@types/react': ^16.14.0
+      '@types/react-dom': ^17.0.2
+      clsx: ^1.1.0
+      color-hash: ^1.0.3
+      crx-bridge: ^2.1.0
+      jest: ^26.6.3
+      moment: ^2.24.0
+      react: ^16.14.0
+      react-copy-to-clipboard: ~5.0.3
+      react-dom: ^16.14.0
+      ts-jest: ^26.5.6
+      typescript: ^4.3.5
+  ../../packages/sdk/devtools-extension:
+    dependencies:
+      '@babel/runtime': 7.14.0
+      '@dxos/client': link:../client
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/devtools': link:../devtools
+      '@dxos/metrics': 1.0.0-beta.9
+      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/react-ux': link:../react-ux
+      '@material-ui/core': 4.11.4_react-dom@16.14.0+react@16.14.0
+      '@material-ui/icons': 4.11.2_de4125cbc7df93d07bfd24495ba7ecef
+      '@material-ui/lab': 4.0.0-alpha.58_de4125cbc7df93d07bfd24495ba7ecef
+      clsx: 1.1.1
+      color-hash: 1.1.1
+      crx-bridge: 2.2.0
+      moment: 2.29.1
+      react: 16.14.0
+      react-copy-to-clipboard: 5.0.3_react@16.14.0
+      react-dom: 16.14.0_react@16.14.0
+      webextension-polyfill-ts: 0.25.0
+    devDependencies:
+      '@babel/cli': 7.13.16_@babel+core@7.13.16
+      '@babel/core': 7.13.16
+      '@babel/plugin-proposal-class-properties': 7.13.0_@babel+core@7.13.16
+      '@babel/plugin-proposal-export-default-from': 7.12.13_@babel+core@7.13.16
+      '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
+      '@babel/preset-env': 7.14.2_@babel+core@7.13.16
+      '@babel/preset-react': 7.9.4_@babel+core@7.13.16
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/chrome': 0.0.125
+      babel-jest: 26.6.3_@babel+core@7.13.16
+      babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
+      babel-plugin-add-module-exports: 1.0.4
+      copy-webpack-plugin: 6.4.1_webpack@4.44.2
+      crx: 5.0.1
+      html-webpack-plugin: 4.5.2_webpack@4.44.2
+      jest: 26.6.3
+      moment-locales-webpack-plugin: 1.2.0_moment@2.29.1+webpack@4.44.2
+      raw-loader: 4.0.2_webpack@4.44.2
+      ts-loader: 8.1.0_typescript@4.3.5+webpack@4.44.2
+      typescript: 4.3.5
+      webpack: 4.44.2_webpack-cli@4.7.2
+      webpack-cli: 4.7.2_webpack@4.44.2
+    specifiers:
+      '@babel/cli': ^7.0.0
+      '@babel/core': ~7.13.15
+      '@babel/plugin-proposal-class-properties': ^7.12.1
+      '@babel/plugin-proposal-export-default-from': ^7.2.0
+      '@babel/plugin-transform-runtime': ^7.11.5
+      '@babel/preset-env': ^7.12.7
+      '@babel/preset-react': 7.9.4
+      '@babel/runtime': ^7.9.6
+      '@dxos/client': workspace:*
+      '@dxos/credentials': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/devtools': workspace:*
+      '@dxos/metrics': ~1.0.0-beta.9
+      '@dxos/network-manager': workspace:*
+      '@dxos/react-ux': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@material-ui/core': ^4.11.4
+      '@material-ui/icons': ^4.11.2
+      '@material-ui/lab': ^4.0.0-alpha.58
+      '@types/chrome': ^0.0.125
+      babel-jest: ^26.6.0
+      babel-loader: 8.1.0
+      babel-plugin-add-module-exports: ^1.0.4
+      clsx: ^1.1.0
+      color-hash: ^1.0.3
+      copy-webpack-plugin: ^6.0.1
+      crx: ^5.0.1
+      crx-bridge: ^2.1.0
+      html-webpack-plugin: ^4.3.0
+      jest: ^26.6.3
+      moment: ^2.24.0
+      moment-locales-webpack-plugin: ^1.2.0
+      raw-loader: ^4.0.2
+      react: ^16.14.0
+      react-copy-to-clipboard: ~5.0.3
+      react-dom: ^16.14.0
+      ts-loader: ~8.1.0
+      typescript: ^4.3.5
+      webextension-polyfill-ts: ~0.25.0
+      webpack: 4.44.2
+      webpack-cli: ^4.7.0
   ../../packages/sdk/react-client:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -4923,11 +5057,58 @@ packages:
         optional: true
     resolution:
       integrity: sha512-oqb+lJ2Dl9HXI9orc6/aN8ZIAMkeThufA5iZELf2LQeBn2NtjVilF5D2w7e9RpntAzDb4jK5DsVhkfOvFY/8fg==
+  /@material-ui/core/4.11.4_react-dom@16.14.0+react@16.14.0:
+    dependencies:
+      '@babel/runtime': 7.14.0
+      '@material-ui/styles': 4.11.4_react-dom@16.14.0+react@16.14.0
+      '@material-ui/system': 4.11.3_react-dom@16.14.0+react@16.14.0
+      '@material-ui/types': 5.1.0
+      '@material-ui/utils': 4.11.2_react-dom@16.14.0+react@16.14.0
+      '@types/react-transition-group': 4.4.1
+      clsx: 1.1.1
+      hoist-non-react-statics: 3.3.2
+      popper.js: 1.16.1-lts
+      prop-types: 15.7.2
+      react: 16.14.0
+      react-dom: 16.14.0_react@16.14.0
+      react-is: 17.0.2
+      react-transition-group: 4.4.1_react-dom@16.14.0+react@16.14.0
+    dev: false
+    engines:
+      node: '>=8.0.0'
+    peerDependencies:
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-oqb+lJ2Dl9HXI9orc6/aN8ZIAMkeThufA5iZELf2LQeBn2NtjVilF5D2w7e9RpntAzDb4jK5DsVhkfOvFY/8fg==
   /@material-ui/icons/4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44:
     dependencies:
       '@babel/runtime': 7.14.0
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@types/react': 16.14.6
+      react: 16.14.0
+      react-dom: 16.14.0_react@16.14.0
+    dev: false
+    engines:
+      node: '>=8.0.0'
+    peerDependencies:
+      '@material-ui/core': ^4.0.0
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-fQNsKX2TxBmqIGJCSi3tGTO/gZ+eJgWmMJkgDiOfyNaunNaxcklJQFaFogYcFl0qFuaEz1qaXYXboa/bUXVSOQ==
+  /@material-ui/icons/4.11.2_de4125cbc7df93d07bfd24495ba7ecef:
+    dependencies:
+      '@babel/runtime': 7.14.0
+      '@material-ui/core': 4.11.4_react-dom@16.14.0+react@16.14.0
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
     dev: false
@@ -4949,6 +5130,29 @@ packages:
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/utils': 4.11.2_react-dom@16.14.0+react@16.14.0
       '@types/react': 16.14.6
+      clsx: 1.1.1
+      prop-types: 15.7.2
+      react: 16.14.0
+      react-dom: 16.14.0_react@16.14.0
+      react-is: 17.0.2
+    dev: false
+    engines:
+      node: '>=8.0.0'
+    peerDependencies:
+      '@material-ui/core': ^4.9.10
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-GKHlJqLxUeHH3L3dGQ48ZavYrqGOTXkFkiEiuYMAnAvXAZP4rhMIqeHOPXSUQan4Bd8QnafDcpovOSLnadDmKw==
+  /@material-ui/lab/4.0.0-alpha.58_de4125cbc7df93d07bfd24495ba7ecef:
+    dependencies:
+      '@babel/runtime': 7.14.0
+      '@material-ui/core': 4.11.4_react-dom@16.14.0+react@16.14.0
+      '@material-ui/utils': 4.11.2_react-dom@16.14.0+react@16.14.0
       clsx: 1.1.1
       prop-types: 15.7.2
       react: 16.14.0
@@ -4999,6 +5203,38 @@ packages:
         optional: true
     resolution:
       integrity: sha512-KNTIZcnj/zprG5LW0Sao7zw+yG3O35pviHzejMdcSGCdWbiO8qzRgOYL8JAxAsWBKOKYwVZxXtHWaB5T2Kvxew==
+  /@material-ui/styles/4.11.4_react-dom@16.14.0+react@16.14.0:
+    dependencies:
+      '@babel/runtime': 7.14.0
+      '@emotion/hash': 0.8.0
+      '@material-ui/types': 5.1.0
+      '@material-ui/utils': 4.11.2_react-dom@16.14.0+react@16.14.0
+      clsx: 1.1.1
+      csstype: 2.6.17
+      hoist-non-react-statics: 3.3.2
+      jss: 10.6.0
+      jss-plugin-camel-case: 10.6.0
+      jss-plugin-default-unit: 10.6.0
+      jss-plugin-global: 10.6.0
+      jss-plugin-nested: 10.6.0
+      jss-plugin-props-sort: 10.6.0
+      jss-plugin-rule-value-function: 10.6.0
+      jss-plugin-vendor-prefixer: 10.6.0
+      prop-types: 15.7.2
+      react: 16.14.0
+      react-dom: 16.14.0_react@16.14.0
+    dev: false
+    engines:
+      node: '>=8.0.0'
+    peerDependencies:
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-KNTIZcnj/zprG5LW0Sao7zw+yG3O35pviHzejMdcSGCdWbiO8qzRgOYL8JAxAsWBKOKYwVZxXtHWaB5T2Kvxew==
   /@material-ui/system/4.11.3_79cda1d42d14e5224ea88731ba484d0d:
     dependencies:
       '@babel/runtime': 7.14.0
@@ -5019,6 +5255,35 @@ packages:
         optional: true
     resolution:
       integrity: sha512-SY7otguNGol41Mu2Sg6KbBP1ZRFIbFLHGK81y4KYbsV2yIcaEPOmsCK6zwWlp+2yTV3J/VwT6oSBARtGIVdXPw==
+  /@material-ui/system/4.11.3_react-dom@16.14.0+react@16.14.0:
+    dependencies:
+      '@babel/runtime': 7.14.0
+      '@material-ui/utils': 4.11.2_react-dom@16.14.0+react@16.14.0
+      csstype: 2.6.17
+      prop-types: 15.7.2
+      react: 16.14.0
+      react-dom: 16.14.0_react@16.14.0
+    dev: false
+    engines:
+      node: '>=8.0.0'
+    peerDependencies:
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-SY7otguNGol41Mu2Sg6KbBP1ZRFIbFLHGK81y4KYbsV2yIcaEPOmsCK6zwWlp+2yTV3J/VwT6oSBARtGIVdXPw==
+  /@material-ui/types/5.1.0:
+    dev: false
+    peerDependencies:
+      '@types/react': '*'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-7cqRjrY50b8QzRSYyhSpx4WRw2YuO0KKIGQEVk5J8uoz2BanawykgZGoWEqKm7pVIbzFDN0SpPcVV4IhOFkl8A==
   /@material-ui/types/5.1.0_@types+react@16.14.6:
     dependencies:
       '@types/react': 16.14.6
@@ -6893,6 +7158,13 @@ packages:
     dev: false
     resolution:
       integrity: sha512-Ze94JMnM33+dj/tQCWxXWaQ80uYmV9HwydTyrbHAiBa91ETQuI+3iF5OFPicDpQx+md+/6rDpTp9I2VKOGOtpw==
+  /@types/chrome/0.0.125:
+    dependencies:
+      '@types/filesystem': 0.0.32
+      '@types/har-format': 1.2.7
+    dev: true
+    resolution:
+      integrity: sha512-WBbihYza9NNaE/rlIpBiSE9o2MfLN1GMltDoW6rgaDDIZL+1z08ii2ZAsDbvnrkrG2ohVyQjLODG3IbzakEvGA==
   /@types/color-convert/2.0.0:
     dependencies:
       '@types/color-name': 1.1.1
@@ -7177,6 +7449,16 @@ packages:
     dev: true
     resolution:
       integrity: sha512-TNR5SjCg8sSfU4bdXsPJlpLXOH4YGBCVggvdZnttD2SMiONSxfJm231Nxn1VaQWWF2Twl4Wr2KC1hYaNd4M5Zw==
+  /@types/filesystem/0.0.32:
+    dependencies:
+      '@types/filewriter': 0.0.29
+    dev: true
+    resolution:
+      integrity: sha512-Yuf4jR5YYMR2DVgwuCiP11s0xuVRyPKmz8vo6HBY3CGdeMj8af93CFZX+T82+VD1+UqHOxTq31lO7MI7lepBtQ==
+  /@types/filewriter/0.0.29:
+    dev: true
+    resolution:
+      integrity: sha512-BsPXH/irW0ht0Ji6iw/jJaK8Lj3FJemon2gvEqHKpCdDCeemHa+rI3WBGq5z7cDMZgoLjY40oninGxqk+8NzNQ==
   /@types/from2/2.3.1:
     dependencies:
       '@types/node': 14.14.45
@@ -7229,6 +7511,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-0TRyJD2o8vbkmJF8InppFcPVcXKk+Rvlg/xvpHBIndSJYpmDWfmtx/ZAtl4f3jR2vfarpTqYgj8MZuJssSoU7Q==
+  /@types/har-format/1.2.7:
+    dev: true
+    resolution:
+      integrity: sha512-/TPzUG0tJn5x1TUcVLlDx2LqbE58hyOzDVAc9kf8SpOEmguHjU6bKUyfqb211AdqLOmU/SNyXvLKPNP5qTlfRw==
   /@types/hast/2.3.1:
     dependencies:
       '@types/unist': 2.0.3
@@ -8119,6 +8405,18 @@ packages:
         optional: true
     resolution:
       integrity: sha512-4vSVUiOPJLmr45S8rMGy7WDvpWxfFxfP/Qx/cxZFCfvoypTYpPPL1X8VIZMe0WTA+Jr7blUxwUSEZNkjoMTgSw==
+  /@webpack-cli/serve/1.5.1_webpack-cli@4.7.2:
+    dependencies:
+      webpack-cli: 4.7.2_webpack@4.44.2
+    dev: true
+    peerDependencies:
+      webpack-cli: 4.x.x
+      webpack-dev-server: '*'
+    peerDependenciesMeta:
+      webpack-dev-server:
+        optional: true
+    resolution:
+      integrity: sha512-4vSVUiOPJLmr45S8rMGy7WDvpWxfFxfP/Qx/cxZFCfvoypTYpPPL1X8VIZMe0WTA+Jr7blUxwUSEZNkjoMTgSw==
   /@webpack-contrib/schema-utils/1.0.0-beta.0_webpack@4.44.2:
     dependencies:
       ajv: 6.12.6
@@ -8694,6 +8992,37 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-+S5yIzBW38aWlHJ0nCZ72wRrHXA=
+  /archiver-utils/2.1.0:
+    dependencies:
+      glob: 7.1.7
+      graceful-fs: 4.2.6
+      lazystream: 1.0.0
+      lodash.defaults: 4.2.0
+      lodash.difference: 4.5.0
+      lodash.flatten: 4.4.0
+      lodash.isplainobject: 4.0.6
+      lodash.union: 4.6.0
+      normalize-path: 3.0.0
+      readable-stream: 2.3.7
+    dev: true
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-bEL/yUb/fNNiNTuUz979Z0Yg5L+LzLxGJz8x79lYmR54fmTIb6ob/hNQgkQnIUDWIFjZVQwl9Xs356I6BAMHfw==
+  /archiver/3.1.1:
+    dependencies:
+      archiver-utils: 2.1.0
+      async: 2.6.3
+      buffer-crc32: 0.2.13
+      glob: 7.1.7
+      readable-stream: 3.6.0
+      tar-stream: 2.2.0
+      zip-stream: 2.1.3
+    dev: true
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-5Hxxcig7gw5Jod/8Gq0OneVgLYET+oNHcxgWItq4TbhOzRLKNAFUb9edAftiMKXvXfCB0vbGrJdZDNq0dWMsxg==
   /are-we-there-yet/1.1.5:
     dependencies:
       delegates: 1.0.0
@@ -10484,6 +10813,10 @@ packages:
       node: '>=7.0.0'
     resolution:
       integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==
+  /color-hash/1.1.1:
+    dev: false
+    resolution:
+      integrity: sha512-OOZ2pKPuon1H7/77G0+xzSRDgITsik/kYzfJxmCBEI4ozM6UFhZ1aaZ6OhASbDwolHUq5PTRnhDle9FR72tqbw==
   /color-name/1.1.3:
     resolution:
       integrity: sha1-p9BVi9icQveV3UIyj3QIMcpTvCU=
@@ -10561,6 +10894,17 @@ packages:
     dev: false
     resolution:
       integrity: sha1-ntZ18TzFRQHTCVCkhv9qe6OrGF8=
+  /compress-commons/2.1.1:
+    dependencies:
+      buffer-crc32: 0.2.13
+      crc32-stream: 3.0.1
+      normalize-path: 3.0.0
+      readable-stream: 2.3.7
+    dev: true
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-eVw6n7CnEMFzc3duyFVrQEuY1BlHR3rYsSztyG32ibGMW722i3C6IizEGMFmfMU+A+fALvBIwxN3czffTcdA+Q==
   /compressible/2.0.18:
     dependencies:
       mime-db: 1.47.0
@@ -10683,6 +11027,27 @@ packages:
       toggle-selection: 1.0.6
     resolution:
       integrity: sha512-i13qo6kIHTTpCm8/Wup+0b1mVWETvu2kIMzKoK8FpkLkFxlt0znUAHcMzox+T8sPlqtZXq3CulEjQHsYiGFJUw==
+  /copy-webpack-plugin/6.4.1_webpack@4.44.2:
+    dependencies:
+      cacache: 15.0.6
+      fast-glob: 3.2.5
+      find-cache-dir: 3.3.1
+      glob-parent: 5.1.2
+      globby: 11.0.3
+      loader-utils: 2.0.0
+      normalize-path: 3.0.0
+      p-limit: 3.1.0
+      schema-utils: 3.0.0
+      serialize-javascript: 5.0.1
+      webpack: 4.44.2_webpack-cli@4.7.2
+      webpack-sources: 1.4.3
+    dev: true
+    engines:
+      node: '>= 10.13.0'
+    peerDependencies:
+      webpack: ^4.37.0 || ^5.0.0
+    resolution:
+      integrity: sha512-MXyPCjdPVx5iiWyl40Va3JGh27bKzOTNY3NjUTrosD2q7dR/cLD0013uqJ3BpFbUjyONINjb6qI7nDIJujrMbA==
   /copy/0.3.2:
     dependencies:
       async-each: 1.0.3
@@ -10798,6 +11163,21 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-dmC4mUesv0OYH2kNFEidtf/skUwv4zePmGeepjyyJ0qTo5+8KhA1o99oIAwVVLzQMAeDJml74d6wPPKb6EZUTg==
+  /crc/3.8.0:
+    dependencies:
+      buffer: 5.7.1
+    dev: true
+    resolution:
+      integrity: sha512-iX3mfgcTMIq3ZKLIsVFAbv7+Mc10kxabAGQb8HvjA1o3T1PIYprbakQ65d3I+2HGHt6nSKkM9PYjgoJO2KcFBQ==
+  /crc32-stream/3.0.1:
+    dependencies:
+      crc: 3.8.0
+      readable-stream: 3.6.0
+    dev: true
+    engines:
+      node: '>= 6.9.0'
+    resolution:
+      integrity: sha512-mctvpXlbzsvK+6z8kJwSJ5crm7yBwrQMTybJzMw1O4lLGJqjlDCXY2Zw7KheiA6XBEcBmfLx1D88mjRGVJtY9w==
   /create-ecdh/4.0.4:
     dependencies:
       bn.js: 4.12.0
@@ -10865,6 +11245,24 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==
+  /crx-bridge/2.2.0:
+    dependencies:
+      serialize-error: 2.1.0
+    dev: false
+    resolution:
+      integrity: sha512-4lvu7C06jD4dvUpY4s6+9ScuwXr69nmWrwnPiNC+Cq/FgCit0PV3Jrd/nNhcHzg0PcKTr9+f/SF76oeWrWeUdQ==
+  /crx/5.0.1:
+    dependencies:
+      archiver: 3.1.1
+      commander: 2.20.3
+      node-rsa: 1.1.1
+      pbf: 3.2.1
+    dev: true
+    engines:
+      node: '>=10'
+    hasBin: true
+    resolution:
+      integrity: sha512-n/PzBx/fR1+xZCiJBats9y5zw/a+YBcoJ0ABnUaY56xb1RpXuFhsiCMpNY6WjVtylLzhUUXSWsbitesVg7v2vg==
   /crypto-browserify/3.12.0:
     dependencies:
       browserify-cipher: 1.0.1
@@ -17241,6 +17639,14 @@ packages:
       yarn: '>=1.0.0'
     resolution:
       integrity: sha512-prXSYk799h3GY3iOWnC6ZigYzMPjxN2svgjJ9shk7oMadSNX3wXy0B6F32PMJv7qtMnrIbUxoEHzbutvxR2LBQ==
+  /lazystream/1.0.0:
+    dependencies:
+      readable-stream: 2.3.7
+    dev: true
+    engines:
+      node: '>= 0.6.3'
+    resolution:
+      integrity: sha1-9plf4PggOS9hOWvolGJAe7dxaOQ=
   /level-codec/9.0.2:
     dependencies:
       buffer: 5.7.1
@@ -17494,17 +17900,24 @@ packages:
     resolution:
       integrity: sha1-gteb/zCmfEAF/9XiUVMArZyk168=
   /lodash.defaults/4.2.0:
-    dev: false
     resolution:
       integrity: sha1-0JF4cW/+pN3p5ft7N/bwgCJ0WAw=
   /lodash.defaultsdeep/4.6.1:
     dev: false
     resolution:
       integrity: sha512-3j8wdDzYuWO3lM3Reg03MuQR957t287Rpcxp1njpEa8oDrikb+FwGdW3n+FELh/A6qib6yPit0j/pv9G/yeAqA==
+  /lodash.difference/4.5.0:
+    dev: true
+    resolution:
+      integrity: sha1-nMtOUF1Ia5FlE0V3KIWi3yf9AXw=
   /lodash.filter/4.6.0:
     dev: false
     resolution:
       integrity: sha1-ZosdSYFgOuHMWm+nYBQ+SAtMSs4=
+  /lodash.flatten/4.4.0:
+    dev: true
+    resolution:
+      integrity: sha1-8xwiIlqWMtK7+OSt2+8kCqdlph8=
   /lodash.get/4.4.2:
     dev: false
     resolution:
@@ -17514,7 +17927,6 @@ packages:
     resolution:
       integrity: sha1-QVxEePK8wwEgwizhDtMib30+GOA=
   /lodash.isplainobject/4.0.6:
-    dev: false
     resolution:
       integrity: sha1-fFJqUtibRcRcxpC4gWO+BJf1UMs=
   /lodash.matches/4.6.0:
@@ -17561,6 +17973,10 @@ packages:
   /lodash.truncate/4.4.2:
     resolution:
       integrity: sha1-WjUNoLERO4N+z//VgSy+WNbq4ZM=
+  /lodash.union/4.6.0:
+    dev: true
+    resolution:
+      integrity: sha1-SLtQiECfFvGCFmZkHETdGqrjzYg=
   /lodash.uniq/4.5.0:
     resolution:
       integrity: sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=
@@ -18356,6 +18772,17 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-ak5MIFWb0WwMBIIqw/cKlhFj+0huA7LjAYrv5bLSdluG0+aBRl3ZtST+6Ix4UA5qZ6cwhMsX+m9QtXGIs6CdVA==
+  /moment-locales-webpack-plugin/1.2.0_moment@2.29.1+webpack@4.44.2:
+    dependencies:
+      lodash.difference: 4.5.0
+      moment: 2.29.1
+      webpack: 4.44.2_webpack-cli@4.7.2
+    dev: true
+    peerDependencies:
+      moment: ^2.8.0
+      webpack: ^1 || ^2 || ^3 || ^4 || ^5
+    resolution:
+      integrity: sha512-QAi5v0OlPUP7GXviKMtxnpBAo8WmTHrUNN7iciAhNOEAd9evCOvuN0g1N7ThIg3q11GLCkjY1zQ2saRcf/43nQ==
   /moment/2.29.1:
     resolution:
       integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
@@ -18783,6 +19210,12 @@ packages:
   /node-releases/1.1.71:
     resolution:
       integrity: sha512-zR6HoT6LrLCRBwukmrVbHv0EpEQjksO6GmFcZQQuCAy139BEsoVKPYnf3jongYW83fAa1torLGYwxxky/p28sg==
+  /node-rsa/1.1.1:
+    dependencies:
+      asn1: 0.2.4
+    dev: true
+    resolution:
+      integrity: sha512-Jd4cvbJMryN21r5HgxQOpMEqv+ooke/korixNNK3mGqfGJmy0M77WDDzo/05969+OkMy3XW1UuZsSmW9KQm7Fw==
   /node.extend/1.0.8:
     dependencies:
       is: 0.2.7
@@ -19524,6 +19957,14 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==
+  /pbf/3.2.1:
+    dependencies:
+      ieee754: 1.2.1
+      resolve-protobuf-schema: 2.1.0
+    dev: true
+    hasBin: true
+    resolution:
+      integrity: sha512-ClrV7pNOn7rtmoQVF4TS1vyU0WhYRnP92fzbfF75jAIwpnzdJXf8iTd4CMEqO4yUenH6NDqLiwjqlh6QgZzgLQ==
   /pbkdf2/3.1.2:
     dependencies:
       create-hash: 1.2.0
@@ -20670,6 +21111,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-5aFshI9SbhtcMiDiZZu3g2tMlZeS5lhni//AGJ7V34PQLU5JA91Cva7TIs6inZhYikS3OpnUzAUuL6YtS0CyDA==
+  /protocol-buffers-schema/3.5.2:
+    dev: true
+    resolution:
+      integrity: sha512-LPzSaBYp/TcbuSlpGwqT5jR9kvJ3Zp5ic2N5c2ybx6XB/lSfEHq2D7ja8AgoxHoMD91wXFALJoXsvshKPuXyew==
   /proxy-addr/2.0.6:
     dependencies:
       forwarded: 0.1.2
@@ -20955,7 +21400,7 @@ packages:
     dependencies:
       loader-utils: 2.0.0
       schema-utils: 3.0.0
-      webpack: 4.44.2
+      webpack: 4.44.2_webpack-cli@4.7.2
     dev: true
     engines:
       node: '>= 10.13.0'
@@ -21823,6 +22268,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-C7rARubxI8bXFNB/hqcp/4iUeIXJhJZvFPFPiSPRnhU5UPxzMFIl+2E6yY6c4k9giDJAhtV+enfA+G89N6Csng==
+  /resolve-protobuf-schema/2.1.0:
+    dependencies:
+      protocol-buffers-schema: 3.5.2
+    dev: true
+    resolution:
+      integrity: sha512-kI5ffTiZWmJaS/huM8wZfEMer1eRd7oJQhDuxeCLe3t7N7mX3z94CN0xPxBQxFYQTSNz9T0i+v6inKqSdK8xrQ==
   /resolve-url-loader/3.1.3:
     dependencies:
       adjust-sourcemap-loader: 3.0.0
@@ -22251,6 +22702,12 @@ packages:
       node: '>= 0.8.0'
     resolution:
       integrity: sha512-BsVKsiGcQMFwT8UxypobUKyv7irCNRHk1T0G680vk88yf6LBByGcZJOTJCrTP2xVN6yI+XjPJcNuE3V4fT9sAg==
+  /serialize-error/2.1.0:
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-ULZ51WNc34Rme9yOWa9OW4HV9go=
   /serialize-javascript/4.0.0:
     dependencies:
       randombytes: 2.1.0
@@ -24624,11 +25081,9 @@ packages:
   /webextension-polyfill-ts/0.25.0:
     dependencies:
       webextension-polyfill: 0.7.0
-    dev: true
     resolution:
       integrity: sha512-ikQhwwHYkpBu00pFaUzIKY26I6L87DeRI+Q6jBT1daZUNuu8dSrg5U9l/ZbqdaQ1M/TTSPKeAa3kolP5liuedw==
   /webextension-polyfill/0.7.0:
-    dev: true
     resolution:
       integrity: sha512-su48BkMLxqzTTvPSE1eWxKToPS2Tv5DLGxKexLEVpwFd6Po6N8hhSLIvG6acPAg7qERoEaDL+Y5HQJeJeml5Aw==
   /webidl-conversions/4.0.2:
@@ -24661,6 +25116,43 @@ packages:
       v8-compile-cache: 2.3.0
       webpack: 4.44.2_webpack-cli@4.7.2
       webpack-dev-server: 3.11.2_webpack-cli@4.7.2+webpack@4.44.2
+      webpack-merge: 5.8.0
+    dev: true
+    engines:
+      node: '>=10.13.0'
+    hasBin: true
+    peerDependencies:
+      '@webpack-cli/generators': '*'
+      '@webpack-cli/migrate': '*'
+      webpack: 4.x.x || 5.x.x
+      webpack-bundle-analyzer: '*'
+      webpack-dev-server: '*'
+    peerDependenciesMeta:
+      '@webpack-cli/generators':
+        optional: true
+      '@webpack-cli/migrate':
+        optional: true
+      webpack-bundle-analyzer:
+        optional: true
+      webpack-dev-server:
+        optional: true
+    resolution:
+      integrity: sha512-mEoLmnmOIZQNiRl0ebnjzQ74Hk0iKS5SiEEnpq3dRezoyR3yPaeQZCMCe+db4524pj1Pd5ghZXjT41KLzIhSLw==
+  /webpack-cli/4.7.2_webpack@4.44.2:
+    dependencies:
+      '@discoveryjs/json-ext': 0.5.3
+      '@webpack-cli/configtest': 1.0.4_webpack-cli@4.7.2+webpack@4.44.2
+      '@webpack-cli/info': 1.3.0_webpack-cli@4.7.2
+      '@webpack-cli/serve': 1.5.1_webpack-cli@4.7.2
+      colorette: 1.2.2
+      commander: 7.2.0
+      execa: 5.0.0
+      fastest-levenshtein: 1.0.12
+      import-local: 3.0.2
+      interpret: 2.2.0
+      rechoir: 0.7.0
+      v8-compile-cache: 2.3.0
+      webpack: 4.44.2_webpack-cli@4.7.2
       webpack-merge: 5.8.0
     dev: true
     engines:
@@ -25507,6 +25999,16 @@ packages:
     dev: false
     resolution:
       integrity: sha512-PQ2PC7R9rslx84ndNBZB/Dkv8V8fZEpk83RLgXtYd0fwUgEjseMn1Dgajh2x6S8QbZAFa9p2qVCEuYZNgve0dQ==
+  /zip-stream/2.1.3:
+    dependencies:
+      archiver-utils: 2.1.0
+      compress-commons: 2.1.1
+      readable-stream: 3.6.0
+    dev: true
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-EkXc2JGcKhO5N5aZ7TmuNo45budRaFGHOmz24wtJR7znbNqDPmdZtUauKX6et8KAVseAMBOyWJqEpXcHTBsh7Q==
   /zwitch/1.0.5:
     dev: true
     resolution:

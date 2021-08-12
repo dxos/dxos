@@ -2,7 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { initDevTool } from '../../../devtools/dist/src';
+import { initDevTool } from '@dxos/devtools';
+
 import BridgeProxy from './bridge';
 
 declare let chrome: any;
