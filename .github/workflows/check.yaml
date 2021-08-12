@@ -25,12 +25,12 @@ jobs:
           npm install -g @microsoft/rush pnpm
           sudo ./common/scripts/install-dependencies.sh
           npx playwright@1.11.0 install-deps
-          
+
           # Install dependencies
           echo "::group::Install"
           node common/scripts/install-run-rush.js install
           echo "::endgroup::"
-          
+
           # Build with tests
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
 
@@ -53,12 +53,12 @@ jobs:
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
           npm install -g @microsoft/rush pnpm
           sudo ./common/scripts/install-dependencies.sh
-          
+
           # Install dependencies
           echo "::group::Install"
           node common/scripts/install-run-rush.js install
           echo "::endgroup::"
-          
+
           # Quick build
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose
 
@@ -76,3 +76,51 @@ jobs:
         run: |
           sudo apt-get install -y lsof
           kill $(lsof -t -i:9001) || true
+
+  check-sdk-health:
+    runs-on: [self-hosted, dind-actions-runner]
+    timeout-minutes: 25
+    strategy:
+      matrix:
+        node-version: [16.0]
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          clean: true
+      - name: Prerequisites and dependencies
+        run: |
+          cd protocols
+          set -e
+          npm install -g @microsoft/rush pnpm
+          sudo ./common/scripts/install-dependencies.sh
+
+          echo "::group::Install"
+          node common/scripts/install-run-rush.js install
+          echo "::endgroup::"
+      - name: Test application
+        run: |
+          \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+          npm install -g @microsoft/rush pnpm
+          sudo ./common/scripts/install-dependencies.sh
+
+          # Install dependencies
+          echo "::group::Install"
+          node common/scripts/install-run-rush.js install
+          echo "::endgroup::"
+
+          # Quick build
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to-except @dxos/tutorials-tasks-app
+
+          # Test the Tasks App
+          echo "::group::tasks-app"
+          cd packages/sdk/tutorials/apps/tasks-app
+          ./scripts/start-and-wait.sh
+          pnpm test:playwright
+          echo "::endgroup::"
+      - name: Cleanup
+        run: |
+          sudo apt-get install -y lsof
+          kill $(lsof -t -i:3000) || true
