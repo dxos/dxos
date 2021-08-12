@@ -92,8 +92,7 @@ jobs:
           clean: true
       - name: Prerequisites and dependencies
         run: |
-          cd protocols
-          set -e
+          \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
           npm install -g @microsoft/rush pnpm
           sudo ./common/scripts/install-dependencies.sh
 
