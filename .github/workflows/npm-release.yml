@@ -1,0 +1,54 @@
+name: Release packages to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      breaking:
+        description: 'Whether the release contains breaking changes or not. Leave empty for non-breaking.'
+        required: false
+        default: ''
+
+jobs:
+  npm_release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: true
+        token: ${{ secrets.CREATE_PR_TOKEN }}
+        fetch-depth: 0
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 16.1
+    - name: Prerequisites and dependencies
+      run: |
+        set -e
+        npm install -g @microsoft/rush pnpm
+        sudo ./common/scripts/install-dependencies.sh
+
+        echo "::group::Install"
+        node common/scripts/install-run-rush.js install
+        echo "::endgroup::"
+
+        git config --global user.email "ci@dxos.org"
+        git config --global user.name "ci"
+    - name: Bump non-breaking versions
+      run: rush version --bump
+      if: ${{ github.event.inputs.limit == '' }}
+    - name: Bump breaking versions
+      run: rush version --bump --override-bump minor
+      if: ${{ github.event.inputs.limit != '' }}
+    - name: Clean changelogs
+      run: git status --porcelain | awk '($1=="??" && ($2 ~ /\/CHANGELOG.md/ || $2 ~ /\/CHANGELOG.json/)) {print $2}' | xargs rm
+    - name: Commit and push
+      run: |
+        VERSION=$(cat packages/sdk/client/package.json | jq -r .version)
+        git commit -a -m "Release v$VERSION"
+        git push -u origin
+    - name: Print git log for release notes
+      run: git log --pretty=format:"* %s"

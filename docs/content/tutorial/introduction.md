@@ -8,7 +8,7 @@ We have created a full-stack, real world example application to demonstrate the 
 and to make you feel comfortable building your own applications.
 
 TL;DR. If you want to jump ahead and look at the code directly, here is the Github
-[@dxos/dxos-tutorial-tasks-app](https://github.com/dxos/dxos-tutorial-tasks-app) repository.
+[@dxos/tutorial-tasks-app](https://github.com/dxos/tutorial-tasks-app) repository.
 
 ## What we'll build
 
@@ -78,10 +78,38 @@ This tool will be used to override some Webpack settings that are required for D
 You can read more about it [here](https://github.com/gsoft-inc/craco)
 
 ```bash
-yarn add @craco/craco
+yarn add @craco/craco @jackwilsdon/craco-use-babelrc webpack
 ```
 
-Create a `craco.config.js` file at the root of your project with [this](https://github.com/dxos/tutorial-tasks-app/blob/master/craco.config.js) settings. We will explain the specific settings on later sections.
+Create a `craco.config.js` file at the root of your project with the following script:
+
+```js
+const webpack = require('webpack');
+const BabelRcPlugin = require('@jackwilsdon/craco-use-babelrc');
+
+module.exports = {
+  plugins: [
+    {
+      plugin: BabelRcPlugin
+    }
+  ],
+  webpack: {
+    plugins: {
+      add: [
+        new webpack.ProvidePlugin({
+          Buffer: [require.resolve('buffer/'), 'Buffer']
+        })
+      ],
+    },
+    config: {
+      node: {
+        Buffer: false
+      }
+    }
+  },
+};
+```
+> The Webpack settings are required to polyfill the NodeJS Buffer object to run in the browser and also to enable babel for backwards compatibility.
 
 Then go to your `package.json` and in your npm scripts replace `react-scripts` with `craco`:
 
@@ -96,27 +124,15 @@ Then go to your `package.json` and in your npm scripts replace `react-scripts` w
 }
 ```
 
-## Webpack Settings
+After that, create a `.babelrc` file at the root of your project with the following code:
 
-The following Webpack settings are required to polyfill the NodeJS `Buffer` object to run in the browser.
-
-```jsx:title=<root>/craco.config.js
-module.exports = {
-  webpack: {
-    config: {
-      node: {
-        Buffer: false,
-      },
-    },
-    plugins: {
-      add: [
-        new webpack.ProvidePlugin({
-          Buffer: [require.resolve('buffer/'), 'Buffer'],
-        }),
-      ],
-    },
-  },
-};
+```json
+{
+  "presets": ["@babel/preset-env", "@babel/preset-react"]
+}
 ```
 
 If you have your app running, stop it and start it again so it takes the new changes above. You are ready to go!
+
+---
+> To keep the tutorial simple, we are going to omit the imports of React and its respective hooks during the sections, so don't forget to import them yourself.
