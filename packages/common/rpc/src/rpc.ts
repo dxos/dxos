@@ -4,19 +4,22 @@
 
 import assert from 'assert';
 
-import { synchronized, trigger, Trigger } from '@dxos/async';
+import { sleep, synchronized, trigger, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
 import { Request, Response, Error as ErrorResponse, RpcMessage } from './proto/gen/dxos/rpc';
 
+const DEFAULT_TIMEOUT = 3000;
+
 type MaybePromise<T> = Promise<T> | T
 
 export interface RpcPeerOptions {
   messageHandler: (method: string, request: Uint8Array) => MaybePromise<Uint8Array>
   streamHandler?: (method: string, request: Uint8Array) => Stream<Uint8Array>
-  port: RpcPort
+  port: RpcPort,
+  timeout?: number,
 }
 
 /**
@@ -168,7 +171,10 @@ export class RpcPeer {
       }
     });
 
-    const response = await promise;
+    const timeoutPromise = sleep(this._options.timeout ?? DEFAULT_TIMEOUT).then(() => Promise.reject(new Error('Timeout')))
+    timeoutPromise.catch(() => {}) // Mute the promise.
+
+    const response = await Promise.race([promise, timeoutPromise]);
     assert(response.id === id);
 
     if (response.payload) {
