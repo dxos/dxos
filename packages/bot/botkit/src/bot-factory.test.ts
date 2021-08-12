@@ -3,13 +3,13 @@
 //
 
 import { describe, it as test } from 'mocha';
-import { tmpdir } from 'os'
 
 import { Config } from '@dxos/config';
-import { PublicKey } from '@dxos/crypto';
+import { createId, PublicKey } from '@dxos/crypto';
 
 import { BotFactory } from './bot-factory';
 import { NODE_ENV } from './env';
+import { TEST_SIGNAL_URL } from './test-setup';
 
 describe('BotFactory', () => {
   test('start & stop', async () => {
@@ -17,11 +17,11 @@ describe('BotFactory', () => {
       bot: {
         topic: PublicKey.random().toHex(),
         localDev: false,
-        dumpFile: tmpdir() + '/bots.json',
+        dumpFile: `/out/${createId()}/bots.json`,
       },
       services: {
         signal: {
-          server: undefined
+          server: TEST_SIGNAL_URL,
         },
         ice: undefined,
         wns: {
@@ -41,11 +41,11 @@ describe('BotFactory', () => {
       bot: {
         topic: PublicKey.random().toHex(),
         localDev: true,
-        dumpFile: tmpdir() + '/bots.json',
+        dumpFile: `/out/${createId()}/bots.json`,
       },
       services: {
         signal: {
-          server: undefined
+          server: TEST_SIGNAL_URL
         },
         ice: undefined,
         wns: {

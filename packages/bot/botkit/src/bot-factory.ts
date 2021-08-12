@@ -107,7 +107,7 @@ export class BotFactory {
     });
 
     for (const container of Object.values(this._botContainers)) {
-      await container.start({ controlTopic: this._botManager.controlTopic });
+      await container.start({ controlTopic: this._botManager.controlTopic, botConfig: this._config });
     }
     await this._botManager.start();
 

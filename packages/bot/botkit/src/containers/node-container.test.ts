@@ -11,10 +11,11 @@ import { createId, randomBytes } from '@dxos/crypto';
 import { BotInfo } from '../bot-manager';
 import { NODE_ENV } from '../env';
 import { NodeBotContainer } from './node-container';
+import { Config } from '@dxos/config';
 
 test('Start & stop bot', async () => {
   const container = new NodeBotContainer(process.argv0);
-  await container.start({ controlTopic: randomBytes() });
+  await container.start({ controlTopic: randomBytes(), botConfig: new Config({}) });
 
   const botInfo: BotInfo = {
     botId: createId(),

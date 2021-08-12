@@ -1,6 +1,6 @@
 import { Client } from "@dxos/client";
 import { Config } from "@dxos/config";
-import { keyToBuffer, PublicKey, randomBytes, sign } from "@dxos/crypto";
+import { createId, keyToBuffer, PublicKey, randomBytes, sign } from "@dxos/crypto";
 import { BotManager } from "./bot-manager";
 import { getClientConfig } from "./config";
 import { LocalDevBotContainer } from "./containers";
@@ -8,22 +8,20 @@ import { NATIVE_ENV, NODE_ENV } from "./env";
 import { it as test } from 'mocha'
 import expect from 'expect'
 import { waitForCondition } from "@dxos/async";
-import { tmpdir } from "os";
-import { createBroker } from '@dxos/signal'
+import { TEST_SIGNAL_URL } from "./test-setup";
 
 describe('BotManager', () => {
-  test.only('start a bot locally', async () => {
-    await createBroker(randomBytes(), { logLevel: 'warn', hyperswarm: { bootstrap: false } }).start();
+  test('start a bot locally', async () => {
     
     const config = new Config({
       bot: {
         topic: PublicKey.random().toHex(),
         localDev: true,
-        dumpFile: tmpdir() + `${Math.random()}/bots.json`,
+        dumpFile: `/out/${createId()}/bots.json`,
       },
       services: {
         signal: {
-          server: "http://localhost:4000"
+          server: TEST_SIGNAL_URL
         },
         ice: undefined,
         wns: {
@@ -55,7 +53,7 @@ describe('BotManager', () => {
 
     expect(botManager.controlTopic).toBeDefined()
 
-    await botContainer.start({ controlTopic: botManager.controlTopic });
+    await botContainer.start({ controlTopic: botManager.controlTopic, botConfig: config });
     await botManager.start();
 
     const bot = await botManager.spawnBot('testbot', {

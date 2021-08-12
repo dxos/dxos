@@ -37,13 +37,16 @@ export abstract class ChildProcessContainer implements BotContainer {
 
   private _controlTopic?: any;
 
+  private _config?: Config;
+
   /**
    * Get process command (to spawn).
    */
   protected abstract _getCommand (installDirectory: string, spawnOptions: BotSpawnOptions): CommandInfo;
 
-  async start ({ controlTopic }: ContainerStartOptions) {
+  async start ({ controlTopic, botConfig }: ContainerStartOptions) {
     this._controlTopic = controlTopic;
+    this._config = botConfig;
   }
 
   async stop () {
@@ -53,7 +56,7 @@ export abstract class ChildProcessContainer implements BotContainer {
   /**
    * Start bot instance.
    */
-  async startBot (botInfo: BotInfo, botConfig: Config) {
+  async startBot (botInfo: BotInfo) {
     const { botId, name, installDirectory, storageDirectory, spawnOptions } = botInfo;
     await fs.ensureDir(storageDirectory);
 
@@ -69,11 +72,13 @@ export abstract class ChildProcessContainer implements BotContainer {
       DX_BOT_RESTARTED: 'false' // TODO(marik-d): Remove.
     };
 
+    assert(this._config, 'botConfig is required. Make sure container is started.');
+
     const childOptions: SpawnOptions = {
       env: {
         ...process.env,
         NODE_OPTIONS: '',
-        DX_SIGNAL_ENDPOINT: config.
+        DX_SIGNAL_ENDPOINT: this._config.get('services.signal.server'),
         ...childEnv,
         ...dxEnv
       },

@@ -3,11 +3,13 @@
 //
 
 import { ReadOnlyEvent } from '@dxos/async';
+import { Config } from '@dxos/config';
 
 import { BotId, BotInfo } from '../bot-manager';
 
 export interface ContainerStartOptions {
   controlTopic: Buffer
+  botConfig: Config
 }
 
 export interface BotExitEventArgs {

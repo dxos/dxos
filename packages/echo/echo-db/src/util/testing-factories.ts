@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { Model } from '@dxos/model-factory';
-import { range } from '@dxos/util';
+import { range, Awaited } from '@dxos/util';
 
 import { ECHO } from '../echo';
 import { Item, ItemCreationOptions } from '../items';
@@ -14,7 +14,6 @@ import { createTestInstance, inviteTestPeer } from './testing';
 
 // TODO(burdon): These are very narrow functions. Refactor into factories.
 // TODO(burdon): This is a crime; instead create and return a context map.
-export type Awaited<T> = T extends Promise<infer U> ? U : T;
 export type TestPeer = Awaited<ReturnType<typeof createTestInstance>>;
 export type WithTestMeta<T> = T & { testMeta: TestPeer }
 function addTestMeta<T> (obj: T, meta: TestPeer): WithTestMeta<T> {
