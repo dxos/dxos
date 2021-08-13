@@ -49,11 +49,11 @@ export class Service {
 
         if (method.responseStream) {
           return new Stream(({ next, close }) => {
-            const stream = backend.callStream(method.name, encoded)
-            stream.subscribe(data => next(responseCodec.decode(data)), close)
+            const stream = backend.callStream(method.name, encoded);
+            stream.subscribe(data => next(responseCodec.decode(data)), close);
 
-            return () => stream.close()
-          })
+            return () => stream.close();
+          });
         } else {
           const response = await backend.call(method.name, encoded);
           return responseCodec.decode(response);
@@ -72,8 +72,8 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
   async call (methodName: string, request: Uint8Array): Promise<Uint8Array> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
-    assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.')
-    assert(!method.responseStream, 'Invalid RPC method call: response streaming mismatch.')
+    assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
+    assert(!method.responseStream, 'Invalid RPC method call: response streaming mismatch.');
 
     const requestDecoded = requestCodec.decode(request);
 
@@ -87,11 +87,11 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     return responseEncoded;
   }
 
-  callStream(methodName: string, request: Uint8Array): Stream<Uint8Array> {
+  callStream (methodName: string, request: Uint8Array): Stream<Uint8Array> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
-    assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.')
-    assert(method.responseStream, 'Invalid RPC method call: response streaming mismatch.')
- 
+    assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
+    assert(method.responseStream, 'Invalid RPC method call: response streaming mismatch.');
+
     const requestDecoded = requestCodec.decode(request);
 
     const handler = this._handlers[methodName as keyof S];
@@ -99,12 +99,12 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
     const responseStream = (handler as any)(requestDecoded) as Stream<unknown>;
     return new Stream<Uint8Array>(({ next, close }) => {
-      responseStream.subscribe(data => next(responseCodec.encode(data)), close)
-      return () => responseStream.close()
-    })
+      responseStream.subscribe(data => next(responseCodec.encode(data)), close);
+      return () => responseStream.close();
+    });
   }
 
-  private _getMethodInfo(methodName: string) {
+  private _getMethodInfo (methodName: string) {
     const method = this._service.methods[methodName];
     assert(!!method, `Method not found: ${methodName}`);
 

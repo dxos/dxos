@@ -19,7 +19,8 @@ module.exports = {
       {
         patterns: ['**/dist']
       }
-    ]
+    ],
+    'node/no-callback-literal': 'off'
   },
   ignorePatterns: [
     'src/proto/gen/*'
