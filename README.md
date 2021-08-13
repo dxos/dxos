@@ -15,7 +15,7 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 
 ## Troubleshooting
 
-Install the [DXOS DevTools extension](./packages/sdk/devtools-extension/README.md)
+For debugging, use the [DXOS DevTools extension](./packages/sdk/devtools-extension/README.md).
 
 ## Contributing
 
