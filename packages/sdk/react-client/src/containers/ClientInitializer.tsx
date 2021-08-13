@@ -15,8 +15,8 @@ import ClientProvider from './ClientProvider';
 interface ClientInitializerProperties {
   children?: ReactNode
   config?: ClientConfig | (() => MaybePromise<ClientConfig>)
-  errorComponent: React.ComponentType<ErrorComponentType>
-  onError: ErrorCallbackType
+  errorComponent?: React.ComponentType<ErrorComponentType>
+  onError?: ErrorCallbackType
 }
 
 /**
@@ -53,10 +53,12 @@ const ClientInitializer = ({ children, config = {}, errorComponent, onError }: C
 
   const handleError = (error: Error, errorInfo?: ErrorInfo) => {
     console.error(error, errorInfo);
-    onError(error, errorInfo);
+    if (onError) {
+      onError(error, errorInfo);
+    }
   };
 
-  if (error) {
+  if (error && errorComponent) {
     const ErrorComponent = errorComponent;
     return (<ErrorComponent onRestart={handleRestart} onReset={handleReset} error={error} />);
   }
