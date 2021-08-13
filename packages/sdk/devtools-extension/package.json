@@ -11,7 +11,7 @@
     "build:watch": "npm run clean && webpack --mode development --watch",
     "pack:crx": "crx pack dist -o dxos-devtools.crx",
     "lint": "toolchain lint",
-    "test": "jest --rootDir ./src --verbose --passWithNoTests"
+    "test": "toolchain test"
   },
   "dependencies": {
     "@babel/runtime": "^7.9.6",
