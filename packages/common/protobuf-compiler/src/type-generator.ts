@@ -123,7 +123,7 @@ function getFileNameForNamespace (namespace: string) {
   return `${name.join('/')}.ts`;
 }
 
-function createStreamImport() {
+function createStreamImport () {
   return f.createImportDeclaration(
     [],
     [],
