@@ -126,11 +126,11 @@ const App = () => {
   const classes = useStyles();
   const [selected, setSelected] = useState(items[0].items[0].id);
 
-  const handleListItemClick = (event, index) => {
+  const handleListItemClick = (event: any, index: string) => {
     setSelected(index);
   };
 
-  const className = id => selected === id ? classes.content : classes.contentHidden;
+  const className = (id: string) => selected === id ? classes.content : classes.contentHidden;
 
   return (
     <div className={classes.root}>
