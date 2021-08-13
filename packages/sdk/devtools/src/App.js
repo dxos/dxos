@@ -16,18 +16,15 @@ import StorageIcon from '@material-ui/icons/Dns';
 import FeedIcon from '@material-ui/icons/Pageview';
 import SwarmIcon from '@material-ui/icons/Router';
 import ConfigIcon from '@material-ui/icons/Settings';
-import StoreIcon from '@material-ui/icons/Storage';
 import LoggingIcon from '@material-ui/icons/Subject';
 import KeyIcon from '@material-ui/icons/VpnKey';
 
 import { ConfigView } from './containers/ConfigView';
 import { DebugLoggingView } from './containers/DebugLoggingView';
-import FeedStore from './containers/FeedStore';
 import FeedViewer from './containers/FeedViewer';
 import ItemsViewer from './containers/ItemsViewer';
 import Keys from './containers/Keys';
 import Signal from './containers/Signal';
-import SnapshotsView from './containers/SnapsotsView';
 import StorageTab from './containers/StorageTab';
 import SwarmGraph from './containers/SwarmGraph';
 
@@ -87,11 +84,6 @@ const items = [
     title: 'ECHO',
     items: [
       {
-        id: 'echo.feedstore',
-        title: 'Feed Store',
-        icon: StoreIcon
-      },
-      {
         id: 'echo.feedview',
         title: 'Feed View',
         icon: FeedIcon
@@ -99,11 +91,6 @@ const items = [
       {
         id: 'echo.items',
         title: 'Items',
-        icon: AccountTreeIcon
-      },
-      {
-        id: 'echo.snapshots',
-        title: 'Snapshots',
         icon: AccountTreeIcon
       }
     ]
@@ -184,17 +171,11 @@ const App = () => {
       <div className={className('halo.keyring')}>
         <Keys />
       </div>
-      <div className={className('echo.feedstore')}>
-        <FeedStore />
-      </div>
       <div className={className('echo.feedview')}>
         <FeedViewer />
       </div>
       <div className={className('echo.items')}>
         <ItemsViewer />
-      </div>
-      <div className={className('echo.snapshots')}>
-        <SnapshotsView />
       </div>
       <div className={className('mesh.signal')}>
         <Signal />
