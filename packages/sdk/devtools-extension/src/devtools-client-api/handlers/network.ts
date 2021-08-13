@@ -3,10 +3,11 @@
 //
 
 import { Stream } from 'crx-bridge';
-import { HandlerProps } from "./handler-props";
 
 import { PublicKey } from '@dxos/crypto';
 import { SignalApi } from '@dxos/network-manager';
+
+import { HandlerProps } from './handler-props';
 
 async function subscribeToNetworkStatus (hook: HandlerProps['hook'], stream: Stream) {
   async function update () {

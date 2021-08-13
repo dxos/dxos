@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import Bridge, { Stream } from 'crx-bridge';
-import { HandlerProps } from "./handler-props";
+import { Stream } from 'crx-bridge';
+
+import { HandlerProps } from './handler-props';
 
 function getData (client: any) {
   return Promise.all(

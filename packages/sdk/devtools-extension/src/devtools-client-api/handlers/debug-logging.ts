@@ -6,7 +6,7 @@
 // functions -- if we did that we'd be calling a different instance of the createDebug
 // object, with the result that we wouldn't change the log output from the application.
 
-import { HandlerProps } from "./handler-props";
+import { HandlerProps } from './handler-props';
 
 export default ({ hook, bridge }: HandlerProps) => {
   bridge.onMessage('debug-logging.enable', ({ data }) => {

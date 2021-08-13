@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import Bridge, { Stream } from 'crx-bridge';
-import { HandlerProps } from "./handler-props";
+import { Stream } from 'crx-bridge';
+
+import { HandlerProps } from './handler-props';
 
 function getData (echo: any) {
   // TODO(marik-d): Display items hierarchically
@@ -67,7 +68,7 @@ async function subscribeToEcho (client: any, stream: Stream) {
   }
 }
 
-export default ({ hook, bridge }: {hook: any, bridge: typeof Bridge }) => {
+export default ({ hook, bridge }: HandlerProps) => {
   bridge.onOpenStreamChannel('echo.items', (stream) => {
     subscribeToEcho(hook.client, stream);
   });
