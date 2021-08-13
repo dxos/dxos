@@ -6,6 +6,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 ReactDOM.render(
-  <div>DXOS</div>,
+  <div>Open the Developer Tools and select the DXOS tab.</div>,
   document.getElementById('root')
 );
