@@ -59,6 +59,18 @@ Defaults() -> defaults.yml
 
 Finally, on our app, we should replace the `config` object with the `initConfig` function we are exporting above.
 
+```js:title=src/App.js
+import { initConfig } from './config';
+
+const App = () => {
+  return (
+    <ClientInitializer config={initConfig}>
+      <Root />
+    </ClientInitializer>
+  );
+};
+```
+
 ## Webpack ConfigPlugin
 
 To make this package work properly, we need to make sure our Webpack settings have the `ConfigPlugin` from `@dxos/config` to load the config files.
