@@ -18,8 +18,10 @@ interface ErrorComponentType {
   onReset?: () => void,
 }
 
+type ErrorCallbackType = (error: Error, errorInfo?: ErrorInfo) => void;
+
 interface Props {
-  onError: (error: Error, errorInfo: ErrorInfo) => void,
+  onError: ErrorCallbackType,
   onRestart?: () => void,
   onReset?: () => void,
   errorComponent?: React.ComponentType<ErrorComponentType>
@@ -71,4 +73,4 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-export { ErrorBoundary, ErrorComponentType };
+export { ErrorBoundary, ErrorComponentType, ErrorCallbackType };

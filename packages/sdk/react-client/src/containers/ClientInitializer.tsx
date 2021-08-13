@@ -2,27 +2,30 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState, useEffect, ReactNode } from 'react';
+import React, { useState, useEffect, ReactNode, ErrorInfo } from 'react';
 
 import { LinearProgress } from '@material-ui/core';
 
 import { Client, ClientConfig } from '@dxos/client';
 import { MaybePromise } from '@dxos/util';
 
-import { ErrorComponentType } from '../components/ErrorBoundary';
+import { ErrorComponentType, ErrorBoundary, ErrorCallbackType } from '../components/ErrorBoundary';
 import ClientProvider from './ClientProvider';
 
 interface ClientInitializerProperties {
   children?: ReactNode
   config?: ClientConfig | (() => MaybePromise<ClientConfig>)
   errorComponent: React.ComponentType<ErrorComponentType>
+  onError: ErrorCallbackType
 }
+
+// use errorboundary here and provide onError callback
 
 /**
  * Initializes and provides a client instance given a config object or config generator.
  * To be used with `useClient` hook.
  */
-const ClientInitializer = ({ children, config = {}, errorComponent }: ClientInitializerProperties) => {
+const ClientInitializer = ({ children, config = {}, errorComponent, onError }: ClientInitializerProperties) => {
   const [client, setClient] = useState<Client | undefined>();
   const [error, setError] = useState<undefined | Error>(undefined);
   useEffect(() => {
@@ -34,6 +37,7 @@ const ClientInitializer = ({ children, config = {}, errorComponent }: ClientInit
       } catch (error) {
         setError(error);
         console.error(error);
+        handleError(error);
       }
     };
     setImmediate(createClient);
@@ -49,6 +53,13 @@ const ClientInitializer = ({ children, config = {}, errorComponent }: ClientInit
     }
   };
 
+  const handleError = (error: Error, errorInfo?: ErrorInfo) => {
+    console.log("DO I HAVE A CLIENT?", client);
+    
+    console.error(error, errorInfo);
+    onError(error, errorInfo);
+  };
+
   if (error) {
     const ErrorComponent = errorComponent;
     return (<ErrorComponent onRestart={handleRestart} onReset={handleReset} error={error} />);
@@ -59,9 +70,16 @@ const ClientInitializer = ({ children, config = {}, errorComponent }: ClientInit
   }
 
   return (
-    <ClientProvider client={client}>
-      {children}
-    </ClientProvider>
+    <ErrorBoundary
+      // It's important to print the error to the console here so sentry can report it.
+      onError={handleError}
+      onRestart={handleRestart}
+      onReset={handleReset}
+    >
+      <ClientProvider client={client}>
+        {children}
+      </ClientProvider>
+    </ErrorBoundary>
   );
 };
 
