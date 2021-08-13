@@ -20,42 +20,54 @@ export class Stream<T> {
 
   private _isClosed = false;
   private _dispose: (() => void) | undefined;
+
+  /**
+   * Buffer messages before subscription. Set to null when buffer is no longer needed.
+   */
+  private _buffer: T[] | null = [];
  
   constructor(producer: Producer<T>) {
-    // Delay the execution so that the consumer has a chance to subscribe to the stream.
-    // TODO(marik-d): Figure out if we want to start the producer in constructor or lazily on subscription.
-    setImmediate(() => {
-      const disposeCb = producer({
-        next: msg => {
-          if(this._isClosed) {
-            throw new Error('Stream is closed.')
-          }
-  
-          this._messageHandler?.(msg)
-        },
-        close: err => {
-          if(this._isClosed) {
-            return
-          }
-
-          this._isClosed = true;
-          this._dispose?.();
-          this._closeHandler?.(err);
+    const disposeCb = producer({
+      next: msg => {
+        if(this._isClosed) {
+          throw new Error('Stream is closed.')
         }
-      })
-      if(disposeCb) {
-        this._dispose = disposeCb;
+
+        if(this._messageHandler) {
+          this._messageHandler(msg);
+        } else {
+          assert(this._buffer);
+          this._buffer.push(msg);
+        }
+      },
+      close: err => {
+        if(this._isClosed) {
+          return
+        }
+
+        this._isClosed = true;
+        this._dispose?.();
+        this._closeHandler?.(err);
       }
     })
+    if(disposeCb) {
+      this._dispose = disposeCb;
+    }
   }
 
   subscribe(onMessage: (msg: T) => void, onClose: (error?: Error) => void) {
     assert(!this._isClosed, 'Stream is closed.')
     assert(!this._messageHandler, 'Stream is already subscribed to.')
     assert(!this._closeHandler, 'Stream is already subscribed to.')
+    assert(this._buffer); // Must be not-null.
 
     this._messageHandler = onMessage;
     this._closeHandler = onClose;
+
+    for(const message of this._buffer) {
+      this._messageHandler(message);
+    }
+    this._buffer = null;
   }
 
 

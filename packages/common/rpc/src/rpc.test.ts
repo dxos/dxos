@@ -31,7 +31,7 @@ describe('RpcPeer', () => {
     ]);
   });
 
-  describe('non-stream requests', () => {
+  describe('one-off requests', () => {
     test('can send a request', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
@@ -309,7 +309,7 @@ describe('RpcPeer', () => {
       expect((msgs[0] as any).error.message).toEqual('Test error')
     })
 
-    test('client closes', async () => {
+    test('client closes the stream', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       let closeCalled = false;
@@ -330,7 +330,12 @@ describe('RpcPeer', () => {
         port: bobPort
       })
 
-      const stream = await bob.callStream('method', Buffer.from('request'));
+      await Promise.all([
+        alice.open(),
+        bob.open()
+      ]);
+
+      const stream = bob.callStream('method', Buffer.from('request'));
       stream.close()
 
       await sleep(1);
