@@ -2,10 +2,18 @@
 
 ## Installation
 
-1. Grab a build from the [latest release](https://github.com/dxos/sdk/releases).
-1. Unzip it.
-1. Enable developer mode in chrome.
-1. Load unpacked extension.
+1. Grab a build from the [latest build](https://github.com/dxos/protocols).
+
+<img src="images/jobs.png">
+
+<img src="images/artifacts.png">
+
+2. Unzip the downloaded file.
+3. Go to `chrome://extensions/` and enable developer mode.
+
+<img src="images/developer-mode.png">
+
+4. Select `Load unpacked` and select the unzipped Devtools folder.
 
 ## Extension startup sequence
 
@@ -29,10 +37,10 @@
 1. Clone this repo then install dependencies and build:
 
 ```
-yarn && yarn build
+rushx build
 ```
 
-2. (Optional) Run the `yarn build:watch` for both `extension` and `devtools` and open the devtools in your browser.
+2. (Optional) Run the `rushx build:watch` for both `extension` and `devtools` and open the devtools in your browser.
 
 3. Open the __extensions__ manager in your browser: 
 
@@ -54,15 +62,3 @@ It then sets-up a bridge that enables the devtools (and other components) to acc
 
 - Anatomy of an extension: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#Background_pages
 - This package is loosely based on the [Apollo DevTools](https://github.com/apollographql/apollo-client-devtools).
-
-## Development
-
-
-
-## Contributing
-
-PRs accepted.
-
-## License
-
-GPL-3.0 © DXOS.org
