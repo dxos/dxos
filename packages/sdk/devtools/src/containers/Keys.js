@@ -39,7 +39,7 @@ const Keys = () => {
 
   useEffect(() => {
     bridge.send('keyring.keys', { }).then(keys => setKeys(keys));
-  }, [bridge,]);
+  }, [bridge]);
 
   return (
     <div className={classes.root}>

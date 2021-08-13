@@ -13,7 +13,6 @@ import * as colors from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 import AccountTreeIcon from '@material-ui/icons/AccountTree';
 import StorageIcon from '@material-ui/icons/Dns';
-import FeedIcon from '@material-ui/icons/Pageview';
 import SwarmIcon from '@material-ui/icons/Router';
 import ConfigIcon from '@material-ui/icons/Settings';
 import LoggingIcon from '@material-ui/icons/Subject';
@@ -21,7 +20,6 @@ import KeyIcon from '@material-ui/icons/VpnKey';
 
 import { ConfigView } from './containers/ConfigView';
 import { DebugLoggingView } from './containers/DebugLoggingView';
-import FeedViewer from './containers/FeedViewer';
 import ItemsViewer from './containers/ItemsViewer';
 import Keys from './containers/Keys';
 import Signal from './containers/Signal';
@@ -83,11 +81,6 @@ const items = [
   {
     title: 'ECHO',
     items: [
-      {
-        id: 'echo.feedview',
-        title: 'Feed View',
-        icon: FeedIcon
-      },
       {
         id: 'echo.items',
         title: 'Items',
@@ -170,9 +163,6 @@ const App = () => {
       </div>
       <div className={className('halo.keyring')}>
         <Keys />
-      </div>
-      <div className={className('echo.feedview')}>
-        <FeedViewer />
       </div>
       <div className={className('echo.items')}>
         <ItemsViewer />
