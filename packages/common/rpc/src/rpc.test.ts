@@ -271,7 +271,7 @@ describe('RpcPeer', () => {
       expect(await Stream.consume(stream)).toEqual([
         { data: Buffer.from('res1') },
         { data: Buffer.from('res2') },
-        { closed: true, error: undefined }
+        { closed: true }
       ]);
     });
 

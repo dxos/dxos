@@ -42,23 +42,25 @@ export class Service {
 
       // TODO(marik-d): What about primitive types.
       const requestCodec = schema.tryGetCodecForType(method.resolvedRequestType.fullName);
-      const responseCodec = schema.tryGetCodecForType(method.resolvedResponseType.fullName)
+      const responseCodec = schema.tryGetCodecForType(method.resolvedResponseType.fullName);
 
-      ; (this as any)[method.name] = async (request: unknown) => {
-        const encoded = requestCodec.encode(request);
-
-        if (method.responseStream) {
+      if (!method.responseStream) {
+        (this as any)[method.name] = async (request: unknown) => {
+          const encoded = requestCodec.encode(request);
+          const response = await backend.call(method.name, encoded);
+          return responseCodec.decode(response);
+        };
+      } else {
+        (this as any)[method.name] = (request: unknown) => {
+          const encoded = requestCodec.encode(request);
           return new Stream(({ next, close }) => {
             const stream = backend.callStream(method.name, encoded);
             stream.subscribe(data => next(responseCodec.decode(data)), close);
 
             return () => stream.close();
           });
-        } else {
-          const response = await backend.call(method.name, encoded);
-          return responseCodec.decode(response);
-        }
-      };
+        };
+      }
     }
   }
 }

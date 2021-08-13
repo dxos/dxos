@@ -33,7 +33,11 @@ export class Stream<T> {
           items.push({ data });
         },
         error => {
-          items.push({ closed: true, error });
+          if (error) {
+            items.push({ closed: true, error });
+          } else {
+            items.push({ closed: true });
+          }
           resolve(items);
         }
       );

@@ -6,6 +6,7 @@ import { expect } from 'earljs';
 import { it as test } from 'mocha';
 
 import { sleep } from '@dxos/async';
+import { Stream } from '@dxos/codec-protobuf';
 
 import { SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
@@ -84,5 +85,49 @@ describe('Protobuf service', () => {
     expect(error.message).toEqual('TestError');
     expect(error.stack?.includes('handlerFn')).toEqual(true);
     expect(error.stack?.includes('TestCall')).toEqual(true);
+  });
+
+  test('streams', async () => {
+    const [alicePort, bobPort] = createLinkedPorts();
+
+    const service = schema.getService('dxos.rpc.test.TestStreamService');
+
+    const server: RpcPeer = createRpcServer({
+      service,
+      handlers: {
+        TestCall: (req) => {
+          expect(req.data).toEqual('requestData');
+
+          return new Stream(({ next, close }) => {
+            next({ data: 'foo' });
+            setImmediate(async () => {
+              next({ data: 'bar' });
+              await sleep(5);
+              next({ data: 'baz' });
+              close();
+            });
+          });
+        }
+      },
+      port: alicePort
+    });
+
+    const client = createRpcClient(service, {
+      port: bobPort
+    });
+
+    await Promise.all([
+      server.open(),
+      client.open()
+    ]);
+
+    const stream = client.rpc.TestCall({ data: 'requestData' });
+
+    expect(await Stream.consume(stream)).toEqual([
+      { data: { data: 'foo' } },
+      { data: { data: 'bar' } },
+      { data: { data: 'baz' } },
+      { closed: true }
+    ]);
   });
 });
