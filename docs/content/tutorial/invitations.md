@@ -38,6 +38,8 @@ const TaskList = ({ partyKey }) => {
 export default TaskList;
 ```
 
+> You can access [this](https://github.com/dxos/tutorial-tasks-app/blob/master/src/components/TaskList.js) link to check the full `TaskList` code.
+
 To create a new invitation we just need to call `party.createInvitation` method and it will return the specific information you need to share with your peer.
 
 Go to your `src/components/Main.js` component and render the `TaskList` component in a main section:
