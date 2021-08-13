@@ -28,19 +28,13 @@ const baseTheme = createMuiTheme({
   }
 });
 
-// import client initializer and error boundary
-
 /**
  * Root container.
  */
 const App = () => {
 
-  const handleError = (error, errorInfo) => {
-    // Here you can handle the errors
-  };
-
   return (
-    <ClientInitializer config={initConfig} onError={handleError} errorComponent={ErrorView}>
+    <ClientInitializer config={initConfig} errorComponent={ErrorView}>
       <ReactUXTheme base={baseTheme}>
         <Root />
       </ReactUXTheme>
