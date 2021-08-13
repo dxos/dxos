@@ -54,8 +54,6 @@ const ClientInitializer = ({ children, config = {}, errorComponent, onError }: C
   };
 
   const handleError = (error: Error, errorInfo?: ErrorInfo) => {
-    console.log("DO I HAVE A CLIENT?", client);
-    
     console.error(error, errorInfo);
     onError(error, errorInfo);
   };
