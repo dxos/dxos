@@ -29,8 +29,7 @@ async function subscribeToEcho (client: any, stream: Stream) {
   async function update () {
     try {
       const res = await getData(client);
-      console.log(res);
-      stream.send(res);
+      stream.send(res.filter(s => !!s));
     } catch (err) {
       console.error('DXOS DevTools: Snapshots update error');
       console.error(err);

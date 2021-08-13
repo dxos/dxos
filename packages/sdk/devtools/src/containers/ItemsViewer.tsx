@@ -17,7 +17,6 @@ export default function ItemsViewer () {
     const stream = await bridge.openStream('echo.items');
 
     stream.onMessage(data => {
-      console.log({ data });
       setData(data);
     });
 

@@ -18,10 +18,7 @@ import SwarmIcon from '@material-ui/icons/Router';
 import ConfigIcon from '@material-ui/icons/Settings';
 import StoreIcon from '@material-ui/icons/Storage';
 import LoggingIcon from '@material-ui/icons/Subject';
-import EventsIcon from '@material-ui/icons/Timer';
 import KeyIcon from '@material-ui/icons/VpnKey';
-
-import { JsonTreeView } from '@dxos/react-ux';
 
 import { ConfigView } from './containers/ConfigView';
 import { DebugLoggingView } from './containers/DebugLoggingView';

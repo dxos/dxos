@@ -11,18 +11,23 @@ import { useBridge } from '../hooks/bridge';
 
 export default function SnapshotsView () {
   const [bridge] = useBridge();
-  const [data, setData] = useState({});
+  const [data, setData] = useState<any[]>([]);
 
   useAsyncEffect(async () => {
     const stream = await bridge.openStream('echo.snapshots');
 
     stream.onMessage(data => {
-      console.log({ data });
       setData(data);
     });
 
     return () => stream.close();
   }, [bridge]);
+
+  if (data.length === 0) {
+    return (
+    <p>No snapshots available.</p>
+    );
+  }
 
   return (
     <JsonTreeView
