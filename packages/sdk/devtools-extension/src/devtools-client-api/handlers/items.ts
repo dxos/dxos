@@ -6,7 +6,7 @@ import { Stream } from 'crx-bridge';
 
 import { HandlerProps } from './handler-props';
 
-function getData (echo: any) {
+function getData (echo: HandlerProps['hook']['client']['echo']) {
   // TODO(marik-d): Display items hierarchically
   const res: Record<string, any> = {};
   const parties = echo.queryParties().value;
@@ -14,7 +14,7 @@ function getData (echo: any) {
     const partyInfo: Record<string, any> = {};
     res[`Party ${party.key.toHex()}`] = partyInfo;
 
-    const items = party.database.queryItems().value;
+    const items = party.database.select(s => s.items).getValue();
     for (const item of items) {
       const modelName = Object.getPrototypeOf(item.model).constructor.name;
       partyInfo[`${modelName} ${item.type} ${item.id}`] = {
@@ -29,7 +29,7 @@ function getData (echo: any) {
   return res;
 }
 
-async function subscribeToEcho (client: any, stream: Stream) {
+async function subscribeToEcho (client: HandlerProps['hook']['client'], stream: Stream) {
   function update () {
     try {
       const res = getData(client.echo);
@@ -44,11 +44,11 @@ async function subscribeToEcho (client: any, stream: Stream) {
     await client.initialize();
     const partySubscriptions: any[] = [];
 
-    const unsubscribe = client.echo.queryParties().subscribe((parties: any) => {
+    const unsubscribe = client.echo.queryParties().subscribe((parties) => {
       partySubscriptions.forEach(unsub => unsub());
 
       for (const party of parties) {
-        const sub = party.database.queryItems().subscribe(() => {
+        const sub = party.database.select(s => s.items).update.on(() => {
           update();
         });
         partySubscriptions.push(sub);
