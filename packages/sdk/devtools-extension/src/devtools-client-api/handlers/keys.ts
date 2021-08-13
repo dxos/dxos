@@ -5,11 +5,6 @@
 import { HandlerProps } from './handler-props';
 
 export default ({ hook, bridge }: HandlerProps) => {
-  bridge.onMessage('party.keys', async ({ data: { topic } }) => {
-    console.warn('Party keys not currently implemented.');
-    return [];
-  });
-
   bridge.onMessage('keyring.keys', () => {
     try {
       const { keyring } = hook;
