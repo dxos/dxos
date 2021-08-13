@@ -107,5 +107,5 @@ jobs:
     - name: Upload devtools
       uses: actions/upload-artifact@v2
       with:
-        name: Wallet
+        name: Devtools
         path: packages/sdk/devtools-extension/dist
