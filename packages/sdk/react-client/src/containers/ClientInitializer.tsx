@@ -4,8 +4,6 @@
 
 import React, { useState, useEffect, ReactNode, ErrorInfo } from 'react';
 
-import { LinearProgress } from '@material-ui/core';
-
 import { Client, ClientConfig } from '@dxos/client';
 import { MaybePromise } from '@dxos/util';
 
@@ -15,7 +13,8 @@ import ClientProvider from './ClientProvider';
 interface ClientInitializerProperties {
   children?: ReactNode
   config?: ClientConfig | (() => MaybePromise<ClientConfig>)
-  errorComponent?: React.ComponentType<ErrorComponentType>
+  errorComponent?: React.ComponentType<ErrorComponentType>,
+  loaderComponent?: React.ComponentType,
   onError?: ErrorCallbackType
 }
 
@@ -23,7 +22,7 @@ interface ClientInitializerProperties {
  * Initializes and provides a client instance given a config object or config generator.
  * To be used with `useClient` hook.
  */
-const ClientInitializer = ({ children, config = {}, errorComponent, onError }: ClientInitializerProperties) => {
+const ClientInitializer = ({ children, config = {}, errorComponent, loaderComponent, onError }: ClientInitializerProperties) => {
   const [client, setClient] = useState<Client | undefined>();
   const [error, setError] = useState<undefined | Error>(undefined);
   useEffect(() => {
@@ -64,7 +63,12 @@ const ClientInitializer = ({ children, config = {}, errorComponent, onError }: C
   }
 
   if (!client) {
-    return <LinearProgress />;
+    if (loaderComponent) {
+      const ExternalLoaderComponent = loaderComponent;
+      return (<ExternalLoaderComponent />);
+    }
+
+    return <div>Loading Client...</div>;
   }
 
   return (

@@ -22,7 +22,6 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@material-ui/core": "^4.11.4",
     "@types/debug": "^4.1.1",
     "assert": "^2.0.0",
     "debug": "^4.1.1",

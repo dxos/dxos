@@ -8,6 +8,7 @@ import { createMuiTheme } from '@material-ui/core/styles';
 
 import { ClientInitializer } from '@dxos/react-client';
 import { ReactUXTheme, ErrorView } from '@dxos/react-ux';
+import { LinearProgress } from '@material-ui/core';
 
 import Root from './components/Root';
 import { initConfig } from './config';
@@ -32,9 +33,8 @@ const baseTheme = createMuiTheme({
  * Root container.
  */
 const App = () => {
-
   return (
-    <ClientInitializer config={initConfig} errorComponent={ErrorView}>
+    <ClientInitializer config={initConfig} loaderComponent={LinearProgress} errorComponent={ErrorView}>
       <ReactUXTheme base={baseTheme}>
         <Root />
       </ReactUXTheme>
