@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { sleep, synchronized, trigger, Trigger } from '@dxos/async';
+import { sleep, synchronized, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
@@ -107,7 +107,6 @@ export class RpcPeer {
    */
   private async _receive (msg: Uint8Array): Promise<void> {
     const decoded = codec.decode(msg);
-    console.log('_receive', { decoded })
     if (decoded.request) {
       if (!this._open) {
         await this._sendMessage({ response: { error: encodeError(new RpcClosedError()) } });
@@ -149,7 +148,7 @@ export class RpcPeer {
       }
 
       assert(typeof decoded.streamClose.id === 'number');
-      
+
       const stream = this._localStreams.get(decoded.streamClose.id);
       if (!stream) {
         log(`No local stream for id=${decoded.streamClose.id}`);
@@ -191,8 +190,8 @@ export class RpcPeer {
       }
     });
 
-    const timeoutPromise = sleep(this._options.timeout ?? DEFAULT_TIMEOUT).then(() => Promise.reject(new Error('Timeout')))
-    timeoutPromise.catch(() => {}) // Mute the promise.
+    const timeoutPromise = sleep(this._options.timeout ?? DEFAULT_TIMEOUT).then(() => Promise.reject(new Error('Timeout')));
+    timeoutPromise.catch(() => {}); // Mute the promise.
 
     const response = await Promise.race([promise, timeoutPromise]);
     assert(response.id === id);
@@ -245,7 +244,7 @@ export class RpcPeer {
           id,
           method,
           payload: request,
-          stream: true,
+          stream: true
         }
       }).catch(error => close(error));
 
@@ -253,13 +252,12 @@ export class RpcPeer {
         this._sendMessage({
           streamClose: { id }
         }).catch(() => {}); // Ignore the error here as there's no good way to handle it.
-      }
+      };
     });
   }
 
-  private async _sendMessage(message: RpcMessage) {
-    console.log('send', message)
-    this._options.port.send(codec.encode(message))
+  private async _sendMessage (message: RpcMessage) {
+    this._options.port.send(codec.encode(message));
   }
 
   private async _callHandler (req: Request): Promise<Response> {

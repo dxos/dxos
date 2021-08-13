@@ -10,8 +10,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "build:test": "pnpm run build && pnpm run test",
-    "test": "pnpm run lint && jest 2>&1",
+    "build:test": "pnpm run build && pnpm run lint && pnpm run test",
+    "test": "jest 2>&1",
     "lint": "eslint '{src,test}/**/*.ts'"
   },
   "eslintConfig": {

@@ -5,20 +5,43 @@ type Producer<T> = (callbacks: {
   close: (error?: Error) => void
 }) => (() => void) | void
 
+export type StreamItem<T> = 
+  | { data: T }
+  | { closed: true, error?: Error }
+
 /**
  * Represents a typed stream of data.
  * 
- * The stream doesn't do any buffering, so the consumer must immediately subscribe to the `message` event,
- * otherwise some messages might be lost.
+ * Can only have one subscriber.
  * 
  * `close` must be called to clean-up the resources.
  */
-// TODO(marik-d): Either implement buffering or make streams lazy (invoke producer on subscription).
 export class Stream<T> {
+
+  /**
+   * Consumes the entire stream to the end until it closes and returns a promise with the resulting items.
+   */ 
+  static consume <T> (stream: Stream<T>): Promise<StreamItem<T>[]> {
+    return new Promise(resolve => {
+      const items: StreamItem<T>[] = []
+  
+      stream.subscribe(
+        data => {
+          items.push({ data })
+        },
+        error => {
+          items.push({ closed: true, error });
+          resolve(items)
+        }
+      )
+    })
+  }
+
   private _messageHandler?: (msg: T) => void;
   private _closeHandler?: (error?: Error) => void;
 
   private _isClosed = false;
+  private _closeError: Error | undefined;
   private _dispose: (() => void) | undefined;
 
   /**
@@ -46,6 +69,7 @@ export class Stream<T> {
         }
 
         this._isClosed = true;
+        this._closeError = err;
         this._dispose?.();
         this._closeHandler?.(err);
       }
@@ -56,18 +80,23 @@ export class Stream<T> {
   }
 
   subscribe(onMessage: (msg: T) => void, onClose: (error?: Error) => void) {
-    assert(!this._isClosed, 'Stream is closed.')
     assert(!this._messageHandler, 'Stream is already subscribed to.')
     assert(!this._closeHandler, 'Stream is already subscribed to.')
     assert(this._buffer); // Must be not-null.
 
-    this._messageHandler = onMessage;
-    this._closeHandler = onClose;
-
     for(const message of this._buffer) {
-      this._messageHandler(message);
+      onMessage(message);
     }
     this._buffer = null;
+
+    // Stream might have allready been closed.
+    if(this._isClosed) {
+      onClose(this._closeError)
+      return;
+    }
+
+    this._messageHandler = onMessage;
+    this._closeHandler = onClose;
   }
 
 

@@ -6,11 +6,11 @@ import { expect } from 'earljs';
 import { it as test } from 'mocha';
 
 import { sleep } from '@dxos/async';
+import { Stream } from '@dxos/codec-protobuf';
 
 import { SerializedRpcError } from './errors';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts } from './testutil';
-import { Stream } from '@dxos/codec-protobuf';
 
 describe('RpcPeer', () => {
   test('can open', async () => {
@@ -160,7 +160,7 @@ describe('RpcPeer', () => {
       await expect(req).toBeRejected();
     });
 
-    test('closing remote endpoint stops pending requests', async () => {
+    test('closing remote endpoint stops pending requests on timeout', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -173,7 +173,8 @@ describe('RpcPeer', () => {
       });
       const bob = new RpcPeer({
         messageHandler: async msg => new Uint8Array(),
-        port: bobPort
+        port: bobPort,
+        timeout: 50
       });
 
       await Promise.all([
@@ -213,7 +214,7 @@ describe('RpcPeer', () => {
       await promise;
     });
 
-    test('one peer can open before the other is created ', async () => {
+    test('one peer can open before the other is created', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       // eslint-disable-next-line prefer-const
@@ -247,10 +248,10 @@ describe('RpcPeer', () => {
           expect(method).toEqual('method');
           expect(msg).toEqual(Buffer.from('request'));
           return new Stream<Uint8Array>(({ next, close }) => {
-            next(Buffer.from('res1'))
-            next(Buffer.from('res2'))
-            close()
-          })
+            next(Buffer.from('res1'));
+            next(Buffer.from('res2'));
+            close();
+          });
         },
         port: alicePort
       });
@@ -265,14 +266,14 @@ describe('RpcPeer', () => {
       ]);
 
       const stream = await bob.callStream('method', Buffer.from('request'));
-      expect(stream).toBeA(Stream)
+      expect(stream).toBeA(Stream);
 
-      expect(await consumeStream(stream)).toEqual([
+      expect(await Stream.consume(stream)).toEqual([
         { data: Buffer.from('res1') },
         { data: Buffer.from('res2') },
         { closed: true, error: undefined }
-      ])
-    })
+      ]);
+    });
 
     test('server closes with an error', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
@@ -283,8 +284,8 @@ describe('RpcPeer', () => {
           expect(method).toEqual('method');
           expect(msg).toEqual(Buffer.from('request'));
           return new Stream<Uint8Array>(({ next, close }) => {
-            close(new Error('Test error'))
-          })
+            close(new Error('Test error'));
+          });
         },
         port: alicePort
       });
@@ -299,15 +300,15 @@ describe('RpcPeer', () => {
       ]);
 
       const stream = await bob.callStream('method', Buffer.from('request'));
-      expect(stream).toBeA(Stream)
+      expect(stream).toBeA(Stream);
 
-      const msgs = await consumeStream(stream);
+      const msgs = await Stream.consume(stream);
       expect(msgs).toEqual([
         { closed: true, error: expect.a(Error) }
-      ])
+      ]);
 
-      expect((msgs[0] as any).error.message).toEqual('Test error')
-    })
+      expect((msgs[0] as any).error.message).toEqual('Test error');
+    });
 
     test('client closes the stream', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
@@ -319,16 +320,16 @@ describe('RpcPeer', () => {
           return new Stream<Uint8Array>(({ next, close }) => {
             return () => {
               closeCalled = true;
-            }
-          })
+            };
+          });
         },
         port: alicePort
-      })
+      });
 
       const bob = new RpcPeer({
-        messageHandler: async msg => new Uint8Array(),  
+        messageHandler: async msg => new Uint8Array(),
         port: bobPort
-      })
+      });
 
       await Promise.all([
         alice.open(),
@@ -336,13 +337,13 @@ describe('RpcPeer', () => {
       ]);
 
       const stream = bob.callStream('method', Buffer.from('request'));
-      stream.close()
+      stream.close();
 
       await sleep(1);
 
       expect(closeCalled).toEqual(true);
-    })
-  })
+    });
+  });
 
   test('one peer can open before the other is created', async () => {
     const [alicePort, bobPort] = createLinkedPorts();
@@ -365,28 +366,5 @@ describe('RpcPeer', () => {
       aliceOpen,
       bob.open()
     ]);
-  })
+  });
 });
-
-
-type StreamItem<T> = 
-  | { data: T }
-  | { closed: true, error?: Error }
-
-const consumeStream = <T> (stream: Stream<T>): Promise<StreamItem<T>[]> => {
-  return new Promise(resolve => {
-    const items: StreamItem<T>[] = []
-
-    stream.subscribe(
-      data => {
-        items.push({ data })
-        console.log(items)
-      },
-      error => {
-        items.push({ closed: true, error });
-        resolve(items)
-        console.log(items)
-      }
-    )
-  })
-}
