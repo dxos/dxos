@@ -36,8 +36,8 @@ module.exports = {
             'core-concepts/invitations'
           ],
           'Publishing': [
-            'publishing/kube',
             'publishing/configuration',
+            'publishing/kube',
           ],
           'API Reference': [
             'api-reference/dxos-client',
