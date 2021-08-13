@@ -548,6 +548,14 @@
       "packageName": "@dxos/tutorials-tasks-app",
       "projectFolder": "packages/sdk/tutorials/apps/tasks-app"
     },
+    {
+      "packageName": "@dxos/devtools",
+      "projectFolder": "packages/sdk/devtools"
+    },
+    {
+      "packageName": "@dxos/devtools-extension",
+      "projectFolder": "packages/sdk/devtools-extension"
+    },
 
     //
     // echo
