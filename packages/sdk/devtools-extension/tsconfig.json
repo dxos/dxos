@@ -12,6 +12,29 @@
     "rootDir": "src"
   },
   "include": [
-    "src",
+    "src"
   ],
+  "references": [
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../devtools"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../react-ux"
+    }
+  ]
 }
