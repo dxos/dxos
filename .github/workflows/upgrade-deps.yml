@@ -1,0 +1,38 @@
+#
+# Copyright 2021 DXOS.org
+#
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+
+name: Upgrade DXOS dependencies
+
+jobs:
+  upgrade:
+    name: Upgrade DXOS dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16.1
+      - name: Upgrade DXOS dependencies
+        uses: technote-space/create-pr-action@v2
+        with:
+          EXECUTE_COMMANDS: |
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+
+            npx npm-check-updates -u --deep '@dxos/*'
+
+            npm install -g @microsoft/rush pnpm
+            node common/scripts/install-run-rush.js install
+          COMMIT_MESSAGE: 'Upgrade DXOS dependencies'
+          COMMIT_NAME: 'GitHub Actions'
+          COMMIT_EMAIL: 'ci@dxos.org'
+          PR_BRANCH_NAME: 'upgrade-deps-${PR_ID}'
+          PR_TITLE: 'Automatic: Upgrade DXOS dependencies'
+          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
