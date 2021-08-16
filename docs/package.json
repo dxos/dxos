@@ -21,7 +21,7 @@
     "generate:docs": "typedoc --out content/api --packages '../packages/{sdk,echo,halo,mesh}/*' --tsconfig tsconfig.typedoc.json"
   },
   "dependencies": {
-    "@dxos/docs-theme": "^1.0.0-beta.22",
+    "@dxos/docs-theme": "^1.0.0-beta.23",
     "gatsby": "^2.17.11",
     "gatsby-plugin-sharp": "^2.6.14",
     "gatsby-source-filesystem": "^2.3.14",
