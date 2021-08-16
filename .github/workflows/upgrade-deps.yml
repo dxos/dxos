@@ -31,6 +31,8 @@ jobs:
 
             npm install -g @microsoft/rush pnpm
             node common/scripts/install-run-rush.js install
+
+            rm -rf .npmrc
           COMMIT_MESSAGE: 'Upgrade DXOS dependencies'
           COMMIT_NAME: 'GitHub Actions'
           COMMIT_EMAIL: 'ci@dxos.org'
