@@ -8,6 +8,26 @@
     ]
   },
   "include": [
-    "src",
+    "src"
   ],
+  "references": [
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../mesh/network-devtools"
+    },
+    {
+      "path": "../react-ux"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    }
+  ]
 }
