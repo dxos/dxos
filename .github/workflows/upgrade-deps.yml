@@ -30,7 +30,7 @@ jobs:
             npx npm-check-updates -u --deep '@dxos/*'
 
             npm install -g @microsoft/rush pnpm
-            node common/scripts/install-run-rush.js install
+            node common/scripts/install-run-rush.js update
 
             rm -rf .npmrc
           COMMIT_MESSAGE: 'Upgrade DXOS dependencies'
