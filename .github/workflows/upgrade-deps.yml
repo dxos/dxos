@@ -25,6 +25,7 @@ jobs:
         with:
           EXECUTE_COMMANDS: |
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+            sudo ./common/scripts/install-dependencies.sh
 
             npx npm-check-updates -u --deep '@dxos/*'
 
