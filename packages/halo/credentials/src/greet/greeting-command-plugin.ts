@@ -96,8 +96,8 @@ export class GreetingCommandPlugin extends EventEmitter {
   async send (peerId: PeerId, message: WithTypeUrl<Command>) {
     assert(Buffer.isBuffer(peerId), 'peerId is not a buffer.');
     assert(message);
-    // Only the FINISH command does not require a response.
-    return this._send(peerId, message, message.command === Command.Type.FINISH);
+    const oneway = false;
+    return this._send(peerId, message, oneway);
   }
 
   /**
