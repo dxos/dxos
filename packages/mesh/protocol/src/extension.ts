@@ -177,8 +177,12 @@ export class Extension extends Nanomessage {
 
     this._protocol = protocol;
     this._protocolExtension = this._protocol.stream.registerExtension(this.name, {
-      onmessage: (msg: any) => {
-        this._subscribeCb?.(msg);
+      onmessage: async (msg: any) => {
+        try {
+          await this._subscribeCb?.(msg);
+        } catch (err) {
+          log(`${this.name} failed to execute subscribe callback on message.`, { msg, err });
+        }
       }
     });
 
