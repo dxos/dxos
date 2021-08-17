@@ -87,7 +87,11 @@ export class TaskApp extends AppSimulator {
       console.debug({ result, expectedResult });
       expectedResult ? expect(result).toBeTruthy() : expect(result).toBeFalsy();
     } else {
-      console.debug('not found');
+      console.debug('not found', taskCheckbox);
+      console.debug('selector', `input:left-of(:text("${taskName}"))`);
+      console.debug('selector', `input:left-of(:text("${taskName}"))`);
+      this.browser.getPage().waitForSelector(`input:left-of(:text("${taskName}"))`).then(checkBox => console.debug('found?', checkBox));
+      expect(false).toBeTruthy();
     }
   }
 
