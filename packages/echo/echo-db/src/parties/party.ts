@@ -12,6 +12,7 @@ import { ActivationOptions } from '../halo';
 import { InvitationAuthenticator, InvitationOptions, defaultInvitationAuthenticator } from '../invitations';
 import { ResultSet } from '../result';
 import { PartyInternal, PartyMember } from './party-internal';
+import { CONTACT_DEBOUNCE_INTERVAL } from './party-manager';
 
 const log = debug('dxos:echo:party');
 
@@ -136,7 +137,7 @@ export class Party {
   queryMembers (): ResultSet<PartyMember> {
     assert(this.isOpen, 'Party is not open.');
     return new ResultSet(
-      this._internal.processor.keyOrInfoAdded.discardParameter(),
+      this._internal.processor.keyOrInfoAdded.debounce(CONTACT_DEBOUNCE_INTERVAL).discardParameter(),
       () => this._internal.processor.memberKeys
         .filter(publicKey => !this._internal.processor.partyKey.equals(publicKey))
         .map((publicKey: PublicKey): PartyMember => {
