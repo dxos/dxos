@@ -299,7 +299,15 @@ describe('Party manager', () => {
     const secretProvider: SecretProvider = async () => PIN;
 
     // Issue the invitation to the Party on A.
-    const invitationDescriptor = await partyA.invitationManager.createInvitation({ secretProvider, secretValidator });
+    let inviterOnFinishCalled = false;
+    const invitationDescriptor = await partyA.invitationManager.createInvitation(
+      { secretProvider, secretValidator },
+      {
+        onFinish: () => {
+          inviterOnFinishCalled = true;
+        }
+      }
+    );
 
     // Redeem the invitation on B.
     expect(partyManagerB.parties).toHaveLength(0);
@@ -345,6 +353,8 @@ describe('Party manager', () => {
         }
       }
     }
+
+    expect(inviterOnFinishCalled).toBeTruthy();
 
     // await partyManagerA.close();
     // await partyManagerB.close();

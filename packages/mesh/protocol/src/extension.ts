@@ -247,9 +247,9 @@ export class Extension extends Nanomessage {
    * @param {(Object|Buffer)} message
    * @param {Object} options
    * @param {Boolean} options.oneway
-   * @returns {Promise<Object>} Response from peer.
+   * @returns {Promise<Object>} Response from peer (if not oneway).
    */
-  async send (message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
+  async send (message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}): Promise<any> {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -258,7 +258,12 @@ export class Extension extends Nanomessage {
     const builtMessage = this._buildMessage(message);
 
     if (options.oneway) {
-      return super.send(builtMessage);
+      try {
+        await this.request(builtMessage);
+      } catch (err) {
+        log('Sending oneway message failed', { err, message, builtMessage });
+      }
+      return undefined;
     }
 
     try {
