@@ -93,10 +93,9 @@ export class GreetingCommandPlugin extends EventEmitter {
    * @param {Command} message Message to send, request message in a request/response interaction with peer.
    * @return {Object} Message received from peer in response to our request.
    */
-  async send (peerId: PeerId, message: WithTypeUrl<Command>) {
+  async send (peerId: PeerId, message: WithTypeUrl<Command>, oneway = false) {
     assert(Buffer.isBuffer(peerId), 'peerId is not a buffer.');
     assert(message);
-    const oneway = false;
     return this._send(peerId, message, oneway);
   }
 

@@ -171,9 +171,11 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
     expect(written[0].payload.signatures).toEqual(command.params[0].payload.signatures);
   }
 
+  const oneway = true;
   await plugin.send(rendezvousKey, {
     __type_url: 'dxos.credentials.greet.Command',
     command: Command.Type.FINISH,
     secret: await secretProvider({})
-  });
+  },
+  oneway);
 });
