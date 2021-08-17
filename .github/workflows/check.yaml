@@ -101,15 +101,6 @@ jobs:
           echo "::endgroup::"
       - name: Test application
         run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-          npm install -g @microsoft/rush pnpm
-          sudo ./common/scripts/install-dependencies.sh
-
-          # Install dependencies
-          echo "::group::Install"
-          node common/scripts/install-run-rush.js install
-          echo "::endgroup::"
-
           # Quick build
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to @dxos/tutorials-tasks-app
 
