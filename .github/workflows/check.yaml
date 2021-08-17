@@ -90,7 +90,7 @@ jobs:
         with:
           fetch-depth: 0
           clean: true
-      - name: Prerequisites and dependencies
+      - name: Check, Install and Test
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
           npm install -g @microsoft/rush pnpm
@@ -99,8 +99,7 @@ jobs:
           echo "::group::Install"
           node common/scripts/install-run-rush.js install
           echo "::endgroup::"
-      - name: Test application
-        run: |
+
           # Quick build
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to @dxos/tutorials-tasks-app
 
