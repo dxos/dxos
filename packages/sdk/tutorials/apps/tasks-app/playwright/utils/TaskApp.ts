@@ -76,7 +76,7 @@ export class TaskApp extends AppSimulator {
   }
 
   async checkTaskState(taskName: string, expectedResult: boolean) {
-    const taskCheckbox = await this.browser.getPage().$(`input:left-of(:text("${taskName}"))`);
+    const taskCheckbox = await this.browser.getPage().waitForSelector(`input:left-of(:text("${taskName}"))`);
 
     expect(taskCheckbox).toBeDefined();
 
