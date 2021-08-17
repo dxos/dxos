@@ -20,7 +20,7 @@ import { FeedStoreAdapter } from '../util';
 import { PartyFactory } from './party-factory';
 import { PartyInternal, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './party-internal';
 
-const CONTACT_DEBOUNCE_INTERVAL = 500;
+export const CONTACT_DEBOUNCE_INTERVAL = 500;
 
 const log = debug('dxos:echo:parties:party-manager');
 
