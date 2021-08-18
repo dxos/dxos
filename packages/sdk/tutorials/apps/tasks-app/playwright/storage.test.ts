@@ -21,92 +21,31 @@ describe('Storage Test Cases', () => {
         dialog.accept();
       }
     });
+
+    await alice.profile.checkCreationIsPrompted();
   });
 
   afterAll(() => alice.browser.get().close());
 
-  describe('As a new user starting the app then', () => {
-    test('I should be prompted to create my profile', () => alice.profile.checkCreationIsPrompted())
+  describe.each([
+    { profileName: 'Alice 1', listName: 'My Example List 1', taskName: 'Clone the repo 1', },
+    { profileName: 'Alice 2', listName: 'My Example List 2', taskName: 'Clone the repo 2', },
+    { profileName: 'Alice 3', listName: 'My Example List 3', taskName: 'Clone the repo 3', },
+    { profileName: 'Alice 4', listName: 'My Example List 4', taskName: 'Clone the repo 4', },
+    { profileName: 'Alice 5', listName: 'My Example List 5', taskName: 'Clone the repo 5', },
+  ])('As a user with a profile and items created then (%#: %j)', ({ profileName, listName, taskName }) => {
+    beforeEach(async () => {
+      await alice.profile.create(profileName).then(() => alice.checkAppIsLoaded());
 
-    test('I should be able to create my profile', () =>
-      alice.profile.create('Alice')
-        .then(() => alice.checkAppIsLoaded())
-    )
+      await alice.createTaskList(listName);
+
+      await alice.createTask(listName, taskName);
+    });
+
+    test('I should be able to reset my storage', async () => {
+      await alice.profile.resetStorage()
+      await alice.profile.checkCreationIsPrompted();
+    });
   });
-
-  describe('As a user with a profile already created then', () => {
-    test('I should be able to create a new task list', () => alice.createTaskList("My Example List"))
-  });
-
-  describe('As a user with a task list already created', () => {
-    const listName = "My Initial Tasks"
-
-    beforeEach(() => alice.createTaskList(listName));
-
-    test('I should be able to add new tasks to the list', () => alice.createTask(listName, "Clone the repo"))
-  });
-
-
-  describe('As a user with some data in the task list then', () => {
-    test('I should be able to reset my storage', () => alice.profile.resetStorage())
-    test('I should be prompted to create my profile', () => alice.profile.checkCreationIsPrompted())
-
-    test('I should be able to create my profile', () =>
-      alice.profile.create('Alice 2')
-        .then(() => alice.checkAppIsLoaded())
-    )
-
-  });
-
-
-  describe('As a user with a profile already created then', () => {
-    test('I should be able to create a new task list', () => alice.createTaskList("My Example List"))
-  });
-
-  describe('As a user with a task list already created', () => {
-    const listName = "My Initial Tasks"
-
-    beforeEach(() => alice.createTaskList(listName));
-
-    test('I should be able to add new tasks to the list', () => alice.createTask(listName, "Clone the repo"))
-  });
-
-
-  describe('As a user with some data in the task list then', () => {
-    test('I should be able to reset my storage', () => alice.profile.resetStorage())
-    test('I should be prompted to create my profile', () => alice.profile.checkCreationIsPrompted())
-
-    test('I should be able to create my profile', () =>
-      alice.profile.create('Alice 3')
-        .then(() => alice.checkAppIsLoaded())
-    )
-
-  });
-
-  describe('As a user with a profile already created then', () => {
-    test('I should be able to create a new task list', () => alice.createTaskList("My Example List"))
-  });
-
-  describe('As a user with a task list already created', () => {
-    const listName = "My Initial Tasks"
-
-    beforeEach(() => alice.createTaskList(listName));
-
-    test('I should be able to add new tasks to the list', () => alice.createTask(listName, "Clone the repo"))
-  });
-
-  describe('As a user with some data in the task list then', () => {
-    test('I should be able to reset my storage', () => alice.profile.resetStorage())
-    test('I should be prompted to create my profile', () => alice.profile.checkCreationIsPrompted())
-
-    test('I should be able to create my profile', () =>
-      alice.profile.create('Alice 4')
-        .then(() => alice.checkAppIsLoaded())
-    )
-
-  });
-
-
-  
 });
 
