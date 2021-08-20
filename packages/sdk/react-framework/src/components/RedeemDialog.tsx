@@ -81,7 +81,6 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
     if (isProcessing) {
       return;
     }
-    redeemCode(invitationCode);
     if (pinless) {
       setIsProcessing(true);
       setError('');
@@ -96,6 +95,7 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
         handleInvitationError(JSON.stringify(error));
       }
     } else {
+      redeemCode(invitationCode);
       setStep(1);
     }
   };
