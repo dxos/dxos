@@ -30,6 +30,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-framework": "workspace:*",
     "@dxos/react-ux": "workspace:*",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",

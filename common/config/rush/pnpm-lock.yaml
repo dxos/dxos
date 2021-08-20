@@ -1250,7 +1250,6 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/feed-store': link:../../echo/feed-store
-      '@dxos/metrics': 1.0.0-beta.9
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
@@ -1277,7 +1276,6 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/feed-store': workspace:*
-      '@dxos/metrics': ~1.0.0-beta.9
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -1467,8 +1465,6 @@ importers:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/react': 16.14.6
       '@types/react-dom': 17.0.5
-      jest: 26.6.3
-      ts-jest: 26.5.6_jest@26.6.3+typescript@4.3.5
       typescript: 4.3.5
     specifiers:
       '@dxos/credentials': workspace:*
@@ -1486,12 +1482,10 @@ importers:
       clsx: ^1.1.0
       color-hash: ^1.0.3
       crx-bridge: ^2.1.0
-      jest: ^26.6.3
       moment: ^2.24.0
       react: ^16.14.0
       react-copy-to-clipboard: ~5.0.3
       react-dom: ^16.14.0
-      ts-jest: ^26.5.6
       typescript: ^4.3.5
   ../../packages/sdk/devtools-extension:
     dependencies:
@@ -1501,7 +1495,6 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools': link:../devtools
-      '@dxos/metrics': 1.0.0-beta.9
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/react-ux': link:../react-ux
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
@@ -1554,7 +1547,6 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/devtools': workspace:*
-      '@dxos/metrics': ~1.0.0-beta.9
       '@dxos/network-manager': workspace:*
       '@dxos/react-ux': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -1592,9 +1584,7 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/metrics': 1.0.0-beta.9
       '@dxos/util': link:../../common/util
-      '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@types/debug': 4.1.5
       assert: 2.0.0
       debug: 4.3.1
@@ -1643,10 +1633,8 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/metrics': ~1.0.0-beta.9
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
-      '@material-ui/core': ^4.11.4
       '@testing-library/react': ^11.0.4
       '@testing-library/react-hooks': 5.1.2
       '@types/debug': ^4.1.1
@@ -1673,6 +1661,55 @@ importers:
       typescript: ^4.3.5
       use-subscription: ^1.4.1
       webpack: 4.44.2
+  ../../packages/sdk/react-framework:
+    devDependencies:
+      '@babel/core': 7.13.16
+      '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
+      '@dxos/client': link:../client
+      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/react-client': link:../react-client
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
+      '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
+      '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
+      '@storybook/addon-actions': 6.3.4_79cda1d42d14e5224ea88731ba484d0d
+      '@storybook/addon-knobs': 6.3.0_9fe2f5047078a168846616cf239cdfbf
+      '@storybook/addon-links': 6.3.4_react-dom@16.14.0+react@16.14.0
+      '@storybook/addons': 6.3.4_react-dom@16.14.0+react@16.14.0
+      '@storybook/api': 6.3.4_react-dom@16.14.0+react@16.14.0
+      '@storybook/components': 6.3.4_79cda1d42d14e5224ea88731ba484d0d
+      '@storybook/core-events': 6.3.4
+      '@storybook/react': 6.3.4_13bdf7ef9d150ac204a66aec2f663d59
+      '@storybook/theming': 6.3.4_react-dom@16.14.0+react@16.14.0
+      '@types/react': 16.14.6
+      babel-plugin-add-module-exports: 1.0.4
+      react: 16.14.0
+      react-dom: 16.14.0_react@16.14.0
+      typescript: 4.3.5
+    specifiers:
+      '@babel/core': ~7.13.15
+      '@babel/plugin-transform-runtime': ^7.11.5
+      '@dxos/client': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@material-ui/core': ^4.11.4
+      '@material-ui/icons': ^4.11.2
+      '@material-ui/lab': ^4.0.0-alpha.58
+      '@storybook/addon-actions': ^6.3.4
+      '@storybook/addon-knobs': ^6.3.0
+      '@storybook/addon-links': ^6.3.4
+      '@storybook/addons': ^6.3.4
+      '@storybook/api': ^6.3.4
+      '@storybook/components': ^6.3.4
+      '@storybook/core-events': ^6.3.4
+      '@storybook/react': ^6.3.4
+      '@storybook/theming': ^6.3.4
+      '@types/react': ^16.14.0
+      babel-plugin-add-module-exports: ^1.0.4
+      react: ^16.14.0
+      react-dom: ^16.14.0
+      typescript: ^4.3.5
   ../../packages/sdk/react-ux:
     dependencies:
       '@dxos/botkit-client': link:../../bot/botkit-client
@@ -3853,7 +3890,7 @@ packages:
     dependencies:
       '@babel/core': 7.13.16
       '@babel/helper-module-imports': 7.13.12
-      '@babel/helper-plugin-utils': 7.13.0
+      '@babel/helper-plugin-utils': 7.14.5
       babel-plugin-polyfill-corejs2: 0.2.0_@babel+core@7.13.16
       babel-plugin-polyfill-corejs3: 0.2.0_@babel+core@7.13.16
       babel-plugin-polyfill-regenerator: 0.2.0_@babel+core@7.13.16
@@ -4477,18 +4514,6 @@ packages:
       '@types/react': '*'
     resolution:
       integrity: sha512-KrnRQCoTA7Gxg9FnAyqJgwbcluOl11nmIlFX5ClyNEvSb9zeXy55wBvxRi7Ya2+GO8KlMpSQmGKVHcvBDGmc9A==
-  /@dxos/metrics/1.0.0-beta.9:
-    dependencies:
-      '@babel/runtime': 7.14.0
-      debug: 4.3.1
-      lodash.filter: 4.6.0
-      lodash.get: 4.4.2
-      lodash.matches: 4.6.0
-      lodash.set: 4.3.2
-      lodash.unset: 4.5.2
-    dev: false
-    resolution:
-      integrity: sha512-ZVLAYJHPKgjJFh3pn52MC90MhkUGnbADFtFT5bQwondI5c5Dv9TVelfL5PoJ/WN5jPNRzxxXCa/tMdwjI2b5xw==
   /@dxos/registry-client/1.1.2:
     dependencies:
       '@babel/runtime': 7.14.0
@@ -5068,7 +5093,6 @@ packages:
       '@types/react': 16.14.6
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
-    dev: false
     engines:
       node: '>=8.0.0'
     peerDependencies:
@@ -5092,7 +5116,6 @@ packages:
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
       react-is: 17.0.2
-    dev: false
     engines:
       node: '>=8.0.0'
     peerDependencies:
@@ -17783,10 +17806,6 @@ packages:
     dev: true
     resolution:
       integrity: sha1-nMtOUF1Ia5FlE0V3KIWi3yf9AXw=
-  /lodash.filter/4.6.0:
-    dev: false
-    resolution:
-      integrity: sha1-ZosdSYFgOuHMWm+nYBQ+SAtMSs4=
   /lodash.flatten/4.4.0:
     dev: true
     resolution:
@@ -17853,10 +17872,6 @@ packages:
   /lodash.uniq/4.5.0:
     resolution:
       integrity: sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=
-  /lodash.unset/4.5.2:
-    dev: false
-    resolution:
-      integrity: sha1-Nw0dPoW3Kn4bDN8tJyEhMG8j5O0=
   /lodash/4.17.21:
     resolution:
       integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
