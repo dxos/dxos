@@ -1,0 +1,71 @@
+{
+  "name": "@dxos/react-framework",
+  "version": "2.12.4",
+  "description": "Application framework components",
+  "keywords": [],
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "toolchain build",
+    "lint": "toolchain lint",
+    "test": "toolchain test",
+    "build:test": "toolchain build:test",
+    "build-storybook": "build-storybook",
+    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/react-client": "2.12.4",
+    "@dxos/client": "2.12.4",
+    "@dxos/echo-db": "2.12.4",
+    "@dxos/eslint-plugin": "~1.0.10",
+    "@babel/core": "^7.0.0-0",
+    "@babel/plugin-transform-runtime": "^7.11.5",
+    "@material-ui/core": "^4.11.4",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.58",
+    "@storybook/addon-actions": "^5.2.0",
+    "@storybook/addon-knobs": "^6.1.14",
+    "@storybook/addon-links": "^6.1.14",
+    "@storybook/react": "^6.1.14",
+    "@testing-library/jest-dom": "^5.11.5",
+    "@testing-library/react": "^11.1.0",
+    "@types/jest": "^26.0.15",
+    "@types/react": "^17.0.8",
+    "babel-plugin-add-module-exports": "^1.0.4",
+    "eslint": "^7.13.0",
+    "jest": "^26.6.3",
+    "playwright": "^1.6.2",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "regenerator-runtime": "^0.13.7",
+    "ts-jest": "^26.4.4",
+    "typescript": "^4.3.2",
+    "webpack": "^4.46.0"
+  },
+  "peerDependencies": {
+    "@dxos/client": "*",
+    "@dxos/react-client": "*",
+    "@material-ui/core": "*",
+    "@material-ui/icons": ">=4.11.2",
+    "@material-ui/lab": "*",
+    "react": "*",
+    "react-dom": "*"
+  },
+  "eslintConfig": {
+    "extends": "plugin:@dxos/react",
+    "rules": {
+      "react/prop-types": "off",
+      "react/display-name": "off"
+    }
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
