@@ -16,6 +16,6 @@ export const PinlessReedemDialogStory = () => {
 };
 
 export default {
-  title: 'PinlessRedeemDialog Component',
+  title: 'React Framework/PinlessRedeemDialog Component',
   component: PinlessReedemDialogStory
 };

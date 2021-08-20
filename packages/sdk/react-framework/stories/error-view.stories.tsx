@@ -15,6 +15,6 @@ export const ErrorViewStory = () => {
 };
 
 export default {
-  title: 'ErrorView Component',
+  title: 'React Framework/ErrorView Component',
   component: ErrorViewStory
 };

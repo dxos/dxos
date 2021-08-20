@@ -17,6 +17,6 @@ export const ProfileDialogStory = () => {
 };
 
 export default {
-  title: 'ProfileDialog Component',
+  title: 'React Framework/ProfileDialog Component',
   component: ProfileDialogStory
 };

@@ -15,9 +15,7 @@
     "build": "toolchain build",
     "lint": "toolchain lint",
     "test": "toolchain test",
-    "build:test": "toolchain build:test",
-    "build-storybook": "build-storybook",
-    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci"
+    "build:test": "toolchain build:test"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
@@ -29,15 +27,6 @@
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",
-    "@storybook/addon-actions": "^6.3.4",
-    "@storybook/addon-knobs": "^6.3.0",
-    "@storybook/addons": "^6.3.4",
-    "@storybook/api": "^6.3.4",
-    "@storybook/components": "^6.3.4",
-    "@storybook/core-events": "^6.3.4",
-    "@storybook/addon-links": "^6.3.4",
-    "@storybook/theming": "^6.3.4",
-    "@storybook/react": "^6.3.4",
     "@types/react": "^16.14.0",
     "babel-plugin-add-module-exports": "^1.0.4",
     "react": "^16.14.0",

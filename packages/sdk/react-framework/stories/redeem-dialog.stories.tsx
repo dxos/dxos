@@ -17,6 +17,6 @@ export const ReedemDialogStory = () => {
 };
 
 export default {
-  title: 'RedeemDialog Component',
+  title: 'React Framework/RedeemDialog Component',
   component: ReedemDialogStory
 };
