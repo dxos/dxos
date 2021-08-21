@@ -8,7 +8,8 @@ const webpack = require('webpack');
 module.exports = {
   stories: [
     '../stories/**/*.(jsx|tsx)',
-    '../../tutorials/apps/tasks-app/stories/**/*.(jsx|tsx)'
+    '../../tutorials/apps/tasks-app/stories/**/*.(jsx|tsx)',
+    '../../react-framework/stories/**/*.(jsx|tsx)'
   ],
   addons: [
     '@storybook/addon-essentials',

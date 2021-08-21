@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
+import Dialog, { DialogProps } from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import LinearProgress from '@material-ui/core/LinearProgress';
@@ -15,7 +15,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import RedeemIcon from '@material-ui/icons/Redeem';
 import Alert from '@material-ui/lab/Alert';
 
-import { useInvitationRedeemer } from '@dxos/react-client';
+import { defaultInvitationAuthenticator, InvitationDescriptor } from '@dxos/echo-db';
+import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 
 import DialogHeading from './DialogHeading';
 
@@ -28,11 +29,16 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+interface RedeemDialogProps extends Omit<DialogProps, 'open'> {
+  pinless?: boolean,
+  onClose: () => void
+}
+
 /**
  * Component used for claiming invitations to Parties.
  * Works for both regular and `Offline` invitations.
  */
-const RedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => {
+const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps) => {
   const classes = useStyles();
   const [isOffline] = useState(false);
   // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
@@ -42,6 +48,7 @@ const RedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => {
   const [invitationCode, setInvitationCode] = useState('');
   const [pinCode, setPinCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const client = useClient();
 
   const handleDone = () => {
     setStep(0);
@@ -74,8 +81,23 @@ const RedeemDialog = ({ onClose, ...props }: { onClose: () => void }) => {
     if (isProcessing) {
       return;
     }
-    redeemCode(invitationCode);
-    setStep(1);
+    if (pinless) {
+      setIsProcessing(true);
+      setError('');
+      try {
+        const party = await client.echo.joinParty(
+          InvitationDescriptor.fromQueryParameters(JSON.parse(invitationCode)),
+          defaultInvitationAuthenticator.secretProvider
+        );
+        await party.open();
+        handleDone();
+      } catch (error) {
+        handleInvitationError(JSON.stringify(error));
+      }
+    } else {
+      redeemCode(invitationCode);
+      setStep(1);
+    }
   };
 
   const handleEnterPinCode = async () => {
