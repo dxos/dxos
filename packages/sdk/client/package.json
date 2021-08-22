@@ -26,7 +26,7 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",
-    "@dxos/registry-client": "~1.1.1",
+    "@dxos/registry-client": "~1.1.2",
     "@wirelineio/registry-client": "~1.1.0-beta.3",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
