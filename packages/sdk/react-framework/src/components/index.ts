@@ -5,9 +5,11 @@
 import DialogHeading from './DialogHeading';
 import ErrorView from './ErrorView';
 import ProfileDialog from './ProfileDialog';
+import JsonTreeView from './JsonTreeView';
 
 export {
   DialogHeading,
   ProfileDialog,
-  ErrorView
+  ErrorView,
+  JsonTreeView
 };

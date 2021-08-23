@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { SignalApi } from '@dxos/network-manager';
-import { JsonTreeView } from '@dxos/react-ux';
+import { JsonTreeView } from '@dxos/react-framework';
 
 export interface SignalTraceProps {
   trace: SignalApi.CommandTrace[],

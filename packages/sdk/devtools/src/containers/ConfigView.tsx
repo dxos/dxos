@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { JsonTreeView } from '@dxos/react-ux';
+import { JsonTreeView } from '@dxos/react-framework';
 
 import { useBridge } from '../hooks/bridge';
 

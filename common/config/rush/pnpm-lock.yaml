@@ -1662,6 +1662,11 @@ importers:
       use-subscription: ^1.4.1
       webpack: 4.44.2
   ../../packages/sdk/react-framework:
+    dependencies:
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      clsx: 1.1.1
+      lodash.isplainobject: 4.0.6
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
@@ -1672,15 +1677,6 @@ importers:
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
-      '@storybook/addon-actions': 6.3.4_79cda1d42d14e5224ea88731ba484d0d
-      '@storybook/addon-knobs': 6.3.0_9fe2f5047078a168846616cf239cdfbf
-      '@storybook/addon-links': 6.3.4_react-dom@16.14.0+react@16.14.0
-      '@storybook/addons': 6.3.4_react-dom@16.14.0+react@16.14.0
-      '@storybook/api': 6.3.4_react-dom@16.14.0+react@16.14.0
-      '@storybook/components': 6.3.4_79cda1d42d14e5224ea88731ba484d0d
-      '@storybook/core-events': 6.3.4
-      '@storybook/react': 6.3.4_13bdf7ef9d150ac204a66aec2f663d59
-      '@storybook/theming': 6.3.4_react-dom@16.14.0+react@16.14.0
       '@types/react': 16.14.6
       babel-plugin-add-module-exports: 1.0.4
       react: 16.14.0
@@ -1690,23 +1686,18 @@ importers:
       '@babel/core': ~7.13.15
       '@babel/plugin-transform-runtime': ^7.11.5
       '@dxos/client': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
-      '@storybook/addon-actions': ^6.3.4
-      '@storybook/addon-knobs': ^6.3.0
-      '@storybook/addon-links': ^6.3.4
-      '@storybook/addons': ^6.3.4
-      '@storybook/api': ^6.3.4
-      '@storybook/components': ^6.3.4
-      '@storybook/core-events': ^6.3.4
-      '@storybook/react': ^6.3.4
-      '@storybook/theming': ^6.3.4
       '@types/react': ^16.14.0
       babel-plugin-add-module-exports: ^1.0.4
+      clsx: ^1.1.0
+      lodash.isplainobject: ^4.0.6
       react: ^16.14.0
       react-dom: ^16.14.0
       typescript: ^4.3.5
@@ -1788,6 +1779,7 @@ importers:
       '@dxos/echo-db': link:../../../../echo/echo-db
       '@dxos/object-model': link:../../../../echo/object-model
       '@dxos/react-client': link:../../../react-client
+      '@dxos/react-framework': link:../../../react-framework
       '@dxos/react-ux': link:../../../react-ux
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
@@ -1833,6 +1825,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-framework': workspace:*
       '@dxos/react-ux': workspace:*
       '@jackwilsdon/craco-use-babelrc': ~1.0.0
       '@material-ui/core': ^4.11.4

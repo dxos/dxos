@@ -35,7 +35,8 @@
     "react": "^16.14.0",
     "react-copy-to-clipboard": "~5.0.3",
     "react-dom": "^16.14.0",
-    "webextension-polyfill-ts": "~0.25.0"
+    "webextension-polyfill-ts": "~0.25.0",
+    "@dxos/react-framework": "workspace:*"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
