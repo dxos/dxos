@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { ClientInitializer } from '@dxos/react-client';
-import { ErrorView } from '@dxos/react-ux';
+import { ErrorView } from '@dxos/react-framework';
 import { LinearProgress } from '@material-ui/core';
 
 import Root from './components/Root';

@@ -862,7 +862,7 @@ importers:
       '@dxos/gem-spore': 1.0.0-beta.34_@types+react@16.14.6
       '@dxos/network-manager': link:../network-manager
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
-      '@dxos/react-ux': link:../../sdk/react-ux
+      '@dxos/react-framework': link:../../sdk/react-framework
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@types/react': 16.14.6
       react-resize-aware: 3.1.0_react@16.14.0
@@ -892,7 +892,7 @@ importers:
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
-      '@dxos/react-ux': workspace:*
+      '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
       '@storybook/addon-knobs': ^6.3.0
@@ -1341,7 +1341,7 @@ importers:
       '@dxos/gem-spore': 1.0.0-beta.34_@types+react@16.14.6
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../react-client
-      '@dxos/react-ux': link:../react-ux
+      '@dxos/react-framework': link:../react-framework
       '@dxos/util': link:../../common/util
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
@@ -1402,7 +1402,7 @@ importers:
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-ux': workspace:*
+      '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@material-ui/core': ^4.11.4
@@ -1449,7 +1449,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/network-devtools': link:../../mesh/network-devtools
-      '@dxos/react-ux': link:../react-ux
+      '@dxos/react-framework': link:../react-framework
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
@@ -1472,7 +1472,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/network-devtools': workspace:*
       '@dxos/network-manager': workspace:*
-      '@dxos/react-ux': workspace:*
+      '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
@@ -1496,7 +1496,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools': link:../devtools
       '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/react-ux': link:../react-ux
+      '@dxos/react-framework': link:../react-framework
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
@@ -1548,7 +1548,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/devtools': workspace:*
       '@dxos/network-manager': workspace:*
-      '@dxos/react-ux': workspace:*
+      '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
@@ -1666,6 +1666,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       clsx: 1.1.1
+      lodash.defaultsdeep: 4.6.1
       lodash.isplainobject: 4.0.6
     devDependencies:
       '@babel/core': 7.13.16
@@ -1697,6 +1698,7 @@ importers:
       '@types/react': ^16.14.0
       babel-plugin-add-module-exports: ^1.0.4
       clsx: ^1.1.0
+      lodash.defaultsdeep: ^4.6.1
       lodash.isplainobject: ^4.0.6
       react: ^16.14.0
       react-dom: ^16.14.0
@@ -1780,7 +1782,6 @@ importers:
       '@dxos/object-model': link:../../../../echo/object-model
       '@dxos/react-client': link:../../../react-client
       '@dxos/react-framework': link:../../../react-framework
-      '@dxos/react-ux': link:../../../react-ux
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/styles': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
@@ -1826,7 +1827,6 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-framework': workspace:*
-      '@dxos/react-ux': workspace:*
       '@jackwilsdon/craco-use-babelrc': ~1.0.0
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
