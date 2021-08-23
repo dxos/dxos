@@ -4,7 +4,6 @@
 
 import DeleteConfirmation from './DeleteConfirmation';
 import PartySharingDialog from './PartySharingDialog';
-export * from './Drawer';
 
 export {
   DeleteConfirmation,
