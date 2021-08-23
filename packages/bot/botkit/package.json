@@ -13,6 +13,14 @@
     "test": "toolchain test",
     "lint": "toolchain lint"
   },
+  "bin": {
+    "bot-factory": "bin/bot-factory.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
