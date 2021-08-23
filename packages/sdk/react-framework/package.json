@@ -38,7 +38,7 @@
     "@dxos/react-client": "*",
     "@material-ui/core": "*",
     "@material-ui/icons": ">=4.11.2",
-    "@material-ui/lab": "*",
+    "@material-ui/lab": ">=4.0.0-alpha",
     "react": "*",
     "react-dom": "*"
   },
