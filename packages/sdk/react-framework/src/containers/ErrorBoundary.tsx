@@ -4,7 +4,7 @@
 
 import React, { Component, ErrorInfo } from 'react';
 
-import ErrorView from './ErrorView';
+import { ErrorView } from '../components';
 
 /**
  * Root-level error boundary.

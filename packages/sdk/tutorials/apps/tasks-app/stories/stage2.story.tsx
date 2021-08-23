@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-ux';
+import { JsonTreeView } from '@dxos/react-framework';
 import ProfileDialog from '../src/components/ProfileDialog';
 
 /**

@@ -3,13 +3,19 @@
 //
 
 import DialogHeading from './DialogHeading';
+import EditableText from './EditableText';
 import ErrorView from './ErrorView';
+import FullScreen from './FullScreen';
+import JsonTreeView from './JsonTreeView';
+import Passcode from './Passcode';
 import ProfileDialog from './ProfileDialog';
-import RedeemDialog from './RedeemDialog';
 
 export {
   DialogHeading,
-  RedeemDialog,
   ProfileDialog,
-  ErrorView
+  ErrorView,
+  JsonTreeView,
+  FullScreen,
+  EditableText,
+  Passcode
 };
