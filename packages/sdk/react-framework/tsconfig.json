@@ -9,9 +9,20 @@
     ]
   },
   "include": [
-    "src",
+    "src"
   ],
   "exclude": [
     "/node_modules/"
+  ],
+  "references": [
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../react-client"
+    }
   ]
 }
