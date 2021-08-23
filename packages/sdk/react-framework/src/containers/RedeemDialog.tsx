@@ -18,7 +18,7 @@ import Alert from '@material-ui/lab/Alert';
 import { defaultInvitationAuthenticator, InvitationDescriptor } from '@dxos/echo-db';
 import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 
-import {DialogHeading} from '../components';
+import { DialogHeading } from '../components';
 
 const useStyles = makeStyles((theme) => ({
   marginTop: {

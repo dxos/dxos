@@ -3,12 +3,12 @@
 //
 
 import DialogHeading from './DialogHeading';
-import ErrorView from './ErrorView';
-import ProfileDialog from './ProfileDialog';
-import JsonTreeView from './JsonTreeView';
-import FullScreen from './FullScreen';
 import EditableText from './EditableText';
+import ErrorView from './ErrorView';
+import FullScreen from './FullScreen';
+import JsonTreeView from './JsonTreeView';
 import Passcode from './Passcode';
+import ProfileDialog from './ProfileDialog';
 
 export {
   DialogHeading,
