@@ -34,7 +34,7 @@
       "path": "../../mesh/network-manager"
     },
     {
-      "path": "../react-ux"
+      "path": "../react-framework"
     }
   ]
 }

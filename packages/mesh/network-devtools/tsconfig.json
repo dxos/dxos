@@ -21,7 +21,7 @@
       "path": "../protocol-plugin-presence"
     },
     {
-      "path": "../../sdk/react-ux"
+      "path": "../../sdk/react-framework"
     }
   ]
 }
