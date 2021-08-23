@@ -72,7 +72,6 @@ Let's add the possibility to check/uncheck our tasks to mark which ones are alre
 ```jsx:title=src/components/TaskList.js
 import { ObjectModel } from '@dxos/object-model';
 import { useParty, useSelection } from '@dxos/react-client';
-import { PartySharingDialog } from '@dxos/react-ux';
 
 const TASK_TYPE = 'example.com/type/task';
 
@@ -121,7 +120,6 @@ To complete the famous CRUD operations, we just need to add a deletion option. L
 ```jsx:title=src/components/TaskList.js
 import { ObjectModel } from '@dxos/object-model';
 import { useParty, useSelection } from '@dxos/react-client';
-import { PartySharingDialog } from '@dxos/react-ux';
 
 const TASK_TYPE = 'example.com/type/task';
 

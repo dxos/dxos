@@ -18,7 +18,7 @@ import red from '@material-ui/core/colors/red';
 import { makeStyles } from '@material-ui/core/styles';
 
 import { truncateString } from '@dxos/debug';
-import { JsonTreeView } from '@dxos/react-ux';
+import { JsonTreeView } from '@dxos/react-framework';
 
 const colorHash = new ColorHash({ saturation: 1 });
 

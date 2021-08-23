@@ -24,7 +24,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/react-ux": "workspace:*",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",
@@ -35,7 +34,8 @@
     "react": "^16.14.0",
     "react-copy-to-clipboard": "~5.0.3",
     "react-dom": "^16.14.0",
-    "webextension-polyfill-ts": "~0.25.0"
+    "webextension-polyfill-ts": "~0.25.0",
+    "@dxos/react-framework": "workspace:*"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

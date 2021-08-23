@@ -10,7 +10,7 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import { createKeyPair } from '@dxos/crypto';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-ux';
+import { JsonTreeView } from '@dxos/react-framework';
 
 import { PartyCard } from '../../src';
 

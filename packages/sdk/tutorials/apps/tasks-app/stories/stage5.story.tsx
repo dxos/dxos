@@ -8,7 +8,7 @@ import { Drawer } from '@material-ui/core';
 import { createMuiTheme, makeStyles } from '@material-ui/core/styles';
 import { createKeyPair } from '@dxos/crypto';
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
-import { ReactUXTheme } from '@dxos/react-ux';
+import { ReactUXTheme } from '@dxos/react-framework';
 import ProfileDialog from '../src/components/ProfileDialog';
 import PartyList from '../src/components/PartyList';
 import TaskList from '../src/components/TaskList';
