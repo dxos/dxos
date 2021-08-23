@@ -24,9 +24,6 @@
       "path": "../../mesh/network-devtools"
     },
     {
-      "path": "../react-ux"
-    },
-    {
       "path": "../../mesh/network-manager"
     }
   ]

@@ -65,7 +65,6 @@ jobs:
           # Build storybooks
           echo "::group::Storybooks"
           cd packages/sdk/demos && pnpm build-storybook && cd -
-          cd packages/sdk/react-ux && pnpm build-storybook && cd -
 
           # Test the demos storybooks
           cd packages/sdk/demos
