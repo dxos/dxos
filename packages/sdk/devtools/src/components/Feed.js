@@ -47,6 +47,26 @@ const color = (type) => {
   return type === 'halo' ? red[500] : blue[500];
 };
 
+function getType (message) {
+  if (message.echo) {
+    if (message.echo.genesis) {
+      return 'item genesis';
+    } else if (message.echo.itemMutation) {
+      return 'item mutation';
+    } else if (message.echo.mutation) {
+      return 'model mutation';
+    }
+  } else if (message.halo) {
+    if (message.halo.payload?.__type_url === 'dxos.credentials.SignedMessage') {
+      return message.halo.payload.signed?.payload?.__type_url ?? 'dxos.credentials.SignedMessage';
+    } else {
+      return message.halo.payload?.__type_url ?? 'halo message';
+    }
+  } else {
+    return 'empty message';
+  }
+}
+
 const Feed = ({ messages, onSelect }) => {
   const classes = useStyles();
 
@@ -120,25 +140,5 @@ const Feed = ({ messages, onSelect }) => {
     </TableContainer>
   );
 };
-
-function getType (message) {
-  if (message.echo) {
-    if (message.echo.genesis) {
-      return 'item genesis';
-    } else if (message.echo.itemMutation) {
-      return 'item mutation';
-    } else if (message.echo.mutation) {
-      return 'model mutation';
-    }
-  } else if (message.halo) {
-    if (message.halo.payload?.__type_url === 'dxos.credentials.SignedMessage') {
-      return message.halo.payload.signed?.payload?.__type_url ?? 'dxos.credentials.SignedMessage';
-    } else {
-      return message.halo.payload?.__type_url ?? 'halo message';
-    }
-  } else {
-    return 'empty message';
-  }
-}
 
 export default Feed;

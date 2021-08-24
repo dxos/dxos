@@ -11,6 +11,31 @@ import { SVG, useGrid, Grid } from '@dxos/gem-core';
 import { createSimulationDrag, ForceLayout, Graph, NodeProjector } from '@dxos/gem-spore';
 import { PeerInfo } from '@dxos/network-manager';
 
+const classMap: Record<string, string> = {
+  ME: 'blue',
+  WAITING_FOR_CONNECTION: 'orange',
+  CONNECTED: 'green',
+  CLOSED: 'red'
+};
+
+const nodeColors: (keyof typeof colors)[] = ['red', 'green', 'blue', 'yellow', 'orange', 'grey'];
+const useCustomStyles = makeStyles(() => ({
+  nodes: nodeColors.reduce((map: any, color: string) => {
+    map[`& g.node.${color} circle`] = {
+      fill: (colors as any)[color][400],
+      stroke: (colors as any)[color][700]
+    };
+
+    // map[`& g.node.${color} text`] = {
+    //   fontFamily: 'sans-serif',
+    //   fontSize: 12,
+    //   fill: colors['grey'][700]
+    // };
+
+    return map;
+  }, {})
+}));
+
 export interface PeerGraphProps {
   peers: PeerInfo[]
   size: { width: number | null, height: number | null }
@@ -90,28 +115,3 @@ export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
     </SVG>
   );
 };
-
-const classMap: Record<string, string> = {
-  ME: 'blue',
-  WAITING_FOR_CONNECTION: 'orange',
-  CONNECTED: 'green',
-  CLOSED: 'red'
-};
-
-const nodeColors: (keyof typeof colors)[] = ['red', 'green', 'blue', 'yellow', 'orange', 'grey'];
-const useCustomStyles = makeStyles(() => ({
-  nodes: nodeColors.reduce((map: any, color: string) => {
-    map[`& g.node.${color} circle`] = {
-      fill: (colors as any)[color][400],
-      stroke: (colors as any)[color][700]
-    };
-
-    // map[`& g.node.${color} text`] = {
-    //   fontFamily: 'sans-serif',
-    //   fontSize: 12,
-    //   fill: colors['grey'][700]
-    // };
-
-    return map;
-  }, {})
-}));

@@ -52,6 +52,9 @@
       "path": "../react-client"
     },
     {
+      "path": "../react-framework"
+    },
+    {
       "path": "../../common/util"
     },
     {
