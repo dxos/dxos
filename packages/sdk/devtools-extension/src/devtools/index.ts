@@ -7,6 +7,9 @@
 let panelCreated = false;
 let checkCount = 0;
 
+// eslint-disable-next-line prefer-const
+let loadCheckInterval: NodeJS.Timeout;
+
 function createPanel () {
   // stop trying if above 120 seconds or already made
   if (panelCreated || checkCount++ > 120) {
@@ -47,7 +50,7 @@ chrome.devtools.network.onNavigated.addListener(createPanel);
 
 // Attempt to create panel once per second in case
 // DXOS is loaded after page load
-const loadCheckInterval = setInterval(createPanel, 1000);
+loadCheckInterval = setInterval(createPanel, 1000);
 
 // Start the first attempt immediately
 createPanel();

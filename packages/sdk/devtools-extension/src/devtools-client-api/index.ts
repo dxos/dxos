@@ -13,6 +13,9 @@ Bridge.allowWindowMessaging('dxos.devtools');
 let started = false;
 let checkCount = 0;
 
+// eslint-disable-next-line prefer-const
+let loadCheckInterval: NodeJS.Timeout;
+
 const init = () => {
   if (checkCount++ > 30) {
     if (loadCheckInterval) {
@@ -38,6 +41,6 @@ const init = () => {
   }
 };
 
-const loadCheckInterval = setInterval(init, 1000);
+loadCheckInterval = setInterval(init, 1000);
 
 init();

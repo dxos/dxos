@@ -9,6 +9,17 @@ import { SignalApi } from '@dxos/network-manager';
 
 import { HandlerProps } from './handler-props';
 
+function reportError<A extends any[]> (func: (...args: A) => any): (...args: A) => void {
+  return async (...args) => {
+    try {
+      await func(...args);
+    } catch (err) {
+      console.error('DXOS DevTools API error:');
+      console.error(err);
+    }
+  };
+}
+
 async function subscribeToNetworkStatus (hook: HandlerProps['hook'], stream: Stream) {
   async function update () {
     const status = hook.networkManager.signal.getStatus();
@@ -68,14 +79,3 @@ export default ({ hook, bridge }: HandlerProps) => {
     }));
   });
 };
-
-function reportError<A extends any[]> (func: (...args: A) => any): (...args: A) => void {
-  return async (...args) => {
-    try {
-      await func(...args);
-    } catch (err) {
-      console.error('DXOS DevTools API error:');
-      console.error(err);
-    }
-  };
-}
