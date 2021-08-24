@@ -6,6 +6,7 @@ module.exports = {
     '@typescript-eslint/no-extra-parens': ['off'],
     'no-use-before-define': 'off',
     '@typescript-eslint/no-namespace': 'off',
+    'standard/no-callback-literal': 'off',
     "jest/no-conditional-expect": 'off',
     '@typescript-eslint/no-unused-vars': [
       'error',
@@ -18,7 +19,8 @@ module.exports = {
       {
         patterns: ['**/dist']
       }
-    ]
+    ],
+    'node/no-callback-literal': 'off'
   },
   ignorePatterns: [
     'src/proto/gen/*'
