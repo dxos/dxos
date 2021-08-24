@@ -5,7 +5,7 @@
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 6 * * *'
+    - cron: '0 5 * * 1,2,4'
 
 name: Upgrade DXOS dependencies
 

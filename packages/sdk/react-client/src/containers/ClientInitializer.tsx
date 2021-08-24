@@ -25,6 +25,14 @@ interface ClientInitializerProperties {
 const ClientInitializer = ({ children, config = {}, errorComponent, loaderComponent, onError }: ClientInitializerProperties) => {
   const [client, setClient] = useState<Client | undefined>();
   const [error, setError] = useState<undefined | Error>(undefined);
+
+  const handleError = (error: Error, errorInfo?: ErrorInfo) => {
+    console.error(error, errorInfo);
+    if (onError) {
+      onError(error, errorInfo);
+    }
+  };
+
   useEffect(() => {
     const createClient = async () => {
       try {
@@ -47,13 +55,6 @@ const ClientInitializer = ({ children, config = {}, errorComponent, loaderCompon
   const handleReset = async () => {
     if (client) {
       await client.reset();
-    }
-  };
-
-  const handleError = (error: Error, errorInfo?: ErrorInfo) => {
-    console.error(error, errorInfo);
-    if (onError) {
-      onError(error, errorInfo);
     }
   };
 

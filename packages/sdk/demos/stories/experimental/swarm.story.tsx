@@ -24,14 +24,6 @@ export default {
   title: 'Experimental/Swarm'
 };
 
-export const Primary = () => (
-  <ClientInitializer config={ONLINE_CONFIG}>
-    <ProfileInitializer>
-      <Story/>
-    </ProfileInitializer>
-  </ClientInitializer>
-);
-
 const Story = () => {
   const [id] = useState(createId());
   const [invitation, setInvitation] = useState<string | undefined>(undefined);
@@ -117,3 +109,11 @@ const Story = () => {
     </FullScreen>
   );
 };
+
+export const Primary = () => (
+  <ClientInitializer config={ONLINE_CONFIG}>
+    <ProfileInitializer>
+      <Story/>
+    </ProfileInitializer>
+  </ClientInitializer>
+);

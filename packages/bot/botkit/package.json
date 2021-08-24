@@ -7,12 +7,6 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "scripts": {
-    "build": "toolchain build",
-    "build:test": "toolchain build:test",
-    "test": "toolchain test",
-    "lint": "toolchain lint"
-  },
   "bin": {
     "bot-factory": "bin/bot-factory.js"
   },
@@ -21,6 +15,12 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "test": "toolchain test",
+    "lint": "toolchain lint"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
