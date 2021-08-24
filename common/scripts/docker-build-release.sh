@@ -26,9 +26,9 @@ function build_docker_image {
   # Build and tag the Docker. Save sha256.
   echo "Build Docker Image $NAME."
 
+  # `if [ "$CHANNEL" == "dev" ]; then echo "--build-arg VERSION=@alpha"; fi` \
   docker build \
     --build-arg NPM_TOKEN=$NPM_TOKEN \
-    # `if [ "$CHANNEL" == "dev" ]; then echo "--build-arg VERSION=@alpha"; fi` \
     -t "ghcr.io/$ORG/$NAME:$TAG" \
     -t "ghcr.io/$ORG/$NAME:$HASH" \
     -t "ghcr.io/$ORG/$NAME:$CHANNEL" \
