@@ -1,6 +1,6 @@
 {
   "name": "@dxos/util",
-  "version": "2.12.6",
+  "version": "2.12.7",
   "description": "Temporary bucket for misc functions, which should graduate into separate packages.",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
