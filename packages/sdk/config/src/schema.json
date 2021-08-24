@@ -54,7 +54,7 @@
               "username": {
                 "type": "string"
               },
-              "password": {
+              "credential": {
                 "type": "string"
               }
             },
