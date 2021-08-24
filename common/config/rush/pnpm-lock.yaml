@@ -289,17 +289,23 @@ importers:
     dependencies:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
+      '@dxos/debug': link:../debug
+      debug: 4.3.1
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/debug': 4.1.5
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       earljs: 0.1.10
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/debug': ^4.1.1
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
+      debug: ^4.1.1
       earljs: ~0.1.10
   ../../packages/common/testutils:
     dependencies:
@@ -481,7 +487,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/benchmark-suite': ^1.0.0-beta.1
-      '@dxos/browser-runner': ^1.0.0-beta.8
+      '@dxos/browser-runner': ^1.0.0-beta.13
       '@dxos/crypto': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -1280,7 +1286,7 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
-      '@dxos/registry-client': ~1.1.1
+      '@dxos/registry-client': ~1.1.2
       '@dxos/toolchain-node-library': workspace:*
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
@@ -12563,6 +12569,7 @@ packages:
       mime: 1.6.0
       minimist: 1.2.5
       url-join: 2.0.5
+    deprecated: This package is unmaintained and deprecated. See the GH Issue 259.
     dev: true
     hasBin: true
     resolution:
@@ -18658,6 +18665,7 @@ packages:
     dependencies:
       base-x: 3.0.8
       buffer: 5.7.1
+    deprecated: This module has been superseded by the multiformats module
     dev: false
     resolution:
       integrity: sha512-pFfAwyTjbbQgNc3G7D48JkJxWtoJoBMaR4xQUOuB8RnCgRqaYmWNFeJTTvrJ2w51bjLq2zTby6Rqj9TQ9elSUw==
@@ -18665,6 +18673,7 @@ packages:
     dependencies:
       base-x: 3.0.8
       buffer: 5.7.1
+    deprecated: This module has been superseded by the multiformats module
     dev: false
     resolution:
       integrity: sha512-TW8q03O0f6PNFTQDvh3xxH03c8CjGaaYrjkl9UQPG6rz53TQzzxJVCIWVjzcbN/Q5Y53Zd0IBQBMVktVgNx4Fg==
@@ -18672,6 +18681,7 @@ packages:
     dependencies:
       base-x: 3.0.8
       buffer: 5.7.1
+    deprecated: This module has been superseded by the multiformats module
     dev: false
     engines:
       node: '>=10.0.0'
@@ -18730,6 +18740,7 @@ packages:
       js-sha3: 0.8.0
       multihashes: 1.0.1
       murmurhash3js-revisited: 3.0.0
+    deprecated: This module has been superseded by the multiformats module
     dev: false
     engines:
       node: '>=10.0.0'
