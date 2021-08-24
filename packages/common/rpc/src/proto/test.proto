@@ -17,3 +17,7 @@ message TestRpcRequest {
 message TestRpcResponse {
   string data = 1;
 }
+
+service TestStreamService {
+  rpc TestCall (TestRpcRequest) returns (stream TestRpcResponse);
+}

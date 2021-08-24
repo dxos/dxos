@@ -10,7 +10,7 @@ import * as ts from 'typescript';
 import { createDeclarations, createServicesDictionary, createTypeDictionary } from './generator/declaration-generator';
 import { createSerializerDefinition } from './generator/serializer-definition-generator';
 import { logger } from './logger';
-import { ModuleSpecifier } from './module-specifier';
+import { CODEC_MODULE, ModuleSpecifier } from './module-specifier';
 import { getSafeNamespaceIdentifier, parseFullyQualifiedName, splitSchemaIntoNamespaces } from './namespaces';
 import { registerResolver, parseSubstitutionsFile, SubstitutionsMap } from './parser';
 
@@ -74,6 +74,7 @@ function createNamespaceSourceFile (
 
   return ts.factory.createSourceFile(
     [
+      createStreamImport(),
       ...(substitutionsImport ? [substitutionsImport] : []),
       ...otherNamespaceImports,
       ...declarations
@@ -120,4 +121,15 @@ function createNamespaceImports (namespaces: string[], outDirPath: string, conte
 function getFileNameForNamespace (namespace: string) {
   const name = parseFullyQualifiedName(namespace);
   return `${name.join('/')}.ts`;
+}
+
+function createStreamImport () {
+  return f.createImportDeclaration(
+    [],
+    [],
+    f.createImportClause(false, undefined, f.createNamedImports([
+      f.createImportSpecifier(undefined, f.createIdentifier('Stream'))
+    ])),
+    f.createStringLiteral(CODEC_MODULE.importSpecifier(''))
+  );
 }

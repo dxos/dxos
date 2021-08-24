@@ -5,12 +5,14 @@
 import { expect } from 'earljs';
 import { it as test } from 'mocha';
 
-import { sleep } from '@dxos/async';
+import { sleep, latch } from '@dxos/async';
+import { Stream } from '@dxos/codec-protobuf';
 
 import { SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
+import { TestStreamService } from './proto/gen/dxos/rpc/test';
 import { RpcPeer } from './rpc';
-import { createRpcClient, createRpcServer } from './service';
+import { createRpcClient, createRpcServer, ProtoRpcClient } from './service';
 import { createLinkedPorts } from './testutil';
 
 describe('Protobuf service', () => {
@@ -84,5 +86,68 @@ describe('Protobuf service', () => {
     expect(error.message).toEqual('TestError');
     expect(error.stack?.includes('handlerFn')).toEqual(true);
     expect(error.stack?.includes('TestCall')).toEqual(true);
+  });
+
+  describe('streams', () => {
+    const service = schema.getService('dxos.rpc.test.TestStreamService');
+    let server: RpcPeer;
+    let client: ProtoRpcClient<TestStreamService>;
+
+    beforeEach(async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      server = createRpcServer({
+        service,
+        handlers: {
+          TestCall: (req) => {
+            expect(req.data).toEqual('requestData');
+
+            return new Stream(({ next, close }) => {
+              next({ data: 'foo' });
+              setImmediate(async () => {
+                next({ data: 'bar' });
+                await sleep(5);
+                next({ data: 'baz' });
+                close();
+              });
+            });
+          }
+        },
+        port: alicePort
+      });
+
+      client = createRpcClient(service, {
+        port: bobPort
+      });
+
+      await Promise.all([
+        server.open(),
+        client.open()
+      ]);
+    });
+
+    test('consumed stream', async () => {
+      const stream = client.rpc.TestCall({ data: 'requestData' });
+
+      expect(await Stream.consume(stream)).toEqual([
+        { data: { data: 'foo' } },
+        { data: { data: 'bar' } },
+        { data: { data: 'baz' } },
+        { closed: true }
+      ]);
+    });
+
+    test('subscribed stream', async () => {
+      const stream = client.rpc.TestCall({ data: 'requestData' });
+
+      let lastData: string | undefined;
+      const [closedPromise, closedLatch] = latch();
+      stream.subscribe(msg => {
+        lastData = msg.data;
+      }, closedLatch);
+      await closedPromise;
+
+      expect(lastData).toEqual('baz');
+    });
   });
 });

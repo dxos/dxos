@@ -13,6 +13,8 @@ message RpcMessage {
 
     // Means that the node is open to receiving requests.
     bool open = 3;
+
+    StreamClose streamClose = 4;
   }
 }
 
@@ -20,6 +22,7 @@ message Request {
   int32 id = 1;
   string method = 2;
   bytes payload = 3;
+  bool stream = 4;
 }
 
 message Response {
@@ -27,8 +30,16 @@ message Response {
   oneof content {
     bytes payload = 2;
     Error error = 3;
+    // Sent when stream is closed without an error.
+    bool close = 4;
   }
 }
+
+// Sent by client to end the streaming response.
+message StreamClose {
+  int32 id = 1;
+}
+
 
 message Error {
   string name = 1;

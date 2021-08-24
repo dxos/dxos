@@ -1,3 +1,4 @@
+import { Stream } from '@dxos/codec-protobuf';
 import { schema } from './gen'
 import { TaskType } from './gen/dxos/test';
 import { MyKey } from './my-key';
@@ -10,6 +11,9 @@ test('services', async () => {
       return {
         count: tasks.tasks?.length ?? 0,
       }
+    },
+    SubscribeTasks() {
+      return new Stream(() => {})
     }
   })
 
