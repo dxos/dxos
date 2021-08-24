@@ -43,6 +43,7 @@
     "@dxos/gem-spore": "~1.0.0-beta.25",
     "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-framework": "workspace:*",
     "@dxos/util": "workspace:*",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
@@ -54,8 +55,7 @@
     "immutability-helper": "^3.0.2",
     "mobile-detect": "~1.4.5",
     "playwright": "^1.7.0",
-    "react-resize-aware": "^3.0.0",
-    "@dxos/react-framework": "workspace:*"
+    "react-resize-aware": "^3.0.0"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
