@@ -52,9 +52,6 @@
       "path": "../react-client"
     },
     {
-      "path": "../react-ux"
-    },
-    {
       "path": "../../common/util"
     },
     {

@@ -32,9 +32,6 @@
     },
     {
       "path": "../../mesh/network-manager"
-    },
-    {
-      "path": "../react-ux"
     }
   ]
 }
