@@ -165,7 +165,7 @@ importers:
       lodash.merge: 4.6.2
       protobufjs: 6.11.2
     devDependencies:
-      '@dxos/eslint-plugin': 1.0.11_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.12_eslint@7.26.0+typescript@4.3.5
       '@types/assert': 1.5.4
       '@types/jest': 26.0.23
       '@types/lodash.merge': 4.6.6
@@ -176,7 +176,7 @@ importers:
       ts-node: 9.1.1_typescript@4.3.5
       typescript: 4.3.5
     specifiers:
-      '@dxos/eslint-plugin': ~1.0.11
+      '@dxos/eslint-plugin': ~1.0.12
       '@types/assert': ^1.5.4
       '@types/jest': ^26.0.7
       '@types/lodash.merge': ~4.6.6
@@ -226,7 +226,7 @@ importers:
       ts-morph: 10.0.2
     devDependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
-      '@dxos/eslint-plugin': 1.0.11_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.12_eslint@7.26.0+typescript@4.3.5
       '@types/argparse': 2.0.5
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
@@ -237,7 +237,7 @@ importers:
       typescript: 4.3.5
     specifiers:
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/eslint-plugin': ~1.0.11
+      '@dxos/eslint-plugin': ~1.0.12
       '@types/argparse': ^2.0.0
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
@@ -1961,7 +1961,7 @@ importers:
       util: ~0.12.4
   ../../toolchains/node-library:
     dependencies:
-      '@dxos/eslint-plugin': 1.0.11_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.12_eslint@7.26.0+typescript@4.3.5
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@types/yargs': 16.0.1
       chalk: 4.1.1
@@ -1979,7 +1979,7 @@ importers:
       '@types/node': 14.14.45
       ts-node: 9.1.1_typescript@4.3.5
     specifiers:
-      '@dxos/eslint-plugin': ~1.0.11
+      '@dxos/eslint-plugin': ~1.0.12
       '@dxos/protobuf-compiler': workspace:*
       '@types/glob': ~7.1.3
       '@types/jest': ^26.0.7
@@ -4379,7 +4379,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-9m1Ftf+1RsQvf9JIDOZTJouHyT3X4kdqn1/tDSL9NrvOgLFjp/cA/vzyMcPAZTJCBkcF+xIkR/Peu2/jhwy0gQ==
-  /@dxos/eslint-plugin/1.0.11_eslint@7.26.0+typescript@4.3.5:
+  /@dxos/eslint-plugin/1.0.12_eslint@7.26.0+typescript@4.3.5:
     dependencies:
       '@rushstack/eslint-patch': 1.0.6
       '@typescript-eslint/eslint-plugin': 4.28.4_ed91d8a9a45fee40b4f28fa6457a3abe
@@ -4396,7 +4396,7 @@ packages:
       eslint: '*'
       typescript: '*'
     resolution:
-      integrity: sha512-3U3cZe84wtpQy2jyKuVoqi7X2PK9DVw1SsZ8iw/zWHjciw/AIIhnw0t7j5//n5LHLVks3DAwI8r7KR497BS7tw==
+      integrity: sha512-8aPVI6vwKk8rcQWWqlI88GyjBYB78HtyPtrARs+YkSskQewj9t3gpLdm5OyuFySWMdZaVO7/Q+g25Ral8gMjQg==
   /@dxos/gem-core/1.0.0-beta.34_@types+react@16.14.6:
     dependencies:
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
@@ -7862,6 +7862,7 @@ packages:
       eslint: 7.26.0
       eslint-scope: 5.1.1
       eslint-utils: 3.0.0_eslint@7.26.0
+    dev: false
     engines:
       node: ^10.12.0 || >=12.0.0
     peerDependencies:
@@ -7935,6 +7936,7 @@ packages:
     dependencies:
       '@typescript-eslint/types': 4.27.0
       '@typescript-eslint/visitor-keys': 4.27.0
+    dev: false
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     resolution:
@@ -7960,6 +7962,7 @@ packages:
     resolution:
       integrity: sha512-oqkNWyG2SLS7uTWLZf6Sr7Dm02gA5yxiz1RP87tvsmDsguVATdpVguHr4HoGOcFOpCvx9vtCSCyQUGfzq28YCw==
   /@typescript-eslint/types/4.27.0:
+    dev: false
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     resolution:
@@ -8020,6 +8023,7 @@ packages:
       semver: 7.3.5
       tsutils: 3.21.0_typescript@4.3.5
       typescript: 4.3.5
+    dev: false
     engines:
       node: ^10.12.0 || >=12.0.0
     peerDependencies:
@@ -8069,6 +8073,7 @@ packages:
     dependencies:
       '@typescript-eslint/types': 4.27.0
       eslint-visitor-keys: 2.1.0
+    dev: false
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     resolution:
@@ -13035,7 +13040,7 @@ packages:
   /eslint-plugin-jest/24.4.0_93a7e4aecbb08225f1b6653bdb9c879e:
     dependencies:
       '@typescript-eslint/eslint-plugin': 4.28.4_ed91d8a9a45fee40b4f28fa6457a3abe
-      '@typescript-eslint/experimental-utils': 4.27.0_eslint@7.26.0+typescript@4.3.5
+      '@typescript-eslint/experimental-utils': 4.28.4_eslint@7.26.0+typescript@4.3.5
       eslint: 7.26.0
     engines:
       node: '>=10'
