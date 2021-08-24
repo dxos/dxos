@@ -9,9 +9,26 @@
     ]
   },
   "include": [
-    "src",
+    "src"
   ],
   "exclude": [
     "/node_modules/"
+  ],
+  "references": [
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../react-client"
+    }
   ]
 }
