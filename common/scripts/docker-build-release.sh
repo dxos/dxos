@@ -28,7 +28,7 @@ function build_docker_image {
 
   docker build \
     --build-arg NPM_TOKEN=$NPM_TOKEN \
-    `if [ "$CHANNEL" == "dev" ]; then echo "--build-arg CLI_VER=@alpha"; fi` \
+    # `if [ "$CHANNEL" == "dev" ]; then echo "--build-arg VERSION=@alpha"; fi` \
     -t "ghcr.io/$ORG/$NAME:$TAG" \
     -t "ghcr.io/$ORG/$NAME:$HASH" \
     -t "ghcr.io/$ORG/$NAME:$CHANNEL" \
