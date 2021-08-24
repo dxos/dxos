@@ -26,6 +26,7 @@
   "dependencies": {
     "@craco/craco": "~6.1.2",
     "@dxos/config": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/object-model": "workspace:*",
@@ -33,6 +34,7 @@
     "@dxos/react-framework": "workspace:*",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.58",
     "@material-ui/styles": "^4.11.4",
     "@testing-library/dom": "~7.31.2",
     "@testing-library/jest-dom": "^5.11.4",
