@@ -189,13 +189,13 @@ const EchoGraph = (
     linkProjector: new LinkProjector({ nodeRadius: 16, showArrows: true })
   });
 
+  const [, setSelected] = useState();
   const handleSelect = (source: any) => {
     setSelected(source.id);
     onSelect && onSelect(source);
   };
 
   const { echo } = useClient();
-  const [, setSelected] = useState();
   const [{ layout, drag }, setLayout] = useState(() => createLayout({
     echo, delta, grid, guides: guides.current, linkProjector, handleSelect
   }));

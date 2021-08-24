@@ -1,6 +1,6 @@
 {
   "name": "@dxos/feed-store",
-  "version": "2.12.2",
+  "version": "2.12.7",
   "description": "A consistent store for your hypercore feeds.",
   "homepage": "https://github.com/dxos/feed-store#readme",
   "bugs": {
@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
-    "@dxos/browser-runner": "^1.0.0-beta.8",
+    "@dxos/browser-runner": "^1.0.0-beta.13",
     "@dxos/crypto": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",

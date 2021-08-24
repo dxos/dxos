@@ -1,0 +1,33 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "jsx": "react",
+    "lib": [
+      "DOM"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../mesh/network-devtools"
+    },
+    {
+      "path": "../react-framework"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    }
+  ]
+}

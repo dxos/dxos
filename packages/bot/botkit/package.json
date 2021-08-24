@@ -1,12 +1,20 @@
 {
   "name": "@dxos/botkit",
-  "version": "2.12.2",
+  "version": "2.12.7",
   "description": "Botkit",
   "keywords": [],
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "bin": {
+    "bot-factory": "bin/bot-factory.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",

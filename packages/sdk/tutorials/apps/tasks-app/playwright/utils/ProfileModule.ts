@@ -20,4 +20,17 @@ export class ProfileModule extends AppSimulator {
 
     await submitButton?.click();
   }
+
+  async resetStorage() {
+    const moreButton = await this.browser.getPage().$('button[title="More Options"]');
+
+    expect(moreButton).toBeDefined();
+    await moreButton?.click();
+
+    const resetStorage = await this.browser.getPage().$('button[title="Reset Storage Button"]');
+
+    expect(resetStorage).toBeDefined();
+    
+    await resetStorage?.click();
+  }
 }

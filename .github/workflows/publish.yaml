@@ -98,8 +98,14 @@ jobs:
 
         # Quick build
         node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to @dxos/wallet-extension
+        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to @dxos/devtools-extension
     - name: Upload wallet
       uses: actions/upload-artifact@v2
       with:
         name: Wallet
         path: packages/wallet/extension/dist
+    - name: Upload devtools
+      uses: actions/upload-artifact@v2
+      with:
+        name: Devtools
+        path: packages/sdk/devtools-extension/dist

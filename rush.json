@@ -529,14 +529,14 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/react-ux",
-      "projectFolder": "packages/sdk/react-ux",
+      "packageName": "@dxos/react-client",
+      "projectFolder": "packages/sdk/react-client",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/react-client",
-      "projectFolder": "packages/sdk/react-client",
+      "packageName": "@dxos/react-framework",
+      "projectFolder": "packages/sdk/react-framework",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
@@ -547,6 +547,14 @@
     {
       "packageName": "@dxos/tutorials-tasks-app",
       "projectFolder": "packages/sdk/tutorials/apps/tasks-app"
+    },
+    {
+      "packageName": "@dxos/devtools",
+      "projectFolder": "packages/sdk/devtools"
+    },
+    {
+      "packageName": "@dxos/devtools-extension",
+      "projectFolder": "packages/sdk/devtools-extension"
     },
 
     //

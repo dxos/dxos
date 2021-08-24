@@ -35,10 +35,10 @@ const useStyles = makeStyles(theme => ({
   },
   drawer: {
     flexShrink: 0,
-    width: theme.sidebar.width
+    width: 300
   },
   drawerPaper: {
-    width: theme.sidebar.width,
+    width: 300,
     overflow: 'auto'
   },
   main: {
@@ -89,7 +89,7 @@ const Main = () => {
               <AccountIcon className='account-icon' />
             </IconButton>
           </Tooltip>
-          <IconButton variant="contained" color="inherit" onClick={handleButtonClick}>
+          <IconButton title="More Options" variant="contained" color="inherit" onClick={handleButtonClick}>
             <MoreVertIcon></MoreVertIcon>
           </IconButton>
           <Popover
@@ -108,7 +108,7 @@ const Main = () => {
             }}
           >
             <List dense>
-              <ListItem button onClick={handleResetStorage}>
+              <ListItem component="button" button onClick={handleResetStorage} title="Reset Storage Button">
                 <ListItemIcon>
                   <ResetIcon className='reset-icon' />
                 </ListItemIcon>

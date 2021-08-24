@@ -47,17 +47,17 @@ You should now see your app running on [http://localhost:3000](http://localhost:
 Let's start by installing the required dependencies from the DXOS Stack:
 
 ```bash
-yarn add @dxos/react-client @dxos/react-ux @dxos/config @dxos/object-model
+yarn add @dxos/react-client @dxos/react-framework @dxos/config @dxos/object-model
 ```
 
 Applications depend on the following libraries.
 
-| Syntax               | Description           |
-| -------------------- | --------------------- |
-| `@dxos/react-client` | Main API              |
-| `@dxos/react-ux`     | Main React (UX) API   |
-| `@dxos/config`       | Configuration support |
-| `@dxos/object-model` | ECHO Object model     |
+| Syntax                  | Description           |
+| ----------------------- | --------------------- |
+| `@dxos/react-client`    | Main API              |
+| `@dxos/react-framework` | Main React (UX) API   |
+| `@dxos/config`          | Configuration support |
+| `@dxos/object-model`    | ECHO Object model     |
 
 ## Material-UI
 
@@ -135,4 +135,4 @@ After that, create a `.babelrc` file at the root of your project with the follow
 If you have your app running, stop it and start it again so it takes the new changes above. You are ready to go!
 
 ---
-> To keep the tutorial simple, we are going to omit the imports of React and its respective hooks during the sections, so don't forget to import them yourself.
+> To keep the tutorial simple, we are going to omit the imports of React, Material UI and their respective hooks during the sections, so don't forget to import them yourself.

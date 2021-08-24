@@ -6,54 +6,38 @@ title: Publishing to DXNS
 
 ## Build Settings
 
-Before starting with the deployment process, we need to configure some stuff on our compiler:
+Before starting with the deployment process, we need to explain you some stuff on our compiler:
 
-1. **Build Folder**: Set your build folder to `dist` as it's used by default on the CLI (more on this later)
+1. **Build Folder**: We set our build folder to `dist` as it's used by default on the CLI (more on this later)
 
-2. **Flat Build Folder**: Make your build folder flat (without nested files) so the app can find all the assets when running in the Kube
+2. **Flat Build Folder**: We make our build folder flat (without nested files) so the app can find all the assets when running in the Kube
 
-Go to your `craco.config.js` file and add the following:
+So, we've added some comment in the following snippet, that we already have in our `craco.config.js` file, to explain you better the steps above. 
 
 ```jsx:title=<root>/craco.config.js
-const webpack = require('webpack');
-const path = require('path');
-const { ConfigPlugin } = require('@dxos/config/ConfigPlugin');
+ // ...
 
 module.exports = {
   webpack: {
-    config: {
-      node: {
-        Buffer: false,
-      },
-    },
+    
+    // ...
 
     configure: (webpackConfig, { env, paths }) => {
       const buildFolder = path.join(__dirname, 'dist'); // 1. This is setting the build folder to `dist`
-
+      webpackConfig.entry = './src/index.js'
       webpackConfig.output = {
         ...webpackConfig.output,
         path: buildFolder,
         filename: '[name].bundle.js', // 2. This is removing any possible parent dir that webpack could add to the file
         chunkFilename: '[name].[contenthash:8].chunk.js', // 2. This is removing any possible parent dir that webpack could add to the file
+        publicPath: PUBLIC_URL,
       };
 
       paths.appBuild = buildFolder; // 1. This is setting the build path also on craco
-
       return webpackConfig;
     },
 
-    plugins: {
-      add: [
-        new webpack.ProvidePlugin({
-          Buffer: [require.resolve('buffer/'), 'Buffer'],
-        }),
-
-        new ConfigPlugin({
-          path: path.resolve(__dirname, 'config'),
-          dynamic: process.env.CONFIG_DYNAMIC,
-        }),
-      ],
-    },
+    // ...
   },
 };
 ```

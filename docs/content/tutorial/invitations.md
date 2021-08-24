@@ -38,6 +38,8 @@ const TaskList = ({ partyKey }) => {
 export default TaskList;
 ```
 
+> You can access [this](https://github.com/dxos/tutorial-tasks-app/blob/master/src/components/TaskList.js) link to check the full `TaskList` code.
+
 To create a new invitation we just need to call `party.createInvitation` method and it will return the specific information you need to share with your peer.
 
 Go to your `src/components/Main.js` component and render the `TaskList` component in a main section:
@@ -64,13 +66,13 @@ On your browser, when selecting your party from the list, you will see a share b
 
 ## Redeem Invitation
 
-We now need to give our users the possibility to redeem an invitation so they are able to join the party. Lucky for us, the `@dxos/react-ux` package already exports a `PinlessRedeemDialog` component that we can make usage of.
+We now need to give our users the possibility to redeem an invitation so they are able to join the party. Lucky for us, the `@dxos/react-framework` package already exports a `RedeemDialog` component that we can make usage of.
 
 Let's got now to our `src/components/PartyList.js` component and place the following:
 
 ```jsx:title=src/components/PartyList.js
 // ...
-import { PinlessRedeemDialog } from '@dxos/react-ux';
+import { RedeemDialog } from '@dxos/react-framework';
 
 const PartyList = ({ onSelectParty }) => {
   const [redeemDialog, setRedeemDialog] = useState(false);
@@ -81,7 +83,7 @@ const PartyList = ({ onSelectParty }) => {
     <div>
       {/* ... PartySettings */}
 
-      {redeemDialog && <PinlessRedeemDialog onClose={() => setRedeemDialog(false)} />}
+      {redeemDialog && <RedeemDialog pinless onClose={() => setRedeemDialog(false)} />}
 
       {/* ... Parties */}
 
@@ -99,7 +101,7 @@ const PartyList = ({ onSelectParty }) => {
 export default PartyList;
 ```
 
-We are rendering now the `PinlessRedeemDialog` and also a button to show it.
+We are rendering now the `RedeemDialog` and also a button to show it.
 
 If you go to your app in the browser, you will see that button next to the create party button. Go ahead and try it yourself.
 

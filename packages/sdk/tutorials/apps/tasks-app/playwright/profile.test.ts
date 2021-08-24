@@ -11,6 +11,7 @@ describe('Profile Test Cases', () => {
   let alice: TaskApp;
 
   beforeAll(() => {
+    jest.setTimeout(10000);
     alice = new TaskApp(new Browser());
 
     return alice.browser.launch(firefox, initialUrl);

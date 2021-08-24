@@ -1,0 +1,40 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ES6"
+    ],
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "jsx": "react",
+    "rootDir": "src"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../devtools"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../react-framework"
+    }
+  ]
+}

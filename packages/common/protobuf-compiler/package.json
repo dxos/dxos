@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protobuf-compiler",
-  "version": "2.12.2",
+  "version": "2.12.7",
   "license": "MIT",
   "bin": {
     "build-protobuf": "./bin/main.js"
@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.11",
+    "@dxos/eslint-plugin": "~1.0.12",
     "@types/argparse": "^2.0.0",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
