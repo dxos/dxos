@@ -1,0 +1,19 @@
+on:
+  push:
+    branches:
+      - egorgripasov/docker
+
+name: Test BotFactory docker build and publish
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build and Publish Docker Images
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "${{ secrets.CONTAINER_REGISTRY_TOKEN }}" | docker login https://ghcr.io -u ${{ github.repository_owner }} --password-stdin
+          ./common/scripts/docker-build-release.sh dev
