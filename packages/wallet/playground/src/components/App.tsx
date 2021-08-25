@@ -10,8 +10,10 @@ import { useContentScript } from '../hooks';
 
 const App = () => {
   const [profile, setProfile] = useState<GetProfileResponse | undefined>(undefined);
-  const { error, rpcClient: contentScript } = useContentScript();
+  const { error: connectionError, rpcClient: contentScript } = useContentScript();
+  const [error, setError] = useState<Error | undefined>(undefined);
   const rpcClient = contentScript?.rpc;
+  const [parties, setParties] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (rpcClient === undefined) {
@@ -22,13 +24,30 @@ const App = () => {
       try {
         setProfile(await rpcClient.GetProfile({}));
       } catch (err) {
+        setError(err);
         console.error('Cannot get the profile', err);
       }
     });
   }, [rpcClient]);
 
+  useEffect(() => {
+    if (profile === undefined || rpcClient === undefined) {
+      return;
+    }
+
+    const unsubscribe = rpcClient.SubscribeToParties({}).subscribe(result => {
+      setParties(result.partyKeys?.length);
+    }, console.error);
+
+    return unsubscribe;
+  }, [rpcClient, profile]);
+
+  if (connectionError) {
+    console.error(connectionError);
+    return <p>Connection failed.</p>;
+  }
+
   if (error) {
-    console.error(error);
     return <p>Connection failed.</p>;
   }
 
@@ -37,13 +56,28 @@ const App = () => {
   }
 
   if (!profile) {
-    return <p>No profile loaded.</p>;
+    return <p>Loading profile...</p>;
   }
+
+  if (!profile.publicKey) {
+    return <p>No profile created.</p>;
+  }
+
+  const handleCreateParty = async () => {
+    try {
+      await rpcClient.CreateParty({});
+    } catch (err) {
+      console.error(err);
+      setError(err);
+    }
+  };
 
   return (
     <div style={{ minWidth: 400 }}>
       <p>Hello, {profile.username ?? profile.publicKey}</p>
       <p>{profile.publicKey}</p>
+      <button onClick={handleCreateParty}>Create a party</button>
+      {parties !== undefined && <p>You have {parties} parties.</p>}
     </div>
   );
 };
