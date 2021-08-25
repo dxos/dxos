@@ -13,6 +13,7 @@ const App = () => {
   const { error: connectionError, rpcClient: contentScript } = useContentScript();
   const [error, setError] = useState<Error | undefined>(undefined)
   const rpcClient = contentScript?.rpc;
+  const [parties, setParties] = useState<number | undefined>(undefined)
 
   useEffect(() => {
     if (rpcClient === undefined) {
@@ -28,6 +29,23 @@ const App = () => {
       }
     });
   }, [rpcClient]);
+
+  useEffect(() => {
+    if (profile === undefined || rpcClient === undefined) {
+      return
+    }
+
+    setImmediate(async () => {
+      try {
+        const parties = await rpcClient.GetParties({})
+        console.log({parties})
+        setParties(parties.partyKeys?.length)
+      } catch (err) {
+        setError(err)
+        console.error('Cannot get parties', err);
+      }
+    })
+  }, [rpcClient, profile])
 
   if (connectionError) {
     console.error(connectionError);
@@ -50,10 +68,21 @@ const App = () => {
     return <p>No profile created.</p>;
   }
 
+  const handleCreateParty = async () => {
+    try {
+      await rpcClient.CreateParty({})
+    } catch (err) {
+      console.error(err);
+      setError(err);
+    }
+  }
+
   return (
     <div style={{ minWidth: 400 }}>
       <p>Hello, {profile.username ?? profile.publicKey}</p>
       <p>{profile.publicKey}</p>
+      <button onClick={handleCreateParty}>Create a party</button>
+      {parties !== undefined && <p>You have {parties} parties.</p>}
     </div>
   );
 };
