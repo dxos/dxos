@@ -10,7 +10,7 @@ ORG=dxos
 
 CHANNEL=${1:-latest}
 
-VERSION=`cat sed "/\/\*.*\*\//d;/\/\*/,/\*\// d" $REPO_ROOT/common/config/rush/version-policies.json | sed 's/\/\/.*//' | jq -r '.[0].version'`
+VERSION=`sed "/\/\*.*\*\//d;/\/\*/,/\*\// d" $REPO_ROOT/common/config/rush/version-policies.json | sed 's/\/\/.*//' | jq -r '.[0].version'`
 HASH=`git log --pretty=format:'%h' -n 1`
 
 if [ "$CHANNEL" == "dev" ]; then
