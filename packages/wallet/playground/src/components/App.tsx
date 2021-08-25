@@ -10,7 +10,8 @@ import { useContentScript } from '../hooks';
 
 const App = () => {
   const [profile, setProfile] = useState<GetProfileResponse | undefined>(undefined);
-  const { error, rpcClient: contentScript } = useContentScript();
+  const { error: connectionError, rpcClient: contentScript } = useContentScript();
+  const [error, setError] = useState<Error | undefined>(undefined)
   const rpcClient = contentScript?.rpc;
 
   useEffect(() => {
@@ -22,13 +23,18 @@ const App = () => {
       try {
         setProfile(await rpcClient.GetProfile({}));
       } catch (err) {
+        setError(err)
         console.error('Cannot get the profile', err);
       }
     });
   }, [rpcClient]);
 
+  if (connectionError) {
+    console.error(connectionError);
+    return <p>Connection failed.</p>;
+  }
+
   if (error) {
-    console.error(error);
     return <p>Connection failed.</p>;
   }
 
@@ -37,7 +43,11 @@ const App = () => {
   }
 
   if (!profile) {
-    return <p>No profile loaded.</p>;
+    return <p>Loading profile...</p>;
+  }
+
+  if (!profile.publicKey) {
+    return <p>No profile created.</p>;
   }
 
   return (
