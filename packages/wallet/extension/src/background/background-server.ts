@@ -2,31 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Client, ClientConfig } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { Stream } from '@dxos/codec-protobuf';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/wallet-core';
 
-const config: ClientConfig = {
-  storage: {
-    persistent: true,
-    type: 'idb',
-    path: '/tmp/dxos'
-  },
-  swarm: {
-    signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal',
-    ice: [
-      { urls: 'stun:apollo3.kube.moon.dxos.network:3478' },
-      {
-        urls: 'turn:apollo3.kube.moon.dxos.network:3478',
-        username: 'dxos',
-        credential: 'dxos'
-      }
-    ]
-  }
-};
+import { config } from './config';
 
 // const encodeInvitation = (invitation: InvitationDescriptor) => btoa(JSON.stringify(invitation.toQueryParameters()));
 const decodeInvitation = (code: string) => InvitationDescriptor.fromQueryParameters(JSON.parse(atob(code)));
@@ -86,6 +70,17 @@ export class BackgroundServer {
           return {
             partyKeys: parties.map(party => party.key.toHex())
           };
+        },
+        SubscribeToParties: request => {
+          return new Stream(({ next, close }) => {
+            const query = this._client.echo.queryParties();
+            // Send first value immidiately.
+            next({ partyKeys: query.value.map(party => party.key.toHex()) });
+            // TODO(rzadp): Unsubscribe - when and how?
+            query.subscribe(result => next({
+              partyKeys: result.map(party => party.key.toHex())
+            }));
+          });
         },
         JoinParty: async request => {
           if (!request.invitation) {
