@@ -11,6 +11,7 @@ service BackgroundService {
 
   rpc CreateParty(CreatePartyRequest) returns (CreatePartyResponse);
   rpc GetParties(GetPartiesRequest) returns (GetPartiesResponse);
+  rpc SubscribeToParties (GetPartiesRequest) returns (stream GetPartiesResponse);
   rpc JoinParty(JoinPartyRequest) returns (JoinPartyResponse);
 
   // Used by the key hole application to prove identity and allow/disallow access.

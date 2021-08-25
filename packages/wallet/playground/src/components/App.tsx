@@ -11,9 +11,9 @@ import { useContentScript } from '../hooks';
 const App = () => {
   const [profile, setProfile] = useState<GetProfileResponse | undefined>(undefined);
   const { error: connectionError, rpcClient: contentScript } = useContentScript();
-  const [error, setError] = useState<Error | undefined>(undefined)
+  const [error, setError] = useState<Error | undefined>(undefined);
   const rpcClient = contentScript?.rpc;
-  const [parties, setParties] = useState<number | undefined>(undefined)
+  const [parties, setParties] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (rpcClient === undefined) {
@@ -24,7 +24,7 @@ const App = () => {
       try {
         setProfile(await rpcClient.GetProfile({}));
       } catch (err) {
-        setError(err)
+        setError(err);
         console.error('Cannot get the profile', err);
       }
     });
@@ -32,20 +32,15 @@ const App = () => {
 
   useEffect(() => {
     if (profile === undefined || rpcClient === undefined) {
-      return
+      return;
     }
 
-    setImmediate(async () => {
-      try {
-        const parties = await rpcClient.GetParties({})
-        console.log({parties})
-        setParties(parties.partyKeys?.length)
-      } catch (err) {
-        setError(err)
-        console.error('Cannot get parties', err);
-      }
-    })
-  }, [rpcClient, profile])
+    const unsubscribe = rpcClient.SubscribeToParties({}).subscribe(result => {
+      setParties(result.partyKeys?.length);
+    }, console.error);
+
+    return unsubscribe;
+  }, [rpcClient, profile]);
 
   if (connectionError) {
     console.error(connectionError);
@@ -70,12 +65,12 @@ const App = () => {
 
   const handleCreateParty = async () => {
     try {
-      await rpcClient.CreateParty({})
+      await rpcClient.CreateParty({});
     } catch (err) {
       console.error(err);
       setError(err);
     }
-  }
+  };
 
   return (
     <div style={{ minWidth: 400 }}>
