@@ -89,7 +89,7 @@ export class Generator {
     if (source?.type === OBJECT_ORG) {
       const props = createProps(OBJECT_PERSON);
       const target = await this._database.createItem({ model: ObjectModel, type: OBJECT_PERSON, props });
-      this._database.createLink({ type: LINK_EMPLOYEE, source, target });
+      await this._database.createLink({ type: LINK_EMPLOYEE, source, target });
     }
   }
 
@@ -98,7 +98,7 @@ export class Generator {
     const source = this._database.getItem(sourceId);
     const target = this._database.getItem(targetId);
     if (source?.type === OBJECT_ORG && target?.type === OBJECT_PERSON) {
-      this._database.createLink({ type: LINK_EMPLOYEE, source, target });
+      await this._database.createLink({ type: LINK_EMPLOYEE, source, target });
     }
   }
 
