@@ -69,7 +69,7 @@ async function subscribeToEcho (client: HandlerProps['hook']['client'], stream: 
 }
 
 export default ({ hook, bridge }: HandlerProps) => {
-  bridge.onOpenStreamChannel('echo.items', (stream) => {
-    subscribeToEcho(hook.client, stream);
+  bridge.onOpenStreamChannel('echo.items', async (stream) => {
+    await subscribeToEcho(hook.client, stream);
   });
 };

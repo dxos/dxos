@@ -16,12 +16,12 @@ let checkCount = 0;
 // eslint-disable-next-line prefer-const
 let loadCheckInterval: NodeJS.Timeout;
 
-const init = () => {
+const init = async () => {
   if (checkCount++ > 30) {
     if (loadCheckInterval) {
       clearInterval(loadCheckInterval);
     }
-    Bridge.sendMessage('api.timeout', {}, 'devtools');
+    await Bridge.sendMessage('api.timeout', {}, 'devtools');
     return;
   }
 
@@ -37,7 +37,7 @@ const init = () => {
     if (loadCheckInterval) {
       clearInterval(loadCheckInterval);
     }
-    Bridge.sendMessage('api.ready', {}, 'devtools');
+    await Bridge.sendMessage('api.ready', {}, 'devtools');
   }
 };
 
