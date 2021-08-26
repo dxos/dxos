@@ -52,7 +52,7 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
 const GraphDemo = ({ topic, topology }: { topic: PublicKey, topology: () => Topology }) => {
   const [controlPeer, setControlPeer] = useState<{ swarm: Swarm, map: SwarmMapper, signal: SignalManager }>();
   useEffect(() => {
-    createPeer(topic, topic, topology).then(peer => setControlPeer(peer));
+    void createPeer(topic, topic, topology).then(peer => setControlPeer(peer));
   }, []);
 
   const [peers, setPeers] = useState<any[]>([]);
