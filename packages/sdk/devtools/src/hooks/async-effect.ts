@@ -8,7 +8,7 @@ export function useAsyncEffect (body: () => Promise<void | undefined | (() => vo
   useEffect(() => {
     const promise = body();
     return () => {
-      promise.then(cleanup => {
+      void promise.then(cleanup => {
         if (typeof cleanup === 'function') {
           cleanup();
         }
