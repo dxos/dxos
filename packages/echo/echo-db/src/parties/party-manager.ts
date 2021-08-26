@@ -102,7 +102,7 @@ export class PartyManager {
           await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
         }
 
-        this._setParty(party);
+        await this._setParty(party);
 
         onProgressCallback?.({ haloOpened: true, totalParties: partyKeys.length, partiesOpened: i + 1 });
       }
@@ -145,7 +145,7 @@ export class PartyManager {
     const party = await this._partyFactory.createParty();
     assert(!this._parties.has(party.key), 'Party already exists.');
 
-    this._setParty(party);
+    await this._setParty(party);
     await this._recordPartyJoining(party);
     await this._updateContactList(party);
     return party;
@@ -172,7 +172,7 @@ export class PartyManager {
 
     log(`Adding party partyKey=${partyKey.toHex()} hints=${hints.length}`);
     const party = await this._partyFactory.addParty(partyKey, hints);
-    this._setParty(party);
+    await this._setParty(party);
     return party;
   }
 
@@ -191,13 +191,13 @@ export class PartyManager {
       throw new Error(`Party already exists ${party.key.toHex()}`); // TODO(marik-d): Handle this gracefully
     }
 
-    this._setParty(party);
+    await this._setParty(party);
     await this._recordPartyJoining(party);
     await this._updateContactList(party);
     return party;
   }
 
-  private _setParty (party: PartyInternal) {
+  private async _setParty (party: PartyInternal) {
     const updateContact = async () => {
       try {
         await this._updateContactList(party);
@@ -223,7 +223,7 @@ export class PartyManager {
     if (party.isOpen) {
       attachUpdateListeners();
     } else {
-      party.update.waitFor(() => {
+      await party.update.waitFor(() => {
         if (party.isOpen) {
           attachUpdateListeners();
           return true;
