@@ -121,13 +121,13 @@ const Component = ({ generator }: {generator: Generator}) => {
   const data = useSelection(generator.database.select(graphSelector(itemAdapter)));
   const items = useSelection(generator.database.select(selection => selection.items));
 
-  const handleCreate = (data: GraphData) => {
+  const handleCreate = async (data: GraphData) => {
     if (data.nodes.length) {
       const { source } = data.links[0];
-      generator.createItem(source.toString());
+      await generator.createItem(source.toString());
     } else {
       const { source, target } = data.links[0];
-      generator.linkItem(source.toString(), target.toString());
+      await generator.linkItem(source.toString(), target.toString());
     }
   };
 
