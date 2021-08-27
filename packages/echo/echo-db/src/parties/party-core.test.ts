@@ -85,3 +85,31 @@ test('create item', async () => {
 
   expect(item.model.getProperty('foo')).toEqual('bar');
 });
+
+test('create item with parent and then reload', async () => {
+  const { party } = await setup();
+
+  {
+    const parent = await party.database.createItem({ model: ObjectModel, type: 'parent' });
+    const child = await party.database.createItem({
+      model: ObjectModel,
+      parent: parent.id,
+      type: 'child'
+    });
+
+    expect(child.parent).toEqual(parent);
+    expect(parent.children).toContain(child);
+  }
+
+  await party.close();
+  await party.open();
+
+  {
+    await party.database.select(s => s.items).update.waitFor(items => items.length === 2);
+    const parent = party.database.select(s => s.filter({ type: 'parent' }).items).expectOne();
+    const child = party.database.select(s => s.filter({ type: 'child' }).items).expectOne();
+
+    expect(child.parent).toEqual(parent);
+    expect(parent.children).toContain(child);
+  }
+});
