@@ -143,7 +143,7 @@ test('basic with a buffer ping-pong extension', async () => {
     {
       const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
       expect(data).toEqual(Buffer.from('pong'));
-      protocol1.close();
+      await protocol1.close();
     }
   });
   return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
@@ -214,7 +214,7 @@ test('basic ping and oneway', async () => {
       }
 
       log('%o', bufferMessages.stats);
-      protocol1.close();
+      await protocol1.close();
     })
     .init();
 
