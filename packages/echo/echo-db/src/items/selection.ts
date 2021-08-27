@@ -155,4 +155,16 @@ export class SelectionResult<T> {
   getValue (): T {
     return this._selector(this._selection);
   }
+
+  /**
+   * Asserts that the result only has one element and returns it.
+   */
+  expectOne<U> (this: SelectionResult<U[]>): U {
+    const value = this.getValue();
+    if (value.length === 1) {
+      return value[0];
+    } else {
+      throw new Error(`Expected the SelectionResult to have a single element but it returned ${value.length}`);
+    }
+  }
 }
