@@ -722,7 +722,7 @@ describe('ECHO', () => {
     expect(partyD.title).toEqual('Test'); // However this does not
   }).retries(1);
 
-  test.only('invited party member has his display name available', async () => {
+  test('invited party member has his display name available', async () => {
     const a = await setup({ createProfile: true, displayName: 'A' });
     const b = await setup({ createProfile: true, displayName: 'B' });
 
