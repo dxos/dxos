@@ -161,7 +161,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
     }
 
     // Get candidate snapshot since we will be mutating the collection.
-    for await (const descriptor of Array.from(this._candidateFeeds.values())) {
+    for (const descriptor of Array.from(this._candidateFeeds.values())) {
       if (this._feedSelector(descriptor)) {
         void this._startReadingFromFeed(descriptor);
         this._candidateFeeds.delete(descriptor);

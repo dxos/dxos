@@ -102,7 +102,7 @@ export class PartyManager {
           await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
         }
 
-        await this._setParty(party);
+        this._setParty(party);
 
         onProgressCallback?.({ haloOpened: true, totalParties: partyKeys.length, partiesOpened: i + 1 });
       }
@@ -128,7 +128,7 @@ export class PartyManager {
       }
     }
 
-    await this._parties.clear();
+    this._parties.clear();
   }
 
   //
@@ -145,7 +145,7 @@ export class PartyManager {
     const party = await this._partyFactory.createParty();
     assert(!this._parties.has(party.key), 'Party already exists.');
 
-    await this._setParty(party);
+    this._setParty(party);
     await this._recordPartyJoining(party);
     await this._updateContactList(party);
     return party;
@@ -172,7 +172,7 @@ export class PartyManager {
 
     log(`Adding party partyKey=${partyKey.toHex()} hints=${hints.length}`);
     const party = await this._partyFactory.addParty(partyKey, hints);
-    await this._setParty(party);
+    this._setParty(party);
     return party;
   }
 
@@ -191,13 +191,13 @@ export class PartyManager {
       throw new Error(`Party already exists ${party.key.toHex()}`); // TODO(marik-d): Handle this gracefully
     }
 
-    await this._setParty(party);
+    this._setParty(party);
     await this._recordPartyJoining(party);
     await this._updateContactList(party);
     return party;
   }
 
-  private async _setParty (party: PartyInternal) {
+  private _setParty (party: PartyInternal) {
     const updateContact = async () => {
       try {
         await this._updateContactList(party);
@@ -223,13 +223,7 @@ export class PartyManager {
     if (party.isOpen) {
       attachUpdateListeners();
     } else {
-      await party.update.waitFor(() => {
-        if (party.isOpen) {
-          attachUpdateListeners();
-          return true;
-        }
-        return false;
-      });
+      void party.update.waitFor(() => party.isOpen).then(() => attachUpdateListeners());
     }
 
     this._parties.set(party.key, party);
