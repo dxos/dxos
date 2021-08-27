@@ -42,7 +42,7 @@ export class TextModel extends Model<Mutation> {
     const remote = origin && origin.docClientId && origin.docClientId !== this._doc.clientID;
 
     if (!remote) {
-      this.write({
+      await this.write({
         update,
         clientId: this._doc.clientID
       });
