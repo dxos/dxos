@@ -238,7 +238,7 @@ export class BotFactory {
   async spawnBot (botName: string | undefined, options?: SpawnOptions) {
     const botId = await this._botManager!.spawnBot(botName, options);
     // TODO(egorgripasov): Move down.
-    
+
     return botId;
   }
 

@@ -11,6 +11,7 @@ import get from 'lodash.get';
 import moment from 'moment';
 import path from 'path';
 
+import { waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { keyToString, keyToBuffer, createKeyPair, sha256, PublicKey } from '@dxos/crypto';
 import { StarTopology, transportProtocolProvider } from '@dxos/network-manager';
@@ -31,7 +32,6 @@ import { BotContainer } from './containers';
 import { NATIVE_ENV, getBotCID } from './env';
 import { log } from './log';
 import { BOT_PACKAGE_DOWNLOAD_DIR, SourceManager } from './source-manager';
-import { waitForCondition } from '@dxos/async';
 
 const chance = new Chance();
 
