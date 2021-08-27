@@ -163,7 +163,7 @@ export class WebsocketRpc {
     return this._rpc.emit('signal', data);
   }
 
-  async addHandler (method: string, handler: (data: any) => Promise<any>) {
+  addHandler (method: string, handler: (data: any) => Promise<any>) {
     this._rpc.actions({
       [method]: async (data: any) => {
         const begin = Date.now();
@@ -195,7 +195,7 @@ export class WebsocketRpc {
     });
   }
 
-  async subscribe (method: string, handler: (data: any) => void) {
+  subscribe (method: string, handler: (data: any) => void) {
     this._rpc.on(method, (data: any) => {
       this.commandTrace.emit({
         messageId: `${this._host}-${this._messageId++}`,
