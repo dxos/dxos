@@ -82,14 +82,14 @@ export class SignalApi {
 
       this._reconnect();
     }
-    this._client.addHandler('offer', (message: any) => this._onOffer({
+    void this._client.addHandler('offer', (message: any) => this._onOffer({
       id: PublicKey.from(message.id),
       remoteId: PublicKey.from(message.remoteId),
       topic: PublicKey.from(message.topic),
       sessionId: PublicKey.from(message.sessionId),
       data: message.data
     }));
-    this._client.subscribe('signal', (msg: SignalApi.SignalMessage) => this._onSignal({
+    void this._client.subscribe('signal', (msg: SignalApi.SignalMessage) => this._onSignal({
       id: PublicKey.from(msg.id),
       remoteId: PublicKey.from(msg.remoteId),
       topic: PublicKey.from(msg.topic),

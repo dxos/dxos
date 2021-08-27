@@ -78,7 +78,7 @@ export class WebsocketRpc {
         await promisify(this._socket.send.bind(this._socket) as any)(data);
       },
       subscribe: (next: (data: any) => void) => {
-        this._connectTrigger.wait().then(() => {
+        void this._connectTrigger.wait().then(() => {
           assert(this._socket, 'No socket');
           this._socket.onmessage = async e => {
             try {

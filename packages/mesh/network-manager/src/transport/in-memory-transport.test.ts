@@ -59,7 +59,7 @@ describe('InMemoryTransport', () => {
     plugin1.on('receive', mockReceive);
 
     plugin2.on('connect', async (protocol) => {
-      plugin2.send(peer1Id.asBuffer(), 'Foo');
+      await plugin2.send(peer1Id.asBuffer(), 'Foo');
     });
 
     await waitForExpect(() => {
@@ -75,7 +75,7 @@ describe('InMemoryTransport', () => {
       plugin1.on('receive', mockReceive);
 
       plugin2.on('connect', async (protocol) => {
-        plugin2.send(peer1Id.asBuffer(), 'Foo');
+        await plugin2.send(peer1Id.asBuffer(), 'Foo');
       });
 
       await waitForExpect(() => {
