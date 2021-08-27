@@ -14,6 +14,15 @@
     "test": "jest 2>&1",
     "lint": "eslint '{src,test}/**/*.ts'"
   },
+  "eslintConfig": {
+    "extends": "plugin:@dxos/recomended",
+    "parserOptions": {
+      "project": [
+        "./tsconfig.json",
+        "./tsconfig.eslint.json"
+      ]  
+    }
+  },
   "jest": {
     "modulePathIgnorePatterns": [
       "test/gen",
