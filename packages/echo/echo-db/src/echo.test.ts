@@ -712,15 +712,17 @@ describe('ECHO', () => {
 
     for (const _party of [partyA, partyB, partyC]) {
       await waitForCondition(() => _party.getProperty('title') === 'Test', 3000);
+      await waitForCondition(() => _party.title === 'Test', 3000);
       expect(_party.title).toEqual('Test');
     }
 
     // For the other member of the party, title propagates correctly as well
     await waitForCondition(() => partyD.getProperty('title') === 'Test', 3000);
+    await waitForCondition(() => partyD.title === 'Test', 3000);
     expect(partyD.title).toEqual('Test'); // However this does not
   }).retries(1);
 
-  test('invited party member has his display name available', async () => {
+  test.only('invited party member has his display name available', async () => {
     const a = await setup({ createProfile: true, displayName: 'A' });
     const b = await setup({ createProfile: true, displayName: 'B' });
 
