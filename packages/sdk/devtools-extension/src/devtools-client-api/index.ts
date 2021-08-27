@@ -43,4 +43,4 @@ const init = async () => {
 
 loadCheckInterval = setInterval(init, 1000);
 
-init();
+void init();
