@@ -9,10 +9,10 @@
     "src"
   ],
   "scripts": {
-    "build": "toolchain build",
+    "build": "tsc",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test",
     "test": "jest 2>&1",
-    "lint": "toolchain lint"
+    "lint": "eslint '{src,test}/**/*.ts'"
   },
   "jest": {
     "modulePathIgnorePatterns": [
@@ -28,7 +28,7 @@
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/eslint-plugin": "~1.0.13",
     "@types/assert": "^1.5.4",
     "@types/jest": "^26.0.7",
     "@types/lodash.merge": "~4.6.6",

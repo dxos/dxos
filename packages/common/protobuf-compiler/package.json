@@ -14,10 +14,7 @@
     "build:test": "pnpm run build && pnpm run test",
     "gen": "ts-node src/main.ts test/schema.proto test/another.proto -s test/substitutions.ts -o test/gen",
     "test": "pnpm run lint && jest 2>&1",
-    "lint": "toolchain lint"
-  },
-  "eslintConfig": {
-    "extends": "plugin:@dxos/recomended"
+    "lint": "eslint 'src/**/*.ts'"
   },
   "jest": {
     "modulePathIgnorePatterns": [
@@ -36,7 +33,7 @@
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/eslint-plugin": "~1.0.13",
     "@types/argparse": "^2.0.0",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
