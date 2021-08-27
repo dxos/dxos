@@ -48,4 +48,12 @@ export class ResultSet<T> {
   subscribe (listener: (result: T[]) => void) {
     return this._resultsUpdate.on(listener);
   }
+
+  waitFor(condition: (data: T[]) => boolean): Promise<T[]> {
+    if(condition(this.value)) {
+      return Promise.resolve(this.value);
+    }
+
+    return this._resultsUpdate.waitFor(condition);
+  }
 }
