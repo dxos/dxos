@@ -21,7 +21,6 @@ import { inviteTestPeer } from './util';
 const log = debug('dxos:echo:test');
 
 describe('ECHO', () => {
-
   interface SetupOptions {
     createProfile?: boolean
     displayName?: string
@@ -727,13 +726,13 @@ describe('ECHO', () => {
 
     const partyA = await a.createParty();
 
-    const membersPromise = partyA.queryMembers().waitFor(members => members.length == 2);
+    const membersPromise = partyA.queryMembers().waitFor(members => members.length === 2);
 
     const invitation = await partyA.createInvitation(defaultInvitationAuthenticator);
     await b.joinParty(invitation, defaultSecretProvider);
 
     const members = await membersPromise;
-    
+
     expect(members[0].displayName).toBe('A');
     expect(members[1].displayName).toBe('B');
   });

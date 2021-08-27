@@ -49,6 +49,11 @@ export class ResultSet<T> {
     return this._resultsUpdate.on(listener);
   }
 
+  /**
+   * Waits for condition to be true and then returns the value that passed the condition first.
+   *
+   * Current value is also checked.
+   */
   waitFor (condition: (data: T[]) => boolean): Promise<T[]> {
     if (condition(this.value)) {
       return Promise.resolve(this.value);
