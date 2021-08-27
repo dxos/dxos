@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 import debug from 'debug';
+import { Transform } from 'stream';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
@@ -12,7 +13,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { SignalApi } from '../signal';
 import { Transport, TransportFactory } from './transport';
-import { Transform } from 'stream';
 
 const log = debug('dxos:network-manager:swarm:transport:in-memory-transport');
 
