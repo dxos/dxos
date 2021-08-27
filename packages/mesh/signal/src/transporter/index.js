@@ -125,7 +125,7 @@ export class ProtocolTransporter extends BaseTransporter {
         this.logger.info('ProtocolTransporter connected');
         this._swarm.removeListener('error', onError);
         this._ee.emit('connected');
-        this.onConnected().then(resolve);
+        void this.onConnected().then(resolve);
       });
     });
   }
