@@ -61,7 +61,7 @@ export class PartyProcessor {
       this._feedAdded.emit(keyRecord.publicKey);
     });
     state.on(PartyEventType.ADMIT_KEY, (keyRecord: KeyRecord) => this.keyOrInfoAdded.emit(keyRecord.publicKey));
-    state.on(IdentityEventType, (publicKey: PublicKey) => this.keyOrInfoAdded.emit(publicKey));
+    state.on(IdentityEventType.UPDATE_IDENTITY, (publicKey: PublicKey) => this.keyOrInfoAdded.emit(publicKey));
   }
 
   get partyKey () {
