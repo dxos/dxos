@@ -958,6 +958,7 @@ importers:
       ws: 7.4.5
       xor-distance: 2.0.0
     devDependencies:
+      '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/signal': link:../signal
       '@dxos/testutils': link:../../common/testutils
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
@@ -965,10 +966,13 @@ importers:
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       earljs: 0.1.10
+      expect: 27.0.2
       fast-check: 2.14.0
+      mocha: 8.4.0
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/browser-mocha': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/protocol': workspace:*
@@ -985,8 +989,10 @@ importers:
       assert: ^2.0.0
       debug: ^4.1.1
       earljs: ~0.1.10
+      expect: ~27.0.2
       fast-check: ~2.14.0
       isomorphic-ws: ^4.0.1
+      mocha: ~8.4.0
       nanomessage-rpc: ^3.0.0
       simple-peer: ^9.9.3
       wait-for-expect: ^3.0.2
@@ -1153,6 +1159,7 @@ importers:
     dependencies:
       '@azure/abort-controller': 1.0.4
       '@dxos/broadcast': link:../broadcast
+      '@dxos/crypto': link:../../common/crypto
       '@hyperswarm/dht': 4.0.1
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
@@ -1202,6 +1209,7 @@ importers:
     specifiers:
       '@azure/abort-controller': ^1.0.1
       '@dxos/broadcast': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@geut/discovery-swarm-webrtc': ^4.0.2
       '@hyperswarm/dht': ^4.0.1

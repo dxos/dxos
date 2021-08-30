@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'earljs';
+import expect from 'expect';
 import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
