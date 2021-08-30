@@ -110,7 +110,7 @@ export class PresencePlugin extends EventEmitter {
    * NOTICE: Does not return a Promise cause it could hang if the queue is cleared.
    */
   private _pingLimit () {
-    this._limit(() => this.ping());
+    void this._limit(() => this.ping());
   }
 
   start () {

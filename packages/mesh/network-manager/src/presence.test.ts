@@ -59,7 +59,7 @@ describe('Presence', () => {
         .toEqual([peer1, peer2].map(x => x.peerId.toHex()).sort());
     });
 
-    peer2.networkManager.leaveProtocolSwarm(topic);
+    void peer2.networkManager.leaveProtocolSwarm(topic);
 
     await waitForExpect(() => {
       expect(peer1.presence.peers.map(x => x.toString('hex')).sort())

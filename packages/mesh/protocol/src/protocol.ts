@@ -253,8 +253,8 @@ export class Protocol {
     }
     await this._openExtensions();
 
-    eos(this._stream as any, () => {
-      this.close();
+    eos(this._stream as any, async () => {
+      await this.close();
     });
 
     log(keyToHuman(this._stream.publicKey, 'node'), 'initialized');

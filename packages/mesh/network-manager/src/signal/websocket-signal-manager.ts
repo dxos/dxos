@@ -56,13 +56,13 @@ export class WebsocketSignalManager implements SignalManager {
   join (topic: PublicKey, peerId: PublicKey) {
     log(`Join ${topic} ${peerId}`);
     this._topicsJoined.set(topic, peerId);
-    this._reconcileJoinedTopics();
+    void this._reconcileJoinedTopics();
   }
 
   leave (topic: PublicKey, peerId: PublicKey) {
     log(`Leave ${topic} ${peerId}`);
     this._topicsJoined.delete(topic);
-    this._reconcileJoinedTopics();
+    void this._reconcileJoinedTopics();
   }
 
   @synchronized
@@ -115,9 +115,9 @@ export class WebsocketSignalManager implements SignalManager {
       return;
     }
     log('Will reconcile in 3 seconds');
-    this._reconcileTimeoutId = setTimeout(() => {
+    this._reconcileTimeoutId = setTimeout(async () => {
       this._reconcileTimeoutId = undefined;
-      this._reconcileJoinedTopics();
+      await this._reconcileJoinedTopics();
     }, 3_000);
   }
 
@@ -146,7 +146,7 @@ export class WebsocketSignalManager implements SignalManager {
   signal (msg: SignalApi.SignalMessage) {
     log(`Signal ${msg.remoteId}`);
     for (const server of this._servers.values()) {
-      server.signal(msg);
+      void server.signal(msg);
       // TODO(marik-d): Error handling.
     }
   }

@@ -70,7 +70,7 @@ describe('Network manager', () => {
       plugin1.on('receive', mockReceive);
 
       plugin2.on('connect', async () => {
-        plugin2.send(peer1Id.asBuffer(), 'Foo');
+        await plugin2.send(peer1Id.asBuffer(), 'Foo');
       });
 
       await waitForExpect(() => {
@@ -149,7 +149,7 @@ describe('Network manager', () => {
       plugin1.on('receive', mockReceive);
 
       plugin2.on('connect', async () => {
-        plugin2.send(peer1Id.asBuffer(), 'Foo');
+        await plugin2.send(peer1Id.asBuffer(), 'Foo');
       });
 
       await waitForExpect(() => {
@@ -169,7 +169,7 @@ describe('Network manager', () => {
         plugin1.on('receive', mockReceive);
 
         plugin2.on('connect', async () => {
-          plugin2.send(peer1Id.asBuffer(), 'Foo');
+          await plugin2.send(peer1Id.asBuffer(), 'Foo');
         });
 
         await waitForExpect(() => {
@@ -201,10 +201,10 @@ describe('Network manager', () => {
       pluginB1.on('receive', mockReceiveB);
 
       pluginA2.on('connect', async () => {
-        pluginA2.send(peerA1Id.asBuffer(), 'Foo A');
+        await pluginA2.send(peerA1Id.asBuffer(), 'Foo A');
       });
       pluginB2.on('connect', async () => {
-        pluginB2.send(peerB1Id.asBuffer(), 'Foo B');
+        await pluginB2.send(peerB1Id.asBuffer(), 'Foo B');
       });
 
       await waitForExpect(() => {
@@ -230,7 +230,7 @@ describe('Network manager', () => {
             const { peerId } = protocol.getSession() ?? {};
             const remoteId = PublicKey.from(peerId);
 
-            plugin.send(remoteId.asBuffer(), 'ping');
+            await plugin.send(remoteId.asBuffer(), 'ping');
           });
 
           plugin.on('receive', (protocol: Protocol, data: any) => {
@@ -238,7 +238,7 @@ describe('Network manager', () => {
             const remoteId = PublicKey.from(peerId);
 
             if (data === 'ping') {
-              plugin.send(remoteId.asBuffer(), 'pong');
+              await plugin.send(remoteId.asBuffer(), 'pong');
             } else if (data === 'pong') {
               pongReceived();
             } else {
@@ -373,7 +373,7 @@ describe('Network manager', () => {
 
           const peer = r.peers.get(this.peerId)!;
 
-          peer.networkManager.leaveProtocolSwarm(m.topic);
+          await peer.networkManager.leaveProtocolSwarm(m.topic);
           peer.presence = undefined;
 
           await assertState(m, r);

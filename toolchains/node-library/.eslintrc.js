@@ -7,7 +7,7 @@ module.exports = {
     'no-use-before-define': 'off',
     '@typescript-eslint/no-namespace': 'off',
     'standard/no-callback-literal': 'off',
-    "jest/no-conditional-expect": 'off',
+    'jest/no-conditional-expect': 'off',
     '@typescript-eslint/no-unused-vars': [
       'error',
       {

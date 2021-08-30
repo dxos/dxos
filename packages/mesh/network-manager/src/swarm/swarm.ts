@@ -243,9 +243,9 @@ export class Swarm {
       this._closeConnection(remoteId).catch(err => this.errors.raise(err));
     });
 
-    connection.stateChanged.waitFor(s => s === ConnectionState.CONNECTED).then(() => this.connected.emit(remoteId));
+    void connection.stateChanged.waitFor(s => s === ConnectionState.CONNECTED).then(() => this.connected.emit(remoteId));
 
-    connection.stateChanged.waitFor(s => s === ConnectionState.CLOSED).then(() => {
+    void connection.stateChanged.waitFor(s => s === ConnectionState.CLOSED).then(() => {
       log(`Connection closed topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
       // Connection might have been already closed or replace by a different one. Only remove the connection if it has the same session id.
       if (this._connections.get(remoteId)?.sessionId.equals(sessionId)) {

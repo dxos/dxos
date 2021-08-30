@@ -38,7 +38,7 @@ const Keys = () => {
   const [keys, setKeys] = useState([]);
 
   useEffect(() => {
-    bridge.send('keyring.keys', { }).then(keys => setKeys(keys));
+    void bridge.send('keyring.keys', { }).then(keys => setKeys(keys));
   }, [bridge]);
 
   return (
