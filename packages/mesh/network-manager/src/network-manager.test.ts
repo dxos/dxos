@@ -273,11 +273,23 @@ describe('Network manager', () => {
 
       async function assertState (m: Model, r: Real) {
         await waitForExpect(() => {
-          r.peers.forEach(peer => {
+          for(const peer of r.peers.values()) {
             if (peer.presence) {
-              expect(Array.from(m.joinedPeers.values()).every(peerId => peer.presence!.peers.some(x => PublicKey.equals(peerId, x)))).toEqual(true);
+              for(const expectedJoinedPeer of m.joinedPeers) {
+                if(expectedJoinedPeer.equals(peer.presence.peerId)) {
+                  continue;
+                }
+
+                const actuallyConnectedPeers = peer.presence!.peers;
+                expect(
+                  actuallyConnectedPeers.some(x => PublicKey.equals(expectedJoinedPeer, x)),
+                  {
+                    extraMessage: `Expected ${expectedJoinedPeer} to be in the list of joined peers of peer ${peer.presence.peerId.toString('hex')}, actually connected peers: ${actuallyConnectedPeers.map(x => x.toString('hex'))}`
+                  },
+                ).toEqual(true);
+              }
             }
-          });
+          }
         }, 1_000);
 
         r.peers.forEach(peer => peer.networkManager.topics.forEach(topic => {
@@ -291,6 +303,8 @@ describe('Network manager', () => {
         check = (m: Model) => !m.peers.has(this.peerId);
 
         async run (m: Model, r: Real) {
+          console.log(this.toString());
+
           m.peers.add(this.peerId);
 
           const networkManager = new NetworkManager();
@@ -312,6 +326,8 @@ describe('Network manager', () => {
         check = (m: Model) => m.peers.has(this.peerId);
 
         async run (m: Model, r: Real) {
+          console.log(this.toString());
+
           m.peers.delete(this.peerId);
           m.joinedPeers.delete(this.peerId);
 
@@ -333,6 +349,8 @@ describe('Network manager', () => {
           !m.joinedPeers.has(this.peerId);
 
         async run (m: Model, r: Real) {
+          console.log(this.toString());
+
           m.joinedPeers.add(this.peerId);
 
           const peer = r.peers.get(this.peerId)!;
@@ -370,6 +388,8 @@ describe('Network manager', () => {
           m.joinedPeers.has(this.peerId);
 
         async run (m: Model, r: Real) {
+          console.log(this.toString());
+
           m.joinedPeers.delete(this.peerId);
 
           const peer = r.peers.get(this.peerId)!;
