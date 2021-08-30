@@ -8,4 +8,4 @@
   base = "docs/"
   publish = "public/"
   command = "yarn build"
-  ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF . ../packages/"
+  ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF ."
