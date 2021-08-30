@@ -57,29 +57,14 @@ const createPeer = async ({
 };
 
 describe('Network manager', () => {
-  describe('WebRTC transport', () => {
-    let topic: PublicKey;
-    let peer1Id: PublicKey;
-    let peer2Id: PublicKey;
-    let broker: Awaited<ReturnType<typeof createTestBroker>>;
-
-    before(async function () {
-      broker = await createTestBroker(signalApiPort);
-    });
-
-    after(async function () {
-      await broker?.stop();
-    });
-
-    beforeEach(() => {
-      topic = PublicKey.random();
-      peer1Id = PublicKey.random();
-      peer2Id = PublicKey.random();
-    });
-
+  function sharedTests(inMemory: boolean) {
     test('two peers connect to each other', async () => {
-      const { plugin: plugin1, networkManager: nm1 } = await createPeer({ topic, peerId: peer1Id });
-      const { plugin: plugin2, networkManager: nm2 } = await createPeer({ topic, peerId: peer2Id });
+      const topic = PublicKey.random();
+      const peer1Id = PublicKey.random();
+      const peer2Id = PublicKey.random();
+
+      const { plugin: plugin1, networkManager: nm1 } = await createPeer({ topic, peerId: peer1Id, inMemory });
+      const { plugin: plugin2, networkManager: nm2 } = await createPeer({ topic, peerId: peer2Id, inMemory });
 
       const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
       plugin1.on('receive', mockReceive);
@@ -89,6 +74,8 @@ describe('Network manager', () => {
       });
 
       await waitForExpect(() => {
+        expect(plugin1.initCalled).toEqual(true)
+        expect(plugin2.initCalled).toEqual(true)
         expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
       });
 
@@ -97,8 +84,12 @@ describe('Network manager', () => {
     }).timeout(10_000);
 
     test('join and leave swarm', async () => {
-      const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id });
-      const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id });
+      const topic = PublicKey.random();
+      const peer1Id = PublicKey.random();
+      const peer2Id = PublicKey.random();
+      
+      const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, inMemory });
+      const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, inMemory });
 
       await Promise.all([
         Event.wrap(plugin1, 'connect').waitForCount(1),
@@ -125,6 +116,30 @@ describe('Network manager', () => {
       await networkManager2.destroy();
       log('Peer2 destroyed');
     }).timeout(10_000);
+  }
+
+
+  describe('WebRTC transport', () => {
+    let topic: PublicKey;
+    let peer1Id: PublicKey;
+    let peer2Id: PublicKey;
+    let broker: Awaited<ReturnType<typeof createTestBroker>>;
+
+    before(async function () {
+      broker = await createTestBroker(signalApiPort);
+    });
+
+    after(async function () {
+      await broker?.stop();
+    });
+
+    beforeEach(() => {
+      topic = PublicKey.random();
+      peer1Id = PublicKey.random();
+      peer2Id = PublicKey.random();
+    });
+
+    sharedTests(false);  
 
     it.skip('two peers with different signal & turn servers', async () => {
       const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signal: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'], ice: [{ urls: 'turn:apollo3.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }] });
@@ -166,28 +181,7 @@ describe('Network manager', () => {
   }).timeout(10_000);
 
   describe('In-memory transport', () => {
-    test('two peers connect to each other', async () => {
-      const topic = PublicKey.random();
-      const peer1Id = PublicKey.random();
-      const peer2Id = PublicKey.random();
-
-      const { networkManager: nm1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, inMemory: true });
-      const { networkManager: nm2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, inMemory: true });
-
-      const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
-      plugin1.on('receive', mockReceive);
-
-      plugin2.on('connect', async () => {
-        plugin2.send(peer1Id.asBuffer(), 'Foo');
-      });
-
-      await waitForExpect(() => {
-        expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
-      });
-
-      nm1.destroy();
-      nm2.destroy();
-    }).timeout(10_000);
+    sharedTests(true);
 
     test('two swarms at the same time', async () => {
       const topicA = PublicKey.random();
