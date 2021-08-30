@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { WebRTCTest, InMemoryTests} from './network-manager.blueprint-test';
+import { WebRTCTest } from './network-manager.blueprint-test';
 
 describe('Network manager', () => {
   describe('WebRTC transport', () => {

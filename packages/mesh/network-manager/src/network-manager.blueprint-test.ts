@@ -119,6 +119,7 @@ function sharedTests (inMemory: boolean) {
   }).timeout(10_000);
 }
 
+// eslint-disable-next-line jest/no-export
 export function WebRTCTest () {
   let topic: PublicKey;
   let peer1Id: PublicKey;
@@ -138,10 +139,10 @@ export function WebRTCTest () {
     const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, signal: ['wss://apollo2.kube.moon.dxos.network/dxos/signal'], ice: [{ urls: 'turn:apollo2.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }] });
 
     const received: any[] = [];
-      const mockReceive = (p: Protocol, s: string) => {
-        received.push(p, s);
-        return undefined;
-      };
+    const mockReceive = (p: Protocol, s: string) => {
+      received.push(p, s);
+      return undefined;
+    };
     plugin1.on('receive', mockReceive);
 
     plugin2.on('connect', async () => {
@@ -183,7 +184,8 @@ export function WebRTCTest () {
   });
 }
 
-export function InMemoryTests() {
+// eslint-disable-next-line jest/no-export
+export function InMemoryTests () {
   sharedTests(true);
 
   it('two swarms at the same time', async () => {
