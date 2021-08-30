@@ -38,6 +38,8 @@ export class TestProtocolPlugin extends EventEmitter {
   /** @type {Boolean} */
   _uppercase;
 
+  initCalled = false;
+
   /**
    * Test Protocol. Passes through messages unchanged, or folds to upper case.
    * Provides a way to test that two protocols with different behavior are
@@ -46,8 +48,8 @@ export class TestProtocolPlugin extends EventEmitter {
    * @param {Boolean} uppercase Fold payload case to upper if set.
    */
   constructor (peerId: Buffer, uppercase = false) {
-    assert(Buffer.isBuffer(peerId));
     super();
+    assert(Buffer.isBuffer(peerId));
 
     // TODO(dboreham): Mis-named because this is OUR node ID, not the id of any peer.
     this._peerId = peerId;
@@ -78,6 +80,7 @@ export class TestProtocolPlugin extends EventEmitter {
    */
   createExtension () {
     return new Extension(EXTENSION_NAME, { binary: true })
+      .setInitHandler(this._init.bind(this))
       .setMessageHandler(this._receive.bind(this))
       .setHandshakeHandler(this._onPeerConnect.bind(this))
       .setCloseHandler(this._onPeerDisconnect.bind(this));
@@ -101,6 +104,10 @@ export class TestProtocolPlugin extends EventEmitter {
     const encoded = Buffer.from(payload);
     log('Sent to %s: %s', peerIdStr, payload);
     return await extension.send(encoded, { oneway: true });
+  }
+
+  private async _init (protocol: Protocol) {
+    this.initCalled = true;
   }
 
   async _receive (protocol: Protocol, data: any) {

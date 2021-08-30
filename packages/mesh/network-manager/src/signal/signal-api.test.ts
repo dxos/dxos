@@ -6,9 +6,9 @@ import { expect, mockFn } from 'earljs';
 import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
-import { sleep } from '@dxos/async';
+import { Awaited, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { createBroker } from '@dxos/signal';
+import { createTestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
 import { SignalApi } from './signal-api';
@@ -20,7 +20,7 @@ describe('SignalApi', () => {
   let api: SignalApi;
   let api2: SignalApi;
 
-  let broker: ReturnType<typeof createBroker>;
+  let broker: Awaited<ReturnType<typeof createTestBroker>>;
   const signalApiPort = randomInt(10000, 50000);
   const signalApiUrl = 'http://0.0.0.0:' + signalApiPort;
 
@@ -29,14 +29,8 @@ describe('SignalApi', () => {
   const signalApiUrl2 = 'http://0.0.0.0:' + signalApiPort2;
 
   before(async function () {
-    this.timeout(0);
-    const brokerTopic = PublicKey.random();
-    broker = createBroker(brokerTopic.asBuffer(), { port: signalApiPort, logger: false, hyperswarm: { bootstrap: false } });
-    // broker2 = createBroker(brokerTopic.asBuffer(), { port: signalApiPort2, logger: false });
-    await Promise.all([
-      broker.start()
-      // broker2.start()
-    ]);
+    broker = await createTestBroker(signalApiPort);
+    // broker2 = await createTestBroker(signalApiPort2);
   });
 
   beforeEach(() => {
