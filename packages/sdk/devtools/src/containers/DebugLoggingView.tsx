@@ -24,15 +24,15 @@ export const DebugLoggingView = () => {
     fetchNamespaces().catch(console.error);
   }, []);
 
-  const handleEnableLogging = () => {
+  const handleEnableLogging = async () => {
     const allNamespaces = '*';
     setNamespaces(allNamespaces);
-    bridge.send('debug-logging.enable', allNamespaces);
+    await bridge.send('debug-logging.enable', allNamespaces);
   };
 
-  const handleDisableLogging = () => {
+  const handleDisableLogging = async () => {
     setNamespaces('');
-    bridge.send('debug-logging.disable', null);
+    await bridge.send('debug-logging.disable', null);
   };
 
   const handleCustomLogging = async () => {

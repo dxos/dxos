@@ -60,5 +60,5 @@ class TestAgent extends Bot {
 }
 
 if (!module.parent) {
-  new TestAgent(getConfig(), {}).start();
+  void new TestAgent(getConfig(), {}).start();
 }
