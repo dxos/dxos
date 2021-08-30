@@ -21,22 +21,29 @@ import { inviteTestPeer } from './util';
 const log = debug('dxos:echo:test');
 
 describe('ECHO', () => {
-  const setup = async (createProfile: boolean) => {
+  interface SetupOptions {
+    createProfile?: boolean
+    displayName?: string
+  }
+
+  const setup = async ({ createProfile, displayName }: SetupOptions = {}) => {
     const echo = new ECHO();
 
     await echo.open();
     afterTest(() => echo.close());
 
     if (createProfile) {
-      await echo.halo.createIdentity(createKeyPair());
-      await echo.halo.create();
+      await echo.halo.createIdentity({
+        ...createKeyPair()
+      });
+      await echo.halo.create(displayName);
     }
 
     return echo;
   };
 
   test('create party and update properties.', async () => {
-    const echo = await setup(true);
+    const echo = await setup({ createProfile: true });
     const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
@@ -48,7 +55,7 @@ describe('ECHO', () => {
   });
 
   test('create party and items.', async () => {
-    const echo = await setup(true);
+    const echo = await setup({ createProfile: true });
     const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
     expect(parties.value).toHaveLength(0);
@@ -90,7 +97,7 @@ describe('ECHO', () => {
   });
 
   test('create party and item with child item.', async () => {
-    const echo = await setup(true);
+    const echo = await setup({ createProfile: true });
 
     const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
@@ -131,7 +138,7 @@ describe('ECHO', () => {
   });
 
   test('create party, two items with child items, and then move child.', async () => {
-    const echo = await setup(true);
+    const echo = await setup({ createProfile: true });
 
     const parties = echo.queryParties({ open: true });
     log('Parties:', parties.value.map(party => party.key.humanize()));
@@ -163,7 +170,7 @@ describe('ECHO', () => {
   });
 
   test('cold start with party', async () => {
-    const echo = await setup(true);
+    const echo = await setup({ createProfile: true });
     const party = await echo.createParty();
 
     await echo.close();
@@ -177,8 +184,8 @@ describe('ECHO', () => {
   }).timeout(10_000);
 
   test('cold start from replicated party', async () => {
-    const echo1 = await setup(true);
-    const echo2 = await setup(true);
+    const echo1 = await setup({ createProfile: true });
+    const echo2 = await setup({ createProfile: true });
 
     const party1 = await echo1.createParty();
     await inviteTestPeer(party1, echo2);
@@ -199,7 +206,7 @@ describe('ECHO', () => {
   });
 
   test('create party and items with props', async () => {
-    const echo = await setup(true);
+    const echo = await setup({ createProfile: true });
 
     const party = await echo.createParty();
 
@@ -256,8 +263,8 @@ describe('ECHO', () => {
   });
 
   test('One user, two devices', async () => {
-    const a = await setup(true);
-    const b = await setup(false);
+    const a = await setup({ createProfile: true });
+    const b = await setup();
 
     expect(a.halo.isInitialized).toEqual(true);
     expect(b.halo.isInitialized).toEqual(false);
@@ -318,10 +325,10 @@ describe('ECHO', () => {
   }).timeout(10_000);
 
   test('Two users, two devices each', async () => {
-    const a1 = await setup(true);
-    const a2 = await setup(false);
-    const b1 = await setup(true);
-    const b2 = await setup(false);
+    const a1 = await setup({ createProfile: true });
+    const a2 = await setup();
+    const b1 = await setup({ createProfile: true });
+    const b2 = await setup();
 
     expect(a1.halo.isInitialized).toBeTruthy();
     expect(a2.halo.isInitialized).toBeFalsy();
@@ -421,7 +428,7 @@ describe('ECHO', () => {
     await a.halo.createIdentity(keyPairFromSeedPhrase(seedPhrase));
     await a.halo.create();
 
-    const b = await setup(false);
+    const b = await setup();
 
     expect(a.halo.isInitialized).toBeTruthy();
     expect(b.halo.isInitialized).toBeFalsy();
@@ -463,8 +470,8 @@ describe('ECHO', () => {
   }).timeout(10_000);
 
   test('Contacts', async () => {
-    const a = await setup(true);
-    const b = await setup(true);
+    const a = await setup({ createProfile: true });
+    const b = await setup({ createProfile: true });
 
     const updatedA = a.halo.queryContacts().update.waitFor(contacts => contacts.some(c => b.halo.identityKey?.publicKey.equals(c.publicKey)));
     const updatedB = b.halo.queryContacts().update.waitFor(contacts => contacts.some(c => a.halo.identityKey?.publicKey.equals(c.publicKey)));
@@ -488,7 +495,7 @@ describe('ECHO', () => {
   });
 
   test('Deactivating and activating party.', async () => {
-    const a = await setup(true);
+    const a = await setup({ createProfile: true });
     const partyA = await a.createParty();
 
     expect(partyA.isOpen).toBe(true);
@@ -512,7 +519,7 @@ describe('ECHO', () => {
   });
 
   test('Deactivating and activating party, setting properties after', async () => {
-    const a = await setup(true);
+    const a = await setup({ createProfile: true });
     const partyA = await a.createParty();
 
     expect(partyA.isOpen).toBe(true);
@@ -537,7 +544,7 @@ describe('ECHO', () => {
   });
 
   test('Deactivate Party - single device', async () => {
-    const a = await setup(true);
+    const a = await setup({ createProfile: true });
     const partyA = await a.createParty();
     const partyB = await a.createParty();
 
@@ -568,7 +575,7 @@ describe('ECHO', () => {
   });
 
   test('Deactivate Party - retrieving items', async () => {
-    const a = await setup(true);
+    const a = await setup({ createProfile: true });
     const partyA = await a.createParty();
 
     expect(partyA.isOpen).toBe(true);
@@ -611,8 +618,8 @@ describe('ECHO', () => {
   }).timeout(10_000);
 
   test('Deactivate Party - multi device', async () => {
-    const a = await setup(true);
-    const b = await setup(false);
+    const a = await setup({ createProfile: true });
+    const b = await setup();
 
     {
       const invitation = await a.halo.createInvitation(defaultInvitationAuthenticator);
@@ -656,13 +663,13 @@ describe('ECHO', () => {
     await a.halo.create();
 
     // User's other device, joined by device invitation
-    const b = await setup(false);
+    const b = await setup();
 
     // User's  other device, joined by seed phrase recovery.
-    const c = await setup(false);
+    const c = await setup();
 
     // Another user in the party.
-    const d = await setup(true);
+    const d = await setup({ createProfile: true });
 
     const partyA = await a.createParty();
     expect(partyA.isOpen).toBe(true);
@@ -705,13 +712,32 @@ describe('ECHO', () => {
 
     for (const _party of [partyA, partyB, partyC]) {
       await waitForCondition(() => _party.getProperty('title') === 'Test', 3000);
+      await waitForCondition(() => _party.title === 'Test', 3000);
       expect(_party.title).toEqual('Test');
     }
 
     // For the other member of the party, title propagates correctly as well
     await waitForCondition(() => partyD.getProperty('title') === 'Test', 3000);
+    await waitForCondition(() => partyD.title === 'Test', 3000);
     expect(partyD.title).toEqual('Test'); // However this does not
   }).retries(1);
+
+  test('invited party member has his display name available', async () => {
+    const a = await setup({ createProfile: true, displayName: 'A' });
+    const b = await setup({ createProfile: true, displayName: 'B' });
+
+    const partyA = await a.createParty();
+
+    const membersPromise = partyA.queryMembers().waitFor(members => members.length === 2);
+
+    const invitation = await partyA.createInvitation(defaultInvitationAuthenticator);
+    await b.joinParty(invitation, defaultSecretProvider);
+
+    const members = await membersPromise;
+
+    expect(members[0].displayName).toBe('A');
+    expect(members[1].displayName).toBe('B');
+  });
 
   // TODO(burdon): Fix.
   // Note: The reason I wrote this test is because it does not seem to be working properly in Teamwork.
