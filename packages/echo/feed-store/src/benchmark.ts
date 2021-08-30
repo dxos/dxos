@@ -10,7 +10,7 @@ import { FeedStore } from './feed-store';
 
 const range = (n: number) => [...Array(n).keys()];
 
-(async () => {
+void (async () => {
   const maxFeeds = 5;
   const maxMessages = 1000;
   const expectedMessages = maxFeeds * maxMessages;

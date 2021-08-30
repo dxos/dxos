@@ -95,7 +95,7 @@ describe('FeedDescriptor', () => {
       secretKey
     });
 
-    fd2.open();
+    await fd2.open();
     await expect(fd2.close()).resolves.toBeUndefined();
     expect(fd.opened).toBe(false);
   });
@@ -139,7 +139,7 @@ describe('FeedDescriptor', () => {
     fd.watch(event => {
       expect(event).toBe('opened');
       fd.watch(null);
-      fd.close().then(done);
+      void fd.close().then(done);
     });
 
     await fd.open();

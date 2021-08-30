@@ -12,7 +12,7 @@ import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
 import { compileSchema } from './type-generator';
 
-(async () => {
+void (async () => {
   const { version } = await readPkg();
 
   const parser = new ArgumentParser({
@@ -32,5 +32,5 @@ import { compileSchema } from './type-generator';
 
   logger.logCompilationOptions(substitutionsModule, protoFilePaths, outDirPath);
 
-  compileSchema(substitutionsModule, protoFilePaths, outDirPath);
+  await compileSchema(substitutionsModule, protoFilePaths, outDirPath);
 })();

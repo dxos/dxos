@@ -46,7 +46,7 @@ export const useRegistryBotFactories = () => {
       })));
     };
 
-    queryRegistry();
+    void queryRegistry();
   }, [registry]);
 
   return factories;

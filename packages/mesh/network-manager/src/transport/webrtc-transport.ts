@@ -66,13 +66,13 @@ export class WebrtcTransport implements Transport {
 
       this.connected.emit();
     });
-    this._peer.on('error', err => {
+    this._peer.on('error', async (err) => {
       this.errors.raise(err);
-      this.close();
+      await this.close();
     });
-    this._peer.on('close', () => {
+    this._peer.on('close', async () => {
       log(`Connection closed ${this._ownId} -> ${this._remoteId}`);
-      this._closeStream();
+      await this._closeStream();
       this.closed.emit();
     });
   }
@@ -95,7 +95,7 @@ export class WebrtcTransport implements Transport {
   }
 
   async close () {
-    this._closeStream();
+    await this._closeStream();
     this._peer!.destroy();
     log('Closed.');
   }

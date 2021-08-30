@@ -614,7 +614,7 @@ describe('FeedStore', () => {
 
   test('openFeed should wait until FeedStore is ready', async () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
-    feedStore.open();
+    await feedStore.open();
     const publicKey = PublicKey.random();
     const feed = await feedStore.createReadOnlyFeed({ key: publicKey });
     expect(feed).toBeDefined();

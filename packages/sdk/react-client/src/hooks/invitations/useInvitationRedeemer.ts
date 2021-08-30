@@ -49,7 +49,7 @@ export const useInvitationRedeemer = ({
       client.echo
         .joinParty(invitation, !isOffline ? secretProvider : undefined)
         .then((party) => {
-          party.open().then(() => onDone(party));
+          void party.open().then(() => onDone(party));
         })
         .catch((error) => onError(error));
     } catch (error) {

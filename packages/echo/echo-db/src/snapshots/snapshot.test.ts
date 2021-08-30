@@ -31,7 +31,7 @@ test.skip('loading large party', async () => {
     const item = await party.database.createItem({ model: ObjectModel });
     itemId = item.id;
     for (let i = 0; i < 1_000; i++) {
-      item.model.setProperty('foo', i);
+      await item.model.setProperty('foo', i);
     }
     await item.model.setProperty('foo', 'done');
 

@@ -107,7 +107,7 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
 
   const handleKeyDown = (event: { key: string }) => {
     if (event.key === 'Enter') {
-      handleEnterInvitationCode();
+      void handleEnterInvitationCode();
     }
   };
 

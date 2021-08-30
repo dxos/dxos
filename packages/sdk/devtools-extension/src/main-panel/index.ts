@@ -16,7 +16,7 @@ initDevTool({
     onConnect(bridge);
 
     if (!injected) {
-      bridge.injectClientScript();
+      void bridge.injectClientScript();
     }
   },
 

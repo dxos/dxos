@@ -74,7 +74,7 @@ export class ExtensionInit extends Extension {
 
   async sendSession (userSession?: Record<string, any>) {
     // TODO(rzadp): Protobuf.
-    this.sendCommand('session', userSession);
+    void this.sendCommand('session', userSession);
 
     await this._sessionTrigger.wait();
   }
