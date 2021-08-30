@@ -412,7 +412,7 @@ export class FeedStore extends EventEmitter {
       this._readers.delete(reader);
     });
 
-    (async () => {
+    void (async () => {
       try {
         await reader.addInitialFeedStreams(this
           .getDescriptors()

@@ -81,4 +81,4 @@ async function readFiles (files: string[]): Promise<Record<string, string>> {
   return res;
 }
 
-main();
+void main();

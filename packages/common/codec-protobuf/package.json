@@ -31,7 +31,7 @@
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.12",
+    "@dxos/eslint-plugin": "~1.0.14",
     "@types/assert": "^1.5.4",
     "@types/jest": "^26.0.7",
     "@types/lodash.merge": "~4.6.6",

@@ -128,7 +128,7 @@ export class PartyManager {
       }
     }
 
-    await this._parties.clear();
+    this._parties.clear();
   }
 
   //
@@ -223,13 +223,7 @@ export class PartyManager {
     if (party.isOpen) {
       attachUpdateListeners();
     } else {
-      party.update.waitFor(() => {
-        if (party.isOpen) {
-          attachUpdateListeners();
-          return true;
-        }
-        return false;
-      });
+      void party.update.waitFor(() => party.isOpen).then(() => attachUpdateListeners());
     }
 
     this._parties.set(party.key, party);

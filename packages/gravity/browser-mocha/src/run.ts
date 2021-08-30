@@ -39,8 +39,8 @@ export async function runTests (bundleFile: string, browser: Browser, options: O
 
   const lock = new Lock();
 
-  page.on('pageerror', error => {
-    lock.executeSynchronized(async () => {
+  page.on('pageerror', async (error) => {
+    await lock.executeSynchronized(async () => {
       console.log(error);
     });
   });

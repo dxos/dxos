@@ -139,7 +139,7 @@ describe('Stream tests', () => {
       expect(feed.length).toBe(count.get(feed.key));
     }
 
-    feedStore.close();
+    await feedStore.close();
   });
 
   test('message serialization', () => {

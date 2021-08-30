@@ -78,7 +78,7 @@ export class WebsocketRpc {
         await promisify(this._socket.send.bind(this._socket) as any)(data);
       },
       subscribe: (next: (data: any) => void) => {
-        this._connectTrigger.wait().then(() => {
+        void this._connectTrigger.wait().then(() => {
           assert(this._socket, 'No socket');
           this._socket.onmessage = async e => {
             try {
@@ -163,7 +163,7 @@ export class WebsocketRpc {
     return this._rpc.emit('signal', data);
   }
 
-  async addHandler (method: string, handler: (data: any) => Promise<any>) {
+  addHandler (method: string, handler: (data: any) => Promise<any>) {
     this._rpc.actions({
       [method]: async (data: any) => {
         const begin = Date.now();
@@ -195,7 +195,7 @@ export class WebsocketRpc {
     });
   }
 
-  async subscribe (method: string, handler: (data: any) => void) {
+  subscribe (method: string, handler: (data: any) => void) {
     this._rpc.on(method, (data: any) => {
       this.commandTrace.emit({
         messageId: `${this._host}-${this._messageId++}`,

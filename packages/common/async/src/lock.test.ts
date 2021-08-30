@@ -71,7 +71,7 @@ describe('Lock', () => {
     });
 
     let resolved = false;
-    promise.then(() => {
+    void promise.then(() => {
       resolved = true;
     });
 

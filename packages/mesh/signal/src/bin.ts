@@ -62,7 +62,7 @@ yargs
       .update(argv.topic)
       .digest();
 
-    createBroker(topic, {
+    void createBroker(topic, {
       port: argv.port,
       hyperswarm: {
         bootstrap: argv.bootstrap ? argv.bootstrap.split(',') : undefined,

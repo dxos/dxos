@@ -11,7 +11,7 @@ import { ModelMessage } from '../types';
 import { TestModel } from './test-model';
 
 describe('test model', () => {
-  test('basic mutations', () => {
+  test('basic mutations', async () => {
     const itemId = createId();
     const model = new TestModel(TestModel.meta, itemId);
 
@@ -25,7 +25,7 @@ describe('test model', () => {
     // Set mutation
     const { publicKey: feedKey } = createKeyPair();
 
-    model.processMessage({ feedKey, seq: 1, memberKey: feedKey }, { key: 'title', value: 'DXOS' });
+    await model.processMessage({ feedKey, seq: 1, memberKey: feedKey }, { key: 'title', value: 'DXOS' });
     expect(model.getProperty('title')).toBe('DXOS');
     expect(model.keys).toHaveLength(1);
   });

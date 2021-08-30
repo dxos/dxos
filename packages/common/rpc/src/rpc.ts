@@ -116,7 +116,7 @@ export class RpcPeer {
       const req = decoded.request;
       if (req.stream) {
         this._callStreamHandler(req, response => {
-          this._sendMessage({ response });
+          void this._sendMessage({ response });
         });
       } else {
         const response = await this._callHandler(req);
@@ -257,7 +257,7 @@ export class RpcPeer {
   }
 
   private async _sendMessage (message: RpcMessage) {
-    this._options.port.send(codec.encode(message));
+    await this._options.port.send(codec.encode(message));
   }
 
   private async _callHandler (req: Request): Promise<Response> {

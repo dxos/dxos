@@ -66,7 +66,7 @@ export const useRegistryBots = (props: UseRegistryBotsProps = {}) => {
       }
     };
 
-    queryRegistry();
+    void queryRegistry();
   }, [registry]);
 
   return registryBots;

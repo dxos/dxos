@@ -33,7 +33,7 @@ export class Network extends EventEmitter {
     this._lastUpdate = lru(1000);
 
     this.publish = debounce(() => {
-      this._limit(() => {
+      void this._limit(() => {
         this._limit.clearQueue();
         return publish({ timestamp: timestamp(), connections: this.getConnections() });
       });
