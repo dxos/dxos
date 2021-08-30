@@ -17,7 +17,7 @@ import { Extension, Protocol } from '@dxos/protocol';
 
 import { schema } from './proto/gen';
 
-const log = debug('presence');
+const log = debug('dxos:mesh:presence');
 
 export interface PresenceOptions {
   peerTimeout?: number
@@ -118,7 +118,11 @@ export class PresencePlugin extends EventEmitter {
       return;
     }
 
+    log('Start');
+
     this._broadcast.open();
+
+    this.ping();
 
     this._scheduler = setInterval(() => {
       this._pingLimit();
@@ -127,6 +131,8 @@ export class PresencePlugin extends EventEmitter {
   }
 
   stop () {
+    log('Stop');
+
     this._broadcast.close();
     if (this._scheduler !== null) {
       clearInterval(this._scheduler);
@@ -239,6 +245,8 @@ export class PresencePlugin extends EventEmitter {
     assert(protocol);
     const { peerId } = protocol.getSession() ?? {};
 
+    log(`_addPeer ${peerId}`);
+
     if (!peerId) {
       this.emit('error', new Error('peerId not found'));
       return;
@@ -261,6 +269,9 @@ export class PresencePlugin extends EventEmitter {
   private async _removePeer (protocol: Protocol) {
     assert(protocol);
     const { peerId } = protocol.getSession() ?? {};
+
+    log(`_removePeer ${peerId}`);
+
     if (!peerId) {
       return;
     }
