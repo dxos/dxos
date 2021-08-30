@@ -6,8 +6,9 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { promiseTimeout } from '@dxos/async';
 import {
-  Keyring, KeyType, createPartyGenesisMessage, createFeedAdmitMessage, createKeyAdmitMessage, createEnvelopeMessage
+  Keyring, KeyType, createPartyGenesisMessage, createFeedAdmitMessage, createKeyAdmitMessage, createEnvelopeMessage, createIdentityInfoMessage
 } from '@dxos/credentials';
 import { IHaloStream } from '@dxos/echo-protocol';
 
@@ -151,5 +152,49 @@ describe('party-processor', () => {
     expect(partyProcessor.getFeedOwningMember(feedKey2.publicKey)).toEqual(identityKey2.publicKey);
 
     log(partyProcessor.feedKeys);
+  });
+
+  test('identity info message sets display name & fires a keyOrInfoAdded event', async () => {
+    const keyring = new Keyring();
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    const identityKey2 = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
+
+    const partyProcessor = new PartyProcessor(partyKey.publicKey);
+    expect(partyProcessor.partyKey).toBeTruthy();
+
+    const meta = (seq: number) => ({ feedKey: feedKey.publicKey.asUint8Array(), seq });
+
+    await partyProcessor.processMessage({
+      meta: meta(0),
+      data: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey)
+    });
+
+    const firedOnce = partyProcessor.keyOrInfoAdded.waitForCount(1);
+    const firedTwice = partyProcessor.keyOrInfoAdded.waitForCount(2);
+
+    partyProcessor.keyOrInfoAdded.on(() => console.log('keyOrInfoAdded'));
+
+    await partyProcessor.processMessage({
+      meta: meta(1),
+      data: createKeyAdmitMessage(keyring, partyKey.publicKey, identityKey2, [identityKey])
+    });
+
+    await promiseTimeout(firedOnce, 100, new Error('Expected event to be fired.'));
+
+    await partyProcessor.processMessage({
+      meta: meta(2),
+      data: createEnvelopeMessage(
+        keyring,
+        partyKey.publicKey,
+        createIdentityInfoMessage(keyring, 'Test user', identityKey2),
+        [identityKey2]
+      )
+    });
+
+    await promiseTimeout(firedTwice, 100, new Error('Expected event to be fired.'));
+
+    expect(partyProcessor.getMemberInfo(identityKey2.publicKey)?.displayName).toEqual('Test user');
   });
 });

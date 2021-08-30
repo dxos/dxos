@@ -7,4 +7,4 @@ export enum IdentityEventType {
   UPDATE_IDENTITY = 'update:identityinfo'
 }
 
-export const IdentityEvents = Object.keys(IdentityEventType);
+export const IdentityEvents = Object.values(IdentityEventType);
