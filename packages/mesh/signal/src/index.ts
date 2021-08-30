@@ -4,3 +4,4 @@
 
 export * from './broker';
 export * from './transporter';
+export * from './testing';
