@@ -220,7 +220,7 @@ describe('Network manager', () => {
       });
     });
 
-    test.skip('large amount of peers and connections', async () => {
+    test('large amount of peers and connections', async () => {
       const numTopics = 5;
       const peersPerTopic = 5;
 
