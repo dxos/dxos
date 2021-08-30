@@ -36,7 +36,8 @@
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/mocha": "~8.2.2",
-    "expect": "~27.0.2"
+    "expect": "~27.0.2",
+    "@dxos/object-model": "workspace:*"
   },
   "publishConfig": {
     "access": "restricted"
