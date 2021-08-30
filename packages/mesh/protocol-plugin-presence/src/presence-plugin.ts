@@ -122,7 +122,7 @@ export class PresencePlugin extends EventEmitter {
 
     this._broadcast.open();
 
-    this.ping();
+    void this.ping();
 
     this._scheduler = setInterval(() => {
       this._pingLimit();
