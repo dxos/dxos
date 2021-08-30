@@ -18,7 +18,7 @@ import { afterTest } from '@dxos/testutils';
 import { range, randomInt, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from './network-manager';
-import { protocolFactory } from './protocol-factory';
+import { createProtocolFactory } from './protocol-factory';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
 
@@ -57,7 +57,7 @@ const createPeer = async ({
 };
 
 describe('Network manager', () => {
-  function sharedTests(inMemory: boolean) {
+  function sharedTests (inMemory: boolean) {
     test('two peers connect to each other', async () => {
       const topic = PublicKey.random();
       const peer1Id = PublicKey.random();
@@ -74,8 +74,8 @@ describe('Network manager', () => {
       });
 
       await waitForExpect(() => {
-        expect(plugin1.initCalled).toEqual(true)
-        expect(plugin2.initCalled).toEqual(true)
+        expect(plugin1.initCalled).toEqual(true);
+        expect(plugin2.initCalled).toEqual(true);
         expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
       });
 
@@ -87,7 +87,7 @@ describe('Network manager', () => {
       const topic = PublicKey.random();
       const peer1Id = PublicKey.random();
       const peer2Id = PublicKey.random();
-      
+
       const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, inMemory });
       const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, inMemory });
 
@@ -118,7 +118,6 @@ describe('Network manager', () => {
     }).timeout(10_000);
   }
 
-
   describe('WebRTC transport', () => {
     let topic: PublicKey;
     let peer1Id: PublicKey;
@@ -139,7 +138,7 @@ describe('Network manager', () => {
       peer2Id = PublicKey.random();
     });
 
-    sharedTests(false);  
+    sharedTests(false);
 
     it.skip('two peers with different signal & turn servers', async () => {
       const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signal: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'], ice: [{ urls: 'turn:apollo3.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }] });
@@ -252,7 +251,7 @@ describe('Network manager', () => {
       }));
     });
 
-    test.skip('property-based test', async () => {
+    test('property-based test', async () => {
       interface Model {
         topic: PublicKey
         peers: ComplexSet<PublicKey>
@@ -267,10 +266,10 @@ describe('Network manager', () => {
 
       async function assertState (m: Model, r: Real) {
         await waitForExpect(() => {
-          for(const peer of r.peers.values()) {
+          for (const peer of r.peers.values()) {
             if (peer.presence) {
-              for(const expectedJoinedPeer of m.joinedPeers) {
-                if(expectedJoinedPeer.equals(peer.presence.peerId)) {
+              for (const expectedJoinedPeer of m.joinedPeers) {
+                if (expectedJoinedPeer.equals(peer.presence.peerId)) {
                   continue;
                 }
 
@@ -279,12 +278,12 @@ describe('Network manager', () => {
                   actuallyConnectedPeers.some(x => PublicKey.equals(expectedJoinedPeer, x)),
                   {
                     extraMessage: `Expected ${expectedJoinedPeer} to be in the list of joined peers of peer ${peer.presence.peerId.toString('hex')}, actually connected peers: ${actuallyConnectedPeers.map(x => x.toString('hex'))}`
-                  },
+                  }
                 ).toEqual(true);
               }
             }
           }
-        }, 1_000);
+        }, 5_000);
 
         r.peers.forEach(peer => peer.networkManager.topics.forEach(topic => {
           peer.networkManager.getSwarm(topic)!.errors.assertNoUnhandledErrors();
@@ -297,8 +296,6 @@ describe('Network manager', () => {
         check = (m: Model) => !m.peers.has(this.peerId);
 
         async run (m: Model, r: Real) {
-          console.log(this.toString());
-
           m.peers.add(this.peerId);
 
           const networkManager = new NetworkManager();
@@ -320,8 +317,6 @@ describe('Network manager', () => {
         check = (m: Model) => m.peers.has(this.peerId);
 
         async run (m: Model, r: Real) {
-          console.log(this.toString());
-
           m.peers.delete(this.peerId);
           m.joinedPeers.delete(this.peerId);
 
@@ -343,20 +338,12 @@ describe('Network manager', () => {
           !m.joinedPeers.has(this.peerId);
 
         async run (m: Model, r: Real) {
-          console.log(this.toString());
-
           m.joinedPeers.add(this.peerId);
 
           const peer = r.peers.get(this.peerId)!;
 
           const presence = new PresencePlugin(this.peerId.asBuffer());
-          const protocol = protocolFactory({
-            getTopics: () => {
-              return [m.topic.asBuffer()];
-            },
-            session: { peerId: this.peerId.asBuffer() },
-            plugins: [presence]
-          });
+          const protocol = createProtocolFactory(m.topic, this.peerId, [presence]);
 
           peer.networkManager.joinProtocolSwarm({
             peerId: this.peerId, // TODO(burdon): this?
@@ -382,8 +369,6 @@ describe('Network manager', () => {
           m.joinedPeers.has(this.peerId);
 
         async run (m: Model, r: Real) {
-          console.log(this.toString());
-
           m.joinedPeers.delete(this.peerId);
 
           const peer = r.peers.get(this.peerId)!;

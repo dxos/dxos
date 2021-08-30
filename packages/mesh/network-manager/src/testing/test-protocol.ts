@@ -38,7 +38,7 @@ export class TestProtocolPlugin extends EventEmitter {
   /** @type {Boolean} */
   _uppercase;
 
-  initCalled: boolean = false;
+  initCalled = false;
 
   /**
    * Test Protocol. Passes through messages unchanged, or folds to upper case.
@@ -80,7 +80,7 @@ export class TestProtocolPlugin extends EventEmitter {
    */
   createExtension () {
     return new Extension(EXTENSION_NAME, { binary: true })
-    .setInitHandler(this._init.bind(this))
+      .setInitHandler(this._init.bind(this))
       .setMessageHandler(this._receive.bind(this))
       .setHandshakeHandler(this._onPeerConnect.bind(this))
       .setCloseHandler(this._onPeerDisconnect.bind(this));
@@ -106,7 +106,7 @@ export class TestProtocolPlugin extends EventEmitter {
     return await extension.send(encoded, { oneway: true });
   }
 
-  private async _init(protocol: Protocol) {
+  private async _init (protocol: Protocol) {
     this.initCalled = true;
   }
 
