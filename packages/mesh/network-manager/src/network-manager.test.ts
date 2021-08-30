@@ -233,7 +233,7 @@ describe('Network manager', () => {
             await plugin.send(remoteId.asBuffer(), 'ping');
           });
 
-          plugin.on('receive', (protocol: Protocol, data: any) => {
+          plugin.on('receive', async (protocol: Protocol, data: any) => {
             const { peerId } = protocol.getSession() ?? {};
             const remoteId = PublicKey.from(peerId);
 
