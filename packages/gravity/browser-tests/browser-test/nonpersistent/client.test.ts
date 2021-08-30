@@ -107,14 +107,15 @@ describe('Client - nonpersistent', () => {
 
     const clientB = new Client();
     await clientB.initialize();
-    await clientB.halo.createProfile({
+    const profileB = await clientB.halo.createProfile({
       ...createKeyPair(),
       username: 'DXOS test 2'
     });
 
     const invite1 = await party1A.createInvitation(defaultInvitationAuthenticator);
 
-    const contactPromise = clientA.halo.queryContacts().update.waitFor(contacts => !!contacts.find(x => x.displayName === 'DXOS test 2'));
+    // TODO(marik-d): Comparing by public key as a workaround for https://github.com/dxos/protocols/issues/372.
+    const contactPromise = clientA.halo.queryContacts().update.waitFor(contacts => !!contacts.find(x => x.publicKey.equals(profileB.publicKey)));
 
     await clientB.echo.joinParty(invite1, defaultSecretProvider);
 
@@ -127,5 +128,5 @@ describe('Client - nonpersistent', () => {
 
     await clientA.destroy();
     await clientB.destroy();
-  }).timeout(10_000).retries(2);
+  }).timeout(20_000).retries(2);
 });
