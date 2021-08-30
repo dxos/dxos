@@ -5,8 +5,8 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { discoveryKey, keyToString } from '@dxos/crypto';
-import { Protocol } from '@dxos/protocol';
+import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
+import { Extension, Protocol } from '@dxos/protocol';
 
 import { ProtocolProvider } from './network-manager';
 
@@ -25,9 +25,8 @@ interface ProtocolFactoryOptions {
  *
  * @param plugins array of Protocol plugin objects to add to created Protocol objects
  * @param getTopics retrieve a list of known topic keys to encrypt by public key.
- * @deprecated
+ * @deprecated Use `createProtocolFactory`.
  */
-// TODO(dboreham): Deprecate, replace with protocol provider factory functions.
 export const protocolFactory = ({ session = {}, plugins = [], getTopics }: ProtocolFactoryOptions): ProtocolProvider => {
   assert(getTopics);
   // eslint-disable-next-line no-unused-vars
@@ -56,8 +55,23 @@ export const protocolFactory = ({ session = {}, plugins = [], getTopics }: Proto
   };
 };
 
+export interface Plugin {
+  createExtension: () => Extension;
+}
+
+export function createProtocolFactory (topic: PublicKey, peerId: PublicKey, plugins: Plugin[]) {
+  return protocolFactory({
+    getTopics: () => {
+      return [topic.asBuffer()];
+    },
+    session: { peerId: keyToString(peerId.asBuffer()) },
+    plugins
+  });
+}
+
 /**
  * Creates a ProtocolProvider for simple transport connections with only one protocol plugin.
+ * @deprecated Use `createProtocolFactory`.
  */
 export const transportProtocolProvider = (rendezvousKey: Buffer, peerId: Buffer, protocolPlugin: any): ProtocolProvider => {
   return protocolFactory({

@@ -61,7 +61,8 @@
     "systeminformation": "^5.7.7",
     "tiny-lru": "^7.0.6",
     "varint": "^5.0.0",
-    "yargs": "~16.2.0"
+    "yargs": "~16.2.0",
+    "@dxos/crypto": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

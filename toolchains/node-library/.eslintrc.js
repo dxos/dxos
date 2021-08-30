@@ -20,7 +20,8 @@ module.exports = {
         patterns: ['**/dist']
       }
     ],
-    'node/no-callback-literal': 'off'
+    'node/no-callback-literal': 'off',
+    'jest/valid-expect': 'off'
   },
   ignorePatterns: [
     'src/proto/gen/*'
