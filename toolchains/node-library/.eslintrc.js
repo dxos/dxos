@@ -24,8 +24,5 @@ module.exports = {
   },
   ignorePatterns: [
     'src/proto/gen/*'
-  ],
-  parserOptions: {
-    project: './tsconfig.json'
-  }
+  ]
 }
