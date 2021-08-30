@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.12",
+    "@dxos/eslint-plugin": "~1.0.13",
     "@types/argparse": "^2.0.0",
     "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
