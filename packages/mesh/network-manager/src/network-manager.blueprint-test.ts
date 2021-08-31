@@ -120,7 +120,7 @@ function sharedTests (inMemory: boolean) {
 }
 
 // eslint-disable-next-line jest/no-export
-export function WebRTCTest () {
+export function webRTCTest () {
   let topic: PublicKey;
   let peer1Id: PublicKey;
   let peer2Id: PublicKey;
@@ -185,7 +185,7 @@ export function WebRTCTest () {
 }
 
 // eslint-disable-next-line jest/no-export
-export function InMemoryTests () {
+export function inMemoryTests () {
   sharedTests(true);
 
   it('two swarms at the same time', async () => {
