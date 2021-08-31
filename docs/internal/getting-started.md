@@ -89,7 +89,7 @@ Add TS config to support browser globals.
 ```
 
 ### Upgrading packages across the monorepo
-To upgrade all `dxos` packages you can trigger [Upgrade DXOS dependencies](https://github.com/dxos/protocols/actions/workflows/upgrade-deps.yml) 
+To upgrade all `dxos` packages you can trigger [Upgrade DXOS dependencies](https://github.com/dxos/protocols/actions/workflows/upgrade-deps.yml) job.
 
 If you want to upgrade some specific package or all packages that match specific regexp, you can run
 ```
