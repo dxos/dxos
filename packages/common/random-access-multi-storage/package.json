@@ -15,7 +15,6 @@
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "test": "toolchain test",
-    "test:node": "toolchain test",
     "test:browser": "browser-mocha 'src/**/browser-mocha-test.ts' --browser=chromium --browser=firefox --browser=webkit --checkLeaks false"
   },
   "dependencies": {
