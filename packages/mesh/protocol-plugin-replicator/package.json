@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-replicator",
-  "version": "2.12.8",
+  "version": "2.12.9",
   "description": "Protocol plugin replicator.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
