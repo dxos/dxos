@@ -15,7 +15,7 @@
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "test": "toolchain test",
-    "test:browser": "browser-mocha --setup tests-setup.js 'src/network-manager.browser-test.ts' --browser=chromium --browser=firefox --browser=webkit"
+    "test:browser": "browser-mocha --setup tests-setup.js 'src/network-manager.browser-test.ts' --browser=chromium --browser=firefox"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
