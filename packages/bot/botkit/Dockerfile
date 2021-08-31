@@ -6,7 +6,8 @@ LABEL description="DXOS Bot Factory."
 ARG NPM_TOKEN
 ARG VERSION="@latest"
 
-RUN apk --update add --no-cache g++ make python3 alpine-sdk libtool autoconf automake
+RUN apk --update add --no-cache g++ make python3 alpine-sdk libtool autoconf automake libc6-compat
+RUN ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2
 
 RUN echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> /root/.npmrc
 RUN npm install node-pre-gyp -g
