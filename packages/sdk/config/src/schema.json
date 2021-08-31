@@ -77,8 +77,7 @@
         }
       },
       "required": [
-        "server",
-        "chainId"
+        "server"
       ],
       "additionalProperties": false
     },
