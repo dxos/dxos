@@ -120,7 +120,7 @@ function sharedTests (inMemory: boolean) {
 }
 
 // eslint-disable-next-line jest/no-export
-export function webRTCTest () {
+export function webRTCTests () {
   let topic: PublicKey;
   let peer1Id: PublicKey;
   let peer2Id: PublicKey;
@@ -221,18 +221,14 @@ export function inMemoryTests () {
       await pluginB2.send(peerB1Id.asBuffer(), 'Foo B');
     });
 
-    try {
-      await waitForExpect(() => {
-        expect(receivedA.length).toBe(2);
-        expect(receivedA[0]).toBeInstanceOf(Protocol);
-        expect(receivedA[1]).toBe('Foo A');
-        expect(receivedB.length).toBe(2);
-        expect(receivedB[0]).toBeInstanceOf(Protocol);
-        expect(receivedB[1]).toBe('Foo B');
-      });
-    } catch (e) {
-      console.log({ A: receivedA[1], B: receivedB[1] });
-    }
+    await waitForExpect(() => {
+      expect(receivedA.length).toBe(2);
+      expect(receivedA[0]).toBeInstanceOf(Protocol);
+      expect(receivedA[1]).toBe('Foo A');
+      expect(receivedB.length).toBe(2);
+      expect(receivedB[0]).toBeInstanceOf(Protocol);
+      expect(receivedB[1]).toBe('Foo B');
+    });
   });
 
   it('large amount of peers and connections', async () => {

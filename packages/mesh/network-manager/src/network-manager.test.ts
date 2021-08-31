@@ -5,7 +5,7 @@
 import { Awaited } from '@dxos/async';
 import { createTestBroker } from '@dxos/signal';
 
-import { webRTCTest, inMemoryTests } from './network-manager.blueprint-test';
+import { webRTCTests, inMemoryTests } from './network-manager.blueprint-test';
 
 describe('Network manager', () => {
   describe('WebRTC transport', () => {
@@ -19,7 +19,7 @@ describe('Network manager', () => {
       await broker?.stop();
     });
 
-    webRTCTest();
+    webRTCTests();
   }).timeout(10_000);
 
   describe('In-memory transport', () => {

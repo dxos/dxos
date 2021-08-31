@@ -28,7 +28,9 @@ describe('WebrtcConnection', () => {
     );
 
     let callsCounter = 0;
-    const closedCb = () => { callsCounter++; };
+    const closedCb = () => {
+      callsCounter++;
+    };
     connection.closed.once(closedCb);
 
     await sleep(10); // Let simple-peer process events
