@@ -14,7 +14,8 @@
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test"
+    "test": "toolchain test",
+    "test:browser": "browser-mocha --setup tests-setup.js 'src/network-manager.browser-test.ts' --browser=chromium --browser=firefox"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -35,6 +36,7 @@
     "xor-distance": "^2.0.0"
   },
   "devDependencies": {
+    "@dxos/browser-mocha": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
@@ -43,12 +45,17 @@
     "@types/node": "^14.0.9",
     "earljs": "~0.1.10",
     "fast-check": "~2.14.0",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "mocha": "~8.4.0",
+    "expect": "~27.0.2"
   },
   "publishConfig": {
     "access": "restricted"
   },
   "toolchain": {
-    "testingFramework": "mocha"
+    "testingFramework": "mocha",
+    "additionalTestSteps": [
+      "test:browser"
+    ]
   }
 }
