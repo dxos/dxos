@@ -124,7 +124,7 @@ ncu --deep -u '@storybook/*'
 Solution:
 
 ```bash
-rushx storybook--no-manager-cache
+rushx storybook --no-manager-cache
 ```
 
 [Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
