@@ -6,11 +6,11 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
+import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ConnectionState } from './connection';
 import { Swarm } from './swarm';
-import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 
 /**
  * State of the connection to the remote peer with additional info derived from network mapping.
