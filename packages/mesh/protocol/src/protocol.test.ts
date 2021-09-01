@@ -7,17 +7,15 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 import pump from 'pump';
-import waitForExpect from 'wait-for-expect';
+
+import { sleep } from '@dxos/async';
 
 import { ERR_EXTENSION_RESPONSE_FAILED, ERR_EXTENSION_RESPONSE_TIMEOUT } from './errors';
 import { Extension } from './extension';
 import { Protocol } from './protocol';
 import { pipeProtocols } from './testutils';
 
-const log = debug('test');
-debug.enable('test,protocol');
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const log = debug('dxos:protocol:test');
 
 describe('Protocol', () => {
   test('protocol sessions', async () => {
@@ -158,7 +156,7 @@ describe('Protocol', () => {
     expect.assertions(9);
 
     const bufferExtension = 'buffer';
-    const timeout = 1000;
+    const timeout = 100;
 
     const waitOneWayMessage: any = {};
     waitOneWayMessage.promise = new Promise((resolve) => {
@@ -290,7 +288,7 @@ describe('Protocol', () => {
         new Extension(bufferExtension)
           .setInitHandler(async () => {
             if (error) {
-              await sleep(5 * 100);
+              await sleep(50);
               throw error;
             }
           })

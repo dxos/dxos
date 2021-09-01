@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import { createPromiseFromCallback } from '@dxos/async';
 import crypto from 'crypto';
-import debug from 'debug';
 import expect from 'expect';
 import ProtocolStream from 'hypercore-protocol';
 import { it as test } from 'mocha';
 import pump from 'pump';
+
+import { createPromiseFromCallback } from '@dxos/async';
 
 describe('hypercore-protocol', () => {
   test('Basic connection of two hypercore protocols', async () => {
@@ -18,23 +18,35 @@ describe('hypercore-protocol', () => {
     let bobOptions = false;
     let aliceOnExtension = false;
     let bobOnExtension = false;
-    let aliceReceivedMessageInExtension: Buffer | undefined = undefined;
+    let aliceReceivedMessageInExtension: Buffer | undefined;
 
     const topic = crypto.randomBytes(32);
     const alice = new ProtocolStream(true, {
-      onhandshake: () => { aliceHandshake = true; }
+      onhandshake: () => {
+        aliceHandshake = true;
+      }
     });
     const bob = new ProtocolStream(false, {
-      onhandshake: () => { bobHandshake = true; }
+      onhandshake: () => {
+        bobHandshake = true;
+      }
     });
 
     const aliceChannel = alice.open(topic, {
-      onoptions: (msg: any) => { aliceOptions = true; },
-      onextension: (id: any, data: any) => { aliceOnExtension = true; }
+      onoptions: (msg: any) => {
+        aliceOptions = true;
+      },
+      onextension: (id: any, data: any) => {
+        aliceOnExtension = true;
+      }
     });
     const bobChannel = bob.open(topic, {
-      onoptions: (msg: any) => { bobOptions = true; },
-      onextension: (id: any, data: any) => { bobOnExtension = true; }
+      onoptions: (msg: any) => {
+        bobOptions = true;
+      },
+      onextension: (id: any, data: any) => {
+        bobOnExtension = true;
+      }
     });
 
     aliceChannel.options({
@@ -69,4 +81,4 @@ describe('hypercore-protocol', () => {
     expect(bobOnExtension).toBe(true);
     expect(aliceReceivedMessageInExtension).toEqual(Buffer.from([4, 5, 6]));
   });
-})
+});
