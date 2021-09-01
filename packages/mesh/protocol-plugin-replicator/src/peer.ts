@@ -13,7 +13,7 @@ import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
 const log = debug('dxos.replicator.peer');
 
 export class Peer {
-  private readonly _feeds = new Map();
+  private readonly _feeds = new Map<string, HypercoreFeed>();
   readonly closed = new Event();
   constructor (private _protocol: Protocol, private _extension: Extension) {}
 

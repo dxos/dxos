@@ -3,7 +3,6 @@
 //
 
 import assert from 'assert';
-import { EventEmitter } from 'events';
 
 import { PublicKeyLike } from '@dxos/crypto';
 import type { HypercoreFeed } from '@dxos/feed-store';
@@ -54,34 +53,22 @@ export interface ReplicatorMiddleware {
  * Manages key exchange and feed replication.
  */
 // TODO(burdon): Rename ReplicatorPlugin.
-export class Replicator extends EventEmitter {
+export class Replicator {
   static extension = 'dxos.protocol.replicator';
   private readonly _peers = new Map<Protocol, Peer>();
-  private _options: {timeout: number}
+  private _options: {timeout: number};
   private _load: LoadFunction;
   private _subscribe: SubscribeFunction
   private _replicate: ReplicateFunction;
 
-  constructor (middleware: ReplicatorMiddleware, options?: {timeout?: number}) {
-    super();
-    assert(middleware);
-    assert(middleware.load);
-
+  constructor (middleware: ReplicatorMiddleware, options?: {timeout: number}) {
     const { load, subscribe = defaultSubscribe, replicate = defaultReplicate } = middleware;
 
     this._load = load;
     this._subscribe = subscribe;
     this._replicate = replicate;
 
-    this._options = Object.assign({
-      timeout: 1000
-    }, options);
-  }
-
-  override toString () {
-    const meta = {};
-
-    return `Replicator(${JSON.stringify(meta)})`;
+    this._options = options ?? { timeout: 10000 };
   }
 
   /**
@@ -93,7 +80,6 @@ export class Replicator extends EventEmitter {
       schema: schemaJson,
       timeout: this._options.timeout
     })
-      .on('error', (err: any) => this.emit(err))
       .setInitHandler(this._initHandler.bind(this))
       .setHandshakeHandler(this._handshakeHandler.bind(this))
       .setMessageHandler(this._messageHandler.bind(this))
@@ -162,6 +148,7 @@ export class Replicator extends EventEmitter {
     const peer = this._peers.get(protocol);
     const context = protocol.getContext();
     const { peerId: session } = protocol.getSession() ?? {};
+    assert(typeof session === 'string');
     const info = { context, session };
 
     try {
