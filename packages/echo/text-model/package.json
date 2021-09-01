@@ -33,11 +33,11 @@
     "yjs": "^13.4.1"
   },
   "devDependencies": {
+    "@dxos/object-model": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/mocha": "~8.2.2",
-    "expect": "~27.0.2",
-    "@dxos/object-model": "workspace:*"
+    "expect": "~27.0.2"
   },
   "publishConfig": {
     "access": "restricted"
