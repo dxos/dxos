@@ -18,6 +18,9 @@
     },
     {
       "path": "../model-factory"
+    },
+    {
+      "path": "../object-model"
     }
   ]
 }

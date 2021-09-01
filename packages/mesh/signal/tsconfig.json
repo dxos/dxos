@@ -13,6 +13,9 @@
   "references": [
     {
       "path": "../broadcast"
+    },
+    {
+      "path": "../../common/crypto"
     }
   ]
 }
