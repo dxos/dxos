@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert, { strict, throws } from 'assert';
+import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
 import { EventedType } from 'ngraph.events';
@@ -10,12 +10,12 @@ import createGraph, { Graph } from 'ngraph.graph';
 import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
+import { Event } from '@dxos/async';
 import { Broadcast, Middleware } from '@dxos/broadcast';
 import { keyToBuffer } from '@dxos/crypto';
 import { Extension, Protocol } from '@dxos/protocol';
 
 import { schema } from './proto/gen';
-import { Event } from '@dxos/async';
 import { Alive } from './proto/gen/dxos/protocol/presence';
 
 const log = debug('dxos:mesh:presence');
@@ -39,7 +39,6 @@ interface ConnectionEventDetails {
   fromId: Buffer,
   toId: Buffer
 }
-
 
 interface ProtocolMessageEventDetails {
   protocol: Protocol,
@@ -186,8 +185,6 @@ export class PresencePlugin {
 
         graphUpdated = true;
 
-        const type = changeType === 'add' ? 'joined' : 'left';
-
         if (node) {
           if (changeType === 'add') {
             this._peerJoined.emit(Buffer.from(node.id, 'hex'));
@@ -198,12 +195,12 @@ export class PresencePlugin {
         if (link) {
           if (changeType === 'add') {
             this._connectionJoined.emit({
-              fromId: Buffer.from(link.fromId, 'hex'), 
+              fromId: Buffer.from(link.fromId, 'hex'),
               toId: Buffer.from(link.toId, 'hex')
             });
           } else {
             this._connectionLeft.emit({
-              fromId: Buffer.from(link.fromId, 'hex'), 
+              fromId: Buffer.from(link.fromId, 'hex'),
               toId: Buffer.from(link.toId, 'hex')
             });
           }
@@ -238,7 +235,7 @@ export class PresencePlugin {
         await presence.send(packet, { oneway: true });
       },
       subscribe: (onPacket) => {
-        this._protocolMessage.on(( { protocol, message }) => {
+        this._protocolMessage.on(({ protocol, message }) => {
           if (message && message.data) {
             onPacket(message.data);
           }
@@ -297,7 +294,7 @@ export class PresencePlugin {
   private _addPeer (protocol: Protocol) {
     assert(protocol);
     const { peerId } = protocol.getSession() ?? {};
-    assert(typeof peerId == 'string');
+    assert(typeof peerId === 'string');
 
     log(`_addPeer ${peerId}`);
 
@@ -412,7 +409,7 @@ export class PresencePlugin {
       await this._broadcast.publish(this._codec.encode(message));
       log('ping', message);
     } catch (err) {
-      // TODO(marik-d): This or one of its subscribers seems to leak "Error: Resource is closed" errors. 
+      // TODO(marik-d): This or one of its subscribers seems to leak "Error: Resource is closed" errors.
       // They are not fatal, and probably happend because the connection was closed but the broadcast job was not cleaned up.
       process.nextTick(() => this._error.emit(err));
     }
