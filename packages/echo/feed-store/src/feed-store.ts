@@ -42,11 +42,6 @@ interface CreateReadOnlyFeedOptions {
   metadata?: any
 }
 
-interface DownloadEventDetails {
-  descriptor: FeedDescriptor
-  args: any
-}
-
 /**
  * FeedStore
  *
