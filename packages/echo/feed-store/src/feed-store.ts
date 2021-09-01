@@ -12,7 +12,7 @@ import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { IStorage } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
-import type { Feed, Hypercore } from './hypercore-types';
+import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import IndexDB from './index-db';
 import Reader from './reader';
 
@@ -186,7 +186,7 @@ export class FeedStore {
   /**
    * Get the list of opened feeds, with optional filter.
    */
-  getOpenFeeds (callback?: DescriptorCallback): Feed[] {
+  getOpenFeeds (callback?: DescriptorCallback): HypercoreFeed[] {
     const notNull = <T>(value: T | null): value is T => Boolean(value);
     return this.getDescriptors()
       .filter(descriptor => descriptor.opened && (!callback || callback(descriptor)))
@@ -197,7 +197,7 @@ export class FeedStore {
   /**
    * Find an opened feed using a filter callback.
    */
-  getOpenFeed (callback: DescriptorCallback): Feed | undefined {
+  getOpenFeed (callback: DescriptorCallback): HypercoreFeed | undefined {
     const descriptor = this.getDescriptors()
       .find(descriptor => descriptor.opened && callback(descriptor));
 
@@ -219,7 +219,7 @@ export class FeedStore {
    * Open multiple feeds using a filter callback.
    */
   @synchronized
-  async openFeeds (callback: DescriptorCallback): Promise<Feed[]> {
+  async openFeeds (callback: DescriptorCallback): Promise<HypercoreFeed[]> {
     assert(this._open, 'FeedStore closed');
 
     const descriptors = this.getDescriptors()
@@ -232,7 +232,7 @@ export class FeedStore {
    * Open a feed to FeedStore.
    */
   @synchronized
-  async openFeed (key: PublicKey): Promise<Feed> {
+  async openFeed (key: PublicKey): Promise<HypercoreFeed> {
     assert(this._open, 'FeedStore closed');
 
     const descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
@@ -247,7 +247,7 @@ export class FeedStore {
   /**
    * Create a feed to Feedstore
    */
-  async createReadWriteFeed (options: CreateReadWriteFeedOptions): Promise<Feed> {
+  async createReadWriteFeed (options: CreateReadWriteFeedOptions): Promise<HypercoreFeed> {
     this._createDescriptor(options);
     return this.openFeed(options.key);
   }
@@ -255,7 +255,7 @@ export class FeedStore {
   /**
    * Create a readonly feed to Feedstore
    */
-  async createReadOnlyFeed (options: CreateReadOnlyFeedOptions): Promise<Feed> {
+  async createReadOnlyFeed (options: CreateReadOnlyFeedOptions): Promise<HypercoreFeed> {
     this._createDescriptor(options);
     return this.openFeed(options.key);
   }

@@ -5,7 +5,7 @@
 import debug from 'debug';
 import { Readable, Transform, Writable } from 'stream';
 
-import type { Feed } from './hypercore-types';
+import type { HypercoreFeed } from './hypercore-types';
 
 const error = debug('dxos:stream:error');
 
@@ -22,7 +22,7 @@ const error = debug('dxos:stream:error');
  * @returns {NodeJS.WritableStream}
  */
 // TODO(burdon): Move to @dxos/codec.
-export function createWritableFeedStream (feed: Feed) {
+export function createWritableFeedStream (feed: HypercoreFeed) {
   return new Writable({
     objectMode: true,
     write (message, _, callback) {

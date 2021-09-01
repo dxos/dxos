@@ -7,7 +7,7 @@ export interface Message {
   data: Buffer;
 }
 
-export interface Feed {
+export interface HypercoreFeed {
   ready: any;
   key: Buffer;
   secretKey: Buffer;
@@ -45,6 +45,8 @@ export interface Feed {
   on: (s: string, cb: () => any) => any;
   removeListener: (s: string, cb: () => any) => any;
   getBatch: (n: number, maxMessages: number, cb: (err: Error, res: any) => any) => any;
+
+  replicate(options: any): void;
 }
 
-export type Hypercore = (storage: any, key?: any, options?: any) => Feed;
+export type Hypercore = (storage: any, key?: any, options?: any) => HypercoreFeed;

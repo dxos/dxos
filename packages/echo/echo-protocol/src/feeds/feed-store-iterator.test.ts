@@ -9,7 +9,7 @@ import pify from 'pify';
 
 import { latch } from '@dxos/async';
 import { createId, createKeyPair, keyToString, PublicKey } from '@dxos/crypto';
-import { FeedStore, Feed } from '@dxos/feed-store';
+import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { ComplexMap } from '@dxos/util';
 
@@ -76,7 +76,7 @@ describe('feed store iterator', () => {
     // Create feeds.
     //
 
-    const feeds = new ComplexMap<FeedKey, Feed>(key => key.toHex());
+    const feeds = new ComplexMap<FeedKey, HypercoreFeed>(key => key.toHex());
     await Promise.all(Array.from({ length: config.numFeeds }, (_, i) => i + 1).map(async () => {
       const { publicKey, secretKey } = createKeyPair();
       const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
@@ -148,7 +148,7 @@ describe('feed store iterator', () => {
 
     // Test expected number of messages.
     expect(Array.from(feeds.values())
-      .reduce((sum, feed: Feed) => sum + feed.length, 0)).toBe(config.numMessages);
+      .reduce((sum, feed: HypercoreFeed) => sum + feed.length, 0)).toBe(config.numMessages);
   });
 
   test('skipping initial messages', async () => {

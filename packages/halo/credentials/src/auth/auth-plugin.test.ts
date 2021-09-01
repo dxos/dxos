@@ -12,7 +12,7 @@ import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
 import { keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
-import { Feed, FeedStore } from '@dxos/feed-store';
+import { HypercoreFeed, FeedStore } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
@@ -22,6 +22,7 @@ import { codec, codecLoop, KeyType } from '../proto';
 import { createAuthMessage } from './auth-message';
 import { AuthPlugin } from './auth-plugin';
 import { Authenticator } from './authenticator';
+import assert from 'assert';
 
 const log = debug('dxos:creds:auth:test');
 
@@ -102,8 +103,9 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
       });
     },
 
-    replicate: async (feeds: Feed[]) => {
+    replicate: async (feeds) => {
       for (const feed of feeds) {
+        assert(feed.key)
         if (feedStore.hasFeed(feed.key)) {
           await feedStore.openFeed(PublicKey.from(feed.key));
         } else {

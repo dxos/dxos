@@ -10,7 +10,7 @@ import through from 'through2';
 
 import { createBatchStream } from './create-batch-stream';
 import type { FeedDescriptor } from './feed-descriptor';
-import type { Feed } from './hypercore-types';
+import type { HypercoreFeed } from './hypercore-types';
 
 const all = () => true;
 
@@ -143,7 +143,7 @@ export default class Reader {
     });
   }
 
-  private _checkFeedSync (feed: Feed, seq: any, sync = false) {
+  private _checkFeedSync (feed: HypercoreFeed, seq: any, sync = false) {
     const feedKey = feed.key.toString('hex');
     this._state[feedKey] = seq;
     if (this.sync) {
