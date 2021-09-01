@@ -34,7 +34,7 @@
     "from2": "^2.3.0",
     "hypercore": "^9.10.0",
     "hypercore-crypto": "^1.0.0",
-    "hypertrie": "^3.8.0",
+    "hypertrie": "5.1.1",
     "multi-read-stream": "^2.0.0",
     "pify": "~5.0.0",
     "pump": "^3.0.0",
