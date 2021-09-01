@@ -6,7 +6,8 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { ComplexMap } from '@dxos/util';
+import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ConnectionState } from './connection';
 import { Swarm } from './swarm';
@@ -30,7 +31,7 @@ type Unsubscribe = () => void;
 const log = debug('dxos:network-manager:swarm-mapper');
 
 export class SwarmMapper {
-  private readonly _subscriptions: (() => void)[] = [];
+  private readonly _subscriptions = new SubscriptionGroup();
 
   private readonly _connectionSubscriptions = new ComplexMap<PublicKey, Unsubscribe>(x => x.toHex());
 
@@ -44,7 +45,7 @@ export class SwarmMapper {
 
   constructor (
     private readonly _swarm: Swarm,
-    private readonly _presence: any /* Presence */ | undefined
+    private readonly _presence: PresencePlugin | undefined
   ) {
     this._subscriptions.push(_swarm.connectionAdded.on(connection => {
       this._update();
@@ -61,8 +62,7 @@ export class SwarmMapper {
       const cb = () => {
         this._update();
       };
-      _presence.on('graph-updated', cb);
-      this._subscriptions.push(() => this._presence.off('graph-updated', cb));
+      this._subscriptions.push(_presence.graphUpdated.on(cb));
     }
     this._update();
   }
@@ -108,6 +108,6 @@ export class SwarmMapper {
 
   destroy () {
     Array.from(this._connectionSubscriptions.values()).forEach(cb => cb());
-    this._subscriptions.forEach(cb => cb());
+    this._subscriptions.unsubscribe();
   }
 }
