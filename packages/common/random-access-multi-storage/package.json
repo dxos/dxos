@@ -1,6 +1,6 @@
 {
   "name": "@dxos/random-access-multi-storage",
-  "version": "2.12.8",
+  "version": "2.12.9",
   "description": "Multiple random storage types.",
   "license": "AGPL-3.0",
   "main": "dist/src/index.js",
@@ -15,7 +15,6 @@
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "test": "toolchain test",
-    "test:node": "toolchain test",
     "test:browser": "browser-mocha 'src/**/browser-mocha-test.ts' --browser=chromium --browser=firefox --browser=webkit --checkLeaks false"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/signal",
-  "version": "2.12.8",
+  "version": "2.12.9",
   "description": "DxOS signal server.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
@@ -30,6 +30,7 @@
   "dependencies": {
     "@azure/abort-controller": "^1.0.1",
     "@dxos/broadcast": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@hyperswarm/dht": "^4.0.1",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.1.1",
@@ -61,8 +62,7 @@
     "systeminformation": "^5.7.7",
     "tiny-lru": "^7.0.6",
     "varint": "^5.0.0",
-    "yargs": "~16.2.0",
-    "@dxos/crypto": "workspace:*"
+    "yargs": "~16.2.0"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

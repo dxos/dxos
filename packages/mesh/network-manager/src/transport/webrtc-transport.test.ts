@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect, mockFn } from 'earljs';
+import expect from 'expect';
 import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
@@ -27,7 +27,10 @@ describe('WebrtcConnection', () => {
       async msg => {}
     );
 
-    const closedCb = mockFn(() => {});
+    let callsCounter = 0;
+    const closedCb = () => {
+      callsCounter++;
+    };
     connection.closed.once(closedCb);
 
     await sleep(10); // Let simple-peer process events
@@ -35,7 +38,7 @@ describe('WebrtcConnection', () => {
 
     await sleep(1); // Process events
 
-    expect(closedCb.calls.length).toEqual(1);
+    expect(callsCounter).toEqual(1);
   }).timeout(1_000);
 
   test('establish connection and send data through with protocol', async () => {
@@ -78,7 +81,11 @@ describe('WebrtcConnection', () => {
     afterTest(() => connection2.close());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
-    const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
+    const received: any[] = [];
+    const mockReceive = (p: Protocol, s: string) => {
+      received.push(p, s);
+      return undefined;
+    };
     plugin1.on('receive', mockReceive);
 
     plugin2.on('connect', async (protocol) => {
@@ -86,7 +93,9 @@ describe('WebrtcConnection', () => {
     });
 
     await waitForExpect(() => {
-      expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
+      expect(received.length).toBe(2);
+      expect(received[0]).toBeInstanceOf(Protocol);
+      expect(received[1]).toBe('Foo');
     });
   }).timeout(2_000);
 });

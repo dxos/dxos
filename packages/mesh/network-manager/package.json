@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "2.12.8",
+  "version": "2.12.9",
   "description": "Network Manager",
   "license": "GPL-3.0",
   "main": "dist/src/index.js",
@@ -14,7 +14,8 @@
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test"
+    "test": "toolchain test",
+    "test:browser": "browser-mocha --setup tests-setup.js 'src/network-manager.browser-test.ts' --browser=chromium --browser=firefox"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -35,6 +36,7 @@
     "xor-distance": "^2.0.0"
   },
   "devDependencies": {
+    "@dxos/browser-mocha": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
@@ -42,13 +44,18 @@
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
     "earljs": "~0.1.10",
+    "expect": "~27.0.2",
     "fast-check": "~2.14.0",
+    "mocha": "~8.4.0",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "restricted"
   },
   "toolchain": {
-    "testingFramework": "mocha"
+    "testingFramework": "mocha",
+    "additionalTestSteps": [
+      "test:browser"
+    ]
   }
 }

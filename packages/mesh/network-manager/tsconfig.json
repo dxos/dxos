@@ -33,6 +33,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../gravity/browser-mocha"
+    },
+    {
       "path": "../signal"
     },
     {
