@@ -133,6 +133,7 @@ export class PresencePlugin extends EventEmitter {
   stop () {
     log('Stop');
 
+    this._limit.clearQueue();
     this._broadcast.close();
     if (this._scheduler !== null) {
       clearInterval(this._scheduler);
@@ -358,6 +359,8 @@ export class PresencePlugin extends EventEmitter {
       await this._broadcast.publish(this._codec.encode(message));
       log('ping', message);
     } catch (err) {
+      // TODO(marik-d): This or one of its subscribers seems to leak "Error: Resource is closed" errors. 
+      // They are not fatal, and probably happend because the connection was closed but the broadcast job was not cleaned up.
       process.nextTick(() => this.emit('error', err));
     }
   }
