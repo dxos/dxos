@@ -142,8 +142,10 @@ export class Connection {
 
     log(`Closing ${this.ownId}`);
 
+    // This will try to gracefull close the stream flushing any unsent data packets.
     await this._protocol.close();
 
+    // After the transport is closed streams are disconnected.
     await this._transport?.close();
 
     log(`Closed ${this.ownId}`);
