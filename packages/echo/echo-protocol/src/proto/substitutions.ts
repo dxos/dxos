@@ -22,5 +22,9 @@ export default {
         .filter((frame: any) => frame.feedKey != null && frame.seq != null)
         .map((frame: any) => [PublicKey.from(frame.feedKey), frame.seq])
     )
-  }
+  },
+  'dxos.echo.keys.Key': {
+    encode: (value: PublicKey) => ({ data: value.asUint8Array() }),
+    decode: (value: any) => PublicKey.from(value.data)
+  },
 };
