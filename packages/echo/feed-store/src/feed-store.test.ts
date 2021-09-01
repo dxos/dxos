@@ -15,7 +15,7 @@ import { PublicKey, createKeyPair } from '@dxos/crypto';
 import { IStorage, STORAGE_NODE, STORAGE_RAM, createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedStore } from './feed-store';
-import { Feed } from './hypercore-types';
+import { HypercoreFeed } from './hypercore-types';
 
 interface KeyPair {
   key: PublicKey,
@@ -39,7 +39,7 @@ async function createDefault () {
   };
 }
 
-async function defaultFeeds (feedStore: FeedStore, keys: Record<string, KeyPair>) : Promise<Record<string, Feed>> {
+async function defaultFeeds (feedStore: FeedStore, keys: Record<string, KeyPair>) : Promise<Record<string, HypercoreFeed>> {
   return Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
     feed === 'booksFeed'
       ? [feed, await feedStore.createReadWriteFeed({ key: keyPair.key, secretKey: keyPair.secretKey, metadata: { topic: 'books' } })]

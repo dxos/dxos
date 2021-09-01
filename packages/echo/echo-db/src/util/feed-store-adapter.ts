@@ -9,7 +9,7 @@ import { PublicKey, createKeyPair } from '@dxos/crypto';
 import {
   codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
 } from '@dxos/echo-protocol';
-import { FeedStore, Feed } from '@dxos/feed-store';
+import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { IStorage } from '@dxos/random-access-multi-storage';
 
 /**
@@ -62,12 +62,12 @@ export class FeedStoreAdapter {
     ).values());
   }
 
-  getFeed (feedKey: FeedKey): Feed | null | undefined {
+  getFeed (feedKey: FeedKey): HypercoreFeed | null | undefined {
     const descriptor = this._feedStore.getDescriptors().find(descriptor => feedKey.equals(descriptor.key));
     return descriptor?.feed;
   }
 
-  queryWritableFeed (partyKey: PartyKey): Feed | null | undefined {
+  queryWritableFeed (partyKey: PartyKey): HypercoreFeed | null | undefined {
     // TODO(telackey): 'writable' is true property of the Feed, not just its Descriptor's metadata.
     // Using that real value would be preferable to using metadata, but I think it requires the Feed be open.
     const descriptor = this._feedStore.getDescriptors()
@@ -75,7 +75,7 @@ export class FeedStoreAdapter {
     return descriptor?.feed;
   }
 
-  createWritableFeed (partyKey: PartyKey): Promise<Feed> {
+  createWritableFeed (partyKey: PartyKey): Promise<HypercoreFeed> {
     // TODO(marik-d): Something is wrong here; Buffer should be a subclass of Uint8Array but it isn't here.
     assert(!this.queryWritableFeed(partyKey), 'Writable feed already exists');
 
@@ -89,7 +89,7 @@ export class FeedStoreAdapter {
     });
   }
 
-  createReadOnlyFeed (feedKey: FeedKey, partyKey: PartyKey): Promise<Feed> {
+  createReadOnlyFeed (feedKey: FeedKey, partyKey: PartyKey): Promise<HypercoreFeed> {
     return this._feedStore.createReadOnlyFeed({
       key: feedKey,
       metadata: { partyKey: partyKey.asBuffer() }
