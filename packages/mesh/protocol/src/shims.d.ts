@@ -81,8 +81,6 @@ declare module 'hypercore-protocol' {
   export = ProtocolStream;
 }
 
-declare module 'nanoresource-promise/emitter';
-
 declare module 'nanomessage';
 
 declare module 'signal-promise';
