@@ -5,6 +5,8 @@
   "bin": {
     "build-protobuf": "./bin/main.js"
   },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
