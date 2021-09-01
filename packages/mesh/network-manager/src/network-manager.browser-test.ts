@@ -12,5 +12,5 @@ describe('Network manager', () => {
   // TODO(marik-d): In-memory tests seem to be broken in the browser. Need more investigation.
   describe.skip('In-memory transport', () => {
     inMemoryTests();
-  }); //.timeout(30_000);
+  }); // .timeout(30_000);
 });
