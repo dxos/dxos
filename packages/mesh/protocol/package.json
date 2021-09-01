@@ -34,7 +34,6 @@
     "hypercore-protocol": "dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60",
     "nanoerror": "^1.2.1",
     "nanomessage": "^5.4.0",
-    "nanoresource-promise": "^2.0.0",
     "signal-promise": "^1.0.3"
   },
   "devDependencies": {
