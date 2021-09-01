@@ -18,20 +18,52 @@ const f = ts.factory;
 
 registerResolver();
 
-export async function compileSchema (substitutionsModule: ModuleSpecifier | undefined, protoFiles: string[], outDirPath: string) {
+export async function parseAndGenerateSchema (substitutionsModule: ModuleSpecifier | undefined, protoFiles: string[], outDirPath: string) {
   const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
   logger.logParsedSubstitutions(substitutions);
 
   const root = await pb.load(protoFiles);
 
-  const namespaces = splitSchemaIntoNamespaces(root);
+  await generateSchema({
+    schema: root,
+    outDir: outDirPath,
+    substitutions: substitutions
+      ? {
+          map: substitutions,
+          module: substitutionsModule!
+        }
+      : undefined
+  });
+}
+
+export interface GenerateSchemaOptions {
+  schema: pb.Root
+  outDir: string
+  substitutions?: {
+    map: SubstitutionsMap,
+    module: ModuleSpecifier
+  }
+}
+
+/**
+ * Generate typescript definitions for a given schema and write them to `options.outDir`.
+ */
+export function generateSchema (options: GenerateSchemaOptions) {
+  const namespaces = splitSchemaIntoNamespaces(options.schema);
 
   const printer = ts.createPrinter();
 
   for (const [namespace, types] of namespaces) {
-    const outFile = join(outDirPath, getFileNameForNamespace(namespace));
+    const outFile = join(options.outDir, getFileNameForNamespace(namespace));
 
-    const generatedSourceFile = createNamespaceSourceFile(types, substitutions, outDirPath, namespace, substitutionsModule, Array.from(namespaces.keys()));
+    const generatedSourceFile = createNamespaceSourceFile(
+      types,
+      options.substitutions?.map ?? {},
+      options.outDir,
+      namespace,
+      options.substitutions?.module,
+      Array.from(namespaces.keys())
+    );
 
     const source = printer.printFile(generatedSourceFile);
 
@@ -41,11 +73,11 @@ export async function compileSchema (substitutionsModule: ModuleSpecifier | unde
     writeFileSync(outFile, source);
   }
 
-  const generatedSourceFile = createIndexSourceFile(substitutionsModule, root, outDirPath, Array.from(namespaces.keys()));
+  const generatedSourceFile = createIndexSourceFile(options.substitutions?.module, options.schema, options.outDir, Array.from(namespaces.keys()));
 
   const source = printer.printFile(generatedSourceFile);
 
-  writeFileSync(join(outDirPath, 'index.ts'), source);
+  writeFileSync(join(options.outDir, 'index.ts'), source);
 }
 
 function createSubstitutionsImport (substitutionsModule: ModuleSpecifier, context: string) {
