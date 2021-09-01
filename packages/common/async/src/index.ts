@@ -10,3 +10,4 @@ export * from './lock';
 export * from './sink';
 export * from './trigger';
 export * from './types';
+export * from './callback';

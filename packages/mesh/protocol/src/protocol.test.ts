@@ -12,6 +12,7 @@ import waitForExpect from 'wait-for-expect';
 import { ERR_EXTENSION_RESPONSE_FAILED, ERR_EXTENSION_RESPONSE_TIMEOUT } from './errors';
 import { Extension } from './extension';
 import { Protocol } from './protocol';
+import { pipeProtocols } from './testutils';
 
 const log = debug('test');
 debug.enable('test,protocol');
@@ -62,6 +63,8 @@ test('basic without extensions', async () => {
     streamOptions: {
       onhandshake: async () => {
         onInit();
+
+        await protocol1.close();
       }
     },
     userSession: { peerId: 'user1' }
@@ -74,6 +77,8 @@ test('basic without extensions', async () => {
     streamOptions: {
       onhandshake: async () => {
         onInit();
+
+        await protocol2.close();
       }
     },
     userSession: { peerId: 'user2' }
@@ -83,11 +88,9 @@ test('basic without extensions', async () => {
   protocol1.error.on(err => console.log('protocol1', err));
   protocol2.error.on(err => console.log('protocol2', err));
 
-  pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any);
+  await pipeProtocols(protocol1, protocol2).catch(() => {});
 
-  await waitForExpect(async () => {
-    expect(onInitCalled).toBe(2);
-  });
+  expect(onInitCalled).toBe(2);
 }).timeout(1 * 1000);
 
 test('basic with a buffer ping-pong extension', async () => {
@@ -146,9 +149,8 @@ test('basic with a buffer ping-pong extension', async () => {
       await protocol1.close();
     }
   });
-  return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
-    resolve();
-  }));
+
+  await pipeProtocols(protocol1, protocol2).catch(() => {});
 }).timeout(1 * 1000);
 
 test('basic ping and oneway', async () => {
@@ -261,9 +263,7 @@ test('basic ping and oneway', async () => {
   expect(protocol1.id).toBeDefined();
   expect(protocol2.id).toBeDefined();
 
-  return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
-    resolve();
-  }));
+  await pipeProtocols(protocol1, protocol2).catch(() => {});
 });
 
 test('protocol init error', async () => {
@@ -299,8 +299,6 @@ test('protocol init error', async () => {
   const protocol1 = protocol('protocol1');
   const protocol2 = protocol('protocol2', new Error('big error'), true);
 
-  return new Promise<void>(resolve => pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any, () => {
-    expect(onHandshakeCalled).toBe(0);
-    resolve();
-  }));
+  await pipeProtocols(protocol1, protocol2).catch(() => {});
+  expect(onHandshakeCalled).toBe(0);
 });
