@@ -174,8 +174,6 @@ describe('party-processor', () => {
     const firedOnce = partyProcessor.keyOrInfoAdded.waitForCount(1);
     const firedTwice = partyProcessor.keyOrInfoAdded.waitForCount(2);
 
-    partyProcessor.keyOrInfoAdded.on(() => console.log('keyOrInfoAdded'));
-
     await partyProcessor.processMessage({
       meta: meta(1),
       data: createKeyAdmitMessage(keyring, partyKey.publicKey, identityKey2, [identityKey])
