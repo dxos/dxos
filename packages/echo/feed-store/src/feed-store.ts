@@ -4,11 +4,10 @@
 
 import assert from 'assert';
 import jsonBuffer from 'buffer-json-encoding';
-import { EventEmitter } from 'events';
 import defaultHypercore from 'hypercore';
 import hypertrie from 'hypertrie';
 
-import { synchronized } from '@dxos/async';
+import { synchronized, Event } from '@dxos/async';
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { IStorage } from '@dxos/random-access-multi-storage';
 
@@ -43,13 +42,18 @@ interface CreateReadOnlyFeedOptions {
   metadata?: any
 }
 
+interface DownloadEventDetails {
+  descriptor: FeedDescriptor
+  args: any
+}
+
 /**
  * FeedStore
  *
  * Management of multiple feeds to create, update, load, find and delete feeds
  * into a persist repository storage.
  */
-export class FeedStore extends EventEmitter {
+export class FeedStore {
   private _storage: IStorage;
   private _database: any;
   private _defaultFeedOptions: any;
@@ -59,6 +63,21 @@ export class FeedStore extends EventEmitter {
   private _readers: Set<Reader>;
   private _indexDB: any;
   private _open: boolean;
+  private readonly openedEvent = new Event();
+  private readonly readyEvent = new Event();
+  private readonly closedEvent = new Event();
+  private readonly descriptorRemove = new Event<FeedDescriptor>();
+  private readonly downloadEvent = new Event<DownloadEventDetails>();
+
+  /**
+   * Is emitted when something gets appended to one of the FeedStore's feeds represented by FeedDescriptors.
+   */
+  readonly appendEvent = new Event<FeedDescriptor>();
+
+  /** x
+   * Is emitted when a new feed represnted by FeedDescriptor is opened.
+   */
+  readonly feedEvent = new Event<FeedDescriptor>();
 
   /**
    * @param storage RandomAccessStorage to use by default by the feeds.
@@ -69,8 +88,6 @@ export class FeedStore extends EventEmitter {
    */
   constructor (storage: IStorage, options: any = {}) {
     assert(storage, 'The storage is required.');
-
-    super();
 
     this._storage = storage;
 
@@ -97,7 +114,7 @@ export class FeedStore extends EventEmitter {
 
     this._open = false;
 
-    this.on('feed', (_, descriptor) => {
+    this.feedEvent.on((descriptor) => {
       this._readers.forEach(reader => {
         reader.addFeedStream(descriptor).catch(err => {
           reader.destroy(err);
@@ -136,10 +153,10 @@ export class FeedStore extends EventEmitter {
       this._createDescriptor({ ...data, key: PublicKey.from(data.key) }); // cause we don't have PublicKey deserialization
     });
 
-    this.emit('opened');
+    this.openedEvent.emit();
 
     // backward compatibility
-    this.emit('ready');
+    this.readyEvent.emit();
   }
 
   @synchronized
@@ -166,7 +183,7 @@ export class FeedStore extends EventEmitter {
 
     await this._indexDB.close();
 
-    this.emit('closed');
+    this.closedEvent.emit();
   }
 
   /**
@@ -302,7 +319,7 @@ export class FeedStore extends EventEmitter {
 
         this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
 
-        this.emit('descriptor-remove', descriptor);
+        this.descriptorRemove.emit(descriptor);
       });
     }
   }
@@ -353,8 +370,8 @@ export class FeedStore extends EventEmitter {
       descriptor
     );
 
-    const append = () => this.emit('append', descriptor.feed, descriptor);
-    const download = (...args: any) => this.emit('download', ...args, descriptor.feed, descriptor);
+    const append = () => this.appendEvent.emit(descriptor);
+    const download = (...args: any) => this.downloadEvent.emit({ descriptor, args });
 
     descriptor.watch(async (event) => {
       if (event === 'updated') {
@@ -368,7 +385,7 @@ export class FeedStore extends EventEmitter {
         await this._persistDescriptor(descriptor);
         feed.on('append', append);
         feed.on('download', download);
-        this.emit('feed', feed, descriptor);
+        this.feedEvent.emit(descriptor);
         return;
       }
 

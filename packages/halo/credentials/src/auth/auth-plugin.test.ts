@@ -97,10 +97,11 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
     },
 
     subscribe: (add: (feed: any) => void) => {
-      const onFeed = (feed: any) => add(feed);
-      feedStore.on('feed', onFeed);
+      const unsubscribe = feedStore.feedEvent.on((descriptor) => {
+        add(descriptor.feed);
+      });
       return () => {
-        feedStore.removeListener('feed', onFeed);
+        unsubscribe();
       };
     },
 

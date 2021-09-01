@@ -582,8 +582,8 @@ describe('FeedStore', () => {
     const { publicKey, secretKey } = createKeyPair();
     const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
 
-    feedStore.on('append', (f) => {
-      expect(f).toBe(feed);
+    feedStore.appendEvent.on((descriptor) => {
+      expect(descriptor.feed).toBe(feed);
       done();
     });
 
@@ -680,7 +680,7 @@ describe('FeedStore', () => {
     const { feedStore } = await createDefault();
 
     let timesCalled = 0;
-    feedStore.on('feed', () => {
+    feedStore.feedEvent.on(() => {
       timesCalled++;
     });
 
