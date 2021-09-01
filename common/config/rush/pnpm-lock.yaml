@@ -460,7 +460,7 @@ importers:
       from2: 2.3.0
       hypercore: 9.10.0
       hypercore-crypto: 1.0.0
-      hypertrie: 3.8.0
+      hypertrie: 5.1.1
       multi-read-stream: 2.0.0
       pify: 5.0.0
       pump: 3.0.0
@@ -504,7 +504,7 @@ importers:
       from2: ^2.3.0
       hypercore: ^9.10.0
       hypercore-crypto: ^1.0.0
-      hypertrie: ^3.8.0
+      hypertrie: 5.1.1
       multi-read-stream: ^2.0.0
       pify: ~5.0.0
       pump: ^3.0.0
@@ -1011,7 +1011,6 @@ importers:
       hypercore-protocol: github.com/dxos/hypercore-protocol/05513f9266f8bec4d29b144b72c59257c2d7bd60
       nanoerror: 1.2.1
       nanomessage: 5.4.0
-      nanoresource-promise: 2.0.0
       signal-promise: 1.0.3
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
@@ -1043,7 +1042,6 @@ importers:
       hypercore-protocol: dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60
       nanoerror: ^1.2.1
       nanomessage: ^5.4.0
-      nanoresource-promise: ^2.0.0
       pump: ^3.0.0
       signal-promise: ^1.0.3
       wait-for-expect: ^3.0.2
@@ -1097,12 +1095,14 @@ importers:
       p-limit: 3.1.0
       queue-microtask: 1.2.3
     devDependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.23
       ngraph.path: 1.3.1
       wait-for-expect: 3.0.2
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/broadcast': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
@@ -13719,15 +13719,6 @@ packages:
       bser: 2.1.1
     resolution:
       integrity: sha512-DkPJKQeY6kKwmuMretBhr7G6Vodr7bFwDYTXIkfG1gjvNpaxBTQV3PbXg6bR1c1UP4jPOX0jHUbbHANL9vRjVg==
-  /fd-lock/1.2.0:
-    dependencies:
-      napi-macros: 2.0.0
-      node-gyp-build: 4.2.3
-    dev: false
-    optional: true
-    requiresBuild: true
-    resolution:
-      integrity: sha512-Lk/pKH2DldLpG4Yh/sOOY84k5VqNzxHPffGwf1+yYI+/qMXzTPp9KJMX+Wh6n4xqGSA1Mu7JPmaDArfJGw2O/A==
   /fd-slicer/1.1.0:
     dependencies:
       pend: 1.2.0
@@ -15386,20 +15377,6 @@ packages:
       fsctl: 1.0.0
     resolution:
       integrity: sha512-y7dSX3VUT4I/X5Cj0h6hcKN2R+/QQIi1HnElnCqY3tQYbVaWYljdbVe3aBQIvkRCfOgWMfe2RbCLX4N78D5syg==
-  /hypercore-protocol/6.12.0:
-    dependencies:
-      buffer-alloc-unsafe: 1.1.0
-      buffer-from: 1.1.1
-      inherits: 2.0.4
-      protocol-buffers-encodings: 1.1.1
-      readable-stream: 2.3.7
-      simple-hypercore-protocol: github.com/dxos/simple-hypercore-protocol/bc23f0747e55954ec0bd94754910c92f88ec561c
-      sodium-universal: 2.0.0
-      sorted-indexof: 1.0.0
-      varint: 5.0.2
-    dev: false
-    resolution:
-      integrity: sha512-T3oy9/7QFejqJX2RGcCUU1944e5/eKbLlSz9JPTNN1QbYFJgat/r7eTyOO8SMSLUimUmQx6YBMKhgYbdKzp7Bw==
   /hypercore-protocol/8.0.7:
     dependencies:
       abstract-extension: 3.1.1
@@ -15420,37 +15397,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-OcN2zq9DEoArC84q9VCSrf9Hx1QUkR6ineCOwyOwhE4v/8aUTOx87mAk1nyjMOf76DQmF+tl2vnS2FssLx5N+Q==
-  /hypercore/7.7.1:
-    dependencies:
-      array-lru: 1.1.1
-      atomic-batcher: 1.0.2
-      bitfield-rle: 2.2.1
-      bulk-write-stream: 1.1.4
-      codecs: 2.2.0
-      fast-bitfield: 1.2.2
-      flat-tree: 1.8.0
-      from2: 2.3.0
-      hypercore-crypto: 1.0.0
-      hypercore-protocol: 6.12.0
-      inherits: 2.0.4
-      inspect-custom-symbol: 1.1.1
-      last-one-wins: 1.0.4
-      memory-pager: 1.5.0
-      merkle-tree-stream: 3.0.3
-      nanoguard: 1.3.0
-      pretty-hash: 1.0.1
-      random-access-file: 2.2.0
-      sodium-universal: 2.0.0
-      sparse-bitfield: 3.0.3
-      thunky: 1.1.0
-      uint64be: 2.0.2
-      unordered-array-remove: 1.0.2
-      unordered-set: 2.0.1
-    dev: false
-    optionalDependencies:
-      fd-lock: 1.2.0
-    resolution:
-      integrity: sha512-boEiPCK848pNGACW1j111tJApu530e/UPpwbHytJZlrVf3YdgUIP1KL3aSi5xJFLUnuO8GLGl4lIsSeH8TaQQA==
   /hypercore/9.10.0:
     dependencies:
       abstract-extension: 3.1.1
@@ -15495,24 +15441,26 @@ packages:
     dev: false
     resolution:
       integrity: sha512-bESly7s6X7cLMWCn4dsAVE/ttNbbB13o6jku2B7fV2wIV/g7NVC/yF7S3NiknGlftKn/uLU3fhMmbOfdBvQ5IA==
-  /hypertrie/3.8.0:
+  /hypertrie/5.1.1:
     dependencies:
+      array-lru: 1.1.1
       bulk-write-stream: 1.1.4
       codecs: 2.2.0
-      hypercore: 7.7.1
+      hypercore: 9.10.0
+      hypercore-protocol: 8.0.7
       inherits: 2.0.4
       inspect-custom-symbol: 1.1.1
       is-options: 1.0.1
       mutexify: 1.3.1
       nanoiterator: 1.2.1
       protocol-buffers-encodings: 1.1.1
-      sodium-universal: 2.0.0
+      siphash24-universal: 1.0.0
       thunky: 1.1.0
       unordered-set: 2.0.1
       varint: 5.0.2
     dev: false
     resolution:
-      integrity: sha512-mAZpE3FwrwHQvg5IUx0P2rsOUM8cCFhNv7pdrXL0O3sX8dpjmyX6mxedM26HfifyM40BJdrDer4ZQltfIf+3JA==
+      integrity: sha512-6PjBRPsTH+hqhMpjt1QmxXMFW6XaHNXkjxH1KrL1bp8Fpz7SPOvBNSaQVttvAP6GRzDKkeLraG4q3yJiSL4IhQ==
   /hyphenate-style-name/1.0.4:
     resolution:
       integrity: sha512-ygGZLjmXfPHj+ZWh6LwbC37l43MhfztxetbFCoYTM2VjkIUpeHgSNn7QIyVFj7YQ1Wl9Cbw5sholVJPzWvC2MQ==
@@ -18220,13 +18168,6 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
-  /merkle-tree-stream/3.0.3:
-    dependencies:
-      flat-tree: 1.8.0
-      readable-stream: 2.3.7
-    dev: false
-    resolution:
-      integrity: sha1-+KBkdg0355eK1fn208EZpJT1cIE=
   /merkle-tree-stream/4.0.0:
     dependencies:
       flat-tree: 1.8.0
@@ -22789,6 +22730,12 @@ packages:
       ws: 7.4.5
     resolution:
       integrity: sha512-8MJPnjRN6A8UCp1I+H/dSFyjwJhp6wta4hsVRhjf8w9qBHRzxYt14RaOcjvQnhD1N4yKOddEjflwMnQM4VtXjQ==
+  /siphash24-universal/1.0.0:
+    dependencies:
+      siphash24: 1.1.1
+    dev: false
+    resolution:
+      integrity: sha512-TasWcrGz+ITPEvE6Bhz8hACI39bSuoO9aRBYk601lhFZRpkHikbmmCbD5OkBFenYUmhOCjbOSZDbaHb8+FdWkg==
   /siphash24/1.1.1:
     dependencies:
       nanoassert: 1.1.0
@@ -22995,10 +22942,6 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-ZYU1WEhh7JfXMNbPQYIuH1ZoQSg=
-  /sorted-indexof/1.0.0:
-    dev: false
-    resolution:
-      integrity: sha1-F8dC/3zxh+L1mhXfm4HxemLOCJk=
   /source-list-map/2.0.1:
     resolution:
       integrity: sha512-qnQ7gVMxGNxsiL4lEuJwe/To8UnK7fAnmbGEEH8RpLouuKbeEm0lhbQVFIrNSuB+G7tVrAlVsZgETT5nljf+Iw==
