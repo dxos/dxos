@@ -269,7 +269,7 @@ export class Protocol {
     }
 
     this._connected = false;
-    this._stream.destroy();
+    this._stream.finalize();
     await this._extensionInit.close().catch((err: any) => process.nextTick(() => this._stream.destroy(err)));
     for (const [name, extension] of this._extensionMap) {
       log(`close extension "${name}"`);
