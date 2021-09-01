@@ -680,7 +680,7 @@ describe('FeedStore', () => {
     const { feedStore } = await createDefault();
 
     let timesCalled = 0;
-    feedStore.feedEvent.on(() => {
+    feedStore.feedOpenedEvent.on(() => {
       timesCalled++;
     });
 

@@ -63,7 +63,7 @@ export async function createIterator (
   }
 
   // TODO(burdon): Only add feeds that belong to party (or use feedSelector).
-  (feedStore as any).on('feed', (_: never, descriptor: FeedDescriptor) => {
+  feedStore.feedOpenedEvent.on((descriptor) => {
     iterator.addFeedDescriptor(descriptor);
   });
 

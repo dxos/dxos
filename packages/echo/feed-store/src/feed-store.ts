@@ -63,21 +63,16 @@ export class FeedStore {
   private _readers: Set<Reader>;
   private _indexDB: any;
   private _open: boolean;
-  private readonly openedEvent = new Event();
-  private readonly readyEvent = new Event();
-  private readonly closedEvent = new Event();
-  private readonly descriptorRemove = new Event<FeedDescriptor>();
-  private readonly downloadEvent = new Event<DownloadEventDetails>();
 
   /**
-   * Is emitted when something gets appended to one of the FeedStore's feeds represented by FeedDescriptors.
+   * Is emitted when data gets appended to one of the FeedStore's feeds represented by FeedDescriptors.
    */
   readonly appendEvent = new Event<FeedDescriptor>();
 
-  /** x
-   * Is emitted when a new feed represnted by FeedDescriptor is opened.
+  /**
+   * Is emitted when a new feed represented by FeedDescriptor is opened.
    */
-  readonly feedEvent = new Event<FeedDescriptor>();
+  readonly feedOpenedEvent = new Event<FeedDescriptor>();
 
   /**
    * @param storage RandomAccessStorage to use by default by the feeds.
@@ -114,7 +109,7 @@ export class FeedStore {
 
     this._open = false;
 
-    this.feedEvent.on((descriptor) => {
+    this.feedOpenedEvent.on((descriptor) => {
       this._readers.forEach(reader => {
         reader.addFeedStream(descriptor).catch(err => {
           reader.destroy(err);
@@ -152,11 +147,6 @@ export class FeedStore {
     list.forEach((data: any) => {
       this._createDescriptor({ ...data, key: PublicKey.from(data.key) }); // cause we don't have PublicKey deserialization
     });
-
-    this.openedEvent.emit();
-
-    // backward compatibility
-    this.readyEvent.emit();
   }
 
   @synchronized
@@ -182,8 +172,6 @@ export class FeedStore {
     this._descriptors.clear();
 
     await this._indexDB.close();
-
-    this.closedEvent.emit();
   }
 
   /**
@@ -318,8 +306,6 @@ export class FeedStore {
         await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key.toString()}`);
 
         this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
-
-        this.descriptorRemove.emit(descriptor);
       });
     }
   }
@@ -371,7 +357,6 @@ export class FeedStore {
     );
 
     const append = () => this.appendEvent.emit(descriptor);
-    const download = (...args: any) => this.downloadEvent.emit({ descriptor, args });
 
     descriptor.watch(async (event) => {
       if (event === 'updated') {
@@ -384,14 +369,12 @@ export class FeedStore {
       if (event === 'opened' && feed) {
         await this._persistDescriptor(descriptor);
         feed.on('append', append);
-        feed.on('download', download);
-        this.feedEvent.emit(descriptor);
+        this.feedOpenedEvent.emit(descriptor);
         return;
       }
 
       if (event === 'closed' && feed) {
         feed.removeListener('append', append);
-        feed.removeListener('download', download);
       }
     });
 
