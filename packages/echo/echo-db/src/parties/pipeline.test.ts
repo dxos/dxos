@@ -10,7 +10,7 @@ import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
 import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream, Timeframe } from '@dxos/echo-protocol';
-import { FeedStore, Feed, createWritableFeedStream, createWritable, WritableArray } from '@dxos/feed-store';
+import { FeedStore, HypercoreFeed, createWritableFeedStream, createWritable, WritableArray } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
@@ -89,7 +89,7 @@ describe('pipeline', () => {
     const feedReadStream = await createIterator(feedStore);
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed: Feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
+    const feed: HypercoreFeed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
 
     const keyring = new Keyring();
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });

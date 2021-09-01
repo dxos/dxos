@@ -4,6 +4,7 @@
 
 // dxos-testing-browser
 
+import assert from 'assert';
 import debug from 'debug';
 import eos from 'end-of-stream';
 import expect from 'expect';
@@ -12,7 +13,7 @@ import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
 import { keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
-import { Feed, FeedStore } from '@dxos/feed-store';
+import { FeedStore } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
@@ -102,8 +103,9 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
       });
     },
 
-    replicate: async (feeds: Feed[]) => {
+    replicate: async (feeds) => {
       for (const feed of feeds) {
+        assert(feed.key);
         if (feedStore.hasFeed(feed.key)) {
           await feedStore.openFeed(PublicKey.from(feed.key));
         } else {

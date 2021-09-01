@@ -13,7 +13,7 @@ import {
 } from '@dxos/credentials';
 import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
 import { FeedKey, FeedSetProvider, PartyKey } from '@dxos/echo-protocol';
-import type { Feed } from '@dxos/feed-store';
+import type { HypercoreFeed } from '@dxos/feed-store';
 import { MMSTTopology, NetworkManager } from '@dxos/network-manager';
 import { Protocol } from '@dxos/protocol';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
@@ -174,17 +174,18 @@ class ReplicatorProtocolPluginFactory {
           });
         },
 
-        subscribe: (addFeedToReplicatedSet: (feed: any) => void) => this._activeFeeds.added.on(async (feedKey) => {
-          log(`Adding feed: ${feedKey.toHex()}`);
-          const feed = await this._openFeed(feedKey);
-          addFeedToReplicatedSet({ discoveryKey: feed.discoveryKey });
-        }),
+        subscribe: (addFeedToReplicatedSet: (feed: any) => void) => {
+          return this._activeFeeds.added.on(async (feedKey) => {
+            log(`Adding feed: ${feedKey.toHex()}`);
+            const feed = await this._openFeed(feedKey);
+            addFeedToReplicatedSet({ discoveryKey: feed.discoveryKey });
+          });
+        },
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        replicate: async (remoteFeeds: any, info: any) => {
+        replicate: async (remoteFeeds, info) => {
           // We can ignore remoteFeeds entirely, since the set of feeds we want to replicate is dictated by the Party.
           // TODO(telackey): why are we opening feeds? Necessary or belt/braces thinking, or because open party does it?
-          log(`Replicating: peerId=${info.session.peerId}; feeds=${this._activeFeeds.get().map(key => key.toHex())}`);
+          log(`Replicating: peerId=${info.session}; feeds=${this._activeFeeds.get().map(key => key.toHex())}`);
           return Promise.all(this._activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
         }
       })
@@ -192,7 +193,7 @@ class ReplicatorProtocolPluginFactory {
   }
 
   @synchronized
-  private async _openFeed (key: FeedKey): Promise<Feed> {
+  private async _openFeed (key: FeedKey): Promise<HypercoreFeed> {
     return this._feedStore.getFeed(key) ?? await this._feedStore.createReadOnlyFeed(key, this._partyKey);
   }
 }
