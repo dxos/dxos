@@ -1,6 +1,6 @@
 {
   "name": "@dxos/random-access-multi-storage",
-  "version": "2.12.9",
+  "version": "2.12.10",
   "description": "Multiple random storage types.",
   "license": "AGPL-3.0",
   "main": "dist/src/index.js",

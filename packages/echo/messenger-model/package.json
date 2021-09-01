@@ -1,6 +1,6 @@
 {
   "name": "@dxos/messenger-model",
-  "version": "2.12.9",
+  "version": "2.12.10",
   "license": "AGPL-3.0",
   "main": "dist/src/index.js",
   "files": [
