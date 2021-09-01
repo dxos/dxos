@@ -2,11 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import pify from 'pify';
 import debug from 'debug';
+import pify from 'pify';
 
+import { EchoMetadata, schema } from '@dxos/echo-protocol';
 import { IStorage } from '@dxos/random-access-multi-storage';
-import { EchoMetadata, schema } from '@dxos/echo-protocol'
 
 const log = debug('dxos:snapshot-store');
 
@@ -15,7 +15,7 @@ export class MetadataStore {
     private readonly _storage: IStorage
   ) {}
 
-  async load(): Promise<EchoMetadata> {
+  async load (): Promise<EchoMetadata> {
     const file = this._storage.createOrOpen('EchoMetadata');
     try {
       const { size } = await pify(file.stat.bind(file))();
@@ -36,7 +36,7 @@ export class MetadataStore {
     }
   }
 
-  async save(metadata: EchoMetadata) {
+  async save (metadata: EchoMetadata) {
     const file = this._storage.createOrOpen('EchoMetadata');
 
     try {

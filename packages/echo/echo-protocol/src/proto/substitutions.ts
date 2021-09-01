@@ -26,5 +26,5 @@ export default {
   'dxos.echo.keys.Key': {
     encode: (value: PublicKey) => ({ data: value.asUint8Array() }),
     decode: (value: any) => PublicKey.from(value.data)
-  },
+  }
 };
