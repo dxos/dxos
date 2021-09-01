@@ -179,7 +179,7 @@ class ReplicatorProtocolPluginFactory {
             log(`Adding feed: ${feedKey.toHex()}`);
             const feed = await this._openFeed(feedKey);
             addFeedToReplicatedSet({ discoveryKey: feed.discoveryKey });
-          })
+          });
         },
 
         replicate: async (remoteFeeds, info) => {
