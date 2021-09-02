@@ -141,7 +141,7 @@ const connect = (source: any, target: any) => {
 
 type Node = { feed: HypercoreFeed, feedStore: FeedStore }
 
-async function getMessages(sender: Node, receiver: Node): Promise<any[]> {
+async function getMessages (sender: Node, receiver: Node): Promise<any[]> {
   const feed = receiver.feedStore.getOpenFeed((descriptor) => descriptor.key.equals(sender.feed.key));
   assert(feed, 'Nodes not connected');
   const messages: any[] = [];
@@ -158,7 +158,7 @@ async function getMessages(sender: Node, receiver: Node): Promise<any[]> {
       }
     });
   });
-};
+}
 
 it('Auth Plugin (GOOD)', async () => {
   const keyring = await createTestKeyring();
