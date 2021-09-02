@@ -63,61 +63,6 @@ void (async () => {
 
     check(count);
   });
-
-  suite.test('createReadStream [batch=1]', async () => {
-    const stream = fs.createReadStream({ batch: 1 });
-    let count = 0;
-
-    await new Promise<void>((resolve, reject) => {
-      stream.on('data', (data: any) => {
-        count++;
-        if (count === expectedMessages) {
-          resolve();
-        }
-      });
-    });
-
-    stream.destroy();
-
-    check(count);
-  });
-
-  suite.test('createReadStream [batch=100]', async () => {
-    const stream = fs.createReadStream({ batch: 100 });
-    let count = 0;
-
-    await new Promise<void>((resolve, reject) => {
-      stream.on('data', (data: any) => {
-        count++;
-        if (count === expectedMessages) {
-          resolve();
-        }
-      });
-    });
-
-    stream.destroy();
-
-    check(count);
-  });
-
-  suite.test('createBatchStream [batch=100]', async () => {
-    const stream = fs.createBatchStream({ batch: 100 });
-    let count = 0;
-
-    await new Promise<void>((resolve, reject) => {
-      stream.on('data', (data: any) => {
-        count += data.length;
-        if (count === expectedMessages) {
-          resolve();
-        }
-      });
-    });
-
-    stream.destroy();
-
-    check(count);
-  });
-
   const results = await suite.run();
 
   suite.print(results);

@@ -5,17 +5,20 @@
 import assert from 'assert';
 import streamFrom from 'from2';
 
+import { HypercoreFeed } from './hypercore-types';
+
 export interface CreateBatchStreamOptions {
   start?: number,
   end?: number,
-  live?: any,
+  live?: boolean,
   snapshot?: boolean,
   batch?: number,
   metadata?: any,
   tail?: boolean
 }
 
-export function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {}) {
+export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamOptions = {}) {
+  const _feed = feed as any; // to preserve external interface
   assert(!opts.batch || opts.batch > 0, 'batch must be major or equal to 1');
 
   let start = opts.start || 0;
@@ -30,15 +33,15 @@ export function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {
   let first = true;
   let firstSyncEnd = end;
 
-  let range = feed.download({ start, end, linear: true });
+  let range = _feed.download({ start, end, linear: true });
 
   return streamFrom.obj(read).on('end', cleanup).on('close', cleanup);
 
   function read (size: any, cb?: any) {
-    if (!feed.opened) {
+    if (!_feed.opened) {
       return open(size, cb);
     }
-    if (!feed.readable) {
+    if (!_feed.readable) {
       return cb(new Error('Feed is closed'));
     }
 
@@ -47,26 +50,26 @@ export function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {
         if (live) {
           end = Infinity;
         } else if (snapshot) {
-          end = feed.length;
+          end = _feed.length;
         }
         if (start > end) {
           return cb(null, null);
         }
       }
       if (opts.tail) {
-        start = feed.length;
+        start = _feed.length;
       }
-      firstSyncEnd = end === Infinity ? feed.length : end;
+      firstSyncEnd = end === Infinity ? _feed.length : end;
       first = false;
     }
 
-    if (start === end || (end === -1 && start === feed.length)) {
+    if (start === end || (end === -1 && start === _feed.length)) {
       return cb(null, null);
     }
 
     if (batch === 1) {
       seq = setStart(start + 1);
-      feed.get(seq, opts, (err: any, data: any) => {
+      _feed.get(seq, opts, (err: any, data: any) => {
         if (err) {
           return cb(err);
         }
@@ -76,14 +79,14 @@ export function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {
     }
 
     batchEnd = start + batch;
-    batchLimit = end === Infinity ? feed.length : end;
+    batchLimit = end === Infinity ? _feed.length : end;
     if (batchEnd > batchLimit) {
       batchEnd = batchLimit;
     }
 
-    if (!feed.downloaded(start, batchEnd)) {
+    if (!_feed.downloaded(start, batchEnd)) {
       seq = setStart(start + 1);
-      feed.get(seq, opts, (err: Error, data: any) => {
+      _feed.get(seq, opts, (err: Error, data: any) => {
         if (err) {
           return cb(err);
         }
@@ -93,7 +96,7 @@ export function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {
     }
 
     seq = setStart(batchEnd);
-    feed.getBatch(seq, batchEnd, opts, (err: Error, messages: any[]) => {
+    _feed.getBatch(seq, batchEnd, opts, (err: Error, messages: any[]) => {
       if (err || messages.length === 0) {
         cb(err);
         return;
@@ -105,10 +108,10 @@ export function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {
 
   function buildMessage (data: object) {
     const message = {
-      key: feed.key,
+      key: _feed.key,
       seq: seq++,
       data,
-      sync: feed.length === seq || firstSyncEnd === 0 || firstSyncEnd === seq,
+      sync: _feed.length === seq || firstSyncEnd === 0 || firstSyncEnd === seq,
       ...metadata
     };
 
@@ -119,12 +122,12 @@ export function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {
     if (!range) {
       return;
     }
-    feed.undownload(range);
+    _feed.undownload(range);
     range = null;
   }
 
   function open (size: any, cb: (err: Error) => void) {
-    feed.ready(function (err: Error) {
+    _feed.ready(function (err: Error) {
       if (err) {
         return cb(err);
       }

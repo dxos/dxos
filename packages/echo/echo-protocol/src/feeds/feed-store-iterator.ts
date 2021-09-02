@@ -176,7 +176,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
     log(`Starting reading from feed ${descriptor.key.toString()} from sequence ${startIdx}`);
 
     const stream = new Readable({ objectMode: true })
-      .wrap(createBatchStream(descriptor.feed, { live: true, start: startIdx }));
+      .wrap(createBatchStream(descriptor.feed!, { live: true, start: startIdx }));
 
     this._openFeeds.set(keyToString(descriptor.key.asBuffer()), {
       descriptor,

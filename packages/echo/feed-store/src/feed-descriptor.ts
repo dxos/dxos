@@ -2,6 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
+import assert from 'assert';
 import defaultHypercore from 'hypercore';
 import pify from 'pify';
 
@@ -10,19 +11,14 @@ import { PublicKey, discoveryKey } from '@dxos/crypto';
 import type { IFile, IStorage } from '@dxos/random-access-multi-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
-
-interface ValueEncoding {
-  encode: string,
-  decode: string
-}
+import type { ValueEncoding } from './types';
 
 interface FeedDescriptorOptions {
   storage: IStorage,
   key: PublicKey,
   secretKey?: Buffer,
-  valueEncoding?: string | ValueEncoding,
+  valueEncoding?: ValueEncoding,
   metadata?: any,
-  codecs?: object,
   hypercore?: Hypercore
 }
 
@@ -37,13 +33,12 @@ export class FeedDescriptor {
   private _storage: IStorage;
   private _key: PublicKey;
   private _secretKey?: Buffer;
-  private _valueEncoding?: string | ValueEncoding;
+  private _valueEncoding?: ValueEncoding;
   private _hypercore: Hypercore;
-  private _codecs: any;
   private _metadata: any;
   private _discoveryKey: Buffer;
   public readonly lock: Lock;
-  private _feed: any;
+  private _feed: HypercoreFeed | null;
   private _listener: Listener;
 
   constructor (options: FeedDescriptorOptions) {
@@ -53,14 +48,12 @@ export class FeedDescriptor {
       secretKey,
       valueEncoding,
       hypercore = defaultHypercore,
-      codecs = {},
       metadata
     } = options;
 
     this._storage = storage;
     this._valueEncoding = valueEncoding;
     this._hypercore = hypercore;
-    this._codecs = codecs;
     this._metadata = metadata;
     this._key = key;
     this._secretKey = secretKey;
@@ -114,6 +107,7 @@ export class FeedDescriptor {
    */
   async open (): Promise<HypercoreFeed> {
     if (this.opened) {
+      assert(this._feed, 'Feed is not initialized');
       return this._feed;
     }
 
@@ -121,6 +115,7 @@ export class FeedDescriptor {
       await this._open();
       await this._emit('opened');
     });
+    assert(this._feed, 'Feed is not initialized');
     return this._feed;
   }
 
@@ -133,7 +128,7 @@ export class FeedDescriptor {
     }
 
     await this.lock.executeSynchronized(async () => {
-      await pify(this._feed.close.bind(this._feed))();
+      await pify(this._feed?.close.bind(this._feed))();
       await this._emit('closed');
     });
   }
@@ -163,8 +158,7 @@ export class FeedDescriptor {
       this._key.asBuffer(),
       {
         secretKey: this._secretKey,
-        valueEncoding: (typeof this._valueEncoding === 'string' && this._codecs[this._valueEncoding]) ||
-          this._valueEncoding
+        valueEncoding: this._valueEncoding
       }
     );
 

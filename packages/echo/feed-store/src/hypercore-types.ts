@@ -47,6 +47,7 @@ export interface HypercoreFeed {
   getBatch: (n: number, maxMessages: number, cb: (err: Error, res: any) => any) => any;
 
   replicate(options: any): void;
+  close: (arg: any) => any
 }
 
 export type Hypercore = (storage: any, key?: any, options?: any) => HypercoreFeed;

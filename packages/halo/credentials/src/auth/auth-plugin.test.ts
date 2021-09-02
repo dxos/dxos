@@ -13,7 +13,7 @@ import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
 import { keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedStore, createBatchStream, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
@@ -119,24 +119,6 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
     }
   });
 
-  const getMessages = async () => {
-    const messages: { data: unknown }[] = [];
-    const stream = feedStore.createReadStream();
-    stream.on('data', ({ data }: any) => {
-      messages.push(data);
-    });
-
-    return new Promise((resolve, reject) => {
-      eos(stream, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(messages.sort());
-        }
-      });
-    });
-  };
-
   const proto = new Protocol({
     streamOptions: { live: true },
     discoveryKey: partyKey.asBuffer(),
@@ -155,6 +137,27 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
  */
 const connect = (source: any, target: any) => {
   return pump(source.stream, target.stream, source.stream) as any;
+};
+
+type Node = { feed: HypercoreFeed, feedStore: FeedStore }
+
+async function getMessages(sender: Node, receiver: Node): Promise<any[]> {
+  const feed = receiver.feedStore.getOpenFeed((descriptor) => descriptor.key.equals(sender.feed.key));
+  assert(feed, 'Nodes not connected');
+  const messages: any[] = [];
+  const stream = createBatchStream(feed);
+  stream.on('data', (data) => {
+    messages.push(data[0].data);
+  });
+  return new Promise((resolve, reject) => {
+    eos(stream, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(messages);
+      }
+    });
+  });
 };
 
 it('Auth Plugin (GOOD)', async () => {
@@ -191,7 +194,7 @@ it('Auth & Repl (GOOD)', async () => {
   const message1 = randomBytes(32).toString('hex');
   await node1.append(message1);
   await waitForExpect(async () => {
-    const msgs = await node2.getMessages();
+    const msgs = await getMessages(node1, node2);
     expect(msgs).toContain(message1);
     log(`${message1} on ${keyToString(node2.id)}.`);
   });
@@ -199,7 +202,7 @@ it('Auth & Repl (GOOD)', async () => {
   const message2 = randomBytes(32).toString('hex');
   await node2.append(message2);
   await waitForExpect(async () => {
-    const msgs = await node1.getMessages();
+    const msgs = await getMessages(node2, node1);
     expect(msgs).toContain(message2);
     log(`${message2} on ${keyToString(node1.id)}.`);
   });
