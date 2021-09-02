@@ -1,0 +1,11 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo.keys;
+
+message Key {
+  bytes data = 1;
+}
