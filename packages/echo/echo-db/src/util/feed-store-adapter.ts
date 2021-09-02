@@ -19,7 +19,7 @@ import { IStorage } from '@dxos/random-access-multi-storage';
 // TODO(burdon): Temporary: will replace FeedStore.
 export class FeedStoreAdapter {
   static create (storage: IStorage) {
-    return new FeedStoreAdapter(new FeedStore(storage, { feedOptions: { valueEncoding: patchBufferCodec(codec) } }));
+    return new FeedStoreAdapter(new FeedStore(storage, { valueEncoding: patchBufferCodec(codec) }));
   }
 
   constructor (

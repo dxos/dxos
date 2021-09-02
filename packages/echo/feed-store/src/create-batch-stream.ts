@@ -18,7 +18,6 @@ export interface CreateBatchStreamOptions {
 }
 
 export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamOptions = {}) {
-  const _feed = feed as any; // to preserve external interface
   assert(!opts.batch || opts.batch > 0, 'batch must be major or equal to 1');
 
   let start = opts.start || 0;
@@ -33,15 +32,15 @@ export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamO
   let first = true;
   let firstSyncEnd = end;
 
-  let range = _feed.download({ start, end, linear: true });
+  let range = feed.download({ start, end, linear: true });
 
   return streamFrom.obj(read).on('end', cleanup).on('close', cleanup);
 
   function read (size: any, cb?: any) {
-    if (!_feed.opened) {
+    if (!feed.opened) {
       return open(size, cb);
     }
-    if (!_feed.readable) {
+    if (!feed.readable) {
       return cb(new Error('Feed is closed'));
     }
 
@@ -50,26 +49,26 @@ export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamO
         if (live) {
           end = Infinity;
         } else if (snapshot) {
-          end = _feed.length;
+          end = feed.length;
         }
         if (start > end) {
           return cb(null, null);
         }
       }
       if (opts.tail) {
-        start = _feed.length;
+        start = feed.length;
       }
-      firstSyncEnd = end === Infinity ? _feed.length : end;
+      firstSyncEnd = end === Infinity ? feed.length : end;
       first = false;
     }
 
-    if (start === end || (end === -1 && start === _feed.length)) {
+    if (start === end || (end === -1 && start === feed.length)) {
       return cb(null, null);
     }
 
     if (batch === 1) {
       seq = setStart(start + 1);
-      _feed.get(seq, opts, (err: any, data: any) => {
+      feed.get(seq, opts, (err: any, data: any) => {
         if (err) {
           return cb(err);
         }
@@ -79,24 +78,24 @@ export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamO
     }
 
     batchEnd = start + batch;
-    batchLimit = end === Infinity ? _feed.length : end;
+    batchLimit = end === Infinity ? feed.length : end;
     if (batchEnd > batchLimit) {
       batchEnd = batchLimit;
     }
 
-    if (!_feed.downloaded(start, batchEnd)) {
+    if (!feed.downloaded(start, batchEnd)) {
       seq = setStart(start + 1);
-      _feed.get(seq, opts, (err: Error, data: any) => {
+      feed.get(seq, opts, (err, data) => {
         if (err) {
           return cb(err);
         }
-        cb(null, [buildMessage(data)]);
+        cb(null, [buildMessage(data as any)]);
       });
       return;
     }
 
     seq = setStart(batchEnd);
-    _feed.getBatch(seq, batchEnd, opts, (err: Error, messages: any[]) => {
+    feed.getBatch(seq, batchEnd, opts, (err: Error, messages: any[]) => {
       if (err || messages.length === 0) {
         cb(err);
         return;
@@ -108,10 +107,10 @@ export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamO
 
   function buildMessage (data: object) {
     const message = {
-      key: _feed.key,
+      key: feed.key,
       seq: seq++,
       data,
-      sync: _feed.length === seq || firstSyncEnd === 0 || firstSyncEnd === seq,
+      sync: feed.length === seq || firstSyncEnd === 0 || firstSyncEnd === seq,
       ...metadata
     };
 
@@ -122,12 +121,12 @@ export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamO
     if (!range) {
       return;
     }
-    _feed.undownload(range);
+    feed.undownload(range);
     range = null;
   }
 
   function open (size: any, cb: (err: Error) => void) {
-    _feed.ready(function (err: Error) {
+    feed.ready(function (err: Error) {
       if (err) {
         return cb(err);
       }

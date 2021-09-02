@@ -178,7 +178,7 @@ describe('Party manager', () => {
   });
 
   test('Create from cold start', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
     const feedStoreAdapter = new FeedStoreAdapter(feedStore);
 
     const keyring = new Keyring();

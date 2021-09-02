@@ -21,7 +21,7 @@ void (async () => {
     }
   };
 
-  const fs = new FeedStore(createStorage('.benchmark'), { feedOptions: { valueEncoding: 'utf8' } });
+  const fs = new FeedStore(createStorage('.benchmark'), { valueEncoding: 'utf8' });
   await fs.open();
   const suite = new Suite(fs, { maxFeeds, maxMessages });
 
@@ -51,7 +51,7 @@ void (async () => {
 
     await Promise.all(fs.getOpenFeeds().map(feed => {
       return new Promise<void>((resolve, reject) => {
-        feed.getBatch(0, maxMessages, (err, result) => {
+        feed.getBatch(0, maxMessages, (err: Error, result: any) => {
           count += result.length;
           if (err) {
             return reject(err);

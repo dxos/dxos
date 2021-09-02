@@ -22,36 +22,32 @@ const STORE_NAMESPACE = '@feedstore';
 type DescriptorCallback = (descriptor: FeedDescriptor) => boolean;
 type Database = (...args: any) => ReturnType<typeof hypertrie>;
 
-interface CreateDescriptorOptions {
+export interface CreateDescriptorOptions {
   key: PublicKey,
   secretKey?: Buffer,
   metadata?: any
 }
 
-interface CreateReadWriteFeedOptions {
+export interface CreateReadWriteFeedOptions {
   key: PublicKey,
   secretKey: Buffer
   metadata?: any
 }
 
-interface CreateReadOnlyFeedOptions {
+export interface CreateReadOnlyFeedOptions {
   key: PublicKey
   metadata?: any
 }
 
-interface FeedOptions {
-  valueEncoding?: ValueEncoding
-}
-
-interface FeedStoreOptions {
+export interface FeedStoreOptions {
   /**
    * Defines a custom hypertrie database to index the feeds.
    */
   database?: Database,
   /**
-   * Options for each feed.
+   * Encoding type for each feed.
    */
-  feedOptions?: FeedOptions,
+  valueEncoding?: ValueEncoding
   /**
    * Hypercore class to use.
    */
@@ -67,7 +63,7 @@ interface FeedStoreOptions {
 export class FeedStore {
   private _storage: IStorage;
   private _database: Database;
-  private _feedOptions: FeedOptions;
+  private _valueEncoding: ValueEncoding | undefined;
   private _hypercore: Hypercore;
   private _descriptors: Map<string, FeedDescriptor>;
   private _indexDB: IndexDB | null;
@@ -94,13 +90,13 @@ export class FeedStore {
 
     const {
       database = (...args: any) => hypertrie(...args),
-      feedOptions = { valueEncoding: undefined },
+      valueEncoding,
       hypercore = defaultHypercore
     } = options;
 
     this._database = database;
 
-    this._feedOptions = feedOptions;
+    this._valueEncoding = valueEncoding;
 
     this._hypercore = hypercore;
 
@@ -311,7 +307,7 @@ export class FeedStore {
       storage: this._storage,
       key,
       secretKey,
-      valueEncoding: this._feedOptions.valueEncoding,
+      valueEncoding: this._valueEncoding,
       metadata,
       hypercore: this._hypercore
     });
