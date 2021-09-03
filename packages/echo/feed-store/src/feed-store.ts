@@ -54,16 +54,6 @@ export interface FeedStoreOptions {
   hypercore?: Hypercore
 }
 
-function patchBufferCodec (encoding: ValueEncoding): ValueEncoding {
-  if (typeof encoding === 'string') {
-    return encoding;
-  }
-  return {
-    encode: (x: any) => Buffer.from(encoding.encode(x)),
-    decode: encoding.decode.bind(encoding)
-  };
-}
-
 /**
  * FeedStore
  *
@@ -372,4 +362,14 @@ export class FeedStore {
       await this._indexDB.put(key, newData);
     }
   }
+}
+
+function patchBufferCodec (encoding: ValueEncoding): ValueEncoding {
+  if (typeof encoding === 'string') {
+    return encoding;
+  }
+  return {
+    encode: (x: any) => Buffer.from(encoding.encode(x)),
+    decode: encoding.decode.bind(encoding)
+  };
 }
