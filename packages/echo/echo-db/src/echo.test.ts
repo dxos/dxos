@@ -190,19 +190,19 @@ describe('ECHO', () => {
     const party1 = await echo1.createParty();
     await inviteTestPeer(party1, echo2);
 
-    // await echo1.close();
-    // await echo2.close();
+    await echo1.close();
+    await echo2.close();
 
-    // await echo2.open();
-    // await waitForCondition(async () => echo2.getParty(party1.key) !== undefined);
+    await echo2.open();
+    await waitForCondition(async () => echo2.getParty(party1.key) !== undefined);
 
-    // const party = echo2.getParty(party1.key);
-    // assert(party);
-    // log('Initialized party');
+    const party = echo2.getParty(party1.key);
+    assert(party);
+    log('Initialized party');
 
-    // const items = party.database.select(s => s.items).getValue();
-    // await waitForCondition(() => items.length > 0);
-    // expect(items.length).toBeGreaterThan(0);
+    const items = party.database.select(s => s.items).getValue();
+    await waitForCondition(() => items.length > 0);
+    expect(items.length).toBeGreaterThan(0);
   });
 
   test('create party and items with props', async () => {
