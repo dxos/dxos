@@ -34,7 +34,7 @@ async function createDefault () {
 
   return {
     directory,
-    feedStore: await createFeedStore(createStorage(directory, STORAGE_NODE), { feedOptions: { valueEncoding: 'utf-8' } })
+    feedStore: await createFeedStore(createStorage(directory, STORAGE_NODE), { valueEncoding: 'utf-8' })
   };
 }
 
