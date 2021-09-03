@@ -140,7 +140,7 @@ export class FeedStore {
 
     list.forEach((data: any) => {
       const key = PublicKey.from(data.key); // cause we don't have PublicKey deserialization
-      const secretKey = keys?.find(keyRecord => keyRecord.publicKey.equals(key))?.secretKey
+      const secretKey = keys?.find(keyRecord => keyRecord.publicKey.equals(key))?.secretKey;
       this._createDescriptor({ ...data, secretKey, key });
     });
   }
