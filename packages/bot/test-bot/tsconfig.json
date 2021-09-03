@@ -1,0 +1,36 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": [
+      "DOM"
+    ]
+  },
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../protocol-plugin-bot"
+    }
+  ]
+}

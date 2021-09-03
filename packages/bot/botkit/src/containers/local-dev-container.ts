@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import path from 'path';
+
 import { SpawnOptions } from '@dxos/protocol-plugin-bot';
 
 import { LOCAL_BOT_MAIN_FILE } from '../source-manager';
@@ -30,7 +32,7 @@ export class LocalDevBotContainer extends ChildProcessContainer {
     const { botPath } = spawnOptions;
     return {
       command: LOCAL_BOT_RUN_COMMAND,
-      args: LOCAL_BOT_RUN_ARGS.concat([botPath || LOCAL_BOT_MAIN_FILE]),
+      args: LOCAL_BOT_RUN_ARGS.concat([botPath || path.join(process.cwd(), LOCAL_BOT_MAIN_FILE)]),
       env: {
         NODE_PATH: this._nodePath
       }

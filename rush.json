@@ -712,6 +712,12 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
+    {
+      "packageName": "@dxos/test-bot",
+      "projectFolder": "packages/bot/test-bot",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
 
     //
     // gravity
