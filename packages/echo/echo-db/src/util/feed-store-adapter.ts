@@ -97,10 +97,6 @@ export class FeedStoreAdapter {
   }
 
   async createReadOnlyFeed (feedKey: FeedKey, partyKey: PartyKey): Promise<HypercoreFeed> {
-    await this._keyring.addKeyRecord({
-      type: KeyType.FEED,
-      publicKey: feedKey
-    });
     return this._feedStore.createReadOnlyFeed({
       key: feedKey,
       metadata: { partyKey: partyKey.asBuffer() }

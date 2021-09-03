@@ -6,7 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
+import { createKeyPair, PublicKey } from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -37,13 +37,19 @@ const setup = async () => {
     snapshotStore
   );
 
-  const feed = await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
+  
+  const { publicKey, secretKey } = createKeyPair();
+  const key = PublicKey.from(publicKey);
   const feedKey = await keyring.addKeyRecord({
-    publicKey: PublicKey.from(feed.key),
-    secretKey: feed.secretKey,
-    type: KeyType.FEED
+    type: KeyType.FEED,
+    publicKey: key,
+    secretKey
   });
-
+  await feedStore.createReadWriteFeed({
+    key,
+    secretKey,
+    metadata: { partyKey: partyKey.publicKey.asBuffer(), writable: true }
+  });
   await party.open();
   afterTest(async () => party.close());
 
