@@ -473,7 +473,6 @@ importers:
       hypercore: 9.10.0
       hypercore-crypto: 1.0.0
       hypertrie: 5.1.1
-      multi-read-stream: 2.0.0
       pify: 5.0.0
       pump: 3.0.0
       sodium-universal: 3.0.4
@@ -494,6 +493,7 @@ importers:
       '@types/through2': 2.0.36
       end-of-stream-promise: 1.0.0
       tempy: 1.0.1
+      wait-for-expect: 3.0.2
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/benchmark-suite': ^1.0.0-beta.1
@@ -517,12 +517,12 @@ importers:
       hypercore: ^9.10.0
       hypercore-crypto: ^1.0.0
       hypertrie: 5.1.1
-      multi-read-stream: ^2.0.0
       pify: ~5.0.0
       pump: ^3.0.0
       sodium-universal: ~3.0.4
       tempy: ~1.0.1
       through2: ^3.0.1
+      wait-for-expect: ^3.0.2
   ../../packages/echo/messenger-model:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -1148,6 +1148,7 @@ importers:
       '@types/jest': 26.0.23
       end-of-stream: 1.4.4
       jest: 26.6.3
+      multi-read-stream: 2.0.0
       pify: 5.0.0
       wait-for-expect: 3.0.2
     specifiers:
@@ -1165,6 +1166,7 @@ importers:
       debug: ^4.1.1
       end-of-stream: ^1.4.1
       jest: ^26.6.3
+      multi-read-stream: ^2.0.0
       pify: ~5.0.0
       wait-for-expect: ^3.0.2
   ../../packages/mesh/signal:
@@ -18623,7 +18625,7 @@ packages:
   /multi-read-stream/2.0.0:
     dependencies:
       readable-stream: 2.3.7
-    dev: false
+    dev: true
     resolution:
       integrity: sha1-2e6GFHQwiUEaTZrH0h04qmjDbkA=
   /multibase/0.6.1:

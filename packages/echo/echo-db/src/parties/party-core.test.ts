@@ -19,7 +19,7 @@ import { FeedStoreAdapter } from '../util';
 import { PartyCore } from './party-core';
 
 const setup = async () => {
-  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
   await feedStore.open();
   afterTest(async () => feedStore.close());
 
