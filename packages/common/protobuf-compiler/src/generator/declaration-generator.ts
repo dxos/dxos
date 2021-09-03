@@ -48,7 +48,7 @@ function createMessageDeclaration (type: protobufjs.Type, subs: SubstitutionsMap
     undefined,
     type.fieldsArray.map(field => f.createPropertySignature(
       undefined,
-      field.name,
+      field.name.includes('.') ? f.createStringLiteral(field.name) : field.name,
       field.required ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
       getFieldType(field, subs)
     ))
