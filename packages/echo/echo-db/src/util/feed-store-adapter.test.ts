@@ -5,12 +5,12 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { Keyring } from '@dxos/credentials';
 import { randomBytes, PublicKey } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 
 import { FeedStoreAdapter } from './feed-store-adapter';
 import { createRamStorage } from './persistant-ram-storage';
-import { Keyring } from '@dxos/credentials';
 
 test('close and re-open', async () => {
   const keyring = new Keyring();

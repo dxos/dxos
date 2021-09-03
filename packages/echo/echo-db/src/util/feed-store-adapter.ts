@@ -4,13 +4,13 @@
 
 import assert from 'assert';
 
+import { Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey, createKeyPair } from '@dxos/crypto';
 import {
   codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
 } from '@dxos/echo-protocol';
 import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { IStorage } from '@dxos/random-access-multi-storage';
-import { Keyring, KeyType } from '@dxos/credentials';
 
 /**
  * An adapter class to better define the API surface of FeedStore we use.
@@ -24,7 +24,7 @@ export class FeedStoreAdapter {
 
   constructor (
     private readonly _feedStore: FeedStore,
-    private readonly _keyring: Keyring,
+    private readonly _keyring: Keyring
   ) {}
 
   // TODO(burdon): Remove.
@@ -76,7 +76,7 @@ export class FeedStoreAdapter {
     return descriptor?.feed;
   }
 
-  createWritableFeed (partyKey: PartyKey): Promise<HypercoreFeed> {
+  async createWritableFeed (partyKey: PartyKey): Promise<HypercoreFeed> {
     // TODO(marik-d): Something is wrong here; Buffer should be a subclass of Uint8Array but it isn't here.
     assert(!this.queryWritableFeed(partyKey), 'Writable feed already exists');
 
@@ -84,7 +84,7 @@ export class FeedStoreAdapter {
     // Using that real value would be preferable to using metadata, but I think it requires the Feed be open.
     const { publicKey, secretKey } = createKeyPair();
     const key = PublicKey.from(publicKey);
-    this._keyring.addKeyRecord({
+    await this._keyring.addKeyRecord({
       type: KeyType.FEED,
       publicKey: key,
       secretKey
@@ -96,8 +96,8 @@ export class FeedStoreAdapter {
     });
   }
 
-  createReadOnlyFeed (feedKey: FeedKey, partyKey: PartyKey): Promise<HypercoreFeed> {
-    this._keyring.addKeyRecord({
+  async createReadOnlyFeed (feedKey: FeedKey, partyKey: PartyKey): Promise<HypercoreFeed> {
+    await this._keyring.addKeyRecord({
       type: KeyType.FEED,
       publicKey: feedKey
     });
