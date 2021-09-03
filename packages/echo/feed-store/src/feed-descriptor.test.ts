@@ -12,6 +12,7 @@ import { PublicKey, createKeyPair } from '@dxos/crypto';
 import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
+import waitForExpect from 'wait-for-expect';
 
 // Caution: the tests depend on each other in sequence.
 describe('FeedDescriptor', () => {
@@ -128,7 +129,7 @@ describe('FeedDescriptor', () => {
     expect(msg).toBe('test');
   });
 
-  test('Watch data', async (done) => {
+  test('Watch data', async () => {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
       storage: createStorage('', STORAGE_RAM),
@@ -136,13 +137,16 @@ describe('FeedDescriptor', () => {
       secretKey
     });
 
+    const events: string[] = []
     fd.watch(event => {
-      expect(event).toBe('opened');
-      fd.watch(null);
-      void fd.close().then(done);
+      events.push(event);
     });
 
     await fd.open();
+    
+    await waitForExpect(() => expect(events).toContain('opened'));
+
+    await fd.close();
   });
 
   test('on open error should unlock the resource', async () => {
