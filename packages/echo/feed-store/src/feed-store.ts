@@ -39,6 +39,11 @@ export interface CreateReadOnlyFeedOptions {
   metadata?: any
 }
 
+export interface KeyRecord {
+  publicKey: PublicKey,
+  secretKey?: Buffer
+}
+
 export interface FeedStoreOptions {
   /**
    * Defines a custom hypertrie database to index the feeds.
@@ -123,7 +128,7 @@ export class FeedStore {
   }
 
   @synchronized
-  async open () {
+  async open (keys?: KeyRecord[]) {
     if (this._open) {
       return;
     }
@@ -134,7 +139,9 @@ export class FeedStore {
     const list = await this._indexDB.list(STORE_NAMESPACE);
 
     list.forEach((data: any) => {
-      this._createDescriptor({ ...data, key: PublicKey.from(data.key) }); // cause we don't have PublicKey deserialization
+      const key = PublicKey.from(data.key); // cause we don't have PublicKey deserialization
+      const secretKey = keys?.find(keyRecord => keyRecord.publicKey.equals(key))?.secretKey
+      this._createDescriptor({ ...data, secretKey, key });
     });
   }
 
@@ -353,7 +360,6 @@ export class FeedStore {
 
     const newData = {
       key: descriptor.key.asBuffer(),
-      secretKey: descriptor.secretKey,
       valueEncoding: typeof descriptor.valueEncoding === 'string' ? descriptor.valueEncoding : undefined,
       metadata: descriptor.metadata
     };

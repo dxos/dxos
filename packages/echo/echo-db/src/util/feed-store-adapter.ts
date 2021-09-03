@@ -10,6 +10,7 @@ import {
 } from '@dxos/echo-protocol';
 import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { IStorage } from '@dxos/random-access-multi-storage';
+import { Keyring, KeyType } from '@dxos/credentials';
 
 /**
  * An adapter class to better define the API surface of FeedStore we use.
@@ -17,12 +18,13 @@ import { IStorage } from '@dxos/random-access-multi-storage';
  */
 // TODO(burdon): Temporary: will replace FeedStore.
 export class FeedStoreAdapter {
-  static create (storage: IStorage) {
-    return new FeedStoreAdapter(new FeedStore(storage, { valueEncoding: codec }));
+  static create (storage: IStorage, keyring: Keyring) {
+    return new FeedStoreAdapter(new FeedStore(storage, { valueEncoding: codec }), keyring);
   }
 
   constructor (
-    private readonly _feedStore: FeedStore
+    private readonly _feedStore: FeedStore,
+    private readonly _keyring: Keyring,
   ) {}
 
   // TODO(burdon): Remove.
@@ -36,12 +38,12 @@ export class FeedStoreAdapter {
 
   async open () {
     if (!this._feedStore.opened) {
-      await this._feedStore.open();
+      await this._feedStore.open(this._keyring.keys);
     }
 
     // TODO(telackey): There may be a better way to do this, but at the moment,
     // we don't have any feeds we don't need to be open.
-    for await (const descriptor of this._feedStore.getDescriptors()) {
+    for (const descriptor of this._feedStore.getDescriptors()) {
       if (!descriptor.opened) {
         await this._feedStore.openFeed(descriptor.key);
       }
@@ -81,14 +83,24 @@ export class FeedStoreAdapter {
     // TODO(telackey): 'writable' is true property of the Feed, not just its Descriptor's metadata.
     // Using that real value would be preferable to using metadata, but I think it requires the Feed be open.
     const { publicKey, secretKey } = createKeyPair();
+    const key = PublicKey.from(publicKey);
+    this._keyring.addKeyRecord({
+      type: KeyType.FEED,
+      publicKey: key,
+      secretKey
+    });
     return this._feedStore.createReadWriteFeed({
-      key: PublicKey.from(publicKey),
+      key,
       secretKey,
       metadata: { partyKey: partyKey.asBuffer(), writable: true }
     });
   }
 
   createReadOnlyFeed (feedKey: FeedKey, partyKey: PartyKey): Promise<HypercoreFeed> {
+    this._keyring.addKeyRecord({
+      type: KeyType.FEED,
+      publicKey: feedKey
+    });
     return this._feedStore.createReadOnlyFeed({
       key: feedKey,
       metadata: { partyKey: partyKey.asBuffer() }

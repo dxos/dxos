@@ -23,12 +23,12 @@ const setup = async () => {
   await feedStore.open();
   afterTest(async () => feedStore.close());
 
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore);
   const keyring = new Keyring();
+  const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+
+  const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring);
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
-
-  const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
   const party = new PartyCore(
     partyKey.publicKey,
