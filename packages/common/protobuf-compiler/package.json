@@ -2,11 +2,11 @@
   "name": "@dxos/protobuf-compiler",
   "version": "2.12.10",
   "license": "MIT",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "bin": {
     "build-protobuf": "./bin/main.js"
   },
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"

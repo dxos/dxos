@@ -21,6 +21,9 @@
       "path": "../protocol"
     },
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../protocol-network-generator"
     }
   ]
