@@ -23,8 +23,8 @@ jobs:
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
           npm install -g @microsoft/rush pnpm
-          # sudo ./common/scripts/install-dependencies.sh
-          # npx playwright@1.11.0 install-deps
+          sudo ./common/scripts/install-dependencies.sh
+          npx playwright@1.11.0 install-deps
 
           # Install dependencies
           echo "::group::Install"
@@ -52,7 +52,7 @@ jobs:
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
           npm install -g @microsoft/rush pnpm
-          # sudo ./common/scripts/install-dependencies.sh
+          sudo ./common/scripts/install-dependencies.sh
 
           # Install dependencies
           echo "::group::Install"
@@ -93,7 +93,7 @@ jobs:
         run: |
           \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
           npm install -g @microsoft/rush pnpm
-          # sudo ./common/scripts/install-dependencies.sh
+          sudo ./common/scripts/install-dependencies.sh
 
           echo "::group::Install"
           node common/scripts/install-run-rush.js install
