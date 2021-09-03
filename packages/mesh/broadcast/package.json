@@ -1,6 +1,6 @@
 {
   "name": "@dxos/broadcast",
-  "version": "2.12.10",
+  "version": "2.12.12",
   "description": "Abstract module to send broadcast messages.",
   "repository": {
     "type": "git",
