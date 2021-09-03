@@ -54,9 +54,9 @@ export interface FeedStoreOptions {
   hypercore?: Hypercore
 }
 
-function patchBufferCodec(encoding: ValueEncoding): ValueEncoding {
+function patchBufferCodec (encoding: ValueEncoding): ValueEncoding {
   if (typeof encoding === 'string') {
-    return encoding
+    return encoding;
   }
   return {
     encode: (x: any) => Buffer.from(encoding.encode(x)),
