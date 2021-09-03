@@ -23,7 +23,7 @@ describe('Feed tests:', () => {
   });
 
   test('hypercore', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
     await feedStore.open();
 
     const { publicKey, secretKey } = createKeyPair();
@@ -40,7 +40,7 @@ describe('Feed tests:', () => {
   });
 
   test('feed writer', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
     await feedStore.open();
 
     const { publicKey, secretKey } = createKeyPair();

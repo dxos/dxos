@@ -14,32 +14,44 @@ import { IStorage } from '@dxos/random-access-multi-storage';
 import FeedDescriptor from './feed-descriptor';
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import IndexDB from './index-db';
-import Reader from './reader';
+import type { ValueEncoding } from './types';
 
 // TODO(burdon): Change to "dxos.feedstore"?
 const STORE_NAMESPACE = '@feedstore';
 
 type DescriptorCallback = (descriptor: FeedDescriptor) => boolean;
-type StreamCallback = (descriptor: FeedDescriptor) => Object | undefined;
+type Database = (...args: any) => ReturnType<typeof hypertrie>;
 
-interface CreateDescriptorOptions {
+export interface CreateDescriptorOptions {
   key: PublicKey,
   secretKey?: Buffer,
-  valueEncoding?: string,
   metadata?: any
 }
 
-interface CreateReadWriteFeedOptions {
+export interface CreateReadWriteFeedOptions {
   key: PublicKey,
   secretKey: Buffer
-  valueEncoding?: string,
   metadata?: any
 }
 
-interface CreateReadOnlyFeedOptions {
+export interface CreateReadOnlyFeedOptions {
   key: PublicKey
-  valueEncoding?: string,
   metadata?: any
+}
+
+export interface FeedStoreOptions {
+  /**
+   * Defines a custom hypertrie database to index the feeds.
+   */
+  database?: Database,
+  /**
+   * Encoding type for each feed.
+   */
+  valueEncoding?: ValueEncoding
+  /**
+   * Hypercore class to use.
+   */
+  hypercore?: Hypercore
 }
 
 /**
@@ -50,13 +62,11 @@ interface CreateReadOnlyFeedOptions {
  */
 export class FeedStore {
   private _storage: IStorage;
-  private _database: any;
-  private _defaultFeedOptions: any;
-  private _codecs: any;
+  private _database: Database;
+  private _valueEncoding: ValueEncoding | undefined;
   private _hypercore: Hypercore;
   private _descriptors: Map<string, FeedDescriptor>;
-  private _readers: Set<Reader>;
-  private _indexDB: any;
+  private _indexDB: IndexDB | null;
   private _open: boolean;
 
   /**
@@ -71,46 +81,30 @@ export class FeedStore {
 
   /**
    * @param storage RandomAccessStorage to use by default by the feeds.
-   * @param options.database Defines a custom hypertrie database to index the feeds.
-   * @param options.feedOptions Default options for each feed.
-   * @param options.codecs Defines a list of available codecs to work with the feeds.
-   * @param options.hypercore Hypercore class to use.
+   * @param options Feedstore options.
    */
-  constructor (storage: IStorage, options: any = {}) {
+  constructor (storage: IStorage, options: FeedStoreOptions = {}) {
     assert(storage, 'The storage is required.');
 
     this._storage = storage;
 
     const {
       database = (...args: any) => hypertrie(...args),
-      feedOptions = {},
-      codecs = {},
+      valueEncoding,
       hypercore = defaultHypercore
     } = options;
 
     this._database = database;
 
-    this._defaultFeedOptions = feedOptions;
-
-    this._codecs = codecs;
+    this._valueEncoding = valueEncoding && patchBufferCodec(valueEncoding);
 
     this._hypercore = hypercore;
 
     this._descriptors = new Map();
 
-    this._readers = new Set();
-
     this._indexDB = null;
 
     this._open = false;
-
-    this.feedOpenedEvent.on((descriptor) => {
-      this._readers.forEach(reader => {
-        reader.addFeedStream(descriptor).catch(err => {
-          reader.destroy(err);
-        });
-      });
-    });
   }
 
   get opened () {
@@ -151,14 +145,6 @@ export class FeedStore {
     }
     this._open = false;
 
-    this._readers.forEach(reader => {
-      try {
-        reader.destroy(new Error('FeedStore closed'));
-      } catch (err) {
-        // ignore
-      }
-    });
-
     await Promise.all(this
       .getDescriptors()
       .map(descriptor => descriptor.close())
@@ -166,7 +152,7 @@ export class FeedStore {
 
     this._descriptors.clear();
 
-    await this._indexDB.close();
+    await this._indexDB?.close();
   }
 
   /**
@@ -298,6 +284,7 @@ export class FeedStore {
 
     if (descriptor) {
       await descriptor.lock.executeSynchronized(async () => {
+        assert(this._indexDB, 'IndexDB is null');
         await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key.toString()}`);
 
         this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
@@ -306,30 +293,10 @@ export class FeedStore {
   }
 
   /**
-   * Creates a ReadableStream from the loaded feeds.
-   *
-   * @param callback Filter function to return options for each feed.createReadStream (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
-   */
-  createReadStream (callback: StreamCallback | object = () => true): ReadableStream {
-    return this._createReadStream(callback);
-  }
-
-  /**
-   * Creates a ReadableStream from the loaded feeds and returns the messages in batch.
-   *
-   * @param callback Filter function to return options for each feed.createReadStream (returns `false` will ignore the feed) or default object options for each feed.createReadStream(options)
-   */
-  createBatchStream (callback: StreamCallback | object = () => true): ReadableStream {
-    return this._createReadStream(callback, true);
-  }
-
-  /**
    * Factory to create a new FeedDescriptor.
    */
   private _createDescriptor (options: CreateDescriptorOptions) {
-    const defaultOptions = this._defaultFeedOptions;
-
-    const { key, secretKey, valueEncoding = defaultOptions.valueEncoding, metadata } = options;
+    const { key, secretKey, metadata } = options;
 
     const existing = this.getDescriptors().find(fd => fd.key.equals(key));
     if (existing) {
@@ -340,10 +307,9 @@ export class FeedStore {
       storage: this._storage,
       key,
       secretKey,
-      valueEncoding,
+      valueEncoding: this._valueEncoding,
       metadata,
-      hypercore: this._hypercore,
-      codecs: this._codecs
+      hypercore: this._hypercore
     });
 
     this._descriptors.set(
@@ -380,6 +346,7 @@ export class FeedStore {
    * Persist in the db the FeedDescriptor.
    */
   private async _persistDescriptor (descriptor: FeedDescriptor) {
+    assert(this._indexDB, 'IndexDB is null');
     const key = `${STORE_NAMESPACE}/${descriptor.key?.toString()}`;
 
     const oldData = await this._indexDB.get(key);
@@ -395,28 +362,14 @@ export class FeedStore {
       await this._indexDB.put(key, newData);
     }
   }
+}
 
-  private _createReadStream (callback: any, inBatch = false): ReadableStream {
-    assert(this._open, 'FeedStore closed');
-
-    const reader = new Reader(callback, inBatch);
-
-    this._readers.add(reader);
-
-    reader.onEnd(() => {
-      this._readers.delete(reader);
-    });
-
-    void (async () => {
-      try {
-        await reader.addInitialFeedStreams(this
-          .getDescriptors()
-          .filter(descriptor => descriptor.opened));
-      } catch (err) {
-        reader.destroy(err);
-      }
-    })();
-
-    return reader.stream;
+function patchBufferCodec (encoding: ValueEncoding): ValueEncoding {
+  if (typeof encoding === 'string') {
+    return encoding;
   }
+  return {
+    encode: (x: any) => Buffer.from(encoding.encode(x)),
+    decode: encoding.decode.bind(encoding)
+  };
 }

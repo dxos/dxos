@@ -30,7 +30,7 @@ describe('feed store iterator', () => {
       numMessages: 10
     };
 
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
     await feedStore.open();
 
     //
@@ -153,9 +153,7 @@ describe('feed store iterator', () => {
 
   test('skipping initial messages', async () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM), {
-      feedOptions: {
-        valueEncoding: schema.getCodecForType('dxos.echo.testing.TestItemMutation')
-      }
+      valueEncoding: schema.getCodecForType('dxos.echo.testing.TestItemMutation')
     });
 
     await feedStore.open();

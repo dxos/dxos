@@ -13,8 +13,9 @@ export interface HypercoreFeed {
   secretKey: Buffer;
   discoveryKey: Buffer;
   length: number;
-  opened: Boolean;
-  closed: Boolean;
+  opened: boolean;
+  closed: boolean;
+  readable: boolean;
 
   /**
    * Appends a block of data to the feed.
@@ -44,9 +45,13 @@ export interface HypercoreFeed {
   head: any;
   on: (s: string, cb: () => any) => any;
   removeListener: (s: string, cb: () => any) => any;
-  getBatch: (n: number, maxMessages: number, cb: (err: Error, res: any) => any) => any;
+  getBatch: ((n: number, maxMessages: number, ...args: any[]) => any);
+  download: (options: any) => any;
+  downloaded: (start: number, batchEnd: number) => boolean;
+  undownload: (args: any) => void;
 
   replicate(options: any): void;
+  close: (arg: any) => any;
 }
 
 export type Hypercore = (storage: any, key?: any, options?: any) => HypercoreFeed;
