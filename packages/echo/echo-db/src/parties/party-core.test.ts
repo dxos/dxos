@@ -37,7 +37,6 @@ const setup = async () => {
     snapshotStore
   );
 
-  
   const { publicKey, secretKey } = createKeyPair();
   const key = PublicKey.from(publicKey);
   const feedKey = await keyring.addKeyRecord({
