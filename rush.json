@@ -448,7 +448,9 @@
     },
     {
       "packageName": "@dxos/esbuild-plugins",
-      "projectFolder": "toolchains/esbuild-plugins"
+      "projectFolder": "toolchains/esbuild-plugins",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/deps-checker",
