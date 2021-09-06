@@ -50,6 +50,8 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.get': 4.4.6
       '@types/node': 14.14.45
+      '@types/node-fetch': 2.5.10
+      '@types/tar': 4.0.4
       '@wirelineio/registry-client': 1.1.0-beta.3
       assert: 2.0.0
       chance: 1.1.7
@@ -62,9 +64,12 @@ importers:
       lodash.defaultsdeep: 4.6.1
       lodash.get: 4.4.2
       moment: 2.29.1
+      node-fetch: 2.6.1
       pkg-up: 3.1.0
       playwright: 1.11.0
       read-pkg-up: 7.0.1
+      sodium-universal: 3.0.4
+      tar: 6.1.0
       tree-kill: 1.2.2
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
@@ -88,6 +93,8 @@ importers:
       '@types/lodash.get': ^4.4.6
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
+      '@types/node-fetch': ^2.5.10
+      '@types/tar': ^4.0.4
       '@wirelineio/registry-client': ~1.1.0-beta.3
       assert: ^2.0.0
       chance: ^1.1.6
@@ -101,9 +108,12 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       lodash.get: ^4.4.2
       moment: ^2.24.0
+      node-fetch: ^2.6.0
       pkg-up: ^3.1.0
       playwright: ^1.7.0
       read-pkg-up: ^7.0.1
+      sodium-universal: ~3.0.4
+      tar: ^6.0.5
       tree-kill: ^1.2.2
   ../../packages/bot/botkit-client:
     dependencies:
@@ -703,7 +713,6 @@ importers:
       '@dxos/signal': link:../../mesh/signal
       '@types/debug': 4.1.5
       '@types/fs-extra': 9.0.11
-      '@types/node-fetch': 2.5.10
       assert: 2.0.0
       debug: 4.3.1
       dotenv: 8.6.0
@@ -711,20 +720,16 @@ importers:
       esbuild: 0.11.23
       fs-extra: 8.1.0
       js-yaml: 3.14.1
-      node-fetch: 2.6.1
       read-pkg-up: 7.0.1
-      tar: 6.1.0
       tree-kill: 1.2.2
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
-      '@types/tar': 4.0.4
       bip32: 2.0.6
       expect: 27.0.2
       process-exists: 4.0.0
       pstree.remy: 1.1.8
-      sodium-universal: 3.0.4
       ts-node: 9.1.1_typescript@4.3.5
       typescript: 4.3.5
       wrtc: 0.4.7
@@ -748,8 +753,6 @@ importers:
       '@types/fs-extra': ^9.0.4
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
-      '@types/node-fetch': ^2.5.10
-      '@types/tar': ^4.0.4
       assert: ^2.0.0
       bip32: ~2.0.6
       debug: ^4.1.1
@@ -759,12 +762,9 @@ importers:
       expect: ~27.0.2
       fs-extra: ^8.1.0
       js-yaml: ^3.13.1
-      node-fetch: ^2.6.0
       process-exists: ^4.0.0
       pstree.remy: ^1.1.8
       read-pkg-up: ^7.0.1
-      sodium-universal: ~3.0.4
-      tar: ^6.0.5
       tree-kill: ^1.2.2
       ts-node: ^9.1.1
       typescript: ^4.3.5
@@ -7552,7 +7552,7 @@ packages:
   /@types/minipass/2.2.0:
     dependencies:
       '@types/node': 14.14.45
-    dev: true
+    dev: false
     resolution:
       integrity: sha512-wuzZksN4w4kyfoOv/dlpov4NOunwutLA/q7uc00xU02ZyUY+aoM5PWIXEKBMnm0NHd4a+N71BMjq+x7+2Af1fg==
   /@types/mocha/8.2.2:
@@ -7731,7 +7731,7 @@ packages:
     dependencies:
       '@types/minipass': 2.2.0
       '@types/node': 14.14.45
-    dev: true
+    dev: false
     resolution:
       integrity: sha512-0Xv+xcmkTsOZdIF4yCnd7RkOOyfyqPaqJ7RZFKnwdxfDbkN3eAAE9sHl8zJFqBz4VhxolW9EErbjR1oyH7jK2A==
   /@types/testing-library__jest-dom/5.9.5:
@@ -9725,12 +9725,14 @@ packages:
   /blake2b-wasm/1.1.7:
     dependencies:
       nanoassert: 1.1.0
+    dev: false
     resolution:
       integrity: sha512-oFIHvXhlz/DUgF0kq5B1CqxIDjIJwh9iDeUUGQUcvgiGz7Wdw03McEO7CfLBy7QKGdsydcMCgO9jFNBAFCtFcA==
   /blake2b/2.1.3:
     dependencies:
       blake2b-wasm: 1.1.7
       nanoassert: 1.1.0
+    dev: false
     resolution:
       integrity: sha512-pkDss4xFVbMb4270aCyGD3qLv92314Et+FsKzilCLxDz5DuZ2/1g3w4nmBbu6nKApPspnjG7JcwTjGZnduB1yg==
   /blakejs/1.1.0:
@@ -10275,6 +10277,7 @@ packages:
   /chacha20-universal/1.0.4:
     dependencies:
       nanoassert: 2.0.0
+    dev: false
     resolution:
       integrity: sha512-/IOxdWWNa7nRabfe7+oF+jVkGjlr2xUL4J8l/OvzZhj+c9RpMqoo3Dq+5nU1j/BflRV4BKnaQ4+4oH1yBpQG1Q==
   /chalk/1.1.3:
@@ -18735,9 +18738,11 @@ packages:
     resolution:
       integrity: sha512-M2ufzIiINKCuDfBSAUr1vWQ+vuVcA9kqx8JJUsbQi6yf1uGRyb7HfpdfUr5qLXf3B/t8dPvcjhKMmlfnP47EzQ==
   /nanoassert/1.1.0:
+    dev: false
     resolution:
       integrity: sha1-TzFS4JVA/eKMdvRLGbvNHVpCR40=
   /nanoassert/2.0.0:
+    dev: false
     resolution:
       integrity: sha512-7vO7n28+aYO4J+8w96AzhmU8G+Y/xpPDJz/se19ICsqj/momRbb9mh9ZUtkoJ5X3nTnPdhEJyc0qnM6yAsHBaA==
   /nanocustomassert/1.0.0:
@@ -18941,6 +18946,7 @@ packages:
     resolution:
       integrity: sha512-dSq1xmcPDKPZ2EED2S6zw/b9NKsqzXRE6dVr8TVQnI3FJOTteUMuqF3Qqs6LZg+mLGYJWqQzMbIjMtJqTv87nQ==
   /node-gyp-build/4.2.3:
+    dev: false
     hasBin: true
     resolution:
       integrity: sha512-MN6ZpzmfNCRM+3t57PTJHgHyw/h4OWnZ6mR8P5j/uZtqQr46RRuDE/P+g3n0YR/AiYXeWixZZzaip77gdICfRg==
@@ -22611,21 +22617,25 @@ packages:
   /sha256-universal/1.1.2:
     dependencies:
       sha256-wasm: 2.2.1
+    dev: false
     resolution:
       integrity: sha512-sheCCiEJve+8rS/fgCaXax8SpXrLzPipCvp0+VDXXjDEHw2DdYqV2PdHVNMNWZrQ3fiQjaor4rQCzYdr3g7TIA==
   /sha256-wasm/2.2.1:
     dependencies:
       nanoassert: 2.0.0
+    dev: false
     resolution:
       integrity: sha512-OkqDgOpo86LzdWlpYVC/MfcQ1jytfR/wxPsGFJTWeEIyLaJg4spZTNQ40vuhYsLNDFidxqvMGae6u9VirkgqqA==
   /sha512-universal/1.1.2:
     dependencies:
       sha512-wasm: 2.3.1
+    dev: false
     resolution:
       integrity: sha512-QGS+eFX3ycFiRl5TxIxWv5ltAYXaLpnUeLMJpnEVIB7dEI/7pw3X0kYe3msuE4XaHERReuqDKBYRrCiQsqlESQ==
   /sha512-wasm/2.3.1:
     dependencies:
       nanoassert: 2.0.0
+    dev: false
     resolution:
       integrity: sha512-YxBYNsaHzTJh5gmk6AbD5aAvXktHy5LsjqbaEVdL60XslC4C7U23w2Mt8g+UDcvidr/K9aFZy3V71Y86Ech27A==
   /shallow-clone/3.0.1:
@@ -22769,6 +22779,7 @@ packages:
   /siphash24/1.1.1:
     dependencies:
       nanoassert: 1.1.0
+    dev: false
     resolution:
       integrity: sha512-dKKwjIoTOa587TARYLlBRXq2lkbu5Iz35XrEVWpelhBP1m8r2BGOy1QlaZe84GTFHG/BTucEUd2btnNc8QzIVA==
   /sisteransi/1.0.5:
@@ -22907,6 +22918,7 @@ packages:
       sha512-universal: 1.1.2
       siphash24: 1.1.1
       xsalsa20: 1.1.0
+    dev: false
     resolution:
       integrity: sha512-J2Zzj61bo41oBO4yEM9hTaNo3J98AcmFctjRg3D7+0A5cXdB1jlQOHV1qo2NavDU3BpqCfxdHW5UXCv565zh6Q==
   /sodium-native/2.4.9:
@@ -22923,6 +22935,7 @@ packages:
     dependencies:
       ini: 1.3.8
       node-gyp-build: 4.2.3
+    dev: false
     requiresBuild: true
     resolution:
       integrity: sha512-EgDZ/Z7PxL2kCasKk7wnRkV8W9kvwuIlHuHXAxkQm3FF0MgVsjyLBXGjSRGhjE6u7rhSpk3KaMfFM23bfMysIQ==
@@ -22946,6 +22959,7 @@ packages:
       sodium-javascript: 0.7.3
       sodium-native: 3.2.1
       xsalsa20: 1.1.0
+    dev: false
     resolution:
       integrity: sha512-WnBQ0GDo/82shKQHZBZT9h4q4miCtxkbzcwVLsCBPWNq4qbq8BXhKICt9nPwQAsJ43ct/rF61FKu4t0druUBug==
   /sort-keys-length/1.0.1:
@@ -25651,6 +25665,7 @@ packages:
     resolution:
       integrity: sha512-0M/X61wiKKAGAMqsxEyJ0kY6NtjpcMiKinYSSsl4K7ypgvqXDTMwQK6hxnYE1s1Jm7h6YKcN8obDUg2CC+jVGA==
   /xsalsa20/1.1.0:
+    dev: false
     resolution:
       integrity: sha512-zd3ytX2cm+tcSndRU+krm0eL4TMMpZE7evs5hLRAoOy6gviqLfe3qOlkjF3i5SeAkQUCeJk0lJZrEU56kHRfWw==
   /xss/1.0.9:
