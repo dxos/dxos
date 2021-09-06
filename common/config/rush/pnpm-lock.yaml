@@ -50,6 +50,8 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.get': 4.4.6
       '@types/node': 14.14.45
+      '@types/node-fetch': 2.5.10
+      '@types/tar': 4.0.4
       '@wirelineio/registry-client': 1.1.0-beta.3
       assert: 2.0.0
       chance: 1.1.7
@@ -62,9 +64,11 @@ importers:
       lodash.defaultsdeep: 4.6.1
       lodash.get: 4.4.2
       moment: 2.29.1
+      node-fetch: 2.6.1
       pkg-up: 3.1.0
       playwright: 1.11.0
       read-pkg-up: 7.0.1
+      tar: 6.1.0
       tree-kill: 1.2.2
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
@@ -88,6 +92,8 @@ importers:
       '@types/lodash.get': ^4.4.6
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
+      '@types/node-fetch': ^2.5.10
+      '@types/tar': ^4.0.4
       '@wirelineio/registry-client': ~1.1.0-beta.3
       assert: ^2.0.0
       chance: ^1.1.6
@@ -101,9 +107,11 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       lodash.get: ^4.4.2
       moment: ^2.24.0
+      node-fetch: ^2.6.0
       pkg-up: ^3.1.0
       playwright: ^1.7.0
       read-pkg-up: ^7.0.1
+      tar: ^6.0.5
       tree-kill: ^1.2.2
   ../../packages/bot/botkit-client:
     dependencies:
@@ -699,7 +707,6 @@ importers:
       '@dxos/signal': link:../../mesh/signal
       '@types/debug': 4.1.5
       '@types/fs-extra': 9.0.11
-      '@types/node-fetch': 2.5.10
       assert: 2.0.0
       debug: 4.3.1
       dotenv: 8.6.0
@@ -707,15 +714,12 @@ importers:
       esbuild: 0.11.23
       fs-extra: 8.1.0
       js-yaml: 3.14.1
-      node-fetch: 2.6.1
       read-pkg-up: 7.0.1
-      tar: 6.1.0
       tree-kill: 1.2.2
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
-      '@types/tar': 4.0.4
       bip32: 2.0.6
       expect: 27.0.2
       process-exists: 4.0.0
@@ -744,8 +748,6 @@ importers:
       '@types/fs-extra': ^9.0.4
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
-      '@types/node-fetch': ^2.5.10
-      '@types/tar': ^4.0.4
       assert: ^2.0.0
       bip32: ~2.0.6
       debug: ^4.1.1
@@ -755,12 +757,10 @@ importers:
       expect: ~27.0.2
       fs-extra: ^8.1.0
       js-yaml: ^3.13.1
-      node-fetch: ^2.6.0
       process-exists: ^4.0.0
       pstree.remy: ^1.1.8
       read-pkg-up: ^7.0.1
       sodium-universal: ~3.0.4
-      tar: ^6.0.5
       tree-kill: ^1.2.2
       ts-node: ^9.1.1
       typescript: ^4.3.5
@@ -1971,6 +1971,7 @@ importers:
     dependencies:
       assert: 2.0.0
       debug: 4.3.1
+      esbuild: 0.11.23
       events: 3.3.0
       path-browserify: 1.0.1
       readable-stream: 3.6.0
@@ -1979,7 +1980,6 @@ importers:
     devDependencies:
       '@dxos/toolchain-node-library': link:../node-library
       '@types/node': 14.14.45
-      esbuild: 0.11.23
     specifiers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/node': ^14.0.9
@@ -7548,7 +7548,7 @@ packages:
   /@types/minipass/2.2.0:
     dependencies:
       '@types/node': 14.14.45
-    dev: true
+    dev: false
     resolution:
       integrity: sha512-wuzZksN4w4kyfoOv/dlpov4NOunwutLA/q7uc00xU02ZyUY+aoM5PWIXEKBMnm0NHd4a+N71BMjq+x7+2Af1fg==
   /@types/mocha/8.2.2:
@@ -7727,7 +7727,7 @@ packages:
     dependencies:
       '@types/minipass': 2.2.0
       '@types/node': 14.14.45
-    dev: true
+    dev: false
     resolution:
       integrity: sha512-0Xv+xcmkTsOZdIF4yCnd7RkOOyfyqPaqJ7RZFKnwdxfDbkN3eAAE9sHl8zJFqBz4VhxolW9EErbjR1oyH7jK2A==
   /@types/testing-library__jest-dom/5.9.5:
