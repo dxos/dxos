@@ -40,9 +40,9 @@
     "@types/jest": "^26.0.7",
     "end-of-stream": "^1.4.1",
     "jest": "^26.6.3",
+    "multi-read-stream": "^2.0.0",
     "pify": "~5.0.0",
-    "wait-for-expect": "^3.0.2",
-    "multi-read-stream": "^2.0.0"
+    "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "restricted"
