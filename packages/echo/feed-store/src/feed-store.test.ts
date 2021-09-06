@@ -13,7 +13,7 @@ import { sleep } from '@dxos/async';
 import { PublicKey, createKeyPair } from '@dxos/crypto';
 import { IStorage, STORAGE_NODE, STORAGE_RAM, createStorage } from '@dxos/random-access-multi-storage';
 
-import { FeedStore, STORE_NAMESPACE } from './feed-store';
+import { FeedStore } from './feed-store';
 import { HypercoreFeed } from './hypercore-types';
 
 interface KeyPair {

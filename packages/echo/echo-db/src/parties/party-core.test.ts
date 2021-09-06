@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
@@ -20,7 +19,7 @@ import { FeedStoreAdapter } from '../util';
 import { PartyCore } from './party-core';
 
 const setup = async () => {
-  const storage = createStorage('', STORAGE_RAM)
+  const storage = createStorage('', STORAGE_RAM);
   const feedStore = new FeedStore(storage, { valueEncoding: codec });
   await feedStore.open();
   afterTest(async () => feedStore.close());

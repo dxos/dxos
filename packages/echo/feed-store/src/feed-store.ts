@@ -13,9 +13,6 @@ import FeedDescriptor from './feed-descriptor';
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
 
-// TODO(burdon): Change to "dxos.feedstore"?
-export const STORE_NAMESPACE = '@feedstore';
-
 type DescriptorCallback = (descriptor: FeedDescriptor) => boolean;
 
 export interface CreateDescriptorOptions {
