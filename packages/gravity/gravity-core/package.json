@@ -48,7 +48,6 @@
     "expect": "~27.0.2",
     "process-exists": "^4.0.0",
     "pstree.remy": "^1.1.8",
-    "sodium-universal": "~3.0.4",
     "ts-node": "^9.1.1",
     "typescript": "^4.3.5",
     "wrtc": "^0.4.6"

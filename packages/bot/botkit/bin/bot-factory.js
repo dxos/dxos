@@ -5,6 +5,6 @@ const { NODE_ENV, NATIVE_ENV, BotFactory, NodeBotContainer, NativeBotContainer, 
 const config = getConfig();
 
 new BotFactory(config, {
-  [NODE_ENV]: new NodeBotContainer(config),
-  [NATIVE_ENV]: new NativeBotContainer(config)
+  [NODE_ENV]: new NodeBotContainer(config.get('cli.nodePath')),
+  [NATIVE_ENV]: new NativeBotContainer()
 }).start();
