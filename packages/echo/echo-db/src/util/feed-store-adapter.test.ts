@@ -14,7 +14,8 @@ import { createRamStorage } from './persistant-ram-storage';
 
 test('close and re-open', async () => {
   const keyring = new Keyring();
-  const feedStore = new FeedStoreAdapter(new FeedStore(createRamStorage()), keyring);
+  const storage = createRamStorage();
+  const feedStore = new FeedStoreAdapter(new FeedStore(storage), keyring, storage);
   await feedStore.open();
 
   const partyKey = PublicKey.from(randomBytes());

@@ -178,10 +178,11 @@ describe('Party manager', () => {
   });
 
   test('Create from cold start', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
+    const storage = createStorage('', STORAGE_RAM);
+    const feedStore = new FeedStore(storage, { valueEncoding: codec });
 
     const keyring = new Keyring();
-    const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring);
+    const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, storage);
 
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     await keyring.createKeyRecord({ type: KeyType.DEVICE });

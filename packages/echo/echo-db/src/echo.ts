@@ -82,7 +82,7 @@ export interface EchoCreationOptions {
 // TODO(burdon): Create ECHOError class for public errors.
 export class ECHO {
   private readonly _halo: HALO;
-  private _keyring: Keyring;
+  private readonly _keyring: Keyring;
 
   private readonly _feedStore: FeedStoreAdapter;
   private readonly _modelFactory: ModelFactory;

@@ -9,8 +9,27 @@ import { PublicKey, createKeyPair } from '@dxos/crypto';
 import {
   codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
 } from '@dxos/echo-protocol';
-import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
+import { CreateReadOnlyFeedOptions, CreateReadWriteFeedOptions, FeedDescriptor, FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { IStorage } from '@dxos/random-access-multi-storage';
+import hypertrie from 'hypertrie';
+import jsonBuffer from 'buffer-json-encoding';
+
+import { IndexDB } from './index-db';
+
+export const STORE_NAMESPACE = '@feedstore'
+
+export type Hypertrie = (...args: any) => ReturnType<typeof hypertrie>;
+
+export interface FeedStoreAdapterOptions {
+  /**
+   * Defines a custom hypertrie database to index the feeds.
+   */
+  database?: Hypertrie,
+}
+
+export interface CreateFeedOptions extends CreateReadOnlyFeedOptions {
+  secretKey?: Buffer
+}
 
 /**
  * An adapter class to better define the API surface of FeedStore we use.
@@ -18,14 +37,26 @@ import { IStorage } from '@dxos/random-access-multi-storage';
  */
 // TODO(burdon): Temporary: will replace FeedStore.
 export class FeedStoreAdapter {
-  static create (storage: IStorage, keyring: Keyring) {
-    return new FeedStoreAdapter(new FeedStore(storage, { valueEncoding: codec }), keyring);
+  static create (storage: IStorage, keyring: Keyring, options: FeedStoreAdapterOptions = {}) {
+    const feedStore = new FeedStore(storage, { valueEncoding: codec })
+    return new FeedStoreAdapter(feedStore, keyring, storage, options);
   }
+
+  private _indexDB: IndexDB | null;
+  private readonly _database: Hypertrie;
 
   constructor (
     private readonly _feedStore: FeedStore,
-    private readonly _keyring: Keyring
-  ) {}
+    private readonly _keyring: Keyring,
+    private readonly _storage: IStorage,
+    options: FeedStoreAdapterOptions = {}
+  ) { 
+    const {
+      database = (...args: any) => hypertrie(...args),
+    } = options;
+    this._database = database;
+    this._indexDB = null;
+  }
 
   // TODO(burdon): Remove.
   get feedStore () {
@@ -38,7 +69,16 @@ export class FeedStoreAdapter {
 
   async open () {
     if (!this._feedStore.opened) {
-      await this._feedStore.open(this._keyring.keys);
+      this._feedStore.open();
+    }
+
+    this._indexDB = new IndexDB(this._database(this._storage.createOrOpen.bind(this._storage), { valueEncoding: jsonBuffer }));;
+    const list = await this._indexDB.list(STORE_NAMESPACE);
+
+    for (let data of list) {
+      const key = PublicKey.from(data.key); // cause we don't have PublicKey deserialization
+      const secretKey = this._keyring.keys.find(keyRecord => keyRecord.publicKey.equals(key))?.secretKey;
+      this._createFeed({ ...data, secretKey, key });
     }
 
     // TODO(telackey): There may be a better way to do this, but at the moment,
@@ -52,6 +92,7 @@ export class FeedStoreAdapter {
 
   async close () {
     await this._feedStore.close();
+    await this._indexDB?.close();
   }
 
   // TODO(marik-d): Should probably not be here.
@@ -89,7 +130,7 @@ export class FeedStoreAdapter {
       publicKey: key,
       secretKey
     });
-    return this._feedStore.createReadWriteFeed({
+    return this._createFeed({
       key,
       secretKey,
       metadata: { partyKey: partyKey.asBuffer(), writable: true }
@@ -97,7 +138,7 @@ export class FeedStoreAdapter {
   }
 
   async createReadOnlyFeed (feedKey: FeedKey, partyKey: PartyKey): Promise<HypercoreFeed> {
-    return this._feedStore.createReadOnlyFeed({
+    return this._createFeed({
       key: feedKey,
       metadata: { partyKey: partyKey.asBuffer() }
     });
@@ -114,5 +155,47 @@ export class FeedStoreAdapter {
       messageSelector,
       initialTimeframe
     );
+  }
+
+  private async _createFeed (options: CreateFeedOptions) {
+    const feed = options.secretKey ? await this.feedStore.createReadWriteFeed({ ...options, secretKey: options.secretKey }) : await this.feedStore.createReadOnlyFeed(options);
+    const descriptor = this.feedStore.getDescriptor(feed.key);
+    assert(descriptor, 'Couldn\'t create descriptor');
+    this._setDescriptorEvents(descriptor);
+    await this._persistDescriptor(descriptor);
+    return feed;
+  }
+
+  private _setDescriptorEvents(descriptor: FeedDescriptor) {
+    descriptor.watch(async (event) => {
+      if (event === 'updated') {
+        await this._persistDescriptor(descriptor);
+        return;
+      }
+
+      const { feed } = descriptor;
+
+      if (event === 'opened' && feed) {
+        await this._persistDescriptor(descriptor);
+        return;
+      }
+    });
+  }
+
+  private async _persistDescriptor (descriptor: FeedDescriptor) {
+    assert(this._indexDB, 'IndexDB is null');
+    const key = `${STORE_NAMESPACE}/${descriptor.key.toString()}`;
+
+    const oldData = await this._indexDB.get(key);
+
+    const newData = {
+      key: descriptor.key.asBuffer(),
+      valueEncoding: typeof descriptor.valueEncoding === 'string' ? descriptor.valueEncoding : undefined,
+      metadata: descriptor.metadata
+    };
+
+    if (!oldData || JSON.stringify(oldData.metadata) !== JSON.stringify(newData.metadata)) {
+      await this._indexDB.put(key, newData);
+    }
   }
 }

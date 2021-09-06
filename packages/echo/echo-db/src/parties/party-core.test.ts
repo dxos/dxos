@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
@@ -19,16 +20,18 @@ import { FeedStoreAdapter } from '../util';
 import { PartyCore } from './party-core';
 
 const setup = async () => {
-  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
+  const storage = createStorage('', STORAGE_RAM)
+  const feedStore = new FeedStore(storage, { valueEncoding: codec });
   await feedStore.open();
   afterTest(async () => feedStore.close());
 
   const keyring = new Keyring();
-  const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring);
+  const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, storage);
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
+
+  const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
   const party = new PartyCore(
     partyKey.publicKey,
