@@ -3,25 +3,10 @@
 //
 
 import debug from 'debug';
-import fetch from 'node-fetch';
-import tar from 'tar';
 
-import { buildBot } from '@dxos/botkit';
+import { buildBot, publishBot } from '@dxos/botkit';
 
 const log = debug('dxos:testing:distributor');
-
-const publishBot = async (ipfsEndpoint: string, buildPath: string) => {
-  if (!ipfsEndpoint.endsWith('/')) {
-    ipfsEndpoint = `${ipfsEndpoint}/`;
-  }
-
-  const response = await fetch(ipfsEndpoint, {
-    method: 'POST',
-    body: tar.c({ gzip: true, C: buildPath }, ['.'])
-  });
-
-  return response.headers.get('Ipfs-Hash');
-};
 
 /**
  * @param {string} ipfsEndpoint IPFS Gateway endpoint.
