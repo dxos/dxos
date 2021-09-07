@@ -7,12 +7,12 @@
 import assert from 'assert';
 import pify from 'pify';
 import tempy from 'tempy';
+import waitForExpect from 'wait-for-expect';
 
 import { PublicKey, createKeyPair } from '@dxos/crypto';
 import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
-import waitForExpect from 'wait-for-expect';
 
 // Caution: the tests depend on each other in sequence.
 describe('FeedDescriptor', () => {
@@ -137,13 +137,13 @@ describe('FeedDescriptor', () => {
       secretKey
     });
 
-    const events: string[] = []
+    const events: string[] = [];
     fd.watch(event => {
       events.push(event);
     });
 
     await fd.open();
-    
+
     await waitForExpect(() => expect(events).toContain('opened'));
 
     await fd.close();
