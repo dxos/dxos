@@ -6,8 +6,8 @@ import assert from 'assert';
 import jsonBuffer from 'buffer-json-encoding';
 import hypertrie from 'hypertrie';
 
-import { Keyring, KeyType } from '@dxos/credentials';
-import { PublicKey, createKeyPair } from '@dxos/crypto';
+import { Keyring } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
 import {
   codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
 } from '@dxos/echo-protocol';
@@ -118,26 +118,28 @@ export class FeedStoreAdapter {
     return descriptor?.feed;
   }
 
+  /**
+   * Create and open feed if feed with given key doesm't exist and open existing feed otherwsie.
+   */
   async createWritableFeed (partyKey: PartyKey): Promise<HypercoreFeed> {
     // TODO(marik-d): Something is wrong here; Buffer should be a subclass of Uint8Array but it isn't here.
     assert(!this.queryWritableFeed(partyKey), 'Writable feed already exists');
 
     // TODO(telackey): 'writable' is true property of the Feed, not just its Descriptor's metadata.
     // Using that real value would be preferable to using metadata, but I think it requires the Feed be open.
-    const { publicKey, secretKey } = createKeyPair();
-    const key = PublicKey.from(publicKey);
-    await this._keyring.addKeyRecord({
-      type: KeyType.FEED,
-      publicKey: key,
-      secretKey
-    });
+    const keyRecord = await this._keyring.createKeyRecord();
+    const fullKeyRecord = this._keyring.getFullKey(keyRecord.publicKey);
+    assert(fullKeyRecord && fullKeyRecord.secretKey);
     return this._createFeed({
-      key,
-      secretKey,
+      key: fullKeyRecord.publicKey,
+      secretKey: fullKeyRecord.secretKey,
       metadata: { partyKey: partyKey.asBuffer(), writable: true }
     });
   }
 
+  /**
+   * Create and open feed if feed with given key doesm't exist and open existing feed otherwsie.
+   */
   async createReadOnlyFeed (feedKey: FeedKey, partyKey: PartyKey): Promise<HypercoreFeed> {
     return this._createFeed({
       key: feedKey,

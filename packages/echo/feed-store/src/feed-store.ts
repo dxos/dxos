@@ -32,11 +32,6 @@ export interface CreateReadOnlyFeedOptions {
   metadata?: any
 }
 
-export interface KeyRecord {
-  publicKey: PublicKey,
-  secretKey?: Buffer
-}
-
 export interface FeedStoreOptions {
   /**
    * Encoding type for each feed.
@@ -253,7 +248,7 @@ export class FeedStore {
 
     const existing = this.getDescriptors().find(fd => fd.key.equals(key));
     if (existing) {
-      throw new Error('Desciptor with given key already exists');
+      return existing;
     }
 
     const descriptor = new FeedDescriptor({
