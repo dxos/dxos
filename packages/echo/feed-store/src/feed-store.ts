@@ -3,9 +3,7 @@
 //
 
 import assert from 'assert';
-import jsonBuffer from 'buffer-json-encoding';
 import defaultHypercore from 'hypercore';
-import hypertrie from 'hypertrie';
 
 import { synchronized, Event } from '@dxos/async';
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
@@ -13,14 +11,9 @@ import { IStorage } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
-import IndexDB from './index-db';
 import type { ValueEncoding } from './types';
 
-// TODO(burdon): Change to "dxos.feedstore"?
-const STORE_NAMESPACE = '@feedstore';
-
 type DescriptorCallback = (descriptor: FeedDescriptor) => boolean;
-type Database = (...args: any) => ReturnType<typeof hypertrie>;
 
 export interface CreateDescriptorOptions {
   key: PublicKey,
@@ -41,10 +34,6 @@ export interface CreateReadOnlyFeedOptions {
 
 export interface FeedStoreOptions {
   /**
-   * Defines a custom hypertrie database to index the feeds.
-   */
-  database?: Database,
-  /**
    * Encoding type for each feed.
    */
   valueEncoding?: ValueEncoding
@@ -62,11 +51,9 @@ export interface FeedStoreOptions {
  */
 export class FeedStore {
   private _storage: IStorage;
-  private _database: Database;
   private _valueEncoding: ValueEncoding | undefined;
   private _hypercore: Hypercore;
   private _descriptors: Map<string, FeedDescriptor>;
-  private _indexDB: IndexDB | null;
   private _open: boolean;
 
   /**
@@ -89,20 +76,14 @@ export class FeedStore {
     this._storage = storage;
 
     const {
-      database = (...args: any) => hypertrie(...args),
       valueEncoding,
       hypercore = defaultHypercore
     } = options;
-
-    this._database = database;
-
     this._valueEncoding = valueEncoding && patchBufferCodec(valueEncoding);
 
     this._hypercore = hypercore;
 
     this._descriptors = new Map();
-
-    this._indexDB = null;
 
     this._open = false;
   }
@@ -128,14 +109,6 @@ export class FeedStore {
       return;
     }
     this._open = true;
-
-    this._indexDB = new IndexDB(this._database(this._storage.createOrOpen.bind(this._storage), { valueEncoding: jsonBuffer }));
-
-    const list = await this._indexDB.list(STORE_NAMESPACE);
-
-    list.forEach((data: any) => {
-      this._createDescriptor({ ...data, key: PublicKey.from(data.key) }); // cause we don't have PublicKey deserialization
-    });
   }
 
   @synchronized
@@ -151,8 +124,6 @@ export class FeedStore {
     );
 
     this._descriptors.clear();
-
-    await this._indexDB?.close();
   }
 
   /**
@@ -160,6 +131,13 @@ export class FeedStore {
    */
   getDescriptors () {
     return Array.from(this._descriptors.values());
+  }
+
+  /**
+   * Get desciptor by its public key
+   */
+  getDescriptor (key: PublicKeyLike) {
+    return this.getDescriptors().find(descriptor => descriptor.key.equals(key));
   }
 
   /**
@@ -263,36 +241,6 @@ export class FeedStore {
   }
 
   /**
-   * Remove all descriptors from the indexDB.
-   *
-   * NOTE: This operation would not close the feeds.
-   */
-  async deleteAllDescriptors () {
-    return Promise.all(this.getDescriptors().map(({ key }) => this.deleteDescriptor(key)));
-  }
-
-  /**
-   * Remove a descriptor from the indexDB by the key.
-   *
-   * NOTE: This operation would not close the feed.
-   */
-  @synchronized
-  async deleteDescriptor (key: PublicKey) {
-    assert(this._open, 'FeedStore closed');
-
-    const descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
-
-    if (descriptor) {
-      await descriptor.lock.executeSynchronized(async () => {
-        assert(this._indexDB, 'IndexDB is null');
-        await this._indexDB.delete(`${STORE_NAMESPACE}/${descriptor.key.toString()}`);
-
-        this._descriptors.delete(descriptor.discoveryKey.toString('hex'));
-      });
-    }
-  }
-
-  /**
    * Factory to create a new FeedDescriptor.
    */
   private _createDescriptor (options: CreateDescriptorOptions) {
@@ -300,7 +248,7 @@ export class FeedStore {
 
     const existing = this.getDescriptors().find(fd => fd.key.equals(key));
     if (existing) {
-      throw new Error('Desciptor with given key already exists');
+      return existing;
     }
 
     const descriptor = new FeedDescriptor({
@@ -321,14 +269,12 @@ export class FeedStore {
 
     descriptor.watch(async (event) => {
       if (event === 'updated') {
-        await this._persistDescriptor(descriptor);
         return;
       }
 
       const { feed } = descriptor;
 
       if (event === 'opened' && feed) {
-        await this._persistDescriptor(descriptor);
         feed.on('append', append);
         this.feedOpenedEvent.emit(descriptor);
         return;
@@ -340,27 +286,6 @@ export class FeedStore {
     });
 
     return descriptor;
-  }
-
-  /**
-   * Persist in the db the FeedDescriptor.
-   */
-  private async _persistDescriptor (descriptor: FeedDescriptor) {
-    assert(this._indexDB, 'IndexDB is null');
-    const key = `${STORE_NAMESPACE}/${descriptor.key?.toString()}`;
-
-    const oldData = await this._indexDB.get(key);
-
-    const newData = {
-      key: descriptor.key.asBuffer(),
-      secretKey: descriptor.secretKey,
-      valueEncoding: typeof descriptor.valueEncoding === 'string' ? descriptor.valueEncoding : undefined,
-      metadata: descriptor.metadata
-    };
-
-    if (!oldData || JSON.stringify(oldData.metadata) !== JSON.stringify(newData.metadata)) {
-      await this._indexDB.put(key, newData);
-    }
   }
 }
 

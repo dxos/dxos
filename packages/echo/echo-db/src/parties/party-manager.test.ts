@@ -56,9 +56,9 @@ const log = debug('dxos:echo:parties:party-manager:test');
  * @param createIdentity - Create the identity key record.
  */
 const setup = async (open = true, createIdentity = true) => {
-  const feedStore = FeedStoreAdapter.create(createStorage('', STORAGE_RAM));
-  await feedStore.open();
   const keyring = new Keyring();
+  const feedStore = FeedStoreAdapter.create(createStorage('', STORAGE_RAM), keyring);
+  await feedStore.open();
 
   let seedPhrase;
   if (createIdentity) {
@@ -178,10 +178,12 @@ describe('Party manager', () => {
   });
 
   test('Create from cold start', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
-    const feedStoreAdapter = new FeedStoreAdapter(feedStore);
+    const storage = createStorage('', STORAGE_RAM);
+    const feedStore = new FeedStore(storage, { valueEncoding: codec });
 
     const keyring = new Keyring();
+    const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, storage);
+
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     await keyring.createKeyRecord({ type: KeyType.DEVICE });
 
