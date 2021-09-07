@@ -130,7 +130,7 @@ export class ECHO {
     };
     this._keyring = new Keyring(new KeyStore(keyStorage));
 
-    this._feedStore = FeedStoreAdapter.create(feedStorage, this._keyring);
+    this._feedStore = FeedStoreAdapter.create(feedStorage, this._keyring, this._metadata);
 
     const partyFactory = new PartyFactory(
       () => this.halo.identity,

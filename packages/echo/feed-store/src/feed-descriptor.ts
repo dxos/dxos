@@ -85,6 +85,10 @@ export class FeedDescriptor {
     return this._valueEncoding;
   }
 
+  get writable () {
+    return !!this.secretKey;
+  }
+
   /**
    * Open an Hypercore feed based on the related feed options.
    *

@@ -199,7 +199,6 @@ export class PartyManager {
     this._setParty(party);
     await this._recordPartyJoining(party);
     await this._updateContactList(party);
-    await this._metadata.addParty({ key: party.key });
     return party;
   }
 

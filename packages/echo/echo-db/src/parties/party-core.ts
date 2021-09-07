@@ -16,6 +16,7 @@ import { FeedStoreAdapter } from '../util';
 import { createMessageSelector } from './message-selector';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
+import { Metadata } from '../metadata';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // every 100 messages
 
