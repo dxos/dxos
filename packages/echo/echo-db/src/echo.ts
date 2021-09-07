@@ -6,6 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import memdown from 'memdown';
 
+import { Keyring, KeyStore } from '@dxos/credentials';
 import { PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -81,6 +82,7 @@ export interface EchoCreationOptions {
 // TODO(burdon): Create ECHOError class for public errors.
 export class ECHO {
   private readonly _halo: HALO;
+  private readonly _keyring: Keyring;
 
   private readonly _feedStore: FeedStoreAdapter;
   private readonly _modelFactory: ModelFactory;
@@ -104,8 +106,6 @@ export class ECHO {
     readLogger,
     writeLogger
   }: EchoCreationOptions = {}) {
-    this._feedStore = FeedStoreAdapter.create(feedStorage);
-
     this._modelFactory = new ModelFactory()
       .registerModel(ObjectModel)
       .registerModel(DefaultModel);
@@ -119,6 +119,9 @@ export class ECHO {
       readLogger,
       writeLogger
     };
+    this._keyring = new Keyring(new KeyStore(keyStorage));
+
+    this._feedStore = FeedStoreAdapter.create(feedStorage, this._keyring);
 
     const partyFactory = new PartyFactory(
       () => this.halo.identity,
@@ -137,7 +140,7 @@ export class ECHO {
     );
 
     this._halo = new HALO({
-      keyStorage: keyStorage,
+      keyring: this._keyring,
       partyFactory,
       networkManager: this._networkManager,
       partyManager: this._partyManager
@@ -192,6 +195,7 @@ export class ECHO {
       return;
     }
 
+    await this._keyring.load();
     await this._feedStore.open();
     await this.halo.open(onProgressCallback);
 

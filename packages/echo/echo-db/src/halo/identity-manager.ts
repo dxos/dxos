@@ -65,7 +65,7 @@ export class IdentityManager {
   @synchronized
   async loadFromStorage () {
     if (this._identity.identityKey) {
-      if (this._haloFactory.hasFeedForParty(this._identity.identityKey.publicKey)) {
+      if (await this._haloFactory.hasFeedForParty(this._identity.identityKey.publicKey)) {
         // TODO(marik-d): Snapshots for halo party?
         const halo = await this._haloFactory.constructParty(this._identity.identityKey.publicKey);
         // Always open the HALO.
