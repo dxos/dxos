@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
@@ -39,16 +40,13 @@ const setup = async () => {
     snapshotStore
   );
 
-  const { publicKey, secretKey } = createKeyPair();
-  const key = PublicKey.from(publicKey);
-  const feedKey = await keyring.addKeyRecord({
-    type: KeyType.FEED,
-    publicKey: key,
-    secretKey
-  });
+  const feedKey = await keyring.createKeyRecord();
+  const fullKey = keyring.getFullKey(feedKey.publicKey);
+  assert(fullKey);
+  assert(fullKey.secretKey);
   await feedStore.createReadWriteFeed({
-    key,
-    secretKey,
+    key: fullKey.publicKey,
+    secretKey: fullKey.secretKey,
     metadata: { partyKey: partyKey.publicKey.asBuffer(), writable: true }
   });
   await party.open();

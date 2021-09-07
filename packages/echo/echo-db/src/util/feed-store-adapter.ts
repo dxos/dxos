@@ -79,7 +79,6 @@ export class FeedStoreAdapter {
     for (const data of list) {
       const key = PublicKey.from(data.key); // cause we don't have PublicKey deserialization
       const secretKey = this._keyring.getFullKey(key)?.secretKey;
-      console.log({ data, secretKey });
       await this._createFeed({ ...data, secretKey, key });
     }
 
