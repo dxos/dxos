@@ -266,25 +266,6 @@ describe('FeedStore', () => {
     expect(feed).toBeDefined();
   });
 
-  test('creating same readonly feed twice should error', async () => {
-    const { feedStore } = await createDefault();
-
-    const key = PublicKey.random();
-    await feedStore.createReadOnlyFeed({ key });
-
-    await expect(feedStore.createReadOnlyFeed({ key })).rejects.toBeInstanceOf(Error);
-  });
-
-  test('creating same read/write feed twice should error', async () => {
-    const { feedStore } = await createDefault();
-
-    const key = PublicKey.random();
-    const secretKey = PublicKey.random().asBuffer();
-    await feedStore.createReadWriteFeed({ key, secretKey });
-
-    await expect(feedStore.createReadWriteFeed({ key, secretKey })).rejects.toBeInstanceOf(Error);
-  });
-
   test('feed event does not get called twice', async () => {
     const { feedStore } = await createDefault();
 

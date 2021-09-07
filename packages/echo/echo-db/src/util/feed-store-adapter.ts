@@ -6,7 +6,7 @@ import assert from 'assert';
 import jsonBuffer from 'buffer-json-encoding';
 import hypertrie from 'hypertrie';
 
-import { Keyring } from '@dxos/credentials';
+import { Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import {
   codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
@@ -127,7 +127,7 @@ export class FeedStoreAdapter {
 
     // TODO(telackey): 'writable' is true property of the Feed, not just its Descriptor's metadata.
     // Using that real value would be preferable to using metadata, but I think it requires the Feed be open.
-    const keyRecord = await this._keyring.createKeyRecord();
+    const keyRecord = await this._keyring.createKeyRecord({ type: KeyType.FEED });
     const fullKeyRecord = this._keyring.getFullKey(keyRecord.publicKey);
     assert(fullKeyRecord && fullKeyRecord.secretKey);
     return this._createFeed({
