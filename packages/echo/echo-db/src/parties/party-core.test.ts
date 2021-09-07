@@ -45,8 +45,7 @@ const setup = async () => {
   assert(fullKey.secretKey);
   await feedStore.createReadWriteFeed({
     key: fullKey.publicKey,
-    secretKey: fullKey.secretKey,
-    metadata: { partyKey: partyKey.publicKey.asBuffer(), writable: true }
+    secretKey: fullKey.secretKey
   });
   await party.open();
   afterTest(async () => party.close());

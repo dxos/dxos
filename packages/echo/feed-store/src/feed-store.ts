@@ -17,19 +17,21 @@ type DescriptorCallback = (descriptor: FeedDescriptor) => boolean;
 
 export interface CreateDescriptorOptions {
   key: PublicKey,
-  secretKey?: Buffer,
-  metadata?: any
+  secretKey?: Buffer
 }
 
 export interface CreateReadWriteFeedOptions {
   key: PublicKey,
   secretKey: Buffer
-  metadata?: any
 }
 
 export interface CreateReadOnlyFeedOptions {
   key: PublicKey
-  metadata?: any
+}
+
+export interface KeyRecord {
+  publicKey: PublicKey,
+  secretKey?: Buffer
 }
 
 export interface FeedStoreOptions {
@@ -244,7 +246,7 @@ export class FeedStore {
    * Factory to create a new FeedDescriptor.
    */
   private _createDescriptor (options: CreateDescriptorOptions) {
-    const { key, secretKey, metadata } = options;
+    const { key, secretKey } = options;
 
     const existing = this.getDescriptors().find(fd => fd.key.equals(key));
     if (existing) {
@@ -256,7 +258,6 @@ export class FeedStore {
       key,
       secretKey,
       valueEncoding: this._valueEncoding,
-      metadata,
       hypercore: this._hypercore
     });
 

@@ -76,7 +76,7 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: 'utf8' });
   await feedStore.open();
   const { publicKey, secretKey } = createKeyPair();
-  const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey, metadata: { topic } });
+  const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
   const append = pify(feed.append.bind(feed));
 
   const credentials = Buffer.from(codec.encode(

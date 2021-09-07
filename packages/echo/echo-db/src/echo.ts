@@ -23,6 +23,7 @@ import { OpenProgress, Party, PartyFactory, PartyFilter, PartyManager } from './
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { FeedStoreAdapter, createRamStorage } from './util';
+import { Metadata, MetadataStore } from './metadata';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
@@ -45,6 +46,11 @@ export interface EchoCreationOptions {
    * Storage used for snapshots. Defaults to in-memory.
    */
   snapshotStorage?: IStorage
+
+  /**
+   * Storage used for snapshots. Defaults to in-memory.
+   */
+  metadataStorage?: IStorage
 
   /**
    * Networking provider. Defaults to in-memory networking.
@@ -90,6 +96,7 @@ export class ECHO {
   private readonly _snapshotStore: SnapshotStore;
   private readonly _partyManager: PartyManager;
   private readonly _subs = new SubscriptionGroup();
+  private readonly _metadata: Metadata;
 
   /**
    * Creates a new instance of ECHO.
@@ -100,6 +107,7 @@ export class ECHO {
     keyStorage = memdown(),
     feedStorage = createRamStorage(),
     snapshotStorage = createRamStorage(),
+    metadataStorage = createRamStorage(),
     networkManagerOptions,
     snapshots = true,
     snapshotInterval = 100,
@@ -112,6 +120,7 @@ export class ECHO {
 
     this._networkManager = new NetworkManager(networkManagerOptions);
     this._snapshotStore = new SnapshotStore(snapshotStorage);
+    this._metadata = new Metadata(new MetadataStore(metadataStorage));
 
     const options = {
       snapshots,
@@ -121,7 +130,7 @@ export class ECHO {
     };
     this._keyring = new Keyring(new KeyStore(keyStorage));
 
-    this._feedStore = FeedStoreAdapter.create(feedStorage, this._keyring);
+    this._feedStore = FeedStoreAdapter.create(feedStorage, this._keyring, this._metadata);
 
     const partyFactory = new PartyFactory(
       () => this.halo.identity,
@@ -133,7 +142,7 @@ export class ECHO {
     );
 
     this._partyManager = new PartyManager(
-      this._feedStore,
+      this._metadata,
       this._snapshotStore,
       () => this.halo.identity,
       partyFactory
