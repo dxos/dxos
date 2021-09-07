@@ -133,15 +133,13 @@ export class FeedStoreAdapter {
     });
     return this._createFeed({
       key,
-      secretKey,
-      metadata: { partyKey: partyKey.asBuffer(), writable: true }
+      secretKey
     });
   }
 
   async createReadOnlyFeed (feedKey: FeedKey, partyKey: PartyKey): Promise<HypercoreFeed> {
     return this._createFeed({
-      key: feedKey,
-      metadata: { partyKey: partyKey.asBuffer() }
+      key: feedKey
     });
   }
 

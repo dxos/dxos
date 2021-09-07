@@ -18,7 +18,6 @@ interface FeedDescriptorOptions {
   key: PublicKey,
   secretKey?: Buffer,
   valueEncoding?: ValueEncoding,
-  metadata?: any,
   hypercore?: Hypercore
 }
 
@@ -35,7 +34,6 @@ export class FeedDescriptor {
   private _secretKey?: Buffer;
   private _valueEncoding?: ValueEncoding;
   private _hypercore: Hypercore;
-  private _metadata: any;
   private _discoveryKey: Buffer;
   public readonly lock: Lock;
   private _feed: HypercoreFeed | null;
@@ -47,14 +45,12 @@ export class FeedDescriptor {
       key,
       secretKey,
       valueEncoding,
-      hypercore = defaultHypercore,
-      metadata
+      hypercore = defaultHypercore
     } = options;
 
     this._storage = storage;
     this._valueEncoding = valueEncoding;
     this._hypercore = hypercore;
-    this._metadata = metadata;
     this._key = key;
     this._secretKey = secretKey;
 
@@ -87,15 +83,6 @@ export class FeedDescriptor {
 
   get valueEncoding () {
     return this._valueEncoding;
-  }
-
-  get metadata () {
-    return this._metadata;
-  }
-
-  async setMetadata (metadata: any) {
-    this._metadata = metadata;
-    await this._emit('updated');
   }
 
   /**

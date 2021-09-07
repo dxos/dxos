@@ -34,8 +34,7 @@ interface MiddlewareOptions {
 const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: MiddlewareOptions): ReplicatorMiddleware => {
   const encodeFeed = (feed: HypercoreFeed, descriptor?: FeedDescriptor): FeedData => ({
     key: feed.key,
-    discoveryKey: feed.discoveryKey,
-    metadata: descriptor?.metadata && bufferJson.encode(descriptor.metadata)
+    discoveryKey: feed.discoveryKey
   });
 
   const decodeFeed = (feed: FeedData): FeedData & { metadata: any } => ({
@@ -72,7 +71,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
             return feed;
           }
           const publicKey = PublicKey.from(key);
-          return feedStore.createReadOnlyFeed({ key: publicKey, metadata });
+          return feedStore.createReadOnlyFeed({ key: publicKey });
         }
 
         if (discoveryKey) {
@@ -93,8 +92,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const { publicKey, secretKey } = createKeyPair();
   const feed = await feedStore.createReadWriteFeed({
     key: PublicKey.from(publicKey),
-    secretKey,
-    metadata: { topic: topic.toString('hex') }
+    secretKey
   });
   const append = pify(feed.append.bind(feed));
   let closed = false;
