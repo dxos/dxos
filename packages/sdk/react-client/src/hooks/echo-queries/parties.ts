@@ -13,7 +13,7 @@ import { useClient } from '../client';
  * Get a specific Party.
  * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
  */
-export const useParty = (partyKey: PublicKeyLike) => {
+export const useParty = (partyKey?: PublicKeyLike) => {
   const client = useClient();
   return partyKey ? client.echo.getParty(PublicKey.from(partyKey)) : undefined;
 };
