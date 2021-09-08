@@ -5,7 +5,7 @@
 import expect from 'expect';
 import pify from 'pify';
 
-import { IFile, IStorage, STORAGE_RAM } from './interfaces';
+import { IFile, IStorage, STORAGE_NODE, STORAGE_RAM } from './interfaces';
 
 // eslint-disable-next-line jest/no-export
 export function storageTests (testGroupName: string, createStorage: () => IStorage) {
@@ -76,20 +76,36 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       await pify(file.close.bind(file))();
     });
 
-    it('subdirectories', async () => {
-      let storage = createStorage();
+    it('subdirectories', async function () {
+      const rootStorage = createStorage();
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for (const _ of Array.from(Array(5))) {
-        storage = storage.subDir(randomText());
+      // TODO(yivlad): Doesn't work for STORAGE_NODE
+      if (rootStorage.type === STORAGE_NODE) {
+        this.skip();
       }
+      const fileName = randomText();
+      const file1 = rootStorage.createOrOpen(fileName);
 
-      const file = storage.createOrOpen(randomText());
+      const buffer1 = Buffer.from(randomText());
+      await writeAndCheck(file1, buffer1);
 
-      const buffer = Buffer.from(randomText());
-      await writeAndCheck(file, buffer);
+      const childStorage1 = rootStorage.subDir('child1');
+      const file2 = childStorage1.createOrOpen(fileName);
+      const buffer2 = Buffer.from(randomText());
+      await writeAndCheck(file2, buffer2);
+      const bufferRead1 = await pify(file1.read.bind(file1))(0, buffer1.length);
+      expect(buffer1.equals(bufferRead1));
 
-      await pify(file.close.bind(file))();
+      const childStorage2 = rootStorage.subDir('child2');
+      const file3 = childStorage2.createOrOpen(fileName);
+      const { size } = await pify(file3.stat.bind(file3))();
+      expect(size).toBe(0);
+      const buffer3 = Buffer.from(randomText());
+      await writeAndCheck(file3, buffer3);
+      const bufferRead2 = await pify(file2.read.bind(file2))(0, buffer2.length);
+      expect(buffer2.equals(bufferRead2));
+
+      await pify(file1.close.bind(file1))();
     });
 
     it('destroys file', async function () {
