@@ -3,10 +3,10 @@
 //
 
 import randomAccessIdb from 'random-access-idb';
-import { IFile } from '..';
 
+import { IFile } from '..';
+import { StorageType, STORAGE_IDB } from '../interfaces/storage-types';
 import { AbstractStorage } from './abstract-storage';
-import { StorageType, STORAGE_IDB } from './storage-types';
 
 export class IDbStorage extends AbstractStorage {
   public override type: StorageType = STORAGE_IDB;
