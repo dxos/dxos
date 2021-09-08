@@ -410,7 +410,7 @@ export class Keyring implements Signer {
     // Do not allow updating/changing secrets.
     const cleaned = stripSecrets(keyRecord);
 
-    const existing = this._getFullKey(cleaned.publicKey);
+    const existing = this.getFullKey(cleaned.publicKey);
     const updated = { ...existing, ...cleaned };
 
     // There is one special case, which is not to move from a more specific to a less specific key type.
@@ -431,7 +431,7 @@ export class Keyring implements Signer {
     assert(keyRecord);
     assertValidPublicKey(keyRecord.publicKey);
 
-    const existing = this._getFullKey(keyRecord.publicKey);
+    const existing = this.getFullKey(keyRecord.publicKey);
     if (existing) {
       const cleaned = stripSecrets(existing);
       await this._keystore.setRecord(cleaned.publicKey.toHex(), cleaned);
@@ -450,7 +450,7 @@ export class Keyring implements Signer {
     const { publicKey } = keyRecord;
     assertValidPublicKey(publicKey);
 
-    const existing = this._getFullKey(publicKey);
+    const existing = this.getFullKey(publicKey);
     return existing && Buffer.isBuffer(existing.secretKey);
   }
 
@@ -477,7 +477,7 @@ export class Keyring implements Signer {
   /**
    * Return the keyRecord from the keyring, if present.
    */
-  private _getFullKey (publicKey: PublicKeyLike): KeyRecord | undefined {
+  getFullKey (publicKey: PublicKeyLike): KeyRecord | undefined {
     assertValidPublicKey(publicKey);
     publicKey = PublicKey.from(publicKey);
 
@@ -494,7 +494,7 @@ export class Keyring implements Signer {
   getKey (publicKey: PublicKeyLike): KeyRecord | undefined {
     assertValidPublicKey(publicKey);
 
-    const key = this._getFullKey(publicKey);
+    const key = this.getFullKey(publicKey);
     return key ? stripSecrets(key) : undefined;
   }
 
@@ -639,7 +639,7 @@ export class Keyring implements Signer {
     const chains = new Map();
     const fullKeys: KeyRecord[] = [];
     keys.forEach((key) => {
-      const fullKey = this._getFullKey(key.publicKey);
+      const fullKey = this.getFullKey(key.publicKey);
       assert(fullKey);
       assertValidKeyPair(fullKey);
       fullKeys.push(fullKey);
@@ -662,7 +662,7 @@ export class Keyring implements Signer {
     assertValidPublicKey(keyRecord.publicKey);
     assertNoSecrets(keyRecord);
 
-    const fullKey = this._getFullKey(keyRecord.publicKey) as KeyRecord;
+    const fullKey = this.getFullKey(keyRecord.publicKey) as KeyRecord;
     assertValidKeyPair(fullKey);
 
     return Keyring.cryptoSign(data, fullKey.secretKey);

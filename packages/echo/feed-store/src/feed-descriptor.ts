@@ -39,7 +39,7 @@ export class FeedDescriptor {
   private _discoveryKey: Buffer;
   public readonly lock: Lock;
   private _feed: HypercoreFeed | null;
-  private _listener: Listener;
+  private _listeners: Listener[] = [];
 
   constructor (options: FeedDescriptorOptions) {
     const {
@@ -63,7 +63,6 @@ export class FeedDescriptor {
     this.lock = new Lock();
 
     this._feed = null;
-    this._listener = null;
   }
 
   get feed (): HypercoreFeed | null {
@@ -139,7 +138,7 @@ export class FeedDescriptor {
    * @param {function} listener
    */
   watch (listener: Listener) {
-    this._listener = listener;
+    this._listeners.push(listener);
   }
 
   /**
@@ -169,8 +168,8 @@ export class FeedDescriptor {
    * Asynchronous emitter.
    */
   private async _emit (event: any, ...args: any) {
-    if (this._listener) {
-      await this._listener(event, ...args);
+    for (const listener of this._listeners) {
+      await listener?.(event, ...args);
     }
   }
 }

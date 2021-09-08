@@ -86,12 +86,10 @@ describe('FeedStore', () => {
     database.list = jest.fn((_, cb) => cb(null, []));
 
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), {
-      database: () => database,
       hypercore: customHypercore
     });
 
     expect(feedStore).toBeInstanceOf(FeedStore);
-    expect(database.list.mock.calls.length).toBe(1);
 
     await feedStore.createReadOnlyFeed({ key: PublicKey.random() });
 
@@ -189,38 +187,6 @@ describe('FeedStore', () => {
     expect(feedStore.closed).toBe(true);
   });
 
-  test('Reopen feedStore and recreate feeds from the indexDB', async () => {
-    const { feedStore } = await createDefault();
-    let { booksFeed, usersFeed } = await defaultFeeds(feedStore, keys);
-
-    await append(booksFeed, 'Foundation and Empire');
-    await append(usersFeed, 'alice');
-
-    await feedStore.close();
-    await feedStore.open();
-    expect(feedStore.opened).toBe(true);
-    expect(feedStore.getDescriptors().length).toBe(3);
-
-    booksFeed = await feedStore.openFeed(keys.booksFeed.key);
-    [usersFeed] = await feedStore.openFeeds(fd => fd.key.equals(keys.usersFeed.key));
-    expect(feedStore.getDescriptors().filter(fd => fd.opened).length).toBe(2);
-
-    await expect(pify(booksFeed.head.bind(booksFeed))()).resolves.toBe('Foundation and Empire');
-    await expect(pify(usersFeed.head.bind(usersFeed))()).resolves.toBe('alice');
-
-    // The metadata of /books should be recreate too.
-    const metadata = { topic: 'books' };
-    expect(feedStore.getDescriptors().find(fd => fd.key.equals(keys.booksFeed.key))?.metadata).toEqual(metadata);
-  });
-
-  test('Delete descriptor', async () => {
-    const { feedStore } = await createDefault();
-    await defaultFeeds(feedStore, keys);
-
-    await feedStore.deleteDescriptor(keys.booksFeed.key);
-    expect(feedStore.getDescriptors().length).toBe(2);
-  });
-
   test('Default codec: binary', async () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
@@ -279,25 +245,6 @@ describe('FeedStore', () => {
     await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
-  test('on delete descriptor error should unlock the descriptor', async () => {
-    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
-
-    const publicKey = PublicKey.random();
-    await feedStore.createReadOnlyFeed({ key: publicKey });
-    const fd = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
-
-    if (!fd) {
-      throw new Error('Descriptor not found');
-    }
-
-    // We remove the indexDB to force an error.
-    (feedStore as any)._indexDB = null;
-
-    await expect(feedStore.deleteDescriptor(publicKey)).rejects.toThrow(/IndexDB/);
-
-    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
-  });
-
   test('append event', async (done) => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     const { publicKey, secretKey } = createKeyPair();
@@ -311,62 +258,12 @@ describe('FeedStore', () => {
     feed.append('test');
   });
 
-  test('update metadata', async () => {
-    const root = tempy.directory();
-    const feedStore = await createFeedStore(createStorage(root, STORAGE_NODE));
-    const publicKey = PublicKey.random();
-    await feedStore.createReadOnlyFeed({ key: publicKey, metadata: { tag: 0 } });
-    let descriptor = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
-    if (!descriptor) {
-      throw new Error('No descriptor found');
-    }
-    await descriptor.setMetadata({ tag: 1 });
-    expect(descriptor.metadata).toEqual({ tag: 1 });
-
-    // Check that the metadata was updated in indexdb.
-    await feedStore.close();
-    await feedStore.open();
-    descriptor = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
-    if (!descriptor) {
-      throw new Error('No descriptor found');
-    }
-    expect(descriptor.metadata).toEqual({ tag: 1 });
-  });
-
   test('openFeed should wait until FeedStore is ready', async () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
     await feedStore.open();
     const publicKey = PublicKey.random();
     const feed = await feedStore.createReadOnlyFeed({ key: publicKey });
     expect(feed).toBeDefined();
-  });
-
-  test('Delete all', async () => {
-    const { feedStore } = await createDefault();
-    await defaultFeeds(feedStore, keys);
-
-    expect(feedStore.getDescriptors().length).toBe(3);
-    await feedStore.deleteAllDescriptors();
-    expect(feedStore.getDescriptors().length).toBe(0);
-  });
-
-  test('creating same readonly feed twice should error', async () => {
-    const { feedStore } = await createDefault();
-
-    const key = PublicKey.random();
-    await feedStore.createReadOnlyFeed({ key });
-
-    await expect(feedStore.createReadOnlyFeed({ key })).rejects.toBeInstanceOf(Error);
-  });
-
-  test('creating same read/write feed twice should error', async () => {
-    const { feedStore } = await createDefault();
-
-    const key = PublicKey.random();
-    const secretKey = PublicKey.random().asBuffer();
-    await feedStore.createReadWriteFeed({ key, secretKey });
-
-    await expect(feedStore.createReadWriteFeed({ key, secretKey })).rejects.toBeInstanceOf(Error);
   });
 
   test('feed event does not get called twice', async () => {

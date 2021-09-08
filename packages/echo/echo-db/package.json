@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.12.12",
+  "version": "2.12.14",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
@@ -45,7 +45,9 @@
     "@types/node": "^14.0.9",
     "debug": "^4.1.1",
     "json-stable-stringify": "^1.0.1",
-    "pify": "~5.0.0"
+    "pify": "~5.0.0",
+    "hypertrie": "5.1.1",
+    "buffer-json-encoding": "^1.0.2"
   },
   "devDependencies": {
     "@dxos/testutils": "workspace:*",
