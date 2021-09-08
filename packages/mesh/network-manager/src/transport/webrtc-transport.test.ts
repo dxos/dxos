@@ -14,7 +14,7 @@ import { afterTest } from '@dxos/testutils';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { WebrtcTransport } from './webrtc-transport';
 
-describe('WebrtcConnection', () => {
+describe('WebrtcTransport', () => {
   // This doesn't clean up correctly and crashes with SIGSEGV at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
     const connection = new WebrtcTransport(
