@@ -43,7 +43,7 @@ import { Party } from './party';
 import { PartyFactory } from './party-factory';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
-import { Metadata, MetadataStore } from '../metadata';
+import { MetadataStore } from '../metadata';
 
 const log = debug('dxos:echo:parties:party-manager:test');
 
@@ -58,8 +58,8 @@ const log = debug('dxos:echo:parties:party-manager:test');
  */
 const setup = async (open = true, createIdentity = true) => {
   const keyring = new Keyring();
-  const metadata = new Metadata(new MetadataStore(createRamStorage()));
-  const feedStore = FeedStoreAdapter.create(createStorage('', STORAGE_RAM), keyring, metadata);
+  const metadataStore = new MetadataStore(createRamStorage());
+  const feedStore = FeedStoreAdapter.create(createStorage('', STORAGE_RAM), keyring, metadataStore);
   await feedStore.open();
 
 
@@ -93,7 +93,7 @@ const setup = async (open = true, createIdentity = true) => {
 
   const haloFactory: HaloFactory = new HaloFactory(partyFactory, networkManager, keyring);
   const identityManager = new IdentityManager(keyring, haloFactory);
-  const partyManager = new PartyManager(metadata, snapshotStore, () => identityManager.identity, partyFactory);
+  const partyManager = new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
   afterTest(() => partyManager.close());
 
   identityManager.ready.once(() => {
@@ -184,8 +184,8 @@ describe('Party manager', () => {
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
 
     const keyring = new Keyring();
-    const metadata = new Metadata(new MetadataStore(createRamStorage()));
-    const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, metadata);
+    const metadataStore = new MetadataStore(createRamStorage());
+    const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, metadataStore);
 
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     await keyring.createKeyRecord({ type: KeyType.DEVICE });
@@ -197,7 +197,7 @@ describe('Party manager', () => {
     const haloFactory = new HaloFactory(partyFactory, networkManager, keyring);
     const identityManager = new IdentityManager(keyring, haloFactory);
     const partyManager =
-      new PartyManager(metadata, snapshotStore, () => identityManager.identity, partyFactory);
+      new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
 
     await feedStore.open();
 
@@ -211,7 +211,7 @@ describe('Party manager', () => {
     const numParties = 3;
     for (let i = 0; i < numParties; i++) {
       const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
-      await metadata.addParty({ key: partyKey.publicKey });
+      await metadataStore.addParty(partyKey.publicKey);
 
       // TODO(burdon): Create multiple feeds.
       const { publicKey, secretKey } = createKeyPair();

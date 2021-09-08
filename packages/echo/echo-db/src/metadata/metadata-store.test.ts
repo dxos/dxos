@@ -9,22 +9,35 @@ import { PublicKey } from '@dxos/crypto';
 import { createRamStorage } from '../util';
 import { MetadataStore } from './metadata-store';
 
-describe('MetadataStore', () => {
-  it('in-memory', async () => {
+describe('MetadataStore in-memory', () => {
+  it('Creates party and adds feed to it', async () => {
     const store = new MetadataStore(createRamStorage());
 
-    const empty = await store.load();
-    expect(empty.parties?.length).toBe(0);
+    await store.load();
+    expect(store.parties?.length).toBe(0);
 
-    const publicKey = PublicKey.random();
-    await store.save({ parties: [{ key: publicKey }] });
-    const updated = await store.load();
-    expect(updated.parties?.length).toBe(1);
-    expect(updated.parties?.[0].key).toEqual(publicKey);
+    const partyKey = PublicKey.random();
+    await store.addParty(partyKey);
+    expect(store.parties?.length).toBe(1);
+    expect(store.parties?.[0].key).toEqual(partyKey);
+    expect(store.parties?.[0].feedKeys?.length ?? 0).toBe(0);
 
-    // TODO(yivlad): clearing storage doesn't work
-    // await store.clear();
-    // const cleared = await store.load();
-    // expect(cleared.parties?.length).toBe(0);
+    const feedKey = PublicKey.random();
+    await store.addPartyFeed(partyKey, feedKey);
+    expect(store.parties?.[0].feedKeys?.length).toBe(1);
+    expect(store.parties?.[0].feedKeys?.[0]).toEqual(feedKey);
+  });
+
+  it('Creates party when adding feed', async () => {
+    const store = new MetadataStore(createRamStorage());
+
+    await store.load();
+
+    const partyKey = PublicKey.random();
+    const feedKey = PublicKey.random();
+    await store.addPartyFeed(partyKey, feedKey);
+    expect(store.parties?.[0].key).toEqual(partyKey);
+    expect(store.parties?.[0].feedKeys?.length).toBe(1);
+    expect(store.parties?.[0].feedKeys?.[0]).toEqual(feedKey);
   });
 });

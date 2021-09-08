@@ -32,6 +32,7 @@ import { SnapshotStore } from '../snapshots';
 import { FeedStoreAdapter } from '../util';
 import { PartyOptions } from './party-core';
 import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
+import { MetadataStore } from '../metadata';
 
 const log = debug('dxos:echo:parties:party-factory');
 

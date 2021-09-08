@@ -14,6 +14,7 @@ import { createBatchStream, FeedDescriptor, FeedStore, HypercoreFeed } from '@dx
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { boolGuard } from '@dxos/util';
 
 import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
 import { Replicator, ReplicatorMiddleware } from './replicator';
@@ -22,9 +23,6 @@ jest.setTimeout(30000);
 
 const noop = () => {};
 
-// TODO(yivlad): Move to utils
-const notNull = <T>(value: T | null | undefined): value is T => Boolean(value);
-
 interface MiddlewareOptions {
   feedStore: FeedStore,
   onUnsubscribe?: (feedStore: FeedStore) => void,
@@ -32,20 +30,19 @@ interface MiddlewareOptions {
 }
 
 const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: MiddlewareOptions): ReplicatorMiddleware => {
-  const encodeFeed = (feed: HypercoreFeed, descriptor?: FeedDescriptor): FeedData => ({
+  const encodeFeed = (feed: HypercoreFeed): FeedData => ({
     key: feed.key,
     discoveryKey: feed.discoveryKey
   });
 
-  const decodeFeed = (feed: FeedData): FeedData & { metadata: any } => ({
+  const decodeFeed = (feed: FeedData): FeedData => ({
     key: feed.key,
-    discoveryKey: feed.discoveryKey,
-    metadata: feed.metadata && bufferJson.decode(feed.metadata)
+    discoveryKey: feed.discoveryKey
   });
 
   return {
     subscribe (next) {
-      const unsubscribe = feedStore.feedOpenedEvent.on((descriptor) => next([encodeFeed(descriptor.feed!, descriptor)]));
+      const unsubscribe = feedStore.feedOpenedEvent.on((descriptor) => next([encodeFeed(descriptor.feed!)]));
       return () => {
         onUnsubscribe(feedStore);
         unsubscribe();
@@ -54,15 +51,12 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
     async load () {
       const feeds = onLoad(feedStore);
       return feeds.map(
-        feed => encodeFeed(
-          feed,
-          feedStore.getDescriptorByDiscoveryKey(feed.discoveryKey as any)
-        )
+        feed => encodeFeed(feed)
       );
     },
     async replicate (feeds: FeedData[]) {
       const hypercoreFeeds = await Promise.all(feeds.map((feed) => {
-        const { key, discoveryKey, metadata } = decodeFeed(feed);
+        const { key, discoveryKey } = decodeFeed(feed);
 
         if (key) {
           const feed = feedStore.getOpenFeed(d => d.key.equals(key));
@@ -81,7 +75,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
         return null;
       }));
 
-      return hypercoreFeeds.filter(notNull);
+      return hypercoreFeeds.filter(boolGuard);
     }
   };
 };
@@ -173,13 +167,6 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
 
       expect(result).toBe(true);
     }, 4500, 1000);
-
-    let metadataOk = true;
-    for (const peer of network.peers) {
-      metadataOk = metadataOk && !peer.getDescriptors().find((d: FeedDescriptor) => !d.metadata || !d.metadata.topic);
-    }
-
-    expect(metadataOk).toBe(true);
   });
 
   test('message synchronization', async () => {

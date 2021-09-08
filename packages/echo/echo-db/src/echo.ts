@@ -23,7 +23,7 @@ import { OpenProgress, Party, PartyFactory, PartyFilter, PartyManager } from './
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { FeedStoreAdapter, createRamStorage } from './util';
-import { Metadata, MetadataStore } from './metadata';
+import { MetadataStore } from './metadata';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
@@ -96,7 +96,7 @@ export class ECHO {
   private readonly _snapshotStore: SnapshotStore;
   private readonly _partyManager: PartyManager;
   private readonly _subs = new SubscriptionGroup();
-  private readonly _metadata: Metadata;
+  private readonly _metadataStore: MetadataStore;
 
   /**
    * Creates a new instance of ECHO.
@@ -120,7 +120,7 @@ export class ECHO {
 
     this._networkManager = new NetworkManager(networkManagerOptions);
     this._snapshotStore = new SnapshotStore(snapshotStorage);
-    this._metadata = new Metadata(new MetadataStore(metadataStorage));
+    this._metadataStore = new MetadataStore(metadataStorage);
 
     const options = {
       snapshots,
@@ -130,7 +130,7 @@ export class ECHO {
     };
     this._keyring = new Keyring(new KeyStore(keyStorage));
 
-    this._feedStore = FeedStoreAdapter.create(feedStorage, this._keyring, this._metadata);
+    this._feedStore = FeedStoreAdapter.create(feedStorage, this._keyring, this._metadataStore);
 
     const partyFactory = new PartyFactory(
       () => this.halo.identity,
@@ -142,7 +142,7 @@ export class ECHO {
     );
 
     this._partyManager = new PartyManager(
-      this._metadata,
+      this._metadataStore,
       this._snapshotStore,
       () => this.halo.identity,
       partyFactory

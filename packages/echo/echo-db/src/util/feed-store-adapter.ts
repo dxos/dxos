@@ -3,21 +3,21 @@
 //
 
 import assert from 'assert';
-import jsonBuffer from 'buffer-json-encoding';
-import hypertrie from 'hypertrie';
 
 import { Keyring, KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
+import { boolGuard } from '@dxos/util';
 import {
   codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
 } from '@dxos/echo-protocol';
-import { CreateReadOnlyFeedOptions, FeedDescriptor, FeedStore, HypercoreFeed } from '@dxos/feed-store';
+import { CreateReadOnlyFeedOptions, FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { IStorage } from '@dxos/random-access-multi-storage';
 
-import { Metadata } from '../metadata';
+import { MetadataStore } from '../metadata';
+import { PublicKey } from '@dxos/crypto';
 
 export interface CreateFeedOptions extends CreateReadOnlyFeedOptions {
-  secretKey?: Buffer
+  secretKey?: Buffer,
+  partyKey: PublicKey
 }
 
 /**
@@ -26,15 +26,15 @@ export interface CreateFeedOptions extends CreateReadOnlyFeedOptions {
  */
 // TODO(burdon): Temporary: will replace FeedStore.
 export class FeedStoreAdapter {
-  static create (storage: IStorage, keyring: Keyring, metadata: Metadata) {
+  static create (storage: IStorage, keyring: Keyring, metadataStore: MetadataStore) {
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
-    return new FeedStoreAdapter(feedStore, keyring, metadata);
+    return new FeedStoreAdapter(feedStore, keyring, metadataStore);
   }
 
   constructor (
     private readonly _feedStore: FeedStore,
     private readonly _keyring: Keyring,
-    private readonly _metadata: Metadata
+    private readonly _metadataStore: MetadataStore
   ) { }
 
   // TODO(burdon): Remove.
@@ -50,24 +50,24 @@ export class FeedStoreAdapter {
     if (!this._feedStore.opened) {
       await this._feedStore.open();
     }
-    for (const party of this._metadata.parties) {
+    for (const party of this._metadataStore.parties) {
       for (const feedKey of party.feedKeys ?? []) {
         const secretKey = this._keyring.getFullKey(feedKey)?.secretKey;
-        await this._createFeed({ key: feedKey, secretKey });
+        assert(party.key);
+        await this._createFeed({ key: feedKey, secretKey, partyKey: party.key });
       }
     }
   }
 
   async close () {
     await this._feedStore.close();
-    await this._indexDB?.close();
   }
 
   // TODO(marik-d): Should probably not be here.
   getPartyKeys (): PartyKey[] {
     return Array.from(new Set(
-      this._metadata.parties.map(party => party.key)
-    )).values());
+      this._metadataStore.parties.map(party => party.key).filter(boolGuard)
+    ).values());
   }
 
   getFeed (feedKey: FeedKey): HypercoreFeed | null | undefined {
@@ -78,7 +78,7 @@ export class FeedStoreAdapter {
   queryWritableFeed (partyKey: PartyKey): HypercoreFeed | null | undefined {
     // TODO(telackey): 'writable' is true property of the Feed, not just its Descriptor's metadata.
     // Using that real value would be preferable to using metadata, but I think it requires the Feed be open.
-    const feedKeys = this._metadata.parties.find(party => party.key && partyKey.equals(party.key))?.feedKeys ?? [];
+    const feedKeys = this._metadataStore.parties.find(party => party.key && partyKey.equals(party.key))?.feedKeys ?? [];
     return this._feedStore.getDescriptors().find(descriptor =>  descriptor.writable && feedKeys.find(feedKey => descriptor.key.equals(feedKey)))?.feed;
   }
 
@@ -97,6 +97,7 @@ export class FeedStoreAdapter {
     return this._createFeed({
       key: fullKeyRecord.publicKey,
       secretKey: fullKeyRecord.secretKey,
+      partyKey
     });
   }
 
@@ -106,6 +107,7 @@ export class FeedStoreAdapter {
   async createReadOnlyFeed (feedKey: FeedKey, partyKey: PartyKey): Promise<HypercoreFeed> {
     return this._createFeed({
       key: feedKey,
+      partyKey
     });
   }
 
@@ -116,13 +118,14 @@ export class FeedStoreAdapter {
   ): Promise<FeedStoreIterator> {
     return createIterator(
       this._feedStore,
-      descriptor => !!this._metadata.parties.find(party => party.key && partyKey.equals(party.key))?.feedKeys?.find(feedKey => descriptor.key.equals(feedKey)),
+      descriptor => !!this._metadataStore.parties.find(party => party.key && partyKey.equals(party.key))?.feedKeys?.find(feedKey => descriptor.key.equals(feedKey)),
       messageSelector,
       initialTimeframe
     );
   }
 
   private async _createFeed (options: CreateFeedOptions) {
+    await this._metadataStore.addPartyFeed(options.partyKey, options.key);
     return options.secretKey ? await this.feedStore.createReadWriteFeed({ ...options, secretKey: options.secretKey }) : await this.feedStore.createReadOnlyFeed(options);
   }
 }

@@ -15,8 +15,9 @@ import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { SnapshotStore } from '../snapshots';
-import { FeedStoreAdapter } from '../util';
+import { createRamStorage, FeedStoreAdapter } from '../util';
 import { PartyCore } from './party-core';
+import { MetadataStore } from '../metadata';
 
 const setup = async () => {
   const storage = createStorage('', STORAGE_RAM);
@@ -26,7 +27,9 @@ const setup = async () => {
 
   const keyring = new Keyring();
 
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, storage);
+  const metadataStore = new MetadataStore(createRamStorage());
+
+  const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, metadataStore);
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
 
@@ -43,10 +46,7 @@ const setup = async () => {
   const fullKey = keyring.getFullKey(feedKey.publicKey);
   assert(fullKey);
   assert(fullKey.secretKey);
-  await feedStore.createReadWriteFeed({
-    key: fullKey.publicKey,
-    secretKey: fullKey.secretKey
-  });
+  await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
   await party.open();
   afterTest(async () => party.close());
 

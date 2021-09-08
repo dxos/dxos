@@ -3,4 +3,3 @@
 //
 
 export * from './metadata-store';
-export * from './echo-metadata';

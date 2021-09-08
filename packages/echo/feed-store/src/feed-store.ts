@@ -8,6 +8,7 @@ import defaultHypercore from 'hypercore';
 import { synchronized, Event } from '@dxos/async';
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { IStorage } from '@dxos/random-access-multi-storage';
+import { boolGuard } from '@dxos/util'
 
 import FeedDescriptor from './feed-descriptor';
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
@@ -153,11 +154,10 @@ export class FeedStore {
    * Get the list of opened feeds, with optional filter.
    */
   getOpenFeeds (callback?: DescriptorCallback): HypercoreFeed[] {
-    const notNull = <T>(value: T | null): value is T => Boolean(value);
     return this.getDescriptors()
       .filter(descriptor => descriptor.opened && (!callback || callback(descriptor)))
       .map(descriptor => descriptor.feed)
-      .filter(notNull);
+      .filter(boolGuard);
   }
 
   /**
