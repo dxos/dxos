@@ -1,0 +1,24 @@
+{
+  "name": "@dxos/test-bot",
+  "version": "2.12.14",
+  "description": "Test bot",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "main": "dist/src/main.js",
+  "types": "dist/src/main.d.ts",
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "test": "toolchain test",
+    "lint": "toolchain lint"
+  },
+  "dependencies": {
+    "@dxos/bot": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

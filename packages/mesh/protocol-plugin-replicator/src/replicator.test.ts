@@ -5,11 +5,12 @@
 import bufferJson from 'buffer-json-encoding';
 import crypto from 'crypto';
 import eos from 'end-of-stream';
+import multi from 'multi-read-stream';
 import pify from 'pify';
 import waitForExpect from 'wait-for-expect';
 
 import { createKeyPair, discoveryKey, PublicKey } from '@dxos/crypto';
-import { FeedDescriptor, FeedStore, HypercoreFeed } from '@dxos/feed-store';
+import { createBatchStream, FeedDescriptor, FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
@@ -87,7 +88,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 };
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
-  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: 'utf8' });
   await feedStore.open();
   const { publicKey, secretKey } = createKeyPair();
   const feed = await feedStore.createReadWriteFeed({
@@ -133,9 +134,9 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     },
     getMessages () {
       const messages: any[] = [];
-      const stream = feedStore.createReadStream();
-      stream.on('data', (data: any) => {
-        messages.push(data.data);
+      const stream = multi.obj(feedStore.getOpenFeeds().map(feed => createBatchStream(feed)));
+      stream.on('data', (data: any[]) => {
+        messages.push(data[0].data);
       });
       return new Promise((resolve, reject) => {
         eos(stream, (err: any) => {

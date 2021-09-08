@@ -448,7 +448,9 @@
     },
     {
       "packageName": "@dxos/esbuild-plugins",
-      "projectFolder": "toolchains/esbuild-plugins"
+      "projectFolder": "toolchains/esbuild-plugins",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/deps-checker",
@@ -709,6 +711,12 @@
     {
       "packageName": "@dxos/bot",
       "projectFolder": "packages/bot/bot",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/test-bot",
+      "projectFolder": "packages/bot/test-bot",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },

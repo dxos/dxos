@@ -4,7 +4,6 @@
 
 /* eslint-disable jest/no-done-callback */
 
-import eos from 'end-of-stream-promise';
 import hypercore from 'hypercore';
 import hypertrie from 'hypertrie';
 import pify from 'pify';
@@ -35,7 +34,7 @@ async function createDefault () {
 
   return {
     directory,
-    feedStore: await createFeedStore(createStorage(directory, STORAGE_NODE), { feedOptions: { valueEncoding: 'utf-8' } })
+    feedStore: await createFeedStore(createStorage(directory, STORAGE_NODE), { valueEncoding: 'utf-8' })
   };
 }
 
@@ -87,12 +86,10 @@ describe('FeedStore', () => {
     database.list = jest.fn((_, cb) => cb(null, []));
 
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), {
-      database: () => database,
       hypercore: customHypercore
     });
 
     expect(feedStore).toBeInstanceOf(FeedStore);
-    expect(database.list.mock.calls.length).toBe(1);
 
     await feedStore.createReadOnlyFeed({ key: PublicKey.random() });
 
@@ -190,38 +187,6 @@ describe('FeedStore', () => {
     expect(feedStore.closed).toBe(true);
   });
 
-  test('Reopen feedStore and recreate feeds from the indexDB', async () => {
-    const { feedStore } = await createDefault();
-    let { booksFeed, usersFeed } = await defaultFeeds(feedStore, keys);
-
-    await append(booksFeed, 'Foundation and Empire');
-    await append(usersFeed, 'alice');
-
-    await feedStore.close();
-    await feedStore.open();
-    expect(feedStore.opened).toBe(true);
-    expect(feedStore.getDescriptors().length).toBe(3);
-
-    booksFeed = await feedStore.openFeed(keys.booksFeed.key);
-    [usersFeed] = await feedStore.openFeeds(fd => fd.key.equals(keys.usersFeed.key));
-    expect(feedStore.getDescriptors().filter(fd => fd.opened).length).toBe(2);
-
-    await expect(pify(booksFeed.head.bind(booksFeed))()).resolves.toBe('Foundation and Empire');
-    await expect(pify(usersFeed.head.bind(usersFeed))()).resolves.toBe('alice');
-
-    // The metadata of /books should be recreate too.
-    const metadata = { topic: 'books' };
-    expect(feedStore.getDescriptors().find(fd => fd.key.equals(keys.booksFeed.key))?.metadata).toEqual(metadata);
-  });
-
-  test('Delete descriptor', async () => {
-    const { feedStore } = await createDefault();
-    await defaultFeeds(feedStore, keys);
-
-    await feedStore.deleteDescriptor(keys.booksFeed.key);
-    expect(feedStore.getDescriptors().length).toBe(2);
-  });
-
   test('Default codec: binary', async () => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     expect(feedStore).toBeInstanceOf(FeedStore);
@@ -231,50 +196,6 @@ describe('FeedStore', () => {
     expect(feed).toBeInstanceOf(hypercore);
     await append(feed, 'test');
     await expect(head(feed)).resolves.toBeInstanceOf(Buffer);
-  });
-
-  test('Default codec: json + custom codecs', async () => {
-    const options = {
-      feedOptions: { valueEncoding: 'utf-8' },
-      codecs: {
-        codecA: {
-          encode (val: any) {
-            val.encodedBy = 'codecA';
-            return Buffer.from(JSON.stringify(val));
-          },
-          decode (val: any) {
-            return JSON.parse(val);
-          }
-        },
-        codecB: {
-          name: 'codecB',
-          encode (val: any) {
-            val.encodedBy = 'codecB';
-            return Buffer.from(JSON.stringify(val));
-          },
-          decode (val: any) {
-            return JSON.parse(val);
-          }
-        }
-      }
-    };
-    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), options);
-    expect(feedStore).toBeInstanceOf(FeedStore);
-
-    {
-      const { publicKey, secretKey } = createKeyPair();
-      const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
-      expect(feed).toBeInstanceOf(hypercore);
-      await append(feed, 'test');
-      await expect(head(feed)).resolves.toBe('test');
-    }
-    {
-      const { publicKey, secretKey } = createKeyPair();
-      const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey, valueEncoding: 'codecA' });
-      expect(feed).toBeInstanceOf(hypercore);
-      await append(feed, { msg: 'test' });
-      await expect(head(feed)).resolves.toEqual({ msg: 'test', encodedBy: 'codecA' });
-    }
   });
 
   test('on open error should unlock the descriptor', async () => {
@@ -324,259 +245,6 @@ describe('FeedStore', () => {
     await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
-  test('on delete descriptor error should unlock the descriptor', async () => {
-    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
-
-    const publicKey = PublicKey.random();
-    await feedStore.createReadOnlyFeed({ key: publicKey });
-    const fd = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
-
-    if (!fd) {
-      throw new Error('Descriptor not found');
-    }
-
-    // We remove the indexDB to force an error.
-    (feedStore as any)._indexDB = null;
-
-    await expect(feedStore.deleteDescriptor(publicKey)).rejects.toThrow(Error);
-
-    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
-  });
-
-  async function generateStreamData (feedStore: FeedStore, maxMessages = 200) {
-    const keyPairs = Array.from(Array(3)).map(() => createKeyPair());
-    const [feed1, feed2, feed3] = await Promise.all([
-      feedStore.createReadWriteFeed({ key: PublicKey.from(keyPairs[0].publicKey), secretKey: keyPairs[0].secretKey }),
-      feedStore.createReadWriteFeed({ key: PublicKey.from(keyPairs[1].publicKey), secretKey: keyPairs[1].secretKey }),
-      feedStore.createReadWriteFeed({ key: PublicKey.from(keyPairs[2].publicKey), secretKey: keyPairs[2].secretKey })
-    ]);
-
-    const messages = [];
-    for (let i = 0; i < maxMessages; i++) {
-      messages.push(append(feed1, `feed1/message${i}`));
-      messages.push(append(feed2, `feed2/message${i}`));
-    }
-
-    await Promise.all(messages);
-
-    return [feed1, feed2, feed3];
-  }
-
-  function asc (a: any, b?: any) {
-    if (a.data > b.data) {
-      return 1;
-    }
-    if (a.data < b.data) {
-      return -1;
-    }
-    // a must be equal to b
-    return 0;
-  }
-
-  test('createReadStream with empty messages', async () => {
-    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf-8' } });
-
-    await generateStreamData(feedStore, 0);
-    const onSync = jest.fn();
-    const messages = [];
-    const stream = feedStore.createReadStream();
-    stream.on('data', (msg: any) => {
-      messages.push(msg);
-    });
-    stream.on('sync', onSync);
-    await new Promise<void>(resolve => eos(stream, () => resolve()));
-
-    expect(messages.length).toBe(0);
-    expect(onSync).toHaveBeenCalledTimes(1);
-    expect(onSync).toHaveBeenCalledWith({});
-  });
-
-  test('createReadStream with 200 messages', async () => {
-    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf-8' } });
-
-    const [feed1, feed2] = await generateStreamData(feedStore);
-
-    const onSync = jest.fn();
-    const messages: any[] = [];
-    const stream = feedStore.createReadStream();
-    stream.on('data', (msg: any) => {
-      messages.push(msg);
-    });
-    stream.on('sync', onSync);
-    await new Promise<void>(resolve => eos(stream, () => resolve()));
-
-    messages.sort(asc);
-
-    expect(messages.length).toBe(400);
-
-    // sync test
-    const syncMessages = messages.filter(m => m.sync);
-    expect(syncMessages.length).toBe(2);
-    expect(syncMessages[0].key).toEqual(PublicKey.from(feed1.key));
-    expect(syncMessages[1].key).toEqual(PublicKey.from(feed2.key));
-    expect(onSync).toHaveBeenCalledTimes(1);
-    expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString('hex')]: 199,
-      [feed2.key.toString('hex')]: 199
-    });
-  });
-
-  test('createReadStream filter [feed2=false]', async () => {
-    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf-8' } });
-
-    const [feed1, feed2] = await generateStreamData(feedStore);
-
-    const onSync = jest.fn();
-    const messages: any[] = [];
-    const stream = feedStore.createReadStream(descriptor => !descriptor.key.equals(feed2.key) && { feedStoreInfo: true });
-    stream.on('data', (msg: any) => messages.push(msg));
-    stream.on('sync', onSync);
-    await new Promise<void>(resolve => eos(stream, () => resolve()));
-
-    messages.sort(asc);
-
-    expect(messages.length).toBe(200);
-
-    // sync test
-    const syncMessages = messages.filter(m => m.sync);
-    expect(syncMessages.length).toBe(1);
-    expect(syncMessages[0].key).toEqual(PublicKey.from(feed1.key));
-    expect(onSync).toHaveBeenCalledTimes(1);
-    expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString('hex')]: 199
-    });
-  });
-
-  test.skip('createReadStream [live=true]', async () => {
-    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf-8' } });
-
-    const [feed1, feed2, feed3] = await generateStreamData(feedStore);
-
-    const onSync = jest.fn();
-    const messages: any[] = [];
-    const stream = feedStore.createReadStream({ live: true, feedStoreInfo: true });
-    stream.on('data', (msg: any) => messages.push(msg));
-    stream.on('sync', onSync);
-    for (let i = 0; i < 2000; i++) {
-      await append(feed3, `feed3/message${i}`);
-      await new Promise(resolve => setImmediate(resolve));
-    }
-    process.nextTick(() => stream.destroy());
-    await new Promise<void>(resolve => eos(stream, () => resolve()));
-
-    messages.sort(asc);
-
-    expect(messages.length).toBe(200 * 2 + 2000);
-
-    // sync test
-    const syncMessages = messages.filter(m => m.sync);
-    expect(syncMessages.length).toBe(2002);
-    expect(syncMessages[0].key).toEqual(PublicKey.from(feed1.key));
-    expect(syncMessages[1].key).toEqual(PublicKey.from(feed2.key));
-    expect(onSync).toHaveBeenCalledTimes(1);
-    expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString('hex')]: 199,
-      [feed2.key.toString('hex')]: 199
-    });
-  });
-
-  test('createBatchStream with 200 messages and [batch=50]', async () => {
-    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf-8' } });
-
-    const [feed1, feed2] = await generateStreamData(feedStore);
-
-    const onSync = jest.fn();
-    const batches: any[] = [];
-    const stream = feedStore.createBatchStream({ batch: 50, feedStoreInfo: true });
-    stream.on('data', (msg: any) => {
-      batches.push(msg);
-    });
-    stream.on('sync', onSync);
-    await new Promise<void>(resolve => eos(stream, () => resolve()));
-
-    expect(batches.length).toBe(400 / 50);
-
-    // flat data
-    const messages = batches.reduce((prev, curr) => [...prev, ...curr], []);
-
-    messages.sort(asc);
-
-    expect(messages.length).toBe(400);
-
-    // sync test
-    const syncMessages = messages.filter((m: any) => m.sync);
-    expect(syncMessages.length).toBe(2);
-    expect(syncMessages[0].key).toEqual(PublicKey.from(feed1.key));
-    expect(syncMessages[1].key).toEqual(PublicKey.from(feed2.key));
-    expect(onSync).toHaveBeenCalledTimes(1);
-    expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString('hex')]: 199,
-      [feed2.key.toString('hex')]: 199
-    });
-  });
-
-  test('createReadStream and check re-open a feed [live=true]', async () => {
-    const { feedStore } = await createDefault();
-
-    const [feed1, feed2, feed3] = await generateStreamData(feedStore, 2);
-
-    const onSync = jest.fn();
-    const messages: any[] = [];
-    const stream = feedStore.createReadStream({ live: true });
-    const done = new Promise<void>(resolve => {
-      stream.on('data', (msg: any) => {
-        messages.push(msg.data);
-        if (messages.length === 6) {
-          resolve();
-        }
-      });
-    });
-
-    const waitForSync = new Promise<void>(resolve => stream.once('sync', (state: any) => {
-      onSync(state);
-      resolve();
-    }));
-
-    await waitForSync;
-
-    expect(messages.length).toBe(4);
-    expect(onSync).toHaveBeenCalledTimes(1);
-    expect(onSync).toHaveBeenCalledWith({
-      [feed1.key.toString('hex')]: 1,
-      [feed2.key.toString('hex')]: 1
-    });
-
-    expect(stream.state()).toStrictEqual({
-      [feed1.key.toString('hex')]: 1,
-      [feed2.key.toString('hex')]: 1,
-      [feed3.key.toString('hex')]: 0
-    });
-
-    const { key } = feed2;
-    await feedStore.closeFeed(PublicKey.from(key));
-    const reopenFeed2 = await feedStore.openFeed(PublicKey.from(key));
-    await append(reopenFeed2, `feed2/message${reopenFeed2.length}`);
-    await append(reopenFeed2, `feed2/message${reopenFeed2.length}`);
-
-    await done;
-
-    messages.sort();
-
-    expect(messages).toStrictEqual([
-      'feed1/message0',
-      'feed1/message1',
-      'feed2/message0',
-      'feed2/message1',
-      'feed2/message2',
-      'feed2/message3'
-    ]);
-    expect(stream.state()).toStrictEqual({
-      [feed1.key.toString('hex')]: 1,
-      [feed2.key.toString('hex')]: 3,
-      [feed3.key.toString('hex')]: 0
-    });
-  });
-
   test('append event', async (done) => {
     const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
     const { publicKey, secretKey } = createKeyPair();
@@ -590,90 +258,12 @@ describe('FeedStore', () => {
     feed.append('test');
   });
 
-  test('update metadata', async () => {
-    const root = tempy.directory();
-    const feedStore = await createFeedStore(createStorage(root, STORAGE_NODE));
-    const publicKey = PublicKey.random();
-    await feedStore.createReadOnlyFeed({ key: publicKey, metadata: { tag: 0 } });
-    let descriptor = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
-    if (!descriptor) {
-      throw new Error('No descriptor found');
-    }
-    await descriptor.setMetadata({ tag: 1 });
-    expect(descriptor.metadata).toEqual({ tag: 1 });
-
-    // Check that the metadata was updated in indexdb.
-    await feedStore.close();
-    await feedStore.open();
-    descriptor = feedStore.getDescriptors().find(fd => fd.key.equals(publicKey));
-    if (!descriptor) {
-      throw new Error('No descriptor found');
-    }
-    expect(descriptor.metadata).toEqual({ tag: 1 });
-  });
-
   test('openFeed should wait until FeedStore is ready', async () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
     await feedStore.open();
     const publicKey = PublicKey.random();
     const feed = await feedStore.createReadOnlyFeed({ key: publicKey });
     expect(feed).toBeDefined();
-  });
-
-  test('createReadStream should destroy if FeedStore is closed', async (done) => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
-
-    await feedStore.open();
-
-    const stream2 = feedStore.createReadStream();
-    eos(stream2, (err: Error) => {
-      expect(err.message).toBe('FeedStore closed');
-      done();
-    });
-
-    await feedStore.close();
-  });
-
-  test('createReadStream should destroy if filter throws an error', async () => {
-    const feedStore = await createFeedStore(createStorage('', STORAGE_RAM));
-    const publicKey = PublicKey.random();
-    await feedStore.createReadOnlyFeed({ key: publicKey });
-
-    const stream = feedStore.createReadStream(async () => {
-      throw new Error('filter error');
-    });
-    await new Promise<void>(resolve => eos(stream, (err: Error) => {
-      expect(err.message).toBe('filter error');
-      resolve();
-    }));
-  });
-
-  test('Delete all', async () => {
-    const { feedStore } = await createDefault();
-    await defaultFeeds(feedStore, keys);
-
-    expect(feedStore.getDescriptors().length).toBe(3);
-    await feedStore.deleteAllDescriptors();
-    expect(feedStore.getDescriptors().length).toBe(0);
-  });
-
-  test('creating same readonly feed twice should error', async () => {
-    const { feedStore } = await createDefault();
-
-    const key = PublicKey.random();
-    await feedStore.createReadOnlyFeed({ key });
-
-    await expect(feedStore.createReadOnlyFeed({ key })).rejects.toBeInstanceOf(Error);
-  });
-
-  test('creating same read/write feed twice should error', async () => {
-    const { feedStore } = await createDefault();
-
-    const key = PublicKey.random();
-    const secretKey = PublicKey.random().asBuffer();
-    await feedStore.createReadWriteFeed({ key, secretKey });
-
-    await expect(feedStore.createReadWriteFeed({ key, secretKey })).rejects.toBeInstanceOf(Error);
   });
 
   test('feed event does not get called twice', async () => {

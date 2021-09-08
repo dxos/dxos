@@ -8,7 +8,7 @@ import pify from 'pify';
 /**
  * Index feed descriptors.
  */
-class IndexDB {
+export class IndexDB {
   public _hypertrie: any;
   public _db: any;
 
@@ -51,5 +51,3 @@ class IndexDB {
     return this._db.close();
   }
 }
-
-export default IndexDB;

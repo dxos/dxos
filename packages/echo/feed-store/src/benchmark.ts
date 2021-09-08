@@ -21,7 +21,7 @@ void (async () => {
     }
   };
 
-  const fs = new FeedStore(createStorage('.benchmark'), { feedOptions: { valueEncoding: 'utf8' } });
+  const fs = new FeedStore(createStorage('.benchmark'), { valueEncoding: 'utf8' });
   await fs.open();
   const suite = new Suite(fs, { maxFeeds, maxMessages });
 
@@ -51,7 +51,7 @@ void (async () => {
 
     await Promise.all(fs.getOpenFeeds().map(feed => {
       return new Promise<void>((resolve, reject) => {
-        feed.getBatch(0, maxMessages, (err, result) => {
+        feed.getBatch(0, maxMessages, (err: Error, result: any) => {
           count += result.length;
           if (err) {
             return reject(err);
@@ -63,61 +63,6 @@ void (async () => {
 
     check(count);
   });
-
-  suite.test('createReadStream [batch=1]', async () => {
-    const stream = fs.createReadStream({ batch: 1 });
-    let count = 0;
-
-    await new Promise<void>((resolve, reject) => {
-      stream.on('data', (data: any) => {
-        count++;
-        if (count === expectedMessages) {
-          resolve();
-        }
-      });
-    });
-
-    stream.destroy();
-
-    check(count);
-  });
-
-  suite.test('createReadStream [batch=100]', async () => {
-    const stream = fs.createReadStream({ batch: 100 });
-    let count = 0;
-
-    await new Promise<void>((resolve, reject) => {
-      stream.on('data', (data: any) => {
-        count++;
-        if (count === expectedMessages) {
-          resolve();
-        }
-      });
-    });
-
-    stream.destroy();
-
-    check(count);
-  });
-
-  suite.test('createBatchStream [batch=100]', async () => {
-    const stream = fs.createBatchStream({ batch: 100 });
-    let count = 0;
-
-    await new Promise<void>((resolve, reject) => {
-      stream.on('data', (data: any) => {
-        count += data.length;
-        if (count === expectedMessages) {
-          resolve();
-        }
-      });
-    });
-
-    stream.destroy();
-
-    check(count);
-  });
-
   const results = await suite.run();
 
   suite.print(results);

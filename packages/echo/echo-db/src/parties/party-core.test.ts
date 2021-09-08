@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -19,12 +19,14 @@ import { FeedStoreAdapter } from '../util';
 import { PartyCore } from './party-core';
 
 const setup = async () => {
-  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
+  const storage = createStorage('', STORAGE_RAM);
+  const feedStore = new FeedStore(storage, { valueEncoding: codec });
   await feedStore.open();
   afterTest(async () => feedStore.close());
 
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore);
   const keyring = new Keyring();
+
+  const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, storage);
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
 
@@ -37,13 +39,15 @@ const setup = async () => {
     snapshotStore
   );
 
-  const feed = await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
-  const feedKey = await keyring.addKeyRecord({
-    publicKey: PublicKey.from(feed.key),
-    secretKey: feed.secretKey,
-    type: KeyType.FEED
+  const feedKey = await keyring.createKeyRecord();
+  const fullKey = keyring.getFullKey(feedKey.publicKey);
+  assert(fullKey);
+  assert(fullKey.secretKey);
+  await feedStore.createReadWriteFeed({
+    key: fullKey.publicKey,
+    secretKey: fullKey.secretKey,
+    metadata: { partyKey: partyKey.publicKey.asBuffer(), writable: true }
   });
-
   await party.open();
   afterTest(async () => party.close());
 
