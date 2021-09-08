@@ -39,7 +39,7 @@ const JoinParty = () => {
         invitation,
         passcode
       });
-    }, { successMessage: 'Joined the party', errorMessage: 'Couldn\'t join the party' });
+    }, { onSuccessMessage: 'Joined the party', onErrorMessage: 'Couldn\'t join the party' });
 
     if (result) {
       history.goBack();

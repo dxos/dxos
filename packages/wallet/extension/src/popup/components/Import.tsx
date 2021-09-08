@@ -40,8 +40,8 @@ const Import = ({ onProfileCreated } : ImportProps) => {
     const response = await withUIError(
       () => backgroundService?.rpc.RestoreProfile({ username, seedPhrase }),
       {
-        successMessage: 'Succesfully imported profile',
-        errorMessage: 'Couldn\'t import profile'
+        onSuccessMessage: 'Succesfully imported profile',
+        onErrorMessage: 'Couldn\'t import profile'
       }
     );
     setInProgress(false);
