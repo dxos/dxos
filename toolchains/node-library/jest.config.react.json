@@ -2,6 +2,6 @@
   "testMatch": ["<rootDir>/{src,test,tests}/**/*.test.{js,ts,jsx,tsx}"],
   "preset": "ts-jest/presets/js-with-ts",
   "testEnvironment": "jsdom",
-  "forceExit": true,
+  "forceExit": false,
   "testTimeout": 60000
 }
