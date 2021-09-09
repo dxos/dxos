@@ -10,6 +10,7 @@
     "url": "git+https://github.com/dxos/protocols.git"
   },
   "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -31,6 +32,6 @@
     "@types/jest": "^26.0.7"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

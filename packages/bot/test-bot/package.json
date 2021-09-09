@@ -19,6 +19,6 @@
     "@dxos/toolchain-node-library": "workspace:*"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

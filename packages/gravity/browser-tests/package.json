@@ -39,7 +39,7 @@
     "mocha": "~8.4.0"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "toolchain": {
     "additionalTestSteps": [
