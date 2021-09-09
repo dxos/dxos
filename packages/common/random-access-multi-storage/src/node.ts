@@ -4,8 +4,8 @@
 
 import { NodeStorage } from './implementations/file-storage';
 import { RamStorage } from './implementations/ram-storage';
-import { STORAGE_RAM, STORAGE_NODE, StorageType } from './implementations/storage-types';
 import { IStorage } from './interfaces/IStorage';
+import { STORAGE_RAM, STORAGE_NODE, StorageType } from './interfaces/storage-types';
 
 export const createStorage = (
   root: string,

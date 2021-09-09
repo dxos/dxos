@@ -4,9 +4,9 @@
 
 import randomAccessIdb from 'random-access-idb';
 
-import { RandomAccessStorage } from '../interfaces/random-access-storage';
+import { IFile } from '..';
+import { StorageType, STORAGE_IDB } from '../interfaces/storage-types';
 import { AbstractStorage } from './abstract-storage';
-import { StorageType, STORAGE_IDB } from './storage-types';
 
 export class IDbStorage extends AbstractStorage {
   public override type: StorageType = STORAGE_IDB;
@@ -62,4 +62,14 @@ export class IDbStorage extends AbstractStorage {
   protected _createFileStorage () {
     return randomAccessIdb(this._root);
   }
+}
+
+interface RandomAccessStorage {
+  (file: string, opts?: {}): IFile;
+
+  root: string;
+
+  type: string;
+
+  destroy(): Promise<void>;
 }
