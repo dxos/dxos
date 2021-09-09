@@ -20,7 +20,7 @@ const createPeer = (topic: PublicKey) => {
   afterTest(() => networkManager.destroy());
 
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
-  afterTest(() => presencePlugin.stop())
+  afterTest(() => presencePlugin.stop());
 
   networkManager.joinProtocolSwarm({
     peerId,
