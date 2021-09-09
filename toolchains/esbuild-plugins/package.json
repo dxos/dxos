@@ -1,6 +1,8 @@
 {
   "name": "@dxos/esbuild-plugins",
   "version": "2.12.14",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "scripts": {

@@ -2,6 +2,8 @@
   "name": "@dxos/signal",
   "version": "2.12.14",
   "description": "DxOS signal server.",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
     "url": "https://github.com/dxos/protocol/issues"

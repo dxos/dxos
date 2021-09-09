@@ -2,6 +2,8 @@
   "name": "@dxos/protocol-plugin-replicator",
   "version": "2.12.14",
   "description": "Protocol plugin replicator.",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
     "url": "https://github.com/dxos/protocol/issues"
@@ -10,7 +12,6 @@
     "type": "git",
     "url": "git+https://github.com/dxos/protocol.git"
   },
-  "license": "GPL-3.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
