@@ -42,7 +42,7 @@ const Parties = () => {
     setImmediate(async () => {
       const response = await withUIError(
         () => backgroundService.rpc.GetParties({}),
-        { errorMessage: 'Couldn\'t load parties' }
+        { onErrorMessage: 'Couldn\'t load parties' }
       );
       if (response) {
         const { result } = response;

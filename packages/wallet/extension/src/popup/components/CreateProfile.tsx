@@ -49,8 +49,8 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
     const response = await withUIError(
       () => backgroundService?.rpc.CreateProfile({ username }),
       {
-        successMessage: 'Succesfully created profile',
-        errorMessage: 'Couldn\'t create profile'
+        onSuccessMessage: 'Succesfully created profile',
+        onErrorMessage: 'Couldn\'t create profile'
       }
     );
     setInProgress(false);

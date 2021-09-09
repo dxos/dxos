@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:16
 
 LABEL maintainer="admin@dxos.org"
 LABEL description="DXOS Bot Factory."
@@ -6,11 +6,13 @@ LABEL description="DXOS Bot Factory."
 ARG NPM_TOKEN
 ARG VERSION="@latest"
 
-RUN apk --update add --no-cache g++ make python3 alpine-sdk libtool autoconf automake libc6-compat
-RUN ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2
+ENV DX_CLI_NODE_PATH="/usr/local/share/.config/yarn/global/node_modules"
+
+RUN apt-get update && apt-get install -y g++ make python3 libtool autoconf automake
 
 RUN echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> /root/.npmrc
 RUN npm install node-pre-gyp -g
-RUN npm install --global --unsafe-perm "@dxos/botkit$VERSION"
+RUN yarn global add "@dxos/botkit$VERSION"
+RUN cp -r /usr/local/share/.config/yarn/global/node_modules/sodium-native/prebuilds /usr/local/bin/prebuilds
 
 CMD ["bot-factory"]
