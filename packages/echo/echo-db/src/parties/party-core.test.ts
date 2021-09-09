@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert, { AssertionError } from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
@@ -18,101 +18,104 @@ import { SnapshotStore } from '../snapshots';
 import { createRamStorage, FeedStoreAdapter } from '../util';
 import { PartyCore } from './party-core';
 import { MetadataStore } from '../metadata';
+import { raise } from '@dxos/debug';
 
-const setup = async () => {
-  const storage = createStorage('', STORAGE_RAM);
-  const feedStore = new FeedStore(storage, { valueEncoding: codec });
-  await feedStore.open();
-  afterTest(async () => feedStore.close());
+describe('PartyCore', () => {
+  const setup = async () => {
+    const storage = createStorage('', STORAGE_RAM);
+    const feedStore = new FeedStore(storage, { valueEncoding: codec });
+    await feedStore.open();
+    afterTest(async () => feedStore.close());
 
-  const keyring = new Keyring();
+    const keyring = new Keyring();
 
-  const metadataStore = new MetadataStore(createRamStorage());
+    const metadataStore = new MetadataStore(createRamStorage());
 
-  const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, metadataStore);
-  const modelFactory = new ModelFactory().registerModel(ObjectModel);
-  const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
+    const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, metadataStore);
+    const modelFactory = new ModelFactory().registerModel(ObjectModel);
+    const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
 
-  const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
-  const party = new PartyCore(
-    partyKey.publicKey,
-    feedStoreAdapter,
-    modelFactory,
-    snapshotStore
-  );
+    const party = new PartyCore(
+      partyKey.publicKey,
+      feedStoreAdapter,
+      modelFactory,
+      snapshotStore
+    );
 
-  const feedKey = await keyring.createKeyRecord();
-  const fullKey = keyring.getFullKey(feedKey.publicKey);
-  assert(fullKey);
-  assert(fullKey.secretKey);
-  await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
-  await party.open();
-  afterTest(async () => party.close());
+    const feed = await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
+    const feedKey = keyring.getKey(feed.key) ?? raise(new AssertionError())
+    await party.open();
+    afterTest(async () => party.close());
 
-  // PartyGenesis (self-signed by Party)
-  await party.processor.writeHaloMessage(createPartyGenesisMessage(
-    keyring,
-    partyKey,
-    feedKey,
-    partyKey)
-  );
+    // PartyGenesis (self-signed by Party)
+    await party.processor.writeHaloMessage(createPartyGenesisMessage(
+      keyring,
+      partyKey,
+      feedKey,
+      partyKey)
+    );
 
-  // FeedAdmit (signed by the Device KeyChain).
-  await party.processor.writeHaloMessage(createFeedAdmitMessage(
-    keyring,
-    partyKey.publicKey,
-    feedKey,
-    [partyKey]
-  ));
+    // FeedAdmit (signed by the Device KeyChain).
+    await party.processor.writeHaloMessage(createFeedAdmitMessage(
+      keyring,
+      partyKey.publicKey,
+      feedKey,
+      [partyKey]
+    ));
 
-  // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
-  await keyring.deleteSecretKey(partyKey);
+    // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
+    await keyring.deleteSecretKey(partyKey);
 
-  return { party, feedKey };
-};
+    return { party, feedKey, feedStoreAdapter, feed, feedStore };
+  };
 
-test('create & have the feed key admitted', async () => {
-  const { party, feedKey } = await setup();
+  test('create & have the feed key admitted', async () => {
+    const { party, feedKey, feedStoreAdapter, feedStore } = await setup();
 
-  await party.processor.keyOrInfoAdded.waitForCount(1);
+    await party.processor.keyOrInfoAdded.waitForCount(1);
 
-  expect(party.processor.isFeedAdmitted(feedKey.publicKey)).toBeTruthy();
-});
+    expect(party.processor.isFeedAdmitted(feedKey.publicKey)).toBeTruthy();
 
-test('create item', async () => {
-  const { party } = await setup();
+    const feedSelector = feedStoreAdapter.createFeedSelector(party.key);
+    expect(feedSelector(feedStore.getDescriptor(feedKey.publicKey)!)).toEqual(true)
+  });
 
-  const item = await party.database.createItem({ model: ObjectModel });
-  await item.model.setProperty('foo', 'bar');
+  test('create item', async () => {
+    const { party } = await setup();
 
-  expect(item.model.getProperty('foo')).toEqual('bar');
-});
+    const item = await party.database.createItem({ model: ObjectModel });
+    await item.model.setProperty('foo', 'bar');
 
-test('create item with parent and then reload', async () => {
-  const { party } = await setup();
+    expect(item.model.getProperty('foo')).toEqual('bar');
+  });
 
-  {
-    const parent = await party.database.createItem({ model: ObjectModel, type: 'parent' });
-    const child = await party.database.createItem({
-      model: ObjectModel,
-      parent: parent.id,
-      type: 'child'
-    });
+  test('create item with parent and then reload', async () => {
+    const { party } = await setup();
 
-    expect(child.parent).toEqual(parent);
-    expect(parent.children).toContain(child);
-  }
+    {
+      const parent = await party.database.createItem({ model: ObjectModel, type: 'parent' });
+      const child = await party.database.createItem({
+        model: ObjectModel,
+        parent: parent.id,
+        type: 'child'
+      });
 
-  await party.close();
-  await party.open();
+      expect(child.parent).toEqual(parent);
+      expect(parent.children).toContain(child);
+    }
 
-  {
-    await party.database.select(s => s.items).update.waitFor(items => items.length === 2);
-    const parent = party.database.select(s => s.filter({ type: 'parent' }).items).expectOne();
-    const child = party.database.select(s => s.filter({ type: 'child' }).items).expectOne();
+    await party.close();
+    await party.open();
 
-    expect(child.parent).toEqual(parent);
-    expect(parent.children).toContain(child);
-  }
+    {
+      await party.database.select(s => s.items).update.waitFor(items => items.length === 2);
+      const parent = party.database.select(s => s.filter({ type: 'parent' }).items).expectOne();
+      const child = party.database.select(s => s.filter({ type: 'child' }).items).expectOne();
+
+      expect(child.parent).toEqual(parent);
+      expect(parent.children).toContain(child);
+    }
+  });
 });

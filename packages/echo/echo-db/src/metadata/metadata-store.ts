@@ -2,10 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import debug from 'debug';
 import pify from 'pify';
 
-import { EchoMetadata, schema } from '@dxos/echo-protocol';
+import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
 import { IStorage } from '@dxos/random-access-multi-storage';
 import { PublicKey } from '@dxos/crypto';
 
@@ -18,14 +19,18 @@ export class MetadataStore {
     private readonly _storage: IStorage
   ) {}
 
-  get parties () {
+  /**
+   * Returns a list of currently saved parties. The list and objects in it can be modified addParty and
+   * addPartyFeed functions.
+   */
+  get parties (): PartyMetadata[] {
     return this._metadata.parties ?? [];
   }
 
   /**
    * Loads metadata from persistent storage.
    */
-  async load () {
+  async load (): Promise<void> {
     const file = this._storage.createOrOpen('EchoMetadata');
     try {
       const { size } = await pify(file.stat.bind(file))();
@@ -48,7 +53,7 @@ export class MetadataStore {
     }
   }
 
-  private async _save () {
+  private async _save (): Promise<void> {
     const file = this._storage.createOrOpen('EchoMetadata');
 
     try {
@@ -62,7 +67,7 @@ export class MetadataStore {
   /**
    * Clears storage - doesn't work for now.
    */
-  async clear () {
+  async clear (): Promise<void> {
     log('Clearing all echo metadata...');
     await this._storage.destroy();
   }
@@ -70,7 +75,10 @@ export class MetadataStore {
   /**
    * Adds new party to store and saves it in persistent storage.
    */
-  async addParty (partyKey: PublicKey) {
+  async addParty (partyKey: PublicKey): Promise<void> {
+    if (!!this.getParty(partyKey)) {
+      return;
+    }
     if (!this._metadata.parties) {
       this._metadata.parties = [{ key: partyKey }];
     } else {
@@ -81,29 +89,40 @@ export class MetadataStore {
 
   /**
    * Adds feed key to the party specified by public key and saves updated data in persistent storage.
-   * Creates party if it doesn't exist.
+   * Creates party if it doesn't exist. Does nothing if party already has feed with given key.
    */
-  async addPartyFeed (partyKey: PublicKey, feedKey: PublicKey) {
-    if (!this.hasParty(partyKey)) {
+  async addPartyFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
+    if (!!this.hasFeed(partyKey, feedKey)) {
+      return;
+    }
+    if (!this.getParty(partyKey)) {
       await this.addParty(partyKey);
     }
-    for (const party of this._metadata.parties ?? []) {
-      if (party.key && partyKey.equals(party.key)) {
-        if (party.feedKeys) {
-          party.feedKeys.push(feedKey);
-        } else {
-          party.feedKeys = [feedKey];
-        }
-        break;
-      }
+    const party = this.getParty(partyKey);
+    assert(party);
+    if (party.feedKeys) {
+      party.feedKeys.push(feedKey);
+    } else {
+      party.feedKeys = [feedKey];
     }
     await this._save();
   }
 
   /**
-   * Checks if there is a party with given public key.
+   * Returns party with given public key.
    */
-  hasParty (partyKey: PublicKey): boolean {
-    return !!this._metadata.parties?.some(party => party.key && partyKey.equals(party.key));
+  getParty (partyKey: PublicKey): PartyMetadata | undefined {
+    return this._metadata.parties?.find(party => party.key && partyKey.equals(party.key));
+  }
+
+  /**
+   * Checks if a party with given key has a feed with given key.
+   */
+  hasFeed (partyKey: PublicKey, feedKey: PublicKey): boolean {
+    const party = this.getParty(partyKey);
+    if (!party) {
+      return false;
+    }
+    return !!party.feedKeys?.find(fk => feedKey.equals(fk));
   }
 }

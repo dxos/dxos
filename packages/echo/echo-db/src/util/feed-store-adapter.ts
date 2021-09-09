@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Keyring, KeyType } from '@dxos/credentials';
 import { boolGuard } from '@dxos/util';
 import {
-  codec, createIterator, FeedKey, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
+  codec, createIterator, FeedKey, FeedSelector, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
 } from '@dxos/echo-protocol';
 import { CreateReadOnlyFeedOptions, FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { IStorage } from '@dxos/random-access-multi-storage';
@@ -111,6 +111,13 @@ export class FeedStoreAdapter {
     });
   }
 
+  /**
+   * Determines which feeds belong to the given party.
+   */
+  createFeedSelector (partyKey: PartyKey): FeedSelector {
+    return descriptor => !!this._metadataStore.getParty(partyKey)?.feedKeys?.find(feedKey => descriptor.key.equals(feedKey));
+  }
+
   createIterator (
     partyKey: PartyKey,
     messageSelector: MessageSelector,
@@ -118,7 +125,7 @@ export class FeedStoreAdapter {
   ): Promise<FeedStoreIterator> {
     return createIterator(
       this._feedStore,
-      descriptor => !!this._metadataStore.parties.find(party => party.key && partyKey.equals(party.key))?.feedKeys?.find(feedKey => descriptor.key.equals(feedKey)),
+      this.createFeedSelector(partyKey),
       messageSelector,
       initialTimeframe
     );

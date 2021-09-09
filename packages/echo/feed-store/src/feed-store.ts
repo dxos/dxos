@@ -299,3 +299,23 @@ function patchBufferCodec (encoding: ValueEncoding): ValueEncoding {
     decode: encoding.decode.bind(encoding)
   };
 }
+
+
+// interface IFeedStore {
+//   createReadOnly(feedKey): Feed
+
+//   createReadWrite(feedKey, secretKey): Feed
+
+//   openReadOnly(feedKey): Feed
+
+//   openReadWrite(feedKey, secretKey): Feed
+// }
+
+
+
+// /**
+//  * /feeds
+//  *  - 0x123
+//  *  - 0x234
+//  *  - 0x456
+//  */

@@ -214,16 +214,9 @@ describe('Party manager', () => {
       await metadataStore.addParty(partyKey.publicKey);
 
       // TODO(burdon): Create multiple feeds.
-      const { publicKey, secretKey } = createKeyPair();
-      const feed = await feedStore.createReadWriteFeed({
-        key: PublicKey.from(publicKey),
-        secretKey,
-      });
-      const feedKey = await keyring.addKeyRecord({
-        publicKey: PublicKey.from(feed.key),
-        secretKey: feed.secretKey,
-        type: KeyType.FEED
-      });
+      const feed = await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
+      const feedKey = keyring.getFullKey(feed.key);
+      assert(feedKey);
 
       const feedStream = createWritableFeedStream(feed);
       feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey) });
