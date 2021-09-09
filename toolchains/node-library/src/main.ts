@@ -43,15 +43,16 @@ function execBuild () {
   execTool('tsc');
 }
 
-function execTest (additionalArgs?: string[]) {
+function execTest (userArgs?: string[]) {
   const project = Project.load();
+  const forceClose = project.toolchainConfig.forceCloseTests ?? false
 
   if (project.toolchainConfig.testingFramework === 'mocha') {
     console.log(chalk.bold`\nmocha`);
-    execMocha(additionalArgs);
+    execMocha({userArgs, forceClose});
   } else {
     console.log(chalk.bold`\njest`);
-    execJest(project, additionalArgs);
+    execJest({project, userArgs, forceClose});
   }
 }
 

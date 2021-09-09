@@ -53,6 +53,7 @@
     "access": "restricted"
   },
   "toolchain": {
+    "forceCloseTests": true,
     "testingFramework": "mocha",
     "additionalTestSteps": [
       "test:browser"
