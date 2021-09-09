@@ -19,11 +19,11 @@ import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer, SecretProvider } from './invitations';
 import { DefaultModel } from './items';
+import { MetadataStore } from './metadata';
 import { OpenProgress, Party, PartyFactory, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { FeedStoreAdapter, createRamStorage } from './util';
-import { MetadataStore } from './metadata';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');

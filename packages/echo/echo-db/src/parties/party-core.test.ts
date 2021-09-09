@@ -2,11 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert, { AssertionError } from 'assert';
+import { AssertionError } from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
+import { raise } from '@dxos/debug';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -14,11 +15,10 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
 
+import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage, FeedStoreAdapter } from '../util';
 import { PartyCore } from './party-core';
-import { MetadataStore } from '../metadata';
-import { raise } from '@dxos/debug';
 
 describe('PartyCore', () => {
   const setup = async () => {
@@ -45,7 +45,7 @@ describe('PartyCore', () => {
     );
 
     const feed = await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
-    const feedKey = keyring.getKey(feed.key) ?? raise(new AssertionError())
+    const feedKey = keyring.getKey(feed.key) ?? raise(new AssertionError());
     await party.open();
     afterTest(async () => party.close());
 
@@ -79,7 +79,7 @@ describe('PartyCore', () => {
     expect(party.processor.isFeedAdmitted(feedKey.publicKey)).toBeTruthy();
 
     const feedSelector = feedStoreAdapter.createFeedSelector(party.key);
-    expect(feedSelector(feedStore.getDescriptor(feedKey.publicKey)!)).toEqual(true)
+    expect(feedSelector(feedStore.getDescriptor(feedKey.publicKey)!)).toEqual(true);
   });
 
   test('create item', async () => {

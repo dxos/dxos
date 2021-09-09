@@ -6,9 +6,9 @@ import assert from 'assert';
 import debug from 'debug';
 import pify from 'pify';
 
+import { PublicKey } from '@dxos/crypto';
 import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
 import { IStorage } from '@dxos/random-access-multi-storage';
-import { PublicKey } from '@dxos/crypto';
 
 const log = debug('dxos:snapshot-store');
 
@@ -35,7 +35,7 @@ export class MetadataStore {
     try {
       const { size } = await pify(file.stat.bind(file))();
       if (size === 0) {
-        this._metadata = { parties : [] };
+        this._metadata = { parties: [] };
         return;
       }
 
@@ -43,7 +43,7 @@ export class MetadataStore {
       this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
     } catch (err: any) {
       if (err.code === 'ENOENT') {
-        this._metadata = { parties : [] };
+        this._metadata = { parties: [] };
         return;
       } else {
         throw err;
@@ -76,7 +76,7 @@ export class MetadataStore {
    * Adds new party to store and saves it in persistent storage.
    */
   async addParty (partyKey: PublicKey): Promise<void> {
-    if (!!this.getParty(partyKey)) {
+    if (this.getParty(partyKey)) {
       return;
     }
     if (!this._metadata.parties) {
@@ -92,7 +92,7 @@ export class MetadataStore {
    * Creates party if it doesn't exist. Does nothing if party already has feed with given key.
    */
   async addPartyFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
-    if (!!this.hasFeed(partyKey, feedKey)) {
+    if (this.hasFeed(partyKey, feedKey)) {
       return;
     }
     if (!this.getParty(partyKey)) {

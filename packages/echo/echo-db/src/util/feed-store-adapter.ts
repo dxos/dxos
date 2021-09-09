@@ -5,15 +5,15 @@
 import assert from 'assert';
 
 import { Keyring, KeyType } from '@dxos/credentials';
-import { boolGuard } from '@dxos/util';
+import { PublicKey } from '@dxos/crypto';
 import {
   codec, createIterator, FeedKey, FeedSelector, FeedStoreIterator, MessageSelector, PartyKey, Timeframe
 } from '@dxos/echo-protocol';
 import { CreateReadOnlyFeedOptions, FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { IStorage } from '@dxos/random-access-multi-storage';
+import { boolGuard } from '@dxos/util';
 
 import { MetadataStore } from '../metadata';
-import { PublicKey } from '@dxos/crypto';
 
 export interface CreateFeedOptions extends CreateReadOnlyFeedOptions {
   secretKey?: Buffer,
@@ -79,7 +79,7 @@ export class FeedStoreAdapter {
     // TODO(telackey): 'writable' is true property of the Feed, not just its Descriptor's metadata.
     // Using that real value would be preferable to using metadata, but I think it requires the Feed be open.
     const feedKeys = this._metadataStore.parties.find(party => party.key && partyKey.equals(party.key))?.feedKeys ?? [];
-    return this._feedStore.getDescriptors().find(descriptor =>  descriptor.writable && feedKeys.find(feedKey => descriptor.key.equals(feedKey)))?.feed;
+    return this._feedStore.getDescriptors().find(descriptor => descriptor.writable && feedKeys.find(feedKey => descriptor.key.equals(feedKey)))?.feed;
   }
 
   /**

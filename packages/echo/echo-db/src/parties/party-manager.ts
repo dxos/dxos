@@ -15,10 +15,10 @@ import { ComplexMap, boolGuard } from '@dxos/util';
 
 import { IdentityProvider } from '../halo';
 import { SecretProvider, InvitationDescriptor } from '../invitations';
+import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
 import { PartyFactory } from './party-factory';
 import { PartyInternal, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './party-internal';
-import { MetadataStore } from '../metadata';
 
 export const CONTACT_DEBOUNCE_INTERVAL = 500;
 

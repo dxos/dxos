@@ -37,13 +37,13 @@ import { HaloFactory, IdentityManager } from '../halo';
 import { autoPartyOpener } from '../halo/party-opener';
 import { OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
+import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage, FeedStoreAdapter, messageLogger } from '../util';
 import { Party } from './party';
 import { PartyFactory } from './party-factory';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
-import { MetadataStore } from '../metadata';
 
 const log = debug('dxos:echo:parties:party-manager:test');
 
@@ -61,7 +61,6 @@ const setup = async (open = true, createIdentity = true) => {
   const metadataStore = new MetadataStore(createRamStorage());
   const feedStore = FeedStoreAdapter.create(createStorage('', STORAGE_RAM), keyring, metadataStore);
   await feedStore.open();
-
 
   let seedPhrase;
   if (createIdentity) {
