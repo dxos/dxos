@@ -9,7 +9,7 @@ export interface ExecMochaOpts {
   userArgs?: string[]
 }
 
-export function execMocha ({userArgs = [], forceClose}: ExecMochaOpts) {
+export function execMocha ({ userArgs = [], forceClose }: ExecMochaOpts) {
   execTool('mocha', [
     '-r', 'ts-node/register/transpile-only',
     forceClose ? '--exit' : '--no-exit',

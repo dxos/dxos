@@ -14,7 +14,7 @@ export interface ExecJestOpts {
   userArgs?: string[]
 }
 
-export function execJest ({project, userArgs = [], forceClose}: ExecJestOpts) {
+export function execJest ({ project, userArgs = [], forceClose }: ExecJestOpts) {
   const config = project.isReactPackage
     ? join(TOOLCHAIN_PACKAGE_DIR, 'jest.config.react.json')
     : join(TOOLCHAIN_PACKAGE_DIR, 'jest.config.json');
