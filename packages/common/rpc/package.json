@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc",
-  "version": "2.12.14",
+  "version": "2.12.15",
   "description": "Tiny RPC library.",
   "license": "AGPL-3.0",
   "author": "DXOS.org",

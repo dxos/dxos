@@ -1,6 +1,6 @@
 {
   "name": "@dxos/async",
-  "version": "2.12.14",
+  "version": "2.12.15",
   "description": "Async utils.",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
