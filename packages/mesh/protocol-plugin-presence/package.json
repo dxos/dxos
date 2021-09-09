@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-presence",
-  "version": "2.12.15",
+  "version": "2.12.16",
   "description": "Protocol plugin presence.",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
