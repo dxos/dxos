@@ -69,7 +69,6 @@ class ExpectedKeyAuthenticator extends Authenticator {
  * @listens AuthPlugin#authenticated
  */
 const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator, keyring: Keyring, protocolOptions?: ProtocolOptions) => {
-  const topic = partyKey.toHex();
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();

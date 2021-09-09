@@ -8,7 +8,7 @@ import defaultHypercore from 'hypercore';
 import { synchronized, Event } from '@dxos/async';
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { IStorage } from '@dxos/random-access-multi-storage';
-import { boolGuard } from '@dxos/util'
+import { boolGuard } from '@dxos/util';
 
 import FeedDescriptor from './feed-descriptor';
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
@@ -300,7 +300,6 @@ function patchBufferCodec (encoding: ValueEncoding): ValueEncoding {
   };
 }
 
-
 // interface IFeedStore {
 //   createReadOnly(feedKey): Feed
 
@@ -310,8 +309,6 @@ function patchBufferCodec (encoding: ValueEncoding): ValueEncoding {
 
 //   openReadWrite(feedKey, secretKey): Feed
 // }
-
-
 
 // /**
 //  * /feeds

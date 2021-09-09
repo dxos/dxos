@@ -43,10 +43,6 @@ describe('FeedDescriptor', () => {
   test('Create custom options', () => {
     const { publicKey, secretKey } = createKeyPair();
 
-    const metadata = {
-      subject: 'books'
-    };
-
     fd = new FeedDescriptor({
       storage: createStorage('', STORAGE_RAM),
       key: PublicKey.from(publicKey),
