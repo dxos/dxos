@@ -59,7 +59,7 @@
     "memdown": "^5.1.0"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "toolchain": {
     "testingFramework": "mocha"

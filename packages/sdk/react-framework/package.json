@@ -50,6 +50,6 @@
     "react-dom": "*"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

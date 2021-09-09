@@ -43,6 +43,6 @@
     "react": "*"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }
