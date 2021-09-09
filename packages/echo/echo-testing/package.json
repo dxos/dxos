@@ -31,6 +31,6 @@
     "@types/lodash": "^4.14.159"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

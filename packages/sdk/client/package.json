@@ -44,6 +44,6 @@
     "@types/memdown": "^3.0.0"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

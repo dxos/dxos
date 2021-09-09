@@ -46,6 +46,6 @@
     "tempy": "~1.0.1"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }
