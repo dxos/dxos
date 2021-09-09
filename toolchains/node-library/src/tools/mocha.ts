@@ -12,6 +12,8 @@ export interface ExecMochaOpts {
 export function execMocha ({ userArgs = [], forceClose }: ExecMochaOpts) {
   execTool('mocha', [
     '-r', 'ts-node/register/transpile-only',
+    '-r', require.resolve('./wtfnode.js'),
+    
     forceClose ? '--exit' : '--no-exit',
     '-t', '15000',
     'src/**/*.test.ts',

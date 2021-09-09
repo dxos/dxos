@@ -9,7 +9,7 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch } from '@dxos/async';
+import { latch, sleep } from '@dxos/async';
 import {
   createPartyGenesisMessage,
   generateSeedPhrase,
@@ -112,6 +112,12 @@ const setup = async (open = true, createIdentity = true) => {
 };
 
 describe('Party manager', () => {
+  test.only('It exits cleanly', async () => {
+    const { partyManager, identityManager } = await setup();
+    await partyManager.open();
+    await partyManager.close();
+  })
+
   test('Created locally', async () => {
     const { partyManager, identityManager } = await setup();
     await partyManager.open();
