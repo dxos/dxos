@@ -213,9 +213,11 @@ importers:
       typescript: ^4.3.5
   ../../packages/common/crypto:
     dependencies:
+      bip39: 3.0.4
       crypto-js: 3.3.0
       humanhash: 1.0.4
       hypercore-crypto: 2.3.0
+      sodium-universal: 3.0.4
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.23
@@ -224,9 +226,11 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
+      bip39: ^3.0.2
       crypto-js: ^3.1.9-1
       humanhash: ^1.0.4
       hypercore-crypto: ^2.3.0
+      sodium-universal: ~3.0.4
   ../../packages/common/debug:
     dependencies:
       '@types/node': 14.14.45
@@ -485,11 +489,9 @@ importers:
       end-of-stream: 1.4.4
       from2: 2.3.0
       hypercore: 9.10.0
-      hypercore-crypto: 2.3.0
       hypertrie: 5.1.1
       pify: 5.0.0
       pump: 3.0.0
-      sodium-universal: 3.0.4
       through2: 3.0.2
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
@@ -529,11 +531,9 @@ importers:
       end-of-stream-promise: ^1.0.0
       from2: ^2.3.0
       hypercore: ^9.10.0
-      hypercore-crypto: ^2.3.0
       hypertrie: 5.1.1
       pify: ~5.0.0
       pump: ^3.0.0
-      sodium-universal: ~3.0.4
       tempy: ~1.0.1
       through2: ^3.0.1
       wait-for-expect: ^3.0.2
