@@ -3,8 +3,6 @@
   "version": "2.10.10",
   "private": true,
   "description": "ECHO database demo app.",
-  "license": "AGPL-3.0",
-  "author": "DXOS.org",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
@@ -13,6 +11,8 @@
     "type": "git",
     "url": "git+https://github.com/dxos/protocols.git"
   },
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "scripts": {
     "build": "tsc --noEmit",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",

@@ -2,8 +2,6 @@
   "name": "@dxos/rpc",
   "version": "2.12.16",
   "description": "Tiny RPC library.",
-  "license": "AGPL-3.0",
-  "author": "DXOS.org",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
   },
@@ -11,6 +9,8 @@
     "type": "git",
     "url": "git+https://github.com/dxos/protocols.git"
   },
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
