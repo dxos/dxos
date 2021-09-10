@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-framework",
-  "version": "2.12.14",
+  "version": "2.12.16",
   "description": "Application framework components",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -50,6 +50,6 @@
     "react-dom": "*"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

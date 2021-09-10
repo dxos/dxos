@@ -1,6 +1,6 @@
 {
   "name": "@dxos/async",
-  "version": "2.12.14",
+  "version": "2.12.16",
   "description": "Async utils.",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
@@ -10,6 +10,7 @@
     "url": "git+https://github.com/dxos/protocols.git"
   },
   "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -31,6 +32,6 @@
     "@types/node": "^14.0.9"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

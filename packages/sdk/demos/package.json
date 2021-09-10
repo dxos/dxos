@@ -12,6 +12,7 @@
     "url": "git+https://github.com/dxos/protocols.git"
   },
   "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "scripts": {
     "build": "tsc --noEmit",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
@@ -92,6 +93,6 @@
     "webpack": "4.44.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/feed-store",
-  "version": "2.12.14",
+  "version": "2.12.16",
   "description": "A consistent store for your hypercore feeds.",
   "homepage": "https://github.com/dxos/feed-store#readme",
   "bugs": {
@@ -59,6 +59,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

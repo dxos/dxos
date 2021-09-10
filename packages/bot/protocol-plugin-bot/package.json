@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-bot",
-  "version": "2.12.14",
+  "version": "2.12.16",
   "description": "Protocol plugin for managing the life-cycle of bots.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-bot#readme",
   "bugs": {
@@ -10,7 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/dxos/protocol.git"
   },
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -38,6 +39,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

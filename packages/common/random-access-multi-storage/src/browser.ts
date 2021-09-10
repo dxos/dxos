@@ -5,8 +5,8 @@
 import { FirefoxStorage } from './implementations/firefox-storage';
 import { IDbStorage } from './implementations/idb-storage';
 import { RamStorage } from './implementations/ram-storage';
-import { STORAGE_RAM, STORAGE_IDB, STORAGE_CHROME, STORAGE_FIREFOX } from './implementations/storage-types';
 import { IStorage } from './interfaces/IStorage';
+import { STORAGE_RAM, STORAGE_IDB, STORAGE_CHROME, STORAGE_FIREFOX, StorageType } from './interfaces/storage-types';
 
 // Extensions to manage and inspect storage.
 // https://addons.mozilla.org/en-US/firefox/addon/clear-browsing-data/?src=search
@@ -14,7 +14,7 @@ import { IStorage } from './interfaces/IStorage';
 
 export const createStorage = (
   root: string,
-  type?: typeof STORAGE_RAM | typeof STORAGE_IDB | typeof STORAGE_CHROME | typeof STORAGE_FIREFOX
+  type?: StorageType
 ) => {
   if (type === undefined) {
     return defaultBrowserImplementation(root);

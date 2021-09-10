@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "2.12.14",
+  "version": "2.12.16",
   "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
@@ -40,7 +40,7 @@
     "expect": "~27.0.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "toolchain": {
     "testingFramework": "mocha"
