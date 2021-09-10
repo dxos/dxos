@@ -4,8 +4,7 @@
 
 import { Client } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
-import { keyPairFromSeedPhrase } from '@dxos/credentials';
-import { createKeyPair } from '@dxos/crypto';
+import { createKeyPair, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/wallet-core';
