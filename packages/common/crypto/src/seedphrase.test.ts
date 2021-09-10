@@ -2,14 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
 import crypto from 'hypercore-crypto';
 
 import { generateSeedPhrase, keyPairFromSeedPhrase } from './seedphrase';
-import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
 
 it('Basic bip39 operations work', async () => {
   const seedPhrase = generateMnemonic();
-  const seed = mnemonicToSeedSync(seedPhrase)
+  const seed = mnemonicToSeedSync(seedPhrase);
   await crypto.keyPair(seed);
 });
 

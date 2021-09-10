@@ -4,9 +4,10 @@
 
 import expect from 'expect';
 
+import { generateSeedPhrase, KeyPair, keyPairFromSeedPhrase, PublicKey } from '@dxos/crypto';
+
 import { Keyring } from '../keys';
 import { KeyType } from '../proto';
-import { generateSeedPhrase, KeyPair, keyPairFromSeedPhrase, createKeyPair, PublicKey } from '@dxos/crypto';
 
 it('Create cold identity key and recover', async () => {
   // Generate a seed phrase and validate result.
