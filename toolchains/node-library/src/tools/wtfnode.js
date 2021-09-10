@@ -2,5 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-const wtfnode = require('wtfnode')
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const wtfnode = require('wtfnode');
 global.wtfnode = wtfnode;
