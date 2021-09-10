@@ -3,6 +3,7 @@
 //
 
 import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
+
 import { createKeyPair, generateSeedPhrase, keyPairFromSeedPhrase } from '.';
 
 it('Basic bip39 operations work', async () => {
