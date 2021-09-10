@@ -2,8 +2,6 @@
   "name": "@dxos/protocol-network-generator",
   "version": "2.12.16",
   "description": "Protocol network generator.",
-  "license": "AGPL-3.0",
-  "author": "DXOS.org",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-network-generator#readme",
   "bugs": {
     "url": "https://github.com/dxos/protocol/issues"
@@ -12,6 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/dxos/protocol.git"
   },
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
