@@ -27,7 +27,13 @@ export interface KeyPair {
   secretKey: Buffer
 }
 
-export const createKeyPair = (seed?: Buffer): KeyPair => crypto.keyPair(seed);
+export const createKeyPair = (seed?: Buffer): KeyPair => {
+  if (seed) {
+    assert(seed.length >= 32, 'Seedphrase too sort. Expecting length of 32.')
+    return crypto.keyPair(seed.slice(0, 32))
+  }
+  return crypto.keyPair()
+};
 
 export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer());
 

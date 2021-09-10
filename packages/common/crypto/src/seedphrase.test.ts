@@ -4,13 +4,12 @@
 
 import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
 import crypto from 'hypercore-crypto';
-
-import { generateSeedPhrase, keyPairFromSeedPhrase } from './seedphrase';
+import { createKeyPair, generateSeedPhrase, keyPairFromSeedPhrase } from '.';
 
 it('Basic bip39 operations work', async () => {
   const seedPhrase = generateMnemonic();
   const seed = mnemonicToSeedSync(seedPhrase);
-  await crypto.keyPair(seed);
+  await createKeyPair(seed.slice(0, 32));
 });
 
 it('Create keypair from seedphrase', async () => {
