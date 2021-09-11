@@ -75,6 +75,10 @@ export class Connection {
     return this._transport;
   }
 
+  get protocol () {
+    return this._protocol;
+  }
+
   connect () {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
 

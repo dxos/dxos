@@ -15,6 +15,7 @@ import { SignalApi } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Connection, ConnectionState } from './connection';
+import { Topic } from '..';
 
 const log = debug('dxos:network-manager:swarm');
 
@@ -24,6 +25,11 @@ const log = debug('dxos:network-manager:swarm');
  * Routes signal events and maintains swarm topology.
  */
 export class Swarm {
+  /**
+   * Unique id of the swarm, local to the current peer, generated when swarm is joined.
+   */
+  readonly id = PublicKey.random();
+
   private readonly _connections = new ComplexMap<PublicKey, Connection>(x => x.toHex());
 
   private readonly _discoveredPeers = new ComplexSet<PublicKey>(x => x.toHex());
@@ -77,6 +83,10 @@ export class Swarm {
     return this._label;
   }
 
+  get topic(): Topic {
+    return this._topic;
+  }
+
   onPeerCandidatesChanged (candidates: PublicKey[]) {
     log(`New peers for ${this._topic} ${candidates}`);
     this._discoveredPeers.clear();
@@ -118,7 +128,7 @@ export class Swarm {
         const connection = this._createConnection(false, message.id, message.sessionId);
         try {
           connection.connect();
-        } catch (err) {
+        } catch (err: any) {
           this.errors.raise(err);
         }
         accept = true;
