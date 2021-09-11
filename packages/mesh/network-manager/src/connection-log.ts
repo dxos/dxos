@@ -1,8 +1,13 @@
-import { Event } from "@dxos/async";
-import { PublicKey } from "@dxos/crypto";
-import { raise } from "@dxos/debug";
-import { ComplexMap } from "@dxos/util";
-import { ConnectionState, Swarm } from ".";
+//
+// Copyright 2021 DXOS.org
+//
+
+import { Event } from '@dxos/async';
+import { PublicKey } from '@dxos/crypto';
+import { raise } from '@dxos/debug';
+import { ComplexMap } from '@dxos/util';
+
+import { ConnectionState, Swarm } from '.';
 
 export interface SwarmInfo {
   id: PublicKey
@@ -34,7 +39,6 @@ export type ConnectionEvent = {
     type: 'PROTOCOL_HANDSHAKE'
   }
 
-
 export class ConnectionLog {
   /**
    * SwarmId => info
@@ -43,22 +47,22 @@ export class ConnectionLog {
 
   readonly update = new Event();
 
-  getSwarmInfo(swarmId: PublicKey) {
-    return this._swarms.get(swarmId) ?? raise(new Error(`Swarm not found ${swarmId}`))
+  getSwarmInfo (swarmId: PublicKey) {
+    return this._swarms.get(swarmId) ?? raise(new Error(`Swarm not found ${swarmId}`));
   }
 
-  get swarms(): SwarmInfo[] {
+  get swarms (): SwarmInfo[] {
     return Array.from(this._swarms.values());
   }
 
-  swarmJoined(swarm: Swarm) {
+  swarmJoined (swarm: Swarm) {
     const info: SwarmInfo = {
       id: swarm.id,
       topic: swarm.topic,
       isActive: true,
       label: swarm.label,
-      connections: [],
-    }
+      connections: []
+    };
 
     this._swarms.set(swarm.id, info);
     this.update.emit();
@@ -70,7 +74,7 @@ export class ConnectionLog {
         transport: Object.getPrototypeOf(connection.transport).constructor.name,
         protocolExtensions: connection.protocol.extensionNames,
         events: []
-      }
+      };
       info.connections.push(connectionInfo);
       this.update.emit();
 
@@ -78,41 +82,40 @@ export class ConnectionLog {
         connectionInfo.state = state;
         connectionInfo.events.push({
           type: 'CONNECTION_STATE_CHANGED',
-          newState: state,
+          newState: state
         });
         this.update.emit();
       });
 
-
       connection.protocol.error.on(error => {
         connectionInfo.events.push({
           type: 'PROTOCOL_ERROR',
-          error: error.stack ?? error.message,
+          error: error.stack ?? error.message
         });
         this.update.emit();
-      })
+      });
       connection.protocol.extensionsInitialized.on(() => {
         connectionInfo.events.push({
-          type: 'PROTOCOL_EXTENSIONS_INITIALIZED',
+          type: 'PROTOCOL_EXTENSIONS_INITIALIZED'
         });
         this.update.emit();
-      })
+      });
       connection.protocol.extensionsHandshake.on(() => {
         connectionInfo.events.push({
-          type: 'PROTOCOL_EXTENSIONS_HANDSHAKE',
+          type: 'PROTOCOL_EXTENSIONS_HANDSHAKE'
         });
         this.update.emit();
-      })
+      });
       connection.protocol.handshake.on(() => {
         connectionInfo.events.push({
-          type: 'PROTOCOL_HANDSHAKE',
+          type: 'PROTOCOL_HANDSHAKE'
         });
         this.update.emit();
-      })
+      });
     });
   }
 
-  swarmLeft(swarm: Swarm) {
+  swarmLeft (swarm: Swarm) {
     this.getSwarmInfo(swarm.id).isActive = false;
     this.update.emit();
   }

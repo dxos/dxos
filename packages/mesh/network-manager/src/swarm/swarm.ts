@@ -10,12 +10,12 @@ import { discoveryKey, PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
+import { Topic } from '..';
 import { ProtocolProvider } from '../network-manager';
 import { SignalApi } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Connection, ConnectionState } from './connection';
-import { Topic } from '..';
 
 const log = debug('dxos:network-manager:swarm');
 
@@ -83,7 +83,7 @@ export class Swarm {
     return this._label;
   }
 
-  get topic(): Topic {
+  get topic (): Topic {
     return this._topic;
   }
 

@@ -10,11 +10,11 @@ import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 import { ComplexMap } from '@dxos/util';
 
+import { ConnectionLog } from './connection-log';
 import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager } from './signal';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { createWebRtcTransportFactory, inMemoryTransportFactory } from './transport';
-import { ConnectionLog } from './connection-log';
 
 export type ProtocolProvider = (opts: { channel: Buffer, initiator: boolean}) => Protocol;
 
@@ -62,7 +62,7 @@ export class NetworkManager {
     this._signal.peerCandidatesChanged.on(([topic, candidates]) => this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
     this._signal.onSignal.on(msg => this._swarms.get(msg.topic)?.onSignal(msg));
 
-    if(options.log) {
+    if (options.log) {
       this._connectionLog = new ConnectionLog();
     }
   }

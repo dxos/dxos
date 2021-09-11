@@ -136,7 +136,7 @@ export class Protocol {
   toString () {
     const meta = {
       id: keyToHuman(this._stream.publicKey),
-      extensions: this.extensionNames,
+      extensions: this.extensionNames
     };
 
     return `Protocol(${JSON.stringify(meta)})`;
@@ -159,7 +159,7 @@ export class Protocol {
   }
 
   get extensionNames (): string[] {
-    return Array.from(this._extensionMap.keys())
+    return Array.from(this._extensionMap.keys());
   }
 
   get streamOptions () {
