@@ -19,6 +19,7 @@ export interface SwarmInfo {
 
 export interface ConnectionInfo {
   state: ConnectionState
+  sessionId: PublicKey
   remotePeerId: PublicKey
   transport: string
   protocolExtensions: string[]
@@ -71,6 +72,7 @@ export class ConnectionLog {
       const connectionInfo: ConnectionInfo = {
         state: ConnectionState.INITIAL,
         remotePeerId: connection.remoteId,
+        sessionId: connection.sessionId,
         transport: Object.getPrototypeOf(connection.transport).constructor.name,
         protocolExtensions: connection.protocol.extensionNames,
         events: []
