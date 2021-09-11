@@ -5,6 +5,7 @@
 import { select } from '@storybook/addon-knobs';
 import React, { useState, useEffect } from 'react';
 import useResizeAware from 'react-resize-aware';
+import { MemoryRouter, NavLink, Switch, Route, useHistory, Link } from 'react-router-dom';
 
 import { PublicKey } from '@dxos/crypto';
 import { FullScreen } from '@dxos/gem-core';
@@ -26,19 +27,51 @@ import {
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 
 import { PeerGraph, SignalStatus, SignalTrace } from '../src';
-import { MemoryRouter, NavLink, Switch, Route, useHistory, Link } from 'react-router-dom';
-import { SwarmList } from '../src/SwarmList';
-import { SwarmInfoView } from '../src/SwarmInfo';
 import { ConnectionInfoView } from '../src/ConnectionInfoView';
+import { SwarmInfoView } from '../src/SwarmInfo';
+import { SwarmList } from '../src/SwarmList';
 
 export default {
   title: 'Devtools'
 };
 
+export interface SwarmsTabProps {
+  swarmInfo: SwarmInfo[]
+}
+
+export const SwarmsTab = ({ swarmInfo }: SwarmsTabProps) => {
+  const location = useHistory();
+  console.log(location.location);
+  return (
+    <Switch>
+      <Route exact path="/swarms/:id">{match => (
+        <div>
+          <Link to="/swarms">Back</Link>
+          <SwarmInfoView
+            swarmInfo={swarmInfo.find(x => x.id.equals(match.match!.params.id))!}
+            onConnectionClick={sessionId => location.push(`/swarms/${match.match!.params.id}/${sessionId.toHex()}`)}
+          />
+        </div>
+      )}</Route>
+      <Route exact path="/swarms/:id/:sessionId">{match => (
+        <div>
+          <Link to={`/swarms/${match.match!.params.id}`}>Back</Link>
+          <ConnectionInfoView
+            connectionInfo={swarmInfo.find(x => x.id.equals(match.match!.params.id))!.connections.find(x => x.sessionId.equals(match.match!.params.sessionId))!}
+          />
+        </div>
+      )}</Route>
+      <Route exact path="/swarms">
+        <SwarmList swarms={swarmInfo} onClick={id => location.push(`/swarms/${id.toHex()}`)} />
+      </Route>
+    </Switch>
+  );
+};
+
 const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFactory: () => Topology) => {
   const networkManager = new NetworkManager({
     signal: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'],
-    log: true,
+    log: true
   });
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
   networkManager.joinProtocolSwarm({
@@ -108,18 +141,16 @@ const GraphDemo = ({ topic, topology }: { topic: PublicKey, topology: () => Topo
 
   const [swarmInfo, setSwarmInfo] = useState<SwarmInfo[]>([]);
   useEffect(() => {
-    if(controlPeer) {
-      setSwarmInfo(controlPeer.log.swarms)
+    if (controlPeer) {
+      setSwarmInfo(controlPeer.log.swarms);
     }
     return controlPeer?.log.update.on(() => {
-      setSwarmInfo(controlPeer!.log.swarms)
+      setSwarmInfo(controlPeer!.log.swarms);
     });
   }, [controlPeer]);
 
   const [resizeListener, size] = useResizeAware();
-  const { width, height } = size;
-
-  const [selectedSwarm, setSelectedSwarm] = useState<PublicKey | undefined>();
+  const { height } = size;
 
   return (
     <FullScreen>
@@ -160,39 +191,6 @@ const GraphDemo = ({ topic, topology }: { topic: PublicKey, topology: () => Topo
     </FullScreen>
   );
 };
-
-export interface SwarmsTabProps {
-  swarmInfo: SwarmInfo[]
-}
-
-export const SwarmsTab = ({swarmInfo}: SwarmsTabProps) => {
-  const location = useHistory()
-  console.log(location.location)
-  return (
-    <Switch>
-      <Route exact path="/swarms/:id">{match => (
-        <div>
-          <Link to="/swarms">Back</Link>
-          <SwarmInfoView
-            swarmInfo={swarmInfo.find(x => x.id.equals(match.match!.params.id))!}
-            onConnectionClick={sessionId => location.push(`/swarms/${match.match!.params.id}/${sessionId.toHex()}`)}
-          />
-        </div>
-      )}</Route>
-      <Route exact path="/swarms/:id/:sessionId">{match => (
-        <div>
-          <Link to={`/swarms/${match.match!.params.id}`}>Back</Link>
-          <ConnectionInfoView
-            connectionInfo={swarmInfo.find(x => x.id.equals(match.match!.params.id))!.connections.find(x => x.sessionId.equals(match.match!.params.sessionId))!}
-          />
-        </div>
-      )}</Route>
-      <Route exact path="/swarms">
-        <SwarmList swarms={swarmInfo} onClick={id => location.push(`/swarms/${id.toHex()}`)} />
-      </Route>
-    </Switch>
-  )
-}
 
 export const withGraph = () => {
   const [topic] = useState(() => PublicKey.random());

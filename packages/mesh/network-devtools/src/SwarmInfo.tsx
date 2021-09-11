@@ -1,13 +1,18 @@
-import { PublicKey } from "@dxos/crypto";
-import { ConnectionState, SwarmInfo } from "@dxos/network-manager";
-import React from 'react'
+//
+// Copyright 2021 DXOS.org
+//
+
+import React from 'react';
+
+import { PublicKey } from '@dxos/crypto';
+import { ConnectionState, SwarmInfo } from '@dxos/network-manager';
 
 export interface SwarmInfoViewProps {
   swarmInfo: SwarmInfo
   onConnectionClick?: (sessionId: PublicKey) => void
 }
 
-export const SwarmInfoView = ({swarmInfo, onConnectionClick}: SwarmInfoViewProps) => (
+export const SwarmInfoView = ({ swarmInfo, onConnectionClick }: SwarmInfoViewProps) => (
   <div>
     <div>topic: {swarmInfo.topic.toHex()}</div>
     <div>label: {swarmInfo.label}</div>
@@ -17,8 +22,8 @@ export const SwarmInfoView = ({swarmInfo, onConnectionClick}: SwarmInfoViewProps
     <hr/>
     <div>
       {swarmInfo.connections.map(connection => (
-        <div onClick={() => onConnectionClick?.(connection.sessionId)}>{connection.state} {connection.protocolExtensions.join(',')} {connection.remotePeerId.toHex()}</div>
+        <div key={connection.sessionId.toHex()} onClick={() => onConnectionClick?.(connection.sessionId)}>{connection.state} {connection.protocolExtensions.join(',')} {connection.remotePeerId.toHex()}</div>
       ))}
     </div>
   </div>
-)
+);

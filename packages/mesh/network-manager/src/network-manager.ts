@@ -50,7 +50,7 @@ export class NetworkManager {
     return Array.from(this._swarms.keys());
   }
 
-  get connectionLog() {
+  get connectionLog () {
     return this._connectionLog;
   }
 
