@@ -12,10 +12,9 @@ import {
   createPartyGenesisMessage,
   Keyring,
   KeyType,
-  keyPairFromSeedPhrase,
   Filter
 } from '@dxos/credentials';
-import { keyToString, PublicKey } from '@dxos/crypto';
+import { keyToString, PublicKey, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
