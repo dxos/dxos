@@ -376,7 +376,7 @@ importers:
       '@types/node': 14.14.45
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
-      hypertrie: 5.1.1
+      hypertrie: 5.1.2
       json-stable-stringify: 1.0.1
       pify: 5.0.0
     devDependencies:
@@ -414,7 +414,7 @@ importers:
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
       expect: ~27.0.2
-      hypertrie: 5.1.1
+      hypertrie: 5.1.2
       json-stable-stringify: ^1.0.1
       lodash: 4.17.21
       memdown: ^5.1.0
@@ -487,7 +487,7 @@ importers:
       end-of-stream: 1.4.4
       from2: 2.3.0
       hypercore: 9.10.0
-      hypertrie: 5.1.1
+      hypertrie: 5.1.2
       pify: 5.0.0
       pump: 3.0.0
       through2: 3.0.2
@@ -529,7 +529,7 @@ importers:
       end-of-stream-promise: ^1.0.0
       from2: ^2.3.0
       hypercore: ^9.10.0
-      hypertrie: 5.1.1
+      hypertrie: 5.1.2
       pify: ~5.0.0
       pump: ^3.0.0
       tempy: ~1.0.1
@@ -15452,7 +15452,7 @@ packages:
     dev: false
     resolution:
       integrity: sha512-bESly7s6X7cLMWCn4dsAVE/ttNbbB13o6jku2B7fV2wIV/g7NVC/yF7S3NiknGlftKn/uLU3fhMmbOfdBvQ5IA==
-  /hypertrie/5.1.1:
+  /hypertrie/5.1.2:
     dependencies:
       array-lru: 1.1.1
       bulk-write-stream: 1.1.4
@@ -15471,7 +15471,7 @@ packages:
       varint: 5.0.2
     dev: false
     resolution:
-      integrity: sha512-6PjBRPsTH+hqhMpjt1QmxXMFW6XaHNXkjxH1KrL1bp8Fpz7SPOvBNSaQVttvAP6GRzDKkeLraG4q3yJiSL4IhQ==
+      integrity: sha512-kdzigFUWrCX5NTFvi28q5o3P7faP3QliAQpMfKRSrP5jtitqPfhTgXwstcxS+Vj7mP93R+unZlPYiwu6N9whzA==
   /hyphenate-style-name/1.0.4:
     resolution:
       integrity: sha512-ygGZLjmXfPHj+ZWh6LwbC37l43MhfztxetbFCoYTM2VjkIUpeHgSNn7QIyVFj7YQ1Wl9Cbw5sholVJPzWvC2MQ==
