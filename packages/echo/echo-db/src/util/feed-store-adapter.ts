@@ -54,6 +54,7 @@ export class FeedStoreAdapter {
       for (const feedKey of party.feedKeys ?? []) {
         const secretKey = this._keyring.getFullKey(feedKey)?.secretKey;
         assert(party.key);
+        // Open feed so its added to the descriptor map in the feed store, so later-on feed-store iterator can find it.
         await this._createFeed({ key: feedKey, secretKey, partyKey: party.key });
       }
     }
@@ -86,9 +87,6 @@ export class FeedStoreAdapter {
    * Create and open feed if feed with given key doesm't exist and open existing feed otherwsie.
    */
   async createWritableFeed (partyKey: PartyKey): Promise<HypercoreFeed> {
-    // TODO(marik-d): Something is wrong here; Buffer should be a subclass of Uint8Array but it isn't here.
-    // assert(!this.queryWritableFeed(partyKey), 'Writable feed already exists');
-
     // TODO(telackey): 'writable' is true property of the Feed, not just its Descriptor's metadata.
     // Using that real value would be preferable to using metadata, but I think it requires the Feed be open.
     const keyRecord = await this._keyring.createKeyRecord({ type: KeyType.FEED });
