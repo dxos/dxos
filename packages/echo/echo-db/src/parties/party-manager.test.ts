@@ -9,7 +9,7 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch, sleep } from '@dxos/async';
+import { latch } from '@dxos/async';
 import {
   createPartyGenesisMessage,
   Keyring, KeyType,
@@ -17,16 +17,15 @@ import {
   SecretValidator
 } from '@dxos/credentials';
 import {
-  createKeyPair, PublicKey,
+  createKeyPair, generateSeedPhrase,
+  keyPairFromSeedPhrase, PublicKey,
   randomBytes,
   sign,
-  SIGNATURE_LENGTH, verify,
-  generateSeedPhrase,
-  keyPairFromSeedPhrase
+  SIGNATURE_LENGTH, verify
 } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
-import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
+import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -112,11 +111,12 @@ const setup = async (open = true, createIdentity = true) => {
 };
 
 describe('Party manager', () => {
-  test.only('It exits cleanly', async () => {
-    const { partyManager, identityManager } = await setup();
+  test('It exits cleanly', async () => {
+    // TODO(rzadp): Disable auto-close and fix auto-closing here.
+    const { partyManager } = await setup();
     await partyManager.open();
     await partyManager.close();
-  })
+  });
 
   test('Created locally', async () => {
     const { partyManager, identityManager } = await setup();
