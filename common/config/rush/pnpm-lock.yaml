@@ -376,7 +376,7 @@ importers:
       '@types/node': 14.14.45
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
-      hypertrie: github.com/dxos/hypertrie/8af4c23bc739f6e1c298cc15c12528e7f7483681
+      hypertrie: 5.1.2
       json-stable-stringify: 1.0.1
       pify: 5.0.0
     devDependencies:
@@ -414,7 +414,7 @@ importers:
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
       expect: ~27.0.2
-      hypertrie: dxos/hypertrie#8af4c23bc739f6e1c298cc15c12528e7f7483681
+      hypertrie: 5.1.2
       json-stable-stringify: ^1.0.1
       lodash: 4.17.21
       memdown: ^5.1.0
@@ -487,7 +487,7 @@ importers:
       end-of-stream: 1.4.4
       from2: 2.3.0
       hypercore: 9.10.0
-      hypertrie: github.com/dxos/hypertrie/8af4c23bc739f6e1c298cc15c12528e7f7483681
+      hypertrie: 5.1.2
       pify: 5.0.0
       pump: 3.0.0
       through2: 3.0.2
@@ -529,7 +529,7 @@ importers:
       end-of-stream-promise: ^1.0.0
       from2: ^2.3.0
       hypercore: ^9.10.0
-      hypertrie: dxos/hypertrie#8af4c23bc739f6e1c298cc15c12528e7f7483681
+      hypertrie: 5.1.2
       pify: ~5.0.0
       pump: ^3.0.0
       tempy: ~1.0.1
@@ -766,7 +766,7 @@ importers:
       tree-kill: ^1.2.2
       ts-node: ^9.1.1
       typescript: ^4.3.5
-      wrtc: ^0.4.7
+      wrtc: ^0.4.6
   ../../packages/halo/credentials:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -1016,7 +1016,7 @@ importers:
       nanomessage-rpc: ^3.0.0
       simple-peer: ^9.9.3
       wait-for-expect: ^3.0.2
-      wrtc: ^0.4.7
+      wrtc: ^0.4.6
       ws: ^7.4.4
       xor-distance: ^2.0.0
   ../../packages/mesh/protocol:
@@ -1275,7 +1275,7 @@ importers:
       tiny-lru: ^7.0.6
       typescript: ^4.3.5
       varint: ^5.0.0
-      wrtc: ^0.4.7
+      wrtc: ^0.4.6
       yargs: ~16.2.0
   ../../packages/sdk/client:
     dependencies:
@@ -2008,7 +2008,6 @@ importers:
       pkg-dir: 5.0.0
       ts-jest: 26.5.6_jest@26.6.3+typescript@4.3.5
       typescript: 4.3.5
-      wtfnode: 0.9.1
       yargs: 16.2.0
     devDependencies:
       '@types/glob': 7.1.3
@@ -2031,7 +2030,6 @@ importers:
       ts-jest: ^26.5.6
       ts-node: ^9.1.1
       typescript: ^4.3.5
-      wtfnode: ~0.9.1
       yargs: ~16.2.0
 lockfileVersion: 5.2
 packages:
@@ -15454,6 +15452,26 @@ packages:
     dev: false
     resolution:
       integrity: sha512-bESly7s6X7cLMWCn4dsAVE/ttNbbB13o6jku2B7fV2wIV/g7NVC/yF7S3NiknGlftKn/uLU3fhMmbOfdBvQ5IA==
+  /hypertrie/5.1.2:
+    dependencies:
+      array-lru: 1.1.1
+      bulk-write-stream: 1.1.4
+      codecs: 2.2.0
+      hypercore: 9.10.0
+      hypercore-protocol: 8.0.7
+      inherits: 2.0.4
+      inspect-custom-symbol: 1.1.1
+      is-options: 1.0.1
+      mutexify: 1.3.1
+      nanoiterator: 1.2.1
+      protocol-buffers-encodings: 1.1.1
+      siphash24-universal: 1.0.0
+      thunky: 1.1.0
+      unordered-set: 2.0.1
+      varint: 5.0.2
+    dev: false
+    resolution:
+      integrity: sha512-kdzigFUWrCX5NTFvi28q5o3P7faP3QliAQpMfKRSrP5jtitqPfhTgXwstcxS+Vj7mP93R+unZlPYiwu6N9whzA==
   /hyphenate-style-name/1.0.4:
     resolution:
       integrity: sha512-ygGZLjmXfPHj+ZWh6LwbC37l43MhfztxetbFCoYTM2VjkIUpeHgSNn7QIyVFj7YQ1Wl9Cbw5sholVJPzWvC2MQ==
@@ -25597,11 +25615,6 @@ packages:
         optional: true
     resolution:
       integrity: sha512-xzyu3hFvomRfXKH8vOFMU3OguG6oOvhXMo3xsGy3xWExqaM2dxBbVxuD99O7m3ZUFMvvscsZDqxfgMaRr/Nr1g==
-  /wtfnode/0.9.1:
-    dev: false
-    hasBin: true
-    resolution:
-      integrity: sha512-Ip6C2KeQPl/F3aP1EfOnPoQk14Udd9lffpoqWDNH3Xt78svxPbv53ngtmtfI0q2Te3oTq79XKTnRNXVIn/GsPA==
   /xml-name-validator/3.0.0:
     resolution:
       integrity: sha512-A5CUptxDsvxKJEU3yO6DuWBSJz/qizqzJKOMIfUJHETbBw/sFaDxgd6fxm1ewUaM0jZ444Fc5vC5ROYurg/4Pw==
@@ -25820,28 +25833,6 @@ packages:
     resolution:
       tarball: https://codeload.github.com/dxos/hypercore-protocol/tar.gz/05513f9266f8bec4d29b144b72c59257c2d7bd60
     version: 8.0.7
-  github.com/dxos/hypertrie/8af4c23bc739f6e1c298cc15c12528e7f7483681:
-    dependencies:
-      array-lru: 1.1.1
-      bulk-write-stream: 1.1.4
-      codecs: 2.2.0
-      hypercore: 9.10.0
-      hypercore-protocol: 8.0.7
-      inherits: 2.0.4
-      inspect-custom-symbol: 1.1.1
-      is-options: 1.0.1
-      mutexify: 1.3.1
-      nanoiterator: 1.2.1
-      protocol-buffers-encodings: 1.1.1
-      siphash24-universal: 1.0.0
-      thunky: 1.1.0
-      unordered-set: 2.0.1
-      varint: 5.0.2
-    dev: false
-    name: hypertrie
-    resolution:
-      tarball: https://codeload.github.com/dxos/hypertrie/tar.gz/8af4c23bc739f6e1c298cc15c12528e7f7483681
-    version: 5.1.1
   github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0:
     dependencies:
       abstract-leveldown: 7.0.0
