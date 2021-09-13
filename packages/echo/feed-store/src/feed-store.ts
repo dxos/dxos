@@ -30,11 +30,6 @@ export interface CreateReadOnlyFeedOptions {
   key: PublicKey
 }
 
-export interface KeyRecord {
-  publicKey: PublicKey,
-  secretKey?: Buffer
-}
-
 export interface FeedStoreOptions {
   /**
    * Encoding type for each feed.
@@ -57,12 +52,6 @@ export class FeedStore {
   private _valueEncoding: ValueEncoding | undefined;
   private _hypercore: Hypercore;
   private _descriptors: Map<string, FeedDescriptor>;
-  private _open: boolean;
-
-  /**
-   * Is emitted when data gets appended to one of the FeedStore's feeds represented by FeedDescriptors.
-   */
-  readonly appendEvent = new Event<FeedDescriptor>();
 
   /**
    * Is emitted when a new feed represented by FeedDescriptor is opened.
@@ -87,16 +76,6 @@ export class FeedStore {
     this._hypercore = hypercore;
 
     this._descriptors = new Map();
-
-    this._open = false;
-  }
-
-  get opened () {
-    return this._open;
-  }
-
-  get closed () {
-    return !this._open;
   }
 
   /**
@@ -107,151 +86,35 @@ export class FeedStore {
   }
 
   @synchronized
-  async open () {
-    if (this._open) {
-      return;
-    }
-    this._open = true;
-  }
-
-  @synchronized
   async close () {
-    if (!this._open) {
-      return;
-    }
-    this._open = false;
-
-    await Promise.all(this
-      .getDescriptors()
-      .map(descriptor => descriptor.close())
-    );
-
+    await Promise.all(Array.from(this._descriptors.values()).map(descriptor => descriptor.close()));
     this._descriptors.clear();
-  }
-
-  /**
-   * Get the list of descriptors.
-   */
-  getDescriptors () {
-    return Array.from(this._descriptors.values());
-  }
-
-  /**
-   * Get desciptor by its public key
-   */
-  getDescriptor (key: PublicKeyLike) {
-    return this.getDescriptors().find(descriptor => descriptor.key.equals(key));
-  }
-
-  /**
-   * Fast access to a descriptor
-   */
-  getDescriptorByDiscoveryKey (discoverKey: Buffer) {
-    return this._descriptors.get(discoverKey.toString('hex'));
-  }
-
-  /**
-   * Get the list of opened feeds, with optional filter.
-   */
-  getOpenFeeds (callback?: DescriptorCallback): HypercoreFeed[] {
-    return this.getDescriptors()
-      .filter(descriptor => descriptor.opened && (!callback || callback(descriptor)))
-      .map(descriptor => descriptor.feed)
-      .filter(boolGuard);
-  }
-
-  /**
-   * Find an opened feed using a filter callback.
-   */
-  getOpenFeed (callback: DescriptorCallback): HypercoreFeed | undefined {
-    const descriptor = this.getDescriptors()
-      .find(descriptor => descriptor.opened && callback(descriptor));
-
-    if (descriptor && descriptor.feed) {
-      return descriptor.feed;
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Checks if feedstore has a feed with specified key.
-   */
-  hasFeed (key: PublicKeyLike): boolean {
-    return this.getDescriptors().some(fd => fd.key.equals(key));
-  }
-
-  /**
-   * Open multiple feeds using a filter callback.
-   */
-  @synchronized
-  async openFeeds (callback: DescriptorCallback): Promise<HypercoreFeed[]> {
-    assert(this._open, 'FeedStore closed');
-
-    const descriptors = this.getDescriptors()
-      .filter(descriptor => callback(descriptor));
-
-    return Promise.all(descriptors.map(descriptor => descriptor.open()));
-  }
-
-  /**
-   * Open a feed to FeedStore.
-   */
-  @synchronized
-  async openFeed (key: PublicKey): Promise<HypercoreFeed> {
-    assert(this._open, 'FeedStore closed');
-
-    const descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
-
-    assert(descriptor, 'Descriptor not found');
-
-    const feed = await descriptor.open();
-
-    return feed;
   }
 
   /**
    * Create a feed to Feedstore
    */
-  async createReadWriteFeed (options: CreateReadWriteFeedOptions): Promise<HypercoreFeed> {
-    this._createDescriptor(options);
-    return this.openFeed(options.key);
+  async openReadWriteFeed (key: PublicKey, secretKey: Buffer): Promise<FeedDescriptor> {
+    const descriptor = this._descriptors.get(key.toString());
+    if (descriptor && descriptor.secretKey) {
+      return descriptor;
+    }
+    return this._createDescriptor({ key, secretKey });
   }
 
   /**
    * Create a readonly feed to Feedstore
    */
-  async createReadOnlyFeed (options: CreateReadOnlyFeedOptions): Promise<HypercoreFeed> {
-    this._createDescriptor(options);
-    return this.openFeed(options.key);
-  }
-
-  /**
-   * Close a feed by the key.
-   */
-  @synchronized
-  async closeFeed (key: PublicKey) {
-    assert(this._open, 'FeedStore closed');
-
-    const descriptor = this.getDescriptors().find(fd => fd.key.equals(key));
-
-    if (!descriptor) {
-      throw new Error(`Feed not found: ${key.toString()}`);
-    }
-
-    await descriptor.close();
+  async openReadOnlyFeed (key: PublicKey): Promise<FeedDescriptor> {
+    const descriptor = this._descriptors.get(key.toString()) ?? await this._createDescriptor({ key });
+    return descriptor;
   }
 
   /**
    * Factory to create a new FeedDescriptor.
    */
-  private _createDescriptor (options: CreateDescriptorOptions) {
+  private async _createDescriptor (options: CreateDescriptorOptions) {
     const { key, secretKey } = options;
-
-    const existing = this.getDescriptors().find(fd => fd.key.equals(key));
-    if (existing) {
-      return existing;
-    }
 
     const descriptor = new FeedDescriptor({
       storage: this._storage,
@@ -262,29 +125,12 @@ export class FeedStore {
     });
 
     this._descriptors.set(
-      descriptor.discoveryKey.toString('hex'),
+      descriptor.key.toString(),
       descriptor
     );
 
-    const append = () => this.appendEvent.emit(descriptor);
-
-    descriptor.watch(async (event) => {
-      if (event === 'updated') {
-        return;
-      }
-
-      const { feed } = descriptor;
-
-      if (event === 'opened' && feed) {
-        feed.on('append', append);
-        this.feedOpenedEvent.emit(descriptor);
-        return;
-      }
-
-      if (event === 'closed' && feed) {
-        feed.removeListener('append', append);
-      }
-    });
+    await descriptor.open();
+    this.feedOpenedEvent.emit(descriptor);
 
     return descriptor;
   }

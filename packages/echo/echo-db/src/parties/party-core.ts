@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 
+import debug from 'debug';
 import { synchronized } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
@@ -12,10 +13,10 @@ import { ModelFactory } from '@dxos/model-factory';
 
 import { Database, TimeframeClock } from '../items';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
-import { FeedStoreAdapter } from '../util';
 import { createMessageSelector } from './message-selector';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
+import { PartyFeedProvider } from '.';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // every 100 messages
 
@@ -53,7 +54,7 @@ export class PartyCore {
 
   constructor (
     private readonly _partyKey: PartyKey,
-    private readonly _feedStore: FeedStoreAdapter,
+    private readonly _feedProvider: PartyFeedProvider,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
     private readonly _initialTimeframe?: Timeframe,
@@ -83,13 +84,8 @@ export class PartyCore {
     return this._pipeline;
   }
 
-  // TODO(marik-d): Needed for Replicator plugin in PartProtocol, consider removing.
-  get feedStore () {
-    return this._feedStore;
-  }
-
-  getWriteFeed () {
-    const feed = this._feedStore.queryWritableFeed(this._partyKey);
+  async getWriteFeed () {
+    const feed = await this._feedProvider.getWritableFeed();
     assert(feed, `No writable feed found for party ${this._partyKey}`);
     return feed;
   }
@@ -104,8 +100,7 @@ export class PartyCore {
       return this;
     }
 
-    const feed = this._feedStore.queryWritableFeed(this._partyKey);
-    assert(feed, `Missing feed for: ${String(this._partyKey)}`);
+    const { feed } = await this._feedProvider.getWritableFeed();
 
     this._timeframeClock = new TimeframeClock(this._initialTimeframe);
 
@@ -116,13 +111,15 @@ export class PartyCore {
       }
     }
 
-    const iterator = await this._feedStore.createIterator(
-      this._partyKey,
-      createMessageSelector(this._partyProcessor, this._timeframeClock),
+    const iterator = await this._feedProvider.createIterator(
+      createMessageSelector(
+        this._partyProcessor,
+        this._timeframeClock
+      ), 
       this._initialTimeframe
     );
 
-    const feedWriteStream = createFeedWriter(feed);
+    const feedWriteStream = createFeedWriter(feed.feed);
 
     this._pipeline = new Pipeline(
       this._partyProcessor, iterator, this._timeframeClock, feedWriteStream, this._options);

@@ -631,7 +631,7 @@ export class Keyring implements Signer {
    * }
    */
   @meter
-  sign (message: any, keys: (KeyRecord | KeyChain)[], nonce?: Buffer, created?: string) {
+  sign (message: any, keys: (KeyRecord | KeyChain | PublicKey)[], nonce?: Buffer, created?: string) {
     assert(typeof message === 'object');
     assert(keys);
     assert(Array.isArray(keys));
@@ -639,7 +639,7 @@ export class Keyring implements Signer {
     const chains = new Map();
     const fullKeys: KeyRecord[] = [];
     keys.forEach((key) => {
-      const fullKey = this.getFullKey(key.publicKey);
+      const fullKey = this.getFullKey(key instanceof PublicKey ? key : key.publicKey);
       assert(fullKey);
       assertValidKeyPair(fullKey);
       fullKeys.push(fullKey);

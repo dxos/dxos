@@ -76,7 +76,7 @@ describe('party-processor', () => {
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
-      data: createFeedAdmitMessage(keyring, partyKey.publicKey, feedKey2, [identityKey])
+      data: createFeedAdmitMessage(keyring, partyKey.publicKey, feedKey2.publicKey, [identityKey])
     };
     await partyProcessor.processMessage(feedAdmit);
 
@@ -113,7 +113,7 @@ describe('party-processor', () => {
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
-      data: createFeedAdmitMessage(keyring, partyKey.publicKey, feedKey, [identityKey])
+      data: createFeedAdmitMessage(keyring, partyKey.publicKey, feedKey.publicKey, [identityKey])
     };
     await partyProcessor.processMessage(feedAdmit);
 
@@ -139,7 +139,7 @@ describe('party-processor', () => {
         seq: 1
         // TODO(telackey): Should ownership data go here?
       },
-      data: createFeedAdmitMessage(keyring2, partyKey.publicKey, feedKey2, [identityKey2])
+      data: createFeedAdmitMessage(keyring2, partyKey.publicKey, feedKey2.publicKey, [identityKey2])
     };
     await partyProcessor.processMessage(feedAdmit2);
 

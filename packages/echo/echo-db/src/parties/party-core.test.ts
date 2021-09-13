@@ -61,7 +61,7 @@ describe('PartyCore', () => {
     await party.processor.writeHaloMessage(createFeedAdmitMessage(
       keyring,
       partyKey.publicKey,
-      feedKey,
+      feedKey.publicKey,
       [partyKey]
     ));
 
