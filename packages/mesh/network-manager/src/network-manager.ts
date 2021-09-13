@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 import { ComplexMap } from '@dxos/util';
 
+import { ConnectionLog } from './connection-log';
 import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager } from './signal';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
@@ -20,6 +21,10 @@ export type ProtocolProvider = (opts: { channel: Buffer, initiator: boolean}) =>
 export interface NetworkManagerOptions {
   signal?: string[],
   ice?: any[],
+  /**
+   * Enable connection logging for devtools.
+   */
+  log?: boolean
 }
 
 const log = debug('dxos:network-manager');
@@ -33,6 +38,8 @@ export class NetworkManager {
 
   private readonly _signal: SignalManager;
 
+  private readonly _connectionLog?: ConnectionLog;
+
   public readonly topicsUpdated = new Event<void>();
 
   get signal () {
@@ -41,6 +48,10 @@ export class NetworkManager {
 
   get topics () {
     return Array.from(this._swarms.keys());
+  }
+
+  get connectionLog () {
+    return this._connectionLog;
   }
 
   constructor (options: NetworkManagerOptions = {}) {
@@ -54,6 +65,10 @@ export class NetworkManager {
 
     this._signal.peerCandidatesChanged.on(([topic, candidates]) => this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
     this._signal.onSignal.on(msg => this._swarms.get(msg.topic)?.onSignal(msg));
+
+    if (options.log) {
+      this._connectionLog = new ConnectionLog();
+    }
   }
 
   getSwarmMap (topic: PublicKey): SwarmMapper | undefined {
@@ -97,6 +112,8 @@ export class NetworkManager {
 
     this.topicsUpdated.emit();
 
+    this._connectionLog?.swarmJoined(swarm);
+
     return () => this.leaveProtocolSwarm(topic);
   }
 
@@ -114,6 +131,8 @@ export class NetworkManager {
 
     map.destroy();
     this._maps.delete(topic);
+
+    this._connectionLog?.swarmLeft(swarm);
 
     await swarm.destroy();
     this._swarms.delete(topic);
