@@ -9,7 +9,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import RestoreIcon from '@material-ui/icons/Restore';
 
 import { sleep } from '@dxos/async';
-import { keyPairFromSeedPhrase } from '@dxos/credentials';
+import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-framework';
 
