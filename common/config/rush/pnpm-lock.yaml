@@ -124,7 +124,7 @@ importers:
       '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
       assert: 2.0.0
       debug: 4.3.1
-      hypercore-crypto: 1.0.0
+      hypercore-crypto: 2.3.0
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
     specifiers:
@@ -136,7 +136,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       assert: ^2.0.0
       debug: ^4.1.1
-      hypercore-crypto: ^1.0.0
+      hypercore-crypto: ^2.3.0
   ../../packages/bot/protocol-plugin-bot:
     dependencies:
       '@dxos/broadcast': link:../../mesh/broadcast
@@ -213,9 +213,10 @@ importers:
       typescript: ^4.3.5
   ../../packages/common/crypto:
     dependencies:
+      bip39: 3.0.4
       crypto-js: 3.3.0
       humanhash: 1.0.4
-      hypercore-crypto: 1.0.0
+      hypercore-crypto: 2.3.0
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.23
@@ -224,9 +225,10 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
+      bip39: ^3.0.2
       crypto-js: ^3.1.9-1
       humanhash: ^1.0.4
-      hypercore-crypto: ^1.0.0
+      hypercore-crypto: ^2.3.0
   ../../packages/common/debug:
     dependencies:
       '@types/node': 14.14.45
@@ -385,7 +387,6 @@ importers:
       expect: 27.0.2
       lodash: 4.17.21
       memdown: 5.1.0
-      wtfnode: 0.9.1
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
@@ -418,7 +419,6 @@ importers:
       lodash: 4.17.21
       memdown: ^5.1.0
       pify: ~5.0.0
-      wtfnode: ~0.9.1
   ../../packages/echo/echo-protocol:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -487,11 +487,9 @@ importers:
       end-of-stream: 1.4.4
       from2: 2.3.0
       hypercore: 9.10.0
-      hypercore-crypto: 1.0.0
       hypertrie: 5.1.1
       pify: 5.0.0
       pump: 3.0.0
-      sodium-universal: 3.0.4
       through2: 3.0.2
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
@@ -531,11 +529,9 @@ importers:
       end-of-stream-promise: ^1.0.0
       from2: ^2.3.0
       hypercore: ^9.10.0
-      hypercore-crypto: ^1.0.0
       hypertrie: 5.1.1
       pify: ~5.0.0
       pump: ^3.0.0
-      sodium-universal: ~3.0.4
       tempy: ~1.0.1
       through2: ^3.0.1
       wait-for-expect: ^3.0.2
@@ -770,7 +766,7 @@ importers:
       tree-kill: ^1.2.2
       ts-node: ^9.1.1
       typescript: ^4.3.5
-      wrtc: ^0.4.7
+      wrtc: ^0.4.6
   ../../packages/halo/credentials:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -784,7 +780,6 @@ importers:
       '@types/end-of-stream': 1.4.0
       '@types/pify': 3.0.2
       '@types/pump': 1.1.1
-      bip39: 3.0.4
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
       encoding-down: 6.3.0
@@ -839,7 +834,6 @@ importers:
       '@types/pify': ^3.0.2
       '@types/pump': ^1.1.0
       '@types/stream-to-array': ^2.3.0
-      bip39: ^3.0.2
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
       encoding-down: ^6.3.0
@@ -1014,7 +1008,7 @@ importers:
       nanomessage-rpc: ^3.0.0
       simple-peer: ^9.9.3
       wait-for-expect: ^3.0.2
-      wrtc: ^0.4.7
+      wrtc: ^0.4.6
       ws: ^7.4.4
       xor-distance: ^2.0.0
   ../../packages/mesh/protocol:
@@ -1187,7 +1181,7 @@ importers:
       graphology: 0.17.1
       graphql: 15.5.0
       graphql-request: 3.4.0_graphql@15.5.0
-      hypercore-crypto: 1.0.0
+      hypercore-crypto: 2.3.0
       hyperswarm: 2.15.3
       internal-ip: 6.2.0
       lodash.debounce: 4.0.8
@@ -1247,7 +1241,7 @@ importers:
       graphology-types: ^0.19.2
       graphql: ^15.3.0
       graphql-request: ^3.1.0
-      hypercore-crypto: ^1.0.0
+      hypercore-crypto: ^2.3.0
       hyperswarm: ^2.10.1
       internal-ip: ^6.0.0
       jest: ^26.6.3
@@ -1273,7 +1267,7 @@ importers:
       tiny-lru: ^7.0.6
       typescript: ^4.3.5
       varint: ^5.0.0
-      wrtc: ^0.4.7
+      wrtc: ^0.4.6
       yargs: ~16.2.0
   ../../packages/sdk/client:
     dependencies:
@@ -1366,7 +1360,6 @@ importers:
   ../../packages/sdk/demos:
     dependencies:
       '@dxos/client': link:../client
-      '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
@@ -1426,7 +1419,6 @@ importers:
       '@babel/plugin-transform-runtime': ^7.11.5
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
@@ -1851,7 +1843,6 @@ importers:
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/react-client': link:../../sdk/react-client
@@ -1893,7 +1884,6 @@ importers:
       '@dxos/browser-mocha': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
@@ -2002,7 +1992,6 @@ importers:
       '@dxos/eslint-plugin': 1.0.14_eslint@7.26.0+typescript@4.3.5
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@types/yargs': 16.0.1
-      async_hooks: 1.0.0
       chalk: 4.1.1
       eslint: 7.26.0
       glob: 7.1.7
@@ -2011,7 +2000,6 @@ importers:
       pkg-dir: 5.0.0
       ts-jest: 26.5.6_jest@26.6.3+typescript@4.3.5
       typescript: 4.3.5
-      wtfnode: 0.9.1
       yargs: 16.2.0
     devDependencies:
       '@types/glob': 7.1.3
@@ -2025,7 +2013,6 @@ importers:
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
       '@types/yargs': ~16.0.1
-      async_hooks: ~1.0.0
       chalk: ^4.1.0
       eslint: ^7.7.0
       glob: ~7.1.6
@@ -2035,7 +2022,6 @@ importers:
       ts-jest: ^26.5.6
       ts-node: ^9.1.1
       typescript: ^4.3.5
-      wtfnode: ~0.9.1
       yargs: ~16.2.0
 lockfileVersion: 5.2
 packages:
@@ -9122,10 +9108,6 @@ packages:
       lodash: 4.17.21
     resolution:
       integrity: sha512-zflvls11DCy+dQWzTW2dzuilv8Z5X/pjfmZOWba6TNIVDm+2UDaJmXSOXlasHKfNBs8oo3M0aT50fDEWfKZjXg==
-  /async_hooks/1.0.0:
-    dev: false
-    resolution:
-      integrity: sha1-gV9ehh/nP2TrKf2ULDLpXIBkBS8=
   /asynckit/0.4.0:
     resolution:
       integrity: sha1-x57Zf380y48robyXkLzDZkdLS3k=
@@ -15384,15 +15366,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-AJ/q7y6EOrXnOH/4+DVcfDygsh1ZXMRGvNc67GBNqwCt22oSCOWhRI6EJ+3HEJciM9M2oSm1WX3qg6kgRhT/Gw==
-  /hypercore-crypto/1.0.0:
-    dependencies:
-      buffer-alloc-unsafe: 1.1.0
-      buffer-from: 1.1.1
-      sodium-universal: 2.0.0
-      uint64be: 2.0.2
-    dev: false
-    resolution:
-      integrity: sha512-xFwOnNlOt8L+SovC7dTNchKaNYJb5l8rKZZwpWQnCme1r7CU4Hlhp1RDqPES6b0OpS7DkTo9iU0GltQGkpsjMw==
   /hypercore-crypto/2.3.0:
     dependencies:
       sodium-universal: 3.0.4
@@ -22910,15 +22883,6 @@ packages:
       websocket-driver: 0.7.4
     resolution:
       integrity: sha512-DhbPFGpxjc6Z3I+uX07Id5ZO2XwYsWOrYjaSeieES78cq+JaJvVe5q/m1uvjIQhXinhIeCFRH6JgXe+mvVMyXw==
-  /sodium-javascript/0.5.6:
-    dependencies:
-      blake2b: 2.1.3
-      nanoassert: 1.1.0
-      siphash24: 1.1.1
-      xsalsa20: 1.1.0
-    dev: false
-    resolution:
-      integrity: sha512-Uk+JpqHEbzsEmiMxwL7TB/ndhMEpc52KdReYXXSIX2oRFPaI7ZDlDImF8KbkFWbYl9BJRtc82AZ/kNf4/0n9KA==
   /sodium-javascript/0.7.3:
     dependencies:
       blake2b: 2.1.3
@@ -22931,16 +22895,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-J2Zzj61bo41oBO4yEM9hTaNo3J98AcmFctjRg3D7+0A5cXdB1jlQOHV1qo2NavDU3BpqCfxdHW5UXCv565zh6Q==
-  /sodium-native/2.4.9:
-    dependencies:
-      ini: 1.3.8
-      nan: 2.14.2
-      node-gyp-build: 4.2.3
-    dev: false
-    optional: true
-    requiresBuild: true
-    resolution:
-      integrity: sha512-mbkiyA2clyfwAyOFIzMvsV6ny2KrKEIhFVASJxWfsmgfUEymgLIS2MLHHcGIQMkrcKhPErRaMR5Dzv0EEn+BWg==
   /sodium-native/3.2.1:
     dependencies:
       ini: 1.3.8
@@ -22949,14 +22903,6 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-EgDZ/Z7PxL2kCasKk7wnRkV8W9kvwuIlHuHXAxkQm3FF0MgVsjyLBXGjSRGhjE6u7rhSpk3KaMfFM23bfMysIQ==
-  /sodium-universal/2.0.0:
-    dependencies:
-      sodium-javascript: 0.5.6
-    dev: false
-    optionalDependencies:
-      sodium-native: 2.4.9
-    resolution:
-      integrity: sha512-csdVyakzHJRyCevY4aZC2Eacda8paf+4nmRGF2N7KxCLKY2Ajn72JsExaQlJQ2BiXJncp44p3T+b80cU+2TTsg==
   /sodium-universal/3.0.4:
     dependencies:
       blake2b: 2.1.3
@@ -25652,10 +25598,6 @@ packages:
         optional: true
     resolution:
       integrity: sha512-xzyu3hFvomRfXKH8vOFMU3OguG6oOvhXMo3xsGy3xWExqaM2dxBbVxuD99O7m3ZUFMvvscsZDqxfgMaRr/Nr1g==
-  /wtfnode/0.9.1:
-    hasBin: true
-    resolution:
-      integrity: sha512-Ip6C2KeQPl/F3aP1EfOnPoQk14Udd9lffpoqWDNH3Xt78svxPbv53ngtmtfI0q2Te3oTq79XKTnRNXVIn/GsPA==
   /xml-name-validator/3.0.0:
     resolution:
       integrity: sha512-A5CUptxDsvxKJEU3yO6DuWBSJz/qizqzJKOMIfUJHETbBw/sFaDxgd6fxm1ewUaM0jZ444Fc5vC5ROYurg/4Pw==
