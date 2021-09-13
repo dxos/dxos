@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.12.16",
+  "version": "2.12.17",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
