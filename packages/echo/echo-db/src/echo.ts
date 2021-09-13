@@ -204,6 +204,7 @@ export class ECHO {
       return;
     }
 
+    await this._metadataStore.load();
     await this._keyring.load();
     await this._feedStore.open();
     await this.halo.open(onProgressCallback);

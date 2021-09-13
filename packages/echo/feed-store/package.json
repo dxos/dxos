@@ -34,7 +34,6 @@
     "from2": "^2.3.0",
     "hypercore": "^9.10.0",
     "hypercore-crypto": "^1.0.0",
-    "hypertrie": "5.1.1",
     "pify": "~5.0.0",
     "pump": "^3.0.0",
     "sodium-universal": "~3.0.4",
@@ -56,6 +55,7 @@
     "@types/pump": "^1.1.0",
     "@types/through2": "^2.0.36",
     "end-of-stream-promise": "^1.0.0",
+    "hypertrie": "5.1.1",
     "tempy": "~1.0.1",
     "wait-for-expect": "^3.0.2"
   },
