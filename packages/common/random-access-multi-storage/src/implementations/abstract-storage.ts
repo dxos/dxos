@@ -6,7 +6,7 @@ import pify from 'pify';
 
 import { IFile } from '../interfaces/IFile';
 import { IStorage } from '../interfaces/IStorage';
-import { StorageType } from './storage-types';
+import { StorageType } from '../interfaces/storage-types';
 
 /**
  * Base class for all storage implementations.
