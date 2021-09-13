@@ -16,7 +16,7 @@ export function execMocha ({ userArgs = [], forceClose }: ExecMochaOpts) {
 
     forceClose ? '--exit' : '--no-exit',
     '-t', '15000',
-    'src/**/*.test.ts',
+    'src/**/*.test.{ts,js,tsx,jsx}',
     ...userArgs
   ], {
     stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.

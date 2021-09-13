@@ -18,5 +18,7 @@ export const expectToThrow = async (test, errType = Error) => {
     thrown = err;
   }
 
-  expect(thrown).toBeInstanceOf(errType);
+  if (thrown === undefined || !(thrown instanceof errType)) {
+    throw new Error(`Expected function to throw instance of ${errType.prototype.name}`);
+  }
 };

@@ -5,8 +5,8 @@
 import del from 'del';
 import raf from 'random-access-file';
 
+import { StorageType, STORAGE_NODE } from '../interfaces/storage-types';
 import { AbstractStorage } from './abstract-storage';
-import { StorageType, STORAGE_NODE } from './storage-types';
 
 export class NodeStorage extends AbstractStorage {
   public override type: StorageType = STORAGE_NODE;

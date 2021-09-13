@@ -12,8 +12,6 @@ import { it as test } from 'mocha';
 import { latch, sleep } from '@dxos/async';
 import {
   createPartyGenesisMessage,
-  generateSeedPhrase,
-  keyPairFromSeedPhrase,
   Keyring, KeyType,
   SecretProvider,
   SecretValidator
@@ -22,7 +20,9 @@ import {
   createKeyPair, PublicKey,
   randomBytes,
   sign,
-  SIGNATURE_LENGTH, verify
+  SIGNATURE_LENGTH, verify,
+  generateSeedPhrase,
+  keyPairFromSeedPhrase
 } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';

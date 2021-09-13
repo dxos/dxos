@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-generator",
-  "version": "2.12.14",
+  "version": "2.12.18",
   "description": "Network generator.",
   "homepage": "https://github.com/dxos/network-generator#readme",
   "bugs": {
@@ -39,6 +39,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

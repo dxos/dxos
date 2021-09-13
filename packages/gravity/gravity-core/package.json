@@ -53,7 +53,7 @@
     "wrtc": "^0.4.7"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "toolchain": {
     "testingFramework": "mocha"

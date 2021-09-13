@@ -9,9 +9,10 @@ import { promises as fs, constants } from 'fs';
 import path from 'path';
 import pify from 'pify';
 
-import { STORAGE_RAM, STORAGE_NODE, STORAGE_IDB } from './implementations/storage-types';
 import { IFile } from './interfaces/IFile';
+import { STORAGE_RAM, STORAGE_NODE, STORAGE_IDB } from './interfaces/storage-types';
 import { createStorage } from './node';
+import { storageTests } from './storage.blueprint-test';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '..', 'out', 'index.test'));
 
@@ -41,18 +42,10 @@ describe('testing node storage types', () => {
     await expect(fs.access(directory, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  it('create a storage with ram type', async () => {
-    const storage = createStorage('testing', STORAGE_RAM);
-    expect(storage.type).toBe(STORAGE_RAM);
-
-    const file = storage.createOrOpen('file1');
-    await write(file);
-
-    // Check destroy
-    await storage.destroy();
-  });
-
   it('should throw an assert error if invalid type for platform', () => {
     expect(() => createStorage('error', STORAGE_IDB)).toThrow(/Unsupported storage/);
   });
+
+  storageTests(STORAGE_RAM, () => createStorage(ROOT_DIRECTORY, STORAGE_RAM));
+  storageTests(STORAGE_NODE, () => createStorage(ROOT_DIRECTORY, STORAGE_NODE));
 });

@@ -12,6 +12,7 @@
     "url": "git+https://github.com/dxos/protocols.git"
   },
   "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "scripts": {
     "build": "tsc --noEmit",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
@@ -34,7 +35,6 @@
   ],
   "dependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
@@ -92,6 +92,6 @@
     "webpack": "4.44.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

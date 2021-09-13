@@ -24,7 +24,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import CreateIcon from '@material-ui/icons/AddCircleOutline';
 import RestoreIcon from '@material-ui/icons/Restore';
 
-import { generateSeedPhrase } from '@dxos/credentials';
+import { generateSeedPhrase } from '@dxos/crypto';
 
 import ImportKeyringDialog from './ImportKeyringDialog';
 

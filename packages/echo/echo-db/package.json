@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.12.14",
+  "version": "2.12.18",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
@@ -45,7 +45,7 @@
     "@types/node": "^14.0.9",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.1.1",
-    "hypertrie": "5.1.1",
+    "hypertrie": "dxos/hypertrie#8af4c23bc739f6e1c298cc15c12528e7f7483681",
     "json-stable-stringify": "^1.0.1",
     "pify": "~5.0.0"
   },
@@ -59,7 +59,7 @@
     "memdown": "^5.1.0"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "toolchain": {
     "testingFramework": "mocha"

@@ -143,6 +143,7 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
               control={<Checkbox checked={isOffline} onChange={(event) => setIsOffline(event.target.checked)} />}
               label='Offline'
             /> */}
+            {isProcessing && <LinearProgress />}
           </DialogContent>
           <DialogActions>
             <Button color='secondary' onClick={handleDone}>
