@@ -217,3 +217,11 @@ rm -rf ~/.local/share/verdaccio/storage/*
 ```
 
 Then, start Verdaccio again.
+
+## FAQ
+
+1. Issue with `data.copy is not a function`
+
+This is caused by incomplete browser polyfills for Node (specifically for Buffer).
+
+Fixed by adding different polyfill for Buffer such as [here](https://github.com/dxos/protocols/blob/551f5592384f5af69f6d46960d5c895050f1f211/packages/sdk/demos/.storybook/main.js#L33).
