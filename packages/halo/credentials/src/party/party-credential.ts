@@ -80,7 +80,7 @@ export const createKeyAdmitMessage = (
 export const createFeedAdmitMessage = (
   signer: Signer,
   partyKey: PublicKeyLike,
-  feedKeyPair: KeyRecord,
+  feedKey: PublicKey,
   signingKeys: (KeyRecord | KeyChain)[] = [],
   nonce?: Buffer
 ): Message => {
@@ -91,11 +91,11 @@ export const createFeedAdmitMessage = (
     type: PartyCredential.Type.FEED_ADMIT,
     feedAdmit: {
       partyKey,
-      feedKey: feedKeyPair.publicKey
+      feedKey: feedKey
     }
   };
 
-  return wrapMessage(signer.sign(message, [feedKeyPair, ...signingKeys], nonce));
+  return wrapMessage(signer.sign(message, [feedKey, ...signingKeys], nonce));
 };
 
 /**

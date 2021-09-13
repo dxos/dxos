@@ -73,9 +73,8 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();
   const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: 'utf8' });
-  await feedStore.open();
   const { publicKey, secretKey } = createKeyPair();
-  const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
+  const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
   const append = pify(feed.append.bind(feed));
 
   const credentials = Buffer.from(codec.encode(
@@ -93,7 +92,7 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   // Share and replicate all known feeds.
   const repl = new Replicator({
     load: async () => {
-      return feedStore.getOpenFeeds();
+      return [];
     },
 
     subscribe: (add: (feed: any) => void) => {
@@ -103,18 +102,15 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
     },
 
     replicate: async (feeds) => {
+      const replicatedFeeds: HypercoreFeed[] = [];
+
       for (const feed of feeds) {
         assert(feed.key);
-        if (feedStore.hasFeed(feed.key)) {
-          await feedStore.openFeed(PublicKey.from(feed.key));
-        } else {
-          await feedStore.createReadOnlyFeed({
-            key: PublicKey.from(feed.key)
-          });
-        }
+        const descriptor = await feedStore.openReadOnlyFeed(PublicKey.from(feed.key));
+        replicatedFeeds.push(descriptor.feed);
       }
 
-      return feedStore.getOpenFeeds();
+      return replicatedFeeds;
     }
   });
 
@@ -141,7 +137,7 @@ const connect = (source: any, target: any) => {
 type Node = { feed: HypercoreFeed, feedStore: FeedStore }
 
 async function getMessages (sender: Node, receiver: Node): Promise<any[]> {
-  const feed = receiver.feedStore.getOpenFeed((descriptor) => descriptor.key.equals(sender.feed.key));
+  const { feed } = await receiver.feedStore.openReadOnlyFeed(PublicKey.from(sender.feed.key));
   assert(feed, 'Nodes not connected');
   const messages: any[] = [];
   const stream = createBatchStream(feed);
@@ -176,7 +172,7 @@ it('Auth Plugin (GOOD)', async () => {
   connection.destroy();
 });
 
-it('Auth & Repl (GOOD)', async () => {
+it.only('Auth & Repl (GOOD)', async () => {
   const keyring = await createTestKeyring();
   const partyKey = PublicKey.from(randomBytes(32));
   const node2 = await createProtocol(partyKey,

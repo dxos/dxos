@@ -7,7 +7,7 @@ import defaultHypercore from 'hypercore';
 import pify from 'pify';
 
 import { Lock } from '@dxos/async';
-import { PublicKey, discoveryKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/crypto';
 import type { IFile, IStorage } from '@dxos/random-access-multi-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
@@ -16,12 +16,10 @@ import type { ValueEncoding } from './types';
 interface FeedDescriptorOptions {
   storage: IStorage,
   key: PublicKey,
+  hypercore: Hypercore,
   secretKey?: Buffer,
-  valueEncoding?: ValueEncoding,
-  hypercore?: Hypercore
+  valueEncoding?: ValueEncoding
 }
-
-type Listener = ((...args: any) => Promise<void> | void) | null;
 
 /**
  * FeedDescriptor
@@ -29,15 +27,14 @@ type Listener = ((...args: any) => Promise<void> | void) | null;
  * Abstract handler for an Hypercore instance.
  */
 export class FeedDescriptor {
-  private _storage: IStorage;
-  private _key: PublicKey;
-  private _secretKey?: Buffer;
-  private _valueEncoding?: ValueEncoding;
-  private _hypercore: Hypercore;
-  private _discoveryKey: Buffer;
-  public readonly lock: Lock;
+  private readonly _storage: IStorage;
+  private readonly _key: PublicKey;
+  private readonly _secretKey?: Buffer;
+  private readonly _valueEncoding?: ValueEncoding;
+  private readonly _hypercore: Hypercore;
+  readonly lock: Lock;
+
   private _feed: HypercoreFeed | null;
-  private _listeners: Listener[] = [];
 
   constructor (options: FeedDescriptorOptions) {
     const {
@@ -54,14 +51,13 @@ export class FeedDescriptor {
     this._key = key;
     this._secretKey = secretKey;
 
-    this._discoveryKey = discoveryKey(this._key);
-
     this.lock = new Lock();
 
     this._feed = null;
   }
 
-  get feed (): HypercoreFeed | null {
+  get feed (): HypercoreFeed {
+    assert(this._feed, 'Feed is not initialized');
     return this._feed;
   }
 
@@ -75,10 +71,6 @@ export class FeedDescriptor {
 
   get secretKey () {
     return this._secretKey;
-  }
-
-  get discoveryKey () {
-    return this._discoveryKey;
   }
 
   get valueEncoding () {
@@ -97,16 +89,13 @@ export class FeedDescriptor {
    */
   async open (): Promise<HypercoreFeed> {
     if (this.opened) {
-      assert(this._feed, 'Feed is not initialized');
-      return this._feed;
+      return this.feed;
     }
 
     await this.lock.executeSynchronized(async () => {
       await this._open();
-      await this._emit('opened');
     });
-    assert(this._feed, 'Feed is not initialized');
-    return this._feed;
+    return this.feed;
   }
 
   /**
@@ -119,17 +108,7 @@ export class FeedDescriptor {
 
     await this.lock.executeSynchronized(async () => {
       await pify(this._feed?.close.bind(this._feed))();
-      await this._emit('closed');
     });
-  }
-
-  /**
-   * Watch for descriptor events.
-   *
-   * @param {function} listener
-   */
-  watch (listener: Listener) {
-    this._listeners.push(listener);
   }
 
   /**
@@ -153,15 +132,6 @@ export class FeedDescriptor {
     );
 
     await pify(this._feed.ready.bind(this._feed))();
-  }
-
-  /**
-   * Asynchronous emitter.
-   */
-  private async _emit (event: any, ...args: any) {
-    for (const listener of this._listeners) {
-      await listener?.(event, ...args);
-    }
   }
 }
 

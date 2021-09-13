@@ -70,7 +70,7 @@ it('Process basic message types', async () => {
     // Admit IdentityB using a KeyAdmit message.
     createKeyAdmitMessage(keyring, partyKey.publicKey, identityKeyB, [identityKeyA]),
     // Add another feed, and sign for it using the Device KeyChain associated with IdentityB.
-    createFeedAdmitMessage(keyring, partyKey.publicKey, feedKeyB, [deviceKeyChain]),
+    createFeedAdmitMessage(keyring, partyKey.publicKey, feedKeyB.publicKey, [deviceKeyChain]),
     // Add an IdentityInfo, wrapped in an Envelope signed by the device KeyChain, as when copied from the HALO.
     createEnvelopeMessage(
       keyring,
@@ -284,7 +284,7 @@ it('Reject admit feed message with wrong Party', async () => {
   messages = [
     createFeedAdmitMessage(keyring,
       wrongParty.publicKey,
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[1],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[1].publicKey,
       [keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))]
     )
   ].map(codecLoop);
@@ -344,7 +344,7 @@ it('Reject tampered admit feed message', async () => {
   messages = [
     createFeedAdmitMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey,
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[1],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[1].publicKey,
       [keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))]
     )
   ].map(codecLoop);

@@ -7,7 +7,7 @@ import debug from 'debug';
 import memdown from 'memdown';
 
 import { Keyring, KeyStore } from '@dxos/credentials';
-import { PartyKey } from '@dxos/echo-protocol';
+import { codec, PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
@@ -20,10 +20,11 @@ import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer, SecretProvider } from './invitations';
 import { DefaultModel } from './items';
 import { MetadataStore } from './metadata';
-import { OpenProgress, Party, PartyFactory, PartyFilter, PartyManager } from './parties';
+import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
-import { FeedStoreAdapter, createRamStorage } from './util';
+import { createRamStorage } from './util';
+import { PublicKey } from '@dxos/crypto';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
@@ -90,7 +91,7 @@ export class ECHO {
   private readonly _halo: HALO;
   private readonly _keyring: Keyring;
 
-  private readonly _feedStore: FeedStoreAdapter;
+  private readonly _feedStore: FeedStore;
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
   private readonly _snapshotStore: SnapshotStore;
@@ -130,14 +131,21 @@ export class ECHO {
     };
     this._keyring = new Keyring(new KeyStore(keyStorage));
 
-    this._feedStore = FeedStoreAdapter.create(feedStorage, this._keyring, this._metadataStore);
+    this._feedStore = new FeedStore(feedStorage, { valueEncoding: codec });
+
+    const createFeedProvider = (partyKey: PublicKey) => new PartyFeedProvider(
+      this._metadataStore,
+      this._keyring,
+      this._feedStore,
+      partyKey
+    );
 
     const partyFactory = new PartyFactory(
       () => this.halo.identity,
       this._networkManager,
-      this._feedStore,
       this._modelFactory,
       this._snapshotStore,
+      createFeedProvider,
       options
     );
 
@@ -152,7 +160,8 @@ export class ECHO {
       keyring: this._keyring,
       partyFactory,
       networkManager: this._networkManager,
-      partyManager: this._partyManager
+      partyManager: this._partyManager,
+      metadataStore: this._metadataStore
     });
 
     this._halo.identityReady.once(() => {
@@ -182,10 +191,6 @@ export class ECHO {
   // TODO(burdon): Expose single devtools object.
   //
 
-  get feedStore (): FeedStore {
-    return this._feedStore.feedStore; // TODO(burdon): Why not return top-level object?
-  }
-
   get networkManager (): NetworkManager {
     return this._networkManager;
   }
@@ -205,7 +210,7 @@ export class ECHO {
     }
 
     await this._keyring.load();
-    await this._feedStore.open();
+    await this._metadataStore.load();
     await this.halo.open(onProgressCallback);
 
     await this._partyManager.open(onProgressCallback);
