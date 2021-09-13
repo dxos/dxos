@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "2.12.14",
+  "version": "2.12.18",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -44,6 +44,6 @@
     "@types/memdown": "^3.0.0"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

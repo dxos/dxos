@@ -7,15 +7,14 @@
 import assert from 'assert';
 import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
 
-import { createKeyPair } from '@dxos/crypto';
+import { createKeyPair } from '.';
 
 // Util functions for Identity: export, import, create
 
 /**
  * Generate bip39 seed phrase (aka mnemonic).
- * @return {string}
  */
-export const generateSeedPhrase = () => {
+export const generateSeedPhrase = (): string => {
   return generateMnemonic();
 };
 

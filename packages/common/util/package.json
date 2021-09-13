@@ -1,6 +1,6 @@
 {
   "name": "@dxos/util",
-  "version": "2.12.14",
+  "version": "2.12.18",
   "description": "Temporary bucket for misc functions, which should graduate into separate packages.",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
@@ -10,6 +10,7 @@
     "url": "git+https://github.com/dxos/protocols.git"
   },
   "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -32,6 +33,6 @@
     "@types/jest": "^26.0.7"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

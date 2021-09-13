@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-devtools",
-  "version": "2.12.14",
+  "version": "2.12.18",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
@@ -43,6 +43,6 @@
     "react": "*"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

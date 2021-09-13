@@ -1,8 +1,9 @@
 {
   "name": "@dxos/network-manager",
-  "version": "2.12.14",
+  "version": "2.12.18",
   "description": "Network Manager",
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -50,7 +51,7 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "toolchain": {
     "testingFramework": "mocha",

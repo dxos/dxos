@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-messenger",
-  "version": "2.12.14",
+  "version": "2.12.18",
   "description": "Protocol plugin messenger.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-messenger#readme",
   "bugs": {
@@ -10,7 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/dxos/protocol.git"
   },
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -36,6 +37,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

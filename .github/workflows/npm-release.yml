@@ -39,10 +39,10 @@ jobs:
         git config --global user.name "ci"
     - name: Bump non-breaking versions
       run: rush version --bump
-      if: ${{ github.event.inputs.limit == '' }}
+      if: ${{ github.event.inputs.breaking == '' }}
     - name: Bump breaking versions
       run: rush version --bump --override-bump minor
-      if: ${{ github.event.inputs.limit != '' }}
+      if: ${{ github.event.inputs.breaking != '' }}
     - name: Clean changelogs
       run: git status --porcelain | awk '($1=="??" && ($2 ~ /\/CHANGELOG.md/ || $2 ~ /\/CHANGELOG.json/)) {print $2}' | xargs rm
     - name: Commit and push

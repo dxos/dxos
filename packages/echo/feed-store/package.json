@@ -1,6 +1,6 @@
 {
   "name": "@dxos/feed-store",
-  "version": "2.12.14",
+  "version": "2.12.18",
   "description": "A consistent store for your hypercore feeds.",
   "homepage": "https://github.com/dxos/feed-store#readme",
   "bugs": {
@@ -33,12 +33,9 @@
     "end-of-stream": "^1.4.1",
     "from2": "^2.3.0",
     "hypercore": "^9.10.0",
-    "hypercore-crypto": "^1.0.0",
     "pify": "~5.0.0",
     "pump": "^3.0.0",
-    "sodium-universal": "~3.0.4",
-    "through2": "^3.0.1",
-    "@dxos/util": "workspace:*"
+    "through2": "^3.0.1"
   },
   "devDependencies": {
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
@@ -60,6 +57,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

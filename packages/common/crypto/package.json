@@ -1,8 +1,9 @@
 {
   "name": "@dxos/crypto",
-  "version": "2.12.14",
+  "version": "2.12.18",
   "description": "Basic crypto key utils",
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -18,7 +19,8 @@
   "dependencies": {
     "crypto-js": "^3.1.9-1",
     "humanhash": "^1.0.4",
-    "hypercore-crypto": "^1.0.0"
+    "hypercore-crypto": "^2.3.0",
+    "bip39": "^3.0.2"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
@@ -26,6 +28,6 @@
     "@types/node": "^14.0.9"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }
