@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-devtools",
-  "version": "2.12.17",
+  "version": "2.12.18",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
