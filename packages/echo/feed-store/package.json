@@ -33,7 +33,7 @@
     "end-of-stream": "^1.4.1",
     "from2": "^2.3.0",
     "hypercore": "^9.10.0",
-    "hypertrie": "dxos/hypertrie#8af4c23bc739f6e1c298cc15c12528e7f7483681",
+    "hypertrie": "5.1.2",
     "pify": "~5.0.0",
     "pump": "^3.0.0",
     "through2": "^3.0.1"
