@@ -1,6 +1,6 @@
 {
   "name": "@dxos/debug",
-  "version": "2.12.17",
+  "version": "2.12.18",
   "description": "Debug utilities",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
