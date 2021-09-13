@@ -57,7 +57,7 @@ export class MetadataStore {
     const file = this._storage.createOrOpen('EchoMetadata');
 
     try {
-      const data = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(this._metadata);
+      const data = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(this._metadata));
       await pify(file.write.bind(file))(0, data);
     } finally {
       await pify(file.close.bind(file))();
