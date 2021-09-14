@@ -112,11 +112,6 @@ const setup = async (open = true, createIdentity = true) => {
 };
 
 describe('Party manager', () => {
-  after(async () => {
-    await sleep(10000);
-    (global as any).wtfnode.dump();
-  });
-
   test('It exits cleanly', async () => {
     await setup();
   });
@@ -292,8 +287,6 @@ describe('Party manager', () => {
   test('Join a party - PIN', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     // Create the Party.
     expect(partyManagerA.parties).toHaveLength(0);
@@ -366,16 +359,11 @@ describe('Party manager', () => {
     }
 
     expect(inviterOnFinishCalled).toBeTruthy();
-
-    // await partyManagerA.close();
-    // await partyManagerB.close();
   });
 
   test('Join a party - signature', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     // This would typically be a keypair associated with BotFactory.
     const keyPair = createKeyPair();
@@ -449,10 +437,6 @@ describe('Party manager', () => {
         }
       }
     }
-
-    // TODO(burdon): Clean-up.
-    // await partyManagerA.close();
-    // await partyManagerB.close();
   });
 
   test('Join a party - Offline', async () => {
@@ -460,9 +444,6 @@ describe('Party manager', () => {
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
     assert(identityManagerA.identity.identityKey);
     assert(identityManagerB.identity.identityKey);
-
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     // Create the Party.
     expect(partyManagerA.parties).toHaveLength(0);
