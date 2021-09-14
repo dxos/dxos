@@ -9,7 +9,7 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch } from '@dxos/async';
+import { latch, sleep } from '@dxos/async';
 import {
   createPartyGenesisMessage,
   Keyring, KeyType,
@@ -111,6 +111,11 @@ const setup = async (open = true, createIdentity = true) => {
 };
 
 describe('Party manager', () => {
+  after(async () => {
+    await sleep(20);
+    (global as any).wtfnode.dump();
+  });
+
   test('It exits cleanly', async () => {
     // TODO(rzadp): Disable auto-close and fix auto-closing here.
     const { partyManager } = await setup();
