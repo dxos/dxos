@@ -26,6 +26,7 @@ const PartySettings = ({ partyKey = undefined, onClose }) => {
   const handleSubmit = async () => {
     const party = await client.echo.createParty({ title });
     await party.setProperty('title', title);
+    onClose();
   };
 
   return <Dialog />;
@@ -48,7 +49,7 @@ const PartyList = ({}) => {
 
   return (
     <div>
-      {settingsDialog && <PartySettings />}
+      {settingsDialog && <PartySettings onClose={() => setSettingsDialog({})}/>}
 
       <div>
         <Fab size='small' color='primary' aria-label='add' title='Create list' onClick={handleCreateParty}>
@@ -151,7 +152,7 @@ const PartyList = ({ onSelectParty }) => {
 
   return (
     <div>
-      {settingsDialog && <PartySettings partyKey={settingsPartyKey} onClose={({}) => setSettingsDialog({})} />}
+      {settingsDialog && <PartySettings partyKey={settingsPartyKey} onClose={() => setSettingsDialog({})} />}
 
       <List disablePadding>
         {parties.map((party) => (

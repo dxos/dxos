@@ -29,6 +29,8 @@ Before proceeding, make sure your system meets the following requirements:
 - Node.js v12+
 - npm v6+ or yarn v1.20+ (We'll use `yarn` here.)
 
+> It is also recommended to use some storage cleaning extension - for instance [Clear site data](https://chrome.google.com/webstore/detail/clear-site-data/aihgofjefdlhpnmeakpnjjeajofpcbhj). 
+> Sometimes when developing a DXOS application new version of the application can fetch old data from storage that was used by previous versions - then some kind of n unexpected error may occur. In such cases it is recommended to clear storage using the abovementioned extension.
 
 ## Create an empty application
 
@@ -67,7 +69,7 @@ but that is not required as we will be focusing on DXOS and provide all required
 You can find out more about Material-UI [here](https://material-ui.com/).
 
 ```bash
-yarn add @material-ui/core @material-ui/styles @material-ui/icons
+yarn add @material-ui/core @material-ui/styles @material-ui/icons @material-ui/lab
 ```
 
 ## CRACO
@@ -78,8 +80,9 @@ This tool will be used to override some Webpack settings that are required for D
 You can read more about it [here](https://github.com/gsoft-inc/craco)
 
 ```bash
-yarn add @craco/craco @jackwilsdon/craco-use-babelrc webpack
+yarn add @craco/craco @jackwilsdon/craco-use-babelrc webpack@4.44.2 @babel/plugin-transform-runtime
 ```
+> We use specific version of Webpack to meet dependecies of the react-script package that is used by @craco/craco package.
 
 Create a `craco.config.js` file at the root of your project with the following script:
 
@@ -128,7 +131,9 @@ After that, create a `.babelrc` file at the root of your project with the follow
 
 ```json
 {
-  "presets": ["@babel/preset-env", "@babel/preset-react"]
+  "presets": ["@babel/preset-env", "@babel/preset-react"],
+  "plugins": ["@babel/plugin-transform-runtime"]
+}
 }
 ```
 
