@@ -28,7 +28,8 @@ module.exports = {
             'tutorial/queries',
             'tutorial/mutations',
             'tutorial/invitations',
-            'tutorial/next'
+            'tutorial/next',
+            'tutorial/troubleshooting'
           ],
           'Core Concepts': [
             'core-concepts/party',
