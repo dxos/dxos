@@ -32,7 +32,7 @@
     "isomorphic-ws": "^4.0.1",
     "nanomessage-rpc": "^3.0.0",
     "simple-peer": "^9.9.3",
-    "wrtc": "^0.4.6",
+    "wrtc": "^0.4.7",
     "ws": "^7.4.4",
     "xor-distance": "^2.0.0"
   },
@@ -54,6 +54,7 @@
     "access": "public"
   },
   "toolchain": {
+    "forceCloseTests": true,
     "testingFramework": "mocha",
     "additionalTestSteps": [
       "test:browser"

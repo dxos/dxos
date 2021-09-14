@@ -43,6 +43,7 @@ const createPeer = async ({
   ice
 }: CreatePeerOptions) => {
   const networkManager = new NetworkManager({ signal, ice });
+  afterTest(() => networkManager.destroy());
 
   const plugin = new TestProtocolPlugin(peerId.asBuffer());
   const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin);
@@ -358,6 +359,7 @@ export function inMemoryTests () {
         const peer = r.peers.get(this.peerId)!;
 
         const presence = new PresencePlugin(this.peerId.asBuffer());
+        afterTest(() => presence.stop());
         const protocol = createProtocolFactory(m.topic, this.peerId, [presence]);
 
         peer.networkManager.joinProtocolSwarm({
