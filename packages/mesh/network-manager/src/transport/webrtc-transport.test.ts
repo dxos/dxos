@@ -4,6 +4,7 @@
 
 import expect from 'expect';
 import { it as test } from 'mocha';
+import { Duplex } from 'stream';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
@@ -14,12 +15,12 @@ import { afterTest } from '@dxos/testutils';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { WebrtcTransport } from './webrtc-transport';
 
-describe('WebrtcConnection', () => {
-  // This doesn't clean up correctly and crashes with SIGSEGV at the end. Probably an issue with wrtc package.
+describe('WebrtcTransport', () => {
+  // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
     const connection = new WebrtcTransport(
       true,
-      new Protocol().stream,
+      new Duplex(),
       PublicKey.random(),
       PublicKey.random(),
       PublicKey.random(),

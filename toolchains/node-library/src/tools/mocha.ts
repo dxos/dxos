@@ -4,8 +4,21 @@
 
 import { execTool } from './common';
 
-export function execMocha (additionalArgs: string[] = []) {
-  execTool('mocha', ['-r', 'ts-node/register/transpile-only', '--exit', '-t', '15000', 'src/**/*.test.{ts,js,tsx,jsx}', ...additionalArgs], {
+export interface ExecMochaOpts {
+  forceClose?: boolean,
+  userArgs?: string[]
+}
+
+export function execMocha ({ userArgs = [], forceClose }: ExecMochaOpts) {
+  execTool('mocha', [
+    '-r', 'ts-node/register/transpile-only',
+    '-r', require.resolve('./wtfnode.js'),
+
+    forceClose ? '--exit' : '--no-exit',
+    '-t', '15000',
+    'src/**/*.test.{ts,js,tsx,jsx}',
+    ...userArgs
+  ], {
     stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
   });
 }

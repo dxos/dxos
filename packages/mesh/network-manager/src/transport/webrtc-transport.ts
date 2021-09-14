@@ -72,7 +72,7 @@ export class WebrtcTransport implements Transport {
     });
     this._peer.on('close', async () => {
       log(`Connection closed ${this._ownId} -> ${this._remoteId}`);
-      await this._closeStream();
+      await this._disconnectStreams();
       this.closed.emit();
     });
   }
@@ -95,12 +95,12 @@ export class WebrtcTransport implements Transport {
   }
 
   async close () {
-    await this._closeStream();
+    await this._disconnectStreams();
     this._peer!.destroy();
     log('Closed.');
   }
 
-  private async _closeStream () {
+  private async _disconnectStreams () {
     this._stream.unpipe?.(this._peer)?.unpipe?.(this._stream); // TODO(rzadp): Find a way of unpiping this?
   }
 }
