@@ -1,6 +1,6 @@
 ---
 title: Sharing and replication
-sidebar_title: 6. Sharing and replication
+sidebar_title: 7. Sharing and replication
 description: Managing peers and replication
 ---
 
@@ -18,6 +18,8 @@ import { useParty } from '@dxos/react-client';
 const TaskList = ({ partyKey }) => {
   const party = useParty(partyKey);
 
+  // ...
+
   const handleCopyInvite = async () => {
     const invitation = await party.createInvitation();
     const invitationText = JSON.stringify(invitation.toQueryParameters());
@@ -26,7 +28,8 @@ const TaskList = ({ partyKey }) => {
 
   return (
     <div>
-      <div className={classes.actions}>
+      {/* ... */}
+      <div>
         <Fab size='small' color='secondary' aria-label='invite' title='Invite people' onClick={handleCopyInvite}>
           <ShareIcon />
         </Fab>

@@ -1,6 +1,6 @@
 ---
 title: Next steps
-sidebar_title: 7. Next Steps
+sidebar_title: 8. Next Steps
 description:
 ---
 
