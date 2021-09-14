@@ -112,11 +112,11 @@ const setup = async (open = true, createIdentity = true) => {
 
 describe('Party manager', () => {
   after(async () => {
-    await sleep(20);
+    await sleep(10000);
     (global as any).wtfnode.dump();
   });
 
-  test('It exits cleanly', async () => {
+  test.only('It exits cleanly', async () => {
     // TODO(rzadp): Disable auto-close and fix auto-closing here.
     const { partyManager } = await setup();
     await partyManager.open();
