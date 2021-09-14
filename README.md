@@ -16,6 +16,7 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 ## Troubleshooting
 
 For debugging, use the [DXOS DevTools extension](./packages/sdk/devtools-extension/README.md).
+Also check the [FAQ section](./docs/internal/getting-started.md#FAQ).
 
 ## Contributing
 
