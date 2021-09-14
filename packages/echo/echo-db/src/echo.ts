@@ -255,6 +255,12 @@ export class ECHO {
     } catch (err) {
       log('Error clearing snapshot storage:', err);
     }
+
+    try {
+      await this._metadataStore.clear();
+    } catch (err) {
+      log('Error clearing metadata storage:', err);
+    }
   }
 
   //

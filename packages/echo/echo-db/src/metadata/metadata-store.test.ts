@@ -60,4 +60,19 @@ describe('MetadataStore in-memory', () => {
     expect(store.parties?.[0].feedKeys?.length).toBe(1);
     expect(store.parties?.[0].feedKeys?.[0]).toEqual(feedKey);
   });
+
+  // TODO(yivlad) Doesn't work for now
+  it.skip('Resets storage', async () => {
+    const store = new MetadataStore(createRamStorage());
+
+    const partyKey = PublicKey.random();
+    const feedKey = PublicKey.random();
+    await store.addPartyFeed(partyKey, feedKey);
+    expect(store.parties?.[0].key).toEqual(partyKey);
+    expect(store.parties?.[0].feedKeys?.length).toBe(1);
+    expect(store.parties?.[0].feedKeys?.[0]).toEqual(feedKey);
+
+    await store.clear();
+    expect(store.parties?.length).toEqual(0);
+  });
 });
