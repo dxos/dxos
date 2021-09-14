@@ -24,8 +24,9 @@ module.exports = {
             'tutorial/client',
             'tutorial/profile',
             'tutorial/parties',
-            'tutorial/mutations',
+            'tutorial/creating',
             'tutorial/queries',
+            'tutorial/mutations',
             'tutorial/invitations',
             'tutorial/next'
           ],
