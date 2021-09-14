@@ -249,6 +249,16 @@ describe('Party manager', () => {
     await partyManager.close();
   });
 
+  test('Creates invitation and exits cleanly', async () => {
+    const { partyManager: partyManagerA } = await setup();
+
+    const partyA = await partyManagerA.createParty();
+    const PIN = Buffer.from('0000');
+    const secretProvider: SecretProvider = async () => PIN;
+    const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
+    await partyA.invitationManager.createInvitation({ secretProvider, secretValidator }, {expiration: Date.now() + 3000});
+  });
+
   test('Create invitation', async () => {
     const { partyManager: partyManagerA } = await setup();
     const { partyManager: partyManagerB } = await setup();
