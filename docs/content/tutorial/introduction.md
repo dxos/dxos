@@ -30,7 +30,7 @@ Before proceeding, make sure your system meets the following requirements:
 - npm v6+ or yarn v1.20+ (We'll use `yarn` here.)
 
 > It is also recommended to use some storage cleaning extension - for instance [Clear site data](https://chrome.google.com/webstore/detail/clear-site-data/aihgofjefdlhpnmeakpnjjeajofpcbhj). 
-> Sometimes when developing a DXOS application new version of the application can fetch old data from storage that was used by previous versions - then some kind of n unexpected error may occur. In such cases it is recommended to clear storage using the abovementioned extension.
+> Sometimes when developing a DXOS application new version of the application can fetch old data from storage that was used by previous versions - then some kind of an unexpected error may occur. In such cases it is recommended to clear storage using the abovementioned extension.
 
 ## Create an empty application
 
