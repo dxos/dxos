@@ -262,8 +262,6 @@ describe('Party manager', () => {
   test('Create invitation', async () => {
     const { partyManager: partyManagerA } = await setup();
     const { partyManager: partyManagerB } = await setup();
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     const partyA = await partyManagerA.createParty();
     const PIN = Buffer.from('0000');
@@ -274,8 +272,6 @@ describe('Party manager', () => {
     const partyB = await partyManagerB.joinParty(invitationDescriptor, secretProvider);
     expect(partyB).toBeDefined();
 
-    // TODO(burdon): Adding this causes the worker process to hang AND partyManger.close to throw.
-    /*
     const [updated, onUpdate] = latch();
     partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
       .update.on((items) => {
@@ -287,14 +283,10 @@ describe('Party manager', () => {
           }
         }
       });
-    */
 
     const itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' });
     log(`A created ${itemA.id}`);
-    // await updated;
-
-    // await partyManagerA.close();
-    // await partyManagerB.close();
+    await updated;
   });
 
   test('Join a party - PIN', async () => {
