@@ -101,9 +101,10 @@ const setup = async (open = true, createIdentity = true) => {
   if (open) {
     await partyManager.open();
     if (createIdentity) {
-      await identityManager.createHalo({
+      const haloParty = await identityManager.createHalo({
         identityDisplayName: identityManager.identity.identityKey!.publicKey.humanize()
       });
+      afterTest(() => haloParty.close())
     }
   }
 
@@ -116,16 +117,12 @@ describe('Party manager', () => {
     (global as any).wtfnode.dump();
   });
 
-  test.only('It exits cleanly', async () => {
-    // TODO(rzadp): Disable auto-close and fix auto-closing here.
-    const { partyManager } = await setup();
-    await partyManager.open();
-    await partyManager.close();
+  test('It exits cleanly', async () => {
+    await setup();
   });
 
   test('Created locally', async () => {
     const { partyManager, identityManager } = await setup();
-    await partyManager.open();
 
     const [update, setUpdated] = latch();
     const unsubscribe = partyManager.update.on((party) => {
@@ -149,7 +146,6 @@ describe('Party manager', () => {
 
   test('Created via sync', async () => {
     const { feedStore, partyManager } = await setup();
-    await partyManager.open();
 
     const [update, setUpdated] = latch();
     const unsubscribe = partyManager.update.on((party) => {
