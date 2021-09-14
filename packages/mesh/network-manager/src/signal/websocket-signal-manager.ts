@@ -151,6 +151,10 @@ export class WebsocketSignalManager implements SignalManager {
     }
   }
 
+  async destroy() {
+    await Promise.all(Array.from(this._servers.values()).map(server => server.close()))
+  }
+
   peerCandidatesChanged = new Event<[topic: PublicKey, candidates: PublicKey[]]>()
 
   onSignal = new Event<SignalApi.SignalMessage>();
