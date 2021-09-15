@@ -22,7 +22,8 @@
     "@dxos/debug": "workspace:*",
     "clsx": "^1.1.0",
     "lodash.defaultsdeep": "^4.6.1",
-    "lodash.isplainobject": "^4.0.6"
+    "lodash.isplainobject": "^4.0.6",
+    "url-join": "^4.0.1"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
@@ -38,7 +39,8 @@
     "babel-plugin-add-module-exports": "^1.0.4",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "@types/url-join": "~4.0.1"
   },
   "peerDependencies": {
     "@dxos/client": "*",
