@@ -7,7 +7,7 @@ import { DXOSError } from '@dxos/debug';
 
 export class PartyNotFoundError extends DXOSError {
   constructor (partyKey: PublicKey) {
-    super('PARTY_NOT_FOUND', `Party with key ${partyKey} not found.`);
+    super('PARTY_NOT_FOUND', `Party with key not found: ${partyKey}`);
   }
 }
 
