@@ -138,8 +138,7 @@ export class PresencePlugin {
       .setMessageHandler(async (protocol, chunk) => this._peerMessageHandler(protocol, chunk))
       .setCloseHandler(async (protocol) => {
         await this._removePeer(protocol);
-        this.extensionsCreated--;
-        if (this.extensionsCreated === 0) {
+        if (--this.extensionsCreated === 0) {
           // The last extension got closed so the plugin can be stopped.
           await this.stop();
         }
