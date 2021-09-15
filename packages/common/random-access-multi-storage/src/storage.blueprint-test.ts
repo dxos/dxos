@@ -59,6 +59,60 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       }
     });
 
+    it('open & read & close & open & read & close', async () => {
+      // open
+      const storage = createStorage();
+      const file = storage.createOrOpen('EchoMetadata');
+
+      // read & close
+      const { size } = await pify(file.stat.bind(file))();
+      const data = await pify(file.read.bind(file))(0, size);
+      expect(data).toBeDefined();
+      await pify(file.close.bind(file))();
+
+      // open again
+      const file2 = storage.createOrOpen('EchoMetadata');
+      // read & close
+      const { size: size2 } = await pify(file2.stat.bind(file2))();
+      const data2 = await pify(file2.read.bind(file2))(0, size2);
+      expect(data2).toBeDefined();
+      await pify(file2.close.bind(file2))();
+    });
+
+    it('open & read & close & open & write & close', async () => {
+      // open
+      const storage = createStorage();
+      const file = storage.createOrOpen('EchoMetadata');
+
+      // read & close
+      const { size } = await pify(file.stat.bind(file))();
+      const data = await pify(file.read.bind(file))(0, size);
+      expect(data).toBeDefined();
+      await pify(file.close.bind(file))();
+
+      // open again
+      const file2 = storage.createOrOpen('EchoMetadata');
+      // write & close
+      await writeAndCheck(file2, Buffer.from(randomText()));
+      await pify(file2.close.bind(file2))();
+    });
+
+    it('open & write & close & open & write & close', async () => {
+      // open
+      const storage = createStorage();
+      const file = storage.createOrOpen('EchoMetadata');
+
+      // write & close
+      await writeAndCheck(file, Buffer.from(randomText()));
+      await pify(file.close.bind(file))();
+
+      // open again
+      const file2 = storage.createOrOpen('EchoMetadata');
+      // write & close
+      await writeAndCheck(file2, Buffer.from(randomText()));
+      await pify(file2.close.bind(file2))();
+    });
+
     // TODO(yivlad): Not implemented.
     it.skip('destroy clears all data', async function () {
       const storage = createStorage();
