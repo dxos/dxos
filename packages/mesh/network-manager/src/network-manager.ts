@@ -154,6 +154,7 @@ export class NetworkManager {
         log(err);
       });
     }
+    await this._signal.destroy();
   }
 }
 

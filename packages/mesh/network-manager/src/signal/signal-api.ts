@@ -141,6 +141,9 @@ export class SignalApi {
       console.error('Signal api already reconnecting.');
       return;
     }
+    if (this._state === SignalApi.State.CLOSED) {
+      return;
+    }
 
     this._reconnectIntervalId = setTimeout(() => {
       this._reconnectIntervalId = undefined;

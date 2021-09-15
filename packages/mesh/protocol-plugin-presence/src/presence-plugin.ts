@@ -61,6 +61,7 @@ interface GraphUpdatedEventDetails {
 export class PresencePlugin {
   static EXTENSION_NAME = 'dxos.protocol.presence';
 
+  private extensionsCreated = 0;
   private readonly _peerTimeout: number;
   private readonly _limit = pLimit(1);
   private readonly _codec = schema.getCodecForType('dxos.protocol.presence.Alive');
@@ -130,11 +131,18 @@ export class PresencePlugin {
    */
   createExtension (): Extension {
     this.start();
+    this.extensionsCreated++;
 
     return new Extension(PresencePlugin.EXTENSION_NAME)
       .setInitHandler(async (protocol) => this._addPeer(protocol))
       .setMessageHandler(async (protocol, chunk) => this._peerMessageHandler(protocol, chunk))
-      .setCloseHandler(async (protocol) => this._removePeer(protocol));
+      .setCloseHandler(async (protocol) => {
+        await this._removePeer(protocol);
+        if (--this.extensionsCreated === 0) {
+          // The last extension got closed so the plugin can be stopped.
+          await this.stop();
+        }
+      });
   }
 
   /**

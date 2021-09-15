@@ -11,7 +11,8 @@ import { TextModel } from './text-model';
 
 describe('TextModel', () => {
   test('insert', async () => {
-    const { items: [item1, item2] } = await createModelTestBench({ model: TextModel });
+    const { items: [item1, item2], peers } = await createModelTestBench({ model: TextModel });
+    after(async () => Promise.all(peers.map(peer => peer.close())));
 
     item1.model.insert(0, 'Hello World!');
 
@@ -32,6 +33,7 @@ describe('TextModel', () => {
 
   test('snapshot', async () => {
     const { peers, items: [item1, item2] } = await createModelTestBench({ model: TextModel });
+    after(async () => Promise.all(peers.map(peer => peer.close())));
 
     item1.model.insert(0, 'Hello World!');
 
@@ -45,7 +47,9 @@ describe('TextModel', () => {
   });
 
   test('conflict', async () => {
-    const { items: [item1, item2] } = await createModelTestBench({ model: TextModel });
+    const { items: [item1, item2], peers } = await createModelTestBench({ model: TextModel });
+    after(async () => Promise.all(peers.map(peer => peer.close())));
+
     // item1.model.modelUpdate.on(() => console.log(`m1 ${item1.model.textContent}`));
     // item2.model.modelUpdate.on(() => console.log(`m2 ${item2.model.textContent}`));
 
