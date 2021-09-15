@@ -59,7 +59,7 @@ export class InMemorySignalManager implements SignalManager {
     state.connections.get(msg.remoteId)!.onSignal.emit(msg);
   }
 
-  async destroy() {}
+  async destroy () {}
 }
 
 // This is global state for the in-memory signal manager.

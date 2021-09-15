@@ -9,7 +9,7 @@ import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch, sleep } from '@dxos/async';
+import { latch } from '@dxos/async';
 import {
   createPartyGenesisMessage,
   Keyring, KeyType,
@@ -104,7 +104,7 @@ const setup = async (open = true, createIdentity = true) => {
       const haloParty = await identityManager.createHalo({
         identityDisplayName: identityManager.identity.identityKey!.publicKey.humanize()
       });
-      afterTest(() => haloParty.close())
+      afterTest(() => haloParty.close());
     }
   }
 
@@ -112,6 +112,7 @@ const setup = async (open = true, createIdentity = true) => {
 };
 
 describe('Party manager', () => {
+  // eslint-disable-next-line jest/expect-expect
   test('It exits cleanly', async () => {
     await setup();
   });
@@ -244,6 +245,7 @@ describe('Party manager', () => {
     await partyManager.close();
   });
 
+  // eslint-disable-next-line jest/expect-expect
   test('Creates invitation and exits cleanly', async () => {
     const { partyManager: partyManagerA } = await setup();
 
@@ -251,7 +253,7 @@ describe('Party manager', () => {
     const PIN = Buffer.from('0000');
     const secretProvider: SecretProvider = async () => PIN;
     const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
-    await partyA.invitationManager.createInvitation({ secretProvider, secretValidator }, {expiration: Date.now() + 3000});
+    await partyA.invitationManager.createInvitation({ secretProvider, secretValidator }, { expiration: Date.now() + 3000 });
   });
 
   test('Create invitation', async () => {
