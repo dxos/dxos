@@ -8,7 +8,11 @@ import 'source-map-support/register';
 import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
-describe('Client - persistent', () => {
+import debug from 'debug';
+
+debug.enable('dxos*')
+
+describe.only('Client - persistent', () => {
   it('reset storage', async function () {
     const client = new Client({ storage: { persistent: true } });
     await client.initialize(); // TODO(marik-d): This line does not work.
@@ -17,24 +21,24 @@ describe('Client - persistent', () => {
       username: 'Reset test 1'
     });
 
-    expect(client.echo.queryParties().value.length).toBe(0);
-    await client.echo.createParty();
-    expect(client.echo.queryParties().value.length).toBe(1);
+    // expect(client.echo.queryParties().value.length).toBe(0);
+    // await client.echo.createParty();
+    // expect(client.echo.queryParties().value.length).toBe(1);
 
-    await client.reset();
+    // await client.reset();
 
-    // We create another client instance after reset here because the first one becomes unusable.
-    // In a browser this would be modeled as a page reload.
-    // TODO(marik-d): Second client fails to initialize in firefox.
-    if (browserMocha.context.browser !== 'firefox') {
-      const client2 = new Client({ storage: { persistent: true } });
+    // // We create another client instance after reset here because the first one becomes unusable.
+    // // In a browser this would be modeled as a page reload.
+    // // TODO(marik-d): Second client fails to initialize in firefox.
+    // if (browserMocha.context.browser !== 'firefox') {
+    //   const client2 = new Client({ storage: { persistent: true } });
 
-      await client2.initialize();
-      await client2.halo.createProfile({
-        ...createKeyPair(),
-        username: 'Reset test 2'
-      });
-      expect(client2.echo.queryParties().value.length).toBe(0);
-    }
-  }).timeout(10_000).retries(2);
+    //   await client2.initialize();
+    //   await client2.halo.createProfile({
+    //     ...createKeyPair(),
+    //     username: 'Reset test 2'
+    //   });
+    //   expect(client2.echo.queryParties().value.length).toBe(0);
+    // }
+  }).timeout(10_000);
 });

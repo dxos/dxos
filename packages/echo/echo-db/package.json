@@ -21,7 +21,8 @@
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test"
+    "test": "toolchain test",
+    "test:browser": "browser-mocha '**/*.browser-test.ts' --checkLeaks=false --browser=chromium"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -55,7 +56,9 @@
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2",
     "lodash": "4.17.21",
-    "memdown": "^5.1.0"
+    "memdown": "^5.1.0",
+    "@dxos/browser-mocha": "workspace:*",
+    "mocha": "~8.4.0"
   },
   "publishConfig": {
     "access": "public"
