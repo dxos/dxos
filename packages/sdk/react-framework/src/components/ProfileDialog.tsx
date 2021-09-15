@@ -26,7 +26,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 interface IRegister{
-  username: string;
+  username?: string;
 }
 
 export interface IProfileDialog {
@@ -40,6 +40,10 @@ const ProfileDialog = ({ open, onClose } :IProfileDialog) => {
 
   const handleUpdate = () => {
     onClose({ username });
+  };
+
+  const handleClose = () => {
+    onClose({});
   };
 
   return (
@@ -68,6 +72,12 @@ const ProfileDialog = ({ open, onClose } :IProfileDialog) => {
         />
       </DialogContent>
       <DialogActions>
+        <Button
+          onClick={handleClose}
+          color="secondary"
+        >
+          Cancel
+        </Button>
         <Button
           color="primary"
           disabled={!username}
