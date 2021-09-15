@@ -54,6 +54,7 @@
     "access": "public"
   },
   "toolchain": {
+    "forceCloseTests": true,
     "testingFramework": "mocha",
     "additionalTestSteps": [
       "test:browser"
