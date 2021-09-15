@@ -229,6 +229,8 @@ export class ECHO {
     await this._partyManager.close();
 
     await this._feedStore.close();
+
+    await this.networkManager.destroy();
   }
 
   /**

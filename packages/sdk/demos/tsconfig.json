@@ -31,9 +31,6 @@
       "path": "../client"
     },
     {
-      "path": "../../halo/credentials"
-    },
-    {
       "path": "../../common/crypto"
     },
     {

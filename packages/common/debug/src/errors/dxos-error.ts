@@ -1,12 +1,12 @@
+//
+// Copyright 2021 DXOS.org
+//
+
 /**
  * Error class to be used in the public API.
  *
  * @param code Error code should be formatted in SCREAMING_SNAKE_CASE.
  */
-//
-// Copyright 2021 DXOS.org
-//
-
 export class DXOSError extends Error {
   constructor (
     readonly code: string,

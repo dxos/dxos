@@ -30,6 +30,7 @@ interface Peer {
 export class BotPlugin extends EventEmitter {
   static EXTENSION_NAME = 'dxos.protocol.bot';
 
+  private extensionsCreated = 0;
   private readonly _peerId: Buffer;
 
   private readonly _peers = new Map<string, any /* Protocol */>();
@@ -109,6 +110,7 @@ export class BotPlugin extends EventEmitter {
    */
   createExtension (timeout = DEFAULT_TIMEOUT) {
     this._broadcast.open();
+    this.extensionsCreated++;
 
     return new Extension(BotPlugin.EXTENSION_NAME, { timeout })
       .setInitHandler(async protocol => {
@@ -124,6 +126,10 @@ export class BotPlugin extends EventEmitter {
       .setMessageHandler(this._commandHandler)
       .setCloseHandler(async protocol => {
         this._removePeer(protocol);
+        if (--this.extensionsCreated === 0) {
+          // The last extension got closed so the plugin can be stopped.
+          await this.stop();
+        }
       });
   }
 
@@ -187,5 +193,9 @@ export class BotPlugin extends EventEmitter {
 
     this._peers.delete(peerId);
     this.emit('peer:exited', peerId);
+  }
+
+  async stop () {
+    await this._broadcast.close();
   }
 }

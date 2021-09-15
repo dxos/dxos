@@ -35,6 +35,7 @@ Now let's go to our `src/components/Root.js` file and add the code to actually c
 
 ```jsx:title=src/components/Root.js
 import { useClient, useProfile } from '@dxos/react-client';
+import { ProfileDialog } from '@dxos/react-framework';
 
 const Root = () => {
   const client = useClient();
@@ -59,5 +60,7 @@ const Root = () => {
 See your app again, you should now see:
 
 ![Tasks App - Create Profile](images/introduction-00.png)
+
+> If you see already created profile but not the dialog itself you can use your storage clearing extension to clear all data from the previous step.
 
 Complete with a profile name of your choice and submit the form.

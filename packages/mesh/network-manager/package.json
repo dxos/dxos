@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "2.12.18",
+  "version": "2.12.19",
   "description": "Network Manager",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -25,14 +25,14 @@
     "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/simple-peer": "^9.6.1",
+    "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
     "assert": "^2.0.0",
     "debug": "^4.1.1",
     "isomorphic-ws": "^4.0.1",
     "nanomessage-rpc": "^3.0.0",
-    "simple-peer": "^9.9.3",
-    "wrtc": "^0.4.6",
+    "simple-peer": "9.11.0",
+    "wrtc": "^0.4.7",
     "ws": "^7.4.4",
     "xor-distance": "^2.0.0"
   },
@@ -54,6 +54,7 @@
     "access": "public"
   },
   "toolchain": {
+    "forceCloseTests": true,
     "testingFramework": "mocha",
     "additionalTestSteps": [
       "test:browser"

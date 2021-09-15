@@ -29,9 +29,6 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../halo/credentials"
-    },
-    {
       "path": "../../common/crypto"
     },
     {

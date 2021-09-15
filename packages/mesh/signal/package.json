@@ -1,6 +1,6 @@
 {
   "name": "@dxos/signal",
-  "version": "2.12.18",
+  "version": "2.12.19",
   "description": "DxOS signal server.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
@@ -79,7 +79,7 @@
     "graphology-types": "^0.19.2",
     "jest": "^26.6.3",
     "typescript": "^4.3.5",
-    "wrtc": "^0.4.6"
+    "wrtc": "^0.4.7"
   },
   "publishConfig": {
     "access": "public"

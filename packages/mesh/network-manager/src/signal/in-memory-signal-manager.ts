@@ -58,6 +58,8 @@ export class InMemorySignalManager implements SignalManager {
     assert(state.connections.get(msg.remoteId), 'Peer not connected');
     state.connections.get(msg.remoteId)!.onSignal.emit(msg);
   }
+
+  async destroy () {}
 }
 
 // This is global state for the in-memory signal manager.

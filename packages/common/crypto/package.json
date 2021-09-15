@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto",
-  "version": "2.12.18",
+  "version": "2.12.19",
   "description": "Basic crypto key utils",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -17,10 +17,10 @@
     "lint": "toolchain lint"
   },
   "dependencies": {
+    "bip39": "^3.0.2",
     "crypto-js": "^3.1.9-1",
     "humanhash": "^1.0.4",
-    "hypercore-crypto": "^2.3.0",
-    "bip39": "^3.0.2"
+    "hypercore-crypto": "^2.3.0"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

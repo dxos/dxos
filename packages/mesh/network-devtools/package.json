@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-devtools",
-  "version": "2.12.18",
+  "version": "2.12.19",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
@@ -31,17 +31,17 @@
     "@storybook/core-events": "^6.3.4",
     "@storybook/react": "^6.3.4",
     "@storybook/theming": "^6.3.4",
+    "@types/react-router": "~5.1.16",
+    "@types/react-router-dom": "~5.1.7",
     "fork-ts-checker-webpack-plugin": "~6.2.5",
     "react": "^16.14.0",
     "react-docgen-typescript-loader": "^3.7.2",
     "react-dom": "^16.14.0",
+    "react-router": "~5.2.1",
+    "react-router-dom": "^5.1.2",
     "ts-loader": "~8.1.0",
     "typescript": "^4.3.5",
-    "webpack": "4.44.2",
-    "react-router": "~5.2.1",
-    "@types/react-router": "~5.1.16",
-    "@types/react-router-dom": "~5.1.7",
-    "react-router-dom": "^5.1.2"
+    "webpack": "4.44.2"
   },
   "peerDependencies": {
     "react": "*"

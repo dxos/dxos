@@ -39,6 +39,7 @@ export const BOT_STORAGE = '/data';
 export class Bot extends EventEmitter {
   private readonly _parties = new Set();
 
+  private _heartBeat: NodeJS.Timeout | null = null;
   private readonly _uid: string;
   private readonly _persistent: boolean;
   private readonly _restarted: boolean;
@@ -123,7 +124,11 @@ export class Bot extends EventEmitter {
   }
 
   async stop () {
+    if (this._heartBeat !== null) {
+      clearTimeout(this._heartBeat);
+    }
     await this._leaveControlSwarm?.();
+    await this.client?.destroy();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -227,7 +232,10 @@ export class Bot extends EventEmitter {
   }
 
   private async _startHeartbeat () {
-    setInterval(() => {
+    if (this._heartBeat !== null) {
+      return;
+    }
+    this._heartBeat = setInterval(() => {
       const used: any = process.memoryUsage();
       for (const key in used) {
         log(`${key} ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);

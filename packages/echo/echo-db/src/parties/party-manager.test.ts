@@ -17,16 +17,15 @@ import {
   SecretValidator
 } from '@dxos/credentials';
 import {
-  createKeyPair, PublicKey,
+  createKeyPair, generateSeedPhrase,
+  keyPairFromSeedPhrase, PublicKey,
   randomBytes,
   sign,
-  SIGNATURE_LENGTH, verify,
-  generateSeedPhrase,
-  keyPairFromSeedPhrase
+  SIGNATURE_LENGTH, verify
 } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
-import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
+import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -104,9 +103,10 @@ const setup = async (open = true, createIdentity = true) => {
   if (open) {
     await partyManager.open();
     if (createIdentity) {
-      await identityManager.createHalo({
+      const haloParty = await identityManager.createHalo({
         identityDisplayName: identityManager.identity.identityKey!.publicKey.humanize()
       });
+      afterTest(() => haloParty.close());
     }
   }
 
@@ -114,9 +114,13 @@ const setup = async (open = true, createIdentity = true) => {
 };
 
 describe('Party manager', () => {
+  // eslint-disable-next-line jest/expect-expect
+  test('It exits cleanly', async () => {
+    await setup();
+  });
+
   test('Created locally', async () => {
     const { partyManager, identityManager } = await setup();
-    await partyManager.open();
 
     const [update, setUpdated] = latch();
     const unsubscribe = partyManager.update.on((party) => {
@@ -140,7 +144,6 @@ describe('Party manager', () => {
 
   test('Created via sync', async () => {
     const { feedStore, partyManager } = await setup();
-    await partyManager.open();
 
     const [update, setUpdated] = latch();
     const unsubscribe = partyManager.update.on((party) => {
@@ -237,11 +240,20 @@ describe('Party manager', () => {
     await partyManager.close();
   });
 
+  // eslint-disable-next-line jest/expect-expect
+  test('Creates invitation and exits cleanly', async () => {
+    const { partyManager: partyManagerA } = await setup();
+
+    const partyA = await partyManagerA.createParty();
+    const PIN = Buffer.from('0000');
+    const secretProvider: SecretProvider = async () => PIN;
+    const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
+    await partyA.invitationManager.createInvitation({ secretProvider, secretValidator }, { expiration: Date.now() + 3000 });
+  });
+
   test('Create invitation', async () => {
     const { partyManager: partyManagerA } = await setup();
     const { partyManager: partyManagerB } = await setup();
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     const partyA = await partyManagerA.createParty();
     const PIN = Buffer.from('0000');
@@ -252,8 +264,6 @@ describe('Party manager', () => {
     const partyB = await partyManagerB.joinParty(invitationDescriptor, secretProvider);
     expect(partyB).toBeDefined();
 
-    // TODO(burdon): Adding this causes the worker process to hang AND partyManger.close to throw.
-    /*
     const [updated, onUpdate] = latch();
     partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
       .update.on((items) => {
@@ -265,21 +275,15 @@ describe('Party manager', () => {
           }
         }
       });
-    */
 
     const itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' });
     log(`A created ${itemA.id}`);
-    // await updated;
-
-    // await partyManagerA.close();
-    // await partyManagerB.close();
+    await updated;
   });
 
   test('Join a party - PIN', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     // Create the Party.
     expect(partyManagerA.parties).toHaveLength(0);
@@ -352,16 +356,11 @@ describe('Party manager', () => {
     }
 
     expect(inviterOnFinishCalled).toBeTruthy();
-
-    // await partyManagerA.close();
-    // await partyManagerB.close();
   });
 
   test('Join a party - signature', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     // This would typically be a keypair associated with BotFactory.
     const keyPair = createKeyPair();
@@ -435,10 +434,6 @@ describe('Party manager', () => {
         }
       }
     }
-
-    // TODO(burdon): Clean-up.
-    // await partyManagerA.close();
-    // await partyManagerB.close();
   });
 
   test('Join a party - Offline', async () => {
@@ -446,9 +441,6 @@ describe('Party manager', () => {
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
     assert(identityManagerA.identity.identityKey);
     assert(identityManagerB.identity.identityKey);
-
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     // Create the Party.
     expect(partyManagerA.parties).toHaveLength(0);

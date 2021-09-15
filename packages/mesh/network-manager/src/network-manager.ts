@@ -148,12 +148,13 @@ export class NetworkManager {
   }
 
   async destroy () {
-    for (const swarm of this._swarms.values()) {
-      await swarm.destroy().catch(err => {
-        log('Failed to destroy swarm');
+    for (const topic of this._swarms.keys()) {
+      await this.leaveProtocolSwarm(topic).catch(err => {
+        log(`Failed to leave swarm ${topic} on NetworkManager.destroy}`);
         log(err);
       });
     }
+    await this._signal.destroy();
   }
 }
 
