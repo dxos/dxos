@@ -5,6 +5,7 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "private": true,
   "bin": {
     "build-protobuf": "./bin/main.js"
   },
@@ -37,6 +38,9 @@
     "read-pkg": "^5.2.0",
     "ts-morph": "~10.0.2"
   },
+  "workspaces": [
+    "../"
+  ],
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/eslint-plugin": "~1.0.14",
