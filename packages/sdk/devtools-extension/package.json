@@ -33,9 +33,10 @@
     "react": "^16.14.0",
     "react-copy-to-clipboard": "~5.0.3",
     "react-dom": "^16.14.0",
-    "webextension-polyfill-ts": "~0.25.0"
+    "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {
+    "@types/webextension-polyfill": "^0.8.0",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/chrome": "^0.0.125",
     "@types/react": "^16.14.0",

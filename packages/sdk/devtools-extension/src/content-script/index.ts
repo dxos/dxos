@@ -3,7 +3,7 @@
 //
 
 import Bridge from 'crx-bridge';
-import { browser } from 'webextension-polyfill-ts';
+import browser from 'webextension-polyfill';
 
 Bridge.setNamespace('dxos.devtools');
 Bridge.allowWindowMessaging('dxos.devtools');

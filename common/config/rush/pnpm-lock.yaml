@@ -1547,45 +1547,20 @@ importers:
       react: 16.14.0
       react-copy-to-clipboard: 5.0.3_react@16.14.0
       react-dom: 16.14.0_react@16.14.0
-      webextension-polyfill-ts: 0.25.0
+      webextension-polyfill: 0.8.0
     devDependencies:
-      '@babel/cli': 7.13.16_@babel+core@7.13.16
-      '@babel/core': 7.13.16
-      '@babel/plugin-proposal-class-properties': 7.13.0_@babel+core@7.13.16
-      '@babel/plugin-proposal-export-default-from': 7.12.13_@babel+core@7.13.16
-      '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
-      '@babel/preset-env': 7.14.2_@babel+core@7.13.16
-      '@babel/preset-react': 7.9.4_@babel+core@7.13.16
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/chrome': 0.0.125
       '@types/react': 16.14.6
       '@types/react-dom': 17.0.5
-      babel-jest: 26.6.3_@babel+core@7.13.16
-      babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
-      babel-plugin-add-module-exports: 1.0.4
+      '@types/webextension-polyfill': 0.8.0
       chalk: 4.1.1
       copy: 0.3.2
-      copy-webpack-plugin: 6.4.1_webpack@4.44.2
       crx: 5.0.1
       esbuild: 0.11.23
-      html-webpack-plugin: 4.5.2_webpack@4.44.2
-      jest: 26.6.3
-      moment-locales-webpack-plugin: 1.2.0_moment@2.29.1+webpack@4.44.2
-      raw-loader: 4.0.2_webpack@4.44.2
       rmdir: 1.2.0
-      ts-loader: 8.1.0_typescript@4.3.5+webpack@4.44.2
-      typescript: 4.3.5
-      webpack: 4.44.2_webpack-cli@4.7.2
-      webpack-cli: 4.7.2_webpack@4.44.2
     specifiers:
-      '@babel/cli': ^7.0.0
-      '@babel/core': ~7.13.15
-      '@babel/plugin-proposal-class-properties': ^7.12.1
-      '@babel/plugin-proposal-export-default-from': ^7.2.0
-      '@babel/plugin-transform-runtime': ^7.11.5
-      '@babel/preset-env': ^7.12.7
-      '@babel/preset-react': 7.9.4
       '@babel/runtime': ^7.9.6
       '@dxos/client': workspace:*
       '@dxos/credentials': workspace:*
@@ -1602,31 +1577,20 @@ importers:
       '@types/chrome': ^0.0.125
       '@types/react': ^16.14.0
       '@types/react-dom': ^17.0.2
-      babel-jest: ^26.6.0
-      babel-loader: 8.1.0
-      babel-plugin-add-module-exports: ^1.0.4
+      '@types/webextension-polyfill': ^0.8.0
       chalk: ^4.1.0
       clsx: ^1.1.0
       color-hash: ^1.0.3
       copy: ~0.3.2
-      copy-webpack-plugin: ^6.0.1
       crx: ^5.0.1
       crx-bridge: ^2.1.0
       esbuild: ^0.11.23
-      html-webpack-plugin: ^4.3.0
-      jest: ^26.6.3
       moment: ^2.24.0
-      moment-locales-webpack-plugin: ^1.2.0
-      raw-loader: ^4.0.2
       react: ^16.14.0
       react-copy-to-clipboard: ~5.0.3
       react-dom: ^16.14.0
       rmdir: ~1.2.0
-      ts-loader: ~8.1.0
-      typescript: ^4.3.5
-      webextension-polyfill-ts: ~0.25.0
-      webpack: 4.44.2
-      webpack-cli: ^4.7.0
+      webextension-polyfill: ^0.8.0
   ../../packages/sdk/react-client:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -7780,6 +7744,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-Y2mHTRAbqfFkpjldbkHGY8JIzRN6XqYRliG8/24FcHm2D2PwW24fl5xMRTVGdrb7iMrwCaIEbLWerGIkXuFWVg==
+  /@types/webextension-polyfill/0.8.0:
+    dev: true
+    resolution:
+      integrity: sha512-usmQx2snpNkVl2VoOGZCdrPnfHL+CjuSFy84ZdTwQ2b2cvyygF/zGW5YI6Zywk+bfq9zmYpORO9lmdN7DknpRw==
   /@types/webpack-env/1.16.0:
     dev: true
     resolution:
@@ -8275,18 +8243,6 @@ packages:
     dependencies:
       webpack-cli: 4.7.2_b24347012da62a72aee59d51298aa452
       webpack-dev-server: 3.11.2_webpack-cli@4.7.2+webpack@4.44.2
-    dev: true
-    peerDependencies:
-      webpack-cli: 4.x.x
-      webpack-dev-server: '*'
-    peerDependenciesMeta:
-      webpack-dev-server:
-        optional: true
-    resolution:
-      integrity: sha512-4vSVUiOPJLmr45S8rMGy7WDvpWxfFxfP/Qx/cxZFCfvoypTYpPPL1X8VIZMe0WTA+Jr7blUxwUSEZNkjoMTgSw==
-  /@webpack-cli/serve/1.5.1_webpack-cli@4.7.2:
-    dependencies:
-      webpack-cli: 4.7.2_webpack@4.44.2
     dev: true
     peerDependencies:
       webpack-cli: 4.x.x
@@ -10898,27 +10854,6 @@ packages:
       toggle-selection: 1.0.6
     resolution:
       integrity: sha512-i13qo6kIHTTpCm8/Wup+0b1mVWETvu2kIMzKoK8FpkLkFxlt0znUAHcMzox+T8sPlqtZXq3CulEjQHsYiGFJUw==
-  /copy-webpack-plugin/6.4.1_webpack@4.44.2:
-    dependencies:
-      cacache: 15.0.6
-      fast-glob: 3.2.5
-      find-cache-dir: 3.3.1
-      glob-parent: 5.1.2
-      globby: 11.0.3
-      loader-utils: 2.0.0
-      normalize-path: 3.0.0
-      p-limit: 3.1.0
-      schema-utils: 3.0.0
-      serialize-javascript: 5.0.1
-      webpack: 4.44.2_webpack-cli@4.7.2
-      webpack-sources: 1.4.3
-    dev: true
-    engines:
-      node: '>= 10.13.0'
-    peerDependencies:
-      webpack: ^4.37.0 || ^5.0.0
-    resolution:
-      integrity: sha512-MXyPCjdPVx5iiWyl40Va3JGh27bKzOTNY3NjUTrosD2q7dR/cLD0013uqJ3BpFbUjyONINjb6qI7nDIJujrMbA==
   /copy/0.3.2:
     dependencies:
       async-each: 1.0.3
@@ -18570,17 +18505,6 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-ak5MIFWb0WwMBIIqw/cKlhFj+0huA7LjAYrv5bLSdluG0+aBRl3ZtST+6Ix4UA5qZ6cwhMsX+m9QtXGIs6CdVA==
-  /moment-locales-webpack-plugin/1.2.0_moment@2.29.1+webpack@4.44.2:
-    dependencies:
-      lodash.difference: 4.5.0
-      moment: 2.29.1
-      webpack: 4.44.2_webpack-cli@4.7.2
-    dev: true
-    peerDependencies:
-      moment: ^2.8.0
-      webpack: ^1 || ^2 || ^3 || ^4 || ^5
-    resolution:
-      integrity: sha512-QAi5v0OlPUP7GXviKMtxnpBAo8WmTHrUNN7iciAhNOEAd9evCOvuN0g1N7ThIg3q11GLCkjY1zQ2saRcf/43nQ==
   /moment/2.29.1:
     resolution:
       integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
@@ -21246,7 +21170,7 @@ packages:
     dependencies:
       loader-utils: 2.0.0
       schema-utils: 3.0.0
-      webpack: 4.44.2_webpack-cli@4.7.2
+      webpack: 4.44.2
     dev: true
     engines:
       node: '>= 10.13.0'
@@ -24925,11 +24849,17 @@ packages:
   /webextension-polyfill-ts/0.25.0:
     dependencies:
       webextension-polyfill: 0.7.0
+    dev: true
     resolution:
       integrity: sha512-ikQhwwHYkpBu00pFaUzIKY26I6L87DeRI+Q6jBT1daZUNuu8dSrg5U9l/ZbqdaQ1M/TTSPKeAa3kolP5liuedw==
   /webextension-polyfill/0.7.0:
+    dev: true
     resolution:
       integrity: sha512-su48BkMLxqzTTvPSE1eWxKToPS2Tv5DLGxKexLEVpwFd6Po6N8hhSLIvG6acPAg7qERoEaDL+Y5HQJeJeml5Aw==
+  /webextension-polyfill/0.8.0:
+    dev: false
+    resolution:
+      integrity: sha512-a19+DzlT6Kp9/UI+mF9XQopeZ+n2ussjhxHJ4/pmIGge9ijCDz7Gn93mNnjpZAk95T4Tae8iHZ6sSf869txqiQ==
   /webidl-conversions/4.0.2:
     optional: true
     resolution:
@@ -24960,43 +24890,6 @@ packages:
       v8-compile-cache: 2.3.0
       webpack: 4.44.2_webpack-cli@4.7.2
       webpack-dev-server: 3.11.2_webpack-cli@4.7.2+webpack@4.44.2
-      webpack-merge: 5.8.0
-    dev: true
-    engines:
-      node: '>=10.13.0'
-    hasBin: true
-    peerDependencies:
-      '@webpack-cli/generators': '*'
-      '@webpack-cli/migrate': '*'
-      webpack: 4.x.x || 5.x.x
-      webpack-bundle-analyzer: '*'
-      webpack-dev-server: '*'
-    peerDependenciesMeta:
-      '@webpack-cli/generators':
-        optional: true
-      '@webpack-cli/migrate':
-        optional: true
-      webpack-bundle-analyzer:
-        optional: true
-      webpack-dev-server:
-        optional: true
-    resolution:
-      integrity: sha512-mEoLmnmOIZQNiRl0ebnjzQ74Hk0iKS5SiEEnpq3dRezoyR3yPaeQZCMCe+db4524pj1Pd5ghZXjT41KLzIhSLw==
-  /webpack-cli/4.7.2_webpack@4.44.2:
-    dependencies:
-      '@discoveryjs/json-ext': 0.5.3
-      '@webpack-cli/configtest': 1.0.4_webpack-cli@4.7.2+webpack@4.44.2
-      '@webpack-cli/info': 1.3.0_webpack-cli@4.7.2
-      '@webpack-cli/serve': 1.5.1_webpack-cli@4.7.2
-      colorette: 1.2.2
-      commander: 7.2.0
-      execa: 5.0.0
-      fastest-levenshtein: 1.0.12
-      import-local: 3.0.2
-      interpret: 2.2.0
-      rechoir: 0.7.0
-      v8-compile-cache: 2.3.0
-      webpack: 4.44.2_webpack-cli@4.7.2
       webpack-merge: 5.8.0
     dev: true
     engines:
