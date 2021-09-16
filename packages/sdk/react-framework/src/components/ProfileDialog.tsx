@@ -88,7 +88,7 @@ const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
         >
           Create
         </Button>
-      </DialogActions> 
+      </DialogActions>
     </Dialog>
   );
 };
