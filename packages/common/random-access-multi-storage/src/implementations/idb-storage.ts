@@ -11,7 +11,13 @@ import { StorageType, STORAGE_IDB } from '../interfaces/storage-types';
 import { AbstractStorage } from './abstract-storage';
 
 interface FileRegistryRecord {
+  /**
+   * Handle for open files with patched closed function which doesn't actually close the file.
+   */
   file: IFile,
+  /**
+   * The actual file close funciton that is supposed to be called at the end of the storage lifecycle.
+   */
   close: () => Promise<void>;
 }
 
@@ -30,6 +36,7 @@ export class IDbStorage extends AbstractStorage {
   }
 
   protected override _create (filename: string) {
+    // Looking up the file in the regirty
     if (this._fileRegistry.has(filename)) {
       const record = this._fileRegistry.get(filename);
       assert(record, 'File registry is corrupt');
@@ -39,6 +46,8 @@ export class IDbStorage extends AbstractStorage {
 
     // Monkeypatch close function.
     const defaultClose = pify(file.close.bind(file));
+    // Do not close the file - put it in the registry and reuse later.
+    // Caching file is necessary because in some cases IndexedDB dosen't handle reopening files well - so instead of reopening we can get already opened handle from the registry.
     file.close = (cb: any) => {
       if (cb) {
         cb(null);
@@ -51,6 +60,7 @@ export class IDbStorage extends AbstractStorage {
   }
 
   protected override async _destroy () {
+    // Closing all files in the registry.
     await Promise.all(Array.from(this._fileRegistry.values()).map(({ close }) => close()));
 
     // eslint-disable-next-line no-undef
