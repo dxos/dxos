@@ -85,13 +85,14 @@ export class Client {
 
     this._config = { storage, swarm, wns, snapshots, snapshotInterval, ...config };
 
-    const { feedStorage, keyStorage, snapshotStorage } = createStorageObjects(storage, snapshots);
+    const { feedStorage, keyStorage, snapshotStorage, metadataStorage } = createStorageObjects(storage, snapshots);
 
     // TODO(burdon): Extract constants.
     this._echo = new ECHO({
       feedStorage,
       keyStorage,
       snapshotStorage,
+      metadataStorage,
       networkManagerOptions: {
         signal: swarm?.signal ? Array.isArray(swarm.signal) ? swarm.signal : [swarm.signal] : undefined,
         ice: swarm?.ice
@@ -371,7 +372,8 @@ function createStorageObjects (config: ClientConfig['storage'], snapshotsEnabled
   return {
     feedStorage: createStorage(`${path}/feeds`, persistent ? type : 'ram'),
     keyStorage: createKeyStorage(`${path}/keystore`, persistent ? keyStorage : 'ram'),
-    snapshotStorage: createStorage(`${path}/snapshots`, persistent && snapshotsEnabled ? type : 'ram')
+    snapshotStorage: createStorage(`${path}/snapshots`, persistent && snapshotsEnabled ? type : 'ram'),
+    metadataStorage: createStorage(`${path}/metadata`, persistent ? type : 'ram')
   };
 }
 

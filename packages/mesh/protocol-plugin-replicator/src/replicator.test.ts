@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import bufferJson from 'buffer-json-encoding';
 import crypto from 'crypto';
 import eos from 'end-of-stream';
 import multi from 'multi-read-stream';
@@ -10,10 +9,11 @@ import pify from 'pify';
 import waitForExpect from 'wait-for-expect';
 
 import { createKeyPair, discoveryKey, PublicKey } from '@dxos/crypto';
-import { createBatchStream, FeedDescriptor, FeedStore, HypercoreFeed } from '@dxos/feed-store';
+import { createBatchStream, FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { boolGuard } from '@dxos/util';
 
 import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
 import { Replicator, ReplicatorMiddleware } from './replicator';
@@ -22,9 +22,6 @@ jest.setTimeout(30000);
 
 const noop = () => {};
 
-// TODO(yivlad): Move to utils
-const notNull = <T>(value: T | null | undefined): value is T => Boolean(value);
-
 interface MiddlewareOptions {
   feedStore: FeedStore,
   onUnsubscribe?: (feedStore: FeedStore) => void,
@@ -32,21 +29,19 @@ interface MiddlewareOptions {
 }
 
 const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: MiddlewareOptions): ReplicatorMiddleware => {
-  const encodeFeed = (feed: HypercoreFeed, descriptor?: FeedDescriptor): FeedData => ({
+  const encodeFeed = (feed: HypercoreFeed): FeedData => ({
     key: feed.key,
-    discoveryKey: feed.discoveryKey,
-    metadata: descriptor?.metadata && bufferJson.encode(descriptor.metadata)
+    discoveryKey: feed.discoveryKey
   });
 
-  const decodeFeed = (feed: FeedData): FeedData & { metadata: any } => ({
+  const decodeFeed = (feed: FeedData): FeedData => ({
     key: feed.key,
-    discoveryKey: feed.discoveryKey,
-    metadata: feed.metadata && bufferJson.decode(feed.metadata)
+    discoveryKey: feed.discoveryKey
   });
 
   return {
     subscribe (next) {
-      const unsubscribe = feedStore.feedOpenedEvent.on((descriptor) => next([encodeFeed(descriptor.feed!, descriptor)]));
+      const unsubscribe = feedStore.feedOpenedEvent.on((descriptor) => next([encodeFeed(descriptor.feed!)]));
       return () => {
         onUnsubscribe(feedStore);
         unsubscribe();
@@ -55,15 +50,12 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
     async load () {
       const feeds = onLoad(feedStore);
       return feeds.map(
-        feed => encodeFeed(
-          feed,
-          feedStore.getDescriptorByDiscoveryKey(feed.discoveryKey as any)
-        )
+        feed => encodeFeed(feed)
       );
     },
     async replicate (feeds: FeedData[]) {
       const hypercoreFeeds = await Promise.all(feeds.map((feed) => {
-        const { key, discoveryKey, metadata } = decodeFeed(feed);
+        const { key, discoveryKey } = decodeFeed(feed);
 
         if (key) {
           const feed = feedStore.getOpenFeed(d => d.key.equals(key));
@@ -72,7 +64,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
             return feed;
           }
           const publicKey = PublicKey.from(key);
-          return feedStore.createReadOnlyFeed({ key: publicKey, metadata });
+          return feedStore.createReadOnlyFeed({ key: publicKey });
         }
 
         if (discoveryKey) {
@@ -82,7 +74,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
         return null;
       }));
 
-      return hypercoreFeeds.filter(notNull);
+      return hypercoreFeeds.filter(boolGuard);
     }
   };
 };
@@ -93,8 +85,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const { publicKey, secretKey } = createKeyPair();
   const feed = await feedStore.createReadWriteFeed({
     key: PublicKey.from(publicKey),
-    secretKey,
-    metadata: { topic: topic.toString('hex') }
+    secretKey
   });
   const append = pify(feed.append.bind(feed));
   let closed = false;
@@ -175,13 +166,6 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
 
       expect(result).toBe(true);
     }, 4500, 1000);
-
-    let metadataOk = true;
-    for (const peer of network.peers) {
-      metadataOk = metadataOk && !peer.getDescriptors().find((d: FeedDescriptor) => !d.metadata || !d.metadata.topic);
-    }
-
-    expect(metadataOk).toBe(true);
   });
 
   test('message synchronization', async () => {

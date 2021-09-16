@@ -43,22 +43,16 @@ describe('FeedDescriptor', () => {
   test('Create custom options', () => {
     const { publicKey, secretKey } = createKeyPair();
 
-    const metadata = {
-      subject: 'books'
-    };
-
     fd = new FeedDescriptor({
       storage: createStorage('', STORAGE_RAM),
       key: PublicKey.from(publicKey),
       secretKey,
-      valueEncoding: 'json',
-      metadata
+      valueEncoding: 'json'
     });
 
     expect(fd).toBeInstanceOf(FeedDescriptor);
     expect(fd.key).toBeInstanceOf(PublicKey);
     expect(fd.secretKey).toBeInstanceOf(Buffer);
-    expect(fd.metadata).toEqual(metadata);
     expect(fd.valueEncoding).toBe('json');
   });
 
