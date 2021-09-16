@@ -64,6 +64,8 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
       setError('Invalid invitation code.');
     } else if (error.includes('ERR_GREET_INVALID_INVITATION')) {
       setError('Invitation not authorized.');
+    } else if (error.includes('Time out')) {
+      setError('Timed out.');
     } else {
       setError(error);
     }
@@ -91,8 +93,12 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
         );
         await party.open();
         handleDone();
-      } catch (error) {
-        handleInvitationError(JSON.stringify(error));
+      } catch (error: any) {
+        if (JSON.stringify(error) === '{}') {
+          handleInvitationError(JSON.stringify(error.message));
+        } else {
+          handleInvitationError(JSON.stringify(error));
+        }
       }
     } else {
       redeemCode(invitationCode);
