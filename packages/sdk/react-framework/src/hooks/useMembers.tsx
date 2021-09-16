@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Party, PartyMember } from '@dxos/echo-db';
 import { useEffect, useState } from 'react';
+
+import { Party, PartyMember } from '@dxos/echo-db';
 
 export const useMembers = (party: Party) => {
   const [members, setMembers] = useState<PartyMember[]>([]);

@@ -20,7 +20,7 @@ export class IpfsHelper {
     return cid ? urlJoin(this._ipfsGateway, cid) : this._ipfsGateway;
   }
 
-  async upload (body: any, contentType: string = 'text/plain'): Promise<string> {
+  async upload (body: any, contentType = 'text/plain'): Promise<string> {
     const response: any = await this._fetch({
       method: 'POST',
       mode: 'cors',
@@ -49,7 +49,7 @@ export class IpfsHelper {
     return response.text();
   }
 
-  async _fetch (request: any, cid: string = ''): Promise<{}> {
+  async _fetch (request: any, cid = ''): Promise<{}> {
     let response: any;
     const gateway = this._ipfsGateway;
     try {
