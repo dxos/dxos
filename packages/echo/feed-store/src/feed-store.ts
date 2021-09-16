@@ -6,15 +6,12 @@ import assert from 'assert';
 import defaultHypercore from 'hypercore';
 
 import { synchronized, Event } from '@dxos/async';
-import { PublicKey, PublicKeyLike } from '@dxos/crypto';
+import { PublicKey } from '@dxos/crypto';
 import { IStorage } from '@dxos/random-access-multi-storage';
-import { boolGuard } from '@dxos/util';
 
 import FeedDescriptor from './feed-descriptor';
-import type { HypercoreFeed, Hypercore } from './hypercore-types';
+import type { Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
-
-type DescriptorCallback = (descriptor: FeedDescriptor) => boolean;
 
 export interface CreateDescriptorOptions {
   key: PublicKey,

@@ -14,7 +14,7 @@ import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-mu
 
 import FeedDescriptor from './feed-descriptor';
 
-describe.only('FeedDescriptor', () => {
+describe('FeedDescriptor', () => {
   let fd: FeedDescriptor;
 
   beforeEach(async () => {
