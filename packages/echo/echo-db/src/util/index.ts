@@ -6,4 +6,3 @@ export * from './feed-store-adapter';
 export * from './persistant-ram-storage';
 export * from './testing';
 export * from './testing-factories';
-export * from './index-db';
