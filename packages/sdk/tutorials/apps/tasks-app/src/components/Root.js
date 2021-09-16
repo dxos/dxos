@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { useClient, useProfile } from '@dxos/react-client';
+import { ProfileDialog } from '@dxos/react-framework';
 
 import Main from './Main';
-import ProfileDialog from './ProfileDialog';
 
 /**
  * Root component.
@@ -33,7 +33,7 @@ const Root = () => {
     };
 
     return (
-      <ProfileDialog open={!profile} onClose={handleRegistration} />
+      <ProfileDialog open={!profile} onCreate={handleRegistration} />
     );
   }
 
