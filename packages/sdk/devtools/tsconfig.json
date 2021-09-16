@@ -9,7 +9,7 @@
   },
   "include": [
     "src"
-  ],
+, "../devtools-extension/scripts/build.js"  ],
   "references": [
     {
       "path": "../../halo/credentials"
