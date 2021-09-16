@@ -31,16 +31,16 @@ interface IRegister{
 
 export interface IProfileDialog {
   open: boolean;
-  onClose: ({ username }: IRegister)=>void;
+  onCreate: ({ username }: IRegister)=>void;
   onCancel?: () => void;
 }
 
-const ProfileDialog = ({ open, onClose, onCancel } :IProfileDialog) => {
+const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
   const classes = useStyles();
   const [username, setUsername] = useState('');
 
   const handleUpdate = () => {
-    onClose({ username });
+    onCreate({ username });
   };
 
   const handleCancel = () => {
