@@ -7,10 +7,10 @@ import React from 'react';
 import { Theme } from '@material-ui/core';
 import Avatar from '@material-ui/core/Avatar';
 import Tooltip from '@material-ui/core/Tooltip';
+import { makeStyles, useTheme } from '@material-ui/core/styles';
 import FaceIcon from '@material-ui/icons/Face';
 import ShareIcon from '@material-ui/icons/GroupAdd';
 import { AvatarGroup } from '@material-ui/lab';
-import { makeStyles, useTheme } from '@material-ui/core/styles';
 
 import { humanize } from '@dxos/crypto';
 import { Party, PartyMember } from '@dxos/echo-db';
