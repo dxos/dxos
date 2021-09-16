@@ -8,6 +8,7 @@ import defaultHypercore from 'hypercore';
 import { synchronized, Event } from '@dxos/async';
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { IStorage } from '@dxos/random-access-multi-storage';
+import { boolGuard } from '@dxos/util';
 
 import FeedDescriptor from './feed-descriptor';
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
@@ -17,19 +18,21 @@ type DescriptorCallback = (descriptor: FeedDescriptor) => boolean;
 
 export interface CreateDescriptorOptions {
   key: PublicKey,
-  secretKey?: Buffer,
-  metadata?: any
+  secretKey?: Buffer
 }
 
 export interface CreateReadWriteFeedOptions {
   key: PublicKey,
   secretKey: Buffer
-  metadata?: any
 }
 
 export interface CreateReadOnlyFeedOptions {
   key: PublicKey
-  metadata?: any
+}
+
+export interface KeyRecord {
+  publicKey: PublicKey,
+  secretKey?: Buffer
 }
 
 export interface FeedStoreOptions {
@@ -151,11 +154,10 @@ export class FeedStore {
    * Get the list of opened feeds, with optional filter.
    */
   getOpenFeeds (callback?: DescriptorCallback): HypercoreFeed[] {
-    const notNull = <T>(value: T | null): value is T => Boolean(value);
     return this.getDescriptors()
       .filter(descriptor => descriptor.opened && (!callback || callback(descriptor)))
       .map(descriptor => descriptor.feed)
-      .filter(notNull);
+      .filter(boolGuard);
   }
 
   /**
@@ -244,7 +246,7 @@ export class FeedStore {
    * Factory to create a new FeedDescriptor.
    */
   private _createDescriptor (options: CreateDescriptorOptions) {
-    const { key, secretKey, metadata } = options;
+    const { key, secretKey } = options;
 
     const existing = this.getDescriptors().find(fd => fd.key.equals(key));
     if (existing) {
@@ -256,7 +258,6 @@ export class FeedStore {
       key,
       secretKey,
       valueEncoding: this._valueEncoding,
-      metadata,
       hypercore: this._hypercore
     });
 

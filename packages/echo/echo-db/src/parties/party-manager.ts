@@ -11,12 +11,12 @@ import { KeyHint, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { PartyKey } from '@dxos/echo-protocol';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, boolGuard } from '@dxos/util';
 
 import { IdentityProvider } from '../halo';
 import { SecretProvider, InvitationDescriptor } from '../invitations';
+import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
-import { FeedStoreAdapter } from '../util';
 import { PartyFactory } from './party-factory';
 import { PartyInternal, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './party-internal';
 
@@ -47,7 +47,7 @@ export class PartyManager {
   private _open = false;
 
   constructor (
-    private readonly _feedStore: FeedStoreAdapter,
+    private readonly _metadataStore: MetadataStore,
     private readonly _snapshotStore: SnapshotStore,
     private readonly _identityProvider: IdentityProvider,
     private readonly _partyFactory: PartyFactory
@@ -70,7 +70,7 @@ export class PartyManager {
     }
     this._open = true;
 
-    let partyKeys = this._feedStore.getPartyKeys();
+    let partyKeys = this._metadataStore.parties.map(party => party.key).filter(boolGuard);
 
     const identity = this._identityProvider();
 
@@ -148,6 +148,7 @@ export class PartyManager {
     this._setParty(party);
     await this._recordPartyJoining(party);
     await this._updateContactList(party);
+    await this._metadataStore.addParty(party.key);
     return party;
   }
 
@@ -172,6 +173,7 @@ export class PartyManager {
 
     log(`Adding party partyKey=${partyKey.toHex()} hints=${hints.length}`);
     const party = await this._partyFactory.addParty(partyKey, hints);
+    await this._metadataStore.addParty(party.key);
     this._setParty(party);
     return party;
   }

@@ -40,9 +40,7 @@ async function createDefault () {
 
 async function defaultFeeds (feedStore: FeedStore, keys: Record<string, KeyPair>) : Promise<Record<string, HypercoreFeed>> {
   return Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
-    feed === 'booksFeed'
-      ? [feed, await feedStore.createReadWriteFeed({ key: keyPair.key, secretKey: keyPair.secretKey, metadata: { topic: 'books' } })]
-      : [feed, await feedStore.createReadWriteFeed({ key: keyPair.key, secretKey: keyPair.secretKey })]
+    [feed, await feedStore.createReadWriteFeed({ key: keyPair.key, secretKey: keyPair.secretKey })]
   )));
 }
 
@@ -104,7 +102,6 @@ describe('FeedStore', () => {
 
     const booksFeedDescriptor = feedStore.getDescriptors().find(fd => fd.key.equals(booksFeed.key));
     expect(booksFeedDescriptor).toHaveProperty('key', PublicKey.from(booksFeed.key));
-    expect(booksFeedDescriptor?.metadata).toHaveProperty('topic', 'books');
 
     await append(booksFeed, 'Foundation and Empire');
     await expect(head(booksFeed)).resolves.toBe('Foundation and Empire');

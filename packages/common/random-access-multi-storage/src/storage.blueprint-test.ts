@@ -59,6 +59,37 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
       }
     });
 
+    it('reads from empty file', async function () {
+      const storage = createStorage();
+
+      // TODO(yivlad): doesn't work for node
+      if (storage.type === STORAGE_NODE) {
+        this.skip();
+      }
+      const fileName = randomText();
+      const file = storage.createOrOpen(fileName);
+
+      const { size } = await pify(file.stat.bind(file))();
+      expect(size).toBe(0);
+    });
+
+    it('reopen', async () => {
+      // open
+      const storage = createStorage();
+      const fileName = randomText();
+      const file = storage.createOrOpen(fileName);
+
+      // write & close
+      await writeAndCheck(file, Buffer.from(randomText()));
+      await pify(file.close.bind(file))();
+
+      // open again
+      const file2 = storage.createOrOpen('EchoMetadata');
+      // write & close
+      await writeAndCheck(file2, Buffer.from(randomText()));
+      await pify(file2.close.bind(file2))();
+    });
+
     // TODO(yivlad): Not implemented.
     it.skip('destroy clears all data', async function () {
       const storage = createStorage();
