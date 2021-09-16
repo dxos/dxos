@@ -69,14 +69,13 @@ class ExpectedKeyAuthenticator extends Authenticator {
  * @listens AuthPlugin#authenticated
  */
 const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator, keyring: Keyring, protocolOptions?: ProtocolOptions) => {
-  const topic = partyKey.toHex();
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();
   const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: 'utf8' });
   await feedStore.open();
   const { publicKey, secretKey } = createKeyPair();
-  const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey, metadata: { topic } });
+  const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
   const append = pify(feed.append.bind(feed));
 
   const credentials = Buffer.from(codec.encode(
