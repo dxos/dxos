@@ -48,11 +48,7 @@ export class IDbStorage extends AbstractStorage {
     const defaultClose = pify(file.close.bind(file));
     // Do not close the file - put it in the registry and reuse later.
     // Caching file is necessary because in some cases IndexedDB dosen't handle reopening files well - so instead of reopening we can get already opened handle from the registry.
-    file.close = (cb: any) => {
-      if (cb) {
-        cb(null);
-      }
-    };
+    file.close = (cb: any) => cb?.(null);
 
     this._fileRegistry.set(filename, { file, close: defaultClose });
 
