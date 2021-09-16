@@ -36,8 +36,9 @@ import { HaloFactory, IdentityManager } from '../halo';
 import { autoPartyOpener } from '../halo/party-opener';
 import { OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
+import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
-import { FeedStoreAdapter, messageLogger } from '../util';
+import { createRamStorage, FeedStoreAdapter, messageLogger } from '../util';
 import { Party } from './party';
 import { PartyFactory } from './party-factory';
 import { PARTY_ITEM_TYPE } from './party-internal';
@@ -56,7 +57,8 @@ const log = debug('dxos:echo:parties:party-manager:test');
  */
 const setup = async (open = true, createIdentity = true) => {
   const keyring = new Keyring();
-  const feedStore = FeedStoreAdapter.create(createStorage('', STORAGE_RAM), keyring);
+  const metadataStore = new MetadataStore(createRamStorage());
+  const feedStore = FeedStoreAdapter.create(createStorage('', STORAGE_RAM), keyring, metadataStore);
   await feedStore.open();
 
   let seedPhrase;
@@ -89,7 +91,7 @@ const setup = async (open = true, createIdentity = true) => {
 
   const haloFactory: HaloFactory = new HaloFactory(partyFactory, networkManager, keyring);
   const identityManager = new IdentityManager(keyring, haloFactory);
-  const partyManager = new PartyManager(feedStore, snapshotStore, () => identityManager.identity, partyFactory);
+  const partyManager = new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
   afterTest(() => partyManager.close());
 
   identityManager.ready.once(() => {
@@ -160,8 +162,7 @@ describe('Party manager', () => {
     const { publicKey, secretKey } = createKeyPair();
     const feed = await feedStore.feedStore.createReadWriteFeed({
       key: PublicKey.from(publicKey),
-      secretKey,
-      metadata: { partyKey: partyKey.publicKey }
+      secretKey
     });
     const feedKey = await keyring.addKeyRecord({
       publicKey: PublicKey.from(feed.key),
@@ -185,7 +186,8 @@ describe('Party manager', () => {
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
 
     const keyring = new Keyring();
-    const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, storage);
+    const metadataStore = new MetadataStore(createRamStorage());
+    const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, metadataStore);
 
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     await keyring.createKeyRecord({ type: KeyType.DEVICE });
@@ -197,7 +199,7 @@ describe('Party manager', () => {
     const haloFactory = new HaloFactory(partyFactory, networkManager, keyring);
     const identityManager = new IdentityManager(keyring, haloFactory);
     const partyManager =
-      new PartyManager(feedStoreAdapter, snapshotStore, () => identityManager.identity, partyFactory);
+      new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
 
     await feedStore.open();
 
@@ -211,19 +213,12 @@ describe('Party manager', () => {
     const numParties = 3;
     for (let i = 0; i < numParties; i++) {
       const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+      await metadataStore.addParty(partyKey.publicKey);
 
       // TODO(burdon): Create multiple feeds.
-      const { publicKey, secretKey } = createKeyPair();
-      const feed = await feedStore.createReadWriteFeed({
-        key: PublicKey.from(publicKey),
-        secretKey,
-        metadata: { partyKey: partyKey.publicKey, writable: true }
-      });
-      const feedKey = await keyring.addKeyRecord({
-        publicKey: PublicKey.from(feed.key),
-        secretKey: feed.secretKey,
-        type: KeyType.FEED
-      });
+      const feed = await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
+      const feedKey = keyring.getFullKey(feed.key);
+      assert(feedKey);
 
       const feedStream = createWritableFeedStream(feed);
       feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey) });

@@ -19,6 +19,7 @@ import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer, SecretProvider } from './invitations';
 import { DefaultModel } from './items';
+import { MetadataStore } from './metadata';
 import { OpenProgress, Party, PartyFactory, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
@@ -45,6 +46,11 @@ export interface EchoCreationOptions {
    * Storage used for snapshots. Defaults to in-memory.
    */
   snapshotStorage?: IStorage
+
+  /**
+   * Storage used for snapshots. Defaults to in-memory.
+   */
+  metadataStorage?: IStorage
 
   /**
    * Networking provider. Defaults to in-memory networking.
@@ -90,6 +96,7 @@ export class ECHO {
   private readonly _snapshotStore: SnapshotStore;
   private readonly _partyManager: PartyManager;
   private readonly _subs = new SubscriptionGroup();
+  private readonly _metadataStore: MetadataStore;
 
   /**
    * Creates a new instance of ECHO.
@@ -100,6 +107,7 @@ export class ECHO {
     keyStorage = memdown(),
     feedStorage = createRamStorage(),
     snapshotStorage = createRamStorage(),
+    metadataStorage = createRamStorage(),
     networkManagerOptions,
     snapshots = true,
     snapshotInterval = 100,
@@ -112,6 +120,7 @@ export class ECHO {
 
     this._networkManager = new NetworkManager(networkManagerOptions);
     this._snapshotStore = new SnapshotStore(snapshotStorage);
+    this._metadataStore = new MetadataStore(metadataStorage);
 
     const options = {
       snapshots,
@@ -121,7 +130,7 @@ export class ECHO {
     };
     this._keyring = new Keyring(new KeyStore(keyStorage));
 
-    this._feedStore = FeedStoreAdapter.create(feedStorage, this._keyring);
+    this._feedStore = FeedStoreAdapter.create(feedStorage, this._keyring, this._metadataStore);
 
     const partyFactory = new PartyFactory(
       () => this.halo.identity,
@@ -133,7 +142,7 @@ export class ECHO {
     );
 
     this._partyManager = new PartyManager(
-      this._feedStore,
+      this._metadataStore,
       this._snapshotStore,
       () => this.halo.identity,
       partyFactory
@@ -195,6 +204,7 @@ export class ECHO {
       return;
     }
 
+    await this._metadataStore.load();
     await this._keyring.load();
     await this._feedStore.open();
     await this.halo.open(onProgressCallback);
@@ -246,6 +256,12 @@ export class ECHO {
       await this._snapshotStore.clear();
     } catch (err) {
       log('Error clearing snapshot storage:', err);
+    }
+
+    try {
+      await this._metadataStore.clear();
+    } catch (err) {
+      log('Error clearing metadata storage:', err);
     }
   }
 
