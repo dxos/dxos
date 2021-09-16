@@ -26,15 +26,16 @@ const useStyles = makeStyles(theme => ({
 }));
 
 interface IRegister{
-  username?: string;
+  username: string;
 }
 
 export interface IProfileDialog {
   open: boolean;
   onClose: ({ username }: IRegister)=>void;
+  onCancel?: () => void;
 }
 
-const ProfileDialog = ({ open, onClose } :IProfileDialog) => {
+const ProfileDialog = ({ open, onClose, onCancel } :IProfileDialog) => {
   const classes = useStyles();
   const [username, setUsername] = useState('');
 
@@ -42,8 +43,10 @@ const ProfileDialog = ({ open, onClose } :IProfileDialog) => {
     onClose({ username });
   };
 
-  const handleClose = () => {
-    onClose({});
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
   };
 
   return (
@@ -73,7 +76,7 @@ const ProfileDialog = ({ open, onClose } :IProfileDialog) => {
       </DialogContent>
       <DialogActions>
         <Button
-          onClick={handleClose}
+          onClick={handleCancel}
           color="secondary"
         >
           Cancel
@@ -85,7 +88,7 @@ const ProfileDialog = ({ open, onClose } :IProfileDialog) => {
         >
           Create
         </Button>
-      </DialogActions>
+      </DialogActions> 
     </Dialog>
   );
 };
