@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-framework';
-import ProfileDialog from '../src/components/ProfileDialog';
+import { JsonTreeView, ProfileDialog } from '@dxos/react-framework';
 
 /**
  * Create the user's HALO profile.
@@ -24,7 +23,7 @@ export const Stage2 = () => {
 
     return (
       <>
-        <ProfileDialog open={!profile} onClose={handleCreateProfile} />
+        <ProfileDialog open={!profile} onCreate={handleCreateProfile} />
         <JsonTreeView data={profile} />
       </>
     );

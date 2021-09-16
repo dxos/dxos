@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Drawer } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
-import ProfileDialog from '../src/components/ProfileDialog';
+import { ProfileDialog } from '@dxos/react-framework';
 import PartyList from '../src/components/PartyList';
 import TaskList from '../src/components/TaskList';
 
@@ -49,7 +49,7 @@ export const Stage4 = () => {
 
     if (!profile) {
       return (
-        <ProfileDialog open={!profile} onClose={handleCreateProfile} />
+        <ProfileDialog open={!profile} onCreate={handleCreateProfile} />
       );
     }
 

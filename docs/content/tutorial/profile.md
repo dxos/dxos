@@ -48,7 +48,7 @@ const Root = () => {
       }
     };
 
-    return <ProfileDialog open onClose={handleRegistration} />;
+    return <ProfileDialog open onCreate={handleRegistration} />;
   }
 
   return JSON.stringify(profile);
