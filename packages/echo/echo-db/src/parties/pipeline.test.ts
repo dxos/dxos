@@ -9,7 +9,7 @@ import { it as test } from 'mocha';
 import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
-import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream, Timeframe } from '@dxos/echo-protocol';
+import { codec, createFeedWriter, FeedSelector, FeedStoreIterator, IEchoStream, Timeframe } from '@dxos/echo-protocol';
 import { FeedStore, HypercoreFeed, createWritableFeedStream, createWritable, WritableArray } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
@@ -28,12 +28,13 @@ describe('pipeline', () => {
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
     const feedKeys: Uint8Array[] = [];
     const feedSelector: FeedSelector = descriptor => !!feedKeys.find(key => descriptor.key.equals(key));
-    await feedStore.open();
-    const feedReadStream = await createIterator(feedStore, feedSelector);
+    const feedReadStream = new FeedStoreIterator(feedSelector, () => 0, new Timeframe());
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
+    const descriptor = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const feed = descriptor.feed;
     feedKeys.push(feed.key);
+    feedReadStream.addFeedDescriptor(descriptor);
     const writeStream = createWritableFeedStream(feed);
 
     //
@@ -87,11 +88,12 @@ describe('pipeline', () => {
   test('writing', async () => {
     const storage = createStorage('', STORAGE_RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
-    await feedStore.open();
-    const feedReadStream = await createIterator(feedStore);
+    const feedReadStream = new FeedStoreIterator(() => true, () => 0, new Timeframe());
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed: HypercoreFeed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
+    const descriptor = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const feed = descriptor.feed;
+    feedReadStream.addFeedDescriptor(descriptor);
 
     const keyring = new Keyring();
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
