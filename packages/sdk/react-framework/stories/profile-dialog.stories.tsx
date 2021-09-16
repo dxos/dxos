@@ -12,7 +12,7 @@ const handleClose = () => {
 
 export const ProfileDialogStory = () => {
   return (
-    <ProfileDialog open={true} onClose={handleClose} />
+    <ProfileDialog open={true} onCreate={handleClose} onCancel={handleClose} />
   );
 };
 
