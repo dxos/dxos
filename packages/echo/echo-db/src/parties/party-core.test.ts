@@ -45,8 +45,7 @@ describe('PartyCore', () => {
       snapshotStore
     );
 
-    const feed = await feedStore.openReadOnlyFeed(partyKey.publicKey);
-    const feedKey = keyring.getKey(feed.key) ?? raise(new AssertionError());
+    const { feedKey, feed } = await partyFeedProvider.createReadOnlyFeed();
     await party.open();
     afterTest(async () => party.close());
 

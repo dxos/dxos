@@ -70,14 +70,14 @@ export class PartyFeedProvider {
     return { feed, feedKey }; // TODO(vlad): Return only feed.
   }
 
-  // async _createReadOnlyFeed () {
-  //   const feedKey = await this._keyring.createKeyRecord({ type: KeyType.FEED });
-  //   const fullKey = this._keyring.getFullKey(feedKey.publicKey);
-  //   assert(fullKey);
-  //   await this._metadataStore.addPartyFeed(this._partyKey, fullKey.publicKey);
-  //   const feed = await this._feedStore.openReadOnlyFeed(fullKey.publicKey);
-  //   return { feed, feedKey };
-  // }
+  async createReadOnlyFeed () {
+    const feedKey = await this._keyring.createKeyRecord({ type: KeyType.FEED });
+    const fullKey = this._keyring.getFullKey(feedKey.publicKey);
+    assert(fullKey);
+    await this._metadataStore.addPartyFeed(this._partyKey, fullKey.publicKey);
+    const feed = await this._feedStore.openReadOnlyFeed(fullKey.publicKey);
+    return { feed, feedKey };
+  }
 
   async createIterator (messageSelector: MessageSelector, initialTimeframe?: Timeframe) {
     const iterator = new FeedStoreIterator(() => true, messageSelector, initialTimeframe ?? new Timeframe());
