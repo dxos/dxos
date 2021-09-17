@@ -51,7 +51,13 @@ export const ERR_GREET_INVALID_PARTY = 'ERR_GREET_INVALID_PARTY';
 export const ERR_GREET_INVALID_SIGNATURE = 'ERR_GREET_INVALID_SIGNATURE';
 
 /**
- * The signature on a submitted message cannot be verified.
+ * Greeter is alreary connected to supplied party.
  * @type {string}
  */
 export const ERR_GREET_ALREADY_CONNECTED_TO_SWARM = 'ERR_GREET_ALREADY_CONNECTED_TO_SWARM';
+
+/**
+ * The connection to supplied party timed out.
+ * @type {string}
+ */
+export const ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT = 'ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT';

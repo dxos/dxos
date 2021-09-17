@@ -33,9 +33,10 @@ export const addListener = (eventEmitter, eventName, callback) => {
  * @param {string} eventName
  * @param {function} [test] Returns truthy value if the test passes.
  * @param {Number} [timeout]
+ * @param {unknown} [error]
  * @returns {Promise<unknown>}
  */
-export const waitForEvent = (eventEmitter, eventName, test, timeout) => {
+export const waitForEvent = (eventEmitter, eventName, test, timeout, error) => {
   let off;
 
   const promise = new Promise((resolve) => {
@@ -46,5 +47,5 @@ export const waitForEvent = (eventEmitter, eventName, test, timeout) => {
     });
   });
 
-  return timeout ? promiseTimeout(promise, timeout).finally(off) : promise.finally(off);
+  return timeout ? promiseTimeout(promise, timeout, error).finally(off) : promise.finally(off);
 };

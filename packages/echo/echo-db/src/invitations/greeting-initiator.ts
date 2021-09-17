@@ -22,6 +22,7 @@ import {
 } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
+import { ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT } from '@dxos/credentials';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { Identity } from '../halo';
@@ -32,9 +33,8 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
 
 const log = debug('dxos:echo:invitations:greeting-initiator');
 
-// const DEFAULT_TIMEOUT = 1000;
 const DEFAULT_TIMEOUT = 30_000;
-console.log(DEFAULT_TIMEOUT);
+
 /**
  * Attempts to connect to a greeting responder to 'redeem' an invitation, potentially with some out-of-band
  * authentication check, in order to be admitted to a Party.
@@ -91,8 +91,9 @@ export class GreetingInitiator {
     this._greeterPlugin = new GreetingCommandPlugin(localPeerId, new Greeter().createMessageHandler());
 
     log(keyToString(localPeerId), 'connecting to', keyToString(swarmKey));
+
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
-      (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId), timeout);
+      (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId), timeout, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT);
 
     await this._networkManager.joinProtocolSwarm({
       topic: PublicKey.from(swarmKey),
@@ -101,7 +102,7 @@ export class GreetingInitiator {
       topology: new FullyConnectedTopology(),
       label: 'Greeting initiator'
     });
-    
+
     await peerJoinedWaiter;
     log('Connected');
     this._state = GreetingState.CONNECTED;
