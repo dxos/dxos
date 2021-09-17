@@ -92,7 +92,7 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   // Share and replicate all known feeds.
   const repl = new Replicator({
     load: async () => {
-      return [];
+      return [feed];
     },
 
     subscribe: (add: (feed: any) => void) => {
@@ -172,7 +172,7 @@ it('Auth Plugin (GOOD)', async () => {
   connection.destroy();
 });
 
-it('Auth & Repl (GOOD)', async () => {
+it.only('Auth & Repl (GOOD)', async () => {
   const keyring = await createTestKeyring();
   const partyKey = PublicKey.from(randomBytes(32));
   const node2 = await createProtocol(partyKey,
