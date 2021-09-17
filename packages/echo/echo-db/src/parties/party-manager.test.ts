@@ -59,7 +59,7 @@ const log = debug('dxos:echo:parties:party-manager:test');
 const setup = async (open = true, createIdentity = true) => {
   const keyring = new Keyring();
   const metadataStore = new MetadataStore(createRamStorage());
-  const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
 
   let seedPhrase;
   if (createIdentity) {
@@ -116,7 +116,7 @@ const setup = async (open = true, createIdentity = true) => {
 
 describe('Party manager', () => {
   // eslint-disable-next-line jest/expect-expect
-  test.only('It exits cleanly', async () => {
+  test('It exits cleanly', async () => {
     await setup();
   });
 
@@ -208,10 +208,13 @@ describe('Party manager', () => {
     const numParties = 3;
     for (let i = 0; i < numParties; i++) {
       const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+      const keyRecord = keyring.getFullKey(partyKey.publicKey);
+      assert(keyRecord, 'Key is not found in keyring');
+      assert(keyRecord.secretKey, 'Missing secret key');
       await metadataStore.addParty(partyKey.publicKey);
 
       // TODO(burdon): Create multiple feeds.
-      const { feed } = await feedStore.openReadOnlyFeed(partyKey.publicKey);
+      const { feed } = await feedStore.openReadWriteFeed(keyRecord.publicKey, keyRecord.secretKey);
       const feedKey = keyring.getFullKey(feed.key);
       assert(feedKey);
 
