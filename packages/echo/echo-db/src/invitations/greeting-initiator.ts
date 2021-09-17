@@ -18,11 +18,11 @@ import {
   Greeter,
   GreetingCommandPlugin,
   Message,
-  WithTypeUrl
+  WithTypeUrl,
+  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT
 } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
-import { ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT } from '@dxos/credentials';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { Identity } from '../halo';
