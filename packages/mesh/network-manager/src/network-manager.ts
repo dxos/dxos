@@ -6,10 +6,10 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
+import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
 import { ComplexMap } from '@dxos/util';
-import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
 
 import { ConnectionLog } from './connection-log';
 import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager } from './signal';
@@ -88,7 +88,7 @@ export class NetworkManager {
     assert(topology, 'Incorrect arguments format.');
     assert(typeof protocol === 'function', 'Incorrect arguments format.');
     log(`Join ${options.topic} as ${options.peerId} with ${options.topology.toString()} topology.`);
-    
+
     if (this._swarms.has(topic)) {
       throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, `Already connected to swarm ${topic}`);
     }
