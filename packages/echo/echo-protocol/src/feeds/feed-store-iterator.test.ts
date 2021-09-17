@@ -13,11 +13,11 @@ import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { ComplexMap } from '@dxos/util';
 
+import { FeedStoreIterator } from '.';
 import { codec, createTestItemMutation, schema } from '../proto';
 import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
 import { FeedSelector } from './feed-store-iterator';
-import { FeedStoreIterator } from '.';
 
 const log = debug('dxos:echo:feed-store-iterator:test');
 
@@ -161,7 +161,7 @@ describe('feed store iterator', () => {
     const descriptor1 = await feedStore.openReadWriteFeed(PublicKey.from(keyPair1.publicKey), keyPair1.secretKey);
     const descriptor2 = await feedStore.openReadWriteFeed(PublicKey.from(keyPair2.publicKey), keyPair2.secretKey);
 
-    const feed1 = descriptor1.feed, feed2 = descriptor2.feed;
+    const feed1 = descriptor1.feed; const feed2 = descriptor2.feed;
 
     await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '0' });
     await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '1' });

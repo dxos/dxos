@@ -7,6 +7,7 @@ import debug from 'debug';
 import memdown from 'memdown';
 
 import { Keyring, KeyStore } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
 import { codec, PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -24,7 +25,6 @@ import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, Part
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
-import { PublicKey } from '@dxos/crypto';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');

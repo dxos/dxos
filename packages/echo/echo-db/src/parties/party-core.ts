@@ -4,19 +4,18 @@
 
 import assert from 'assert';
 
-import debug from 'debug';
 import { synchronized } from '@dxos/async';
 import { KeyHint } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
+import { PartyFeedProvider } from './party-feed-provider';
 import { Database, TimeframeClock } from '../items';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 import { createMessageSelector } from './message-selector';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
-import { PartyFeedProvider } from '.';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // every 100 messages
 
@@ -115,7 +114,7 @@ export class PartyCore {
       createMessageSelector(
         this._partyProcessor,
         this._timeframeClock
-      ), 
+      ),
       this._initialTimeframe
     );
 

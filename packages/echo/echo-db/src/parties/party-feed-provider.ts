@@ -2,16 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from "assert";
-import debug from "debug";
+import assert from 'assert';
+import debug from 'debug';
 
-import { Event } from "@dxos/async";
-import { Keyring, KeyType } from "@dxos/credentials";
-import { PublicKey } from "@dxos/crypto";
-import { FeedDescriptor, FeedStore } from "@dxos/feed-store";
+import { Keyring, KeyType } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
+import { FeedStoreIterator, MessageSelector, Timeframe } from '@dxos/echo-protocol';
+import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 
-import { MetadataStore } from "../metadata";
-import { FeedStoreIterator, MessageSelector, Timeframe } from "@dxos/echo-protocol";
+import { MetadataStore } from '../metadata';
 
 const STALL_TIMEOUT = 1000;
 const warn = debug('dxos:echo:feed-store-iterator:warn');
@@ -25,8 +24,8 @@ export class PartyFeedProvider {
   ) {}
 
   // TODO(dmaretskyi): Consider refactoring this to have write feed stored separeately in metadata.
-  async getWritableFeed() {
-    let feed: FeedDescriptor | undefined = undefined;
+  async getWritableFeed () {
+    let feed: FeedDescriptor | undefined;
 
     for (const feedKey of this._metadataStore.getParty(this._partyKey)?.feedKeys ?? []) {
       const fullKey = this._keyring.getFullKey(feedKey);
@@ -37,12 +36,12 @@ export class PartyFeedProvider {
     if (feed) {
       const feedKey = this._keyring.getKey(feed.key);
       assert(feedKey, 'Feed key not found');
-      return { feed, feedKey }
+      return { feed, feedKey };
     }
     return this._createReadWriteFeed();
   }
 
-  getFeedKeys() {
+  getFeedKeys () {
     return this._metadataStore.getParty(this._partyKey)?.feedKeys ?? [];
   }
 
@@ -55,8 +54,8 @@ export class PartyFeedProvider {
 
   async createOrOpenReadOnlyFeed (feedKey: PublicKey) {
     await this._metadataStore.addPartyFeed(this._partyKey, feedKey);
-    if(!this._keyring.hasKey(feedKey)) {
-      this._keyring.addKeyRecord({ type: KeyType.FEED, publicKey: feedKey });
+    if (!this._keyring.hasKey(feedKey)) {
+      await this._keyring.addKeyRecord({ type: KeyType.FEED, publicKey: feedKey });
     }
     return this._feedStore.openReadOnlyFeed(feedKey);
   }
@@ -86,7 +85,7 @@ export class PartyFeedProvider {
     }
 
     this._feedStore.feedOpenedEvent.on((descriptor) => {
-      if (!!this._metadataStore.getParty(this._partyKey)?.feedKeys?.find(feedKey => feedKey.equals(descriptor.key))) {
+      if (this._metadataStore.getParty(this._partyKey)?.feedKeys?.find(feedKey => feedKey.equals(descriptor.key))) {
         iterator.addFeedDescriptor(descriptor);
       }
     });

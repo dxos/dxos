@@ -12,6 +12,7 @@ import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
+import { PartyFeedProvider } from '.';
 import { IdentityNotInitializedError } from '../errors';
 import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
@@ -19,7 +20,6 @@ import { Database } from '../items';
 import { SnapshotStore } from '../snapshots';
 import { PartyCore, PartyOptions } from './party-core';
 import { CredentialsProvider, PartyProtocol } from './party-protocol';
-import { PartyFeedProvider } from '.';
 
 export const PARTY_ITEM_TYPE = 'dxn://dxos/item/party';
 export const PARTY_TITLE_PROPERTY = 'title';

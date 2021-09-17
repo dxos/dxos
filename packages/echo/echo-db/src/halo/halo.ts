@@ -13,13 +13,13 @@ import { NetworkManager } from '@dxos/network-manager';
 import {
   InvitationAuthenticator, InvitationDescriptor, InvitationOptions, SecretProvider
 } from '../invitations';
+import { MetadataStore } from '../metadata';
 import { PartyFactory, OpenProgress, Party, PartyManager } from '../parties';
 import { ResultSet } from '../result';
 import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';
 import { IdentityManager } from './identity-manager';
 import type { CreateProfileOptions } from './types';
-import { MetadataStore } from '../metadata';
 
 const log = debug('dxos:echo');
 

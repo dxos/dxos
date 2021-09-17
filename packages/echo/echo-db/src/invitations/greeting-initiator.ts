@@ -18,8 +18,7 @@ import {
   Greeter,
   GreetingCommandPlugin,
   Message,
-  WithTypeUrl,
-  KeyRecord
+  WithTypeUrl
 } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';

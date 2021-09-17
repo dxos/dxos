@@ -3,6 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/crypto';
+
 import { KeyChain, KeyRecord, SignedMessage, WithTypeUrl } from '../proto';
 
 export interface Signer {

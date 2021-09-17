@@ -8,7 +8,7 @@ import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
 import { keyToString, PublicKey } from '@dxos/crypto';
-import { createBatchStream, FeedDescriptor, FeedStore } from '@dxos/feed-store';
+import { createBatchStream, FeedDescriptor } from '@dxos/feed-store';
 
 import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';

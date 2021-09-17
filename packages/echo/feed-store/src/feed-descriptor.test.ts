@@ -5,9 +5,9 @@
 /* eslint-disable jest/no-done-callback */
 
 import assert from 'assert';
+import defaultHypercore from 'hypercore';
 import pify from 'pify';
 import tempy from 'tempy';
-import defaultHypercore from 'hypercore';
 
 import { PublicKey, createKeyPair } from '@dxos/crypto';
 import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-multi-storage';
@@ -29,7 +29,7 @@ describe('FeedDescriptor', () => {
 
   afterEach(async () => {
     await fd.close();
-  })
+  });
 
   test('Create', () => {
     expect(fd).toBeInstanceOf(FeedDescriptor);

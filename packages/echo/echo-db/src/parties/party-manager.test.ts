@@ -41,9 +41,9 @@ import { SnapshotStore } from '../snapshots';
 import { createRamStorage, messageLogger } from '../util';
 import { Party } from './party';
 import { PartyFactory } from './party-factory';
+import { PartyFeedProvider } from './party-feed-provider';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
-import { PartyFeedProvider } from '.';
 
 const log = debug('dxos:echo:parties:party-manager:test');
 

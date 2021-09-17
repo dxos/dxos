@@ -30,8 +30,8 @@ import {
 } from '../invitations';
 import { SnapshotStore } from '../snapshots';
 import { PartyOptions } from './party-core';
-import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 import { PartyFeedProvider } from './party-feed-provider';
+import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 
 const log = debug('dxos:echo:parties:party-factory');
 
@@ -134,7 +134,7 @@ export class PartyFactory {
       feedProvider,
       this._identityProvider,
       this._networkManager,
-      [ { type: feedKeyPair.type, publicKey: feedKeyPair.publicKey } , ...hints],
+      [{ type: feedKeyPair.type, publicKey: feedKeyPair.publicKey }, ...hints],
       undefined,
       this._options
     );

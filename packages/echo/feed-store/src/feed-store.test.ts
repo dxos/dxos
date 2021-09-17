@@ -14,9 +14,9 @@ import { sleep } from '@dxos/async';
 import { PublicKey, createKeyPair } from '@dxos/crypto';
 import { IStorage, STORAGE_NODE, STORAGE_RAM, createStorage } from '@dxos/random-access-multi-storage';
 
+import { FeedDescriptor } from '.';
 import { FeedStore } from './feed-store';
 import { HypercoreFeed } from './hypercore-types';
-import { FeedDescriptor } from '.';
 
 interface KeyPair {
   key: PublicKey,
@@ -140,7 +140,7 @@ describe('FeedStore', () => {
 
     expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key))
       .toEqual(Object.entries(keys).map(([, keyPair]) => keyPair.key)
-    );
+      );
   });
 
   test('Feeds', async () => {

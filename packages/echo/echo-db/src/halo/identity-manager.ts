@@ -9,11 +9,11 @@ import { Event, synchronized, waitForCondition } from '@dxos/async';
 import { Keyring, SecretProvider } from '@dxos/credentials';
 
 import { InvitationDescriptor } from '../invitations';
+import { MetadataStore } from '../metadata';
 import { PartyInternal } from '../parties';
 import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
 import { Identity } from './identity';
-import { MetadataStore } from '../metadata';
 
 const log = debug('dxos:echo:parties:identity-manager');
 
@@ -67,7 +67,7 @@ export class IdentityManager {
   @synchronized
   async loadFromStorage () {
     if (this._identity.identityKey) {
-      if (!!this._metadataStore.getParty(this._identity.identityKey.publicKey)) {
+      if (this._metadataStore.getParty(this._identity.identityKey.publicKey)) {
         // TODO(marik-d): Snapshots for halo party?
         const halo = await this._haloFactory.constructParty(this._identity.identityKey.publicKey);
         // Always open the HALO.
