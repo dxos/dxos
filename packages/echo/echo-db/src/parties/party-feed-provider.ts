@@ -45,13 +45,6 @@ export class PartyFeedProvider {
     return this._metadataStore.getParty(this._partyKey)?.feedKeys ?? [];
   }
 
-  // async openReadWriteFeed (feedKey: PublicKey) {
-  //   await this._metadataStore.addPartyFeed(this._partyKey, feedKey);
-  //   const fullKey = this._keyring.getFullKey(feedKey);
-  //   assert(fullKey && fullKey.secretKey);
-  //   return this._feedStore.openReadWriteFeed(feedKey, fullKey.secretKey);
-  // }
-
   async createOrOpenReadOnlyFeed (feedKey: PublicKey) {
     await this._metadataStore.addPartyFeed(this._partyKey, feedKey);
     if (!this._keyring.hasKey(feedKey)) {
