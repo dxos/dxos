@@ -2,12 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { AssertionError } from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { raise } from '@dxos/debug';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -19,7 +17,7 @@ import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
 import { createRamStorage } from '../util';
 import { PartyCore } from './party-core';
-import { PartyFeedProvider } from '.';
+import { PartyFeedProvider } from './party-feed-provider';
 
 describe('PartyCore', () => {
   const setup = async () => {
