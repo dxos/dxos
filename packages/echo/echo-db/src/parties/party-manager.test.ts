@@ -211,7 +211,7 @@ describe('Party manager', () => {
       const keyRecord = keyring.getFullKey(partyKey.publicKey);
       assert(keyRecord, 'Key is not found in keyring');
       assert(keyRecord.secretKey, 'Missing secret key');
-      await metadataStore.addParty(partyKey.publicKey);
+      await metadataStore.addPartyFeed(partyKey.publicKey, keyRecord.publicKey);
 
       // TODO(burdon): Create multiple feeds.
       const { feed } = await feedStore.openReadWriteFeed(keyRecord.publicKey, keyRecord.secretKey);
