@@ -5,5 +5,5 @@
 export const redeemErrors = {
   invalidCode: 'Invalid invitation code.',
   notAuthorized: 'Invitation not authorized.',
-  timeout: 'Timed out.',
+  timeout: 'Timed out.'
 };
