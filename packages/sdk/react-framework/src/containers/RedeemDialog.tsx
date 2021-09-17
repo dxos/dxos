@@ -19,6 +19,7 @@ import { defaultInvitationAuthenticator, InvitationDescriptor } from '@dxos/echo
 import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 
 import { DialogHeading } from '../components';
+import { redeemErrors } from '../constants';
 
 const useStyles = makeStyles((theme) => ({
   marginTop: {
@@ -61,11 +62,11 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
   const handleInvitationError = (error: string) => {
     setStep(2);
     if (error.includes('SyntaxError: Unexpected token') || error.includes('InvalidCharacterError')) {
-      setError('Invalid invitation code.');
+      setError(redeemErrors.invalidCode);
     } else if (error.includes('ERR_GREET_INVALID_INVITATION')) {
-      setError('Invitation not authorized.');
+      setError(redeemErrors.notAuthorized);
     } else if (error.includes('Time out')) {
-      setError('Timed out.');
+      setError(redeemErrors.timeout);
     } else {
       setError(error);
     }
