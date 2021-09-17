@@ -19,7 +19,7 @@ import { defaultInvitationAuthenticator, InvitationDescriptor } from '@dxos/echo
 import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 
 import { DialogHeading } from '../components';
-import { redeemErrors } from '../constants';
+import { REDEEM_ERRORS } from '../constants';
 
 const useStyles = makeStyles((theme) => ({
   marginTop: {
@@ -62,11 +62,11 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
   const handleInvitationError = (error: string) => {
     setStep(2);
     if (error.includes('SyntaxError: Unexpected token') || error.includes('InvalidCharacterError')) {
-      setError(redeemErrors.invalidCode);
+      setError(REDEEM_ERRORS.INVALID_CODE);
     } else if (error.includes('ERR_GREET_INVALID_INVITATION')) {
-      setError(redeemErrors.notAuthorized);
-    } else if (error.includes('Time out')) {
-      setError(redeemErrors.timeout);
+      setError(REDEEM_ERRORS.NOT_AUTHORIZED);
+    } else if (error.includes('ERR_GREET_ALREADY_CONNECTED_TO_SWARM')) {
+      setError(REDEEM_ERRORS.ALREADY_CONNECTED);
     } else {
       setError(error);
     }
@@ -95,11 +95,7 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
         await party.open();
         handleDone();
       } catch (error: any) {
-        if (JSON.stringify(error) === '{}') {
-          handleInvitationError(JSON.stringify(error.message));
-        } else {
-          handleInvitationError(JSON.stringify(error));
-        }
+        handleInvitationError(JSON.stringify(error));
       }
     } else {
       redeemCode(invitationCode);

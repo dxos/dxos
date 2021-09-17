@@ -215,12 +215,7 @@ export class PartyFactory {
       }
     );
 
-    try {
-      await initiator.connect();
-    } catch (err) {
-      throw new Error('Time out');
-    }
-
+    await initiator.connect();
     const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
     const party = await this.addParty(partyKey, hints);
     await initiator.destroy();

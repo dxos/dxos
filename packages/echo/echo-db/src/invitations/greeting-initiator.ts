@@ -32,8 +32,9 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
 
 const log = debug('dxos:echo:invitations:greeting-initiator');
 
+// const DEFAULT_TIMEOUT = 1000;
 const DEFAULT_TIMEOUT = 30_000;
-
+console.log(DEFAULT_TIMEOUT);
 /**
  * Attempts to connect to a greeting responder to 'redeem' an invitation, potentially with some out-of-band
  * authentication check, in order to be admitted to a Party.
@@ -100,7 +101,7 @@ export class GreetingInitiator {
       topology: new FullyConnectedTopology(),
       label: 'Greeting initiator'
     });
-
+    
     await peerJoinedWaiter;
     log('Connected');
     this._state = GreetingState.CONNECTED;
