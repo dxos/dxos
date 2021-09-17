@@ -4,6 +4,8 @@
 
 import browser from 'webextension-polyfill';
 
+// Taken from https://github.com/xpl/crx-hotreload.
+
 const filesInDirectory = (dir: FileSystemDirectoryEntry): Promise<File[]> => new Promise(resolve =>
   dir.createReader().readEntries(entries =>
     Promise.all(entries.filter(e => e.name[0] !== '.').map(e =>
