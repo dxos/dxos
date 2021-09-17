@@ -55,7 +55,7 @@ export class PartyFeedProvider {
   async createOrOpenReadOnlyFeed (feedKey: PublicKey) {
     await this._metadataStore.addPartyFeed(this._partyKey, feedKey);
     if (!this._keyring.hasKey(feedKey)) {
-      await this._keyring.addKeyRecord({ type: KeyType.FEED, publicKey: feedKey });
+      await this._keyring.addPublicKey({ type: KeyType.FEED, publicKey: feedKey });
     }
     return this._feedStore.openReadOnlyFeed(feedKey);
   }
