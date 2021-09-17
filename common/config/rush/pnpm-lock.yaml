@@ -1682,6 +1682,7 @@ importers:
       clsx: 1.1.1
       lodash.defaultsdeep: 4.6.1
       lodash.isplainobject: 4.0.6
+      url-join: 4.0.1
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
@@ -1693,6 +1694,7 @@ importers:
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@types/react': 16.14.6
+      '@types/url-join': 4.0.1
       babel-plugin-add-module-exports: 1.0.4
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
@@ -1710,6 +1712,7 @@ importers:
       '@material-ui/icons': ^4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@types/react': ^16.14.0
+      '@types/url-join': ~4.0.1
       babel-plugin-add-module-exports: ^1.0.4
       clsx: ^1.1.0
       lodash.defaultsdeep: ^4.6.1
@@ -1717,6 +1720,7 @@ importers:
       react: ^16.14.0
       react-dom: ^16.14.0
       typescript: ^4.3.5
+      url-join: ^4.0.1
   ../../packages/sdk/tutorials/apps/tasks-app:
     dependencies:
       '@craco/craco': 6.1.2_react-scripts@4.0.3
@@ -7736,6 +7740,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-FvUupuM3rlRsRtCN+fDudtmytGO6iHJuuRKS1Ss0pG5z8oX0diNEw94UEL7hgDbpN94rgaK5R7sWm6RrSkZuAQ==
+  /@types/url-join/4.0.1:
+    dev: true
+    resolution:
+      integrity: sha512-wDXw9LEEUHyV+7UWy7U315nrJGJ7p1BzaCxDpEoLr789Dk1WDVMMlf3iBfbG2F8NdWnYyFbtTxUn2ZNbm1Q4LQ==
   /@types/use-subscription/1.0.0:
     dev: true
     resolution:
@@ -24513,6 +24521,10 @@ packages:
     dev: true
     resolution:
       integrity: sha1-WvIvGMBSoACkjXuCxenC4v7tpyg=
+  /url-join/4.0.1:
+    dev: false
+    resolution:
+      integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==
   /url-loader/4.1.1_file-loader@6.1.1+webpack@4.44.2:
     dependencies:
       file-loader: 6.1.1_webpack@4.44.2
