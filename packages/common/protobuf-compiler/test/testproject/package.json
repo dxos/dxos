@@ -1,0 +1,16 @@
+{
+  "name": "@dxos/testproject",
+  "version": "1.0.0",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "main": "src/index.js",
+  "private": true,
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "true",
+    "build:test": "true"
+  }
+}

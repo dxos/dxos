@@ -1,5 +1,5 @@
-import { schema } from './gen';
 import { ComplexFields, Scalars, TaskList, TaskType, WithTimestamp } from './gen/dxos/test'
+import { schema, TYPES } from './gen';
 import { MyKey } from './my-key';
 import { readFileSync, readdirSync, lstatSync } from 'fs'
 import { join } from 'path'
@@ -36,6 +36,30 @@ test('encode and decode', async () => {
   const decoded = codec.decode(encoded)
 
   expect(decoded).toEqual(initial)
+})
+
+test('encode and decode external package message', async () => {
+  const codec = schema.getCodecForType('dxos.test.testfoo.TestFoo')
+
+  const initial: TYPES['dxos.test.testfoo.TestFoo'] = { fizz: 3, bazz: "5" };
+
+  const encoded = codec.encode(initial)
+
+  expect(encoded).toBeInstanceOf(Uint8Array);
+
+  const decoded = codec.decode(encoded)
+
+  expect(decoded).toEqual(initial)
+
+  expect(() => {
+    const encoded = codec.encode({ badname: "badvalue" } as any)
+
+    expect(encoded).toBeInstanceOf(Uint8Array);
+
+    const decoded = codec.decode(encoded)
+
+    expect(decoded).toEqual(initial)
+  }).toThrow();
 })
 
 test('complex fields round trip', () => {
