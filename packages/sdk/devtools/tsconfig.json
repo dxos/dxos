@@ -8,8 +8,8 @@
     ]
   },
   "include": [
-    "src"
-, "../devtools-extension/scripts/build.js"  ],
+    "src" 
+  ],
   "references": [
     {
       "path": "../../halo/credentials"
