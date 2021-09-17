@@ -10,10 +10,10 @@ import { timed } from '@dxos/debug';
 import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
-import { PartyFeedProvider } from './party-feed-provider';
 import { Database, TimeframeClock } from '../items';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 import { createMessageSelector } from './message-selector';
+import { PartyFeedProvider } from './party-feed-provider';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
 
