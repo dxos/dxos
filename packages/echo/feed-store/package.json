@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/util": "workspace:*",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.1.1",
     "end-of-stream": "^1.4.1",
@@ -35,8 +36,7 @@
     "hypercore": "^9.10.0",
     "pify": "~5.0.0",
     "pump": "^3.0.0",
-    "through2": "^3.0.1",
-    "@dxos/util": "workspace:*"
+    "through2": "^3.0.1"
   },
   "devDependencies": {
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
