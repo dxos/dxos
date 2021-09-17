@@ -172,7 +172,7 @@ it('Auth Plugin (GOOD)', async () => {
   connection.destroy();
 });
 
-it.only('Auth & Repl (GOOD)', async () => {
+it('Auth & Repl (GOOD)', async () => {
   const keyring = await createTestKeyring();
   const partyKey = PublicKey.from(randomBytes(32));
   const node2 = await createProtocol(partyKey,
