@@ -9,12 +9,12 @@ import type { Schema } from './schema';
 
 const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
   // Represent long integers as strings.
-  longs: String, 
+  longs: String,
 
   // Will set empty repeated fields to [] instead of undefined.
   // TODO(marik-d): Type repeated fields as non-optional arrays.
-  arrays: true, 
-}
+  arrays: true
+};
 
 export class Codec<T = any> {
   constructor (
