@@ -2,7 +2,14 @@
 
 const childProcess = require('child_process')
 
-const diffs = childProcess.execSync('git diff main --name-only --cached').toString().split('\n')
+try {
+  childProcess.execSync('git fetch')
+} catch(err) {
+  console.log('git fetch failed')
+  console.error(err)
+}
+
+const diffs = childProcess.execSync('git diff origin/main --name-only --cached').toString().split('\n')
 
 const rushList = JSON.parse(childProcess.execSync('rush list --json').toString())
 const projectDirs = rushList.projects.map(project => project.path)

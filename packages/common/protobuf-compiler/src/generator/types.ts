@@ -39,23 +39,23 @@ function getPrimitiveType (type: string): ts.TypeNode {
     case 'int32':
       return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
     case 'int64':
-      return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
+      return f.createKeywordTypeNode(ts.SyntaxKind.StringKeyword);
     case 'uint32':
       return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
     case 'uint64':
-      return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
+      return f.createKeywordTypeNode(ts.SyntaxKind.StringKeyword);
     case 'sint32':
       return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
     case 'sint64':
-      return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
+      return f.createKeywordTypeNode(ts.SyntaxKind.StringKeyword);
     case 'fixed32':
       return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
     case 'fixed64':
-      return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
+      return f.createKeywordTypeNode(ts.SyntaxKind.StringKeyword);
     case 'sfixed32':
       return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
     case 'sfixed64':
-      return f.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword);
+      return f.createKeywordTypeNode(ts.SyntaxKind.StringKeyword);
     case 'bool':
       return f.createKeywordTypeNode(ts.SyntaxKind.BooleanKeyword);
     case 'string':
