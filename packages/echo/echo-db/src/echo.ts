@@ -191,6 +191,10 @@ export class ECHO {
   // TODO(burdon): Expose single devtools object.
   //
 
+  get feedStore (): FeedStore {
+    return this._feedStore;
+  }
+
   get networkManager (): NetworkManager {
     return this._networkManager;
   }
