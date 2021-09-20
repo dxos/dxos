@@ -13,13 +13,13 @@ import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { ComplexMap } from '@dxos/util';
 
+import { FeedStoreIterator } from '.';
 import { codec, createTestItemMutation, schema } from '../proto';
 import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
-import { createIterator, FeedSelector } from './feed-store-iterator';
+import { FeedSelector } from './feed-store-iterator';
 
 const log = debug('dxos:echo:feed-store-iterator:test');
-debug.enable('dxos:echo:*');
 
 faker.seed(1);
 
@@ -31,7 +31,6 @@ describe('feed store iterator', () => {
     };
 
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
-    await feedStore.open();
 
     //
     // Create the ordered feed stream.
@@ -70,7 +69,7 @@ describe('feed store iterator', () => {
     };
 
     const feedSelector: FeedSelector = descriptor => feeds.has(PublicKey.from(descriptor.key));
-    const iterator = await createIterator(feedStore, feedSelector, messageSelector);
+    const iterator = new FeedStoreIterator(feedSelector, messageSelector, new Timeframe());
 
     //
     // Create feeds.
@@ -79,8 +78,10 @@ describe('feed store iterator', () => {
     const feeds = new ComplexMap<FeedKey, HypercoreFeed>(key => key.toHex());
     await Promise.all(Array.from({ length: config.numFeeds }, (_, i) => i + 1).map(async () => {
       const { publicKey, secretKey } = createKeyPair();
-      const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
+      const descriptor = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+      const feed = descriptor.feed;
       feeds.set(PublicKey.from(feed.key), feed);
+      iterator.addFeedDescriptor(descriptor);
     }));
 
     log(JSON.stringify({
@@ -156,11 +157,11 @@ describe('feed store iterator', () => {
       valueEncoding: schema.getCodecForType('dxos.echo.testing.TestItemMutation')
     });
 
-    await feedStore.open();
-
     const [keyPair1, keyPair2] = [createKeyPair(), createKeyPair()];
-    const feed1 = await feedStore.createReadWriteFeed({ key: PublicKey.from(keyPair1.publicKey), secretKey: keyPair1.secretKey });
-    const feed2 = await feedStore.createReadWriteFeed({ key: PublicKey.from(keyPair2.publicKey), secretKey: keyPair2.secretKey });
+    const descriptor1 = await feedStore.openReadWriteFeed(PublicKey.from(keyPair1.publicKey), keyPair1.secretKey);
+    const descriptor2 = await feedStore.openReadWriteFeed(PublicKey.from(keyPair2.publicKey), keyPair2.secretKey);
+
+    const feed1 = descriptor1.feed; const feed2 = descriptor2.feed;
 
     await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '0' });
     await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '1' });
@@ -168,7 +169,9 @@ describe('feed store iterator', () => {
     await pify(feed2.append.bind(feed2))({ key: 'feed2', value: '1' });
 
     const timeframe = new Timeframe([[PublicKey.from(feed1.key), 0]]);
-    const iterator = await createIterator(feedStore, undefined, undefined, timeframe);
+    const iterator = new FeedStoreIterator(() => true, () => 0, timeframe);
+    iterator.addFeedDescriptor(descriptor1);
+    iterator.addFeedDescriptor(descriptor2);
 
     const [counter, updateCounter] = latch(3);
     const messages: any[] = [];

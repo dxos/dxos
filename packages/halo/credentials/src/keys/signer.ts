@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { PublicKey } from '@dxos/crypto';
+
 import { KeyChain, KeyRecord, SignedMessage, WithTypeUrl } from '../proto';
 
 export interface Signer {
@@ -12,7 +14,7 @@ export interface Signer {
    *   signatures: []   // An array with signature and publicKey of each signing key.
    * }
    */
-  sign (message: any, keys: (KeyRecord | KeyChain)[], nonce?: Buffer, created?: string): WithTypeUrl<SignedMessage>;
+  sign (message: any, keys: (KeyRecord | KeyChain | PublicKey)[], nonce?: Buffer, created?: string): WithTypeUrl<SignedMessage>;
 
   /**
    * Sign the data with the indicated key and return the signature.

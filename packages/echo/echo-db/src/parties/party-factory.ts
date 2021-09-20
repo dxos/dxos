@@ -29,8 +29,8 @@ import {
   SecretProvider
 } from '../invitations';
 import { SnapshotStore } from '../snapshots';
-import { FeedStoreAdapter } from '../util';
 import { PartyOptions } from './party-core';
+import { PartyFeedProvider } from './party-feed-provider';
 import { PartyInternal, PARTY_ITEM_TYPE } from './party-internal';
 
 const log = debug('dxos:echo:parties:party-factory');
@@ -42,32 +42,11 @@ export class PartyFactory {
   constructor (
     private readonly _identityProvider: IdentityProvider,
     private readonly _networkManager: NetworkManager,
-    private readonly _feedStore: FeedStoreAdapter,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
+    private readonly _createFeedProvider: (partyKey: PublicKey) => PartyFeedProvider,
     private readonly _options: PartyOptions = {}
   ) {}
-
-  async hasFeedForParty (partyKey: PartyKey) {
-    return !!this._feedStore.queryWritableFeed(partyKey);
-  }
-
-  // TODO(marik-d): Refactor this.
-  async initWritableFeed (partyKey: PartyKey) {
-    const identity = this._identityProvider();
-
-    const feed = this._feedStore.queryWritableFeed(partyKey) ??
-      await this._feedStore.createWritableFeed(partyKey);
-
-    const feedKey = identity.keyring.getKey(feed.key) ??
-      await identity.keyring.addKeyRecord({
-        publicKey: PublicKey.from(feed.key),
-        secretKey: feed.secretKey,
-        type: KeyType.FEED
-      });
-
-    return { feed, feedKey };
-  }
 
   /**
    * Create a new party with a new feed for it. Writes a party genensis message to this feed.
@@ -81,17 +60,18 @@ export class PartyFactory {
     assert(identity.deviceKeyChain, 'Device KeyChain must exist');
 
     const partyKey = await identity.keyring.createKeyRecord({ type: KeyType.PARTY });
-    const { feedKey } = await this.initWritableFeed(partyKey.publicKey);
     const party = await this.constructParty(partyKey.publicKey);
 
     // Connect the pipeline.
     await party.open();
 
+    const writableFeed = await party.feedProvider.createOrOpenWritableFeed();
+
     // PartyGenesis (self-signed by Party).
     await party.processor.writeHaloMessage(createPartyGenesisMessage(
       identity.signer,
       partyKey,
-      feedKey,
+      writableFeed.key,
       partyKey)
     );
 
@@ -107,7 +87,7 @@ export class PartyFactory {
     await party.processor.writeHaloMessage(createFeedAdmitMessage(
       identity.signer,
       partyKey.publicKey,
-      feedKey,
+      writableFeed.key,
       [identity.deviceKeyChain]
     ));
 
@@ -137,17 +117,25 @@ export class PartyFactory {
    */
   async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     const identity = this._identityProvider();
-    const { feedKey } = await this.initWritableFeed(partyKey);
 
     // TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
     // mechanism is broken by not waiting on the messages to be processed before returning.
-    const party = await this.constructParty(partyKey, [
-      {
-        type: feedKey.type,
-        publicKey: feedKey.publicKey
-      },
-      ...hints
-    ]);
+
+    const feedProvider = this._createFeedProvider(partyKey);
+    const { feed } = await feedProvider.createOrOpenWritableFeed();
+    const feedKeyPair = identity.keyring.getKey(feed.key);
+    assert(feedKeyPair, 'Keypair for writable feed not found');
+    const party = new PartyInternal(
+      partyKey,
+      this._modelFactory,
+      this._snapshotStore,
+      feedProvider,
+      this._identityProvider,
+      this._networkManager,
+      [{ type: feedKeyPair.type, publicKey: feedKeyPair.publicKey }, ...hints],
+      undefined,
+      this._options
+    );
 
     await party.open();
 
@@ -161,7 +149,7 @@ export class PartyFactory {
     await party.processor.writeHaloMessage(createFeedAdmitMessage(
       identity.signer,
       partyKey,
-      feedKey,
+      feedKeyPair.publicKey,
       [signingKey]
     ));
 
@@ -175,17 +163,16 @@ export class PartyFactory {
    */
   async constructParty (partyKey: PartyKey, hints: KeyHint[] = [], initialTimeframe?: Timeframe) {
     // TODO(marik-d): Support read-only parties if this feed doesn't exist?
-    // TODO(marik-d): Verify that this feed is admitted.
-    assert(this._feedStore.queryWritableFeed(partyKey), `Feed not found for party: ${partyKey.toHex()}`);
+    const feedProvider = this._createFeedProvider(partyKey);
 
     //
     // Create the party.
     //
     const party = new PartyInternal(
       partyKey,
-      this._feedStore,
       this._modelFactory,
       this._snapshotStore,
+      feedProvider,
       this._identityProvider,
       this._networkManager,
       hints,
@@ -227,8 +214,9 @@ export class PartyFactory {
       identity,
       invitationDescriptor,
       async partyKey => {
-        const { feedKey } = await this.initWritableFeed(partyKey);
-        return feedKey;
+        const feedProvider = this._createFeedProvider(partyKey);
+        const feed = await feedProvider.createOrOpenWritableFeed();
+        return feed.key;
       }
     );
 

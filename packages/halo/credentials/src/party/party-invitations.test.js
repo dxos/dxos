@@ -52,7 +52,7 @@ it('PartyInvitation messages', async () => {
   const party = new PartyState(partyKey.publicKey);
 
   // First, configure the Party.
-  const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey);
+  const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey);
   await party.processMessages([genesisMessage]);
 
   // Now 'write' an invitation message.
