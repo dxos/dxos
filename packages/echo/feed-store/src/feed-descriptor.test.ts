@@ -144,8 +144,6 @@ describe('FeedDescriptor', () => {
     });
 
     await expect(fd.open()).rejects.toThrow(/open error/);
-
-    await expect((fd as any).lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   test('on close error should unlock the resource', async () => {
@@ -169,7 +167,5 @@ describe('FeedDescriptor', () => {
     await fd.open();
 
     await expect(fd.close()).rejects.toThrow(/close error/);
-
-    await expect((fd as any).lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 });

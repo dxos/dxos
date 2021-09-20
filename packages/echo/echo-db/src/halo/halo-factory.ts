@@ -63,7 +63,7 @@ export class HaloFactory {
 
     // 1. Create a feed for the HALO.
     const halo = await this._partyFactory.constructParty(identityKey.publicKey);
-    const { feed } = await halo.feedProvider.getWritableFeed();
+    const { feed } = await halo.feedProvider.createOrOpenWritableFeed();
 
     // Connect the pipeline.
     await halo.open();
@@ -74,7 +74,7 @@ export class HaloFactory {
     //    C. Feed key (the feed owned by the Device)
     const feedKeyPair = this._keyring.getKey(feed.key);
     assert(feedKeyPair);
-    await halo.processor.writeHaloMessage(createPartyGenesisMessage(this._keyring, identityKey, feedKeyPair, deviceKey));
+    await halo.processor.writeHaloMessage(createPartyGenesisMessage(this._keyring, identityKey, feedKeyPair.publicKey, deviceKey));
 
     // 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
     //    message will be copied into other Parties which we create or join.

@@ -43,7 +43,7 @@ describe('PartyCore', () => {
       snapshotStore
     );
 
-    const { feedKey, feed } = await partyFeedProvider.createReadOnlyFeed();
+    const feed = await partyFeedProvider.createOrOpenWritableFeed();
     await party.open();
     afterTest(async () => party.close());
 
@@ -51,7 +51,7 @@ describe('PartyCore', () => {
     await party.processor.writeHaloMessage(createPartyGenesisMessage(
       keyring,
       partyKey,
-      feedKey,
+      feed.key,
       partyKey)
     );
 
@@ -59,14 +59,14 @@ describe('PartyCore', () => {
     await party.processor.writeHaloMessage(createFeedAdmitMessage(
       keyring,
       partyKey.publicKey,
-      feedKey.publicKey,
+      feed.key,
       [partyKey]
     ));
 
     // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
     await keyring.deleteSecretKey(partyKey);
 
-    return { party, feedKey, feed, feedStore };
+    return { party, feedKey: feed.key, feed, feedStore };
   };
 
   test('create & have the feed key admitted', async () => {
@@ -74,7 +74,7 @@ describe('PartyCore', () => {
 
     await party.processor.keyOrInfoAdded.waitForCount(1);
 
-    expect(party.processor.isFeedAdmitted(feedKey.publicKey)).toBeTruthy();
+    expect(party.processor.isFeedAdmitted(feedKey)).toBeTruthy();
   });
 
   test('create item', async () => {

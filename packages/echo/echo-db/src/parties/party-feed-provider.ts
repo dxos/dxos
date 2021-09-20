@@ -24,7 +24,7 @@ export class PartyFeedProvider {
   ) {}
 
   // TODO(dmaretskyi): Consider refactoring this to have write feed stored separeately in metadata.
-  async getWritableFeed () {
+  async createOrOpenWritableFeed () {
     let feed: FeedDescriptor | undefined;
 
     for (const feedKey of this._metadataStore.getParty(this._partyKey)?.feedKeys ?? []) {
@@ -36,16 +36,16 @@ export class PartyFeedProvider {
     if (feed) {
       const feedKey = this._keyring.getKey(feed.key);
       assert(feedKey, 'Feed key not found');
-      return { feed, feedKey };
+      return feed;
     }
     return this._createReadWriteFeed();
   }
 
-  getFeedKeys () {
+  private _getFeedKeys () {
     return this._metadataStore.getParty(this._partyKey)?.feedKeys ?? [];
   }
 
-  async createOrOpenReadOnlyFeed (feedKey: PublicKey) {
+  async createOrOpenReadOnlyFeed (feedKey: PublicKey): Promise<FeedDescriptor> {
     await this._metadataStore.addPartyFeed(this._partyKey, feedKey);
     if (!this._keyring.hasKey(feedKey)) {
       await this._keyring.addPublicKey({ type: KeyType.FEED, publicKey: feedKey });
@@ -59,21 +59,12 @@ export class PartyFeedProvider {
     assert(fullKey && fullKey.secretKey);
     await this._metadataStore.addPartyFeed(this._partyKey, fullKey.publicKey);
     const feed = await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey);
-    return { feed, feedKey }; // TODO(vlad): Return only feed.
-  }
-
-  async createReadOnlyFeed () {
-    const feedKey = await this._keyring.createKeyRecord({ type: KeyType.FEED });
-    const fullKey = this._keyring.getFullKey(feedKey.publicKey);
-    assert(fullKey);
-    await this._metadataStore.addPartyFeed(this._partyKey, fullKey.publicKey);
-    const feed = await this._feedStore.openReadOnlyFeed(fullKey.publicKey);
-    return { feed, feedKey };
+    return feed;
   }
 
   async createIterator (messageSelector: MessageSelector, initialTimeframe?: Timeframe) {
     const iterator = new FeedStoreIterator(() => true, messageSelector, initialTimeframe ?? new Timeframe());
-    for (const feedKey of this.getFeedKeys()) {
+    for (const feedKey of this._getFeedKeys()) {
       iterator.addFeedDescriptor(await this.createOrOpenReadOnlyFeed(feedKey));
     }
 

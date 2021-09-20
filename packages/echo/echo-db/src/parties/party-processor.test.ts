@@ -26,7 +26,7 @@ describe('party-processor', () => {
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
     expect(partyProcessor.partyKey).toBeTruthy();
 
-    const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey);
+    const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey);
 
     const message: IHaloStream = {
       meta: {
@@ -65,7 +65,7 @@ describe('party-processor', () => {
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
-      data: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey)
+      data: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey)
     };
     await partyProcessor.processMessage(genesisMessage);
 
@@ -104,7 +104,7 @@ describe('party-processor', () => {
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
-      data: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey)
+      data: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey)
     };
     await partyProcessor.processMessage(genesisMessage);
     const feedAdmit: IHaloStream = {
@@ -168,7 +168,7 @@ describe('party-processor', () => {
 
     await partyProcessor.processMessage({
       meta: meta(0),
-      data: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey)
+      data: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey)
     });
 
     const firedOnce = partyProcessor.keyOrInfoAdded.waitForCount(1);

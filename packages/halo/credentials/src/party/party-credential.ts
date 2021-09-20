@@ -21,14 +21,14 @@ export const TYPE_URL_PARTY_INVITATION = 'dxos.credentials.party.PartyInvitation
  * signing this message.
  * @param signer
  * @param partyKeyPair
- * @param feedKeyPair
+ * @param feedKey
  * @param admitKeyPair
  * @returns Signed message
  */
 export const createPartyGenesisMessage = (
   signer: Signer,
   partyKeyPair: KeyRecord,
-  feedKeyPair: KeyRecord,
+  feedKey: PublicKey,
   admitKeyPair: KeyRecord
 ): Message => {
   assert(typeof admitKeyPair.type !== 'undefined');
@@ -38,13 +38,13 @@ export const createPartyGenesisMessage = (
     type: PartyCredential.Type.PARTY_GENESIS,
     partyGenesis: {
       partyKey: partyKeyPair.publicKey,
-      feedKey: feedKeyPair.publicKey,
+      feedKey: feedKey,
       admitKey: admitKeyPair.publicKey,
       admitKeyType: admitKeyPair.type
     }
   };
 
-  return wrapMessage(signer.sign(message, [partyKeyPair, feedKeyPair, admitKeyPair]));
+  return wrapMessage(signer.sign(message, [partyKeyPair, feedKey, admitKeyPair]));
 };
 
 /**

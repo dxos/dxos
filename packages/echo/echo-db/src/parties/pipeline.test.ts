@@ -50,7 +50,7 @@ describe('pipeline', () => {
     });
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
     await partyProcessor.processMessage({
-      data: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey),
+      data: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey),
       meta: {
         feedKey: feedKey.publicKey.asBuffer(),
         seq: 0
@@ -116,7 +116,7 @@ describe('pipeline', () => {
     const writable = new WritableArray();
     pipeline.inboundEchoStream!.pipe(writable);
 
-    await pipeline.outboundHaloStream!.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
+    await pipeline.outboundHaloStream!.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
     await waitForCondition(() => !partyProcessor.genesisRequired);
 
     await pipeline.outboundEchoStream!.write({

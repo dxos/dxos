@@ -65,15 +65,13 @@ export class PartyFactory {
     // Connect the pipeline.
     await party.open();
 
-    const { feed: writableFeed } = await party.feedProvider.getWritableFeed();
-    const feedKeyPair = identity.keyring.getKey(writableFeed.key);
-    assert(feedKeyPair, 'Keypair for writable feed not found');
+    const writableFeed = await party.feedProvider.createOrOpenWritableFeed();
 
     // PartyGenesis (self-signed by Party).
     await party.processor.writeHaloMessage(createPartyGenesisMessage(
       identity.signer,
       partyKey,
-      feedKeyPair,
+      writableFeed.key,
       partyKey)
     );
 
@@ -89,7 +87,7 @@ export class PartyFactory {
     await party.processor.writeHaloMessage(createFeedAdmitMessage(
       identity.signer,
       partyKey.publicKey,
-      feedKeyPair.publicKey,
+      writableFeed.key,
       [identity.deviceKeyChain]
     ));
 
@@ -124,7 +122,7 @@ export class PartyFactory {
     // mechanism is broken by not waiting on the messages to be processed before returning.
 
     const feedProvider = this._createFeedProvider(partyKey);
-    const { feed } = await feedProvider.getWritableFeed();
+    const { feed } = await feedProvider.createOrOpenWritableFeed();
     const feedKeyPair = identity.keyring.getKey(feed.key);
     assert(feedKeyPair, 'Keypair for writable feed not found');
     const party = new PartyInternal(
@@ -166,7 +164,6 @@ export class PartyFactory {
   async constructParty (partyKey: PartyKey, hints: KeyHint[] = [], initialTimeframe?: Timeframe) {
     // TODO(marik-d): Support read-only parties if this feed doesn't exist?
     const feedProvider = this._createFeedProvider(partyKey);
-    await feedProvider.getWritableFeed();
 
     //
     // Create the party.
@@ -218,7 +215,7 @@ export class PartyFactory {
       invitationDescriptor,
       async partyKey => {
         const feedProvider = this._createFeedProvider(partyKey);
-        const { feed } = await feedProvider.getWritableFeed();
+        const feed = await feedProvider.createOrOpenWritableFeed();
         return feed.key;
       }
     );

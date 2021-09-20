@@ -193,7 +193,8 @@ class ReplicatorProtocolPluginFactory {
 
   @synchronized
   private async _openFeed (key: FeedKey): Promise<HypercoreFeed> {
-    return (await this._feedProvider.createOrOpenReadOnlyFeed(key)).feed;
+    const descriptor = await this._feedProvider.createOrOpenReadOnlyFeed(key);
+    return descriptor.feed;
   }
 }
 

@@ -133,7 +133,7 @@ export class PartyInternal {
 
     await this._partyCore.open(this._hints);
 
-    const identity = await this._identityProvider();
+    const identity = this._identityProvider();
     this._invitationManager = new InvitationManager(
       this._partyCore.processor,
       this._identityProvider,

@@ -169,7 +169,7 @@ describe('Party manager', () => {
     });
 
     const feedStream = createWritableFeedStream(feed);
-    feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
+    feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
 
     await partyManager.addParty(partyKey.publicKey, [{
       type: KeyType.FEED,
@@ -219,7 +219,7 @@ describe('Party manager', () => {
       assert(feedKey);
 
       const feedStream = createWritableFeedStream(feed);
-      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey) });
+      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey) });
       feedStream.write({
         echo: checkType<EchoEnvelope>({
           itemId: 'foo',

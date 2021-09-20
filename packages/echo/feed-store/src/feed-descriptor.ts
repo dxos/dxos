@@ -32,7 +32,7 @@ export class FeedDescriptor {
   private readonly _secretKey?: Buffer;
   private readonly _valueEncoding?: ValueEncoding;
   private readonly _hypercore: Hypercore;
-  readonly lock: Lock;
+  private readonly _lock: Lock;
 
   private _feed: HypercoreFeed | null;
 
@@ -51,7 +51,7 @@ export class FeedDescriptor {
     this._key = key;
     this._secretKey = secretKey;
 
-    this.lock = new Lock();
+    this._lock = new Lock();
 
     this._feed = null;
   }
@@ -92,7 +92,7 @@ export class FeedDescriptor {
       return this.feed;
     }
 
-    await this.lock.executeSynchronized(async () => {
+    await this._lock.executeSynchronized(async () => {
       await this._open();
     });
     return this.feed;
@@ -106,7 +106,7 @@ export class FeedDescriptor {
       return;
     }
 
-    await this.lock.executeSynchronized(async () => {
+    await this._lock.executeSynchronized(async () => {
       await pify(this._feed?.close.bind(this._feed))();
     });
   }

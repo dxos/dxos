@@ -186,11 +186,9 @@ describe('FeedStore', () => {
     });
 
     const publicKey = PublicKey.random();
-    const fd = await feedStore.openReadOnlyFeed(publicKey);
+    await feedStore.openReadOnlyFeed(publicKey);
 
     await expect(feedStore.close()).rejects.toThrow(/close error/);
-
-    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   test('feed event does not get called twice', async () => {
