@@ -6,3 +6,4 @@ export * from './authenticator';
 export * from './useInvitation';
 export * from './useInvitationRedeemer';
 export * from './useOfflineInvitation';
+export * from './utils';
