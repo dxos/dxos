@@ -13,7 +13,7 @@ export interface InvitationAuthenticator {
   secretValidator: SecretValidator
 }
 
-export const defaultInvitationAuthenticator: InvitationAuthenticator = {
+export const defaultInvitationAuthenticator: Required<InvitationAuthenticator> = {
   secretProvider: defaultSecretProvider,
   secretValidator: defaultSecretValidator
 };
