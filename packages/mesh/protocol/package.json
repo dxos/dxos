@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol",
-  "version": "2.12.20",
+  "version": "2.12.21",
   "description": "Protocol.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol#readme",
   "bugs": {
