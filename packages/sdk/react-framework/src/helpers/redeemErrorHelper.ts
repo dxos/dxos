@@ -9,7 +9,7 @@ export enum RedeemErrorType {
   ALREADY_CONNECTED = 'Already connected.'
 }
 
-export const handleRedeemError = (error: string) => { 
+export const handleRedeemError = (error: string) => {
   if (error.includes('SyntaxError: Unexpected token') || error.includes('InvalidCharacterError')) {
     return RedeemErrorType.INVALID_CODE;
   } else if (error.includes('ERR_GREET_INVALID_INVITATION')) {
