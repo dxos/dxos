@@ -98,7 +98,7 @@ it('Chain of Keys', async () => {
   const messages = new Map();
 
   // The first message in the chain in always a PartyGenesis for the Halo.
-  messages.set(identityKey.publicKey.toHex(), createPartyGenesisMessage(haloKeyring, identityKey, feedKeyA, deviceKeyA));
+  messages.set(identityKey.publicKey.toHex(), createPartyGenesisMessage(haloKeyring, identityKey, feedKeyA.publicKey, deviceKeyA));
   messages.set(deviceKeyA.publicKey.toHex(), messages.get(identityKey.publicKey.toHex()));
   messages.set(feedKeyA.publicKey.toHex(), messages.get(identityKey.publicKey.toHex()));
 
@@ -146,7 +146,7 @@ it('PartyAuthenticator - good direct', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
       identityKeyRecord
     )
   ];
@@ -179,7 +179,7 @@ it('PartyAuthenticator - good chain', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
       identityKeyRecord
     )
   ];
@@ -221,7 +221,7 @@ it('PartyAuthenticator - bad chain', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
       identityKeyRecord
     )
   ];
@@ -264,7 +264,7 @@ it('PartyAuthenticator - wrong key', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))
     )
   ];
@@ -292,7 +292,7 @@ it('PartyAuthenticator - wrong party', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
       identityKeyRecord
     )
   ];
@@ -321,7 +321,7 @@ it('PartyAuthenticator - missing deviceKey', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))
     )
   ];
@@ -350,7 +350,7 @@ it('PartyAuthenticator - tampered message', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
       identityKeyRecord
     )
   ];
@@ -384,7 +384,7 @@ it('PartyAuthenticator - tampered signature', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
       identityKeyRecord
     )
   ];
@@ -419,7 +419,7 @@ it('PartyAuthenticator - signature too old', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
       identityKeyRecord
     )
   ];
@@ -455,7 +455,7 @@ it('PartyAuthenticator - signature too far in future', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
       identityKeyRecord
     )
   ];
@@ -491,7 +491,7 @@ it('PartyAuthenticator - signature date invalid', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })),
+      keyring.findKey(Keyring.signingFilter({ type: KeyType.FEED })).publicKey,
       identityKeyRecord
     )
   ];

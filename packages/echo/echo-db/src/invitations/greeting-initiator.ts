@@ -54,7 +54,7 @@ export class GreetingInitiator {
     private readonly _networkManager: NetworkManager,
     private readonly _identity: Identity,
     private readonly _invitationDescriptor: InvitationDescriptor,
-    private readonly _feedInitializer: (partyKey: PartyKey) => Promise<any /* Keypair */>
+    private readonly _feedInitializer: (partyKey: PartyKey) => Promise<PublicKey>
   ) {
     assert(InvitationDescriptorType.INTERACTIVE === this._invitationDescriptor.type);
   }

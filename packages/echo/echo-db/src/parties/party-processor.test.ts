@@ -26,7 +26,7 @@ describe('party-processor', () => {
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
     expect(partyProcessor.partyKey).toBeTruthy();
 
-    const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey);
+    const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey);
 
     const message: IHaloStream = {
       meta: {
@@ -65,7 +65,7 @@ describe('party-processor', () => {
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
-      data: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey)
+      data: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey)
     };
     await partyProcessor.processMessage(genesisMessage);
 
@@ -76,7 +76,7 @@ describe('party-processor', () => {
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
-      data: createFeedAdmitMessage(keyring, partyKey.publicKey, feedKey2, [identityKey])
+      data: createFeedAdmitMessage(keyring, partyKey.publicKey, feedKey2.publicKey, [identityKey])
     };
     await partyProcessor.processMessage(feedAdmit);
 
@@ -104,7 +104,7 @@ describe('party-processor', () => {
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
-      data: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey)
+      data: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey)
     };
     await partyProcessor.processMessage(genesisMessage);
     const feedAdmit: IHaloStream = {
@@ -113,7 +113,7 @@ describe('party-processor', () => {
         seq: 0
         // TODO(telackey): Should ownership data go here?
       },
-      data: createFeedAdmitMessage(keyring, partyKey.publicKey, feedKey, [identityKey])
+      data: createFeedAdmitMessage(keyring, partyKey.publicKey, feedKey.publicKey, [identityKey])
     };
     await partyProcessor.processMessage(feedAdmit);
 
@@ -139,7 +139,7 @@ describe('party-processor', () => {
         seq: 1
         // TODO(telackey): Should ownership data go here?
       },
-      data: createFeedAdmitMessage(keyring2, partyKey.publicKey, feedKey2, [identityKey2])
+      data: createFeedAdmitMessage(keyring2, partyKey.publicKey, feedKey2.publicKey, [identityKey2])
     };
     await partyProcessor.processMessage(feedAdmit2);
 
@@ -168,7 +168,7 @@ describe('party-processor', () => {
 
     await partyProcessor.processMessage({
       meta: meta(0),
-      data: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey)
+      data: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey)
     });
 
     const firedOnce = partyProcessor.keyOrInfoAdded.waitForCount(1);

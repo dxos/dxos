@@ -9,7 +9,6 @@ import { createKeyPair, PublicKey } from '@dxos/crypto';
 import { Timeframe } from './timeframe';
 
 const log = debug('dxos:echo:spacetime:test');
-debug.enable('dxos:echo:*');
 
 const createFeedKey = () => {
   const { publicKey } = createKeyPair();

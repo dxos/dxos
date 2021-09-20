@@ -16,9 +16,8 @@ import { ItemManager } from './item-manager';
 describe('items', () => {
   test('item construction', async () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
-    await feedStore.open();
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
+    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
 
     const modelFactory = new ModelFactory();
     const itemManager = new ItemManager(modelFactory, createFeedWriter(feed));

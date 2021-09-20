@@ -54,21 +54,12 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
       );
     },
     async replicate (feeds: FeedData[]) {
-      const hypercoreFeeds = await Promise.all(feeds.map((feed) => {
-        const { key, discoveryKey } = decodeFeed(feed);
+      const hypercoreFeeds = await Promise.all(feeds.map(async (feed) => {
+        const { key } = decodeFeed(feed);
 
         if (key) {
-          const feed = feedStore.getOpenFeed(d => d.key.equals(key));
-
-          if (feed) {
-            return feed;
-          }
-          const publicKey = PublicKey.from(key);
-          return feedStore.createReadOnlyFeed({ key: publicKey });
-        }
-
-        if (discoveryKey) {
-          return feedStore.getOpenFeed(d => d.discoveryKey.equals(discoveryKey));
+          const { feed } = await feedStore.openReadOnlyFeed(PublicKey.from(key));
+          return feed;
         }
 
         return null;
@@ -81,12 +72,11 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: 'utf8' });
-  await feedStore.open();
   const { publicKey, secretKey } = createKeyPair();
-  const feed = await feedStore.createReadWriteFeed({
-    key: PublicKey.from(publicKey),
+  const { feed } = await feedStore.openReadWriteFeed(
+    PublicKey.from(publicKey),
     secretKey
-  });
+  );
   const append = pify(feed.append.bind(feed));
   let closed = false;
 
@@ -100,11 +90,8 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
 
   return {
     id: peerId,
-    getFeeds () {
-      return feedStore.getOpenFeeds();
-    },
-    getDescriptors () {
-      return feedStore.getDescriptors();
+    getFeedsNum () {
+      return Array.from((feedStore as any)._descriptors.values()).length;
     },
     createStream ({ initiator }) {
       return new Protocol({
@@ -125,7 +112,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     },
     getMessages () {
       const messages: any[] = [];
-      const stream = multi.obj(feedStore.getOpenFeeds().map(feed => createBatchStream(feed)));
+      const stream = multi.obj(Array.from((feedStore as any)._descriptors.values()).map((descriptor: any) => createBatchStream(descriptor.feed)));
       stream.on('data', (data: any[]) => {
         messages.push(data[0].data);
       });
@@ -161,7 +148,7 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
 
     await waitForExpect(() => {
       const result = network.peers.reduce((prev: boolean, peer: any) => {
-        return prev && peer.getFeeds().length === network.peers.length;
+        return prev && peer.getFeedsNum() === network.peers.length;
       }, true);
 
       expect(result).toBe(true);
