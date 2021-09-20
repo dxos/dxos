@@ -19,7 +19,7 @@ import { defaultInvitationAuthenticator, InvitationDescriptor } from '@dxos/echo
 import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 
 import { DialogHeading } from '../components';
-import { REDEEM_ERRORS } from '../constants';
+import { handleRedeemError } from '../helpers';
 
 const useStyles = makeStyles((theme) => ({
   marginTop: {
@@ -61,17 +61,8 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
 
   const handleInvitationError = (error: string) => {
     setStep(2);
-    if (error.includes('SyntaxError: Unexpected token') || error.includes('InvalidCharacterError')) {
-      setError(REDEEM_ERRORS.INVALID_CODE);
-    } else if (error.includes('ERR_GREET_INVALID_INVITATION')) {
-      setError(REDEEM_ERRORS.NOT_AUTHORIZED);
-    } else if (error.includes('ERR_GREET_ALREADY_CONNECTED_TO_SWARM')) {
-      setError(REDEEM_ERRORS.ALREADY_CONNECTED);
-    } else if (error.includes('ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT')) {
-      setError(REDEEM_ERRORS.TIMEOUT);
-    } else {
-      setError(error);
-    }
+    const err = handleRedeemError(error);
+    setError(err);
   };
 
   const [redeemCode, setPin] = useInvitationRedeemer({
