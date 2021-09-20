@@ -14,7 +14,7 @@ import { sleep } from '@dxos/async';
 import { PublicKey, createKeyPair } from '@dxos/crypto';
 import { IStorage, STORAGE_NODE, STORAGE_RAM, createStorage } from '@dxos/random-access-multi-storage';
 
-import { FeedDescriptor } from '.';
+import { FeedDescriptor } from './feed-descriptor';
 import { FeedStore } from './feed-store';
 import { HypercoreFeed } from './hypercore-types';
 

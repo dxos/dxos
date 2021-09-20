@@ -19,7 +19,7 @@ import { Protocol } from '@dxos/protocol';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 
-import { PartyFeedProvider } from '.';
+import { PartyFeedProvider } from './party-feed-provider';
 import { IdentityProvider } from '../halo';
 import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
 import { PartyInternal } from './party-internal';
