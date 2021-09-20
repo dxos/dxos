@@ -5,14 +5,11 @@
 import { Client } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { createKeyPair, keyPairFromSeedPhrase } from '@dxos/crypto';
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { decodeInvitation } from '@dxos/react-client';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/wallet-core';
 
 import { config } from './config';
-
-// const encodeInvitation = (invitation: InvitationDescriptor) => btoa(JSON.stringify(invitation.toQueryParameters()));
-const decodeInvitation = (code: string) => InvitationDescriptor.fromQueryParameters(JSON.parse(atob(code)));
 
 export class BackgroundServer {
   private _client: Client = new Client(config);
