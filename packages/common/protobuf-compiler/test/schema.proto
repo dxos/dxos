@@ -53,6 +53,8 @@ message ComplexFields {
   Any myAny = 20;
   google.protobuf.Any googleAny = 21;
   dxos.test.any.Any importedAny = 22;
+
+  TestFoo fooTest = 23;
 }
 
 message WithTimestamp {
