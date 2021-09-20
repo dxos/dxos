@@ -35,12 +35,12 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
   const backgroundService = useBackgroundContext();
   const withUIError = useUIError();
 
-  const onImport = async () => {
+  const onNavigation = async (path: string) => {
     if (inFullScreenMode()) {
-      history.push('/import');
+      history.push(`/${path}`);
       return;
     }
-    const fullScreenUrl = location.href.replace('popup/popup.html', 'popup/fullscreen.html').replace('create', 'import');
+    const fullScreenUrl = location.href.replace('popup/popup.html', 'popup/fullscreen.html').replace('create', path);
     await browser.tabs.create({ active: true, url: fullScreenUrl });
   };
 
@@ -98,8 +98,11 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
           </Grid>
         </Grid>
         <Grid item xs={12}>
-          <Grid container justify='center' onClick={onImport}>
-            or &nbsp; <Link component='button'> Import using seedphrase</Link>
+          <Grid container justify='center' onClick={() => onNavigation('import')}>
+            <Link component='button'>Import using seedphrase</Link>
+          </Grid>
+          <Grid container justify='center' onClick={() => onNavigation('redeem-device')}>
+            <Link component='button'>Redeem device invitation</Link>
           </Grid>
         </Grid>
       </Grid>

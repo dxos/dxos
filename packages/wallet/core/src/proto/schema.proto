@@ -13,6 +13,7 @@ service BackgroundService {
   rpc GetParties(GetPartiesRequest) returns (GetPartiesResponse);
   rpc SubscribeToParties (GetPartiesRequest) returns (stream GetPartiesResponse);
   rpc JoinParty(JoinPartyRequest) returns (JoinPartyResponse);
+  rpc RedeemDevice(RedeemDeviceRequest) returns (RedeemDeviceResponse);
 
   // Used by the key hole application to prove identity and allow/disallow access.
   rpc SignMessage(SignMessageRequest) returns (SignMessageResponse);
@@ -71,6 +72,14 @@ message JoinPartyRequest {
   string passcode = 2;
 }
 message JoinPartyResponse {
+  string partyKey = 1;
+}
+
+message RedeemDeviceRequest {
+  string invitation = 1;
+  string passcode = 2;
+}
+message RedeemDeviceResponse {
   string partyKey = 1;
 }
 
