@@ -12,7 +12,7 @@ import { PartyKey, PartySnapshot, Timeframe, FeedKey } from '@dxos/echo-protocol
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
-import { PartyFeedProvider } from '.';
+import { PartyFeedProvider } from './party-feed-provider';
 import { IdentityNotInitializedError } from '../errors';
 import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
@@ -50,9 +50,9 @@ export class PartyInternal {
   private _protocol?: PartyProtocol;
 
   constructor (
-    _partyKey: PartyKey,
-    _modelFactory: ModelFactory,
-    _snapshotStore: SnapshotStore,
+    partyKey: PartyKey,
+    modelFactory: ModelFactory,
+    snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
     // This needs to be a provider in case this is a backend for the HALO party.
     // Then the identity would be changed after this is instantiated.
@@ -63,10 +63,10 @@ export class PartyInternal {
     _options: PartyOptions = {}
   ) {
     this._partyCore = new PartyCore(
-      _partyKey,
+      partyKey,
       _feedProvider,
-      _modelFactory,
-      _snapshotStore,
+      modelFactory,
+      snapshotStore,
       _initialTimeframe,
       _options
     );
@@ -142,6 +142,7 @@ export class PartyInternal {
 
     assert(identity.deviceKey, 'Missing device key.');
 
+    const writeFeed = await this._partyCore.getWriteFeed();
     // Network/swarm.
     this._protocol = new PartyProtocol(
       this._partyCore.key,
@@ -150,7 +151,7 @@ export class PartyInternal {
       this._partyCore.processor.getActiveFeedSet(),
       this._invitationManager,
       this._identityProvider,
-      this._createCredentialsProvider(this._partyCore.key, PublicKey.from((await this._partyCore.getWriteFeed()).feed.key)),
+      this._createCredentialsProvider(this._partyCore.key, writeFeed.key),
       this._partyCore.processor.authenticator
     );
 
