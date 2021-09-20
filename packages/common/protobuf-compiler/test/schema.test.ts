@@ -1,4 +1,5 @@
 import { ComplexFields, Scalars, TaskList, TaskType, WithTimestamp } from './gen/dxos/test'
+import { TestFoo } from "./gen/dxos/test/testfoo";
 import { schema, TYPES } from './gen';
 import { MyKey } from './my-key';
 import { readFileSync, readdirSync, lstatSync } from 'fs'
@@ -41,7 +42,7 @@ test('encode and decode', async () => {
 test('encode and decode external package message', async () => {
   const codec = schema.getCodecForType('dxos.test.testfoo.TestFoo')
 
-  const initial: TYPES['dxos.test.testfoo.TestFoo'] = { fizz: 3, bazz: "5" };
+  const initial: TestFoo = { fizz: 3, bazz: "5" };
 
   const encoded = codec.encode(initial)
 
