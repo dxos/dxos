@@ -9,7 +9,7 @@
     "src"
   ],
   "scripts": {
-    "build": "true",
-    "build:test": "true"
+    "build": "",
+    "build:test": ""
   }
 }
