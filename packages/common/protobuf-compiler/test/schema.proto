@@ -5,7 +5,7 @@ package dxos.test;
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "any.proto";
-import "@dxos/testproject/src/foo.proto";
+import "@dxos/protobuf-test/src/foo.proto";
 
 message Key {
   required bytes data = 1;
