@@ -24,6 +24,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
