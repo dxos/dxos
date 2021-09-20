@@ -138,13 +138,10 @@ export class PartyFactory {
     );
 
     await party.open();
-
     assert(identity.identityKey, 'No identity key');
     const isHalo = identity.identityKey.publicKey.equals(partyKey);
-
     const signingKey = isHalo ? identity.deviceKey : identity.deviceKeyChain;
     assert(signingKey, 'No device key or keychain.');
-
     // Write the Feed genesis message.
     await party.processor.writeHaloMessage(createFeedAdmitMessage(
       identity.signer,
@@ -152,7 +149,6 @@ export class PartyFactory {
       feedKeyPair.publicKey,
       [signingKey]
     ));
-
     return party;
   }
 
@@ -197,7 +193,6 @@ export class PartyFactory {
     const originalInvitation = invitationDescriptor;
 
     const identity = this._identityProvider();
-
     // Claim the offline invitation and convert it into an interactive invitation.
     if (InvitationDescriptorType.OFFLINE_KEY === invitationDescriptor.type) {
       const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
@@ -224,7 +219,6 @@ export class PartyFactory {
     const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
     const party = await this.addParty(partyKey, hints);
     await initiator.destroy();
-
     if (!haloInvitation) {
       assert(identity.deviceKeyChain);
 
@@ -239,7 +233,6 @@ export class PartyFactory {
         ));
       }
     }
-
     return party;
   }
 }
