@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { useHistory, Redirect } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
 
-import { Button, Container, Grid, makeStyles, TextField, Typography, Link } from '@material-ui/core';
+import { Button, Container, Grid, makeStyles, TextField, Typography, Link, Divider } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
 import { useUIError } from '../hooks';
@@ -16,6 +16,11 @@ import type { Profile } from '../utils/types';
 const useStyles = makeStyles({
   container: {
     marginTop: 50
+  },
+  divider: {
+    width: 200,
+    marginTop: 5,
+    marginBottom: 5
   }
 });
 
@@ -100,6 +105,9 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
         <Grid item xs={12}>
           <Grid container justify='center' onClick={() => onNavigation('import')}>
             <Link component='button'>Import using seedphrase</Link>
+          </Grid>
+          <Grid container justify='center'>
+            <Divider className={classes.divider} orientation='horizontal'/>
           </Grid>
           <Grid container justify='center' onClick={() => onNavigation('redeem-device')}>
             <Link component='button'>Redeem device invitation</Link>
