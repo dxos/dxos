@@ -21,7 +21,7 @@ import { Replicator } from '@dxos/protocol-plugin-replicator';
 
 import { IdentityProvider } from '../halo';
 import { HaloRecoveryInitiator, InvitationManager, OfflineInvitationClaimer } from '../invitations';
-import { FeedStoreAdapter } from '../util';
+import { PartyFeedProvider } from './party-feed-provider';
 import { PartyInternal } from './party-internal';
 
 const log = debug('dxos:echo:replication-adapter');
@@ -56,7 +56,7 @@ export class PartyProtocol {
   constructor (
     private readonly _partyKey: PartyKey,
     private readonly _networkManager: NetworkManager,
-    feedStore: FeedStoreAdapter,
+    private readonly _feedProvider: PartyFeedProvider,
     activeFeeds: FeedSetProvider,
     invitationManager: InvitationManager,
     private readonly _identityProvider: IdentityProvider,
@@ -68,7 +68,7 @@ export class PartyProtocol {
     this._haloProtocolPluginFactory =
       new HaloProtocolPluginFactory(this._partyKey, this._identityProvider, invitationManager, authenticator);
     this._replicatorProtocolPluginFactory =
-      new ReplicatorProtocolPluginFactory(this._partyKey, feedStore, activeFeeds);
+      new ReplicatorProtocolPluginFactory(this._feedProvider, activeFeeds);
   }
 
   async start () {
@@ -158,8 +158,7 @@ export class PartyProtocol {
  */
 class ReplicatorProtocolPluginFactory {
   constructor (
-    private readonly _partyKey: PartyKey,
-    private readonly _feedStore: FeedStoreAdapter,
+    private readonly _feedProvider: PartyFeedProvider,
     private readonly _activeFeeds: FeedSetProvider
   ) {}
 
@@ -194,7 +193,8 @@ class ReplicatorProtocolPluginFactory {
 
   @synchronized
   private async _openFeed (key: FeedKey): Promise<HypercoreFeed> {
-    return this._feedStore.getFeed(key) ?? await this._feedStore.createReadOnlyFeed(key, this._partyKey);
+    const descriptor = await this._feedProvider.createOrOpenReadOnlyFeed(key);
+    return descriptor.feed;
   }
 }
 

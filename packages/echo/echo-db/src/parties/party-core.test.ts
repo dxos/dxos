@@ -2,12 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { AssertionError } from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { raise } from '@dxos/debug';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -17,35 +15,35 @@ import { afterTest } from '@dxos/testutils';
 
 import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
-import { createRamStorage, FeedStoreAdapter } from '../util';
+import { createRamStorage } from '../util';
 import { PartyCore } from './party-core';
+import { PartyFeedProvider } from './party-feed-provider';
 
 describe('PartyCore', () => {
   const setup = async () => {
     const storage = createStorage('', STORAGE_RAM);
     const feedStore = new FeedStore(storage, { valueEncoding: codec });
-    await feedStore.open();
     afterTest(async () => feedStore.close());
 
     const keyring = new Keyring();
 
     const metadataStore = new MetadataStore(createRamStorage());
 
-    const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, metadataStore);
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
+    const partyFeedProvider = new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey.publicKey);
+
     const party = new PartyCore(
       partyKey.publicKey,
-      feedStoreAdapter,
+      partyFeedProvider,
       modelFactory,
       snapshotStore
     );
 
-    const feed = await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
-    const feedKey = keyring.getKey(feed.key) ?? raise(new AssertionError());
+    const feed = await partyFeedProvider.createOrOpenWritableFeed();
     await party.open();
     afterTest(async () => party.close());
 
@@ -53,7 +51,7 @@ describe('PartyCore', () => {
     await party.processor.writeHaloMessage(createPartyGenesisMessage(
       keyring,
       partyKey,
-      feedKey,
+      feed.key,
       partyKey)
     );
 
@@ -61,25 +59,22 @@ describe('PartyCore', () => {
     await party.processor.writeHaloMessage(createFeedAdmitMessage(
       keyring,
       partyKey.publicKey,
-      feedKey,
+      feed.key,
       [partyKey]
     ));
 
     // The Party key is an inception key; its SecretKey must be destroyed once the Party has been created.
     await keyring.deleteSecretKey(partyKey);
 
-    return { party, feedKey, feedStoreAdapter, feed, feedStore };
+    return { party, feedKey: feed.key, feed, feedStore };
   };
 
   test('create & have the feed key admitted', async () => {
-    const { party, feedKey, feedStoreAdapter, feedStore } = await setup();
+    const { party, feedKey } = await setup();
 
     await party.processor.keyOrInfoAdded.waitForCount(1);
 
-    expect(party.processor.isFeedAdmitted(feedKey.publicKey)).toBeTruthy();
-
-    const feedSelector = feedStoreAdapter.createFeedSelector(party.key);
-    expect(feedSelector(feedStore.getDescriptor(feedKey.publicKey)!)).toEqual(true);
+    expect(party.processor.isFeedAdmitted(feedKey)).toBeTruthy();
   });
 
   test('create item', async () => {

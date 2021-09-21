@@ -504,6 +504,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/protobuf-test",
+      "projectFolder": "packages/common/protobuf-test",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/testutils",
       "projectFolder": "packages/common/testutils"
     },

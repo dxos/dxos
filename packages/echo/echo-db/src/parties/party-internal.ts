@@ -17,8 +17,8 @@ import { ActivationOptions, PartyPreferences, IdentityProvider } from '../halo';
 import { InvitationManager } from '../invitations';
 import { Database } from '../items';
 import { SnapshotStore } from '../snapshots';
-import { FeedStoreAdapter } from '../util';
 import { PartyCore, PartyOptions } from './party-core';
+import { PartyFeedProvider } from './party-feed-provider';
 import { CredentialsProvider, PartyProtocol } from './party-protocol';
 
 export const PARTY_ITEM_TYPE = 'dxn://dxos/item/party';
@@ -50,10 +50,10 @@ export class PartyInternal {
   private _protocol?: PartyProtocol;
 
   constructor (
-    _partyKey: PartyKey,
-    _feedStore: FeedStoreAdapter,
-    _modelFactory: ModelFactory,
-    _snapshotStore: SnapshotStore,
+    partyKey: PartyKey,
+    modelFactory: ModelFactory,
+    snapshotStore: SnapshotStore,
+    private readonly _feedProvider: PartyFeedProvider,
     // This needs to be a provider in case this is a backend for the HALO party.
     // Then the identity would be changed after this is instantiated.
     private readonly _identityProvider: IdentityProvider,
@@ -63,10 +63,10 @@ export class PartyInternal {
     _options: PartyOptions = {}
   ) {
     this._partyCore = new PartyCore(
-      _partyKey,
-      _feedStore,
-      _modelFactory,
-      _snapshotStore,
+      partyKey,
+      _feedProvider,
+      modelFactory,
+      snapshotStore,
       _initialTimeframe,
       _options
     );
@@ -111,6 +111,10 @@ export class PartyInternal {
     return this._preferences;
   }
 
+  get feedProvider (): PartyFeedProvider {
+    return this._feedProvider;
+  }
+
   async setTitle (title: string) {
     const item = await this.getPropertiesItem();
     await item.model.setProperty(PARTY_TITLE_PROPERTY, title);
@@ -129,7 +133,7 @@ export class PartyInternal {
 
     await this._partyCore.open(this._hints);
 
-    const identity = await this._identityProvider();
+    const identity = this._identityProvider();
     this._invitationManager = new InvitationManager(
       this._partyCore.processor,
       this._identityProvider,
@@ -138,15 +142,16 @@ export class PartyInternal {
 
     assert(identity.deviceKey, 'Missing device key.');
 
+    const writeFeed = await this._partyCore.getWriteFeed();
     // Network/swarm.
     this._protocol = new PartyProtocol(
       this._partyCore.key,
       this._networkManager,
-      this._partyCore.feedStore,
+      this._feedProvider,
       this._partyCore.processor.getActiveFeedSet(),
       this._invitationManager,
       this._identityProvider,
-      this._createCredentialsProvider(this._partyCore.key, PublicKey.from(this._partyCore.getWriteFeed().key)),
+      this._createCredentialsProvider(this._partyCore.key, writeFeed.key),
       this._partyCore.processor.authenticator
     );
 
