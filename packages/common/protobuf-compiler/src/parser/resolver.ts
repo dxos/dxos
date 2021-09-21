@@ -15,7 +15,18 @@ export function createProtoResolver (original: ProtoResolver): ProtoResolver {
       return clasicResolved;
     }
 
-    return require.resolve(target, { paths: [dirname(origin)] });
+    // NOTE: only packages of "@namespace/name" format are supported.
+    if (target.match(/^@[^/]+\/[^/]+$/)) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const config = require(target + '/package.json');
+      if (typeof config.protobuf !== 'string') {
+        throw new Error(`Package "${target}" does not expose "protobuf" file.`);
+      }
+
+      return require.resolve(target + '/' + config.protobuf, { paths: [dirname(origin)] });
+    } else {
+      return require.resolve(target, { paths: [dirname(origin)] });
+    }
   };
 }
 
