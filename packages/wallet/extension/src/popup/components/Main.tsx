@@ -11,6 +11,7 @@ import CreateProfile from './CreateProfile';
 import Import from './Import';
 import JoinParty from './JoinParty';
 import Parties from './Parties';
+import RedeemDevice from './RedeemDevice';
 import User from './User';
 
 const Main = () => {
@@ -41,6 +42,9 @@ const Main = () => {
         </Route>
         <Route path='/create'>
           <CreateProfile profile={profile} onProfileCreated={setProfile} />
+        </Route>
+        <Route path='/redeem-device'>
+          <RedeemDevice profile={profile} onProfileCreated={setProfile} />
         </Route>
         {profile && profile.username && profile.publicKey
           ? <Switch>

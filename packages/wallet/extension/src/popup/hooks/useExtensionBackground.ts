@@ -9,5 +9,8 @@ import { useBackgroundService } from '@dxos/wallet-core';
 import { wrapPort } from '../../utils/wrapPort';
 
 export const useExtensionBackgroundService = () => {
-  return useBackgroundService({ port: wrapPort(browser.runtime.connect()) });
+  return useBackgroundService({
+    port: wrapPort(browser.runtime.connect()),
+    timeout: 10000
+  });
 };
