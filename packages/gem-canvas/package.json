@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-canvas",
-  "version": "1.0.0-beta.33",
+  "version": "1.0.0-beta.34",
   "description": "GEM Canvas.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": {
@@ -28,7 +28,7 @@
     "extends": "plugin:@dxos/react"
   },
   "dependencies": {
-    "@dxos/gem-core": "^1.0.0-beta.33",
+    "@dxos/gem-core": "^1.0.0-beta.34",
     "clsx": "^1.1.0",
     "d3": "^6.1.1",
     "debug": "^4.1.1",
