@@ -9,10 +9,11 @@ import { RpcPort, ProtoRpcClient, createRpcClient } from '@dxos/rpc';
 
 interface UseRpcClientProps<S> {
   port: RpcPort,
-  service: ServiceDescriptor<S>
+  service: ServiceDescriptor<S>,
+  timeout?: number | undefined,
 }
 
-export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) => {
+export const useRpcClient = <S>({ port, service, timeout } : UseRpcClientProps<S>) => {
   const [error, setError] = useState<Error | undefined>(undefined);
   const [rpcClient, setRpcClient] = useState<ProtoRpcClient<S> | undefined>(undefined);
 
@@ -20,9 +21,10 @@ export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) => {
     let client: ProtoRpcClient<S>;
     try {
       client = createRpcClient(service, {
-        port: port
+        port: port,
+        timeout
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Creating RPC client failed', err);
       setError(err);
       return;
@@ -32,7 +34,7 @@ export const useRpcClient = <S>({ port, service } : UseRpcClientProps<S>) => {
       try {
         await client.open();
         setRpcClient(client);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Opening RPC client failed', err);
         setError(err);
       }
