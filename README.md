@@ -12,6 +12,11 @@ yarn build
 yarn test
 ```
 
+## Dependencies.
+
+Run `yarn version-check` to list and fix dependencies across modules.
+React and Mui modules should only be defined in `devDependencies` and `peerDependencies`.
+
 
 ### Publishing to npm
 
