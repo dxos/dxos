@@ -23,5 +23,5 @@ To deploy the docs into the publish URL, you will need to update your `productio
 $ git fetch
 $ git checkout production
 $ git rebase origin/main
-$ git push production
+$ git push origin production
 ```
