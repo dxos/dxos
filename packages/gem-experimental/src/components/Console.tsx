@@ -6,7 +6,7 @@ import faker from 'faker';
 import React, { useState } from 'react';
 import ReactConsole from 'simple-react-console';
 
-import { makeStyles } from '@material-ui/styles';
+import { makeStyles } from '@material-ui/core/styles';
 
 const lineHeight = 22;
 
