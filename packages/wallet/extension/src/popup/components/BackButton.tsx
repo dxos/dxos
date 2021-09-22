@@ -12,7 +12,11 @@ const BackButton = () => {
   const history = useHistory();
 
   const onReturn = () => {
-    history.goBack();
+    if (history.length > 1) {
+      history.goBack();
+    } else {
+      history.replace('/');
+    }
   };
 
   return (
