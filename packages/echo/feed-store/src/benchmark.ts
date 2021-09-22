@@ -22,14 +22,13 @@ void (async () => {
   };
 
   const fs = new FeedStore(createStorage('.benchmark'), { valueEncoding: 'utf8' });
-  await fs.open();
   const suite = new Suite(fs, { maxFeeds, maxMessages });
 
   suite.beforeAll(() => {
     return Promise.all(range(maxFeeds).map(async i => {
       const name = `feed/${i}`;
       const { publicKey, secretKey } = createKeyPair();
-      const feed = await fs.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
+      const { feed } = await fs.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
 
       for (let i = 0; i < maxMessages; i++) {
         await new Promise<void>((resolve, reject) => {
@@ -49,7 +48,7 @@ void (async () => {
   suite.test('getBatch', async () => {
     let count = 0;
 
-    await Promise.all(fs.getOpenFeeds().map(feed => {
+    await Promise.all(Array.from((fs as any)._descriptors.values()).map(({ feed }: any) => {
       return new Promise<void>((resolve, reject) => {
         feed.getBatch(0, maxMessages, (err: Error, result: any) => {
           count += result.length;

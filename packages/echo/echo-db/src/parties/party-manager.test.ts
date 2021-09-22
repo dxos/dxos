@@ -38,9 +38,10 @@ import { OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
 import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
-import { createRamStorage, FeedStoreAdapter, messageLogger } from '../util';
+import { createRamStorage, messageLogger } from '../util';
 import { Party } from './party';
 import { PartyFactory } from './party-factory';
+import { PartyFeedProvider } from './party-feed-provider';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
 
@@ -58,8 +59,7 @@ const log = debug('dxos:echo:parties:party-manager:test');
 const setup = async (open = true, createIdentity = true) => {
   const keyring = new Keyring();
   const metadataStore = new MetadataStore(createRamStorage());
-  const feedStore = FeedStoreAdapter.create(createStorage('', STORAGE_RAM), keyring, metadataStore);
-  await feedStore.open();
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
 
   let seedPhrase;
   if (createIdentity) {
@@ -77,12 +77,13 @@ const setup = async (open = true, createIdentity = true) => {
   const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
+  const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
   const partyFactory = new PartyFactory(
     () => identityManager.identity,
     networkManager,
-    feedStore,
     modelFactory,
     snapshotStore,
+    feedProviderFactory,
     {
       writeLogger: messageLogger('<<<'),
       readLogger: messageLogger('>>>')
@@ -90,7 +91,7 @@ const setup = async (open = true, createIdentity = true) => {
   );
 
   const haloFactory: HaloFactory = new HaloFactory(partyFactory, networkManager, keyring);
-  const identityManager = new IdentityManager(keyring, haloFactory);
+  const identityManager = new IdentityManager(keyring, haloFactory, metadataStore);
   const partyManager = new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
   afterTest(() => partyManager.close());
 
@@ -160,10 +161,7 @@ describe('Party manager', () => {
 
     // TODO(burdon): Create multiple feeds.
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.feedStore.createReadWriteFeed({
-      key: PublicKey.from(publicKey),
-      secretKey
-    });
+    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     const feedKey = await keyring.addKeyRecord({
       publicKey: PublicKey.from(feed.key),
       secretKey: feed.secretKey,
@@ -171,7 +169,7 @@ describe('Party manager', () => {
     });
 
     const feedStream = createWritableFeedStream(feed);
-    feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
+    feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
 
     await partyManager.addParty(partyKey.publicKey, [{
       type: KeyType.FEED,
@@ -187,7 +185,6 @@ describe('Party manager', () => {
 
     const keyring = new Keyring();
     const metadataStore = new MetadataStore(createRamStorage());
-    const feedStoreAdapter = new FeedStoreAdapter(feedStore, keyring, metadataStore);
 
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     await keyring.createKeyRecord({ type: KeyType.DEVICE });
@@ -195,13 +192,11 @@ describe('Party manager', () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
     const networkManager = new NetworkManager();
-    const partyFactory: PartyFactory = new PartyFactory(() => identityManager.identity, networkManager, feedStoreAdapter, modelFactory, snapshotStore);
+    const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
+    const partyFactory: PartyFactory = new PartyFactory(() => identityManager.identity, networkManager, modelFactory, snapshotStore, feedProviderFactory);
     const haloFactory = new HaloFactory(partyFactory, networkManager, keyring);
-    const identityManager = new IdentityManager(keyring, haloFactory);
-    const partyManager =
-      new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
-
-    await feedStore.open();
+    const identityManager = new IdentityManager(keyring, haloFactory, metadataStore);
+    const partyManager = new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
 
     // TODO(telackey): Injecting "raw" Parties into the feeds behind the scenes seems fishy to me, as it writes the
     // Party messages in a slightly different way than the code inside PartyFactory does, and so could easily diverge
@@ -213,15 +208,18 @@ describe('Party manager', () => {
     const numParties = 3;
     for (let i = 0; i < numParties; i++) {
       const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
-      await metadataStore.addParty(partyKey.publicKey);
+      const keyRecord = keyring.getFullKey(partyKey.publicKey);
+      assert(keyRecord, 'Key is not found in keyring');
+      assert(keyRecord.secretKey, 'Missing secret key');
+      await metadataStore.addPartyFeed(partyKey.publicKey, keyRecord.publicKey);
 
       // TODO(burdon): Create multiple feeds.
-      const feed = await feedStoreAdapter.createWritableFeed(partyKey.publicKey);
+      const { feed } = await feedStore.openReadWriteFeed(keyRecord.publicKey, keyRecord.secretKey);
       const feedKey = keyring.getFullKey(feed.key);
       assert(feedKey);
 
       const feedStream = createWritableFeedStream(feed);
-      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey) });
+      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey) });
       feedStream.write({
         echo: checkType<EchoEnvelope>({
           itemId: 'foo',

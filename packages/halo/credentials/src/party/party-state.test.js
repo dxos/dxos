@@ -55,7 +55,7 @@ it('Process basic message types', async () => {
   let deviceKeyChain;
   {
     const haloMessages = new Map();
-    const haloGenesis = createPartyGenesisMessage(keyring, identityKeyB, haloFeedKey, deviceKey);
+    const haloGenesis = createPartyGenesisMessage(keyring, identityKeyB, haloFeedKey.publicKey, deviceKey);
     haloMessages.set(identityKeyB.publicKey.toHex(), haloGenesis);
     haloMessages.set(haloFeedKey.publicKey.toHex(), haloGenesis);
     haloMessages.set(deviceKey.publicKey.toHex(), haloGenesis);
@@ -66,11 +66,11 @@ it('Process basic message types', async () => {
 
   const messages = [
     // The Genesis message is signed by the party private key, the feed key, and one admitted key (IdentityA).
-    createPartyGenesisMessage(keyring, partyKey, feedKeyA, identityKeyA),
+    createPartyGenesisMessage(keyring, partyKey, feedKeyA.publicKey, identityKeyA),
     // Admit IdentityB using a KeyAdmit message.
     createKeyAdmitMessage(keyring, partyKey.publicKey, identityKeyB, [identityKeyA]),
     // Add another feed, and sign for it using the Device KeyChain associated with IdentityB.
-    createFeedAdmitMessage(keyring, partyKey.publicKey, feedKeyB, [deviceKeyChain]),
+    createFeedAdmitMessage(keyring, partyKey.publicKey, feedKeyB.publicKey, [deviceKeyChain]),
     // Add an IdentityInfo, wrapped in an Envelope signed by the device KeyChain, as when copied from the HALO.
     createEnvelopeMessage(
       keyring,
@@ -120,7 +120,7 @@ it('GreetingCommandPlugin envelopes', async () => {
   const genesis = codecLoop(
     createPartyGenesisMessage(greeterKeyring,
       greeterKeyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      greeterKeyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0],
+      greeterKeyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0].publicKey,
       greeterKeyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))
     )
   );
@@ -155,7 +155,7 @@ it('Reject message from unknown source', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0].publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))),
     createKeyAdmitMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey,
@@ -181,7 +181,7 @@ it('Message signed by known and unknown key should not admit unknown key', async
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0].publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))),
     createKeyAdmitMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey,
@@ -208,7 +208,7 @@ it('Reject Genesis not signed by Party key', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       wrongKey,
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0].publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))
     )
   ].map(codecLoop);
@@ -231,7 +231,7 @@ it('Reject admit key message with wrong Party', async () => {
   let messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0].publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))
     )
   ].map(codecLoop);
@@ -268,7 +268,7 @@ it('Reject admit feed message with wrong Party', async () => {
   let messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0].publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))
     )
   ].map(codecLoop);
@@ -284,7 +284,7 @@ it('Reject admit feed message with wrong Party', async () => {
   messages = [
     createFeedAdmitMessage(keyring,
       wrongParty.publicKey,
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[1],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[1].publicKey,
       [keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))]
     )
   ].map(codecLoop);
@@ -303,7 +303,7 @@ it('Reject tampered Genesis message', async () => {
   const messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0].publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))
     )
   ].map(codecLoop);
@@ -328,7 +328,7 @@ it('Reject tampered admit feed message', async () => {
   let messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0].publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))
     )
   ].map(codecLoop);
@@ -344,7 +344,7 @@ it('Reject tampered admit feed message', async () => {
   messages = [
     createFeedAdmitMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey,
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[1],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[1].publicKey,
       [keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }))]
     )
   ].map(codecLoop);
@@ -365,7 +365,7 @@ it('Reject tampered admit key message', async () => {
   let messages = [
     createPartyGenesisMessage(keyring,
       keyring.findKey(Filter.matches({ type: KeyType.PARTY })),
-      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0],
+      keyring.findKeys(Keyring.signingFilter({ type: KeyType.FEED }))[0].publicKey,
       keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY })))
   ].map(codecLoop);
 

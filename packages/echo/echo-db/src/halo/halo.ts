@@ -13,6 +13,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import {
   InvitationAuthenticator, InvitationDescriptor, InvitationOptions, SecretProvider
 } from '../invitations';
+import { MetadataStore } from '../metadata';
 import { PartyFactory, OpenProgress, Party, PartyManager } from '../parties';
 import { ResultSet } from '../result';
 import { Contact } from './contact-manager';
@@ -26,7 +27,8 @@ export interface HaloConfiguration {
   keyring: Keyring,
   partyFactory: PartyFactory,
   networkManager: NetworkManager,
-  partyManager: PartyManager
+  partyManager: PartyManager,
+  metadataStore: MetadataStore
 }
 
 /**
@@ -41,7 +43,8 @@ export class HALO {
     keyring,
     partyFactory,
     networkManager,
-    partyManager
+    partyManager,
+    metadataStore
   }: HaloConfiguration) {
     this._keyring = keyring;
 
@@ -51,7 +54,7 @@ export class HALO {
       this._keyring
     );
 
-    this._identityManager = new IdentityManager(this._keyring, haloFactory);
+    this._identityManager = new IdentityManager(this._keyring, haloFactory, metadataStore);
     this._partyManager = partyManager;
   }
 

@@ -39,16 +39,16 @@
     "@dxos/async": "workspace:*"
   },
   "devDependencies": {
-    "@types/webextension-polyfill": "^0.8.0",
+    "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/chrome": "^0.0.125",
     "@types/react": "^16.14.0",
     "@types/react-dom": "^17.0.2",
-    "crx": "^5.0.1",
-    "@dxos/esbuild-plugins": "workspace:*",
-    "esbuild": "^0.11.23",
+    "@types/webextension-polyfill": "^0.8.0",
     "chalk": "^4.1.0",
     "copy": "~0.3.2",
+    "crx": "^5.0.1",
+    "esbuild": "^0.11.23",
     "rmdir": "~1.2.0"
   }
 }

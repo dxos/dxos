@@ -9,6 +9,7 @@ import { Event, synchronized, waitForCondition } from '@dxos/async';
 import { Keyring, SecretProvider } from '@dxos/credentials';
 
 import { InvitationDescriptor } from '../invitations';
+import { MetadataStore } from '../metadata';
 import { PartyInternal } from '../parties';
 import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
@@ -30,7 +31,8 @@ export class IdentityManager {
 
   constructor (
     private readonly _keyring: Keyring,
-    private readonly _haloFactory: HaloFactory
+    private readonly _haloFactory: HaloFactory,
+    private readonly _metadataStore: MetadataStore
   ) {
     this._identity = Identity.fromKeyring(_keyring);
   }
@@ -65,7 +67,7 @@ export class IdentityManager {
   @synchronized
   async loadFromStorage () {
     if (this._identity.identityKey) {
-      if (await this._haloFactory.hasFeedForParty(this._identity.identityKey.publicKey)) {
+      if (this._metadataStore.getParty(this._identity.identityKey.publicKey)) {
         // TODO(marik-d): Snapshots for halo party?
         const halo = await this._haloFactory.constructParty(this._identity.identityKey.publicKey);
         // Always open the HALO.

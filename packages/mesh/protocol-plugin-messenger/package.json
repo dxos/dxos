@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-messenger",
-  "version": "2.12.20",
+  "version": "2.12.23",
   "description": "Protocol plugin messenger.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-messenger#readme",
   "bugs": {

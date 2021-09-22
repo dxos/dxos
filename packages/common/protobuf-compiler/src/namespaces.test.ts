@@ -14,9 +14,10 @@ test('split namespaces', async () => {
   const root = await pb.load(join(__dirname, '../test/schema.proto'));
   const namespaces = splitSchemaIntoNamespaces(root);
 
-  expect(Array.from(namespaces.keys())).toEqual([
+  expect(Array.from(namespaces.keys()).sort()).toEqual([
     'dxos.test',
     'dxos.test.any',
+    'dxos.test.testfoo',
     'google.protobuf'
-  ]);
+  ].sort());
 });
