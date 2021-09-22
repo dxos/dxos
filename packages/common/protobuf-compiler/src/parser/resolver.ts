@@ -3,7 +3,7 @@
 //
 
 import { existsSync } from 'fs';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import pb from 'protobufjs';
 
 export type ProtoResolver = (origin: string, target: string) => string | null;
@@ -15,15 +15,20 @@ export function createProtoResolver (original: ProtoResolver): ProtoResolver {
       return clasicResolved;
     }
 
-    // NOTE: only packages of "@namespace/name" format are supported.
-    if (target.match(/^@[^/]+\/[^/]+$/)) {
+    let config: any;
+    try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const config = require(target + '/package.json');
+      config = require(join(target, 'package.json'));
+    } catch {
+      config = undefined;
+    }
+
+    if (config) {
       if (typeof config.protobuf !== 'string') {
         throw new Error(`Package "${target}" does not expose "protobuf" file.`);
       }
 
-      return require.resolve(target + '/' + config.protobuf, { paths: [dirname(origin)] });
+      return require.resolve(join(target, config.protobuf), { paths: [dirname(origin)] });
     } else {
       return require.resolve(target, { paths: [dirname(origin)] });
     }
