@@ -93,6 +93,22 @@ export class BackgroundServer {
             console.error(err);
             throw err;
           }
+        },
+        RedeemDevice: async request => {
+          if (!request.invitation) {
+            throw new Error('Invitation is missing.');
+          }
+          const invitation = decodeInvitation(request.invitation);
+          try {
+            const joinedParty = await this._client.halo.join(invitation, async () => Buffer.from(request.passcode!));
+            return {
+              partyKey: joinedParty.key.toHex()
+            };
+          } catch (err) {
+            console.error('Redeeming device invitation failed');
+            console.error(err);
+            throw err;
+          }
         }
       },
       port: this._port

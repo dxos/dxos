@@ -8,9 +8,14 @@ import { useRpcClient } from '.';
 import { schema } from '../proto/gen';
 
 interface UseBackgroundServiceProps {
-  port: RpcPort
+  port: RpcPort,
+  timeout?: number | undefined,
 }
 
-export const useBackgroundService = ({ port } : UseBackgroundServiceProps) => {
-  return useRpcClient({ port, service: schema.getService('dxos.wallet.extension.BackgroundService') });
+export const useBackgroundService = ({ port, timeout } : UseBackgroundServiceProps) => {
+  return useRpcClient({
+    port,
+    service: schema.getService('dxos.wallet.extension.BackgroundService'),
+    timeout
+  });
 };
