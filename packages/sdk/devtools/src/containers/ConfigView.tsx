@@ -6,14 +6,17 @@ import React, { useEffect, useState } from 'react';
 
 import { JsonTreeView } from '@dxos/react-framework';
 
-import { useBridge } from '../hooks/bridge';
+import { useDevtoolsHost } from '../contexts';
 
 export const ConfigView = () => {
-  const [bridge] = useBridge();
-  const [config, setConfig] = useState(undefined);
+  const devtoolsHost = useDevtoolsHost();
+  const [config, setConfig] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    bridge.getConfig().then(setConfig).catch(console.error);
+    (async () => {
+      const config = await devtoolsHost.GetConfig({});
+      setConfig(config.config);
+    })();
   }, []);
 
   return (

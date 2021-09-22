@@ -6,20 +6,21 @@ import React, { useEffect, useState } from 'react';
 
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
-
-import { useBridge } from '../hooks/bridge';
+import { useDevtoolsHost } from '../contexts';
 
 export const DebugLoggingView = () => {
-  const [bridge] = useBridge();
+  const devtoolsHost = useDevtoolsHost();
   const [namespaces, setNamespaces] = useState('');
 
   useEffect(() => {
     const fetchNamespaces = async () => {
       // debug module API only allows fetching the current namespaces by calling disable()
       // so we need to then call enable() in order to restore the existing config.
-      const namespacesFetched = await bridge.send('debug-logging.disable', null);
-      await bridge.send('debug-logging.enable', namespacesFetched);
-      setNamespaces(namespacesFetched);
+      const namespacesFetched = await devtoolsHost.DisableDebugLogging({});
+      await devtoolsHost.EnableDebugLogging({ namespaces: namespacesFetched?.enabledNamespaces });
+      if (namespacesFetched?.enabledNamespaces) {
+        setNamespaces(namespacesFetched.enabledNamespaces);
+      }
     };
     fetchNamespaces().catch(console.error);
   }, []);
@@ -27,18 +28,18 @@ export const DebugLoggingView = () => {
   const handleEnableLogging = async () => {
     const allNamespaces = '*';
     setNamespaces(allNamespaces);
-    await bridge.send('debug-logging.enable', allNamespaces);
+    await devtoolsHost.EnableDebugLogging({ namespaces: allNamespaces });
   };
 
   const handleDisableLogging = async () => {
     setNamespaces('');
-    await bridge.send('debug-logging.disable', null);
+    await devtoolsHost.DisableDebugLogging({});
   };
 
   const handleCustomLogging = async () => {
     // Disable first otherwise the new namespaces are added to the existing enabled set
-    await bridge.send('debug-logging.disable', null);
-    await bridge.send('debug-logging.enable', namespaces);
+    await devtoolsHost.DisableDebugLogging({});
+    await devtoolsHost.EnableDebugLogging({ namespaces });
   };
 
   return (

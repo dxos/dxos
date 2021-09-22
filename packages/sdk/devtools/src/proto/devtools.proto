@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2021 DXOS.org
 //
 
 syntax = "proto3";
@@ -36,7 +36,7 @@ service DevtoolsHost {
   // ECHO
   //
 
-  rpc SubsribeToItems(SubscribeToItemsRequest) returns (stream SubscribeToItemsResponse);
+  rpc SubscribeToItems(SubscribeToItemsRequest) returns (stream SubscribeToItemsResponse);
 
   //
   // MESH

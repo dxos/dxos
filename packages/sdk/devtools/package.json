@@ -31,7 +31,8 @@
     "react": "^16.14.0",
     "react-copy-to-clipboard": "~5.0.3",
     "react-dom": "^16.14.0",
-    "@dxos/codec-protobuf": "workspace:*"
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/rpc": "workspace:*"
   },
   "devDependencies": {
     "@dxos/network-manager": "workspace:*",

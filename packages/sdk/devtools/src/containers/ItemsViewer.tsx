@@ -2,26 +2,23 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { JsonTreeView } from '@dxos/react-framework';
 
-import { useAsyncEffect } from '../hooks/async-effect';
-import { useBridge } from '../hooks/bridge';
+import { useDevtoolsHost } from '../contexts';
 
 export default function ItemsViewer () {
-  const [bridge] = useBridge();
+  const devtoolsHost = useDevtoolsHost();
   const [data, setData] = useState({});
 
-  useAsyncEffect(async () => {
-    const stream = await bridge.openStream('echo.items');
+  useEffect(() => {
+    const stream = devtoolsHost.SubscribeToItems({});
 
-    stream.onMessage(data => {
-      setData(data);
-    });
+    stream?.subscribe(msg => setData(msg), () => {});
 
-    return () => stream.close();
-  }, [bridge]);
+    return stream?.close
+  }, []);
 
   return (
     <JsonTreeView

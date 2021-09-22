@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+import assert from 'assert';
 
 import { makeStyles } from '@material-ui/core';
 
@@ -10,8 +12,9 @@ import { makeStyles } from '@material-ui/core';
 import { SignalStatus, SignalTrace } from '@dxos/network-devtools';
 import { SignalApi } from '@dxos/network-manager';
 
-import { useAsyncEffect } from '../hooks/async-effect';
-import { useBridge } from '../hooks/bridge';
+import { useDevtoolsHost } from '../contexts';
+import { PermPhoneMsg } from '@material-ui/icons';
+import { SubscribeToSignalStatusResponse } from '../proto';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -40,23 +43,45 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+const stringToState = (state: string): SignalApi.State => {
+  const dict: Record<string, SignalApi.State> = {
+    'CONNECTING': SignalApi.State.CONNECTING,
+    'RE_CONNECTING': SignalApi.State.RE_CONNECTING,
+    'CONNECTED': SignalApi.State.CONNECTED,
+    'DISCONNECTED': SignalApi.State.DISCONNECTED,
+    'CLOSED': SignalApi.State.CLOSED
+  };
+  return dict[state]
+}
+
+const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalApi.Status => {
+  assert(server.connectionStarted && server.host && server.lastStateChange && server.reconnectIn && server.state);
+  return {
+    connectionStarted: +server.connectionStarted!.seconds!,
+    lastStateChange: +server.lastStateChange!.seconds!,
+    reconnectIn: server.reconnectIn!,
+    host: server.host!,
+    state: stringToState(server.state!)
+  }
+}
+
 export default function Signal () {
   const classes = useStyles();
-  const [bridge] = useBridge();
+  const devtoolsHost = useDevtoolsHost();
   const [status, setStatus] = useState<SignalApi.Status[]>([]);
   const [trace, setTrace] = useState<SignalApi.CommandTrace[]>([]);
 
-  useAsyncEffect(async () => {
-    const stream = await bridge.openStream('network.signal.status');
-    stream.onMessage(data => setStatus(data));
-    return () => stream.close();
-  }, [bridge]);
+  useEffect(() => {
+    const stream = devtoolsHost.SubscribeToSignalStatus({});
+    stream?.subscribe(msg => msg.servers && setStatus(msg.servers.map(signalStatus)), () => {});
+    return stream?.close;
+  }, []);
 
-  useAsyncEffect(async () => {
-    const stream = await bridge.openStream('network.signal.trace');
-    stream.onMessage(data => setTrace(data));
-    return () => stream.close();
-  }, [bridge]);
+  useEffect(() => {
+    const stream = devtoolsHost.SubscribeToSignalTrace({});
+    stream?.subscribe((msg) => msg.events && setTrace(msg.events.map(event => JSON.parse(event))), () => {});
+    return stream?.close;
+  }, []);
 
   return (
     <div className={classes.root}>

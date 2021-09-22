@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 
 import KeyTable from '../components/KeyTable';
-import { useBridge } from '../hooks/bridge';
+import { useDevtoolsHost } from '../contexts';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -34,12 +34,18 @@ const useStyles = makeStyles(theme => ({
 
 const Keys = () => {
   const classes = useStyles();
-  const [bridge] = useBridge();
-  const [keys, setKeys] = useState([]);
+  const devtoolsHost = useDevtoolsHost();
+  const [keys, setKeys] = useState<any[]>([]);
 
   useEffect(() => {
-    void bridge.send('keyring.keys', { }).then(keys => setKeys(keys));
-  }, [bridge]);
+    (async () => {
+      const keyring = await devtoolsHost.GetKeyringKeys({});
+      if (keyring?.keys) {
+        keyring.keys
+        setKeys(keyring.keys);
+      }
+    })();
+  }, []);
 
   return (
     <div className={classes.root}>
