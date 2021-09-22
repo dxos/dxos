@@ -2,11 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Stream } from 'crx-bridge';
+import { DevtoolsContext } from '@dxos/client';
+import { Stream } from '@dxos/codec-protobuf';
+import { SubscribeToItemsResponse } from '@dxos/devtools';
 
-import { HandlerProps } from './handler-props';
-
-function getData (echo: HandlerProps['hook']['client']['echo']) {
+function getData (echo: DevtoolsContext['client']['echo']) {
   // TODO(marik-d): Display items hierarchically
   const res: Record<string, any> = {};
   const parties = echo.queryParties().value;
@@ -29,47 +29,31 @@ function getData (echo: HandlerProps['hook']['client']['echo']) {
   return res;
 }
 
-async function subscribeToEcho (client: HandlerProps['hook']['client'], stream: Stream) {
-  function update () {
-    try {
+export const subscribeToItems = (hook: DevtoolsContext) => {
+  return new Stream<SubscribeToItemsResponse>(({ next, close}) => {
+    const client = hook.client;
+    const update = () => {
       const res = getData(client.echo);
-      stream.send(res);
-    } catch (err) {
-      console.error('DXOS DevTools: Items update error');
-      console.error(err);
-    }
-  }
+      next(res);
+    };
 
-  try {
-    await client.initialize();
-    const partySubscriptions: any[] = [];
+    setImmediate(async () => {
+      await client.initialize();
 
-    const unsubscribe = client.echo.queryParties().subscribe((parties) => {
-      partySubscriptions.forEach(unsub => unsub());
-
-      for (const party of parties) {
-        const sub = party.database.select(s => s.items).update.on(() => {
-          update();
-        });
-        partySubscriptions.push(sub);
-      }
-      update();
+      const partySubscriptions: any[] = [];
+      client.echo.queryParties().subscribe((parties) => {
+        partySubscriptions.forEach(unsub => unsub());
+  
+        for (const party of parties) {
+          const sub = party.database.select(s => s.items).update.on(() => {
+            update();
+          });
+          partySubscriptions.push(sub);
+        }
+        update();
+      });
     });
 
-    stream.onClose(() => {
-      partySubscriptions.forEach(unsub => unsub());
-      unsubscribe();
-    });
-
-    update();
-  } catch (e) {
-    console.error('DXOS DevTools: Items handler failed to subscribe to echo.');
-    console.error(e);
-  }
-}
-
-export default ({ hook, bridge }: HandlerProps) => {
-  bridge.onOpenStreamChannel('echo.items', async (stream) => {
-    await subscribeToEcho(hook.client, stream);
+    // TODO(yivlad): Add cleanup logic
   });
 };

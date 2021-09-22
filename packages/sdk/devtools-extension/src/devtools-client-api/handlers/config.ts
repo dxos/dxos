@@ -2,21 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { HandlerProps } from './handler-props';
+import { DevtoolsContext } from '@dxos/client';
+import type { GetConfigResponse } from '@dxos/devtools';
 
-export default ({ hook, bridge }: HandlerProps) => {
-  bridge.onMessage('config', () => {
-    try {
-      return {
-        config: JSON.parse(JSON.stringify(hook.client.config)), // make sure the config is serializable
-        profile: {
-          username: hook.client.halo.getProfile()?.username,
-          publicKey: hook.client.halo.getProfile()?.publicKey.toHex()
-        }
-      };
-    } catch (e) {
-      console.error('DXOS DevTools: Config handler failed to respond');
-      console.log(e);
-    }
-  });
+export const getConfig = (hook: DevtoolsContext): GetConfigResponse => {
+  return {
+    config: JSON.parse(JSON.stringify(hook.client.config)) // make sure the config is serializable
+  };
 };
