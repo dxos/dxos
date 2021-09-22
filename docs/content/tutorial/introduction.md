@@ -136,4 +136,4 @@ After that, create a `.babelrc` file at the root of your project with the follow
 If you have your app running, stop it and start it again so it takes the new changes above. You are ready to go!
 
 ---
-> REMEMBER to import React, Material UI and their respective hooks during the sections - we omitted them in the tutorial to make it more simple.
+> REMEMBER to import React, Material UI and their respective hooks during the sections - we omitted them in the tutorial to make it simpler.
