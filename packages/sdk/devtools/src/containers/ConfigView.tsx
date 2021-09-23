@@ -10,12 +10,12 @@ import { useDevtoolsHost } from '../contexts';
 
 export const ConfigView = () => {
   const devtoolsHost = useDevtoolsHost();
-  const [config, setConfig] = useState<string | undefined>(undefined);
+  const [config, setConfig] = useState<any>(undefined);
 
   useEffect(() => {
     (async () => {
       const config = await devtoolsHost.GetConfig({});
-      setConfig(config.config);
+      config.config && setConfig(JSON.parse(config.config));
     })();
   }, []);
 

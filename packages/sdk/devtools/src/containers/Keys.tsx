@@ -8,6 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import KeyTable from '../components/KeyTable';
 import { useDevtoolsHost } from '../contexts';
+import { PublicKey } from '@dxos/crypto';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -42,7 +43,7 @@ const Keys = () => {
       const keyring = await devtoolsHost.GetKeyringKeys({});
       if (keyring?.keys) {
         keyring.keys
-        setKeys(keyring.keys);
+        setKeys(keyring.keys.map(key => ({ ...key, publicKey: PublicKey.from(key.publicKey!).toHex() })));
       }
     })();
   }, []);

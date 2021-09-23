@@ -7,6 +7,6 @@ import type { GetConfigResponse } from '@dxos/devtools';
 
 export const getConfig = (hook: DevtoolsContext): GetConfigResponse => {
   return {
-    config: JSON.parse(JSON.stringify(hook.client.config)) // make sure the config is serializable
+    config: JSON.stringify(hook.client.config) // make sure the config is serializable
   };
 };

@@ -80,7 +80,7 @@ const KeyTable = ({ keys }) => {
 
           return (
             <TableRow key={key}>
-              <TableCell>{keyTypeName(type)}</TableCell>
+              <TableCell> {type} </TableCell>
               <TableCell className={classes.mono} title={key}>
                 {truncateString(key, 8)}
                 <CopyToClipboard text={key} onCopy={value => console.log(value)}>

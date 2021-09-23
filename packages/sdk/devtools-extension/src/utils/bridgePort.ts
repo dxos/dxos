@@ -15,10 +15,18 @@ const createPort = (destination: string): RpcPort => {
     },
     subscribe: cb => {
       Bridge.onMessage(MESSAGE_ID, (message) => {
-        cb(message.data);
+        cb(new Uint8Array(message.data));
       });
     }
   };
 }
 
-export const createWindowPort = () => createPort('window');
+/**
+ * Port that can be used by window to send messages to devtools.
+ */
+export const createWindowPort = () => createPort('devtools');
+
+/**
+ * Port that can be used by devtools to send messages to window.
+ */
+export const createDevtoolsPort = () => createPort('window');
