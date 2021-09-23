@@ -505,9 +505,7 @@
     },
     {
       "packageName": "@dxos/protobuf-test",
-      "projectFolder": "packages/common/protobuf-test",
-      "shouldPublish": false,
-      "versionPolicyName": "lockStepPolicy"
+      "projectFolder": "packages/common/protobuf-test"
     },
     {
       "packageName": "@dxos/testutils",
