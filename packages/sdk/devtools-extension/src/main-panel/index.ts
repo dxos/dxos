@@ -10,5 +10,7 @@ import { createDevtoolsRpc } from './rpc-client';
 
 (async () => {
   await Bridge.sendMessage('extension.inject-client-script', {}, 'content-script');
-  initPanel(() => createDevtoolsRpc(createWindowPort()));
+  const port = createWindowPort();
+  const devtoolsHost = await createDevtoolsRpc(port);
+  initPanel(devtoolsHost);
 })();   
