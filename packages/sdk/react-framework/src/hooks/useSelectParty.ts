@@ -85,7 +85,7 @@ export const useSelectParty = () => {
     void updateActiveStatus();
   }, [user]);
 
-  //TODO(dtoloto): disable user status when they close browser tab
+  // TODO(dtoloto): disable user status when they close browser tab
 
   return {
     setSelectedParty,
