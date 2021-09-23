@@ -19,7 +19,7 @@ export default function ItemsViewer () {
       msg.data && setData(JSON.parse(msg.data));
     }, () => {});
 
-    return stream?.close
+    return stream?.close;
   }, []);
 
   return (

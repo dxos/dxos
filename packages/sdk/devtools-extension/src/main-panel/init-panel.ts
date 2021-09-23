@@ -11,11 +11,11 @@ export const initPanel = (devtoolsHost: DevtoolsHost) => {
     connect (onConnect) {
       onConnect(devtoolsHost);
     },
-  
+
     tabId: chrome.devtools.inspectedWindow.tabId,
-  
+
     onReload (reloadFn) {
       chrome.devtools.network.onNavigated.addListener(reloadFn);
     }
   });
-}
+};

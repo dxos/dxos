@@ -9,8 +9,8 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 
 import App from './App';
-import { WithDevtoolsHostContext } from './contexts'; 
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { WithDevtoolsHostContext } from './contexts';
 import { DevtoolsHost } from './proto';
 
 const theme = createMuiTheme({

@@ -11,7 +11,7 @@ const MESSAGE_ID = 'devtools';
 const createPort = (destination: string): RpcPort => {
   return {
     send: async (msg) => {
-      Bridge.sendMessage(MESSAGE_ID, Array.from(msg), destination);
+      await Bridge.sendMessage(MESSAGE_ID, Array.from(msg), destination);
     },
     subscribe: cb => {
       Bridge.onMessage(MESSAGE_ID, (message) => {
@@ -19,7 +19,7 @@ const createPort = (destination: string): RpcPort => {
       });
     }
   };
-}
+};
 
 /**
  * Port that can be used by window to send messages to devtools.

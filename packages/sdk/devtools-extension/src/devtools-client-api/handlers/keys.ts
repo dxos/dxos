@@ -25,5 +25,5 @@ export const getKeyringKeys = (hook: DevtoolsContext): GetKeyringKeysResponse =>
       .map(({ type, publicKey, added, own, trusted }) => ({
         type: keyTypeToString(type), publicKey: publicKey.asUint8Array(), added, own, trusted
       }))
-  }; 
+  };
 };

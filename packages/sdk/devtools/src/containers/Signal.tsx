@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState, useEffect } from 'react';
-
 import assert from 'assert';
+import React, { useState, useEffect } from 'react';
 
 import { makeStyles } from '@material-ui/core';
 
@@ -44,14 +43,14 @@ const useStyles = makeStyles(theme => ({
 
 const stringToState = (state: string): SignalApi.State => {
   const dict: Record<string, SignalApi.State> = {
-    'CONNECTING': SignalApi.State.CONNECTING,
-    'RE_CONNECTING': SignalApi.State.RE_CONNECTING,
-    'CONNECTED': SignalApi.State.CONNECTED,
-    'DISCONNECTED': SignalApi.State.DISCONNECTED,
-    'CLOSED': SignalApi.State.CLOSED
+    CONNECTING: SignalApi.State.CONNECTING,
+    RE_CONNECTING: SignalApi.State.RE_CONNECTING,
+    CONNECTED: SignalApi.State.CONNECTED,
+    DISCONNECTED: SignalApi.State.DISCONNECTED,
+    CLOSED: SignalApi.State.CLOSED
   };
-  return dict[state]
-}
+  return dict[state];
+};
 
 const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalApi.Status => {
   assert(server.connectionStarted && server.host && server.lastStateChange && server.reconnectIn && server.state);
@@ -61,8 +60,8 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
     reconnectIn: server.reconnectIn!,
     host: server.host!,
     state: stringToState(server.state!)
-  }
-}
+  };
+};
 
 export default function Signal () {
   const classes = useStyles();

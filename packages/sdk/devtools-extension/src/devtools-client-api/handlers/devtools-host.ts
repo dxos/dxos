@@ -2,18 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DevtoolsContext } from "@dxos/client";
+import { DevtoolsContext } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
-import { Event as ClientAPIEvent } from '@dxos/devtools';
-import { DevtoolsHost } from "@dxos/devtools";
+import { Event as ClientAPIEvent, DevtoolsHost } from '@dxos/devtools';
 
-import { getConfig } from "./config";
-import { enableDebugLogging, disableDebugLogging } from "./debug-logging";
-import { DevtoolsHostEvents } from "./devtools-host-events";
-import { subscribeToItems } from "./items";
-import { getKeyringKeys } from "./keys";
-import { getNetworkPeers, subscribeToNetworkTopics, subscribeToNetworkStatus, subscribeToSignalTrace } from "./network";
-import { resetStorage } from "./storage";
+import { getConfig } from './config';
+import { enableDebugLogging, disableDebugLogging } from './debug-logging';
+import { DevtoolsHostEvents } from './devtools-host-events';
+import { subscribeToItems } from './items';
+import { getKeyringKeys } from './keys';
+import { getNetworkPeers, subscribeToNetworkTopics, subscribeToNetworkStatus, subscribeToSignalTrace } from './network';
+import { resetStorage } from './storage';
 
 export const createDevtoolsHost = (context: DevtoolsContext, events: DevtoolsHostEvents) : DevtoolsHost => {
   return {
@@ -58,5 +57,5 @@ export const createDevtoolsHost = (context: DevtoolsContext, events: DevtoolsHos
     SubscribeToSignalTrace: () => {
       return subscribeToSignalTrace(context);
     }
-  }
+  };
 };

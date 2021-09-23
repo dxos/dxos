@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
+
 import { DevtoolsHost, schema } from '../proto';
 import { WithDevtoolsHostContext } from './devtools-host-context';
 
@@ -19,9 +20,8 @@ const WithDevtoolsRpc = ({ port, children } : WithDevtoolsRpcProps) => {
 
   useEffect(() => {
     let open = false;
-    let client: ProtoRpcClient<DevtoolsHost>;
     const service = schema.getService('dxos.devtools.DevtoolsHost');
-    client = createRpcClient(service, {
+    const client = createRpcClient(service, {
       port: port
     });
 
@@ -30,10 +30,14 @@ const WithDevtoolsRpc = ({ port, children } : WithDevtoolsRpcProps) => {
       open = true;
       setRpcClient(client);
       const stream = client.rpc.Events({});
-      stream.subscribe((msg) => { msg.ready && setReady(true) }, () => {});
+      stream.subscribe((msg) => {
+        msg.ready && setReady(true);
+      }, () => {});
     });
 
-    return () => { open && client.close() };
+    return () => {
+      open && client.close();
+    };
   });
 
   return (
@@ -41,7 +45,7 @@ const WithDevtoolsRpc = ({ port, children } : WithDevtoolsRpcProps) => {
       {(!ready || !rpcClient) && (<div>
           <div style={{ padding: 8 }}> Waiting for DXOS client... </div>
         </div>)}
-      {(ready && rpcClient ) && (<WithDevtoolsHostContext devtoolsHost={rpcClient?.rpc}>
+      {(ready && rpcClient) && (<WithDevtoolsHostContext devtoolsHost={rpcClient?.rpc}>
           {children}
         </WithDevtoolsHostContext>)}
     </>

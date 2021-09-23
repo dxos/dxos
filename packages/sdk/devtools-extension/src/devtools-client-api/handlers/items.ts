@@ -45,7 +45,7 @@ export const subscribeToItems = (hook: DevtoolsContext) => {
       const partySubscriptions: any[] = [];
       client.echo.queryParties().subscribe((parties) => {
         partySubscriptions.forEach(unsub => unsub());
-  
+
         for (const party of parties) {
           const sub = party.database.select(s => s.items).update.on(() => {
             update();

@@ -2,18 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
+import { DevtoolsContext } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/crypto';
-import { SignalApi } from '@dxos/network-manager';
-
-import { DevtoolsContext } from '@dxos/client';
-import { 
+import {
   GetNetworkPeersRequest,
   GetNetworkPeersResponse,
   SubscribeToNetworkTopicsResponse,
   SubscribeToSignalStatusResponse,
   SubscribeToSignalTraceResponse
 } from '@dxos/devtools';
+import { SignalApi } from '@dxos/network-manager';
 
 const patchProtobufTimestamp = (date: number) => ({
   seconds: (date / 1000).toString()
@@ -24,8 +23,8 @@ export const subscribeToNetworkStatus = (hook: DevtoolsContext) => {
     const update = () => {
       try {
         const status = hook.networkManager.signal.getStatus();
-        next({ 
-          servers: status.map(server => ({ 
+        next({
+          servers: status.map(server => ({
             ...server,
             connectionStarted: patchProtobufTimestamp(server.connectionStarted),
             lastStateChange: patchProtobufTimestamp(server.lastStateChange)
@@ -39,7 +38,7 @@ export const subscribeToNetworkStatus = (hook: DevtoolsContext) => {
     // This is needed to alleviate a race condition where update is sent before devtools subscribes to the stream.
     setTimeout(() => update(), 30);
   });
-}
+};
 
 export const subscribeToSignalTrace = (hook: DevtoolsContext) => {
   return new Stream<SubscribeToSignalTraceResponse>(({ next }) => {
@@ -47,7 +46,7 @@ export const subscribeToSignalTrace = (hook: DevtoolsContext) => {
     hook.networkManager.signal.commandTrace.on(msg => {
       trace.push(msg);
       next({ events: trace.map((msg) => JSON.stringify(msg)) });
-  });
+    });
   });
 };
 
@@ -73,7 +72,7 @@ export const subscribeToNetworkTopics = (hook: DevtoolsContext) => {
 };
 
 export const getNetworkPeers = (hook: DevtoolsContext, request: GetNetworkPeersRequest): GetNetworkPeersResponse => {
-  if(!request.topic) {
+  if (!request.topic) {
     throw new Error('Expected a network topic');
   }
   const map = hook.networkManager.getSwarmMap(PublicKey.from(request.topic));
@@ -84,4 +83,4 @@ export const getNetworkPeers = (hook: DevtoolsContext, request: GetNetworkPeersR
       connections: peer.connections.map(connection => connection.asUint8Array())
     }))
   };
-}
+};

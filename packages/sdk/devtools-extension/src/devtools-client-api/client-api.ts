@@ -4,6 +4,7 @@
 
 import { schema, DevtoolsHost } from '@dxos/devtools';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
+
 import { DevtoolsHostEvents } from './handlers';
 
 export class RpcClientAPI {
