@@ -6,7 +6,7 @@ import { DevtoolsContext } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { SubscribeToItemsResponse } from '@dxos/devtools';
 
-function getData (echo: DevtoolsContext['client']['echo']) {
+function getData (echo: DevtoolsContext['client']['echo']): SubscribeToItemsResponse {
   // TODO(marik-d): Display items hierarchically
   const res: Record<string, any> = {};
   const parties = echo.queryParties().value;
@@ -26,11 +26,13 @@ function getData (echo: DevtoolsContext['client']['echo']) {
     }
   }
 
-  return res;
+  return {
+    data: JSON.stringify(res)
+  };
 }
 
 export const subscribeToItems = (hook: DevtoolsContext) => {
-  return new Stream<SubscribeToItemsResponse>(({ next, close}) => {
+  return new Stream<SubscribeToItemsResponse>(({ next }) => {
     const client = hook.client;
     const update = () => {
       const res = getData(client.echo);
@@ -52,6 +54,8 @@ export const subscribeToItems = (hook: DevtoolsContext) => {
         }
         update();
       });
+
+      update();
     });
 
     // TODO(yivlad): Add cleanup logic

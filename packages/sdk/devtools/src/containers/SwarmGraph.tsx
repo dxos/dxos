@@ -49,7 +49,7 @@ interface Topic {
 
 const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => {
   return {
-    topic: topic.topic!.toString(),
+    topic: PublicKey.from(topic.topic!).toHex(),
     label: topic.label!
   };
 };
@@ -68,12 +68,12 @@ export default function Signal () {
   }, []);
 
   useAsyncEffect(async () => {
-    if (!selectedTopic) {
+    if (!selectedTopic && !PublicKey.isPublicKey(selectedTopic)) {
       setPeers([]);
       return;
     }
     const updatePeers = async () => {
-      const { peers } = await devtoolsHost.GetNetworkPeers({ topic: Buffer.from(selectedTopic) });
+      const { peers } = await devtoolsHost.GetNetworkPeers({ topic: PublicKey.from(selectedTopic).asUint8Array() });
       peers && setPeers(peers.map((peer: any) => ({
         ...peer,
         id: PublicKey.from(peer.id),

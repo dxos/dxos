@@ -13,7 +13,6 @@ import { SignalStatus, SignalTrace } from '@dxos/network-devtools';
 import { SignalApi } from '@dxos/network-manager';
 
 import { useDevtoolsHost } from '../contexts';
-import { PermPhoneMsg } from '@material-ui/icons';
 import { SubscribeToSignalStatusResponse } from '../proto';
 
 const useStyles = makeStyles(theme => ({
@@ -57,8 +56,8 @@ const stringToState = (state: string): SignalApi.State => {
 const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalApi.Status => {
   assert(server.connectionStarted && server.host && server.lastStateChange && server.reconnectIn && server.state);
   return {
-    connectionStarted: +server.connectionStarted!.seconds!,
-    lastStateChange: +server.lastStateChange!.seconds!,
+    connectionStarted: +(server.connectionStarted!.seconds! + '000'),
+    lastStateChange: +(server.lastStateChange!.seconds! + '000'),
     reconnectIn: server.reconnectIn!,
     host: server.host!,
     state: stringToState(server.state!)

@@ -10,12 +10,14 @@ import { useDevtoolsHost } from '../contexts';
 
 export default function ItemsViewer () {
   const devtoolsHost = useDevtoolsHost();
-  const [data, setData] = useState({});
+  const [data, setData] = useState<any>();
 
   useEffect(() => {
     const stream = devtoolsHost.SubscribeToItems({});
 
-    stream?.subscribe(msg => setData(msg), () => {});
+    stream?.subscribe(msg => {
+      msg.data && setData(JSON.parse(msg.data));
+    }, () => {});
 
     return stream?.close
   }, []);
