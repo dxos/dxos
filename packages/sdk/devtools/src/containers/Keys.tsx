@@ -6,10 +6,9 @@ import React, { useEffect, useState } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 
-import { PublicKey } from '@dxos/crypto';
-
 import KeyTable from '../components/KeyTable';
 import { useDevtoolsHost } from '../contexts';
+import { KeyRecord } from '../proto/gen/dxos/credentials/keys';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -37,13 +36,13 @@ const useStyles = makeStyles(theme => ({
 const Keys = () => {
   const classes = useStyles();
   const devtoolsHost = useDevtoolsHost();
-  const [keys, setKeys] = useState<any[]>([]);
+  const [keys, setKeys] = useState<KeyRecord[]>([]);
 
   useEffect(() => {
     void (async () => {
       const keyring = await devtoolsHost.GetKeyringKeys({});
       if (keyring?.keys) {
-        setKeys(keyring.keys.map(key => ({ ...key, publicKey: PublicKey.from(key.publicKey!).toHex() })));
+        setKeys(keyring.keys);
       }
     })();
   }, []);

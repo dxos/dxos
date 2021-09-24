@@ -75,7 +75,7 @@ const KeyTable = ({ keys }) => {
       </TableHead>
       <TableBody>
         {keys.sort(sorter).map(({ type, publicKey, added, own, trusted }) => {
-          const key = publicKey;
+          const key = publicKey.toHex();
 
           return (
             <TableRow key={key}>

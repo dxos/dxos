@@ -8,6 +8,7 @@ package dxos.devtools;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "@dxos/credentials/src/proto/keys.proto";
 
 service DevtoolsHost {
   //
@@ -83,21 +84,7 @@ message DisableDebugLoggingResponse {
 message GetKeyringKeysRequest {}
 
 message GetKeyringKeysResponse {
-  message KeyringKey {
-    // String representation of they KeyType enum.
-    string type = 1;
-    
-    bytes publicKey = 2;
-
-    string added = 3;
-    
-    bool own = 4;
-
-    bool trusted = 5;
-  }
-
-  // TODO(dmaretskyi): Use KeyRecord type from @dxos/credentials once cross-package imports are working.
-  repeated KeyringKey keys = 1;
+  repeated KeyRecord keys = 1;
 }
 
 message ResetStorageRequest {}
