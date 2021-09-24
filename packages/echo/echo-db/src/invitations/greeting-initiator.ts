@@ -18,7 +18,8 @@ import {
   Greeter,
   GreetingCommandPlugin,
   Message,
-  WithTypeUrl
+  WithTypeUrl,
+  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT
 } from '@dxos/credentials';
 import { keyToString, PublicKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
@@ -90,8 +91,9 @@ export class GreetingInitiator {
     this._greeterPlugin = new GreetingCommandPlugin(localPeerId, new Greeter().createMessageHandler());
 
     log(keyToString(localPeerId), 'connecting to', keyToString(swarmKey));
+
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
-      (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId), timeout);
+      (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId), timeout, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT);
 
     await this._networkManager.joinProtocolSwarm({
       topic: PublicKey.from(swarmKey),

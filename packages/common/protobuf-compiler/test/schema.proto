@@ -5,6 +5,7 @@ package dxos.test;
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "any.proto";
+import "@dxos/protobuf-test";
 
 message Key {
   required bytes data = 1;
@@ -52,6 +53,8 @@ message ComplexFields {
   Any myAny = 20;
   google.protobuf.Any googleAny = 21;
   dxos.test.any.Any importedAny = 22;
+
+  TestFoo fooTest = 23;
 }
 
 message WithTimestamp {

@@ -1,0 +1,16 @@
+{
+  "name": "@dxos/protobuf-test",
+  "version": "1.0.0",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "protobuf": "src/foo.proto",
+  "private": true,
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "",
+    "build:test": ""
+  }
+}

@@ -3,3 +3,4 @@
 //
 
 export * from './ipfs-helper';
+export * from './redeemErrorHelper';
