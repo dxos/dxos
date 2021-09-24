@@ -16,5 +16,5 @@ export default {
   'dxos.credentials.keys.PrivKey': {
     encode: (value: Buffer) => ({ data: new Uint8Array(value) }),
     decode: (value: any) => PublicKey.from(value.data).asBuffer()
-  },
+  }
 };
