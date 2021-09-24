@@ -19,6 +19,7 @@ import YesIcon from '@material-ui/icons/CheckCircleOutline';
 import LinkIcon from '@material-ui/icons/Link';
 import NoIcon from '@material-ui/icons/RadioButtonUnchecked';
 
+import { keyTypeName } from '@dxos/credentials';
 import { truncateString } from '@dxos/debug';
 
 // TODO(burdon): Move to dxos/react-ux.
@@ -79,7 +80,7 @@ const KeyTable = ({ keys }) => {
 
           return (
             <TableRow key={key}>
-              <TableCell> {type} </TableCell>
+              <TableCell> {keyTypeName(type)} </TableCell>
               <TableCell className={classes.mono} title={key}>
                 {truncateString(key, 8)}
                 <CopyToClipboard text={key} onCopy={value => console.log(value)}>
