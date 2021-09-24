@@ -12,5 +12,9 @@ export default {
   'google.protobuf.Timestamp': {
     encode: (value: number) => ({ seconds: value / 1000 }),
     decode: (value: any) => +(value.seconds + '000')
-  }
+  },
+  'dxos.credentials.keys.PrivKey': {
+    encode: (value: Buffer) => ({ data: new Uint8Array(value) }),
+    decode: (value: any) => PublicKey.from(value.data).asBuffer()
+  },
 };

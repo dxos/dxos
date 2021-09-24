@@ -25,8 +25,7 @@ export const subscribeToNetworkStatus = (hook: DevtoolsContext) => {
       }
     };
     hook.networkManager.signal.statusChanged.on(update);
-    // This is needed to alleviate a race condition where update is sent before devtools subscribes to the stream.
-    setTimeout(() => update(), 30);
+    update();
   });
 };
 
@@ -46,7 +45,7 @@ export const subscribeToNetworkTopics = (hook: DevtoolsContext) => {
       try {
         const topics = hook.networkManager.topics;
         const labeledTopics = topics.map(topic => ({
-          topic: topic.asUint8Array(),
+          topic,
           label: hook.networkManager.getSwarm(topic)?.label ?? topic.toHex()
         }));
         next({ topics: labeledTopics });
@@ -56,8 +55,7 @@ export const subscribeToNetworkTopics = (hook: DevtoolsContext) => {
     };
     hook.networkManager.topicsUpdated.on(update);
 
-    // This is needed to alleviate a race condition where update is sent before devtools subscribes to the stream.
-    setTimeout(() => update(), 30);
+    update();
   });
 };
 
@@ -69,7 +67,6 @@ export const getNetworkPeers = (hook: DevtoolsContext, request: GetNetworkPeersR
   return {
     peers: map?.peers.map(peer => ({
       ...peer,
-      id: peer.id.asUint8Array(),
       connections: peer.connections.map(connection => connection.asUint8Array())
     }))
   };

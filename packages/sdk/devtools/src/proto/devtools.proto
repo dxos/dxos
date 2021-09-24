@@ -95,7 +95,7 @@ message GetNetworkPeersRequest {
 
 message GetNetworkPeersResponse {
   message PeerInfo {
-    bytes id = 1;
+    PubKey id = 1;
 
     // PeerState enum.
     string state = 2;
@@ -115,7 +115,7 @@ message SubscribeToItemsResponse {
 
 message SubscribeToNetworkTopicsResponse {
   message Topic {
-    bytes topic = 1;
+    PubKey topic = 1;
     string label = 2;
   }
 
