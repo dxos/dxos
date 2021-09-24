@@ -2,27 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import { initDevTool } from '@dxos/devtools';
+import Bridge from 'crx-bridge';
 
-import BridgeProxy from './bridge';
+import { createDevtoolsPort } from '../utils';
+import { initPanel } from './init-panel';
+import { createDevtoolsRpc } from './rpc-client';
 
-declare let chrome: any;
-
-const injected = false;
-
-initDevTool({
-  connect (onConnect) {
-    const bridge = new BridgeProxy();
-    onConnect(bridge);
-
-    if (!injected) {
-      void bridge.injectClientScript();
-    }
-  },
-
-  tabId: chrome.devtools.inspectedWindow.tabId,
-
-  onReload (reloadFn) {
-    chrome.devtools.network.onNavigated.addListener(reloadFn);
-  }
-});
+void (async () => {
+  await Bridge.sendMessage('extension.inject-client-script', {}, 'content-script');
+  const port = createDevtoolsPort();
+  const devtoolsHost = await createDevtoolsRpc(port);
+  initPanel(devtoolsHost);
+})();

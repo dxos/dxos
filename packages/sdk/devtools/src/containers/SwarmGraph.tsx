@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { makeStyles } from '@material-ui/core';
 
@@ -11,8 +11,9 @@ import { PeerGraph } from '@dxos/network-devtools';
 import { PeerInfo } from '@dxos/network-manager';
 
 import AutocompleteFilter from '../components/AutocompleteFilter';
+import { useDevtoolsHost } from '../contexts';
 import { useAsyncEffect } from '../hooks/async-effect';
-import { useBridge } from '../hooks/bridge';
+import { SubscribeToNetworkTopicsResponse } from '../proto';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -41,29 +42,39 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+interface Topic {
+  topic: string,
+  label: string
+}
+
+const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => {
+  return {
+    topic: PublicKey.from(topic.topic!).toHex(),
+    label: topic.label!
+  };
+};
+
 export default function Signal () {
   const classes = useStyles();
-  const [bridge] = useBridge();
-  const [networkTopics, setNetworkTopics] = useState<{topic: string, label: string}[]>([]);
+  const devtoolsHost = useDevtoolsHost();
+  const [networkTopics, setNetworkTopics] = useState<Topic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState('');
   const [peers, setPeers] = useState<PeerInfo[]>([]);
 
-  useAsyncEffect(async () => {
-    const stream = await bridge.openStream('network.topics');
-    stream.onMessage(data => {
-      setNetworkTopics(data);
-    });
-    return () => stream.close();
-  }, [bridge]);
+  useEffect(() => {
+    const stream = devtoolsHost.SubscribeToNetworkTopics({});
+    stream.subscribe((msg) => msg.topics && setNetworkTopics(msg.topics.map(networkTopic)), () => {});
+    return stream.close;
+  }, []);
 
   useAsyncEffect(async () => {
-    if (!selectedTopic) {
+    if (!selectedTopic && !PublicKey.isPublicKey(selectedTopic)) {
       setPeers([]);
       return;
     }
     const updatePeers = async () => {
-      const result = await bridge.send('network.peers', { topic: selectedTopic });
-      setPeers(result.map((peer: any) => ({
+      const { peers } = await devtoolsHost.GetNetworkPeers({ topic: PublicKey.from(selectedTopic).asUint8Array() });
+      peers && setPeers(peers.map((peer: any) => ({
         ...peer,
         id: PublicKey.from(peer.id),
         connections: peer.connections.map((connection: any) => PublicKey.from(connection))
@@ -72,14 +83,14 @@ export default function Signal () {
     await updatePeers();
     const interval = setInterval(updatePeers, 2000);
     return () => clearInterval(interval);
-  }, [bridge, selectedTopic]);
+  }, [selectedTopic]);
 
   const options = networkTopics.map(topic => topic.topic);
 
   return (
     <div className={classes.root}>
       <div className={classes.filter}>
-        <AutocompleteFilter label='Topic' options={options} onChange={setSelectedTopic} value={selectedTopic} />
+        <AutocompleteFilter label='Topic' options={options} onChange={setSelectedTopic} value={selectedTopic as any} />
       </div>
       {selectedTopic
         ? (
