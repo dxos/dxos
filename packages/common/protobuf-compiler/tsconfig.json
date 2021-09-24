@@ -6,6 +6,9 @@
   "references": [
     {
       "path": "../codec-protobuf"
+    },
+    {
+      "path": "../protobuf-test"
     }
   ],
   "include": [
