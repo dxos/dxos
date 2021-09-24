@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import EventEmitter from 'events';
-
 import { Stream } from './stream';
 
 describe('Stream', () => {
@@ -56,14 +54,14 @@ describe('Stream', () => {
   });
 
   test('subscribe gets all updates', async () => {
-    const event = new EventEmitter();
+    let nextCb: (value: string) => void = () => {};
     const stream = new Stream<string>(({ next }) => {
-      event.addListener('add', (value) => next(value));
+      nextCb = next;
     });
-    event.emit('add', 'first');
+    nextCb('first');
     const received: string[] = [];
     stream.subscribe(msg => received.push(msg), () => {});
-    event.emit('add', 'second');
+    nextCb('second');
     expect(received).toEqual(['first', 'second']);
   });
 });
