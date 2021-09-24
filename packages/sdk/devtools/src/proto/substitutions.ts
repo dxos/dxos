@@ -1,4 +1,8 @@
-import { PublicKey } from "@dxos/crypto";
+//
+// Copyright 2021 DXOS.org
+//
+
+import { PublicKey } from '@dxos/crypto';
 
 export default {
   'dxos.credentials.keys.PubKey': {
@@ -9,4 +13,4 @@ export default {
     encode: (value: number) => ({ seconds: value / 1000 }),
     decode: (value: any) => +(value.seconds + '000')
   }
-}
+};

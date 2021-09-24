@@ -14,22 +14,12 @@ import {
 } from '@dxos/devtools';
 import { SignalApi } from '@dxos/network-manager';
 
-const patchProtobufTimestamp = (date: number) => ({
-  seconds: (date / 1000).toString()
-});
-
 export const subscribeToNetworkStatus = (hook: DevtoolsContext) => {
   return new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
     const update = () => {
       try {
         const status = hook.networkManager.signal.getStatus();
-        next({
-          servers: status.map(server => ({
-            ...server,
-            connectionStarted: patchProtobufTimestamp(server.connectionStarted),
-            lastStateChange: patchProtobufTimestamp(server.lastStateChange)
-          }))
-        });
+        next({ servers: status });
       } catch (err: any) {
         close(err);
       }
