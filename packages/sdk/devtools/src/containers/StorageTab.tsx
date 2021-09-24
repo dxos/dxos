@@ -6,14 +6,14 @@ import React from 'react';
 
 import Button from '@material-ui/core/Button';
 
-import { useBridge } from '../hooks/bridge';
+import { useDevtoolsHost } from '../contexts';
 
 export default function StorageTab () {
-  const [bridge] = useBridge();
+  const devtoolsHost = useDevtoolsHost();
 
   async function handleReset () {
     if (window.confirm('RESET ALL DATA (CANNOT BE UNDONE)?')) {
-      await bridge.send('storage.reset');
+      await devtoolsHost.ResetStorage({});
     }
   }
 
