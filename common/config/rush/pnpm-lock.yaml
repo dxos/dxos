@@ -251,6 +251,7 @@ importers:
     devDependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/eslint-plugin': 1.0.14_eslint@7.26.0+typescript@4.3.5
+      '@dxos/protobuf-test': link:../protobuf-test
       '@types/argparse': 2.0.5
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
@@ -262,6 +263,7 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/eslint-plugin': ~1.0.14
+      '@dxos/protobuf-test': workspace:*
       '@types/argparse': ^2.0.0
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
@@ -275,6 +277,8 @@ importers:
       ts-morph: ~10.0.2
       ts-node: ^9.1.1
       typescript: ^4.3.5
+  ../../packages/common/protobuf-test:
+    specifiers: {}
   ../../packages/common/random-access-multi-storage:
     dependencies:
       del: 5.1.0
@@ -853,6 +857,26 @@ importers:
       pump: ^3.0.0
       stream-to-array: ^2.3.0
       wait-for-expect: ^3.0.2
+  ../../packages/halo/halo-protocol:
+    dependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/util': link:../../common/util
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/expect': 24.3.0
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
+      '@types/expect': ~24.3.0
+      '@types/mocha': ~8.2.2
+      expect: ~27.0.2
   ../../packages/mesh/broadcast:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -966,6 +990,7 @@ importers:
   ../../packages/mesh/network-manager:
     dependencies:
       '@dxos/async': link:../../common/async
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/protocol': link:../protocol
@@ -997,6 +1022,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/browser-mocha': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/protocol': workspace:*
@@ -1485,11 +1511,13 @@ importers:
       webpack: 4.44.2
   ../../packages/sdk/devtools:
     dependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/network-devtools': link:../../mesh/network-devtools
       '@dxos/react-framework': link:../react-framework
+      '@dxos/rpc': link:../../common/rpc
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
@@ -1507,12 +1535,14 @@ importers:
       '@types/react-dom': 17.0.5
       typescript: 4.3.5
     specifiers:
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/network-devtools': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/react-framework': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2
@@ -1530,13 +1560,16 @@ importers:
   ../../packages/sdk/devtools-extension:
     dependencies:
       '@babel/runtime': 7.14.0
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools': link:../devtools
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/react-framework': link:../react-framework
+      '@dxos/rpc': link:../../common/rpc
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
@@ -1562,7 +1595,9 @@ importers:
       rmdir: 1.2.0
     specifiers:
       '@babel/runtime': ^7.9.6
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -1570,6 +1605,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/react-framework': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
       '@material-ui/icons': ^4.11.2

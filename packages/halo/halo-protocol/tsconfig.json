@@ -1,0 +1,42 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "types": [
+    "mocha",
+    "node"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../echo/feed-store"
+    },
+    {
+      "path": "../../mesh/protocol"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../mesh/protocol-plugin-replicator"
+    },
+    {
+      "path": "../../common/random-access-multi-storage"
+    }
+  ]
+}
