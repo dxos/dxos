@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 import * as THREE from 'three';
 
-import { makeStyles } from '@material-ui/styles';
+import { makeStyles } from '@material-ui/core/styles';
 
 import { THREEx } from '../lib';
 
