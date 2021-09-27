@@ -7,11 +7,9 @@ import crypto from 'crypto';
 import { ServiceBroker } from 'moleculer';
 
 import packageJSON from '../package.json';
+
 import { Serializer } from './serializer';
-import { DiscoveryService } from './services/discovery.service';
-import { PresenceService } from './services/presence.service';
-import { StatusService } from './services/status.service';
-import { WebService } from './services/web.service';
+import { DiscoveryService, PresenceService, StatusService, WebService } from './services';
 import { PeerMap } from './signal';
 import { ProtocolTransporter } from './transporter';
 
@@ -38,9 +36,10 @@ export interface CreateBrokerOpts {
 /**
  * Create a ServiceBroker
  */
-export function createBroker (topic: Buffer, opts: CreateBrokerOpts = {}) {
+export const createBroker = (topic: Buffer, opts: CreateBrokerOpts = {}) => {
   assert(Buffer.isBuffer(topic) && topic.length === 32, 'topic is required and must be a buffer of 32 bytes');
 
+  // TODO(burdon): Lint error (void function used).
   topic = crypto.createHash('sha256')
     .update(topic.toString('hex') + SIGNAL_PROTOCOL_VERSION)
     .digest();
@@ -131,5 +130,6 @@ export function createBroker (topic: Buffer, opts: CreateBrokerOpts = {}) {
   if (statusService) {
     broker.createService(StatusService);
   }
+
   return broker;
-}
+};

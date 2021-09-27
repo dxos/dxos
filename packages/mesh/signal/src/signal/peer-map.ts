@@ -12,7 +12,6 @@ import { EventEmitter } from 'events';
  * @prop {Buffer} owner
  * @prop {NanomessageRPC} [rpc]
  */
-
 interface Peer {
   id: Buffer,
   topic: Buffer,
