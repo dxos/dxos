@@ -5,25 +5,39 @@
 import React from 'react';
 
 import { ConnectionInfo } from '@dxos/network-manager';
+import { IconButton, List, ListItem } from '@material-ui/core';
+import { TruncateCopy } from '@dxos/react-framework';
+
+import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
 
 export interface ConnectionInfoViewProps {
-  connectionInfo: ConnectionInfo
+  connectionInfo: ConnectionInfo,
+  onReturn?: () => void,
 }
 
-export const ConnectionInfoView = ({ connectionInfo }: ConnectionInfoViewProps) => (
+export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoViewProps) => (
   <div>
-    <div>state: {connectionInfo.state}</div>
-    <div>sessionId: {connectionInfo.sessionId.toHex()}</div>
-    <div>remotePeerId: {connectionInfo.remotePeerId.toHex()}</div>
-    <div>transport: {connectionInfo.transport}</div>
-    <div>protocolExtensions: {connectionInfo.protocolExtensions.join(',')}</div>
+    <div> State: {connectionInfo.state}</div>
+    <div> Session id: <TruncateCopy text={connectionInfo.sessionId.toHex()} /> </div>
+    <div> Remote peer id: <TruncateCopy text={connectionInfo.remotePeerId.toHex()} /> </div>
+    <div> Transport: {connectionInfo.transport}</div>
+    <div> Protocol extensions: {connectionInfo.protocolExtensions.join(',')}</div>
     <hr/>
     <div>
-      {connectionInfo.events.map((event, idx) => (
-        <div key={idx}>
-          {JSON.stringify(event)}
-        </div>
-      ))}
+      Connection events:
     </div>
+    <List>
+      {connectionInfo.events.map(event => (
+        <ListItem key={JSON.stringify(event)}>
+          {JSON.stringify(event)}
+        </ListItem>
+      ))}
+    </List>
+    {onReturn && (
+      <IconButton size='small' onClick={onReturn} title={'Back'} style={{ borderRadius: 5 }}> 
+        <ArrowBackIos /> 
+        Back 
+      </IconButton>)
+    }
   </div>
 );

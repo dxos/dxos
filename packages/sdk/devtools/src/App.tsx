@@ -25,6 +25,7 @@ import Keys from './containers/Keys';
 import Signal from './containers/Signal';
 import StorageTab from './containers/StorageTab';
 import SwarmGraph from './containers/SwarmGraph';
+import SwarmDetails from './containers/SwarmDetails';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -92,8 +93,13 @@ const items = [
     title: 'MESH',
     items: [
       {
-        id: 'mesh.swarm',
-        title: 'Swarm',
+        id: 'mesh.swarmgraph',
+        title: 'Swarm Graph',
+        icon: SwarmIcon
+      },
+      {
+        id: 'mesh.swarminfo',
+        title: 'Swarm Info',
         icon: SwarmIcon
       },
       {
@@ -170,8 +176,11 @@ const App = () => {
       <div className={className('mesh.signal')}>
         <Signal />
       </div>
-      <div className={className('mesh.swarm')}>
+      <div className={className('mesh.swarmgraph')}>
         <SwarmGraph />
+      </div>
+      <div className={className('mesh.swarminfo')}>
+        <SwarmDetails />
       </div>
       <div className={className('debug.logging')}>
         <DebugLoggingView />

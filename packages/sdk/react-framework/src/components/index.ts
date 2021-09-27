@@ -9,6 +9,8 @@ import FullScreen from './FullScreen';
 import JsonTreeView from './JsonTreeView';
 import Passcode from './Passcode';
 import ProfileDialog from './ProfileDialog';
+import BooleanIcon from './BooleanIcon';
+import TruncateCopy from './TruncateCopy';
 
 export {
   DialogHeading,
@@ -17,5 +19,7 @@ export {
   JsonTreeView,
   FullScreen,
   EditableText,
-  Passcode
+  Passcode,
+  BooleanIcon,
+  TruncateCopy
 };

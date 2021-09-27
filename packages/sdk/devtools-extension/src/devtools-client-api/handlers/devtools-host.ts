@@ -11,7 +11,13 @@ import { enableDebugLogging, disableDebugLogging } from './debug-logging';
 import { DevtoolsHostEvents } from './devtools-host-events';
 import { subscribeToItems } from './items';
 import { getKeyringKeys } from './keys';
-import { getNetworkPeers, subscribeToNetworkTopics, subscribeToNetworkStatus, subscribeToSignalTrace } from './network';
+import { 
+  getNetworkPeers,
+  subscribeToNetworkTopics,
+  subscribeToNetworkStatus,
+  subscribeToSignalTrace,
+  subscribeToSwarmInfo
+} from './network';
 import { resetStorage } from './storage';
 
 export const createDevtoolsHost = (context: DevtoolsContext, events: DevtoolsHostEvents) : DevtoolsHost => {
@@ -56,6 +62,9 @@ export const createDevtoolsHost = (context: DevtoolsContext, events: DevtoolsHos
     },
     SubscribeToSignalTrace: () => {
       return subscribeToSignalTrace(context);
+    },
+    SubscribeToSwarmInfo: () => {
+      return subscribeToSwarmInfo(context);
     }
   };
 };

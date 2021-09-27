@@ -251,6 +251,7 @@ importers:
     devDependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/eslint-plugin': 1.0.14_eslint@7.26.0+typescript@4.3.5
+      '@dxos/protobuf-test': link:../protobuf-test
       '@types/argparse': 2.0.5
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
@@ -262,6 +263,7 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/eslint-plugin': ~1.0.14
+      '@dxos/protobuf-test': workspace:*
       '@types/argparse': ^2.0.0
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
@@ -275,6 +277,8 @@ importers:
       ts-morph: ~10.0.2
       ts-node: ^9.1.1
       typescript: ^4.3.5
+  ../../packages/common/protobuf-test:
+    specifiers: {}
   ../../packages/common/random-access-multi-storage:
     dependencies:
       del: 5.1.0
@@ -886,6 +890,7 @@ importers:
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
       '@dxos/react-framework': link:../../sdk/react-framework
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
+      '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@types/react': 16.14.6
       react-resize-aware: 3.1.0_react@16.14.0
     devDependencies:
@@ -921,6 +926,7 @@ importers:
       '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
+      '@material-ui/icons': ~4.11.2
       '@storybook/addon-knobs': ^6.3.0
       '@storybook/addons': ^6.3.4
       '@storybook/api': ^6.3.4
@@ -966,6 +972,7 @@ importers:
   ../../packages/mesh/network-manager:
     dependencies:
       '@dxos/async': link:../../common/async
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/protocol': link:../protocol
@@ -997,6 +1004,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/browser-mocha': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/protocol': workspace:*
@@ -1446,7 +1454,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ^4.11.2
+      '@material-ui/icons': ~4.11.2
       '@material-ui/styles': ^4.11.4
       '@storybook/addon-essentials': ^6.3.4
       '@storybook/addon-links': ^6.3.4
@@ -1485,11 +1493,13 @@ importers:
       webpack: 4.44.2
   ../../packages/sdk/devtools:
     dependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/network-devtools': link:../../mesh/network-devtools
       '@dxos/react-framework': link:../react-framework
+      '@dxos/rpc': link:../../common/rpc
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
@@ -1507,15 +1517,17 @@ importers:
       '@types/react-dom': 17.0.5
       typescript: 4.3.5
     specifiers:
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/network-devtools': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/react-framework': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ^4.11.2
+      '@material-ui/icons': ~4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@types/react': ^16.14.0
       '@types/react-dom': ^17.0.2
@@ -1530,13 +1542,16 @@ importers:
   ../../packages/sdk/devtools-extension:
     dependencies:
       '@babel/runtime': 7.14.0
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools': link:../devtools
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/react-framework': link:../react-framework
+      '@dxos/rpc': link:../../common/rpc
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
@@ -1562,7 +1577,9 @@ importers:
       rmdir: 1.2.0
     specifiers:
       '@babel/runtime': ^7.9.6
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -1570,9 +1587,10 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/react-framework': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ^4.11.2
+      '@material-ui/icons': ~4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@types/chrome': ^0.0.125
       '@types/react': ^16.14.0
@@ -1682,6 +1700,7 @@ importers:
       clsx: 1.1.1
       lodash.defaultsdeep: 4.6.1
       lodash.isplainobject: 4.0.6
+      react-copy-to-clipboard: 5.0.3_react@16.14.0
       url-join: 4.0.1
     devDependencies:
       '@babel/core': 7.13.16
@@ -1694,6 +1713,7 @@ importers:
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@types/react': 16.14.6
+      '@types/react-copy-to-clipboard': 5.0.1
       '@types/url-join': 4.0.1
       babel-plugin-add-module-exports: 1.0.4
       react: 16.14.0
@@ -1709,15 +1729,17 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ^4.11.2
+      '@material-ui/icons': ~4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@types/react': ^16.14.0
+      '@types/react-copy-to-clipboard': ~5.0.1
       '@types/url-join': ~4.0.1
       babel-plugin-add-module-exports: ^1.0.4
       clsx: ^1.1.0
       lodash.defaultsdeep: ^4.6.1
       lodash.isplainobject: ^4.0.6
       react: ^16.14.0
+      react-copy-to-clipboard: ~5.0.3
       react-dom: ^16.14.0
       typescript: ^4.3.5
       url-join: ^4.0.1
@@ -1780,7 +1802,7 @@ importers:
       '@dxos/react-framework': workspace:*
       '@jackwilsdon/craco-use-babelrc': ~1.0.0
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ^4.11.2
+      '@material-ui/icons': ~4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@material-ui/styles': ^4.11.4
       '@storybook/addon-actions': ^6.3.4
@@ -1885,7 +1907,7 @@ importers:
       '@dxos/wallet-core': workspace:*
       '@hot-loader/react-dom': 16.13.0
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ^4.11.2
+      '@material-ui/icons': ~4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@types/faker': ~5.5.1
       '@types/mocha': ~8.2.2

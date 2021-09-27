@@ -24,7 +24,6 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/react-framework": "workspace:*",
     "@material-ui/core": "^4.11.4",
-    "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",
     "clsx": "^1.1.0",
     "color-hash": "^1.0.3",

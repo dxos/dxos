@@ -10,7 +10,8 @@ import {
   GetNetworkPeersResponse,
   SubscribeToNetworkTopicsResponse,
   SubscribeToSignalStatusResponse,
-  SubscribeToSignalTraceResponse
+  SubscribeToSignalTraceResponse,
+  SubscribeToSwarmInfoResponse
 } from '@dxos/devtools';
 import { SignalApi } from '@dxos/network-manager';
 
@@ -58,6 +59,21 @@ export const subscribeToNetworkTopics = (hook: DevtoolsContext) => {
     update();
   });
 };
+
+export const subscribeToSwarmInfo = (hook: DevtoolsContext) => {
+  return new Stream<SubscribeToSwarmInfoResponse>(({ next }) => {
+    const networkManager = hook.client.echo.networkManager;
+    const update = () => {
+      const info = networkManager.connectionLog?.swarms;
+      console.log(info);
+      if (info) {
+        next({ data: info });
+      }
+    }
+    networkManager.connectionLog?.update.on(update);
+    update();
+  });
+}
 
 export const getNetworkPeers = (hook: DevtoolsContext, request: GetNetworkPeersRequest): GetNetworkPeersResponse => {
   if (!request.topic) {

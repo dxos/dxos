@@ -50,6 +50,8 @@ service DevtoolsHost {
   rpc SubscribeToSignalStatus(google.protobuf.Empty) returns (stream SubscribeToSignalStatusResponse);
 
   rpc SubscribeToSignalTrace(google.protobuf.Empty) returns (stream SubscribeToSignalTraceResponse);
+
+  rpc SubscribeToSwarmInfo(SubscribeToSwarmInfoRequest) returns (stream SubscribeToSwarmInfoResponse);
 }
 
 message Event {
@@ -145,4 +147,25 @@ message SubscribeToSignalStatusResponse {
 message SubscribeToSignalTraceResponse {
   // JSON-encoded events.
   repeated string events = 1;
+}
+
+message SubscribeToSwarmInfoRequest {}
+
+message SubscribeToSwarmInfoResponse {
+  message SwarmInfo {
+    PubKey id = 1;
+    PubKey topic = 2;
+    string label = 3;
+    bool isActive = 4;
+    message ConnectionInfo {
+      string state = 1;
+      PubKey sessionState = 2;
+      PubKey remotePeerId = 3;
+      string transport = 4;
+      repeated string protocolExtensions = 5;
+      repeated string events = 6;
+    }
+    repeated ConnectionInfo connections = 5;
+  }
+  repeated SwarmInfo data = 1;
 }
