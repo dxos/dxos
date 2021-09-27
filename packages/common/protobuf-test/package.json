@@ -11,8 +11,8 @@
   "scripts": {
     "build": "",
     "build:test": "",
-    "test": "",
-    "lint": ""
+    "lint": "",
+    "test": ""
   },
   "protobuf": "src/foo.proto"
 }
