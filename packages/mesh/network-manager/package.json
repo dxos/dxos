@@ -1,8 +1,9 @@
 {
   "name": "@dxos/network-manager",
-  "version": "2.12.7",
+  "version": "2.12.23",
   "description": "Network Manager",
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -14,7 +15,8 @@
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test"
+    "test": "toolchain test",
+    "test:browser": "browser-mocha --setup tests-setup.js 'src/network-manager.browser-test.ts' --browser=chromium --browser=firefox"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -22,19 +24,21 @@
     "@dxos/debug": "workspace:*",
     "@dxos/protocol": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/simple-peer": "^9.6.1",
+    "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
     "assert": "^2.0.0",
     "debug": "^4.1.1",
     "isomorphic-ws": "^4.0.1",
     "nanomessage-rpc": "^3.0.0",
-    "simple-peer": "^9.9.3",
-    "wrtc": "^0.4.6",
+    "simple-peer": "9.11.0",
+    "wrtc": "^0.4.7",
     "ws": "^7.4.4",
     "xor-distance": "^2.0.0"
   },
   "devDependencies": {
+    "@dxos/browser-mocha": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
@@ -42,13 +46,19 @@
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
     "earljs": "~0.1.10",
+    "expect": "~27.0.2",
     "fast-check": "~2.14.0",
+    "mocha": "~8.4.0",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "toolchain": {
-    "testingFramework": "mocha"
+    "forceCloseTests": true,
+    "testingFramework": "mocha",
+    "additionalTestSteps": [
+      "test:browser"
+    ]
   }
 }

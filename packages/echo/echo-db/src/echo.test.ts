@@ -8,8 +8,8 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { latch, waitForCondition } from '@dxos/async';
-import { generateSeedPhrase, keyPairFromSeedPhrase, defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
-import { createKeyPair } from '@dxos/crypto';
+import { defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
+import { generateSeedPhrase, keyPairFromSeedPhrase, createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
@@ -64,7 +64,7 @@ describe('ECHO', () => {
     const unsubscribe = parties.subscribe(async parties => {
       log('Updated:', parties.map(party => party.key.humanize()));
 
-      // TODO(burdon): Update currentybly called after all mutations below have completed?
+      // TODO(burdon): Update currently called after all mutations below have completed?
       expect(parties).toHaveLength(1);
       parties.map(async party => {
         const items = party.database.select(s => s.items).getValue();
@@ -231,6 +231,7 @@ describe('ECHO', () => {
     await echo.halo.createIdentity(createKeyPair());
     await echo.halo.create();
     expect(echo.halo.identityKey).toBeDefined();
+    await echo.close();
   });
 
   test('close and open again', async () => {
@@ -244,6 +245,7 @@ describe('ECHO', () => {
     await echo.open();
     expect(echo.isOpen).toBe(true);
     expect(echo.halo.identityKey).toBeDefined();
+    await echo.close();
   });
 
   test('cant create party on closed echo', async () => {
@@ -259,7 +261,8 @@ describe('ECHO', () => {
     await echo.halo.create();
     expect(echo.halo.identityKey).toBeDefined();
 
-    return echo.reset();
+    await echo.reset();
+    await echo.close();
   });
 
   test('One user, two devices', async () => {

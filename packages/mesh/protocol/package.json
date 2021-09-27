@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol",
-  "version": "2.12.7",
+  "version": "2.12.23",
   "description": "Protocol.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol#readme",
   "bugs": {
@@ -10,7 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/dxos/protocol.git"
   },
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -34,7 +35,6 @@
     "hypercore-protocol": "dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60",
     "nanoerror": "^1.2.1",
     "nanomessage": "^5.4.0",
-    "nanoresource-promise": "^2.0.0",
     "signal-promise": "^1.0.3"
   },
   "devDependencies": {
@@ -50,7 +50,7 @@
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "toolchain": {
     "testingFramework": "mocha"

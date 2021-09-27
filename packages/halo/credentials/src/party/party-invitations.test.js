@@ -52,7 +52,7 @@ it('PartyInvitation messages', async () => {
   const party = new PartyState(partyKey.publicKey);
 
   // First, configure the Party.
-  const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey);
+  const genesisMessage = createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey);
   await party.processMessages([genesisMessage]);
 
   // Now 'write' an invitation message.
@@ -61,10 +61,12 @@ it('PartyInvitation messages', async () => {
 
   const invitationID = invitationMessage.payload.signed.payload.id;
 
-  const greetingHandler = jest.fn((claimInvitationID) => {
+  let greetingHandlerCalled = 0;
+  const greetingHandler = (claimInvitationID) => {
     expect(claimInvitationID).toEqual(invitationID);
+    greetingHandlerCalled++;
     return { invitation: randomBytes(), swarmKey: rendezvousKey };
-  });
+  };
 
   const claimHandler = new PartyInvitationClaimHandler(greetingHandler);
   expect(party.getInvitation(invitationID)).toBeTruthy();
@@ -77,7 +79,7 @@ it('PartyInvitation messages', async () => {
   const envelope = createEnvelopeMessage(keyring, partyKey.publicKey, admitMessage, [identityKey]);
   await party.processMessages([envelope]);
 
-  expect(greetingHandler).toHaveBeenCalledTimes(1);
+  expect(greetingHandlerCalled).toEqual(1);
   expect(claimResponse.rendezvousKey).toEqual(rendezvousKey);
 
   await waitForExpect(() => {

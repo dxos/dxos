@@ -2,10 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
-import protobufjs from 'protobufjs';
+import protobufjs, { IConversionOptions } from 'protobufjs';
 
 import { BidirectionalMapingDescriptors, mapMessage } from './mapping';
 import type { Schema } from './schema';
+
+const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
+  // Represent long integers as strings.
+  longs: String,
+
+  // Will set empty repeated fields to [] instead of undefined.
+  // TODO(marik-d): Type repeated fields as non-optional arrays.
+  arrays: true
+};
 
 export class Codec<T = any> {
   constructor (
@@ -20,7 +29,7 @@ export class Codec<T = any> {
   }
 
   decode (data: Uint8Array): T {
-    const obj = this._type.toObject(this._type.decode(data));
+    const obj = this._type.toObject(this._type.decode(data), OBJECT_CONVERSION_OPTIONS);
     return mapMessage(this._type, this._mapping.decode, obj, [this._schema]);
   }
 

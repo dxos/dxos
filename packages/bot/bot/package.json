@@ -1,6 +1,6 @@
 {
   "name": "@dxos/bot",
-  "version": "2.12.7",
+  "version": "2.12.23",
   "description": "Botkit",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -31,7 +31,7 @@
     "expect": "~27.0.2"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "toolchain": {
     "testingFramework": "mocha"

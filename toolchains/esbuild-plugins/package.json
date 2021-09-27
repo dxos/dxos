@@ -1,7 +1,8 @@
 {
   "name": "@dxos/esbuild-plugins",
-  "version": "2.10.10",
-  "private": true,
+  "version": "2.12.23",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "scripts": {
@@ -12,6 +13,7 @@
   "dependencies": {
     "assert": "^2.0.0",
     "debug": "^4.1.1",
+    "esbuild": "^0.11.23",
     "events": "~3.3.0",
     "path-browserify": "~1.0.1",
     "readable-stream": "^3.6.0",
@@ -20,7 +22,9 @@
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "@types/node": "^14.0.9",
-    "esbuild": "^0.11.23"
+    "@types/node": "^14.0.9"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

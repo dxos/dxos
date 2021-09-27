@@ -43,20 +43,16 @@ function execBuild () {
   execTool('tsc');
 }
 
-function execTest (additionalArgs?: string[]) {
+function execTest (userArgs?: string[]) {
   const project = Project.load();
+  const forceClose = project.toolchainConfig.forceCloseTests ?? false;
 
   if (project.toolchainConfig.testingFramework === 'mocha') {
     console.log(chalk.bold`\nmocha`);
-    execMocha(additionalArgs);
+    execMocha({ userArgs, forceClose });
   } else {
     console.log(chalk.bold`\njest`);
-    execJest(project, additionalArgs);
-  }
-
-  for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
-    console.log(chalk.bold`\n${step}`);
-    execPackageScript(project, step, []);
+    execJest({ project, userArgs, forceClose });
   }
 }
 
@@ -88,6 +84,13 @@ yargs(process.argv.slice(2))
       execLint(project);
 
       execTest();
+
+      // Additional test steps execution placed here to allow to run tests without additional steps.
+      // Additional test steps are executed by default only when build:test is run
+      for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
+        console.log(chalk.bold`\n${step}`);
+        execPackageScript(project, step, []);
+      }
 
       console.log(chalk`\n{green.bold CHECK COMPLETE} in {bold ${Date.now() - before}} ms`);
     }

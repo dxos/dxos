@@ -5,17 +5,18 @@
 import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
-import { EventEmitter } from 'events';
 import { EventedType } from 'ngraph.events';
 import createGraph, { Graph } from 'ngraph.graph';
 import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
+import { Event } from '@dxos/async';
 import { Broadcast, Middleware } from '@dxos/broadcast';
 import { keyToBuffer } from '@dxos/crypto';
 import { Extension, Protocol } from '@dxos/protocol';
 
 import { schema } from './proto/gen';
+import { Alive } from './proto/gen/dxos/protocol/presence';
 
 const log = debug('dxos:mesh:presence');
 
@@ -34,16 +35,48 @@ interface Peer {
   protocol: Protocol
 }
 
+interface ConnectionEventDetails {
+  fromId: Buffer,
+  toId: Buffer
+}
+
+interface ProtocolMessageEventDetails {
+  protocol: Protocol,
+  message: any
+}
+
+interface NeighborJoinedEventDetails {
+  peerId: string,
+  protocol: Protocol
+}
+
+interface GraphUpdatedEventDetails {
+  graph: any,
+  changes: any
+}
+
 /**
  * Presence protocol plugin.
  */
-export class PresencePlugin extends EventEmitter {
+export class PresencePlugin {
   static EXTENSION_NAME = 'dxos.protocol.presence';
 
+  private extensionsCreated = 0;
   private readonly _peerTimeout: number;
   private readonly _limit = pLimit(1);
   private readonly _codec = schema.getCodecForType('dxos.protocol.presence.Alive');
   private readonly _neighbors = new Map<string, any>();
+  private readonly _error = new Event<Error>();
+  private readonly _peerJoined = new Event<Buffer>();
+  private readonly _peerLeft = new Event<Buffer>();
+  private readonly _connectionJoined = new Event<ConnectionEventDetails>();
+  private readonly _connectionLeft = new Event<ConnectionEventDetails>();
+  private readonly _protocolMessage = new Event<ProtocolMessageEventDetails>();
+  private readonly _remotePing = new Event<Alive>();
+  private readonly _neighborAlreadyConnected = new Event<string>();
+  private readonly _neighborJoined = new Event<NeighborJoinedEventDetails>();
+  private readonly _neighborLeft = new Event<string>();
+  readonly graphUpdated = new Event<GraphUpdatedEventDetails>()
 
   private _metadata: any;
   private _graph!: Graph<GraphNode, any> & EventedType;
@@ -54,7 +87,6 @@ export class PresencePlugin extends EventEmitter {
     private readonly _peerId: Buffer,
     options: PresenceOptions = {}
   ) {
-    super();
     assert(Buffer.isBuffer(_peerId));
 
     const { peerTimeout = 2 * 60 * 1000, metadata } = options;
@@ -64,7 +96,7 @@ export class PresencePlugin extends EventEmitter {
 
     this._buildGraph();
     this._buildBroadcast();
-    this.on('error', (err: Error) => {
+    this._error.on((err: Error) => {
       log('broadcast-error', err);
     });
   }
@@ -99,11 +131,18 @@ export class PresencePlugin extends EventEmitter {
    */
   createExtension (): Extension {
     this.start();
+    this.extensionsCreated++;
 
     return new Extension(PresencePlugin.EXTENSION_NAME)
       .setInitHandler(async (protocol) => this._addPeer(protocol))
       .setMessageHandler(async (protocol, chunk) => this._peerMessageHandler(protocol, chunk))
-      .setCloseHandler(async (protocol) => this._removePeer(protocol));
+      .setCloseHandler(async (protocol) => {
+        await this._removePeer(protocol);
+        if (--this.extensionsCreated === 0) {
+          // The last extension got closed so the plugin can be stopped.
+          await this.stop();
+        }
+      });
   }
 
   /**
@@ -133,6 +172,7 @@ export class PresencePlugin extends EventEmitter {
   stop () {
     log('Stop');
 
+    this._limit.clearQueue();
     this._broadcast.close();
     if (this._scheduler !== null) {
       clearInterval(this._scheduler);
@@ -153,19 +193,34 @@ export class PresencePlugin extends EventEmitter {
 
         graphUpdated = true;
 
-        const type = changeType === 'add' ? 'joined' : 'left';
-
         if (node) {
-          this.emit(`peer:${type}`, Buffer.from(node.id, 'hex'));
+          if (changeType === 'add') {
+            this._peerJoined.emit(Buffer.from(node.id, 'hex'));
+          } else {
+            this._peerLeft.emit(Buffer.from(node.id, 'hex'));
+          }
         }
         if (link) {
-          this.emit(`connection:${type}`, Buffer.from(link.fromId, 'hex'), Buffer.from(link.toId, 'hex'));
+          if (changeType === 'add') {
+            this._connectionJoined.emit({
+              fromId: Buffer.from(link.fromId, 'hex'),
+              toId: Buffer.from(link.toId, 'hex')
+            });
+          } else {
+            this._connectionLeft.emit({
+              fromId: Buffer.from(link.fromId, 'hex'),
+              toId: Buffer.from(link.toId, 'hex')
+            });
+          }
         }
       });
 
       if (graphUpdated) {
         log('graph-updated', changes);
-        this.emit('graph-updated', changes, this._graph);
+        this.graphUpdated.emit({
+          graph: this._graph,
+          changes
+        });
       }
     });
   }
@@ -188,7 +243,7 @@ export class PresencePlugin extends EventEmitter {
         await presence.send(packet, { oneway: true });
       },
       subscribe: (onPacket) => {
-        this.on('protocol-message', (protocol: Protocol, message: any) => {
+        this._protocolMessage.on(({ protocol, message }) => {
           if (message && message.data) {
             onPacket(message.data);
           }
@@ -206,7 +261,7 @@ export class PresencePlugin extends EventEmitter {
       if (data.metadata) {
         data.metadata = bufferJson.decode(data.metadata);
       }
-      this.emit('remote-ping', data);
+      this._remotePing.emit(data);
     });
     this._broadcast.sendError.on(err => {
       // Filter out "stream closed" errors.
@@ -215,11 +270,14 @@ export class PresencePlugin extends EventEmitter {
       }
     });
     this._broadcast.subscribeError.on(err => console.warn(err));
-    this.on('remote-ping', packet => this._updateGraph(packet));
+    this._remotePing.on(packet => this._updateGraph(packet));
   }
 
   private _peerMessageHandler (protocol: Protocol, chunk: any) {
-    this.emit('protocol-message', protocol, chunk);
+    this._protocolMessage.emit({
+      protocol,
+      message: chunk
+    });
   }
 
   private _pruneGraph () {
@@ -244,22 +302,23 @@ export class PresencePlugin extends EventEmitter {
   private _addPeer (protocol: Protocol) {
     assert(protocol);
     const { peerId } = protocol.getSession() ?? {};
+    assert(typeof peerId === 'string');
 
     log(`_addPeer ${peerId}`);
 
     if (!peerId) {
-      this.emit('error', new Error('peerId not found'));
+      this._error.emit(new Error('peerId not found'));
       return;
     }
 
     if (this._neighbors.has(peerId)) {
-      this.emit('neighbor:already-connected', peerId);
+      this._neighborAlreadyConnected.emit(peerId);
       return;
     }
 
     this._neighbors.set(peerId, protocol);
 
-    this.emit('neighbor:joined', peerId, protocol);
+    this._neighborJoined.emit({ peerId, protocol });
     this._pingLimit();
   }
 
@@ -278,7 +337,7 @@ export class PresencePlugin extends EventEmitter {
 
     this._neighbors.delete(peerId);
     this._deleteNode(peerId);
-    this.emit('neighbor:left', peerId);
+    this._neighborLeft.emit(peerId);
 
     if (this._neighbors.size > 0) {
       await this.ping();
@@ -358,7 +417,9 @@ export class PresencePlugin extends EventEmitter {
       await this._broadcast.publish(this._codec.encode(message));
       log('ping', message);
     } catch (err) {
-      process.nextTick(() => this.emit('error', err));
+      // TODO(marik-d): This or one of its subscribers seems to leak "Error: Resource is closed" errors.
+      // They are not fatal, and probably happend because the connection was closed but the broadcast job was not cleaned up.
+      process.nextTick(() => this._error.emit(err));
     }
   }
 }

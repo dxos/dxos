@@ -27,4 +27,6 @@ export interface SignalManager {
   offer (msg: SignalApi.SignalMessage): Promise<SignalApi.Answer>;
 
   signal (msg: SignalApi.SignalMessage): void;
+
+  destroy(): Promise<void>;
 }

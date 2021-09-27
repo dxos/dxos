@@ -4,16 +4,16 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
-import { KeyRecord, Keyring, KeyStore, KeyType } from '@dxos/credentials';
+import { KeyRecord, Keyring, KeyType } from '@dxos/credentials';
 import { createKeyPair, KeyPair, PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
 import {
   InvitationAuthenticator, InvitationDescriptor, InvitationOptions, SecretProvider
 } from '../invitations';
+import { MetadataStore } from '../metadata';
 import { PartyFactory, OpenProgress, Party, PartyManager } from '../parties';
 import { ResultSet } from '../result';
 import { Contact } from './contact-manager';
@@ -24,10 +24,11 @@ import type { CreateProfileOptions } from './types';
 const log = debug('dxos:echo');
 
 export interface HaloConfiguration {
-  keyStorage?: any,
+  keyring: Keyring,
   partyFactory: PartyFactory,
   networkManager: NetworkManager,
-  partyManager: PartyManager
+  partyManager: PartyManager,
+  metadataStore: MetadataStore
 }
 
 /**
@@ -39,12 +40,13 @@ export class HALO {
   private readonly _partyManager: PartyManager;
 
   constructor ({
-    keyStorage = memdown(),
+    keyring,
     partyFactory,
     networkManager,
-    partyManager
+    partyManager,
+    metadataStore
   }: HaloConfiguration) {
-    this._keyring = new Keyring(new KeyStore(keyStorage));
+    this._keyring = keyring;
 
     const haloFactory = new HaloFactory(
       partyFactory,
@@ -52,7 +54,7 @@ export class HALO {
       this._keyring
     );
 
-    this._identityManager = new IdentityManager(this._keyring, haloFactory);
+    this._identityManager = new IdentityManager(this._keyring, haloFactory, metadataStore);
     this._partyManager = partyManager;
   }
 
@@ -104,8 +106,6 @@ export class HALO {
    * Loads the saved identity from disk. Is called by client.
    */
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
-    await this._keyring.load();
-
     // TODO(burdon): Replace with events.
     onProgressCallback?.({ haloOpened: false });
 

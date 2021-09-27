@@ -9,8 +9,8 @@ import { it as test } from 'mocha';
 import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
 import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
-import { codec, createFeedWriter, createIterator, FeedSelector, IEchoStream, Timeframe } from '@dxos/echo-protocol';
-import { FeedStore, Feed, createWritableFeedStream, createWritable, WritableArray } from '@dxos/feed-store';
+import { codec, createFeedWriter, FeedSelector, FeedStoreIterator, IEchoStream, Timeframe } from '@dxos/echo-protocol';
+import { FeedStore, createWritableFeedStream, createWritable, WritableArray } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
@@ -24,15 +24,17 @@ const log = debug('dxos:echo:pipeline:test');
 // TODO(burdon): Test read-only.
 describe('pipeline', () => {
   test('streams', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
+    const storage = createStorage('', STORAGE_RAM);
+    const feedStore = new FeedStore(storage, { valueEncoding: codec });
     const feedKeys: Uint8Array[] = [];
     const feedSelector: FeedSelector = descriptor => !!feedKeys.find(key => descriptor.key.equals(key));
-    await feedStore.open();
-    const feedReadStream = await createIterator(feedStore, feedSelector);
+    const feedReadStream = new FeedStoreIterator(feedSelector, () => 0, new Timeframe());
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
+    const descriptor = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const feed = descriptor.feed;
     feedKeys.push(feed.key);
+    feedReadStream.addFeedDescriptor(descriptor);
     const writeStream = createWritableFeedStream(feed);
 
     //
@@ -48,7 +50,7 @@ describe('pipeline', () => {
     });
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
     await partyProcessor.processMessage({
-      data: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey),
+      data: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey),
       meta: {
         feedKey: feedKey.publicKey.asBuffer(),
         seq: 0
@@ -84,12 +86,14 @@ describe('pipeline', () => {
   });
 
   test('writing', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
-    await feedStore.open();
-    const feedReadStream = await createIterator(feedStore);
+    const storage = createStorage('', STORAGE_RAM);
+    const feedStore = new FeedStore(storage, { valueEncoding: codec });
+    const feedReadStream = new FeedStoreIterator(() => true, () => 0, new Timeframe());
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed: Feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
+    const descriptor = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const feed = descriptor.feed;
+    feedReadStream.addFeedDescriptor(descriptor);
 
     const keyring = new Keyring();
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
@@ -112,7 +116,7 @@ describe('pipeline', () => {
     const writable = new WritableArray();
     pipeline.inboundEchoStream!.pipe(writable);
 
-    await pipeline.outboundHaloStream!.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
+    await pipeline.outboundHaloStream!.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
     await waitForCondition(() => !partyProcessor.genesisRequired);
 
     await pipeline.outboundEchoStream!.write({

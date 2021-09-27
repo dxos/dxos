@@ -4,6 +4,7 @@
 
 // dxos-testing-browser
 
+import assert from 'assert';
 import debug from 'debug';
 import eos from 'end-of-stream';
 import expect from 'expect';
@@ -12,7 +13,7 @@ import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
 import { keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
-import { Feed, FeedStore } from '@dxos/feed-store';
+import { FeedStore, createBatchStream, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
@@ -68,14 +69,12 @@ class ExpectedKeyAuthenticator extends Authenticator {
  * @listens AuthPlugin#authenticated
  */
 const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator, keyring: Keyring, protocolOptions?: ProtocolOptions) => {
-  const topic = partyKey.toHex();
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();
-  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
-  await feedStore.open();
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: 'utf8' });
   const { publicKey, secretKey } = createKeyPair();
-  const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey, metadata: { topic } });
+  const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
   const append = pify(feed.append.bind(feed));
 
   const credentials = Buffer.from(codec.encode(
@@ -93,49 +92,27 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   // Share and replicate all known feeds.
   const repl = new Replicator({
     load: async () => {
-      return feedStore.getOpenFeeds();
+      return [feed];
     },
 
     subscribe: (add: (feed: any) => void) => {
-      const onFeed = (feed: any) => add(feed);
-      feedStore.on('feed', onFeed);
-      return () => {
-        feedStore.removeListener('feed', onFeed);
-      };
+      return feedStore.feedOpenedEvent.on((descriptor) => {
+        add(descriptor.feed);
+      });
     },
 
-    replicate: async (feeds: Feed[]) => {
+    replicate: async (feeds) => {
+      const replicatedFeeds: HypercoreFeed[] = [];
+
       for (const feed of feeds) {
-        if (feedStore.hasFeed(feed.key)) {
-          await feedStore.openFeed(PublicKey.from(feed.key));
-        } else {
-          await feedStore.createReadOnlyFeed({
-            key: PublicKey.from(feed.key)
-          });
-        }
+        assert(feed.key);
+        const descriptor = await feedStore.openReadOnlyFeed(PublicKey.from(feed.key));
+        replicatedFeeds.push(descriptor.feed);
       }
 
-      return feedStore.getOpenFeeds();
+      return replicatedFeeds;
     }
   });
-
-  const getMessages = async () => {
-    const messages: { data: unknown }[] = [];
-    const stream = feedStore.createReadStream();
-    stream.on('data', ({ data }: any) => {
-      messages.push(data);
-    });
-
-    return new Promise((resolve, reject) => {
-      eos(stream, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(messages.sort());
-        }
-      });
-    });
-  };
 
   const proto = new Protocol({
     streamOptions: { live: true },
@@ -156,6 +133,27 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
 const connect = (source: any, target: any) => {
   return pump(source.stream, target.stream, source.stream) as any;
 };
+
+type Node = { feed: HypercoreFeed, feedStore: FeedStore }
+
+async function getMessages (sender: Node, receiver: Node): Promise<any[]> {
+  const { feed } = await receiver.feedStore.openReadOnlyFeed(PublicKey.from(sender.feed.key));
+  assert(feed, 'Nodes not connected');
+  const messages: any[] = [];
+  const stream = createBatchStream(feed);
+  stream.on('data', (data) => {
+    messages.push(data[0].data);
+  });
+  return new Promise((resolve, reject) => {
+    eos(stream, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(messages);
+      }
+    });
+  });
+}
 
 it('Auth Plugin (GOOD)', async () => {
   const keyring = await createTestKeyring();
@@ -191,7 +189,7 @@ it('Auth & Repl (GOOD)', async () => {
   const message1 = randomBytes(32).toString('hex');
   await node1.append(message1);
   await waitForExpect(async () => {
-    const msgs = await node2.getMessages();
+    const msgs = await getMessages(node1, node2);
     expect(msgs).toContain(message1);
     log(`${message1} on ${keyToString(node2.id)}.`);
   });
@@ -199,7 +197,7 @@ it('Auth & Repl (GOOD)', async () => {
   const message2 = randomBytes(32).toString('hex');
   await node2.append(message2);
   await waitForExpect(async () => {
-    const msgs = await node1.getMessages();
+    const msgs = await getMessages(node2, node1);
     expect(msgs).toContain(message2);
     log(`${message2} on ${keyToString(node1.id)}.`);
   });

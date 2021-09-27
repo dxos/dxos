@@ -1,0 +1,18 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo.metadata;
+
+import "key.proto";
+
+message EchoMetadata {
+  repeated PartyMetadata parties = 1;
+}
+
+message PartyMetadata {
+  dxos.echo.keys.Key key = 1;
+  repeated dxos.echo.keys.Key feedKeys = 2;
+}

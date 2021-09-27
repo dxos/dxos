@@ -5,7 +5,7 @@
 import pify from 'pify';
 
 import { PublicKey } from '@dxos/crypto';
-import type { Feed } from '@dxos/feed-store';
+import type { HypercoreFeed } from '@dxos/feed-store';
 import { MaybePromise } from '@dxos/util';
 
 import { FeedKey } from '../types';
@@ -25,7 +25,7 @@ export function mapFeedWriter<T, U> (map: (arg: T) => MaybePromise<U>, writer: F
   };
 }
 
-export function createFeedWriter<T> (feed: Feed): FeedWriter<T> {
+export function createFeedWriter<T> (feed: HypercoreFeed): FeedWriter<T> {
   return {
     write: async message => {
       const seq = await pify(feed.append.bind(feed))(message);

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/signal",
-  "version": "2.12.7",
+  "version": "2.12.23",
   "description": "DxOS signal server.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
@@ -10,6 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/dxos/protocol.git"
   },
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "bin": {
     "dxos-signal": "bin/signal.js",
@@ -30,6 +32,7 @@
   "dependencies": {
     "@azure/abort-controller": "^1.0.1",
     "@dxos/broadcast": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@hyperswarm/dht": "^4.0.1",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.1.1",
@@ -37,7 +40,7 @@
     "graphology": "^0.17.1",
     "graphql": "^15.3.0",
     "graphql-request": "^3.1.0",
-    "hypercore-crypto": "^1.0.0",
+    "hypercore-crypto": "^2.3.0",
     "hyperswarm": "^2.10.1",
     "internal-ip": "^6.0.0",
     "lodash.debounce": "^4.0.8",
@@ -61,8 +64,7 @@
     "systeminformation": "^5.7.7",
     "tiny-lru": "^7.0.6",
     "varint": "^5.0.0",
-    "yargs": "~16.2.0",
-    "@dxos/crypto": "workspace:*"
+    "yargs": "~16.2.0"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
@@ -77,7 +79,7 @@
     "graphology-types": "^0.19.2",
     "jest": "^26.6.3",
     "typescript": "^4.3.5",
-    "wrtc": "^0.4.6"
+    "wrtc": "^0.4.7"
   },
   "publishConfig": {
     "access": "public"

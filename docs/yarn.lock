@@ -1119,9 +1119,9 @@
   resolved "https://registry.yarnpkg.com/@braintree/sanitize-url/-/sanitize-url-3.1.0.tgz#8ff71d51053cd5ee4981e5a501d80a536244f7fd"
   integrity sha512-GcIY79elgB+azP74j8vqkiXz8xLFfIzbQJdlwOPisgbKT00tviJQuEghOXSMVxJ00HoYJbGswr4kcllUc4xCcg==
 
-"@dxos/docs-theme@^1.0.0-beta.22":
+"@dxos/docs-theme@^1.0.0-beta.23":
   version "1.0.0-beta.23"
-  resolved "https://registry.yarnpkg.com/@dxos/docs-theme/-/docs-theme-1.0.0-beta.23.tgz#cae25dde6f19cc3fefd80ec78d4884f409567e21"
+  resolved "https://registry.npmjs.org/@dxos/docs-theme/-/docs-theme-1.0.0-beta.23.tgz#cae25dde6f19cc3fefd80ec78d4884f409567e21"
   integrity sha512-zu8kMGzONh+34LtNQraMynw38AmF8NcRpQvHAIKXOHGD3fEcsEsPP05pw+V7fktWXsmu6AGKYFJ7N34y+E1VBA==
   dependencies:
     gatsby-image "^2.4.9"
@@ -16312,10 +16312,8 @@ watchpack@^1.7.4:
   resolved "https://registry.yarnpkg.com/watchpack/-/watchpack-1.7.5.tgz#1267e6c55e0b9b5be44c2023aed5437a2c26c453"
   integrity sha512-9P3MWk6SrKjHsGkLT2KHXdQ/9SNkyoJbabxnKOoJepsvJjJG8uYTR3yTPxPQvNDI3w4Nz1xnE0TLHK4RIVe/MQ==
   dependencies:
-    chokidar "^3.4.1"
     graceful-fs "^4.1.2"
     neo-async "^2.5.0"
-    watchpack-chokidar2 "^2.0.1"
   optionalDependencies:
     chokidar "^3.4.1"
     watchpack-chokidar2 "^2.0.1"

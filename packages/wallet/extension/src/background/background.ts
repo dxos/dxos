@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { browser, Runtime } from 'webextension-polyfill-ts';
+import { browser, Runtime } from 'webextension-polyfill-ts'; // TODO(marik-d): Replace with @types/webextension-polyfill.
 
 import { wrapPort } from '../utils/wrapPort';
 import { BackgroundServer } from './background-server';

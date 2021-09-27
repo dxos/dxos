@@ -6,10 +6,12 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
+import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { Protocol } from '@dxos/protocol';
+import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/protocol';
 import { ComplexMap } from '@dxos/util';
 
+import { ConnectionLog } from './connection-log';
 import { InMemorySignalManager, SignalManager, SignalApi, WebsocketSignalManager } from './signal';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
@@ -20,6 +22,10 @@ export type ProtocolProvider = (opts: { channel: Buffer, initiator: boolean}) =>
 export interface NetworkManagerOptions {
   signal?: string[],
   ice?: any[],
+  /**
+   * Enable connection logging for devtools.
+   */
+  log?: boolean
 }
 
 const log = debug('dxos:network-manager');
@@ -33,6 +39,8 @@ export class NetworkManager {
 
   private readonly _signal: SignalManager;
 
+  private readonly _connectionLog?: ConnectionLog;
+
   public readonly topicsUpdated = new Event<void>();
 
   get signal () {
@@ -41,6 +49,10 @@ export class NetworkManager {
 
   get topics () {
     return Array.from(this._swarms.keys());
+  }
+
+  get connectionLog () {
+    return this._connectionLog;
   }
 
   constructor (options: NetworkManagerOptions = {}) {
@@ -54,6 +66,10 @@ export class NetworkManager {
 
     this._signal.peerCandidatesChanged.on(([topic, candidates]) => this._swarms.get(topic)?.onPeerCandidatesChanged(candidates));
     this._signal.onSignal.on(msg => this._swarms.get(msg.topic)?.onSignal(msg));
+
+    if (options.log) {
+      this._connectionLog = new ConnectionLog();
+    }
   }
 
   getSwarmMap (topic: PublicKey): SwarmMapper | undefined {
@@ -74,7 +90,7 @@ export class NetworkManager {
     log(`Join ${options.topic} as ${options.peerId} with ${options.topology.toString()} topology.`);
 
     if (this._swarms.has(topic)) {
-      throw new Error(`Already connected to swarm ${topic}`);
+      throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, `Already connected to swarm ${topic}`);
     }
 
     const swarm = new Swarm(
@@ -97,6 +113,8 @@ export class NetworkManager {
 
     this.topicsUpdated.emit();
 
+    this._connectionLog?.swarmJoined(swarm);
+
     return () => this.leaveProtocolSwarm(topic);
   }
 
@@ -115,6 +133,8 @@ export class NetworkManager {
     map.destroy();
     this._maps.delete(topic);
 
+    this._connectionLog?.swarmLeft(swarm);
+
     await swarm.destroy();
     this._swarms.delete(topic);
     this.topicsUpdated.emit();
@@ -129,12 +149,13 @@ export class NetworkManager {
   }
 
   async destroy () {
-    for (const swarm of this._swarms.values()) {
-      await swarm.destroy().catch(err => {
-        log('Failed to destroy swarm');
+    for (const topic of this._swarms.keys()) {
+      await this.leaveProtocolSwarm(topic).catch(err => {
+        log(`Failed to leave swarm ${topic} on NetworkManager.destroy}`);
         log(err);
       });
     }
+    await this._signal.destroy();
   }
 }
 

@@ -12,10 +12,9 @@ import {
   createPartyGenesisMessage,
   Keyring,
   KeyType,
-  keyPairFromSeedPhrase,
   Filter
 } from '@dxos/credentials';
-import { keyToString, PublicKey } from '@dxos/crypto';
+import { keyToString, PublicKey, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
@@ -50,11 +49,6 @@ export class HaloFactory {
     private readonly _keyring: Keyring
   ) {}
 
-  // TODO(marik-d): Should this really be here?
-  hasFeedForParty (partyKey: PublicKey) {
-    return this._partyFactory.hasFeedForParty(partyKey);
-  }
-
   async constructParty (partyKey: PublicKey) {
     return this._partyFactory.constructParty(partyKey);
   }
@@ -68,9 +62,9 @@ export class HaloFactory {
       await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     // 1. Create a feed for the HALO.
-    // TODO(telackey): Just create the FeedKey and then let other code create the feed with the correct key.
-    const { feedKey } = await this._partyFactory.initWritableFeed(identityKey.publicKey);
     const halo = await this._partyFactory.constructParty(identityKey.publicKey);
+    const { feed } = await halo.feedProvider.createOrOpenWritableFeed();
+
     // Connect the pipeline.
     await halo.open();
 
@@ -78,7 +72,9 @@ export class HaloFactory {
     //    A. Identity key (in the case of the HALO, this serves as the Party key)
     //    B. Device key (the first "member" of the Identity's HALO)
     //    C. Feed key (the feed owned by the Device)
-    await halo.processor.writeHaloMessage(createPartyGenesisMessage(this._keyring, identityKey, feedKey, deviceKey));
+    const feedKeyPair = this._keyring.getKey(feed.key);
+    assert(feedKeyPair);
+    await halo.processor.writeHaloMessage(createPartyGenesisMessage(this._keyring, identityKey, feedKeyPair.publicKey, deviceKey));
 
     // 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
     //    message will be copied into other Parties which we create or join.

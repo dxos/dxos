@@ -2,8 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { mockFn, expect } from 'earljs';
-import { it as test } from 'mocha';
+import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { discoveryKey, PublicKey } from '@dxos/crypto';
@@ -52,10 +51,14 @@ function createPair () {
 }
 
 describe('InMemoryTransport', () => {
-  test('establish connection and send data through with protocol', async () => {
+  it('establish connection and send data through with protocol', async () => {
     const { plugin1, plugin2, peer1Id } = createPair();
 
-    const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
+    const received: any[] = [];
+    const mockReceive = (p: Protocol, s: string) => {
+      received.push(p, s);
+      return undefined;
+    };
     plugin1.on('receive', mockReceive);
 
     plugin2.on('connect', async (protocol) => {
@@ -63,15 +66,21 @@ describe('InMemoryTransport', () => {
     });
 
     await waitForExpect(() => {
-      expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
+      expect(received.length).toBe(2);
+      expect(received[0]).toBeInstanceOf(Protocol);
+      expect(received[1]).toBe('Foo');
     });
   });
 
-  test('10 pairs of peers connecting at the same time', async () => {
+  it('10 pairs of peers connecting at the same time', async () => {
     await Promise.all(range(10).map(async () => {
       const { plugin1, plugin2, peer1Id } = createPair();
 
-      const mockReceive = mockFn<[Protocol, string]>().returns(undefined);
+      const received: any[] = [];
+      const mockReceive = (p: Protocol, s: string) => {
+        received.push(p, s);
+        return undefined;
+      };
       plugin1.on('receive', mockReceive);
 
       plugin2.on('connect', async (protocol) => {
@@ -79,7 +88,9 @@ describe('InMemoryTransport', () => {
       });
 
       await waitForExpect(() => {
-        expect(mockReceive).toHaveBeenCalledWith([expect.a(Protocol), 'Foo']);
+        expect(received.length).toBe(2);
+        expect(received[0]).toBeInstanceOf(Protocol);
+        expect(received[1]).toBe('Foo');
       });
     }));
   });

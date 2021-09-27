@@ -136,7 +136,7 @@ export class Protocol {
   toString () {
     const meta = {
       id: keyToHuman(this._stream.publicKey),
-      extensions: Array.from(this._extensionMap.keys())
+      extensions: this.extensionNames
     };
 
     return `Protocol(${JSON.stringify(meta)})`;
@@ -156,6 +156,10 @@ export class Protocol {
 
   get extensions () {
     return Array.from(this._extensionMap.values());
+  }
+
+  get extensionNames (): string[] {
+    return Array.from(this._extensionMap.keys());
   }
 
   get streamOptions () {
@@ -269,7 +273,7 @@ export class Protocol {
     }
 
     this._connected = false;
-    this._stream.destroy();
+    this._stream.finalize();
     await this._extensionInit.close().catch((err: any) => process.nextTick(() => this._stream.destroy(err)));
     for (const [name, extension] of this._extensionMap) {
       log(`close extension "${name}"`);

@@ -5,17 +5,19 @@
 import assert from 'assert';
 import streamFrom from 'from2';
 
+import { HypercoreFeed } from './hypercore-types';
+
 export interface CreateBatchStreamOptions {
   start?: number,
   end?: number,
-  live?: any,
+  live?: boolean,
   snapshot?: boolean,
   batch?: number,
   metadata?: any,
   tail?: boolean
 }
 
-export function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {}) {
+export function createBatchStream (feed: HypercoreFeed, opts: CreateBatchStreamOptions = {}) {
   assert(!opts.batch || opts.batch > 0, 'batch must be major or equal to 1');
 
   let start = opts.start || 0;
@@ -83,11 +85,11 @@ export function createBatchStream (feed: any, opts: CreateBatchStreamOptions = {
 
     if (!feed.downloaded(start, batchEnd)) {
       seq = setStart(start + 1);
-      feed.get(seq, opts, (err: Error, data: any) => {
+      feed.get(seq, opts, (err, data) => {
         if (err) {
           return cb(err);
         }
-        cb(null, [buildMessage(data)]);
+        cb(null, [buildMessage(data as any)]);
       });
       return;
     }

@@ -1,8 +1,10 @@
-import { schema } from './gen';
-import { ComplexFields, TaskList, TaskType } from './gen/dxos/test'
+import { ComplexFields, Scalars, TaskList, TaskType, WithTimestamp } from './gen/dxos/test'
+import { TestFoo } from "./gen/dxos/test/testfoo";
+import { schema, TYPES } from './gen';
 import { MyKey } from './my-key';
 import { readFileSync, readdirSync, lstatSync } from 'fs'
 import { join } from 'path'
+import { loadSync } from 'protobufjs';
 
 test('encode and decode', async () => {
   const codec = schema.getCodecForType('dxos.test.TaskList')
@@ -37,6 +39,30 @@ test('encode and decode', async () => {
   expect(decoded).toEqual(initial)
 })
 
+test('encode and decode external package message', async () => {
+  const codec = schema.getCodecForType('dxos.test.testfoo.TestFoo')
+
+  const initial: TestFoo = { fizz: 3, bazz: "5" };
+
+  const encoded = codec.encode(initial)
+
+  expect(encoded).toBeInstanceOf(Uint8Array);
+
+  const decoded = codec.decode(encoded)
+
+  expect(decoded).toEqual(initial)
+
+  expect(() => {
+    const encoded = codec.encode({ badname: "badvalue" } as any)
+
+    expect(encoded).toBeInstanceOf(Uint8Array);
+
+    const decoded = codec.decode(encoded)
+
+    expect(decoded).toEqual(initial)
+  }).toThrow();
+})
+
 test('complex fields round trip', () => {
   const codec = schema.getCodecForType('dxos.test.ComplexFields');
 
@@ -64,6 +90,52 @@ test('complex fields round trip', () => {
     importedAny: {
       bar: 123,
     },
+  }
+
+  const encoded = codec.encode(initial)
+  
+  expect(encoded).toBeInstanceOf(Uint8Array);
+
+  const decoded = codec.decode(encoded)
+
+  expect(decoded).toEqual(initial)
+})
+
+test('scalars', () => {
+  const codec = schema.getCodecForType('dxos.test.Scalars');
+
+  const initial: Scalars = {
+    doubleField: 0.52,
+    floatField: 1.5,
+    int32Field: -54,
+    int64Field: '-55',
+    uint32Field: 314,
+    uint64Field: '34',
+    sint32Field: 3123,
+    sint64Field: '3123',
+    fixed32Field: 22,
+    fixed64Field: '312312312',
+    sfixed32Field: 45,
+    sfixed64Field: '312313123',
+    boolField: true,
+    stringField: 'hello',
+    bytesField: Buffer.from('world'),
+  }
+
+  const encoded = codec.encode(initial)
+  
+  expect(encoded).toBeInstanceOf(Uint8Array);
+
+  const decoded = codec.decode(encoded)
+
+  expect(decoded).toEqual(initial)
+})
+
+test('timestamp', () => {
+  const codec = schema.getCodecForType('dxos.test.WithTimestamp')
+
+  const initial: WithTimestamp = {
+    timestamp: new Date('2021-09-17T09:46:04Z')
   }
 
   const encoded = codec.encode(initial)

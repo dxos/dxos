@@ -12,21 +12,20 @@ import { it as test } from 'mocha';
 import { latch } from '@dxos/async';
 import {
   createPartyGenesisMessage,
-  generateSeedPhrase,
-  keyPairFromSeedPhrase,
   Keyring, KeyType,
   SecretProvider,
   SecretValidator
 } from '@dxos/credentials';
 import {
-  createKeyPair, PublicKey,
+  createKeyPair, generateSeedPhrase,
+  keyPairFromSeedPhrase, PublicKey,
   randomBytes,
   sign,
   SIGNATURE_LENGTH, verify
 } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
-import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
+import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -37,10 +36,12 @@ import { HaloFactory, IdentityManager } from '../halo';
 import { autoPartyOpener } from '../halo/party-opener';
 import { OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../items';
+import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
-import { FeedStoreAdapter, messageLogger } from '../util';
+import { createRamStorage, messageLogger } from '../util';
 import { Party } from './party';
 import { PartyFactory } from './party-factory';
+import { PartyFeedProvider } from './party-feed-provider';
 import { PARTY_ITEM_TYPE } from './party-internal';
 import { PartyManager } from './party-manager';
 
@@ -56,9 +57,9 @@ const log = debug('dxos:echo:parties:party-manager:test');
  * @param createIdentity - Create the identity key record.
  */
 const setup = async (open = true, createIdentity = true) => {
-  const feedStore = FeedStoreAdapter.create(createStorage('', STORAGE_RAM));
-  await feedStore.open();
   const keyring = new Keyring();
+  const metadataStore = new MetadataStore(createRamStorage());
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
 
   let seedPhrase;
   if (createIdentity) {
@@ -76,12 +77,13 @@ const setup = async (open = true, createIdentity = true) => {
   const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
+  const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
   const partyFactory = new PartyFactory(
     () => identityManager.identity,
     networkManager,
-    feedStore,
     modelFactory,
     snapshotStore,
+    feedProviderFactory,
     {
       writeLogger: messageLogger('<<<'),
       readLogger: messageLogger('>>>')
@@ -89,8 +91,8 @@ const setup = async (open = true, createIdentity = true) => {
   );
 
   const haloFactory: HaloFactory = new HaloFactory(partyFactory, networkManager, keyring);
-  const identityManager = new IdentityManager(keyring, haloFactory);
-  const partyManager = new PartyManager(feedStore, snapshotStore, () => identityManager.identity, partyFactory);
+  const identityManager = new IdentityManager(keyring, haloFactory, metadataStore);
+  const partyManager = new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
   afterTest(() => partyManager.close());
 
   identityManager.ready.once(() => {
@@ -102,9 +104,10 @@ const setup = async (open = true, createIdentity = true) => {
   if (open) {
     await partyManager.open();
     if (createIdentity) {
-      await identityManager.createHalo({
+      const haloParty = await identityManager.createHalo({
         identityDisplayName: identityManager.identity.identityKey!.publicKey.humanize()
       });
+      afterTest(() => haloParty.close());
     }
   }
 
@@ -112,9 +115,13 @@ const setup = async (open = true, createIdentity = true) => {
 };
 
 describe('Party manager', () => {
+  // eslint-disable-next-line jest/expect-expect
+  test('It exits cleanly', async () => {
+    await setup();
+  });
+
   test('Created locally', async () => {
     const { partyManager, identityManager } = await setup();
-    await partyManager.open();
 
     const [update, setUpdated] = latch();
     const unsubscribe = partyManager.update.on((party) => {
@@ -138,7 +145,6 @@ describe('Party manager', () => {
 
   test('Created via sync', async () => {
     const { feedStore, partyManager } = await setup();
-    await partyManager.open();
 
     const [update, setUpdated] = latch();
     const unsubscribe = partyManager.update.on((party) => {
@@ -155,11 +161,7 @@ describe('Party manager', () => {
 
     // TODO(burdon): Create multiple feeds.
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.feedStore.createReadWriteFeed({
-      key: PublicKey.from(publicKey),
-      secretKey,
-      metadata: { partyKey: partyKey.publicKey }
-    });
+    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     const feedKey = await keyring.addKeyRecord({
       publicKey: PublicKey.from(feed.key),
       secretKey: feed.secretKey,
@@ -167,7 +169,7 @@ describe('Party manager', () => {
     });
 
     const feedStream = createWritableFeedStream(feed);
-    feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey));
+    feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
 
     await partyManager.addParty(partyKey.publicKey, [{
       type: KeyType.FEED,
@@ -178,23 +180,23 @@ describe('Party manager', () => {
   });
 
   test('Create from cold start', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
-    const feedStoreAdapter = new FeedStoreAdapter(feedStore);
+    const storage = createStorage('', STORAGE_RAM);
+    const feedStore = new FeedStore(storage, { valueEncoding: codec });
 
     const keyring = new Keyring();
+    const metadataStore = new MetadataStore(createRamStorage());
+
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
     await keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const snapshotStore = new SnapshotStore(createStorage('', STORAGE_RAM));
     const networkManager = new NetworkManager();
-    const partyFactory: PartyFactory = new PartyFactory(() => identityManager.identity, networkManager, feedStoreAdapter, modelFactory, snapshotStore);
+    const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
+    const partyFactory: PartyFactory = new PartyFactory(() => identityManager.identity, networkManager, modelFactory, snapshotStore, feedProviderFactory);
     const haloFactory = new HaloFactory(partyFactory, networkManager, keyring);
-    const identityManager = new IdentityManager(keyring, haloFactory);
-    const partyManager =
-      new PartyManager(feedStoreAdapter, snapshotStore, () => identityManager.identity, partyFactory);
-
-    await feedStore.open();
+    const identityManager = new IdentityManager(keyring, haloFactory, metadataStore);
+    const partyManager = new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
 
     // TODO(telackey): Injecting "raw" Parties into the feeds behind the scenes seems fishy to me, as it writes the
     // Party messages in a slightly different way than the code inside PartyFactory does, and so could easily diverge
@@ -206,22 +208,18 @@ describe('Party manager', () => {
     const numParties = 3;
     for (let i = 0; i < numParties; i++) {
       const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+      const keyRecord = keyring.getFullKey(partyKey.publicKey);
+      assert(keyRecord, 'Key is not found in keyring');
+      assert(keyRecord.secretKey, 'Missing secret key');
+      await metadataStore.addPartyFeed(partyKey.publicKey, keyRecord.publicKey);
 
       // TODO(burdon): Create multiple feeds.
-      const { publicKey, secretKey } = createKeyPair();
-      const feed = await feedStore.createReadWriteFeed({
-        key: PublicKey.from(publicKey),
-        secretKey,
-        metadata: { partyKey: partyKey.publicKey, writable: true }
-      });
-      const feedKey = await keyring.addKeyRecord({
-        publicKey: PublicKey.from(feed.key),
-        secretKey: feed.secretKey,
-        type: KeyType.FEED
-      });
+      const { feed } = await feedStore.openReadWriteFeed(keyRecord.publicKey, keyRecord.secretKey);
+      const feedKey = keyring.getFullKey(feed.key);
+      assert(feedKey);
 
       const feedStream = createWritableFeedStream(feed);
-      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey, identityKey) });
+      feedStream.write({ halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey) });
       feedStream.write({
         echo: checkType<EchoEnvelope>({
           itemId: 'foo',
@@ -240,11 +238,20 @@ describe('Party manager', () => {
     await partyManager.close();
   });
 
+  // eslint-disable-next-line jest/expect-expect
+  test('Creates invitation and exits cleanly', async () => {
+    const { partyManager: partyManagerA } = await setup();
+
+    const partyA = await partyManagerA.createParty();
+    const PIN = Buffer.from('0000');
+    const secretProvider: SecretProvider = async () => PIN;
+    const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(PIN);
+    await partyA.invitationManager.createInvitation({ secretProvider, secretValidator }, { expiration: Date.now() + 3000 });
+  });
+
   test('Create invitation', async () => {
     const { partyManager: partyManagerA } = await setup();
     const { partyManager: partyManagerB } = await setup();
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     const partyA = await partyManagerA.createParty();
     const PIN = Buffer.from('0000');
@@ -255,8 +262,6 @@ describe('Party manager', () => {
     const partyB = await partyManagerB.joinParty(invitationDescriptor, secretProvider);
     expect(partyB).toBeDefined();
 
-    // TODO(burdon): Adding this causes the worker process to hang AND partyManger.close to throw.
-    /*
     const [updated, onUpdate] = latch();
     partyB.database.select(s => s.filter({ type: 'dxn://example/item/test' }).items)
       .update.on((items) => {
@@ -268,21 +273,15 @@ describe('Party manager', () => {
           }
         }
       });
-    */
 
     const itemA = await partyA.database.createItem({ model: ObjectModel, type: 'dxn://example/item/test' });
     log(`A created ${itemA.id}`);
-    // await updated;
-
-    // await partyManagerA.close();
-    // await partyManagerB.close();
+    await updated;
   });
 
   test('Join a party - PIN', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     // Create the Party.
     expect(partyManagerA.parties).toHaveLength(0);
@@ -355,16 +354,11 @@ describe('Party manager', () => {
     }
 
     expect(inviterOnFinishCalled).toBeTruthy();
-
-    // await partyManagerA.close();
-    // await partyManagerB.close();
   });
 
   test('Join a party - signature', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA } = await setup();
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     // This would typically be a keypair associated with BotFactory.
     const keyPair = createKeyPair();
@@ -438,10 +432,6 @@ describe('Party manager', () => {
         }
       }
     }
-
-    // TODO(burdon): Clean-up.
-    // await partyManagerA.close();
-    // await partyManagerB.close();
   });
 
   test('Join a party - Offline', async () => {
@@ -449,9 +439,6 @@ describe('Party manager', () => {
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup();
     assert(identityManagerA.identity.identityKey);
     assert(identityManagerB.identity.identityKey);
-
-    await partyManagerA.open();
-    await partyManagerB.open();
 
     // Create the Party.
     expect(partyManagerA.parties).toHaveLength(0);

@@ -74,14 +74,13 @@ declare module 'hypercore-protocol' {
 
     open (key: any, handlers: ChannelHandlers): Channel;
     destroy (error?: any);
+    finalize();
 
     registerExtension(name: string, handlers?: ExtensionHandlers): Extension;
   }
 
   export = ProtocolStream;
 }
-
-declare module 'nanoresource-promise/emitter';
 
 declare module 'nanomessage';
 

@@ -6,7 +6,9 @@ import assert from 'assert';
 import debug from 'debug';
 import memdown from 'memdown';
 
-import { PartyKey } from '@dxos/echo-protocol';
+import { Keyring, KeyStore } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
+import { codec, PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
@@ -18,10 +20,11 @@ import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer, SecretProvider } from './invitations';
 import { DefaultModel } from './items';
-import { OpenProgress, Party, PartyFactory, PartyFilter, PartyManager } from './parties';
+import { MetadataStore } from './metadata';
+import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
-import { FeedStoreAdapter, createRamStorage } from './util';
+import { createRamStorage } from './util';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
@@ -44,6 +47,11 @@ export interface EchoCreationOptions {
    * Storage used for snapshots. Defaults to in-memory.
    */
   snapshotStorage?: IStorage
+
+  /**
+   * Storage used for snapshots. Defaults to in-memory.
+   */
+  metadataStorage?: IStorage
 
   /**
    * Networking provider. Defaults to in-memory networking.
@@ -81,13 +89,15 @@ export interface EchoCreationOptions {
 // TODO(burdon): Create ECHOError class for public errors.
 export class ECHO {
   private readonly _halo: HALO;
+  private readonly _keyring: Keyring;
 
-  private readonly _feedStore: FeedStoreAdapter;
+  private readonly _feedStore: FeedStore;
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
   private readonly _snapshotStore: SnapshotStore;
   private readonly _partyManager: PartyManager;
   private readonly _subs = new SubscriptionGroup();
+  private readonly _metadataStore: MetadataStore;
 
   /**
    * Creates a new instance of ECHO.
@@ -98,20 +108,20 @@ export class ECHO {
     keyStorage = memdown(),
     feedStorage = createRamStorage(),
     snapshotStorage = createRamStorage(),
+    metadataStorage = createRamStorage(),
     networkManagerOptions,
     snapshots = true,
     snapshotInterval = 100,
     readLogger,
     writeLogger
   }: EchoCreationOptions = {}) {
-    this._feedStore = FeedStoreAdapter.create(feedStorage);
-
     this._modelFactory = new ModelFactory()
       .registerModel(ObjectModel)
       .registerModel(DefaultModel);
 
     this._networkManager = new NetworkManager(networkManagerOptions);
     this._snapshotStore = new SnapshotStore(snapshotStorage);
+    this._metadataStore = new MetadataStore(metadataStorage);
 
     const options = {
       snapshots,
@@ -119,28 +129,39 @@ export class ECHO {
       readLogger,
       writeLogger
     };
+    this._keyring = new Keyring(new KeyStore(keyStorage));
+
+    this._feedStore = new FeedStore(feedStorage, { valueEncoding: codec });
+
+    const createFeedProvider = (partyKey: PublicKey) => new PartyFeedProvider(
+      this._metadataStore,
+      this._keyring,
+      this._feedStore,
+      partyKey
+    );
 
     const partyFactory = new PartyFactory(
       () => this.halo.identity,
       this._networkManager,
-      this._feedStore,
       this._modelFactory,
       this._snapshotStore,
+      createFeedProvider,
       options
     );
 
     this._partyManager = new PartyManager(
-      this._feedStore,
+      this._metadataStore,
       this._snapshotStore,
       () => this.halo.identity,
       partyFactory
     );
 
     this._halo = new HALO({
-      keyStorage: keyStorage,
+      keyring: this._keyring,
       partyFactory,
       networkManager: this._networkManager,
-      partyManager: this._partyManager
+      partyManager: this._partyManager,
+      metadataStore: this._metadataStore
     });
 
     this._halo.identityReady.once(() => {
@@ -171,7 +192,7 @@ export class ECHO {
   //
 
   get feedStore (): FeedStore {
-    return this._feedStore.feedStore; // TODO(burdon): Why not return top-level object?
+    return this._feedStore;
   }
 
   get networkManager (): NetworkManager {
@@ -192,7 +213,9 @@ export class ECHO {
       return;
     }
 
-    await this._feedStore.open();
+    await this._metadataStore.load();
+    await this._keyring.load();
+    await this._metadataStore.load();
     await this.halo.open(onProgressCallback);
 
     await this._partyManager.open(onProgressCallback);
@@ -215,6 +238,8 @@ export class ECHO {
     await this._partyManager.close();
 
     await this._feedStore.close();
+
+    await this.networkManager.destroy();
   }
 
   /**
@@ -240,6 +265,12 @@ export class ECHO {
       await this._snapshotStore.clear();
     } catch (err) {
       log('Error clearing snapshot storage:', err);
+    }
+
+    try {
+      await this._metadataStore.clear();
+    } catch (err) {
+      log('Error clearing metadata storage:', err);
     }
   }
 

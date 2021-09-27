@@ -75,6 +75,10 @@ export class Connection {
     return this._transport;
   }
 
+  get protocol () {
+    return this._protocol;
+  }
+
   connect () {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
 
@@ -142,8 +146,10 @@ export class Connection {
 
     log(`Closing ${this.ownId}`);
 
+    // This will try to gracefull close the stream flushing any unsent data packets.
     await this._protocol.close();
 
+    // After the transport is closed streams are disconnected.
     await this._transport?.close();
 
     log(`Closed ${this.ownId}`);

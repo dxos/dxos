@@ -6,23 +6,13 @@
 // functions -- if we did that we'd be calling a different instance of the createDebug
 // object, with the result that we wouldn't change the log output from the application.
 
-import { HandlerProps } from './handler-props';
+import { DevtoolsContext } from '@dxos/client';
+import { EnableDebugLoggingRequest } from '@dxos/devtools';
 
-export default ({ hook, bridge }: HandlerProps) => {
-  bridge.onMessage('debug-logging.enable', ({ data }) => {
-    try {
-      hook.debug.enable(data);
-    } catch (ex) {
-      console.error('DevTools: Failed to enable logging');
-      console.error(ex);
-    }
-  });
-  bridge.onMessage('debug-logging.disable', () => {
-    try {
-      return hook.debug.disable();
-    } catch (ex) {
-      console.error('DevTools: Failed to disable logging');
-      console.error(ex);
-    }
-  });
+export const enableDebugLogging = (hook: DevtoolsContext, data: EnableDebugLoggingRequest) => {
+  hook.debug.enable(data.namespaces);
+};
+
+export const disableDebugLogging = (hook: DevtoolsContext) => {
+  hook.debug.disable();
 };

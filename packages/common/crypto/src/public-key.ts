@@ -13,7 +13,7 @@ export class PublicKey {
   static LENGTH = 32;
 
   /**
-   * Creates new instance of PublicKey automatically determening the input format.
+   * Creates new instance of PublicKey automatically determining the input format.
    */
   static from (source: PublicKeyLike): PublicKey {
     if (source instanceof PublicKey) {

@@ -3,52 +3,72 @@
 //
 
 import assert from 'assert';
-import { EventEmitter } from 'events';
 
 import { PublicKeyLike } from '@dxos/crypto';
+import type { HypercoreFeed } from '@dxos/feed-store';
 import { Extension, Protocol } from '@dxos/protocol';
 
 import { Peer } from './peer';
 import { schemaJson } from './proto/gen';
-import { Feed } from './proto/gen/dxos/protocol/replicator';
+import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
 
 // const log = debug('dxos.replicator');
 
-const defaultReplicate = () => {};
-const defaultSubscribe = () => () => {};
+const defaultReplicate: ReplicateFunction = async () => [];
+const defaultSubscribe: SubscribeFunction = () => () => {};
+
+export interface ReplicatorContextInfo {
+  /**
+   * Passed from protocol.getContext()
+   */
+  context: any,
+  /**
+   * Peer id, loaded from protocol.getSession()
+   */
+  session?: string
+}
+
+type LoadFunction = (info: ReplicatorContextInfo) => Promise<FeedData[]>;
+type SubscribeFunction = (share: (feeds: FeedData[]) => Promise<void> | undefined, info: ReplicatorContextInfo) => () => void;
+type ReplicateFunction = (feeds: FeedData[], info: ReplicatorContextInfo) => Promise<HypercoreFeed[]>;
+
+export interface ReplicatorMiddleware {
+  /**
+   * Returns a list of local feeds to replicate.
+   */
+  load: LoadFunction,
+
+  /**
+   * Subscribe to new local feeds being opened.
+   */
+  subscribe?: SubscribeFunction
+
+  /**
+   * Maps feed replication requests to a set of feed descriptors to be replicated.
+   */
+  replicate?: ReplicateFunction
+}
 
 /**
  * Manages key exchange and feed replication.
  */
 // TODO(burdon): Rename ReplicatorPlugin.
-export class Replicator extends EventEmitter {
+export class Replicator {
   static extension = 'dxos.protocol.replicator';
   private readonly _peers = new Map<Protocol, Peer>();
-  private _options: {timeout: number}
-  private _load: (...args: any[]) => any;
-  private _subscribe: (...args: any[]) => any;
-  private _replicate: (...args: any[]) => any;
+  private _options: {timeout: number};
+  private _load: LoadFunction;
+  private _subscribe: SubscribeFunction
+  private _replicate: ReplicateFunction;
 
-  constructor (middleware: any, options?: {timeout?: number}) {
-    super();
-    assert(middleware);
-    assert(middleware.load);
-
+  constructor (middleware: ReplicatorMiddleware, options?: {timeout: number}) {
     const { load, subscribe = defaultSubscribe, replicate = defaultReplicate } = middleware;
 
-    this._load = async (...args) => load(...args);
-    this._subscribe = (...args) => subscribe(...args);
-    this._replicate = async (...args) => replicate(...args);
+    this._load = load;
+    this._subscribe = subscribe;
+    this._replicate = replicate;
 
-    this._options = Object.assign({
-      timeout: 1000
-    }, options);
-  }
-
-  override toString () {
-    const meta = {};
-
-    return `Replicator(${JSON.stringify(meta)})`;
+    this._options = options ?? { timeout: 10000 };
   }
 
   /**
@@ -60,7 +80,6 @@ export class Replicator extends EventEmitter {
       schema: schemaJson,
       timeout: this._options.timeout
     })
-      .on('error', (err: any) => this.emit(err))
       .setInitHandler(this._initHandler.bind(this))
       .setHandshakeHandler(this._handshakeHandler.bind(this))
       .setMessageHandler(this._messageHandler.bind(this))
@@ -91,7 +110,7 @@ export class Replicator extends EventEmitter {
     const info = { context, session };
 
     try {
-      const share = (feeds: Feed[]) => peer?.share(feeds);
+      const share = (feeds: FeedData[]) => peer?.share(feeds);
       const unsubscribe = this._subscribe(share, info);
       peer?.closed.on(unsubscribe);
 
@@ -129,6 +148,7 @@ export class Replicator extends EventEmitter {
     const peer = this._peers.get(protocol);
     const context = protocol.getContext();
     const { peerId: session } = protocol.getSession() ?? {};
+    assert(typeof session === 'string');
     const info = { context, session };
 
     try {

@@ -52,6 +52,18 @@ describe('Stream', () => {
       { closed: true, error: new Error('test') }
     ]);
   });
+
+  test('subscribe gets all updates', async () => {
+    let nextCb: (value: string) => void = () => {};
+    const stream = new Stream<string>(({ next }) => {
+      nextCb = next;
+    });
+    nextCb('first');
+    const received: string[] = [];
+    stream.subscribe(msg => received.push(msg), () => {});
+    nextCb('second');
+    expect(received).toEqual(['first', 'second']);
+  });
 });
 
 // To not introduce a dependency on @dxos/async.

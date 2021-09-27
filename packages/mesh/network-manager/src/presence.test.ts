@@ -2,8 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect } from 'earljs';
-import { it as test } from 'mocha';
+import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/crypto';
@@ -21,6 +20,7 @@ const createPeer = (topic: PublicKey) => {
   afterTest(() => networkManager.destroy());
 
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
+  afterTest(() => presencePlugin.stop());
 
   networkManager.joinProtocolSwarm({
     peerId,
@@ -33,7 +33,7 @@ const createPeer = (topic: PublicKey) => {
 };
 
 describe('Presence', () => {
-  test('sees connected peers', async () => {
+  it('sees connected peers', async () => {
     const topic = PublicKey.random();
 
     const peer1 = createPeer(topic);
@@ -48,7 +48,7 @@ describe('Presence', () => {
     });
   });
 
-  test('removes disconnected peers', async () => {
+  it('removes disconnected peers', async () => {
     const topic = PublicKey.random();
 
     const peer1 = createPeer(topic);

@@ -10,7 +10,7 @@ import readPkg from 'read-pkg';
 
 import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
-import { compileSchema } from './type-generator';
+import { parseAndGenerateSchema } from './type-generator';
 
 void (async () => {
   const { version } = await readPkg();
@@ -32,5 +32,5 @@ void (async () => {
 
   logger.logCompilationOptions(substitutionsModule, protoFilePaths, outDirPath);
 
-  await compileSchema(substitutionsModule, protoFilePaths, outDirPath);
+  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, outDirPath);
 })();

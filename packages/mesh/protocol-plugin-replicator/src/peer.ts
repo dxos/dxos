@@ -5,14 +5,15 @@
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
+import type { HypercoreFeed } from '@dxos/feed-store';
 import { Extension, Protocol } from '@dxos/protocol';
 
-import { Feed } from './proto/gen/dxos/protocol/replicator';
+import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
 
 const log = debug('dxos.replicator.peer');
 
 export class Peer {
-  private readonly _feeds = new Map();
+  private readonly _feeds = new Map<string, HypercoreFeed>();
   readonly closed = new Event();
   constructor (private _protocol: Protocol, private _extension: Extension) {}
 
@@ -23,7 +24,7 @@ export class Peer {
   /**
    * Share feeds to the remote peer.
    */
-  async share (feeds: Feed | Feed[] = []): Promise<void> {
+  async share (feeds: FeedData | FeedData[] = []): Promise<void> {
     log('share', feeds);
 
     if (!Array.isArray(feeds)) {
@@ -37,7 +38,7 @@ export class Peer {
     const message = {
       __type_url: 'dxos.protocol.replicator.Container',
       type: 'share-feeds',
-      data: feeds.map(({ key, discoveryKey, metadata }) => ({ __type_url: 'dxos.protocol.replicator.Feed', key, discoveryKey, metadata }))
+      data: feeds.map(({ key, discoveryKey }) => ({ __type_url: 'dxos.protocol.replicator.Feed', key, discoveryKey }))
     };
 
     await this._extension.send(message, { oneway: true });
@@ -46,7 +47,7 @@ export class Peer {
   /**
    * Replicate multiple feeds.
    */
-  replicate (feeds: Feed[] = []) {
+  replicate (feeds: HypercoreFeed[] = []) {
     feeds.forEach(feed => this._replicate(feed));
   }
 
@@ -69,7 +70,7 @@ export class Peer {
    * @returns {boolean} - true if `feed.replicate` was called.
    * @private
    */
-  _replicate (feed: any): boolean {
+  _replicate (feed: HypercoreFeed): boolean {
     if (!feed || !feed.replicate) {
       return false;
     }

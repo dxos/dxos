@@ -23,11 +23,10 @@ describe('Feed tests:', () => {
   });
 
   test('hypercore', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
-    await feedStore.open();
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
+    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     expect(feed.length).toBe(0);
 
     const data: FeedMessage = {};
@@ -40,11 +39,10 @@ describe('Feed tests:', () => {
   });
 
   test('feed writer', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: codec } });
-    await feedStore.open();
+    const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
-    const feed = await feedStore.createReadWriteFeed({ key: PublicKey.from(publicKey), secretKey });
+    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     const writer = createFeedWriter<FeedMessage>(feed);
 
     const data: FeedMessage = {

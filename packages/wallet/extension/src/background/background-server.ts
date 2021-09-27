@@ -4,16 +4,12 @@
 
 import { Client } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
-import { keyPairFromSeedPhrase } from '@dxos/credentials';
-import { createKeyPair } from '@dxos/crypto';
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { createKeyPair, keyPairFromSeedPhrase } from '@dxos/crypto';
+import { decodeInvitation } from '@dxos/react-client';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/wallet-core';
 
 import { config } from './config';
-
-// const encodeInvitation = (invitation: InvitationDescriptor) => btoa(JSON.stringify(invitation.toQueryParameters()));
-const decodeInvitation = (code: string) => InvitationDescriptor.fromQueryParameters(JSON.parse(atob(code)));
 
 export class BackgroundServer {
   private _client: Client = new Client(config);
@@ -94,6 +90,22 @@ export class BackgroundServer {
             };
           } catch (err) {
             console.error('Joining party failed');
+            console.error(err);
+            throw err;
+          }
+        },
+        RedeemDevice: async request => {
+          if (!request.invitation) {
+            throw new Error('Invitation is missing.');
+          }
+          const invitation = decodeInvitation(request.invitation);
+          try {
+            const joinedParty = await this._client.halo.join(invitation, async () => Buffer.from(request.passcode!));
+            return {
+              partyKey: joinedParty.key.toHex()
+            };
+          } catch (err) {
+            console.error('Redeeming device invitation failed');
             console.error(err);
             throw err;
           }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-framework",
-  "version": "2.12.7",
+  "version": "2.12.23",
   "description": "Application framework components",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -22,7 +22,8 @@
     "@dxos/debug": "workspace:*",
     "clsx": "^1.1.0",
     "lodash.defaultsdeep": "^4.6.1",
-    "lodash.isplainobject": "^4.0.6"
+    "lodash.isplainobject": "^4.0.6",
+    "url-join": "^4.0.1"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
@@ -35,6 +36,7 @@
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",
     "@types/react": "^16.14.0",
+    "@types/url-join": "~4.0.1",
     "babel-plugin-add-module-exports": "^1.0.4",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
@@ -50,6 +52,6 @@
     "react-dom": "*"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

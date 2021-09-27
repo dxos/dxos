@@ -3,9 +3,10 @@
 #
 
 # TODO(burdon): Is this used or configured via the Netlify dashboard?
+# Both. This file overrides configuration in the dashboard.
 
 [build]
   base = "docs/"
   publish = "public/"
   command = "yarn build"
-  ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF . ../packages/"
+  ignore = "bash ./netlify-ignore.sh"

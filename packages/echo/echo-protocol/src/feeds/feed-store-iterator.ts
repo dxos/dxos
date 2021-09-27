@@ -8,13 +8,13 @@ import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
 import { keyToString, PublicKey } from '@dxos/crypto';
-import { createBatchStream, FeedDescriptor, FeedStore } from '@dxos/feed-store';
+import { createBatchStream, FeedDescriptor } from '@dxos/feed-store';
 
 import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
 
 const log = debug('dxos:echo:feed-store-iterator:log');
-const warn = debug('dxos:echo:feed-store-iterator:warn');
+const STALL_TIMEOUT = 1000;
 
 // TODO(burdon): Redesign FeedStore:
 // - event handlers
@@ -29,50 +29,6 @@ export interface FeedSetProvider {
 
 export type MessageSelector = (candidates: FeedBlock[]) => number | undefined;
 export type FeedSelector = (descriptor: FeedDescriptor) => boolean;
-
-const STALL_TIMEOUT = 1000;
-
-/**
- * Creates an ordered message iterator.
- *
- * @param feedStore
- * @param feedSelector Filter for desired feeds.
- * @param messageSelector Returns the index of the selected message candidate (or undefined).
- * @param skipTimeframe Feeds are read starting from the next message after this timeframe. Feeds not included in this timeframe are read from the beginning.
- * @readonly {NodeJS.ReadableStream} readStream stream.
- */
-// TODO(burdon): Remove factory.
-// TODO(burdon): Use arrow functions (remove this side-effect).
-export async function createIterator (
-  feedStore: FeedStore,
-  feedSelector: FeedSelector = () => true,
-  messageSelector: MessageSelector = () => 0,
-  skipTimeframe?: Timeframe
-): Promise<FeedStoreIterator> {
-  assert(!feedStore.closed);
-  if (!feedStore.opened) {
-    await feedStore.open();
-  }
-
-  const iterator = new FeedStoreIterator(feedSelector, messageSelector, skipTimeframe ?? new Timeframe());
-
-  // TODO(burdon): Only add feeds that belong to party (or use feedSelector).
-  const initialDescriptors = feedStore.getDescriptors().filter(descriptor => descriptor.opened);
-  for (const descriptor of initialDescriptors) {
-    iterator.addFeedDescriptor(descriptor);
-  }
-
-  // TODO(burdon): Only add feeds that belong to party (or use feedSelector).
-  (feedStore as any).on('feed', (_: never, descriptor: FeedDescriptor) => {
-    iterator.addFeedDescriptor(descriptor);
-  });
-
-  iterator.stalled.on(candidates => {
-    warn(`Feed store reader stalled: no message candidates were accepted after ${STALL_TIMEOUT}ms timeout.\nCurrent candidates:`, candidates);
-  });
-
-  return iterator;
-}
 
 /**
  * We are using an iterator here instead of a stream to ensure we have full control over how and at what time
@@ -175,6 +131,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
 
     log(`Starting reading from feed ${descriptor.key.toString()} from sequence ${startIdx}`);
 
+    assert(descriptor.feed, 'Feed is not initialized');
     const stream = new Readable({ objectMode: true })
       .wrap(createBatchStream(descriptor.feed, { live: true, start: startIdx }));
 

@@ -4,46 +4,94 @@
 
 import crypto from 'crypto';
 import eos from 'end-of-stream';
+import multi from 'multi-read-stream';
 import pify from 'pify';
 import waitForExpect from 'wait-for-expect';
 
 import { createKeyPair, discoveryKey, PublicKey } from '@dxos/crypto';
-import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
+import { createBatchStream, FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { boolGuard } from '@dxos/util';
 
-import { DefaultReplicator } from '.';
+import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
+import { Replicator, ReplicatorMiddleware } from './replicator';
 
 jest.setTimeout(30000);
 
-const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
-  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { feedOptions: { valueEncoding: 'utf8' } });
-  await feedStore.open();
-  const { publicKey, secretKey } = createKeyPair();
-  const feed = await feedStore.createReadWriteFeed({
-    key: PublicKey.from(publicKey),
-    secretKey,
-    metadata: { topic: topic.toString('hex') }
+const noop = () => {};
+
+interface MiddlewareOptions {
+  feedStore: FeedStore,
+  onUnsubscribe?: (feedStore: FeedStore) => void,
+  onLoad?: (feedStore: FeedStore) => HypercoreFeed[],
+}
+
+const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: MiddlewareOptions): ReplicatorMiddleware => {
+  const encodeFeed = (feed: HypercoreFeed): FeedData => ({
+    key: feed.key,
+    discoveryKey: feed.discoveryKey
   });
+
+  const decodeFeed = (feed: FeedData): FeedData => ({
+    key: feed.key,
+    discoveryKey: feed.discoveryKey
+  });
+
+  return {
+    subscribe (next) {
+      const unsubscribe = feedStore.feedOpenedEvent.on((descriptor) => next([encodeFeed(descriptor.feed!)]));
+      return () => {
+        onUnsubscribe(feedStore);
+        unsubscribe();
+      };
+    },
+    async load () {
+      const feeds = onLoad(feedStore);
+      return feeds.map(
+        feed => encodeFeed(feed)
+      );
+    },
+    async replicate (feeds: FeedData[]) {
+      const hypercoreFeeds = await Promise.all(feeds.map(async (feed) => {
+        const { key } = decodeFeed(feed);
+
+        if (key) {
+          const { feed } = await feedStore.openReadOnlyFeed(PublicKey.from(key));
+          return feed;
+        }
+
+        return null;
+      }));
+
+      return hypercoreFeeds.filter(boolGuard);
+    }
+  };
+};
+
+const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
+  const feedStore = new FeedStore(createStorage('', STORAGE_RAM), { valueEncoding: 'utf8' });
+  const { publicKey, secretKey } = createKeyPair();
+  const { feed } = await feedStore.openReadWriteFeed(
+    PublicKey.from(publicKey),
+    secretKey
+  );
   const append = pify(feed.append.bind(feed));
   let closed = false;
 
-  const replicator = new DefaultReplicator({
+  const replicator = new Replicator(middleware({
     feedStore,
     onLoad: () => [feed],
     onUnsubscribe: () => {
       closed = true;
     }
-  });
+  }));
 
   return {
     id: peerId,
-    getFeeds () {
-      return feedStore.getOpenFeeds();
-    },
-    getDescriptors () {
-      return feedStore.getDescriptors();
+    getFeedsNum () {
+      return Array.from((feedStore as any)._descriptors.values()).length;
     },
     createStream ({ initiator }) {
       return new Protocol({
@@ -64,9 +112,9 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     },
     getMessages () {
       const messages: any[] = [];
-      const stream = feedStore.createReadStream();
-      stream.on('data', (data: any) => {
-        messages.push(data.data);
+      const stream = multi.obj(Array.from((feedStore as any)._descriptors.values()).map((descriptor: any) => createBatchStream(descriptor.feed)));
+      stream.on('data', (data: any[]) => {
+        messages.push(data[0].data);
       });
       return new Promise((resolve, reject) => {
         eos(stream, (err: any) => {
@@ -100,18 +148,11 @@ describe('test data replication in a balanced network graph of 15 peers', () => 
 
     await waitForExpect(() => {
       const result = network.peers.reduce((prev: boolean, peer: any) => {
-        return prev && peer.getFeeds().length === network.peers.length;
+        return prev && peer.getFeedsNum() === network.peers.length;
       }, true);
 
       expect(result).toBe(true);
     }, 4500, 1000);
-
-    let metadataOk = true;
-    for (const peer of network.peers) {
-      metadataOk = metadataOk && !peer.getDescriptors().find((d: FeedDescriptor) => !d.metadata || !d.metadata.topic);
-    }
-
-    expect(metadataOk).toBe(true);
   });
 
   test('message synchronization', async () => {

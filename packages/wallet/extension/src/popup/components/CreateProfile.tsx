@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { useHistory, Redirect } from 'react-router-dom';
 import { browser } from 'webextension-polyfill-ts';
 
-import { Button, Container, Grid, makeStyles, TextField, Typography, Link } from '@material-ui/core';
+import { Button, Container, Grid, makeStyles, TextField, Typography, Link, Divider } from '@material-ui/core';
 
 import { useBackgroundContext } from '../contexts';
 import { useUIError } from '../hooks';
@@ -16,6 +16,11 @@ import type { Profile } from '../utils/types';
 const useStyles = makeStyles({
   container: {
     marginTop: 50
+  },
+  divider: {
+    width: 200,
+    marginTop: 5,
+    marginBottom: 5
   }
 });
 
@@ -35,12 +40,12 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
   const backgroundService = useBackgroundContext();
   const withUIError = useUIError();
 
-  const onImport = async () => {
+  const onNavigation = async (path: string) => {
     if (inFullScreenMode()) {
-      history.push('/import');
+      history.push(`/${path}`);
       return;
     }
-    const fullScreenUrl = location.href.replace('popup/popup.html', 'popup/fullscreen.html').replace('create', 'import');
+    const fullScreenUrl = location.href.replace('popup/popup.html', 'popup/fullscreen.html').replace('create', path);
     await browser.tabs.create({ active: true, url: fullScreenUrl });
   };
 
@@ -49,8 +54,8 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
     const response = await withUIError(
       () => backgroundService?.rpc.CreateProfile({ username }),
       {
-        successMessage: 'Succesfully created profile',
-        errorMessage: 'Couldn\'t create profile'
+        onSuccessMessage: 'Succesfully created profile',
+        onErrorMessage: 'Couldn\'t create profile'
       }
     );
     setInProgress(false);
@@ -98,8 +103,14 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
           </Grid>
         </Grid>
         <Grid item xs={12}>
-          <Grid container justify='center' onClick={onImport}>
-            or &nbsp; <Link component='button'> Import using seedphrase</Link>
+          <Grid container justify='center' onClick={() => onNavigation('import')}>
+            <Link component='button'>Import using seedphrase</Link>
+          </Grid>
+          <Grid container justify='center'>
+            <Divider className={classes.divider} orientation='horizontal'/>
+          </Grid>
+          <Grid container justify='center' onClick={() => onNavigation('redeem-device')}>
+            <Link component='button'>Redeem device invitation</Link>
           </Grid>
         </Grid>
       </Grid>

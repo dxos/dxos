@@ -5,6 +5,7 @@
 /* eslint-disable jest/no-done-callback */
 
 import assert from 'assert';
+import defaultHypercore from 'hypercore';
 import pify from 'pify';
 import tempy from 'tempy';
 
@@ -13,18 +14,24 @@ import { createStorage, STORAGE_NODE, STORAGE_RAM } from '@dxos/random-access-mu
 
 import FeedDescriptor from './feed-descriptor';
 
-// Caution: the tests depend on each other in sequence.
 describe('FeedDescriptor', () => {
   let fd: FeedDescriptor;
 
-  test('Create', () => {
+  beforeEach(async () => {
     const { publicKey, secretKey } = createKeyPair();
-    const fd = new FeedDescriptor({
-      storage: createStorage('', STORAGE_NODE),
+    fd = new FeedDescriptor({
+      storage: createStorage('', STORAGE_RAM),
       key: PublicKey.from(publicKey),
-      secretKey
+      secretKey,
+      hypercore: defaultHypercore
     });
+  });
 
+  afterEach(async () => {
+    await fd.close();
+  });
+
+  test('Create', () => {
     expect(fd).toBeInstanceOf(FeedDescriptor);
     expect(fd.key).toBeDefined();
     expect(fd.secretKey).toBeDefined();
@@ -34,7 +41,7 @@ describe('FeedDescriptor', () => {
     // When this behaviour was changed, suddenly `protocol-plugin-replicator` tests started hanging forever on network generation.
     const { publicKey } = createKeyPair();
     const key = PublicKey.from(publicKey);
-    const fd = new FeedDescriptor({ key, storage: createStorage('', STORAGE_NODE) });
+    const fd = new FeedDescriptor({ key, storage: createStorage('', STORAGE_NODE), hypercore: defaultHypercore });
     expect(fd.key).toEqual(key);
     expect(fd.secretKey).toBeUndefined();
   });
@@ -42,27 +49,21 @@ describe('FeedDescriptor', () => {
   test('Create custom options', () => {
     const { publicKey, secretKey } = createKeyPair();
 
-    const metadata = {
-      subject: 'books'
-    };
-
-    fd = new FeedDescriptor({
+    const fd = new FeedDescriptor({
       storage: createStorage('', STORAGE_RAM),
       key: PublicKey.from(publicKey),
       secretKey,
       valueEncoding: 'json',
-      metadata
+      hypercore: defaultHypercore
     });
 
     expect(fd).toBeInstanceOf(FeedDescriptor);
     expect(fd.key).toBeInstanceOf(PublicKey);
     expect(fd.secretKey).toBeInstanceOf(Buffer);
-    expect(fd.metadata).toEqual(metadata);
     expect(fd.valueEncoding).toBe('json');
   });
 
   test('Open', async () => {
-    expect(fd.feed).toBeNull();
     expect(fd.opened).toBe(false);
 
     // Opening multiple times should actually open once.
@@ -77,6 +78,7 @@ describe('FeedDescriptor', () => {
   });
 
   test('Close', async () => {
+    await fd.open();
     // Closing multiple times should actually close once.
     await Promise.all([fd.close(), fd.close()]);
     expect(fd.opened).toBe(false);
@@ -92,7 +94,8 @@ describe('FeedDescriptor', () => {
     const fd2 = new FeedDescriptor({
       storage: createStorage('', STORAGE_RAM),
       key: PublicKey.from(publicKey),
-      secretKey
+      secretKey,
+      hypercore: defaultHypercore
     });
 
     await fd2.open();
@@ -108,7 +111,8 @@ describe('FeedDescriptor', () => {
       storage: createStorage(root, STORAGE_NODE),
       key: PublicKey.from(publicKey),
       secretKey,
-      valueEncoding: 'utf-8'
+      valueEncoding: 'utf-8',
+      hypercore: defaultHypercore
     });
 
     await fd.open();
@@ -128,23 +132,6 @@ describe('FeedDescriptor', () => {
     expect(msg).toBe('test');
   });
 
-  test('Watch data', async (done) => {
-    const { publicKey, secretKey } = createKeyPair();
-    const fd = new FeedDescriptor({
-      storage: createStorage('', STORAGE_RAM),
-      key: PublicKey.from(publicKey),
-      secretKey
-    });
-
-    fd.watch(event => {
-      expect(event).toBe('opened');
-      fd.watch(null);
-      void fd.close().then(done);
-    });
-
-    await fd.open();
-  });
-
   test('on open error should unlock the resource', async () => {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
@@ -157,8 +144,6 @@ describe('FeedDescriptor', () => {
     });
 
     await expect(fd.open()).rejects.toThrow(/open error/);
-
-    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 
   test('on close error should unlock the resource', async () => {
@@ -182,7 +167,5 @@ describe('FeedDescriptor', () => {
     await fd.open();
 
     await expect(fd.close()).rejects.toThrow(/close error/);
-
-    await expect(fd.lock.executeSynchronized(async () => 'Unlocked')).resolves.toBe('Unlocked');
   });
 });
