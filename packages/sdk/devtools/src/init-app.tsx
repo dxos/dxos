@@ -9,9 +9,9 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 
 import App from './App';
-import Provider from './Provider';
-import { DevtoolsBridge } from './bridge';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { WithDevtoolsHostContext } from './contexts';
+import { DevtoolsHost } from './proto';
 
 const theme = createMuiTheme({
   typography: {
@@ -26,19 +26,19 @@ const theme = createMuiTheme({
 
 export interface Shell {
   tabId: number,
-  connect(cb: (bridge: DevtoolsBridge) => void): void;
+  connect(cb: (devtoolsHost: DevtoolsHost) => void): void;
   onReload(cb: () => void): void;
 }
 
 export const initApp = (shell: Shell) => {
-  shell.connect(bridge => {
+  shell.connect(devtoolsHost => {
     ReactDOM.render(
       <ErrorBoundary>
         <MuiThemeProvider theme={theme}>
           <CssBaseline />
-          <Provider bridge={bridge}>
+          <WithDevtoolsHostContext devtoolsHost={devtoolsHost}>
             <App />
-          </Provider>
+          </WithDevtoolsHostContext>
         </MuiThemeProvider>
       </ErrorBoundary>,
       document.getElementById('root')

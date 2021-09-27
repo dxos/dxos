@@ -3,4 +3,4 @@
 //
 
 export * from './init-app';
-export * from './bridge';
+export * from './proto';

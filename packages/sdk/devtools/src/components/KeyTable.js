@@ -76,11 +76,11 @@ const KeyTable = ({ keys }) => {
       </TableHead>
       <TableBody>
         {keys.sort(sorter).map(({ type, publicKey, added, own, trusted }) => {
-          const key = publicKey;
+          const key = publicKey.toHex();
 
           return (
             <TableRow key={key}>
-              <TableCell>{keyTypeName(type)}</TableCell>
+              <TableCell> {keyTypeName(type)} </TableCell>
               <TableCell className={classes.mono} title={key}>
                 {truncateString(key, 8)}
                 <CopyToClipboard text={key} onCopy={value => console.log(value)}>

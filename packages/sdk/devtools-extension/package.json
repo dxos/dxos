@@ -33,7 +33,10 @@
     "react": "^16.14.0",
     "react-copy-to-clipboard": "~5.0.3",
     "react-dom": "^16.14.0",
-    "webextension-polyfill": "^0.8.0"
+    "webextension-polyfill": "^0.8.0",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/async": "workspace:*"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",

@@ -2,16 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { HandlerProps } from './handler-props';
+import { DevtoolsContext } from '@dxos/client';
 
-export default ({ hook, bridge }: HandlerProps) => {
-  bridge.onMessage('storage.reset', async () => {
-    try {
-      await hook.client.reset();
-      window.location.reload();
-    } catch (e) {
-      console.error('DXOS DevTools: reset handler failed to respond');
-      console.log(e);
-    }
-  });
+export const resetStorage = async (hook: DevtoolsContext) => {
+  await hook.client.reset();
+  window.location.reload();
 };

@@ -2,80 +2,72 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Stream } from 'crx-bridge';
-
+import { DevtoolsContext } from '@dxos/client';
+import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/crypto';
+import {
+  GetNetworkPeersRequest,
+  GetNetworkPeersResponse,
+  SubscribeToNetworkTopicsResponse,
+  SubscribeToSignalStatusResponse,
+  SubscribeToSignalTraceResponse
+} from '@dxos/devtools';
 import { SignalApi } from '@dxos/network-manager';
 
-import { HandlerProps } from './handler-props';
+export const subscribeToNetworkStatus = (hook: DevtoolsContext) => {
+  return new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
+    const update = () => {
+      try {
+        const status = hook.networkManager.signal.getStatus();
+        next({ servers: status });
+      } catch (err: any) {
+        close(err);
+      }
+    };
+    hook.networkManager.signal.statusChanged.on(update);
+    update();
+  });
+};
 
-function reportError<A extends any[]> (func: (...args: A) => any): (...args: A) => void {
-  return async (...args) => {
-    try {
-      await func(...args);
-    } catch (err) {
-      console.error('DXOS DevTools API error:');
-      console.error(err);
-    }
-  };
-}
-
-async function subscribeToNetworkStatus (hook: HandlerProps['hook'], stream: Stream) {
-  async function update () {
-    const status = hook.networkManager.signal.getStatus();
-    stream.send(status);
-  }
-
-  hook.networkManager.signal.statusChanged.on(reportError(update));
-  // This is needed to alleviate a race condition where update is sent before devtools subscribes to the stream.
-  setTimeout(() => update(), 30);
-}
-
-async function subscribeToNetworkTrace (hook: HandlerProps['hook'], stream: Stream) {
-  const trace: SignalApi.CommandTrace[] = [];
-  hook.networkManager.signal.commandTrace.on(msg => {
-    reportError(() => {
+export const subscribeToSignalTrace = (hook: DevtoolsContext) => {
+  return new Stream<SubscribeToSignalTraceResponse>(({ next }) => {
+    const trace: SignalApi.CommandTrace[] = [];
+    hook.networkManager.signal.commandTrace.on(msg => {
       trace.push(msg);
-      stream.send(trace);
-    })();
+      next({ events: trace.map((msg) => JSON.stringify(msg)) });
+    });
   });
-}
+};
 
-async function subscribeToNetworkTopics (hook: HandlerProps['hook'], stream: Stream) {
-  async function update () {
-    const topics = hook.networkManager.topics;
-    const labeledTopics = topics.map(topic => ({
-      topic: topic.toHex(),
-      label: hook.networkManager.getSwarm(topic)?.label ?? topic.toHex()
-    }));
-    stream.send(labeledTopics);
+export const subscribeToNetworkTopics = (hook: DevtoolsContext) => {
+  return new Stream<SubscribeToNetworkTopicsResponse>(({ next, close }) => {
+    const update = () => {
+      try {
+        const topics = hook.networkManager.topics;
+        const labeledTopics = topics.map(topic => ({
+          topic,
+          label: hook.networkManager.getSwarm(topic)?.label ?? topic.toHex()
+        }));
+        next({ topics: labeledTopics });
+      } catch (err: any) {
+        close(err);
+      }
+    };
+    hook.networkManager.topicsUpdated.on(update);
+
+    update();
+  });
+};
+
+export const getNetworkPeers = (hook: DevtoolsContext, request: GetNetworkPeersRequest): GetNetworkPeersResponse => {
+  if (!request.topic) {
+    throw new Error('Expected a network topic');
   }
-
-  hook.networkManager.topicsUpdated.on(reportError(update));
-  // This is needed to alleviate a race condition where update is sent before devtools subscribes to the stream.
-  setTimeout(() => update(), 30);
-}
-
-export default ({ hook, bridge }: HandlerProps) => {
-  bridge.onOpenStreamChannel('network.signal.status', (stream) => {
-    reportError(subscribeToNetworkStatus)(hook, stream);
-  });
-  bridge.onOpenStreamChannel('network.signal.trace', (stream) => {
-    reportError(subscribeToNetworkTrace)(hook, stream);
-  });
-  bridge.onOpenStreamChannel('network.topics', (stream) => {
-    reportError(subscribeToNetworkTopics)(hook, stream);
-  });
-  bridge.onMessage('network.peers', ({ data }) => {
-    if (!data && !data.topic) {
-      throw new Error('Expected a network topic');
-    }
-    const map = hook.networkManager.getSwarmMap(PublicKey.from(data.topic));
-    return map?.peers.map(peer => ({
+  const map = hook.networkManager.getSwarmMap(PublicKey.from(request.topic));
+  return {
+    peers: map?.peers.map(peer => ({
       ...peer,
-      // There is a problem with pushing PublicKey through the bridge.
-      id: peer.id.toHex(),
-      connections: peer.connections.map(connection => connection.toHex())
-    }));
-  });
+      connections: peer.connections.map(connection => connection.asUint8Array())
+    }))
+  };
 };
