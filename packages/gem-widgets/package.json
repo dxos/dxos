@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-widgets",
-  "version": "1.0.0-beta.35",
+  "version": "1.0.0-beta.36",
   "description": "GEM Widgets.",
   "repository": "https://github.com/dxos/gem",
   "license": "AGPL-3.0",
@@ -21,7 +21,7 @@
     "extends": "plugin:@dxos/react"
   },
   "dependencies": {
-    "@dxos/gem-core": "^1.0.0-beta.35",
+    "@dxos/gem-core": "^1.0.0-beta.36",
     "canonicalize": "^1.0.1",
     "chance": "^1.0.13",
     "d3": "^6.1.1",
