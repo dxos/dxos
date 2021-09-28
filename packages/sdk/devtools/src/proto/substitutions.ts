@@ -3,6 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/crypto';
+import type { ConnectionEvent } from '@dxos/network-manager';
 
 export default {
   'dxos.credentials.keys.PubKey': {
@@ -16,5 +17,9 @@ export default {
   'dxos.credentials.keys.PrivKey': {
     encode: (value: Buffer) => ({ data: new Uint8Array(value) }),
     decode: (value: any) => PublicKey.from(value.data).asBuffer()
+  },
+  'dxos.devtools.SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo.Json': {
+    encode: (value: ConnectionEvent) => ({ data: JSON.stringify(value) }),
+    decode: (value: any) => JSON.parse(value.data) as ConnectionEvent
   }
 };
