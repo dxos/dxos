@@ -26,8 +26,8 @@
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
-    "test": "toolchain test",
-    "lint": "toolchain lint"
+    "lint": "toolchain lint",
+    "test": "toolchain test"
   },
   "dependencies": {
     "@azure/abort-controller": "^1.0.1",

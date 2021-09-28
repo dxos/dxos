@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/codec-protobuf"
+    },
+    {
       "path": "../../halo/credentials"
     },
     {
@@ -25,6 +28,9 @@
     },
     {
       "path": "../react-framework"
+    },
+    {
+      "path": "../../common/rpc"
     },
     {
       "path": "../../mesh/network-manager"
