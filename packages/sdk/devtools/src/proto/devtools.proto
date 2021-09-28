@@ -159,7 +159,7 @@ message SubscribeToSwarmInfoResponse {
     bool isActive = 4;
     message ConnectionInfo {
       string state = 1;
-      PubKey sessionState = 2;
+      PubKey sessionId = 2;
       PubKey remotePeerId = 3;
       string transport = 4;
       repeated string protocolExtensions = 5;

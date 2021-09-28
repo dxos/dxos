@@ -19,7 +19,18 @@ export default {
     decode: (value: any) => PublicKey.from(value.data).asBuffer()
   },
   'dxos.devtools.SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo': {
-    encode: (value: ConnectionInfo) => ({ ...value, events: value.events.map(event => JSON.stringify(event)) }),
-    decode: (value: any) => ({ ...value, events: value.events.map((event: any) => JSON.parse(event)) } as ConnectionInfo)
+    // TODO(yivlad): protobuf doesn't call encode and decode methods of PubKey type in nested data structures.
+    encode: (value: ConnectionInfo) => ({
+      ...value,
+      remotePeerId: { data: value.remotePeerId.asUint8Array() },
+      sessionId: { data: value.sessionId.asUint8Array() },
+      events: value.events.map(event => JSON.stringify(event))
+    }),
+    decode: (value: any) => ({
+      ...value,
+      remotePeerId: PublicKey.from(value.remotePeerId.data),
+      sessionId: PublicKey.from(value.sessionId.data),
+      events: value.events.map((event: any) => JSON.parse(event))
+    } as ConnectionInfo)
   }
 };

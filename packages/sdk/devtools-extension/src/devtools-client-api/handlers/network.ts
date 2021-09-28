@@ -65,7 +65,6 @@ export const subscribeToSwarmInfo = (hook: DevtoolsContext) => {
     const networkManager = hook.client.echo.networkManager;
     const update = () => {
       const info = networkManager.connectionLog?.swarms;
-      console.log(info);
       if (info) {
         next({ data: info });
       }
