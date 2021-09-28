@@ -5,7 +5,7 @@
 import { select } from '@storybook/addon-knobs';
 import React, { useState, useEffect } from 'react';
 import useResizeAware from 'react-resize-aware';
-import { MemoryRouter, NavLink, Switch, Route, useHistory, Link } from 'react-router-dom';
+import { MemoryRouter, NavLink, Switch, Route } from 'react-router-dom';
 
 import { PublicKey } from '@dxos/crypto';
 import { FullScreen } from '@dxos/gem-core';

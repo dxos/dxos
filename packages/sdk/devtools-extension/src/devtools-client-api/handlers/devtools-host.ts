@@ -11,7 +11,7 @@ import { enableDebugLogging, disableDebugLogging } from './debug-logging';
 import { DevtoolsHostEvents } from './devtools-host-events';
 import { subscribeToItems } from './items';
 import { getKeyringKeys } from './keys';
-import { 
+import {
   getNetworkPeers,
   subscribeToNetworkTopics,
   subscribeToNetworkStatus,

@@ -4,11 +4,11 @@
 
 import React from 'react';
 
-import { ConnectionInfo } from '@dxos/network-manager';
 import { IconButton, List, ListItem } from '@material-ui/core';
-import { TruncateCopy } from '@dxos/react-framework';
-
 import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
+
+import { ConnectionInfo } from '@dxos/network-manager';
+import { TruncateCopy } from '@dxos/react-framework';
 
 export interface ConnectionInfoViewProps {
   connectionInfo: ConnectionInfo,
@@ -34,9 +34,9 @@ export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoV
       ))}
     </List>
     {onReturn && (
-      <IconButton size='small' onClick={onReturn} title={'Back'} style={{ borderRadius: 5 }}> 
-        <ArrowBackIos /> 
-        Back 
+      <IconButton size='small' onClick={onReturn} title={'Back'} style={{ borderRadius: 5 }}>
+        <ArrowBackIos />
+        Back
       </IconButton>)
     }
   </div>

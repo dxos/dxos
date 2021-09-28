@@ -4,13 +4,13 @@
 
 import React from 'react';
 
+import { IconButton, List, ListItem, ListItemIcon, ListItemText } from '@material-ui/core';
+import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
+import InfoIcon from '@material-ui/icons/Info';
+
 import { PublicKey } from '@dxos/crypto';
 import { ConnectionState, SwarmInfo } from '@dxos/network-manager';
-import { IconButton, List, ListItem, ListItemIcon, ListItemText } from '@material-ui/core';
 import { TruncateCopy } from '@dxos/react-framework';
-
-import InfoIcon from '@material-ui/icons/Info';
-import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
 
 export interface SwarmInfoViewProps {
   swarmInfo: SwarmInfo
@@ -31,7 +31,7 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
       {swarmInfo.connections.map(connection => (
         <ListItem key={connection.sessionId.toHex()}>
           <ListItemText>
-            <TruncateCopy text={connection.remotePeerId.toHex()} /> 
+            <TruncateCopy text={connection.remotePeerId.toHex()} />
           </ListItemText>
           <ListItemIcon>
             <IconButton onClick={() => onConnectionClick?.(connection.sessionId)} title='Details'>
@@ -42,9 +42,9 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
       ))}
     </List>
     {onReturn && (
-      <IconButton size='small' onClick={onReturn} title={'Back'} style={{ borderRadius: 5 }}> 
-        <ArrowBackIos /> 
-        Back 
+      <IconButton size='small' onClick={onReturn} title={'Back'} style={{ borderRadius: 5 }}>
+        <ArrowBackIos />
+        Back
       </IconButton>)
     }
   </div>

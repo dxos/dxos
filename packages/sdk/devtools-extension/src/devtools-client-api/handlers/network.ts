@@ -69,11 +69,11 @@ export const subscribeToSwarmInfo = (hook: DevtoolsContext) => {
       if (info) {
         next({ data: info });
       }
-    }
+    };
     networkManager.connectionLog?.update.on(update);
     update();
   });
-}
+};
 
 export const getNetworkPeers = (hook: DevtoolsContext, request: GetNetworkPeersRequest): GetNetworkPeersResponse => {
   if (!request.topic) {

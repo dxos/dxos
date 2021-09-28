@@ -3,7 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/crypto';
-import { ConnectionInfo, SwarmInfo } from '@dxos/network-manager';
+import { ConnectionInfo } from '@dxos/network-manager';
 
 export default {
   'dxos.credentials.keys.PubKey': {

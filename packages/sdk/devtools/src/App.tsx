@@ -24,8 +24,8 @@ import ItemsViewer from './containers/ItemsViewer';
 import Keys from './containers/Keys';
 import Signal from './containers/Signal';
 import StorageTab from './containers/StorageTab';
-import SwarmGraph from './containers/SwarmGraph';
 import SwarmDetails from './containers/SwarmDetails';
+import SwarmGraph from './containers/SwarmGraph';
 
 const useStyles = makeStyles(theme => ({
   root: {

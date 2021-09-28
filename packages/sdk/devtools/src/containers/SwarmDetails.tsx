@@ -4,10 +4,10 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { SwarmInfo } from '@dxos/network-manager';
 import { SwarmDetails as SwarmComponent } from '@dxos/network-devtools';
+import { SwarmInfo } from '@dxos/network-manager';
 
-import { useDevtoolsHost } from "../contexts";
+import { useDevtoolsHost } from '../contexts';
 
 const SwarmDetails = () => {
   const devtoolsHost = useDevtoolsHost();
@@ -20,10 +20,10 @@ const SwarmDetails = () => {
       setSwarms((msg.data as unknown) as SwarmInfo[]);
     }, () => {});
 
-    return stream.close
+    return stream.close;
   }, []);
 
-  return <SwarmComponent swarms={swarms}/>
+  return <SwarmComponent swarms={swarms}/>;
 };
 
 export default SwarmDetails;
