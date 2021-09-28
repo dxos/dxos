@@ -26,10 +26,14 @@ function execBuild () {
     process.stderr.write(chalk`{yellow warn}: eslint config in package.json is ignored\n`);
   }
 
+  // Compile protocol buffer definitions.
   const protoFiles = glob('src/proto/**/*.proto', { cwd: project.packageRoot });
   if (protoFiles.length > 0) {
     console.log(chalk.bold`\nprotobuf`);
-    const substitutions = fs.existsSync(join(project.packageRoot, 'src/proto/substitutions.ts')) ? join(project.packageRoot, 'src/proto/substitutions.ts') : undefined;
+    // TODO(burdon): Document this.
+    const substitutions = fs.existsSync(join(project.packageRoot, 'src/proto/substitutions.ts'))
+      ? join(project.packageRoot, 'src/proto/substitutions.ts')
+      : undefined;
 
     execTool('build-protobuf', [
       '-o',
