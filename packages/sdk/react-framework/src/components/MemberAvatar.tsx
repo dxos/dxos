@@ -4,15 +4,14 @@
 
 import React, { ReactElement } from 'react';
 
-import { Theme } from '@material-ui/core';
-import Avatar from '@material-ui/core/Avatar';
-import { red, pink, deepPurple, deepOrange, indigo, blue, cyan, teal, green, amber } from '@material-ui/core/colors';
-import { useTheme } from '@material-ui/core/styles';
-import FaceIcon from '@material-ui/icons/Face';
+import { Face as FaceIcon } from '@mui/icons-material';
+import { Avatar as MuiAvatar, colors, styled, Theme, useTheme } from '@mui/material';
+import { StyledComponent } from '@mui/system';
 
 import { PublicKeyLike } from '@dxos/crypto';
 import { PartyMember } from '@dxos/echo-db';
 
+const { red, pink, deepPurple, deepOrange, indigo, blue, cyan, teal, green, amber } = colors;
 const depth = 500;
 
 const COLORS = [
@@ -28,22 +27,31 @@ const COLORS = [
   amber[depth]
 ];
 
-const getColor = (publicKey: PublicKeyLike) => COLORS[parseInt(publicKey.toString('hex').slice(0, 4), 16) % COLORS.length];
+const getColor = (publicKey: PublicKeyLike) =>
+  COLORS[parseInt(publicKey.toString('hex').slice(0, 4), 16) % COLORS.length];
 
-export const getAvatarStyle = (theme: Theme, publicKey?: PublicKeyLike): Record<string, unknown> => {
+interface AvatarProps {
+  publicKey?: PublicKeyLike
+}
+
+interface OwnerState extends Record<string, any> {}
+
+export const Avatar: StyledComponent<AvatarProps, OwnerState, Theme> = styled(MuiAvatar)(({ publicKey, theme }) => {
   const color = publicKey ? getColor(publicKey) : theme.palette.grey[200];
+
   return {
     backgroundColor: color,
     color: theme.palette.getContrastText(color),
-    width: theme.spacing(4) - 2,
-    height: theme.spacing(4) - 2
+    width: `calc(${theme.spacing(4)} - 2px)`,
+    height: `calc(${theme.spacing(4)} - 2px)`
   };
-};
+});
 
-const MemberAvatar = ({ member }: { member: PartyMember }): ReactElement => (
-  <Avatar style={getAvatarStyle(useTheme(), member.publicKey.asUint8Array())}>
-    {member.displayName ? member.displayName.slice(0, 1).toUpperCase() : <FaceIcon />}
+export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement => (
+  <Avatar publicKey={member?.publicKey.asUint8Array()}>
+    {member?.displayName ? member.displayName.slice(0, 1).toUpperCase() : <FaceIcon />}
   </Avatar>
 );
 
+// TODO(wittjosiah): Remove default export.
 export default MemberAvatar;

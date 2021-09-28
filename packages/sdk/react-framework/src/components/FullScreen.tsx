@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { makeStyles } from '@material-ui/core/styles';
+import { styled } from '@mui/material';
 
-const useStyles = makeStyles(() => ({
+const Root = styled('div')({
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -16,18 +16,16 @@ const useStyles = makeStyles(() => ({
     top: 0,
     bottom: 0
   }
-}));
+});
 
 /**
  * Fullscreen container.
  */
 const FullScreen = ({ children }: { children: React.ReactNode }) => {
-  const classes = useStyles();
-
   return (
-    <div className={classes.root}>
+    <Root>
       {children}
-    </div>
+    </Root>
   );
 };
 

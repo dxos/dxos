@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 
+import { LockOutlined as LockOutlinedIcon } from '@mui/icons-material';
 import {
   Avatar,
   Button,
@@ -11,18 +12,15 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  styled,
   TextField,
   Toolbar,
   Typography
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import { LockOutlined as LockOutlinedIcon } from '@material-ui/icons';
+} from '@mui/material';
 
-const useStyles = makeStyles(theme => ({
-  avatar: {
-    backgroundColor: theme.palette.secondary.main,
-    marginRight: theme.spacing(2)
-  }
+const StyledAvatar = styled(Avatar)(({ theme }) => ({
+  backgroundColor: theme.palette.secondary.main,
+  marginRight: theme.spacing(2)
 }));
 
 interface IRegister{
@@ -36,7 +34,6 @@ export interface IProfileDialog {
 }
 
 const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
-  const classes = useStyles();
   const [username, setUsername] = useState('');
 
   const handleUpdate = () => {
@@ -53,9 +50,9 @@ const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
     <Dialog open={open} fullWidth maxWidth="xs">
       <DialogTitle>
         <Toolbar variant='dense' disableGutters>
-          <Avatar className={classes.avatar}>
+          <StyledAvatar>
             <LockOutlinedIcon />
-          </Avatar>
+          </StyledAvatar>
           <Typography component="h1" variant="h5">
             Create Profile
           </Typography>

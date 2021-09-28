@@ -4,11 +4,10 @@
 
 import React from 'react';
 
-import { DialogTitle, SvgIconTypeMap, Toolbar, Typography } from '@material-ui/core';
-import { OverridableComponent } from '@material-ui/core/OverridableComponent';
-import { makeStyles } from '@material-ui/core/styles';
+import { DialogTitle, styled, SvgIconTypeMap, Toolbar, Typography } from '@mui/material';
+import { OverridableComponent } from '@mui/material/OverridableComponent';
 
-const useStyles = makeStyles((theme) => ({
+const Title = styled(Typography)(({ theme }) => ({
   title: {
     marginLeft: theme.spacing(2)
   }
@@ -21,12 +20,11 @@ const DialogHeading = ({
   title: string,
   icon: OverridableComponent<SvgIconTypeMap<unknown, 'svg'>>
 }) => {
-  const classes = useStyles();
   return (
     <DialogTitle>
       <Toolbar variant='dense' disableGutters>
         <Icon />
-        <Typography variant='h5' className={classes.title}>{title}</Typography>
+        <Title variant='h5'>{title}</Title>
       </Toolbar>
     </DialogTitle>
   );

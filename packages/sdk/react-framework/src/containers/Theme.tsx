@@ -5,9 +5,7 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 import React from 'react';
 
-import { CssBaseline, ThemeProvider, createMuiTheme } from '@material-ui/core';
-import primary from '@material-ui/core/colors/blue';
-import secondary from '@material-ui/core/colors/blueGrey';
+import { colors, createTheme as createMuiTheme, CssBaseline, ThemeProvider } from '@mui/material';
 
 // https://material-ui.com/customization/theming
 export const defaultThemeProperties = {
@@ -33,8 +31,8 @@ export const defaultThemeProperties = {
 
   // TODO(burdon): DXOS Palette.
   palette: {
-    primary,
-    secondary
+    primary: colors.blue,
+    secondary: colors.blueGrey
   }
 };
 
