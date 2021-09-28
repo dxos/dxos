@@ -30,5 +30,5 @@ describe('BotFactory', () => {
     await botFactory.start();
 
     await botFactory.stop();
-  }).timeout(30_000);
+  });
 });
