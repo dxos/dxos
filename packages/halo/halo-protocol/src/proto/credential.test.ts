@@ -6,6 +6,7 @@ import expect from 'expect';
 
 import { schema } from './gen';
 
+// eslint-disable-next-line jest/no-export
 export const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
 
 // TODO(burdon): Factor out to proto util?
