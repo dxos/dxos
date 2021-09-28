@@ -289,6 +289,8 @@ export class BotManager {
   }
 
   async stop () {
+    await this._registryApi?.disconnect();
+
     for await (const { botId } of this._bots.values()) {
       await this._stopBot(botId);
     }
