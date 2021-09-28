@@ -2,28 +2,23 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 import { SwarmDetails as SwarmComponent } from '@dxos/network-devtools';
 import { SwarmInfo } from '@dxos/network-manager';
 
 import { useDevtoolsHost } from '../contexts';
+import { useStream } from '../hooks';
 
 const SwarmDetails = () => {
   const devtoolsHost = useDevtoolsHost();
-  const [swarms, setSwarms] = useState<SwarmInfo[]>([]);
+  const swarms = useStream(() => devtoolsHost.SubscribeToSwarmInfo({}));
 
-  useEffect(() => {
-    const stream = devtoolsHost.SubscribeToSwarmInfo({});
+  if (!swarms?.data) {
+    return <div> Loading swarms info... </div>;
+  }
 
-    stream.subscribe(msg => {
-      setSwarms((msg.data as unknown) as SwarmInfo[]);
-    }, () => {});
-
-    return stream.close;
-  }, []);
-
-  return <SwarmComponent swarms={swarms}/>;
+  return <SwarmComponent swarms={swarms?.data as SwarmInfo[]}/>;
 };
 
 export default SwarmDetails;

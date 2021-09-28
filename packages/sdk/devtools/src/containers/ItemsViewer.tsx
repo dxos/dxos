@@ -2,30 +2,25 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 import { JsonTreeView } from '@dxos/react-framework';
 
 import { useDevtoolsHost } from '../contexts';
+import { useStream } from '../hooks';
 
 export default function ItemsViewer () {
   const devtoolsHost = useDevtoolsHost();
-  const [data, setData] = useState<any>();
+  const data = useStream(() => devtoolsHost.SubscribeToItems({}));
 
-  useEffect(() => {
-    const stream = devtoolsHost.SubscribeToItems({});
-
-    stream?.subscribe(msg => {
-      msg.data && setData(JSON.parse(msg.data));
-    }, () => {});
-
-    return stream?.close;
-  }, []);
+  if (!data?.data) {
+    return <div> Loading items... </div>;
+  }
 
   return (
     <JsonTreeView
       size='small'
-      data={data}
+      data={JSON.parse(data.data)}
       depth={4}
     />
   );
