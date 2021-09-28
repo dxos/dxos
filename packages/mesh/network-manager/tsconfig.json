@@ -18,6 +18,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../halo/credentials"
+    },
+    {
       "path": "../../common/crypto"
     },
     {

@@ -16,8 +16,8 @@
     "build": "pnpm run gen && tsc",
     "build:test": "pnpm run build && pnpm run test",
     "gen": "ts-node src/main.ts test/schema.proto test/another.proto -s test/substitutions.ts -o test/gen",
-    "test": "pnpm run lint && jest 2>&1",
-    "lint": "eslint 'src/**/*.ts'"
+    "lint": "eslint 'src/**/*.ts'",
+    "test": "pnpm run lint && jest 2>&1"
   },
   "eslintConfig": {
     "extends": "plugin:@dxos/recomended"
