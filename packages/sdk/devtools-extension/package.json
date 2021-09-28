@@ -7,8 +7,8 @@
   "scripts": {
     "build": "node scripts/build.js",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test",
-    "pack:crx": "crx pack dist -o dxos-devtools.crx",
     "lint": "toolchain lint",
+    "pack:crx": "crx pack dist -o dxos-devtools.crx",
     "test": "toolchain test"
   },
   "browserslist": [
@@ -16,13 +16,16 @@
   ],
   "dependencies": {
     "@babel/runtime": "^7.9.6",
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/react-framework": "workspace:*",
+    "@dxos/rpc": "workspace:*",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",
@@ -33,10 +36,7 @@
     "react": "^16.14.0",
     "react-copy-to-clipboard": "~5.0.3",
     "react-dom": "^16.14.0",
-    "webextension-polyfill": "^0.8.0",
-    "@dxos/rpc": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/async": "workspace:*"
+    "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",

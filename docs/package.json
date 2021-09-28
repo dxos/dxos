@@ -11,14 +11,14 @@
   "license": "AGPL-3.0",
   "author": "info@dxos.org",
   "scripts": {
+    "build": "yarn clean && gatsby build --prefix-paths && mkdir -p sdk && mv public/* sdk && mv sdk public/",
     "clean": "rimraf .cache && rimraf public",
     "dev": "yarn clean && gatsby develop --port 8003 --verbose",
+    "generate:docs": "typedoc --out content/api --packages '../packages/{sdk,echo,halo,mesh}/*' --tsconfig tsconfig.typedoc.json",
+    "postinstall": "yarn moveSocialCard && yarn moveSocialCardBackground",
     "moveSocialCard": "cp -f ./src/gatsby-theme-apollo-docs/components/social-card.js ./node_modules/gatsby-theme-apollo-docs/src/components/social-card.js",
     "moveSocialCardBackground": "cp -f ./node_modules/@dxos/docs-theme/src/assets/img/social-bg.jpg ./node_modules/gatsby-theme-apollo-docs/src/assets/social-bg.jpg",
-    "postinstall": "yarn moveSocialCard && yarn moveSocialCardBackground",
-    "build": "yarn clean && gatsby build --prefix-paths && mkdir -p sdk && mv public/* sdk && mv sdk public/",
-    "test": "jest --rootDir ./content --passWithNoTests",
-    "generate:docs": "typedoc --out content/api --packages '../packages/{sdk,echo,halo,mesh}/*' --tsconfig tsconfig.typedoc.json"
+    "test": "jest --rootDir ./content --passWithNoTests"
   },
   "dependencies": {
     "@dxos/docs-theme": "^1.0.0-beta.23",
