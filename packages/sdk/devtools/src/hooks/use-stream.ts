@@ -16,7 +16,7 @@ export const useStream = <T>(streamFactory: () => Stream<T>, deps: React.Depende
       setValue(msg);
     }, () => {});
 
-    return stream.close;
+    return () => stream.close();
   }, deps);
 
   return value;
