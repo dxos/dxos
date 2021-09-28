@@ -624,6 +624,10 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
+    {
+      "packageName": "@dxos/halo-protocol",
+      "projectFolder": "packages/halo/halo-protocol",
+    },
 
     //
     // mesh

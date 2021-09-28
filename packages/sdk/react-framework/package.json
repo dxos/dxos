@@ -13,9 +13,9 @@
   ],
   "scripts": {
     "build": "toolchain build",
+    "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test",
-    "build:test": "toolchain build:test"
+    "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/crypto": "workspace:*",

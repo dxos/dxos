@@ -1,44 +1,36 @@
 {
-  "name": "@dxos/object-model",
+  "name": "@dxos/halo-protocol",
   "version": "2.12.23",
-  "private": false,
-  "description": "ECHO object model.",
-  "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
+  "description": "DXOS HALO Protocol",
+  "homepage": "https://github.com/dxos/halo/tree/master/packages/credentials#readme",
   "bugs": {
-    "url": "'https://github.com/dxos/protocols/issues"
+    "url": "https://github.com/dxos/halo/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dxos/protocols.git"
+    "url": "git+https://github.com/dxos/halo.git"
   },
-  "license": "AGPL-3.0",
+  "license": "GPL-3.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "files": [
-    "src",
-    "dist"
-  ],
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
+  "browserslist": [
+    "> 5%"
+  ],
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
-    "@dxos/model-factory": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@types/debug": "^4.1.1",
-    "@types/lodash": "^4.14.159",
-    "@types/node": "^14.0.9",
-    "debug": "^4.1.1",
-    "lodash": "4.17.21",
-    "minisearch": "^3.0.2"
+    "@dxos/debug": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
+    "@types/expect": "~24.3.0",
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2"
   },

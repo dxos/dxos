@@ -8,19 +8,21 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
+    "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test",
-    "build:test": "toolchain build:test"
+    "test": "toolchain test"
   },
   "browserslist": [
     "> 5%"
   ],
   "dependencies": {
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/network-devtools": "workspace:*",
     "@dxos/react-framework": "workspace:*",
+    "@dxos/rpc": "workspace:*",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.58",
@@ -30,9 +32,7 @@
     "moment": "^2.24.0",
     "react": "^16.14.0",
     "react-copy-to-clipboard": "~5.0.3",
-    "react-dom": "^16.14.0",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/rpc": "workspace:*"
+    "react-dom": "^16.14.0"
   },
   "devDependencies": {
     "@dxos/network-manager": "workspace:*",

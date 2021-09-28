@@ -16,7 +16,13 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../client"
+    },
+    {
+      "path": "../../common/codec-protobuf"
     },
     {
       "path": "../../halo/credentials"
@@ -35,6 +41,9 @@
     },
     {
       "path": "../react-framework"
+    },
+    {
+      "path": "../../common/rpc"
     }
   ]
 }

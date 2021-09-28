@@ -857,6 +857,26 @@ importers:
       pump: ^3.0.0
       stream-to-array: ^2.3.0
       wait-for-expect: ^3.0.2
+  ../../packages/halo/halo-protocol:
+    dependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/util': link:../../common/util
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/expect': 24.3.0
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
+      '@types/expect': ~24.3.0
+      '@types/mocha': ~8.2.2
+      expect: ~27.0.2
   ../../packages/mesh/broadcast:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -926,7 +946,7 @@ importers:
       '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ~4.11.2
+      '@material-ui/icons': ^4.11.2
       '@storybook/addon-knobs': ^6.3.0
       '@storybook/addons': ^6.3.4
       '@storybook/api': ^6.3.4
@@ -1454,7 +1474,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ~4.11.2
+      '@material-ui/icons': ^4.11.2
       '@material-ui/styles': ^4.11.4
       '@storybook/addon-essentials': ^6.3.4
       '@storybook/addon-links': ^6.3.4
@@ -1527,7 +1547,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ~4.11.2
+      '@material-ui/icons': ^4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@types/react': ^16.14.0
       '@types/react-dom': ^17.0.2
@@ -1553,7 +1573,6 @@ importers:
       '@dxos/react-framework': link:../react-framework
       '@dxos/rpc': link:../../common/rpc
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
-      '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
       clsx: 1.1.1
       color-hash: 1.1.1
@@ -1590,7 +1609,6 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ~4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@types/chrome': ^0.0.125
       '@types/react': ^16.14.0
@@ -1729,7 +1747,7 @@ importers:
       '@dxos/react-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ~4.11.2
+      '@material-ui/icons': ^4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@types/react': ^16.14.0
       '@types/react-copy-to-clipboard': ~5.0.1
@@ -1802,7 +1820,7 @@ importers:
       '@dxos/react-framework': workspace:*
       '@jackwilsdon/craco-use-babelrc': ~1.0.0
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ~4.11.2
+      '@material-ui/icons': ^4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@material-ui/styles': ^4.11.4
       '@storybook/addon-actions': ^6.3.4
@@ -1907,7 +1925,7 @@ importers:
       '@dxos/wallet-core': workspace:*
       '@hot-loader/react-dom': 16.13.0
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ~4.11.2
+      '@material-ui/icons': ^4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@types/faker': ~5.5.1
       '@types/mocha': ~8.2.2
