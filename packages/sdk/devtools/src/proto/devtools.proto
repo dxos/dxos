@@ -8,7 +8,7 @@ package dxos.devtools;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
-import "@dxos/credentials/src/proto/keys.proto";
+import "@dxos/credentials/src/proto/defs/keys.proto";
 
 service DevtoolsHost {
   //
