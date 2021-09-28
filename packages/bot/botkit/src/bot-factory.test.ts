@@ -21,9 +21,8 @@ describe('BotFactory', () => {
           server: undefined
         },
         ice: undefined,
-        wns: {
-          server: 'https://node1.dxos.network/wns/api',
-          chainId: 'wireline'
+        dxns: {
+          server: 'wss://dxns1.kube.moon.dxos.network/dxns/ws'
         }
       }
     }), {});
@@ -31,5 +30,5 @@ describe('BotFactory', () => {
     await botFactory.start();
 
     await botFactory.stop();
-  });
+  }).timeout(30_000);
 });
