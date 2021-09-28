@@ -910,6 +910,7 @@ importers:
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
       '@dxos/react-framework': link:../../sdk/react-framework
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
+      '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@types/react': 16.14.6
       react-resize-aware: 3.1.0_react@16.14.0
     devDependencies:
@@ -945,6 +946,7 @@ importers:
       '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
+      '@material-ui/icons': ^4.11.2
       '@storybook/addon-knobs': ^6.3.0
       '@storybook/addons': ^6.3.4
       '@storybook/api': ^6.3.4
@@ -1571,7 +1573,6 @@ importers:
       '@dxos/react-framework': link:../react-framework
       '@dxos/rpc': link:../../common/rpc
       '@material-ui/core': 4.11.4_79cda1d42d14e5224ea88731ba484d0d
-      '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
       clsx: 1.1.1
       color-hash: 1.1.1
@@ -1608,7 +1609,6 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ^4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@types/chrome': ^0.0.125
       '@types/react': ^16.14.0
@@ -1718,6 +1718,7 @@ importers:
       clsx: 1.1.1
       lodash.defaultsdeep: 4.6.1
       lodash.isplainobject: 4.0.6
+      react-copy-to-clipboard: 5.0.3_react@16.14.0
       url-join: 4.0.1
     devDependencies:
       '@babel/core': 7.13.16
@@ -1730,6 +1731,7 @@ importers:
       '@material-ui/icons': 4.11.2_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@material-ui/lab': 4.0.0-alpha.58_4e5ec2bc16c7e4a36bc3be4c928bda44
       '@types/react': 16.14.6
+      '@types/react-copy-to-clipboard': 5.0.1
       '@types/url-join': 4.0.1
       babel-plugin-add-module-exports: 1.0.4
       react: 16.14.0
@@ -1748,12 +1750,14 @@ importers:
       '@material-ui/icons': ^4.11.2
       '@material-ui/lab': ^4.0.0-alpha.58
       '@types/react': ^16.14.0
+      '@types/react-copy-to-clipboard': ~5.0.1
       '@types/url-join': ~4.0.1
       babel-plugin-add-module-exports: ^1.0.4
       clsx: ^1.1.0
       lodash.defaultsdeep: ^4.6.1
       lodash.isplainobject: ^4.0.6
       react: ^16.14.0
+      react-copy-to-clipboard: ~5.0.3
       react-dom: ^16.14.0
       typescript: ^4.3.5
       url-join: ^4.0.1

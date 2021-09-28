@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 import { makeStyles } from '@material-ui/core';
 
@@ -12,6 +12,7 @@ import { SignalStatus, SignalTrace } from '@dxos/network-devtools';
 import { SignalApi } from '@dxos/network-manager';
 
 import { useDevtoolsHost } from '../contexts';
+import { useStream } from '../hooks';
 import { SubscribeToSignalStatusResponse } from '../proto';
 
 const useStyles = makeStyles(theme => ({
@@ -66,31 +67,27 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
 export default function Signal () {
   const classes = useStyles();
   const devtoolsHost = useDevtoolsHost();
-  const [status, setStatus] = useState<SignalApi.Status[]>([]);
-  const [trace, setTrace] = useState<SignalApi.CommandTrace[]>([]);
+  const status = useStream(() => devtoolsHost.SubscribeToSignalStatus({}));
+  const trace = useStream(() => devtoolsHost.SubscribeToSignalTrace({}));
 
-  useEffect(() => {
-    const stream = devtoolsHost.SubscribeToSignalStatus({});
-    stream?.subscribe(msg => msg.servers && setStatus(msg.servers.map(signalStatus)), () => {});
-    return stream?.close;
-  }, []);
+  if (!status?.servers) {
+    return <div> Loading servers statuses... </div>;
+  }
 
-  useEffect(() => {
-    const stream = devtoolsHost.SubscribeToSignalTrace({});
-    stream?.subscribe((msg) => msg.events && setTrace(msg.events.map(event => JSON.parse(event))), () => {});
-    return stream?.close;
-  }, []);
+  if (!trace?.events) {
+    return <div> Loading trace </div>;
+  }
 
   return (
     <div className={classes.root}>
-      {status.length < 1
+      {status?.servers.length < 1
         ? (
         <p>Status unknown.</p>
           )
         : (
-        <SignalStatus status={status} />
+        <SignalStatus status={status.servers.map(signalStatus)} />
           )}
-      <SignalTrace trace={trace} />
+      <SignalTrace trace={trace?.events?.map(event => JSON.parse(event))} />
     </div>
   );
 }

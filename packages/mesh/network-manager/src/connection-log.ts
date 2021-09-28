@@ -21,7 +21,7 @@ export interface ConnectionInfo {
   state: ConnectionState
   sessionId: PublicKey
   remotePeerId: PublicKey
-  transport: string
+  transport: string | undefined
   protocolExtensions: string[]
   events: ConnectionEvent[]
 }
@@ -73,7 +73,7 @@ export class ConnectionLog {
         state: ConnectionState.INITIAL,
         remotePeerId: connection.remoteId,
         sessionId: connection.sessionId,
-        transport: Object.getPrototypeOf(connection.transport).constructor.name,
+        transport: connection.transport && Object.getPrototypeOf(connection.transport).constructor.name,
         protocolExtensions: connection.protocol.extensionNames,
         events: []
       };

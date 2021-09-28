@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import { makeStyles } from '@material-ui/core';
 
@@ -12,8 +12,8 @@ import { PeerInfo } from '@dxos/network-manager';
 
 import AutocompleteFilter from '../components/AutocompleteFilter';
 import { useDevtoolsHost } from '../contexts';
+import { useStream } from '../hooks';
 import { useAsyncEffect } from '../hooks/async-effect';
-import { SubscribeToNetworkTopicsResponse } from '../proto';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -42,30 +42,13 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-interface Topic {
-  topic: string,
-  label: string
-}
-
-const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => {
-  return {
-    topic: PublicKey.from(topic.topic!).toHex(),
-    label: topic.label!
-  };
-};
-
 export default function Signal () {
   const classes = useStyles();
   const devtoolsHost = useDevtoolsHost();
-  const [networkTopics, setNetworkTopics] = useState<Topic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState('');
   const [peers, setPeers] = useState<PeerInfo[]>([]);
 
-  useEffect(() => {
-    const stream = devtoolsHost.SubscribeToNetworkTopics({});
-    stream.subscribe((msg) => msg.topics && setNetworkTopics(msg.topics.map(networkTopic)), () => {});
-    return stream.close;
-  }, []);
+  const networkTopics = useStream(() => devtoolsHost.SubscribeToNetworkTopics({}));
 
   useAsyncEffect(async () => {
     if (!selectedTopic && !PublicKey.isPublicKey(selectedTopic)) {
@@ -85,7 +68,7 @@ export default function Signal () {
     return () => clearInterval(interval);
   }, [selectedTopic]);
 
-  const options = networkTopics.map(topic => topic.topic);
+  const options = networkTopics?.topics?.map(topic => topic.topic);
 
   return (
     <div className={classes.root}>
