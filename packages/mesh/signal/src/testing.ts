@@ -22,4 +22,4 @@ export const createTestBroker = async (port?: string | number): Promise<Molecule
   });
   await broker.start();
   return broker;
-}
+};

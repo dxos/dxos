@@ -7,7 +7,6 @@ import crypto from 'crypto';
 import { ServiceBroker } from 'moleculer';
 
 import packageJSON from '../package.json';
-
 import { Serializer } from './serializer';
 import { DiscoveryService, PresenceService, StatusService, WebService } from './services';
 import { PeerMap } from './signal';
