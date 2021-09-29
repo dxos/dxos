@@ -4,9 +4,9 @@
 
 import React, { useState } from 'react';
 
-import { Dialog, DialogContent, DialogContentText, LinearProgress } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import RestoreIcon from '@material-ui/icons/Restore';
+import { createTheme, Dialog, DialogContent, DialogContentText, LinearProgress } from '@mui/material';
+import { makeStyles } from '@mui/styles';
+import RestoreIcon from '@mui/icons-material/Restore';
 
 import { sleep } from '@dxos/async';
 import { keyPairFromSeedPhrase } from '@dxos/crypto';
@@ -20,7 +20,7 @@ const useStyles = makeStyles((theme) => ({
   progressBar: {
     marginBottom: theme.spacing(2)
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const Registration = () => {
   const classes = useStyles();

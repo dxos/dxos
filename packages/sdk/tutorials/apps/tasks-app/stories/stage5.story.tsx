@@ -4,9 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { Drawer } from '@material-ui/core';
-import { createMuiTheme, makeStyles } from '@material-ui/core/styles';
-import { createKeyPair } from '@dxos/crypto';
+import { createTheme as createMuiTheme, Drawer } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
 import { ReactUXTheme, ProfileDialog } from '@dxos/react-framework';
 import PartyList from '../src/components/PartyList';

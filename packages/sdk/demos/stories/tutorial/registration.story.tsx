@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 
 import { ClientInitializer, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-framework';

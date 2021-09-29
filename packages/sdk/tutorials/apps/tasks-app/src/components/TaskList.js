@@ -15,13 +15,13 @@ import {
   ListItemText,
   TextField,
   Snackbar,
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Share as ShareIcon,
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 
 import { ObjectModel } from '@dxos/object-model';
 import { useParty, useSelection, useInvitation } from '@dxos/react-client';

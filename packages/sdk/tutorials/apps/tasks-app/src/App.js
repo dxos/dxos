@@ -5,7 +5,7 @@
 import React from 'react';
 import { ClientInitializer } from '@dxos/react-client';
 import { ErrorView } from '@dxos/react-framework';
-import { LinearProgress } from '@material-ui/core';
+import { LinearProgress } from '@mui/material';
 
 import Root from './components/Root';
 import { initConfig } from './config';

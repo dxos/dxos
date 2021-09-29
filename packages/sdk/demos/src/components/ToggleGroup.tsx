@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { IconButton } from '@material-ui/core';
+import { IconButton } from '@mui/material';
 
 interface TypeMap {
   [key: string]: Function;

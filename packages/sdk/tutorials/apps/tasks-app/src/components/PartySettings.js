@@ -12,7 +12,7 @@ import {
   DialogTitle,
   TextField,
   Typography
-} from '@material-ui/core';
+} from '@mui/material';
 
 import { useClient, useParty } from '@dxos/react-client';
 

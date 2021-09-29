@@ -5,13 +5,13 @@
 import faker from 'faker';
 import React, { useState } from 'react';
 
-import { Chip, IconButton, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import AddIcon from '@material-ui/icons/Add';
-import OrgIcon from '@material-ui/icons/Business';
-import DefaultIcon from '@material-ui/icons/CheckBoxOutlineBlank';
-import PersonIcon from '@material-ui/icons/PersonOutline';
-import ProjectIcon from '@material-ui/icons/WorkOutline';
+import { Chip, createTheme, IconButton, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
+import AddIcon from '@mui/icons-material/Add';
+import OrgIcon from '@mui/icons-material/Business';
+import DefaultIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import PersonIcon from '@mui/icons-material/PersonOutline';
+import ProjectIcon from '@mui/icons-material/WorkOutline';
 
 import { Database, Item } from '@dxos/echo-db';
 import {
@@ -68,7 +68,7 @@ const useStyles = makeStyles(theme => ({
       fontSize: 12
     }
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 interface ListProperties {
   type: string

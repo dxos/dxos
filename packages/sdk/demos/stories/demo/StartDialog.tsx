@@ -13,7 +13,7 @@ import {
   LinearProgress,
   TextField,
   Typography
-} from '@material-ui/core';
+} from '@mui/material';
 
 interface HomeProps {
   onCreate: () => void,

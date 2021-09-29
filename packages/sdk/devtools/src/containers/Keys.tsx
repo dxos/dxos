@@ -4,7 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { makeStyles } from '@material-ui/core/styles';
+import { createTheme } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 
 import KeyTable from '../components/KeyTable';
 import { useDevtoolsHost } from '../contexts';
@@ -31,7 +32,7 @@ const useStyles = makeStyles(theme => ({
     flex: 1,
     overflow: 'hidden'
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const Keys = () => {
   const classes = useStyles();

@@ -4,8 +4,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import * as colors from '@material-ui/core/colors';
-import { makeStyles } from '@material-ui/core/styles';
+import * as colors from '@mui/material/colors';
+import { makeStyles } from '@mui/styles';
 
 import { ECHO, Item } from '@dxos/echo-db';
 import {

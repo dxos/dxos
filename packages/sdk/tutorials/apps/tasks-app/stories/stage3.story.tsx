@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Button, Toolbar } from '@material-ui/core';
+import { Button, Toolbar } from '@mui/material';
 import { Party } from '@dxos/echo-db';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
 import { JsonTreeView, ProfileDialog } from '@dxos/react-framework';

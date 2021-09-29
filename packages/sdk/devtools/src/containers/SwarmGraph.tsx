@@ -4,7 +4,8 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { makeStyles } from '@material-ui/core';
+import { createTheme } from '@mui/material';
+import { makeStyles } from '@mui/styles'
 
 import { PublicKey } from '@dxos/crypto';
 import { PeerGraph } from '@dxos/network-devtools';
@@ -40,7 +41,7 @@ const useStyles = makeStyles(theme => ({
     flex: 1,
     overflow: 'hidden'
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 interface Topic {
   topic: string,

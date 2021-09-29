@@ -4,10 +4,10 @@
 
 import React, { useState } from 'react';
 
-import { IconButton, InputAdornment, TextField, TextFieldProps } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import ClearIcon from '@material-ui/icons/Clear';
-import SearchIcon from '@material-ui/icons/Search';
+import { createTheme, IconButton, InputAdornment, TextField, TextFieldProps } from '@mui/material';
+import { makeStyles } from '@mui/styles';
+import ClearIcon from '@mui/icons-material/Clear';
+import SearchIcon from '@mui/icons-material/Search';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -17,7 +17,7 @@ const useStyles = makeStyles(theme => ({
   searchIcon: {
     marginRight: theme.spacing(1)
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
   const clazzes = { ...useStyles(), ...classes };

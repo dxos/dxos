@@ -5,8 +5,8 @@
 import * as faker from 'faker';
 import React from 'react';
 
-import { Button, Card, CardActions, CardContent, CardHeader, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { Button, Card, CardActions, CardContent, CardHeader, createTheme, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 
 import { Party } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
@@ -25,7 +25,7 @@ const useStyles = makeStyles(theme => ({
     fontFamily: 'monospace',
     fontSize: 'small'
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const PartyCard = ({ party }: { party: Party }) => {
   const classes = useStyles();

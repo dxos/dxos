@@ -6,7 +6,7 @@ import update from 'immutability-helper';
 import React, { useState, useEffect } from 'react';
 import useResizeAware from 'react-resize-aware';
 
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from '@mui/styles';
 
 import { SVG, useGrid } from '@dxos/gem-core';
 import {

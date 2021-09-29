@@ -5,7 +5,7 @@
 import clsx from 'clsx';
 import React from 'react';
 
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from '@mui/styles';
 
 import { Item } from '@dxos/echo-db';
 
