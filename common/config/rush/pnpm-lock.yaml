@@ -909,8 +909,11 @@ importers:
       '@dxos/network-manager': link:../network-manager
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
       '@dxos/react-framework': link:../../sdk/react-framework
-      '@material-ui/core': 4.11.4_3b7f7b84f013384d046f72a4522eddf8
-      '@material-ui/icons': 4.11.2_0af02906fa0607ac82beb03a84b38b21
+      '@emotion/react': 11.4.1_9bfa804cd21315a6b28257b6309f6867
+      '@emotion/styled': 11.3.0_7153564620b9f6be3c75efaa2248597b
+      '@mui/icons-material': 5.0.1_4708d87537568924a83ffdea00ac702d
+      '@mui/material': 5.0.1_604b72d74923f30e2e755c544d7c2813
+      '@mui/styles': 5.0.1_9b26932173ac5a93c18fc8634be19f05
       '@types/react': 17.0.24
       react-resize-aware: 3.1.1_react@17.0.2
     devDependencies:
@@ -945,8 +948,11 @@ importers:
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@material-ui/core': ^4.11.4
-      '@material-ui/icons': ^4.11.2
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      '@mui/icons-material': ^5.0.1
+      '@mui/material': ^5.0.1
+      '@mui/styles': ^5.0.1
       '@storybook/addon-knobs': ^6.3.0
       '@storybook/addons': ^6.3.4
       '@storybook/api': ^6.3.4
@@ -1519,7 +1525,6 @@ importers:
       webpack: 4.44.2
   ../../packages/sdk/devtools:
     dependencies:
-      '@babel/core': 7.13.16
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
@@ -1541,6 +1546,7 @@ importers:
       react-copy-to-clipboard: 5.0.3_react@17.0.2
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
+      '@babel/core': 7.13.16
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/react': 17.0.24
@@ -1575,7 +1581,6 @@ importers:
       typescript: ^4.3.5
   ../../packages/sdk/devtools-extension:
     dependencies:
-      '@babel/core': 7.13.16
       '@babel/runtime': 7.14.0
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
@@ -1602,6 +1607,7 @@ importers:
       react-dom: 17.0.2_react@17.0.2
       webextension-polyfill: 0.8.0
     devDependencies:
+      '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/chrome': 0.0.125
@@ -5248,6 +5254,7 @@ packages:
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
       react-transition-group: 4.4.1_react-dom@17.0.2+react@17.0.2
+    dev: true
     engines:
       node: '>=8.0.0'
     peerDependencies:
@@ -5353,6 +5360,7 @@ packages:
       prop-types: 15.7.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
+    dev: true
     engines:
       node: '>=8.0.0'
     peerDependencies:
@@ -5406,6 +5414,7 @@ packages:
       prop-types: 15.7.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
+    dev: true
     engines:
       node: '>=8.0.0'
     peerDependencies:
@@ -22395,6 +22404,7 @@ packages:
       prop-types: 15.7.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
+    dev: true
     peerDependencies:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'

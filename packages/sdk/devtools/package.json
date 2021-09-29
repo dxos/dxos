@@ -16,7 +16,6 @@
     "> 5%"
   ],
   "dependencies": {
-    "@babel/core": "~7.13.15",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
@@ -39,6 +38,7 @@
     "react-dom": "^17.0.2"
   },
   "devDependencies": {
+    "@babel/core": "~7.13.15",
     "@dxos/network-manager": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/react": "^17.0.24",

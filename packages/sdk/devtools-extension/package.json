@@ -15,7 +15,6 @@
     "> 5%"
   ],
   "dependencies": {
-    "@babel/core": "~7.13.15",
     "@babel/runtime": "^7.9.6",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -43,6 +42,7 @@
     "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {
+    "@babel/core": "~7.13.15",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/chrome": "^0.0.125",
