@@ -18,6 +18,10 @@ const SwarmDetails = () => {
     return <div> Loading swarms info... </div>;
   }
 
+  if (swarms.data.length === 0) {
+    return <div> No swarms to display. </div>;
+  }
+
   return <SwarmComponent swarms={swarms?.data as SwarmInfo[]}/>;
 };
 

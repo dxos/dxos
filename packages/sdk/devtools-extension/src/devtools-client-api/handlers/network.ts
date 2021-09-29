@@ -32,6 +32,7 @@ export const subscribeToNetworkStatus = (hook: DevtoolsContext) => {
 
 export const subscribeToSignalTrace = (hook: DevtoolsContext) => {
   return new Stream<SubscribeToSignalTraceResponse>(({ next }) => {
+    next({ events: [] });
     const trace: SignalApi.CommandTrace[] = [];
     hook.networkManager.signal.commandTrace.on(msg => {
       trace.push(msg);
