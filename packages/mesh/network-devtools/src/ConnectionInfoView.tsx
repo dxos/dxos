@@ -34,7 +34,7 @@ export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoV
       ))}
     </List>
     {onReturn && (
-      <IconButton size='small' onClick={onReturn} title='Back' style={{ borderRadius: 5 }}>
+      <IconButton size="small" onClick={onReturn} title="Back" style={{ borderRadius: 5 }}>
         <ArrowBackIos />
         Back
       </IconButton>)

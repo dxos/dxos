@@ -66,15 +66,15 @@ export const ErrorView = ({
   return (
     <Grid
       container
-      direction='column'
-      alignItems='center'
-      justify='center'
+      direction="column"
+      alignItems="center"
+      justify="center"
       className={classes.grid}
     >
       <Card className={classes.card}>
         <CardContent>
           <p className={classes.title}>Something went wrong.</p>
-          <p>Please try again, or <a target='_blank' rel='noopener noreferrer' href={issuesLink}>Report this issue</a>.</p>
+          <p>Please try again, or <a target="_blank" rel="noopener noreferrer" href={issuesLink}>Report this issue</a>.</p>
           <p>Details:</p>
           <code className={classes.code}>{String(error?.stack)}</code>
           {isDev && config &&
@@ -85,9 +85,9 @@ export const ErrorView = ({
         </CardContent>
         <CardActions className={classes.actions}>
           {(onReset)
-            ? <Button variant='text' color='secondary' onClick={onReset}>Reset storage</Button>
+            ? <Button variant="text" color="secondary" onClick={onReset}>Reset storage</Button>
             : <span />}
-          <Button variant='contained' color='primary' onClick={onRestart}>Try again</Button>
+          <Button variant="contained" color="primary" onClick={onRestart}>Try again</Button>
         </CardActions>
       </Card>
     </Grid>

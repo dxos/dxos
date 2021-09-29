@@ -35,15 +35,15 @@ const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void
     <div className={classes.root}>
       <AvatarGroup>
         {members.map(member => (
-          <Tooltip key={member.publicKey.toString()} title={member.displayName || humanize(member.publicKey.toString())} placement='top'>
-            <Avatar style={getAvatarStyle(theme, member.publicKey.asUint8Array())} data-testid='avatar'>
-              {member.displayName ? member.displayName.slice(0, 1).toUpperCase() : <FaceIcon data-testid='face-icon' />}
+          <Tooltip key={member.publicKey.toString()} title={member.displayName || humanize(member.publicKey.toString())} placement="top">
+            <Avatar style={getAvatarStyle(theme, member.publicKey.asUint8Array())} data-testid="avatar">
+              {member.displayName ? member.displayName.slice(0, 1).toUpperCase() : <FaceIcon data-testid="face-icon" />}
             </Avatar>
           </Tooltip>
         ))}
       </AvatarGroup>
 
-      <Tooltip title='Share' placement='top'>
+      <Tooltip title="Share" placement="top">
         <Avatar style={getAvatarStyle(theme)} onClick={onShare}>
           <ShareIcon />
         </Avatar>

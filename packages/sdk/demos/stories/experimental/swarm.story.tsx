@@ -77,7 +77,7 @@ const Story = () => {
         <Toolbar>
           <TextField
             style={{ flex: 1 }}
-            placeholder='Invitation code'
+            placeholder="Invitation code"
             inputProps={{ spellCheck: false }}
             multiline={true}
             rows={3}

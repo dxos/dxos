@@ -19,7 +19,7 @@ export default function StorageTab () {
 
   return (
     <div style={{ padding: 8 }}>
-      <Button variant='outlined' size='small' onClick={handleReset}>Reset storage</Button>
+      <Button variant="outlined" size="small" onClick={handleReset}>Reset storage</Button>
     </div>
   );
 }

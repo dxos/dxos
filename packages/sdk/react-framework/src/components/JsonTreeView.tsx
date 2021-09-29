@@ -99,7 +99,7 @@ const TreeItem = ({
       classes={{ root: classes.itemRoot }}
       label={(
         <div className={classes.labelRoot}>
-          <Typography classes={{ root: classes.label }} color='primary'>{label}</Typography>
+          <Typography classes={{ root: classes.label }} color="primary">{label}</Typography>
           {value !== undefined && (
             <Typography classes={{ root: clsx(classes.value, className) }}>{String(value)}</Typography>
           )}

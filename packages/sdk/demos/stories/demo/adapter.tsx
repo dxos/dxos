@@ -141,16 +141,16 @@ export const createAdapter = (database: Database) => {
 
         return (
           <div className={classes.sublist}>
-            <Typography variant='caption' className={classes.subheader}>{title}</Typography>
+            <Typography variant="caption" className={classes.subheader}>{title}</Typography>
             <table>
               <tbody>
                 {items.map(item => (
                   <tr key={item.id}>
                     <td>
-                      <Typography variant='body2'>&#x2022;</Typography>
+                      <Typography variant="body2">&#x2022;</Typography>
                     </td>
                     <td>
-                      <Typography variant='body2'>
+                      <Typography variant="body2">
                         {item.model.getProperty('name')}
                       </Typography>
                     </td>
@@ -161,7 +161,7 @@ export const createAdapter = (database: Database) => {
 
             {handleCreate && (
               <>
-                <IconButton size='small' onClick={() => setDialog(true)}>
+                <IconButton size="small" onClick={() => setDialog(true)}>
                   <AddIcon/>
                 </IconButton>
 
@@ -199,7 +199,7 @@ export const createAdapter = (database: Database) => {
             <List
               type={OBJECT_PROJECT}
               items={projects}
-              title='Projects'
+              title="Projects"
               handleCreate={handleCreate(item, LINK_PROJECT)}
             />
           );
@@ -210,7 +210,7 @@ export const createAdapter = (database: Database) => {
               <List
                 type={OBJECT_PERSON}
                 items={employees}
-                title='Employees'
+                title="Employees"
               />
             );
           }
@@ -224,7 +224,7 @@ export const createAdapter = (database: Database) => {
               <List
                 type={OBJECT_TASK}
                 items={tasks}
-                title='Tasks'
+                title="Tasks"
               />);
           }
           break;

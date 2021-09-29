@@ -134,7 +134,7 @@ const App = () => {
   return (
     <div className={classes.root}>
       <div className={classes.sidebar}>
-        <List dense aria-label='main tools'>
+        <List dense aria-label="main tools">
           {items.map(({ title, items = [] }) => (
             <div key={title}>
               <ListItem>

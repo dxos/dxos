@@ -73,7 +73,7 @@ export default function Signal () {
   return (
     <div className={classes.root}>
       <div className={classes.filter}>
-        <AutocompleteFilter label='Topic' options={options} onChange={setSelectedTopic} value={selectedTopic as any} />
+        <AutocompleteFilter label="Topic" options={options} onChange={setSelectedTopic} value={selectedTopic as any} />
       </div>
       {selectedTopic
         ? (

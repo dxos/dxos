@@ -222,7 +222,7 @@ const RegistrationDialog = ({
               icon={<Avatar className={classes.seedNumber}>{i + 1}</Avatar>}
               classes={{ root: classes.seedChip, label: classes.seedLabel }}
               label={word}
-              data-testid='chip'
+              data-testid="chip"
             />
           </Grid>
         ))}
@@ -240,23 +240,23 @@ const RegistrationDialog = ({
             <DialogTitle>User Profile</DialogTitle>
             <DialogContent className={classes.container}>
               <div>
-                <Paper className={classes.choice} variant='outlined'>
+                <Paper className={classes.choice} variant="outlined">
                   <CreateIcon className={classes.icon} />
                   <Typography className={classes.caption}>
                     Create a new profile<br />and wallet.
                   </Typography>
-                  <Button variant='contained' color='primary' onClick={() => setStage(STAGE_ENTER_USERNAME)}>
+                  <Button variant="contained" color="primary" onClick={() => setStage(STAGE_ENTER_USERNAME)}>
                     Create Wallet
                   </Button>
                 </Paper>
               </div>
               <div>
-                <Paper className={classes.choice} variant='outlined'>
+                <Paper className={classes.choice} variant="outlined">
                   <RestoreIcon className={classes.icon} />
                   <Typography className={classes.caption}>
                     Enter your seed phrase<br />to recover your profile.
                   </Typography>
-                  <Button variant='contained' color='primary' onClick={() => setStage(STAGE_RESTORE)}>
+                  <Button variant="contained" color="primary" onClick={() => setStage(STAGE_RESTORE)}>
                     Recover Wallet
                   </Button>
                 </Paper>
@@ -285,8 +285,8 @@ const RegistrationDialog = ({
                 onKeyDown={handleKeyDown}/>
             </DialogContent>
             <DialogActions>
-              <Button color='primary' onClick={() => setStage(STAGE_START)}>Back</Button>
-              <Button variant='contained' color='primary' onClick={handleNext} disabled={!restoreSeedPhraseValid()}>Restore</Button>
+              <Button color="primary" onClick={() => setStage(STAGE_START)}>Back</Button>
+              <Button variant="contained" color="primary" onClick={handleNext} disabled={!restoreSeedPhraseValid()}>Restore</Button>
             </DialogActions>
           </>
         );
@@ -301,8 +301,8 @@ const RegistrationDialog = ({
               <TextField autoFocus fullWidth spellCheck={false} inputRef={usernameRef} onKeyDown={handleKeyDown} />
             </DialogContent>
             <DialogActions>
-              <Button color='primary' onClick={() => setStage(STAGE_START)}>Back</Button>
-              <Button variant='contained' color='primary' onClick={handleNext}>Next</Button>
+              <Button color="primary" onClick={() => setStage(STAGE_START)}>Back</Button>
+              <Button variant="contained" color="primary" onClick={handleNext}>Next</Button>
             </DialogActions>
           </>
         );
@@ -328,8 +328,8 @@ const RegistrationDialog = ({
                 <Button onClick={() => handleDownloadSeedPhrase(seedPhrase)}>Download</Button>
               </div>
               <div>
-                <Button color='primary' onClick={() => setStage(STAGE_ENTER_USERNAME)}>Back</Button>
-                <Button variant='contained' color='primary' onClick={handleNext}>Next</Button>
+                <Button color="primary" onClick={() => setStage(STAGE_ENTER_USERNAME)}>Back</Button>
+                <Button variant="contained" color="primary" onClick={handleNext}>Next</Button>
               </div>
             </DialogActions>
           </>
@@ -350,8 +350,8 @@ const RegistrationDialog = ({
               <TextField autoFocus fullWidth spellCheck={false} inputRef={seedPhraseRef} onKeyDown={handleKeyDown} />
             </DialogContent>
             <DialogActions>
-              <Button color='primary' onClick={() => setStage(STAGE_ENTER_USERNAME)}>Back</Button>
-              <Button variant='contained' color='primary' onClick={handleNext}>Finish</Button>
+              <Button color="primary" onClick={() => setStage(STAGE_ENTER_USERNAME)}>Back</Button>
+              <Button variant="contained" color="primary" onClick={handleNext}>Finish</Button>
             </DialogActions>
           </>
         );
@@ -378,7 +378,7 @@ const RegistrationDialog = ({
   };
 
   return (
-    <Dialog open={open} maxWidth='sm' classes={{ paper: classes.paper }}>
+    <Dialog open={open} maxWidth="sm" classes={{ paper: classes.paper }}>
       {getStage(stage)}
     </Dialog>
   );
