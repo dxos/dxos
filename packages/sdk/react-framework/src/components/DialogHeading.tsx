@@ -7,9 +7,7 @@ import { OverridableComponent } from '@mui/material/OverridableComponent';
 import React from 'react';
 
 const Title = styled(Typography)(({ theme }) => ({
-  title: {
-    marginLeft: theme.spacing(2)
-  }
+  marginLeft: theme.spacing(2)
 }));
 
 const DialogHeading = ({

@@ -22,6 +22,12 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   marginRight: theme.spacing(2)
 }));
 
+const Title = styled(DialogTitle)(({ theme }) => ({
+  '+ .MuiDialogContent-root': {
+    paddingTop: theme.spacing(1)
+  }
+}));
+
 interface IRegister{
   username: string;
 }
@@ -47,7 +53,7 @@ const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
 
   return (
     <Dialog open={open} fullWidth maxWidth="xs">
-      <DialogTitle>
+      <Title>
         <Toolbar variant='dense' disableGutters>
           <StyledAvatar>
             <LockOutlinedIcon />
@@ -56,7 +62,7 @@ const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
             Create Profile
           </Typography>
         </Toolbar>
-      </DialogTitle>
+      </Title>
       <DialogContent>
         <TextField
           autoFocus

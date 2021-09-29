@@ -31,7 +31,7 @@ const Label = styled(Typography)(({ fontSize }: { fontSize?: string }) => ({
   fontSize: fontSize === 'small' ? 14 : undefined
 }));
 
-const Default = styled(Typography)(({ fontSize }: { fontSize?: string }) => ({
+const DefaultValue = styled(Typography)(({ fontSize }: { fontSize?: string }) => ({
   overflowX: 'hidden',
   paddingLeft: 8,
   whiteSpace: 'pre-line',
@@ -39,12 +39,12 @@ const Default = styled(Typography)(({ fontSize }: { fontSize?: string }) => ({
   fontSize: fontSize === 'small' ? 14 : undefined
 }));
 
-const KeyStr = styled(MuiTreeItem)(({ theme }) => ({
+const KeyStrValue = styled(DefaultValue)(({ theme }) => ({
   color: theme.palette.info.main,
   fontFamily: 'monospace'
 }));
 
-const Boolean = styled(MuiTreeItem)(({ theme }) => ({
+const BooleanValue = styled(DefaultValue)(({ theme }) => ({
   color: theme.palette.info.main
 }));
 
@@ -146,36 +146,30 @@ const JsonTreeView = ({
       const items = Object.entries(value).map(([key, value]) => renderNode(value, key, level + 1, `${path}.${key}`)).filter(Boolean);
       return (!root && level === 0)
         ? items
-        : (
-          <TreeItem size={size} key={path} nodeId={path || '.'} label={key}>{items}</TreeItem>
-          );
+        : <TreeItem size={size} key={path} nodeId={path || '.'} label={key}>{items}</TreeItem>;
     }
 
     if (Array.isArray(value)) {
       const items = value.map((value, key) => renderNode(value, `[${key}]`, level + 1, `${path}.${key}`)).filter(Boolean);
       return (!root && level === 0)
         ? items
-        : (
-          <TreeItem size={size} key={path} nodeId={path} label={key}>{items}</TreeItem>
-          );
+        : <TreeItem size={size} key={path} nodeId={path} label={key}>{items}</TreeItem>;
     }
 
     // TODO(burdon): Pluggable types (e.g., date, string, number, boolean, etc).
-    let ValueComponent: any = Default;
+    let ValueComponent: any = DefaultValue;
     if (value instanceof Uint8Array) {
       value = truncateString(keyToString(value), 16);
-      ValueComponent = KeyStr;
+      ValueComponent = KeyStrValue;
     } else if (typeof value === 'boolean') {
-      ValueComponent = Boolean;
+      ValueComponent = BooleanValue;
     }
 
-    const itemValue = value && (
-      <ValueComponent fontSize={size}>{String(value)}</ValueComponent>
-    );
+    const itemValue = value !== undefined
+      ? <ValueComponent fontSize={size}>{String(value)}</ValueComponent>
+      : undefined;
 
-    return (
-      <TreeItem size={size} key={path} nodeId={path} label={key} value={itemValue} />
-    );
+    return <TreeItem size={size} key={path} nodeId={path} label={key} value={itemValue} />;
   };
 
   const handleToggle = (_event: React.ChangeEvent<unknown>, nodeIds: string[]) => {

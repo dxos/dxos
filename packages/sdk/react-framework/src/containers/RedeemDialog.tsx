@@ -120,7 +120,8 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
               autoFocus
               fullWidth
               multiline
-              placeholder='Paste invitation code.'
+              variant="standard"
+              placeholder="Paste invitation code."
               spellCheck={false}
               value={invitationCode}
               onChange={(event) => setInvitationCode(event.target.value)}
