@@ -75,7 +75,7 @@ export default function Signal () {
   }
 
   if (!trace?.events) {
-    return <div> Loading trace </div>;
+    return <div> Loading trace... </div>;
   }
 
   return (
@@ -87,7 +87,7 @@ export default function Signal () {
         : (
         <SignalStatus status={status.servers.map(signalStatus)} />
           )}
-      <SignalTrace trace={trace?.events?.map(event => JSON.parse(event))} />
+      {trace.events.length < 1 ? <SignalTrace trace={trace?.events?.map(event => JSON.parse(event))} /> : <div> No signal trace. </div>}
     </div>
   );
 }
