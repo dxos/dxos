@@ -4,7 +4,7 @@
 
 import { ApiPromise } from '@polkadot/api/promise';
 import { AddressOrPair } from '@polkadot/api/types';
-import { Option } from '@polkadot/types';
+import { Option } from '@polkadot/types/codec/Option';
 import { compactAddLength } from '@polkadot/util';
 import assert from 'assert';
 import protobuf from 'protobufjs';
