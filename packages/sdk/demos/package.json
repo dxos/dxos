@@ -15,20 +15,20 @@
   "author": "DXOS.org",
   "scripts": {
     "build": "tsc --noEmit",
-    "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
     "build-storybook": "build-storybook --quiet",
     "build-storybook-docs": "build-storybook --quiet --docs",
+    "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
+    "chromatic": "npx chromatic --exit-zero-on-changes --auto-accept-changes",
+    "chromatic-docs": "npx chromatic --exit-zero-on-changes --auto-accept-changes --build-script-name build-storybook-docs",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
-    "lint": "toolchain lint",
-    "test": "exit 0",
-    "test:playwright": "mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts'",
     "grid:demo": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
+    "lint": "toolchain lint",
+    "prepublishOnly": "npm run test && npm run build",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "storybook-docs": "start-storybook --docs --no-manager-cache",
-    "prepublishOnly": "npm run test && npm run build",
-    "watch": "babel-watch src --out-dir ./dist --source-maps",
-    "chromatic": "npx chromatic --exit-zero-on-changes --auto-accept-changes",
-    "chromatic-docs": "npx chromatic --exit-zero-on-changes --auto-accept-changes --build-script-name build-storybook-docs"
+    "test": "exit 0",
+    "test:playwright": "mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts'",
+    "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
   "browserslist": [
     "> 5%"

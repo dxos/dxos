@@ -13,15 +13,16 @@
   ],
   "scripts": {
     "build": "toolchain build",
+    "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test",
-    "build:test": "toolchain build:test"
+    "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.isplainobject": "^4.0.6",
+    "react-copy-to-clipboard": "~5.0.3",
     "url-join": "^4.0.1"
   },
   "devDependencies": {
@@ -38,6 +39,7 @@
     "@mui/material": "^5.0.1",
     "@mui/system": "^5.0.1",
     "@types/react": "^17.0.24",
+    "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/url-join": "~4.0.1",
     "babel-plugin-add-module-exports": "^1.0.4",
     "react": "^17.0.2",

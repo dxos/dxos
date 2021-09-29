@@ -95,7 +95,8 @@ export class Client {
       metadataStorage,
       networkManagerOptions: {
         signal: swarm?.signal ? Array.isArray(swarm.signal) ? swarm.signal : [swarm.signal] : undefined,
-        ice: swarm?.ice
+        ice: swarm?.ice,
+        log: true
       },
       snapshots,
       snapshotInterval

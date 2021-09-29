@@ -1,4 +1,3 @@
-
 /**
  * Copy from https://github.com/dxos/console/tree/master/packages/console-server
  */

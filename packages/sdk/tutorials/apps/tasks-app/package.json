@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "SKIP_PREFLIGHT_CHECK=true craco start",
     "build": "SKIP_PREFLIGHT_CHECK=true craco build",
     "build:test": "npm run build && npm run test",
-    "test": "SKIP_PREFLIGHT_CHECK=true craco test --passWithNoTests --watchAll=false",
-    "test:playwright": "jest --rootDir ./playwright --runInBand --passWithNoTests --verbose",
     "eject": "craco eject",
-    "pack:app": "pnpm pack"
+    "pack:app": "pnpm pack",
+    "start": "SKIP_PREFLIGHT_CHECK=true craco start",
+    "test": "SKIP_PREFLIGHT_CHECK=true craco test --passWithNoTests --watchAll=false",
+    "test:playwright": "jest --rootDir ./playwright --runInBand --passWithNoTests --verbose"
   },
   "browserslist": {
     "production": [

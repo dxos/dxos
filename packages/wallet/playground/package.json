@@ -12,9 +12,9 @@
   "scripts": {
     "build": "webpack",
     "build:test": "pnpm run build && pnpm run test",
-    "test": "pnpm run lint",
     "lint": "toolchain lint",
-    "start": "webpack serve --mode development"
+    "start": "webpack serve --mode development",
+    "test": "pnpm run lint"
   },
   "dependencies": {
     "@dxos/wallet-core": "workspace:*",

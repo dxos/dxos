@@ -18,13 +18,13 @@
     "dist"
   ],
   "scripts": {
+    "benchmark": "pnpm run build && pnpm run benchmark:node && pnpm run benchmark:browser",
+    "benchmark:browser": "browser-runner dist/src/benchmark.js --timeout 0",
+    "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js",
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "test": "toolchain test",
-    "benchmark": "pnpm run build && pnpm run benchmark:node && pnpm run benchmark:browser",
-    "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js",
-    "benchmark:browser": "browser-runner dist/src/benchmark.js --timeout 0"
+    "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

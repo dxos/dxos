@@ -2,32 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import YesIcon from '@mui/icons-material/CheckCircleOutline';
-import LinkIcon from '@mui/icons-material/Link';
-import NoIcon from '@mui/icons-material/RadioButtonUnchecked';
-import IconButton from '@mui/material/IconButton';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import green from '@mui/material/colors/green';
-import red from '@mui/material/colors/red';
 import { makeStyles } from '@mui/styles';
 import moment from 'moment';
 import React from 'react';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 import { keyTypeName } from '@dxos/credentials';
-import { truncateString } from '@dxos/debug';
-
-// TODO(burdon): Move to dxos/react-ux.
-const BooleanIcon = ({ yes = false, error = false }) => {
-  return (yes
-    ? <YesIcon style={{ color: green[500] }} />
-    : <NoIcon style={{ color: error ? red[500] : 'transparent' }} />
-  );
-};
+import { BooleanIcon, TruncateCopy } from '@dxos/react-framework';
 
 // TODO(burdon): React component to show truncated key with click-to-copy.
 
@@ -81,17 +66,7 @@ const KeyTable = ({ keys }) => {
             <TableRow key={key}>
               <TableCell> {keyTypeName(type)} </TableCell>
               <TableCell className={classes.mono} title={key}>
-                {truncateString(key, 8)}
-                <CopyToClipboard text={key} onCopy={value => console.log(value)}>
-                  <IconButton
-                    color='inherit'
-                    aria-label='copy to clipboard'
-                    title='Copy to clipboard'
-                    edge='end'
-                  >
-                    <LinkIcon />
-                  </IconButton>
-                </CopyToClipboard>
+                <TruncateCopy text={key}/>
               </TableCell>
               <TableCell title={added}>{moment(added).fromNow()}</TableCell>
               <TableCell align='center'>
