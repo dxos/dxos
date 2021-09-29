@@ -283,16 +283,20 @@ export class RegistryApi implements IRegistryApi {
   async getRecords (query?: IQuery): Promise<RegistryRecord[]> {
     const records = await this.api.query.registry.records.entries();
 
-    const output = await Promise.all(records.map(async ([storageKey]): Promise<RegistryRecord> => {
+    const output = await Promise.all(records.map(async ([storageKey]): Promise<RegistryRecord | undefined> => {
       const contentCid = storageKey.args[0];
 
-      // TODO(marik-d): Very unoptimized.
-      const record = await this.getRecord(contentCid);
-      assert(record);
-      return record;
+      try {
+        // TODO(marik-d): Very unoptimized.
+        const record = await this.getRecord(contentCid);
+        assert(record);
+        return record;
+      } catch (err) {
+        return undefined;
+      }
     }));
 
-    return output.filter(record => Filtering.matchRecord(record, query));
+    return output.filter(isNotNullOrUndefined).filter(record => Filtering.matchRecord(record, query));
   }
 
   async getDataRecord (cid: CIDLike): Promise<RegistryDataRecord | undefined> {
@@ -354,26 +358,31 @@ export class RegistryApi implements IRegistryApi {
       this.api.query.registry.resources.entries<Option<Multihash>>(),
       this.api.query.registry.domains.entries()
     ]);
-    const result = await Promise.all(resources.map(async (resource): Promise<Resource> => {
+    const result = await Promise.all(resources.map(async (resource): Promise<Resource | undefined> => {
       const name = resource[0].args[1].toString();
       const domainKey = new DomainKey(resource[0].args[0].toU8a());
       const domain = domains.find(([storageKey]) => storageKey.args[0].eq(resource[0].args[0]))![1].unwrap();
       const id = domain.name.isSome ? DXN.fromDomainName(domain.name.unwrap().toString(), name) : DXN.fromDomainKey(domainKey, name);
 
       const cid = CID.from(resource[1].unwrap().toU8a());
-      const registryRecord = await this.getRecord(cid);
 
-      if (!registryRecord) {
-        throw new Error('Registry corrupted.');
+      try {
+        const registryRecord = await this.getRecord(cid);
+
+        if (!registryRecord) {
+          throw new Error('Registry corrupted.');
+        }
+
+        return {
+          id,
+          record: registryRecord
+        };
+      } catch (err) {
+        return undefined;
       }
-
-      return {
-        id,
-        record: registryRecord
-      };
     }));
 
-    return result.filter(resource => Filtering.matchResource(resource, query));
+    return result.filter(isNotNullOrUndefined).filter(resource => Filtering.matchResource(resource, query));
   }
 
   async insertRawRecord (data: Uint8Array): Promise<CID> {
@@ -438,3 +447,5 @@ export function getSchemaMessages (obj: protobuf.ReflectionObject): string[] {
 
   return [];
 }
+
+const isNotNullOrUndefined = <T> (x: T): x is Exclude<T, null | undefined> => x != null;

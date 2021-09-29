@@ -144,6 +144,16 @@ describe('Registry API', () => {
       });
     });
 
+    it('invalid records are ignored by list methods', async () => {
+      const cid = await registryApi.insertRawRecord(Buffer.from('100203', 'hex'));
+
+      const records = await registryApi.getRecords();
+      expect(records.every(record => !record.cid.equals(cid))).to.be.true;
+
+      const resources = await registryApi.getResources();
+      expect(resources.every(resource => !resource.record.cid.equals(cid))).to.be.true;
+    });
+
     describe('Querying', () => {
       let appTypeCid: CID;
       let botTypeCid: CID;
