@@ -1,14 +1,15 @@
 # @dxos/signal
-> DxOS signal server.
 
 ![npm (scoped)](https://img.shields.io/npm/v/@dxos/signal)
 [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/standard/semistandard)
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
+The DXOS signal server managed WebRTC connections between peers.
+
 ## Install
 
 ```
-$ npm install -g @dxos/signal
+npm install -g @dxos/signal
 ```
 
 ## Usage
@@ -36,12 +37,14 @@ Options:
   --logDir         defines a log directory                              [string]
 ```
 
+To create and start the signal server:
+
 ```javascript
-const { createBroker } = require('@dxos/signal')
+import { createBroker } from '@dxos/signal';
 
-const topic = randomBytes(32)
+const topic = randomBytes(32);
 
-createBroker(topic, opts).start()
+createBroker(topic, opts).start();
 ```
 
 ## API
