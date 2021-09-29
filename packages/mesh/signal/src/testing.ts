@@ -13,7 +13,7 @@ import { createBroker } from './broker';
  *
  * @param port Port to start the signal server on, random by default.
  */
-export async function createTestBroker (port?: string | number): Promise<Moleculer.ServiceBroker> {
+export const createTestBroker = async (port?: string | number): Promise<Moleculer.ServiceBroker> => {
   const broker = createBroker(PublicKey.random().asBuffer(), {
     port,
     logger: false,
@@ -22,4 +22,4 @@ export async function createTestBroker (port?: string | number): Promise<Molecul
   });
   await broker.start();
   return broker;
-}
+};
