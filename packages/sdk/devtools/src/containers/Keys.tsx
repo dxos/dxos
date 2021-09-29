@@ -47,6 +47,14 @@ const Keys = () => {
     })();
   }, []);
 
+  if (keys.length === 0) {
+    return (
+      <div className={classes.root}>
+        No keys to display.
+      </div>
+    );
+  }
+
   return (
     <div className={classes.root}>
       <div className={classes.keys}>
