@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import {
   Avatar,
+  createTheme,
   Fab,
   IconButton,
   List,
@@ -56,7 +57,7 @@ const useStyles = makeStyles(theme => ({
       marginRight: theme.spacing(1)
     }
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 /**
  * Party list.

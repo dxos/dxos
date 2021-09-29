@@ -29,7 +29,7 @@ export class TaskApp extends AppSimulator {
 
     await this.browser.getPage().fill('input:above(:text("Create"))', listName);
 
-    await this.browser.getPage().click('button :text("Create")');
+    await this.browser.getPage().click('button:has-text("Create")');
 
     const createdList = await this.browser.getPage().waitForSelector(`text="${listName}"`)
 
@@ -62,7 +62,7 @@ export class TaskApp extends AppSimulator {
   }
 
   async swapTaskState(taskName: string) {
-    const taskCheckbox = await this.browser.getPage().waitForSelector(`input:left-of(:text("${taskName}"))`);
+    const taskCheckbox = await this.browser.getPage().waitForSelector(`input:left-of(:text("${taskName}"), 100)`);
 
     expect(taskCheckbox).toBeTruthy();
 
@@ -76,7 +76,7 @@ export class TaskApp extends AppSimulator {
   }
 
   async checkTaskState(taskName: string, expectedResult: boolean) {
-    const taskCheckbox = await this.browser.getPage().waitForSelector(`input:left-of(:text("${taskName}"))`);
+    const taskCheckbox = await this.browser.getPage().waitForSelector(`input:left-of(:text("${taskName}"), 100)`);
 
     expect(taskCheckbox).toBeTruthy();
 

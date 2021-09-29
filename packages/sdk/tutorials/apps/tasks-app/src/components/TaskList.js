@@ -6,6 +6,7 @@ import React, { useState, useRef, useEffect } from 'react';
 
 import {
   Checkbox,
+  createTheme,
   Fab,
   IconButton,
   List,
@@ -65,7 +66,7 @@ const useStyles = makeStyles(theme => ({
       marginRight: theme.spacing(1)
     }
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const TASK_TYPE = 'example.com/type/task';
 
@@ -146,6 +147,7 @@ const TaskList = ({ partyKey, hideShare = false }) => {
               fullWidth
               autoFocus
               value={taskTitle}
+              variant="standard"
               onChange={event => setTaskTitle(event.target.value)}
               onKeyPress={event => (event.key === 'Enter') && handleCreateTask()}
             />

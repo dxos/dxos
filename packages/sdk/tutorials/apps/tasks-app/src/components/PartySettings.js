@@ -10,11 +10,18 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  styled,
   TextField,
   Typography
 } from '@mui/material';
 
 import { useClient, useParty } from '@dxos/react-client';
+
+const Title = styled(DialogTitle)(({ theme }) => ({
+  '+ .MuiDialogContent-root': {
+    paddingTop: theme.spacing(1)
+  }
+}));
 
 /**
  * Settings dialog.
@@ -55,11 +62,11 @@ const PartySettings = ({ partyKey = undefined, onClose }) => {
 
   return (
     <Dialog open fullWidth maxWidth="xs">
-      <DialogTitle>
+      <Title>
         <Typography>
           {partyKey ? 'List Settings' : 'Create List'}
         </Typography>
-      </DialogTitle>
+      </Title>
       <DialogContent>
         <TextField
           fullWidth

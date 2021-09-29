@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { AppBar, Drawer, IconButton, Toolbar, Typography, Tooltip, List, ListItem, ListItemText, Popover, ListItemIcon } from '@mui/material';
+import { AppBar, createTheme, Drawer, IconButton, Toolbar, Typography, Tooltip, List, ListItem, ListItemText, Popover, ListItemIcon } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import {
   AccountCircle as AccountIcon,
@@ -47,7 +47,7 @@ const useStyles = makeStyles(theme => ({
     flexDirection: 'column',
     flex: 1
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 /**
  * Main layout.
