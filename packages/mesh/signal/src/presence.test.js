@@ -10,9 +10,10 @@ import { createBroker } from './broker';
 
 const log = debug('dxos:test:presence');
 
+// TODO(burdon): A worker process has failed to exit gracefully and has been force exited.
 jest.setTimeout(100 * 1000);
 
-function complete (nodeID, graph, max) {
+const complete = (nodeID, graph, max) => {
   if (graph.nodes().length !== max) {
     return false;
   }
@@ -37,7 +38,7 @@ function complete (nodeID, graph, max) {
   }
 
   return true;
-}
+};
 
 test('5 brokers full network connected', async () => {
   const MAX_BROKERS = 5;
@@ -55,14 +56,14 @@ test('5 brokers full network connected', async () => {
     return Promise.all(nodes.map(nodeID => pEvent(broker.localBus, '$node.connected', ({ node }) => node.id === nodeID)));
   }));
 
-  log('> starting brokers');
+  log('Starting brokers...');
   await Promise.all(brokers.map(b => b.start()));
 
   await waitForConnected;
 
-  log('> waiting for the nodes to be full connected');
+  log('Waiting for the nodes to be fully connected...');
   await waitForPresenceGraph;
 
-  log('> stopping brokers');
+  log('Stopping brokers...');
   return Promise.all(brokers.map(b => b.stop()));
 });

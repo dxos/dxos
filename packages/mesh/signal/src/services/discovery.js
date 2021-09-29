@@ -90,13 +90,11 @@ export const DiscoveryService = {
   },
   async started () {
     const { peerMap } = this.broker.shared;
-
     peerMap.on('peer-added', this._updatePeers);
     peerMap.on('peer-deleted', this._updatePeers);
   },
   async stopped () {
     const { peerMap } = this.broker.shared;
-
     peerMap.off('peer-added', this._updatePeers);
     peerMap.off('peer-deleted', this._updatePeers);
   }
