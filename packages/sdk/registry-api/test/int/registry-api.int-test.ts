@@ -7,11 +7,11 @@ import Keyring from '@polkadot/keyring';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
-import { App } from 'sample-polkadotjs-typegen/proto/gen/dxos/type';
 
 import { IRegistryApi, CID, RegistryApi } from '../../src';
 import { createApiPromise, createKeyring } from '../../src/api-creation';
 import { schemaJson } from '../../src/proto/gen';
+import { App } from '../../src/proto/gen/dxos/type';
 import { createCID } from '../../src/testing';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
