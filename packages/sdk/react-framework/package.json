@@ -54,9 +54,6 @@
     "@mui/icons-material": ">=5.0.0",
     "@mui/lab": ">=5.0.0-alpha",
     "@mui/material": ">=5.0.0",
-    "@material-ui/core": "*",
-    "@material-ui/icons": ">=4.11.2",
-    "@material-ui/lab": ">=4.0.0-alpha",
     "react": "*",
     "react-dom": "*"
   },
