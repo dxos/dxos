@@ -7,10 +7,10 @@ import * as protobuf from 'protobufjs';
 
 import 'protobufjs/ext/descriptor';
 import { CID, RegistryTypeRecord } from '.';
-import { TYPES } from './defs/gen';
-import { Record } from './defs/gen/dxos/registry';
-import { FileDescriptorSet } from './defs/gen/google/protobuf';
 import { FieldMapper, mapMessage } from './proto-mapper';
+import { TYPES } from './proto/gen';
+import { Record } from './proto/gen/dxos/registry';
+import { FileDescriptorSet } from './proto/gen/google/protobuf';
 
 // TODO(marik-d): Descriptors are unused right now, either fix them or remove those methods.
 

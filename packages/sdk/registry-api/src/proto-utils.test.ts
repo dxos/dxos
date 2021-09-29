@@ -5,8 +5,8 @@
 import { expect } from 'chai';
 import * as protobuf from 'protobufjs';
 
-import { schemaJson } from './defs/gen';
 import { convertSchemaToDescriptor, loadSchemaFromDescriptor } from './encoding';
+import { schemaJson } from './proto/gen';
 
 describe('proto utils', () => {
   it('can convert schema to descriptor and back', () => {

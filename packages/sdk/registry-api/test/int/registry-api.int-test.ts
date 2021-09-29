@@ -11,7 +11,7 @@ import protobuf from 'protobufjs';
 
 import { IRegistryApi, CID, RegistryApi } from '../../src';
 import { createApiPromise, createKeyring } from '../../src/api-creation';
-import { schemaJson } from '../../src/defs/gen';
+import { schemaJson } from '../../src/proto/gen';
 import { createCID } from '../../src/testing';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 

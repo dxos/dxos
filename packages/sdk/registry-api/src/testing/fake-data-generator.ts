@@ -5,10 +5,10 @@
 import faker from 'faker';
 import * as protobuf from 'protobufjs';
 
-import { schemaJson } from '../defs/gen';
 import { DXN } from '../dxn';
 import { sanitizeExtensionData } from '../encoding';
 import { CID } from '../models';
+import { schemaJson } from '../proto/gen';
 import { RecordKind, RegistryDataRecord, RegistryTypeRecord, Resource } from '../registry-api';
 
 export const mockTypeNames = [

@@ -12,11 +12,11 @@ import protobuf from 'protobufjs';
 import { ComplexMap, raise } from '@dxos/util';
 
 import { ApiTransactionHandler } from './api-transaction-handler';
-import { schema as dxnsSchema } from './defs/gen';
 import { DXN } from './dxn';
 import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, RecordExtension, sanitizeExtensionData } from './encoding';
 import { Multihash } from './interfaces';
 import { CID, CIDLike, DomainKey } from './models';
+import { schema as dxnsSchema } from './proto/gen';
 import { Filtering, IQuery } from './querying';
 
 export interface DomainInfo {
@@ -113,7 +113,7 @@ export interface IReadOnlyRegistryApi {
    * Queries data records.
    * @param query Query that each returned record must meet.
    */
-  getDataRecords<T = any>(query?: IQuery): Promise<RegistryDataRecord[]>
+  getDataRecords<T = any>(query?: IQuery): Promise<RegistryDataRecord<T>[]>
 
   /**
    * Gets type records details by CID.
