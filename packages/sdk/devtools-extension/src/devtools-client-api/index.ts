@@ -11,6 +11,7 @@ import { createDevtoolsHost, DevtoolsHostEvents } from './handlers';
 Bridge.setNamespace('dxos.devtools');
 Bridge.allowWindowMessaging('dxos.devtools');
 
+// eslint-disable-next-line prefer-const
 let checkInterval: NodeJS.Timeout;
 let checkCount = 0;
 
