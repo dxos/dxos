@@ -2,9 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-import React, { useState, useRef } from 'react';
-
 import { createTheme, DialogContentText } from '@mui/material';
 import Button from '@mui/material/Button';
 import DialogActions from '@mui/material/DialogActions';
@@ -12,6 +9,8 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
 import { makeStyles } from '@mui/styles';
+import assert from 'assert';
+import React, { useState, useRef } from 'react';
 
 const useStyles = makeStyles(theme => ({
   marginTop: {

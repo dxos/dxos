@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
-
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import React, { useEffect, useState } from 'react';
 
 import { useDevtoolsHost } from '../contexts';
 

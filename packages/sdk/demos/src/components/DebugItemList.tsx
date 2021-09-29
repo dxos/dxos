@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import React from 'react';
-
-import { makeStyles } from '@mui/styles';
 
 import { Item } from '@dxos/echo-db';
 

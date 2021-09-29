@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-import faker from 'faker';
-import React, { useState } from 'react';
-
+import AddIcon from '@mui/icons-material/Add';
+import GraphIcon from '@mui/icons-material/BubbleChart';
+import ListIcon from '@mui/icons-material/Reorder';
+import CardIcon from '@mui/icons-material/ViewComfy';
+import GridIcon from '@mui/icons-material/ViewModule';
 import {
   Button,
   createTheme,
@@ -14,11 +15,9 @@ import {
   Toolbar
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import AddIcon from '@mui/icons-material/Add';
-import GraphIcon from '@mui/icons-material/BubbleChart';
-import ListIcon from '@mui/icons-material/Reorder';
-import CardIcon from '@mui/icons-material/ViewComfy';
-import GridIcon from '@mui/icons-material/ViewModule';
+import assert from 'assert';
+import faker from 'faker';
+import React, { useState } from 'react';
 
 import { Party } from '@dxos/echo-db';
 import { labels } from '@dxos/echo-testing';

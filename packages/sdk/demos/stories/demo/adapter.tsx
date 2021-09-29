@@ -2,16 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import faker from 'faker';
-import React, { useState } from 'react';
-
-import { Chip, createTheme, IconButton, Typography } from '@mui/material';
-import { makeStyles } from '@mui/styles';
 import AddIcon from '@mui/icons-material/Add';
 import OrgIcon from '@mui/icons-material/Business';
 import DefaultIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import PersonIcon from '@mui/icons-material/PersonOutline';
 import ProjectIcon from '@mui/icons-material/WorkOutline';
+import { Chip, createTheme, IconButton, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
+import faker from 'faker';
+import React, { useState } from 'react';
 
 import { Database, Item } from '@dxos/echo-db';
 import {

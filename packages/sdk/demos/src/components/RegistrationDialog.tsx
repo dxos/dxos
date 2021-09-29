@@ -2,10 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-import MobileDetect from 'mobile-detect';
-import React, { useRef, useState } from 'react';
-
+import CreateIcon from '@mui/icons-material/AddCircleOutline';
+import RestoreIcon from '@mui/icons-material/Restore';
 import { createTheme, Theme } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -21,8 +19,9 @@ import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { makeStyles, withStyles } from '@mui/styles';
-import CreateIcon from '@mui/icons-material/AddCircleOutline';
-import RestoreIcon from '@mui/icons-material/Restore';
+import assert from 'assert';
+import MobileDetect from 'mobile-detect';
+import React, { useRef, useState } from 'react';
 
 import { generateSeedPhrase } from '@dxos/crypto';
 

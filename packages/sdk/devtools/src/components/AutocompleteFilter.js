@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
+import Autocomplete from '@mui/lab/Autocomplete';
 import TextField from '@mui/material/TextField';
 import { makeStyles } from '@mui/styles';
-import Autocomplete from '@mui/lab/Autocomplete';
+import React from 'react';
 
 const useStyles = makeStyles(() => ({
   input: {

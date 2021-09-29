@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Button, TextField, Toolbar } from '@mui/material';
 import debug from 'debug';
 import React, { useState } from 'react';
 import useResizeAware from 'react-resize-aware';
-
-import { Button, TextField, Toolbar } from '@mui/material';
 
 import { createId, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';

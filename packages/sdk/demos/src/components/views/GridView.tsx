@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
 import { Box, createTheme, Typography } from '@mui/material';
 import { teal } from '@mui/material/colors';
 import { makeStyles } from '@mui/styles';
+import React from 'react';
 
 import { ItemAdapter } from './adapter';
 

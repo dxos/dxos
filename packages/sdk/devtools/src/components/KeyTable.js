@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import moment from 'moment';
-import React from 'react';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
-
+import YesIcon from '@mui/icons-material/CheckCircleOutline';
+import LinkIcon from '@mui/icons-material/Link';
+import NoIcon from '@mui/icons-material/RadioButtonUnchecked';
 import IconButton from '@mui/material/IconButton';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -15,9 +14,9 @@ import TableRow from '@mui/material/TableRow';
 import green from '@mui/material/colors/green';
 import red from '@mui/material/colors/red';
 import { makeStyles } from '@mui/styles';
-import YesIcon from '@mui/icons-material/CheckCircleOutline';
-import LinkIcon from '@mui/icons-material/Link';
-import NoIcon from '@mui/icons-material/RadioButtonUnchecked';
+import moment from 'moment';
+import React from 'react';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 import { keyTypeName } from '@dxos/credentials';
 import { truncateString } from '@dxos/debug';

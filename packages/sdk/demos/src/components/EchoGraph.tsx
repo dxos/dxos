@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useRef, useState } from 'react';
-
 import * as colors from '@mui/material/colors';
 import { makeStyles } from '@mui/styles';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { ECHO, Item } from '@dxos/echo-db';
 import {

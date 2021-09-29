@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-import React, { useState, useEffect } from 'react';
-
 import { createTheme } from '@mui/material';
 import { makeStyles } from '@mui/styles';
+import assert from 'assert';
+import React, { useState, useEffect } from 'react';
 
 // import { PeerGraph } from '@dxos/network-devtools';
 import { SignalStatus, SignalTrace } from '@dxos/network-devtools';

@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
 import Button from '@mui/material/Button';
+import React from 'react';
 
 import { useDevtoolsHost } from '../contexts';
 

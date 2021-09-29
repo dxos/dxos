@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState, useEffect } from 'react';
-
 import { createTheme } from '@mui/material';
-import { makeStyles } from '@mui/styles'
+import { makeStyles } from '@mui/styles';
+import React, { useState, useEffect } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { PeerGraph } from '@dxos/network-devtools';

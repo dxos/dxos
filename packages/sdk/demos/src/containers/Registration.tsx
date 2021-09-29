@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
-
+import RestoreIcon from '@mui/icons-material/Restore';
 import { createTheme, Dialog, DialogContent, DialogContentText, LinearProgress } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import RestoreIcon from '@mui/icons-material/Restore';
+import React, { useState } from 'react';
 
 import { sleep } from '@dxos/async';
 import { keyPairFromSeedPhrase } from '@dxos/crypto';

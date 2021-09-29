@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as faker from 'faker';
-import React from 'react';
-
 import { Button, Card, CardActions, CardContent, CardHeader, createTheme, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
+import * as faker from 'faker';
+import React from 'react';
 
 import { Party } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';

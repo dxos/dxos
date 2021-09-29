@@ -2,12 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
-
-import { createTheme, IconButton, InputAdornment, TextField, TextFieldProps } from '@mui/material';
-import { makeStyles } from '@mui/styles';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
+import { createTheme, IconButton, InputAdornment, TextField, TextFieldProps } from '@mui/material';
+import { makeStyles } from '@mui/styles';
+import React, { useState } from 'react';
 
 const useStyles = makeStyles(theme => ({
   root: {

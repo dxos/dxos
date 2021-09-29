@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
 import { List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import { makeStyles } from '@mui/styles';
+import React from 'react';
 
 import { ItemAdapter } from './adapter';
 
