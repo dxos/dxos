@@ -9,8 +9,8 @@
   "scripts": {
     "build": "rm -rf ./dist && toolchain generate:proto && tsc",
     "generate:types": "toolchain generate:defs && yarn generate:meta && yarn generate:proto",
-    "generate:defs": "ts-node --skip-project node_modules/.bin/polkadot-types-from-defs --package sample-polkadotjs-typegen/interfaces --input ./src/interfaces",
-    "generate:meta": "ts-node --skip-project node_modules/.bin/polkadot-types-from-chain --package sample-polkadotjs-typegen/interfaces --endpoint ws://127.0.0.1:9944 --output ./src/interfaces",
+    "generate:defs": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-defs --package sample-polkadotjs-typegen/interfaces --input ./src/interfaces",
+    "generate:meta": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-chain --package sample-polkadotjs-typegen/interfaces --endpoint ws://127.0.0.1:9944 --output ./src/interfaces",
     "generate:proto": "build-protobuf src/defs/dxns/*.proto --substitutions src/defs/substitutions.ts -o src/defs/gen",
     "lint": "eslint '{src,test}/**/*.ts'",
     "test": "NODE_ENV=test mocha '{src,test}/**/*.?(int-)test.{ts,tsx}'",
@@ -28,7 +28,13 @@
     "fs-extra": "^8.1.0",
     "multihashes": "^4.0.2",
     "protobufjs": "^6.9.0",
-    "@polkadot/types": "~6.1.2"
+    "@polkadot/rpc-core": "4.17.1",
+    "@polkadot/types": "4.17.1",
+    "@polkadot/util": "6.11.1",
+    "@polkadot/keyring": "6.11.1",
+    "@polkadot/util-crypto": "6.11.1",
+    "@polkadot/metadata": "4.17.1",
+    "bn.js": "4.12.0"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.14",
