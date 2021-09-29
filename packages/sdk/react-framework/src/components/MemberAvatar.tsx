@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { ReactElement } from 'react';
-
 import { Face as FaceIcon } from '@mui/icons-material';
-import { Avatar as MuiAvatar, colors, styled, Theme, useTheme } from '@mui/material';
+import { Avatar as MuiAvatar, colors, styled, Theme } from '@mui/material';
 import { StyledComponent } from '@mui/system';
+import React, { ReactElement } from 'react';
 
 import { PublicKeyLike } from '@dxos/crypto';
 import { PartyMember } from '@dxos/echo-db';
@@ -34,7 +33,7 @@ interface AvatarProps {
   publicKey?: PublicKeyLike
 }
 
-interface OwnerState extends Record<string, any> {}
+type OwnerState = Record<string, any>
 
 export const Avatar: StyledComponent<AvatarProps, OwnerState, Theme> = styled(MuiAvatar)(({ publicKey, theme }) => {
   const color = publicKey ? getColor(publicKey) : theme.palette.grey[200];

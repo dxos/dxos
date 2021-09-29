@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
-
 import { LockOutlined as LockOutlinedIcon } from '@mui/icons-material';
 import {
   Avatar,
@@ -17,6 +15,7 @@ import {
   Toolbar,
   Typography
 } from '@mui/material';
+import React, { useState } from 'react';
 
 const StyledAvatar = styled(Avatar)(({ theme }) => ({
   backgroundColor: theme.palette.secondary.main,

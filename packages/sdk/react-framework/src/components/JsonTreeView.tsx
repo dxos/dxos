@@ -2,15 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import isPlainObject from 'lodash.isplainobject';
-import React, { ReactElement, useEffect, useState } from 'react';
-
 import {
   ChevronRight as ChevronRightIcon,
   ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import { TreeItem as MuiTreeItem, TreeView as MuiTreeView } from '@mui/lab';
 import { styled, Typography } from '@mui/material';
+import isPlainObject from 'lodash.isplainobject';
+import React, { ReactElement, useEffect, useState } from 'react';
 
 import { keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';

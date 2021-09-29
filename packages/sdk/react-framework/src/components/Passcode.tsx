@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { createRef, useEffect, useState } from 'react';
-
 import { colors, styled } from '@mui/material';
+import React, { createRef, useEffect, useState } from 'react';
 
 const Root = styled('div')({ display: 'flex' });
 
@@ -104,9 +103,9 @@ const Passcode = (
     sx: {
       '& > div': {
         borderColor: colors.grey[400]
-      } 
+      }
     }
-  }
+  };
 
   return (
     <div onClick={() => {

@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
+import { Share as ShareIcon } from '@mui/icons-material';
 import { AvatarGroup } from '@mui/lab';
 import { styled, Tooltip, Theme, useTheme } from '@mui/material';
-import { Share as ShareIcon } from '@mui/icons-material';
+import React from 'react';
 
 import { humanize } from '@dxos/crypto';
 import { Party, PartyMember } from '@dxos/echo-db';

@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
 import { DialogTitle, styled, SvgIconTypeMap, Toolbar, Typography } from '@mui/material';
 import { OverridableComponent } from '@mui/material/OverridableComponent';
+import React from 'react';
 
 const Title = styled(Typography)(({ theme }) => ({
   title: {

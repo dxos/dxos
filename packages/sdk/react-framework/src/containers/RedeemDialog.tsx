@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
-
 import { Redeem as RedeemIcon } from '@mui/icons-material';
 import { Alert } from '@mui/lab';
 import {
@@ -17,6 +15,7 @@ import {
   TextField,
   Typography
 } from '@mui/material';
+import React, { useState } from 'react';
 
 import { defaultInvitationAuthenticator, InvitationDescriptor } from '@dxos/echo-db';
 import { useClient, useInvitationRedeemer } from '@dxos/react-client';

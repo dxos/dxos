@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
 import { styled } from '@mui/material';
+import React from 'react';
 
 const Root = styled('div')({
   root: {

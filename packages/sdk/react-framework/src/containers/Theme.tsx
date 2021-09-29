@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import { colors, createTheme as createMuiTheme, CssBaseline, ThemeProvider } from '@mui/material';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React from 'react';
-
-import { colors, createTheme as createMuiTheme, CssBaseline, ThemeProvider } from '@mui/material';
 
 // https://material-ui.com/customization/theming
 export const defaultThemeProperties = {

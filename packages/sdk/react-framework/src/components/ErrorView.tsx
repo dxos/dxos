@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
 import { Button, Card, CardActions, CardContent, Grid, styled } from '@mui/material';
+import React from 'react';
 
 const StyledGrid = styled(Grid)(({ theme }) => ({
   backgroundColor: theme.palette.grey[100],
