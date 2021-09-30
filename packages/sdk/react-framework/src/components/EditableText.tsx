@@ -2,10 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { InputBase, TextField } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
-
-import InputBase from '@material-ui/core/InputBase';
-import TextField from '@material-ui/core/TextField';
 
 /**
  * Editable text field.

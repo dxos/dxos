@@ -2,17 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
+import { createTheme, DialogTitle, SvgIconTypeMap, Toolbar, Typography } from '@mui/material';
+import { OverridableComponent } from '@mui/material/OverridableComponent';
+import { makeStyles } from '@mui/styles';
 import React from 'react';
-
-import { DialogTitle, SvgIconTypeMap, Toolbar, Typography } from '@material-ui/core';
-import { OverridableComponent } from '@material-ui/core/OverridableComponent';
-import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles((theme) => ({
   title: {
     marginLeft: theme.spacing(2)
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const DialogHeading = ({
   title,

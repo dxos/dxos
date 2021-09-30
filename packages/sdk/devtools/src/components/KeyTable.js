@@ -2,15 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import { makeStyles } from '@mui/styles';
 import moment from 'moment';
 import React from 'react';
-
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import { makeStyles } from '@material-ui/core/styles';
 
 import { keyTypeName } from '@dxos/credentials';
 import { BooleanIcon, TruncateCopy } from '@dxos/react-framework';

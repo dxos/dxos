@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import {
   Avatar,
+  createTheme,
   Fab,
   IconButton,
   List,
@@ -13,14 +14,14 @@ import {
   ListItemAvatar,
   ListItemSecondaryAction,
   ListItemText
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import {
   Add as AddIcon,
   Assignment as PartyIcon,
   Redeem as RedeemIcon,
   Settings as SettingsIcon
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 
 import { useParties } from '@dxos/react-client';
 import { RedeemDialog } from '@dxos/react-framework';
@@ -56,7 +57,7 @@ const useStyles = makeStyles(theme => ({
       marginRight: theme.spacing(1)
     }
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 /**
  * Party list.

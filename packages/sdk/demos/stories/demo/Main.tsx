@@ -2,22 +2,22 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-import faker from 'faker';
-import React, { useState } from 'react';
-
+import AddIcon from '@mui/icons-material/Add';
+import GraphIcon from '@mui/icons-material/BubbleChart';
+import ListIcon from '@mui/icons-material/Reorder';
+import CardIcon from '@mui/icons-material/ViewComfy';
+import GridIcon from '@mui/icons-material/ViewModule';
 import {
   Button,
+  createTheme,
   Fab,
   IconButton,
   Toolbar
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import AddIcon from '@material-ui/icons/Add';
-import GraphIcon from '@material-ui/icons/BubbleChart';
-import ListIcon from '@material-ui/icons/Reorder';
-import CardIcon from '@material-ui/icons/ViewComfy';
-import GridIcon from '@material-ui/icons/ViewModule';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
+import assert from 'assert';
+import faker from 'faker';
+import React, { useState } from 'react';
 
 import { Party } from '@dxos/echo-db';
 import { labels } from '@dxos/echo-testing';
@@ -29,6 +29,7 @@ import {
 } from '../../src';
 import { createAdapter, TYPES } from './adapter';
 
+// TODO(wittjosiah): Refactor, makeStyles is deprecated.
 const useStyles = makeStyles(theme => ({
   // TODO(burdon): Container.
   root: {
@@ -68,7 +69,7 @@ const useStyles = makeStyles(theme => ({
     left: 'auto',
     position: 'fixed'
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const VIEW_LIST = 1;
 const VIEW_CARDS = 2;

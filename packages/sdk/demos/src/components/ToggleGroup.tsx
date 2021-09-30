@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { IconButton } from '@mui/material';
 import React from 'react';
-
-import { IconButton } from '@material-ui/core';
 
 interface TypeMap {
   [key: string]: Function;

@@ -2,18 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
-
 import {
   Box,
   Button,
+  createTheme,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   TextField
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
+import React, { useState } from 'react';
 
 import { Item } from '@dxos/echo-db';
 
@@ -23,7 +23,7 @@ const useStyles = makeStyles(theme => ({
   field: {
     marginBottom: theme.spacing(2)
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 export interface TypeMap {
   [key: string]: Function;
