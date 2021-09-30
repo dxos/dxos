@@ -541,6 +541,10 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/react-registry-client",
+      "projectFolder": "packages/sdk/react-registry-client"
+    },
+    {
       "packageName": "@dxos/react-framework",
       "projectFolder": "packages/sdk/react-framework",
       "shouldPublish": true,
