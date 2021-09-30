@@ -562,6 +562,10 @@
       "packageName": "@dxos/devtools-extension",
       "projectFolder": "packages/sdk/devtools-extension"
     },
+    {
+      "packageName": "@dxos/registry-api",
+      "projectFolder": "packages/sdk/registry-api"
+    },
 
     //
     // echo
