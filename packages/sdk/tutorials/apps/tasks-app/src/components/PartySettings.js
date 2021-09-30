@@ -17,10 +17,8 @@ import {
 
 import { useClient, useParty } from '@dxos/react-client';
 
-const Title = styled(DialogTitle)(({ theme }) => ({
-  '+ .MuiDialogContent-root': {
-    paddingTop: theme.spacing(1)
-  }
+const Content = styled(DialogContent)(({ theme }) => ({
+  paddingTop: `${theme.spacing(1)} !important`
 }));
 
 /**
@@ -62,12 +60,12 @@ const PartySettings = ({ partyKey = undefined, onClose }) => {
 
   return (
     <Dialog open fullWidth maxWidth="xs">
-      <Title>
+      <DialogTitle>
         <Typography>
           {partyKey ? 'List Settings' : 'Create List'}
         </Typography>
-      </Title>
-      <DialogContent>
+      </DialogTitle>
+      <Content>
         <TextField
           fullWidth
           autoFocus
@@ -76,7 +74,7 @@ const PartySettings = ({ partyKey = undefined, onClose }) => {
           onChange={event => setTitle(event.target.value)}
           onKeyPress={event => (event.key === 'Enter') && handleSubmit()}
         />
-      </DialogContent>
+      </Content>
       <DialogActions>
         <Button onClick={onClose}>
           Cancel
