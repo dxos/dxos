@@ -48,14 +48,16 @@ export interface ClientConfig {
     server: string,
     chainId: string,
   },
-  dxns?: {
-    server: string,
-    accountUri?: string
-  },
   ipfs?: {
     server: string,
     gateway: string,
-  }
+  },
+  services?: {
+    dxns?: {
+      server: string,
+      uri?: string
+    },
+  },
   snapshots?: boolean
   snapshotInterval?: number,
   invitationExpiration?: number,
@@ -87,16 +89,18 @@ export class Client {
       storage = {},
       swarm = DEFAULT_SWARM_CONFIG,
       wns,
-      dxns,
+      services,
       snapshots = false,
       snapshotInterval
     } = config;
+
+    const dxns = services?.dxns;
 
     if (!!wns && !!dxns) {
       throw new Error('Use either WNS or DXNS blockchain.');
     }
 
-    this._config = { storage, swarm, wns, dxns, snapshots, snapshotInterval, ...config };
+    this._config = { storage, swarm, wns, services: { dxns }, snapshots, snapshotInterval, ...config };
 
     const { feedStorage, keyStorage, snapshotStorage, metadataStorage } = createStorageObjects(storage, snapshots);
 
@@ -172,15 +176,15 @@ export class Client {
       return;
     }
 
-    if (this.config.dxns) {
+    if (this.config.services?.dxns) {
       // TODO(rzadp): Move those lines to @dxos/registry-api and use a single line factory method or constructor.
       const keyring = await createKeyring();
       let keypair: ReturnType<typeof keyring['addFromUri']> | undefined;
-      if (this.config.dxns.accountUri) {
-        const config = { uri: this.config.dxns.accountUri };
+      if (this.config.services.dxns.uri) {
+        const config = { uri: this.config.services.dxns.uri };
         keypair = keyring.addFromUri(config.uri);
       }
-      const apiPromise = await createApiPromise(this.config.dxns.server);
+      const apiPromise = await createApiPromise(this.config.services.dxns.server);
       this._registry = new RegistryApi(apiPromise, keypair);
     }
 
