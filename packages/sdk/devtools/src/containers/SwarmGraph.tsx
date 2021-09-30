@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import { createTheme } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useState } from 'react';
-
-import { makeStyles } from '@material-ui/core';
 
 import { PublicKey } from '@dxos/crypto';
 import { PeerGraph } from '@dxos/network-devtools';
@@ -41,7 +41,7 @@ const useStyles = makeStyles(theme => ({
     flex: 1,
     overflow: 'hidden'
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 interface Topic {
   topic: string,

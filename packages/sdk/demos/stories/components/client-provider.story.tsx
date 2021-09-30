@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Box, Button, createTheme, Grid, Toolbar } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import * as faker from 'faker';
 import React from 'react';
-
-import { Box, Button, Grid, Toolbar } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
 
 import { createKeyPair } from '@dxos/crypto';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
@@ -25,7 +24,7 @@ const useStyles = makeStyles(theme => ({
   root: {
     margin: theme.spacing(2)
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const Demo = () => {
   const classes = useStyles();

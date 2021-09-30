@@ -2,43 +2,30 @@
 // Copyright 2020 DXOS.org
 //
 
-import clsx from 'clsx';
+import { colors, styled } from '@mui/material';
 import React, { createRef, useEffect, useState } from 'react';
 
-import grey from '@material-ui/core/colors/grey';
-import { makeStyles } from '@material-ui/core/styles';
+const Root = styled('div')({ display: 'flex' });
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    display: 'flex'
-  },
+const Input = styled('input')({
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  clip: 'rect(1px,1px,1px,1px)',
+  outline: 'none'
+});
 
-  input: {
-    position: 'absolute',
-    width: 1,
-    height: 1,
-    clip: 'rect(1px,1px,1px,1px)',
-    outline: 'none'
-  },
-
-  char: {
-    margin: theme.spacing(0.5),
-    padding: theme.spacing(1),
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(2),
-    border: '1px solid',
-    borderColor: grey[200],
-    fontSize: 32,
-    fontFamily: 'monospace',
-    color: grey[700],
-    cursor: 'pointer'
-  },
-
-  focused: {
-    '& > div': {
-      borderColor: grey[400]
-    }
-  }
+const Char = styled('div')(({ theme }) => ({
+  margin: theme.spacing(0.5),
+  padding: theme.spacing(1),
+  paddingLeft: theme.spacing(2),
+  paddingRight: theme.spacing(2),
+  border: '1px solid',
+  borderColor: colors.grey[200],
+  fontSize: 32,
+  fontFamily: 'monospace',
+  color: colors.grey[700],
+  cursor: 'pointer'
 }));
 
 const DEFAULT_PATTERN = /^[0-9]*$/;
@@ -65,7 +52,6 @@ const Passcode = (
     onChange,
     onSubmit
   } = props;
-  const classes = useStyles();
   const [value, setValue] = useState(initialValue || '');
   const [focused, setFocused] = useState(false);
   const input = createRef<HTMLInputElement>();
@@ -113,6 +99,14 @@ const Passcode = (
     chars[i] = i < value.length ? value[i] : '\u00A0';
   }
 
+  const rootProps = focused && {
+    sx: {
+      '& > div': {
+        borderColor: colors.grey[400]
+      }
+    }
+  };
+
   return (
     <div onClick={() => {
       if (input.current) {
@@ -120,9 +114,8 @@ const Passcode = (
       }
     }}>
       {editable && (
-        <input
+        <Input
           ref={input}
-          className={classes.input}
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
@@ -133,13 +126,13 @@ const Passcode = (
         />
       )}
 
-      <div className={clsx(classes.root, focused && classes.focused)}>
+      <Root {...rootProps}>
         {
           chars.map((c, i) => (
-            <div key={i} className={classes.char}>{c}</div>
+            <Char key={i}>{c}</Char>
           ))
         }
-      </div>
+      </Root>
     </div>
   );
 };

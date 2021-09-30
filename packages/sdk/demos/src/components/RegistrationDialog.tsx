@@ -2,27 +2,26 @@
 // Copyright 2020 DXOS.org
 //
 
+import CreateIcon from '@mui/icons-material/AddCircleOutline';
+import RestoreIcon from '@mui/icons-material/Restore';
+import { createTheme, Theme } from '@mui/material';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Dialog from '@mui/material/Dialog';
+import MuiDialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Grid from '@mui/material/Grid';
+import LinearProgress from '@mui/material/LinearProgress';
+import Paper from '@mui/material/Paper';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import { makeStyles, withStyles } from '@mui/styles';
 import assert from 'assert';
 import MobileDetect from 'mobile-detect';
 import React, { useRef, useState } from 'react';
-
-import { withStyles, Theme } from '@material-ui/core';
-import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
-import Chip from '@material-ui/core/Chip';
-import Dialog from '@material-ui/core/Dialog';
-import MuiDialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import Grid from '@material-ui/core/Grid';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import Paper from '@material-ui/core/Paper';
-import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import { makeStyles } from '@material-ui/core/styles';
-import CreateIcon from '@material-ui/icons/AddCircleOutline';
-import RestoreIcon from '@material-ui/icons/Restore';
 
 import { generateSeedPhrase } from '@dxos/crypto';
 
@@ -100,7 +99,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     backgroundColor: theme.palette.primary.dark,
     color: 'white'
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const DialogActions = withStyles(theme => ({
   root: {

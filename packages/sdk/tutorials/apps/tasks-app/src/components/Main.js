@@ -4,21 +4,21 @@
 
 import React, { useState } from 'react';
 
-import { AppBar, Drawer, IconButton, Toolbar, Typography, Tooltip, List, ListItem, ListItemText, Popover, ListItemIcon } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { AppBar, createTheme, Drawer, IconButton, Toolbar, Typography, Tooltip, List, ListItem, ListItemText, Popover, ListItemIcon } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import {
   AccountCircle as AccountIcon,
   DeleteForever as ResetIcon,
-  FormatListBulleted,
   Work as WorkIcon,
   MoreVert as MoreVertIcon,
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 
 import { useClient, useProfile } from '@dxos/react-client';
 
 import PartyList from './PartyList';
 import TaskList from './TaskList';
 
+// TODO(wittjosiah): Refactor, makeStyles is deprecated.
 const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex'
@@ -47,7 +47,7 @@ const useStyles = makeStyles(theme => ({
     flexDirection: 'column',
     flex: 1
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 /**
  * Main layout.
