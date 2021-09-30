@@ -17,6 +17,7 @@ import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { createStorage } from '@dxos/random-access-multi-storage';
+import { createApiPromise, createKeyring, IRegistryApi, RegistryApi } from '@dxos/registry-api';
 import { Registry } from '@wirelineio/registry-client';
 
 import { DevtoolsContext } from './devtools-context';
@@ -47,6 +48,10 @@ export interface ClientConfig {
     server: string,
     chainId: string,
   },
+  dxns?: {
+    server: string,
+    accountUri?: string
+  },
   ipfs?: {
     server: string,
     gateway: string,
@@ -65,7 +70,10 @@ export class Client {
 
   private readonly _echo: ECHO;
 
-  private readonly _registry?: any;
+  private _registry?: IRegistryApi;
+
+  // Deprecated. Use DXNS _registry instead.
+  private _wnsRegistry?: any;
 
   private _initialized = false;
 
@@ -79,11 +87,16 @@ export class Client {
       storage = {},
       swarm = DEFAULT_SWARM_CONFIG,
       wns,
+      dxns,
       snapshots = false,
       snapshotInterval
     } = config;
 
-    this._config = { storage, swarm, wns, snapshots, snapshotInterval, ...config };
+    if (!!wns && !!dxns) {
+      throw new Error('Use either WNS or DXNS blockchain.');
+    }
+
+    this._config = { storage, swarm, wns, dxns, snapshots, snapshotInterval, ...config };
 
     const { feedStorage, keyStorage, snapshotStorage, metadataStorage } = createStorageObjects(storage, snapshots);
 
@@ -102,7 +115,10 @@ export class Client {
       snapshotInterval
     });
 
-    this._registry = wns ? new Registry(wns.server, wns.chainId) : undefined;
+    if (wns) {
+      console.warn('WNS is deprecated. Use DXNS instead.');
+      this._wnsRegistry = new Registry(wns.server, wns.chainId);
+    }
   }
 
   get config (): ClientConfig {
@@ -131,6 +147,14 @@ export class Client {
   }
 
   /**
+   * WNS registry.
+   * @deprecated
+   */
+  get wnsRegistry () {
+    return this._wnsRegistry;
+  }
+
+  /**
    * Has the Client been initialized?
    * Initialize by calling `.initialize()`
    */
@@ -146,6 +170,18 @@ export class Client {
   async initialize (onProgressCallback?: (progress: OpenProgress) => void) {
     if (this._initialized) {
       return;
+    }
+
+    if (this.config.dxns) {
+      // TODO(rzadp): Move those lines to @dxos/registry-api and use a single line factory method or constructor.
+      const keyring = await createKeyring();
+      let keypair: ReturnType<typeof keyring['addFromUri']> | undefined;
+      if (this.config.dxns.accountUri) {
+        const config = { uri: this.config.dxns.accountUri };
+        keypair = keyring.addFromUri(config.uri);
+      }
+      const apiPromise = await createApiPromise(this.config.dxns.server);
+      this._registry = new RegistryApi(apiPromise, keypair);
     }
 
     const t = 10;
