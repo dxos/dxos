@@ -564,7 +564,9 @@
     },
     {
       "packageName": "@dxos/registry-api",
-      "projectFolder": "packages/sdk/registry-api"
+      "projectFolder": "packages/sdk/registry-api",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
 
     //

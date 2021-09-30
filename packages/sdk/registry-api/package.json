@@ -1,6 +1,6 @@
 {
   "name": "@dxos/registry-api",
-  "version": "2.12.23",
+  "version": "2.13.0",
   "description": "DXNS API",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
