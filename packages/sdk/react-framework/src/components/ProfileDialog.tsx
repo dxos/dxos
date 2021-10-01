@@ -52,7 +52,7 @@ const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
   return (
     <Dialog open={open} fullWidth maxWidth="xs">
       <DialogTitle>
-        <Toolbar variant='dense' disableGutters>
+        <Toolbar variant="dense" disableGutters>
           <StyledAvatar>
             <LockOutlinedIcon />
           </StyledAvatar>

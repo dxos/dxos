@@ -59,7 +59,7 @@ const Parties = () => {
     <Container className={classes.container}>
       <Grid container spacing={4}>
         <Grid item xs={12}>
-          <Typography variant='h4' align='center'> Your parties </Typography>
+          <Typography variant="h4" align="center"> Your parties </Typography>
         </Grid>
         <Grid item xs={12}>
           <List>
@@ -90,12 +90,12 @@ const Parties = () => {
           <BackButton />
         </Grid>
         <Grid item xs={6}>
-          <Grid container justify='flex-end'>
+          <Grid container justify="flex-end">
             <Button
-              variant='contained'
-              color='primary'
+              variant="contained"
+              color="primary"
               component={Link}
-              to='/joinparty'>
+              to="/joinparty">
               Join new party
             </Button>
           </Grid>
