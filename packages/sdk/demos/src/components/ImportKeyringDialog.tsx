@@ -71,8 +71,8 @@ const ImportKeyringDialog = ({
   return (
     <>
       <input
-        type='file'
-        id='import-keyring-file'
+        type="file"
+        id="import-keyring-file"
         style={{ display: 'none' }}
         onChange={handleFileChange}
         ref={fileRef}
@@ -84,7 +84,7 @@ const ImportKeyringDialog = ({
         <TextField
           autoFocus
           fullWidth
-          label='Passphrase'
+          label="Passphrase"
           onChange={handlePassChange}
         />
         {!!error && (
@@ -95,8 +95,8 @@ const ImportKeyringDialog = ({
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button
-          variant='contained'
-          color='primary'
+          variant="contained"
+          color="primary"
           ref={buttonRef}
           disabled={!passphrase || !!error}
           onClick={async () => {

@@ -27,13 +27,13 @@ const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void
     <Root>
       <AvatarGroup>
         {members.map(member => (
-          <Tooltip key={member.publicKey.toString()} title={member.displayName || humanize(member.publicKey.toString())} placement='top'>
+          <Tooltip key={member.publicKey.toString()} title={member.displayName || humanize(member.publicKey.toString())} placement="top">
             <MemberAvatar member={member} />
           </Tooltip>
         ))}
       </AvatarGroup>
 
-      <Tooltip title='Share' placement='top'>
+      <Tooltip title="Share" placement="top">
         <Avatar theme={theme} onClick={onShare}>
           <ShareIcon />
         </Avatar>
