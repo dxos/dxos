@@ -7,13 +7,12 @@ import { CID, DomainInfo, IQuery, IRegistryApi, RegistryRecord, Resource } from 
 import { useRegistry } from "..";
 
 interface Result {
-  result: Resource[],
+  resources: Resource[],
   error?: unknown
 } 
 
 /**
  * Returns matching resources.
- * @param query
  */
  export const useResources = (query?: IQuery): Result => {
   const registry = useRegistry();
@@ -32,7 +31,7 @@ interface Result {
   }, [query]);
 
   return {
-    result: resources,
+    resources,
     error
   };
 };

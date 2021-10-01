@@ -9,14 +9,12 @@ import { CID, DomainInfo, IQuery, IRegistryApi, RegistryRecord, Resource } from 
 import { useRegistry } from "..";
 
 interface Result {
-  result: RegistryRecord[],
+  records: RegistryRecord[],
   error?: unknown
 } 
 
 /**
  * Returns matching records.
- * @param query
- * @returns [result, error]
  */
  export const useRecords = (query?: IQuery): Result => {
   const registry = useRegistry();
@@ -25,13 +23,18 @@ interface Result {
 
   useEffect(() => {
     setImmediate(async () => {
-      const resources = await registry?.getRecords(query);
-      setRecords(resources ?? []);
+      try {
+        const resources = await registry?.getRecords(query);
+        setRecords(resources ?? []);
+      } catch (e: unknown) {
+        setError(e);
+      }
+      
     });
   }, [query]);
 
   return {
-    result: records,
+    records,
     error
   };
 };
