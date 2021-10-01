@@ -4,12 +4,12 @@
 
 import React, { ReactNode } from 'react';
 
-import { RegistryApi } from '@dxos/registry-client';
+import { RegistryClient } from '@dxos/registry-client';
 
 import { RegistryContext } from '../hooks';
 
 export interface RegistryProviderProps {
-  registry?: RegistryApi
+  registry?: RegistryClient
   children?: ReactNode
 }
 

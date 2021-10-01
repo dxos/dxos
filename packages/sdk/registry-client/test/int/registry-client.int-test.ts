@@ -8,7 +8,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
 
-import { IRegistryApi, CID, RegistryApi } from '../../src';
+import { IRegistryClient, CID, RegistryClient } from '../../src';
 import { createApiPromise, createKeyring } from '../../src/api-creation';
 import { schemaJson } from '../../src/proto/gen';
 import { App } from '../../src/proto/gen/dxos/type';
@@ -19,8 +19,8 @@ chai.use(chaiAsPromised);
 
 const protoSchema = protobuf.Root.fromJSON(schemaJson);
 
-describe('Registry API', () => {
-  let registryApi: IRegistryApi;
+describe('Registry Client', () => {
+  let registryApi: IRegistryClient;
   let keypair: ReturnType<Keyring['addFromUri']>;
   let apiPromise: ApiPromise;
 
@@ -29,7 +29,7 @@ describe('Registry API', () => {
     const config = { uri: '//Alice' };
     keypair = keyring.addFromUri(config.uri);
     apiPromise = await createApiPromise(DEFAULT_DOT_ENDPOINT);
-    registryApi = new RegistryApi(apiPromise, keypair);
+    registryApi = new RegistryClient(apiPromise, keypair);
   });
 
   afterEach(async () => {

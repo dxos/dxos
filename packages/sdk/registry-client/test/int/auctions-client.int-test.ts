@@ -7,13 +7,13 @@ import { KeyringPair } from '@polkadot/keyring/types';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { IAuctionsApi, AuctionsApi, createApiPromise, createKeyring } from '../../src';
+import { IAuctionsClient, AuctionsClient, createApiPromise, createKeyring } from '../../src';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
 
-describe('Auctions API', () => {
-  let auctionsApi: IAuctionsApi;
+describe('Auctions Client', () => {
+  let auctionsApi: IAuctionsClient;
   let apiPromise: ApiPromise;
   let sudoer: KeyringPair;
   let alice: KeyringPair;
@@ -26,7 +26,7 @@ describe('Auctions API', () => {
     apiPromise = await createApiPromise(DEFAULT_DOT_ENDPOINT);
     sudoer = alice = keyring.addFromUri('//Alice');
     bob = keyring.addFromUri('//Bob');
-    auctionsApi = new AuctionsApi(apiPromise, keypair);
+    auctionsApi = new AuctionsClient(apiPromise, keypair);
   });
 
   afterEach(async () => {
@@ -96,8 +96,8 @@ describe('Auctions API', () => {
     });
 
     it('Only the winner can claim an auction', async () => {
-      const winner = new AuctionsApi(apiPromise, bob);
-      const loser = new AuctionsApi(apiPromise, alice);
+      const winner = new AuctionsClient(apiPromise, bob);
+      const loser = new AuctionsClient(apiPromise, alice);
       const auctionName = Math.random().toString(36).substring(2);
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
@@ -111,7 +111,7 @@ describe('Auctions API', () => {
     });
 
     it('Auction winnner has a domain registered', async () => {
-      const winner = new AuctionsApi(apiPromise, bob);
+      const winner = new AuctionsClient(apiPromise, bob);
       const auctionName = Math.random().toString(36).substring(2);
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;

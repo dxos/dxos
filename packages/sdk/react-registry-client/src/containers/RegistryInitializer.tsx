@@ -5,7 +5,7 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 
 import type { ClientConfig } from '@dxos/client';
-import { createApiPromise, createKeyring, RegistryApi } from '@dxos/registry-client';
+import { createApiPromise, createKeyring, RegistryClient } from '@dxos/registry-client';
 import { MaybePromise } from '@dxos/util';
 
 import RegistryProvider from './RegistryProvider';
@@ -20,7 +20,7 @@ interface ClientInitializerProperties {
  * To be used with `useRegistry` hook.
  */
 const RegistryInitializer = ({ children, config = {} }: ClientInitializerProperties) => {
-  const [registry, setRegistry] = useState<RegistryApi | undefined | null>(null);
+  const [registry, setRegistry] = useState<RegistryClient | undefined | null>(null);
   const [error, setError] = useState<undefined | Error>(undefined);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ const RegistryInitializer = ({ children, config = {} }: ClientInitializerPropert
           keypair = keyring.addFromUri(resolvedConfig.services.dxns.uri);
         }
         const apiPromise = await createApiPromise(resolvedConfig.services.dxns.server);
-        setRegistry(new RegistryApi(apiPromise, keypair));
+        setRegistry(new RegistryClient(apiPromise, keypair));
       } catch (error: any) {
         setError(error);
       }

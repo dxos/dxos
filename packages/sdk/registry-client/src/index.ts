@@ -7,7 +7,7 @@ import './interfaces/augment-types';
 
 export * from './api-creation';
 export * from './api-transaction-handler';
-export * from './auctions-api';
+export * from './auctions-client';
 export * from './dxn';
 export * from './models';
 export * from './querying';

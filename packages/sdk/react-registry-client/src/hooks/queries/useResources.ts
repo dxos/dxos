@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 import { useEffect, useState } from 'react';
-import { CID, DomainInfo, IQuery, IRegistryApi, RegistryRecord, Resource } from '@dxos/registry-client';
+import { CID, DomainInfo, IQuery, IRegistryClient, RegistryRecord, Resource } from '@dxos/registry-client';
 
 import { useRegistry } from "..";
 
