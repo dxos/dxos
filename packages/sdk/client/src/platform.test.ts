@@ -3,7 +3,7 @@
 //
 
 import expect from 'expect';
-import { it as test} from 'mocha';
+import { it as test } from 'mocha';
 
 import { isNode } from './platform';
 
