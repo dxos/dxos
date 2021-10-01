@@ -29,7 +29,6 @@ interface Result {
       } catch (e: unknown) {
         setError(e);
       }
-      
     });
   }, [query]);
 
