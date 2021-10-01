@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import { colors } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useState, useEffect } from 'react';
-
-import { makeStyles, colors } from '@material-ui/core';
 
 import { PublicKey } from '@dxos/crypto';
 import { SVG, useGrid, Grid } from '@dxos/gem-core';

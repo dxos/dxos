@@ -2,15 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
+import InfoIcon from '@mui/icons-material/Info';
+import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React from 'react';
-
-import { IconButton, makeStyles, Table, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
-import InfoIcon from '@material-ui/icons/Info';
 
 import { PublicKey } from '@dxos/crypto';
 import { SwarmInfo } from '@dxos/network-manager';
 import { BooleanIcon, TruncateCopy } from '@dxos/react-framework';
 
+// TODO(wittjosiah): Refactor, makeStyles is deprecated.
 const useStyle = makeStyles(() => ({
   table: {
     '& .MuiTableCell-root': {
@@ -41,7 +42,7 @@ const SwarmTable = ({ swarms, onClick }: SwarmListProps) => {
   const classes = useStyle();
 
   return (
-    <Table stickyHeader size='small' className={classes.table}>
+    <Table stickyHeader size="small" className={classes.table}>
       <TableHead>
         <TableRow>
           <TableCell className={classes.colLabel}> Label </TableCell>
@@ -61,7 +62,7 @@ const SwarmTable = ({ swarms, onClick }: SwarmListProps) => {
             </TableCell>
             <TableCell> <BooleanIcon yes={swarm.isActive} /> </TableCell>
             <TableCell>
-              <IconButton onClick={() => onClick?.(swarm.id)} title='Details'>
+              <IconButton onClick={() => onClick?.(swarm.id)} title="Details">
                 <InfoIcon />
               </IconButton>
             </TableCell>

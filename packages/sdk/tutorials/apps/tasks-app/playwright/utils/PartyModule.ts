@@ -15,7 +15,7 @@ export class PartyModule extends AppSimulator {
     const isModalOpen = await this.browser.getPage().$('button :text("Done")');
 
     if (isModalOpen) {
-      await this.browser.getPage().click('button :text("Done")');
+      await this.browser.getPage().click('button:has-text("Done")');
     }
   }
 
@@ -61,7 +61,7 @@ export class PartyModule extends AppSimulator {
 
     await this.browser.getPage().fill('textarea', invitationCode);
 
-    await this.browser.getPage().click('button :text("Submit")');
+    await this.browser.getPage().click('button:has-text("Submit")');
   }
 
   async checkPinCodeModal() {
@@ -79,7 +79,7 @@ export class PartyModule extends AppSimulator {
 
     expect(invitationCode).toBeDefined();
 
-    await this.browser.getPage().click('button :text("Done")');
+    await this.browser.getPage().click('button:has-text("Done")');
 
     return invitationCode;
   }

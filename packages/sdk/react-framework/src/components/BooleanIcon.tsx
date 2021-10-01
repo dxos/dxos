@@ -2,12 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import YesIcon from '@mui/icons-material/CheckCircleOutline';
+import NoIcon from '@mui/icons-material/RadioButtonUnchecked';
+import green from '@mui/material/colors/green';
+import red from '@mui/material/colors/red';
 import React from 'react';
-
-import green from '@material-ui/core/colors/green';
-import red from '@material-ui/core/colors/red';
-import YesIcon from '@material-ui/icons/CheckCircleOutline';
-import NoIcon from '@material-ui/icons/RadioButtonUnchecked';
 
 const BooleanIcon = ({ yes = false, error = false }) => {
   return (yes

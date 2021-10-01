@@ -2,16 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
+import AddIcon from '@mui/icons-material/Add';
+import OrgIcon from '@mui/icons-material/Business';
+import DefaultIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import PersonIcon from '@mui/icons-material/PersonOutline';
+import ProjectIcon from '@mui/icons-material/WorkOutline';
+import { Chip, createTheme, IconButton, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import faker from 'faker';
 import React, { useState } from 'react';
-
-import { Chip, IconButton, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import AddIcon from '@material-ui/icons/Add';
-import OrgIcon from '@material-ui/icons/Business';
-import DefaultIcon from '@material-ui/icons/CheckBoxOutlineBlank';
-import PersonIcon from '@material-ui/icons/PersonOutline';
-import ProjectIcon from '@material-ui/icons/WorkOutline';
 
 import { Database, Item } from '@dxos/echo-db';
 import {
@@ -68,7 +67,7 @@ const useStyles = makeStyles(theme => ({
       fontSize: 12
     }
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 interface ListProperties {
   type: string
@@ -141,16 +140,16 @@ export const createAdapter = (database: Database) => {
 
         return (
           <div className={classes.sublist}>
-            <Typography variant='caption' className={classes.subheader}>{title}</Typography>
+            <Typography variant="caption" className={classes.subheader}>{title}</Typography>
             <table>
               <tbody>
                 {items.map(item => (
                   <tr key={item.id}>
                     <td>
-                      <Typography variant='body2'>&#x2022;</Typography>
+                      <Typography variant="body2">&#x2022;</Typography>
                     </td>
                     <td>
-                      <Typography variant='body2'>
+                      <Typography variant="body2">
                         {item.model.getProperty('name')}
                       </Typography>
                     </td>
@@ -161,7 +160,7 @@ export const createAdapter = (database: Database) => {
 
             {handleCreate && (
               <>
-                <IconButton size='small' onClick={() => setDialog(true)}>
+                <IconButton size="small" onClick={() => setDialog(true)}>
                   <AddIcon/>
                 </IconButton>
 
@@ -199,7 +198,7 @@ export const createAdapter = (database: Database) => {
             <List
               type={OBJECT_PROJECT}
               items={projects}
-              title='Projects'
+              title="Projects"
               handleCreate={handleCreate(item, LINK_PROJECT)}
             />
           );
@@ -210,7 +209,7 @@ export const createAdapter = (database: Database) => {
               <List
                 type={OBJECT_PERSON}
                 items={employees}
-                title='Employees'
+                title="Employees"
               />
             );
           }
@@ -224,7 +223,7 @@ export const createAdapter = (database: Database) => {
               <List
                 type={OBJECT_TASK}
                 items={tasks}
-                title='Tasks'
+                title="Tasks"
               />);
           }
           break;

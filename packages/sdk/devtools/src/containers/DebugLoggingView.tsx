@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
 import React, { useEffect, useState } from 'react';
-
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
 
 import { useDevtoolsHost } from '../contexts';
 
@@ -45,10 +44,10 @@ export const DebugLoggingView = () => {
 
   return (
     <span>
-      <div style={{ padding: 8 }}><Button variant='outlined' size='small' onClick={handleEnableLogging}>Enable All Logging</Button></div>
-      <div style={{ padding: 8 }}><Button variant='outlined' size='small' onClick={handleDisableLogging}>Disable All Logging</Button></div>
-      <div style={{ padding: 8 }}><TextField onChange={ev => setNamespaces(ev.target.value)} size='small' value={namespaces} label='Current Logging Namespaces' variant='outlined' fullWidth /></div>
-      <div style={{ padding: 8 }}><Button variant='outlined' size='small' onClick={handleCustomLogging}>Set Custom Logging</Button></div>
+      <div style={{ padding: 8 }}><Button variant="outlined" size="small" onClick={handleEnableLogging}>Enable All Logging</Button></div>
+      <div style={{ padding: 8 }}><Button variant="outlined" size="small" onClick={handleDisableLogging}>Disable All Logging</Button></div>
+      <div style={{ padding: 8 }}><TextField onChange={ev => setNamespaces(ev.target.value)} size="small" value={namespaces} label="Current Logging Namespaces" variant="outlined" fullWidth /></div>
+      <div style={{ padding: 8 }}><Button variant="outlined" size="small" onClick={handleCustomLogging}>Set Custom Logging</Button></div>
     </span>
   );
 };

@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as colors from '@mui/material/colors';
+import { makeStyles } from '@mui/styles';
 import debug from 'debug';
 import React, { useEffect } from 'react';
-
-import * as colors from '@material-ui/core/colors';
-import { makeStyles } from '@material-ui/core/styles';
 
 import { Generator, OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK } from '@dxos/echo-testing';
 import { ClientInitializer, ProfileInitializer, useSelection } from '@dxos/react-client';

@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { createTheme as createMuiTheme, ThemeProvider } from '@mui/material';
+import CssBaseline from '@mui/material/CssBaseline';
 import React from 'react';
 import ReactDOM from 'react-dom';
-
-import CssBaseline from '@material-ui/core/CssBaseline';
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -17,9 +16,11 @@ const theme = createMuiTheme({
   typography: {
     fontSize: 10
   },
-  props: {
+  components: {
     MuiButtonBase: {
-      disableRipple: true
+      defaultProps: {
+        disableRipple: true
+      }
     }
   }
 });
@@ -34,12 +35,12 @@ export const initApp = (shell: Shell) => {
   shell.connect(devtoolsHost => {
     ReactDOM.render(
       <ErrorBoundary>
-        <MuiThemeProvider theme={theme}>
+        <ThemeProvider theme={theme}>
           <CssBaseline />
           <WithDevtoolsHostContext devtoolsHost={devtoolsHost}>
             <App />
           </WithDevtoolsHostContext>
-        </MuiThemeProvider>
+        </ThemeProvider>
       </ErrorBoundary>,
       document.getElementById('root')
     );

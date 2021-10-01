@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { makeStyles } from '@mui/styles';
 import update from 'immutability-helper';
 import React, { useState, useEffect } from 'react';
 import useResizeAware from 'react-resize-aware';
-
-import { makeStyles } from '@material-ui/core/styles';
 
 import { SVG, useGrid } from '@dxos/gem-core';
 import {

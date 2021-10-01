@@ -2,12 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import ClearIcon from '@mui/icons-material/Clear';
+import SearchIcon from '@mui/icons-material/Search';
+import { createTheme, IconButton, InputAdornment, TextField, TextFieldProps } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import React, { useState } from 'react';
-
-import { IconButton, InputAdornment, TextField, TextFieldProps } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import ClearIcon from '@material-ui/icons/Clear';
-import SearchIcon from '@material-ui/icons/Search';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -17,7 +16,7 @@ const useStyles = makeStyles(theme => ({
   searchIcon: {
     marginRight: theme.spacing(1)
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
   const clazzes = { ...useStyles(), ...classes };
@@ -50,7 +49,7 @@ const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
       <TextField
         autoFocus
         fullWidth
-        variant='outlined'
+        variant="outlined"
         spellCheck={false}
         value={text}
         onChange={ev => setText(ev.target.value)}
@@ -60,7 +59,7 @@ const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
             <InputAdornment position="end">
               <IconButton
                 className={clazzes.searchIcon}
-                size='small'
+                size="small"
                 onClick={handleSearch}
                 onMouseDown={handleSearch}
               >
@@ -70,7 +69,7 @@ const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
           endAdornment:
             <InputAdornment position="end">
               <IconButton
-                size='small'
+                size="small"
                 onClick={handleCancel}
                 onMouseDown={handleCancel}
               >

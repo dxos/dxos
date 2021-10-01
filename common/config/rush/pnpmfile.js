@@ -27,10 +27,19 @@ module.exports = {
  * The return value is the updated object.
  */
 function readPackage(packageJson, context) {
-
-  if(packageJson.name === 'ts-essentials') {
+  if (packageJson.name === 'ts-essentials') {
     // This peer dependency is not required at runtime
     delete packageJson.peerDependencies['typescript']
+  } else if (packageJson.name === '@hot-loader/react-dom') {
+    // Package has an unneccessarily strict peer dep of 17.0.1
+    packageJson.peerDependencies['react'] = '^17.0.0'
+  } else if (packageJson.name === 'create-react-context' || packageJson.name === '@reach/router') {
+    // Packages haven't been updated, see:
+    // - https://github.com/jamiebuilds/create-react-context/pull/33
+    // - https://github.com/reach/router/pull/43
+    packageJson.peerDependencies['react'] = '>=15.0.0'
+    packageJson.peerDependencies['react-dom'] = '>=15.0.0'
   }
+
   return packageJson;
 }

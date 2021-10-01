@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Box, createTheme, Typography } from '@mui/material';
+import { teal } from '@mui/material/colors';
+import { makeStyles } from '@mui/styles';
 import React from 'react';
-
-import { Box, Typography } from '@material-ui/core';
-import { teal } from '@material-ui/core/colors';
-import { makeStyles } from '@material-ui/core/styles';
 
 import { ItemAdapter } from './adapter';
 
@@ -28,7 +27,7 @@ const useStyles = makeStyles(theme => ({
       marginBottom: theme.spacing(1)
     }
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 export interface GridViewProps {
   adapter: ItemAdapter
@@ -46,8 +45,8 @@ const GridView = ({ adapter, items = [] }: GridViewProps) => {
 
         return (
           <Box key={item.id} className={classes.card}>
-            <Typography variant='h6'>{title}</Typography>
-            <Typography variant='body2'>{description}</Typography>
+            <Typography variant="h6">{title}</Typography>
+            <Typography variant="body2">{description}</Typography>
           </Box>
         );
       })}
