@@ -73,7 +73,7 @@ export const RegistryRecord = {
 /**
  * DXNS Registry read-only operations.
  */
-export interface IReadOnlyRegistryApi {
+export interface IReadOnlyRegistryClient {
   /**
    * Resolves a CID of a record registered under a resource described with DXN name.
    * @param dxn Name of the resource which CID has to be resolved.
@@ -143,7 +143,7 @@ export interface IReadOnlyRegistryApi {
 /**
  * DXNS Registry modification operations.
  */
-export interface IRegistryApi extends IReadOnlyRegistryApi {
+export interface IRegistryClient extends IReadOnlyRegistryClient {
   /**
    * Creates a new record in the system.
    * @param data Payload data of the record.
@@ -180,7 +180,7 @@ export interface IRegistryApi extends IReadOnlyRegistryApi {
   registerResource (domainKey: DomainKey, resourceName: string, contentCid: CID): Promise<void>
 }
 
-export class RegistryApi implements IRegistryApi {
+export class RegistryClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, RegistryRecord>(cid => cid.toB58String())
 
   private transactionsHandler: ApiTransactionHandler;

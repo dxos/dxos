@@ -3,4 +3,4 @@
 //
 
 export * from './fake-data-generator';
-export * from './mock-registry-api';
+export * from './mock-registry-client';
