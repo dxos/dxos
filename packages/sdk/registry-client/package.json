@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/registry-api",
+  "name": "@dxos/registry-client",
   "version": "2.14.0",
   "description": "DXNS API",
   "license": "AGPL-3.0",
@@ -16,7 +16,7 @@
     "test": "toolchain test",
     "test:int": "NODE_ENV=test mocha '{src,test,int}/**/*.int-test.ts'",
     "test:int:auctions": "NODE_ENV=test mocha '{src,test,int}/**/auctions-api.int-test.ts'",
-    "test:int:registry": "NODE_ENV=test mocha '{src,test,int}/**/registry-api.int-test.ts'"
+    "test:int:registry": "NODE_ENV=test mocha '{src,test,int}/**/registry-client.int-test.ts'"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",

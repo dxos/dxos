@@ -5,21 +5,21 @@
 import { expect } from 'chai';
 
 import { DXN } from '../dxn';
-import { IRegistryApi } from '../registry-api';
+import { IRegistryClient } from '../registry-client';
 import { createMockResource, createMockTypes } from './fake-data-generator';
-import { MemoryRegistryApi } from './mock-registry-api';
+import { MemoryRegistryClient } from './mock-registry-client';
 
 describe('Registry API mock', () => {
-  let mock: IRegistryApi;
+  let mock: IRegistryClient;
 
   beforeEach(() => {
-    mock = new MemoryRegistryApi();
+    mock = new MemoryRegistryClient();
   });
 
   it('Returns a specific resource', async () => {
     const dxn = 'example:resource';
     const resource = createMockResource(DXN.parse(dxn));
-    mock = new MemoryRegistryApi(createMockTypes(), [resource]);
+    mock = new MemoryRegistryClient(createMockTypes(), [resource]);
     // Parse the query DXN separately to ensure it is not the same instance
     // as the resource DXN
     const registryResource = await mock.getResource(DXN.parse(dxn));

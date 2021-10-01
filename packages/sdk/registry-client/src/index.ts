@@ -7,11 +7,11 @@ import './interfaces/augment-types';
 
 export * from './api-creation';
 export * from './api-transaction-handler';
-export * from './auctions-api';
+export * from './auctions-client';
 export * from './dxn';
 export * from './models';
 export * from './querying';
-export * from './registry-api';
+export * from './registry-client';
 export { RecordExtension } from './encoding';
 
 export * from './testing';

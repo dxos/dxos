@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { DXN } from './dxn';
 import { Filtering } from './querying';
-import { Resource } from './registry-api';
+import { Resource } from './registry-client';
 
 describe('Registry API querying', () => {
   // TODO(marik-d): Fix those tests.

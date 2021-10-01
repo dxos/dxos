@@ -4,7 +4,7 @@
 
 import { DXN } from './dxn';
 import { CID } from './models';
-import { RegistryRecord, Resource } from './registry-api';
+import { RegistryRecord, Resource } from './registry-client';
 
 /**
  * Common querying request for data of the DXNS.
