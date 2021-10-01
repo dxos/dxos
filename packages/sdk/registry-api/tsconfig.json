@@ -5,9 +5,15 @@
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": false,
     "paths": {
-      "sample-polkadotjs-typegen/*": ["./src/*"],
-      "@polkadot/api/augment": ["./src/interfaces/augment-api.ts"],
-      "@polkadot/types/augment": ["./src/interfaces/augment-types.ts"]
+      "sample-polkadotjs-typegen/*": [
+        "./src/*"
+      ],
+      "@polkadot/api/augment": [
+        "./src/interfaces/augment-api.ts"
+      ],
+      "@polkadot/types/augment": [
+        "./src/interfaces/augment-types.ts"
+      ]
     }
   },
   "include": [
@@ -16,5 +22,13 @@
   ],
   "exclude": [
     "dist"
+  ],
+  "references": [
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/util"
+    }
   ]
 }
