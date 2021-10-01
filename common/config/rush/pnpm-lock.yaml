@@ -1333,8 +1333,6 @@ importers:
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
-      '@dxos/registry-api': link:../registry-api
-      '@dxos/registry-client': 1.1.2
       '@wirelineio/registry-client': 1.1.0-beta.3
       abstract-leveldown: 7.0.0
       assert: 2.0.0
@@ -1365,8 +1363,6 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
-      '@dxos/registry-api': workspace:*
-      '@dxos/registry-client': ~1.1.2
       '@dxos/toolchain-node-library': workspace:*
       '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
@@ -1692,7 +1688,6 @@ importers:
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
       '@babel/preset-env': 7.14.2_@babel+core@7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
-      '@dxos/registry-api': link:../registry-api
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@testing-library/react': 11.2.6_react-dom@17.0.2+react@17.0.2
       '@testing-library/react-hooks': 5.1.2_fc2bb8a5b006d3f25c5f84ea777e678d
@@ -1728,7 +1723,6 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/registry-api': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@testing-library/react': ^11.0.4
@@ -1813,7 +1807,7 @@ importers:
       url-join: ^4.0.1
   ../../packages/sdk/react-registry-client:
     dependencies:
-      '@dxos/registry-api': link:../registry-api
+      '@dxos/registry-client': link:../registry-client
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.1
@@ -1828,7 +1822,7 @@ importers:
       typescript: 4.3.5
     specifiers:
       '@dxos/client': workspace:*
-      '@dxos/registry-api': workspace:*
+      '@dxos/registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
@@ -1839,7 +1833,7 @@ importers:
       react: ^17.0.2
       react-dom: ^17.0.2
       typescript: ^4.3.5
-  ../../packages/sdk/registry-api:
+  ../../packages/sdk/registry-client:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/util': link:../../common/util
@@ -4944,32 +4938,6 @@ packages:
       '@types/react': '*'
     resolution:
       integrity: sha512-KrnRQCoTA7Gxg9FnAyqJgwbcluOl11nmIlFX5ClyNEvSb9zeXy55wBvxRi7Ya2+GO8KlMpSQmGKVHcvBDGmc9A==
-  /@dxos/registry-client/1.1.2:
-    dependencies:
-      '@babel/runtime': 7.14.0
-      '@graphql-tools/schema': 6.2.4_graphql@15.5.0
-      '@wirelineio/wns-schema': 0.3.2
-      bech32: 1.1.4
-      bip32: 2.0.6
-      bip39: 2.6.0
-      canonical-json: 0.0.4
-      cids: 0.7.5
-      debug: 4.3.1
-      graphql: 15.5.0
-      graphql.js: 0.6.7
-      hdkey: 1.1.2
-      is-url: 1.2.4
-      js-sha256: 0.9.0
-      jsonschema: 1.4.0
-      lodash.get: 4.4.2
-      lodash.isequal: 4.5.0
-      lodash.set: 4.3.2
-      multihashing-async: 0.8.2
-      ripemd160: 2.0.2
-      secp256k1: 3.8.0
-    dev: false
-    resolution:
-      integrity: sha512-v3Y5SMZKamrvajmmc5s8uD5t65i7ZOI49J+Q/ll6h+7OJjFJ1HKr0WGIXaLJG6yrJQ+scJMBRelhbOXVJiiPwQ==
   /@emotion/babel-plugin/11.3.0_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
