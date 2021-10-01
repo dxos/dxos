@@ -1333,6 +1333,7 @@ importers:
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
+      '@dxos/registry-api': link:../registry-api
       '@dxos/registry-client': 1.1.2
       '@wirelineio/registry-client': 1.1.0-beta.3
       abstract-leveldown: 7.0.0
@@ -1345,9 +1346,13 @@ importers:
     devDependencies:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/expect': 24.3.0
       '@types/jest': 26.0.23
       '@types/level-js': 4.0.1
       '@types/memdown': 3.0.0
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
+      mocha: 8.4.0
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/credentials': workspace:*
@@ -1360,19 +1365,24 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/registry-api': workspace:*
       '@dxos/registry-client': ~1.1.2
       '@dxos/toolchain-node-library': workspace:*
+      '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
       '@types/memdown': ^3.0.0
+      '@types/mocha': ~8.2.2
       '@wirelineio/registry-client': ~1.1.0-beta.3
       abstract-leveldown: ~7.0.0
       assert: ^2.0.0
       debug: ^4.1.1
       del: ^5.1.0
+      expect: ~27.0.2
       jsondown: dxos/jsondown#main
       level-js: ^5.0.2
       memdown: ^5.1.0
+      mocha: ~8.4.0
   ../../packages/sdk/config:
     dependencies:
       '@dxos/debug': link:../../common/debug
@@ -1682,6 +1692,7 @@ importers:
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
       '@babel/preset-env': 7.14.2_@babel+core@7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
+      '@dxos/registry-api': link:../registry-api
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@testing-library/react': 11.2.6_react-dom@17.0.2+react@17.0.2
       '@testing-library/react-hooks': 5.1.2_fc2bb8a5b006d3f25c5f84ea777e678d
@@ -1717,6 +1728,7 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/registry-api': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@testing-library/react': ^11.0.4
@@ -1799,6 +1811,34 @@ importers:
       react-dom: ^17.0.2
       typescript: ^4.3.5
       url-join: ^4.0.1
+  ../../packages/sdk/react-registry-client:
+    dependencies:
+      '@dxos/registry-api': link:../registry-api
+      '@dxos/util': link:../../common/util
+      assert: 2.0.0
+      debug: 4.3.1
+    devDependencies:
+      '@dxos/client': link:../client
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/debug': 4.1.5
+      '@types/node': 14.14.45
+      '@types/react': 17.0.24
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      typescript: 4.3.5
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/registry-api': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.1
+      '@types/node': ^14.0.9
+      '@types/react': ^17.0.24
+      assert: ^2.0.0
+      debug: ^4.1.1
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      typescript: ^4.3.5
   ../../packages/sdk/registry-api:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -8790,9 +8830,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-xl+5r2rcrxdLViAYkkiLMYsoUs3qEyrAnHFyEzYysgRxdVp3WbhysxIvJIxZp9FvZ2CYezh0TaHZorivH+voOQ==
-  /@types/prop-types/15.7.3:
-    resolution:
-      integrity: sha512-KfRL3PuHmqQLOG+2tGpRO26Ctg+Cq1E01D2DMriKEATHgWLfeNDmq9e29Q9WIky0dQ3NPkd1mzYH8Lm936Z9qw==
   /@types/prop-types/15.7.4:
     resolution:
       integrity: sha512-rZ5drC/jWjrArrS8BR6SIr4cWpW09RNTYt9AMZo3Jwwif+iacXAqgVjm0B0Bv/S1jhDXKHqRVNCbACkJ89RAnQ==
@@ -8874,9 +8911,9 @@ packages:
       integrity: sha512-fUx5muOWSYP8Bw2BUQ9M9RK9+W1XBK/7FLJ8PTQpnpTEkn0ccyMffyEQvan4C3h53gHdx7KE5Qrxi/LnUGQtdg==
   /@types/react/17.0.24:
     dependencies:
-      '@types/prop-types': 15.7.3
+      '@types/prop-types': 15.7.4
       '@types/scheduler': 0.16.1
-      csstype: 3.0.8
+      csstype: 3.0.9
     resolution:
       integrity: sha512-eIpyco99gTH+FTI3J7Oi/OH8MZoFMJuztNRimDOJwH4iGIsKV2qkGnk4M9VzlaVWeEEWLWSQRy0FEA0Kz218cg==
   /@types/readable-stream/2.3.9:
@@ -17958,7 +17995,7 @@ packages:
       integrity: sha512-rGiLePzQ3AzwUshu2+Rn+UMFk0pHN58sOG+IaJbk5Jxuqo3NYO1U2/MIR4S1sKgsoYSXSzdtSa0TgrmtUwEbmA==
   /jest-message-util/27.0.2:
     dependencies:
-      '@babel/code-frame': 7.12.13
+      '@babel/code-frame': 7.14.5
       '@jest/types': 27.0.2
       '@types/stack-utils': 2.0.0
       chalk: 4.1.1

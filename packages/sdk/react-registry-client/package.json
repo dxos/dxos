@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-registry-client",
-  "version": "2.12.23",
+  "version": "2.14.0",
   "description": "React registry client API",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -14,34 +14,24 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/async": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/debug": "^4.1.1",
     "assert": "^2.0.0",
     "debug": "^4.1.1",
-    "react-display-name": "^0.2.5",
-    "use-subscription": "^1.4.1"
-  },
-  "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*",
-    "@types/level-js": "~4.0.1",
-    "@types/node": "^14.0.9",
-    "@types/react": "^16.14.0",
-    "@types/use-subscription": "^1.0.0",
-    "level-js": "^5.0.2",
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0",
-    "react-test-renderer": "16.12.0",
-    "typescript": "^4.3.5",
-    "webpack": "4.44.2",
     "@dxos/registry-api": "workspace:*"
   },
+  "devDependencies": {
+    "@dxos/client": "workspace:*",
+    "@types/debug": "^4.1.1",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/node": "^14.0.9",
+    "@types/react": "^17.0.24",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "typescript": "^4.3.5"
+  },
   "peerDependencies": {
-    "react": "*"
+    "react": "*",
+    "react-dom": "*"
   },
   "publishConfig": {
     "access": "public"

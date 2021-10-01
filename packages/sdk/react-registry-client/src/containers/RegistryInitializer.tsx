@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect, ReactNode } from 'react';
 
-import { ClientConfig } from '@dxos/client';
+import type { ClientConfig } from '@dxos/client';
 import { createApiPromise, createKeyring, RegistryApi } from '@dxos/registry-api';
 import { MaybePromise } from '@dxos/util';
 
