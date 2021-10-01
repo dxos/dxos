@@ -39,7 +39,7 @@ export interface Auction {
 /**
  * Auctions operations supported in the DXOS.
  */
-export interface IAuctionsApi {
+export interface IAuctionsClient {
   /**
    * Creates a new auction.
    * @param name An object of the auction.
@@ -81,7 +81,7 @@ export interface IAuctionsApi {
   listAuctions(): Promise<Auction[]>;
 }
 
-export class AuctionsApi implements IAuctionsApi {
+export class AuctionsClient implements IAuctionsClient {
   private transactionsHandler: ApiTransactionHandler;
 
   constructor (private api: ApiPromise, private signer?: AddressOrPair) {

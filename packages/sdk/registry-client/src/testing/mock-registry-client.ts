@@ -9,16 +9,16 @@ import { CID, CIDLike, DomainKey } from '../models';
 import { IQuery, Filtering } from '../querying';
 import {
   DomainInfo,
-  IRegistryApi,
+  IRegistryClient,
   RecordMetadata,
   RegistryDataRecord,
   RegistryRecord,
   RegistryTypeRecord,
   Resource
-} from '../registry-api';
+} from '../registry-client';
 import { createMockResources, createMockTypes } from './fake-data-generator';
 
-export class MemoryRegistryApi implements IRegistryApi {
+export class MemoryRegistryClient implements IRegistryClient {
   constructor (
     private types: RegistryTypeRecord[] = createMockTypes(),
     private resources: Resource[] = createMockResources()
