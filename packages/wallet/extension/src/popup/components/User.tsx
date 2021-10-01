@@ -74,7 +74,7 @@ const User = ({ profile } : UserProps) => {
         onClose={() => setMenuOpen(false)}>
         <MenuItem button={true} onClick={onPartiesClick}>
           <ListItemIcon>
-            <GroupIcon fontSize='small' />
+            <GroupIcon fontSize="small" />
           </ListItemIcon>
           <Typography variant="inherit"> Parties </Typography>
         </MenuItem>

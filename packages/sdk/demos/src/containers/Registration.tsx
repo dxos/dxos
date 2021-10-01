@@ -59,8 +59,8 @@ const Registration = () => {
         onFinishRestore={handleFinishRestore}
       />
       {recovering && (
-        <Dialog open maxWidth='sm'>
-          <DialogHeading title='Recovering wallet' icon={RestoreIcon}/>
+        <Dialog open maxWidth="sm">
+          <DialogHeading title="Recovering wallet" icon={RestoreIcon}/>
           <DialogContent>
             <LinearProgress className={classes.progressBar} />
             <DialogContentText>One of your other devices needs to be online.</DialogContentText>
