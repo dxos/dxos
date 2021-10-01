@@ -24,7 +24,7 @@ test('initialize and destroy are idempotent', async () => {
   expect(client.initialized).toBeFalsy();
 });
 
-test.only('initialize', async () => {
+test('initialize', async () => {
   const client = new Client();
   await client.initialize();
 
