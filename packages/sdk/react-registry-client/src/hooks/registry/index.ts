@@ -2,5 +2,5 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './queries';
+export * from './context';
 export * from './registry';
