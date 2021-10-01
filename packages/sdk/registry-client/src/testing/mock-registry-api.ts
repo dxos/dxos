@@ -15,7 +15,7 @@ import {
   RegistryRecord,
   RegistryTypeRecord,
   Resource
-} from '../registry-api';
+} from '../registry-client';
 import { createMockResources, createMockTypes } from './fake-data-generator';
 
 export class MemoryRegistryApi implements IRegistryApi {

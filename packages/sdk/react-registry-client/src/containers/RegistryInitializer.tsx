@@ -5,7 +5,7 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 
 import type { ClientConfig } from '@dxos/client';
-import { createApiPromise, createKeyring, RegistryApi } from '@dxos/registry-api';
+import { createApiPromise, createKeyring, RegistryApi } from '@dxos/registry-client';
 import { MaybePromise } from '@dxos/util';
 
 import RegistryProvider from './RegistryProvider';

@@ -5,9 +5,9 @@
 import { expect } from 'chai';
 
 import { DXN } from '../dxn';
-import { IRegistryApi } from '../registry-api';
+import { IRegistryApi } from '../registry-client';
 import { createMockResource, createMockTypes } from './fake-data-generator';
-import { MemoryRegistryApi } from './mock-registry-api';
+import { MemoryRegistryApi } from './mock-registry-client';
 
 describe('Registry API mock', () => {
   let mock: IRegistryApi;

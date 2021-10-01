@@ -4,7 +4,7 @@
 
 import { createContext } from 'react';
 
-import { RegistryApi } from '@dxos/registry-api';
+import { RegistryApi } from '@dxos/registry-client';
 
 type ContextValue = {
   registry?: RegistryApi | undefined,

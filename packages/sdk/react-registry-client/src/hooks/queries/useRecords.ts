@@ -3,7 +3,7 @@
 //
 
 import { useEffect, useState } from 'react';
-import { CID, DomainInfo, IQuery, IRegistryApi, RegistryRecord, Resource } from '@dxos/registry-api';
+import { CID, DomainInfo, IQuery, IRegistryApi, RegistryRecord, Resource } from '@dxos/registry-client';
 
 
 import { useRegistry } from "..";

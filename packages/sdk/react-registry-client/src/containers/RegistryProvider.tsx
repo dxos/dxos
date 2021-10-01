@@ -4,7 +4,7 @@
 
 import React, { ReactNode } from 'react';
 
-import { RegistryApi } from '@dxos/registry-api';
+import { RegistryApi } from '@dxos/registry-client';
 
 import { RegistryContext } from '../hooks';
 

@@ -11,7 +11,7 @@ export * from './auctions-api';
 export * from './dxn';
 export * from './models';
 export * from './querying';
-export * from './registry-api';
+export * from './registry-client';
 export { RecordExtension } from './encoding';
 
 export * from './testing';

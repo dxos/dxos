@@ -9,7 +9,7 @@ import { DXN } from '../dxn';
 import { sanitizeExtensionData } from '../encoding';
 import { CID } from '../models';
 import { schemaJson } from '../proto/gen';
-import { RecordKind, RegistryDataRecord, RegistryTypeRecord, Resource } from '../registry-api';
+import { RecordKind, RegistryDataRecord, RegistryTypeRecord, Resource } from '../registry-client';
 
 export const mockTypeNames = [
   {

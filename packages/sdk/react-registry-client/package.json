@@ -17,7 +17,7 @@
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.1.1",
-    "@dxos/registry-api": "workspace:*"
+    "@dxos/registry-client": "workspace:*"
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",

@@ -541,10 +541,6 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/react-registry-client",
-      "projectFolder": "packages/sdk/react-registry-client"
-    },
-    {
       "packageName": "@dxos/react-framework",
       "projectFolder": "packages/sdk/react-framework",
       "shouldPublish": true,
@@ -567,8 +563,14 @@
       "projectFolder": "packages/sdk/devtools-extension"
     },
     {
-      "packageName": "@dxos/registry-api",
-      "projectFolder": "packages/sdk/registry-api",
+      "packageName": "@dxos/registry-client",
+      "projectFolder": "packages/sdk/registry-client",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/react-registry-client",
+      "projectFolder": "packages/sdk/react-registry-client",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
