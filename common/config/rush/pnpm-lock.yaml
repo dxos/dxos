@@ -1344,9 +1344,13 @@ importers:
     devDependencies:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/expect': 24.3.0
       '@types/jest': 26.0.23
       '@types/level-js': 4.0.1
       '@types/memdown': 3.0.0
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
+      mocha: 8.4.0
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/credentials': workspace:*
@@ -1360,17 +1364,21 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
       '@types/memdown': ^3.0.0
+      '@types/mocha': ~8.2.2
       '@wirelineio/registry-client': ~1.1.0-beta.3
       abstract-leveldown: ~7.0.0
       assert: ^2.0.0
       debug: ^4.1.1
       del: ^5.1.0
+      expect: ~27.0.2
       jsondown: dxos/jsondown#main
       level-js: ^5.0.2
       memdown: ^5.1.0
+      mocha: ~8.4.0
   ../../packages/sdk/config:
     dependencies:
       '@dxos/debug': link:../../common/debug
@@ -1797,7 +1805,35 @@ importers:
       react-dom: ^17.0.2
       typescript: ^4.3.5
       url-join: ^4.0.1
-  ../../packages/sdk/registry-api:
+  ../../packages/sdk/react-registry-client:
+    dependencies:
+      '@dxos/registry-client': link:../registry-client
+      '@dxos/util': link:../../common/util
+      assert: 2.0.0
+      debug: 4.3.1
+    devDependencies:
+      '@dxos/client': link:../client
+      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/debug': 4.1.5
+      '@types/node': 14.14.45
+      '@types/react': 17.0.24
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      typescript: 4.3.5
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/registry-client': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.1
+      '@types/node': ^14.0.9
+      '@types/react': ^17.0.24
+      assert: ^2.0.0
+      debug: ^4.1.1
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      typescript: ^4.3.5
+  ../../packages/sdk/registry-client:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/util': link:../../common/util
