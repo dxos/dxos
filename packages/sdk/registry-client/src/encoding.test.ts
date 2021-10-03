@@ -19,13 +19,13 @@ describe('record encoding', () => {
 
   it('record without extensions', async () => {
     const data = {
-      '@type': serviceType.cid,
+      '@type': serviceType.recordCID,
       type: 'foo',
       kube: createCID().value
     };
     const encoded = await encodeExtensionPayload(data, lookupType);
 
-    expect(encoded.typeRecord).to.deep.eq(serviceType.cid.value);
+    expect(encoded.typeRecord).to.deep.eq(serviceType.recordCID.value);
     expect(encoded.data).to.be.instanceOf(Uint8Array);
 
     const decoded = await decodeExtensionPayload(encoded, lookupType);
@@ -35,11 +35,11 @@ describe('record encoding', () => {
 
   it('record with extensions', async () => {
     const data = {
-      '@type': serviceType.cid,
+      '@type': serviceType.recordCID,
       type: 'ipfs',
       kube: createCID().value,
       extension: {
-        '@type': ipfsType.cid,
+        '@type': ipfsType.recordCID,
         protocol: 'ipfs/0.1.0',
         addresses: [
           '/ip4/123.123.123.123/tcp/5566'
@@ -48,7 +48,7 @@ describe('record encoding', () => {
     };
     const encoded = await encodeExtensionPayload(data, lookupType);
 
-    expect(encoded.typeRecord).to.deep.eq(serviceType.cid.value);
+    expect(encoded.typeRecord).to.deep.eq(serviceType.recordCID.value);
     expect(encoded.data).to.be.instanceOf(Uint8Array);
 
     const decoded = await decodeExtensionPayload(encoded, lookupType);

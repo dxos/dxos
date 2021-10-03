@@ -53,11 +53,11 @@ export const createMockResource = (_dxn?: DXN): Resource => {
   const record: RegistryDataRecord = {
     kind: RecordKind.Data,
     recordCID: createCID(),
-    type: type.cid,
+    type: type.recordCID,
     meta: { name: dxn.resource },
     dataSize: 0,
     dataRaw: new Uint8Array(),
-    data: sanitizeExtensionData({}, type.cid)
+    data: sanitizeExtensionData({}, type.recordCID)
   };
 
   return {
