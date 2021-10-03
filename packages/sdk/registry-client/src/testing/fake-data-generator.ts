@@ -52,7 +52,7 @@ export const createMockResource = (_dxn?: DXN): Resource => {
 
   const record: RegistryDataRecord = {
     kind: RecordKind.Data,
-    cid: createCID(),
+    recordCID: createCID(),
     type: type.cid,
     meta: { name: dxn.resource },
     dataSize: 0,
@@ -69,7 +69,7 @@ export const createMockResource = (_dxn?: DXN): Resource => {
 const defs = protobuf.Root.fromJSON(schemaJson);
 
 const mockTypes = mockTypeNames.map((item): RegistryTypeRecord => ({
-  cid: createCID(),
+  recordCID: createCID(),
   kind: RecordKind.Type,
   meta: {
     name: item.label,

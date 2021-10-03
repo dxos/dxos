@@ -148,10 +148,10 @@ describe('Registry Client', () => {
       const cid = await registryApi.insertRawRecord(Buffer.from('100203', 'hex'));
 
       const records = await registryApi.getRecords();
-      expect(records.every(record => !record.cid.equals(cid))).to.be.true;
+      expect(records.every(record => !record.recordCID.equals(cid))).to.be.true;
 
       const resources = await registryApi.getResources();
-      expect(resources.every(resource => !resource.record.cid.equals(cid))).to.be.true;
+      expect(resources.every(resource => !resource.record.recordCID.equals(cid))).to.be.true;
     });
 
     describe('Querying', () => {

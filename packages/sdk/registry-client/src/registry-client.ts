@@ -45,7 +45,7 @@ export enum RecordKind {
 
 export interface RegistryRecordBase {
   kind: RecordKind
-  cid: CID
+  recordCID: CID
   meta: RecordMetadata
 }
 
@@ -257,7 +257,7 @@ export class RegistryClient implements IRegistryClient {
 
       return {
         kind: RecordKind.Data,
-        cid,
+        recordCID: cid,
         meta,
         type: CID.from(decoded.payload.typeRecord),
         dataRaw: decoded.payload.data,
@@ -270,7 +270,7 @@ export class RegistryClient implements IRegistryClient {
 
       return {
         kind: RecordKind.Type,
-        cid,
+        recordCID: cid,
         meta,
         protobufDefs: decodeProtobuf(decoded.type.protobufDefs),
         messageName: decoded.type.messageName
