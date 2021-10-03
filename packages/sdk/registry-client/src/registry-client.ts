@@ -33,9 +33,7 @@ export interface Resource<R extends RegistryRecord = RegistryRecord> {
 export interface RecordMetadata {
   created?: Date;
   version?: string;
-  name?: string;
   description?: string;
-  author?: string;
 }
 
 export enum RecordKind {
@@ -240,11 +238,9 @@ export class RegistryClient implements IRegistryClient {
     const decoded = dxnsSchema.getCodecForType('dxos.registry.Record').decode(Buffer.from(record.data));
 
     const meta: RecordMetadata = {
-      name: decoded.name,
       description: decoded.description,
       version: decoded.version,
-      created: decoded.created,
-      author: decoded.author
+      created: decoded.created
     };
 
     if (decoded.payload) {
