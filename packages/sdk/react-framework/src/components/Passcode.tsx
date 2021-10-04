@@ -33,7 +33,7 @@ const DEFAULT_PATTERN = /^[0-9]*$/;
 /**
  * Displays a multi-digit passcode, which may optionally be editable.
  */
-const Passcode = (
+export const Passcode = (
   props: {
     attempt: number,
     editable: boolean,
@@ -136,5 +136,3 @@ const Passcode = (
     </div>
   );
 };
-
-export default Passcode;

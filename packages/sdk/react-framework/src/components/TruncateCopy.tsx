@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import LinkIcon from '@mui/icons-material/Link';
-import IconButton from '@mui/material/IconButton';
+import { Link as LinkIcon } from '@mui/icons-material';
+import { IconButton } from '@mui/material';
 import React from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 

@@ -51,6 +51,3 @@ export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement
     {member?.displayName ? member.displayName.slice(0, 1).toUpperCase() : <FaceIcon />}
   </Avatar>
 );
-
-// TODO(wittjosiah): Remove default export.
-export default MemberAvatar;

@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 /**
  * Editable text field.
  */
-const EditableText = ({
+export const EditableText = ({
   value,
   onUpdate,
   onChange,
@@ -138,5 +138,3 @@ const EditableText = ({
     />
   );
 };
-
-export default EditableText;
