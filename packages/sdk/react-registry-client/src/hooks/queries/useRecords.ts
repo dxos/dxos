@@ -3,22 +3,22 @@
 //
 
 import { useEffect, useState } from 'react';
-import { CID, DomainInfo, IQuery, IRegistryClient, RegistryRecord, Resource } from '@dxos/registry-client';
 
+import { IQuery, RegistryRecord } from '@dxos/registry-client';
 
-import { useRegistry } from "..";
+import { useRegistry } from '..';
 
 interface Result {
   records: RegistryRecord[],
   error?: unknown
-} 
+}
 
 /**
  * Returns matching records.
  */
- export const useRecords = (query?: IQuery): Result => {
+export const useRecords = (query?: IQuery): Result => {
   const registry = useRegistry();
-  const [error, setError] = useState<any>(undefined)
+  const [error, setError] = useState<any>(undefined);
   const [records, setRecords] = useState<RegistryRecord[]>([]);
 
   useEffect(() => {

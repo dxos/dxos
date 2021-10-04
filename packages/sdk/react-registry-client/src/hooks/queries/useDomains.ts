@@ -2,21 +2,22 @@
 // Copyright 2020 DXOS.org
 //
 import { useEffect, useState } from 'react';
-import { CID, DomainInfo, IQuery, IRegistryClient, RegistryRecord, Resource } from '@dxos/registry-client';
 
-import { useRegistry } from "..";
+import { DomainInfo } from '@dxos/registry-client';
+
+import { useRegistry } from '..';
 
 interface Result {
   domains: DomainInfo[],
   error?: unknown
-} 
+}
 
 /**
  * Returns the set of domains.
  */
- export const useDomains = (): Result => {
+export const useDomains = (): Result => {
   const registry = useRegistry();
-  const [error, setError] = useState<any>(undefined)
+  const [error, setError] = useState<any>(undefined);
   const [domains, setDomains] = useState<DomainInfo[]>([]);
 
   useEffect(() => {
