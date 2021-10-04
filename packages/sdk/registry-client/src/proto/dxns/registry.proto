@@ -31,14 +31,8 @@ message Record {
   // Should conform to the semver regex (see https://semver.org/).
   string version = 2;
 
-  // DEPREACATED
-  string name = 3;                                // TODO(damaretskyi): Remove name.
-
   // Optional record description.
   string description = 4;
-
-  // DEPREACATED
-  string author = 5;                              // TODO(damaretskyi): Remove author. Infer it from the tx that registered this record.
   
   oneof kind {
     Type type = 100;
