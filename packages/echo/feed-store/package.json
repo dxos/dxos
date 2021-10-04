@@ -1,6 +1,6 @@
 {
   "name": "@dxos/feed-store",
-  "version": "2.14.2",
+  "version": "2.14.3",
   "description": "A consistent store for your hypercore feeds.",
   "homepage": "https://github.com/dxos/feed-store#readme",
   "bugs": {
