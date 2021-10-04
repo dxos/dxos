@@ -5,7 +5,7 @@
 import debug from 'debug';
 import { useState, useEffect } from 'react';
 
-import { useRegistry } from './registry';
+import { useWNSRegistry } from './registry';
 import { QueryRecord, WRN_TYPE_BOT_FACTORY } from './types';
 
 const log = debug('dxos:react-client');
@@ -22,7 +22,7 @@ interface RegistryBotFactoryRecord {
 }
 
 export const useRegistryBotFactories = () => {
-  const registry = useRegistry();
+  const registry = useWNSRegistry();
   const [factories, setFactories] = useState<RegistryBotFactoryRecord[]>([]);
 
   useEffect(() => {
