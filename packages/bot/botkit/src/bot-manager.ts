@@ -24,11 +24,11 @@ import {
   createBotCommand,
   SpawnOptions
 } from '@dxos/protocol-plugin-bot';
-import { Registry } from '@wirelineio/registry-client';
+import { CID, DXN, ApiFactory, IRegistryApi } from '@dxos/registry-api';
 
 import { BOT_CONFIG_FILENAME } from './config';
 import { BotContainer } from './containers';
-import { NATIVE_ENV, getBotCID } from './env';
+import { NATIVE_ENV } from './env';
 import { log } from './log';
 import { BOT_PACKAGE_DOWNLOAD_DIR, SourceManager } from './source-manager';
 
@@ -77,7 +77,6 @@ export class BotManager {
   private readonly _emitBotEvent: (event: any) => Promise<void>;
   private readonly _localDev: boolean;
   private readonly _botsFile: string;
-  private readonly _registry: any;
   private readonly _sourceManager: SourceManager;
 
   /**
@@ -88,6 +87,7 @@ export class BotManager {
 
   private _plugin?: any;
   private _leaveControlSwarm?: () => void;
+  private _registryApi?: IRegistryApi;
 
   constructor (config: any, botContainers: Record<string, BotContainer>, client: Client, options: Options) {
     this._config = config;
@@ -100,8 +100,6 @@ export class BotManager {
 
     this._localDev = this._config.get('bot.localDev');
     this._botsFile = path.join(process.cwd(), this._config.get('bot.dumpFile', BOTS_DUMP_FILE));
-
-    this._registry = new Registry(this._config.get('services.wns.server'), this._config.get('services.wns.chainId'));
 
     ensureFileSync(this._botsFile);
 
@@ -127,6 +125,8 @@ export class BotManager {
 
   async start () {
     this._plugin = new BotPlugin(this._controlPeerKey, (protocol: any, message: any) => this._botMessageHandler(protocol, message));
+
+    this._registryApi = await ApiFactory.createRegistryApi(this._config.get('services.dxns.server'));
     // Join control swarm.
     this._leaveControlSwarm = await this._client.echo.networkManager.joinProtocolSwarm({
       topic: PublicKey.from(this._controlTopic),
@@ -152,14 +152,15 @@ export class BotManager {
   /**
    * Spawn bot instance.
    */
-  async spawnBot (botName: string | undefined, options: SpawnOptions = {}) {
+  async spawnBot (botDXN: string | undefined, options: SpawnOptions = {}) {
     let { ipfsCID, env = NATIVE_ENV, name: displayName, id } = options;
-    assert(botName || ipfsCID || this._localDev);
+    assert(botDXN || ipfsCID || this._localDev);
 
     if (!ipfsCID) {
-      const botRecord = await this._getBotRecord(botName);
+      const botRecord = await this._getBotRecord(botDXN);
       if (!this._localDev) {
-        ipfsCID = getBotCID(botRecord, env);
+        ipfsCID = botRecord.ipfsCID;
+        assert(ipfsCID, 'Invalid IPFS CID for selected bot.');
       }
 
       if (!displayName) {
@@ -171,7 +172,7 @@ export class BotManager {
       }
     }
 
-    log(`Spawn bot request for ${botName || ipfsCID || displayName} env: ${env}`);
+    log(`Spawn bot request for ${botDXN || ipfsCID || displayName} env: ${env}`);
 
     if (this._botContainers[env] === undefined) {
       throw new Error(`Unknown env ${env}. Available envs are: ${Object.keys(this._botContainers)}`);
@@ -184,12 +185,12 @@ export class BotManager {
     const name = `bot:${displayName} ${chance.animal()}`;
 
     const installDirectory = await this._sourceManager.downloadAndInstallBot(id, ipfsCID, options);
-    assert(installDirectory, `Invalid install directory for bot: ${botName || ipfsCID}`);
+    assert(installDirectory, `Invalid install directory for bot: ${botDXN || ipfsCID}`);
 
     this._bots.set(botId, {
       botId,
       id,
-      recordName: botName || id,
+      recordName: botDXN || id,
       installDirectory,
       storageDirectory: path.join(process.cwd(), '.bots', botId),
       spawnOptions: options,
@@ -288,6 +289,8 @@ export class BotManager {
   }
 
   async stop () {
+    await this._registryApi?.disconnect();
+
     for await (const { botId } of this._bots.values()) {
       await this._stopBot(botId);
     }
@@ -396,7 +399,7 @@ export class BotManager {
     return result;
   }
 
-  private async _getBotRecord (botName: string | undefined) {
+  private async _getBotRecord (botDXN: string | undefined) {
     if (this._localDev) {
       let name;
       try {
@@ -409,11 +412,19 @@ export class BotManager {
       }
       return { attributes: { name }, id: sha256(name) };
     }
-    const { records } = await this._registry.resolveNames([botName]);
-    if (!records.length) {
-      log(`Bot not found: ${botName}.`);
-      throw new Error(`Invalid bot: ${botName}`);
+
+    const record = await this._registryApi!.get(DXN.parse(botDXN!));
+
+    if (!record) {
+      log(`Bot not found: ${botDXN}.`);
+      throw new Error(`Invalid bot: ${botDXN}`);
     }
-    return records[0];
+
+    const ipfsCID = CID.from(Buffer.from(get(record, 'record.data.hash'), 'base64'));
+
+    const name = get(record, 'record.meta.name');
+    const botCid = get(record, 'record.cid').toString();
+
+    return { attributes: { name }, id: botCid, ipfsCID: ipfsCID.toString() };
   }
 }

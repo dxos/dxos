@@ -5,7 +5,7 @@
 import debug from 'debug';
 import { useState, useEffect } from 'react';
 
-import { useRegistry } from './registry';
+import { useWNSRegistry } from './registry';
 import { QueryRecord, WRN_TYPE_BOT } from './types';
 
 const log = debug('dxos:react-client');
@@ -30,7 +30,7 @@ export interface UseRegistryBotsProps {
  */
 export const useRegistryBots = (props: UseRegistryBotsProps = {}) => {
   const { sortByKeywords } = props;
-  const registry = useRegistry();
+  const registry = useWNSRegistry();
   const [registryBots, setRegistryBots] = useState<RegistryBotRecord[]>([]);
 
   useEffect(() => {

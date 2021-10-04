@@ -6,17 +6,8 @@
     "path": "services.ice",
     "type": "json"
   },
-  "DX_WNS_ENDPOINT": {
-    "path": "services.wns.server"
-  },
-  "DX_WNS_USER_KEY": {
-    "path": "services.wns.userKey"
-  },
-  "DX_WNS_BOND_ID": {
-    "path": "services.wns.bondId"
-  },
-  "DX_WNS_CHAIN_ID": {
-    "path": "services.wns.chainId"
+  "DX_DXNS_SERVER": {
+    "path": "services.dxns.server"
   },
   "DX_IPFS_SERVER": {
     "path": "services.ipfs.server"
