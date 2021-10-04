@@ -471,6 +471,7 @@ importers:
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/object-model': link:../object-model
       faker: 5.5.3
+      lodash: 4.17.21
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/faker': 5.5.5
@@ -485,6 +486,7 @@ importers:
       '@types/jest': ^26.0.7
       '@types/lodash': ^4.14.159
       faker: ^5.1.0
+      lodash: 4.17.21
   ../../packages/echo/feed-store:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -1894,6 +1896,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
+      '@dxos/esbuild-plugins': link:../../../../../toolchains/esbuild-plugins
       '@jackwilsdon/craco-use-babelrc': 1.0.0_react-scripts@4.0.3
       '@storybook/addon-actions': 6.3.4_3b7f7b84f013384d046f72a4522eddf8
       '@storybook/addon-knobs': 6.3.0_dbc36a74c5c62fa125cf8545b6065b1c
@@ -1921,6 +1924,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/esbuild-plugins': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-framework': workspace:*
