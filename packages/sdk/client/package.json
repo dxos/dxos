@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "2.14.0",
+  "version": "2.14.1",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -40,9 +40,17 @@
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/jest": "^26.0.7",
     "@types/level-js": "~4.0.1",
-    "@types/memdown": "^3.0.0"
+    "@types/memdown": "^3.0.0",
+    "mocha": "~8.4.0",
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2",
+    "@types/expect": "~24.3.0"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "toolchain" : {
+    "testingFramework": "mocha",
+    "forceCloseTests": true
   }
 }
