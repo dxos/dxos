@@ -54,7 +54,7 @@ export const createMockResource = (_dxn?: DXN): Resource => {
     kind: RecordKind.Data,
     cid: createCID(),
     type: type.cid,
-    meta: { name: dxn.resource },
+    meta: {},
     dataSize: 0,
     dataRaw: new Uint8Array(),
     data: sanitizeExtensionData({}, type.cid)
@@ -72,7 +72,6 @@ const mockTypes = mockTypeNames.map((item): RegistryTypeRecord => ({
   cid: createCID(),
   kind: RecordKind.Type,
   meta: {
-    name: item.label,
     created: faker.date.recent(30)
   },
   messageName: item.type,
