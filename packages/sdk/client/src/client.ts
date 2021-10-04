@@ -50,7 +50,13 @@ export interface ClientConfig {
   ipfs?: {
     server: string,
     gateway: string,
-  }
+  },
+  services?: {
+    dxns?: {
+      server: string,
+      uri?: string
+    },
+  },
   snapshots?: boolean
   snapshotInterval?: number,
   invitationExpiration?: number,
@@ -65,7 +71,7 @@ export class Client {
 
   private readonly _echo: ECHO;
 
-  private readonly _registry?: any;
+  private readonly _wnsRegistry?: any;
 
   private _initialized = false;
 
@@ -102,7 +108,7 @@ export class Client {
       snapshotInterval
     });
 
-    this._registry = wns ? new Registry(wns.server, wns.chainId) : undefined;
+    this._wnsRegistry = wns ? new Registry(wns.server, wns.chainId) : undefined;
   }
 
   get config (): ClientConfig {
@@ -124,10 +130,10 @@ export class Client {
   }
 
   /**
-   * DXNS registry.
+   * WNS registry.
    */
-  get registry () {
-    return this._registry;
+  get wnsRegistry () {
+    return this._wnsRegistry;
   }
 
   /**
