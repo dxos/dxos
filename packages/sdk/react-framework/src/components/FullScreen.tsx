@@ -20,12 +20,10 @@ const Root = styled('div')({
 /**
  * Fullscreen container.
  */
-const FullScreen = ({ children }: { children: React.ReactNode }) => {
+export const FullScreen = ({ children }: { children: React.ReactNode }) => {
   return (
     <Root>
       {children}
     </Root>
   );
 };
-
-export default FullScreen;

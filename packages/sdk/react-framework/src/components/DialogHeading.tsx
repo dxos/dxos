@@ -10,7 +10,7 @@ const Title = styled(Typography)(({ theme }) => ({
   marginLeft: theme.spacing(2)
 }));
 
-const DialogHeading = ({
+export const DialogHeading = ({
   title,
   icon: Icon
 }: {
@@ -26,5 +26,3 @@ const DialogHeading = ({
     </DialogTitle>
   );
 };
-
-export default DialogHeading;

@@ -36,7 +36,7 @@ interface RedeemDialogProps extends Omit<DialogProps, 'open'> {
  * Component used for claiming invitations to Parties.
  * Works for both regular and `Offline` invitations.
  */
-const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps) => {
+export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps) => {
   const [isOffline] = useState(false);
   // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
   // const [isOffline, setIsOffline] = useState(false);
@@ -201,5 +201,3 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
     </Dialog>
   );
 };
-
-export default RedeemDialog;
