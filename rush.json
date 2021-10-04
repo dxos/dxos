@@ -568,6 +568,12 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
+    {
+      "packageName": "@dxos/react-registry-client",
+      "projectFolder": "packages/sdk/react-registry-client",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
 
     //
     // echo
