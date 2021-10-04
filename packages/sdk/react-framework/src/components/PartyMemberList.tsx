@@ -19,7 +19,7 @@ const Root = styled('div')({
 });
 
 // TODO(burdon): Pass in array (small UX data object) of processed members (don't apply humanize here).
-const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void }) => {
+export const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void }) => {
   const theme = useTheme() as Theme;
   const members: PartyMember[] = useMembers(party);
 
@@ -41,5 +41,3 @@ const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void
     </Root>
   );
 };
-
-export default PartyMemberList;

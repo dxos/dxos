@@ -6,7 +6,8 @@ import React from 'react';
 
 import { ClientInitializer } from '@dxos/react-client';
 
-import RedeemDialog from '../src/containers/RedeemDialog';
+import { RedeemDialog } from '../src/containers';
+
 export const PinlessReedemDialogStory = () => {
   return (
     <ClientInitializer>
