@@ -32,7 +32,7 @@ message Record {
   string version = 2;
 
   // Optional record description.
-  string description = 3;
+  string description = 4;
   
   oneof kind {
     Type type = 100;
