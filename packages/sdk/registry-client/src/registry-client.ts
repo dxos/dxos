@@ -30,11 +30,16 @@ export interface Resource<R extends RegistryRecord = RegistryRecord> {
   record: R
 }
 
-export interface RecordMetadata {
-  created?: Date;
+export interface SuppliedRecordMetadata {
   version?: string;
   description?: string;
 }
+
+export interface InferredRecordMetadata {
+  created?: Date;
+}
+
+export type RecordMetadata = SuppliedRecordMetadata & InferredRecordMetadata
 
 export enum RecordKind {
   Type = 'TYPE',
@@ -154,7 +159,7 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
    * @param typeCid CID of the type record that holds the schema of the data.
    * @param meta Record metadata information.
    */
-  insertDataRecord (data: unknown, typeCid: CIDLike, meta?: RecordMetadata): Promise<CID>
+  insertDataRecord (data: unknown, typeCid: CIDLike, meta?: SuppliedRecordMetadata): Promise<CID>
 
   /**
    * Creates a new type record in the system.
@@ -162,7 +167,7 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
    * @param messageFqn Fully qualified name of the message. It must reside in the schema definition.
    * @param meta Record metadata information.
    */
-  insertTypeRecord(schema: protobuf.Root, messageFqn: string, meta?: RecordMetadata): Promise<CID>
+  insertTypeRecord(schema: protobuf.Root, messageFqn: string, meta?: SuppliedRecordMetadata): Promise<CID>
 
   /**
    * Creates a new domain in the system under a generated name.
@@ -388,24 +393,26 @@ export class RegistryClient implements IRegistryClient {
     return new CID(event.data[1].toU8a());
   }
 
-  async insertDataRecord (data: unknown, typeId: CIDLike, meta: RecordMetadata = {}): Promise<CID> {
+  async insertDataRecord (data: unknown, typeId: CIDLike, meta: SuppliedRecordMetadata = {}): Promise<CID> {
     const type = await this.getTypeRecord(typeId);
     assert(type);
 
     const encoded = dxnsSchema.getCodecForType('dxos.registry.Record').encode({
       ...meta,
+      created: new Date(),
       payload: await encodeExtensionPayload(sanitizeExtensionData(data, CID.from(typeId)), async cid => (await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`)))
     });
 
     return this.insertRawRecord(encoded);
   }
 
-  async insertTypeRecord (schema: protobuf.Root, messageName: string, meta: RecordMetadata = {}) {
+  async insertTypeRecord (schema: protobuf.Root, messageName: string, meta: SuppliedRecordMetadata = {}) {
     // Make sure message type exists
     schema.lookupType(messageName);
 
     const encoded = dxnsSchema.getCodecForType('dxos.registry.Record').encode({
       ...meta,
+      created: new Date(),
       type: {
         protobufDefs: encodeProtobuf(schema),
         messageName
