@@ -1441,6 +1441,7 @@ importers:
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
+      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@storybook/addon-essentials': 6.3.4_1d5c09d9412d120ff147866436c2e6d4
       '@storybook/addon-links': 6.3.4_react-dom@17.0.2+react@17.0.2
@@ -1459,6 +1460,8 @@ importers:
       chromatic: 5.8.0
       dotenv: 8.6.0
       expect: 27.0.2
+      faker: 5.5.3
+      lodash: 4.17.21
       mocha: 8.4.0
       pump: 3.0.0
       react: 17.0.2
@@ -1479,6 +1482,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
+      '@dxos/esbuild-plugins': workspace:*
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/object-model': workspace:*
@@ -1513,7 +1517,9 @@ importers:
       debug: ^4.1.1
       dotenv: ^8.2.0
       expect: ~27.0.2
+      faker: ^5.1.0
       immutability-helper: ^3.0.2
+      lodash: 4.17.21
       mobile-detect: ~1.4.5
       mocha: ~8.4.0
       playwright: ^1.7.0
