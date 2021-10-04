@@ -562,6 +562,12 @@
       "packageName": "@dxos/devtools-extension",
       "projectFolder": "packages/sdk/devtools-extension"
     },
+    {
+      "packageName": "@dxos/registry-client",
+      "projectFolder": "packages/sdk/registry-client",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
 
     //
     // echo

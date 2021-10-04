@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
 import {
   Card,
   CardActions,
@@ -11,9 +9,10 @@ import {
   CardHeader,
   Grid,
   Typography
-} from '@material-ui/core';
-import { grey } from '@material-ui/core/colors';
-import { makeStyles } from '@material-ui/core/styles';
+} from '@mui/material';
+import { grey } from '@mui/material/colors';
+import { makeStyles } from '@mui/styles';
+import React from 'react';
 
 import { ItemAdapter } from './adapter';
 
@@ -62,7 +61,7 @@ export const ItemCard = ({ adapter, item }: { adapter: ItemAdapter, item: any })
       />
       <CardContent classes={{ root: classes.cardContent }}>
         {description && (
-          <Typography component='p' className={classes.description}>
+          <Typography component="p" className={classes.description}>
             {description}
           </Typography>
         )}

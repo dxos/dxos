@@ -27,7 +27,7 @@ function getData (echo: DevtoolsContext['client']['echo']): SubscribeToItemsResp
   }
 
   return {
-    data: JSON.stringify(res)
+    data: Object.keys(res).length !== 0 ? JSON.stringify(res) : undefined
   };
 }
 

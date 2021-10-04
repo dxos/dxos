@@ -6,6 +6,7 @@ import React, { useState, useRef, useEffect } from 'react';
 
 import {
   Checkbox,
+  createTheme,
   Fab,
   IconButton,
   List,
@@ -15,13 +16,13 @@ import {
   ListItemText,
   TextField,
   Snackbar,
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Share as ShareIcon,
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 
 import { ObjectModel } from '@dxos/object-model';
 import { useParty, useSelection, useInvitation } from '@dxos/react-client';
@@ -65,7 +66,7 @@ const useStyles = makeStyles(theme => ({
       marginRight: theme.spacing(1)
     }
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const TASK_TYPE = 'example.com/type/task';
 
@@ -146,6 +147,7 @@ const TaskList = ({ partyKey, hideShare = false }) => {
               fullWidth
               autoFocus
               value={taskTitle}
+              variant="standard"
               onChange={event => setTaskTitle(event.target.value)}
               onKeyPress={event => (event.key === 'Enter') && handleCreateTask()}
             />

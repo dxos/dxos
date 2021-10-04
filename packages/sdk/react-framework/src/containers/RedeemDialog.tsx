@@ -2,18 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Redeem as RedeemIcon } from '@mui/icons-material';
+import { Alert } from '@mui/lab';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogProps,
+  LinearProgress,
+  styled,
+  TextField,
+  Typography
+} from '@mui/material';
 import React, { useState } from 'react';
-
-import Button from '@material-ui/core/Button';
-import Dialog, { DialogProps } from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import { makeStyles } from '@material-ui/core/styles';
-import RedeemIcon from '@material-ui/icons/Redeem';
-import Alert from '@material-ui/lab/Alert';
 
 import { defaultInvitationAuthenticator, InvitationDescriptor } from '@dxos/echo-db';
 import { useClient, useInvitationRedeemer } from '@dxos/react-client';
@@ -21,13 +23,8 @@ import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 import { DialogHeading } from '../components';
 import { handleRedeemError } from '../helpers';
 
-const useStyles = makeStyles((theme) => ({
-  marginTop: {
-    marginTop: theme.spacing(2)
-  },
-  title: {
-    marginLeft: theme.spacing(2)
-  }
+const SpacedTypography = styled(Typography)(({ theme }) => ({
+  marginTop: theme.spacing(2)
 }));
 
 interface RedeemDialogProps extends Omit<DialogProps, 'open'> {
@@ -40,7 +37,6 @@ interface RedeemDialogProps extends Omit<DialogProps, 'open'> {
  * Works for both regular and `Offline` invitations.
  */
 const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps) => {
-  const classes = useStyles();
   const [isOffline] = useState(false);
   // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
   // const [isOffline, setIsOffline] = useState(false);
@@ -110,12 +106,12 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
   return (
     <Dialog
       fullWidth
-      maxWidth='xs'
+      maxWidth="xs"
       open
       onClose={step === 0 ? handleDone : undefined} // No click away when in the middle of a flow
       {...props}
     >
-      <DialogHeading title='Redeem Invitation' icon={RedeemIcon} />
+      <DialogHeading title="Redeem Invitation" icon={RedeemIcon} />
 
       {step === 0 && (
         <>
@@ -124,7 +120,8 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
               autoFocus
               fullWidth
               multiline
-              placeholder='Paste invitation code.'
+              variant="standard"
+              placeholder="Paste invitation code."
               spellCheck={false}
               value={invitationCode}
               onChange={(event) => setInvitationCode(event.target.value)}
@@ -142,10 +139,10 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
             {isProcessing && <LinearProgress />}
           </DialogContent>
           <DialogActions>
-            <Button color='secondary' onClick={handleDone}>
+            <Button color="secondary" onClick={handleDone}>
               Cancel
             </Button>
-            <Button variant='contained' color='primary' onClick={handleEnterInvitationCode} disabled={isProcessing}>
+            <Button variant="contained" color="primary" onClick={handleEnterInvitationCode} disabled={isProcessing}>
               Submit
             </Button>
           </DialogActions>
@@ -155,27 +152,27 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
       {step === 1 && setPin && (
         <>
           <DialogContent>
-            <Typography variant='body1' gutterBottom>
+            <Typography variant="body1" gutterBottom>
               Enter the PIN number.
             </Typography>
             <TextField
               value={pinCode}
               onChange={(event) => setPinCode(event.target.value)}
-              variant='outlined'
-              margin='normal'
+              variant="outlined"
+              margin="normal"
               required
               fullWidth
-              label='PIN Code'
+              label="PIN Code"
               autoFocus
               disabled={isProcessing}
             />
             {isProcessing && <LinearProgress />}
           </DialogContent>
           <DialogActions>
-            <Button color='secondary' onClick={handleDone}>
+            <Button color="secondary" onClick={handleDone}>
               Cancel
             </Button>
-            <Button variant='contained' color='primary' onClick={handleEnterPinCode} disabled={isProcessing}>
+            <Button variant="contained" color="primary" onClick={handleEnterPinCode} disabled={isProcessing}>
               Submit
             </Button>
           </DialogActions>
@@ -185,17 +182,17 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
       {step === 1 && !setPin && (
         <DialogContent>
           <LinearProgress />
-          <Typography className={classes.marginTop} variant='body1' gutterBottom>
+          <SpacedTypography variant="body1" gutterBottom>
             Processing...
-          </Typography>
+          </SpacedTypography>
         </DialogContent>
       )}
 
       {step === 2 && error && (
         <DialogContent>
-          <Alert severity='error'>{error}</Alert>
+          <Alert severity="error">{error}</Alert>
           <DialogActions>
-            <Button autoFocus color='secondary' onClick={handleDone}>
+            <Button autoFocus color="secondary" onClick={handleDone}>
               Cancel
             </Button>
           </DialogActions>

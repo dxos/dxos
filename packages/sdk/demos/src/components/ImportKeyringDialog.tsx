@@ -2,22 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
+import { createTheme, DialogContentText } from '@mui/material';
+import Button from '@mui/material/Button';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
+import { makeStyles } from '@mui/styles';
 import assert from 'assert';
 import React, { useState, useRef } from 'react';
-
-import { DialogContentText } from '@material-ui/core';
-import Button from '@material-ui/core/Button';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import TextField from '@material-ui/core/TextField';
-import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles(theme => ({
   marginTop: {
     marginTop: theme.spacing(2)
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 /**
  * Dialog to import keyring from file.
@@ -72,8 +71,8 @@ const ImportKeyringDialog = ({
   return (
     <>
       <input
-        type='file'
-        id='import-keyring-file'
+        type="file"
+        id="import-keyring-file"
         style={{ display: 'none' }}
         onChange={handleFileChange}
         ref={fileRef}
@@ -85,7 +84,7 @@ const ImportKeyringDialog = ({
         <TextField
           autoFocus
           fullWidth
-          label='Passphrase'
+          label="Passphrase"
           onChange={handlePassChange}
         />
         {!!error && (
@@ -96,8 +95,8 @@ const ImportKeyringDialog = ({
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button
-          variant='contained'
-          color='primary'
+          variant="contained"
+          color="primary"
           ref={buttonRef}
           disabled={!passphrase || !!error}
           onClick={async () => {

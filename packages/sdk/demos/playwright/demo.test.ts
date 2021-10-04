@@ -11,7 +11,7 @@ import { Browser } from './utils';
 const INVITATION_REGEX = /swarmKey/g;
 
 const createParty = async (page: Page) => {
-  const haloButtonSelector = '//span[text()=\'Create Party\']';
+  const haloButtonSelector = 'button:has-text("Create Party")';
   await page.waitForSelector(haloButtonSelector);
   await page.click(haloButtonSelector);
 };
@@ -26,7 +26,7 @@ const createInvitation = async (page: Page): Promise<string> => {
     return false;
   });
 
-  await page!.click('//span[text()=\'Copy invite\']');
+  await page!.click('button:has-text("Copy invite")');
   await invitationPromise;
 
   expect(invitationText!).toBeDefined();
@@ -37,7 +37,7 @@ const createItem = async (page: Page): Promise<string> => {
   const itemName = `${Math.random().toString().slice(5)}`;
   await page.click('.MuiFab-root'); // The 'Add" fab button
   await page.fill('#item-dialog-item-name', itemName);
-  await page.click('//span[text()=\'Create\']');
+  await page.click('button:has-text("Create")');
   return itemName;
 };
 
@@ -66,7 +66,7 @@ describe('Demo - Primary and Peers', async function () {
   it('Primary - item creation', async () => {
     await alice.page!.goto(primaryUrl);
     const itemName = await createItem(alice.page!);
-    await alice.page!.waitForSelector(`//span[text()='${itemName}']`);
+    await alice.page!.waitForSelector(`span:has-text("${itemName}")`);
   });
 
   it('Peers - Alice creates a party', async () => {
@@ -74,7 +74,7 @@ describe('Demo - Primary and Peers', async function () {
     await alice.page!.goto(peersUrl);
     await createParty(alice.page!);
 
-    await alice.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
+    await alice.page!.waitForSelector('span:has-text("Koch - Macejkovic")');
   });
 
   it('Peers - Alice invites Bob to a party', async () => {
@@ -84,9 +84,9 @@ describe('Demo - Primary and Peers', async function () {
 
     await bob.page!.goto(peersUrl);
     await bob.page!.fill('#start-dialog-invitation-input', invitationFromAlice);
-    await bob.page!.click('//span[text()=\'Join Party\']');
+    await bob.page!.click('button:has-text("Join Party")');
 
-    await bob.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
+    await bob.page!.waitForSelector('span:has-text("Koch - Macejkovic")');
   });
 
   it('Peers - Replication in party', async () => {
@@ -96,14 +96,14 @@ describe('Demo - Primary and Peers', async function () {
 
     await bob.page!.goto(peersUrl);
     await bob.page!.fill('#start-dialog-invitation-input', invitationFromAlice);
-    await bob.page!.click('//span[text()=\'Join Party\']');
+    await bob.page!.click('button:has-text("Join Party")');
 
-    await bob.page!.waitForSelector('//span[text()=\'Koch - Macejkovic\']');
+    await bob.page!.waitForSelector('span:has-text("Koch - Macejkovic")');
 
     // Bob creates an item..
     const itemName = await createItem(bob.page!);
 
     // ..item gets replicated over to Alice.
-    await alice.page!.waitForSelector(`//span[text()='${itemName}']`);
+    await alice.page!.waitForSelector(`span:has-text("${itemName}")`);
   });
 });

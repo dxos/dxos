@@ -2,27 +2,26 @@
 // Copyright 2020 DXOS.org
 //
 
+import CreateIcon from '@mui/icons-material/AddCircleOutline';
+import RestoreIcon from '@mui/icons-material/Restore';
+import { createTheme, Theme } from '@mui/material';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Dialog from '@mui/material/Dialog';
+import MuiDialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Grid from '@mui/material/Grid';
+import LinearProgress from '@mui/material/LinearProgress';
+import Paper from '@mui/material/Paper';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import { makeStyles, withStyles } from '@mui/styles';
 import assert from 'assert';
 import MobileDetect from 'mobile-detect';
 import React, { useRef, useState } from 'react';
-
-import { withStyles, Theme } from '@material-ui/core';
-import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
-import Chip from '@material-ui/core/Chip';
-import Dialog from '@material-ui/core/Dialog';
-import MuiDialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import Grid from '@material-ui/core/Grid';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import Paper from '@material-ui/core/Paper';
-import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import { makeStyles } from '@material-ui/core/styles';
-import CreateIcon from '@material-ui/icons/AddCircleOutline';
-import RestoreIcon from '@material-ui/icons/Restore';
 
 import { generateSeedPhrase } from '@dxos/crypto';
 
@@ -100,7 +99,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     backgroundColor: theme.palette.primary.dark,
     color: 'white'
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const DialogActions = withStyles(theme => ({
   root: {
@@ -222,7 +221,7 @@ const RegistrationDialog = ({
               icon={<Avatar className={classes.seedNumber}>{i + 1}</Avatar>}
               classes={{ root: classes.seedChip, label: classes.seedLabel }}
               label={word}
-              data-testid='chip'
+              data-testid="chip"
             />
           </Grid>
         ))}
@@ -240,23 +239,23 @@ const RegistrationDialog = ({
             <DialogTitle>User Profile</DialogTitle>
             <DialogContent className={classes.container}>
               <div>
-                <Paper className={classes.choice} variant='outlined'>
+                <Paper className={classes.choice} variant="outlined">
                   <CreateIcon className={classes.icon} />
                   <Typography className={classes.caption}>
                     Create a new profile<br />and wallet.
                   </Typography>
-                  <Button variant='contained' color='primary' onClick={() => setStage(STAGE_ENTER_USERNAME)}>
+                  <Button variant="contained" color="primary" onClick={() => setStage(STAGE_ENTER_USERNAME)}>
                     Create Wallet
                   </Button>
                 </Paper>
               </div>
               <div>
-                <Paper className={classes.choice} variant='outlined'>
+                <Paper className={classes.choice} variant="outlined">
                   <RestoreIcon className={classes.icon} />
                   <Typography className={classes.caption}>
                     Enter your seed phrase<br />to recover your profile.
                   </Typography>
-                  <Button variant='contained' color='primary' onClick={() => setStage(STAGE_RESTORE)}>
+                  <Button variant="contained" color="primary" onClick={() => setStage(STAGE_RESTORE)}>
                     Recover Wallet
                   </Button>
                 </Paper>
@@ -285,8 +284,8 @@ const RegistrationDialog = ({
                 onKeyDown={handleKeyDown}/>
             </DialogContent>
             <DialogActions>
-              <Button color='primary' onClick={() => setStage(STAGE_START)}>Back</Button>
-              <Button variant='contained' color='primary' onClick={handleNext} disabled={!restoreSeedPhraseValid()}>Restore</Button>
+              <Button color="primary" onClick={() => setStage(STAGE_START)}>Back</Button>
+              <Button variant="contained" color="primary" onClick={handleNext} disabled={!restoreSeedPhraseValid()}>Restore</Button>
             </DialogActions>
           </>
         );
@@ -301,8 +300,8 @@ const RegistrationDialog = ({
               <TextField autoFocus fullWidth spellCheck={false} inputRef={usernameRef} onKeyDown={handleKeyDown} />
             </DialogContent>
             <DialogActions>
-              <Button color='primary' onClick={() => setStage(STAGE_START)}>Back</Button>
-              <Button variant='contained' color='primary' onClick={handleNext}>Next</Button>
+              <Button color="primary" onClick={() => setStage(STAGE_START)}>Back</Button>
+              <Button variant="contained" color="primary" onClick={handleNext}>Next</Button>
             </DialogActions>
           </>
         );
@@ -328,8 +327,8 @@ const RegistrationDialog = ({
                 <Button onClick={() => handleDownloadSeedPhrase(seedPhrase)}>Download</Button>
               </div>
               <div>
-                <Button color='primary' onClick={() => setStage(STAGE_ENTER_USERNAME)}>Back</Button>
-                <Button variant='contained' color='primary' onClick={handleNext}>Next</Button>
+                <Button color="primary" onClick={() => setStage(STAGE_ENTER_USERNAME)}>Back</Button>
+                <Button variant="contained" color="primary" onClick={handleNext}>Next</Button>
               </div>
             </DialogActions>
           </>
@@ -350,8 +349,8 @@ const RegistrationDialog = ({
               <TextField autoFocus fullWidth spellCheck={false} inputRef={seedPhraseRef} onKeyDown={handleKeyDown} />
             </DialogContent>
             <DialogActions>
-              <Button color='primary' onClick={() => setStage(STAGE_ENTER_USERNAME)}>Back</Button>
-              <Button variant='contained' color='primary' onClick={handleNext}>Finish</Button>
+              <Button color="primary" onClick={() => setStage(STAGE_ENTER_USERNAME)}>Back</Button>
+              <Button variant="contained" color="primary" onClick={handleNext}>Finish</Button>
             </DialogActions>
           </>
         );
@@ -378,7 +377,7 @@ const RegistrationDialog = ({
   };
 
   return (
-    <Dialog open={open} maxWidth='sm' classes={{ paper: classes.paper }}>
+    <Dialog open={open} maxWidth="sm" classes={{ paper: classes.paper }}>
       {getStage(stage)}
     </Dialog>
   );

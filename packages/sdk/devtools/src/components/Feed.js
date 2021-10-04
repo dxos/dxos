@@ -2,20 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
+import Link from '@mui/material/Link';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import blue from '@mui/material/colors/blue';
+import red from '@mui/material/colors/red';
+import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import ColorHash from 'color-hash';
 import React, { useState } from 'react';
-
-import Link from '@material-ui/core/Link';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import blue from '@material-ui/core/colors/blue';
-import red from '@material-ui/core/colors/red';
-import { makeStyles } from '@material-ui/core/styles';
 
 import { truncateString } from '@dxos/debug';
 import { JsonTreeView } from '@dxos/react-framework';
@@ -78,7 +77,7 @@ const Feed = ({ messages, onSelect }) => {
 
   return (
     <TableContainer>
-      <Table stickyHeader size='small'>
+      <Table stickyHeader size="small">
         <TableHead>
           <TableRow>
             <TableCell className={classes.outerCell}>Feed</TableCell>
@@ -97,7 +96,7 @@ const Feed = ({ messages, onSelect }) => {
               const type = getType(data);
 
               return (
-                <TableRow key={rowKey} size='small' className={clsx({ [classes.system]: type === 'halo' })}>
+                <TableRow key={rowKey} size="small" className={clsx({ [classes.system]: type === 'halo' })}>
                   {/* Feed */}
                   <TableCell
                     className={clsx(classes.outerCell, classes.meta)}
@@ -124,8 +123,8 @@ const Feed = ({ messages, onSelect }) => {
                   {/* TODO(burdon): Custom rendering of links for public keys. */}
                   <TableCell className={classes.outerCell}>
                     <JsonTreeView
-                      size='small'
-                      root='data'
+                      size="small"
+                      root="data"
                       depth={0}
                       data={expanded[rowKey] ? data : { dummy: undefined }}
                       onSelect={() => handleExpand(rowKey)}

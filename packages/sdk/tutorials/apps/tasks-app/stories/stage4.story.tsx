@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { Drawer } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { Drawer } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
 import { ProfileDialog } from '@dxos/react-framework';
 import PartyList from '../src/components/PartyList';

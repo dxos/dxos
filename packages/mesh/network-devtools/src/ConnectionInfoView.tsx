@@ -2,10 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import ArrowBackIos from '@mui/icons-material/ArrowBackIos';
+import { IconButton, List, ListItem } from '@mui/material';
 import React from 'react';
-
-import { IconButton, List, ListItem } from '@material-ui/core';
-import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
 
 import { ConnectionInfo } from '@dxos/network-manager';
 import { TruncateCopy } from '@dxos/react-framework';
@@ -34,7 +33,7 @@ export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoV
       ))}
     </List>
     {onReturn && (
-      <IconButton size='small' onClick={onReturn} title='Back' style={{ borderRadius: 5 }}>
+      <IconButton size="small" onClick={onReturn} title="Back" style={{ borderRadius: 5 }}>
         <ArrowBackIos />
         Back
       </IconButton>)

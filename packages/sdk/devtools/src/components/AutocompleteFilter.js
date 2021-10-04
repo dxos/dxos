@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import Autocomplete from '@mui/lab/Autocomplete';
+import TextField from '@mui/material/TextField';
+import { makeStyles } from '@mui/styles';
 import React from 'react';
-
-import TextField from '@material-ui/core/TextField';
-import { makeStyles } from '@material-ui/core/styles';
-import Autocomplete from '@material-ui/lab/Autocomplete';
 
 const useStyles = makeStyles(() => ({
   input: {
@@ -21,7 +20,7 @@ const AutocompleteFilter = ({ label, onChange, value = null, options = [] }) => 
   return (
     <Autocomplete
       className={classes.input}
-      size='small'
+      size="small"
       freeSolo
       autoComplete
       clearOnEscape
@@ -36,7 +35,7 @@ const AutocompleteFilter = ({ label, onChange, value = null, options = [] }) => 
         }
       }}
       renderInput={params => (
-        <TextField {...params} label={label} variant='outlined' fullWidth />
+        <TextField {...params} label={label} variant="outlined" fullWidth />
       )}
     />
   );

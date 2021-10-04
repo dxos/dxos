@@ -58,18 +58,18 @@ const Import = ({ onProfileCreated } : ImportProps) => {
     <Container className={classes.container}>
       <Grid container spacing={4}>
         <Grid item xs={12}>
-          <Typography variant='h4' align='center'> Restore your identity using seedphrase </Typography>
+          <Typography variant="h4" align="center"> Restore your identity using seedphrase </Typography>
         </Grid>
         <Grid item xs={12}>
           <TextField
             autoFocus
             fullWidth
-            label='Wallet Secret Recovery Phrase'
-            placeholder='Paste your seedphrase'
+            label="Wallet Secret Recovery Phrase"
+            placeholder="Paste your seedphrase"
             spellCheck={false}
             value={seedPhrase}
             onChange={e => setSeedPhrase(e.target.value)}
-            variant='outlined'
+            variant="outlined"
             required
             helperText={<div> Your public and private keys will be recreated using this seedphrase. You will have all the accesses you had before.</div>}
             type={showSeed ? 'string' : 'password'}/>
@@ -78,18 +78,18 @@ const Import = ({ onProfileCreated } : ImportProps) => {
           <FormControlLabel
             control={<Checkbox checked={showSeed} onChange={(e) => {
               setShowseed(e.target.checked);
-            }} name="showSeed" color='primary' />}
-            label='Show Secret Recovery Phrase'
+            }} name="showSeed" color="primary" />}
+            label="Show Secret Recovery Phrase"
           />
         </Grid>
         <Grid item xs={12}>
           <TextField
-            label='Your new username'
-            placeholder='Type in username'
+            label="Your new username"
+            placeholder="Type in username"
             spellCheck={false}
             value={username}
             onChange={e => setUsername(e.target.value)}
-            variant='outlined'
+            variant="outlined"
             required
             helperText={<div> We cannot restore your username using your seedphrase, so you need to create a new one. </div>}/>
         </Grid>
@@ -97,10 +97,10 @@ const Import = ({ onProfileCreated } : ImportProps) => {
           <BackButton />
         </Grid>
         <Grid item xs={6}>
-          <Grid container justify='flex-end'>
+          <Grid container justify="flex-end">
             <Button
-              variant='contained'
-              color='primary'
+              variant="contained"
+              color="primary"
               onClick={onRestore}
               disabled={inProgress}>
               {inProgress ? 'Importing...' : 'Import'}

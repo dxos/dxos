@@ -10,11 +10,16 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  styled,
   TextField,
   Typography
-} from '@material-ui/core';
+} from '@mui/material';
 
 import { useClient, useParty } from '@dxos/react-client';
+
+const Content = styled(DialogContent)(({ theme }) => ({
+  paddingTop: `${theme.spacing(1)} !important`
+}));
 
 /**
  * Settings dialog.
@@ -60,7 +65,7 @@ const PartySettings = ({ partyKey = undefined, onClose }) => {
           {partyKey ? 'List Settings' : 'Create List'}
         </Typography>
       </DialogTitle>
-      <DialogContent>
+      <Content>
         <TextField
           fullWidth
           autoFocus
@@ -69,7 +74,7 @@ const PartySettings = ({ partyKey = undefined, onClose }) => {
           onChange={event => setTitle(event.target.value)}
           onKeyPress={event => (event.key === 'Enter') && handleSubmit()}
         />
-      </DialogContent>
+      </Content>
       <DialogActions>
         <Button onClick={onClose}>
           Cancel

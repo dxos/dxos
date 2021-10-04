@@ -2,11 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
+import ArrowBackIos from '@mui/icons-material/ArrowBackIos';
+import InfoIcon from '@mui/icons-material/Info';
+import { IconButton, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import React from 'react';
-
-import { IconButton, List, ListItem, ListItemIcon, ListItemText } from '@material-ui/core';
-import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
-import InfoIcon from '@material-ui/icons/Info';
 
 import { PublicKey } from '@dxos/crypto';
 import { ConnectionState, SwarmInfo } from '@dxos/network-manager';
@@ -34,7 +33,7 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
             <TruncateCopy text={connection.remotePeerId.toHex()} />
           </ListItemText>
           <ListItemIcon>
-            <IconButton onClick={() => onConnectionClick?.(connection.sessionId)} title='Details'>
+            <IconButton onClick={() => onConnectionClick?.(connection.sessionId)} title="Details">
               <InfoIcon />
             </IconButton>
           </ListItemIcon>
@@ -42,7 +41,7 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
       ))}
     </List>
     {onReturn && (
-      <IconButton size='small' onClick={onReturn} title='Back' style={{ borderRadius: 5 }}>
+      <IconButton size="small" onClick={onReturn} title="Back" style={{ borderRadius: 5 }}>
         <ArrowBackIos />
         Back
       </IconButton>)

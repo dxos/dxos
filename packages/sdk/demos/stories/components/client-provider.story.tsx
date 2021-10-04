@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Box, Button, createTheme, Grid, Toolbar } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import * as faker from 'faker';
 import React from 'react';
-
-import { Box, Button, Grid, Toolbar } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
 
 import { createKeyPair } from '@dxos/crypto';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
@@ -25,7 +24,7 @@ const useStyles = makeStyles(theme => ({
   root: {
     margin: theme.spacing(2)
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const Demo = () => {
   const classes = useStyles();
@@ -50,8 +49,8 @@ const Demo = () => {
 
   return (
     <Box className={classes.root}>
-      <Toolbar variant='dense' disableGutters={true}>
-        <Button variant='contained' disabled={!!profile} onClick={handleCreateProfile}>Create profile</Button>
+      <Toolbar variant="dense" disableGutters={true}>
+        <Button variant="contained" disabled={!!profile} onClick={handleCreateProfile}>Create profile</Button>
         <Button disabled={!profile} onClick={handleCreateParty}>Create party</Button>
       </Toolbar>
       <Box m={2}>
@@ -60,7 +59,7 @@ const Demo = () => {
       <Box m={2}>
         <JsonTreeView data={{ profile }} />
       </Box>
-      <Grid container direction='row' spacing={2}>
+      <Grid container direction="row" spacing={2}>
         {parties.map((party: any) => (
           <Grid item key={party.key.toString()}>
             <PartyCard party={party} />

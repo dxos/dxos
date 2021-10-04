@@ -2,21 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import StorageIcon from '@mui/icons-material/Dns';
+import SwarmIcon from '@mui/icons-material/Router';
+import ConfigIcon from '@mui/icons-material/Settings';
+import LoggingIcon from '@mui/icons-material/Subject';
+import KeyIcon from '@mui/icons-material/VpnKey';
+import { createTheme } from '@mui/material';
+import Divider from '@mui/material/Divider';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import * as colors from '@mui/material/colors';
+import { makeStyles } from '@mui/styles';
 import React, { useState } from 'react';
-
-import Divider from '@material-ui/core/Divider';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import * as colors from '@material-ui/core/colors';
-import { makeStyles } from '@material-ui/core/styles';
-import AccountTreeIcon from '@material-ui/icons/AccountTree';
-import StorageIcon from '@material-ui/icons/Dns';
-import SwarmIcon from '@material-ui/icons/Router';
-import ConfigIcon from '@material-ui/icons/Settings';
-import LoggingIcon from '@material-ui/icons/Subject';
-import KeyIcon from '@material-ui/icons/VpnKey';
 
 import { ConfigView } from './containers/ConfigView';
 import { DebugLoggingView } from './containers/DebugLoggingView';
@@ -27,6 +27,7 @@ import StorageTab from './containers/StorageTab';
 import SwarmDetails from './containers/SwarmDetails';
 import SwarmGraph from './containers/SwarmGraph';
 
+// TODO(wittjosiah): Refactor, makeStyles is deprecated.
 const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex',
@@ -51,7 +52,7 @@ const useStyles = makeStyles(theme => ({
   contentHidden: {
     display: 'none'
   }
-}));
+}), { defaultTheme: createTheme({}) });
 
 const items = [
   {
@@ -134,7 +135,7 @@ const App = () => {
   return (
     <div className={classes.root}>
       <div className={classes.sidebar}>
-        <List dense aria-label='main tools'>
+        <List dense aria-label="main tools">
           {items.map(({ title, items = [] }) => (
             <div key={title}>
               <ListItem>

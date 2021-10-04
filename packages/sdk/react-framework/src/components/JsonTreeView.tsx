@@ -2,56 +2,50 @@
 // Copyright 2020 DXOS.org
 //
 
-import clsx from 'clsx';
+import {
+  ChevronRight as ChevronRightIcon,
+  ExpandMore as ExpandMoreIcon
+} from '@mui/icons-material';
+import { TreeItem as MuiTreeItem, TreeView as MuiTreeView } from '@mui/lab';
+import { styled, Typography } from '@mui/material';
 import isPlainObject from 'lodash.isplainobject';
-import React, { useEffect, useState } from 'react';
-
-import Typography from '@material-ui/core/Typography';
-import { makeStyles, Theme } from '@material-ui/core/styles';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import MuiTreeItem from '@material-ui/lab/TreeItem';
-import MuiTreeView from '@material-ui/lab/TreeView';
+import React, { ReactElement, useEffect, useState } from 'react';
 
 import { keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';
 
-const useStyles = makeStyles((theme: Theme) => ({
-  root: {
-    overflowX: 'hidden'
-  },
+const StyledTreeView = styled(MuiTreeView)({ overflowX: 'hidden' });
 
-  itemRoot: {
-    display: 'flex',
-    flexDirection: 'column',
-    overflowX: 'hidden'
-  },
+const ItemRoot = styled(MuiTreeItem)({
+  display: 'flex',
+  flexDirection: 'column',
+  overflowX: 'hidden'
+});
 
-  labelRoot: {
-    display: 'flex',
-    overflowX: 'hidden'
-  },
+const LabelRoot = styled('div')({
+  display: 'flex',
+  overflowX: 'hidden'
+});
 
-  label: ({ fontSize }: { fontSize?: string }) => ({
-    fontSize: fontSize === 'small' ? 14 : undefined
-  }),
+const Label = styled(Typography)(({ fontSize }: { fontSize?: string }) => ({
+  fontSize: fontSize === 'small' ? 14 : undefined
+}));
 
-  value: ({ fontSize }: { fontSize?: string }) => ({
-    overflowX: 'hidden',
-    paddingLeft: 8,
-    whiteSpace: 'pre-line',
-    wordBreak: 'break-word',
-    fontSize: fontSize === 'small' ? 14 : undefined
-  }),
+const DefaultValue = styled(Typography)(({ fontSize }: { fontSize?: string }) => ({
+  overflowX: 'hidden',
+  paddingLeft: 8,
+  whiteSpace: 'pre-line',
+  wordBreak: 'break-word',
+  fontSize: fontSize === 'small' ? 14 : undefined
+}));
 
-  keystr: {
-    color: theme.palette.info.main,
-    fontFamily: 'monospace'
-  },
+const KeyStrValue = styled(DefaultValue)(({ theme }) => ({
+  color: theme.palette.info.main,
+  fontFamily: 'monospace'
+}));
 
-  boolean: {
-    color: theme.palette.info.main
-  }
+const BooleanValue = styled(DefaultValue)(({ theme }) => ({
+  color: theme.palette.info.main
 }));
 
 //
@@ -77,37 +71,30 @@ const visitor = (value: any, depth = 1, path = '', ids: string[] = [], i = 0) =>
  * TreeItem wrapper.
  */
 const TreeItem = ({
-  className,
   nodeId,
   size,
   label,
   value,
   children
 }: {
-  className?: string,
   nodeId: string,
   size: string | undefined,
   label: string,
-  value?: any,
+  value?: ReactElement,
   children?: React.ReactNode
 }) => {
-  const classes = useStyles({ fontSize: size });
-
   return (
-    <MuiTreeItem
+    <ItemRoot
       nodeId={nodeId}
-      classes={{ root: classes.itemRoot }}
       label={(
-        <div className={classes.labelRoot}>
-          <Typography classes={{ root: classes.label }} color='primary'>{label}</Typography>
-          {value !== undefined && (
-            <Typography classes={{ root: clsx(classes.value, className) }}>{String(value)}</Typography>
-          )}
-        </div>
+        <LabelRoot>
+          <Label color="primary" fontSize={size}>{label}</Label>
+          {value}
+        </LabelRoot>
       )}
     >
       {children}
-    </MuiTreeItem>
+    </ItemRoot>
   );
 };
 
@@ -128,14 +115,12 @@ interface JsonTreeViewProperties {
  * @param onSelect Callback for when one or more nodes are selected by the user.
  */
 const JsonTreeView = ({
-  className = undefined,
   data = {},
   depth = Infinity,
   onSelect = () => {},
   root,
   size
 }: JsonTreeViewProperties) => {
-  const classes = useStyles({ fontSize: size });
   if (!data) {
     data = {};
   }
@@ -161,32 +146,30 @@ const JsonTreeView = ({
       const items = Object.entries(value).map(([key, value]) => renderNode(value, key, level + 1, `${path}.${key}`)).filter(Boolean);
       return (!root && level === 0)
         ? items
-        : (
-          <TreeItem size={size} key={path} nodeId={path || '.'} label={key}>{items}</TreeItem>
-          );
+        : <TreeItem size={size} key={path} nodeId={path || '.'} label={key}>{items}</TreeItem>;
     }
 
     if (Array.isArray(value)) {
       const items = value.map((value, key) => renderNode(value, `[${key}]`, level + 1, `${path}.${key}`)).filter(Boolean);
       return (!root && level === 0)
         ? items
-        : (
-          <TreeItem size={size} key={path} nodeId={path} label={key}>{items}</TreeItem>
-          );
+        : <TreeItem size={size} key={path} nodeId={path} label={key}>{items}</TreeItem>;
     }
 
     // TODO(burdon): Pluggable types (e.g., date, string, number, boolean, etc).
-    let className = classes.value;
+    let ValueComponent: any = DefaultValue;
     if (value instanceof Uint8Array) {
       value = truncateString(keyToString(value), 16);
-      className = classes.keystr;
+      ValueComponent = KeyStrValue;
     } else if (typeof value === 'boolean') {
-      className = classes.boolean;
+      ValueComponent = BooleanValue;
     }
 
-    return (
-      <TreeItem className={className} size={size} key={path} nodeId={path} label={key} value={value} />
-    );
+    const itemValue = value !== undefined
+      ? <ValueComponent fontSize={size}>{String(value)}</ValueComponent>
+      : undefined;
+
+    return <TreeItem size={size} key={path} nodeId={path} label={key} value={itemValue} />;
   };
 
   const handleToggle = (_event: React.ChangeEvent<unknown>, nodeIds: string[]) => {
@@ -195,8 +178,7 @@ const JsonTreeView = ({
 
   // TODO(burdon): Controller
   return (
-    <MuiTreeView
-      classes={{ root: clsx(classes.root, className) }}
+    <StyledTreeView
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
       onNodeSelect={onSelect}
@@ -205,7 +187,7 @@ const JsonTreeView = ({
       selected={[]}
     >
       {renderNode(data, root || '')}
-    </MuiTreeView>
+    </StyledTreeView>
   );
 };
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-devtools",
-  "version": "2.12.23",
+  "version": "2.14.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
@@ -16,10 +16,13 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/react-framework": "workspace:*",
-    "@material-ui/core": "^4.11.4",
-    "@types/react": "^16.14.0",
-    "react-resize-aware": "^3.0.0",
-    "@material-ui/icons": "^4.11.2"
+    "@emotion/react": "^11.4.1",
+    "@emotion/styled": "^11.3.0",
+    "@mui/icons-material": "^5.0.1",
+    "@mui/material": "^5.0.1",
+    "@mui/styles": "^5.0.1",
+    "@types/react": "^17.0.24",
+    "react-resize-aware": "^3.1.1"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
@@ -35,9 +38,9 @@
     "@types/react-router": "~5.1.16",
     "@types/react-router-dom": "~5.1.7",
     "fork-ts-checker-webpack-plugin": "~6.2.5",
-    "react": "^16.14.0",
+    "react": "^17.0.2",
     "react-docgen-typescript-loader": "^3.7.2",
-    "react-dom": "^16.14.0",
+    "react-dom": "^17.0.2",
     "react-router": "~5.2.1",
     "react-router-dom": "^5.1.2",
     "ts-loader": "~8.1.0",
