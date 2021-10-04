@@ -9,7 +9,7 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 import { truncateString } from '@dxos/debug';
 
-const TruncateCopy = ({ text } : { text: string }) => {
+export const TruncateCopy = ({ text } : { text: string }) => {
   return (
     <>
       {truncateString(text, 8)}
@@ -26,5 +26,3 @@ const TruncateCopy = ({ text } : { text: string }) => {
     </>
   );
 };
-
-export default TruncateCopy;
