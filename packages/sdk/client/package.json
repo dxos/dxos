@@ -50,6 +50,7 @@
     "access": "public"
   },
   "toolchain" : {
-    "testingFramework": "mocha"
+    "testingFramework": "mocha",
+    "forceCloseTests": true
   }
 }
