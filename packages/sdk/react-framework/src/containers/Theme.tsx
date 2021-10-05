@@ -39,11 +39,9 @@ export const defaultThemeProperties = {
 
 export const createTheme = (base: any) => createMuiTheme(defaultsDeep(base, defaultThemeProperties));
 
-const ReactUXTheme = ({ children, base }: { base: any; children: React.ReactNode }) => (
+export const ReactUXTheme = ({ children, base }: { base: any; children: React.ReactNode }) => (
   <ThemeProvider theme={createTheme(base)}>
     <CssBaseline />
     {children}
   </ThemeProvider>
 );
-
-export default ReactUXTheme;
