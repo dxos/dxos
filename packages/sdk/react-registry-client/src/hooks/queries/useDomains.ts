@@ -19,7 +19,7 @@ export const useDomains = (): Result => {
   const registry = useRegistry();
   const data = useQuery(() => registry?.getDomains());
 
-  return { 
+  return {
     domains: data.data,
     error: data.error
   };
