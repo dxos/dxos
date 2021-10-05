@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import ErrorView from '../src/components/ErrorView';
+import { ErrorView } from '../src/components';
 
 export const ErrorViewStory = () => {
   const testError = new Error('Error CODE');

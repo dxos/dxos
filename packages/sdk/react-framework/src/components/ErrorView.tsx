@@ -85,5 +85,3 @@ export const ErrorView = ({
     </StyledGrid>
   );
 };
-
-export default ErrorView;

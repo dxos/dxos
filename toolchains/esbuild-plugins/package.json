@@ -1,6 +1,6 @@
 {
   "name": "@dxos/esbuild-plugins",
-  "version": "2.14.0",
+  "version": "2.14.3",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "./dist/src/index.js",
