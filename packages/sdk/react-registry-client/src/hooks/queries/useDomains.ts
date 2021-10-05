@@ -1,11 +1,11 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2021 DXOS.org
 //
-import { useEffect, useState } from 'react';
 
 import { DomainInfo } from '@dxos/registry-client';
 
-import { useRegistry } from '..';
+import { useRegistry } from '../registry';
+import { useQuery } from './useQuery';
 
 interface Result {
   domains: DomainInfo[],
@@ -17,22 +17,10 @@ interface Result {
  */
 export const useDomains = (): Result => {
   const registry = useRegistry();
-  const [error, setError] = useState<any>(undefined);
-  const [domains, setDomains] = useState<DomainInfo[]>([]);
+  const data = useQuery(() => registry?.getDomains());
 
-  useEffect(() => {
-    setImmediate(async () => {
-      try {
-        const domains = await registry?.getDomains();
-        setDomains(domains ?? []);
-      } catch (e: unknown) {
-        setError(e);
-      }
-    });
-  }, []);
-
-  return {
-    domains,
-    error
+  return { 
+    domains: data.data,
+    error: data.error
   };
 };

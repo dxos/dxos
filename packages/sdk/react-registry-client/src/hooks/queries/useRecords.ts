@@ -1,12 +1,11 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2021 DXOS.org
 //
-
-import { useEffect, useState } from 'react';
 
 import { IQuery, RegistryRecord } from '@dxos/registry-client';
 
-import { useRegistry } from '..';
+import { useRegistry } from '../registry';
+import { useQuery } from './useQuery';
 
 interface Result {
   records: RegistryRecord[],
@@ -18,22 +17,10 @@ interface Result {
  */
 export const useRecords = (query?: IQuery): Result => {
   const registry = useRegistry();
-  const [error, setError] = useState<any>(undefined);
-  const [records, setRecords] = useState<RegistryRecord[]>([]);
-
-  useEffect(() => {
-    setImmediate(async () => {
-      try {
-        const resources = await registry?.getRecords(query);
-        setRecords(resources ?? []);
-      } catch (e: unknown) {
-        setError(e);
-      }
-    });
-  }, [query]);
+  const data = useQuery(() => registry?.getRecords(query), [query]);
 
   return {
-    records,
-    error
+    records: data.data,
+    error: data.error
   };
 };
