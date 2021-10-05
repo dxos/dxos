@@ -42,7 +42,7 @@ importers:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
-      '@dxos/registry-api': 0.3.2
+      '@dxos/registry-api': 2.14.0
       '@types/chance': 1.1.1
       '@types/debug': 4.1.5
       '@types/download': 6.2.4
@@ -84,7 +84,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-bot': workspace:*
-      '@dxos/registry-api': ~0.3.2
+      '@dxos/registry-api': ~2.14.0
       '@dxos/toolchain-node-library': workspace:*
       '@types/chance': ^1.1.0
       '@types/debug': ^4.1.1
@@ -1820,7 +1820,6 @@ importers:
       '@types/node': 14.14.45
       '@types/react': 17.0.27
       react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
       typescript: 4.3.5
     specifiers:
       '@dxos/client': workspace:*
@@ -1833,7 +1832,6 @@ importers:
       assert: ^2.0.0
       debug: ^4.1.1
       react: ^17.0.2
-      react-dom: ^17.0.2
       typescript: ^4.3.5
   ../../packages/sdk/registry-client:
     dependencies:
@@ -4882,15 +4880,15 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-9m1Ftf+1RsQvf9JIDOZTJouHyT3X4kdqn1/tDSL9NrvOgLFjp/cA/vzyMcPAZTJCBkcF+xIkR/Peu2/jhwy0gQ==
-  /@dxos/codec-protobuf/2.12.23:
+  /@dxos/codec-protobuf/2.14.0:
     dependencies:
       assert: 2.0.0
       lodash.merge: 4.6.2
       protobufjs: 6.11.2
     dev: false
     resolution:
-      integrity: sha512-JZeqTy5X4Ws7TNxQtbaXRFmUb50iMCIdOVIRZ4kAK+4+ndQrCqoRpzH+7PNN1MX4o/KvqwgFZgPM3zqjGiiObA==
-  /@dxos/crypto/2.12.23:
+      integrity: sha512-/tfoHgUAD0CJi1DmfzKKWMZ9C0g1RXeFkpmSJBzW8FxDjJ+JHdFIiBCtDhHrr4MMeFOHZ0khcAabHwdmOatW2Q==
+  /@dxos/crypto/2.14.0:
     dependencies:
       bip39: 3.0.4
       crypto-js: 3.3.0
@@ -4898,14 +4896,14 @@ packages:
       hypercore-crypto: 2.3.0
     dev: false
     resolution:
-      integrity: sha512-YHmzFB29Gt6TmcXE3frbCldHD++pbMpOZOQgNaNRI3HpoXWJCVIV50iK9y5x839zTsm8t+f16zgEcU0IsQ1qSw==
-  /@dxos/debug/2.12.23:
+      integrity: sha512-uc3q22uUU62XQelNhDzjaz2NWLQkwyuKYFK3jrIgKlwocIyn0HCsCo8ONAQhQi+vAxdFxHs/TUtlDNzFa8J1/Q==
+  /@dxos/debug/2.14.0:
     dependencies:
       '@types/node': 14.14.45
       debug: 4.3.1
     dev: false
     resolution:
-      integrity: sha512-cosLjQm3u+6Bdv2Mt5DHPOvUN5M7J9u/kiOA+Td8+BrVH5CR+WOz2iJhSyn2aRAAJc0dcsRPOavW3H1RuoFufw==
+      integrity: sha512-EkBwS1qIzXE4qiFo2z6PubByNkaOBy3kxd5ORhrcOjWdhQ2ozP3I3OuXv8O+S+v9nxlc8YeUBNVh+7SIINuxsw==
   /@dxos/eslint-plugin/1.0.15_eslint@7.26.0+typescript@4.3.5:
     dependencies:
       '@rushstack/eslint-patch': 1.0.6
@@ -4964,29 +4962,36 @@ packages:
       '@types/react': '*'
     resolution:
       integrity: sha512-KrnRQCoTA7Gxg9FnAyqJgwbcluOl11nmIlFX5ClyNEvSb9zeXy55wBvxRi7Ya2+GO8KlMpSQmGKVHcvBDGmc9A==
-  /@dxos/registry-api/0.3.2:
+  /@dxos/registry-api/2.14.0:
     dependencies:
-      '@dxos/codec-protobuf': 2.12.23
-      '@dxos/util': 2.12.23
+      '@dxos/codec-protobuf': 2.14.0
+      '@dxos/util': 2.14.0
       '@polkadot/api': 4.17.1
+      '@polkadot/keyring': 6.11.1
+      '@polkadot/metadata': 4.17.1
+      '@polkadot/rpc-core': 4.17.1
+      '@polkadot/types': 4.17.1
+      '@polkadot/util': 6.11.1
+      '@polkadot/util-crypto': 6.11.1
+      bn.js: 4.12.0
       crypto: 1.0.1
       faker: 5.5.3
-      fs-extra: 9.1.0
+      fs-extra: 8.1.0
       multihashes: 4.0.3
       protobufjs: 6.11.2
     dev: false
     engines:
       node: '>= 14'
     resolution:
-      integrity: sha512-aFTsX2A84VRej8zWDdrl6LrasrBZnS3K/HCxChKHzbamcnJY0XXMJVBwco4+frtWQ0Oaq9HMxv2HzgtNRWYTSg==
-  /@dxos/util/2.12.23:
+      integrity: sha512-XllfRVXi6IQgA0RoKF6OYUYHIAcvCJ7Djbu61YV8AYJjWDGKPekHNKvLqBBv3Rt+DLn87f2+HYqjd0O7jJR/OA==
+  /@dxos/util/2.14.0:
     dependencies:
-      '@dxos/crypto': 2.12.23
-      '@dxos/debug': 2.12.23
+      '@dxos/crypto': 2.14.0
+      '@dxos/debug': 2.14.0
       '@types/node': 14.14.45
     dev: false
     resolution:
-      integrity: sha512-xRcOuglsZJm0u8FdbIenLfLYk68MZYjhyHLeuj3Lrf5jNUdZn1Le/T47tWADRS+wXZJoia7k0vykFP0r/kVeIw==
+      integrity: sha512-r3ZKWmv+g7w1T6JWdX9hQ8tzWPGupkGtENUC3XC4e4pTbZQhIFbOewq7/TvexaAUSTxBaU+33h210PaW5nr26g==
   /@emotion/babel-plugin/11.3.0_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
