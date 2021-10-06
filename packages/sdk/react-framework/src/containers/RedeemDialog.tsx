@@ -3,8 +3,8 @@
 //
 
 import { Redeem as RedeemIcon } from '@mui/icons-material';
-import { Alert } from '@mui/lab';
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,

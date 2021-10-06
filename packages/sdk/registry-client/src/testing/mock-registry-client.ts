@@ -110,4 +110,8 @@ export class MemoryRegistryClient implements IRegistryClient {
   async getDataRecords<T = any> (query?: IQuery): Promise<RegistryDataRecord[]> {
     return Promise.resolve([]);
   }
+
+  async disconnect () {
+    return Promise.resolve();
+  }
 }
