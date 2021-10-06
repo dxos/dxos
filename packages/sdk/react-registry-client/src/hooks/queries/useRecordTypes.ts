@@ -8,19 +8,19 @@ import { useRegistry } from '../registry';
 import { useQuery } from './useQuery';
 
 interface Result {
-  records: RegistryTypeRecord[],
+  recordTypes: RegistryTypeRecord[],
   error?: unknown
 }
 
 /**
  * Returns matching type records.
  */
-export const useTypeRecords = (query?: IQuery): Result => {
+export const useRecordTypes = (query?: IQuery): Result => {
   const registry = useRegistry();
   const data = useQuery(() => registry?.getTypeRecords(query), [query]);
 
   return {
-    records: data.data,
+    recordTypes: data.data,
     error: data.error
   };
 };

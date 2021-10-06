@@ -4,9 +4,9 @@
 
 import { createContext } from 'react';
 
-import { RegistryClient } from '@dxos/registry-client';
+import type { IRegistryClient } from '@dxos/registry-client';
 
 type ContextValue = {
-  registry?: RegistryClient | undefined,
+  registry?: IRegistryClient | undefined,
 }
 export const RegistryContext = createContext<ContextValue | undefined>(undefined);

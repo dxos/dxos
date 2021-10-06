@@ -11,9 +11,6 @@ interface Result<T> {
   error?: unknown
 }
 
-/**
- * Returns matching resources.
- */
 export const useQuery = <T>(getData: () => MaybePromise<T[]> | undefined, deps: React.DependencyList = []): Result<T> => {
   const [error, setError] = useState<any>(undefined);
   const [data, setData] = useState<T[]>([]);
