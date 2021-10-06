@@ -5,7 +5,7 @@
 import { DomainInfo } from '@dxos/registry-client';
 
 import { useRegistry } from '../registry';
-import { useQuery } from './useQuery';
+import { useAsync } from './useAsync';
 
 interface Result {
   domains: DomainInfo[],
@@ -17,7 +17,7 @@ interface Result {
  */
 export const useDomains = (): Result => {
   const registry = useRegistry();
-  const data = useQuery(() => registry?.getDomains());
+  const data = useAsync(() => registry?.getDomains(), []);
 
   return {
     domains: data.data,

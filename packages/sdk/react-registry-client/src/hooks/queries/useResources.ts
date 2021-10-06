@@ -5,7 +5,7 @@
 import { IQuery, Resource } from '@dxos/registry-client';
 
 import { useRegistry } from '../registry';
-import { useQuery } from './useQuery';
+import { useAsync } from './useAsync';
 
 interface Result {
   resources: Resource[],
@@ -17,7 +17,7 @@ interface Result {
  */
 export const useResources = (query?: IQuery): Result => {
   const registry = useRegistry();
-  const data = useQuery(() => registry?.getResources(query), [query]);
+  const data = useAsync(() => registry?.getResources(query), [], [query]);
 
   return {
     resources: data.data,

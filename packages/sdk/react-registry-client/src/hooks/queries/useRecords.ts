@@ -5,7 +5,7 @@
 import { IQuery, RegistryRecord } from '@dxos/registry-client';
 
 import { useRegistry } from '../registry';
-import { useQuery } from './useQuery';
+import { useAsync } from './useAsync';
 
 interface Result {
   records: RegistryRecord[],
@@ -17,7 +17,7 @@ interface Result {
  */
 export const useRecords = (query?: IQuery): Result => {
   const registry = useRegistry();
-  const data = useQuery(() => registry?.getRecords(query), [query]);
+  const data = useAsync(() => registry?.getRecords(query), [], [query]);
 
   return {
     records: data.data,
