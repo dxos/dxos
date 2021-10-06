@@ -6,9 +6,13 @@ import React from 'react';
 
 import { ClientInitializer } from '@dxos/react-client';
 
-import { RedeemDialog } from '../src/containers';
+import { RedeemDialog } from '../src';
 
-export const ReedemDialogStory = () => {
+export default {
+  title: 'RedeemDialog'
+};
+
+export const Primary = () => {
   return (
     <ClientInitializer>
       <RedeemDialog onClose={() => null} />
@@ -16,7 +20,10 @@ export const ReedemDialogStory = () => {
   );
 };
 
-export default {
-  title: 'React Framework/RedeemDialog Component',
-  component: ReedemDialogStory
+export const Pinless = () => {
+  return (
+    <ClientInitializer>
+      <RedeemDialog pinless onClose={() => null} />
+    </ClientInitializer>
+  );
 };

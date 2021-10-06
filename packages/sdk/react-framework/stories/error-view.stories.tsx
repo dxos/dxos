@@ -4,17 +4,17 @@
 
 import React from 'react';
 
-import { ErrorView } from '../src/components';
-
-export const ErrorViewStory = () => {
-  const testError = new Error('Error CODE');
-
-  return (
-    <ErrorView error={testError} onRestart={() => {}} />
-  );
-};
+import { ErrorView } from '../src';
 
 export default {
-  title: 'React Framework/ErrorView Component',
-  component: ErrorViewStory
+  title: 'ErrorView'
+};
+
+export const Primary = () => {
+  const error = new Error('Error CODE');
+
+  // TODO(burdon): Rename ErrorBoundary?
+  return (
+    <ErrorView error={error} onRestart={() => {}} />
+  );
 };
