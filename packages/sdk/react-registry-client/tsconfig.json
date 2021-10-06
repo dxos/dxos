@@ -6,9 +6,20 @@
     "lib": [
       "DOM",
       "ESNext"
-    ],
+    ]
   },
   "include": [
     "src"
   ],
+  "references": [
+    {
+      "path": "../registry-client"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../client"
+    }
+  ]
 }
