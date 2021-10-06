@@ -40,19 +40,6 @@ const createRegistryClient = async (config: ConfigProvier) => {
   return new RegistryClient(apiPromise, keypair);
 };
 
-// TODO(burdon): Storybook.
-// TODO(burdon): Generic loader.
-
-// interface LoaderProperties<T> {
-//   children: ReactNode
-//   initializer: () => Promise<T>
-// }
-
-// const Loader = async <T extends any>({ children, initializier }: LoaderProperties<T>) => {
-//   const [value, setValue] = useState<T>();
-//   const [error, setError] = useState<undefined | Error>(undefined);
-// }
-
 interface RegistryInitializerProperties {
   children?: ReactNode
   config?: ConfigProvier
@@ -63,6 +50,8 @@ interface RegistryInitializerProperties {
  * To be used with `useRegistry` hook.
  * @deprecated
  */
+// TODO(burdon): Merge with RegistryProvider.
+// E.g., <RegistryProvider registry={() => createRegistryClient(config)}>
 const RegistryInitializer = ({ children, config = {} }: RegistryInitializerProperties) => {
   const [registry, setRegistry] = useState<RegistryClient | undefined>();
   const [error, setError] = useState<undefined | Error>(undefined);
