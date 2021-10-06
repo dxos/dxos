@@ -24,7 +24,7 @@ import {
   createBotCommand,
   SpawnOptions
 } from '@dxos/protocol-plugin-bot';
-import { CID, DXN, ApiFactory, IRegistryApi } from '@dxos/registry-api';
+import { CID, createApiPromise, DXN, IRegistryClient, RegistryClient } from '@dxos/registry-client';
 
 import { BOT_CONFIG_FILENAME } from './config';
 import { BotContainer } from './containers';
@@ -87,7 +87,7 @@ export class BotManager {
 
   private _plugin?: any;
   private _leaveControlSwarm?: () => void;
-  private _registryApi?: IRegistryApi;
+  private _registryClient?: IRegistryClient;
 
   constructor (config: any, botContainers: Record<string, BotContainer>, client: Client, options: Options) {
     this._config = config;
@@ -126,7 +126,7 @@ export class BotManager {
   async start () {
     this._plugin = new BotPlugin(this._controlPeerKey, (protocol: any, message: any) => this._botMessageHandler(protocol, message));
 
-    this._registryApi = await ApiFactory.createRegistryApi(this._config.get('services.dxns.server'));
+    this._registryClient = new RegistryClient(await createApiPromise(this._config.get('services.dxns.server')));
     // Join control swarm.
     this._leaveControlSwarm = await this._client.echo.networkManager.joinProtocolSwarm({
       topic: PublicKey.from(this._controlTopic),
@@ -289,7 +289,7 @@ export class BotManager {
   }
 
   async stop () {
-    await this._registryApi?.disconnect();
+    await this._registryClient?.disconnect();
 
     for await (const { botId } of this._bots.values()) {
       await this._stopBot(botId);
@@ -413,7 +413,8 @@ export class BotManager {
       return { attributes: { name }, id: sha256(name) };
     }
 
-    const record = await this._registryApi!.get(DXN.parse(botDXN!));
+    const resource = await this._registryClient!.getResource(DXN.parse(botDXN!));
+    const record = resource?.record;
 
     if (!record) {
       log(`Bot not found: ${botDXN}.`);
