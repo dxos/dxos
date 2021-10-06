@@ -4,12 +4,27 @@
 
 import React from 'react';
 
+import { RegistryProvider, useRegistry } from '../src';
+import { MemoryRegistryClient } from '@dxos/registry-client';
+
 export default {
   title: 'RegistryProvider'
 };
 
-export const Primary = () => {
+const TestApp = () => {
+  const regsitry = useRegistry();
+
   return (
-    <div>Test</div>
+    <div>{String(regsitry)}</div>
+  );
+};
+
+export const Primary = () => {
+  const registry = new MemoryRegistryClient();
+
+  return (
+    <RegistryProvider registry={registry}>
+      <TestApp />
+    </RegistryProvider>
   );
 };

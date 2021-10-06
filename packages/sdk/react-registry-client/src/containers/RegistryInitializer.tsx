@@ -77,7 +77,7 @@ const RegistryInitializer = ({ children, config = {} }: RegistryInitializerPrope
     });
   }, []);
 
-  // TODO(burdon): Rrror boundary?
+  // TODO(burdon): Error boundary?
   if (error) {
     log(error);
     throw error;

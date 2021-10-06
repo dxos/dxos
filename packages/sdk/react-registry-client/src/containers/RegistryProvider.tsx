@@ -16,9 +16,7 @@ export interface RegistryProviderProps {
 /**
  * Root component that provides the DXNS registry instance to child components.
  * To be used with `useRegistry` hook.
- * @deprecated
  */
-// TODO(burdon): Why do we need to wrap this?
 const RegistryProvider = ({ registry, children }: RegistryProviderProps) => {
   return (
     <RegistryContext.Provider value={{ registry }}>

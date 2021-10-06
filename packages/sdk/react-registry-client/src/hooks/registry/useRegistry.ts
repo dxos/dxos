@@ -2,11 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useContext } from 'react';
+import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/util';
 
-import { RegistryContext } from './context';
+import type { IRegistryClient } from '@dxos/registry-client';
+
+type ContextValue = {
+  registry?: IRegistryClient | undefined,
+}
+
+export const RegistryContext = createContext<ContextValue | undefined>(undefined);
 
 /**
  * Low-level hook returning instance of DXNS registry.
