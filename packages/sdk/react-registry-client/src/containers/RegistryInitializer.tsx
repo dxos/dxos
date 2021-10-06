@@ -4,22 +4,30 @@
 
 import React, { useState, useEffect, ReactNode } from 'react';
 
-import type { ClientConfig } from '@dxos/client';
 import { createApiPromise, createKeyring, RegistryClient } from '@dxos/registry-client';
 import { MaybePromise } from '@dxos/util';
 
 import RegistryProvider from './RegistryProvider';
 
-interface ClientInitializerProperties {
+interface RegistryClientConfig {
+  services?: {
+    dxns? : {
+      server: string,
+      uri?: string
+    }
+  }
+}
+
+interface RegistryInitializerProperties {
   children?: ReactNode
-  config?: ClientConfig | (() => MaybePromise<ClientConfig>)
+  config?: RegistryClientConfig | (() => MaybePromise<RegistryClientConfig>)
 }
 
 /**
  * Initializes and provides a DXNS registry instance given a config object or config generator.
  * To be used with `useRegistry` hook.
  */
-const RegistryInitializer = ({ children, config = {} }: ClientInitializerProperties) => {
+const RegistryInitializer = ({ children, config = {} }: RegistryInitializerProperties) => {
   const [registry, setRegistry] = useState<RegistryClient | undefined | null>(null);
   const [error, setError] = useState<undefined | Error>(undefined);
 
