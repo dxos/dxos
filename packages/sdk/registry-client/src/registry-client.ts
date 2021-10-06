@@ -181,6 +181,8 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
    * @param contentCid CID of the record to be referenced with the given name.
    */
   registerResource (domainKey: DomainKey, resourceName: string, contentCid: CID): Promise<void>
+
+  disconnect (): Promise<void>
 }
 
 export class RegistryClient implements IRegistryClient {
@@ -432,6 +434,10 @@ export class RegistryClient implements IRegistryClient {
   async registerResource (key: DomainKey, resourceName: string, contentCid: CID): Promise<void> {
     await this.transactionsHandler.sendTransaction(
       this.api.tx.registry.registerResource(key.value, resourceName, contentCid.value));
+  }
+
+  async disconnect () {
+    return this.api.disconnect();
   }
 }
 
