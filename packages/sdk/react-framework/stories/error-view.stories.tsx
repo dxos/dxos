@@ -19,7 +19,7 @@ export const Primary = () => {
       error={error}
       onReset={() => {}}
       onRestart={() => {}}
-      config={{
+      context={{
         testing: true
       }}
     />
@@ -40,9 +40,9 @@ const TestApp = () => {
     return () => clearTimeout(t);
   }, [count]);
 
-  const TestComponent = ({ count }) => {
+  const TestComponent = ({ count }: { count: number }) => {
     if (count === 0) {
-      return; // This will break.
+      throw new Error();
     }
 
     return (
