@@ -7,8 +7,12 @@ const webpack = require('webpack');
 module.exports = {
   stories: [
     '../stories/**/*.(jsx|tsx)',
+
     '../../tutorials/apps/tasks-app/stories/**/*.(jsx|tsx)',
-    '../../react-framework/stories/**/*.(jsx|tsx)'
+
+    // TODO(burdon): Enable local storybook testing also.
+    '../../react-framework/stories/**/*.(jsx|tsx)',
+    '../../react-registry-client/stories/**/*.(jsx|tsx)'
   ],
 
   addons: [
@@ -18,7 +22,7 @@ module.exports = {
 
   exclude: [/node_modules/],
 
-  // TODO(burdon): Factor out.
+  // TODO(burdon): Factor out into toolchain.
   webpackFinal: async config => {
     config.module.rules.push({
       test: /\.(ts|tsx)$/,

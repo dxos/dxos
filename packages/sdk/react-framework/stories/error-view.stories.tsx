@@ -11,7 +11,7 @@ export default {
 };
 
 export const Primary = () => {
-  const error = new Error('Error CODE');
+  const error = new Error('Test Error');
 
   // TODO(burdon): Rename ErrorBoundary?
   return (

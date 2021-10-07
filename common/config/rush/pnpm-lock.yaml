@@ -15,7 +15,7 @@ importers:
       debug: 4.3.1
       lodash.defaultsdeep: 4.6.1
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/mocha': 8.2.2
       expect: 27.0.2
     specifiers:
@@ -73,7 +73,7 @@ importers:
       tar: 6.1.0
       tree-kill: 1.2.2
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/mocha': 8.2.2
       expect: 27.0.2
     specifiers:
@@ -128,7 +128,7 @@ importers:
       debug: 4.3.1
       hypercore-crypto: 2.3.0
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/crypto': workspace:*
@@ -146,7 +146,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/protocol': link:../../mesh/protocol
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
       ngraph.generators: 18.0.1
@@ -167,7 +167,7 @@ importers:
     dependencies:
       '@dxos/bot': link:../bot
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
     specifiers:
       '@dxos/bot': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -175,7 +175,7 @@ importers:
     dependencies:
       '@dxos/debug': link:../debug
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
     specifiers:
@@ -220,7 +220,7 @@ importers:
       humanhash: 1.0.4
       hypercore-crypto: 2.3.0
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
     specifiers:
@@ -236,7 +236,7 @@ importers:
       '@types/node': 14.14.45
       debug: 4.3.1
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.23
     specifiers:
       '@dxos/toolchain-node-library': workspace:*
@@ -291,7 +291,7 @@ importers:
       random-access-web: 2.0.3
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/expect': 24.3.0
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
@@ -321,7 +321,7 @@ importers:
       '@dxos/codec-protobuf': link:../codec-protobuf
       debug: 4.3.1
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/debug': 4.1.5
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
@@ -340,7 +340,7 @@ importers:
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
     specifiers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/jest': ^26.0.7
@@ -351,7 +351,7 @@ importers:
       '@dxos/debug': link:../debug
       '@types/node': 14.14.45
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.23
     specifiers:
       '@dxos/crypto': workspace:*
@@ -378,7 +378,7 @@ importers:
       '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       '@types/json-stable-stringify': 1.0.32
-      '@types/lodash': 4.14.169
+      '@types/lodash': 4.14.175
       '@types/node': 14.14.45
       buffer-json-encoding: 1.0.2
       debug: 4.3.1
@@ -387,7 +387,7 @@ importers:
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/testutils': link:../../common/testutils
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/memdown': 3.0.0
       '@types/mocha': 8.2.2
       expect: 27.0.2
@@ -415,7 +415,7 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
       '@types/json-stable-stringify': ^1.0.32
-      '@types/lodash': ^4.14.159
+      '@types/lodash': ^4.14.175
       '@types/memdown': ^3.0.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
@@ -442,7 +442,7 @@ importers:
       readable-stream: 3.6.0
     devDependencies:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/faker': 5.5.5
       '@types/jest': 26.0.23
       faker: 5.5.3
@@ -474,10 +474,10 @@ importers:
       '@dxos/object-model': link:../object-model
       faker: 5.5.3
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/faker': 5.5.5
       '@types/jest': 26.0.23
-      '@types/lodash': 4.14.169
+      '@types/lodash': 4.14.175
     specifiers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
@@ -485,7 +485,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/faker': ~5.5.1
       '@types/jest': ^26.0.7
-      '@types/lodash': ^4.14.159
+      '@types/lodash': ^4.14.175
       faker: ^5.1.0
   ../../packages/echo/feed-store:
     dependencies:
@@ -504,7 +504,7 @@ importers:
       '@dxos/browser-runner': 1.0.0-beta.13
       '@dxos/crypto': link:../../common/crypto
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
       '@types/from2': 2.3.1
@@ -551,7 +551,7 @@ importers:
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/echo-protocol': workspace:*
@@ -568,7 +568,7 @@ importers:
       '@types/node': 14.14.45
       debug: 4.3.1
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.23
     specifiers:
       '@dxos/async': workspace:*
@@ -589,13 +589,13 @@ importers:
       '@dxos/model-factory': link:../model-factory
       '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
-      '@types/lodash': 4.14.169
+      '@types/lodash': 4.14.175
       '@types/node': 14.14.45
       debug: 4.3.1
       lodash: 4.17.21
       minisearch: 3.0.2
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/mocha': 8.2.2
       expect: 27.0.2
     specifiers:
@@ -606,7 +606,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.1
-      '@types/lodash': ^4.14.159
+      '@types/lodash': ^4.14.175
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       debug: ^4.1.1
@@ -623,7 +623,7 @@ importers:
       yjs: 13.5.5
     devDependencies:
       '@dxos/object-model': link:../object-model
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.23
       '@types/mocha': 8.2.2
       expect: 27.0.2
@@ -653,7 +653,7 @@ importers:
       playwright: 1.11.0
       yargs: 16.2.0
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/glob': 7.1.3
       '@types/uuid': 8.3.1
       '@types/yargs': 16.0.1
@@ -686,7 +686,7 @@ importers:
     devDependencies:
       '@dxos/browser-mocha': link:../browser-mocha
       '@dxos/signal': link:../../mesh/signal
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/mocha': 8.2.2
       expect: 27.0.2
       mocha: 8.4.0
@@ -731,7 +731,7 @@ importers:
       read-pkg-up: 7.0.1
       tree-kill: 1.2.2
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       bip32: 2.0.6
@@ -806,7 +806,7 @@ importers:
     devDependencies:
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/encoding-down': 5.0.0
       '@types/expect': 24.3.0
       '@types/jest': 26.0.23
@@ -866,7 +866,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/util': link:../../common/util
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/expect': 24.3.0
       '@types/mocha': 8.2.2
       expect: 27.0.2
@@ -888,7 +888,7 @@ importers:
       tiny-lru: 7.0.6
     devDependencies:
       '@dxos/network-generator': link:../network-generator
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/debug': 4.1.5
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
@@ -921,7 +921,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@storybook/addon-knobs': 6.3.0_dbc36a74c5c62fa125cf8545b6065b1c
       '@storybook/addons': 6.3.4_react-dom@17.0.2+react@17.0.2
       '@storybook/api': 6.3.4_react-dom@17.0.2+react@17.0.2
@@ -982,7 +982,7 @@ importers:
       ngraph.generators: 18.0.1
       ngraph.graph: 19.1.0
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/assert': 1.5.4
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
@@ -1020,7 +1020,7 @@ importers:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/signal': link:../signal
       '@dxos/testutils': link:../../common/testutils
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/debug': 4.1.5
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
@@ -1077,7 +1077,7 @@ importers:
       nanomessage: 5.4.0
       signal-promise: 1.0.3
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/assert': 1.5.4
       '@types/debug': 4.1.5
       '@types/end-of-stream': 1.4.0
@@ -1115,7 +1115,7 @@ importers:
       pump: 3.0.0
     devDependencies:
       '@dxos/protocol': link:../protocol
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
     specifiers:
@@ -1133,7 +1133,7 @@ importers:
       '@dxos/protocol': link:../protocol
     devDependencies:
       '@dxos/protocol-network-generator': link:../protocol-network-generator
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       jest: 26.6.3
       wait-for-expect: 3.0.2
     specifiers:
@@ -1161,7 +1161,7 @@ importers:
     devDependencies:
       '@dxos/async': link:../../common/async
       '@dxos/protocol-network-generator': link:../protocol-network-generator
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/jest': 26.0.23
       ngraph.path: 1.3.1
       wait-for-expect: 3.0.2
@@ -1196,7 +1196,7 @@ importers:
       '@dxos/feed-store': link:../../echo/feed-store
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/debug': 4.1.5
       '@types/jest': 26.0.23
       end-of-stream: 1.4.4
@@ -1261,7 +1261,7 @@ importers:
       varint: 5.0.2
       yargs: 16.2.0
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@geut/discovery-swarm-webrtc': 4.3.0
       '@types/debug': 4.1.5
       '@types/jest': 26.0.23
@@ -1345,7 +1345,7 @@ importers:
       memdown: 5.1.0
     devDependencies:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/expect': 24.3.0
       '@types/jest': 26.0.23
       '@types/level-js': 4.0.1
@@ -1393,7 +1393,7 @@ importers:
       lodash.set: 4.3.2
       node-fetch: 2.6.1
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/js-yaml': 3.12.6
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/lodash.get': 4.4.6
@@ -1449,7 +1449,7 @@ importers:
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@storybook/addon-essentials': 6.3.4_d29a56eb7620d737157cc2e198cdc4c5
       '@storybook/addon-links': 6.3.4_react-dom@17.0.2+react@17.0.2
       '@storybook/components': 6.3.4_12a6012245369fd5be825566be975ff0
@@ -1560,7 +1560,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/react': 17.0.27
       '@types/react-dom': 17.0.9
       typescript: 4.3.5
@@ -1621,7 +1621,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/chrome': 0.0.125
       '@types/react': 17.0.27
       '@types/react-dom': 17.0.9
@@ -1690,7 +1690,7 @@ importers:
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
       '@babel/preset-env': 7.14.2_@babel+core@7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@testing-library/react': 11.2.6_react-dom@17.0.2+react@17.0.2
       '@testing-library/react-hooks': 5.1.2_fc2bb8a5b006d3f25c5f84ea777e678d
       '@types/jest': 26.0.23
@@ -1767,7 +1767,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/react-client': link:../react-client
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@emotion/react': 11.4.1_e8b5cf6062c45b9745b0342da9c6ae76
       '@emotion/styled': 11.3.0_685a00edc1b9d811affa2a9597618310
       '@mui/icons-material': 5.0.1_a1bc1c8e5975665cda49945c81cf8e18
@@ -1815,13 +1815,10 @@ importers:
       debug: 4.3.1
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
-      '@storybook/addon-essentials': 6.3.4_d29a56eb7620d737157cc2e198cdc4c5
-      '@storybook/components': 6.3.4_12a6012245369fd5be825566be975ff0
-      '@storybook/core-events': 6.3.4
-      '@storybook/react': 6.3.4_999fb4d08306f2581cd6eccef95d3760
-      '@storybook/theming': 6.3.4_react-dom@17.0.2+react@17.0.2
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@storybook/addon-essentials': 6.3.4_c7c391bf0d175bb6c6ba0cca6aaeb08b
       '@types/debug': 4.1.5
+      '@types/lodash': 4.14.175
       '@types/node': 14.14.45
       '@types/react': 17.0.27
       babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
@@ -1835,11 +1832,8 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
       '@storybook/addon-essentials': ^6.3.4
-      '@storybook/components': ^6.3.4
-      '@storybook/core-events': ^6.3.4
-      '@storybook/react': ^6.3.4
-      '@storybook/theming': ^6.3.4
       '@types/debug': ^4.1.1
+      '@types/lodash': ^4.14.175
       '@types/node': ^14.0.9
       '@types/react': ^17.0.24
       assert: ^2.0.0
@@ -1867,7 +1861,7 @@ importers:
       multihashes: 4.0.3
       protobufjs: 6.11.2
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@polkadot/typegen': 4.17.1
       '@types/chai': 4.2.22
       '@types/chai-as-promised': 7.1.4
@@ -2008,7 +2002,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/rpc': link:../../common/rpc
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/node': 14.14.45
       '@types/react': 17.0.27
       '@types/react-dom': 17.0.9
@@ -2043,7 +2037,7 @@ importers:
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@material-ui/core': 4.11.4_12a6012245369fd5be825566be975ff0
       '@types/faker': 5.5.5
       '@types/mocha': 8.2.2
@@ -2110,7 +2104,7 @@ importers:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/react': 17.0.27
       '@types/react-dom': 17.0.9
       html-webpack-plugin: 4.5.2_webpack@4.44.2
@@ -2139,7 +2133,7 @@ importers:
     dependencies:
       chalk: 4.1.1
     devDependencies:
-      '@dxos/toolchain-node-library': link:../node-library
+      '@dxos/toolchain-node-library': link:../toolchain-node-library
       '@types/chalk': 2.2.0
       '@types/node': 14.14.45
     specifiers:
@@ -2158,7 +2152,7 @@ importers:
       tty-browserify: 0.0.1
       util: 0.12.4
     devDependencies:
-      '@dxos/toolchain-node-library': link:../node-library
+      '@dxos/toolchain-node-library': link:../toolchain-node-library
       '@types/node': 14.14.45
     specifiers:
       '@dxos/toolchain-node-library': workspace:*
@@ -2171,7 +2165,7 @@ importers:
       readable-stream: ^3.6.0
       tty-browserify: ~0.0.1
       util: ~0.12.4
-  ../../toolchains/node-library:
+  ../../toolchains/toolchain-node-library:
     dependencies:
       '@dxos/eslint-plugin': 1.0.15_eslint@7.26.0+typescript@4.3.5
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
@@ -7010,6 +7004,54 @@ packages:
         optional: true
     resolution:
       integrity: sha512-KoC6GImsC5ZVvco228Jw3+1k/eGeDabjF3+V4In4rPWnOyv0qsFIlE7wcwOCRKcGrPfkBSCWYajH/h+rD0bzUw==
+  /@storybook/addon-essentials/6.3.4_c7c391bf0d175bb6c6ba0cca6aaeb08b:
+    dependencies:
+      '@babel/core': 7.13.16
+      '@storybook/addon-actions': 6.3.4_12a6012245369fd5be825566be975ff0
+      '@storybook/addon-backgrounds': 6.3.4_12a6012245369fd5be825566be975ff0
+      '@storybook/addon-controls': 6.3.4_12a6012245369fd5be825566be975ff0
+      '@storybook/addon-docs': 6.3.4_13670c18f0c655000e20eceaf917b070
+      '@storybook/addon-measure': 2.0.0_f10d9d044b2ec40e27b2b5f7ce6d0c12
+      '@storybook/addon-toolbars': 6.3.4_12a6012245369fd5be825566be975ff0
+      '@storybook/addon-viewport': 6.3.4_12a6012245369fd5be825566be975ff0
+      '@storybook/addons': 6.3.4_react-dom@17.0.2+react@17.0.2
+      '@storybook/api': 6.3.4_react-dom@17.0.2+react@17.0.2
+      '@storybook/node-logger': 6.3.4
+      babel-loader: 8.1.0_0c9ed85c987bca43d65931123ef87b6c
+      core-js: 3.12.1
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      regenerator-runtime: 0.13.7
+      storybook-addon-outline: 1.4.1_12a6012245369fd5be825566be975ff0
+      ts-dedent: 2.1.1
+      webpack: 4.44.2
+    dev: true
+    peerDependencies:
+      '@babel/core': ^7.9.6
+      '@storybook/vue': 6.3.4
+      '@storybook/web-components': 6.3.4
+      '@types/react': '*'
+      babel-loader: ^8.0.0
+      lit-html: ^1.4.1 || ^2.0.0-rc.3
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+      typescript: '*'
+      webpack: '*'
+    peerDependenciesMeta:
+      '@storybook/vue':
+        optional: true
+      '@storybook/web-components':
+        optional: true
+      lit-html:
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+      webpack:
+        optional: true
+    resolution:
+      integrity: sha512-z06IhJaHkledTPc1TdkMikDwcJhPQZCEoQftSj0MwjafdjntYUbNYsGlD40Lo/wmEW4OtUiHOx/3TWaC1WiIbw==
   /@storybook/addon-essentials/6.3.4_d29a56eb7620d737157cc2e198cdc4c5:
     dependencies:
       '@babel/core': 7.13.16
@@ -7131,6 +7173,28 @@ packages:
       '@storybook/components': 6.3.4_12a6012245369fd5be825566be975ff0
       '@storybook/core-events': 6.3.4
       '@storybook/theming': 6.3.4_react-dom@17.0.2+react@17.0.2
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+    dev: true
+    peerDependencies:
+      '@storybook/addons': ^6.3.0
+      '@storybook/api': ^6.3.0
+      '@storybook/components': ^6.3.0
+      '@storybook/core-events': ^6.3.0
+      '@storybook/theming': ^6.3.0
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+    resolution:
+      integrity: sha512-ZhdT++cX+L9LwjhGYggvYUUVQH/MGn2rwbrAwCMzA/f2QTFvkjxzX8nDgMxIhaLCDC+gHIxfJG2wrWN0jkBr3g==
+  /@storybook/addon-measure/2.0.0_f10d9d044b2ec40e27b2b5f7ce6d0c12:
+    dependencies:
+      '@storybook/addons': 6.3.4_react-dom@17.0.2+react@17.0.2
+      '@storybook/api': 6.3.4_react-dom@17.0.2+react@17.0.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
     dev: true
@@ -8684,47 +8748,47 @@ packages:
       integrity: sha512-n//PeTpbHLjMLTIgW5B/g06W/6iuTBHuvUka2nFL9APMSVMNe2r4enADfu3CIE9IyV9E+uquf9OEQQqrDeg24A==
   /@types/lodash.debounce/4.0.6:
     dependencies:
-      '@types/lodash': 4.14.169
+      '@types/lodash': 4.14.175
     dev: true
     resolution:
       integrity: sha512-4WTmnnhCfDvvuLMaF3KV4Qfki93KebocUF45msxhYyjMttZDQYzHkO639ohhk8+oco2cluAFL3t5+Jn4mleylQ==
   /@types/lodash.defaultsdeep/4.6.6:
     dependencies:
-      '@types/lodash': 4.14.169
+      '@types/lodash': 4.14.175
     resolution:
       integrity: sha512-k3bXTg1/54Obm6uFEtSwvDm2vCyK9jSROv0V9X3gFFNPu7eKmvqqadPSXx0SkVVixSilR30BxhFlnIj8OavXOA==
   /@types/lodash.get/4.4.6:
     dependencies:
-      '@types/lodash': 4.14.169
+      '@types/lodash': 4.14.175
     resolution:
       integrity: sha512-E6zzjR3GtNig8UJG/yodBeJeIOtgPkMgsLjDU3CbgCAPC++vJ0eCMnJhVpRZb/ENqEFlov1+3K9TKtY4UdWKtQ==
   /@types/lodash.matches/4.6.6:
     dependencies:
-      '@types/lodash': 4.14.169
+      '@types/lodash': 4.14.175
     dev: true
     resolution:
       integrity: sha512-rs1P/R+4ExqZdmIlw6CcIeHUvyQVY/lDP8RiQVw9RnFK5GAQyZ2fLSvPwUtAp2fgqlCY0TOGT4Av69eIgu5HQg==
   /@types/lodash.merge/4.6.6:
     dependencies:
-      '@types/lodash': 4.14.169
+      '@types/lodash': 4.14.175
     dev: true
     resolution:
       integrity: sha512-IB90krzMf7YpfgP3u/EvZEdXVvm4e3gJbUvh5ieuI+o+XqiNEt6fCzqNRaiLlPVScLI59RxIGZMQ3+Ko/DJ8vQ==
   /@types/lodash.pick/4.4.6:
     dependencies:
-      '@types/lodash': 4.14.169
+      '@types/lodash': 4.14.175
     dev: true
     resolution:
       integrity: sha512-u8bzA16qQ+8dY280z3aK7PoWb3fzX5ATJ0rJB6F+uqchOX2VYF02Aqa+8aYiHiHgPzQiITqCgeimlyKFy4OA6g==
   /@types/lodash.set/4.3.6:
     dependencies:
-      '@types/lodash': 4.14.169
+      '@types/lodash': 4.14.175
     dev: true
     resolution:
       integrity: sha512-ZeGDDlnRYTvS31Laij0RsSaguIUSBTYIlJFKL3vm3T2OAZAQj2YpSvVWJc0WiG4jqg9fGX6PAPGvDqBcHfSgFg==
-  /@types/lodash/4.14.169:
+  /@types/lodash/4.14.175:
     resolution:
-      integrity: sha512-DvmZHoHTFJ8zhVYwCLWbQ7uAbYQEk52Ev2/ZiQ7Y7gQGeV9pjBqjnQpECMHfKS1rCYAhMI7LHVxwyZLZinJgdw==
+      integrity: sha512-XmdEOrKQ8a1Y/yxQFOMbC47G/V2VDO1GvMRnl4O75M4GW/abC5tnfzadQYkqEveqRM1dEJGFFegfPNA2vvx2iw==
   /@types/long/4.0.1:
     dev: false
     resolution:

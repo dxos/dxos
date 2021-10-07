@@ -10,7 +10,7 @@ import { MaybePromise } from '@dxos/util';
 
 import RegistryProvider from './RegistryProvider';
 
-// TODO(burdon): Reference master config object.
+// TODO(burdon): Just provide minimal local config (don't infect with global config).
 interface RegistryClientConfig {
   services?: {
     dxns? : {
@@ -22,21 +22,31 @@ interface RegistryClientConfig {
 
 const log = debug('dxos:react-registry-client:error');
 
-type ConfigProvier = RegistryClientConfig | (() => MaybePromise<RegistryClientConfig>);
+// TODO(burdon): Util.
+type AsyncProvider<T> = T | (() => MaybePromise<T>);
+const resolveAsyncProvider = async <T extends any>(provider: AsyncProvider<T>): Promise<T> => {
+  return (typeof provider === 'function') ? await (provider as CallableFunction)() : provider;
+}
 
-const createRegistryClient = async (config: ConfigProvier) => {
-  const resolvedConfig = (typeof config === 'function') ? await config() : config;
-  if (!resolvedConfig.services?.dxns) {
+type ConfigProvier = AsyncProvider<RegistryClientConfig>;
+
+/**
+ *
+ */
+// TODO(burdon): Move to registry-client?
+const createRegistryClient = async (configProvider: ConfigProvier) => {
+  const config = await resolveAsyncProvider(configProvider);
+  if (!config.services?.dxns) {
     throw new Error('Config missing DXNS endpoint');
   }
 
   const keyring = await createKeyring();
   let keypair: ReturnType<typeof keyring['addFromUri']> | undefined;
-  if (resolvedConfig.services.dxns.uri) {
-    keypair = keyring.addFromUri(resolvedConfig.services.dxns.uri);
+  if (config.services.dxns.uri) {
+    keypair = keyring.addFromUri(config.services.dxns.uri);
   }
 
-  const apiPromise = await createApiPromise(resolvedConfig.services.dxns.server);
+  const apiPromise = await createApiPromise(config.services.dxns.server);
   return new RegistryClient(apiPromise, keypair);
 };
 
@@ -50,7 +60,8 @@ interface RegistryInitializerProperties {
  * To be used with `useRegistry` hook.
  * @deprecated
  */
-// TODO(burdon): Merge with RegistryProvider.
+// TODO(burdon): Merge with RegistryProvider or require client to create before rendering.
+// TODO(burdon): Could be multiple things that require async bootstrap.
 // E.g., <RegistryProvider registry={() => createRegistryClient(config)}>
 const RegistryInitializer = ({ children, config = {} }: RegistryInitializerProperties) => {
   const [registry, setRegistry] = useState<RegistryClient | undefined>();

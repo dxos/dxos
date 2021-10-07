@@ -440,11 +440,12 @@
 
     //
     // toolchains
+    // NOTE: KEEP SORTED
     //
 
     {
-      "packageName": "@dxos/toolchain-node-library",
-      "projectFolder": "toolchains/node-library"
+      "packageName": "@dxos/deps-checker",
+      "projectFolder": "toolchains/deps-checker"
     },
     {
       "packageName": "@dxos/esbuild-plugins",
@@ -453,12 +454,13 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/deps-checker",
-      "projectFolder": "toolchains/deps-checker"
+      "packageName": "@dxos/toolchain-node-library",
+      "projectFolder": "toolchains/toolchain-node-library"
     },
 
     //
     // common
+    // NOTE: KEEP SORTED
     //
 
     {
@@ -474,14 +476,14 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/debug",
-      "projectFolder": "packages/common/debug",
+      "packageName": "@dxos/crypto",
+      "projectFolder": "packages/common/crypto",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/config",
-      "projectFolder": "packages/sdk/config",
+      "packageName": "@dxos/debug",
+      "projectFolder": "packages/common/debug",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
@@ -492,24 +494,14 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/util",
-      "projectFolder": "packages/common/util",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/crypto",
-      "projectFolder": "packages/common/crypto",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
       "packageName": "@dxos/protobuf-test",
       "projectFolder": "packages/common/protobuf-test"
     },
     {
-      "packageName": "@dxos/testutils",
-      "projectFolder": "packages/common/testutils"
+      "packageName": "@dxos/random-access-multi-storage",
+      "projectFolder": "packages/common/random-access-multi-storage",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/rpc",
@@ -518,14 +510,19 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/random-access-multi-storage",
-      "projectFolder": "packages/common/random-access-multi-storage",
+      "packageName": "@dxos/testutils",
+      "projectFolder": "packages/common/testutils"
+    },
+    {
+      "packageName": "@dxos/util",
+      "projectFolder": "packages/common/util",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
 
     //
     // sdk
+    // NOTE: KEEP SORTED
     //
 
     {
@@ -533,6 +530,24 @@
       "projectFolder": "packages/sdk/client",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/config",
+      "projectFolder": "packages/sdk/config",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/demos",
+      "projectFolder": "packages/sdk/demos"
+    },
+    {
+      "packageName": "@dxos/devtools",
+      "projectFolder": "packages/sdk/devtools"
+    },
+    {
+      "packageName": "@dxos/devtools-extension",
+      "projectFolder": "packages/sdk/devtools-extension"
     },
     {
       "packageName": "@dxos/react-client",
@@ -547,20 +562,10 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/demos",
-      "projectFolder": "packages/sdk/demos"
-    },
-    {
-      "packageName": "@dxos/tutorials-tasks-app",
-      "projectFolder": "packages/sdk/tutorials/apps/tasks-app"
-    },
-    {
-      "packageName": "@dxos/devtools",
-      "projectFolder": "packages/sdk/devtools"
-    },
-    {
-      "packageName": "@dxos/devtools-extension",
-      "projectFolder": "packages/sdk/devtools-extension"
+      "packageName": "@dxos/react-registry-client",
+      "projectFolder": "packages/sdk/react-registry-client",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/registry-client",
@@ -569,16 +574,21 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/react-registry-client",
-      "projectFolder": "packages/sdk/react-registry-client",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
+      "packageName": "@dxos/tutorials-tasks-app",
+      "projectFolder": "packages/sdk/tutorials/apps/tasks-app"
     },
 
     //
     // echo
+    // NOTE: KEEP SORTED
     //
 
+    {
+      "packageName": "@dxos/echo-db",
+      "projectFolder": "packages/echo/echo-db",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
     {
       "packageName": "@dxos/echo-protocol",
       "projectFolder": "packages/echo/echo-protocol",
@@ -586,14 +596,18 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/model-factory",
-      "projectFolder": "packages/echo/model-factory",
+      "packageName": "@dxos/feed-store",
+      "projectFolder": "packages/echo/feed-store",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/object-model",
-      "projectFolder": "packages/echo/object-model",
+      "packageName": "@dxos/echo-testing",
+      "projectFolder": "packages/echo/echo-testing"
+    },
+    {
+      "packageName": "@dxos/model-factory",
+      "projectFolder": "packages/echo/model-factory",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
@@ -604,18 +618,8 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/echo-db",
-      "projectFolder": "packages/echo/echo-db",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/echo-testing",
-      "projectFolder": "packages/echo/echo-testing"
-    },
-    {
-      "packageName": "@dxos/feed-store",
-      "projectFolder": "packages/echo/feed-store",
+      "packageName": "@dxos/object-model",
+      "projectFolder": "packages/echo/object-model",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
@@ -628,6 +632,7 @@
 
     //
     // halo
+    // NOTE: KEEP SORTED
     //
 
     {
@@ -643,8 +648,33 @@
 
     //
     // mesh
+    // NOTE: KEEP SORTED
     //
 
+    {
+      "packageName": "@dxos/broadcast",
+      "projectFolder": "packages/mesh/broadcast",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/network-manager",
+      "projectFolder": "packages/mesh/network-manager",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/network-devtools",
+      "projectFolder": "packages/mesh/network-devtools",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/network-generator",
+      "projectFolder": "packages/mesh/network-generator",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
     {
       "packageName": "@dxos/protocol",
       "projectFolder": "packages/mesh/protocol",
@@ -676,30 +706,6 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/network-manager",
-      "projectFolder": "packages/mesh/network-manager",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/network-devtools",
-      "projectFolder": "packages/mesh/network-devtools",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/network-generator",
-      "projectFolder": "packages/mesh/network-generator",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/broadcast",
-      "projectFolder": "packages/mesh/broadcast",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
       "packageName": "@dxos/signal",
       "projectFolder": "packages/mesh/signal",
       "shouldPublish": true,
@@ -708,11 +714,12 @@
 
     //
     // bot
+    // NOTE: KEEP SORTED
     //
 
     {
-      "packageName": "@dxos/protocol-plugin-bot",
-      "projectFolder": "packages/bot/protocol-plugin-bot",
+      "packageName": "@dxos/bot",
+      "projectFolder": "packages/bot/bot",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
@@ -729,8 +736,8 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/bot",
-      "projectFolder": "packages/bot/bot",
+      "packageName": "@dxos/protocol-plugin-bot",
+      "projectFolder": "packages/bot/protocol-plugin-bot",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
@@ -743,6 +750,7 @@
 
     //
     // gravity
+    // NOTE: KEEP SORTED
     //
 
     {
@@ -760,8 +768,15 @@
 
     //
     // wallet
+    // NOTE: KEEP SORTED
     //
 
+    {
+      "packageName": "@dxos/wallet-core",
+      "projectFolder": "packages/wallet/core",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
     {
       "packageName": "@dxos/wallet-extension",
       "projectFolder": "packages/wallet/extension"
@@ -769,12 +784,6 @@
     {
       "packageName": "@dxos/wallet-playground",
       "projectFolder": "packages/wallet/playground"
-    },
-    {
-      "packageName": "@dxos/wallet-core",
-      "projectFolder": "packages/wallet/core",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
     }
   ]
 }

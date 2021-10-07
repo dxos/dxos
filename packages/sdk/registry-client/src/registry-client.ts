@@ -190,10 +190,14 @@ export class RegistryClient implements IRegistryClient {
 
   private transactionsHandler: ApiTransactionHandler;
 
-  constructor (private api: ApiPromise, private signer?: AddressOrPair) {
+  constructor (
+    private api: ApiPromise,
+    private signer?: AddressOrPair
+  ) {
     this.transactionsHandler = new ApiTransactionHandler(api, signer);
   }
 
+  // TODO(burdon): Uppercase CID
   async resolveRecordCid (dxn: DXN): Promise<CID | undefined> {
     let domainKey: DomainKey | undefined;
     if (dxn.domain) {
@@ -399,6 +403,7 @@ export class RegistryClient implements IRegistryClient {
     const type = await this.getTypeRecord(typeId);
     assert(type);
 
+    // TODO(burdon): Lint error.
     const encoded = dxnsSchema.getCodecForType('dxos.registry.Record').encode({
       ...meta,
       created: new Date(),
@@ -412,6 +417,7 @@ export class RegistryClient implements IRegistryClient {
     // Make sure message type exists
     schema.lookupType(messageName);
 
+    // TODO(burdon): Lint error.
     const encoded = dxnsSchema.getCodecForType('dxos.registry.Record').encode({
       ...meta,
       created: new Date(),
