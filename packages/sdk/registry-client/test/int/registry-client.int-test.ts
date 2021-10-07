@@ -53,7 +53,7 @@ describe('Registry Client', () => {
       const domainKey = await registryApi.registerDomain();
 
       const typeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
-      await registryApi.registerResource(domainKey, name, typeCid);
+      await registryApi.updateResource(domainKey, name, typeCid);
 
       const type = await registryApi.getTypeRecord(typeCid);
       expect(type?.messageName).to.equal('.dxos.type.App');
@@ -82,7 +82,7 @@ describe('Registry Client', () => {
       }, appTypeCid);
 
       const domainKey = await registryApi.registerDomain();
-      await registryApi.registerResource(domainKey, appResourceName, contentCid);
+      await registryApi.updateResource(domainKey, appResourceName, contentCid);
     });
 
     it('Retrieves a list of resources', async () => {
@@ -190,7 +190,7 @@ describe('Registry Client', () => {
 
       const name = Math.random().toString(36).substring(2);
 
-      await expect(registryApi.registerResource(domainKey, name, appTypeCid)).to.be.fulfilled;
+      await expect(registryApi.updateResource(domainKey, name, appTypeCid)).to.be.fulfilled;
     });
 
     it('Does allow to overwrite already registered name', async () => {
@@ -200,9 +200,9 @@ describe('Registry Client', () => {
 
       const name = Math.random().toString(36).substring(2);
 
-      await expect(registryApi.registerResource(domainKey, name, appTypeCid)).to.be.fulfilled;
+      await expect(registryApi.updateResource(domainKey, name, appTypeCid)).to.be.fulfilled;
 
-      await expect(registryApi.registerResource(domainKey, name, appTypeCid)).to.be.fulfilled;
+      await expect(registryApi.updateResource(domainKey, name, appTypeCid)).to.be.fulfilled;
     });
   });
 

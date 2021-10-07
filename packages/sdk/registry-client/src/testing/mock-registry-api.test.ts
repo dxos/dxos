@@ -27,7 +27,7 @@ describe('Registry API mock', () => {
   });
 
   it('Returns predefined resources', async () => {
-    const resources = await mock.getResources({});
+    const resources = await mock.queryResources({});
 
     expect(resources.length).to.be.equal(30);
   });

@@ -14,7 +14,7 @@ import { ComplexMap, raise } from '@dxos/util';
 import { ApiTransactionHandler } from './api-transaction-handler';
 import { DXN } from './dxn';
 import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, RecordExtension, sanitizeExtensionData } from './encoding';
-import { Multihash } from './interfaces';
+import { Multihash, Resource as BaseResource } from './interfaces';
 import { CID, CIDLike, DomainKey } from './models';
 import { schema as dxnsSchema } from './proto/gen';
 import { Filtering, IQuery } from './querying';
@@ -25,8 +25,11 @@ export interface DomainInfo {
   owners: string[],
 }
 
-export interface Resource<R extends RegistryRecord = RegistryRecord> {
+export interface Resource extends BaseResource {
   id: DXN
+}
+
+export interface ResourceWithRecord<R extends RegistryRecord = RegistryRecord> extends Resource {
   record: R
 }
 
@@ -72,6 +75,11 @@ export const RegistryRecord = {
   isDataRecord: (x: RegistryRecord): x is RegistryDataRecord => x.kind === RecordKind.Data,
   isTypeRecord: (x: RegistryRecord): x is RegistryTypeRecord => x.kind === RecordKind.Type
 };
+
+interface UpdateResourceOptions {
+  version?: string,
+  tags?: string[]
+}
 
 /**
  * DXNS Registry read-only operations.
@@ -134,13 +142,20 @@ export interface IReadOnlyRegistryClient {
    * Gets resource by its registered name.
    * @param dxn Name of the resource used for registration.
    */
-  getResource<R extends RegistryRecord = RegistryRecord> (dxn: DXN): Promise<Resource<R> | undefined>
+  getResource (dxn: DXN): Promise<Resource | undefined>
+
+  /**
+   * Gets resource by its registered name.
+   * @param dxn Name of the resource used for registration.
+   * @param tag Tag to get the resource by. 'latest' by default.
+   */
+  getResourceByTag<R extends RegistryRecord = RegistryRecord> (dxn: DXN, tag?: string): Promise<ResourceWithRecord<R> | undefined>
 
   /**
    * Queries resources registered in the system.
    * @param query Query that each returned record must meet.
    */
-  getResources (query?: IQuery): Promise<Resource[]>
+  queryResources (query?: IQuery): Promise<Resource[]>
 }
 
 /**
@@ -175,12 +190,20 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
   registerDomain (): Promise<DomainKey>
 
   /**
-   * Registers a new resource in the system.
+   * Registers or updates a resource in the system.
    * @param domainKey Identifies the domain of the resource to be registered in.
    * @param resourceName Identifies the name of the resource.
    * @param contentCid CID of the record to be referenced with the given name.
+   * @param opts Optional version and tags. Adds tag 'latest' and no version by default.
+   * @param opts.version Valid semver.
+   * @param opts.tags A list of tags.
    */
-  registerResource (domainKey: DomainKey, resourceName: string, contentCid: CID): Promise<void>
+   updateResource (
+     domainKey: DomainKey,
+     resourceName: string,
+     contentCid: CID,
+     opts?: UpdateResourceOptions
+  ): Promise<void>
 
   disconnect (): Promise<void>
 }
@@ -339,26 +362,17 @@ export class RegistryClient implements IRegistryClient {
       .filter(record => Filtering.matchRecord(record, query));
   }
 
-  async getResource<R extends RegistryRecord = RegistryRecord> (id: DXN): Promise<Resource<R> | undefined> {
-    const cid = await this.resolveRecordCid(id);
-    if (!cid) {
-      return undefined;
-    }
-
-    const record = await this.getRecord(cid);
-    if (!record) {
-      return undefined;
-    }
-
-    return {
-      id,
-      record: record as R
-    };
+  async getResource (id: DXN): Promise<Resource | undefined> {
+    return (await this.api.query.registry.resources<Option<Resource>>(id.domain ?? id.key?.value, id.resource)).unwrapOr(undefined)
   }
 
-  async getResources (query?: IQuery): Promise<Resource[]> {
+  async getResourceByTag<R extends RegistryRecord = RegistryRecord> (id: DXN, tag = 'latest'): Promise<ResourceWithRecord<R> | undefined> {
+    return null as any
+  }
+
+  async queryResources (query?: IQuery): Promise<Resource[]> {
     const [resources, domains] = await Promise.all([
-      this.api.query.registry.resources.entries<Option<Multihash>>(),
+      this.api.query.registry.resources.entries<Option<Resource>>(),
       this.api.query.registry.domains.entries()
     ]);
     const result = await Promise.all(resources.map(async (resource): Promise<Resource | undefined> => {
@@ -431,9 +445,9 @@ export class RegistryClient implements IRegistryClient {
     return domainKey;
   }
 
-  async registerResource (key: DomainKey, resourceName: string, contentCid: CID): Promise<void> {
+  async updateResource (key: DomainKey, resourceName: string, contentCid: CID, opts: UpdateResourceOptions = {tags: ['latest']}): Promise<void> {
     await this.transactionsHandler.sendTransaction(
-      this.api.tx.registry.registerResource(key.value, resourceName, contentCid.value));
+      this.api.tx.registry.updateResource(key.value, resourceName, contentCid.value, opts.version ?? null, opts.tags ?? []));
   }
 
   async disconnect () {

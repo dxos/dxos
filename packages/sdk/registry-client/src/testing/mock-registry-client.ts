@@ -35,6 +35,13 @@ export class MemoryRegistryClient implements IRegistryClient {
     return resources.find(resource => resource.id.toString() === id.toString());
   }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async getResourceByTag<R extends RegistryRecord = RegistryRecord> (id: DXN, tag = 'latest'): Promise<Resource<R> | undefined> {
+      const resource = await this.getResource(id);
+      if (resource === undefined) return undefined;
+      resource.record.
+    }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getDomains (): Promise<DomainInfo[]> {
     return [];
@@ -50,7 +57,7 @@ export class MemoryRegistryClient implements IRegistryClient {
     return [];
   }
 
-  async getResources<R extends RegistryRecord = RegistryRecord> (query?: IQuery): Promise<Resource<R>[]> {
+  async queryResources<R extends RegistryRecord = RegistryRecord> (query?: IQuery): Promise<Resource<R>[]> {
     let result = this.resources as unknown as Resource<R>[];
     result = result.filter(resource => Filtering.matchResource(resource, query));
     return result;
@@ -62,7 +69,7 @@ export class MemoryRegistryClient implements IRegistryClient {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async registerResource (domainKey: DomainKey, resourceName: string, contentCid: CID): Promise<void> {
+  async updateResource (): Promise<void> {
     return undefined;
   }
 
