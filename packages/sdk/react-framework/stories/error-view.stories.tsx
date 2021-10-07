@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { ErrorBoundary, ErrorView } from '../src';
 
 export default {
-  title: 'ErrorView'
+  title: 'react-framework/ErrorView'
 };
 
 export const Primary = () => {

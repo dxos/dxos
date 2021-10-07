@@ -9,8 +9,10 @@ import { ClientInitializer } from '@dxos/react-client';
 import { RedeemDialog } from '../src';
 
 export default {
-  title: 'RedeemDialog'
+  title: 'react-framework/RedeemDialog'
 };
+
+// TODO(burdon): Remove dependency on client.
 
 export const Primary = () => {
   return (

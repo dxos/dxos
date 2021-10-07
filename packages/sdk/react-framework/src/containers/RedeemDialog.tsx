@@ -45,6 +45,8 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
   const [invitationCode, setInvitationCode] = useState('');
   const [pinCode, setPinCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // TODO(burdon): Remove (move to components).
   const client = useClient();
 
   const handleDone = () => {
@@ -65,7 +67,7 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
     onDone: () => {
       handleDone();
     },
-    onError: (ex?: string) => handleInvitationError(String(ex)),
+    onError: (error?: string) => handleInvitationError(String(error)),
     isOffline
   });
 
@@ -77,6 +79,7 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
       setIsProcessing(true);
       setError('');
       try {
+        // TODO(burdon): Move to callback.
         const party = await client.echo.joinParty(
           InvitationDescriptor.fromQueryParameters(JSON.parse(invitationCode)),
           defaultInvitationAuthenticator.secretProvider

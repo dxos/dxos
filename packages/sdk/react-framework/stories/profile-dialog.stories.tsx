@@ -11,7 +11,7 @@ const handleClose = () => {
 };
 
 export default {
-  title: 'ProfileDialog'
+  title: 'react-framework/ProfileDialog'
 };
 
 export const Primary = () => {

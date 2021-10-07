@@ -6,10 +6,10 @@ import React, { useEffect, useState } from 'react';
 
 import { RegistryTypeRecord, MemoryRegistryClient } from '@dxos/registry-client';
 
-import { RegistryProvider, useRegistry } from '../src'; // TODO(burdon): ???
+import { RegistryProvider, useRegistry } from '../src';
 
 export default {
-  title: 'RegistryProvider'
+  title: 'react-registry-client/RegistryProvider'
 };
 
 const TestApp = () => {
@@ -24,11 +24,8 @@ const TestApp = () => {
   }, []);
 
   return (
-    <div
-      style={{
-        padding: 16
-      }}
-    >
+    <div style={{ padding: 16 }}>
+      <div style={{ marginBottom: 8 }}>Domains</div>
       {types.map(({ messageName }) => (
         <div key={messageName}>
           {messageName}

@@ -3,7 +3,7 @@
 //
 
 import { Face as FaceIcon } from '@mui/icons-material';
-import { Avatar as MuiAvatar, colors, styled, Theme } from '@mui/material';
+import { Avatar as MuiAvatar, Theme, colors, styled } from '@mui/material';
 import { StyledComponent } from '@mui/system';
 import React, { ReactElement } from 'react';
 
@@ -35,6 +35,7 @@ interface AvatarProps {
 
 type OwnerState = Record<string, any>
 
+// TODO(burdon): Why is theme passed here?
 export const Avatar: StyledComponent<AvatarProps, OwnerState, Theme> = styled(MuiAvatar)(({ publicKey, theme }) => {
   const color = publicKey ? getColor(publicKey) : theme.palette.grey[200];
 
@@ -46,6 +47,7 @@ export const Avatar: StyledComponent<AvatarProps, OwnerState, Theme> = styled(Mu
   };
 });
 
+// TODO(burdon): Remove PartyMember dep and create type here.
 export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement => (
   <Avatar publicKey={member?.publicKey.asUint8Array()}>
     {member?.displayName ? member.displayName.slice(0, 1).toUpperCase() : <FaceIcon />}

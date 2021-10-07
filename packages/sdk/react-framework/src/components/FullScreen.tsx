@@ -5,7 +5,7 @@
 import { styled } from '@mui/material';
 import React from 'react';
 
-const Root = styled('div')({
+export const FullScreen = styled('div')({
   display: 'flex',
   flexDirection: 'column',
   position: 'fixed',
@@ -14,14 +14,3 @@ const Root = styled('div')({
   top: 0,
   bottom: 0
 });
-
-/**
- * Fullscreen container.
- */
-export const FullScreen = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <Root>
-      {children}
-    </Root>
-  );
-};
