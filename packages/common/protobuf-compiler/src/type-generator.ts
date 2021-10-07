@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import pb from 'protobufjs';
 import * as ts from 'typescript';
+import { preconfigureProtobufjs } from './configure';
 
 import { createDeclarations, createServicesDictionary, createTypeDictionary } from './generator/declaration-generator';
 import { createSerializerDefinition } from './generator/serializer-definition-generator';
@@ -17,6 +18,7 @@ import { registerResolver, parseSubstitutionsFile, SubstitutionsMap } from './pa
 const f = ts.factory;
 
 registerResolver();
+preconfigureProtobufjs();
 
 export async function parseAndGenerateSchema (substitutionsModule: ModuleSpecifier | undefined, protoFiles: string[], outDirPath: string) {
   const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
