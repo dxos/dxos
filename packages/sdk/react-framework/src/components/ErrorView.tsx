@@ -2,39 +2,33 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Button, Card, CardActions, CardContent, Grid, styled } from '@mui/material';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  Link,
+  Toolbar,
+  Typography,
+  styled
+} from '@mui/material';
+import {
+  ErrorOutline as ErrorIcon
+} from '@mui/icons-material';
 import React from 'react';
 
-const StyledGrid = styled(Grid)(({ theme }) => ({
-  backgroundColor: theme.palette.grey[100],
-  minHeight: '100vh'
-}));
+import { CopyToClipboard } from './CopyToClipboard';
+import { DialogHeading } from './DialogHeading';
 
-const StyledCard = styled(Card)({ width: '50%' });
+const DEFAULT_TITLE = 'Error';
+const DEFAULT_ISSUE_LINK = 'https://github.com/dxos/sdk/issues/new';
 
-const Title = styled('p')({
-  fontSize: '1.5em',
-  color: 'red',
-  marginBottom: 20
-});
-
-const Code = styled('code')({
-  display: 'block',
-  font: 'monospace',
-  whiteSpace: 'pre',
+const Code = styled('div')(({ theme }) => ({
+  maxHeight: 156,
+  overflow: 'scroll',
+  whiteSpace: 'break-spaces',
   padding: 8,
-  border: '1px solid #ccc',
-  backgroundColor: '#eee',
-  borderRadius: 8,
-  margin: 8,
-  overflow: 'auto'
-});
-
-const Actions = styled(CardActions)(({ theme }) => ({
-  justifyContent: 'space-between',
-  paddingLeft: theme.spacing(2),
-  paddingRight: theme.spacing(2),
-  marginBottom: 20
+  backgroundColor: theme.palette.action.hover
 }));
 
 /**
@@ -46,42 +40,77 @@ export const ErrorView = ({
   onRestart,
   onReset,
   error,
+  title = DEFAULT_TITLE,
+  issueLink = DEFAULT_ISSUE_LINK,
   config
 }: {
   onRestart?: () => void,
   onReset?: () => void,
   error: Error | null,
-  config?: Record<string, string>
+  title?: string,
+  issueLink?: string,
+  config?: any
 }) => {
   const isDev = process.env.NODE_ENV === 'development';
-  const issuesLink = config?.issuesLink ?? 'https://github.com/dxos/sdk/issues/new';
+  const stack = String(error?.stack);
+
+  // TODO(burdon): Production button to log error.
 
   return (
-    <StyledGrid
-      container
-      direction="column"
-      alignItems="center"
-      justifyContent="center"
-    >
-      <StyledCard>
-        <CardContent>
-          <Title>Something went wrong.</Title>
-          <p>Please try again, or <a target="_blank" rel="noopener noreferrer" href={issuesLink}>Report this issue</a>.</p>
-          <p>Details:</p>
-          <Code>{String(error?.stack)}</Code>
-          {isDev && config &&
-            <>
-              <p>Configuration:</p>
-              <Code>{JSON.stringify(config.values, undefined, 2)}</Code>
-            </>}
-        </CardContent>
-        <Actions>
-          {(onReset)
-            ? <Button variant="text" color="secondary" onClick={onReset}>Reset storage</Button>
-            : <span />}
-          <Button variant="contained" color="primary" onClick={onRestart}>Try again</Button>
-        </Actions>
-      </StyledCard>
-    </StyledGrid>
+    <Dialog open fullWidth maxWidth='sm'>
+      <DialogHeading title={title} icon={ErrorIcon} />
+      <DialogContent>
+        {!isDev && (
+          <Typography>Something went wrong.</Typography>
+        )}
+        {isDev && (
+          <Code>
+            {stack}
+          </Code>
+        )}
+        {(isDev && config) && (
+          <>
+            <Toolbar variant='dense' disableGutters sx={{ padding: 0.5 }}>
+              <Typography>Config</Typography>
+              <div style={{ display: 'flex', flex: 1 }} />
+              <CopyToClipboard text={stack} />
+            </Toolbar>
+            <Code>
+              {JSON.stringify(config, undefined, 2)}
+            </Code>
+          </>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <div style={{ display: 'flex', flex: 1 }} />
+        {isDev && (
+          <Button
+            variant='text'
+            onClick={() => {}}
+          >
+            <Link href={issueLink} underline='none' target='_blank'>
+              Create Issue
+            </Link>
+          </Button>
+        )}
+        {(isDev && onReset) && (
+          <Button
+            variant='text'
+            onClick={onReset}
+          >
+            Reset storage
+          </Button>
+        )}
+        {onRestart && (
+          <Button
+            variant='contained'
+            color='primary'
+            onClick={onRestart}
+          >
+            Restart
+          </Button>
+        )}
+      </DialogActions>
+    </Dialog>
   );
 };

@@ -55,9 +55,8 @@ export class ErrorBoundary extends Component<Props, State> {
   override render () {
     const { children, onRestart, onReset } = this.props;
     const { error } = this.state;
-
     if (error) {
-      return <ErrorView onRestart={onRestart} onReset={onReset} error={error} />;
+      return <ErrorView error={error} onRestart={onRestart} onReset={onReset} />;
     }
 
     return children;

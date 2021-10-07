@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { DomainInfo, MemoryRegistryClient } from '@dxos/registry-client';
+import { RegistryTypeRecord, MemoryRegistryClient } from '@dxos/registry-client';
 
 import { RegistryProvider, useRegistry } from '../src'; // TODO(burdon): ???
 
@@ -14,17 +14,27 @@ export default {
 
 const TestApp = () => {
   const registry = useRegistry();
-  const [domains, setDomains] = useState<DomainInfo[]>([]);
+  const [types, setTypes] = useState<RegistryTypeRecord[]>([]);
 
   useEffect(() => {
     setImmediate(async () => {
-      const domains = await registry.getDomains();
-      setDomains(domains);
+      const types = await registry.getTypeRecords();
+      setTypes(types);
     })
   }, []);
 
   return (
-    <pre>{JSON.stringify(domains, undefined, 2)}</pre>
+    <div
+      style={{
+        padding: 16
+      }}
+    >
+      {types.map(({ messageName }) => (
+        <div key={messageName}>
+          {messageName}
+        </div>
+      ))}
+    </div>
   );
 };
 

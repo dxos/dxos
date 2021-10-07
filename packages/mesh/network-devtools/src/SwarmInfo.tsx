@@ -9,7 +9,8 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { ConnectionState, SwarmInfo } from '@dxos/network-manager';
-import { TruncateCopy } from '@dxos/react-framework';
+
+import { Key } from './Key';
 
 export interface SwarmInfoViewProps {
   swarmInfo: SwarmInfo
@@ -19,18 +20,18 @@ export interface SwarmInfoViewProps {
 
 export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmInfoViewProps) => (
   <div>
-    <div> Topic: <TruncateCopy text={swarmInfo.topic.toHex()} /> </div>
-    <div> Label: {swarmInfo.label ? <TruncateCopy text={swarmInfo.label} /> : 'No label'}</div>
-    <div> Active: {swarmInfo.isActive ? 'yes' : 'no'} </div>
-    <div> Active connection count: {swarmInfo.connections.filter(c => c.state !== ConnectionState.CLOSED).length}</div>
-    <div> Total connection count: {swarmInfo.connections.length}</div>
+    <div>Topic: <Key text={swarmInfo.topic.toHex()} /></div>
+    <div>Label: {swarmInfo.label ? <Key text={swarmInfo.label} /> : 'No label'}</div>
+    <div>Active: {swarmInfo.isActive ? 'yes' : 'no'}</div>
+    <div>Active connection count: {swarmInfo.connections.filter(c => c.state !== ConnectionState.CLOSED).length}</div>
+    <div>Total connection count: {swarmInfo.connections.length}</div>
     <hr/>
-    <div> Connections: </div>
+    <div>Connections:</div>
     <List>
       {swarmInfo.connections.map(connection => (
         <ListItem key={connection.sessionId.toHex()}>
           <ListItemText>
-            <TruncateCopy text={connection.remotePeerId.toHex()} />
+            <Key text={connection.remotePeerId.toHex()} />
           </ListItemText>
           <ListItemIcon>
             <IconButton onClick={() => onConnectionClick?.(connection.sessionId)} title="Details">

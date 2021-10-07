@@ -77,7 +77,7 @@
     "@types/node": "^14.0.9",
     "@types/pump": "^1.1.0",
     "@types/react": "^17.0.24",
-    "babel-loader": "8.1.0",
+    "babel-loader": "^8.1.0",
     "babel-plugin-add-module-exports": "^1.0.4",
     "buffer": "^6.0.3",
     "chromatic": "^5.8.0",

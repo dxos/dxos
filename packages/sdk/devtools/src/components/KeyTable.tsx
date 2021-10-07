@@ -2,19 +2,26 @@
 // Copyright 2020 DXOS.org
 //
 
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
+import { Box, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import moment from 'moment';
 import React from 'react';
+import { CopyToClipboard } from '@dxos/react-framework';
 
 import { keyTypeName } from '@dxos/credentials';
-import { BooleanIcon, TruncateCopy } from '@dxos/react-framework';
+import { truncateString } from '@dxos/debug';
+import { BooleanIcon } from '@dxos/react-framework';
 
-// TODO(burdon): React component to show truncated key with click-to-copy.
+export const Key = ({ text } : { text: string }) => {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center' }} >
+      <Typography>
+        {truncateString(text, 8)}
+      </Typography>
+      <CopyToClipboard text={text} />
+    </Box>
+  );
+};
 
 const useStyle = makeStyles(() => ({
   table: {
@@ -28,24 +35,24 @@ const useStyle = makeStyles(() => ({
       fontVariant: 'all-petite-caps'
     }
   },
-
   mono: {
     fontFamily: 'monospace',
     fontSize: 'medium'
   },
-
   colType: {
     width: 180
   },
+  colKey: {},
   colAdded: {
     width: 180
   }
 }));
 
-const KeyTable = ({ keys }) => {
-  const classes = useStyle();
+// TODO(burdon): Use type.
+const sorter = (a: any, b: any) => (a.type < b.type ? -1 : a.type > b.type ? 1 : a.own ? -1 : 1);
 
-  const sorter = (a, b) => (a.type < b.type ? -1 : a.type > b.type ? 1 : a.own ? -1 : 1);
+const KeyTable = ({ keys }: { keys: any[] }) => {
+  const classes = useStyle();
 
   return (
     <Table stickyHeader size="small" className={classes.table}>
@@ -61,12 +68,11 @@ const KeyTable = ({ keys }) => {
       <TableBody>
         {keys.sort(sorter).map(({ type, publicKey, added, own, trusted }) => {
           const key = publicKey.toHex();
-
           return (
             <TableRow key={key}>
               <TableCell> {keyTypeName(type)} </TableCell>
               <TableCell className={classes.mono} title={key}>
-                <TruncateCopy text={key}/>
+                <Key text={key} />
               </TableCell>
               <TableCell title={added}>{moment(added).fromNow()}</TableCell>
               <TableCell align="center">

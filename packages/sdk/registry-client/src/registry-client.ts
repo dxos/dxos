@@ -19,6 +19,8 @@ import { CID, CIDLike, DomainKey } from './models';
 import { schema as dxnsSchema } from './proto/gen';
 import { Filtering, IQuery } from './querying';
 
+// TODO(burdon): Review names and types (vs. protobuf).
+
 export interface DomainInfo {
   key: DomainKey,
   name?: string,

@@ -22,7 +22,7 @@ interface RegistryClientConfig {
 
 const log = debug('dxos:react-registry-client:error');
 
-// TODO(burdon): Util.
+// TODO(burdon): Move to util?
 type AsyncProvider<T> = T | (() => MaybePromise<T>);
 const resolveAsyncProvider = async <T extends any>(provider: AsyncProvider<T>): Promise<T> => {
   return (typeof provider === 'function') ? await (provider as CallableFunction)() : provider;
@@ -60,9 +60,7 @@ interface RegistryInitializerProperties {
  * To be used with `useRegistry` hook.
  * @deprecated
  */
-// TODO(burdon): Merge with RegistryProvider or require client to create before rendering.
-// TODO(burdon): Could be multiple things that require async bootstrap.
-// E.g., <RegistryProvider registry={() => createRegistryClient(config)}>
+// TODO(burdon): Anti-patten: there could be many contexts that require async; require main app to pre-create them.
 const RegistryInitializer = ({ children, config = {} }: RegistryInitializerProperties) => {
   const [registry, setRegistry] = useState<RegistryClient | undefined>();
   const [error, setError] = useState<undefined | Error>(undefined);
@@ -77,7 +75,7 @@ const RegistryInitializer = ({ children, config = {} }: RegistryInitializerPrope
     });
   }, []);
 
-  // TODO(burdon): Error boundary?
+  // TODO(burdon): ErrorView?
   if (error) {
     log(error);
     throw error;
