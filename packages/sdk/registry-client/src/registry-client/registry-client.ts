@@ -11,14 +11,14 @@ import protobuf from 'protobufjs';
 
 import { ComplexMap, raise } from '@dxos/util';
 
-import { ApiTransactionHandler } from './api-transaction-handler';
-import { DXN } from './dxn';
-import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, RecordExtension, sanitizeExtensionData } from './encoding';
-import { Multihash, Resource as BaseResource } from './interfaces';
-import { CID, CIDLike, DomainKey } from './models';
-import { schema as dxnsSchema } from './proto/gen';
-import { Filtering, IQuery } from './querying';
-import { DomainInfo, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './registry-client-interface';
+import { ApiTransactionHandler } from '../api-transaction-handler';
+import { DXN } from '../dxn';
+import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, RecordExtension, sanitizeExtensionData } from '../encoding';
+import { Multihash, Resource as BaseResource } from '../interfaces';
+import { CID, CIDLike, DomainKey } from '../models';
+import { schema as dxnsSchema } from '../proto/gen';
+import { Filtering, IQuery } from '../querying';
+import { DomainInfo, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './interface';
 import { BTreeMap, Text } from '@polkadot/types';
 
 export class RegistryClient implements IRegistryClient {
