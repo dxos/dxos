@@ -42,41 +42,41 @@ export const ErrorView = ({
   error,
   title = DEFAULT_TITLE,
   issueLink = DEFAULT_ISSUE_LINK,
-  config
+                            context
 }: {
   onRestart?: () => void,
   onReset?: () => void,
   error: Error | null,
   title?: string,
   issueLink?: string,
-  config?: any
+  context?: any
 }) => {
   const isDev = process.env.NODE_ENV === 'development';
   const stack = String(error?.stack);
 
-  // TODO(burdon): Production button to log error.
+  // TODO(burdon): Production button to post error.
 
   return (
     <Dialog open fullWidth maxWidth='sm'>
       <DialogHeading title={title} icon={ErrorIcon} />
       <DialogContent>
         {!isDev && (
-          <Typography>Something went wrong.</Typography>
+          <Typography>Something went wrong that requires the app to be reloaded.</Typography>
         )}
         {isDev && (
           <Code>
             {stack}
           </Code>
         )}
-        {(isDev && config) && (
+        {(isDev && context) && (
           <>
             <Toolbar variant='dense' disableGutters sx={{ padding: 0.5 }}>
-              <Typography>Config</Typography>
+              <Typography>Context</Typography>
               <div style={{ display: 'flex', flex: 1 }} />
               <CopyToClipboard text={stack} />
             </Toolbar>
             <Code>
-              {JSON.stringify(config, undefined, 2)}
+              {JSON.stringify(context, undefined, 2)}
             </Code>
           </>
         )}

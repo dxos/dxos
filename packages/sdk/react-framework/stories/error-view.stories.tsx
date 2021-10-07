@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Box } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { ErrorBoundary, ErrorView } from '../src';
@@ -26,17 +27,33 @@ export const Primary = () => {
 };
 
 const TestApp = () => {
-  const [value, setValue] = useState(true);
+  const [count, setCount] = useState(3);
   useEffect(() => {
+    if (count === 0) {
+      return;
+    }
+
     const t = setTimeout((() => {
-      setValue(false);
-    }));
+      setCount(count - 1);
+    }), 1000);
 
     return () => clearTimeout(t);
-  });
+  }, [count]);
+
+  const TestComponent = ({ count }) => {
+    if (count === 0) {
+      return; // This will break.
+    }
+
+    return (
+      <div>Count: {count}</div>
+    );
+  };
 
   return (
-    <div>App</div>
+    <Box sx={{ padding: 2 }}>
+      <TestComponent count={count} />
+    </Box>
   );
 }
 
