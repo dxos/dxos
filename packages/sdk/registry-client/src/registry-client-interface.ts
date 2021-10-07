@@ -9,19 +9,22 @@ import { Resource as BaseResource } from './interfaces';
 import { CID, CIDLike, DomainKey } from './models';
 import { IQuery } from './querying';
 
-
-
 export interface DomainInfo {
   key: DomainKey,
   name?: string,
   owners: string[],
 }
 
-export interface Resource extends BaseResource {
+export interface Resource {
   id: DXN
+  versions: Record<string, CID | undefined>
+  tags: Record<string, CID | undefined>
 }
 
-export interface ResourceWithRecord<R extends RegistryRecord = RegistryRecord> extends Resource {
+// TODO(dmaretskyi): Think about a better name.
+export interface ResourceRecord<R extends RegistryRecord = RegistryRecord> extends Resource {
+  version?: string
+  tag?: string
   record: R
 }
 
@@ -139,9 +142,9 @@ export interface IReadOnlyRegistryClient {
   /**
    * Gets resource by its registered name.
    * @param dxn Name of the resource used for registration.
-   * @param tag Tag to get the resource by. 'latest' by default.
+   * @param tagOrVersion Tag or version to get the resource by. 'latest' by default.
    */
-  getResourceByTag<R extends RegistryRecord = RegistryRecord> (dxn: DXN, tag?: string): Promise<ResourceWithRecord<R> | undefined>
+  getResourceRecord<R extends RegistryRecord = RegistryRecord> (dxn: DXN, tagOrVersion: string): Promise<ResourceRecord<R> | undefined>
 
   /**
    * Queries resources registered in the system.

@@ -18,7 +18,8 @@ import { Multihash, Resource as BaseResource } from './interfaces';
 import { CID, CIDLike, DomainKey } from './models';
 import { schema as dxnsSchema } from './proto/gen';
 import { Filtering, IQuery } from './querying';
-import { DomainInfo, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceWithRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './registry-client-interface';
+import { DomainInfo, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './registry-client-interface';
+import { BTreeMap, Text } from '@polkadot/types';
 
 export class RegistryClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, RegistryRecord>(cid => cid.toB58String())
@@ -174,42 +175,63 @@ export class RegistryClient implements IRegistryClient {
       .filter(record => Filtering.matchRecord(record, query));
   }
 
-  async getResource (id: DXN): Promise<Resource | undefined> {
-    return (await this.api.query.registry.resources<Option<Resource>>(id.domain ?? id.key?.value, id.resource)).unwrapOr(undefined)
+  /**
+   * Transforms the Resource from the chain with Polkadot types to Typescript types, decoding maps and adding id.
+   */
+  private decodeResource (resource: BaseResource | undefined, domains: DomainInfo[]): Resource | undefined {
+    if (resource === undefined) {
+      return undefined;
+    }
+    const name = resource[0].args[1].toString();
+    const domainKey = new DomainKey(resource[0].args[0].toU8a());
+    const domain = domains.find(domain => domain.key.toHex() === domainKey.toHex())
+    const id = domain?.name ? DXN.fromDomainName(domain.name, name) : DXN.fromDomainKey(domainKey, name);
+
+    function decodeMap(map: BTreeMap<Text, Multihash>): Record<string, CID> {
+      return Object.fromEntries(
+        Array.from(map.entries())
+          .map(([key, value]) => [key.toString(), CID.from(value.toU8a())])
+      )
+    }
+
+    return {
+      id,
+      tags: decodeMap(resource[1].unwrap().tags),
+      versions: decodeMap(resource[1].unwrap().versions),
+    }
   }
 
-  async getResourceByTag<R extends RegistryRecord = RegistryRecord> (id: DXN, tag = 'latest'): Promise<ResourceWithRecord<R> | undefined> {
-    return null as any
+  async getResource (id: DXN): Promise<Resource | undefined> {
+    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(id.domain ?? id.key?.value, id.resource)).unwrapOr(undefined)
+    return this.decodeResource(resource, await this.getDomains());
+  }
+
+  async getResourceRecord<R extends RegistryRecord = RegistryRecord> (id: DXN, versionOrTag = 'latest'): Promise<ResourceRecord<R> | undefined> {
+    const resource = await this.getResource(id);
+    if (resource === undefined) {
+      return undefined;
+    }
+    const cid = resource.tags[versionOrTag] ?? resource.versions[versionOrTag]
+    if (cid === undefined) {
+      return undefined
+    }
+    const record = await this.getRecord(cid);
+    if (record === undefined) {
+      return undefined;
+    }
+    return {
+      ...resource,
+      record: record as R
+    }
   }
 
   async queryResources (query?: IQuery): Promise<Resource[]> {
     const [resources, domains] = await Promise.all([
-      this.api.query.registry.resources.entries<Option<Resource>>(),
-      this.api.query.registry.domains.entries()
+      this.api.query.registry.resources.entries<Option<BaseResource>>(),
+      this.getDomains()
     ]);
-    const result = await Promise.all(resources.map(async (resource): Promise<Resource | undefined> => {
-      const name = resource[0].args[1].toString();
-      const domainKey = new DomainKey(resource[0].args[0].toU8a());
-      const domain = domains.find(([storageKey]) => storageKey.args[0].eq(resource[0].args[0]))![1].unwrap();
-      const id = domain.name.isSome ? DXN.fromDomainName(domain.name.unwrap().toString(), name) : DXN.fromDomainKey(domainKey, name);
 
-      const cid = CID.from(resource[1].unwrap().toU8a());
-
-      try {
-        const registryRecord = await this.getRecord(cid);
-
-        if (!registryRecord) {
-          throw new Error('Registry corrupted.');
-        }
-
-        return {
-          id,
-          record: registryRecord
-        };
-      } catch (err) {
-        return undefined;
-      }
-    }));
+    const result = resources.map(resource => this.decodeResource(resource[1].unwrap(), domains))
 
     return result.filter(isNotNullOrUndefined).filter(resource => Filtering.matchResource(resource, query));
   }
