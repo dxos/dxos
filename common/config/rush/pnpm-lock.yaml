@@ -42,7 +42,7 @@ importers:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
-      '@dxos/registry-api': 0.3.2
+      '@dxos/registry-client': link:../../sdk/registry-client
       '@types/chance': 1.1.1
       '@types/debug': 4.1.5
       '@types/download': 6.2.4
@@ -84,7 +84,7 @@ importers:
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-bot': workspace:*
-      '@dxos/registry-api': ~0.3.2
+      '@dxos/registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/chance': ^1.1.0
       '@types/debug': ^4.1.1
@@ -1774,6 +1774,8 @@ importers:
       '@mui/lab': 5.0.0-alpha.49_317c931599744b59b48b612532baf811
       '@mui/material': 5.0.2_8b1afd652731575359982e6f2c187961
       '@mui/system': 5.0.2_7b0c288ee1a1e07f392d7acfbf356824
+      '@types/lodash.defaultsdeep': 4.6.6
+      '@types/lodash.isplainobject': 4.0.6
       '@types/react': 17.0.27
       '@types/react-copy-to-clipboard': 5.0.1
       '@types/url-join': 4.0.1
@@ -1796,6 +1798,8 @@ importers:
       '@mui/lab': ^5.0.0-alpha.48
       '@mui/material': ^5.0.1
       '@mui/system': ^5.0.1
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.isplainobject': ~4.0.6
       '@types/react': ^17.0.24
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/url-join': ~4.0.1
@@ -1814,16 +1818,13 @@ importers:
       assert: 2.0.0
       debug: 4.3.1
     devDependencies:
-      '@dxos/client': link:../client
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/debug': 4.1.5
       '@types/node': 14.14.45
       '@types/react': 17.0.27
       react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
       typescript: 4.3.5
     specifiers:
-      '@dxos/client': workspace:*
       '@dxos/registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
@@ -1833,7 +1834,6 @@ importers:
       assert: ^2.0.0
       debug: ^4.1.1
       react: ^17.0.2
-      react-dom: ^17.0.2
       typescript: ^4.3.5
   ../../packages/sdk/registry-client:
     dependencies:
@@ -4882,30 +4882,6 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-9m1Ftf+1RsQvf9JIDOZTJouHyT3X4kdqn1/tDSL9NrvOgLFjp/cA/vzyMcPAZTJCBkcF+xIkR/Peu2/jhwy0gQ==
-  /@dxos/codec-protobuf/2.12.23:
-    dependencies:
-      assert: 2.0.0
-      lodash.merge: 4.6.2
-      protobufjs: 6.11.2
-    dev: false
-    resolution:
-      integrity: sha512-JZeqTy5X4Ws7TNxQtbaXRFmUb50iMCIdOVIRZ4kAK+4+ndQrCqoRpzH+7PNN1MX4o/KvqwgFZgPM3zqjGiiObA==
-  /@dxos/crypto/2.12.23:
-    dependencies:
-      bip39: 3.0.4
-      crypto-js: 3.3.0
-      humanhash: 1.0.4
-      hypercore-crypto: 2.3.0
-    dev: false
-    resolution:
-      integrity: sha512-YHmzFB29Gt6TmcXE3frbCldHD++pbMpOZOQgNaNRI3HpoXWJCVIV50iK9y5x839zTsm8t+f16zgEcU0IsQ1qSw==
-  /@dxos/debug/2.12.23:
-    dependencies:
-      '@types/node': 14.14.45
-      debug: 4.3.1
-    dev: false
-    resolution:
-      integrity: sha512-cosLjQm3u+6Bdv2Mt5DHPOvUN5M7J9u/kiOA+Td8+BrVH5CR+WOz2iJhSyn2aRAAJc0dcsRPOavW3H1RuoFufw==
   /@dxos/eslint-plugin/1.0.15_eslint@7.26.0+typescript@4.3.5:
     dependencies:
       '@rushstack/eslint-patch': 1.0.6
@@ -4964,29 +4940,6 @@ packages:
       '@types/react': '*'
     resolution:
       integrity: sha512-KrnRQCoTA7Gxg9FnAyqJgwbcluOl11nmIlFX5ClyNEvSb9zeXy55wBvxRi7Ya2+GO8KlMpSQmGKVHcvBDGmc9A==
-  /@dxos/registry-api/0.3.2:
-    dependencies:
-      '@dxos/codec-protobuf': 2.12.23
-      '@dxos/util': 2.12.23
-      '@polkadot/api': 4.17.1
-      crypto: 1.0.1
-      faker: 5.5.3
-      fs-extra: 9.1.0
-      multihashes: 4.0.3
-      protobufjs: 6.11.2
-    dev: false
-    engines:
-      node: '>= 14'
-    resolution:
-      integrity: sha512-aFTsX2A84VRej8zWDdrl6LrasrBZnS3K/HCxChKHzbamcnJY0XXMJVBwco4+frtWQ0Oaq9HMxv2HzgtNRWYTSg==
-  /@dxos/util/2.12.23:
-    dependencies:
-      '@dxos/crypto': 2.12.23
-      '@dxos/debug': 2.12.23
-      '@types/node': 14.14.45
-    dev: false
-    resolution:
-      integrity: sha512-xRcOuglsZJm0u8FdbIenLfLYk68MZYjhyHLeuj3Lrf5jNUdZn1Le/T47tWADRS+wXZJoia7k0vykFP0r/kVeIw==
   /@emotion/babel-plugin/11.3.0_@babel+core@7.13.16:
     dependencies:
       '@babel/core': 7.13.16
@@ -8722,6 +8675,12 @@ packages:
       '@types/lodash': 4.14.169
     resolution:
       integrity: sha512-E6zzjR3GtNig8UJG/yodBeJeIOtgPkMgsLjDU3CbgCAPC++vJ0eCMnJhVpRZb/ENqEFlov1+3K9TKtY4UdWKtQ==
+  /@types/lodash.isplainobject/4.0.6:
+    dependencies:
+      '@types/lodash': 4.14.169
+    dev: true
+    resolution:
+      integrity: sha512-8G41YFhmOl8Ck6NrwLK5hhnbz6ADfuDJP+zusDnX3PoYhfC60+H/rQE6zmdO4yFzPCPJPY4oGZK2spbXm6gYEA==
   /@types/lodash.matches/4.6.6:
     dependencies:
       '@types/lodash': 4.14.169
