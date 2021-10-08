@@ -32,6 +32,9 @@
     },
     {
       "path": "../protocol-plugin-bot"
+    },
+    {
+      "path": "../../sdk/registry-client"
     }
   ]
 }
