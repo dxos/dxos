@@ -149,6 +149,7 @@ importers:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
+      '@types/pump': 1.1.1
       ngraph.generators: 18.0.1
       pump: 3.0.0
       wait-for-expect: 3.0.2
@@ -160,6 +161,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
+      '@types/pump': ^1.1.0
       ngraph.generators: ^18.0.1
       pump: ^3.0.0
       wait-for-expect: ^3.0.2
@@ -221,10 +223,12 @@ importers:
       hypercore-crypto: 2.3.0
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/crypto-js': 4.0.2
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
     specifiers:
       '@dxos/toolchain-node-library': workspace:*
+      '@types/crypto-js': ~4.0.2
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
       bip39: ^3.0.2
@@ -390,6 +394,7 @@ importers:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/memdown': 3.0.0
       '@types/mocha': 8.2.2
+      '@types/pify': 3.0.2
       expect: 27.0.2
       lodash: 4.17.21
       memdown: 5.1.0
@@ -419,6 +424,7 @@ importers:
       '@types/memdown': ^3.0.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
+      '@types/pify': ^3.0.2
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
       expect: ~27.0.2
@@ -443,8 +449,11 @@ importers:
     devDependencies:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/chance': 1.1.1
       '@types/faker': 5.5.5
       '@types/jest': 26.0.23
+      '@types/pify': 3.0.2
+      '@types/pumpify': 1.4.1
       faker: 5.5.3
       pify: 5.0.0
       tempy: 1.0.1
@@ -457,10 +466,13 @@ importers:
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
+      '@types/chance': ^1.1.0
       '@types/debug': ^4.1.1
       '@types/faker': ~5.5.1
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
+      '@types/pify': ^3.0.2
+      '@types/pumpify': ~1.4.1
       '@types/readable-stream': ^2.3.9
       debug: ^4.1.1
       faker: ^5.1.0
@@ -732,6 +744,8 @@ importers:
       tree-kill: 1.2.2
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
+      '@types/download': 6.2.4
+      '@types/js-yaml': 3.12.6
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       bip32: 2.0.6
@@ -758,7 +772,9 @@ importers:
       '@dxos/signal': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.1
+      '@types/download': ^6.2.4
       '@types/fs-extra': ^9.0.4
+      '@types/js-yaml': ^3.12.5
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       assert: ^2.0.0
@@ -984,15 +1000,19 @@ importers:
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/assert': 1.5.4
+      '@types/end-of-stream': 1.4.0
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
+      '@types/pump': 1.1.1
       wait-for-expect: 3.0.2
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/assert': ^1.5.4
+      '@types/end-of-stream': ^1.4.0
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
+      '@types/pump': ^1.1.0
       end-of-stream: ^1.4.1
       ngraph.generators: ^18.0.1
       ngraph.graph: ^19.0.1
@@ -1118,12 +1138,14 @@ importers:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@types/jest': 26.0.23
       '@types/node': 14.14.45
+      '@types/pump': 1.1.1
     specifiers:
       '@dxos/network-generator': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
+      '@types/pump': ^1.1.0
       pump: ^3.0.0
   ../../packages/mesh/protocol-plugin-messenger:
     dependencies:
@@ -1264,9 +1286,11 @@ importers:
       '@dxos/toolchain-node-library': link:../../../toolchains/node-library
       '@geut/discovery-swarm-webrtc': 4.3.0
       '@types/debug': 4.1.5
+      '@types/end-of-stream': 1.4.0
       '@types/jest': 26.0.23
       '@types/lodash.debounce': 4.0.6
       '@types/lodash.pick': 4.4.6
+      '@types/pify': 3.0.2
       '@types/yargs': 16.0.1
       graphology-canvas: 0.3.2_graphology-types@0.19.2
       graphology-shortest-path: 1.4.1_graphology-types@0.19.2
@@ -1282,9 +1306,11 @@ importers:
       '@geut/discovery-swarm-webrtc': ^4.0.2
       '@hyperswarm/dht': ^4.0.1
       '@types/debug': ^4.1.1
+      '@types/end-of-stream': ^1.4.0
       '@types/jest': ^26.0.7
       '@types/lodash.debounce': ~4.0.6
       '@types/lodash.pick': ~4.4.6
+      '@types/pify': ^3.0.2
       '@types/yargs': ~16.0.1
       buffer-json-encoding: ^1.0.2
       debug: ^4.1.1
@@ -1456,7 +1482,10 @@ importers:
       '@storybook/core-events': 6.3.4
       '@storybook/react': 6.3.4_999fb4d08306f2581cd6eccef95d3760
       '@storybook/theming': 6.3.4_react-dom@17.0.2+react@17.0.2
+      '@types/d3': 7.0.0
       '@types/faker': 5.5.5
+      '@types/lodash.defaultsdeep': 4.6.6
+      '@types/lodash.isplainobject': 4.0.6
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       '@types/pump': 1.1.1
@@ -1506,8 +1535,11 @@ importers:
       '@storybook/core-events': ^6.3.4
       '@storybook/react': ^6.3.4
       '@storybook/theming': ^6.3.4
+      '@types/d3': ~7.0.0
       '@types/debug': ^4.1.1
       '@types/faker': ~5.5.1
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.isplainobject': ~4.0.6
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/pump': ^1.1.0
@@ -8204,7 +8236,6 @@ packages:
     resolution:
       integrity: sha512-1zzPV9FDe1I/WHhRkf9SNgqtRJWZqrBWgu7JGveuHmmyR9CnAPCie2N/x+iHrgnpYBIcCJWHBoMRv2TRWktsvw==
   /@types/chance/1.1.1:
-    dev: false
     resolution:
       integrity: sha512-Ze94JMnM33+dj/tQCWxXWaQ80uYmV9HwydTyrbHAiBa91ETQuI+3iF5OFPicDpQx+md+/6rDpTp9I2VKOGOtpw==
   /@types/chrome/0.0.125:
@@ -8243,152 +8274,125 @@ packages:
     dev: false
     resolution:
       integrity: sha512-FK4U5Qyn7/Sc5ih233OuHO0qAkOpEcD/eG6584yEiLKizTFRny86qHLe/rej3HFQrkBuUjF4whFliAdODbVN/w==
+  /@types/crypto-js/4.0.2:
+    dev: true
+    resolution:
+      integrity: sha512-sCVniU+h3GcGqxOmng11BRvf9TfN9yIs8KKjB8C8d75W69cpTfZG80gau9yTx5SxF3gvHGbJhdESzzvnjtf3Og==
   /@types/d3-array/2.9.0:
-    dev: false
     resolution:
       integrity: sha512-sdBMGfNvLUkBypPMEhOcKcblTQfgHbqbYrUqRE31jOwdDHBJBxz4co2MDAq93S4Cp++phk4UiwoEg/1hK3xXAQ==
   /@types/d3-axis/2.0.0:
     dependencies:
       '@types/d3-selection': 2.0.0
-    dev: false
     resolution:
       integrity: sha512-gUdlEwGBLl3tXGiBnBNmNzph9W3bCfa4tBgWZD60Z1eDQKTY4zyCAcZ3LksignGfKawYatmDYcBdjJ5h/54sqA==
   /@types/d3-brush/2.1.0:
     dependencies:
       '@types/d3-selection': 2.0.0
-    dev: false
     resolution:
       integrity: sha512-rLQqxQeXWF4ArXi81GlV8HBNwJw9EDpz0jcWvvzv548EDE4tXrayBTOHYi/8Q4FZ/Df8PGXFzxpAVQmJMjOtvQ==
   /@types/d3-chord/2.0.1:
-    dev: false
     resolution:
       integrity: sha512-mqGww8qDtGZRnDsFizzobAVizd85hgaYNEri095ZI7/aYtW7hxa9a20enwuoVTWm0YqdCtLPoyV9ZPYgfyaTZw==
   /@types/d3-color/2.0.1:
-    dev: false
     resolution:
       integrity: sha512-u7LTCL7RnaavFSmob2rIAJLNwu50i6gFwY9cHFr80BrQURYQBRkJ+Yv47nA3Fm7FeRhdWTiVTeqvSeOuMAOzBQ==
   /@types/d3-contour/2.0.0:
     dependencies:
       '@types/d3-array': 2.9.0
       '@types/geojson': 7946.0.7
-    dev: false
     resolution:
       integrity: sha512-PS9UO6zBQqwHXsocbpdzZFONgK1oRUgWtjjh/iz2vM06KaXLInLiKZ9e3OLBRerc1cU2uJYpO+8zOnb6frvCGQ==
   /@types/d3-delaunay/5.3.0:
-    dev: false
     resolution:
       integrity: sha512-gJYcGxLu0xDZPccbUe32OUpeaNtd1Lz0NYJtko6ZLMyG2euF4pBzrsQXms67LHZCDFzzszw+dMhSL/QAML3bXw==
   /@types/d3-dispatch/2.0.0:
-    dev: false
     resolution:
       integrity: sha512-Sh0KW6z/d7uxssD7K4s4uCSzlEG/+SP+U47q098NVdOfFvUKNTvKAIV4XqjxsUuhE/854ARAREHOxkr9gQOCyg==
   /@types/d3-drag/2.0.0:
     dependencies:
       '@types/d3-selection': 2.0.0
-    dev: false
     resolution:
       integrity: sha512-VaUJPjbMnDn02tcRqsHLRAX5VjcRIzCjBfeXTLGe6QjMn5JccB5Cz4ztMRXMJfkbC45ovgJFWuj6DHvWMX1thA==
   /@types/d3-dsv/2.0.1:
-    dev: false
     resolution:
       integrity: sha512-wovgiG9Mgkr/SZ/m/c0m+RwrIT4ozsuCWeLxJyoObDWsie2DeQT4wzMdHZPR9Ya5oZLQT3w3uSl0NehG0+0dCA==
   /@types/d3-ease/2.0.0:
-    dev: false
     resolution:
       integrity: sha512-6aZrTyX5LG+ptofVHf+gTsThLRY1nhLotJjgY4drYqk1OkJMu2UvuoZRlPw2fffjRHeYepue3/fxTufqKKmvsA==
   /@types/d3-fetch/2.0.0:
     dependencies:
       '@types/d3-dsv': 2.0.1
-    dev: false
     resolution:
       integrity: sha512-WnLepGtxepFfXRdPI8I5FTgNiHn9p4vMTTqaNCzJJfAswXx0rOY2jjeolzEU063em3iJmGZ+U79InnEeFOrCRw==
   /@types/d3-force/2.1.1:
-    dev: false
     resolution:
       integrity: sha512-3r+CQv2K/uDTAVg0DGxsbBjV02vgOxb8RhPIv3gd6cp3pdPAZ7wEXpDjUZSoqycAQLSDOxG/AZ54Vx6YXZSbmQ==
   /@types/d3-format/2.0.0:
-    dev: false
     resolution:
       integrity: sha512-uagdkftxnGkO4pZw5jEYOM5ZnZOEsh7z8j11Qxk85UkB2RzfUUxRl7R9VvvJZHwKn8l+x+rpS77Nusq7FkFmIg==
   /@types/d3-geo/2.0.0:
     dependencies:
       '@types/geojson': 7946.0.7
-    dev: false
     resolution:
       integrity: sha512-DHHgYXW36lnAEQMYU2udKVOxxljHrn2EdOINeSC9jWCAXwOnGn7A19B8sNsHqgpu4F7O2bSD7//cqBXD3W0Deg==
   /@types/d3-hierarchy/2.0.0:
-    dev: false
     resolution:
       integrity: sha512-YxdskUvwzqggpnSnDQj4KVkicgjpkgXn/g/9M9iGsiToLS3nG6Ytjo1FoYhYVAAElV/fJBGVL3cQ9Hb7tcv+lw==
   /@types/d3-interpolate/2.0.0:
     dependencies:
       '@types/d3-color': 2.0.1
-    dev: false
     resolution:
       integrity: sha512-Wt1v2zTlEN8dSx8hhx6MoOhWQgTkz0Ukj7owAEIOF2QtI0e219paFX9rf/SLOr/UExWb1TcUzatU8zWwFby6gg==
   /@types/d3-path/1.0.9:
-    dev: false
     resolution:
       integrity: sha512-NaIeSIBiFgSC6IGUBjZWcscUJEq7vpVu7KthHN8eieTV9d9MqkSOZLH4chq1PmcKy06PNe3axLeKmRIyxJ+PZQ==
   /@types/d3-path/2.0.0:
-    dev: false
     resolution:
       integrity: sha512-tXcR/9OtDdeCIsyl6eTNHC3XOAOdyc6ceF3QGBXOd9jTcK+ex/ecr00p9L9362e/op3UEPpxrToi1FHrtTSj7Q==
   /@types/d3-polygon/2.0.0:
-    dev: false
     resolution:
       integrity: sha512-fISnMd8ePED1G4aa4V974Jmt+ajHSgPoxMa2D0ULxMybpx0Vw4WEzhQEaMIrL3hM8HVRcKTx669I+dTy/4PhAw==
   /@types/d3-quadtree/2.0.0:
-    dev: false
     resolution:
       integrity: sha512-YZuJuGBnijD0H+98xMJD4oZXgv/umPXy5deu3IimYTPGH3Kr8Th6iQUff0/6S80oNBD7KtOuIHwHUCymUiRoeQ==
   /@types/d3-random/2.2.0:
-    dev: false
     resolution:
       integrity: sha512-Hjfj9m68NmYZzushzEG7etPvKH/nj9b9s9+qtkNG3/dbRBjQZQg1XS6nRuHJcCASTjxXlyXZnKu2gDxyQIIu9A==
   /@types/d3-scale-chromatic/2.0.0:
-    dev: false
     resolution:
       integrity: sha512-Y62+2clOwZoKua84Ha0xU77w7lePiaBoTjXugT4l8Rd5LAk+Mn/ZDtrgs087a+B5uJ3jYUHHtKw5nuEzp0WBHw==
   /@types/d3-scale/3.2.2:
     dependencies:
       '@types/d3-time': 2.0.0
-    dev: false
     resolution:
       integrity: sha512-qpQe8G02tzUwt9sdWX1h8A/W0Q1+N48wMnYXVOkrzeLUkCfvzJYV9Ee3aORCS4dN4ONRLFmMvaXdziQ29XGLjQ==
   /@types/d3-selection/2.0.0:
-    dev: false
     resolution:
       integrity: sha512-EF0lWZ4tg7oDFg4YQFlbOU3936e3a9UmoQ2IXlBy1+cv2c2Pv7knhKUzGlH5Hq2sF/KeDTH1amiRPey2rrLMQA==
   /@types/d3-shape/2.0.0:
     dependencies:
       '@types/d3-path': 1.0.9
-    dev: false
     resolution:
       integrity: sha512-NLzD02m5PiD1KLEDjLN+MtqEcFYn4ZL9+Rqc9ZwARK1cpKZXd91zBETbe6wpBB6Ia0D0VZbpmbW3+BsGPGnCpA==
   /@types/d3-time-format/3.0.0:
-    dev: false
     resolution:
       integrity: sha512-UpLg1mn/8PLyjr+J/JwdQJM/GzysMvv2CS8y+WYAL5K0+wbvXv/pPSLEfdNaprCZsGcXTxPsFMy8QtkYv9ueew==
   /@types/d3-time/2.0.0:
-    dev: false
     resolution:
       integrity: sha512-Abz8bTzy8UWDeYs9pCa3D37i29EWDjNTjemdk0ei1ApYVNqulYlGUKip/jLOpogkPSsPz/GvZCYiC7MFlEk0iQ==
   /@types/d3-timer/2.0.0:
-    dev: false
     resolution:
       integrity: sha512-l6stHr1VD1BWlW6u3pxrjLtJfpPZq9I3XmKIQtq7zHM/s6fwEtI1Yn6Sr5/jQTrUDCC5jkS6gWqlFGCDArDqNg==
   /@types/d3-transition/2.0.0:
     dependencies:
       '@types/d3-selection': 2.0.0
-    dev: false
     resolution:
       integrity: sha512-UJDzI98utcZQUJt3uIit/Ho0/eBIANzrWJrTmi4+TaKIyWL2iCu7ShP0o4QajCskhyjOA7C8+4CE3b1YirTzEQ==
   /@types/d3-zoom/2.0.1:
     dependencies:
       '@types/d3-interpolate': 2.0.0
       '@types/d3-selection': 2.0.0
-    dev: false
     resolution:
       integrity: sha512-FuiGLfaHmp84b9wsj0dG03E/aJl5k98OLnJ2/5p7bQOHEpWqR+z5WCoWYMAbdGxaca7VNd9tCT5i6AJnpauNTQ==
   /@types/d3/6.3.0:
@@ -8426,13 +8430,47 @@ packages:
     dev: false
     resolution:
       integrity: sha512-YILdGsjNTbvkWZKsBasB4cVDwNPnni7ILMJg9keMErQHyuII2yO2jyFdUy5E+7k/HTNP/AucrPddQuu27udbeA==
+  /@types/d3/7.0.0:
+    dependencies:
+      '@types/d3-array': 2.9.0
+      '@types/d3-axis': 2.0.0
+      '@types/d3-brush': 2.1.0
+      '@types/d3-chord': 2.0.1
+      '@types/d3-color': 2.0.1
+      '@types/d3-contour': 2.0.0
+      '@types/d3-delaunay': 5.3.0
+      '@types/d3-dispatch': 2.0.0
+      '@types/d3-drag': 2.0.0
+      '@types/d3-dsv': 2.0.1
+      '@types/d3-ease': 2.0.0
+      '@types/d3-fetch': 2.0.0
+      '@types/d3-force': 2.1.1
+      '@types/d3-format': 2.0.0
+      '@types/d3-geo': 2.0.0
+      '@types/d3-hierarchy': 2.0.0
+      '@types/d3-interpolate': 2.0.0
+      '@types/d3-path': 2.0.0
+      '@types/d3-polygon': 2.0.0
+      '@types/d3-quadtree': 2.0.0
+      '@types/d3-random': 2.2.0
+      '@types/d3-scale': 3.2.2
+      '@types/d3-scale-chromatic': 2.0.0
+      '@types/d3-selection': 2.0.0
+      '@types/d3-shape': 2.0.0
+      '@types/d3-time': 2.0.0
+      '@types/d3-time-format': 3.0.0
+      '@types/d3-timer': 2.0.0
+      '@types/d3-transition': 2.0.0
+      '@types/d3-zoom': 2.0.1
+    dev: true
+    resolution:
+      integrity: sha512-7rMMuS5unvbvFCJXAkQXIxWTo2OUlmVXN5q7sfQFesuVICY55PSP6hhbUhWjTTNpfTTB3iLALsIYDFe7KUNABw==
   /@types/debug/4.1.5:
     resolution:
       integrity: sha512-Q1y515GcOdTHgagaVFhHnIFQ38ygs/kmxdNpvpou+raI9UO3YZcHDngBSYKQklcKlvA7iuQlmIKbzvmxcOE9CQ==
   /@types/decompress/4.2.3:
     dependencies:
       '@types/node': 14.14.45
-    dev: false
     resolution:
       integrity: sha512-W24e3Ycz1UZPgr1ZEDHlK4XnvOr+CpJH3qNsFeqXwwlW/9END9gxn3oJSsp7gYdiQxrXUHwUUd3xuzVz37MrZQ==
   /@types/download/6.2.4:
@@ -8440,9 +8478,14 @@ packages:
       '@types/decompress': 4.2.3
       '@types/got': 8.3.5
       '@types/node': 14.14.45
-    dev: false
     resolution:
       integrity: sha512-Lo5dy3ai6LNnbL663sgdzqL1eib11u1yKH6w3v3IXEOO4kRfQpMn1qWUTaumcHLACjFp1RcBx9tUXEvJoR3vcA==
+  /@types/duplexify/3.6.0:
+    dependencies:
+      '@types/node': 14.14.45
+    dev: true
+    resolution:
+      integrity: sha512-5zOA53RUlzN74bvrSGwjudssD9F3a797sDZQkiYpUOxW+WHaXTCPz4/d5Dgi6FKnOqZ2CpaTo0DhgIfsXAOE/A==
   /@types/encoding-down/5.0.0:
     dependencies:
       '@types/abstract-leveldown': 5.0.1
@@ -8526,7 +8569,6 @@ packages:
     resolution:
       integrity: sha512-mZsifGG4QeQ7hlkhO56u7zt/ycBgGxSVsFI/6lGTU34VtwkiqrrSDgw0+ygs8kFGWcXnFQWMrzF2h7TtDFNixA==
   /@types/geojson/7946.0.7:
-    dev: false
     resolution:
       integrity: sha512-wE2v81i4C4Ol09RtsWFAqg3BUitWbHSpSlIo+bNdsCJijO9sjme+zm+73ZMCa/qMC8UEERxzGbvmr1cffo2SiQ==
   /@types/glob-base/0.3.0:
@@ -8542,7 +8584,6 @@ packages:
   /@types/got/8.3.5:
     dependencies:
       '@types/node': 14.14.45
-    dev: false
     resolution:
       integrity: sha512-AaXSrIF99SjjtPVNmCmYb388HML+PKEJb/xmj4SbL2ZO0hHuETZZzyDIKfOqaEoAHZEuX4sC+FRFrHYJoIby6A==
   /@types/graceful-fs/4.1.5:
@@ -8816,6 +8857,13 @@ packages:
       '@types/node': 14.14.45
     resolution:
       integrity: sha512-wpRerjHDxFBQ4r8XNv3xHJZeuqrBBoeQ/fhgkooV2F7KsPIYRROb/+f9ODgZfOEyO5/w2ej4YQdpPPXipT8DAA==
+  /@types/pumpify/1.4.1:
+    dependencies:
+      '@types/duplexify': 3.6.0
+      '@types/node': 14.14.45
+    dev: true
+    resolution:
+      integrity: sha512-l7u/Dnh1OG9T7VH6TvulR0g8oE8hgIW5409mSUKi8Vxw2+JV18aTa06Sv5bvNjrD0zbsB/cuZ/iTFQgFNfzIuw==
   /@types/q/1.5.4:
     dev: false
     resolution:
