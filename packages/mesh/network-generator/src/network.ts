@@ -6,7 +6,8 @@ import assert from 'assert';
 import crypto from 'crypto';
 import eos from 'end-of-stream';
 import { EventEmitter } from 'events';
-import createGraph from 'ngraph.graph';
+import { EventedType } from 'ngraph.events';
+import createGraph, { Graph } from 'ngraph.graph';
 import { PassThrough, Stream } from 'stream';
 
 interface CreateStreamOptions {
@@ -17,13 +18,13 @@ interface CreateStreamOptions {
 }
 interface Peer {
   id: Buffer,
-  createStream?: (options: CreateStreamOptions) => Stream.Stream
+  createStream?: (options: CreateStreamOptions) => Stream
 }
 
 interface Connection {
   fromPeer: Peer,
   toPeer: Peer,
-  stream: Stream.Stream
+  stream: Stream
 }
 
 /**
@@ -37,7 +38,7 @@ type CreatePeerCallback = (id: Buffer) => Promise<Peer>
  * @param {Peer} fromPeer Peer initiator of the connection
  * @param {Peer} toPeer Peer target
  */
-type CreateConnectionCallback = (fromPeer: Peer, toPeer: Peer) => Promise<Stream.Stream | undefined>
+type CreateConnectionCallback = (fromPeer: Peer, toPeer: Peer) => Promise<Stream | undefined>
 
 /**
  * Class helper to generate random buffer ids based on a number.
@@ -64,6 +65,8 @@ export interface NetworkOptions {
 export class Network extends EventEmitter {
   private _createPeer: CreatePeerCallback
   private _createConnection: CreateConnectionCallback
+  private _connectionsOpening: Map<any, any>;
+  private _graph: Graph<any, any> & EventedType
 
   constructor (options: NetworkOptions = {}) {
     super();
@@ -101,8 +104,8 @@ export class Network extends EventEmitter {
   get connections () {
     const connections: Connection[] = [];
     this._graph.forEachLink((link: any) => {
-      const fromPeer = this._graph.getNode(link.fromId).data;
-      const toPeer = this._graph.getNode(link.toId).data;
+      const fromPeer = this._graph.getNode(link.fromId)?.data;
+      const toPeer = this._graph.getNode(link.toId)?.data;
       connections.push({ fromPeer, toPeer, stream: link.data });
     });
     return connections;
@@ -178,7 +181,7 @@ export class Network extends EventEmitter {
     const promises: Promise<any>[] = [];
     this._graph.forEachLinkedNode(idHex, (_: any, link: any) => {
       promises.push(this._destroyLink(link));
-    });
+    }, false);
     this._graph.removeNode(idHex);
     return Promise.all(promises);
   }
@@ -195,7 +198,7 @@ export class Network extends EventEmitter {
       if (link.fromId === fromHex && link.toId === toHex) {
         promises.push(this._destroyLink(link));
       }
-    });
+    }, false);
 
     return Promise.all(promises);
   }
@@ -216,16 +219,16 @@ export class Network extends EventEmitter {
 
     const connection = (async () => conn || await this._createConnection(fromPeer, toPeer) || new PassThrough())()
       .then(stream => {
-        if (!(typeof stream === 'object' && typeof stream.pipe === 'function')) {
+        if (!(typeof stream === 'object' && typeof (stream as any).pipe === 'function')) {
           throw new Error('createConnection expect to return a stream');
         }
 
-        eos(stream, () => {
+        eos(stream as any, () => {
           this._graph.removeLink(link);
         });
 
         link.data = stream;
-        return stream;
+        return stream as Stream;
       }).catch((err) => {
         this._graph.removeLink(link);
         throw err;
