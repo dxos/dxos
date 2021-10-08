@@ -231,7 +231,9 @@ export class RegistryClient implements IRegistryClient {
     }
     return {
       ...resource,
-      record: record as R
+      record: record as R,
+      tag: resource.tags[versionOrTag] ? versionOrTag : undefined,
+      version: resource.versions[versionOrTag] ? versionOrTag : undefined
     };
   }
 

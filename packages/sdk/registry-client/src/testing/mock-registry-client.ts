@@ -4,6 +4,7 @@
 
 import { Root } from 'protobufjs';
 
+import { createMockResourceRecords } from '.';
 import { DXN } from '../dxn';
 import { CID, CIDLike, DomainKey } from '../models';
 import { IQuery, Filtering } from '../querying';
@@ -17,13 +18,16 @@ import {
   Resource,
   ResourceRecord
 } from '../registry-client';
-import { createMockResources, createMockTypes } from './fake-data-generator';
+import { createMockTypes } from './fake-data-generator';
 
 export class MemoryRegistryClient implements IRegistryClient {
+  private records: RegistryRecord[]
   constructor (
     private types: RegistryTypeRecord[] = createMockTypes(),
-    private resources: Resource[] = createMockResources()
-  ) {}
+    private resources: ResourceRecord<RegistryRecord>[] = createMockResourceRecords()
+  ) {
+    this.records = this.resources.map(resource => resource.record);
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addRecord (data: unknown, schemaId: CIDLike, messageFqn: string): Promise<CID> {
@@ -52,7 +56,9 @@ export class MemoryRegistryClient implements IRegistryClient {
     }
     return {
       ...resource,
-      record: record as R
+      record: record as R,
+      tag: resource.tags[versionOrTag] ? versionOrTag : undefined,
+      version: resource.versions[versionOrTag] ? versionOrTag : undefined
     };
   }
 
@@ -63,12 +69,12 @@ export class MemoryRegistryClient implements IRegistryClient {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getRecord<R extends RegistryRecord = RegistryRecord> (cidLike: CIDLike): Promise<R | undefined> {
-    return undefined;
+    return this.records.find(record => record.cid.equals(cidLike)) as R;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getRecords<R extends RegistryRecord = RegistryRecord> (query?: IQuery): Promise<R[]> {
-    return [];
+    return this.records as R[];
   }
 
   async queryResources (query?: IQuery): Promise<Resource[]> {
