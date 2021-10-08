@@ -152,9 +152,9 @@ describe('Registry Client', () => {
 
       const resources = await registryApi.queryResources();
       expect(resources.every(resource => {
-        const tags = Object.values(resource.tags).map(tag => tag?.toString() ?? '')
-        const versions = Object.values(resource.versions).map(version => version?.toString() ?? '')
-        return !tags.includes(cid.toString()) && !versions.includes(cid.toString())
+        const tags = Object.values(resource.tags).map(tag => tag?.toString() ?? '');
+        const versions = Object.values(resource.versions).map(version => version?.toString() ?? '');
+        return !tags.includes(cid.toString()) && !versions.includes(cid.toString());
       })).to.be.true;
     });
 

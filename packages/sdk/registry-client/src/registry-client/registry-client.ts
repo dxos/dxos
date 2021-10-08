@@ -4,6 +4,7 @@
 
 import { ApiPromise } from '@polkadot/api/promise';
 import { AddressOrPair } from '@polkadot/api/types';
+import { BTreeMap, StorageKey, Text } from '@polkadot/types';
 import { Option } from '@polkadot/types/codec/Option';
 import { compactAddLength } from '@polkadot/util';
 import assert from 'assert';
@@ -13,13 +14,12 @@ import { ComplexMap, raise } from '@dxos/util';
 
 import { ApiTransactionHandler } from '../api-transaction-handler';
 import { DXN } from '../dxn';
-import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, RecordExtension, sanitizeExtensionData } from '../encoding';
-import { Multihash, Resource as BaseResource, DomainKey as BaseDomainKey } from '../interfaces';
+import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData } from '../encoding';
+import { DomainKey as BaseDomainKey, Multihash, Resource as BaseResource } from '../interfaces';
 import { CID, CIDLike, DomainKey } from '../models';
 import { schema as dxnsSchema } from '../proto/gen';
 import { Filtering, IQuery } from '../querying';
 import { DomainInfo, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './interface';
-import { BTreeMap, StorageKey, Text } from '@polkadot/types';
 
 export class RegistryClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, RegistryRecord>(cid => cid.toB58String())
@@ -179,17 +179,17 @@ export class RegistryClient implements IRegistryClient {
    * Transforms the Resource from the chain with Polkadot types to Typescript types and models.
    */
   private decodeResourceValues (resource: BaseResource): Omit<Resource, 'id'> {
-    function decodeMap(map: BTreeMap<Text, Multihash>): Record<string, CID> {
+    function decodeMap (map: BTreeMap<Text, Multihash>): Record<string, CID> {
       return Object.fromEntries(
         Array.from(map.entries())
           .map(([key, value]) => [key.toString(), CID.from(value.toU8a())])
-      )
+      );
     }
 
     return {
       tags: decodeMap(resource.tags),
-      versions: decodeMap(resource.versions),
-    }
+      versions: decodeMap(resource.versions)
+    };
   }
 
   /**
@@ -198,19 +198,19 @@ export class RegistryClient implements IRegistryClient {
   private decodeResourceId (resourceKeys: StorageKey<[BaseDomainKey, Text]>, domains: DomainInfo[]): Resource['id'] {
     const name = resourceKeys.args[1].toString();
     const domainKey = new DomainKey(resourceKeys.args[0].toU8a());
-    const domain = domains.find(domain => domain.key.toHex() === domainKey.toHex())
+    const domain = domains.find(domain => domain.key.toHex() === domainKey.toHex());
     return domain?.name ? DXN.fromDomainName(domain.name, name) : DXN.fromDomainKey(domainKey, name);
   }
 
   async getResource (id: DXN): Promise<Resource | undefined> {
-    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(id.domain ?? id.key?.value, id.resource)).unwrapOr(undefined)
+    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(id.domain ?? id.key?.value, id.resource)).unwrapOr(undefined);
     if (resource === undefined) {
       return undefined;
     }
     return {
       id,
       ...this.decodeResourceValues(resource)
-    }
+    };
   }
 
   async getResourceRecord<R extends RegistryRecord = RegistryRecord> (id: DXN, versionOrTag = 'latest'): Promise<ResourceRecord<R> | undefined> {
@@ -218,9 +218,9 @@ export class RegistryClient implements IRegistryClient {
     if (resource === undefined) {
       return undefined;
     }
-    const cid = resource.tags[versionOrTag] ?? resource.versions[versionOrTag]
+    const cid = resource.tags[versionOrTag] ?? resource.versions[versionOrTag];
     if (cid === undefined) {
-      return undefined
+      return undefined;
     }
     const record = await this.getRecord(cid);
     if (record === undefined) {
@@ -229,7 +229,7 @@ export class RegistryClient implements IRegistryClient {
     return {
       ...resource,
       record: record as R
-    }
+    };
   }
 
   async queryResources (query?: IQuery): Promise<Resource[]> {
@@ -241,7 +241,7 @@ export class RegistryClient implements IRegistryClient {
     const result = resources.map(resource => ({
       id: this.decodeResourceId(resource[0], domains),
       ...this.decodeResourceValues(resource[1].unwrap())
-    }))
+    }));
 
     return result.filter(isNotNullOrUndefined).filter(resource => Filtering.matchResource(resource, query));
   }
@@ -289,7 +289,7 @@ export class RegistryClient implements IRegistryClient {
     return domainKey;
   }
 
-  async updateResource (key: DomainKey, resourceName: string, contentCid: CID, opts: UpdateResourceOptions = {tags: ['latest']}): Promise<void> {
+  async updateResource (key: DomainKey, resourceName: string, contentCid: CID, opts: UpdateResourceOptions = { tags: ['latest'] }): Promise<void> {
     await this.transactionsHandler.sendTransaction(
       this.api.tx.registry.updateResource(key.value, resourceName, contentCid.value, opts.version ?? null, opts.tags ?? []));
   }

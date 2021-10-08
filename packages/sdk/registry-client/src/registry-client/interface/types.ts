@@ -3,6 +3,7 @@
 //
 
 import protobuf from 'protobufjs';
+
 import { DXN } from '../../dxn';
 import { RecordExtension } from '../../encoding';
 import { CID, DomainKey } from '../../models';

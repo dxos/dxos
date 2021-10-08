@@ -3,8 +3,9 @@
 //
 
 import protobuf from 'protobufjs';
-import { IReadOnlyRegistryClient } from './readonly-registry-client';
+
 import { CID, CIDLike, DomainKey } from '../../models';
+import { IReadOnlyRegistryClient } from './readonly-registry-client';
 import { SuppliedRecordMetadata, UpdateResourceOptions } from './types';
 
 /**

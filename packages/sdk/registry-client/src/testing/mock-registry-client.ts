@@ -42,9 +42,9 @@ export class MemoryRegistryClient implements IRegistryClient {
     if (resource === undefined) {
       return undefined;
     }
-    const cid = resource.tags[versionOrTag] ?? resource.versions[versionOrTag]
+    const cid = resource.tags[versionOrTag] ?? resource.versions[versionOrTag];
     if (cid === undefined) {
-      return undefined
+      return undefined;
     }
     const record = await this.getRecord(cid);
     if (record === undefined) {
@@ -53,7 +53,7 @@ export class MemoryRegistryClient implements IRegistryClient {
     return {
       ...resource,
       record: record as R
-    }
+    };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -24,7 +24,7 @@ describe('Registry API mock', () => {
     // as the resource DXN
     const registryResource = await mock.getResource(DXN.parse(dxn));
     expect(registryResource).to.be.deep.equal(resource);
-    expect(registryResource?.tags['latest']).to.be.a('string');
+    expect(registryResource?.tags.latest).to.be.a('string');
   });
 
   it('Returns predefined resources', async () => {
