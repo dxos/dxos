@@ -203,8 +203,8 @@ export class RegistryClient implements IRegistryClient {
   }
 
   async getResource (id: DXN): Promise<Resource | undefined> {
-    const domainKey = id.domain ? await this.resolveDomainName(id.domain) : id.key
-    assert(domainKey)
+    const domainKey = id.domain ? await this.resolveDomainName(id.domain) : id.key;
+    assert(domainKey);
 
     const resource = (await this.api.query.registry.resources<Option<BaseResource>>(domainKey.value, id.resource)).unwrapOr(undefined);
     if (resource === undefined) {

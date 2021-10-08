@@ -10,11 +10,11 @@ import protobuf from 'protobufjs';
 
 import { IRegistryClient, CID, RegistryClient } from '../../src';
 import { createApiPromise, createKeyring } from '../../src/api-creation';
+import { DXN } from '../../src/dxn';
+import { DomainKey } from '../../src/models';
 import { schemaJson } from '../../src/proto/gen';
 import { App } from '../../src/proto/gen/dxos/type';
 import { createCID } from '../../src/testing';
-import { DXN } from '../../src/dxn';
-import { DomainKey } from '../../src/models';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
@@ -105,47 +105,76 @@ describe('Registry Client', () => {
     });
 
     it('Retrieves a single resource', async () => {
-      const id = DXN.fromDomainKey(domainKey, appResourceName)
+      const id = DXN.fromDomainKey(domainKey, appResourceName);
       const resource = await registryApi.getResource(id);
-      expect(resource).to.not.be.undefined
-      expect(resource!.id.toString()).to.be.equal(id.toString())
-      expect(Object.keys(resource!.versions).length).to.equal(0)
-      expect(Object.keys(resource!.tags).length).to.equal(1)
-      expect(resource!.tags['latest']?.toString()).to.be.equal(contentCid.toString())
+      expect(resource).to.not.be.undefined;
+      expect(resource!.id.toString()).to.be.equal(id.toString());
+      expect(Object.keys(resource!.versions).length).to.equal(0);
+      expect(Object.keys(resource!.tags).length).to.equal(1);
+      expect(resource!.tags.latest?.toString()).to.be.equal(contentCid.toString());
     });
 
-    it.only('Registers resource with tags and versions', async () => {
-      const resourceName = 'versionedApp'
-      const version2 = await registryApi.insertDataRecord({
-        appName: 'Versioned App',
-        appVersion: 2,
-        hasSso: false
-      }, appTypeCid);
-      const version3 = await registryApi.insertDataRecord({
-        appName: 'Versioned App',
-        appVersion: 3,
-        hasSso: false
-      }, appTypeCid);
-      const version4 = await registryApi.insertDataRecord({
-        appName: 'Versioned App',
-        appVersion: 4,
-        hasSso: false
-      }, appTypeCid);
+    describe('Tags and versions', () => {
+      const versionedName = 'versionedApp';
+      let version2: CID;
+      let version3: CID;
+      let version4: CID;
+      let versionedDxn: DXN;
 
-      await registryApi.updateResource(domainKey, resourceName, version2, {tags: ['beta'], version: '2.0.0'});
-      await registryApi.updateResource(domainKey, resourceName, version3, {tags: ['alpha'], version: '3.0.0'});
-      await registryApi.updateResource(domainKey, resourceName, version4); // latest tag by default.
+      beforeEach(async () => {
+        version2 = await registryApi.insertDataRecord({
+          appName: 'Versioned App',
+          appVersion: 2,
+          hasSso: false
+        }, appTypeCid);
+        version3 = await registryApi.insertDataRecord({
+          appName: 'Versioned App',
+          appVersion: 3,
+          hasSso: false
+        }, appTypeCid);
+        version4 = await registryApi.insertDataRecord({
+          appName: 'Versioned App',
+          appVersion: 4,
+          hasSso: false
+        }, appTypeCid);
 
-      const resource = await registryApi.getResource(DXN.fromDomainKey(domainKey, resourceName))
-      expect(resource).to.not.be.undefined
+        versionedDxn = DXN.fromDomainKey(domainKey, versionedName);
+        await registryApi.updateResource(domainKey, versionedName, version2, { tags: ['beta'], version: '2.0.0' });
+        await registryApi.updateResource(domainKey, versionedName, version3, { tags: ['alpha'], version: '3.0.0' });
+        await registryApi.updateResource(domainKey, versionedName, version4); // latest tag by default.
+      });
 
-      expect(resource!.tags.latest?.toString()).to.be.equal(version4.toString())
-      expect(resource!.tags.alpha?.toString()).to.be.equal(version3.toString())
-      expect(resource!.tags.beta?.toString()).to.be.equal(version2.toString())
+      it('Properly Registers resource with tags and versions', async () => {
+        const resource = await registryApi.getResource(versionedDxn);
+        expect(resource).to.not.be.undefined;
 
-      expect(resource!.versions['2.0.0']?.toString()).to.be.equal(version2.toString())
-      expect(resource!.versions['3.0.0']?.toString()).to.be.equal(version3.toString())
-    })
+        expect(resource!.tags.latest?.toString()).to.be.equal(version4.toString());
+        expect(resource!.tags.alpha?.toString()).to.be.equal(version3.toString());
+        expect(resource!.tags.beta?.toString()).to.be.equal(version2.toString());
+
+        expect(resource!.versions['2.0.0']?.toString()).to.be.equal(version2.toString());
+        expect(resource!.versions['3.0.0']?.toString()).to.be.equal(version3.toString());
+      });
+
+      it('queries by tag', async () => {
+        const resource = await registryApi.getResourceRecord(versionedDxn, 'alpha');
+        expect(resource).to.not.be.undefined;
+
+        expect(resource!.record.cid.toString()).to.be.equal(version3.toString());
+
+        expect(resource!.tag).to.be.equal('alpha');
+        expect(resource!.version).to.be.undefined;
+      });
+
+      it('queries by version', async () => {
+        const resource = await registryApi.getResourceRecord(versionedDxn, '3.0.0');
+        expect(resource).to.not.be.undefined;
+
+        expect(resource!.record.cid.toString()).to.be.equal(version3.toString());
+        expect(resource!.tag).to.be.undefined;
+        expect(resource!.version).to.be.equal('3.0.0');
+      });
+    });
   });
 
   describe('Data records', () => {
