@@ -14,12 +14,12 @@ import { ComplexMap, raise } from '@dxos/util';
 import { ApiTransactionHandler } from '../api-transaction-handler';
 import { DXN } from '../dxn';
 import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, RecordExtension, sanitizeExtensionData } from '../encoding';
-import { Multihash, Resource as BaseResource } from '../interfaces';
+import { Multihash, Resource as BaseResource, DomainKey as BaseDomainKey } from '../interfaces';
 import { CID, CIDLike, DomainKey } from '../models';
 import { schema as dxnsSchema } from '../proto/gen';
 import { Filtering, IQuery } from '../querying';
 import { DomainInfo, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './interface';
-import { BTreeMap, Text } from '@polkadot/types';
+import { BTreeMap, StorageKey, Text } from '@polkadot/types';
 
 export class RegistryClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, RegistryRecord>(cid => cid.toB58String())
@@ -176,17 +176,9 @@ export class RegistryClient implements IRegistryClient {
   }
 
   /**
-   * Transforms the Resource from the chain with Polkadot types to Typescript types, decoding maps and adding id.
+   * Transforms the Resource from the chain with Polkadot types to Typescript types and models.
    */
-  private decodeResource (resource: BaseResource | undefined, domains: DomainInfo[]): Resource | undefined {
-    if (resource === undefined) {
-      return undefined;
-    }
-    const name = resource[0].args[1].toString();
-    const domainKey = new DomainKey(resource[0].args[0].toU8a());
-    const domain = domains.find(domain => domain.key.toHex() === domainKey.toHex())
-    const id = domain?.name ? DXN.fromDomainName(domain.name, name) : DXN.fromDomainKey(domainKey, name);
-
+  private decodeResourceValues (resource: BaseResource): Omit<Resource, 'id'> {
     function decodeMap(map: BTreeMap<Text, Multihash>): Record<string, CID> {
       return Object.fromEntries(
         Array.from(map.entries())
@@ -195,15 +187,30 @@ export class RegistryClient implements IRegistryClient {
     }
 
     return {
-      id,
-      tags: decodeMap(resource[1].unwrap().tags),
-      versions: decodeMap(resource[1].unwrap().versions),
+      tags: decodeMap(resource.tags),
+      versions: decodeMap(resource.versions),
     }
+  }
+
+  /**
+   * Transforms the Resource from the chain with Polkadot types to Typescript types and models.
+   */
+  private decodeResourceId (resourceKeys: StorageKey<[BaseDomainKey, Text]>, domains: DomainInfo[]): Resource['id'] {
+    const name = resourceKeys.args[1].toString();
+    const domainKey = new DomainKey(resourceKeys.args[0].toU8a());
+    const domain = domains.find(domain => domain.key.toHex() === domainKey.toHex())
+    return domain?.name ? DXN.fromDomainName(domain.name, name) : DXN.fromDomainKey(domainKey, name);
   }
 
   async getResource (id: DXN): Promise<Resource | undefined> {
     const resource = (await this.api.query.registry.resources<Option<BaseResource>>(id.domain ?? id.key?.value, id.resource)).unwrapOr(undefined)
-    return this.decodeResource(resource, await this.getDomains());
+    if (resource === undefined) {
+      return undefined;
+    }
+    return {
+      id,
+      ...this.decodeResourceValues(resource)
+    }
   }
 
   async getResourceRecord<R extends RegistryRecord = RegistryRecord> (id: DXN, versionOrTag = 'latest'): Promise<ResourceRecord<R> | undefined> {
@@ -231,7 +238,10 @@ export class RegistryClient implements IRegistryClient {
       this.getDomains()
     ]);
 
-    const result = resources.map(resource => this.decodeResource(resource[1].unwrap(), domains))
+    const result = resources.map(resource => ({
+      id: this.decodeResourceId(resource[0], domains),
+      ...this.decodeResourceValues(resource[1].unwrap())
+    }))
 
     return result.filter(isNotNullOrUndefined).filter(resource => Filtering.matchResource(resource, query));
   }

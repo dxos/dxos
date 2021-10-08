@@ -86,17 +86,17 @@ describe('Registry Client', () => {
     });
 
     it('Retrieves a list of resources', async () => {
-      const resources = await registryApi.getResources();
+      const resources = await registryApi.queryResources();
       expect(resources.length).to.be.greaterThan(0);
     });
 
     it('Queries by type, when matching, returns matching items', async () => {
-      const resources = await registryApi.getResources({ text: appResourceName });
+      const resources = await registryApi.queryResources({ text: appResourceName });
       expect(resources.length).to.be.greaterThan(0);
     });
 
     it('Queries by type, when not matching, returns empty', async () => {
-      const resources = await registryApi.getResources({ text: 'mybot' });
+      const resources = await registryApi.queryResources({ text: 'mybot' });
       expect(resources).to.be.empty;
     });
   });
@@ -150,8 +150,12 @@ describe('Registry Client', () => {
       const records = await registryApi.getRecords();
       expect(records.every(record => !record.cid.equals(cid))).to.be.true;
 
-      const resources = await registryApi.getResources();
-      expect(resources.every(resource => !resource.record.cid.equals(cid))).to.be.true;
+      const resources = await registryApi.queryResources();
+      expect(resources.every(resource => {
+        const tags = Object.values(resource.tags).map(tag => tag?.toString() ?? '')
+        const versions = Object.values(resource.versions).map(version => version?.toString() ?? '')
+        return !tags.includes(cid.toString()) && !versions.includes(cid.toString())
+      })).to.be.true;
     });
 
     describe('Querying', () => {

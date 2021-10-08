@@ -14,7 +14,8 @@ import {
   RegistryDataRecord,
   RegistryRecord,
   RegistryTypeRecord,
-  Resource
+  Resource,
+  ResourceRecord
 } from '../registry-client';
 import { createMockResources, createMockTypes } from './fake-data-generator';
 
@@ -30,17 +31,30 @@ export class MemoryRegistryClient implements IRegistryClient {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getResource<R extends RegistryRecord = RegistryRecord> (id: DXN): Promise<Resource<R> | undefined> {
-    const resources = this.resources as unknown as Resource<R>[];
+  async getResource (id: DXN): Promise<Resource | undefined> {
+    const resources = this.resources as unknown as Resource[];
     return resources.find(resource => resource.id.toString() === id.toString());
   }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async getResourceByTag<R extends RegistryRecord = RegistryRecord> (id: DXN, tag = 'latest'): Promise<Resource<R> | undefined> {
-      const resource = await this.getResource(id);
-      if (resource === undefined) return undefined;
-      resource.record.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getResourceRecord<R extends RegistryRecord = RegistryRecord> (id: DXN, versionOrTag = 'latest'): Promise<ResourceRecord<R> | undefined> {
+    const resource = await this.getResource(id);
+    if (resource === undefined) {
+      return undefined;
     }
+    const cid = resource.tags[versionOrTag] ?? resource.versions[versionOrTag]
+    if (cid === undefined) {
+      return undefined
+    }
+    const record = await this.getRecord(cid);
+    if (record === undefined) {
+      return undefined;
+    }
+    return {
+      ...resource,
+      record: record as R
+    }
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getDomains (): Promise<DomainInfo[]> {
@@ -57,8 +71,8 @@ export class MemoryRegistryClient implements IRegistryClient {
     return [];
   }
 
-  async queryResources<R extends RegistryRecord = RegistryRecord> (query?: IQuery): Promise<Resource<R>[]> {
-    let result = this.resources as unknown as Resource<R>[];
+  async queryResources (query?: IQuery): Promise<Resource[]> {
+    let result = this.resources as unknown as Resource[];
     result = result.filter(resource => Filtering.matchResource(resource, query));
     return result;
   }

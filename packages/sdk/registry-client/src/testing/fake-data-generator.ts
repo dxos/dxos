@@ -62,7 +62,10 @@ export const createMockResource = (_dxn?: DXN): Resource => {
 
   return {
     id: dxn,
-    record: record
+    tags: {
+      latest: record.cid
+    },
+    versions: {}
   };
 };
 
