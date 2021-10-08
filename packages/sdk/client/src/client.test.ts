@@ -74,6 +74,7 @@ test('persistent storage', async () => {
     await client.initialize();
 
     expect(client.halo.getProfile()).toBeDefined();
+    await client.destroy();
   }
 });
 
