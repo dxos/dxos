@@ -95,7 +95,8 @@
     "webpack": "4.44.2",
     "@dxos/esbuild-plugins": "workspace:*",
     "faker": "^5.1.0",
-    "lodash": "4.17.21"
+    "lodash": "4.17.21",
+    "esapp": "~0.1.3"
   },
   "publishConfig": {
     "access": "public"
