@@ -75,9 +75,21 @@ enum TaskType {
   COMPLETED = 2;
 }
 
+/**
+ * Task.
+ * Comments can be multiline.
+ */
 message Task {
+  /// Task id
   string id = 1;
+
+  /// Task title
   string title = 2;
+
+  /**
+   * Task key.
+   * Multiline field comment.
+   */
   required Key key = 3;
   required TaskType type = 4;
   google.protobuf.Any googleAny = 5;

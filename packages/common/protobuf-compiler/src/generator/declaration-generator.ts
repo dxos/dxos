@@ -46,11 +46,16 @@ function createMessageDeclaration (type: protobufjs.Type, subs: SubstitutionsMap
     type.name,
     undefined,
     undefined,
-    type.fieldsArray.map(field => f.createPropertySignature(
-      undefined,
-      field.name.includes('.') ? f.createStringLiteral(field.name) : field.name,
-      field.required ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
-      getFieldType(field, subs)
+    type.fieldsArray.map(field => ts.addSyntheticLeadingComment(
+      f.createPropertySignature(
+        undefined,
+        field.name.includes('.') ? f.createStringLiteral(field.name) : field.name,
+        field.required ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
+        getFieldType(field, subs)
+      ),
+      ts.SyntaxKind.MultiLineCommentTrivia,
+      'foo',
+      true,
     ))
   );
 }
