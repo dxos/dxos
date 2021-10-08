@@ -13,6 +13,8 @@ import { createApiPromise, createKeyring } from '../../src/api-creation';
 import { schemaJson } from '../../src/proto/gen';
 import { App } from '../../src/proto/gen/dxos/type';
 import { createCID } from '../../src/testing';
+import { DXN } from '../../src/dxn';
+import { DomainKey } from '../../src/models';
 import { DEFAULT_DOT_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
@@ -70,18 +72,20 @@ describe('Registry Client', () => {
 
   describe('Resources', () => {
     let appTypeCid: CID;
+    let contentCid: CID;
     const appResourceName = 'app';
+    let domainKey: DomainKey;
 
     beforeEach(async () => {
       appTypeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
 
-      const contentCid = await registryApi.insertDataRecord({
+      contentCid = await registryApi.insertDataRecord({
         appName: 'Tasks App',
         appVersion: 5,
         hasSso: false
       }, appTypeCid);
 
-      const domainKey = await registryApi.registerDomain();
+      domainKey = await registryApi.registerDomain();
       await registryApi.updateResource(domainKey, appResourceName, contentCid);
     });
 
@@ -99,6 +103,49 @@ describe('Registry Client', () => {
       const resources = await registryApi.queryResources({ text: 'mybot' });
       expect(resources).to.be.empty;
     });
+
+    it('Retrieves a single resource', async () => {
+      const id = DXN.fromDomainKey(domainKey, appResourceName)
+      const resource = await registryApi.getResource(id);
+      expect(resource).to.not.be.undefined
+      expect(resource!.id.toString()).to.be.equal(id.toString())
+      expect(Object.keys(resource!.versions).length).to.equal(0)
+      expect(Object.keys(resource!.tags).length).to.equal(1)
+      expect(resource!.tags['latest']?.toString()).to.be.equal(contentCid.toString())
+    });
+
+    it.only('Registers resource with tags and versions', async () => {
+      const resourceName = 'versionedApp'
+      const version2 = await registryApi.insertDataRecord({
+        appName: 'Versioned App',
+        appVersion: 2,
+        hasSso: false
+      }, appTypeCid);
+      const version3 = await registryApi.insertDataRecord({
+        appName: 'Versioned App',
+        appVersion: 3,
+        hasSso: false
+      }, appTypeCid);
+      const version4 = await registryApi.insertDataRecord({
+        appName: 'Versioned App',
+        appVersion: 4,
+        hasSso: false
+      }, appTypeCid);
+
+      await registryApi.updateResource(domainKey, resourceName, version2, {tags: ['beta'], version: '2.0.0'});
+      await registryApi.updateResource(domainKey, resourceName, version3, {tags: ['alpha'], version: '3.0.0'});
+      await registryApi.updateResource(domainKey, resourceName, version4); // latest tag by default.
+
+      const resource = await registryApi.getResource(DXN.fromDomainKey(domainKey, resourceName))
+      expect(resource).to.not.be.undefined
+
+      expect(resource!.tags.latest?.toString()).to.be.equal(version4.toString())
+      expect(resource!.tags.alpha?.toString()).to.be.equal(version3.toString())
+      expect(resource!.tags.beta?.toString()).to.be.equal(version2.toString())
+
+      expect(resource!.versions['2.0.0']?.toString()).to.be.equal(version2.toString())
+      expect(resource!.versions['3.0.0']?.toString()).to.be.equal(version3.toString())
+    })
   });
 
   describe('Data records', () => {
