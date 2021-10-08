@@ -413,7 +413,7 @@ export class BotManager {
       return { attributes: { name }, id: sha256(name) };
     }
 
-    const resource = await this._registryClient!.getResource(DXN.parse(botDXN!));
+    const resource = await this._registryClient!.getResourceRecord(DXN.parse(botDXN!), 'latest');
     const record = resource?.record;
 
     if (!record) {
