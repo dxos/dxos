@@ -18,6 +18,10 @@ export interface Resource {
   id: DXN
   versions: Record<string, CID | undefined>
   tags: Record<string, CID | undefined>
+  /**
+   * Type of the underlying records. `undefined` if the resource points to the type record.
+   */
+  type?: CID
 }
 
 // TODO(dmaretskyi): Think about a better name.

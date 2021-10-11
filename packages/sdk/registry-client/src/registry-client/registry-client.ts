@@ -178,17 +178,31 @@ export class RegistryClient implements IRegistryClient {
   /**
    * Transforms the Resource from the chain with Polkadot types to Typescript types and models.
    */
-  private decodeResourceValues (resource: BaseResource): Omit<Resource, 'id'> {
+  private async decodeResourceBody (resource: BaseResource): Promise<Omit<Resource, 'id'>> {
     function decodeMap (map: BTreeMap<Text, Multihash>): Record<string, CID> {
       return Object.fromEntries(
         Array.from(map.entries())
           .map(([key, value]) => [key.toString(), CID.from(value.toU8a())])
       );
     }
+    const tags = decodeMap(resource.tags);
+
+    // A single record to query for the type.
+    const selectedRecord = tags['latest'] ?? tags[Object.keys(tags)[0]];
+    let type: CID | undefined = undefined;
+    if(selectedRecord !== undefined) {
+      try {
+        const record = await this.getRecord(selectedRecord);
+        assert(record && RegistryRecord.isDataRecord(record));
+
+        type = record.type;
+      } catch {} // TODO(marik-d): This will set type to `undefined` for both type records and when there's an error. We should be more precise.
+    }
 
     return {
-      tags: decodeMap(resource.tags),
-      versions: decodeMap(resource.versions)
+      tags,
+      versions: decodeMap(resource.versions),
+      type,
     };
   }
 
@@ -212,7 +226,7 @@ export class RegistryClient implements IRegistryClient {
     }
     return {
       id,
-      ...this.decodeResourceValues(resource)
+      ...await this.decodeResourceBody(resource)
     };
   }
 
@@ -243,10 +257,10 @@ export class RegistryClient implements IRegistryClient {
       this.getDomains()
     ]);
 
-    const result = resources.map(resource => ({
+    const result = await Promise.all(resources.map(async resource => ({
       id: this.decodeResourceId(resource[0], domains),
-      ...this.decodeResourceValues(resource[1].unwrap())
-    }));
+      ...await this.decodeResourceBody(resource[1].unwrap())
+    })));
 
     return result.filter(isNotNullOrUndefined).filter(resource => Filtering.matchResource(resource, query));
   }

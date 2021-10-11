@@ -37,8 +37,9 @@ export const Filtering = {
     }
 
     const textMatches = query.text === undefined || matchesDxn(resource.id, query.text);
+    const typeMatches = query.type === undefined || (!!resource.type && resource.type.equals(query.type));
 
-    return textMatches;
+    return textMatches && typeMatches;
   },
 
   /**
