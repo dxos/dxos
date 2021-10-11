@@ -5,14 +5,11 @@
 import assert from 'assert';
 import { EventEmitter } from 'events';
 import pump from 'pump';
+import { Stream } from 'stream';
 
+import type { Peer } from '@dxos/network-generator';
 import { Network, NetworkGenerator, Topology, TOPOLOGIES } from '@dxos/network-generator';
 import { getProtocolFromStream, ProtocolOptions } from '@dxos/protocol';
-
-interface Peer {
-  id: Buffer,
-  createStream: (...args: any) => void,
-}
 
 /**
  * @param topic Buffer to initialize the stream protocol
@@ -72,20 +69,20 @@ export class ProtocolNetworkGenerator extends EventEmitter {
         assert(typeof peer.createStream === 'function', 'peer.createStream is required and must be a function');
         return peer;
       },
-      createConnection: async (fromPeer, toPeer) => {
+      createConnection: async (fromPeer, toPeer): Promise<Stream> => {
         const r1 = fromPeer.createStream?.({ initiator: true, topic, channel: topic, options: protocol });
         // Target peer shouldn't get the topic, this help us to simulate the network like discovery-swarm/hyperswarm
         const r2 = toPeer.createStream?.({ initiator: false, options: protocol });
         assert(isStream(r1), 'createStream function must return a stream');
         assert(isStream(r1), 'createStream function must return a stream');
 
-        const stream = pump(r1, r2, r1);
+        const stream = pump(r1 as pump.Stream, r2 as pump.Stream, r1 as pump.Stream);
 
         if (waitForFullConnection) {
           await getProtocolFromStream(r1).waitForHandshake();
         }
 
-        return stream;
+        return stream as Stream;
       }
     });
 

@@ -23,17 +23,17 @@ jest.setTimeout(TIMEOUT);
 
 const random = <T>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
-const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
+const generator = new ProtocolNetworkGenerator(async (topic, peerId): Promise<any> => {
   const presence = new PresencePlugin(peerId, {
     metadata: { shareStr: 'test1', shareBuf: Buffer.from('test2') }
   });
 
-  const createStream = ({ initiator }: {initiator: boolean}) => new Protocol({
+  const createStream = ({ initiator }: {initiator: boolean | undefined}) => new Protocol({
     streamOptions: {
       live: true
     },
     discoveryKey: topic,
-    initiator,
+    initiator: !!initiator,
     userSession: { peerId: keyToString(peerId) }
   })
     .setExtension(presence.createExtension())
