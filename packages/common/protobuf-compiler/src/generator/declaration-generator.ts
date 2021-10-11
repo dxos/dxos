@@ -40,24 +40,33 @@ function getRpcTypes (method: protobufjs.Method, service: protobufjs.Service, su
 }
 
 function createMessageDeclaration (type: protobufjs.Type, subs: SubstitutionsMap) {
-  return f.createInterfaceDeclaration(
+  const declaration = f.createInterfaceDeclaration(
     undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     type.name,
     undefined,
     undefined,
-    type.fieldsArray.map(field => ts.addSyntheticLeadingComment(
-      f.createPropertySignature(
+    type.fieldsArray.map(field => {   
+      const signature = f.createPropertySignature(
         undefined,
         field.name.includes('.') ? f.createStringLiteral(field.name) : field.name,
         field.required ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
         getFieldType(field, subs)
-      ),
-      ts.SyntaxKind.MultiLineCommentTrivia,
-      'foo',
-      true,
-    ))
+      );
+
+      if(!field.comment) {
+        return signature
+      }
+
+      return attachDocComment(signature, field.comment);
+    })
   );
+
+  if(!type.comment) {
+    return declaration;
+  }
+
+  return attachDocComment(declaration, type.comment);
 }
 
 function createEnumDeclaration (type: protobufjs.Enum) {
@@ -197,4 +206,13 @@ export function createServicesDictionary (root: protobufjs.NamespaceBase) {
         getTypeReference(type)
       ))
   );
+}
+
+function attachDocComment<T extends ts.Node>(node: T, comment: string): T {
+  return ts.addSyntheticLeadingComment(
+    node,
+    ts.SyntaxKind.MultiLineCommentTrivia,
+    `*\n${comment.split('\n').map(line => ` * ${line}`).join('\n')}\n `,
+    true,
+  )
 }
