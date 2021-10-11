@@ -11,6 +11,7 @@ import get from 'lodash.get';
 import moment from 'moment';
 import path from 'path';
 
+import { Awaited } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { keyToString, keyToBuffer, createKeyPair, sha256, PublicKey } from '@dxos/crypto';
 import { StarTopology, transportProtocolProvider } from '@dxos/network-manager';
@@ -88,6 +89,7 @@ export class BotManager {
   private _plugin?: any;
   private _leaveControlSwarm?: () => void;
   private _registryClient?: IRegistryClient;
+  private _apiPromise?: Awaited<ReturnType<typeof createApiPromise>>;
 
   constructor (config: any, botContainers: Record<string, BotContainer>, client: Client, options: Options) {
     this._config = config;
@@ -126,7 +128,8 @@ export class BotManager {
   async start () {
     this._plugin = new BotPlugin(this._controlPeerKey, (protocol: any, message: any) => this._botMessageHandler(protocol, message));
 
-    this._registryClient = new RegistryClient(await createApiPromise(this._config.get('services.dxns.server')));
+    this._apiPromise = await createApiPromise(this._config.get('services.dxns.server'));
+    this._registryClient = new RegistryClient(this._apiPromise);
     // Join control swarm.
     this._leaveControlSwarm = await this._client.echo.networkManager.joinProtocolSwarm({
       topic: PublicKey.from(this._controlTopic),
@@ -289,7 +292,7 @@ export class BotManager {
   }
 
   async stop () {
-    await this._registryClient?.disconnect();
+    await this._apiPromise?.disconnect();
 
     for await (const { botId } of this._bots.values()) {
       await this._stopBot(botId);
