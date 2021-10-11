@@ -33,10 +33,8 @@ describe('ECHO', () => {
     afterTest(() => echo.close());
 
     if (createProfile) {
-      await echo.halo.createIdentity({
-        ...createKeyPair()
-      });
-      await echo.halo.create(displayName);
+      await echo.halo.createIdentity({ ...createKeyPair() });
+      await echo.halo.create(displayName); // TODO(burdon): Rename.
     }
 
     return echo;
@@ -277,7 +275,10 @@ describe('ECHO', () => {
     expect(a.queryParties().value.length).toBe(1);
 
     // Issue the invitation on nodeA.
-    const invitation = await a.halo.createInvitation({ secretValidator: defaultSecretValidator, secretProvider: defaultSecretProvider });
+    const invitation = await a.halo.createInvitation({
+      secretValidator: defaultSecretValidator,
+      secretProvider: defaultSecretProvider
+    });
 
     // Should not have any parties.
     expect(b.queryParties().value.length).toBe(0);

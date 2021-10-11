@@ -54,14 +54,12 @@ export const RedeemDialog = ({ open, onClose, pinless = false }: RedeemDialogPro
 
   const handleInvitationError = (error: string) => {
     setStep(2);
-    const err = handleRedeemError(error);
+    const err = handleRedeemError(error); // TODO(burdon): Rename.
     setError(err);
   };
 
   const [redeemCode, setPin] = useInvitationRedeemer({
-    onDone: () => {
-      handleDone();
-    },
+    onDone: () => handleDone,
     onError: (error?: string) => handleInvitationError(String(error)),
     isOffline
   });
@@ -82,7 +80,7 @@ export const RedeemDialog = ({ open, onClose, pinless = false }: RedeemDialogPro
         await party.open();
         handleDone();
       } catch (error: any) {
-        handleInvitationError(JSON.stringify(error));
+        handleInvitationError(String(error));
       }
     } else {
       redeemCode(invitationCode);

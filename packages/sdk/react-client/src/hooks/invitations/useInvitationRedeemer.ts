@@ -63,6 +63,6 @@ export const useInvitationRedeemer = ({ // TODO(burdon): Hooks shouldn't have ca
   return [
     setInvitationCode, // redeemCode
     // TODO(burdon): Isn't `resolver` going to be stale?
-    resolver ? (pin: string) => secretResolver(Buffer.from(pin)) : () => null // setPin
+    resolver ? (pin: string) => secretResolver(Buffer.from(pin)) : () => null // setPin,
   ];
 };
