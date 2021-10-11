@@ -53,7 +53,7 @@ test('generate a balancedBinTree of 2 n', async () => {
     async createPeer (id) {
       return { id, name: `peer${id}` };
     },
-    createConnection (fromPeer, toPeer) {
+    async createConnection (fromPeer, toPeer) {
       return new PassThrough();
     }
   });
@@ -73,7 +73,7 @@ test('insert pre-made peers', async () => {
       createPeerCalledCount++;
       return { id, name: `peer${id}` };
     },
-    createConnection (fromPeer, toPeer) {
+    async createConnection (fromPeer, toPeer) {
       return new PassThrough();
     }
   });
