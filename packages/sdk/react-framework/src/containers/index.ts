@@ -3,3 +3,4 @@
 //
 
 export * from './RedeemDialog';
+export * from './RedeemDialogWithoutClient';

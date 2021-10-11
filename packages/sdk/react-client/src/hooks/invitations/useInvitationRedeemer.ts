@@ -11,9 +11,9 @@ import { useClient } from '../client';
 import { decodeInvitation, noOp } from './utils';
 
 type UseInvitationRedeemerProps = {
-  onDone?: (party: Party) => void;
-  onError?: (error?: string) => void | never;
-  isOffline?: boolean;
+  onDone?: (party: Party) => void
+  onError?: (error?: string) => void | never
+  isOffline?: boolean  // TODO(burdon): Rename offline.
 };
 
 /**
@@ -26,25 +26,28 @@ type UseInvitationRedeemerProps = {
  * @param onError called if the invite flow produces an error.
  * @param isOffline Is this an `Offline` invitation?
  */
-export const useInvitationRedeemer = ({
+// TODO(burdon): Requires tests.
+export const useInvitationRedeemer = ({ // TODO(burdon): Hooks shouldn't have callbacks.
   onDone = noOp,
   onError = noOp,
   isOffline = false
 }: UseInvitationRedeemerProps = {}) => {
   const client = useClient();
-  const [code, setCode] = useState<string>();
-  const [resolver, setResolver] = useState<boolean>();
-  const [secretProvider, secretResolver] = useMemo(() => trigger<Buffer>(), [code]);
+  const [invitationCode, setInvitationCode] = useState<string>();
+  const [resolver, setResolver] = useState<boolean>(false);
+
+  //
+  const [secretProvider, secretResolver] = useMemo(() => trigger<Buffer>(), [invitationCode]);
 
   useEffect(() => {
     setResolver(!isOffline);
 
-    if (!code) {
+    if (!invitationCode) {
       return;
     }
 
     try {
-      const invitation = decodeInvitation(code);
+      const invitation = decodeInvitation(invitationCode);
 
       client.echo
         .joinParty(invitation, !isOffline ? secretProvider : undefined)
@@ -55,10 +58,11 @@ export const useInvitationRedeemer = ({
     } catch (error) {
       onError(error);
     }
-  }, [code, isOffline]);
+  }, [invitationCode, isOffline]);
 
   return [
-    setCode, // redeemCode
+    setInvitationCode, // redeemCode
+    // TODO(burdon): Isn't `resolver` going to be stale?
     resolver ? (pin: string) => secretResolver(Buffer.from(pin)) : () => null // setPin
   ];
 };

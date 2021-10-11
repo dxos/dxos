@@ -3,7 +3,7 @@
 //
 
 import { SecretProvider, SecretValidator, defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
-export { SecretProvider, SecretValidator };
+export { SecretProvider, SecretValidator }; // TODO(burdon): ???
 
 /**
  * Defines a way for peers to authenticate each other through a side channel.

@@ -9,9 +9,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogProps,
   LinearProgress,
-  styled,
   TextField,
   Typography
 } from '@mui/material';
@@ -23,11 +21,8 @@ import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 import { DialogHeading } from '../components';
 import { handleRedeemError } from '../helpers';
 
-const SpacedTypography = styled(Typography)(({ theme }) => ({
-  marginTop: theme.spacing(2)
-}));
-
-interface RedeemDialogProps extends Omit<DialogProps, 'open'> {
+interface RedeemDialogProps {
+  open: boolean
   pinless?: boolean,
   onClose: () => void
 }
@@ -36,7 +31,7 @@ interface RedeemDialogProps extends Omit<DialogProps, 'open'> {
  * Component used for claiming invitations to Parties.
  * Works for both regular and `Offline` invitations.
  */
-export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps) => {
+export const RedeemDialog = ({ open, onClose, pinless = false }: RedeemDialogProps) => {
   const [isOffline] = useState(false);
   // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
   // const [isOffline, setIsOffline] = useState(false);
@@ -110,9 +105,8 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
     <Dialog
       fullWidth
       maxWidth="xs"
-      open
+      open={open}
       onClose={step === 0 ? handleDone : undefined} // No click away when in the middle of a flow
-      {...props}
     >
       <DialogHeading title="Redeem Invitation" icon={RedeemIcon} />
 
@@ -185,9 +179,9 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
       {step === 1 && !setPin && (
         <DialogContent>
           <LinearProgress />
-          <SpacedTypography variant="body1" gutterBottom>
+          <Typography variant="body1" sx={{ marginTop: 1 }} gutterBottom>
             Processing...
-          </SpacedTypography>
+          </Typography>
         </DialogContent>
       )}
 

@@ -6,14 +6,20 @@ import { Box } from '@mui/material';
 import React from 'react';
 
 import { ClientInitializer, useProfile } from '@dxos/react-client';
+
 import { JsonTreeView } from '@dxos/react-framework';
 
-import { Registration as RegistrationDialog } from '../../src';
+// TODO(burdon): Which package should this be in?
+// import { RegistrationDialog } from '../src';
+
+export default {
+  title: 'Tutorials/Registration'
+};
 
 /**
  * Registration and profile recovery.
  */
-export const Registration = () => {
+export const Primary = () => {
   const App = () => {
     const profile = useProfile();
 
@@ -25,13 +31,18 @@ export const Registration = () => {
       );
     }
 
+    return null;
+
+    // TODO(burdon): Set defaults.
+    /*
     return (
       <>
         <Box m={2}>
-          <RegistrationDialog />
+          <RegistrationDialog/>
         </Box>
       </>
     );
+    */
   };
 
   return (
@@ -39,9 +50,4 @@ export const Registration = () => {
       <App />
     </ClientInitializer>
   );
-};
-
-export default {
-  title: 'Tutorials/Registration',
-  component: Registration
 };
