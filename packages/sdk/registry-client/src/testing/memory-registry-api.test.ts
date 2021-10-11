@@ -8,7 +8,7 @@ import { createMockResourceRecord } from '.';
 import { DXN } from '../models';
 import { IRegistryClient } from '../registry-client';
 import { createMockTypes } from './fake-data-generator';
-import { MemoryRegistryClient } from './mock-registry-client';
+import { MemoryRegistryClient } from './memory-registry-client';
 
 describe('Registry API mock', () => {
   let mock: IRegistryClient;
