@@ -154,9 +154,10 @@ declare module '@polkadot/api/types/submittable' {
       claimAuction: AugmentedSubmittable<(domainKey: DomainKey | string | Uint8Array, domainName: Text | string) => SubmittableExtrinsic<ApiType>, [DomainKey, Text]>;
       closeAuction: AugmentedSubmittable<(name: Bytes | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [Bytes]>;
       createAuction: AugmentedSubmittable<(name: Text | string, startAmount: u128 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [Text, u128]>;
+      deleteResource: AugmentedSubmittable<(domainKey: DomainKey | string | Uint8Array, name: Text | string) => SubmittableExtrinsic<ApiType>, [DomainKey, Text]>;
       forceCloseAuction: AugmentedSubmittable<(name: Bytes | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [Bytes]>;
       registerDomain: AugmentedSubmittable<(domainKey: DomainKey | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [DomainKey]>;
-      registerResource: AugmentedSubmittable<(domainKey: DomainKey | string | Uint8Array, name: Text | string, recordHash: Multihash | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [DomainKey, Text, Multihash]>;
+      updateResource: AugmentedSubmittable<(domainKey: DomainKey | string | Uint8Array, name: Text | string, recordHash: Multihash | string | Uint8Array, version: Option<Text> | null | object | string | Uint8Array, tags: Vec<Text> | (Text | string)[]) => SubmittableExtrinsic<ApiType>, [DomainKey, Text, Multihash, Option<Text>, Vec<Text>]>;
       /**
        * Generic tx
        **/

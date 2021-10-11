@@ -9,7 +9,7 @@ import { DXN } from '../dxn';
 import { sanitizeExtensionData } from '../encoding';
 import { CID } from '../models';
 import { schemaJson } from '../proto/gen';
-import { RecordKind, RegistryDataRecord, RegistryTypeRecord, Resource } from '../registry-client';
+import { RecordKind, RegistryDataRecord, RegistryTypeRecord, ResourceRecord } from '../registry-client';
 
 export const mockTypeNames = [
   {
@@ -46,7 +46,7 @@ export const createDxn = (): DXN => {
   return DXN.fromDomainName(faker.internet.domainWord(), faker.internet.domainWord());
 };
 
-export const createMockResource = (_dxn?: DXN): Resource => {
+export const createMockResourceRecord = (_dxn?: DXN): ResourceRecord => {
   const dxn = _dxn || createDxn();
   const type = faker.random.arrayElement(mockTypes);
 
@@ -62,7 +62,25 @@ export const createMockResource = (_dxn?: DXN): Resource => {
 
   return {
     id: dxn,
+    tags: {
+      latest: record.cid
+    },
+    versions: {},
     record: record
+  };
+};
+
+export const createMockRecord = (): RegistryDataRecord => {
+  const type = faker.random.arrayElement(mockTypes);
+
+  return {
+    kind: RecordKind.Data,
+    cid: createCID(),
+    type: type.cid,
+    meta: {},
+    dataSize: 0,
+    dataRaw: new Uint8Array(),
+    data: sanitizeExtensionData({}, type.cid)
   };
 };
 
@@ -80,4 +98,4 @@ const mockTypes = mockTypeNames.map((item): RegistryTypeRecord => ({
 
 export const createMockTypes = () => mockTypes;
 
-export const createMockResources = () => Array.from({ length: 30 }).map(() => createMockResource());
+export const createMockResourceRecords = () => Array.from({ length: 30 }).map(() => createMockResourceRecord());
