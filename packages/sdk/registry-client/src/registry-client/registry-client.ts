@@ -19,7 +19,7 @@ import { DomainKey as BaseDomainKey, Multihash, Resource as BaseResource } from 
 import { CID, DomainKey } from '../models';
 import { schema as dxnsSchema } from '../proto/gen';
 import { Filtering, IQuery } from '../querying';
-import { DomainInfo, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './interface';
+import { Domain, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './interface';
 
 export class RegistryClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, RegistryRecord>(cid => cid.toB58String())
@@ -54,7 +54,7 @@ export class RegistryClient implements IRegistryClient {
     return new DomainKey((await this.api.query.registry.domainNames(domainName)).unwrap().toU8a());
   }
 
-  async getDomains (): Promise<DomainInfo[]> {
+  async getDomains (): Promise<Domain[]> {
     const domains = await this.api.query.registry.domains.entries();
     return domains.map(domainEntry => {
       const key = new DomainKey(domainEntry[0].args[0].toU8a());
@@ -207,7 +207,7 @@ export class RegistryClient implements IRegistryClient {
   /**
    * Transforms the Resource from the chain with Polkadot types to Typescript types and models.
    */
-  private decodeResourceId (resourceKeys: StorageKey<[BaseDomainKey, Text]>, domains: DomainInfo[]): Resource['id'] {
+  private decodeResourceId (resourceKeys: StorageKey<[BaseDomainKey, Text]>, domains: Domain[]): Resource['id'] {
     const name = resourceKeys.args[1].toString();
     const domainKey = new DomainKey(resourceKeys.args[0].toU8a());
     const domain = domains.find(domain => domain.key.toHex() === domainKey.toHex());

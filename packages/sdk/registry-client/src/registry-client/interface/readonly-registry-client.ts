@@ -5,7 +5,7 @@
 import { DXN } from './../../dxn';
 import { CID, DomainKey } from './../../models';
 import { IQuery } from './../../querying';
-import { DomainInfo, RegistryRecord, RegistryDataRecord, RegistryTypeRecord, Resource, ResourceRecord } from './types';
+import { Domain, RegistryRecord, RegistryDataRecord, RegistryTypeRecord, Resource, ResourceRecord } from './types';
 
 /**
  * DXNS Registry read-only operations.
@@ -26,7 +26,7 @@ export interface IReadOnlyRegistryClient {
   /**
    * Returns a list of domains created in DXOS system.
    */
-  getDomains (): Promise<DomainInfo[]>
+  getDomains (): Promise<Domain[]>
 
   /**
    * Gets record details by CID.

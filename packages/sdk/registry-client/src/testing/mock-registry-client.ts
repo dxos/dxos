@@ -9,7 +9,7 @@ import { DXN } from '../dxn';
 import { CID, CIDLike, DomainKey } from '../models';
 import { IQuery, Filtering } from '../querying';
 import {
-  DomainInfo,
+  Domain,
   IRegistryClient,
   RecordMetadata,
   RegistryDataRecord,
@@ -63,7 +63,7 @@ export class MemoryRegistryClient implements IRegistryClient {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getDomains (): Promise<DomainInfo[]> {
+  async getDomains (): Promise<Domain[]> {
     return [];
   }
 

@@ -8,7 +8,7 @@ import { DXN } from '../../dxn';
 import { RecordExtension } from '../../encoding';
 import { CID, DomainKey } from '../../models';
 
-export interface DomainInfo {
+export interface Domain {
   key: DomainKey,
   name?: string,
   owners: string[],
