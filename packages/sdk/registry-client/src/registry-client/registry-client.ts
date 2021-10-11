@@ -306,9 +306,11 @@ export class RegistryClient implements IRegistryClient {
     return domainKey;
   }
 
-  async updateResource (key: DomainKey, resourceName: string, contentCid: CID, opts: UpdateResourceOptions = { tags: ['latest'] }): Promise<void> {
+  async updateResource (resource: DXN, contentCid: CID, opts: UpdateResourceOptions = { tags: ['latest'] }): Promise<void> {
+    const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
+    assert(domainKey);
     await this.transactionsHandler.sendTransaction(
-      this.api.tx.registry.updateResource(key.value, resourceName, contentCid.value, opts.version ?? null, opts.tags ?? []));
+      this.api.tx.registry.updateResource(domainKey.value, resource.resource, contentCid.value, opts.version ?? null, opts.tags ?? []));
   }
 
   async disconnect () {

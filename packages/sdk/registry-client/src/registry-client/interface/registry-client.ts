@@ -5,6 +5,7 @@
 import protobuf from 'protobufjs';
 
 import { CID, DomainKey } from '../../models';
+import {DXN} from '../../dxn';
 import { IReadOnlyRegistryClient } from './readonly-registry-client';
 import { SuppliedRecordMetadata, UpdateResourceOptions } from './types';
 
@@ -41,16 +42,14 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
 
   /**
    * Registers or updates a resource in the system.
-   * @param domainKey Identifies the domain of the resource to be registered in.
-   * @param resourceName Identifies the name of the resource.
+   * @param resource Identifies the domain and name of the resource.
    * @param contentCid CID of the record to be referenced with the given name.
    * @param opts Optional version and tags. Adds tag 'latest' and no version by default.
    * @param opts.version Valid semver.
    * @param opts.tags A list of tags.
    */
    updateResource (
-     domainKey: DomainKey,
-     resourceName: string,
+     resource: DXN,
      contentCid: CID,
      opts?: UpdateResourceOptions
   ): Promise<void>
