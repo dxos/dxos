@@ -9,40 +9,34 @@ import CryptoJS from 'crypto-js';
  *
  * @param algorithm
  * @param plaintext
- * @returns {string}
- * @private
  */
-const _hash = (algorithm: string, plaintext: string) => {
+const _hash = (algorithm: string, plaintext: string): string => {
   assert(typeof algorithm === 'string');
   assert(typeof plaintext === 'string');
 
-  return CryptoJS[algorithm](plaintext).toString();
+  return (CryptoJS as any)[algorithm](plaintext).toString();
 };
 
 /**
  * Creates a SHA-1 hash of the supplied string, returned as a hexadecimal string.
- * @param {string} text
- * @returns {string}
+ * @param text
  */
 export const sha1 = (text: string) => _hash('SHA1', text);
 
 /**
  * Creates a SHA-256 hash of the supplied string, returned as a hexadecimal string.
- * @param {string} text
- * @returns {string}
+ * @param text
  */
 export const sha256 = (text: string) => _hash('SHA256', text);
 
 /**
  * Creates a SHA-512 hash of the supplied string, returned as a hexadecimal string.
- * @param {string} text
- * @returns {string}
+ * @param text
  */
 export const sha512 = (text: string) => _hash('SHA512', text);
 
 /**
  * Creates a SHA-512 hash of the supplied string, returned as a hexadecimal string.
- * @param {string} text
- * @returns {string}
+ * @param text
  */
 export const ripemd160 = (text: string) => _hash('RIPEMD160', text);
