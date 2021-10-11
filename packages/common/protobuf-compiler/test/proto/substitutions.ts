@@ -1,5 +1,5 @@
-import { MyKey } from "./my-key";
-import { MyInterfaceSubstitution } from './my-interface'
+import { MyKey } from "../my-key";
+import { MyInterfaceSubstitution } from '../my-interface'
 import { anySubstitutions, Schema as CodecSchema } from "@dxos/codec-protobuf";
 import { Timestamp } from "./gen/google/protobuf";
 

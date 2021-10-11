@@ -46,7 +46,7 @@ function createMessageDeclaration (type: protobufjs.Type, subs: SubstitutionsMap
     type.name,
     undefined,
     undefined,
-    type.fieldsArray.map(field => {   
+    type.fieldsArray.map(field => {
       const signature = f.createPropertySignature(
         undefined,
         field.name.includes('.') ? f.createStringLiteral(field.name) : field.name,
@@ -54,15 +54,15 @@ function createMessageDeclaration (type: protobufjs.Type, subs: SubstitutionsMap
         getFieldType(field, subs)
       );
 
-      if(!field.comment) {
-        return signature
+      if (!field.comment) {
+        return signature;
       }
 
       return attachDocComment(signature, field.comment);
     })
   );
 
-  if(!type.comment) {
+  if (!type.comment) {
     return declaration;
   }
 
@@ -208,11 +208,11 @@ export function createServicesDictionary (root: protobufjs.NamespaceBase) {
   );
 }
 
-function attachDocComment<T extends ts.Node>(node: T, comment: string): T {
+function attachDocComment<T extends ts.Node> (node: T, comment: string): T {
   return ts.addSyntheticLeadingComment(
     node,
     ts.SyntaxKind.MultiLineCommentTrivia,
     `*\n${comment.split('\n').map(line => ` * ${line}`).join('\n')}\n `,
-    true,
-  )
+    true
+  );
 }

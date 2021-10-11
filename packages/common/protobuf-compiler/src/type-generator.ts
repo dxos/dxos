@@ -6,8 +6,8 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import pb from 'protobufjs';
 import * as ts from 'typescript';
-import { preconfigureProtobufjs } from './configure';
 
+import { preconfigureProtobufjs } from './configure';
 import { createDeclarations, createServicesDictionary, createTypeDictionary } from './generator/declaration-generator';
 import { createSerializerDefinition } from './generator/serializer-definition-generator';
 import { logger } from './logger';
