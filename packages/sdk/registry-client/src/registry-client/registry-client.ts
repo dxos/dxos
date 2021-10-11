@@ -13,10 +13,9 @@ import protobuf from 'protobufjs';
 import { ComplexMap, raise } from '@dxos/util';
 
 import { ApiTransactionHandler } from '../api-transaction-handler';
-import { DXN } from '../dxn';
 import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData } from '../encoding';
 import { DomainKey as BaseDomainKey, Multihash, Resource as BaseResource } from '../interfaces';
-import { CID, DomainKey } from '../models';
+import { CID, DomainKey, DXN } from '../models';
 import { schema as dxnsSchema } from '../proto/gen';
 import { Filtering, IQuery } from '../querying';
 import { Domain, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './interface';

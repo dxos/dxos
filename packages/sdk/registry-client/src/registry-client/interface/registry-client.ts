@@ -4,8 +4,7 @@
 
 import protobuf from 'protobufjs';
 
-import { CID, DomainKey } from '../../models';
-import {DXN} from '../../dxn';
+import { CID, DomainKey, DXN } from '../../models';
 import { IReadOnlyRegistryClient } from './readonly-registry-client';
 import { SuppliedRecordMetadata, UpdateResourceOptions } from './types';
 

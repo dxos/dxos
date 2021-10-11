@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { randomBytes } from 'crypto';
 
 import { DXN } from './dxn';
-import { DomainKey } from './models';
+import { DomainKey } from './domain-key';
 
 describe('Dxn', () => {
   it('fromAddress', () => {

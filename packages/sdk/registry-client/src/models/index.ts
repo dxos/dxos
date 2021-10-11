@@ -4,3 +4,4 @@
 
 export * from './CID';
 export * from './domain-key';
+export * from './dxn';
