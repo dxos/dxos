@@ -26,14 +26,14 @@ export interface Resource {
   /**
    * **semver 2.0** compliant record versions.
    * Should conform to the semver regex (see https://semver.org/).
-   * 
+   *
    * Examples: 1.0.0, 1.0.0-alpha, 1.0.0-alpha.1, 1.0.0-0.3.7, 1.0.0-x.7.z.92, 1.0.0-x-y-z.–
    */
   versions: Record<string, CID | undefined>
 
   /**
    * Describe release channels.
-   * 
+   *
    * Examples: latest, alpha, beta, dev
    */
   tags: Record<string, CID | undefined>
@@ -107,7 +107,7 @@ export interface RegistryTypeRecord extends RegistryRecordBase {
 
   /**
    * FQN of the root message in the protobuf definitions.
-   * 
+   *
    * NOTE: Should not be used to name this type.
    */
   messageName: string
@@ -121,7 +121,7 @@ export interface RegistryDataRecord<T = any> extends RegistryRecordBase {
   kind: RecordKind.Data
   type: CID
   dataSize: number
-  dataRaw: Uint8Array,
+  dataRaw: Uint8Array
   data: RecordExtension<T>
 }
 
@@ -129,10 +129,10 @@ export type RegistryRecord = RegistryTypeRecord | RegistryDataRecord
 
 export const RegistryRecord = {
   isTypeRecord: (x: RegistryRecord): x is RegistryTypeRecord => x.kind === RecordKind.Type,
-  isDataRecord: (x: RegistryRecord): x is RegistryDataRecord => x.kind === RecordKind.Data,
+  isDataRecord: (x: RegistryRecord): x is RegistryDataRecord => x.kind === RecordKind.Data
 };
 
 export interface UpdateResourceOptions {
-  version?: string,
+  version?: string
   tags?: string[]
 }
