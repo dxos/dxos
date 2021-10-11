@@ -16,7 +16,7 @@ import { ApiTransactionHandler } from '../api-transaction-handler';
 import { DXN } from '../dxn';
 import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData } from '../encoding';
 import { DomainKey as BaseDomainKey, Multihash, Resource as BaseResource } from '../interfaces';
-import { CID, CIDLike, DomainKey } from '../models';
+import { CID, DomainKey } from '../models';
 import { schema as dxnsSchema } from '../proto/gen';
 import { Filtering, IQuery } from '../querying';
 import { DomainInfo, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './interface';
@@ -67,8 +67,7 @@ export class RegistryClient implements IRegistryClient {
     });
   }
 
-  async getRecord (cidLike: CIDLike): Promise<RegistryRecord | undefined> {
-    const cid = CID.from(cidLike);
+  async getRecord (cid: CID): Promise<RegistryRecord | undefined> {
     if (this._recordCache.has(cid)) {
       return this._recordCache.get(cid);
     }
@@ -82,7 +81,6 @@ export class RegistryClient implements IRegistryClient {
 
     const meta: RecordMetadata = {
       description: decoded.description,
-      version: decoded.version,
       created: decoded.created
     };
 
@@ -90,7 +88,7 @@ export class RegistryClient implements IRegistryClient {
       assert(decoded.payload.typeRecord);
       assert(decoded.payload.data);
 
-      const typeRecord = await this.getRecord(decoded.payload.typeRecord);
+      const typeRecord = await this.getRecord(CID.from(decoded.payload.typeRecord));
       assert(typeRecord, 'Dangling record type reference.');
       assert(typeRecord.kind === RecordKind.Type, 'Invalid type record kind.');
 
@@ -127,7 +125,7 @@ export class RegistryClient implements IRegistryClient {
 
       try {
         // TODO(marik-d): Very unoptimized.
-        const record = await this.getRecord(contentCid);
+        const record = await this.getRecord(CID.from(contentCid));
         assert(record);
         return record;
       } catch (err) {
@@ -138,7 +136,7 @@ export class RegistryClient implements IRegistryClient {
     return output.filter(isNotNullOrUndefined).filter(record => Filtering.matchRecord(record, query));
   }
 
-  async getDataRecord (cid: CIDLike): Promise<RegistryDataRecord | undefined> {
+  async getDataRecord (cid: CID): Promise<RegistryDataRecord | undefined> {
     const record = await this.getRecord(cid);
     if (!record) {
       return undefined;
@@ -156,7 +154,7 @@ export class RegistryClient implements IRegistryClient {
       .filter(record => Filtering.matchRecord(record, query));
   }
 
-  async getTypeRecord (cid: CIDLike): Promise<RegistryTypeRecord | undefined> {
+  async getTypeRecord (cid: CID): Promise<RegistryTypeRecord | undefined> {
     const record = await this.getRecord(cid);
     if (!record) {
       return undefined;
@@ -244,10 +242,10 @@ export class RegistryClient implements IRegistryClient {
       return undefined;
     }
     return {
-      ...resource,
-      record: record as R,
+      resource,
       tag: resource.tags[versionOrTag] ? versionOrTag : undefined,
-      version: resource.versions[versionOrTag] ? versionOrTag : undefined
+      version: resource.versions[versionOrTag] ? versionOrTag : undefined,
+      record: record as R
     };
   }
 
@@ -272,7 +270,7 @@ export class RegistryClient implements IRegistryClient {
     return new CID(event.data[1].toU8a());
   }
 
-  async insertDataRecord (data: unknown, typeId: CIDLike, meta: SuppliedRecordMetadata = {}): Promise<CID> {
+  async insertDataRecord (data: unknown, typeId: CID, meta: SuppliedRecordMetadata = {}): Promise<CID> {
     const type = await this.getTypeRecord(typeId);
     assert(type);
 

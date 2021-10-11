@@ -3,7 +3,7 @@
 //
 
 import { DXN } from './../../dxn';
-import { CID, CIDLike, DomainKey } from './../../models';
+import { CID, DomainKey } from './../../models';
 import { IQuery } from './../../querying';
 import { DomainInfo, RegistryRecord, RegistryDataRecord, RegistryTypeRecord, Resource, ResourceRecord } from './types';
 
@@ -32,7 +32,7 @@ export interface IReadOnlyRegistryClient {
    * Gets record details by CID.
    * @param cid CID of the record.
    */
-  getRecord(cid: CIDLike): Promise<RegistryRecord | undefined>
+  getRecord(cid: CID): Promise<RegistryRecord | undefined>
 
   /**
    * Queries all records in the system.
@@ -44,7 +44,7 @@ export interface IReadOnlyRegistryClient {
    * Gets data record details by CID.
    * @param cid CID of the record.
    */
-  getDataRecord<T = any>(cid: CIDLike): Promise<RegistryDataRecord<T> | undefined>
+  getDataRecord<T = any>(cid: CID): Promise<RegistryDataRecord<T> | undefined>
 
   /**
    * Queries data records.
@@ -56,7 +56,7 @@ export interface IReadOnlyRegistryClient {
    * Gets type records details by CID.
    * @param cid CID of the record.
    */
-  getTypeRecord(cid: CIDLike): Promise<RegistryTypeRecord | undefined>
+  getTypeRecord(cid: CID): Promise<RegistryTypeRecord | undefined>
 
   /**
    * Queries type records.

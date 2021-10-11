@@ -4,7 +4,7 @@
 
 import protobuf from 'protobufjs';
 
-import { CID, CIDLike, DomainKey } from '../../models';
+import { CID, DomainKey } from '../../models';
 import { IReadOnlyRegistryClient } from './readonly-registry-client';
 import { SuppliedRecordMetadata, UpdateResourceOptions } from './types';
 
@@ -24,7 +24,7 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
    * @param typeCid CID of the type record that holds the schema of the data.
    * @param meta Record metadata information.
    */
-  insertDataRecord (data: unknown, typeCid: CIDLike, meta?: SuppliedRecordMetadata): Promise<CID>
+  insertDataRecord (data: unknown, typeCid: CID, meta?: SuppliedRecordMetadata): Promise<CID>
 
   /**
    * Creates a new type record in the system.
