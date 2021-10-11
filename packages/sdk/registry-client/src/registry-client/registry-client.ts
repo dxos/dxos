@@ -311,10 +311,6 @@ export class RegistryClient implements IRegistryClient {
     await this.transactionsHandler.sendTransaction(
       this.api.tx.registry.updateResource(domainKey.value, resource.resource, contentCid.value, opts.version ?? null, opts.tags ?? []));
   }
-
-  async disconnect () {
-    return this.api.disconnect();
-  }
 }
 
 export function getSchemaMessages (obj: protobuf.ReflectionObject): string[] {

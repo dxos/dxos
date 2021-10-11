@@ -52,6 +52,4 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
      contentCid: CID,
      opts?: UpdateResourceOptions
   ): Promise<void>
-
-  disconnect (): Promise<void>
 }
