@@ -15,7 +15,7 @@
   "scripts": {
     "build": "pnpm run gen && tsc",
     "build:test": "pnpm run build && pnpm run test",
-    "gen": "ts-node src/main.ts test/schema.proto test/another.proto -s test/substitutions.ts -o test/gen",
+    "gen": "ts-node src/main.ts test/proto/schema.proto test/proto/another.proto -s test/proto/substitutions.ts -o test/proto/gen",
     "lint": "eslint 'src/**/*.ts'",
     "test": "pnpm run lint && jest 2>&1"
   },
@@ -24,7 +24,7 @@
   },
   "jest": {
     "modulePathIgnorePatterns": [
-      "test/gen",
+      "test/proto",
       "dist"
     ],
     "preset": "ts-jest/presets/default",

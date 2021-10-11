@@ -1,6 +1,6 @@
 import { Stream } from '@dxos/codec-protobuf';
-import { schema } from './gen'
-import { TaskType } from './gen/dxos/test';
+import { schema } from './proto/gen'
+import { TaskType } from './proto/gen/dxos/test';
 import { MyKey } from './my-key';
 
 test('services', async () => {
