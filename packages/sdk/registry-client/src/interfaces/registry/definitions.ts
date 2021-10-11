@@ -19,6 +19,10 @@ export default {
       data: 'Vec<u8>'
     },
     Multihash: '[u8; 34]',
-    DomainKey: '[u8; 32]'
+    DomainKey: '[u8; 32]',
+    Resource: {
+      versions: 'BTreeMap<Text, Multihash>',
+      tags: 'BTreeMap<Text, Multihash>'
+    }
   }
 };

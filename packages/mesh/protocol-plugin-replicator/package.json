@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-replicator",
-  "version": "2.14.5",
+  "version": "2.15.1",
   "description": "Protocol plugin replicator.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-replicator#readme",
   "bugs": {
@@ -44,7 +44,9 @@
     "jest": "^26.6.3",
     "multi-read-stream": "^2.0.0",
     "pify": "~5.0.0",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "@types/pify": "^3.0.2",
+    "@types/end-of-stream": "^1.4.0"
   },
   "publishConfig": {
     "access": "public"

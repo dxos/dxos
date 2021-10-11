@@ -58,7 +58,7 @@ import type { ClassDetails, ClassId, ClassMetadata, DepositBalance, DepositBalan
 import type { Multisig, Timepoint } from '@polkadot/types/interfaces/utility';
 import type { VestingInfo } from '@polkadot/types/interfaces/vesting';
 import type { AccountId32Junction, AccountIndex64Junction, AccountKey20Junction, AssetInstance, BodyId, BodyPart, BodyPartAtLeastProportion, BodyPartFraction, BodyPartMoreThanProportion, DoubleEncodedCall, InboundStatus, Junction, MultiAsset, MultiAssetAbstractFungible, MultiAssetAbstractNonFungible, MultiAssetConcreteFungible, MultiAssetConcreteNonFungible, MultiLocation, NetworkId, OutboundStatus, Outcome, PluralityJunction, QueueConfigData, VersionedMultiAsset, VersionedMultiLocation, VersionedXcm, Xcm, XcmAssetEffects, XcmError, XcmHrmpChannelAccepted, XcmHrmpChannelClosing, XcmHrmpNewChannelOpenRequest, XcmOrder, XcmOrderBuyExecution, XcmOrderDepositAsset, XcmOrderDepositReserveAsset, XcmOrderExchangeAsset, XcmOrderInitiateReserveWithdraw, XcmOrderInitiateTeleport, XcmOrderQueryHolding, XcmOrigin, XcmOriginKind, XcmQueryResponse, XcmRelayedFrom, XcmReserveAssetDeposit, XcmResponse, XcmTeleportAsset, XcmTransact, XcmTransferAsset, XcmTransferReserveAsset, XcmWithdrawAsset, XcmpMessageFormat } from '@polkadot/types/interfaces/xcm';
-import type { Auction, Domain, DomainKey, Multihash, Record } from 'sample-polkadotjs-typegen/interfaces/registry';
+import type { Auction, Domain, DomainKey, Multihash, Record, Resource } from 'sample-polkadotjs-typegen/interfaces/registry';
 
 declare module '@polkadot/types/types/registry' {
   export interface InterfaceTypes {
@@ -796,6 +796,7 @@ declare module '@polkadot/types/types/registry' {
     'Option<ReportIdOf>': Option<ReportIdOf>;
     'Option<ReserveData>': Option<ReserveData>;
     'Option<ReserveIdentifier>': Option<ReserveIdentifier>;
+    'Option<Resource>': Option<Resource>;
     'Option<Retriable>': Option<Retriable>;
     'Option<RewardDestination>': Option<RewardDestination>;
     'Option<RewardPoint>': Option<RewardPoint>;
@@ -1681,6 +1682,7 @@ declare module '@polkadot/types/types/registry' {
     'Vec<ReportIdOf>': Vec<ReportIdOf>;
     'Vec<ReserveData>': Vec<ReserveData>;
     'Vec<ReserveIdentifier>': Vec<ReserveIdentifier>;
+    'Vec<Resource>': Vec<Resource>;
     'Vec<Retriable>': Vec<Retriable>;
     'Vec<RewardDestination>': Vec<RewardDestination>;
     'Vec<RewardPoint>': Vec<RewardPoint>;
@@ -2566,6 +2568,7 @@ declare module '@polkadot/types/types/registry' {
     ReportIdOf: ReportIdOf;
     ReserveData: ReserveData;
     ReserveIdentifier: ReserveIdentifier;
+    Resource: Resource;
     Retriable: Retriable;
     RewardDestination: RewardDestination;
     RewardPoint: RewardPoint;

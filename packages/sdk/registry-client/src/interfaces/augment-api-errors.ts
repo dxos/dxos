@@ -92,8 +92,10 @@ declare module '@polkadot/api/types/errors' {
       DomainNotFound: AugmentedError<ApiType>;
       NotAuthorized: AugmentedError<ApiType>;
       NotEnoughFunds: AugmentedError<ApiType>;
+      NoVersionOrTagSpecified: AugmentedError<ApiType>;
       RecordNotFound: AugmentedError<ApiType>;
-      SchemaNotFound: AugmentedError<ApiType>;
+      ResourceNotFound: AugmentedError<ApiType>;
+      VersionAlreadyExists: AugmentedError<ApiType>;
       /**
        * Generic error
        **/
