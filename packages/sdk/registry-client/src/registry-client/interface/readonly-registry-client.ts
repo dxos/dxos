@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { registry } from 'sample-polkadotjs-typegen/interfaces/definitions';
 import { DXN } from './../../dxn';
 import { CID, CIDLike, DomainKey } from './../../models';
 import { IQuery } from './../../querying';

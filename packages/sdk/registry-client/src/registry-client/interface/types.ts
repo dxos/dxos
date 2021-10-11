@@ -14,45 +14,109 @@ export interface DomainInfo {
   owners: string[],
 }
 
+/**
+ * Identifies a named (and optionally versioned) record.
+ */
 export interface Resource {
-  id: DXN
-  versions: Record<string, CID | undefined>
-  tags: Record<string, CID | undefined>
   /**
-   * Type of the underlying records. `undefined` if the resource points to the type record.
+   * Resource DXN.
+   */
+  id: DXN
+
+  /**
+   * **semver 2.0** compliant record versions.
+   * Should conform to the semver regex (see https://semver.org/).
+   * 
+   * Examples: 1.0.0, 1.0.0-alpha, 1.0.0-alpha.1, 1.0.0-0.3.7, 1.0.0-x.7.z.92, 1.0.0-x-y-z.–
+   */
+  versions: Record<string, CID | undefined>
+
+  /**
+   * Describe release channels.
+   * 
+   * Examples: latest, alpha, beta, dev
+   */
+  tags: Record<string, CID | undefined>
+
+  /**
+   * Type of the underlying Records. `undefined` if the Resource points to the type Record.
    */
   type?: CID
 }
 
-// TODO(dmaretskyi): Think about a better name.
-export interface ResourceRecord<R extends RegistryRecord = RegistryRecord> extends Resource {
+/**
+ * Specific binding of Resource tag or version to a corresponding Record.
+ */
+export interface ResourceRecord<R extends RegistryRecord = RegistryRecord> {
+  /**
+   * Resource that points to this Record.
+   */
+  resource: Resource
+
+  /**
+   * Specific version of the fetched Record.
+   */
   version?: string
+
+  /**
+   * Specific tag of the fetched Record.
+   */
   tag?: string
+
+  /**
+   * Record data.
+   */
   record: R
 }
 
-export interface SuppliedRecordMetadata {
-  version?: string;
-  description?: string;
-}
-
+/**
+ * Automatically generated Record metadata.
+ */
 export interface InferredRecordMetadata {
   created?: Date;
 }
 
-export type RecordMetadata = SuppliedRecordMetadata & InferredRecordMetadata
+/**
+ * Record metadata provided by the user.
+ */
+export interface SuppliedRecordMetadata {
+  description?: string;
+}
+
+export type RecordMetadata = InferredRecordMetadata & SuppliedRecordMetadata
 
 export enum RecordKind {
   Type = 'TYPE',
   Data = 'DATA'
 }
 
+/**
+ * Base fields for all Record variants.
+ */
 export interface RegistryRecordBase {
   kind: RecordKind
   cid: CID
   meta: RecordMetadata
 }
 
+/**
+ * Types are system Records that define protocol-buffer schema of other Records.
+ */
+export interface RegistryTypeRecord extends RegistryRecordBase {
+  kind: RecordKind.Type
+
+  /**
+   * FQN of the root message in the protobuf definitions.
+   * 
+   * NOTE: Should not be used to name this type.
+   */
+  messageName: string
+  protobufDefs: protobuf.Root
+}
+
+/**
+ * Data with a reference to a type record that defines the encoding.
+ */
 export interface RegistryDataRecord<T = any> extends RegistryRecordBase {
   kind: RecordKind.Data
   type: CID
@@ -61,17 +125,11 @@ export interface RegistryDataRecord<T = any> extends RegistryRecordBase {
   data: RecordExtension<T>
 }
 
-export interface RegistryTypeRecord extends RegistryRecordBase {
-  kind: RecordKind.Type
-  protobufDefs: protobuf.Root
-  messageName: string
-}
-
-export type RegistryRecord = RegistryDataRecord | RegistryTypeRecord
+export type RegistryRecord = RegistryTypeRecord | RegistryDataRecord
 
 export const RegistryRecord = {
+  isTypeRecord: (x: RegistryRecord): x is RegistryTypeRecord => x.kind === RecordKind.Type,
   isDataRecord: (x: RegistryRecord): x is RegistryDataRecord => x.kind === RecordKind.Data,
-  isTypeRecord: (x: RegistryRecord): x is RegistryTypeRecord => x.kind === RecordKind.Type
 };
 
 export interface UpdateResourceOptions {
