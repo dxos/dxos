@@ -5,8 +5,7 @@
 import { Root } from 'protobufjs';
 
 import { createMockResourceRecords } from '.';
-import { DXN } from '../dxn';
-import { CID, CIDLike, DomainKey } from '../models';
+import { CID, CIDLike, DomainKey, DXN } from '../models';
 import { IQuery, Filtering } from '../querying';
 import {
   Domain,
@@ -55,10 +54,10 @@ export class MemoryRegistryClient implements IRegistryClient {
       return undefined;
     }
     return {
-      ...resource,
-      record: record as R,
+      resource,
       tag: resource.tags[versionOrTag] ? versionOrTag : undefined,
-      version: resource.versions[versionOrTag] ? versionOrTag : undefined
+      version: resource.versions[versionOrTag] ? versionOrTag : undefined,
+      record: record as R
     };
   }
 

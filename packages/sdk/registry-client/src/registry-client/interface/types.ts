@@ -4,9 +4,8 @@
 
 import protobuf from 'protobufjs';
 
-import { DXN } from '../../dxn';
 import { RecordExtension } from '../../encoding';
-import { CID, DomainKey } from '../../models';
+import { CID, DomainKey, DXN } from '../../models';
 
 export interface Domain {
   key: DomainKey,

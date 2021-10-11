@@ -2,8 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DXN } from './../../dxn';
-import { CID, DomainKey } from './../../models';
+import { CID, DomainKey, DXN } from './../../models';
 import { IQuery } from './../../querying';
 import { Domain, RegistryRecord, RegistryDataRecord, RegistryTypeRecord, Resource, ResourceRecord } from './types';
 

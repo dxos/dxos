@@ -10,8 +10,7 @@ import protobuf from 'protobufjs';
 
 import { IRegistryClient, CID, RegistryClient } from '../../src';
 import { createApiPromise, createKeyring } from '../../src/api-creation';
-import { DXN } from '../../src/dxn';
-import { DomainKey } from '../../src/models';
+import { DomainKey, DXN } from '../../src/models';
 import { schemaJson } from '../../src/proto/gen';
 import { App } from '../../src/proto/gen/dxos/type';
 import { createCID } from '../../src/testing';
@@ -55,7 +54,7 @@ describe('Registry Client', () => {
       const domainKey = await registryApi.registerDomain();
 
       const typeCid = await registryApi.insertTypeRecord(protoSchema, '.dxos.type.App');
-      await registryApi.updateResource(domainKey, name, typeCid);
+      await registryApi.updateResource(DXN.fromDomainKey(domainKey, name), typeCid);
 
       const type = await registryApi.getTypeRecord(typeCid);
       expect(type?.messageName).to.equal('.dxos.type.App');
@@ -86,7 +85,7 @@ describe('Registry Client', () => {
       }, appTypeCid);
 
       domainKey = await registryApi.registerDomain();
-      await registryApi.updateResource(domainKey, appResourceName, contentCid);
+      await registryApi.updateResource(DXN.fromDomainKey(domainKey, appResourceName), contentCid);
     });
 
     it('Retrieves a list of resources', async () => {
@@ -139,9 +138,9 @@ describe('Registry Client', () => {
         }, appTypeCid);
 
         versionedDxn = DXN.fromDomainKey(domainKey, versionedName);
-        await registryApi.updateResource(domainKey, versionedName, version2, { tags: ['beta'], version: '2.0.0' });
-        await registryApi.updateResource(domainKey, versionedName, version3, { tags: ['alpha'], version: '3.0.0' });
-        await registryApi.updateResource(domainKey, versionedName, version4); // latest tag by default.
+        await registryApi.updateResource(versionedDxn, version2, { tags: ['beta'], version: '2.0.0' });
+        await registryApi.updateResource(versionedDxn, version3, { tags: ['alpha'], version: '3.0.0' });
+        await registryApi.updateResource(versionedDxn, version4); // latest tag by default.
       });
 
       it('Properly Registers resource with tags and versions', async () => {
@@ -270,7 +269,7 @@ describe('Registry Client', () => {
 
       const name = Math.random().toString(36).substring(2);
 
-      await expect(registryApi.updateResource(domainKey, name, appTypeCid)).to.be.fulfilled;
+      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, name), appTypeCid)).to.be.fulfilled;
     });
 
     it('Does allow to overwrite already registered name', async () => {
@@ -280,9 +279,9 @@ describe('Registry Client', () => {
 
       const name = Math.random().toString(36).substring(2);
 
-      await expect(registryApi.updateResource(domainKey, name, appTypeCid)).to.be.fulfilled;
+      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, name), appTypeCid)).to.be.fulfilled;
 
-      await expect(registryApi.updateResource(domainKey, name, appTypeCid)).to.be.fulfilled;
+      await expect(registryApi.updateResource(DXN.fromDomainKey(domainKey, name), appTypeCid)).to.be.fulfilled;
     });
   });
 

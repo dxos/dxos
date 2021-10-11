@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { createMockResourceRecord } from '.';
-import { DXN } from '../dxn';
+import { DXN } from '../models';
 import { IRegistryClient } from '../registry-client';
 import { createMockTypes } from './fake-data-generator';
 import { MemoryRegistryClient } from './mock-registry-client';
@@ -28,7 +28,7 @@ describe('Registry API mock', () => {
     expect(registryResource?.tags.latest).to.not.be.undefined;
 
     const resourceRecord = await mock.getResourceRecord(DXN.parse(dxn), 'latest');
-    expect(resourceRecord?.id.toString()).to.be.deep.equal(resource.id.toString());
+    expect(resourceRecord?.resource.id.toString()).to.be.deep.equal(resource.resource.id.toString());
     expect(resourceRecord?.tag).to.be.equal('latest');
   });
 
