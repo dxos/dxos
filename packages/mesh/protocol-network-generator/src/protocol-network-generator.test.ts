@@ -15,7 +15,7 @@ test('basic generator', async () => {
       createStream ({ initiator }) {
         return new Protocol({
           discoveryKey: topic,
-          initiator,
+          initiator: !!initiator,
           streamOptions: {
             live: true
           }

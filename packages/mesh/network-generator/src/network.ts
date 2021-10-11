@@ -16,7 +16,7 @@ interface CreateStreamOptions {
   channel?: Buffer,
   options?: any
 }
-interface Peer {
+export interface Peer {
   id: Buffer,
   createStream?: (options: CreateStreamOptions) => Stream
 }
@@ -29,14 +29,13 @@ interface Connection {
 
 /**
  * @param id Random buffer of 32 bytes to represent the id of the peer
- * @returns {Promise<Peer>}
  */
 type CreatePeerCallback = (id: Buffer) => Promise<Peer>
 
 /**
  *
- * @param {Peer} fromPeer Peer initiator of the connection
- * @param {Peer} toPeer Peer target
+ * @param fromPeer Peer initiator of the connection
+ * @param toPeer Peer target
  */
 type CreateConnectionCallback = (fromPeer: Peer, toPeer: Peer) => Promise<Stream | undefined>
 
