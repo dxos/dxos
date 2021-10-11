@@ -108,7 +108,11 @@ message TaskCount {
   int32 count = 1;
 }
 
+/// Test service definition.
 service TestService {
+  /// Count the tasks in the task list.
   rpc CountTasks(TaskList) returns (TaskCount);
+
+  /// Subscribe to task list updates.
   rpc SubscribeTasks(Key) returns (stream Task);
 }

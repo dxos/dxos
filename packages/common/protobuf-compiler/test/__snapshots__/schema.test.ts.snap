@@ -145,8 +145,17 @@ export interface SubstitutedByInterface {
 export interface TaskCount {
     count?: number;
 }
+/**
+ * Test service definition.
+ */
 export interface TestService {
+    /**
+     * Count the tasks in the task list.
+     */
     CountTasks: (request: TaskList) => Promise<TaskCount>;
+    /**
+     * Subscribe to task list updates.
+     */
     SubscribeTasks: (request: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>) => Stream<Task>;
 }
 
