@@ -188,9 +188,9 @@ export class RegistryClient implements IRegistryClient {
     const tags = decodeMap(resource.tags);
 
     // A single record to query for the type.
-    const selectedRecord = tags['latest'] ?? tags[Object.keys(tags)[0]];
-    let type: CID | undefined = undefined;
-    if(selectedRecord !== undefined) {
+    const selectedRecord = tags.latest ?? tags[Object.keys(tags)[0]];
+    let type: CID | undefined;
+    if (selectedRecord !== undefined) {
       try {
         const record = await this.getRecord(selectedRecord);
         assert(record && RegistryRecord.isDataRecord(record));
@@ -202,7 +202,7 @@ export class RegistryClient implements IRegistryClient {
     return {
       tags,
       versions: decodeMap(resource.versions),
-      type,
+      type
     };
   }
 
