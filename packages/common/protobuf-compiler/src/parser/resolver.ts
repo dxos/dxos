@@ -10,9 +10,9 @@ export type ProtoResolver = (origin: string, target: string) => string | null;
 
 export function createProtoResolver (original: ProtoResolver): ProtoResolver {
   return function (this: any, origin, target) {
-    const clasicResolved = original.call(this, origin, target);
-    if (clasicResolved && existsSync(clasicResolved)) {
-      return clasicResolved;
+    const classicResolved = original.call(this, origin, target);
+    if (classicResolved && existsSync(classicResolved)) {
+      return classicResolved;
     }
 
     let config: any;
