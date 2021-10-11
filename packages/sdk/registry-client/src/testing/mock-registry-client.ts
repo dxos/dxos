@@ -35,8 +35,8 @@ export class MemoryRegistryClient implements IRegistryClient {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getResource (id: DXN): Promise<Resource | undefined> {
-    const resources = this.resources as unknown as Resource[];
-    return resources.find(resource => resource.id.toString() === id.toString());
+    const resource = this.resources.find(resource => resource.resource.id.toString() === id.toString());
+    return resource?.resource;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

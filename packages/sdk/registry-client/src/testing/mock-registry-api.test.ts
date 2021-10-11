@@ -24,7 +24,7 @@ describe('Registry API mock', () => {
     // Parse the query DXN separately to ensure it is not the same instance
     // as the resource DXN
     const registryResource = await mock.getResource(DXN.parse(dxn));
-    expect(registryResource).to.be.deep.equal(resource);
+    expect(registryResource).to.be.deep.equal(resource.resource);
     expect(registryResource?.tags.latest).to.not.be.undefined;
 
     const resourceRecord = await mock.getResourceRecord(DXN.parse(dxn), 'latest');
