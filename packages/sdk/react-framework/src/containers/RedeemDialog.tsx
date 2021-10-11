@@ -73,6 +73,7 @@ export const RedeemDialog = ({ open, onClose, pinless = false }: RedeemDialogPro
       setError('');
       try {
         // TODO(burdon): Move to callback.
+        // TODO(burdon): This is duplicated from useInvitationRedeemer.
         const party = await client.echo.joinParty(
           InvitationDescriptor.fromQueryParameters(JSON.parse(invitationCode)),
           defaultInvitationAuthenticator.secretProvider

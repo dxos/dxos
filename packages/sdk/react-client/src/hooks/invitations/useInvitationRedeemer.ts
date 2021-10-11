@@ -12,7 +12,7 @@ import { decodeInvitation, noOp } from './utils';
 
 type UseInvitationRedeemerProps = {
   onDone?: (party: Party) => void
-  onError?: (error?: string) => void | never
+  onError?: (error?: string) => void | never // TODO(burdon): Error (and not optional).
   isOffline?: boolean  // TODO(burdon): Rename offline.
 };
 
@@ -34,14 +34,9 @@ export const useInvitationRedeemer = ({ // TODO(burdon): Hooks shouldn't have ca
 }: UseInvitationRedeemerProps = {}) => {
   const client = useClient();
   const [invitationCode, setInvitationCode] = useState<string>();
-  const [resolver, setResolver] = useState<boolean>(false);
-
-  //
   const [secretProvider, secretResolver] = useMemo(() => trigger<Buffer>(), [invitationCode]);
 
   useEffect(() => {
-    setResolver(!isOffline);
-
     if (!invitationCode) {
       return;
     }
@@ -49,8 +44,9 @@ export const useInvitationRedeemer = ({ // TODO(burdon): Hooks shouldn't have ca
     try {
       const invitation = decodeInvitation(invitationCode);
 
+      // TODO(burdon): Use await.
       client.echo
-        .joinParty(invitation, !isOffline ? secretProvider : undefined)
+        .joinParty(invitation, isOffline ? undefined : secretProvider)
         .then((party) => {
           void party.open().then(() => onDone(party));
         })
@@ -61,8 +57,10 @@ export const useInvitationRedeemer = ({ // TODO(burdon): Hooks shouldn't have ca
   }, [invitationCode, isOffline]);
 
   return [
-    setInvitationCode, // redeemCode
-    // TODO(burdon): Isn't `resolver` going to be stale?
-    resolver ? (pin: string) => secretResolver(Buffer.from(pin)) : () => null // setPin,
+    setInvitationCode,
+    (pin: string) => {
+      console.log(pin);
+      secretResolver(Buffer.from(pin)) ;
+    }
   ];
 };

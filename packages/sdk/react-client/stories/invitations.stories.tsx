@@ -6,43 +6,23 @@ import React, { useEffect, useState } from 'react';
 
 import { defaultSecretProvider } from '@dxos/credentials';
 
-import { ClientInitializer, decodeInvitation, encodeInvitation, useClient } from '../src';
+import { ClientInitializer, decodeInvitation, useClient, useInvitationRedeemer } from '../src';
 
-import { useTestPeers } from './helpers';
+import { useInitializedClient, useTestInvitation } from './helpers';
 
 export default {
   title: 'react-client/Party invitations'
 };
 
-const TestApp = () => {
+const PrimaryApp = () => {
   const [timestamp, setTimestamp] = useState(Date.now);
-  const [invitationCode, setInvitationCode] = useState('');
   const client = useClient();
-  const [peer] = useTestPeers(1);
-
-  // Initialize client.
-  useEffect(() => {
-    setImmediate(async () => {
-      await client.halo.createProfile({ username: 'Test' });
-    });
-  }, []);
-
-  // Create remote party.
-  useEffect(() => {
-    if (!peer) {
-      return;
-    }
-
-    setImmediate(async () => {
-      const party = await peer.createParty();
-      const invitation = await party.createInvitation();
-      setInvitationCode(encodeInvitation(invitation));
-    });
-  }, [peer]);
+  const initialized = useInitializedClient();
+  const invitationCode = useTestInvitation();
 
   // Join party
   useEffect(() => {
-    if (!invitationCode) {
+    if (!initialized || !invitationCode) {
       return;
     }
 
@@ -52,8 +32,9 @@ const TestApp = () => {
       await client.echo.joinParty(invitation, defaultSecretProvider);
       setTimestamp(Date.now());
     });
-  }, [invitationCode]);
+  }, [initialized, invitationCode]);
 
+  // TODO(burdon): Factor out UX.
   return (
     <div>
       <div style={{ padding: 8 }}>
@@ -71,28 +52,64 @@ const TestApp = () => {
       </div>
 
       <div style={{ padding: 8 }}>
-        <h2>Peer</h2>
-        <pre>
-          {String(peer)}
-        </pre>
-      </div>
-
-      <div style={{ padding: 8 }}>
         <h2>Invitation Code</h2>
         <textarea defaultValue={invitationCode} cols={80} rows={6} />
       </div>
 
       <div style={{ padding: 8 }}>
-        T:{timestamp}
+        [{timestamp}]
       </div>
     </div>
   );
 };
 
-export const Primary = () => {
+export const Test = () => {
   return (
     <ClientInitializer config={{ swarm: { signal: undefined } }}>
-      <TestApp />
+      <PrimaryApp />
     </ClientInitializer>
   );
 };
+
+const RedeemerApp = () => {
+  const initialized = useInitializedClient();
+  const invitationCode = useTestInvitation();
+
+  // TODO(burdon): Remove callbacks.
+  const [setInvitationCode, setPin] = useInvitationRedeemer({
+    onDone: () => { console.log('done'); },
+    onError: (error?: string) => { console.log('error', error) }
+  });
+
+  // Redeem code.
+  useEffect(() => {
+    if (!initialized || !invitationCode) {
+      return;
+    }
+
+    // TODO(burdon): Attempts to contact network: error ERR_EXTENSION_RESPONSE_FAILED:
+    setInvitationCode(invitationCode);
+  }, [initialized, invitationCode]);
+
+  // Set PIN.
+  useEffect(() => {
+    setTimeout(() => {
+      setPin('0000'); // TODO(burdon): Configure defaultSecretProvider.
+    }, 1000)
+  }, []);
+
+  return (
+    <div style={{ padding: 8 }}>
+      <h2>Invitation Code</h2>
+      <textarea defaultValue={invitationCode} cols={80} rows={6} />
+    </div>
+  );
+}
+
+export const UseInvitationRedeemer = () => {
+  return (
+    <ClientInitializer config={{ swarm: { signal: undefined } }}>
+      <RedeemerApp />
+    </ClientInitializer>
+  );
+}
