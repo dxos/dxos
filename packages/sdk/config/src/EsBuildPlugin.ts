@@ -21,18 +21,10 @@ export function ConfigPlugin (): Plugin {
     setup: ({ onResolve, onLoad, initialOptions }) => {
       onResolve(
         { filter: /loaders\/index$/ },
-        args => ({ path: require.resolve('@dxos/config/dist/src/loaders/browser', { paths: [args.resolveDir] }) })
+        args => ({ path: require.resolve('./loaders/browser', { paths: [args.resolveDir] }) })
       );
 
-      const injected = [
-        resolve(CWD, 'configGlobal.js')
-      ];
-
-      if (initialOptions.inject) {
-        initialOptions.inject.push(...injected);
-      } else {
-        initialOptions.inject = [...injected];
-      }
+      (initialOptions.inject ??= []).push(resolve(CWD, 'configGlobal.js'));
 
       onResolve(
         { filter: /^dxos-config-globals$/ },
