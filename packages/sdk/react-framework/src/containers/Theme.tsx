@@ -8,19 +8,21 @@ import React from 'react';
 
 // https://material-ui.com/customization/theming
 export const defaultThemeProperties = {
-  props: {
+  components: {
     MuiAppBar: {
-      elevation: 0
+      defaultProps: {
+        elevation: 0
+      }
     },
 
     MuiButtonBase: {
-      disableRipple: true
-    }
-  },
+      defaultProps: {
+        disableRipple: true
+      }
+    },
 
-  overrides: {
     MuiCssBaseline: {
-      '@global': {
+      styleOverrides: {
         body: {
           overflow: 'hidden' // Prevent scroll bounce.
         }
@@ -37,11 +39,9 @@ export const defaultThemeProperties = {
 
 export const createTheme = (base: any) => createMuiTheme(defaultsDeep(base, defaultThemeProperties));
 
-const ReactUXTheme = ({ children, base }: { base: any; children: React.ReactNode }) => (
+export const ReactUXTheme = ({ children, base }: { base: any; children: React.ReactNode }) => (
   <ThemeProvider theme={createTheme(base)}>
     <CssBaseline />
     {children}
   </ThemeProvider>
 );
-
-export default ReactUXTheme;

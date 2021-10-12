@@ -10,7 +10,7 @@ const Title = styled(Typography)(({ theme }) => ({
   marginLeft: theme.spacing(2)
 }));
 
-const DialogHeading = ({
+export const DialogHeading = ({
   title,
   icon: Icon
 }: {
@@ -19,12 +19,10 @@ const DialogHeading = ({
 }) => {
   return (
     <DialogTitle>
-      <Toolbar variant='dense' disableGutters>
+      <Toolbar variant="dense" disableGutters>
         <Icon />
-        <Title variant='h5'>{title}</Title>
+        <Title variant="h5">{title}</Title>
       </Toolbar>
     </DialogTitle>
   );
 };
-
-export default DialogHeading;

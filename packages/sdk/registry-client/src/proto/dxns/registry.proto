@@ -1,0 +1,53 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.registry;
+
+import "google/protobuf/timestamp.proto";
+
+message Record {
+  /**
+   * Types are system records that define protocol-buffer schema of other records.
+   */
+  message Type {
+    /// FQ protobuf message name.
+    string message_name = 1;                      
+    /// Set of protobuf messages encoded in JSON.
+    string protobuf_defs = 2;                     
+    /// CID of protobuf source file.
+    string protobuf_file = 3;                     
+  }
+
+  /**
+   * Data with a reference to a type record that defines the encoding.
+   */
+  message Extension {
+    /// CID of type record.
+    bytes type_record = 1;
+    /// Serialized payload data.
+    bytes data = 2;
+  }
+
+  //
+  // Metadata
+  //
+
+  /// Record creation timetstamp.
+  google.protobuf.Timestamp created = 1;
+
+  /// Optional record description.
+  string description = 2;
+  
+  oneof kind {
+    /// Type record variant.
+    Type type = 100;
+
+    /// Data record variant.
+    Extension payload = 101;
+
+    // TODO(damaretskyi): Add DID record definition.
+  }
+}

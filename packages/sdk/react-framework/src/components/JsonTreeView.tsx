@@ -114,7 +114,7 @@ interface JsonTreeViewProperties {
  * @param depth Maximum nest depth to be visualized. Unlimited by default.
  * @param onSelect Callback for when one or more nodes are selected by the user.
  */
-const JsonTreeView = ({
+export const JsonTreeView = ({
   data = {},
   depth = Infinity,
   onSelect = () => {},
@@ -190,5 +190,3 @@ const JsonTreeView = ({
     </StyledTreeView>
   );
 };
-
-export default JsonTreeView;

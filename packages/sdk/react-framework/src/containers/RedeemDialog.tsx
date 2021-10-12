@@ -3,8 +3,8 @@
 //
 
 import { Redeem as RedeemIcon } from '@mui/icons-material';
-import { Alert } from '@mui/lab';
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,
@@ -36,7 +36,7 @@ interface RedeemDialogProps extends Omit<DialogProps, 'open'> {
  * Component used for claiming invitations to Parties.
  * Works for both regular and `Offline` invitations.
  */
-const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps) => {
+export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps) => {
   const [isOffline] = useState(false);
   // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
   // const [isOffline, setIsOffline] = useState(false);
@@ -106,12 +106,12 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
   return (
     <Dialog
       fullWidth
-      maxWidth='xs'
+      maxWidth="xs"
       open
       onClose={step === 0 ? handleDone : undefined} // No click away when in the middle of a flow
       {...props}
     >
-      <DialogHeading title='Redeem Invitation' icon={RedeemIcon} />
+      <DialogHeading title="Redeem Invitation" icon={RedeemIcon} />
 
       {step === 0 && (
         <>
@@ -139,10 +139,10 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
             {isProcessing && <LinearProgress />}
           </DialogContent>
           <DialogActions>
-            <Button color='secondary' onClick={handleDone}>
+            <Button color="secondary" onClick={handleDone}>
               Cancel
             </Button>
-            <Button variant='contained' color='primary' onClick={handleEnterInvitationCode} disabled={isProcessing}>
+            <Button variant="contained" color="primary" onClick={handleEnterInvitationCode} disabled={isProcessing}>
               Submit
             </Button>
           </DialogActions>
@@ -152,27 +152,27 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
       {step === 1 && setPin && (
         <>
           <DialogContent>
-            <Typography variant='body1' gutterBottom>
+            <Typography variant="body1" gutterBottom>
               Enter the PIN number.
             </Typography>
             <TextField
               value={pinCode}
               onChange={(event) => setPinCode(event.target.value)}
-              variant='outlined'
-              margin='normal'
+              variant="outlined"
+              margin="normal"
               required
               fullWidth
-              label='PIN Code'
+              label="PIN Code"
               autoFocus
               disabled={isProcessing}
             />
             {isProcessing && <LinearProgress />}
           </DialogContent>
           <DialogActions>
-            <Button color='secondary' onClick={handleDone}>
+            <Button color="secondary" onClick={handleDone}>
               Cancel
             </Button>
-            <Button variant='contained' color='primary' onClick={handleEnterPinCode} disabled={isProcessing}>
+            <Button variant="contained" color="primary" onClick={handleEnterPinCode} disabled={isProcessing}>
               Submit
             </Button>
           </DialogActions>
@@ -182,7 +182,7 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
       {step === 1 && !setPin && (
         <DialogContent>
           <LinearProgress />
-          <SpacedTypography variant='body1' gutterBottom>
+          <SpacedTypography variant="body1" gutterBottom>
             Processing...
           </SpacedTypography>
         </DialogContent>
@@ -190,9 +190,9 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
 
       {step === 2 && error && (
         <DialogContent>
-          <Alert severity='error'>{error}</Alert>
+          <Alert severity="error">{error}</Alert>
           <DialogActions>
-            <Button autoFocus color='secondary' onClick={handleDone}>
+            <Button autoFocus color="secondary" onClick={handleDone}>
               Cancel
             </Button>
           </DialogActions>
@@ -201,5 +201,3 @@ const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps)
     </Dialog>
   );
 };
-
-export default RedeemDialog;

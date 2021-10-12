@@ -1,6 +1,6 @@
 {
   "name": "@dxos/botkit",
-  "version": "2.14.0",
+  "version": "2.15.2",
   "description": "Botkit",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -29,6 +29,7 @@
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-bot": "workspace:*",
+    "@dxos/registry-client": "workspace:*",
     "@types/chance": "^1.1.0",
     "@types/debug": "^4.1.1",
     "@types/download": "^6.2.4",

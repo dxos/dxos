@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import download from 'download';
@@ -29,10 +30,11 @@ export const OVERRIDE_CONFIG = {
 export const getTestConfig = async () => {
   if (!existsSync(PROFILE_PATH)) {
     // TODO(egorgripasov): DX_PROFILE_URL.
+    assert(process.env.WIRE_PROFILE_URL, 'Missing WIRE_PROFILE_URL environment variable.');
     writeFileSync(PROFILE_PATH, await download(process.env.WIRE_PROFILE_URL));
   }
 
-  const profileConfig = yaml.load(readFileSync(PROFILE_PATH));
+  const profileConfig = yaml.load(String(readFileSync(PROFILE_PATH)));
 
   const config = new Config(
     mapFromKeyValues(envmap, OVERRIDE_CONFIG),

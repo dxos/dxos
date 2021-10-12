@@ -61,7 +61,7 @@ export const ItemCard = ({ adapter, item }: { adapter: ItemAdapter, item: any })
       />
       <CardContent classes={{ root: classes.cardContent }}>
         {description && (
-          <Typography component='p' className={classes.description}>
+          <Typography component="p" className={classes.description}>
             {description}
           </Typography>
         )}

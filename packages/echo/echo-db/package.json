@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "2.14.0",
+  "version": "2.15.2",
   "description": "ECHO database.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
@@ -57,7 +57,8 @@
     "expect": "~27.0.2",
     "lodash": "4.17.21",
     "memdown": "^5.1.0",
-    "mocha": "~8.4.0"
+    "mocha": "~8.4.0",
+    "@types/pify": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"

@@ -6,5 +6,5 @@ export * from './client';
 export * from './echo-queries';
 export * from './echo-selections';
 export * from './invitations';
-export * from './registry';
+export * from './wns';
 export * from './util';

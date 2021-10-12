@@ -2,13 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
+import expect from 'expect';
+import { it as test } from 'mocha';
+
 import { Client } from './client';
 
 test('initialize and destroy in a reasonable time', async () => {
   const client = new Client();
   await client.initialize();
   await client.destroy();
-}, 200);
+}).timeout(200);
 
 test('initialize and destroy are idempotent', async () => {
   const client = new Client();
@@ -71,6 +74,7 @@ test('persistent storage', async () => {
     await client.initialize();
 
     expect(client.halo.getProfile()).toBeDefined();
+    await client.destroy();
   }
 });
 

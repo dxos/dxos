@@ -36,7 +36,7 @@ export interface IProfileDialog {
   onCancel?: () => void;
 }
 
-const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
+export const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
   const [username, setUsername] = useState('');
 
   const handleUpdate = () => {
@@ -52,7 +52,7 @@ const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
   return (
     <Dialog open={open} fullWidth maxWidth="xs">
       <DialogTitle>
-        <Toolbar variant='dense' disableGutters>
+        <Toolbar variant="dense" disableGutters>
           <StyledAvatar>
             <LockOutlinedIcon />
           </StyledAvatar>
@@ -92,5 +92,3 @@ const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
     </Dialog>
   );
 };
-
-export default ProfileDialog;

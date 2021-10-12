@@ -27,7 +27,7 @@ interface State {
 /**
  * https://reactjs.org/docs/error-boundaries.html
  */
-class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends Component<Props, State> {
   override state = {
     error: null
   };
@@ -63,5 +63,3 @@ class ErrorBoundary extends Component<Props, State> {
     return children;
   }
 }
-
-export default ErrorBoundary;

@@ -3,8 +3,7 @@
 //
 
 import { Share as ShareIcon } from '@mui/icons-material';
-import { AvatarGroup } from '@mui/lab';
-import { styled, Tooltip, Theme, useTheme } from '@mui/material';
+import { AvatarGroup, styled, Tooltip, Theme, useTheme } from '@mui/material';
 import React from 'react';
 
 import { humanize } from '@dxos/crypto';
@@ -19,7 +18,7 @@ const Root = styled('div')({
 });
 
 // TODO(burdon): Pass in array (small UX data object) of processed members (don't apply humanize here).
-const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void }) => {
+export const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void }) => {
   const theme = useTheme() as Theme;
   const members: PartyMember[] = useMembers(party);
 
@@ -27,13 +26,13 @@ const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void
     <Root>
       <AvatarGroup>
         {members.map(member => (
-          <Tooltip key={member.publicKey.toString()} title={member.displayName || humanize(member.publicKey.toString())} placement='top'>
+          <Tooltip key={member.publicKey.toString()} title={member.displayName || humanize(member.publicKey.toString())} placement="top">
             <MemberAvatar member={member} />
           </Tooltip>
         ))}
       </AvatarGroup>
 
-      <Tooltip title='Share' placement='top'>
+      <Tooltip title="Share" placement="top">
         <Avatar theme={theme} onClick={onShare}>
           <ShareIcon />
         </Avatar>
@@ -41,5 +40,3 @@ const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void
     </Root>
   );
 };
-
-export default PartyMemberList;

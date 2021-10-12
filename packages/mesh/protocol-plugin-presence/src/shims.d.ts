@@ -3,5 +3,3 @@
 //
 
 declare module 'buffer-json-encoding'
-declare module 'ngraph.path'
-declare module 'hypercore-extension'

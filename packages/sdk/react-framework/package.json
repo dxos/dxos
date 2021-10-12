@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-framework",
-  "version": "2.14.0",
+  "version": "2.15.2",
   "description": "Application framework components",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -44,7 +44,9 @@
     "babel-plugin-add-module-exports": "^1.0.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "@types/lodash.isplainobject": "~4.0.6",
+    "@types/lodash.defaultsdeep": "^4.6.6"
   },
   "peerDependencies": {
     "@dxos/client": "*",

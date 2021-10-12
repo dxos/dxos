@@ -54,30 +54,30 @@ const JoinParty = () => {
     <Container className={classes.container}>
       <Grid container spacing={4}>
         <Grid item xs={12}>
-          <Typography variant='h4' align='center'> Join party </Typography>
+          <Typography variant="h4" align="center"> Join party </Typography>
         </Grid>
         <Grid item xs={12}>
           <TextField
             autoFocus
             fullWidth
             multiline
-            label='Invitation code'
-            placeholder='Paste code'
+            label="Invitation code"
+            placeholder="Paste code"
             spellCheck={false}
             value={invitation}
             onChange={e => setInvitation(e.target.value)}
-            variant='outlined'
+            variant="outlined"
             required
             helperText={<div> The shared invitation code. </div>}/>
         </Grid>
         <Grid item xs={12}>
           <TextField
-            label='Passcode'
-            placeholder='Paste passcode'
+            label="Passcode"
+            placeholder="Paste passcode"
             spellCheck={false}
             value={passcode}
             onChange={e => setPasscode(e.target.value)}
-            variant='outlined'
+            variant="outlined"
             required
             helperText={<div> The passcode you get from the party owner.  </div>}/>
         </Grid>
@@ -85,10 +85,10 @@ const JoinParty = () => {
           <BackButton />
         </Grid>
         <Grid item xs={6}>
-          <Grid container justify='flex-end'>
+          <Grid container justify="flex-end">
             <Button
-              variant='contained'
-              color='primary'
+              variant="contained"
+              color="primary"
               onClick={onJoin}
               disabled={inProgress}>
               {inProgress ? 'Joining...' : 'Join'}

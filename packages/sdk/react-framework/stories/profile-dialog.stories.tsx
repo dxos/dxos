@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import ProfileDialog from '../src/components/ProfileDialog';
+import { ProfileDialog } from '../src/components';
 
 const handleClose = () => {
   return null;

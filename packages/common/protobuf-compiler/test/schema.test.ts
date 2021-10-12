@@ -1,6 +1,6 @@
-import { ComplexFields, Scalars, TaskList, TaskType, WithTimestamp } from './gen/dxos/test'
-import { TestFoo } from "./gen/dxos/test/testfoo";
-import { schema, TYPES } from './gen';
+import { ComplexFields, Scalars, TaskList, TaskType, WithTimestamp } from './proto/gen/dxos/test'
+import { TestFoo } from "./proto/gen/dxos/test/testfoo";
+import { schema, TYPES } from './proto/gen';
 import { MyKey } from './my-key';
 import { readFileSync, readdirSync, lstatSync } from 'fs'
 import { join } from 'path'
@@ -148,7 +148,7 @@ test('timestamp', () => {
 })
 
 test('definitions', () => {
-  expect(readDirectoryFiles(join(__dirname, 'gen'))).toMatchSnapshot()
+  expect(readDirectoryFiles(join(__dirname, 'proto/gen'))).toMatchSnapshot()
 })
 
 
