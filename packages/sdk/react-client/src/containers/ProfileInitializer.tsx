@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import { useClient, useProfile } from '../hooks';
 
@@ -10,7 +10,7 @@ import { useClient, useProfile } from '../hooks';
  * Automatically creates a random DXOS profile.
  */
 // TODO(burdon): Testing-only.
-const ProfileInitializer = ({ children }: { children: ReactNode }) => {
+const ProfileInitializer = ({ children }: { children: React.ReactNode }) => {
   const client = useClient();
   const profile = useProfile();
 

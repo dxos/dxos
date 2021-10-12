@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Box, Button, Divider, Paper, TextField, Toolbar, Typography } from '@mui/material';
 import React, { useState } from 'react';
 
 import { trigger } from '@dxos/async';
@@ -11,39 +12,17 @@ import {
   ClientInitializer, decodeInvitation,
   encodeInvitation,
   ProfileInitializer,
-  useClient,
-  useParties
+  useClient, useParties
 } from '../src';
 import { PublicKey } from '@dxos/crypto';
 
-import { JsonPanel } from './helpers';
+import { ClientPanel, JsonPanel, TestTheme } from './helpers';
 
 export default {
   title: 'react-client/Invitations'
 };
 
 // debug.enable('dxos:*');
-
-/**
- * Displays client info.
- */
-const ClientPanel = () => {
-  const client = useClient();
-  const parties = useParties();
-
-  // TODO(burdon): Refresh view via subscription?
-  const info = {
-    config: client.config,
-    client: client.info(),
-    parties: parties.map(({ key }) => key.toHex())
-  }
-
-  return (
-    <div style={{ padding: 8, borderBottom: '1px solid #CCC' }}>
-      <JsonPanel value={info} />
-    </div>
-  );
-};
 
 // TODO(burdon): Factor out.
 const useSecretProvider = (): [() => Promise<Buffer>, string | undefined, () => void] => {
@@ -56,6 +35,13 @@ const useSecretProvider = (): [() => Promise<Buffer>, string | undefined, () => 
   }
 
   return [provider, pin, () => setPin('')];
+}
+
+// TODO(burdon): Factor out.
+const useProvider = <T extends any> (): [() => Promise<T>, (value: T) => void] => {
+  const [[provider, resolver]] = useState(() => trigger<T>());
+
+  return [provider, resolver];
 }
 
 /**
@@ -84,50 +70,45 @@ const InviatationPanel = () => {
   }
 
   return (
-    <div style={{ padding: 8, borderBottom: '1px solid #CCC' }}>
-      <div style={{ display: 'flex' }}>
-        <button
+    <Box sx={{ padding: 1 }}>
+      <Toolbar>
+        <Button
+          variant='outlined'
           onClick={handleCreateParty}
         >
           Create Party
-        </button>
-        <div style={{ margin: 2 }}/>
-        <button
+        </Button>
+        <Button
           disabled={!partyKey}
           onClick={handleCreateInvitation}
         >
           Create Invitation
-        </button>
-      </div>
+        </Button>
+      </Toolbar>
+
       {invitationCode && (
-        <div style={{ display: 'flex', marginTop: 8 }}>
-          <textarea
-            style={{ width: '100%' }}
+        <Box sx={{ marginTop: 1 }}>
+          <TextField
             disabled
+            multiline
+            fullWidth
             defaultValue={invitationCode}
-            rows={6}
+            maxRows={6}
           />
-        </div>
+        </Box>
       )}
       {pin && (
-        <div style={{ marginTop: 8 }}>
-          <input
+        <Box sx={{ marginTop: 1 }}>
+          <TextField
             disabled
             type='text'
             value={pin}
           />
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
-
-// TODO(burdon): Factor out.
-const useProvider = <T extends any> (): [() => Promise<T>, (value: T) => void] => {
-  const [[provider, resolver]] = useState(() => trigger<T>());
-
-  return [provider, resolver];
-}
 
 /**
  * Processes party invitations.
@@ -187,96 +168,102 @@ const RedeemInvitationPanel = (
   const [pin, setPin] = useState<string>('');
 
   return (
-    <div style={{ padding: 8, borderBottom: '1px solid #CCC' }}>
-      <div>
-        <div style={{ display: 'flex', marginBottom: 8 }}>
-          <textarea
-            style={{ width: '100%' }}
+    <Box sx={{ padding: 1 }}>
+      <Box>
+        <Toolbar>
+          <Button
+            onClick={() => onSubmit(invitationCode)}
+            disabled={!invitationCode}
+            variant='outlined'
+          >
+            Join Party
+          </Button>
+        </Toolbar>
+
+        <Box sx={{ marginTop: 1 }}>
+          <TextField
+            multiline
+            fullWidth
             value={invitationCode}
             onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
               setInvitationCode(event.target.value);
               setPin('');
             }}
-            rows={6}
+            maxRows={6}
           />
-        </div>
-        <div style={{ display: 'flex' }}>
-          <button
-            onClick={() => onSubmit(invitationCode)}
-            disabled={!invitationCode}
-          >
-            Join Party
-          </button>
-          <div style={{ margin: 2 }}/>
-          <input
-            type='text'
-            value={pin}
-            placeholder='PIN'
-            disabled={!invitationCode}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPin(event.target.value)}
-          />
-          <div style={{ margin: 2 }}/>
-          <button
-            disabled={!pin}
-            onClick={() => onAuthenticate(pin)}
-          >
-            Authenticate
-          </button>
-        </div>
-      </div>
+          {invitationCode && (
+            <Box sx={{ display: 'flex', marginTop: 2 }}>
+              <TextField
+                // disabled={!invitationCode}
+                value={pin}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPin(event.target.value)}
+                // variant='standard'
+                size='small'
+                label='PIN'
+              />
+              <Button
+                disabled={!pin}
+                onClick={() => onAuthenticate(pin)}
+              >
+                Submit
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </Box>
+
       {(Object.keys(status).length > 0) && (
-        <div>
-          <h2>Status</h2>
+        <Box sx={{ marginTop: 1 }}>
           <JsonPanel value={status} />
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }
 
 const TestApp = () => {
+  const client = useClient();
+  const parties = useParties();
+
   return (
-    <div style={{
+    <Paper sx={{
       display: 'flex',
       flexDirection: 'column',
       flex: 1,
       flexShrink: 0,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      margin: 1
     }}>
-      <div style={{
-        border: '1px solid #CCC',
-        borderBottom: 'none',
-        margin: 16
-      }}>
-        <ClientPanel/>
-        <InviatationPanel/>
-        <RedeemInvitationContainer/>
-      </div>
-    </div>
+      <ClientPanel client={client} parties={parties} />
+      <Divider />
+      <InviatationPanel/>
+      <Divider />
+      <RedeemInvitationContainer/>
+    </Paper>
   );
 };
 
 export const TwinClients = () => {
   // Configure in-memory swarm.
   const config = { swarm: { signal: undefined } };
+  const peers = 3;
 
   // TODO(burdon): Remove ProfileInitializer.
 
   return (
-    <div style={{
-      display: 'flex',
-      overflow: 'hidden'
-    }}>
-      <ClientInitializer config={config}>
-        <ProfileInitializer>
-          <TestApp/>
-        </ProfileInitializer>
-      </ClientInitializer>
-      <ClientInitializer config={config}>
-        <ProfileInitializer>
-          <TestApp/>
-        </ProfileInitializer>
-      </ClientInitializer>
-    </div>
+    <TestTheme>
+      <Box sx={{
+        display: 'flex',
+        overflow: 'hidden'
+      }}>
+        {[...new Array(peers)].map((_, i) => (
+          <ClientInitializer key={i} config={config}>
+            <ProfileInitializer>
+              <TestApp/>
+            </ProfileInitializer>
+          </ClientInitializer>
+        ))}
+      </Box>
+    </TestTheme>
   );
-}
+};

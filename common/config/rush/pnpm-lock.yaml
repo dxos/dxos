@@ -1699,6 +1699,7 @@ importers:
       '@babel/preset-env': 7.14.2_@babel+core@7.13.16
       '@babel/preset-react': 7.9.4_@babel+core@7.13.16
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@mui/material': 5.0.2_12a6012245369fd5be825566be975ff0
       '@testing-library/react': 11.2.6_react-dom@17.0.2+react@17.0.2
       '@testing-library/react-hooks': 5.1.2_fc2bb8a5b006d3f25c5f84ea777e678d
       '@types/jest': 26.0.23
@@ -1735,6 +1736,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
+      '@mui/material': ^5.0.1
       '@testing-library/react': ^11.0.4
       '@testing-library/react-hooks': 5.1.2
       '@types/debug': ^4.1.1
@@ -6035,6 +6037,42 @@ packages:
         optional: true
     resolution:
       integrity: sha512-AKTh3gAsP5GaveAoBAjEvyuuyFMYzyfUAwo7wvz9A/EiTnkc+2QXsSO7W4ykTIjNoIGBrTd9bTV/YQNK6FpPMw==
+  /@mui/material/5.0.2_12a6012245369fd5be825566be975ff0:
+    dependencies:
+      '@babel/runtime': 7.15.4
+      '@mui/core': 5.0.0-alpha.49_12a6012245369fd5be825566be975ff0
+      '@mui/system': 5.0.2_b094b78811fc8d2f00a90f13d0251fb6
+      '@mui/types': 7.0.0_@types+react@17.0.27
+      '@mui/utils': 5.0.1_react@17.0.2
+      '@popperjs/core': 2.9.2
+      '@types/react': 17.0.27
+      '@types/react-transition-group': 4.4.3
+      clsx: 1.1.1
+      csstype: 3.0.9
+      hoist-non-react-statics: 3.3.2
+      prop-types: 15.7.2
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      react-is: 17.0.2
+      react-transition-group: 4.4.2_react-dom@17.0.2+react@17.0.2
+    dev: true
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.2
+      react-dom: ^17.0.2
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-LD2xHSjTLmbN0UoCuKTu09L/7JjpEzg+Cophf+dVJOTNoK7VI0Eqv3bmpF/9pDIk5dVKmeU9Eh4t2lW1ZifM6A==
   /@mui/material/5.0.2_8b1afd652731575359982e6f2c187961:
     dependencies:
       '@babel/runtime': 7.15.4
@@ -6110,6 +6148,26 @@ packages:
         optional: true
     resolution:
       integrity: sha512-j40nCbaKr1HAZYqpX61XvZYsadYskjo3u6+pRFFaewSViAkkD1rjjbubpnh15nqVfYmijtHMZJ9/l1x1hamvfQ==
+  /@mui/styled-engine/5.0.1_react@17.0.2:
+    dependencies:
+      '@babel/runtime': 7.15.4
+      '@emotion/cache': 11.4.0
+      prop-types: 15.7.2
+      react: 17.0.2
+    dev: true
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      react: ^17.0.2
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+    resolution:
+      integrity: sha512-j40nCbaKr1HAZYqpX61XvZYsadYskjo3u6+pRFFaewSViAkkD1rjjbubpnh15nqVfYmijtHMZJ9/l1x1hamvfQ==
   /@mui/styles/5.0.1_b094b78811fc8d2f00a90f13d0251fb6:
     dependencies:
       '@babel/runtime': 7.15.4
@@ -6156,6 +6214,35 @@ packages:
       csstype: 3.0.9
       prop-types: 15.7.2
       react: 17.0.2
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      '@emotion/react': ^11.4.1
+      '@emotion/styled': ^11.3.0
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.2
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-K6wMbiSEYSMeYUw7zmZ2/50JFthqtuTz4OADyKc4ic2RP8ubAf/duH/nkJ4gtsKcewU4RIub0HQHl5F77WVp4Q==
+  /@mui/system/5.0.2_b094b78811fc8d2f00a90f13d0251fb6:
+    dependencies:
+      '@babel/runtime': 7.15.4
+      '@mui/private-theming': 5.0.1_b094b78811fc8d2f00a90f13d0251fb6
+      '@mui/styled-engine': 5.0.1_react@17.0.2
+      '@mui/types': 7.0.0_@types+react@17.0.27
+      '@mui/utils': 5.0.1_react@17.0.2
+      '@types/react': 17.0.27
+      clsx: 1.1.1
+      csstype: 3.0.9
+      prop-types: 15.7.2
+      react: 17.0.2
+    dev: true
     engines:
       node: '>=12.0.0'
     peerDependencies:

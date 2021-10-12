@@ -2,11 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Box } from '@mui/material';
 import React, { useEffect } from 'react';
 
 import { ClientInitializer, useClient } from '../src';
-import { JsonPanel } from './helpers';
+import { ClientPanel } from './helpers';
 
 export default {
   title: 'react-client/ClientInitializer'
@@ -22,18 +21,7 @@ const TestApp = () => {
   }, []);
 
   return (
-    <Box>
-      <Box style={{ padding: 8 }}>
-        Config
-        <JsonPanel value={client.config} />
-      </Box>
-
-      {/* TODO(burdon): Show client profile. */}
-      <Box style={{ padding: 8 }}>
-        Client
-        <JsonPanel value={client.info()} />
-      </Box>
-    </Box>
+    <ClientPanel client={client} />
   );
 };
 
