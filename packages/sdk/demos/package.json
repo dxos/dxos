@@ -24,6 +24,7 @@
     "grid:demo": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",
+    "book": "esapp book 'stories/**/*.story.tsx'",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "storybook-docs": "start-storybook --docs --no-manager-cache",
     "test": "exit 0",
@@ -58,7 +59,8 @@
     "immutability-helper": "^3.0.2",
     "mobile-detect": "~1.4.5",
     "playwright": "^1.7.0",
-    "react-resize-aware": "^3.1.1"
+    "react-resize-aware": "^3.1.1",
+    "faker": "^5.1.0"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
