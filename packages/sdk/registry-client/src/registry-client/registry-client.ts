@@ -182,7 +182,7 @@ export class RegistryClient implements IRegistryClient {
           .map(([key, value]) => [key.toString(), CID.from(value.toU8a())])
       );
     }
-    const tags = decodeMap(resource.tags);
+    const tags = decodeMap(resource.tags ?? new Map());
 
     // A single record to query for the type.
     const selectedRecord = tags.latest ?? tags[Object.keys(tags)[0]];
@@ -198,7 +198,7 @@ export class RegistryClient implements IRegistryClient {
 
     return {
       tags,
-      versions: decodeMap(resource.versions),
+      versions: decodeMap(resource.versions ?? new Map()),
       type
     };
   }
