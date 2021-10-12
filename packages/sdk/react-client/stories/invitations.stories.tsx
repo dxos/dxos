@@ -16,24 +16,13 @@ import {
 } from '../src';
 import { PublicKey } from '@dxos/crypto';
 
+import { JsonPanel } from './helpers';
+
 export default {
   title: 'react-client/Invitations'
 };
 
 // debug.enable('dxos:*');
-
-const Pre = ({ value }: { value: any }) => {
-  return (
-    <pre
-      style={{
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-all'
-      }}
-    >
-      {JSON.stringify(value, undefined, 2)}
-    </pre>
-  )
-}
 
 /**
  * Displays client info.
@@ -45,14 +34,13 @@ const ClientPanel = () => {
   // TODO(burdon): Refresh view via subscription?
   const info = {
     config: client.config,
-    echo: client.echo.info(),
-    halo: client.halo.info(),
+    client: client.info(),
     parties: parties.map(({ key }) => key.toHex())
   }
 
   return (
     <div style={{ padding: 8, borderBottom: '1px solid #CCC' }}>
-      <Pre value={info} />
+      <JsonPanel value={info} />
     </div>
   );
 };
@@ -239,7 +227,7 @@ const RedeemInvitationPanel = (
       {(Object.keys(status).length > 0) && (
         <div>
           <h2>Status</h2>
-          <Pre value={status} />
+          <JsonPanel value={status} />
         </div>
       )}
     </div>

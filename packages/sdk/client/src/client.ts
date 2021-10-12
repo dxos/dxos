@@ -12,8 +12,8 @@ import { Invitation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
 import * as debug from '@dxos/debug';
-import { 
-  ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, SecretProvider, sortItemsTopologically 
+import {
+  ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, SecretProvider, sortItemsTopologically
 } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
@@ -113,8 +113,28 @@ export class Client {
     this._wnsRegistry = wns ? new Registry(wns.server, wns.chainId) : undefined;
   }
 
+  toString () {
+    return `Client(${JSON.stringify(this.info())})`;
+  }
+
+  info () {
+    return {
+      initialized: this.initialized,
+      halo: this.halo.info(),
+      echo: this.echo.info()
+    };
+  }
+
   get config (): ClientConfig {
     return this._config;
+  }
+
+  /**
+   * Has the Client been initialized?
+   * Initialize by calling `.initialize()`
+   */
+  get initialized () {
+    return this._initialized;
   }
 
   /**
@@ -134,17 +154,11 @@ export class Client {
 
   /**
    * WNS registry.
+   * @deprecated
    */
+  // TODO(burdon): Remove.
   get wnsRegistry () {
     return this._wnsRegistry;
-  }
-
-  /**
-   * Has the Client been initialized?
-   * Initialize by calling `.initialize()`
-   */
-  get initialized () {
-    return this._initialized;
   }
 
   /**
