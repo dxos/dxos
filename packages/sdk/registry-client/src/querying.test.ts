@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { DXN } from './dxn';
+import { DXN } from './models';
 import { Filtering } from './querying';
 import { Resource } from './registry-client';
 

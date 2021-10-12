@@ -13,13 +13,12 @@ import protobuf from 'protobufjs';
 import { ComplexMap, raise } from '@dxos/util';
 
 import { ApiTransactionHandler } from '../api-transaction-handler';
-import { DXN } from '../dxn';
 import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData } from '../encoding';
 import { DomainKey as BaseDomainKey, Multihash, Resource as BaseResource } from '../interfaces';
-import { CID, CIDLike, DomainKey } from '../models';
+import { CID, DomainKey, DXN } from '../models';
 import { schema as dxnsSchema } from '../proto/gen';
 import { Filtering, IQuery } from '../querying';
-import { DomainInfo, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './interface';
+import { Domain, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './interface';
 
 export class RegistryClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, RegistryRecord>(cid => cid.toB58String())
@@ -54,7 +53,7 @@ export class RegistryClient implements IRegistryClient {
     return new DomainKey((await this.api.query.registry.domainNames(domainName)).unwrap().toU8a());
   }
 
-  async getDomains (): Promise<DomainInfo[]> {
+  async getDomains (): Promise<Domain[]> {
     const domains = await this.api.query.registry.domains.entries();
     return domains.map(domainEntry => {
       const key = new DomainKey(domainEntry[0].args[0].toU8a());
@@ -67,8 +66,7 @@ export class RegistryClient implements IRegistryClient {
     });
   }
 
-  async getRecord (cidLike: CIDLike): Promise<RegistryRecord | undefined> {
-    const cid = CID.from(cidLike);
+  async getRecord (cid: CID): Promise<RegistryRecord | undefined> {
     if (this._recordCache.has(cid)) {
       return this._recordCache.get(cid);
     }
@@ -82,7 +80,6 @@ export class RegistryClient implements IRegistryClient {
 
     const meta: RecordMetadata = {
       description: decoded.description,
-      version: decoded.version,
       created: decoded.created
     };
 
@@ -90,7 +87,7 @@ export class RegistryClient implements IRegistryClient {
       assert(decoded.payload.typeRecord);
       assert(decoded.payload.data);
 
-      const typeRecord = await this.getRecord(decoded.payload.typeRecord);
+      const typeRecord = await this.getRecord(CID.from(decoded.payload.typeRecord));
       assert(typeRecord, 'Dangling record type reference.');
       assert(typeRecord.kind === RecordKind.Type, 'Invalid type record kind.');
 
@@ -127,7 +124,7 @@ export class RegistryClient implements IRegistryClient {
 
       try {
         // TODO(marik-d): Very unoptimized.
-        const record = await this.getRecord(contentCid);
+        const record = await this.getRecord(CID.from(contentCid));
         assert(record);
         return record;
       } catch (err) {
@@ -138,7 +135,7 @@ export class RegistryClient implements IRegistryClient {
     return output.filter(isNotNullOrUndefined).filter(record => Filtering.matchRecord(record, query));
   }
 
-  async getDataRecord (cid: CIDLike): Promise<RegistryDataRecord | undefined> {
+  async getDataRecord (cid: CID): Promise<RegistryDataRecord | undefined> {
     const record = await this.getRecord(cid);
     if (!record) {
       return undefined;
@@ -156,7 +153,7 @@ export class RegistryClient implements IRegistryClient {
       .filter(record => Filtering.matchRecord(record, query));
   }
 
-  async getTypeRecord (cid: CIDLike): Promise<RegistryTypeRecord | undefined> {
+  async getTypeRecord (cid: CID): Promise<RegistryTypeRecord | undefined> {
     const record = await this.getRecord(cid);
     if (!record) {
       return undefined;
@@ -209,7 +206,7 @@ export class RegistryClient implements IRegistryClient {
   /**
    * Transforms the Resource from the chain with Polkadot types to Typescript types and models.
    */
-  private decodeResourceId (resourceKeys: StorageKey<[BaseDomainKey, Text]>, domains: DomainInfo[]): Resource['id'] {
+  private decodeResourceId (resourceKeys: StorageKey<[BaseDomainKey, Text]>, domains: Domain[]): Resource['id'] {
     const name = resourceKeys.args[1].toString();
     const domainKey = new DomainKey(resourceKeys.args[0].toU8a());
     const domain = domains.find(domain => domain.key.toHex() === domainKey.toHex());
@@ -244,10 +241,10 @@ export class RegistryClient implements IRegistryClient {
       return undefined;
     }
     return {
-      ...resource,
-      record: record as R,
+      resource,
       tag: resource.tags[versionOrTag] ? versionOrTag : undefined,
-      version: resource.versions[versionOrTag] ? versionOrTag : undefined
+      version: resource.versions[versionOrTag] ? versionOrTag : undefined,
+      record: record as R
     };
   }
 
@@ -272,7 +269,7 @@ export class RegistryClient implements IRegistryClient {
     return new CID(event.data[1].toU8a());
   }
 
-  async insertDataRecord (data: unknown, typeId: CIDLike, meta: SuppliedRecordMetadata = {}): Promise<CID> {
+  async insertDataRecord (data: unknown, typeId: CID, meta: SuppliedRecordMetadata = {}): Promise<CID> {
     const type = await this.getTypeRecord(typeId);
     assert(type);
 
@@ -308,13 +305,11 @@ export class RegistryClient implements IRegistryClient {
     return domainKey;
   }
 
-  async updateResource (key: DomainKey, resourceName: string, contentCid: CID, opts: UpdateResourceOptions = { tags: ['latest'] }): Promise<void> {
+  async updateResource (resource: DXN, contentCid: CID, opts: UpdateResourceOptions = { tags: ['latest'] }): Promise<void> {
+    const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
+    assert(domainKey);
     await this.transactionsHandler.sendTransaction(
-      this.api.tx.registry.updateResource(key.value, resourceName, contentCid.value, opts.version ?? null, opts.tags ?? []));
-  }
-
-  async disconnect () {
-    return this.api.disconnect();
+      this.api.tx.registry.updateResource(domainKey.value, resource.resource, contentCid.value, opts.version ?? null, opts.tags ?? []));
   }
 }
 

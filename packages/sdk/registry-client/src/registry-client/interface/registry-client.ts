@@ -4,7 +4,7 @@
 
 import protobuf from 'protobufjs';
 
-import { CID, CIDLike, DomainKey } from '../../models';
+import { CID, DomainKey, DXN } from '../../models';
 import { IReadOnlyRegistryClient } from './readonly-registry-client';
 import { SuppliedRecordMetadata, UpdateResourceOptions } from './types';
 
@@ -24,7 +24,7 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
    * @param typeCid CID of the type record that holds the schema of the data.
    * @param meta Record metadata information.
    */
-  insertDataRecord (data: unknown, typeCid: CIDLike, meta?: SuppliedRecordMetadata): Promise<CID>
+  insertDataRecord (data: unknown, typeCid: CID, meta?: SuppliedRecordMetadata): Promise<CID>
 
   /**
    * Creates a new type record in the system.
@@ -41,19 +41,15 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
 
   /**
    * Registers or updates a resource in the system.
-   * @param domainKey Identifies the domain of the resource to be registered in.
-   * @param resourceName Identifies the name of the resource.
+   * @param resource Identifies the domain and name of the resource.
    * @param contentCid CID of the record to be referenced with the given name.
    * @param opts Optional version and tags. Adds tag 'latest' and no version by default.
    * @param opts.version Valid semver.
    * @param opts.tags A list of tags.
    */
    updateResource (
-     domainKey: DomainKey,
-     resourceName: string,
+     resource: DXN,
      contentCid: CID,
      opts?: UpdateResourceOptions
   ): Promise<void>
-
-  disconnect (): Promise<void>
 }
