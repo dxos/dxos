@@ -3,11 +3,12 @@
 //
 
 import type { Plugin } from 'esbuild';
-import { resolve } from 'path';
-import yaml from 'js-yaml';
 import { readFileSync } from 'fs';
+import yaml from 'js-yaml';
+import { resolve } from 'path';
 
-const DEFAULT_PATH = resolve(process.cwd(), 'config');
+const CWD = process.cwd();
+const DEFAULT_PATH = resolve(CWD, 'config');
 
 const KEYS_TO_FILE = {
   __CONFIG_DEFAULTS__: 'defaults.yml',
@@ -18,11 +19,14 @@ export function ConfigPlugin (): Plugin {
   return {
     name: 'dxos-config',
     setup: ({ onResolve, onLoad, initialOptions }) => {
-      onResolve({ filter: /loaders\/index$/ }, args => ({ path: require.resolve('@dxos/config/dist/src/loaders/browser', { paths: [args.resolveDir]}) }))
+      onResolve(
+        { filter: /loaders\/index$/ },
+        args => ({ path: require.resolve('@dxos/config/dist/src/loaders/browser', { paths: [args.resolveDir] }) })
+      );
 
       const injected = [
-        resolve(__dirname, 'configGlobal.js')
-      ]
+        resolve(CWD, 'configGlobal.js')
+      ];
 
       if (initialOptions.inject) {
         initialOptions.inject.push(...injected);
@@ -30,7 +34,10 @@ export function ConfigPlugin (): Plugin {
         initialOptions.inject = [...injected];
       }
 
-      onResolve({ filter: /^dxos-config-globals$/, }, () => ({ path: 'dxos-config-globals', namespace: 'dxos-config' }))
+      onResolve(
+        { filter: /^dxos-config-globals$/ },
+        () => ({ path: 'dxos-config-globals', namespace: 'dxos-config' })
+      );
 
       const definitions = Object.entries(KEYS_TO_FILE).reduce((prev, [key, value]) => {
         let content = {};
@@ -38,7 +45,7 @@ export function ConfigPlugin (): Plugin {
         try {
           content = yaml.load(readFileSync(resolve(DEFAULT_PATH, value), 'utf-8'));
         } catch (error) {
-          console.error(error)
+          console.error(error);
         }
 
         return {
@@ -48,13 +55,12 @@ export function ConfigPlugin (): Plugin {
       }, {
         __DXOS_CONFIG__: { dynamic: false, publicUrl: '' },
         __CONFIG_ENVS__: {}
-      })
-
+      });
 
       onLoad({ filter: /^dxos-config-globals$/, namespace: 'dxos-config' }, () => ({
-        resolveDir: __dirname,
-        contents: Object.entries(definitions).map(([key, value]) => `window.${key} = ${JSON.stringify(value)};`).join('\n'),
-      }))
+        resolveDir: CWD,
+        contents: Object.entries(definitions).map(([key, value]) => `window.${key} = ${JSON.stringify(value)};`).join('\n')
+      }));
     }
   };
 }
