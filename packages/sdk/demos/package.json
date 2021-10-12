@@ -24,7 +24,7 @@
     "grid:demo": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",
-    "book": "esapp book 'stories/**/*.story.tsx'",
+    "book": "esapp book 'stories/**/*.tsx' '../tutorials/apps/tasks-app/stories/**/*.tsx' '../react-framework/stories/**/*.tsx'",
     "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "storybook-docs": "start-storybook --docs --no-manager-cache",
     "test": "exit 0",
