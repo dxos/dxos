@@ -22,8 +22,8 @@ export class ApiTransactionHandler {
       transaction.signAndSend(signer, ({ events = [], status }) => {
         try {
           this.ensureExtrinsicNotFailed(events);
-        } catch (e) {
-          reject(e);
+        } catch (err) {
+          reject(err);
         }
         // TODO(marcin): provide ensureTransaction which makes sure the given transaction has been finalized.
         // see: https://github.com/dxos/dot/issues/167

@@ -5,11 +5,10 @@
 import { Root } from 'protobufjs';
 
 import { createMockResourceRecords } from '.';
-import { DXN } from '../dxn';
-import { CID, CIDLike, DomainKey } from '../models';
+import { CID, CIDLike, DomainKey, DXN } from '../models';
 import { IQuery, Filtering } from '../querying';
 import {
-  DomainInfo,
+  Domain,
   IRegistryClient,
   RecordMetadata,
   RegistryDataRecord,
@@ -36,8 +35,8 @@ export class MemoryRegistryClient implements IRegistryClient {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getResource (id: DXN): Promise<Resource | undefined> {
-    const resources = this.resources as unknown as Resource[];
-    return resources.find(resource => resource.id.toString() === id.toString());
+    const resource = this.resources.find(resource => resource.resource.id.toString() === id.toString());
+    return resource?.resource;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -55,15 +54,15 @@ export class MemoryRegistryClient implements IRegistryClient {
       return undefined;
     }
     return {
-      ...resource,
-      record: record as R,
+      resource,
       tag: resource.tags[versionOrTag] ? versionOrTag : undefined,
-      version: resource.versions[versionOrTag] ? versionOrTag : undefined
+      version: resource.versions[versionOrTag] ? versionOrTag : undefined,
+      record: record as R
     };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getDomains (): Promise<DomainInfo[]> {
+  async getDomains (): Promise<Domain[]> {
     return [];
   }
 

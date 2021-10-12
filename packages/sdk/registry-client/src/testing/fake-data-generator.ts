@@ -5,9 +5,8 @@
 import faker from 'faker';
 import * as protobuf from 'protobufjs';
 
-import { DXN } from '../dxn';
 import { sanitizeExtensionData } from '../encoding';
-import { CID } from '../models';
+import { CID, DXN } from '../models';
 import { schemaJson } from '../proto/gen';
 import { RecordKind, RegistryDataRecord, RegistryTypeRecord, ResourceRecord } from '../registry-client';
 
@@ -61,11 +60,13 @@ export const createMockResourceRecord = (_dxn?: DXN): ResourceRecord => {
   };
 
   return {
-    id: dxn,
-    tags: {
-      latest: record.cid
+    resource: {
+      id: dxn,
+      tags: {
+        latest: record.cid
+      },
+      versions: {}
     },
-    versions: {},
     record: record
   };
 };
