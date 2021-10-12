@@ -15,6 +15,7 @@ import {
   PartyInvitationClaimHandler,
   createAuthMessage,
   createGreetingClaimMessage,
+  SecretInfo,
   SignedMessage
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, PublicKey, randomBytes } from '@dxos/crypto';
@@ -168,16 +169,18 @@ export class OfflineInvitationClaimer {
 
   // The secretProvider should provide an `Auth` message signed directly by the Identity key.
   static createSecretProvider (identity: Identity): SecretProvider {
-    return async (info: any) => Buffer.from(Authenticator.encodePayload(
-      // The signed portion of the Auth message includes the ID and authNonce provided
-      // by "info". These values will be validated on the other end.
-      createAuthMessage(
-        identity.signer,
-        info.id.value,
-        identity.identityKey ?? raise(new IdentityNotInitializedError()),
-        identity.deviceKeyChain ?? raise(new IdentityNotInitializedError()),
-        undefined,
-        info.authNonce.value)
-    ));
+    return async (info?: SecretInfo) => {
+      return Buffer.from(Authenticator.encodePayload(
+        // The signed portion of the Auth message includes the ID and authNonce provided
+        // by "info". These values will be validated on the other end.
+        createAuthMessage(
+          identity.signer,
+          info!.id.value,
+          identity.identityKey ?? raise(new IdentityNotInitializedError()),
+          identity.deviceKeyChain ?? raise(new IdentityNotInitializedError()),
+          undefined,
+          info!.authNonce.value)
+      ));
+    }
   }
 }

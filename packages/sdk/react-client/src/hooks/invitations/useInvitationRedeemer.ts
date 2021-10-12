@@ -13,7 +13,7 @@ import { decodeInvitation, noOp } from './utils';
 type UseInvitationRedeemerProps = {
   onDone?: (party: Party) => void
   onError?: (error?: string) => void | never // TODO(burdon): Error (and not optional).
-  isOffline?: boolean  // TODO(burdon): Rename offline.
+  isOffline?: boolean
 };
 
 /**
@@ -25,12 +25,12 @@ type UseInvitationRedeemerProps = {
  * @param onDone called once the redeem flow finishes successfully.
  * @param onError called if the invite flow produces an error.
  * @param isOffline Is this an `Offline` invitation?
+ * @deprecated
  */
-// TODO(burdon): Requires tests.
-export const useInvitationRedeemer = ({ // TODO(burdon): Hooks shouldn't have callbacks.
-  onDone = noOp,
+export const useInvitationRedeemer = ({
+  onDone = noOp, // TODO(burdon): Hooks shouldn't have callbacks (return state?)
   onError = noOp,
-  isOffline = false
+  isOffline = false // TODO(burdon): Document? Rename "offline"
 }: UseInvitationRedeemerProps = {}) => {
   const client = useClient();
   const [invitationCode, setInvitationCode] = useState<string>();
@@ -41,25 +41,21 @@ export const useInvitationRedeemer = ({ // TODO(burdon): Hooks shouldn't have ca
       return;
     }
 
-    try {
-      const invitation = decodeInvitation(invitationCode);
-
-      // TODO(burdon): Use await.
-      client.echo
-        .joinParty(invitation, isOffline ? undefined : secretProvider)
-        .then((party) => {
-          void party.open().then(() => onDone(party));
-        })
-        .catch((error) => onError(error));
-    } catch (error) {
-      onError(error);
-    }
+    setImmediate(async () => {
+      try {
+        const invitation = decodeInvitation(invitationCode);
+        const party = await client.echo.joinParty(invitation, isOffline ? undefined : secretProvider);
+        await party.open();
+        onDone(party);
+      } catch (error) {
+        onError(error);
+      }
+    });
   }, [invitationCode, isOffline]);
 
   return [
     setInvitationCode,
     (pin: string) => {
-      console.log(pin);
       secretResolver(Buffer.from(pin)) ;
     }
   ];

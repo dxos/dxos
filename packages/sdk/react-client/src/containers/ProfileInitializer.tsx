@@ -9,7 +9,7 @@ import { useClient, useProfile } from '../hooks';
 /**
  * Automatically creates a random DXOS profile.
  */
-// TODO(burdon): Trigger HALO?
+// TODO(burdon): Testing-only.
 const ProfileInitializer = ({ children }: { children: ReactNode }) => {
   const client = useClient();
   const profile = useProfile();

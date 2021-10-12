@@ -3,6 +3,7 @@
 //
 
 import { SecretProvider, SecretValidator, defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
+
 export { SecretProvider, SecretValidator }; // TODO(burdon): ???
 
 /**

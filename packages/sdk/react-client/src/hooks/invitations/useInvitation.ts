@@ -31,6 +31,7 @@ type UseInvitationOpts = {
  * @param opts.onError called if the invite flow produces an error.
  * @param opts.onExpiration called if the invite flow expired.
  * @param opts.expiration (optional) Date.now()-style timestamp of when this invitation should expire.
+ * @deprecated
  */
 export const useInvitation = (
   partyKey: PublicKeyLike,
@@ -42,15 +43,18 @@ export const useInvitation = (
   const [pin, setPin] = useState<string>();
   const key = partyKey.toString();
 
+  const secretProvider = () => {
+    const pin = generatePasscode();
+    setPin(pin);
+    return Promise.resolve(Buffer.from(pin));
+  };
+
   useEffect(() => {
+    // TODO(burdon): Use async.
     client
       .createInvitation(
         PublicKey.from(partyKey),
-        () => {
-          const pin = generatePasscode();
-          setPin(pin);
-          return Promise.resolve(Buffer.from(pin));
-        },
+        secretProvider,
         {
           onFinish: ({ expired }) => {
             expired ? onExpiration() : onDone();

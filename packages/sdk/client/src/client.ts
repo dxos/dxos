@@ -12,7 +12,9 @@ import { Invitation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
 import * as debug from '@dxos/debug';
-import { ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, SecretProvider, sortItemsTopologically } from '@dxos/echo-db';
+import { 
+  ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, SecretProvider, sortItemsTopologically 
+} from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
@@ -126,6 +128,7 @@ export class Client {
    * HALO credentials.
    */
   get halo () {
+    // TODO(burdon): Why is this constructed inside ECHO?
     return this._echo.halo;
   }
 
@@ -309,8 +312,7 @@ export class Client {
    */
   // TODO(burdon): Move to party.
   async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
-    const party =
-      await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
+    const party = await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createOfflineInvitation(recipientKey);
   }
 
@@ -345,6 +347,7 @@ export class Client {
       keyring: this._echo.halo.keyring,
       debug
     };
+
     return devtoolsContext;
   }
 }

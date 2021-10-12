@@ -26,8 +26,11 @@ type UseOfflineInvitationOpts = {
  *
  * @param partyKey the Party to create the invitation for.
  * @param recipient the invitee (recipient for the invitation).
+ * @param opts
  * @param opts.onError called if the invite flow produces an error.
+ * @deprecated
  */
+// TODO(burdon): Remove.
 export const useOfflineInvitation = (
   partyKey: PublicKeyLike,
   recipient: Contact,
@@ -42,13 +45,15 @@ export const useOfflineInvitation = (
   const recipientKey = recipient.publicKey.toString();
 
   useEffect(() => {
-    client
-      .createOfflineInvitation(PublicKey.from(partyKey), recipient.publicKey)
-      .then((invitation) => {
+    setImmediate(async () => {
+      try {
+        const invitation = await client.createOfflineInvitation(PublicKey.from(partyKey), recipient.publicKey);
         setInvitationCode(encodeInvitation(invitation));
-      })
-      .catch((error) => onError(error));
-  }, [key, recipientKey]);
+      } catch (error) {
+        onError(error);
+      }
+    });
+  }, []);
 
   return [invitationCode];
 };

@@ -26,10 +26,13 @@ export const useAuthenticator = (invitation: InvitationDescriptor) => {
     if (!invitation) {
       return;
     }
+
     // Use an AbortController to avoid "calling setState on unmounted component" errors.
     const controller = new AbortController();
+
     const signal = controller.signal;
 
+    // TODO(burdon): ???
     async function runEffect () {
       if (invitation.identityKey) {
         // An invitation for this device to join an existing Identity.

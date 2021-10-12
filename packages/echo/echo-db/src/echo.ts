@@ -156,6 +156,7 @@ export class ECHO {
       partyFactory
     );
 
+    // TODO(burdon): Why is this constructed inside of ECHO (rather than passed in)?
     this._halo = new HALO({
       keyring: this._keyring,
       partyFactory,
@@ -173,9 +174,14 @@ export class ECHO {
   }
 
   toString () {
-    return `Database(${JSON.stringify({
+    return `ECHO(${JSON.stringify(this.info())})`;
+  }
+
+  info () {
+    return {
+      open: this.isOpen,
       parties: this._partyManager.parties.length
-    })})`;
+    }
   }
 
   get isOpen () {
