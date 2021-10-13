@@ -34,17 +34,25 @@ interface RedeemDialogWithoutClientProps {
   onClose: () => void
 }
 
+// TODO(burdon): Should the dialog manage it's state or be passive?
+
+interface ReedeemDialogModel {
+  stage: Stage
+  error: Error // Would require effect hook to update state.
+  onEnterInvitationCode: () => void
+  onEnterPin: () => void
+}
+
 /**
  * Component used for claiming invitations to Parties.
  * Works for both regular and `Offline` invitations.
  */
-export const RedeemDialogWithoutClient = (
-  {
-    open,
-    onEnterInvitationCode,
-    onEnterPin,
-    onClose
-  }: RedeemDialogWithoutClientProps) => {
+export const RedeemDialogWithoutClient = ({
+  open,
+  onEnterInvitationCode,
+  onEnterPin,
+  onClose // TODO(burdon): onSuccess
+}: RedeemDialogWithoutClientProps) => {
   // TODO(grazianoramiro): https://github.com/dxos/protocols/issues/197
   // const [isOffline, setIsOffline] = useState(false);
   const [stage, setStage] = useState<Stage>(Stage.ENTER_INVITATION);
@@ -53,6 +61,7 @@ export const RedeemDialogWithoutClient = (
   const [invitationCode, setInvitationCode] = useState('');
   const [pinCode, setPinCode] = useState('');
 
+  // TODO(burdon): Remove?
   const handleDone = () => {
     setStage(Stage.ENTER_INVITATION);
     setError(undefined);

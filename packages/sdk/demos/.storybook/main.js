@@ -43,7 +43,7 @@ module.exports = {
       Buffer: [require.resolve('buffer/'), 'Buffer']
     }));
 
-    // https://mui.com/guides/migration-v4/
+    // https://mui.com/guides/migration-v4
     return {
       ...config,
       resolve: {

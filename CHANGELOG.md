@@ -10,6 +10,10 @@
 - [ ] Construct HALO outside of ECHO and pass in? (lower complexity)
 - [ ] client vs echo methods (createParty, createInvitation, joinParty, etc.)
 
+- [ ] Default config -- in memory.
+- [ ] Config structure (e.g., snapshots).
+- [ ] Standard for shims (e.g., client/src/shims.d.ts vs demo/src/@types)
+
 - [ ] components lib (Fullscreen, JSON, Editable) vs framework lib
 
 - Test with tutorial-tasks-app
@@ -18,13 +22,12 @@
 - [ ] ProfileInitializer
 - [ ] ClientInitializer, ClientInitializerProperties (clean-up)
 - [ ] RedeemDialog (remove hooks)
-- 
+
 - [ ] Replace/remove hooks
   - [ ] useInvitationRedeemer
   - [ ] useOfflineInvitation
   - [ ] useInviation
   - [ ] useAuthenticator
-
 
 ### Breaking Changes
 

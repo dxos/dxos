@@ -226,17 +226,17 @@ const TestApp = () => {
       padding: 1
     }}>
       <Paper>
-        <ClientPanel client={client} parties={parties} />
-        <Divider />
+        <ClientPanel client={client} parties={parties}/>
+        <Divider/>
         <InviatationPanel/>
-        <Divider />
+        <Divider/>
         <RedeemInvitationContainer/>
       </Paper>
     </Box>
   );
 };
 
-export const TwinClients = () => {
+export const MultipleClients = () => {
   // Configure in-memory swarm.
   const config = { swarm: { signal: undefined } };
   const peers = 3;
