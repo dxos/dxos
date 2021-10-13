@@ -15,13 +15,13 @@ export const DialogHeading = ({
 }) => {
   return (
     <DialogTitle>
-      <Toolbar variant="dense" disableGutters>
+      <Toolbar variant='dense' disableGutters>
         {Icon && (
           <Box sx={{ display: 'flex', marginRight: 1 }}>
             <Icon />
           </Box>
         )}
-        <Typography variant="h5">{title}</Typography>
+        <Typography variant='h5'>{title}</Typography>
       </Toolbar>
     </DialogTitle>
   );

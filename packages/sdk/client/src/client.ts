@@ -6,7 +6,7 @@ import assert from 'assert';
 import jsondown from 'jsondown';
 import leveljs from 'level-js';
 import defaultsDeep from 'lodash.defaultsdeep';
- import memdown from 'memdown';
+import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
 import { Invitation } from '@dxos/credentials';

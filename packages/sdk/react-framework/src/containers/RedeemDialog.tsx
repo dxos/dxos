@@ -176,7 +176,7 @@ export const RedeemDialog = ({ open, onClose, pinless = false }: RedeemDialogPro
       {step === 1 && !setPin && (
         <DialogContent>
           <LinearProgress />
-          <Typography variant="body1" sx={{ marginTop: 1 }} gutterBottom>
+          <Typography variant='body1' sx={{ marginTop: 1 }} gutterBottom>
             Processing...
           </Typography>
         </DialogContent>

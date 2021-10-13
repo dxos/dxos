@@ -34,7 +34,7 @@ const RedeemDevice = ({ profile, onProfileCreated } : RedeemDeviceProps) => {
   const [inProgress, setInProgress] = useState(false);
 
   if (profile && profile.username && profile.publicKey) {
-    return <Redirect to="/user"/>;
+    return <Redirect to='/user'/>;
   }
 
   const onJoin = async () => {
