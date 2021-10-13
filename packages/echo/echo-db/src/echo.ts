@@ -327,6 +327,13 @@ export class ECHO {
    * @param invitationDescriptor Invitation descriptor passed from another peer.
    * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
    */
+  // TODO(burdon): Reconcile with client.createInvitation on client.
+  // TODO(burdon): Expose state machine for invitations.
+  //   const invitationProcess = client.joinParty(invitation);
+  //   invitationProcess.authenticate(code);
+  //   const party = await invitationProcess.ready
+  //   const { status } = useInvitationStatus(invitationProcess)
+  //   const party = await client.joinParty(invitation)..ready;
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<Party> {
     assert(this._partyManager.isOpen, 'ECHO not open.');
 

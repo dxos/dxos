@@ -25,3 +25,8 @@
 ## Notes
 - [ ] Default client config disable signaling (otherwise storybooks show connection warning)
 - [ ] Construct HALO outside of ECHO and pass in? (lower complexity)
+- [ ] client vs echo methods (createParty, createInvitation, joinParty, etc.)
+
+## Lint
+- [ ] Remove functions
+- [ ] Double/single quotes

@@ -12,7 +12,7 @@ import { decodeInvitation, noOp } from './utils';
 
 type UseInvitationRedeemerProps = {
   onDone?: (party: Party) => void
-  onError?: (error?: string) => void | never // TODO(burdon): Error (and not optional).
+  onError?: (error?: string) => void | never // TODO(burdon): Error type (and not optional).
   isOffline?: boolean
 };
 

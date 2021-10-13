@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Box, Button, Divider, Paper, TextField, Toolbar, Typography } from '@mui/material';
+import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 import React, { useState } from 'react';
 
 import { trigger } from '@dxos/async';
@@ -35,14 +35,14 @@ const useSecretProvider = (): [() => Promise<Buffer>, string | undefined, () => 
   }
 
   return [provider, pin, () => setPin('')];
-}
+};
 
 // TODO(burdon): Factor out.
 const useProvider = <T extends any> (): [() => Promise<T>, (value: T) => void] => {
   const [[provider, resolver]] = useState(() => trigger<T>());
 
   return [provider, resolver];
-}
+};
 
 /**
  * Creates party and invitations.
@@ -118,18 +118,10 @@ const RedeemInvitationContainer = () => {
   const [status, setStatus] = useState({});
   const [secretProvider, secretResolver] = useProvider<Buffer>();
 
-  // TODO(burdon): Second time submit fails; Test trigger used multiple times?
   const handleSubmit = async (invitationCode: string) => {
     setStatus({});
 
     try {
-      // TODO(burdon): Expose state machine for invitations.
-      //   const invitationProcess = client.joinParty(invitation);
-      //   invitationProcess.authenticate(code);
-      //   const party = await invitationProcess.ready
-      //   const { status } = useInvitationStatus(invitationProcess)
-      //   const party = await client.joinParty(invitation)..ready;
-
       const invitation = decodeInvitation(invitationCode);
       const party = await client.echo.joinParty(invitation, secretProvider);
       await party.open();
@@ -159,7 +151,7 @@ const RedeemInvitationPanel = (
     onSubmit,
     onAuthenticate
   }: {
-    status: any, // TODO(burdon): Define type.
+    status: any,
     onSubmit: (invitationCode: string) => void
     onAuthenticate: (pin: string) => void
   }
@@ -249,8 +241,6 @@ export const TwinClients = () => {
   // Configure in-memory swarm.
   const config = { swarm: { signal: undefined } };
   const peers = 3;
-
-  // TODO(burdon): Remove ProfileInitializer.
 
   return (
     <TestTheme>

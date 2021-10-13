@@ -34,8 +34,7 @@ type UseInvitationOpts = {
  * @deprecated
  */
 export const useInvitation = (
-  partyKey: PublicKeyLike,
-  { onDone = noOp, onError = noOp, onExpiration = noOp, expiration }: UseInvitationOpts = {}
+  partyKey: PublicKeyLike, { onDone = noOp, onError = noOp, onExpiration = noOp, expiration }: UseInvitationOpts = {}
 ) => {
   assert(partyKey);
   const client = useClient();
@@ -50,20 +49,20 @@ export const useInvitation = (
   };
 
   useEffect(() => {
-    // TODO(burdon): Use async.
-    client
-      .createInvitation(
-        PublicKey.from(partyKey),
-        secretProvider,
-        {
+    setImmediate(async () => {
+      try {
+        const invitation = await client.createInvitation(PublicKey.from(partyKey), secretProvider, {
           onFinish: ({ expired }) => {
             expired ? onExpiration() : onDone();
           },
           expiration
-        }
-      )
-      .then((invitation) => setInvitationCode(encodeInvitation(invitation)))
-      .catch((error) => onError(error));
+        });
+
+        setInvitationCode(encodeInvitation(invitation));
+      } catch (error) {
+        onError(error);
+      }
+    });
   }, [key]);
 
   return [invitationCode, pin];

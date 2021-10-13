@@ -9,7 +9,7 @@ import { Button, Container, Grid, makeStyles, TextField, Typography } from '@mat
 
 import { useBackgroundContext } from '../contexts';
 import { useUIError } from '../hooks';
-import type { Profile } from '../utils/types';
+import type { Profile } from '../utils';
 import BackButton from './BackButton';
 
 const useStyles = makeStyles({
@@ -34,7 +34,7 @@ const RedeemDevice = ({ profile, onProfileCreated } : RedeemDeviceProps) => {
   const [inProgress, setInProgress] = useState(false);
 
   if (profile && profile.username && profile.publicKey) {
-    return <Redirect to="/user"/>;
+    return <Redirect to="/user" />;
   }
 
   const onJoin = async () => {

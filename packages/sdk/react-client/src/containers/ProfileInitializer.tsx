@@ -8,6 +8,7 @@ import { useClient, useProfile } from '../hooks';
 
 /**
  * Automatically creates a random DXOS profile.
+ * @deprecated
  */
 // TODO(burdon): Testing-only.
 const ProfileInitializer = ({ children }: { children: React.ReactNode }) => {

@@ -50,7 +50,7 @@ const createRegistryClient = async (configProvider: ConfigProvier) => {
   return new RegistryClient(apiPromise, keypair);
 };
 
-interface RegistryInitializerProperties {
+interface RegistryInitializerProps {
   children?: ReactNode
   config?: ConfigProvier
 }
@@ -61,7 +61,7 @@ interface RegistryInitializerProperties {
  * @deprecated
  */
 // TODO(burdon): Anti-patten: there could be many contexts that require async; require main app to pre-create them.
-const RegistryInitializer = ({ children, config = {} }: RegistryInitializerProperties) => {
+const RegistryInitializer = ({ children, config = {} }: RegistryInitializerProps) => {
   const [registry, setRegistry] = useState<RegistryClient | undefined>();
   const [error, setError] = useState<undefined | Error>(undefined);
 

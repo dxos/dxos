@@ -33,7 +33,7 @@ export const useAuthenticator = (invitation: InvitationDescriptor) => {
     const signal = controller.signal;
 
     // TODO(burdon): ???
-    async function runEffect () {
+    const runEffect = async () => {
       if (invitation.identityKey) {
         // An invitation for this device to join an existing Identity.
         // Join the Identity
@@ -42,7 +42,7 @@ export const useAuthenticator = (invitation: InvitationDescriptor) => {
           setState({ identity: invitation.identityKey.toString() });
         }
       }
-    }
+    };
 
     runEffect().catch(err => {
       console.error(err);
