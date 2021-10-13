@@ -12,7 +12,7 @@ interface SnackbarMessage {
   severity: 'error' | 'warning' | 'info' | 'success'
 }
 
-const Alert = (props: AlertProps) => <MuiAlert elevation={6} variant="filled" {...props} />;
+const Alert = (props: AlertProps) => <MuiAlert elevation={6} variant='filled' {...props} />;
 
 const SnackbarContext = React.createContext<((message : SnackbarMessage) => void) | undefined>(undefined);
 
