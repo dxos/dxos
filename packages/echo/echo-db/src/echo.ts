@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import memdown from 'memdown';
 
-import { Keyring, KeyStore } from '@dxos/credentials';
+import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { codec, PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
@@ -18,7 +18,7 @@ import { SubscriptionGroup } from '@dxos/util';
 
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
-import { InvitationDescriptor, OfflineInvitationClaimer, SecretProvider } from './invitations';
+import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { DefaultModel } from './items';
 import { MetadataStore } from './metadata';
 import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, PartyManager } from './parties';

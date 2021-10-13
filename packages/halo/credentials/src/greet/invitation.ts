@@ -27,8 +27,8 @@ export type SecretValidator = (invitation: Invitation, secret: Buffer) => Promis
 
 export const defaultSecretProvider: SecretProvider = async () => Buffer.from('0000');
 
-export const defaultSecretValidator: SecretValidator = async (invitation, secret) =>
-  secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
+export const defaultSecretValidator: SecretValidator =
+  async (invitation, secret) => secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
 
 export type InvitationOnFinish = () => Promise<void>;
 

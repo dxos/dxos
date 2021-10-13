@@ -18,6 +18,7 @@ import {
   Greeter,
   GreetingCommandPlugin,
   Message,
+  SecretProvider,
   WithTypeUrl,
   ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT
 } from '@dxos/credentials';
@@ -26,7 +27,6 @@ import { PartyKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { Identity } from '../halo';
-import { SecretProvider } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';

@@ -6,13 +6,11 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
-import { KeyRecord, Keyring, KeyType } from '@dxos/credentials';
+import { KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
 import { createKeyPair, KeyPair, PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 
-import {
-  InvitationAuthenticator, InvitationDescriptor, InvitationOptions, SecretProvider
-} from '../invitations';
+import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions } from '../invitations';
 import { MetadataStore } from '../metadata';
 import { PartyFactory, OpenProgress, Party, PartyManager } from '../parties';
 import { ResultSet } from '../result';

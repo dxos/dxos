@@ -98,33 +98,34 @@ describe('Client - nonpersistent', () => {
 
     const clientA = new Client();
     await clientA.initialize();
-    await clientA.halo.createProfile({
-      ...createKeyPair(),
-      username: 'DXOS test'
-    });
-
-    const party1A = await clientA.echo.createParty();
+    await clientA.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 1' });
 
     const clientB = new Client();
     await clientB.initialize();
-    const profileB = await clientB.halo.createProfile({
-      ...createKeyPair(),
-      username: 'DXOS test 2'
-    });
+    const profileB = await clientB.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 2' });
 
-    const invite1 = await party1A.createInvitation(defaultInvitationAuthenticator);
-
+    // Wait for invited person to arrive.
     // TODO(marik-d): Comparing by public key as a workaround for https://github.com/dxos/protocols/issues/372.
-    const contactPromise = clientA.halo.queryContacts().update.waitFor(contacts => !!contacts.find(x => x.publicKey.equals(profileB.publicKey)));
+    const contactPromise = clientA.halo.queryContacts()
+      .update.waitFor(contacts => !!contacts.find(contact => contact.publicKey.equals(profileB.publicKey)));
 
-    await clientB.echo.joinParty(invite1, defaultSecretProvider);
+    // Online.
+    {
+      const party1A = await clientA.echo.createParty();
+      const invite1 = await party1A.createInvitation(defaultInvitationAuthenticator);
+      console.log('!!!', invite1);
+      await clientB.echo.joinParty(invite1, defaultSecretProvider); // TODO(burdon): Hangs
+      console.log('???');
+    }
 
     const contact = (await contactPromise)[0];
 
-    const party2A = await clientA.echo.createParty();
-
-    const invite2 = await party2A.createOfflineInvitation(contact.publicKey);
-    await clientB.echo.joinParty(invite2);
+    // Offline.
+    {
+      const party2A = await clientA.echo.createParty();
+      const invite2 = await party2A.createOfflineInvitation(contact.publicKey);
+      await clientB.echo.joinParty(invite2);
+    }
 
     await clientA.destroy();
     await clientB.destroy();
