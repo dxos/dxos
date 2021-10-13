@@ -18,19 +18,19 @@ export interface SecretInfo {
 /**
  * Provides a shared secret during an invitation process.
  */
-export type SecretProvider = (info?: SecretInfo) => Promise<Buffer>;
+export type SecretProvider = (info?: SecretInfo) => Promise<Buffer>
 
 /**
  * Validates the shared secret during an invitation process.
  */
-export type SecretValidator = (invitation: Invitation, secret: Buffer) => Promise<boolean>;
+export type SecretValidator = (invitation: Invitation, secret: Buffer) => Promise<boolean>
 
 export const defaultSecretProvider: SecretProvider = async () => Buffer.from('0000');
 
 export const defaultSecretValidator: SecretValidator =
   async (invitation, secret) => secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
 
-export type InvitationOnFinish = () => Promise<void>;
+export type InvitationOnFinish = () => Promise<void>
 
 /**
  * Represents a single-use invitation to admit the Invitee to the Party.
