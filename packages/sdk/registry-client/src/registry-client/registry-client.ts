@@ -80,7 +80,7 @@ export class RegistryClient implements IRegistryClient {
 
     const meta: RecordMetadata = {
       description: decoded.description,
-      created: decoded.created
+      created: (decoded.created && !isNaN(decoded.created.getTime())) ? decoded.created : undefined
     };
 
     if (decoded.payload) {
