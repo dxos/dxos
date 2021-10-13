@@ -28,16 +28,16 @@ const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
   const [error, setError] = useState<Error | undefined>(undefined);
 
   return (
-    <Dialog open={true} fullWidth maxWidth="sm">
+    <Dialog open={true} fullWidth maxWidth='sm'>
       <DialogTitle>Demo</DialogTitle>
       <DialogContent>
         <TextField
-          id="start-dialog-invitation-input"
+          id='start-dialog-invitation-input'
           fullWidth
           value={invitationCode}
           onChange={event => setInvitationCode(event.target.value)}
-          variant="outlined"
-          label="Invitation code"
+          variant='outlined'
+          label='Invitation code'
           spellCheck={false}
         />
 
@@ -49,8 +49,8 @@ const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
       </DialogContent>
       <DialogActions>
         <Button
-          color="secondary"
-          variant="contained"
+          color='secondary'
+          variant='contained'
           onClick={async () => {
             setInProgress(true);
             setError(undefined);
@@ -68,8 +68,8 @@ const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
           Join Party
         </Button>
         <Button
-          color="primary"
-          variant="contained"
+          color='primary'
+          variant='contained'
           onClick={() => {
             setInProgress(true);
             onCreate();

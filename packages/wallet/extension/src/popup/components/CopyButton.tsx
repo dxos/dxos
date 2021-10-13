@@ -32,7 +32,7 @@ const CopyButton = ({ text } : CopyButtonProps) => {
     <Tooltip title={isCopied ? 'Copied!' : 'Copy to clipboard'} arrow>
       <CopyToClipboard text={text} onCopy={handleCopy}>
         <IconButton>
-          <FileCopyOutlinedIcon fontSize="small"/>
+          <FileCopyOutlinedIcon fontSize='small'/>
         </IconButton>
       </CopyToClipboard>
     </Tooltip>

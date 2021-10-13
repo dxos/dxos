@@ -101,7 +101,7 @@ const Main = ({ party, code }: MainProps) => {
   const handleUpdate = (text: string) => setSearch(text.toLowerCase());
 
   const ViewButton = ({ view: type, icon: Icon }: {view: number, icon: React.FunctionComponent}) => (
-    <IconButton color={type === view ? 'primary' : 'default'} size="small" onClick={() => setView(type)}>
+    <IconButton color={type === view ? 'primary' : 'default'} size='small' onClick={() => setView(type)}>
       <Icon />
     </IconButton>
   );
@@ -139,7 +139,7 @@ const Main = ({ party, code }: MainProps) => {
   // TODO(burdon): Show/hide components to maintain state (and test subscriptions). Show for first time on select.
   return (
     <div className={classes.root}>
-      <Toolbar variant="dense" disableGutters classes={{ root: classes.toolbar }}>
+      <Toolbar variant='dense' disableGutters classes={{ root: classes.toolbar }}>
         <SearchBar onUpdate={handleUpdate} />
         <div className={classes.buttons}>
           <ViewButton view={VIEW_LIST} icon={ListIcon} />
@@ -196,7 +196,7 @@ const Main = ({ party, code }: MainProps) => {
         handleClose={() => setShowCreate(false)}
       />
 
-      <Fab className={classes.fab} color="primary" aria-label="add" onClick={() => setShowCreate(true)}>
+      <Fab className={classes.fab} color='primary' aria-label='add' onClick={() => setShowCreate(true)}>
         <AddIcon />
       </Fab>
     </div>

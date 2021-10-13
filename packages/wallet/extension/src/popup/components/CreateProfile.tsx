@@ -69,33 +69,33 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
   };
 
   if (profile && profile.username && profile.publicKey) {
-    return <Redirect to="/user"/>;
+    return <Redirect to='/user'/>;
   }
 
   return (
-    <Container className={classes.container} maxWidth="md">
+    <Container className={classes.container} maxWidth='md'>
       <Grid container spacing={4}>
         <Grid item xs={12}>
-          <Typography variant="h6" align="center"> Create new profile </Typography>
+          <Typography variant='h6' align='center'> Create new profile </Typography>
         </Grid>
         <Grid item xs={12}>
-          <Grid container justify="center">
+          <Grid container justify='center'>
             <TextField
-              label="Your new username"
-              placeholder="Type in username"
+              label='Your new username'
+              placeholder='Type in username'
               spellCheck={false}
               value={username}
               onChange={e => setUsername(e.target.value)}
-              variant="outlined"
+              variant='outlined'
               required
               helperText={<div> This will be your username visible to everyone. </div>}/>
           </Grid>
         </Grid>
         <Grid item xs={12}>
-          <Grid container justify="flex-end">
+          <Grid container justify='flex-end'>
             <Button
-              variant="contained"
-              color="primary"
+              variant='contained'
+              color='primary'
               onClick={onCreate}
               disabled={inProgress}>
               {inProgress ? 'Creating...' : 'Create'}
@@ -103,14 +103,14 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
           </Grid>
         </Grid>
         <Grid item xs={12}>
-          <Grid container justify="center" onClick={() => onNavigation('import')}>
-            <Link component="button">Import using seedphrase</Link>
+          <Grid container justify='center' onClick={() => onNavigation('import')}>
+            <Link component='button'>Import using seedphrase</Link>
           </Grid>
-          <Grid container justify="center">
-            <Divider className={classes.divider} orientation="horizontal"/>
+          <Grid container justify='center'>
+            <Divider className={classes.divider} orientation='horizontal'/>
           </Grid>
-          <Grid container justify="center" onClick={() => onNavigation('redeem-device')}>
-            <Link component="button">Redeem device invitation</Link>
+          <Grid container justify='center' onClick={() => onNavigation('redeem-device')}>
+            <Link component='button'>Redeem device invitation</Link>
           </Grid>
         </Grid>
       </Grid>

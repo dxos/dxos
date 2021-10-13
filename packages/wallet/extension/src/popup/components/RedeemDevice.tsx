@@ -34,7 +34,7 @@ const RedeemDevice = ({ profile, onProfileCreated } : RedeemDeviceProps) => {
   const [inProgress, setInProgress] = useState(false);
 
   if (profile && profile.username && profile.publicKey) {
-    return <Redirect to="/user"/>;
+    return <Redirect to='/user'/>;
   }
 
   const onJoin = async () => {
@@ -63,30 +63,30 @@ const RedeemDevice = ({ profile, onProfileCreated } : RedeemDeviceProps) => {
     <Container className={classes.container}>
       <Grid container spacing={4}>
         <Grid item xs={12}>
-          <Typography variant="h4" align="center"> Redeem device invitation </Typography>
+          <Typography variant='h4' align='center'> Redeem device invitation </Typography>
         </Grid>
         <Grid item xs={12}>
           <TextField
             autoFocus
             fullWidth
             multiline
-            label="Invitation code"
-            placeholder="Paste code"
+            label='Invitation code'
+            placeholder='Paste code'
             spellCheck={false}
             value={invitation}
             onChange={e => setInvitation(e.target.value)}
-            variant="outlined"
+            variant='outlined'
             required
             helperText={<div> The shared invitation code. </div>}/>
         </Grid>
         <Grid item xs={12}>
           <TextField
-            label="Passcode"
-            placeholder="Paste passcode"
+            label='Passcode'
+            placeholder='Paste passcode'
             spellCheck={false}
             value={passcode}
             onChange={e => setPasscode(e.target.value)}
-            variant="outlined"
+            variant='outlined'
             required
             helperText={<div> The passcode you get from the inviter.  </div>}/>
         </Grid>
@@ -94,10 +94,10 @@ const RedeemDevice = ({ profile, onProfileCreated } : RedeemDeviceProps) => {
           <BackButton />
         </Grid>
         <Grid item xs={6}>
-          <Grid container justify="flex-end">
+          <Grid container justify='flex-end'>
             <Button
-              variant="contained"
-              color="primary"
+              variant='contained'
+              color='primary'
               onClick={onJoin}
               disabled={inProgress}>
               {inProgress ? 'Redeeming...' : 'Redeem'}

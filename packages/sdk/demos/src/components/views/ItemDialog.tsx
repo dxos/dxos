@@ -62,10 +62,10 @@ const ItemDialog = ({
   };
 
   return (
-    <Dialog open={open} fullWidth maxWidth="sm">
+    <Dialog open={open} fullWidth maxWidth='sm'>
       <DialogTitle>Create Item</DialogTitle>
       <DialogContent>
-        <Box m={2} flexDirection="column">
+        <Box m={2} flexDirection='column'>
           {!initialType && (
             <div className={classes.field}>
               <ToggleGroup types={types} type={type} onChange={type => setType(type)} />
@@ -73,19 +73,19 @@ const ItemDialog = ({
           )}
 
           <TextField
-            id="item-dialog-item-name"
+            id='item-dialog-item-name'
             autoFocus
             fullWidth
-            label="Name"
+            label='Name'
             value={name}
             onChange={event => setName(event.currentTarget.value)}
-            variant="outlined"
+            variant='outlined'
           />
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button color="primary" variant="contained" onClick={handleCreateItem}>Create</Button>
-        <Button color="secondary" onClick={handleClose}>Cancel</Button>
+        <Button color='primary' variant='contained' onClick={handleCreateItem}>Create</Button>
+        <Button color='secondary' onClick={handleClose}>Cancel</Button>
       </DialogActions>
     </Dialog>
   );

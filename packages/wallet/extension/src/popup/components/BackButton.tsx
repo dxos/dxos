@@ -20,8 +20,8 @@ const BackButton = () => {
   };
 
   return (
-    <Grid container justify="flex-start">
-      <IconButton size="small" style={{ borderRadius: 5 }} onClick={onReturn}>
+    <Grid container justify='flex-start'>
+      <IconButton size='small' style={{ borderRadius: 5 }} onClick={onReturn}>
         <ArrowBackIosIcon /> Back
       </IconButton>
     </Grid>
