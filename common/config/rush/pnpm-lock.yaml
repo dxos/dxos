@@ -1429,6 +1429,7 @@ importers:
       '@types/lodash.get': 4.4.6
       '@types/lodash.set': 4.3.6
       '@types/node': 14.14.45
+      esbuild: 0.11.23
       webpack: 4.44.2
     specifiers:
       '@dxos/debug': workspace:*
@@ -1441,6 +1442,7 @@ importers:
       ajv: ~8.6.2
       boolean: ^3.0.1
       debug: ^4.1.1
+      esbuild: ^0.11.23
       js-yaml: ^3.13.1
       lodash.defaultsdeep: ^4.6.1
       lodash.get: ^4.4.2
@@ -2173,6 +2175,7 @@ importers:
     dependencies:
       assert: 2.0.0
       debug: 4.3.1
+      domain-browser: 4.22.0
       esbuild: 0.11.23
       events: 3.3.0
       path-browserify: 1.0.1
@@ -2187,6 +2190,7 @@ importers:
       '@types/node': ^14.0.9
       assert: ^2.0.0
       debug: ^4.1.1
+      domain-browser: ^4.22.0
       esbuild: ^0.11.23
       events: ~3.3.0
       path-browserify: ~1.0.1
@@ -13735,6 +13739,12 @@ packages:
       npm: '>=1.2'
     resolution:
       integrity: sha512-jnjyiM6eRyZl2H+W8Q/zLMA481hzi0eszAaBUzIVnmYVDBbnLxVNnfu1HgEBvCbL+71FrxMl3E6lpKH7Ge3OXA==
+  /domain-browser/4.22.0:
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-IGBwjF7tNk3cwypFNH/7bfzBcgSCbaMOD3GsaY1AU/JRrnHnYgEM0+9kQt52iZxjNsjBtJYtao146V+f8jFZNw==
   /domelementtype/1.3.1:
     resolution:
       integrity: sha512-BSKB+TSpMpFI/HOxCNr1O8aMOTZ8hT3pM3GQ0w/mWRmkhEDSFJkkyzz4XQsBV44BChwGkrDfMyjVD0eA2aFV3w==
