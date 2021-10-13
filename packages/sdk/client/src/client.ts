@@ -9,12 +9,12 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
-import { Invitation } from '@dxos/credentials';
+import { Invitation, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import {
-  ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, SecretProvider, sortItemsTopologically
+  ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically
 } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
