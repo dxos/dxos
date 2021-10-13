@@ -233,6 +233,12 @@ describe('Registry Client', () => {
       })).to.be.true;
     });
 
+    it('Records has date fields decoded properly', async () => {
+      for (const record of await registryApi.getRecords()) {
+        expect(record.meta.created?.toString()).to.not.equal('Invalid Date')
+      }
+    })
+
     describe('Querying', () => {
       let appTypeCid: CID;
       let botTypeCid: CID;
