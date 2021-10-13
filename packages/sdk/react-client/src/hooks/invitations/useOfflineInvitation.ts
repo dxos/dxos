@@ -41,8 +41,8 @@ export const useOfflineInvitation = (
   const { onError = noOp } = opts;
   const client = useClient();
   const [invitationCode, setInvitationCode] = useState<string>();
-  const key = partyKey.toString();
-  const recipientKey = recipient.publicKey.toString();
+  // const key = partyKey.toString();
+  // const recipientKey = recipient.publicKey.toString();
 
   useEffect(() => {
     setImmediate(async () => {

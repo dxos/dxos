@@ -181,6 +181,6 @@ export class OfflineInvitationClaimer {
           undefined,
           info!.authNonce.value)
       ));
-    }
+    };
   }
 }

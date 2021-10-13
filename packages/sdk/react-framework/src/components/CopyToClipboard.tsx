@@ -23,10 +23,10 @@ export const CopyToClipboard = ({
       onCopy={value => onCopy!(value)}
     >
       <IconButton
-        color='inherit'
-        aria-label='copy to clipboard'
-        title='Copy to clipboard'
-        edge='end'
+        color="inherit"
+        aria-label="copy to clipboard"
+        title="Copy to clipboard"
+        edge="end"
       >
         <Icon />
       </IconButton>

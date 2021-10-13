@@ -20,7 +20,7 @@ const TestApp = () => {
     setImmediate(async () => {
       const types = await registry.getTypeRecords();
       setTypes(types);
-    })
+    });
   }, []);
 
   return (

@@ -1,13 +1,16 @@
 # Change Log
 
-2021-10-11
+## 2021-10-11
 
-## TODO:
+### TODO:
 
 - [x] Basic react-client storybooks
 - [ ] useInvitationRedeemer storybook
+- [ ] Default client config disable signaling (otherwise storybooks show connection warning)
+- [ ] Construct HALO outside of ECHO and pass in? (lower complexity)
+- [ ] client vs echo methods (createParty, createInvitation, joinParty, etc.)
 
-## Breaking Changes
+- [ ] components lib (Fullscreen, JSON, Editable) vs framework lib
 
 - Test with tutorial-tasks-app
 
@@ -22,11 +25,10 @@
   - [ ] useInviation
   - [ ] useAuthenticator
 
-## Notes
-- [ ] Default client config disable signaling (otherwise storybooks show connection warning)
-- [ ] Construct HALO outside of ECHO and pass in? (lower complexity)
-- [ ] client vs echo methods (createParty, createInvitation, joinParty, etc.)
 
-## Lint
+### Breaking Changes
+
+### Lint
 - [ ] Remove functions
 - [ ] Double/single quotes
+- [ ] No default exports

@@ -56,7 +56,7 @@ export const useInvitationRedeemer = ({
   return [
     setInvitationCode,
     (pin: string) => {
-      secretResolver(Buffer.from(pin)) ;
+      secretResolver(Buffer.from(pin));
     }
   ];
 };

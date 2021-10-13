@@ -3,6 +3,9 @@
 //
 
 import {
+  ErrorOutline as ErrorIcon
+} from '@mui/icons-material';
+import {
   Button,
   Dialog,
   DialogActions,
@@ -12,9 +15,6 @@ import {
   Typography,
   styled
 } from '@mui/material';
-import {
-  ErrorOutline as ErrorIcon
-} from '@mui/icons-material';
 import React from 'react';
 
 import { CopyToClipboard } from './CopyToClipboard';
@@ -42,7 +42,7 @@ export const ErrorView = ({
   error,
   title = DEFAULT_TITLE,
   issueLink = DEFAULT_ISSUE_LINK,
-                            context
+  context
 }: {
   onRestart?: () => void,
   onReset?: () => void,
@@ -57,7 +57,7 @@ export const ErrorView = ({
   // TODO(burdon): Production button to post error.
 
   return (
-    <Dialog open fullWidth maxWidth='sm'>
+    <Dialog open fullWidth maxWidth="sm">
       <DialogHeading title={title} icon={ErrorIcon} />
       <DialogContent>
         {!isDev && (
@@ -70,7 +70,7 @@ export const ErrorView = ({
         )}
         {(isDev && context) && (
           <>
-            <Toolbar variant='dense' disableGutters sx={{ padding: 0.5 }}>
+            <Toolbar variant="dense" disableGutters sx={{ padding: 0.5 }}>
               <Typography>Context</Typography>
               <div style={{ display: 'flex', flex: 1 }} />
               <CopyToClipboard text={stack} />
@@ -85,17 +85,17 @@ export const ErrorView = ({
         <div style={{ display: 'flex', flex: 1 }} />
         {isDev && (
           <Button
-            variant='text'
+            variant="text"
             onClick={() => {}}
           >
-            <Link href={issueLink} underline='none' target='_blank'>
+            <Link href={issueLink} underline="none" target="_blank">
               Create Issue
             </Link>
           </Button>
         )}
         {(isDev && onReset) && (
           <Button
-            variant='text'
+            variant="text"
             onClick={onReset}
           >
             Reset storage
@@ -103,8 +103,8 @@ export const ErrorView = ({
         )}
         {onRestart && (
           <Button
-            variant='contained'
-            color='primary'
+            variant="contained"
+            color="primary"
             onClick={onRestart}
           >
             Restart

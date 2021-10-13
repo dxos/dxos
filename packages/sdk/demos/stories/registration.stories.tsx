@@ -6,7 +6,6 @@ import { Box } from '@mui/material';
 import React from 'react';
 
 import { ClientInitializer, useProfile } from '@dxos/react-client';
-
 import { JsonTreeView } from '@dxos/react-framework';
 
 // TODO(burdon): Which package should this be in?

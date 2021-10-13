@@ -67,7 +67,7 @@ export class HALO {
       initialized: this.isInitialized,
       identityKey: this.identityKey?.publicKey.toHex(),
       displayName: this.identityDisplayName
-    }
+    };
   }
 
   /**

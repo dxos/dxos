@@ -17,7 +17,7 @@ export function trigger <T> (timeout?: number): [() => Promise<T>, (arg: T) => v
       }
       callback = resolve;
     });
-  }
+  };
 
   const resolver = (value: T) => callback(value);
 

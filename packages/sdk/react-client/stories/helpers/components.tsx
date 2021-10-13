@@ -52,13 +52,13 @@ export const JsonPanel = ({ value }: { value: any }) => {
     >
       {JSON.stringify(value, undefined, 2)}
     </pre>
-  )
+  );
 };
 
 export const ClientPanel = ({ client, parties = [] }: { client: Client, parties?: Party[] }) => {
   const data = {
     parties: parties.map(({ key }) => key.toHex())
-  }
+  };
 
   return (
     <Box>

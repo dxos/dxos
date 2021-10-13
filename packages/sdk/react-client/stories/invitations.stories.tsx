@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 
 import { trigger } from '@dxos/async';
 import { generatePasscode } from '@dxos/credentials';
+import { PublicKey } from '@dxos/crypto';
 
 import {
   ClientInitializer, decodeInvitation,
@@ -14,8 +15,6 @@ import {
   ProfileInitializer,
   useClient, useParties
 } from '../src';
-import { PublicKey } from '@dxos/crypto';
-
 import { ClientPanel, JsonPanel, TestTheme } from './helpers';
 
 export default {
@@ -32,7 +31,7 @@ const useSecretProvider = (): [() => Promise<Buffer>, string | undefined, () => 
     const pin = generatePasscode();
     setPin(pin);
     return Promise.resolve(Buffer.from(pin));
-  }
+  };
 
   return [provider, pin, () => setPin('')];
 };
@@ -60,20 +59,20 @@ const InviatationPanel = () => {
       setInvitationCode('');
       resetPin();
     });
-  }
+  };
 
   const handleCreateInvitation = () => {
     setImmediate(async () => {
       const invitation = await client.createInvitation(partyKey!, secretProvider);
       setInvitationCode(encodeInvitation(invitation));
     });
-  }
+  };
 
   return (
     <Box sx={{ padding: 1 }}>
       <Toolbar>
         <Button
-          variant='outlined'
+          variant="outlined"
           onClick={handleCreateParty}
         >
           Create Party
@@ -101,9 +100,77 @@ const InviatationPanel = () => {
         <Box sx={{ marginTop: 1 }}>
           <TextField
             disabled
-            type='text'
+            type="text"
             value={pin}
           />
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+const RedeemInvitationPanel = (
+  {
+    status,
+    onSubmit,
+    onAuthenticate
+  }: {
+    status: any,
+    onSubmit: (invitationCode: string) => void
+    onAuthenticate: (pin: string) => void
+  }
+) => {
+  const [invitationCode, setInvitationCode] = useState<string>('');
+  const [pin, setPin] = useState<string>('');
+
+  return (
+    <Box sx={{ padding: 1 }}>
+      <Box>
+        <Toolbar>
+          <Button
+            onClick={() => onSubmit(invitationCode)}
+            disabled={!invitationCode}
+            variant="outlined"
+          >
+            Join Party
+          </Button>
+        </Toolbar>
+
+        <Box sx={{ marginTop: 1 }}>
+          <TextField
+            multiline
+            fullWidth
+            value={invitationCode}
+            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
+              setInvitationCode(event.target.value);
+              setPin('');
+            }}
+            maxRows={6}
+          />
+          {invitationCode && (
+            <Box sx={{ display: 'flex', marginTop: 2 }}>
+              <TextField
+                // disabled={!invitationCode}
+                value={pin}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPin(event.target.value)}
+                // variant='standard'
+                size="small"
+                label="PIN"
+              />
+              <Button
+                disabled={!pin}
+                onClick={() => onAuthenticate(pin)}
+              >
+                Submit
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </Box>
+
+      {(Object.keys(status).length > 0) && (
+        <Box sx={{ marginTop: 1 }}>
+          <JsonPanel value={status} />
         </Box>
       )}
     </Box>
@@ -134,7 +201,7 @@ const RedeemInvitationContainer = () => {
 
   const handleAuthenticate = (pin: string) => {
     secretResolver(Buffer.from(pin));
-  }
+  };
 
   return (
     <RedeemInvitationPanel
@@ -142,76 +209,8 @@ const RedeemInvitationContainer = () => {
       onSubmit={handleSubmit}
       onAuthenticate={handleAuthenticate}
     />
-  )
-}
-
-const RedeemInvitationPanel = (
-  {
-    status,
-    onSubmit,
-    onAuthenticate
-  }: {
-    status: any,
-    onSubmit: (invitationCode: string) => void
-    onAuthenticate: (pin: string) => void
-  }
-) => {
-  const [invitationCode, setInvitationCode] = useState<string>('');
-  const [pin, setPin] = useState<string>('');
-
-  return (
-    <Box sx={{ padding: 1 }}>
-      <Box>
-        <Toolbar>
-          <Button
-            onClick={() => onSubmit(invitationCode)}
-            disabled={!invitationCode}
-            variant='outlined'
-          >
-            Join Party
-          </Button>
-        </Toolbar>
-
-        <Box sx={{ marginTop: 1 }}>
-          <TextField
-            multiline
-            fullWidth
-            value={invitationCode}
-            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
-              setInvitationCode(event.target.value);
-              setPin('');
-            }}
-            maxRows={6}
-          />
-          {invitationCode && (
-            <Box sx={{ display: 'flex', marginTop: 2 }}>
-              <TextField
-                // disabled={!invitationCode}
-                value={pin}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPin(event.target.value)}
-                // variant='standard'
-                size='small'
-                label='PIN'
-              />
-              <Button
-                disabled={!pin}
-                onClick={() => onAuthenticate(pin)}
-              >
-                Submit
-              </Button>
-            </Box>
-          )}
-        </Box>
-      </Box>
-
-      {(Object.keys(status).length > 0) && (
-        <Box sx={{ marginTop: 1 }}>
-          <JsonPanel value={status} />
-        </Box>
-      )}
-    </Box>
   );
-}
+};
 
 const TestApp = () => {
   const client = useClient();

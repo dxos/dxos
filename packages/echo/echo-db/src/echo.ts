@@ -181,7 +181,7 @@ export class ECHO {
     return {
       open: this.isOpen,
       parties: this._partyManager.parties.length
-    }
+    };
   }
 
   get isOpen () {

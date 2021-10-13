@@ -50,7 +50,9 @@ export const WithClient = () => {
     <ClientInitializer>
       <RedeemDialog
         open
-        onClose={() => { console.log('OK'); }}
+        onClose={() => {
+          console.log('OK');
+        }}
       />
     </ClientInitializer>
   );

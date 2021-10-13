@@ -6,11 +6,10 @@ import { Box, Table, TableBody, TableCell, TableHead, TableRow, Typography } fro
 import { makeStyles } from '@mui/styles';
 import moment from 'moment';
 import React from 'react';
-import { CopyToClipboard } from '@dxos/react-framework';
 
 import { keyTypeName } from '@dxos/credentials';
 import { truncateString } from '@dxos/debug';
-import { BooleanIcon } from '@dxos/react-framework';
+import { BooleanIcon, CopyToClipboard } from '@dxos/react-framework';
 
 export const Key = ({ text } : { text: string }) => {
   return (

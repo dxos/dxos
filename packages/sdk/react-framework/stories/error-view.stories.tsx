@@ -55,13 +55,12 @@ const TestApp = () => {
       <TestComponent count={count} />
     </Box>
   );
-}
+};
 
 export const Boundary = () => {
-
   return (
     <ErrorBoundary>
       <TestApp />
     </ErrorBoundary>
   );
-}
+};

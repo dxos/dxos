@@ -50,13 +50,13 @@ export const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
   };
 
   return (
-    <Dialog open={open} fullWidth maxWidth='xs'>
+    <Dialog open={open} fullWidth maxWidth="xs">
       <DialogTitle>
-        <Toolbar variant='dense' disableGutters>
+        <Toolbar variant="dense" disableGutters>
           <StyledAvatar>
             <LockOutlinedIcon />
           </StyledAvatar>
-          <Typography component='h1' variant='h5'>
+          <Typography component="h1" variant="h5">
             Create Profile
           </Typography>
         </Toolbar>
@@ -69,20 +69,20 @@ export const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
           value={username}
           onChange={event => setUsername(event.target.value)}
           onKeyPress={event => (event.key === 'Enter') && handleUpdate()}
-          label='Username'
-          variant='outlined'
+          label="Username"
+          variant="outlined"
           spellCheck={false}
         />
       </Content>
       <DialogActions>
         <Button
           onClick={handleCancel}
-          color='secondary'
+          color="secondary"
         >
           Cancel
         </Button>
         <Button
-          color='primary'
+          color="primary"
           disabled={!username}
           onClick={handleUpdate}
         >

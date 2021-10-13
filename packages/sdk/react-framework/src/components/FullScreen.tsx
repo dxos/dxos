@@ -3,7 +3,6 @@
 //
 
 import { styled } from '@mui/material';
-import React from 'react';
 
 export const FullScreen = styled('div')({
   display: 'flex',
