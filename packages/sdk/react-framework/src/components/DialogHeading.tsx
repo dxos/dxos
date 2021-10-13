@@ -19,9 +19,9 @@ export const DialogHeading = ({
 }) => {
   return (
     <DialogTitle>
-      <Toolbar variant="dense" disableGutters>
+      <Toolbar variant='dense' disableGutters>
         <Icon />
-        <Title variant="h5">{title}</Title>
+        <Title variant='h5'>{title}</Title>
       </Toolbar>
     </DialogTitle>
   );

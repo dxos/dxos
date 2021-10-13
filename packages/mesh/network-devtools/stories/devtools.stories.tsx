@@ -142,15 +142,15 @@ const GraphDemo = ({ topic, topology }: { topic: PublicKey, topology: () => Topo
         <div>
           <MemoryRouter>
             <div>
-              <NavLink to="/">Signal</NavLink>
-              <NavLink to="/swarms">Swarms</NavLink>
+              <NavLink to='/'>Signal</NavLink>
+              <NavLink to='/swarms'>Swarms</NavLink>
             </div>
             <Switch>
-              <Route exact path="/">
+              <Route exact path='/'>
                 <SignalStatus status={signalStatus} />
                 <SignalTrace trace={signalTrace} />
               </Route>
-              <Route path="/swarms">
+              <Route path='/swarms'>
                 <SwarmDetails swarms={swarmInfo} />
               </Route>
             </Switch>

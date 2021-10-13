@@ -44,14 +44,14 @@ const User = ({ profile } : UserProps) => {
     <Card className={classes.card} raised={true}>
       <CardHeader
         title={
-          <Typography gutterBottom variant="h5" component="h2">
+          <Typography gutterBottom variant='h5' component='h2'>
             {profile.username}
           </Typography>
         }
         subheader={
-          <Grid container alignContent="space-between" alignItems="center">
+          <Grid container alignContent='space-between' alignItems='center'>
             <Grid item xs={11} md={8} lg={6}>
-              <Typography variant="body2" color="textSecondary" className={classes.ellipsis}>
+              <Typography variant='body2' color='textSecondary' className={classes.ellipsis}>
                 {profile.publicKey}
               </Typography>
             </Grid>
@@ -61,7 +61,7 @@ const User = ({ profile } : UserProps) => {
           </Grid>
         }
         action={
-          <IconButton aria-label="settings" ref={actions} onClick={() => setMenuOpen(m => !m)}>
+          <IconButton aria-label='settings' ref={actions} onClick={() => setMenuOpen(m => !m)}>
             <MoreVertIcon />
           </IconButton>
         }/>
@@ -74,9 +74,9 @@ const User = ({ profile } : UserProps) => {
         onClose={() => setMenuOpen(false)}>
         <MenuItem button={true} onClick={onPartiesClick}>
           <ListItemIcon>
-            <GroupIcon fontSize="small" />
+            <GroupIcon fontSize='small' />
           </ListItemIcon>
-          <Typography variant="inherit"> Parties </Typography>
+          <Typography variant='inherit'> Parties </Typography>
         </MenuItem>
       </Menu>
     </Card>

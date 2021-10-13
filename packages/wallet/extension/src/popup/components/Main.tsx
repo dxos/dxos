@@ -35,31 +35,31 @@ const Main = () => {
   }
 
   return (
-    <HashRouter hashType="noslash">
+    <HashRouter hashType='noslash'>
       <Switch>
-        <Route path="/import">
+        <Route path='/import'>
           <Import onProfileCreated={setProfile} />
         </Route>
-        <Route path="/create">
+        <Route path='/create'>
           <CreateProfile profile={profile} onProfileCreated={setProfile} />
         </Route>
-        <Route path="/redeem-device">
+        <Route path='/redeem-device'>
           <RedeemDevice profile={profile} onProfileCreated={setProfile} />
         </Route>
         {profile && profile.username && profile.publicKey
           ? <Switch>
-            <Route path="/user">
+            <Route path='/user'>
               <User profile={profile} />
             </Route>
-            <Route path="/parties">
+            <Route path='/parties'>
               <Parties />
             </Route>
-            <Route path="/joinparty">
+            <Route path='/joinparty'>
               <JoinParty />
             </Route>
           </Switch>
           : null}
-        <Redirect to="/create" />
+        <Redirect to='/create' />
       </Switch>
     </HashRouter>
   );
