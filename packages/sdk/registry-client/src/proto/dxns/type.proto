@@ -14,7 +14,13 @@ import "registry.proto";
 
 // Registered as `type.app`.
 message App {
-  // IPFS CID of the app bundle.
+  /**
+   * Optional **semver 2.0** compliant record version.
+   * Should conform to the semver regex (see https://semver.org/).
+   */
+  string version = 1;
+
+  /// IPFS CID of the app bundle.
   bytes hash = 2;
   string repository = 3;
   string repository_version = 4;
@@ -31,6 +37,12 @@ message App {
 
 // Registered as `type.bot`.
 message Bot {
+  /**
+   * Optional **semver 2.0** compliant record version.
+   * Should conform to the semver regex (see https://semver.org/).
+   */
+  string version = 1;
+
   // IPFS CID of the bot bundle.
   bytes hash = 2;
   string repository = 3;

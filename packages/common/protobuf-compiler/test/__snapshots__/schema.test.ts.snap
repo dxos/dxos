@@ -6,6 +6,7 @@ import { Stream } from \\"@dxos/codec-protobuf\\";
 import substitutions from \\"../../../substitutions\\";
 import * as dxos_test from \\"../test\\";
 import * as dxos_test_any from \\"./any\\";
+import * as dxos_test_extensions from \\"./extensions\\";
 import * as dxos_test_testfoo from \\"./testfoo\\";
 import * as google_protobuf from \\"../../google/protobuf\\";
 export interface AnotherMessage {
@@ -16,10 +17,23 @@ import { Stream } from \\"@dxos/codec-protobuf\\";
 import substitutions from \\"../../../substitutions\\";
 import * as dxos_test from \\"../test\\";
 import * as dxos_test_another from \\"./another\\";
+import * as dxos_test_extensions from \\"./extensions\\";
 import * as dxos_test_testfoo from \\"./testfoo\\";
 import * as google_protobuf from \\"../../google/protobuf\\";
 export interface Any {
     bar?: number;
+}
+
+dxos/test/extensions.ts:
+import { Stream } from \\"@dxos/codec-protobuf\\";
+import substitutions from \\"../../../substitutions\\";
+import * as dxos_test from \\"../test\\";
+import * as dxos_test_another from \\"./another\\";
+import * as dxos_test_any from \\"./any\\";
+import * as dxos_test_testfoo from \\"./testfoo\\";
+import * as google_protobuf from \\"../../google/protobuf\\";
+export interface WithDefaultField {
+    tag?: string;
 }
 
 dxos/test/testfoo.ts:
@@ -28,6 +42,7 @@ import substitutions from \\"../../../substitutions\\";
 import * as dxos_test from \\"../test\\";
 import * as dxos_test_another from \\"./another\\";
 import * as dxos_test_any from \\"./any\\";
+import * as dxos_test_extensions from \\"./extensions\\";
 import * as google_protobuf from \\"../../google/protobuf\\";
 export interface TestFoo {
     fizz?: number;
@@ -39,6 +54,7 @@ import { Stream } from \\"@dxos/codec-protobuf\\";
 import substitutions from \\"../../substitutions\\";
 import * as dxos_test_another from \\"./test/another\\";
 import * as dxos_test_any from \\"./test/any\\";
+import * as dxos_test_extensions from \\"./test/extensions\\";
 import * as dxos_test_testfoo from \\"./test/testfoo\\";
 import * as google_protobuf from \\"../google/protobuf\\";
 export interface Key {
@@ -99,9 +115,23 @@ export enum TaskType {
     IN_PROGRESS = 1,
     COMPLETED = 2
 }
+/**
+ * Task.
+ * Comments can be multiline.
+ */
 export interface Task {
+    /**
+     * Task id
+     */
     id?: string;
+    /**
+     * Task title
+     */
     title?: string;
+    /**
+     * Task key.
+     * Multiline field comment.
+     */
     key: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>;
     type: TaskType;
     googleAny?: ReturnType<typeof substitutions[\\"google.protobuf.Any\\"][\\"decode\\"]>;
@@ -115,8 +145,17 @@ export interface SubstitutedByInterface {
 export interface TaskCount {
     count?: number;
 }
+/**
+ * Test service definition.
+ */
 export interface TestService {
+    /**
+     * Count the tasks in the task list.
+     */
     CountTasks: (request: TaskList) => Promise<TaskCount>;
+    /**
+     * Subscribe to task list updates.
+     */
     SubscribeTasks: (request: ReturnType<typeof substitutions[\\"dxos.test.Key\\"][\\"decode\\"]>) => Stream<Task>;
 }
 
@@ -126,6 +165,7 @@ import substitutions from \\"../../substitutions\\";
 import * as dxos_test from \\"../dxos/test\\";
 import * as dxos_test_another from \\"../dxos/test/another\\";
 import * as dxos_test_any from \\"../dxos/test/any\\";
+import * as dxos_test_extensions from \\"../dxos/test/extensions\\";
 import * as dxos_test_testfoo from \\"../dxos/test/testfoo\\";
 export interface Any {
     type_url?: string;
@@ -141,6 +181,7 @@ import { Schema } from \\"@dxos/codec-protobuf\\";
 import * as dxos_test from \\"./dxos/test\\";
 import * as dxos_test_another from \\"./dxos/test/another\\";
 import * as dxos_test_any from \\"./dxos/test/any\\";
+import * as dxos_test_extensions from \\"./dxos/test/extensions\\";
 import * as dxos_test_testfoo from \\"./dxos/test/testfoo\\";
 import * as google_protobuf from \\"./google/protobuf\\";
 import substitutions from \\"../substitutions\\";
@@ -151,6 +192,7 @@ export interface TYPES {
     \\"dxos.test.ComplexFields\\": dxos_test.ComplexFields;
     \\"dxos.test.ComplexFields.Inner\\": dxos_test.ComplexFields.Inner;
     \\"dxos.test.ComplexFields.InnerEnum\\": dxos_test.ComplexFields.InnerEnum;
+    \\"dxos.test.extensions.WithDefaultField\\": dxos_test_extensions.WithDefaultField;
     \\"dxos.test.Key\\": dxos_test.Key;
     \\"dxos.test.Outer\\": dxos_test.Outer;
     \\"dxos.test.Outer.Inner\\": dxos_test.Outer.Inner;
@@ -168,7 +210,7 @@ export interface TYPES {
 export interface SERVICES {
     \\"dxos.test.TestService\\": dxos_test.TestService;
 }
-export const schemaJson = JSON.parse(\\"{\\\\\\"nested\\\\\\":{\\\\\\"dxos\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"test\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"another\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"AnotherMessage\\\\\\":{\\\\\\"fields\\\\\\":{}}}},\\\\\\"any\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"bar\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1}}}}},\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"ComplexFields\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"repeatedField\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":16},\\\\\\"requiredField\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":17},\\\\\\"mappedField\\\\\\":{\\\\\\"keyType\\\\\\":\\\\\\"string\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":18},\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Inner\\\\\\",\\\\\\"id\\\\\\":19},\\\\\\"myAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Any\\\\\\",\\\\\\"id\\\\\\":20},\\\\\\"googleAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Any\\\\\\",\\\\\\"id\\\\\\":21},\\\\\\"importedAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"dxos.test.any.Any\\\\\\",\\\\\\"id\\\\\\":22},\\\\\\"fooTest\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"TestFoo\\\\\\",\\\\\\"id\\\\\\":23}},\\\\\\"nested\\\\\\":{\\\\\\"Inner\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"bar\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"InnerEnum\\\\\\",\\\\\\"id\\\\\\":2}}},\\\\\\"InnerEnum\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"FOO\\\\\\":1,\\\\\\"BAR\\\\\\":2}}}},\\\\\\"Key\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"data\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"Outer\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ComplexFields.Inner\\\\\\",\\\\\\"id\\\\\\":1}},\\\\\\"nested\\\\\\":{\\\\\\"Inner\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ComplexFields.InnerEnum\\\\\\",\\\\\\"id\\\\\\":1}}}}},\\\\\\"Scalars\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"doubleField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"double\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"floatField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"float\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"int32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"int64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int64\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"uint32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint32\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"uint64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint64\\\\\\",\\\\\\"id\\\\\\":6},\\\\\\"sint32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sint32\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"sint64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sint64\\\\\\",\\\\\\"id\\\\\\":8},\\\\\\"fixed32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"fixed32\\\\\\",\\\\\\"id\\\\\\":9},\\\\\\"fixed64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"fixed64\\\\\\",\\\\\\"id\\\\\\":10},\\\\\\"sfixed32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sfixed32\\\\\\",\\\\\\"id\\\\\\":11},\\\\\\"sfixed64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sfixed64\\\\\\",\\\\\\"id\\\\\\":12},\\\\\\"boolField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":13},\\\\\\"stringField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":14},\\\\\\"bytesField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":15}}},\\\\\\"SubstitutedByInterface\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"Task\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"id\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"title\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"key\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"type\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"TaskType\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"googleAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Any\\\\\\",\\\\\\"id\\\\\\":5}}},\\\\\\"TaskCount\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"count\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"TaskList\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"tasks\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Task\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"TaskType\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"IN_PROGRESS\\\\\\":1,\\\\\\"COMPLETED\\\\\\":2}},\\\\\\"testfoo\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"TestFoo\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"fizz\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint32\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"bazz\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2}}}}},\\\\\\"TestService\\\\\\":{\\\\\\"methods\\\\\\":{\\\\\\"CountTasks\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"TaskList\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"TaskCount\\\\\\"},\\\\\\"SubscribeTasks\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"Task\\\\\\",\\\\\\"responseStream\\\\\\":true}}},\\\\\\"WithTimestamp\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"timestamp\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Timestamp\\\\\\",\\\\\\"id\\\\\\":1}}}}}}},\\\\\\"google\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"protobuf\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"type_url\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"value\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":2}}},\\\\\\"Timestamp\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"seconds\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int64\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"nanos\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2}}}}}}}}}\\");
+export const schemaJson = JSON.parse(\\"{\\\\\\"nested\\\\\\":{\\\\\\"dxos\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"test\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"another\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"AnotherMessage\\\\\\":{\\\\\\"fields\\\\\\":{}}}},\\\\\\"any\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"bar\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1}}}}},\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"ComplexFields\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"repeatedField\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":16},\\\\\\"requiredField\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":17},\\\\\\"mappedField\\\\\\":{\\\\\\"keyType\\\\\\":\\\\\\"string\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":18},\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Inner\\\\\\",\\\\\\"id\\\\\\":19},\\\\\\"myAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"Any\\\\\\",\\\\\\"id\\\\\\":20},\\\\\\"googleAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Any\\\\\\",\\\\\\"id\\\\\\":21},\\\\\\"importedAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"dxos.test.any.Any\\\\\\",\\\\\\"id\\\\\\":22},\\\\\\"fooTest\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"TestFoo\\\\\\",\\\\\\"id\\\\\\":23}},\\\\\\"nested\\\\\\":{\\\\\\"Inner\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"bar\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"InnerEnum\\\\\\",\\\\\\"id\\\\\\":2}}},\\\\\\"InnerEnum\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"FOO\\\\\\":1,\\\\\\"BAR\\\\\\":2}}}},\\\\\\"extensions\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"defaultValue\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":5001,\\\\\\"extend\\\\\\":\\\\\\"google.protobuf.FieldOptions\\\\\\"},\\\\\\"WithDefaultField\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"tag\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1,\\\\\\"options\\\\\\":{\\\\\\"(defaultValue)\\\\\\":\\\\\\"latest\\\\\\"}}}}}},\\\\\\"Key\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"data\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"Outer\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ComplexFields.Inner\\\\\\",\\\\\\"id\\\\\\":1}},\\\\\\"nested\\\\\\":{\\\\\\"Inner\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"inner\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"ComplexFields.InnerEnum\\\\\\",\\\\\\"id\\\\\\":1}}}}},\\\\\\"Scalars\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"doubleField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"double\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"floatField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"float\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"int32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"int64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int64\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"uint32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint32\\\\\\",\\\\\\"id\\\\\\":5},\\\\\\"uint64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint64\\\\\\",\\\\\\"id\\\\\\":6},\\\\\\"sint32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sint32\\\\\\",\\\\\\"id\\\\\\":7},\\\\\\"sint64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sint64\\\\\\",\\\\\\"id\\\\\\":8},\\\\\\"fixed32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"fixed32\\\\\\",\\\\\\"id\\\\\\":9},\\\\\\"fixed64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"fixed64\\\\\\",\\\\\\"id\\\\\\":10},\\\\\\"sfixed32Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sfixed32\\\\\\",\\\\\\"id\\\\\\":11},\\\\\\"sfixed64Field\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"sfixed64\\\\\\",\\\\\\"id\\\\\\":12},\\\\\\"boolField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bool\\\\\\",\\\\\\"id\\\\\\":13},\\\\\\"stringField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":14},\\\\\\"bytesField\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":15}}},\\\\\\"SubstitutedByInterface\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"foo\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"Task\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"id\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"title\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2},\\\\\\"key\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"id\\\\\\":3},\\\\\\"type\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"required\\\\\\",\\\\\\"type\\\\\\":\\\\\\"TaskType\\\\\\",\\\\\\"id\\\\\\":4},\\\\\\"googleAny\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Any\\\\\\",\\\\\\"id\\\\\\":5}}},\\\\\\"TaskCount\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"count\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"TaskList\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"tasks\\\\\\":{\\\\\\"rule\\\\\\":\\\\\\"repeated\\\\\\",\\\\\\"type\\\\\\":\\\\\\"Task\\\\\\",\\\\\\"id\\\\\\":1}}},\\\\\\"TaskType\\\\\\":{\\\\\\"values\\\\\\":{\\\\\\"IN_PROGRESS\\\\\\":1,\\\\\\"COMPLETED\\\\\\":2}},\\\\\\"testfoo\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"TestFoo\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"fizz\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"uint32\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"bazz\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":2}}}}},\\\\\\"TestService\\\\\\":{\\\\\\"methods\\\\\\":{\\\\\\"CountTasks\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"TaskList\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"TaskCount\\\\\\"},\\\\\\"SubscribeTasks\\\\\\":{\\\\\\"requestType\\\\\\":\\\\\\"Key\\\\\\",\\\\\\"responseType\\\\\\":\\\\\\"Task\\\\\\",\\\\\\"responseStream\\\\\\":true}}},\\\\\\"WithTimestamp\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"timestamp\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"google.protobuf.Timestamp\\\\\\",\\\\\\"id\\\\\\":1}}}}}}},\\\\\\"google\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"protobuf\\\\\\":{\\\\\\"nested\\\\\\":{\\\\\\"Any\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"type_url\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"string\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"value\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"bytes\\\\\\",\\\\\\"id\\\\\\":2}}},\\\\\\"nested\\\\\\":{},\\\\\\"Timestamp\\\\\\":{\\\\\\"fields\\\\\\":{\\\\\\"seconds\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int64\\\\\\",\\\\\\"id\\\\\\":1},\\\\\\"nanos\\\\\\":{\\\\\\"type\\\\\\":\\\\\\"int32\\\\\\",\\\\\\"id\\\\\\":2}}}}}}}}}\\");
 export const schema = Schema.fromJson<TYPES, SERVICES>(schemaJson, substitutions);
 
 "

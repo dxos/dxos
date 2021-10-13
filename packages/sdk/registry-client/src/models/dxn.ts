@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { DomainKey } from './models';
+import { DomainKey } from './domain-key';
 
 export class DXN {
   static parse (dxn: string) {

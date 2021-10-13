@@ -4,25 +4,29 @@
 
 import { Root } from 'protobufjs';
 
-import { DXN } from '../dxn';
-import { CID, CIDLike, DomainKey } from '../models';
+import { createMockResourceRecords } from '.';
+import { CID, CIDLike, DomainKey, DXN } from '../models';
 import { IQuery, Filtering } from '../querying';
 import {
-  DomainInfo,
+  Domain,
   IRegistryClient,
   RecordMetadata,
   RegistryDataRecord,
   RegistryRecord,
   RegistryTypeRecord,
-  Resource
+  Resource,
+  ResourceRecord
 } from '../registry-client';
-import { createMockResources, createMockTypes } from './fake-data-generator';
+import { createMockTypes } from './fake-data-generator';
 
 export class MemoryRegistryClient implements IRegistryClient {
+  private records: RegistryRecord[]
   constructor (
     private types: RegistryTypeRecord[] = createMockTypes(),
-    private resources: Resource[] = createMockResources()
-  ) {}
+    private resources: ResourceRecord<RegistryRecord>[] = createMockResourceRecords()
+  ) {
+    this.records = this.resources.map(resource => resource.record);
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addRecord (data: unknown, schemaId: CIDLike, messageFqn: string): Promise<CID> {
@@ -30,28 +34,50 @@ export class MemoryRegistryClient implements IRegistryClient {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getResource<R extends RegistryRecord = RegistryRecord> (id: DXN): Promise<Resource<R> | undefined> {
-    const resources = this.resources as unknown as Resource<R>[];
-    return resources.find(resource => resource.id.toString() === id.toString());
+  async getResource (id: DXN): Promise<Resource | undefined> {
+    const resource = this.resources.find(resource => resource.resource.id.toString() === id.toString());
+    return resource?.resource;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getDomains (): Promise<DomainInfo[]> {
+  async getResourceRecord<R extends RegistryRecord = RegistryRecord> (id: DXN, versionOrTag = 'latest'): Promise<ResourceRecord<R> | undefined> {
+    const resource = await this.getResource(id);
+    if (resource === undefined) {
+      return undefined;
+    }
+    const cid = resource.tags[versionOrTag] ?? resource.versions[versionOrTag];
+    if (cid === undefined) {
+      return undefined;
+    }
+    const record = await this.getRecord(cid);
+    if (record === undefined) {
+      return undefined;
+    }
+    return {
+      resource,
+      tag: resource.tags[versionOrTag] ? versionOrTag : undefined,
+      version: resource.versions[versionOrTag] ? versionOrTag : undefined,
+      record: record as R
+    };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getDomains (): Promise<Domain[]> {
     return [];
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getRecord<R extends RegistryRecord = RegistryRecord> (cidLike: CIDLike): Promise<R | undefined> {
-    return undefined;
+    return this.records.find(record => record.cid.equals(cidLike)) as R;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getRecords<R extends RegistryRecord = RegistryRecord> (query?: IQuery): Promise<R[]> {
-    return [];
+    return this.records as R[];
   }
 
-  async getResources<R extends RegistryRecord = RegistryRecord> (query?: IQuery): Promise<Resource<R>[]> {
-    let result = this.resources as unknown as Resource<R>[];
+  async queryResources (query?: IQuery): Promise<Resource[]> {
+    let result = this.resources as unknown as Resource[];
     result = result.filter(resource => Filtering.matchResource(resource, query));
     return result;
   }
@@ -62,7 +88,7 @@ export class MemoryRegistryClient implements IRegistryClient {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async registerResource (domainKey: DomainKey, resourceName: string, contentCid: CID): Promise<void> {
+  async updateResource (): Promise<void> {
     return undefined;
   }
 

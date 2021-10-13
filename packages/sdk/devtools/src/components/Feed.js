@@ -77,7 +77,7 @@ const Feed = ({ messages, onSelect }) => {
 
   return (
     <TableContainer>
-      <Table stickyHeader size="small">
+      <Table stickyHeader size='small'>
         <TableHead>
           <TableRow>
             <TableCell className={classes.outerCell}>Feed</TableCell>
@@ -96,7 +96,7 @@ const Feed = ({ messages, onSelect }) => {
               const type = getType(data);
 
               return (
-                <TableRow key={rowKey} size="small" className={clsx({ [classes.system]: type === 'halo' })}>
+                <TableRow key={rowKey} size='small' className={clsx({ [classes.system]: type === 'halo' })}>
                   {/* Feed */}
                   <TableCell
                     className={clsx(classes.outerCell, classes.meta)}
@@ -123,8 +123,8 @@ const Feed = ({ messages, onSelect }) => {
                   {/* TODO(burdon): Custom rendering of links for public keys. */}
                   <TableCell className={classes.outerCell}>
                     <JsonTreeView
-                      size="small"
-                      root="data"
+                      size='small'
+                      root='data'
                       depth={0}
                       data={expanded[rowKey] ? data : { dummy: undefined }}
                       onSelect={() => handleExpand(rowKey)}

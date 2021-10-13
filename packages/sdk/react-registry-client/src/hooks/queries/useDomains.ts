@@ -2,13 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DomainInfo } from '@dxos/registry-client';
+import { Domain } from '@dxos/registry-client';
 
 import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
 
 interface Result {
-  domains: DomainInfo[],
+  domains: Domain[],
   error?: unknown
 }
 

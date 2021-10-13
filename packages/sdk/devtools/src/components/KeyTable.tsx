@@ -54,7 +54,7 @@ const KeyTable = ({ keys }: { keys: any[] }) => {
   const classes = useStyle();
 
   return (
-    <Table stickyHeader size="small" className={classes.table}>
+    <Table stickyHeader size='small' className={classes.table}>
       <TableHead>
         <TableRow>
           <TableCell className={classes.colType}>Type</TableCell>
@@ -74,10 +74,10 @@ const KeyTable = ({ keys }: { keys: any[] }) => {
                 <Key text={key} />
               </TableCell>
               <TableCell title={added}>{moment(added).fromNow()}</TableCell>
-              <TableCell align="center">
+              <TableCell align='center'>
                 <BooleanIcon yes={own} />
               </TableCell>
-              <TableCell align="center">
+              <TableCell align='center'>
                 <BooleanIcon yes={trusted} error={!trusted} />
               </TableCell>
             </TableRow>

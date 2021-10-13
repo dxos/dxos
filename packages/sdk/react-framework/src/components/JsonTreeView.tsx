@@ -88,7 +88,7 @@ const TreeItem = ({
       nodeId={nodeId}
       label={(
         <LabelRoot>
-          <Label color="primary" fontSize={size}>{label}</Label>
+          <Label color='primary' fontSize={size}>{label}</Label>
           {value}
         </LabelRoot>
       )}
