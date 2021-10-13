@@ -58,11 +58,16 @@ export class HALO {
     this._partyManager = partyManager;
   }
 
-  /**
-   * Get user's identity.
-   */
-  get identity () {
-    return this._identityManager.identity;
+  toString () {
+    return `HALO(${JSON.stringify(this.info())})`;
+  }
+
+  info () {
+    return {
+      initialized: this.isInitialized,
+      identityKey: this.identityKey?.publicKey.toHex(),
+      displayName: this.identityDisplayName
+    };
   }
 
   /**
@@ -70,6 +75,13 @@ export class HALO {
    */
   get isInitialized (): boolean {
     return this.identity.halo !== undefined;
+  }
+
+  /**
+   * Get user's identity.
+   */
+  get identity () {
+    return this._identityManager.identity;
   }
 
   /**
@@ -89,6 +101,7 @@ export class HALO {
   /**
    * User's identity display name.
    */
+  // TODO(burdon): Rename username (here and in data structure).
   get identityDisplayName (): string | undefined {
     return this.identity.displayName;
   }

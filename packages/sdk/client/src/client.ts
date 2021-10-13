@@ -5,14 +5,17 @@
 import assert from 'assert';
 import jsondown from 'jsondown';
 import leveljs from 'level-js';
+import defaultsDeep from 'lodash.defaultsdeep';
 import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
 import { Invitation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
-import * as debug from '@dxos/debug';
-import { ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, SecretProvider, sortItemsTopologically } from '@dxos/echo-db';
+import * as debug from '@dxos/debug'; // TODO(burdon): ???
+import {
+  ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, SecretProvider, sortItemsTopologically
+} from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
@@ -57,10 +60,24 @@ export interface ClientConfig {
       uri?: string
     },
   },
+  // TODO(burdon): Make hierarchical (e.g., snapshot.[enabled, interval]); and in ECHO constructor.
   snapshots?: boolean
   snapshotInterval?: number,
   invitationExpiration?: number,
 }
+
+export const defaultConfig: ClientConfig = {
+  storage: {}, // TODO(burdon): Remove?
+  swarm: {
+    signal: undefined // In-memory signal.
+  }
+};
+
+export const defaultLocalConfig: ClientConfig = {
+  swarm: {
+    signal: 'ws://localhost:4000'
+  }
+};
 
 /**
  * Main DXOS client object.
@@ -71,7 +88,7 @@ export class Client {
 
   private readonly _echo: ECHO;
 
-  private readonly _wnsRegistry?: any;
+  private readonly _wnsRegistry?: any; // TODO(burdon): Remove.
 
   private _initialized = false;
 
@@ -80,20 +97,17 @@ export class Client {
    * Requires initialization after creating by calling `.initialize()`.
    */
   constructor (config: ClientConfig = {}) {
-    // TODO(burdon): Make hierarchical (e.g., snapshot.[enabled, interval])
+    this._config = defaultsDeep({}, defaultConfig, config);
     const {
-      storage = {},
-      swarm = DEFAULT_SWARM_CONFIG,
+      storage,
+      swarm,
       wns,
-      snapshots = false,
+      snapshots,
       snapshotInterval
-    } = config;
-
-    this._config = { storage, swarm, wns, snapshots, snapshotInterval, ...config };
+    } = this._config;
 
     const { feedStorage, keyStorage, snapshotStorage, metadataStorage } = createStorageObjects(storage, snapshots);
 
-    // TODO(burdon): Extract constants.
     this._echo = new ECHO({
       feedStorage,
       keyStorage,
@@ -108,11 +122,32 @@ export class Client {
       snapshotInterval
     });
 
+    // TODO(burdon): Remove.
     this._wnsRegistry = wns ? new Registry(wns.server, wns.chainId) : undefined;
+  }
+
+  toString () {
+    return `Client(${JSON.stringify(this.info())})`;
+  }
+
+  info () {
+    return {
+      initialized: this.initialized,
+      halo: this.halo.info(),
+      echo: this.echo.info()
+    };
   }
 
   get config (): ClientConfig {
     return this._config;
+  }
+
+  /**
+   * Has the Client been initialized?
+   * Initialize by calling `.initialize()`
+   */
+  get initialized () {
+    return this._initialized;
   }
 
   /**
@@ -126,22 +161,17 @@ export class Client {
    * HALO credentials.
    */
   get halo () {
+    // TODO(burdon): Why is this constructed inside ECHO?
     return this._echo.halo;
   }
 
   /**
    * WNS registry.
+   * @deprecated
    */
+  // TODO(burdon): Remove.
   get wnsRegistry () {
     return this._wnsRegistry;
-  }
-
-  /**
-   * Has the Client been initialized?
-   * Initialize by calling `.initialize()`
-   */
-  get initialized () {
-    return this._initialized;
   }
 
   /**
@@ -309,8 +339,7 @@ export class Client {
    */
   // TODO(burdon): Move to party.
   async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
-    const party =
-      await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
+    const party = await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createOfflineInvitation(recipientKey);
   }
 
@@ -345,17 +374,14 @@ export class Client {
       keyring: this._echo.halo.keyring,
       debug
     };
+
     return devtoolsContext;
   }
 }
 
-// TODO(burdon): Shouldn't be here.
-const DEFAULT_SWARM_CONFIG: ClientConfig['swarm'] = {
-  signal: 'ws://localhost:4000',
-  ice: [{ urls: 'stun:stun.wireline.ninja:3478' }]
-};
+// TODO(burdon): Factor out these methods.
 
-function createStorageObjects (config: ClientConfig['storage'], snapshotsEnabled: boolean) {
+function createStorageObjects (config: ClientConfig['storage'], snapshotsEnabled = false) {
   const {
     path = 'dxos/storage',
     type,
