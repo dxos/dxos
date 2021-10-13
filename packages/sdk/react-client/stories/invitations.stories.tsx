@@ -226,20 +226,22 @@ const TestApp = () => {
   const parties = useParties();
 
   return (
-    <Paper sx={{
+    <Box sx={{
       display: 'flex',
       flexDirection: 'column',
       flex: 1,
       flexShrink: 0,
       overflow: 'hidden',
-      margin: 1
+      padding: 1
     }}>
-      <ClientPanel client={client} parties={parties} />
-      <Divider />
-      <InviatationPanel/>
-      <Divider />
-      <RedeemInvitationContainer/>
-    </Paper>
+      <Paper>
+        <ClientPanel client={client} parties={parties} />
+        <Divider />
+        <InviatationPanel/>
+        <Divider />
+        <RedeemInvitationContainer/>
+      </Paper>
+    </Box>
   );
 };
 
