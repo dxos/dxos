@@ -6,5 +6,4 @@
 
 declare module 'jsondown';
 
-// TODO(burdon): Remove.
-declare module '@wirelineio/registry-client';
+declare module '@wirelineio/registry-client'; // TODO(burdon): Remove.
