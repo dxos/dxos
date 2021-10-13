@@ -23,7 +23,7 @@ export default function ItemsViewer () {
 
   return (
     <JsonTreeView
-      size="small"
+      size='small'
       data={JSON.parse(data.data)}
       depth={4}
     />

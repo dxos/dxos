@@ -122,7 +122,7 @@ export const Passcode = (
           onBlur={handleFocus}
           onFocus={handleFocus}
           autoFocus
-          data-testid="passcode-input"
+          data-testid='passcode-input'
         />
       )}
 

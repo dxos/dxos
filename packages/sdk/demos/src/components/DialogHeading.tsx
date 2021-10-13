@@ -23,9 +23,9 @@ const DialogHeading = ({
   const classes = useStyles();
   return (
     <DialogTitle>
-      <Toolbar variant="dense" disableGutters>
+      <Toolbar variant='dense' disableGutters>
         <Icon />
-        <Typography variant="h5" className={classes.title}>{title}</Typography>
+        <Typography variant='h5' className={classes.title}>{title}</Typography>
       </Toolbar>
     </DialogTitle>
   );

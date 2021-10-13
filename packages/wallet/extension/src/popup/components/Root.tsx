@@ -36,11 +36,11 @@ const Root = () => {
   return (
     <WithBackgroundContext>
       <WithSnackbarContext>
-        <AppBar position="static" color="default">
+        <AppBar position='static' color='default'>
           <Toolbar>
-            <img src="../dxos.png" alt="logo" className={classes.logo} />
-            <Typography variant="h6" className={classes.title}> Welcome to DXOS! </Typography>
-            <Tooltip title="Expand to fullscreen" placement="left" arrow>
+            <img src='../dxos.png' alt='logo' className={classes.logo} />
+            <Typography variant='h6' className={classes.title}> Welcome to DXOS! </Typography>
+            <Tooltip title='Expand to fullscreen' placement='left' arrow>
               <IconButton onClick={onExpandToFullscreen}>
                 <FullscreenIcon />
               </IconButton>

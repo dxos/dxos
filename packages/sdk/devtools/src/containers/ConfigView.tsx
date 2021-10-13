@@ -21,7 +21,7 @@ export const ConfigView = () => {
 
   return (
     <JsonTreeView
-      size="small"
+      size='small'
       depth={4}
       data={config}
     />
