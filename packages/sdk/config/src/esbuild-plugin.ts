@@ -18,13 +18,11 @@ const KEYS_TO_FILE = {
 export function ConfigPlugin (): Plugin {
   return {
     name: 'dxos-config',
-    setup: ({ onResolve, onLoad, initialOptions }) => {
+    setup: ({ onResolve, onLoad }) => {
       onResolve(
         { filter: /loaders\/index$/ },
-        args => ({ path: require.resolve('./loaders/browser', { paths: [args.resolveDir] }) })
+        args => ({ path: require.resolve('./loaders/browser-esbuild', { paths: [args.resolveDir] }) })
       );
-
-      (initialOptions.inject ??= []).push(resolve(CWD, 'configGlobal.js'));
 
       onResolve(
         { filter: /^dxos-config-globals$/ },
