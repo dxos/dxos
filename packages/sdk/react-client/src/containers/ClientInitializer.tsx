@@ -7,13 +7,13 @@ import React, { useState, useEffect, ReactNode, ErrorInfo } from 'react';
 import { Client, ClientConfig } from '@dxos/client';
 import { MaybePromise } from '@dxos/util';
 
-import { ErrorComponentType, ErrorBoundary, ErrorCallbackType } from '../components';
+import { ErrorComponentProps, ErrorBoundary, ErrorCallbackType } from '../components';
 import ClientProvider from './ClientProvider';
 
 interface ClientInitializerProps {
   children?: ReactNode
   config?: ClientConfig | (() => MaybePromise<ClientConfig>)
-  errorComponent?: React.ComponentType<ErrorComponentType>,
+  errorComponent?: React.ComponentType<ErrorComponentProps>,
   loaderComponent?: React.ComponentType,
   onError?: ErrorCallbackType
 }
@@ -26,7 +26,7 @@ const ClientInitializer = ({
   children,
   config = {},
   errorComponent,
-  loaderComponent,
+  loaderComponent: LoaderComponent,
   onError
 }: ClientInitializerProps) => {
   const [client, setClient] = useState<Client | undefined>();
@@ -70,12 +70,11 @@ const ClientInitializer = ({
   }
 
   if (!client) {
-    if (loaderComponent) {
-      const ExternalLoaderComponent = loaderComponent;
-      return (<ExternalLoaderComponent />);
+    if (LoaderComponent) {
+      return (<LoaderComponent />);
     }
 
-    return <div>Loading Client...</div>;
+    return null;
   }
 
   return (

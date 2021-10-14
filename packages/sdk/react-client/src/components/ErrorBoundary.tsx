@@ -2,7 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import React, { Component, ErrorInfo } from 'react';
+
+const log = debug('dxos:react-client:error');
 
 /**
  * Root-level error boundary.
@@ -12,8 +15,7 @@ import React, { Component, ErrorInfo } from 'react';
  * https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
  */
 
-// TODO(burdon): Bad interface.
-export interface ErrorComponentType {
+export interface ErrorComponentProps {
   error: Error | null,
   onRestart?: () => void,
   onReset?: () => void,
@@ -25,7 +27,7 @@ interface Props {
   onError: ErrorCallbackType,
   onRestart?: () => void,
   onReset?: () => void,
-  errorComponent?: React.ComponentType<ErrorComponentType>
+  errorComponent?: React.ComponentType<ErrorComponentProps>
 }
 
 interface State {
@@ -56,20 +58,26 @@ export class ErrorBoundary extends Component<Props, State> {
   override componentDidCatch (error: Error, errorInfo: ErrorInfo) {
     const { onError } = this.props;
 
-    // TODO(burdon): Show error indicator.
-    // TODO(burdon): Logging service; output error file to storage?
     onError(error, errorInfo);
   }
 
   override render () {
-    const { children, onRestart, onReset, errorComponent } = this.props;
+    const { children, onRestart, onReset, errorComponent: ErrorComponent } = this.props;
     const { error } = this.state;
 
-    if (error && errorComponent) {
-      const ErrorComponent = errorComponent;
-      return (
-        <ErrorComponent onRestart={onRestart} onReset={onReset} error={error} />
-      );
+    if (error) {
+      if (ErrorComponent) {
+        return (
+          <ErrorComponent
+            onRestart={onRestart}
+            onReset={onReset}
+            error={error}
+          />
+        );
+      }
+
+      log(`ErrorComponent not set [${String(error)}]`);
+      return null;
     }
 
     return children;

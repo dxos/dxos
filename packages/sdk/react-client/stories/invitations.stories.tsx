@@ -268,9 +268,6 @@ const TestApp = () => {
   const client = useClient();
   const parties = useParties();
 
-  // TODO(burdon): Exception causes infinite loop.
-  // throw new Error();
-
   return (
     <Box sx={{
       display: 'flex',
