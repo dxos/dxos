@@ -64,6 +64,10 @@ interface RegistryInitializerProps {
 const RegistryInitializer = ({ children, config = {} }: RegistryInitializerProps) => {
   const [registry, setRegistry] = useState<RegistryClient | undefined>();
   const [error, setError] = useState<undefined | Error>(undefined);
+  if (error) {
+    log(error);
+    throw error; // Throw to be caught be outer ErrorBoundary.
+  }
 
   useEffect(() => {
     setImmediate(async () => {
@@ -74,12 +78,6 @@ const RegistryInitializer = ({ children, config = {} }: RegistryInitializerProps
       }
     });
   }, []);
-
-  // TODO(burdon): ErrorView?
-  if (error) {
-    log(error);
-    throw error;
-  }
 
   // Still loading.
   if (!registry) {
