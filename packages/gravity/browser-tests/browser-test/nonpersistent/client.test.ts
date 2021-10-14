@@ -5,7 +5,7 @@
 import expect from 'expect';
 import 'source-map-support/register';
 
-import { Client } from '@dxos/client';
+import { defaultLocalConfig, Client } from '@dxos/client';
 import { defaultSecretProvider } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { defaultInvitationAuthenticator } from '@dxos/echo-db';
@@ -62,7 +62,7 @@ describe('Client - nonpersistent', () => {
       this.skip();
     }
 
-    const client = new Client();
+    const client = new Client(defaultLocalConfig);
     await client.initialize();
     await client.halo.createProfile({
       ...createKeyPair(),
@@ -73,7 +73,7 @@ describe('Client - nonpersistent', () => {
     const item = await party.database.createItem({ model: ObjectModel, type: 'dxn://test' });
     await item.model.setProperty('foo', 'bar');
 
-    const otherClient = new Client();
+    const otherClient = new Client(defaultLocalConfig);
     await otherClient.initialize();
     await otherClient.halo.createProfile({
       ...createKeyPair(),
@@ -96,11 +96,11 @@ describe('Client - nonpersistent', () => {
       this.skip();
     }
 
-    const clientA = new Client();
+    const clientA = new Client(defaultLocalConfig);
     await clientA.initialize();
     await clientA.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 1' });
 
-    const clientB = new Client();
+    const clientB = new Client(defaultLocalConfig);
     await clientB.initialize();
     const profileB = await clientB.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 2' });
 
@@ -109,18 +109,16 @@ describe('Client - nonpersistent', () => {
     const contactPromise = clientA.halo.queryContacts()
       .update.waitFor(contacts => !!contacts.find(contact => contact.publicKey.equals(profileB.publicKey)));
 
-    // Online.
+    // Online (adds contact).
     {
       const party1A = await clientA.echo.createParty();
       const invite1 = await party1A.createInvitation(defaultInvitationAuthenticator);
-      console.log('!!!', invite1);
-      await clientB.echo.joinParty(invite1, defaultSecretProvider); // TODO(burdon): Hangs
-      console.log('???');
+      await clientB.echo.joinParty(invite1, defaultSecretProvider);
     }
 
     const contact = (await contactPromise)[0];
 
-    // Offline.
+    // Offline (use existing contact).
     {
       const party2A = await clientA.echo.createParty();
       const invite2 = await party2A.createOfflineInvitation(contact.publicKey);

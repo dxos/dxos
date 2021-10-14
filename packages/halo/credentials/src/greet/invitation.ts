@@ -158,7 +158,7 @@ export class Invitation {
     }
 
     if (!this._secret && this._secretProvider) {
-      this._secret = await this._secretProvider({
+      this._secret = await this._secretProvider({ // TODO(burdon): Delay.
         id: this.id,
         authNonce: this.authNonce
       });

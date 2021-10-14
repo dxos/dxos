@@ -173,7 +173,7 @@ export class OfflineInvitationClaimer {
     return async (info?: SecretInfo) => {
       return Buffer.from(Authenticator.encodePayload(
         // The signed portion of the Auth message includes the ID and authNonce provided
-        // by "info". These values will be validated on the other end.
+        // by the `info` object. These values will be validated on the other end.
         createAuthMessage(
           identity.signer,
           info!.id.value,
