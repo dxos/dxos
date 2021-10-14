@@ -1,0 +1,50 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ES6"
+    ],
+    "jsx": "react",
+    "outDir": "dist",
+    "types": [
+      "node",
+      "webpack-env",
+      "mocha"
+    ],
+    "noEmit": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo"
+  },
+  "include": [
+    "src/**/*",
+    "browser-tests",
+    "tools/**/*",
+    "browser-mocha"
+  ],
+  "references": [
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../wallet-core"
+    },
+    {
+      "path": "../../gravity/browser-mocha"
+    }
+  ]
+}

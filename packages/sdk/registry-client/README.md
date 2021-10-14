@@ -14,6 +14,12 @@ More information about the Registry can be found here: https://github.com/dxos/d
 In order to run integration tests you need to first run an instance of the Registry
 node at `ws://127.0.0.1:9944`.
 
+## Regenerate definitions
+
+1. Run a local [node](https://github.com/dxos/dot).
+2. If needed, supplement custom types in `./src/interfaces/registry/definitions.ts`
+3. Run `rushx generate:types`
+
 ## Useful information interacting with the Registry
 
 DXOS Registry is [Substrate](https://substrate.dev/) based blockchain service.

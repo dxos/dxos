@@ -5,7 +5,7 @@
 import expect from 'expect';
 import 'source-map-support/register';
 
-import { Client } from '@dxos/client';
+import { defaultTestingConfig, Client } from '@dxos/client';
 import { defaultSecretProvider } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { defaultInvitationAuthenticator } from '@dxos/echo-db';
@@ -62,7 +62,7 @@ describe('Client - nonpersistent', () => {
       this.skip();
     }
 
-    const client = new Client();
+    const client = new Client(defaultTestingConfig);
     await client.initialize();
     await client.halo.createProfile({
       ...createKeyPair(),
@@ -73,7 +73,7 @@ describe('Client - nonpersistent', () => {
     const item = await party.database.createItem({ model: ObjectModel, type: 'dxn://test' });
     await item.model.setProperty('foo', 'bar');
 
-    const otherClient = new Client();
+    const otherClient = new Client(defaultTestingConfig);
     await otherClient.initialize();
     await otherClient.halo.createProfile({
       ...createKeyPair(),
@@ -96,35 +96,34 @@ describe('Client - nonpersistent', () => {
       this.skip();
     }
 
-    const clientA = new Client();
+    const clientA = new Client(defaultTestingConfig);
     await clientA.initialize();
-    await clientA.halo.createProfile({
-      ...createKeyPair(),
-      username: 'DXOS test'
-    });
+    await clientA.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 1' });
 
-    const party1A = await clientA.echo.createParty();
-
-    const clientB = new Client();
+    const clientB = new Client(defaultTestingConfig);
     await clientB.initialize();
-    const profileB = await clientB.halo.createProfile({
-      ...createKeyPair(),
-      username: 'DXOS test 2'
-    });
+    const profileB = await clientB.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 2' });
 
-    const invite1 = await party1A.createInvitation(defaultInvitationAuthenticator);
-
+    // Wait for invited person to arrive.
     // TODO(marik-d): Comparing by public key as a workaround for https://github.com/dxos/protocols/issues/372.
-    const contactPromise = clientA.halo.queryContacts().update.waitFor(contacts => !!contacts.find(x => x.publicKey.equals(profileB.publicKey)));
+    const contactPromise = clientA.halo.queryContacts()
+      .update.waitFor(contacts => !!contacts.find(contact => contact.publicKey.equals(profileB.publicKey)));
 
-    await clientB.echo.joinParty(invite1, defaultSecretProvider);
+    // Online (adds contact).
+    {
+      const party1A = await clientA.echo.createParty();
+      const invite1 = await party1A.createInvitation(defaultInvitationAuthenticator);
+      await clientB.echo.joinParty(invite1, defaultSecretProvider);
+    }
 
     const contact = (await contactPromise)[0];
 
-    const party2A = await clientA.echo.createParty();
-
-    const invite2 = await party2A.createOfflineInvitation(contact.publicKey);
-    await clientB.echo.joinParty(invite2);
+    // Offline (use existing contact).
+    {
+      const party2A = await clientA.echo.createParty();
+      const invite2 = await party2A.createOfflineInvitation(contact.publicKey);
+      await clientB.echo.joinParty(invite2);
+    }
 
     await clientA.destroy();
     await clientB.destroy();

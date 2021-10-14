@@ -45,8 +45,8 @@ const GridView = ({ adapter, items = [] }: GridViewProps) => {
 
         return (
           <Box key={item.id} className={classes.card}>
-            <Typography variant="h6">{title}</Typography>
-            <Typography variant="body2">{description}</Typography>
+            <Typography variant='h6'>{title}</Typography>
+            <Typography variant='body2'>{description}</Typography>
           </Box>
         );
       })}

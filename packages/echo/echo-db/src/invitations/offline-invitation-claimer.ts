@@ -16,6 +16,8 @@ import {
   createAuthMessage,
   createGreetingClaimMessage,
   SecretInfo,
+  SecretProvider,
+  SecretValidator,
   SignedMessage
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, PublicKey, randomBytes } from '@dxos/crypto';
@@ -24,7 +26,6 @@ import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { IdentityNotInitializedError, InvalidInvitationError } from '../errors';
 import { Identity } from '../halo';
-import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
@@ -172,7 +173,7 @@ export class OfflineInvitationClaimer {
     return async (info?: SecretInfo) => {
       return Buffer.from(Authenticator.encodePayload(
         // The signed portion of the Auth message includes the ID and authNonce provided
-        // by "info". These values will be validated on the other end.
+        // by the `info` object. These values will be validated on the other end.
         createAuthMessage(
           identity.signer,
           info!.id.value,

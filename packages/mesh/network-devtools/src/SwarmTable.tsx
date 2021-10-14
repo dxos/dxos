@@ -44,7 +44,7 @@ const SwarmTable = ({ swarms, onClick }: SwarmListProps) => {
   const classes = useStyle();
 
   return (
-    <Table stickyHeader size="small" className={classes.table}>
+    <Table stickyHeader size='small' className={classes.table}>
       <TableHead>
         <TableRow>
           <TableCell className={classes.colLabel}>Label</TableCell>
@@ -64,7 +64,7 @@ const SwarmTable = ({ swarms, onClick }: SwarmListProps) => {
             </TableCell>
             <TableCell> <BooleanIcon yes={swarm.isActive} /> </TableCell>
             <TableCell>
-              <IconButton onClick={() => onClick?.(swarm.id)} title="Details">
+              <IconButton onClick={() => onClick?.(swarm.id)} title='Details'>
                 <InfoIcon />
               </IconButton>
             </TableCell>

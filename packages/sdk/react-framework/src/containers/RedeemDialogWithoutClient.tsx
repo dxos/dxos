@@ -115,7 +115,7 @@ export const RedeemDialogWithoutClient = ({
     return (
       <Box sx={{ marginTop: 2 }}>
         {isProcessing && <LinearProgress />}
-        {error && <Alert severity="error">{String(error)}</Alert>}
+        {error && <Alert severity='error'>{String(error)}</Alert>}
       </Box>
     );
   };
@@ -125,11 +125,11 @@ export const RedeemDialogWithoutClient = ({
     <Dialog
       open={open}
       fullWidth
-      maxWidth="xs"
+      maxWidth='xs'
       onClose={stage === 0 ? handleDone : undefined} // Prevent click-away when in the middle of a flow.
     >
       <DialogHeading
-        title="Redeem Invitation"
+        title='Redeem Invitation'
         icon={RedeemIcon}
       />
 
@@ -143,8 +143,8 @@ export const RedeemDialogWithoutClient = ({
               autoFocus
               fullWidth
               multiline
-              variant="standard"
-              placeholder="Paste invitation code."
+              variant='standard'
+              placeholder='Paste invitation code.'
               spellCheck={false}
               value={invitationCode}
               onChange={(event) => setInvitationCode(event.target.value)}
@@ -165,15 +165,15 @@ export const RedeemDialogWithoutClient = ({
           </DialogContent>
           <DialogActions>
             <Button
-              color="secondary"
+              color='secondary'
               onClick={handleDone}
               disabled={!invitationCode.length}
             >
               Cancel
             </Button>
             <Button
-              variant="contained"
-              color="primary"
+              variant='contained'
+              color='primary'
               onClick={handleEnterInvitationCode}
               disabled={isProcessing}
             >
@@ -190,17 +190,17 @@ export const RedeemDialogWithoutClient = ({
       {stage === Stage.ENTER_PIN && (
         <>
           <DialogContent>
-            <Typography variant="body1" gutterBottom>
+            <Typography variant='body1' gutterBottom>
               Enter the PIN number.
             </Typography>
             <TextField
               value={pinCode}
               onChange={(event) => setPinCode(event.target.value)}
-              variant="outlined"
-              margin="normal"
+              variant='outlined'
+              margin='normal'
               required
               fullWidth
-              label="PIN Code"
+              label='PIN Code'
               autoFocus
               disabled={isProcessing}
               onKeyDown={handlePinKeyDown}
@@ -209,14 +209,14 @@ export const RedeemDialogWithoutClient = ({
           </DialogContent>
           <DialogActions>
             <Button
-              color="secondary"
+              color='secondary'
               onClick={handleDone}
             >
               Cancel
             </Button>
             <Button
-              variant="contained"
-              color="primary"
+              variant='contained'
+              color='primary'
               onClick={handleEnterPinCode}
               disabled={isProcessing}
             >

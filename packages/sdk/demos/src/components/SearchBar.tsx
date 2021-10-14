@@ -49,17 +49,17 @@ const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
       <TextField
         autoFocus
         fullWidth
-        variant="outlined"
+        variant='outlined'
         spellCheck={false}
         value={text}
         onChange={ev => setText(ev.target.value)}
         onKeyUp={handleKeyDown}
         InputProps={{
           startAdornment:
-            <InputAdornment position="end">
+            <InputAdornment position='end'>
               <IconButton
                 className={clazzes.searchIcon}
-                size="small"
+                size='small'
                 onClick={handleSearch}
                 onMouseDown={handleSearch}
               >
@@ -67,9 +67,9 @@ const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
               </IconButton>
             </InputAdornment>,
           endAdornment:
-            <InputAdornment position="end">
+            <InputAdornment position='end'>
               <IconButton
-                size="small"
+                size='small'
                 onClick={handleCancel}
                 onMouseDown={handleCancel}
               >

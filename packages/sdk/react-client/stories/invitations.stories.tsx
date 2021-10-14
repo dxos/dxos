@@ -72,7 +72,7 @@ const InviatationPanel = () => {
     <Box sx={{ padding: 1 }}>
       <Toolbar>
         <Button
-          variant="outlined"
+          variant='outlined'
           onClick={handleCreateParty}
         >
           Create Party
@@ -100,7 +100,7 @@ const InviatationPanel = () => {
         <Box sx={{ marginTop: 1 }}>
           <TextField
             disabled
-            type="text"
+            type='text'
             value={pin}
           />
         </Box>
@@ -130,7 +130,7 @@ const RedeemInvitationPanel = (
           <Button
             onClick={() => onSubmit(invitationCode)}
             disabled={!invitationCode}
-            variant="outlined"
+            variant='outlined'
           >
             Join Party
           </Button>
@@ -154,8 +154,8 @@ const RedeemInvitationPanel = (
                 value={pin}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPin(event.target.value)}
                 // variant='standard'
-                size="small"
-                label="PIN"
+                size='small'
+                label='PIN'
               />
               <Button
                 disabled={!pin}

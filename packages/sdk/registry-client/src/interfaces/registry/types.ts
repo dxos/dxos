@@ -1,7 +1,7 @@
 // Auto-generated via `yarn polkadot-types-from-defs`, do not edit
 /* eslint-disable */
 
-import type { Bytes, Option, Struct, Text, U8aFixed, Vec, bool, u128 } from '@polkadot/types';
+import type { BTreeMap, Bytes, Option, Struct, Text, U8aFixed, Vec, bool, u128 } from '@polkadot/types';
 import type { AccountId, BlockNumber } from '@polkadot/types/interfaces/runtime';
 
 /** @name Auction */
@@ -28,6 +28,12 @@ export interface Multihash extends U8aFixed {}
 /** @name Record */
 export interface Record extends Struct {
   readonly data: Bytes;
+}
+
+/** @name Resource */
+export interface Resource extends Struct {
+  readonly versions: BTreeMap<Text, Multihash>;
+  readonly tags: BTreeMap<Text, Multihash>;
 }
 
 export type PHANTOM_REGISTRY = 'registry';

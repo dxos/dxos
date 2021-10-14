@@ -34,7 +34,7 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
             <Key text={connection.remotePeerId.toHex()} />
           </ListItemText>
           <ListItemIcon>
-            <IconButton onClick={() => onConnectionClick?.(connection.sessionId)} title="Details">
+            <IconButton onClick={() => onConnectionClick?.(connection.sessionId)} title='Details'>
               <InfoIcon />
             </IconButton>
           </ListItemIcon>
@@ -42,7 +42,7 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
       ))}
     </List>
     {onReturn && (
-      <IconButton size="small" onClick={onReturn} title="Back" style={{ borderRadius: 5 }}>
+      <IconButton size='small' onClick={onReturn} title='Back' style={{ borderRadius: 5 }}>
         <ArrowBackIos />
         Back
       </IconButton>)

@@ -12,17 +12,14 @@ import {
   createPartyGenesisMessage,
   Keyring,
   KeyType,
-  Filter
+  Filter,
+  SecretProvider
 } from '@dxos/credentials';
 import { keyToString, PublicKey, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
-import {
-  HaloRecoveryInitiator,
-  InvitationDescriptor,
-  SecretProvider
-} from '../invitations';
+import { HaloRecoveryInitiator, InvitationDescriptor } from '../invitations';
 import { PartyFactory, PartyInternal, PARTY_ITEM_TYPE } from '../parties';
 import {
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE

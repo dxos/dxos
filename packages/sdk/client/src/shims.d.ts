@@ -3,7 +3,5 @@
 //
 
 declare module 'jsondown';
-declare module 'lodash.defaultsdeep';
 
-// TODO(burdon): Remove.
-declare module '@wirelineio/registry-client';
+declare module '@wirelineio/registry-client'; // TODO(burdon): Remove.
