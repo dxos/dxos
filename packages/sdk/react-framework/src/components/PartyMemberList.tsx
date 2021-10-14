@@ -3,7 +3,7 @@
 //
 
 import { Share as ShareIcon } from '@mui/icons-material';
-import { AvatarGroup, styled, Tooltip, Theme, useTheme } from '@mui/material';
+import { AvatarGroup, Tooltip, Theme, styled, useTheme } from '@mui/material';
 import React from 'react';
 
 import { humanize } from '@dxos/crypto';

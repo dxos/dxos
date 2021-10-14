@@ -2,26 +2,26 @@
 // Copyright 2020 DXOS.org
 //
 
-import { DialogTitle, styled, SvgIconTypeMap, Toolbar, Typography } from '@mui/material';
+import { Box, DialogTitle, SvgIconTypeMap, Toolbar, Typography } from '@mui/material';
 import { OverridableComponent } from '@mui/material/OverridableComponent';
 import React from 'react';
-
-const Title = styled(Typography)(({ theme }) => ({
-  marginLeft: theme.spacing(2)
-}));
 
 export const DialogHeading = ({
   title,
   icon: Icon
 }: {
   title: string,
-  icon: OverridableComponent<SvgIconTypeMap<unknown, 'svg'>>
+  icon?: OverridableComponent<SvgIconTypeMap<unknown, 'svg'>>
 }) => {
   return (
     <DialogTitle>
       <Toolbar variant='dense' disableGutters>
-        <Icon />
-        <Title variant='h5'>{title}</Title>
+        {Icon && (
+          <Box sx={{ display: 'flex', marginRight: 1 }}>
+            <Icon />
+          </Box>
+        )}
+        <Typography variant='h5'>{title}</Typography>
       </Toolbar>
     </DialogTitle>
   );

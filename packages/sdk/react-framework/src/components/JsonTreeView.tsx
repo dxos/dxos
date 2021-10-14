@@ -98,7 +98,7 @@ const TreeItem = ({
   );
 };
 
-interface JsonTreeViewProperties {
+interface JsonTreeViewProps {
   className?: string
   data?: any
   depth?: number
@@ -120,7 +120,7 @@ export const JsonTreeView = ({
   onSelect = () => {},
   root,
   size
-}: JsonTreeViewProperties) => {
+}: JsonTreeViewProps) => {
   if (!data) {
     data = {};
   }

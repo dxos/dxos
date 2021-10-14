@@ -33,10 +33,8 @@ describe('ECHO', () => {
     afterTest(() => echo.close());
 
     if (createProfile) {
-      await echo.halo.createIdentity({
-        ...createKeyPair()
-      });
-      await echo.halo.create(displayName);
+      await echo.halo.createIdentity({ ...createKeyPair() });
+      await echo.halo.create(displayName); // TODO(burdon): Rename.
     }
 
     return echo;
@@ -277,7 +275,10 @@ describe('ECHO', () => {
     expect(a.queryParties().value.length).toBe(1);
 
     // Issue the invitation on nodeA.
-    const invitation = await a.halo.createInvitation({ secretValidator: defaultSecretValidator, secretProvider: defaultSecretProvider });
+    const invitation = await a.halo.createInvitation({
+      secretValidator: defaultSecretValidator,
+      secretProvider: defaultSecretProvider
+    });
 
     // Should not have any parties.
     expect(b.queryParties().value.length).toBe(0);
@@ -747,7 +748,8 @@ describe('ECHO', () => {
   // I don't seem to be receiving an update after which party.title holds correct value.
   // https://github.com/dxos/teamwork/issues/496#issuecomment-739862830
   // However it seems to be working fine in this test.
-  /* test.skip('Party update event is emitted after the title is set', async () => {
+  /*
+  test.skip('Party update event is emitted after the title is set', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);
     const { partyManager: partyManagerC, identityManager: identityManagerC } = await setup(true, false);
@@ -806,5 +808,6 @@ describe('ECHO', () => {
     expect(partyA.title).toEqual('value-2');
     await waitForCondition(() => titleInC === 'value-2', 10000);
     await waitForCondition(() => titleInB === 'value-2', 10000);
-  }); */
+  });
+  */
 });

@@ -29,14 +29,14 @@ export interface TypeMap {
   [key: string]: Function;
 }
 
-export interface ItemProperties {
+export interface ItemProps {
   type: string
   name: string
 }
 
-export declare type CreateItemCallback = ({ type, name }: ItemProperties) => Promise<Item<any>>;
+export declare type CreateItemCallback = ({ type, name }: ItemProps) => Promise<Item<any>>;
 
-interface ItemDialogProperties {
+interface ItemDialogProps {
   open: boolean
   type?: string
   types: TypeMap
@@ -49,7 +49,7 @@ interface ItemDialogProperties {
  */
 const ItemDialog = ({
   open, type: initialType, types, handleCreate, handleClose
-}: ItemDialogProperties) => {
+}: ItemDialogProps) => {
   const classes = useStyles();
   const [type, setType] = useState(initialType || Object.keys(types)[0]);
   const [name, setName] = useState('');

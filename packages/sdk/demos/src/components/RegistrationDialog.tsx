@@ -117,8 +117,8 @@ const RegistrationDialog = ({
   onFinishRestore,
   keyringDecrypter
 }: {
-  open: boolean,
-  debug: boolean,
+  open?: boolean,
+  debug?: boolean,
   onFinishCreate: (username: string, seedPhrase: string) => void,
   onFinishRestore: (seedPhrase: string) => void,
   keyringDecrypter: (text: string | ArrayBuffer | null, passphrase: number) => string
