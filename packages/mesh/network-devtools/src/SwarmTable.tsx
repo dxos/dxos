@@ -9,7 +9,9 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { SwarmInfo } from '@dxos/network-manager';
-import { BooleanIcon, TruncateCopy } from '@dxos/react-framework';
+import { BooleanIcon } from '@dxos/react-framework';
+
+import { Key } from './Key';
 
 // TODO(wittjosiah): Refactor, makeStyles is deprecated.
 const useStyle = makeStyles(() => ({
@@ -45,20 +47,20 @@ const SwarmTable = ({ swarms, onClick }: SwarmListProps) => {
     <Table stickyHeader size='small' className={classes.table}>
       <TableHead>
         <TableRow>
-          <TableCell className={classes.colLabel}> Label </TableCell>
-          <TableCell className={classes.colTopic}> Topic </TableCell>
-          <TableCell> Active  </TableCell>
-          <TableCell> Info </TableCell>
+          <TableCell className={classes.colLabel}>Label</TableCell>
+          <TableCell className={classes.colTopic}>Topic</TableCell>
+          <TableCell>Active</TableCell>
+          <TableCell>Info</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
         {swarms.map(swarm => (
           <TableRow key={swarm.id.toHex()}>
             <TableCell className={classes.colLabel}>
-              {swarm.label && (<TruncateCopy text={swarm.label}/>)}
+              {swarm.label && (<Key text={swarm.label} />)}
             </TableCell>
             <TableCell className={classes.colLabel}>
-              <TruncateCopy text={swarm.topic.toHex()}/>
+              <Key text={swarm.topic.toHex()} />
             </TableCell>
             <TableCell> <BooleanIcon yes={swarm.isActive} /> </TableCell>
             <TableCell>

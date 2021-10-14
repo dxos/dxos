@@ -4,19 +4,18 @@
 
 import React from 'react';
 
-import { ProfileDialog } from '../src/components';
+import { ProfileDialog } from '../src';
 
 const handleClose = () => {
   return null;
 };
 
-export const ProfileDialogStory = () => {
+export default {
+  title: 'react-framework/ProfileDialog'
+};
+
+export const Primary = () => {
   return (
     <ProfileDialog open={true} onCreate={handleClose} onCancel={handleClose} />
   );
-};
-
-export default {
-  title: 'React Framework/ProfileDialog Component',
-  component: ProfileDialogStory
 };

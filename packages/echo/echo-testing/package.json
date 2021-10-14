@@ -28,7 +28,7 @@
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/faker": "~5.5.1",
     "@types/jest": "^26.0.7",
-    "@types/lodash": "^4.14.159"
+    "@types/lodash": "^4.14.175"
   },
   "publishConfig": {
     "access": "public"

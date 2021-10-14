@@ -11,9 +11,9 @@ import { useClient } from '../client';
 import { decodeInvitation, noOp } from './utils';
 
 type UseInvitationRedeemerProps = {
-  onDone?: (party: Party) => void;
-  onError?: (error?: string) => void | never;
-  isOffline?: boolean;
+  onDone?: (party: Party) => void
+  onError?: (error?: string) => void | never // TODO(burdon): Error type (and not optional).
+  isOffline?: boolean
 };
 
 /**
@@ -25,40 +25,38 @@ type UseInvitationRedeemerProps = {
  * @param onDone called once the redeem flow finishes successfully.
  * @param onError called if the invite flow produces an error.
  * @param isOffline Is this an `Offline` invitation?
+ * @deprecated
  */
 export const useInvitationRedeemer = ({
-  onDone = noOp,
+  onDone = noOp, // TODO(burdon): Hooks shouldn't have callbacks (return state?)
   onError = noOp,
-  isOffline = false
+  isOffline = false // TODO(burdon): Document? Rename "offline"
 }: UseInvitationRedeemerProps = {}) => {
   const client = useClient();
-  const [code, setCode] = useState<string>();
-  const [resolver, setResolver] = useState<boolean>();
-  const [secretProvider, secretResolver] = useMemo(() => trigger<Buffer>(), [code]);
+  const [invitationCode, setInvitationCode] = useState<string>();
+  const [secretProvider, secretResolver] = useMemo(() => trigger<Buffer>(), [invitationCode]);
 
   useEffect(() => {
-    setResolver(!isOffline);
-
-    if (!code) {
+    if (!invitationCode) {
       return;
     }
 
-    try {
-      const invitation = decodeInvitation(code);
-
-      client.echo
-        .joinParty(invitation, !isOffline ? secretProvider : undefined)
-        .then((party) => {
-          void party.open().then(() => onDone(party));
-        })
-        .catch((error) => onError(error));
-    } catch (error) {
-      onError(error);
-    }
-  }, [code, isOffline]);
+    setImmediate(async () => {
+      try {
+        const invitation = decodeInvitation(invitationCode);
+        const party = await client.echo.joinParty(invitation, isOffline ? undefined : secretProvider);
+        await party.open();
+        onDone(party);
+      } catch (error) {
+        onError(error);
+      }
+    });
+  }, [invitationCode, isOffline]);
 
   return [
-    setCode, // redeemCode
-    resolver ? (pin: string) => secretResolver(Buffer.from(pin)) : () => null // setPin
+    setInvitationCode,
+    (pin: string) => {
+      secretResolver(Buffer.from(pin));
+    }
   ];
 };

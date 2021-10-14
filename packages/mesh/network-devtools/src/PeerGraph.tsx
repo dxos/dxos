@@ -99,7 +99,7 @@ export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
   const classes = useCustomStyles();
 
   return (
-    <SVG width={size.width} height={size.height}>
+    <SVG width={size.width || 0} height={size.height || 0}>
       <Grid grid={grid} />
 
       <Graph

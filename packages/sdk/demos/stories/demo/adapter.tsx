@@ -23,7 +23,7 @@ import {
 } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
 
-import { CreateItemCallback, ItemProperties, ItemAdapter, ItemDialog } from '../../src';
+import { CreateItemCallback, ItemAdapter, ItemDialog, ItemProps } from '../../src';
 
 export const TYPES = {
   [OBJECT_ORG]: OrgIcon,
@@ -69,7 +69,7 @@ const useStyles = makeStyles(theme => ({
   }
 }), { defaultTheme: createTheme({}) });
 
-interface ListProperties {
+interface ListProps {
   type: string
   items: Item<any>[]
   title?: string
@@ -78,7 +78,7 @@ interface ListProperties {
 
 export const createAdapter = (database: Database) => {
   // Create sub-item.
-  const handleCreate = (parent?: Item<any>, linkType?: string) => async ({ type, name }: ItemProperties) => {
+  const handleCreate = (parent?: Item<any>, linkType?: string) => async ({ type, name }: ItemProps) => {
     const item = await database.createItem({
       model: ObjectModel,
       type,
@@ -134,7 +134,7 @@ export const createAdapter = (database: Database) => {
       const labels = item.model.getProperty('labels') || {};
 
       // Sublist.
-      const List = ({ type, items, title, handleCreate }: ListProperties) => {
+      const List = ({ type, items, title, handleCreate }: ListProps) => {
         const classes = useStyles();
         const [showDialog, setDialog] = useState(false);
 

@@ -12,13 +12,14 @@ import React, { Component, ErrorInfo } from 'react';
  * https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
  */
 
-interface ErrorComponentType {
+// TODO(burdon): Bad interface.
+export interface ErrorComponentType {
   error: Error | null,
   onRestart?: () => void,
   onReset?: () => void,
 }
 
-type ErrorCallbackType = (error: Error, errorInfo?: ErrorInfo) => void;
+export type ErrorCallbackType = (error: Error, errorInfo?: ErrorInfo) => void;
 
 interface Props {
   onError: ErrorCallbackType,
@@ -34,7 +35,7 @@ interface State {
 /**
  * https://reactjs.org/docs/error-boundaries.html
  */
-class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends Component<Props, State> {
   override state = {
     error: null
   };
@@ -72,5 +73,3 @@ class ErrorBoundary extends Component<Props, State> {
     return children;
   }
 }
-
-export { ErrorBoundary, ErrorComponentType, ErrorCallbackType };

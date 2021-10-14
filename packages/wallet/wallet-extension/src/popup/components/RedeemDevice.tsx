@@ -9,7 +9,7 @@ import { Button, Container, Grid, makeStyles, TextField, Typography } from '@mat
 
 import { useBackgroundContext } from '../contexts';
 import { useUIError } from '../hooks';
-import type { Profile } from '../utils/types';
+import type { Profile } from '../utils';
 import BackButton from './BackButton';
 
 const useStyles = makeStyles({
