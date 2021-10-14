@@ -67,7 +67,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
     if (error && errorComponent) {
       const ErrorComponent = errorComponent;
-      return (<ErrorComponent onRestart={onRestart} onReset={onReset} error={error} />);
+      return (
+        <ErrorComponent onRestart={onRestart} onReset={onReset} error={error} />
+      );
     }
 
     return children;

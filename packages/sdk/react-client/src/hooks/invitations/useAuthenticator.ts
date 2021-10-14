@@ -10,10 +10,11 @@ import { InvitationDescriptor } from '@dxos/echo-db';
 import { useClient } from '../client';
 
 /**
- * Handles the invitation handshake.
- * Used to implement a Device invitation flow.
+ * Used to implement the Device invitation handshake on the receiver side.
  * @param invitation Invitation descriptor.
+ * @deprecated
  */
+// TODO(burdon): Deprecated see dxos/braneframe DeviceAuthenticator
 export const useAuthenticator = (invitation: InvitationDescriptor) => {
   const client = useClient();
   const [state, setState] = useState<any>({});
@@ -27,16 +28,14 @@ export const useAuthenticator = (invitation: InvitationDescriptor) => {
       return;
     }
 
-    // Use an AbortController to avoid "calling setState on unmounted component" errors.
+    // Avoids "calling setState on unmounted component" errors.
     const controller = new AbortController();
-
     const signal = controller.signal;
 
     // TODO(burdon): ???
     const runEffect = async () => {
       if (invitation.identityKey) {
         // An invitation for this device to join an existing Identity.
-        // Join the Identity
         await client.echo.halo.join(invitation, secretProvider);
         if (!signal.aborted) {
           setState({ identity: invitation.identityKey.toString() });

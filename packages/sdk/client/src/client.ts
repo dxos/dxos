@@ -67,16 +67,14 @@ export interface ClientConfig {
 }
 
 export const defaultConfig: ClientConfig = {
-  storage: {}, // TODO(burdon): Remove?
   swarm: {
-    signal: undefined // In-memory signal.
-  },
-  snapshots: false
+    signal: undefined // In-memory.
+  }
 };
 
-export const defaultLocalConfig: ClientConfig = {
+export const defaultTestingConfig: ClientConfig = {
   swarm: {
-    signal: 'ws://localhost:4000'
+    signal: 'ws://localhost:4000' // Locally running signal server.
   }
 };
 
@@ -380,9 +378,8 @@ export class Client {
   }
 }
 
-// TODO(burdon): Factor out these methods.
-
-function createStorageObjects (config: ClientConfig['storage'], snapshotsEnabled = false) {
+// TODO(burdon): Factor out.
+const createStorageObjects = (config: ClientConfig['storage'], snapshotsEnabled = false) => {
   const {
     path = 'dxos/storage', // TODO(burdon): Factor out const.
     type,

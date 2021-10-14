@@ -2,7 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
+import {
+  Box, Button, Divider, FormControl, InputLabel, MenuItem, Paper, Select, SelectChangeEvent, TextField, Toolbar
+} from '@mui/material';
 import React, { useState } from 'react';
 
 import { trigger } from '@dxos/async';
@@ -10,10 +12,14 @@ import { generatePasscode } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 
 import {
-  ClientInitializer, decodeInvitation,
+  ClientInitializer,
+  ErrorBoundary,
+  decodeInvitation,
   encodeInvitation,
   ProfileInitializer,
-  useClient, useParties
+  useClient,
+  useContacts,
+  useParties
 } from '../src';
 import { ClientPanel, JsonPanel, TestTheme } from './helpers';
 
@@ -23,7 +29,7 @@ export default {
 
 // debug.enable('dxos:*');
 
-// TODO(burdon): Factor out.
+// TODO(burdon): Factor out; replaces useInvitation.
 const useSecretProvider = (): [() => Promise<Buffer>, string | undefined, () => void] => {
   const [pin, setPin] = useState<string>();
 
@@ -36,11 +42,39 @@ const useSecretProvider = (): [() => Promise<Buffer>, string | undefined, () => 
   return [provider, pin, () => setPin('')];
 };
 
-// TODO(burdon): Factor out.
+// TODO(burdon): Factor out; replaces useInvitationRedeemer.
 const useProvider = <T extends any> (): [() => Promise<T>, (value: T) => void] => {
   const [[provider, resolver]] = useState(() => trigger<T>());
 
   return [provider, resolver];
+};
+
+/**
+ * Displays contact selector.
+ */
+const Contacts = ({ contacts, selected = '', onSelect }: {
+  contacts: any[],
+  selected?: string,
+  onSelect: (selected: string) => void
+}) => {
+  return (
+    <FormControl fullWidth>
+      <InputLabel id='contact-select-label'>Contact</InputLabel>
+      <Select
+        value={selected || ''}
+        label='Contact'
+        labelId='contact-select-label'
+        onChange={(event: SelectChangeEvent) => onSelect(event.target.value)}
+      >
+        <MenuItem value=''>N/A</MenuItem>
+        {contacts.map(contact => (
+          <MenuItem key={contact.publicKey.toHex()} value={contact.publicKey.toHex()}>
+            {contact.displayName}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
 };
 
 /**
@@ -51,6 +85,8 @@ const InviatationPanel = () => {
   const [partyKey, setPartyKey] = useState<PublicKey>();
   const [invitationCode, setInvitationCode] = useState<string>();
   const [secretProvider, pin, resetPin] = useSecretProvider();
+  const [contact, setContact] = useState<string>();
+  const [contacts] = useContacts();
 
   const handleCreateParty = () => {
     setImmediate(async () => {
@@ -63,48 +99,63 @@ const InviatationPanel = () => {
 
   const handleCreateInvitation = () => {
     setImmediate(async () => {
-      const invitation = await client.createInvitation(partyKey!, secretProvider);
+      const invitation = (contact)
+        ? await client.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!))
+        : await client.createInvitation(partyKey!, secretProvider)
+
       setInvitationCode(encodeInvitation(invitation));
     });
   };
 
   return (
-    <Box sx={{ padding: 1 }}>
-      <Toolbar>
-        <Button
-          variant='outlined'
-          onClick={handleCreateParty}
-        >
-          Create Party
-        </Button>
-        <Button
-          disabled={!partyKey}
-          onClick={handleCreateInvitation}
-        >
-          Create Invitation
-        </Button>
-      </Toolbar>
+    <Box>
+      <Box sx={{ padding: 1 }}>
+        <Toolbar>
+          <Button
+            variant='outlined'
+            onClick={handleCreateParty}
+          >
+            Create Party
+          </Button>
+          <Button
+            disabled={!partyKey}
+            onClick={handleCreateInvitation}
+          >
+            Create Invitation
+          </Button>
+        </Toolbar>
 
-      {invitationCode && (
-        <Box sx={{ marginTop: 1 }}>
-          <TextField
-            disabled
-            multiline
-            fullWidth
-            defaultValue={invitationCode}
-            maxRows={6}
-          />
-        </Box>
-      )}
-      {pin && (
-        <Box sx={{ marginTop: 1 }}>
-          <TextField
-            disabled
-            type='text'
-            value={pin}
-          />
-        </Box>
-      )}
+        {contacts.length !== 0 && (
+          <Box sx={{ marginTop: 1 }}>
+            <Contacts
+              contacts={contacts}
+              selected={contact}
+              onSelect={setContact}
+            />
+          </Box>
+        )}
+
+        {invitationCode && (
+          <Box sx={{ marginTop: 1 }}>
+            <TextField
+              disabled
+              multiline
+              fullWidth
+              defaultValue={invitationCode}
+              maxRows={6}
+            />
+          </Box>
+        )}
+        {pin && (
+          <Box sx={{ marginTop: 1 }}>
+            <TextField
+              disabled
+              type='text'
+              value={pin}
+            />
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };
@@ -190,7 +241,8 @@ const RedeemInvitationContainer = () => {
 
     try {
       const invitation = decodeInvitation(invitationCode);
-      const party = await client.echo.joinParty(invitation, secretProvider);
+      const offline = invitation.type === '2'; // TODO(burdon): Use enum?
+      const party = await client.echo.joinParty(invitation, offline ? undefined : secretProvider);
       await party.open();
 
       setStatus({ party: party.key.toHex() });
@@ -216,6 +268,9 @@ const TestApp = () => {
   const client = useClient();
   const parties = useParties();
 
+  // TODO(burdon): Exception causes infinite loop.
+  // throw new Error();
+
   return (
     <Box sx={{
       display: 'flex',
@@ -226,35 +281,37 @@ const TestApp = () => {
       padding: 1
     }}>
       <Paper>
-        <ClientPanel client={client} parties={parties}/>
-        <Divider/>
+        <ClientPanel client={client} parties={parties} />
+        <Divider />
         <InviatationPanel/>
-        <Divider/>
+        <Divider />
         <RedeemInvitationContainer/>
       </Paper>
     </Box>
   );
 };
 
-export const MultipleClients = () => {
+export const TwinClients = () => {
   // Configure in-memory swarm.
   const config = { swarm: { signal: undefined } };
-  const peers = 3;
+  const peers = 2;
 
   return (
     <TestTheme>
-      <Box sx={{
-        display: 'flex',
-        overflow: 'hidden'
-      }}>
-        {[...new Array(peers)].map((_, i) => (
-          <ClientInitializer key={i} config={config}>
-            <ProfileInitializer>
-              <TestApp/>
-            </ProfileInitializer>
-          </ClientInitializer>
-        ))}
-      </Box>
+      <ErrorBoundary>
+        <Box sx={{
+          display: 'flex',
+          overflow: 'hidden'
+        }}>
+          {[...new Array(peers)].map((_, i) => (
+            <ClientInitializer key={i} config={config}>
+              <ProfileInitializer>
+                <TestApp/>
+              </ProfileInitializer>
+            </ClientInitializer>
+          ))}
+        </Box>
+      </ErrorBoundary>
     </TestTheme>
   );
 };

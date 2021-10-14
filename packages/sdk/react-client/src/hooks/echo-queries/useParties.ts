@@ -2,12 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 
 import { useClient } from '../client';
+import { useResultSet } from '../util';
 
 /**
  * Get a specific Party.
@@ -42,4 +43,11 @@ export const useParties = () => {
   }, []);
 
   return parties;
+};
+
+/**
+ * Get all known members of a Party.
+ */
+export const usePartyMembers = (party: Party) => {
+  return useResultSet(useMemo(() => party.queryMembers(), [party.key.toHex()]));
 };

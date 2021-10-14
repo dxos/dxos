@@ -35,7 +35,6 @@ interface RedeemDialogWithoutClientProps {
 }
 
 // TODO(burdon): Should the dialog manage it's state or be passive?
-
 interface ReedeemDialogModel {
   stage: Stage
   error: Error // Would require effect hook to update state.
@@ -51,7 +50,7 @@ export const RedeemDialogWithoutClient = ({
   open,
   onEnterInvitationCode,
   onEnterPin,
-  onClose // TODO(burdon): onSuccess
+  onClose // TODO(burdon): onSuccess?
 }: RedeemDialogWithoutClientProps) => {
   // TODO(grazianoramiro): https://github.com/dxos/protocols/issues/197
   // const [isOffline, setIsOffline] = useState(false);

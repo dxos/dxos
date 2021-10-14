@@ -19,7 +19,7 @@ type UseInvitationOpts = {
 };
 
 /**
- * Hook to create an Invitation for a given party.
+ * Creates an Invitation for a given party on the caller side.
  * The Invitation flow requires the inviter and invitee to be online at the same time.
  * If the invitee is known ahead of time, `useOfflineInvitation` can be used instead.
  * The invitation flow is protected by a generated pin code.
@@ -34,7 +34,13 @@ type UseInvitationOpts = {
  * @deprecated
  */
 export const useInvitation = (
-  partyKey: PublicKeyLike, { onDone = noOp, onError = noOp, onExpiration = noOp, expiration }: UseInvitationOpts = {}
+  partyKey: PublicKeyLike, // TODO(burdon): Avoid ambiguous types.
+  {
+    onDone = noOp,
+    onError = noOp,
+    onExpiration = noOp,
+    expiration
+  }: UseInvitationOpts = {}
 ) => {
   assert(partyKey);
   const client = useClient();
