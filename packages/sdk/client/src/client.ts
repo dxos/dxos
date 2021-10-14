@@ -67,15 +67,14 @@ export interface ClientConfig {
 }
 
 export const defaultConfig: ClientConfig = {
-  storage: {}, // TODO(burdon): Remove?
   swarm: {
-    signal: undefined // In-memory signal.
+    signal: undefined // In-memory.
   }
 };
 
-export const defaultLocalConfig: ClientConfig = {
+export const defaultTestingConfig: ClientConfig = {
   swarm: {
-    signal: 'ws://localhost:4000'
+    signal: 'ws://localhost:4000' // Locally running signal server.
   }
 };
 
@@ -378,11 +377,10 @@ export class Client {
   }
 }
 
-// TODO(burdon): Factor out these methods.
-
-function createStorageObjects (config: ClientConfig['storage'], snapshotsEnabled = false) {
+// TODO(burdon): Factor out.
+const createStorageObjects = (config: ClientConfig['storage'], snapshotsEnabled = false) => {
   const {
-    path = 'dxos/storage',
+    path = 'dxos/storage', // TODO(burdon): Factor out const.
     type,
     keyStorage,
     persistent = false
@@ -407,15 +405,20 @@ function createStorageObjects (config: ClientConfig['storage'], snapshotsEnabled
     snapshotStorage: createStorage(`${path}/snapshots`, persistent && snapshotsEnabled ? type : 'ram'),
     metadataStorage: createStorage(`${path}/metadata`, persistent ? type : 'ram')
   };
-}
+};
 
-function createKeyStorage (path: string, type?: KeyStorageType) {
+// TODO(burdon): Factor out.
+const createKeyStorage = (path: string, type?: KeyStorageType) => {
   const defaultedType = type ?? (isNode() ? 'jsondown' : 'leveljs');
 
   switch (defaultedType) {
-    case 'leveljs': return leveljs(path);
-    case 'jsondown': return jsondown(path);
-    case 'ram': return memdown();
-    default: throw new InvalidConfigurationError(`Invalid key storage type: ${defaultedType}`);
+    case 'leveljs':
+      return leveljs(path);
+    case 'jsondown':
+      return jsondown(path);
+    case 'ram':
+      return memdown();
+    default:
+      throw new InvalidConfigurationError(`Invalid key storage type: ${defaultedType}`);
   }
-}
+};

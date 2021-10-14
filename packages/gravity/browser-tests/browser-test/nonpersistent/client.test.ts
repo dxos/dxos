@@ -5,7 +5,7 @@
 import expect from 'expect';
 import 'source-map-support/register';
 
-import { defaultLocalConfig, Client } from '@dxos/client';
+import { defaultTestingConfig, Client } from '@dxos/client';
 import { defaultSecretProvider } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { defaultInvitationAuthenticator } from '@dxos/echo-db';
@@ -62,7 +62,7 @@ describe('Client - nonpersistent', () => {
       this.skip();
     }
 
-    const client = new Client(defaultLocalConfig);
+    const client = new Client(defaultTestingConfig);
     await client.initialize();
     await client.halo.createProfile({
       ...createKeyPair(),
@@ -73,7 +73,7 @@ describe('Client - nonpersistent', () => {
     const item = await party.database.createItem({ model: ObjectModel, type: 'dxn://test' });
     await item.model.setProperty('foo', 'bar');
 
-    const otherClient = new Client(defaultLocalConfig);
+    const otherClient = new Client(defaultTestingConfig);
     await otherClient.initialize();
     await otherClient.halo.createProfile({
       ...createKeyPair(),
@@ -96,11 +96,11 @@ describe('Client - nonpersistent', () => {
       this.skip();
     }
 
-    const clientA = new Client(defaultLocalConfig);
+    const clientA = new Client(defaultTestingConfig);
     await clientA.initialize();
     await clientA.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 1' });
 
-    const clientB = new Client(defaultLocalConfig);
+    const clientB = new Client(defaultTestingConfig);
     await clientB.initialize();
     const profileB = await clientB.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 2' });
 
