@@ -2202,6 +2202,7 @@ importers:
   ../../toolchains/esbuild-plugins:
     dependencies:
       assert: 2.0.0
+      crypto-browserify: 3.12.0
       debug: 4.3.1
       domain-browser: 4.22.0
       esbuild: 0.11.23
@@ -2217,6 +2218,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/node': ^14.0.9
       assert: ^2.0.0
+      crypto-browserify: ^3.12.0
       debug: ^4.1.1
       domain-browser: ^4.22.0
       esbuild: ^0.11.23
