@@ -30,6 +30,7 @@ export const defaultSecretProvider: SecretProvider = async () => Buffer.from('00
 export const defaultSecretValidator: SecretValidator =
   async (invitation, secret) => secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
 
+// TODO(burdon): Pass state?
 export type InvitationOnFinish = () => Promise<void>
 
 /**

@@ -7,13 +7,13 @@ import React, { useState, useEffect, ReactNode, ErrorInfo } from 'react';
 import { Client, ClientConfig } from '@dxos/client';
 import { MaybePromise } from '@dxos/util';
 
-import { ErrorComponentProps, ErrorBoundary, ErrorCallbackType } from '../components';
+import { ErrorComponentProps, ErrorCallbackType } from '../components';
 import ClientProvider from './ClientProvider';
 
 interface ClientInitializerProps {
   children?: ReactNode
   config?: ClientConfig | (() => MaybePromise<ClientConfig>)
-  errorComponent?: React.ComponentType<ErrorComponentProps>,
+  // errorComponent?: React.ComponentType<ErrorComponentProps>,
   loaderComponent?: React.ComponentType,
   onError?: ErrorCallbackType
 }
@@ -25,7 +25,6 @@ interface ClientInitializerProps {
 const ClientInitializer = ({
   children,
   config = {},
-  errorComponent,
   loaderComponent: LoaderComponent,
   onError
 }: ClientInitializerProps) => {
@@ -54,20 +53,22 @@ const ClientInitializer = ({
     setImmediate(createClient);
   }, []);
 
-  const handleRestart = () => {
-    window.location.reload();
-  };
+  // const handleRestart = () => {
+  //   window.location.reload();
+  // };
 
-  const handleReset = async () => {
-    if (client) {
-      await client.reset();
-    }
-  };
+  // const handleReset = async () => {
+  //   if (client) {
+  //     await client.reset();
+  //   }
+  // };
 
-  if (error && errorComponent) {
-    const ErrorComponent = errorComponent;
-    return (<ErrorComponent onRestart={handleRestart} onReset={handleReset} error={error} />);
-  }
+  // if (error && errorComponent) {
+  //   const ErrorComponent = errorComponent;
+  //   return (
+  //     <ErrorComponent onRestart={handleRestart} onReset={handleReset} error={error} />
+  //   );
+  // }
 
   if (!client) {
     if (LoaderComponent) {
@@ -77,6 +78,14 @@ const ClientInitializer = ({
     return null;
   }
 
+  return (
+    <ClientProvider client={client}>
+      {children}
+    </ClientProvider>
+  );
+
+  // TODO(burdon): Require explicit error boundary in all apps.
+  /*
   return (
     <ErrorBoundary
       // It's important to print the error to the console here so sentry can report it.
@@ -89,6 +98,7 @@ const ClientInitializer = ({
       </ClientProvider>
     </ErrorBoundary>
   );
+  */
 };
 
 export default ClientInitializer;

@@ -3,84 +3,42 @@
 //
 
 import {
-  Box, Button, Divider, FormControl, InputLabel, MenuItem, Paper, Select, SelectChangeEvent, TextField, Toolbar
+  Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 import React, { useState } from 'react';
 
-import { trigger } from '@dxos/async';
-import { generatePasscode } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
+import { InvitationDescriptorType } from '@dxos/echo-db';
 
 import {
   ClientInitializer,
-  ErrorBoundary,
   decodeInvitation,
   encodeInvitation,
   ProfileInitializer,
   useClient,
   useContacts,
-  useParties
+  useParties,
+  useProfile
 } from '../src';
-import { ClientPanel, JsonPanel, TestTheme } from './helpers';
+import {
+  useSecretProvider,
+  useProvider,
+  ClientPanel,
+  ContactsSelector,
+  Container,
+  RedeemInvitationPanel
+} from './helpers';
 
 export default {
-  title: 'react-client/Invitations'
+  title: 'react-client/Invitation'
 };
 
 // debug.enable('dxos:*');
 
-// TODO(burdon): Factor out; replaces useInvitation.
-const useSecretProvider = (): [() => Promise<Buffer>, string | undefined, () => void] => {
-  const [pin, setPin] = useState<string>();
-
-  const provider = () => {
-    const pin = generatePasscode();
-    setPin(pin);
-    return Promise.resolve(Buffer.from(pin));
-  };
-
-  return [provider, pin, () => setPin('')];
-};
-
-// TODO(burdon): Factor out; replaces useInvitationRedeemer.
-const useProvider = <T extends any> (): [() => Promise<T>, (value: T) => void] => {
-  const [[provider, resolver]] = useState(() => trigger<T>());
-
-  return [provider, resolver];
-};
-
-/**
- * Displays contact selector.
- */
-const Contacts = ({ contacts, selected = '', onSelect }: {
-  contacts: any[],
-  selected?: string,
-  onSelect: (selected: string) => void
-}) => {
-  return (
-    <FormControl fullWidth>
-      <InputLabel id='contact-select-label'>Contact</InputLabel>
-      <Select
-        value={selected || ''}
-        label='Contact'
-        labelId='contact-select-label'
-        onChange={(event: SelectChangeEvent) => onSelect(event.target.value)}
-      >
-        <MenuItem value=''>N/A</MenuItem>
-        {contacts.map(contact => (
-          <MenuItem key={contact.publicKey.toHex()} value={contact.publicKey.toHex()}>
-            {contact.displayName}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
-  );
-};
-
 /**
  * Creates party and invitations.
  */
-const InviatationPanel = () => {
+const PartyInviatationContainer = () => {
   const client = useClient();
   const [partyKey, setPartyKey] = useState<PublicKey>();
   const [invitationCode, setInvitationCode] = useState<string>();
@@ -101,7 +59,11 @@ const InviatationPanel = () => {
     setImmediate(async () => {
       const invitation = (contact)
         ? await client.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!))
-        : await client.createInvitation(partyKey!, secretProvider)
+        : await client.createInvitation(partyKey!, secretProvider, {
+          onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
+            setInvitationCode(undefined);
+          }
+        })
 
       setInvitationCode(encodeInvitation(invitation));
     });
@@ -127,7 +89,7 @@ const InviatationPanel = () => {
 
         {contacts.length !== 0 && (
           <Box sx={{ marginTop: 1 }}>
-            <Contacts
+            <ContactsSelector
               contacts={contacts}
               selected={contact}
               onSelect={setContact}
@@ -141,11 +103,12 @@ const InviatationPanel = () => {
               disabled
               multiline
               fullWidth
-              defaultValue={invitationCode}
-              maxRows={6}
+              value={invitationCode}
+              maxRows={3}
             />
           </Box>
         )}
+
         {pin && (
           <Box sx={{ marginTop: 1 }}>
             <TextField
@@ -160,78 +123,10 @@ const InviatationPanel = () => {
   );
 };
 
-const RedeemInvitationPanel = (
-  {
-    status,
-    onSubmit,
-    onAuthenticate
-  }: {
-    status: any,
-    onSubmit: (invitationCode: string) => void
-    onAuthenticate: (pin: string) => void
-  }
-) => {
-  const [invitationCode, setInvitationCode] = useState<string>('');
-  const [pin, setPin] = useState<string>('');
-
-  return (
-    <Box sx={{ padding: 1 }}>
-      <Box>
-        <Toolbar>
-          <Button
-            onClick={() => onSubmit(invitationCode)}
-            disabled={!invitationCode}
-            variant='outlined'
-          >
-            Join Party
-          </Button>
-        </Toolbar>
-
-        <Box sx={{ marginTop: 1 }}>
-          <TextField
-            multiline
-            fullWidth
-            value={invitationCode}
-            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
-              setInvitationCode(event.target.value);
-              setPin('');
-            }}
-            maxRows={6}
-          />
-          {invitationCode && (
-            <Box sx={{ display: 'flex', marginTop: 2 }}>
-              <TextField
-                // disabled={!invitationCode}
-                value={pin}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPin(event.target.value)}
-                // variant='standard'
-                size='small'
-                label='PIN'
-              />
-              <Button
-                disabled={!pin}
-                onClick={() => onAuthenticate(pin)}
-              >
-                Submit
-              </Button>
-            </Box>
-          )}
-        </Box>
-      </Box>
-
-      {(Object.keys(status).length > 0) && (
-        <Box sx={{ marginTop: 1 }}>
-          <JsonPanel value={status} />
-        </Box>
-      )}
-    </Box>
-  );
-};
-
 /**
  * Processes party invitations.
  */
-const RedeemInvitationContainer = () => {
+const RedeemPartyInvitationContainer = () => {
   const client = useClient();
   const [status, setStatus] = useState({});
   const [secretProvider, secretResolver] = useProvider<Buffer>();
@@ -241,7 +136,7 @@ const RedeemInvitationContainer = () => {
 
     try {
       const invitation = decodeInvitation(invitationCode);
-      const offline = invitation.type === '2'; // TODO(burdon): Use enum?
+      const offline = invitation.type === InvitationDescriptorType.OFFLINE_KEY;
       const party = await client.echo.joinParty(invitation, offline ? undefined : secretProvider);
       await party.open();
 
@@ -267,6 +162,7 @@ const RedeemInvitationContainer = () => {
 const TestApp = () => {
   const client = useClient();
   const parties = useParties();
+  const profile = useProfile();
 
   return (
     <Box sx={{
@@ -275,40 +171,35 @@ const TestApp = () => {
       flex: 1,
       flexShrink: 0,
       overflow: 'hidden',
-      padding: 1
+      margin: 1
     }}>
       <Paper>
-        <ClientPanel client={client} parties={parties} />
+        <ClientPanel client={client} profile={profile} parties={parties} />
         <Divider />
-        <InviatationPanel/>
+        <PartyInviatationContainer/>
         <Divider />
-        <RedeemInvitationContainer/>
+        <RedeemPartyInvitationContainer/>
       </Paper>
     </Box>
   );
 };
 
-export const TwinClients = () => {
+export const Primary = () => {
   // Configure in-memory swarm.
   const config = { swarm: { signal: undefined } };
-  const peers = 2;
+  const peers = 3;
 
   return (
-    <TestTheme>
-      <ErrorBoundary>
-        <Box sx={{
-          display: 'flex',
-          overflow: 'hidden'
-        }}>
-          {[...new Array(peers)].map((_, i) => (
-            <ClientInitializer key={i} config={config}>
-              <ProfileInitializer>
-                <TestApp/>
-              </ProfileInitializer>
-            </ClientInitializer>
-          ))}
-        </Box>
-      </ErrorBoundary>
-    </TestTheme>
+    <Container>
+      <Box sx={{ display: 'flex', flex: 1, padding: 1 }}>
+        {[...new Array(peers)].map((_, i) => (
+          <ClientInitializer key={i} config={config}>
+            <ProfileInitializer>
+              <TestApp/>
+            </ProfileInitializer>
+          </ClientInitializer>
+        ))}
+      </Box>
+    </Container>
   );
 };

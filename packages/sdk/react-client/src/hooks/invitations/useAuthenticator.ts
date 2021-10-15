@@ -26,7 +26,7 @@ export const useAuthenticator = (invitation: InvitationDescriptor) => {
       return;
     }
 
-    // Prevenut unmount error.
+    // Prevents unmount error.
     const controller = new AbortController();
     const signal = controller.signal;
 

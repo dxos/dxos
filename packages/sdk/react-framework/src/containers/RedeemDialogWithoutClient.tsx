@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+// TODO(burdon): Work in progress (refactoring RedeemDialog without hooks).
+
 import { Redeem as RedeemIcon } from '@mui/icons-material';
 import {
   Alert,
