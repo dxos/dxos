@@ -36,13 +36,15 @@ interface RedeemDialogWithoutClientProps {
   onClose: () => void
 }
 
-// TODO(burdon): Should the dialog manage it's state or be passive?
+// TODO(burdon): Should the dialog manage it's state (directly or via a model) or be passive (with state passed in)?
+/*
 interface ReedeemDialogModel {
   stage: Stage
   error: Error // Would require effect hook to update state.
   onEnterInvitationCode: () => void
   onEnterPin: () => void
 }
+*/
 
 /**
  * Component used for claiming invitations to Parties.
