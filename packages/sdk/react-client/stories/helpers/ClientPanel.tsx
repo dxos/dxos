@@ -19,9 +19,11 @@ export const ClientPanel = ({
   profile?: any, // TODO(burdon): Require type definition.
   parties?: Party[]
 }) => {
-  const data = (parties.length !== 0) ? {
-    parties: parties.map(({ key }) => key.toHex())
-  }: undefined;
+  const data = (parties.length !== 0)
+    ? {
+        parties: parties.map(({ key }) => key.toHex())
+      }
+    : undefined;
 
   return (
     <Box>

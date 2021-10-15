@@ -28,7 +28,7 @@ import {
 } from './helpers';
 
 export default {
-  title: 'react-client/Authentication'
+  title: 'react-client/HALO Invitations'
 };
 
 // debug.enable('dxos:*');
@@ -47,7 +47,7 @@ const HaloInvitationContainer = () => {
     const authenticator: InvitationAuthenticator = {
       secretProvider,
       secretValidator: defaultSecretValidator // TODO(burdon): Normalize with other invitation methods.
-    }
+    };
 
     // TODO(burdon): Move to client package method.
     // TODO(burdon): Don't use default (normalize with invitation flow).
@@ -59,7 +59,7 @@ const HaloInvitationContainer = () => {
     });
 
     setInvitationCode(encodeInvitation(invitation));
-  }
+  };
 
   if (!client.halo.isInitialized) {
     return null;
@@ -121,11 +121,11 @@ const HaloAuthenticationContainer = () => {
       // TODO(burdon): Doesn't support retry. Provide hint (e.g., should retry/cancel).
       setStatus({ error: err });
     }
-  }
+  };
 
   const handleAuthenticate = (pin: string) => {
     secretResolver(Buffer.from(pin));
-  }
+  };
 
   return (
     <RedeemInvitationPanel
@@ -172,7 +172,7 @@ export const Primary = () => {
 
   return (
     <Container>
-      <Box sx={{ display: 'flex', flex: 1, padding: 1 }}>
+      <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
         {/* Instantiated Client */}
         <ClientInitializer config={config}>
           <ProfileInitializer>

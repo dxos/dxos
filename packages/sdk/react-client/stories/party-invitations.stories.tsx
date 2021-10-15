@@ -30,7 +30,7 @@ import {
 } from './helpers';
 
 export default {
-  title: 'react-client/Invitation'
+  title: 'react-client/Party Invitations'
 };
 
 // debug.enable('dxos:*');
@@ -63,7 +63,7 @@ const PartyInviatationContainer = () => {
           onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
             setInvitationCode(undefined);
           }
-        })
+        });
 
       setInvitationCode(encodeInvitation(invitation));
     });
@@ -191,7 +191,7 @@ export const Primary = () => {
 
   return (
     <Container>
-      <Box sx={{ display: 'flex', flex: 1, padding: 1 }}>
+      <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
         {[...new Array(peers)].map((_, i) => (
           <ClientInitializer key={i} config={config}>
             <ProfileInitializer>

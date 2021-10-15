@@ -21,13 +21,14 @@ const Components = () => {
 
 ## Storybooks
 
-[Party Invitation Story](./stories/invitations.stories.tsx)
+The Party Invitation [Story](./stories/invitations.stories.tsx) demonstrates multiple clients creating and sharing parties.
 
-https://user-images.githubusercontent.com/3523355/137529670-7ab9a4bd-3b89-499f-88a3-75853b87fa5e.mov
+https://user-images.githubusercontent.com/3523355/137532717-e77395dc-96f9-4e4b-8f67-e6bd026a3abe.mov
 
-[Device Invitation Story](./stories/authentication.stories.tsx)
+the HALO Invitation [Story](./stories/authentication.stories.tsx) demonstrates multiple clients (devices) joining the same HALO.
 
-https://user-images.githubusercontent.com/3523355/137529677-97e58a3a-552b-43a2-86bb-c4bdfd4df177.mov
+https://user-images.githubusercontent.com/3523355/137532718-a21f1f27-9854-4c0b-831a-e9ff92feac49.mov
+
 
 ## Contributing
 
