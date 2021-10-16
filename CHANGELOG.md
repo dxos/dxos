@@ -16,21 +16,20 @@
   - [ ] Construct HALO outside of ECHO and pass in? (reduce complexity)
   - [ ] useProfile type definition; displayName vs username, etc.
 
-- [ ] Refactor hooks
+- [ ] Error handling
+  - [ ] Client API errors
+  - [ ] Invitation flow errors
+  - [ ] Global error handler, logging, reporter, etc.
+
+- [ ] Hooks
   - [ ] Normailze THREE client invitation methods (party, offline party, halo)
-  - [ ] useInvitationRedeemer
-  - [ ] useOfflineInvitation
   - [ ] useInviation
-  - [ ] useAuthenticator
-  
-- [ ] react-client testing
-  - [x] Invitation Storybooks
-  - [ ] React tests for major flows (mocha with jsdom)
-  - [ ] Convert storybooks to using esapp
+  - [ ] useOfflineInvitation (merge with useInviation)
+  - [ ] useInvitationRedeemer
+  - [ ] useAuthenticator (merge with useInvitationRedeemer)
 
 - [ ] Initializers
   - [x] Remove ErrorBoundary from ClientInitializer
-    - [ ] Update dependent apps 
   - [ ] Rethink initializers: Loading indicator until all async have fininshed
     - [ ] ClientInitializer, ClientInitializerProperties (clean-up)
     - [ ] RegistryClientInitializer
@@ -46,6 +45,11 @@
     ]}>
   </ClientInitializer>
 ```
+
+- [ ] react-client testing
+  - [x] Invitation Storybooks
+  - [ ] React tests for major flows (mocha with jsdom)
+  - [ ] Convert storybooks to using esapp
 
 - [ ] react-components lib
   - [ ] Move low-level components: Fullscreen, JSON, Editable, etc.
