@@ -21,6 +21,10 @@ const ProfileInitializer = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
+  if (!profile) {
+    return null;
+  }
+
   return <>{children}</>;
 };
 
