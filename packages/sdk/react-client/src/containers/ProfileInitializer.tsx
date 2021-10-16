@@ -11,7 +11,7 @@ import { useClient, useProfile } from '../hooks';
  * @deprecated
  */
 // TODO(burdon): Testing-only.
-const ProfileInitializer = ({ children }: { children: React.ReactNode }) => {
+export const ProfileInitializer = ({ children }: { children: React.ReactNode }) => {
   const client = useClient();
   const profile = useProfile();
 
@@ -27,5 +27,3 @@ const ProfileInitializer = ({ children }: { children: React.ReactNode }) => {
 
   return <>{children}</>;
 };
-
-export default ProfileInitializer;

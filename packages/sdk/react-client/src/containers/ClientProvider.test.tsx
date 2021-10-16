@@ -9,7 +9,7 @@ import React from 'react';
 import { Client } from '@dxos/client';
 
 import { useClient } from '../hooks';
-import ClientProvider from './ClientProvider';
+import { ClientProvider } from './ClientProvider';
 
 const TestComponent = () => {
   const client = useClient();
