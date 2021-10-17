@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { styled } from '@mui/material';
+import { styled } from '@mui/system'; // TODO(burdon): ???
 
 /**
  * Fullscreen no bounce.
