@@ -1,11 +1,11 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2021 DXOS.org
 //
 
 import { styled } from '@mui/material';
 
 /**
- * @deprecated Moved to react-components.
+ * Fullscreen no bounce.
  */
 export const FullScreen = styled('div')({
   display: 'flex',

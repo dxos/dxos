@@ -556,6 +556,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/react-components",
+      "projectFolder": "packages/sdk/react-components",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/react-framework",
       "projectFolder": "packages/sdk/react-framework",
       "shouldPublish": true,

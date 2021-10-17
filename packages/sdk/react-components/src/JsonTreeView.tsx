@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2021 DXOS.org
 //
 
 import {
@@ -113,7 +113,6 @@ interface JsonTreeViewProps {
  * @param data The object to be visualized
  * @param depth Maximum nest depth to be visualized. Unlimited by default.
  * @param onSelect Callback for when one or more nodes are selected by the user.
- * @deprecated Moved to react-components.
  */
 export const JsonTreeView = ({
   data = {},

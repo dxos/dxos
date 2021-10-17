@@ -1,42 +1,46 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2021 DXOS.org
 //
 
-import { InputBase, TextField } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { InputBase, TextField, Typography } from '@mui/material';
+
+export interface CustomTextFieldProps {
+  value?: string
+  onChange?: (value: string) => void
+  onUpdate?: (value: string) => void // TODO(burdon): Rename onEnter, onCancel, etc.
+  onEnterKey?: (value: string) => void // TODO(burdon): Remove???
+  disabled?: boolean
+  autoFocus?: boolean
+  // bareInput?: boolean // TODO(burdon): ???
+}
+
 /**
- * @deprecated Moved to react-components.
+ * Click-to-edit text field.
  */
-export const EditableText = ({
+export const CustomTextField = ({
   value,
   onUpdate,
   onChange,
   onEnterKey,
   disabled = false,
-  bareInput = false,
   autoFocus = false,
+  // bareInput = false,
   ...rest
-}: {
-  value: string,
-  onUpdate: (value: string) => void,
-  onChange?: (value: string) => void,
-  onEnterKey?: (value: string) => void,
-  disabled: boolean,
-  bareInput: boolean,
-  autoFocus: boolean
-}) => {
+}: CustomTextFieldProps) => {
+  const inputRef = useRef<HTMLInputElement>();
   const [editable, setEditable] = useState(false);
   const [text, setText] = useState(value);
-  const textInput = useRef<HTMLInputElement>();
 
+  // TODO(burdon): ???
   useEffect(() => {
     setText(value);
   }, [value]);
 
   useEffect(() => {
-    autoFocus && (textInput.current as HTMLInputElement).click();
-  }, [textInput.current]);
+    autoFocus && (inputRef.current as HTMLInputElement).click();
+  }, [inputRef.current]);
 
   const handleUpdate = (newValue: string) => {
     if (value === undefined && !newValue) {
@@ -44,7 +48,7 @@ export const EditableText = ({
     }
 
     if (newValue !== value) {
-      onUpdate(newValue);
+      onUpdate && onUpdate(newValue);
     }
   };
 
@@ -97,11 +101,13 @@ export const EditableText = ({
             spellCheck: false
           }
         }}
-        inputRef={textInput}
+        inputRef={inputRef}
       />
     );
   }
 
+  // TODO(burdon): ???
+  /*
   if (bareInput) {
     return (
       <InputBase
@@ -120,7 +126,9 @@ export const EditableText = ({
       />
     );
   }
+  */
 
+  // TODO(burdon): Just Typography (perforamce).
   return (
     <TextField
       {...rest}
@@ -134,7 +142,7 @@ export const EditableText = ({
           spellCheck: false
         }
       }}
-      inputRef={textInput}
+      inputRef={inputRef}
     />
   );
 };
