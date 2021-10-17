@@ -93,7 +93,7 @@ export const Passcode = (
         <input
           ref={inputRef}
           value={value}
-          data-testid="passcode-input"
+          data-testid='passcode-input'
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onBlur={handleFocusChange}

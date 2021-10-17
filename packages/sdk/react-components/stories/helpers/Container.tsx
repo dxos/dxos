@@ -31,6 +31,7 @@ export const Container = ({ children }: { children: React.ReactNode }) => (
         <Box
           sx={{
             display: 'flex',
+            flexDirection: 'column',
             width: 600,
             backgroundColor: 'white'
           }}

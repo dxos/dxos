@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
 import { Box } from '@mui/material';
+import React from 'react';
 
 import { Passcode } from '../src';
 import { Container } from './helpers';
