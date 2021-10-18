@@ -1,6 +1,6 @@
 {
   "name": "@dxos/object-model",
-  "version": "2.15.2",
+  "version": "2.15.7",
   "private": false,
   "description": "ECHO object model.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
@@ -31,7 +31,7 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
-    "@types/lodash": "^4.14.159",
+    "@types/lodash": "^4.14.175",
     "@types/node": "^14.0.9",
     "debug": "^4.1.1",
     "lodash": "4.17.21",

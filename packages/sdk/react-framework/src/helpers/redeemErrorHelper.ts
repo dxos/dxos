@@ -9,6 +9,7 @@ export enum RedeemErrorType {
   ALREADY_CONNECTED = 'Already connected.'
 }
 
+// TODO(burdon): Rename (not handler).
 export const handleRedeemError = (error: string) => {
   if (error.includes('SyntaxError: Unexpected token') || error.includes('InvalidCharacterError')) {
     return RedeemErrorType.INVALID_CODE;
@@ -19,5 +20,6 @@ export const handleRedeemError = (error: string) => {
   } else if (error.includes('ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT')) {
     return RedeemErrorType.TIMEOUT;
   }
+
   return error;
 };

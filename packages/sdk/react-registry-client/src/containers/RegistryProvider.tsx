@@ -9,8 +9,8 @@ import type { IRegistryClient } from '@dxos/registry-client';
 import { RegistryContext } from '../hooks';
 
 export interface RegistryProviderProps {
-  registry?: IRegistryClient
-  children?: ReactNode
+  registry: IRegistryClient
+  children: ReactNode
 }
 
 /**

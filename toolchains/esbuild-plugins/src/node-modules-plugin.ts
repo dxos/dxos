@@ -16,6 +16,11 @@ export function NodeModulesPlugin (): Plugin {
           path: require.resolve('assert/') // Appending slash makes node resolve the installed package from node_modules.
         };
       });
+      onResolve({ filter: /^domain$/ }, arg => {
+        return {
+          path: require.resolve('domain-browser')
+        };
+      });
       onResolve({ filter: /^stream$/ }, arg => {
         return {
           path: require.resolve('readable-stream')
@@ -51,9 +56,9 @@ export function NodeModulesPlugin (): Plugin {
           path: require.resolve('../../polyfills/module.js')
         };
       });
-      onResolve({ filter: /^crypto$/ }, arg => { // TODO
+      onResolve({ filter: /^crypto$/ }, arg => {
         return {
-          path: require.resolve('../../polyfills/empty-module-stub.js')
+          path: require.resolve('crypto-browserify')
         };
       });
       onResolve({ filter: /^debug$/ }, arg => {

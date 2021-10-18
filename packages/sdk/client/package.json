@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "2.15.2",
+  "version": "2.15.7",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -33,6 +33,7 @@
     "del": "^5.1.0",
     "jsondown": "dxos/jsondown#main",
     "level-js": "^5.0.2",
+    "lodash.defaultsdeep": "^4.6.1",
     "memdown": "^5.1.0"
   },
   "devDependencies": {
@@ -41,6 +42,7 @@
     "@types/expect": "~24.3.0",
     "@types/jest": "^26.0.7",
     "@types/level-js": "~4.0.1",
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/memdown": "^3.0.0",
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2",

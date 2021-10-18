@@ -10,7 +10,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { createModelTestBench } from './util';
 
 describe('Conflicts', () => {
-  // Fails: the final state is different for two peers.
+  // TODO(burdon): Fails: the final state is different for two peers.
   test.skip('object model', async () => {
     const { items: [item1, item2] } = await createModelTestBench({ model: ObjectModel });
 
