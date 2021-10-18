@@ -45,12 +45,10 @@
     "@types/debug": "^4.1.1",
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
-    "bufferutil": "4.0.3",
     "earljs": "~0.1.10",
     "expect": "~27.0.2",
     "fast-check": "~2.14.0",
     "mocha": "~8.4.0",
-    "utf-8-validate": "5.0.5",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
