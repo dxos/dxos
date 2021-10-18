@@ -7,7 +7,7 @@ import React, { useState, useEffect, ReactNode, ErrorInfo } from 'react';
 import { Client, ClientConfig } from '@dxos/client';
 import { MaybePromise } from '@dxos/util';
 
-import { ErrorComponentProps, ErrorBoundary, ErrorCallbackType } from '../components';
+import { ErrorCallbackType, ErrorComponentProps, ErrorBoundary } from '../components';
 import { ClientProvider } from './ClientProvider';
 
 interface ClientLoaderProps {
