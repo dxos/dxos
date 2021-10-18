@@ -25,10 +25,14 @@ export class RegistryClient implements IRegistryClient {
 
   private transactionsHandler: ApiTransactionHandler;
 
-  constructor (private api: ApiPromise, private signer?: AddressOrPair) {
+  constructor (
+    private api: ApiPromise,
+    private signer?: AddressOrPair
+  ) {
     this.transactionsHandler = new ApiTransactionHandler(api, signer);
   }
 
+  // TODO(burdon): Uppercase CID
   async resolveRecordCid (dxn: DXN): Promise<CID | undefined> {
     let domainKey: DomainKey | undefined;
     if (dxn.domain) {
@@ -80,7 +84,7 @@ export class RegistryClient implements IRegistryClient {
 
     const meta: RecordMetadata = {
       description: decoded.description,
-      created: decoded.created
+      created: (decoded.created && !isNaN(decoded.created.getTime())) ? decoded.created : undefined
     };
 
     if (decoded.payload) {
@@ -308,6 +312,7 @@ export class RegistryClient implements IRegistryClient {
   async updateResource (resource: DXN, contentCid: CID, opts: UpdateResourceOptions = { tags: ['latest'] }): Promise<void> {
     const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
     assert(domainKey);
+
     await this.transactionsHandler.sendTransaction(
       this.api.tx.registry.updateResource(domainKey.value, resource.resource, contentCid.value, opts.version ?? null, opts.tags ?? []));
   }

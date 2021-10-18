@@ -11,6 +11,7 @@ import {
   createPartyGenesisMessage,
   KeyHint,
   KeyType,
+  SecretProvider,
   wrapMessage
 } from '@dxos/credentials';
 import { humanize, keyToString, PublicKey } from '@dxos/crypto';
@@ -22,11 +23,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { IdentityProvider } from '../halo';
 import {
-  GreetingInitiator,
-  InvitationDescriptor,
-  InvitationDescriptorType,
-  OfflineInvitationClaimer,
-  SecretProvider
+  GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer
 } from '../invitations';
 import { SnapshotStore } from '../snapshots';
 import { PartyOptions } from './party-core';

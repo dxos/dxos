@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import React, { useState, useEffect, ReactNode } from 'react';
 
 import { createApiPromise, createKeyring, RegistryClient } from '@dxos/registry-client';
@@ -9,6 +10,7 @@ import { MaybePromise } from '@dxos/util';
 
 import RegistryProvider from './RegistryProvider';
 
+// TODO(burdon): Just provide minimal local config (don't infect with global config).
 interface RegistryClientConfig {
   services?: {
     dxns? : {
@@ -18,54 +20,74 @@ interface RegistryClientConfig {
   }
 }
 
-interface RegistryInitializerProperties {
+const log = debug('dxos:react-registry-client:error');
+
+// TODO(burdon): Move to util?
+type AsyncProvider<T> = T | (() => MaybePromise<T>);
+const resolveAsyncProvider = async <T extends any>(provider: AsyncProvider<T>): Promise<T> => {
+  return (typeof provider === 'function') ? await (provider as CallableFunction)() : provider;
+};
+
+type ConfigProvier = AsyncProvider<RegistryClientConfig>
+
+/**
+ *
+ */
+// TODO(burdon): Move to registry-client?
+const createRegistryClient = async (configProvider: ConfigProvier) => {
+  const config = await resolveAsyncProvider(configProvider);
+  if (!config.services?.dxns) {
+    throw new Error('Config missing DXNS endpoint');
+  }
+
+  const keyring = await createKeyring();
+  let keypair: ReturnType<typeof keyring['addFromUri']> | undefined;
+  if (config.services.dxns.uri) {
+    keypair = keyring.addFromUri(config.services.dxns.uri);
+  }
+
+  const apiPromise = await createApiPromise(config.services.dxns.server);
+  return new RegistryClient(apiPromise, keypair);
+};
+
+interface RegistryInitializerProps {
   children?: ReactNode
-  config?: RegistryClientConfig | (() => MaybePromise<RegistryClientConfig>)
+  config?: ConfigProvier
 }
 
 /**
  * Initializes and provides a DXNS registry instance given a config object or config generator.
  * To be used with `useRegistry` hook.
+ * @deprecated
  */
-const RegistryInitializer = ({ children, config = {} }: RegistryInitializerProperties) => {
-  const [registry, setRegistry] = useState<RegistryClient | undefined | null>(null);
+// TODO(burdon): Anti-patten: there could be many contexts that require async; require main app to pre-create them.
+const RegistryInitializer = ({ children, config = {} }: RegistryInitializerProps) => {
+  const [registry, setRegistry] = useState<RegistryClient | undefined>();
   const [error, setError] = useState<undefined | Error>(undefined);
+  if (error) {
+    log(error);
+    throw error; // Throw to be caught be outer ErrorBoundary.
+  }
 
   useEffect(() => {
     setImmediate(async () => {
-      const resolvedConfig = typeof config === 'function' ? await config() : config;
-      if (!resolvedConfig.services?.dxns) {
-        console.warn('RegistryInitializer is used but no `config.services.dxns` provided.');
-        setRegistry(undefined);
-        return;
-      }
       try {
-        const keyring = await createKeyring();
-        let keypair: ReturnType<typeof keyring['addFromUri']> | undefined;
-        if (resolvedConfig.services.dxns.uri) {
-          keypair = keyring.addFromUri(resolvedConfig.services.dxns.uri);
-        }
-        const apiPromise = await createApiPromise(resolvedConfig.services.dxns.server);
-        setRegistry(new RegistryClient(apiPromise, keypair));
+        setRegistry(await createRegistryClient(config));
       } catch (error: any) {
         setError(error);
       }
     });
   }, []);
 
-  if (error) {
-    throw error;
-  }
-
-  if (registry === null) {
-    // Still loading.
+  // Still loading.
+  if (!registry) {
     return null;
   }
 
   return (
-      <RegistryProvider registry={registry}>
-        {children}
-      </RegistryProvider>
+    <RegistryProvider registry={registry}>
+      {children}
+    </RegistryProvider>
   );
 };
 

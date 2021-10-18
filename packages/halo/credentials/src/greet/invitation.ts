@@ -7,31 +7,41 @@ import { randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
 import { createDateTimeString } from '../proto';
 
 /**
+ * Info required for offline invitations.
+ */
+// TODO(burdon): Define types.
+export interface SecretInfo {
+  id: any
+  authNonce: any
+}
+
+/**
  * Provides a shared secret during an invitation process.
  */
-export type SecretProvider = (info: any) => Promise<Buffer>;
-
-export const defaultSecretProvider: SecretProvider = async () => Buffer.from('0000');
+export type SecretProvider = (info?: SecretInfo) => Promise<Buffer>
 
 /**
  * Validates the shared secret during an invitation process.
  */
-export type SecretValidator = (invitation: Invitation, secret: Buffer) => Promise<boolean>;
+export type SecretValidator = (invitation: Invitation, secret: Buffer) => Promise<boolean>
 
-export const defaultSecretValidator: SecretValidator = async (invitation, secret) =>
-  secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
+export const defaultSecretProvider: SecretProvider = async () => Buffer.from('0000');
 
-export type InvitationOnFinish = () => Promise<void>;
+export const defaultSecretValidator: SecretValidator =
+  async (invitation, secret) => secret && Buffer.isBuffer(invitation.secret) && secret.equals(invitation.secret);
+
+// TODO(burdon): Pass state?
+export type InvitationOnFinish = () => Promise<void>
 
 /**
  * Represents a single-use invitation to admit the Invitee to the Party.
  * During Greeting the invitation will cross through the states:
  *
- *   1. issued
- *   2. presented
- *   3. negotiated
- *   4. submitted
- *   5. finished
+ * 1. issued
+ * 2. presented
+ * 3. negotiated
+ * 4. submitted
+ * 5. finished
  *
  * It may also be revoked at anytime.
  */
@@ -55,6 +65,7 @@ export class Invitation {
   private _revoked?: string;
 
   /**
+   * @constructor
    */
   constructor (partyKey: PublicKeyLike,
     secretValidator: SecretValidator,
@@ -148,7 +159,10 @@ export class Invitation {
     }
 
     if (!this._secret && this._secretProvider) {
-      this._secret = await this._secretProvider(this);
+      this._secret = await this._secretProvider({ // TODO(burdon): Delay.
+        id: this.id,
+        authNonce: this.authNonce
+      });
     }
 
     this._began = createDateTimeString();

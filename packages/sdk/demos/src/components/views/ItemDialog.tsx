@@ -29,14 +29,14 @@ export interface TypeMap {
   [key: string]: Function;
 }
 
-export interface ItemProperties {
+export interface ItemProps {
   type: string
   name: string
 }
 
-export declare type CreateItemCallback = ({ type, name }: ItemProperties) => Promise<Item<any>>;
+export declare type CreateItemCallback = ({ type, name }: ItemProps) => Promise<Item<any>>;
 
-interface ItemDialogProperties {
+interface ItemDialogProps {
   open: boolean
   type?: string
   types: TypeMap
@@ -49,7 +49,7 @@ interface ItemDialogProperties {
  */
 const ItemDialog = ({
   open, type: initialType, types, handleCreate, handleClose
-}: ItemDialogProperties) => {
+}: ItemDialogProps) => {
   const classes = useStyles();
   const [type, setType] = useState(initialType || Object.keys(types)[0]);
   const [name, setName] = useState('');
@@ -62,10 +62,10 @@ const ItemDialog = ({
   };
 
   return (
-    <Dialog open={open} fullWidth maxWidth="sm">
+    <Dialog open={open} fullWidth maxWidth='sm'>
       <DialogTitle>Create Item</DialogTitle>
       <DialogContent>
-        <Box m={2} flexDirection="column">
+        <Box m={2} flexDirection='column'>
           {!initialType && (
             <div className={classes.field}>
               <ToggleGroup types={types} type={type} onChange={type => setType(type)} />
@@ -73,19 +73,19 @@ const ItemDialog = ({
           )}
 
           <TextField
-            id="item-dialog-item-name"
+            id='item-dialog-item-name'
             autoFocus
             fullWidth
-            label="Name"
+            label='Name'
             value={name}
             onChange={event => setName(event.currentTarget.value)}
-            variant="outlined"
+            variant='outlined'
           />
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button color="primary" variant="contained" onClick={handleCreateItem}>Create</Button>
-        <Button color="secondary" onClick={handleClose}>Cancel</Button>
+        <Button color='primary' variant='contained' onClick={handleCreateItem}>Create</Button>
+        <Button color='secondary' onClick={handleClose}>Cancel</Button>
       </DialogActions>
     </Dialog>
   );

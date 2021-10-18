@@ -7,20 +7,22 @@ import { IconButton, List, ListItem } from '@mui/material';
 import React from 'react';
 
 import { ConnectionInfo } from '@dxos/network-manager';
-import { TruncateCopy } from '@dxos/react-framework';
+
+import { Key } from './Key';
 
 export interface ConnectionInfoViewProps {
   connectionInfo: ConnectionInfo,
   onReturn?: () => void,
 }
 
+// TODO(burdon): Convert to table.
 export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoViewProps) => (
   <div>
-    <div> State: {connectionInfo.state}</div>
-    <div> Session id: <TruncateCopy text={connectionInfo.sessionId.toHex()} /> </div>
-    <div> Remote peer id: <TruncateCopy text={connectionInfo.remotePeerId.toHex()} /> </div>
-    <div> Transport: {connectionInfo.transport}</div>
-    <div> Protocol extensions: {connectionInfo.protocolExtensions.join(',')}</div>
+    <div>State: {connectionInfo.state}</div>
+    <div>Session id: <Key text={connectionInfo.sessionId.toHex()} /></div>
+    <div>Remote peer id: <Key text={connectionInfo.remotePeerId.toHex()} /></div>
+    <div>Transport: {connectionInfo.transport}</div>
+    <div>Protocol extensions: {connectionInfo.protocolExtensions.join(',')}</div>
     <hr/>
     <div>
       Connection events:
@@ -33,7 +35,7 @@ export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoV
       ))}
     </List>
     {onReturn && (
-      <IconButton size="small" onClick={onReturn} title="Back" style={{ borderRadius: 5 }}>
+      <IconButton size='small' onClick={onReturn} title='Back' style={{ borderRadius: 5 }}>
         <ArrowBackIos />
         Back
       </IconButton>)

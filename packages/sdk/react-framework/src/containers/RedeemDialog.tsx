@@ -9,9 +9,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogProps,
   LinearProgress,
-  styled,
   TextField,
   Typography
 } from '@mui/material';
@@ -23,11 +21,8 @@ import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 import { DialogHeading } from '../components';
 import { handleRedeemError } from '../helpers';
 
-const SpacedTypography = styled(Typography)(({ theme }) => ({
-  marginTop: theme.spacing(2)
-}));
-
-interface RedeemDialogProps extends Omit<DialogProps, 'open'> {
+interface RedeemDialogProps {
+  open: boolean
   pinless?: boolean,
   onClose: () => void
 }
@@ -36,7 +31,7 @@ interface RedeemDialogProps extends Omit<DialogProps, 'open'> {
  * Component used for claiming invitations to Parties.
  * Works for both regular and `Offline` invitations.
  */
-export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialogProps) => {
+export const RedeemDialog = ({ open, onClose, pinless = false }: RedeemDialogProps) => {
   const [isOffline] = useState(false);
   // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
   // const [isOffline, setIsOffline] = useState(false);
@@ -57,15 +52,13 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
 
   const handleInvitationError = (error: string) => {
     setStep(2);
-    const err = handleRedeemError(error);
+    const err = handleRedeemError(error); // TODO(burdon): Rename.
     setError(err);
   };
 
   const [redeemCode, setPin] = useInvitationRedeemer({
-    onDone: () => {
-      handleDone();
-    },
-    onError: (ex?: string) => handleInvitationError(String(ex)),
+    onDone: () => handleDone,
+    onError: (error?: string) => handleInvitationError(String(error)),
     isOffline
   });
 
@@ -77,6 +70,8 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
       setIsProcessing(true);
       setError('');
       try {
+        // TODO(burdon): Move to callback.
+        // TODO(burdon): This is duplicated from useInvitationRedeemer.
         const party = await client.echo.joinParty(
           InvitationDescriptor.fromQueryParameters(JSON.parse(invitationCode)),
           defaultInvitationAuthenticator.secretProvider
@@ -84,7 +79,7 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
         await party.open();
         handleDone();
       } catch (error: any) {
-        handleInvitationError(JSON.stringify(error));
+        handleInvitationError(String(error));
       }
     } else {
       redeemCode(invitationCode);
@@ -106,12 +101,11 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
   return (
     <Dialog
       fullWidth
-      maxWidth="xs"
-      open
-      onClose={step === 0 ? handleDone : undefined} // No click away when in the middle of a flow
-      {...props}
+      maxWidth='xs'
+      open={open}
+      onClose={step === 0 ? handleDone : undefined} // No click away when in the middle of a flow.
     >
-      <DialogHeading title="Redeem Invitation" icon={RedeemIcon} />
+      <DialogHeading title='Redeem Invitation' icon={RedeemIcon} />
 
       {step === 0 && (
         <>
@@ -120,8 +114,8 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
               autoFocus
               fullWidth
               multiline
-              variant="standard"
-              placeholder="Paste invitation code."
+              variant='standard'
+              placeholder='Paste invitation code.'
               spellCheck={false}
               value={invitationCode}
               onChange={(event) => setInvitationCode(event.target.value)}
@@ -139,10 +133,10 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
             {isProcessing && <LinearProgress />}
           </DialogContent>
           <DialogActions>
-            <Button color="secondary" onClick={handleDone}>
+            <Button color='secondary' onClick={handleDone}>
               Cancel
             </Button>
-            <Button variant="contained" color="primary" onClick={handleEnterInvitationCode} disabled={isProcessing}>
+            <Button variant='contained' color='primary' onClick={handleEnterInvitationCode} disabled={isProcessing}>
               Submit
             </Button>
           </DialogActions>
@@ -152,27 +146,27 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
       {step === 1 && setPin && (
         <>
           <DialogContent>
-            <Typography variant="body1" gutterBottom>
+            <Typography variant='body1' gutterBottom>
               Enter the PIN number.
             </Typography>
             <TextField
               value={pinCode}
               onChange={(event) => setPinCode(event.target.value)}
-              variant="outlined"
-              margin="normal"
+              variant='outlined'
+              margin='normal'
               required
               fullWidth
-              label="PIN Code"
+              label='PIN Code'
               autoFocus
               disabled={isProcessing}
             />
             {isProcessing && <LinearProgress />}
           </DialogContent>
           <DialogActions>
-            <Button color="secondary" onClick={handleDone}>
+            <Button color='secondary' onClick={handleDone}>
               Cancel
             </Button>
-            <Button variant="contained" color="primary" onClick={handleEnterPinCode} disabled={isProcessing}>
+            <Button variant='contained' color='primary' onClick={handleEnterPinCode} disabled={isProcessing}>
               Submit
             </Button>
           </DialogActions>
@@ -182,17 +176,17 @@ export const RedeemDialog = ({ onClose, pinless = false, ...props }: RedeemDialo
       {step === 1 && !setPin && (
         <DialogContent>
           <LinearProgress />
-          <SpacedTypography variant="body1" gutterBottom>
+          <Typography variant='body1' sx={{ marginTop: 1 }} gutterBottom>
             Processing...
-          </SpacedTypography>
+          </Typography>
         </DialogContent>
       )}
 
       {step === 2 && error && (
         <DialogContent>
-          <Alert severity="error">{error}</Alert>
+          <Alert severity='error'>{error}</Alert>
           <DialogActions>
-            <Button autoFocus color="secondary" onClick={handleDone}>
+            <Button autoFocus color='secondary' onClick={handleDone}>
               Cancel
             </Button>
           </DialogActions>
