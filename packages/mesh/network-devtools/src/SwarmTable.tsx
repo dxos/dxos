@@ -9,9 +9,8 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { SwarmInfo } from '@dxos/network-manager';
+import { CopyText } from '@dxos/react-components';
 import { BooleanIcon } from '@dxos/react-framework';
-
-import { Key } from './Key';
 
 // TODO(wittjosiah): Refactor, makeStyles is deprecated.
 const useStyle = makeStyles(() => ({
@@ -57,10 +56,10 @@ const SwarmTable = ({ swarms, onClick }: SwarmListProps) => {
         {swarms.map(swarm => (
           <TableRow key={swarm.id.toHex()}>
             <TableCell className={classes.colLabel}>
-              {swarm.label && (<Key text={swarm.label} />)}
+              {swarm.label && (<CopyText value={swarm.label} />)}
             </TableCell>
             <TableCell className={classes.colLabel}>
-              <Key text={swarm.topic.toHex()} />
+              <CopyText value={swarm.topic.toHex()} />
             </TableCell>
             <TableCell> <BooleanIcon yes={swarm.isActive} /> </TableCell>
             <TableCell>
