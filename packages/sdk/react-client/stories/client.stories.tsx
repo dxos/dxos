@@ -4,8 +4,8 @@
 
 import React, { useEffect } from 'react';
 
-import { ClientInitializer, useClient } from '../src';
-import { ClientPanel } from './helpers';
+import { ClientInitializer, ErrorBoundary, useClient } from '../src';
+import { ClientPanel, ThemeProvider } from './helpers';
 
 export default {
   title: 'react-client/ClientInitializer'
@@ -27,8 +27,12 @@ const TestApp = () => {
 
 export const Primary = () => {
   return (
-    <ClientInitializer config={{ swarm: { signal: undefined } }}>
-      <TestApp />
-    </ClientInitializer>
+    <ThemeProvider>
+      <ErrorBoundary>
+        <ClientInitializer config={{ swarm: { signal: undefined } }}>
+          <TestApp />
+        </ClientInitializer>
+      </ErrorBoundary>
+    </ThemeProvider>
   );
 };

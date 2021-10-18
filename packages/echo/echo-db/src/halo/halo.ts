@@ -265,6 +265,7 @@ export class HALO {
   /**
    * @returns {ProfileInfo} User profile info.
    */
+  // TODO(burdon): Type definition.
   // TODO(burdon): Change to property (currently returns a new object each time).
   getProfile () {
     if (!this.identityKey) {
