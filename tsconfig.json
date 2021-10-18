@@ -19,6 +19,6 @@
     "target": "ES2018",
     "experimentalDecorators": true
   },
-  "include": [],
+  "include": ["**/src/**/*.ts","**/src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }

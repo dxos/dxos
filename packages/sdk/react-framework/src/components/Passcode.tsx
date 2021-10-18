@@ -5,6 +5,8 @@
 import { colors, styled } from '@mui/material';
 import React, { createRef, useEffect, useState } from 'react';
 
+// TODO(burdon): Reconcile with @dxos/console
+
 const Root = styled('div')({ display: 'flex' });
 
 const Input = styled('input')({
@@ -122,7 +124,7 @@ export const Passcode = (
           onBlur={handleFocus}
           onFocus={handleFocus}
           autoFocus
-          data-testid="passcode-input"
+          data-testid='passcode-input'
         />
       )}
 

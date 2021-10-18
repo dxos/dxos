@@ -7,14 +7,14 @@ import debug from 'debug';
 import unionWith from 'lodash/unionWith';
 
 import { Event, synchronized } from '@dxos/async';
-import { KeyHint, KeyType } from '@dxos/credentials';
+import { KeyHint, KeyType, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ComplexMap, boolGuard } from '@dxos/util';
 
 import { IdentityProvider } from '../halo';
-import { SecretProvider, InvitationDescriptor } from '../invitations';
+import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../metadata';
 import { SnapshotStore } from '../snapshots';
 import { PartyFactory } from './party-factory';

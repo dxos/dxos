@@ -15,6 +15,8 @@ import {
   PartyInvitationClaimHandler,
   createAuthMessage,
   createGreetingClaimMessage,
+  SecretProvider,
+  SecretValidator,
   SignedMessage
 } from '@dxos/credentials';
 import { keyToBuffer, keyToString, PublicKey, randomBytes, verify } from '@dxos/crypto';
@@ -23,7 +25,6 @@ import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 
 import { IdentityNotInitializedError, InvalidInvitationError } from '../errors';
 import { Identity, IdentityProvider } from '../halo';
-import { SecretProvider, SecretValidator } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';

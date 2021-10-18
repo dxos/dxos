@@ -2,7 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import React, { Component, ErrorInfo } from 'react';
+
+const log = debug('dxos:react-client:error');
 
 /**
  * Root-level error boundary.
@@ -12,19 +15,19 @@ import React, { Component, ErrorInfo } from 'react';
  * https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
  */
 
-interface ErrorComponentType {
+export type ErrorCallbackType = (error: Error, errorInfo?: ErrorInfo) => void;
+
+export interface ErrorComponentProps {
   error: Error | null,
   onRestart?: () => void,
   onReset?: () => void,
 }
 
-type ErrorCallbackType = (error: Error, errorInfo?: ErrorInfo) => void;
-
-interface Props {
+interface ErrorBoundaryProps {
   onError: ErrorCallbackType,
   onRestart?: () => void,
   onReset?: () => void,
-  errorComponent?: React.ComponentType<ErrorComponentType>
+  errorComponent?: React.ComponentType<ErrorComponentProps>
 }
 
 interface State {
@@ -32,9 +35,14 @@ interface State {
 }
 
 /**
- * https://reactjs.org/docs/error-boundaries.html
+ * Top-level error boundary.
+ * NOTE: Doesn't catch exceptions in event handlers, or asynchronous callbacks.
+ * A global error handler should be configured for such errors.
+ * https://reactjs.org/docs/error-boundaries.html#how-about-event-handlers
+ * https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
+ * It DOES catch exceptions in hooks and any components that return malformed React compoennts.
  */
-class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   override state = {
     error: null
   };
@@ -54,23 +62,35 @@ class ErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch (error: Error, errorInfo: ErrorInfo) {
     const { onError } = this.props;
-
-    // TODO(burdon): Show error indicator.
-    // TODO(burdon): Logging service; output error file to storage?
     onError(error, errorInfo);
   }
 
   override render () {
-    const { children, onRestart, onReset, errorComponent } = this.props;
+    const { children, onRestart, onReset, errorComponent: ErrorComponent } = this.props;
     const { error } = this.state;
 
-    if (error && errorComponent) {
-      const ErrorComponent = errorComponent;
-      return (<ErrorComponent onRestart={onRestart} onReset={onReset} error={error} />);
+    if (error) {
+      if (ErrorComponent) {
+        return (
+          <ErrorComponent
+            onRestart={onRestart}
+            onReset={onReset}
+            error={error}
+          />
+        );
+      }
+
+      log('ErrorComponent not set.');
+      return (
+        <div style={{ border: '1px solid #CCC', padding: 16 }}>
+          <h1>ErrorBoundary component not set.</h1>
+          <pre style={{ whiteSpace: 'break-spaces' }}>
+            {String(error)}
+          </pre>
+        </div>
+      );
     }
 
     return children;
   }
 }
-
-export { ErrorBoundary, ErrorComponentType, ErrorCallbackType };

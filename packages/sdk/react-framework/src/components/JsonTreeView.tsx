@@ -88,7 +88,7 @@ const TreeItem = ({
       nodeId={nodeId}
       label={(
         <LabelRoot>
-          <Label color="primary" fontSize={size}>{label}</Label>
+          <Label color='primary' fontSize={size}>{label}</Label>
           {value}
         </LabelRoot>
       )}
@@ -98,7 +98,7 @@ const TreeItem = ({
   );
 };
 
-interface JsonTreeViewProperties {
+interface JsonTreeViewProps {
   className?: string
   data?: any
   depth?: number
@@ -120,7 +120,7 @@ export const JsonTreeView = ({
   onSelect = () => {},
   root,
   size
-}: JsonTreeViewProperties) => {
+}: JsonTreeViewProps) => {
   if (!data) {
     data = {};
   }

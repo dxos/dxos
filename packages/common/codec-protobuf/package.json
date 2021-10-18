@@ -1,6 +1,6 @@
 {
   "name": "@dxos/codec-protobuf",
-  "version": "2.15.4",
+  "version": "2.15.6",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -32,7 +32,7 @@
     "protobufjs": "^6.9.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.15",
+    "@dxos/eslint-plugin": "~1.0.16",
     "@types/assert": "^1.5.4",
     "@types/jest": "^26.0.7",
     "@types/lodash.merge": "~4.6.6",
