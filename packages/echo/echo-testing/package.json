@@ -22,7 +22,8 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/object-model": "workspace:*",
-    "faker": "^5.1.0"
+    "faker": "^5.1.0",
+    "lodash": "4.17.21"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
