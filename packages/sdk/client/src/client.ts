@@ -373,6 +373,7 @@ export class Client {
       keyring: this._echo.halo.keyring,
       debug
     };
+
     return devtoolsContext;
   }
 }

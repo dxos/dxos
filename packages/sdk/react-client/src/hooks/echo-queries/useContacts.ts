@@ -13,7 +13,7 @@ import { useClient } from '../client';
  * Contacts are known members of a common Party.
  * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
  */
-export function useContacts () {
+export const useContacts = () => {
   const client = useClient();
   const [contacts, setContacts] = useState<PartyMember[]>([]);
 
@@ -33,4 +33,4 @@ export function useContacts () {
   }, []);
 
   return [contacts];
-}
+};

@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-const webpack = require('webpack');
 const path = require('path');
+const webpack = require('webpack');
 const toPath = (filePath) => path.join(process.cwd(), filePath);
 
 module.exports = {
