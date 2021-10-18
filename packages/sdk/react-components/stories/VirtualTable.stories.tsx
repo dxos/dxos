@@ -10,7 +10,7 @@ import { Box, Checkbox, IconButton } from '@mui/material';
 import faker from 'faker';
 import React, { useState } from 'react';
 
-import { GetRowHeightProps, DataCellProps, VirtualTable } from '../src';
+import { GetRowHeightProps, DataCellProps, VirtualTable, FullScreen } from '../src';
 
 faker.seed(123);
 
@@ -111,15 +111,17 @@ const Table = ({ rows }: { rows: any[] }) => {
   };
 
   return (
-    <VirtualTable
-      rows={rows}
-      columns={columns}
-      getRowKey={row => row.id}
-      getRowHeight={getRowHeight}
-      selected={selected}
-      onSelect={handleSelect}
-      renderCell={CustomDataCell}
-    />
+    <FullScreen>
+      <VirtualTable
+        rows={rows}
+        columns={columns}
+        getRowKey={row => row.id}
+        getRowHeight={getRowHeight}
+        selected={selected}
+        onSelect={handleSelect}
+        renderCell={CustomDataCell}
+      />
+    </FullScreen>
   );
 };
 

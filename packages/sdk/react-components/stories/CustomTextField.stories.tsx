@@ -14,7 +14,7 @@ export default {
 };
 
 export const Primary = () => {
-  const [text, setText] = useState<string>('Test');
+  const [text, setText] = useState<string>('CustomTextField');
 
   return (
     <Container>
@@ -22,7 +22,10 @@ export const Primary = () => {
         <CustomTextField
           value={text}
           onUpdate={setText}
-          placeholder='Title'
+          placeholder='Enter title'
+        />
+        <CustomTextField
+          placeholder='Enter title'
         />
       </Box>
     </Container>
