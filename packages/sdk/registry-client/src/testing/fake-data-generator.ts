@@ -42,7 +42,7 @@ export const createCID = (): CID => {
 };
 
 export const createDxn = (): DXN => {
-  return DXN.fromDomainName(faker.internet.domainWord(), faker.internet.domainWord());
+  return DXN.fromDomainName('dxos', faker.internet.domainWord());
 };
 
 export const createMockResourceRecord = (_dxn?: DXN): ResourceRecord => {
