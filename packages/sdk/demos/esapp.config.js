@@ -1,4 +1,12 @@
-const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = require('@dxos/esbuild-plugins')
+//
+// Copyright 2020 DXOS.org
+//
+
+const {
+  FixMemdownPlugin,
+  NodeGlobalsPolyfillPlugin,
+  NodeModulesPlugin
+} = require('@dxos/esbuild-plugins');
 
 module.exports = {
   plugins: [

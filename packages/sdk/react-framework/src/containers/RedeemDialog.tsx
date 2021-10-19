@@ -57,7 +57,7 @@ export const RedeemDialog = ({ open, onClose, pinless = false }: RedeemDialogPro
   };
 
   const [redeemCode, setPin] = useInvitationRedeemer({
-    onDone: () => handleDone,
+    onDone: handleDone,
     onError: (error?: string) => handleInvitationError(String(error)),
     isOffline
   });
@@ -66,6 +66,7 @@ export const RedeemDialog = ({ open, onClose, pinless = false }: RedeemDialogPro
     if (isProcessing) {
       return;
     }
+
     if (pinless) {
       setIsProcessing(true);
       setError('');
