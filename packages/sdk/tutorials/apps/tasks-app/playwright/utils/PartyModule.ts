@@ -1,7 +1,6 @@
 import expect from 'expect';
 
 import { AppSimulator } from './AppSimulator';
-import { Browser } from './Browser';
 
 export class PartyModule extends AppSimulator {
 

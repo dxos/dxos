@@ -2072,6 +2072,7 @@ importers:
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       '@types/react': 17.0.24
+      '@types/react-dom': 17.0.9
       babel-loader: 8.2.2_0c9ed85c987bca43d65931123ef87b6c
       babel-plugin-import: 1.13.3
       expect: 27.0.2
@@ -2112,6 +2113,7 @@ importers:
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/react': ^17.0.24
+      '@types/react-dom': ^17.0.9
       babel-loader: ^8.1.0
       babel-plugin-import: ~1.13.3
       buffer: ^6.0.3
