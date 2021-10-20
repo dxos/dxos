@@ -52,13 +52,25 @@ export const Filtering = {
       return true;
     }
 
-    return query.type === undefined || matchesRecordType(record, query.type);
+    const textMatches = query.text === undefined || matchesRecordText(record, query.text);
+    const typeMatches = query.type === undefined || matchesRecordType(record, query.type);
+
+    return textMatches && typeMatches;
   }
 
 };
 
 function matchesRecordType (record: RegistryRecord, type: CID) {
   return RegistryRecord.isDataRecord(record) && record.type.equals(type);
+}
+
+function matchesRecordText (record: RegistryRecord, text: string) {
+  const places = [
+    record.cid.toString(),
+    record.kind,
+    record.meta.description ?? ''
+  ];
+  return places.some(place => place.toLowerCase().includes(text.toLowerCase()));
 }
 
 function matchesDxn (dxn: DXN, text: string): boolean {

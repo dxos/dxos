@@ -63,7 +63,7 @@ export class MemoryRegistryClient implements IRegistryClient {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getDomains (): Promise<Domain[]> {
-    return [];
+    return [{ key: DomainKey.random(), owners: [], name: 'dxos' }];
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -77,7 +77,7 @@ export class MemoryRegistryClient implements IRegistryClient {
   }
 
   async queryResources (query?: IQuery): Promise<Resource[]> {
-    let result = this.resources as unknown as Resource[];
+    let result = this.resources.map(resource => resource.resource);
     result = result.filter(resource => Filtering.matchResource(resource, query));
     return result;
   }

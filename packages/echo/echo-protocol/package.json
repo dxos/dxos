@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-protocol",
-  "version": "2.15.6",
+  "version": "2.15.9",
   "description": "ECHO protocol definitions and utilities.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
@@ -39,14 +39,14 @@
   "devDependencies": {
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
+    "@types/chance": "^1.1.0",
     "@types/faker": "~5.5.1",
     "@types/jest": "^26.0.7",
+    "@types/pify": "^3.0.2",
+    "@types/pumpify": "~1.4.1",
     "faker": "^5.1.0",
     "pify": "~5.0.0",
-    "tempy": "~1.0.1",
-    "@types/pumpify": "~1.4.1",
-    "@types/pify": "^3.0.2",
-    "@types/chance": "^1.1.0"
+    "tempy": "~1.0.1"
   },
   "publishConfig": {
     "access": "public"

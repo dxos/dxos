@@ -4,9 +4,10 @@
 
 import { expect } from 'chai';
 
+import { createCID } from '.';
 import { DXN } from './models';
 import { Filtering } from './querying';
-import { Resource } from './registry-client';
+import { Resource, RegistryRecord, RegistryTypeRecord, RegistryDataRecord, RecordKind } from './registry-client';
 
 describe('Registry API querying', () => {
   // TODO(marik-d): Fix those tests.
@@ -39,6 +40,38 @@ describe('Registry API querying', () => {
 
       expect(actual).to.have.length(1);
       expect(actual[0].id.toString()).to.be.equal('bricks:redbrick');
+    });
+  });
+
+  describe('records filtering', () => {
+    const appTypeCID = createCID();
+    const botTypeCID = createCID();
+    const typeRecords: RegistryTypeRecord[] = [
+      { cid: appTypeCID, kind: RecordKind.Type, messageName: '.dxos.type.App', meta: { description: 'App' }, protobufDefs: null as any },
+      { cid: botTypeCID, kind: RecordKind.Type, messageName: '.dxos.type.Bot', meta: { description: 'Bot' }, protobufDefs: null as any }
+    ];
+    const dataRecords: RegistryDataRecord[] = [
+      { cid: createCID(), kind: RecordKind.Data, meta: { description: 'alphaApplication' }, type: appTypeCID, data: null as any, dataRaw: null as any, dataSize: null as any },
+      { cid: createCID(), kind: RecordKind.Data, meta: { description: 'betaApplication' }, type: appTypeCID, data: null as any, dataRaw: null as any, dataSize: null as any },
+      { cid: createCID(), kind: RecordKind.Data, meta: { description: 'alphaBotter' }, type: botTypeCID, data: null as any, dataRaw: null as any, dataSize: null as any }
+
+    ];
+    const records: RegistryRecord[] = [
+      ...typeRecords,
+      ...dataRecords
+    ];
+
+    it('Filters by type', () => {
+      expect(records.filter(item => Filtering.matchRecord(item, { type: appTypeCID }))).to.have.length(2);
+      expect(records.filter(item => Filtering.matchRecord(item, { type: botTypeCID }))).to.have.length(1);
+      expect(records.filter(item => Filtering.matchRecord(item, { type: createCID() }))).to.have.length(0);
+    });
+
+    it('Filters by text', () => {
+      expect(records.filter(item => Filtering.matchRecord(item, { text: 'app' }))).to.have.length(3); // 2 Applications and App type
+      expect(records.filter(item => Filtering.matchRecord(item, { text: 'application' }))).to.have.length(2);
+      expect(records.filter(item => Filtering.matchRecord(item, { text: 'botter' }))).to.have.length(1);
+      expect(records.filter(item => Filtering.matchRecord(item, { text: 'ipfs' }))).to.have.length(0);
     });
   });
 });

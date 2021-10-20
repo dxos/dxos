@@ -22,7 +22,7 @@
   - [ ] Global error handler, logging, reporter, etc.
 
 - [ ] Hooks
-  - [ ] Normailze THREE client invitation methods (party, offline party, halo)
+  - [ ] Normalize THREE client invitation methods (party, offline party, halo)
   - [ ] useInviation
   - [ ] useOfflineInvitation (merge with useInviation)
   - [ ] useInvitationRedeemer

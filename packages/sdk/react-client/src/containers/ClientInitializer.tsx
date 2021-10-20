@@ -17,6 +17,13 @@ interface ClientLoaderProps {
   loaderComponent?: React.ComponentType
 }
 
+interface ClientLoaderProps {
+  children?: ReactNode
+  config?: ClientConfig | (() => MaybePromise<ClientConfig>)
+  onInit?: (client: Client) => void
+  loaderComponent?: React.ComponentType
+}
+
 /**
  * Async initializer for the client component the defers rendering of children until complete.
  */
