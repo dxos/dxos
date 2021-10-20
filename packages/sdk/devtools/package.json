@@ -21,6 +21,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/network-devtools": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@dxos/react-framework": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@emotion/react": "^11.4.1",

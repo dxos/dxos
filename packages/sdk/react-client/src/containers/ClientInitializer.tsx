@@ -8,7 +8,14 @@ import { Client, ClientConfig } from '@dxos/client';
 import { MaybePromise } from '@dxos/util';
 
 import { ErrorComponentProps, ErrorBoundary, ErrorCallbackType } from '../components';
-import ClientProvider from './ClientProvider';
+import { ClientProvider } from './ClientProvider';
+
+interface ClientLoaderProps {
+  children?: ReactNode
+  config?: ClientConfig | (() => MaybePromise<ClientConfig>)
+  onInit?: (client: Client) => void
+  loaderComponent?: React.ComponentType
+}
 
 interface ClientLoaderProps {
   children?: ReactNode
@@ -68,7 +75,7 @@ interface ClientInitializerProps {
  * incorporating a top-level ErrorBoundary.
  */
 // TODO(burdon): Rename.
-const ClientInitializer = ({
+export const ClientInitializer = ({
   children,
   config = {},
   onError,
@@ -114,5 +121,3 @@ const ClientInitializer = ({
     </ErrorBoundary>
   );
 };
-
-export default ClientInitializer;

@@ -12,7 +12,7 @@ import { initConfig } from './config';
 
 const App = () => {
   return (
-    <ClientInitializer config={initConfig} loaderComponent={LinearProgress} errorComponent={ErrorView}>
+    <ClientInitializer config={initConfig} loaderComponent={() => <LinearProgress/>} errorComponent={ErrorView}>
       <Root />
     </ClientInitializer>
   );

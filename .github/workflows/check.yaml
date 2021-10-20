@@ -62,19 +62,15 @@ jobs:
           # Quick build
           node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose
 
-          # Build storybooks
-          echo "::group::Storybooks"
-          cd packages/sdk/demos && pnpm build-storybook && cd -
-
           # Test the demos storybooks
           cd packages/sdk/demos
-          ./scripts/start-and-wait.sh
+          pnpm book &
           pnpm test:playwright
           echo "::endgroup::"
       - name: Cleanup
         run: |
-          sudo apt-get install -y lsof
           kill $(lsof -t -i:9001) || true
+          kill $(lsof -t -i:8080) || true
 
   check-sdk-health:
     runs-on: [self-hosted, dind-actions-runner]

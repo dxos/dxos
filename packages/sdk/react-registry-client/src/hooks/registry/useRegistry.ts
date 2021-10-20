@@ -4,8 +4,8 @@
 
 import { createContext, useContext } from 'react';
 
+import { raise } from '@dxos/debug';
 import type { IRegistryClient } from '@dxos/registry-client';
-import { raise } from '@dxos/util';
 
 type ContextValue = {
   registry: IRegistryClient

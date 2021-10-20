@@ -8,6 +8,9 @@ import { OverridableComponent } from '@mui/material/OverridableComponent';
 import React from 'react';
 import { CopyToClipboard as Clipboard } from 'react-copy-to-clipboard';
 
+/**
+ * @deprecated Moved to react-components.
+ */
 export const CopyToClipboard = ({
   text,
   onCopy = console.log,

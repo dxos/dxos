@@ -4,6 +4,9 @@
 
 import { styled } from '@mui/material';
 
+/**
+ * @deprecated Moved to react-components.
+ */
 export const FullScreen = styled('div')({
   display: 'flex',
   flexDirection: 'column',
