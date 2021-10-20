@@ -14,7 +14,7 @@
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "scripts": {
-    "book": "esapp book 'stories/**/*.tsx' '../tutorials/apps/tasks-app/stories/**/*.tsx' '../react-framework/stories/**/*.tsx'",
+    "book": "esapp book 'stories/**/*.tsx' '../tutorials/apps/tasks-app/stories/**/*.tsx' '../react-{client,components,framework,registry-client}/stories/**/*.{stories,story}.tsx'",
     "build": "tsc --noEmit",
     "build-storybook": "build-storybook --quiet",
     "build-storybook-docs": "build-storybook --quiet --docs",

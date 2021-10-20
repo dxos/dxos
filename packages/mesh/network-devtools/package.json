@@ -14,6 +14,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/gem-core": "~1.0.0-beta.25",
     "@dxos/gem-spore": "~1.0.0-beta.25",
+    "@dxos/react-components": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/react-framework": "workspace:*",

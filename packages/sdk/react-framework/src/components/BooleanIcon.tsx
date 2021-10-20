@@ -9,6 +9,9 @@ import {
 import { colors } from '@mui/material';
 import React from 'react';
 
+/**
+ * @deprecated Move out of framework (not too app-specific).
+ */
 export const BooleanIcon = ({ yes = false, error = false }) => {
   return (yes
     ? <YesIcon style={{ color: colors.green[500] }} />

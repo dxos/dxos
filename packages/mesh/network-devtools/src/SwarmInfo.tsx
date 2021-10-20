@@ -9,8 +9,7 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { ConnectionState, SwarmInfo } from '@dxos/network-manager';
-
-import { Key } from './Key';
+import { CopyText } from '@dxos/react-components';
 
 export interface SwarmInfoViewProps {
   swarmInfo: SwarmInfo
@@ -20,8 +19,8 @@ export interface SwarmInfoViewProps {
 
 export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmInfoViewProps) => (
   <div>
-    <div>Topic: <Key text={swarmInfo.topic.toHex()} /></div>
-    <div>Label: {swarmInfo.label ? <Key text={swarmInfo.label} /> : 'No label'}</div>
+    <div>Topic: <CopyText value={swarmInfo.topic.toHex()} /></div>
+    <div>Label: {swarmInfo.label ? <CopyText value={swarmInfo.label} /> : 'No label'}</div>
     <div>Active: {swarmInfo.isActive ? 'yes' : 'no'}</div>
     <div>Active connection count: {swarmInfo.connections.filter(c => c.state !== ConnectionState.CLOSED).length}</div>
     <div>Total connection count: {swarmInfo.connections.length}</div>
@@ -31,7 +30,7 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
       {swarmInfo.connections.map(connection => (
         <ListItem key={connection.sessionId.toHex()}>
           <ListItemText>
-            <Key text={connection.remotePeerId.toHex()} />
+            <CopyText value={connection.remotePeerId.toHex()} />
           </ListItemText>
           <ListItemIcon>
             <IconButton onClick={() => onConnectionClick?.(connection.sessionId)} title='Details'>

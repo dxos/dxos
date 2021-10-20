@@ -6,9 +6,8 @@ import { InputBase, TextField } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * Editable text field.
+ * @deprecated Moved to react-components.
  */
-// TODO(burdon): Move to generic ux lib.
 export const EditableText = ({
   value,
   onUpdate,

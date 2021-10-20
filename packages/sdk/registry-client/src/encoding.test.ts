@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { raise } from '@dxos/util';
+import { raise } from '@dxos/debug';
 
 import { createCID, createMockTypes } from '.';
 import { decodeExtensionPayload, encodeExtensionPayload } from './encoding';

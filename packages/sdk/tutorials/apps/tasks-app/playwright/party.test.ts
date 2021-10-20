@@ -16,9 +16,7 @@ describe('Party Test Cases', () => {
   let alice: TaskApp;
   let bob: TaskApp;
 
-  beforeAll(() => {
-    jest.setTimeout(30000);
-
+  before(() => {
     alice = new TaskApp(new Browser());
 
     return alice.browser.launch(firefox, initialUrl)
@@ -27,12 +25,12 @@ describe('Party Test Cases', () => {
       .then(() => alice.createTaskList(listName));
   });
 
-  afterAll(() => alice.browser.get().close());
+  after(() => alice.browser.get().close());
 
 
   describe('As a user that wants to invite a user then', () => {
 
-    test('I should be able to copy the invitation code to clipboard', () => alice.party.copyInvitationCode())
+    it('I should be able to copy the invitation code to clipboard', () => alice.party.copyInvitationCode())
 
   })
 
@@ -55,7 +53,7 @@ describe('Party Test Cases', () => {
     afterEach(() => bob.browser.get().close());
 
     describe('As a user that has been invited to a party then', () => {
-      test('I should be able to redeem my invitation', async () => {
+      it('I should be able to redeem my invitation', async () => {
         await bob.party.redeemInvitation(invitationToken);
       });
     });
@@ -68,7 +66,7 @@ describe('Party Test Cases', () => {
         await bob.checkTaskListIsCreated(listName)
       });
 
-      test('I should be able to create a task on the party list', () => bob.createTask(listName, taskName));
+      it('I should be able to create a task on the party list', () => bob.createTask(listName, taskName));
     });
 
     describe('As a user that has joined a party then', () => {
@@ -80,7 +78,7 @@ describe('Party Test Cases', () => {
         await bob.createTask(listName, taskName)
       })
 
-      test('I should be able to see tasks created by others on the party', async () => {
+      it('I should be able to see tasks created by others on the party', async () => {
         await alice.checkTaskListIsCreated(listName)
 
         await alice.checkTaskIsCreated(taskName)
@@ -96,7 +94,7 @@ describe('Party Test Cases', () => {
         await bob.createTask(listName, taskName)
       })
 
-      test('I should be able to check and uncheck tasks on the party list', () => bob.swapTaskState(taskName))
+      it('I should be able to check and uncheck tasks on the party list', () => bob.swapTaskState(taskName))
     });
 
     describe('As a user that has joined a party then', () => {
@@ -110,7 +108,7 @@ describe('Party Test Cases', () => {
         await bob.swapTaskState(taskName)
       })
 
-      test('I should be able to see tasks checked or unchecked by others', () => alice.checkTaskState(taskName, false));
+      it('I should be able to see tasks checked or unchecked by others', () => alice.checkTaskState(taskName, false));
     });
 
     describe('As a user that has joined a party then', () => {
@@ -122,7 +120,7 @@ describe('Party Test Cases', () => {
         await bob.createTask(listName, taskName)
       })
 
-      test('I should be able to remove tasks on the party list', () => bob.removeTask(taskName));
+      it('I should be able to remove tasks on the party list', () => bob.removeTask(taskName));
     });
 
     describe('As a user that has joined a party then', () => {
@@ -136,7 +134,7 @@ describe('Party Test Cases', () => {
         await bob.removeTask(taskName)
       });
 
-      test('I should be able to see tasks removed by others', () => alice.checkTaskExistence(taskName));
+      it('I should be able to see tasks removed by others', () => alice.checkTaskExistence(taskName));
     });
   })
 });

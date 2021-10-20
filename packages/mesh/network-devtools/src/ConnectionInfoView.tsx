@@ -7,8 +7,7 @@ import { IconButton, List, ListItem } from '@mui/material';
 import React from 'react';
 
 import { ConnectionInfo } from '@dxos/network-manager';
-
-import { Key } from './Key';
+import { CopyText } from '@dxos/react-components';
 
 export interface ConnectionInfoViewProps {
   connectionInfo: ConnectionInfo,
@@ -19,8 +18,8 @@ export interface ConnectionInfoViewProps {
 export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoViewProps) => (
   <div>
     <div>State: {connectionInfo.state}</div>
-    <div>Session id: <Key text={connectionInfo.sessionId.toHex()} /></div>
-    <div>Remote peer id: <Key text={connectionInfo.remotePeerId.toHex()} /></div>
+    <div>Session id: <CopyText value={connectionInfo.sessionId.toHex()} /></div>
+    <div>Remote peer id: <CopyText value={connectionInfo.remotePeerId.toHex()} /></div>
     <div>Transport: {connectionInfo.transport}</div>
     <div>Protocol extensions: {connectionInfo.protocolExtensions.join(',')}</div>
     <hr/>

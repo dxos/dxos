@@ -2,25 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Box, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import moment from 'moment';
 import React from 'react';
 
 import { keyTypeName } from '@dxos/credentials';
-import { truncateString } from '@dxos/debug';
-import { BooleanIcon, CopyToClipboard } from '@dxos/react-framework';
-
-export const Key = ({ text } : { text: string }) => {
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center' }} >
-      <Typography>
-        {truncateString(text, 8)}
-      </Typography>
-      <CopyToClipboard text={text} />
-    </Box>
-  );
-};
+import { CopyText } from '@dxos/react-components';
+import { BooleanIcon } from '@dxos/react-framework';
 
 const useStyle = makeStyles(() => ({
   table: {
@@ -71,7 +60,7 @@ const KeyTable = ({ keys }: { keys: any[] }) => {
             <TableRow key={key}>
               <TableCell> {keyTypeName(type)} </TableCell>
               <TableCell className={classes.mono} title={key}>
-                <Key text={key} />
+                <CopyText value={key} />
               </TableCell>
               <TableCell title={added}>{moment(added).fromNow()}</TableCell>
               <TableCell align='center'>

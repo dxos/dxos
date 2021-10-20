@@ -14,6 +14,7 @@ module.exports = {
 
     // TODO(burdon): Enable local storybook testing also.
     '../../react-client/stories/**/*.(jsx|tsx)',
+    '../../react-components/stories/**/*.(jsx|tsx)',
     '../../react-framework/stories/**/*.(jsx|tsx)',
     '../../react-registry-client/stories/**/*.(jsx|tsx)'
   ],
