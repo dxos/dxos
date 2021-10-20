@@ -23,14 +23,14 @@
 
 - [ ] Hooks
   - [ ] Normalize THREE client invitation methods (party, offline party, halo)
-  - [ ] useInviation
-  - [ ] useOfflineInvitation (merge with useInviation)
+  - [ ] useInvitation
+  - [ ] useOfflineInvitation (merge with useInvitation)
   - [ ] useInvitationRedeemer
   - [ ] useAuthenticator (merge with useInvitationRedeemer)
 
 - [ ] Initializers
   - [x] Remove ErrorBoundary from ClientInitializer
-  - [ ] Rethink initializers: Loading indicator until all async have fininshed
+  - [ ] Rethink initializers: Loading indicator until all async have finished
     - [ ] ClientInitializer, ClientInitializerProperties (clean-up)
     - [ ] RegistryClientInitializer
     - [ ] ProfileInitializer
