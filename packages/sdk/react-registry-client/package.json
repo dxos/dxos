@@ -16,6 +16,7 @@
   "dependencies": {
     "@dxos/registry-client": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.1.1"
   },
