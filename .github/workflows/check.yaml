@@ -73,8 +73,8 @@ jobs:
           echo "::endgroup::"
       - name: Cleanup
         run: |
-          sudo apt-get install -y lsof
           kill $(lsof -t -i:9001) || true
+          kill $(lsof -t -i:8080) || true
 
   check-sdk-health:
     runs-on: [self-hosted, dind-actions-runner]

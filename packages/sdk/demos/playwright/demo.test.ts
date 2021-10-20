@@ -9,6 +9,7 @@ import { firefox, Page } from 'playwright';
 import { Browser } from './utils';
 
 const INVITATION_REGEX = /swarmKey/g;
+const BASE_URL = 'http://localhost:8080/'
 
 const createParty = async (page: Page) => {
   const haloButtonSelector = 'button:has-text("Create Party")';
@@ -46,8 +47,8 @@ describe('Demo - Primary and Peers', async function () {
   this.timeout(30000);
   this.retries(1);
   const browser = firefox;
-  const primaryUrl = 'http://localhost:9001/iframe.html?id=demo--primary&viewMode=story';
-  const peersUrl = 'http://localhost:9001/iframe.html?id=demo--peers&viewMode=story';
+  const primaryUrl = `${BASE_URL}__story/stories-demo-index-story-tsx/Primary`;
+  const peersUrl = `${BASE_URL}__story/stories-demo-index-story-tsx/Peers`;
   let alice: Browser;
   let bob: Browser;
 
