@@ -6,7 +6,7 @@ import { firefox } from 'playwright';
 
 import { Browser, TaskApp } from './utils';
 
-describe.only('Profile Test Cases', () => {
+describe('Profile Test Cases', () => {
   const initialUrl = 'http://localhost:3000/';
   let alice: TaskApp;
 

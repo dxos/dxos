@@ -101,6 +101,7 @@ const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
 
       {redeemDialog && (
         <RedeemDialog
+          open
           pinless
           onClose={() => setRedeemDialog(false)}
         // TODO(burdon): Get party key from dialog.
