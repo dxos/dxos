@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "types": [
+      "node",
+      "mocha"
+    ],
     "allowJs": true,
     "composite": true,
     "incremental": true,
@@ -17,7 +21,7 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
+    "module": "commonjs",
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx"

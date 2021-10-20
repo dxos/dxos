@@ -9,7 +9,7 @@
     "pack:app": "pnpm pack",
     "start": "SKIP_PREFLIGHT_CHECK=true craco start",
     "test": "SKIP_PREFLIGHT_CHECK=true craco test --passWithNoTests --watchAll=false",
-    "test:playwright": "jest --rootDir ./playwright --runInBand --passWithNoTests --verbose"
+    "test:playwright":  "mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts' --timeout 30000"
   },
   "browserslist": {
     "production": [
@@ -24,7 +24,6 @@
     ]
   },
   "dependencies": {
-    "@craco/craco": "~6.1.2",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/crypto": "workspace:*",
@@ -38,18 +37,15 @@
     "@mui/lab": "^5.0.0-alpha.48",
     "@mui/material": "^5.0.1",
     "@mui/styles": "^5.0.1",
-    "@testing-library/dom": "~7.31.2",
-    "@testing-library/jest-dom": "^5.11.4",
-    "@testing-library/react": "^11.0.4",
-    "@testing-library/user-event": "^12.1.10",
     "buffer": "^6.0.3",
-    "playwright": "^1.7.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
     "type-fest": "^0.13.1"
   },
   "devDependencies": {
+    "playwright": "^1.7.0",
+    "@craco/craco": "~6.1.2",
     "@babel/core": "~7.13.15",
     "@babel/preset-react": "7.9.4",
     "@jackwilsdon/craco-use-babelrc": "~1.0.0",
@@ -62,16 +58,17 @@
     "@storybook/core-events": "^6.3.11",
     "@storybook/react": "^6.3.11",
     "@storybook/theming": "^6.3.11",
-    "@types/jest": "^26.0.7",
     "@types/node": "^14.0.9",
     "@types/react": "^17.0.24",
     "babel-loader": "^8.1.0",
     "babel-plugin-import": "~1.13.3",
-    "jest": "^26.6.3",
     "react-docgen-typescript-loader": "^3.7.2",
-    "ts-jest": "^26.5.6",
     "ts-loader": "~8.1.0",
     "typescript": "^4.3.5",
-    "webpack": "4.44.2"
+    "webpack": "4.44.2",
+    "mocha": "~8.4.0",
+    "@types/mocha": "~8.2.2",
+    "ts-node": "^9.1.1",
+    "expect": "~27.0.2"
   }
 }
