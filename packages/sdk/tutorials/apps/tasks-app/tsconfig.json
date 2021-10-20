@@ -16,15 +16,23 @@
     "strict": true,
     "target": "ES2018",
     "experimentalDecorators": true,
-    "lib": ["DOM", "ESNext", "ES6"],
+    "lib": [
+      "DOM",
+      "ESNext",
+      "ES6"
+    ],
     "outDir": "dist",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "module": "commonjs",
+    "module": "esnext",
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["playwright", "src", "stories"]
+  "include": [
+    "playwright",
+    "src",
+    "stories"
+  ]
 }
