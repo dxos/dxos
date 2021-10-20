@@ -9,7 +9,7 @@ import { firefox, Page } from 'playwright';
 import { Browser } from './utils';
 
 const INVITATION_REGEX = /swarmKey/g;
-const BASE_URL = 'http://localhost:8080/'
+const BASE_URL = 'http://localhost:8080/';
 
 const createParty = async (page: Page) => {
   const haloButtonSelector = 'button:has-text("Create Party")';
