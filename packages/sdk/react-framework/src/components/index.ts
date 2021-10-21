@@ -11,7 +11,7 @@ export * from './ErrorView';
 export * from './FullScreen';
 export * from './JsonTreeView';
 export * from './MemberAvatar';
-export * from './PartyMemberList';
+export * from './MemberList';
 export * from './Passcode';
 export * from './ProfileDialog';
 export * from './Theme';

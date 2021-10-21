@@ -12,10 +12,17 @@ import { Party, PartyMember } from '@dxos/echo-db';
 import { useMembers } from '../hooks';
 import { Avatar, MemberAvatar } from './MemberAvatar';
 
-// TODO(burdon): Pass in array (small UX data object) of processed members (don't apply humanize here).
-export const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void }) => {
+/**
+ * Displays a horizontal list of avataors.
+ */
+export const MemberList = ({
+  members,
+  onShare
+}: {
+  members: PartyMember[],
+  onShare: () => void
+}) => {
   const theme = useTheme() as Theme;
-  const members: PartyMember[] = useMembers(party); // TODO(burdon): Pass-in to make dumb component.
 
   return (
     <Box
@@ -44,3 +51,24 @@ export const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () 
     </Box>
   );
 };
+
+/**
+ * @deprecated
+ */
+export const PartyMemberList = ({
+  party,
+  onShare
+}: {
+  party: Party,
+  onShare: () => void
+}) => {
+  // TODO(burdon): Pass-in to make dumb component.
+  const members: PartyMember[] = useMembers(party);
+
+  return (
+    <MemberList
+      members={members}
+      onShare={onShare}
+    />
+  );
+}
