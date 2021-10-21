@@ -22,8 +22,9 @@ import { DialogHeading } from '../components';
 import { handleRedeemError } from '../helpers';
 
 interface RedeemDialogProps {
+  code?: string
   open: boolean
-  pinless?: boolean,
+  pinless?: boolean
   onClose: () => void
 }
 
@@ -31,13 +32,13 @@ interface RedeemDialogProps {
  * Component used for claiming invitations to Parties.
  * Works for both regular and `Offline` invitations.
  */
-export const RedeemDialog = ({ open, onClose, pinless = false }: RedeemDialogProps) => {
+export const RedeemDialog = ({ code = '', open, onClose, pinless = false }: RedeemDialogProps) => {
   const [isOffline] = useState(false);
   // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
   // const [isOffline, setIsOffline] = useState(false);
   const [error, setError] = useState<string>();
   const [step, setStep] = useState(0); // TODO(burdon): Const.
-  const [invitationCode, setInvitationCode] = useState('');
+  const [invitationCode, setInvitationCode] = useState(code);
   const [pinCode, setPinCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const client = useClient();

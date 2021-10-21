@@ -1,3 +1,5 @@
+import expect from 'expect';
+
 import { AppSimulator } from './AppSimulator';
 
 export class ProfileModule extends AppSimulator {
