@@ -15,7 +15,31 @@ const KEYS_TO_FILE = {
   __CONFIG_DYNAMICS__: 'config.yml'
 };
 
-export function ConfigPlugin (): Plugin {
+export interface ConfigPluginOpts {
+  /**
+   * Path to the directory with config files.
+   * @default './config'
+   */
+  configPath?: string
+
+  /**
+   * The Dynamics() config.yml file is special, it will be loaded if the dynamic property is set to false.
+   * If dynamic is set to true each app will try to load from an endpoint (using {publicUrl}/config/config.json),
+   * wire app serve adds config endpoints for each app serving the global config file (~/.wire/remote.yml).
+   * 
+   * @default false
+   */
+  dynamic?: boolean
+
+  /**
+   * Public URL of the published app. Also used to load the dynamic config.
+   * 
+   * @default ''
+   */
+  publicUrl?: string
+}
+
+export function ConfigPlugin ({ configPath = DEFAULT_PATH, dynamic = false, publicUrl = '' }: ConfigPluginOpts = {}): Plugin {
   return {
     name: 'dxos-config',
     setup: ({ onResolve, onLoad }) => {
@@ -33,7 +57,7 @@ export function ConfigPlugin (): Plugin {
         let content = {};
 
         try {
-          content = yaml.load(readFileSync(resolve(DEFAULT_PATH, value), 'utf-8'));
+          content = yaml.load(readFileSync(resolve(configPath, value), 'utf-8'));
         } catch (error) {
           console.error(error);
         }
@@ -43,7 +67,7 @@ export function ConfigPlugin (): Plugin {
           [key]: content
         };
       }, {
-        __DXOS_CONFIG__: { dynamic: false, publicUrl: '' },
+        __DXOS_CONFIG__: { dynamic, publicUrl },
         __CONFIG_ENVS__: {}
       });
 
