@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import type { Plugin } from 'esbuild';
 import { readFileSync } from 'fs';
 import yaml from 'js-yaml';
@@ -27,6 +28,10 @@ export interface ConfigPluginOpts {
    * If dynamic is set to true each app will try to load from an endpoint (using {publicUrl}/config/config.json),
    * wire app serve adds config endpoints for each app serving the global config file (~/.wire/remote.yml).
    * 
+   * The usual pattern is to set it to CONFIG_DYNAMIC env variable.
+   * When running app locally this should be set to false or nil to serve local config.
+   * And when publishing the app to DXNS the cli-app will set that variable to true automatically.
+   * 
    * @default false
    */
   dynamic?: boolean
@@ -40,6 +45,8 @@ export interface ConfigPluginOpts {
 }
 
 export function ConfigPlugin ({ configPath = DEFAULT_PATH, dynamic = false, publicUrl = '' }: ConfigPluginOpts = {}): Plugin {
+  assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
+
   return {
     name: 'dxos-config',
     setup: ({ onResolve, onLoad }) => {
