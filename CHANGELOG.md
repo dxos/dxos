@@ -15,6 +15,7 @@
     - [ ] Use of PublicKey vs string
   - [ ] Construct HALO outside of ECHO and pass in? (reduce complexity)
   - [ ] useProfile type definition; displayName vs username, etc.
+  - [ ] ECHO "items" should be called "objects"
 
 - [ ] Error handling
   - [ ] Client API errors
