@@ -15,23 +15,45 @@
     - [ ] Use of PublicKey vs string
   - [ ] Construct HALO outside of ECHO and pass in? (reduce complexity)
   - [ ] useProfile type definition; displayName vs username, etc.
+  - [ ] ECHO "items" should be called "objects"
 
-- Test with tutorial-tasks-app
+- [ ] Error handling
+  - [ ] Client API errors
+  - [ ] Invitation flow errors
+  - [ ] Global error handler, logging, reporter, etc.
 
-- [ ] RegistryClientInitializer
-- [ ] ProfileInitializer
-- [ ] ClientInitializer, ClientInitializerProperties (clean-up)
-- [ ] RedeemDialog (remove hooks)
-
-- [ ] Replace/remove hooks
+- [ ] Hooks
+  - [ ] Normalize THREE client invitation methods (party, offline party, halo)
+  - [ ] useInvitation
+  - [ ] useOfflineInvitation (merge with useInvitation)
   - [ ] useInvitationRedeemer
-  - [ ] useOfflineInvitation
-  - [ ] useInviation
-  - [ ] useAuthenticator
-  
-- [ ] Remove functions
-- [ ] Double/single quotes
-- [ ] No default exports
+  - [ ] useAuthenticator (merge with useInvitationRedeemer)
+
+- [ ] Initializers
+  - [x] Remove ErrorBoundary from ClientInitializer
+  - [ ] Rethink initializers: Loading indicator until all async have finished
+    - [ ] ClientInitializer, ClientInitializerProperties (clean-up)
+    - [ ] RegistryClientInitializer
+    - [ ] ProfileInitializer
+
+```html
+  <ClientInitializer
+    client={() => Client}     // Config object or callback.
+    asyncInit={[              // Async functions that are passed a constructed client object.
+      createRegistry,
+      createClient,
+      createProfile
+    ]}>
+  </ClientInitializer>
+```
+
+- [ ] react-client testing
+  - [x] Invitation Storybooks
+  - [ ] React tests for major flows (mocha with jsdom)
+  - [ ] Convert storybooks to using esapp
+
+- [ ] react-components lib
+  - [ ] Move low-level components: Fullscreen, JSON, Editable, etc.
 
 - [ ] react-framework dialogs
   - [ ] RedeemDialog

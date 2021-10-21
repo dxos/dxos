@@ -11,23 +11,21 @@ describe('Tasks App Test Cases', () => {
 
   let alice: TaskApp;
 
-  beforeAll(() => {
-    jest.setTimeout(30000);
-
+  before(() => {
     alice = new TaskApp(new Browser());
 
     return alice.browser.launch(firefox, initialUrl)
       .then(() => alice.profile.create('Alice'));
   });
 
-  afterAll(() => alice.browser.get().close());
+  after(() => alice.browser.get().close());
 
   describe('As a user with a profile already created then', () => {
-    test('I should be presented with the app', () => alice.checkAppIsLoaded())
+    it('I should be presented with the app', () => alice.checkAppIsLoaded())
   });
 
   describe('As a user with a profile already created then', () => {
-    test('I should be able to create a new task list', () => alice.createTaskList("My Example List"))
+    it('I should be able to create a new task list', () => alice.createTaskList("My Example List"))
   });
 
   describe('As a user with a task list already created', () => {
@@ -35,7 +33,7 @@ describe('Tasks App Test Cases', () => {
 
     beforeEach(() => alice.createTaskList(listName));
 
-    test('I should be able to add new tasks to the list', () => alice.createTask(listName, "Clone the repo"))
+    it('I should be able to add new tasks to the list', () => alice.createTask(listName, "Clone the repo"))
   });
 
   describe('As a user with a task already created', () => {
@@ -48,7 +46,7 @@ describe('Tasks App Test Cases', () => {
       await alice.createTask(listName, taskName);
     });
 
-    test('I should be able to check and uncheck a task on the list', () => alice.swapTaskState(taskName))
+    it('I should be able to check and uncheck a task on the list', () => alice.swapTaskState(taskName))
   });
 
   describe('As a user with a task already created', () => {
@@ -61,7 +59,7 @@ describe('Tasks App Test Cases', () => {
       await alice.createTask(listName, taskName);
     });
 
-    test('I should be able to remove a task from the list', () => alice.removeTask(taskName))
+    it('I should be able to remove a task from the list', () => alice.removeTask(taskName))
   });
 
 });

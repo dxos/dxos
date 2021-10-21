@@ -22,12 +22,12 @@ import { DialogHeading } from '../components';
 
 interface Result { error: Error | undefined }
 
-type ResultType = void | Promise<Result | void> | Result
-
 enum Stage {
   ENTER_INVITATION = 0,
   ENTER_PIN = 1
 }
+
+type ResultType = void | Promise<Result | void> | Result
 
 interface RedeemDialogWithoutClientProps {
   open: boolean
@@ -36,9 +36,12 @@ interface RedeemDialogWithoutClientProps {
   onClose: () => void
 }
 
-// TODO(burdon): Should the dialog manage it's state (directly or via a model) or be passive (with state passed in)?
 /*
-interface ReedeemDialogModel {
+// TODO(burdon): Hook to hide complexity.
+export const useReedeemDialogModel = () => {}
+
+// TODO(burdon): Should the dialog manage it's state (directly or via a model) or be passive (with state passed in)?
+export interface ReedeemDialogModel {
   stage: Stage
   error: Error // Would require effect hook to update state.
   onEnterInvitationCode: () => void

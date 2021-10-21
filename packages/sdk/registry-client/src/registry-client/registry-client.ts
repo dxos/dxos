@@ -10,7 +10,8 @@ import { compactAddLength } from '@polkadot/util';
 import assert from 'assert';
 import protobuf from 'protobufjs';
 
-import { ComplexMap, raise } from '@dxos/util';
+import { raise } from '@dxos/debug';
+import { ComplexMap } from '@dxos/util';
 
 import { ApiTransactionHandler } from '../api-transaction-handler';
 import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData } from '../encoding';

@@ -16,10 +16,12 @@ export default {
 
 export const Primary = () => {
   const [open, setOpen] = useState(true);
+
   return (
     <FullScreen>
       <RedeemDialogWithoutClient
         open={open}
+
         onEnterInvitationCode={async (invitationCode: string) => {
           const match = invitationCode.match(/[a-z]+/g);
           if (!match) {
@@ -32,17 +34,21 @@ export const Primary = () => {
             }, 3000);
           });
         }}
+
         onEnterPin={(pin: string) => {
           const match = pin.match(/[0-9]+/g);
           if (!match) {
             return { error: new Error('Invalid PIN.') };
           }
         }}
+
         onClose={() => setOpen(false)}
       />
     </FullScreen>
   );
 };
+
+// TODO(burdon): Create version using actual hooks and context.
 
 // TODO(burdon): Generate actual invitation code to paste.
 export const WithClient = () => {

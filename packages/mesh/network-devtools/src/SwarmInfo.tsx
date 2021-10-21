@@ -8,8 +8,8 @@ import { IconButton, List, ListItem, ListItemIcon, ListItemText } from '@mui/mat
 import React from 'react';
 
 import { PublicKey } from '@dxos/crypto';
-import { CopyText } from '@dxos/react-components';
 import { ConnectionState, SwarmInfo } from '@dxos/network-manager';
+import { CopyText } from '@dxos/react-components';
 
 export interface SwarmInfoViewProps {
   swarmInfo: SwarmInfo

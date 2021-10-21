@@ -1,3 +1,3 @@
-## React Components
+# React Components
 
-This package
+Low-level material components.

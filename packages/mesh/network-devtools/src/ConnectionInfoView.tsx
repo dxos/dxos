@@ -6,8 +6,8 @@ import ArrowBackIos from '@mui/icons-material/ArrowBackIos';
 import { IconButton, List, ListItem } from '@mui/material';
 import React from 'react';
 
-import { CopyText } from '@dxos/react-components';
 import { ConnectionInfo } from '@dxos/network-manager';
+import { CopyText } from '@dxos/react-components';
 
 export interface ConnectionInfoViewProps {
   connectionInfo: ConnectionInfo,

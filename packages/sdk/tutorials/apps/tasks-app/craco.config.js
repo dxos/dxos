@@ -15,7 +15,7 @@ module.exports = {
     configure: (webpackConfig, { env, paths }) => {
       const buildFolder = path.join(__dirname, 'dist')
 
-      webpackConfig.entry = './src/index.js'
+      webpackConfig.entry = './src/index.tsx'
 
       webpackConfig.output = {
         ...webpackConfig.output,
