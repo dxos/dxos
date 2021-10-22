@@ -5,9 +5,10 @@
 import protobufjs, { IConversionOptions } from 'protobufjs';
 
 import { BidirectionalMapingDescriptors, mapMessage } from './mapping';
+import { Codec } from './interface';
 import type { Schema } from './schema';
 
-const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
+export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
   // Represent long integers as strings.
   longs: String,
 
@@ -16,7 +17,7 @@ const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
   arrays: true
 };
 
-export class Codec<T = any> {
+export class ProtoCodec<T = any> implements Codec<T> {
   constructor (
     private readonly _type: protobufjs.Type,
     private readonly _mapping: BidirectionalMapingDescriptors,
