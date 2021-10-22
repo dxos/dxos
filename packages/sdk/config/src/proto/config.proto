@@ -59,7 +59,16 @@ message Services {
   }
 
   message Dxns {
+    /// DXNS endpoint.
     string server = 1;
+
+    /**
+     * Substrate account URI. This is a secret.
+     * KUBEs do not serve this with the config but we store it in profile.yml.
+     *
+     * TODO(dmaretskyi): Deprecate this and move it to keyring.
+     */
+    string accountUri = 2;
   }
 
   message Ipfs {
