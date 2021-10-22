@@ -18,7 +18,7 @@ import { useClient, ClientInitializer, ProfileInitializer } from '@dxos/react-cl
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-const Root = () => {
+const Test = () => {
   const client = useClient();
 
   return (
@@ -26,14 +26,15 @@ const Root = () => {
   );
 };
 
-ReactDOM.render(
+const Root = () => (
   <ClientInitializer>
     <ProfileInitializer>
       <Root />
     </ProfileInitializer>
   </ClientInitializer>,
-  document.getElementById('root')
 );
+
+ReactDOM.render(<Roo />, document.getElementById('root'));
 ```
 
 ## Storybooks
