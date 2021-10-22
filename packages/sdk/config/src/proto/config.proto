@@ -14,7 +14,7 @@ message Config {
   // Global configuration sections
   //
 
-  System system = 1;
+  System system = 1 [(env) = "SYSTEM"];
   Services services = 2;
 
   /// Build metdata
@@ -25,16 +25,16 @@ message Config {
   //
 
   /// App configuration. Incuded if this configuration is for an app.
-  App app = 101;
+  App app = 101 [(env) = "APP"];
 
   /// App configuration. Incuded if this configuration is for a bot.
   Bot bot = 102 [(env) = "BOT"];
 }
 
-// TODO(dmaretskyi): Move into KUBE service?
 message System {
+  // TODO(dmaretskyi): Move into KUBE service?
   string certEndpoint = 1;
-  string debug = 2;
+  string debug = 2 [(env) = "DEBUG"];
 }
 
 /// Services provided to all DXOS agents
@@ -94,7 +94,7 @@ message App {
     string org = 2;
     string theme = 3;
     string website = 4;
-    string publicUrl = 5;
+    string publicUrl = 5 [(env) = "PUBLIC_URL"];
 }
 
 /// Bot configuration
