@@ -16,6 +16,8 @@ rushx book
 
 ## Usage
 
+The snippet below illustrates a self-contained DXOS application that uses providers to create the client and instantiate a user profile.
+
 ```javascript
 import { useClient, ClientInitializer, ProfileInitializer } from '@dxos/react-client';
 import React from 'react';
