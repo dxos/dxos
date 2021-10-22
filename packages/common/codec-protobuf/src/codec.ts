@@ -24,6 +24,24 @@ export class ProtoCodec<T = any> implements Codec<T> {
     private readonly _schema: Schema<any>
   ) {}
 
+  /**
+   * Underlying protobuf.js type descriptor.
+   */
+  get protoType(): protobufjs.Type {
+    return this._type;
+  }
+
+  get substitutionMappings(): BidirectionalMapingDescriptors {
+    return this._mapping;
+  }
+
+  /**
+   * Reference to the protobuf schema this codec was created from.
+   */
+  get schema(): Schema<any> {
+    return this._schema;
+  }
+
   encode (value: T): Uint8Array {
     const sub = mapMessage(this._type, this._mapping.encode, value, [this._schema]);
     return this._type.encode(sub).finish();
