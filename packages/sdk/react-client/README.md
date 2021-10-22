@@ -39,7 +39,7 @@ const Root = () => (
   </ClientInitializer>,
 );
 
-ReactDOM.render(<Roo />, document.getElementById('root'));
+ReactDOM.render(<Root />, document.getElementById('root'));
 ```
 
 ## Storybooks
