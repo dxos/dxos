@@ -2,8 +2,13 @@
 
 ## Install
 
-```
-$ npm install @dxos/react-client
+```bash
+git clone git@github.com:dxos/protocols.git
+cd protocols
+rush update && rush build
+
+cd packages/sdk/demos
+rushx book
 ```
 
 ## Usage
