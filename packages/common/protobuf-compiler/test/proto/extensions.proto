@@ -10,5 +10,13 @@ extend google.protobuf.FieldOptions {
 
 
 message WithDefaultField {
+  /// Tag
   string tag = 1 [(defaultValue) = "latest"];
+}
+
+message ContainingMessageWithExtensions {
+  oneof kind {
+    string str = 1;
+    WithDefaultField msg = 2;
+  }
 }
