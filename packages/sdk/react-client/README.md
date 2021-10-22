@@ -14,14 +14,26 @@ rushx book
 ## Usage
 
 ```javascript
-import { useClient } from '@dxos/react-client';
+import { useClient, ClientInitializer, ProfileInitializer } from '@dxos/react-client';
+import React from 'react';
+import ReactDOM from 'react-dom';
 
-const Components = () => {
+const Root = () => {
   const client = useClient();
+
   return (
     <pre>{JSON.stringify(client.info())}</pre>
   );
 };
+
+ReactDOM.render(
+  <ClientInitializer>
+    <ProfileInitializer>
+      <Root />
+    </ProfileInitializer>
+  </ClientInitializer>,
+  document.getElementById('root')
+);
 ```
 
 ## Storybooks
