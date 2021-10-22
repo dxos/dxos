@@ -8,6 +8,7 @@ package dxos.config;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/descriptor.proto";
+import "google/protobuf/struct.proto";
 
 message Config {
   //
@@ -29,6 +30,9 @@ message Config {
 
   /// App configuration. Incuded if this configuration is for a bot.
   Bot bot = 102 [(env) = "BOT"];
+
+  /// Custom configuration as untyped JSON.
+  Struct custom = 1001;
 }
 
 message System {
