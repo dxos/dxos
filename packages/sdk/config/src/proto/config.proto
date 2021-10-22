@@ -1,0 +1,122 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.config;
+
+import "google/protobuf/timestamp.proto";
+
+message Config {
+  //
+  // Global configuration sections
+  //
+
+  System system = 1;
+  Services services = 2;
+
+  /// Build metdata
+  Build build = 11;
+
+  //
+  // Agent-specific sections
+  //
+
+  /// App configuration. Incuded if this configuration is for an app.
+  App app = 101;
+
+  /// App configuration. Incuded if this configuration is for a bot.
+  Bot bot = 102;
+}
+
+// TODO(dmaretskyi): Move into KUBE service?
+message System {
+  string certEndpoint = 1;
+  string debug = 2;
+}
+
+/// Services provided to all DXOS agents
+message Services {
+  message Kube {
+
+    message Endpoints {
+      string logs = 1;
+      string services = 2;
+    }
+  
+    Endpoints endpoints = 1;
+  }
+
+  message AppServer {
+    string prefix = 1;
+    string server = 2;
+  }
+
+  message Dxns {
+    string server = 1;
+  }
+
+  message Ipfs {
+    string server = 1;
+    string gateway = 2;
+  }
+
+  message Signal {
+    string server = 1;
+  }
+
+  message Ice {
+    string urls = 1;
+    string username = 2;
+    string credential = 3;
+  }
+
+  Kube kube = 1;
+  AppServer app_server = 2;
+  Dxns dxns = 3;
+  Ipfs ipfs = 4;
+  Signal signal = 5;
+  repeated Ice ice = 6;
+}
+
+/// Build metadata
+message Build {
+  string version = 1;
+  string commit_hash = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+/// App configuration
+message App {
+    string title = 1;
+    string org = 2;
+    string theme = 3;
+    string website = 4;
+    string publicUrl = 5;
+}
+
+/// Bot configuration
+message Bot {
+
+  message Ipc {
+    int32 portFrom = 1;
+    int32 portTo = 2;
+    string serverId = 3;
+  }
+
+  string uid = 1;
+  string name = 2;
+  string cwd = 3;
+  bool restarted = 4;
+  bool reset = 5;
+  string peerId = 6;
+  string topic = 7;
+  string secretKey = 8;
+  bool localDev = 9;
+  string nodePath = 10;
+  string controlTopic = 11;
+  string dumpFile = 12;
+  Ipc ipc = 13;
+}
+
