@@ -12,7 +12,8 @@ import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents/test-agent';
 import { AGENT_PATH } from './agent';
 import '../testing/setup';
 
-test('local source', async () => {
+// TODO(rzadp): Broken because of incorrect DXNS in configuration.
+test.skip('local source', async () => {
   const orchestrator = await Orchestrator.create({ local: true });
 
   orchestrator.client.registerModel(MessengerModel);
