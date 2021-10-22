@@ -1,5 +1,7 @@
 # @dxos/react-client
 
+A react implementation of the DXOS Client APIs.
+
 ## Install
 
 ```bash
