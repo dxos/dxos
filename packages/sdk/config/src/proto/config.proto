@@ -7,6 +7,7 @@ syntax = "proto3";
 package dxos.config;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/descriptor.proto";
 
 message Config {
   //
@@ -27,7 +28,7 @@ message Config {
   App app = 101;
 
   /// App configuration. Incuded if this configuration is for a bot.
-  Bot bot = 102;
+  Bot bot = 102 [(env) = "BOT"];
 }
 
 // TODO(dmaretskyi): Move into KUBE service?
@@ -100,23 +101,38 @@ message App {
 message Bot {
 
   message Ipc {
-    int32 portFrom = 1;
-    int32 portTo = 2;
-    string serverId = 3;
+    int32 portFrom = 1 [(env) = "PORT_FROM"];
+    int32 portTo = 2 [(env) = "PORT_TO"];
+    string serverId = 3 [(env) = "SERVER_ID"];
   }
 
-  string uid = 1;
-  string name = 2;
-  string cwd = 3;
-  bool restarted = 4;
-  bool reset = 5;
-  string peerId = 6;
-  string topic = 7;
-  string secretKey = 8;
-  bool localDev = 9;
-  string nodePath = 10;
-  string controlTopic = 11;
-  string dumpFile = 12;
-  Ipc ipc = 13;
+  string uid = 1 [(env) = "UID"];
+  string name = 2 [(env) = "NAME"];
+  string cwd = 3 [(env) = "CWD"];
+  bool restarted = 4 [(env) = "RESTARTED"];
+  bool reset = 5 [(env) = "RESET"];
+  string peerId = 6 [(env) = "PEER_ID"];
+  string topic = 7 [(env) = "TOPIC"];
+  string secretKey = 8 [(env) = "SECRET_KEY"];
+  bool localDev = 9 [(env) = "LOCAL_DEV"];
+  string nodePath = 10 [(env) = "NODE_PATH"];
+  string controlTopic = 11 [(env) = "CONTROL_TOPIC"];
+  string dumpFile = 12 [(env) = "DUMP_FILE"];
+  Ipc ipc = 13 [(env) = "IPC"];
 }
+
+
+
+extend google.protobuf.FieldOptions {
+  /**
+   * Name of the system env variable this config option maps to.
+   * For nested defintions names are concatenated with underscores.
+   */
+  string env = 5001;
+}
+
+
+// message WithDefaultField {
+//   string tag = 1 [(defaultValue) = "latest"];
+// }
 
