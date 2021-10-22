@@ -129,10 +129,10 @@ extend google.protobuf.FieldOptions {
    * For nested defintions names are concatenated with underscores.
    */
   string env = 5001;
+
+  /**
+   * Regex to validate string options.
+   */
+  string regex = 5002;
 }
-
-
-// message WithDefaultField {
-//   string tag = 1 [(defaultValue) = "latest"];
-// }
 
