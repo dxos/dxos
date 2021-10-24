@@ -36,19 +36,6 @@ interface RedeemDialogWithoutClientProps {
   onClose: () => void
 }
 
-/*
-// TODO(burdon): Hook to hide complexity.
-export const useReedeemDialogModel = () => {}
-
-// TODO(burdon): Should the dialog manage it's state (directly or via a model) or be passive (with state passed in)?
-export interface ReedeemDialogModel {
-  stage: Stage
-  error: Error // Would require effect hook to update state.
-  onEnterInvitationCode: () => void
-  onEnterPin: () => void
-}
-*/
-
 /**
  * Component used for claiming invitations to Parties.
  * Works for both regular and `Offline` invitations.
@@ -132,6 +119,7 @@ export const RedeemDialogWithoutClient = ({
       open={open}
       fullWidth
       maxWidth='xs'
+      disableEscapeKeyDown
       onClose={stage === 0 ? handleDone : undefined} // Prevent click-away when in the middle of a flow.
     >
       <DialogHeading

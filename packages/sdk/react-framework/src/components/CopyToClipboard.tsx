@@ -13,7 +13,7 @@ import { CopyToClipboard as Clipboard } from 'react-copy-to-clipboard';
  */
 export const CopyToClipboard = ({
   text,
-  onCopy = console.log,
+  onCopy,
   icon: Icon = CopyIcon
 } : {
   text: string,
@@ -23,7 +23,7 @@ export const CopyToClipboard = ({
   return (
     <Clipboard
       text={text}
-      onCopy={value => onCopy!(value)}
+      onCopy={value => onCopy && onCopy(value)}
     >
       <IconButton
         color='inherit'

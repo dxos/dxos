@@ -31,6 +31,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",

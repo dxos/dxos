@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-components",
-  "version": "2.16.2",
+  "version": "2.16.1",
   "description": "Low-level material components.",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -42,9 +42,6 @@
     "@mui/lab": "^5.0.0-alpha.48",
     "@mui/material": "^5.0.1",
     "@mui/system": "^5.0.1",
-    "@types/debug": "^4.1.1",
-    "@types/faker": "~5.5.1",
-    "@types/lodash.isplainobject": "^4.0.6",
     "@types/react": "^17.0.24",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/url-join": "~4.0.1",
