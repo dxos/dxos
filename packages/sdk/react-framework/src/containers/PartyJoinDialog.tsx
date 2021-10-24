@@ -7,14 +7,10 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { CustomizableDialogProps } from '@dxos/react-components';
 import { decodeInvitation, useClient, useSecretProvider } from '@dxos/react-client';
-
-//
-// Hooks
-//
 
 // TODO(burdon): Util.
 const handleKey = (key: string, callback: () => void) => (event: { key: string }) => {
@@ -35,7 +31,9 @@ interface PartyJoinDialogState {
   dialogProps: CustomizableDialogProps
 }
 
-// TODO(burdon): Factor out.
+/**
+ * Manages the workflow for joining a party using an invitation code.
+ */
 export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [PartyJoinDialogState, () => void] => {
   const [state, setState] = useState<PartyJoinState>(initialState);
   const [invitationCode, setInvitationCode] = useState('');
@@ -43,6 +41,12 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
   const [processing, setProcessing] = useState<boolean>(false);
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
   const client = useClient();
+
+  useEffect(() => {
+    setProcessing(false);
+    setInvitationCode('');
+    setPin('');
+  }, [state])
 
   const handleProcessInvitation = async () => {
     const invitation = decodeInvitation(invitationCode);
@@ -55,6 +59,7 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
   }
 
   const handleAuthenticate = () => {
+    setProcessing(true);
     secretResolver(Buffer.from(pin));
   }
 

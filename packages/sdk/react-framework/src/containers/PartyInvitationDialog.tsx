@@ -7,7 +7,9 @@ import React, { useEffect, useState } from 'react';
 
 import { CopyText, CustomizableDialogProps } from '@dxos/react-components';
 import { PublicKey } from '@dxos/crypto';
-import { encodeInvitation, useClient, useSecretGenerator, useSecretProvider } from '@dxos/react-client';
+import { encodeInvitation, useClient, useSecretGenerator } from '@dxos/react-client';
+
+// TODO(burdon): Merge with ShareDialog from wallet.
 
 enum PartyInvitationState {
   INIT,
@@ -19,6 +21,9 @@ interface PartyInvitationDialogState {
   dialogProps: CustomizableDialogProps
 }
 
+/**
+ * Manages the workflow for inviting a user to a party.
+ */
 export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvitationDialogState, () => void] => {
   const [state, setState] = useState<PartyInvitationState>(PartyInvitationState.INIT);
   const [invitationCode, setInvitationCode] = useState<string>();
@@ -26,6 +31,8 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
   const client = useClient();
 
   useEffect(() => {
+    resetPin();
+    setInvitationCode(undefined);
     setState(PartyInvitationState.INIT);
   }, [partyKey]);
 
