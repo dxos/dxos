@@ -27,7 +27,6 @@ type UseInvitationRedeemerProps = {
  * @param isOffline Is this an `Offline` invitation?
  * @deprecated
  */
-// TODO(burdon): Return state (link useAuthenticator).
 export const useInvitationRedeemer = ({
   onDone = noOp, // TODO(burdon): Hooks shouldn't have callbacks (return state?)
   onError = noOp,

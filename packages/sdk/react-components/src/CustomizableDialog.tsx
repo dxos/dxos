@@ -6,7 +6,6 @@ import React from 'react';
 
 import {
   Alert,
-  Box,
   Card,
   CardActions,
   CardContent,
@@ -23,7 +22,7 @@ export interface CustomizableDialogProps extends DialogProps {
   title?: string
   content?: () => JSX.Element
   actions?: () => JSX.Element
-  loading?: boolean
+  processing?: boolean
   error?: string
 }
 
@@ -34,7 +33,7 @@ export const CustomizableDialog = ({
   title,
   content,
   actions,
-  loading,
+  processing,
   error,
   ...dialogProps
 }: CustomizableDialogProps) => {
@@ -51,7 +50,7 @@ export const CustomizableDialog = ({
       <DialogContent dividers>
         {content?.() || null}
       </DialogContent>
-      {loading && (
+      {processing && (
         <LinearProgress />
       )}
       {error && (
@@ -73,7 +72,7 @@ export const TestCustomizableDialog = ({
   title,
   content,
   actions,
-  loading,
+  processing,
   error,
   ...dialogProps
 }: CustomizableDialogProps) => {
@@ -85,13 +84,16 @@ export const TestCustomizableDialog = ({
   return (
     <Card
       raised
+      sx={{
+        minWidth: 444
+      }}
       {...dialogProps}
     >
       <CardHeader title={title} />
       <CardContent>
         {content?.() || null}
       </CardContent>
-      {loading && (
+      {processing && (
         <LinearProgress />
       )}
       {error && (

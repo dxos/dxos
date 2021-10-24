@@ -18,15 +18,15 @@ import {
   useClient,
   useContacts,
   useParties,
-  useProfile
+  useProfile,
+  useSecretGenerator,
+  useSecretProvider
 } from '../src';
 import {
-  useSecretProvider,
-  useProvider,
   ClientPanel,
   ContactsSelector,
   Container,
-  RedeemInvitationPanel
+  PartyJoinPanel
 } from './helpers';
 
 export default {
@@ -42,7 +42,7 @@ const PartyInviatationContainer = () => {
   const client = useClient();
   const [partyKey, setPartyKey] = useState<PublicKey>();
   const [invitationCode, setInvitationCode] = useState<string>();
-  const [secretProvider, pin, resetPin] = useSecretProvider();
+  const [secretProvider, pin, resetPin] = useSecretGenerator();
   const [contact, setContact] = useState<string>();
   const [contacts] = useContacts();
 
@@ -126,10 +126,10 @@ const PartyInviatationContainer = () => {
 /**
  * Processes party invitations.
  */
-const RedeemPartyInvitationContainer = () => {
+const PartyJoinContainer = () => {
   const client = useClient();
   const [status, setStatus] = useState({});
-  const [secretProvider, secretResolver] = useProvider<Buffer>();
+  const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
 
   const handleSubmit = async (invitationCode: string) => {
     setStatus({});
@@ -151,7 +151,7 @@ const RedeemPartyInvitationContainer = () => {
   };
 
   return (
-    <RedeemInvitationPanel
+    <PartyJoinPanel
       status={status}
       onSubmit={handleSubmit}
       onAuthenticate={handleAuthenticate}
@@ -178,7 +178,7 @@ const TestApp = () => {
         <Divider />
         <PartyInviatationContainer/>
         <Divider />
-        <RedeemPartyInvitationContainer/>
+        <PartyJoinContainer/>
       </Paper>
     </Box>
   );

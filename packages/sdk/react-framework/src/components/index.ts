@@ -4,7 +4,6 @@
 
 export * from './BooleanIcon';
 export * from './CopyToClipboard';
-export * from './CustomizableDialog';
 export * from './DialogHeading';
 export * from './EditableText';
 export * from './ErrorBoundary';

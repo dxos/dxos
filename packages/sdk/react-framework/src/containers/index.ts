@@ -2,5 +2,5 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './RedeemDialog';
-export * from './RedeemDialogWithoutClient';
+export * from './PartyInvitationDialog';
+export * from './PartyJoinDialog';

@@ -30,16 +30,16 @@ enum TestState {
   CANCEL
 }
 
-interface TestStateMachineProps {
+interface TestDialogState {
   state: TestState
   value: string | undefined
   dialogProps: CustomizableDialogProps
 }
 
-const useTestDialogState = (initialState = TestState.INIT): [TestStateMachineProps, () => void] => {
+const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, () => void] => {
   const [state, setState] = useState<TestState>(initialState);
   const [error, setError] = useState<string | undefined>();
-  const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [value, setValue] = useState<string>('');
 
   useEffect(() => {
@@ -50,7 +50,7 @@ const useTestDialogState = (initialState = TestState.INIT): [TestStateMachinePro
 
   const props = {
     open: true,
-    loading,
+    processing,
     error
   }
 
@@ -64,9 +64,9 @@ const useTestDialogState = (initialState = TestState.INIT): [TestStateMachinePro
   }
 
   const handleProcessing = () => {
-    setLoading(true);
+    setProcessing(true);
     setTimeout((() => {
-      setLoading(false);
+      setProcessing(false);
       setState(TestState.DONE);
     }), 1000);
   };
