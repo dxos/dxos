@@ -43,13 +43,16 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
   const client = useClient();
 
   useEffect(() => {
-    handleReset();
+    if (state === PartyJoinState.INIT) {
+      handleReset();
+    }
   }, [state])
 
   const handleReset = () => {
-    setProcessing(false);
     setInvitationCode('');
     setPin('');
+    setProcessing(false);
+    setState(PartyJoinState.INIT);
   }
 
   const handleProcessInvitation = async () => {

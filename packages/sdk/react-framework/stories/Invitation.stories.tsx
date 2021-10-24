@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Box, Button, Toolbar } from '@mui/material';
+import { Box, Button, Toolbar, styled } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient } from '@dxos/react-client';
@@ -60,6 +60,14 @@ const Receiver = () => {
 
 // TODO(burdon): Error handling, retry, etc.
 
+const Column = styled('div')({
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+  flexShrink: 0,
+  margin: 16
+});
+
 export const Primary = () => {
   return (
     <FullScreen>
@@ -70,13 +78,17 @@ export const Primary = () => {
         }}>
           <ClientInitializer>
             <ProfileInitializer>
-              <Sender />
+              <Column>
+                <Sender />
+              </Column>
             </ProfileInitializer>
           </ClientInitializer>
 
           <ClientInitializer>
             <ProfileInitializer>
-              <Receiver />
+              <Column>
+                <Receiver />
+              </Column>
             </ProfileInitializer>
           </ClientInitializer>
         </Box>

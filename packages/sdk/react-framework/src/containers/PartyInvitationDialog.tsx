@@ -11,6 +11,7 @@ import { encodeInvitation, useClient, useSecretGenerator } from '@dxos/react-cli
 
 enum PartyInvitationState {
   INIT,
+  CANCEL,
   DONE
 }
 
@@ -24,7 +25,7 @@ interface PartyInvitationDialogState {
  */
 export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvitationDialogState, () => void] => {
   const [state, setState] = useState<PartyInvitationState>(PartyInvitationState.INIT);
-  // TODO(burdon): Multiple invitations at once.
+  // TODO(burdon): Multiple invitations at once (show useMembers).
   const [invitationCode, setInvitationCode] = useState<string>();
   const [secretProvider, pin, resetPin] = useSecretGenerator();
   const client = useClient();
@@ -32,6 +33,12 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
   useEffect(() => {
     handleReset();
   }, [partyKey]);
+
+  useEffect(() => {
+    if (state === PartyInvitationState.INIT) {
+      handleReset();
+    }
+  }, [state])
 
   const handleReset = () => {
     resetPin();
@@ -52,7 +59,7 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
     });
   };
 
-  const getDialogPropse = (state: PartyInvitationState) => {
+  const getDialogProps = (state: PartyInvitationState) => {
     switch (state) {
       case PartyInvitationState.INIT: {
         return {
@@ -75,6 +82,11 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
                 </TableBody>
               </Table>
             </>
+          ),
+          actions: () => (
+            <>
+              <Button onClick={() => setState(PartyInvitationState.CANCEL)}>Cancel</Button>
+            </>
           )
         }
       }
@@ -87,7 +99,7 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
     }
   };
 
-  return [{ state, dialogProps: getDialogPropse(state) }, handleReset];
+  return [{ state, dialogProps: getDialogProps(state) }, handleReset];
 };
 
 // TODO(burdon): Replace ShareDialog
