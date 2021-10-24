@@ -166,6 +166,7 @@ export const RedeemDialogWithoutClient = ({
 
             <State isProcessing={isProcessing} error={error} />
           </DialogContent>
+
           <DialogActions>
             <Button
               color='secondary'
@@ -210,6 +211,7 @@ export const RedeemDialogWithoutClient = ({
             />
             <State isProcessing={isProcessing} error={error} />
           </DialogContent>
+
           <DialogActions>
             <Button
               color='secondary'
