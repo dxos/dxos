@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { JsonPanel } from './JsonPanel';
 
-export const RedeemInvitationPanel = (
+export const PartyJoinPanel = (
   {
     status,
     onSubmit,

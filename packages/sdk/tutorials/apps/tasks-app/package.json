@@ -9,7 +9,7 @@
     "pack:app": "pnpm pack",
     "start": "SKIP_PREFLIGHT_CHECK=true craco start",
     "test": "SKIP_PREFLIGHT_CHECK=true craco test --passWithNoTests --watchAll=false",
-    "test:playwright":  "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts' --timeout 30000"
+    "test:playwright": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts' --timeout 30000"
   },
   "browserslist": {
     "production": [

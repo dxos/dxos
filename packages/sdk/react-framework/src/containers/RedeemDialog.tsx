@@ -31,6 +31,7 @@ interface RedeemDialogProps {
 /**
  * Component used for claiming invitations to Parties.
  * Works for both regular and `Offline` invitations.
+ * @deprecated
  */
 export const RedeemDialog = ({ open, code = '', onClose, pinless = false }: RedeemDialogProps) => {
   const [isOffline] = useState(false);
