@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
-import { CustomizableDialogProps } from '@dxos/react-components';
+import { CustomizableDialog, CustomizableDialogProps } from '@dxos/react-components';
 import { decodeInvitation, useClient, useSecretProvider } from '@dxos/react-client';
 
 // TODO(burdon): Util.
@@ -43,10 +43,14 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
   const client = useClient();
 
   useEffect(() => {
+    handleReset();
+  }, [state])
+
+  const handleReset = () => {
     setProcessing(false);
     setInvitationCode('');
     setPin('');
-  }, [state])
+  }
 
   const handleProcessInvitation = async () => {
     const invitation = decodeInvitation(invitationCode);
@@ -68,7 +72,7 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
       case PartyJoinState.INIT: {
         return {
           open: true,
-          title: 'Redeem Invitation',
+          title: 'Join Party',
           content: () => (
             <>
               <TextField
@@ -134,5 +138,14 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
     }
   };
 
-  return [{ state, dialogProps: getDialogPropse(state) }, () => setState(PartyJoinState.INIT)];
+  return [{ state, dialogProps: getDialogPropse(state) }, handleReset];
 };
+
+// TODO(burdon): Replace RedeemDialog
+export const PartyJoinDialog = () => {
+  const [{ dialogProps }, reset] = usePartyJoinDialogState();
+
+  return (
+    <CustomizableDialog {...dialogProps} />
+  );
+}

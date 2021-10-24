@@ -2,14 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Box, Button } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableRow } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
-import { CopyText, CustomizableDialogProps } from '@dxos/react-components';
 import { PublicKey } from '@dxos/crypto';
+import { CopyText, CustomizableDialog, CustomizableDialogProps } from '@dxos/react-components';
 import { encodeInvitation, useClient, useSecretGenerator } from '@dxos/react-client';
-
-// TODO(burdon): Merge with ShareDialog from wallet.
 
 enum PartyInvitationState {
   INIT,
@@ -26,19 +24,24 @@ interface PartyInvitationDialogState {
  */
 export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvitationDialogState, () => void] => {
   const [state, setState] = useState<PartyInvitationState>(PartyInvitationState.INIT);
+  // TODO(burdon): Multiple invitations at once.
   const [invitationCode, setInvitationCode] = useState<string>();
   const [secretProvider, pin, resetPin] = useSecretGenerator();
   const client = useClient();
 
   useEffect(() => {
+    handleReset();
+  }, [partyKey]);
+
+  const handleReset = () => {
     resetPin();
     setInvitationCode(undefined);
     setState(PartyInvitationState.INIT);
-  }, [partyKey]);
+  }
 
   const handleCreateInvitation = () => {
     setImmediate(async () => {
-      // TODO(burdon): Handle offline.
+      // TODO(burdon): Handle offline (display members).
       const invitation = await client.createInvitation(partyKey!, secretProvider, {
         onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
           setState(PartyInvitationState.DONE);
@@ -54,17 +57,23 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
       case PartyInvitationState.INIT: {
         return {
           open: true,
-          title: 'Invite Users',
+          title: 'Share Party',
           processing: !!pin,
           content: () => (
             <>
               <Button onClick={handleCreateInvitation}>Create Invitation</Button>
-              <Box sx={{ width: 200 }}>
-                <CopyText value={invitationCode} />
-              </Box>
-              <Box sx={{ width: 200 }}>
-                <CopyText value={pin} />
-              </Box>
+              <Table>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>
+                      <CopyText value={invitationCode} length={4} />
+                    </TableCell>
+                    <TableCell sx={{ width: 0 }}>
+                      <CopyText value={pin} />
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </>
           )
         }
@@ -78,5 +87,14 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
     }
   };
 
-  return [{ state, dialogProps: getDialogPropse(state) }, () => setState(PartyInvitationState.INIT)];
+  return [{ state, dialogProps: getDialogPropse(state) }, handleReset];
 };
+
+// TODO(burdon): Replace ShareDialog
+export const PartyInvitationDialog = () => {
+  const [{ dialogProps }, reset] = usePartyInvitationDialogState();
+
+  return (
+    <CustomizableDialog {...dialogProps} />
+  );
+}

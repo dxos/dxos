@@ -7,15 +7,12 @@ import { AvatarGroup, Box, Tooltip, Theme, useTheme } from '@mui/material';
 import React from 'react';
 
 import { humanize } from '@dxos/crypto';
-import { Party, PartyMember } from '@dxos/echo-db';
+import { PartyMember } from '@dxos/echo-db';
 
-import { useMembers } from '../hooks';
 import { Avatar, MemberAvatar } from './MemberAvatar';
 
-// TODO(burdon): Pass in array (small UX data object) of processed members (don't apply humanize here).
-export const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void }) => {
+export const MembersList = ({ members = [], onShare }: { members?: PartyMember[], onShare: () => void }) => {
   const theme = useTheme() as Theme;
-  const members: PartyMember[] = useMembers(party); // TODO(burdon): Pass-in to make dumb component.
 
   return (
     <Box

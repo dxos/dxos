@@ -16,7 +16,7 @@ import { ErrorBoundary } from '@dxos/react-client';
 import { CustomizableDialog, CustomizableDialogProps, TestCustomizableDialog } from '../src';
 
 export default {
-  title: 'react-framework/CustomizableDialog'
+  title: 'react-components/CustomizableDialog'
 };
 
 //
