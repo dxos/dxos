@@ -22,7 +22,7 @@ describe('BotFactory', () => {
         },
         ice: undefined,
         dxns: {
-          server: 'wss://dxns1.kube.moon.dxos.network/dxns/ws'
+          server: 'wss://enterprise.kube.dxos.network/dxns/ws'
         }
       }
     }), {});

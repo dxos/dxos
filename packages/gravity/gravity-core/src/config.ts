@@ -29,9 +29,8 @@ export const OVERRIDE_CONFIG = {
 
 export const getTestConfig = async () => {
   if (!existsSync(PROFILE_PATH)) {
-    // TODO(egorgripasov): DX_PROFILE_URL.
-    assert(process.env.WIRE_PROFILE_URL, 'Missing WIRE_PROFILE_URL environment variable.');
-    writeFileSync(PROFILE_PATH, await download(process.env.WIRE_PROFILE_URL));
+    assert(process.env.DX_PROFILE_URL, 'Missing DX_PROFILE_URL environment variable.');
+    writeFileSync(PROFILE_PATH, await download(process.env.DX_PROFILE_URL));
   }
 
   const profileConfig = yaml.load(String(readFileSync(PROFILE_PATH)));
