@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import { NOOP_CODEC } from '@dxos/codec-protobuf';
 import { ModelMutation, MutationMeta } from '@dxos/echo-protocol';
 import { Model, ModelMeta, ModelType } from '@dxos/model-factory';
-import { NOOP_CODEC } from '@dxos/codec-protobuf';
 
 /**
  * Is instantiated for items that have unregistered types.

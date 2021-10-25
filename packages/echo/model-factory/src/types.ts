@@ -4,8 +4,8 @@
 
 import assert from 'assert';
 
-import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
 import type { Codec } from '@dxos/codec-protobuf';
+import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
 
 //
 // Types
