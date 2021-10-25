@@ -91,7 +91,12 @@ message Task {
    * Multiline field comment.
    */
   required Key key = 3;
+
+  // I'm a comment
   required TaskType type = 4;
+
+  // And I'm a comment with
+  // multiple lines
   google.protobuf.Any googleAny = 5;
 }
 

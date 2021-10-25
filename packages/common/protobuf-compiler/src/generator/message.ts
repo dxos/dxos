@@ -26,11 +26,8 @@ export function createMessageDeclaration (type: protobufjs.Type, subs: Substitut
         getFieldType(field, subs)
       );
 
-      if (!field.comment) {
-        return signature;
-      }
-
-      return attachDocComment(signature, field.comment);
+      const docComment = getFieldDocComment(field);
+      return docComment ? attachDocComment(signature, docComment) : signature;
     })
   );
 
@@ -39,4 +36,22 @@ export function createMessageDeclaration (type: protobufjs.Type, subs: Substitut
   }
 
   return attachDocComment(declaration, type.comment);
+}
+
+function getFieldDocComment (field: protobufjs.Field) {
+  const sections: string[] = [];
+
+  if (field.comment) {
+    sections.push(field.comment);
+  }
+
+  if (field.options) {
+    sections.push('Options:\n' + Object.entries(field.options).map(([key, value]) => `  - ${key} = ${JSON.stringify(value)}`).join('\n'));
+  }
+
+  if (sections.length === 0) {
+    return undefined;
+  } else {
+    return sections.join('\n\n');
+  }
 }

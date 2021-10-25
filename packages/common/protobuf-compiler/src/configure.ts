@@ -9,5 +9,5 @@ import pb from 'protobufjs';
  */
 export function preconfigureProtobufjs () {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  pb.common('descriptor', require('protobufjs/google/protobuf/descriptor.json'));
+  pb.common('descriptor', require('protobufjs/google/protobuf/descriptor.json').nested.google.nested.protobuf.nested);
 }

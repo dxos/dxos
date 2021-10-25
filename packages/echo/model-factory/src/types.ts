@@ -4,12 +4,8 @@
 
 import assert from 'assert';
 
+import type { Codec } from '@dxos/codec-protobuf';
 import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
-
-export interface Codec<T> {
-  encode(value: T): Uint8Array
-  decode(data: Uint8Array): T
-}
 
 //
 // Types
