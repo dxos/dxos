@@ -1,22 +1,45 @@
 # @dxos/react-client
 
+A react implementation of the DXOS Client APIs.
+
 ## Install
 
-```
-$ npm install @dxos/react-client
+```bash
+git clone git@github.com:dxos/protocols.git
+cd protocols
+rush update
+rush build
+
+cd packages/sdk/demos
+rushx book
 ```
 
 ## Usage
 
-```javascript
-import { useClient } from '@dxos/react-client';
+The snippet below illustrates a self-contained DXOS application that uses providers to create the client and instantiate a user profile.
 
-const Components = () => {
+```javascript
+import { useClient, ClientInitializer, ProfileInitializer } from '@dxos/react-client';
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+const Test = () => {
   const client = useClient();
+
   return (
     <pre>{JSON.stringify(client.info())}</pre>
   );
 };
+
+const Root = () => (
+  <ClientInitializer>
+    <ProfileInitializer>
+      <Root />
+    </ProfileInitializer>
+  </ClientInitializer>,
+);
+
+ReactDOM.render(<Root />, document.getElementById('root'));
 ```
 
 ## Storybooks
