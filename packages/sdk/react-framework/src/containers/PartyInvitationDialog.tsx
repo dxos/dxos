@@ -51,7 +51,7 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
       // TODO(burdon): Handle offline (display members).
       const invitation = await client.createInvitation(partyKey!, secretProvider, {
         onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
-          setState(PartyInvitationState.DONE);
+          handleReset();
         }
       });
 

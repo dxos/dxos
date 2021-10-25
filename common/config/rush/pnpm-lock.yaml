@@ -1492,8 +1492,8 @@ importers:
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
-      '@dxos/esapp': 0.1.6
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
+      '@dxos/esbuild-server': 1.0.2
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@storybook/addon-essentials': 6.3.12_c86ec7d94593fc421030610c98243b1b
       '@storybook/addon-links': 6.3.12_react-dom@17.0.2+react@17.0.2
@@ -1535,8 +1535,8 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
-      '@dxos/esapp': ~0.1.6
       '@dxos/esbuild-plugins': workspace:*
+      '@dxos/esbuild-server': ~1.0.2
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/object-model': workspace:*
@@ -1893,6 +1893,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/react-client': link:../react-client
+      '@dxos/react-components': link:../react-components
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@emotion/react': 11.4.1_9bfa804cd21315a6b28257b6309f6867
       '@emotion/styled': 11.3.0_7153564620b9f6be3c75efaa2248597b
@@ -1917,6 +1918,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
@@ -5039,7 +5041,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-9m1Ftf+1RsQvf9JIDOZTJouHyT3X4kdqn1/tDSL9NrvOgLFjp/cA/vzyMcPAZTJCBkcF+xIkR/Peu2/jhwy0gQ==
-  /@dxos/esapp/0.1.6:
+  /@dxos/esbuild-server/1.0.2:
     dependencies:
       chalk: 4.1.2
       esbuild: 0.12.29
@@ -5055,7 +5057,7 @@ packages:
     dev: true
     hasBin: true
     resolution:
-      integrity: sha512-IsMEpC9KHo/XLuBOvj4R+PI34HxPi/MFS1N8GzZ3PSq1PhYb+GhYBgSvblrJx88QEG/R5zlvv+a9LVYxsPUceg==
+      integrity: sha512-OZ0JC4VZfjYKWHRqsGmDR5wQxnlv+XM/Z39PdIDgLNRGI3+CKHOv9C6mNSoVEEOYCjxC4vE4/DN1iiECVihaUg==
   /@dxos/eslint-plugin/1.0.16_eslint@7.26.0+typescript@4.3.5:
     dependencies:
       '@rushstack/eslint-patch': 1.0.6
@@ -25855,7 +25857,7 @@ packages:
       micromatch: 4.0.4
       semver: 7.3.5
       typescript: 4.3.5
-      webpack: 4.44.2
+      webpack: 4.44.2_webpack-cli@4.7.2
     dev: true
     engines:
       node: '>=10.0.0'
