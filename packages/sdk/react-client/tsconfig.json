@@ -30,6 +30,9 @@
       "path": "../../common/crypto"
     },
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../echo/echo-db"
     },
     {

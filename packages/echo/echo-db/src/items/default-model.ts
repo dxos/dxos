@@ -2,13 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import { NOOP_CODEC } from '@dxos/codec-protobuf';
 import { ModelMutation, MutationMeta } from '@dxos/echo-protocol';
-import { Model, ModelMeta, Codec, ModelType } from '@dxos/model-factory';
-
-const noopCodec: Codec<Uint8Array> = {
-  encode: (value: Uint8Array) => value,
-  decode: (data: Uint8Array) => data
-};
+import { Model, ModelMeta, ModelType } from '@dxos/model-factory';
 
 /**
  * Is instantiated for items that have unregistered types.
@@ -19,7 +15,7 @@ const noopCodec: Codec<Uint8Array> = {
 export class DefaultModel extends Model<Uint8Array> {
   static meta: ModelMeta = {
     type: 'dxn://dxos/model/default',
-    mutation: noopCodec
+    mutation: NOOP_CODEC
   };
 
   private _mutations: ModelMutation[] = [];

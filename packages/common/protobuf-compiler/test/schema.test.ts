@@ -1,6 +1,6 @@
 import { ComplexFields, Scalars, TaskList, TaskType, WithTimestamp } from './proto/gen/dxos/test'
 import { TestFoo } from "./proto/gen/dxos/test/testfoo";
-import { schema, TYPES } from './proto/gen';
+import { schema } from './proto/gen';
 import { MyKey } from './my-key';
 import { readFileSync, readdirSync, lstatSync } from 'fs'
 import { join } from 'path'

@@ -24,6 +24,9 @@
       "path": "../protocol-plugin-presence"
     },
     {
+      "path": "../../sdk/react-components"
+    },
+    {
       "path": "../../sdk/react-framework"
     }
   ]
