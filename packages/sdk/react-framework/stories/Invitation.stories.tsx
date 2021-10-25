@@ -22,7 +22,7 @@ export default {
 const Sender = () => {
   const client = useClient();
   const [partyKey, setPartyKey] = useState<PublicKey>();
-  const [{ dialogProps }, reset] = usePartyInvitationDialogState(partyKey);
+  const { dialogProps, reset} = usePartyInvitationDialogState({partyKey, open: true});
 
   useEffect(() => {
     setImmediate(async () => {
@@ -44,7 +44,7 @@ const Sender = () => {
 };
 
 const Receiver = () => {
-  const [{ dialogProps }, reset] = usePartyJoinDialogState();
+  const { dialogProps, reset} = usePartyJoinDialogState({open: true});
 
   return (
     <Box>

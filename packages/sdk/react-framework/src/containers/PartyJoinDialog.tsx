@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 
 import { decodeInvitation, useClient, useSecretProvider } from '@dxos/react-client';
 import { CustomizableDialog, CustomizableDialogProps } from '@dxos/react-components';
+import { DialogProps } from './DialogProps';
 
 // TODO(burdon): Util.
 const handleKey = (key: string, callback: () => void) => (event: { key: string }) => {
@@ -26,15 +27,20 @@ enum PartyJoinState {
   DONE
 }
 
-interface PartyJoinDialogState {
-  state: PartyJoinState
-  dialogProps: CustomizableDialogProps
+export interface usePartyJoinDialogStateProps extends DialogProps {
+  initialState?: PartyJoinState,
+}
+
+export interface usePartyJoinDialogStateResult {
+  dialogProps: CustomizableDialogProps,
+  state: PartyJoinState,
+  reset: () => void,
 }
 
 /**
  * Manages the workflow for joining a party using an invitation code.
  */
-export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [PartyJoinDialogState, () => void] => {
+export const usePartyJoinDialogState = ({initialState = PartyJoinState.INIT, open, onClose}: usePartyJoinDialogStateProps): usePartyJoinDialogStateResult => {
   const [state, setState] = useState<PartyJoinState>(initialState);
   const [invitationCode, setInvitationCode] = useState('');
   const [pin, setPin] = useState('');
@@ -46,8 +52,13 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
     setInvitationCode('');
     setPin('');
     setProcessing(false);
-    setState(PartyJoinState.INIT);
   };
+
+
+  const handleCancel = () => {
+    setState(PartyJoinState.INIT);
+    onClose?.();
+  }
 
   useEffect(() => {
     if (state === PartyJoinState.INIT) {
@@ -74,7 +85,7 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
     switch (state) {
       case PartyJoinState.INIT: {
         return {
-          open: true,
+          open: !!open,
           title: 'Join Party',
           content: function JoinPartyContent () {
             return (
@@ -97,7 +108,7 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
           actions: function JoinPartyActions () {
             return (
             <>
-              <Button onClick={() => setState(PartyJoinState.CANCEL)}>Cancel</Button>
+              <Button onClick={handleCancel}>Cancel</Button>
               <Button onClick={handleProcessInvitation}>Process</Button>
             </>
             );
@@ -107,7 +118,7 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
 
       case PartyJoinState.AUTHENTICATE: {
         return {
-          open: true,
+          open: !!open,
           title: 'Authenticate',
           content: function AuthenticateContent () {
             return (
@@ -133,8 +144,31 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
           actions: function AuthenticateActions () {
             return (
             <>
-              <Button onClick={() => setState(PartyJoinState.CANCEL)}>Cancel</Button>
+              <Button onClick={handleCancel}>Cancel</Button>
               <Button onClick={handleAuthenticate}>Submit</Button>
+            </>
+            );
+          }
+        };
+      }
+
+      case PartyJoinState.DONE: {
+        return {
+          open: !!open,
+          title: 'Joined Party',
+          content: function JoinedPartyContent () {
+            return (
+            <>
+              <Typography variant='body1' gutterBottom>
+                Successfully joined invitation to a party!
+              </Typography>
+            </>
+            );
+          },
+          actions: function JoinedPartyActions () {
+            return (
+            <>
+              <Button onClick={handleCancel}>OK</Button>
             </>
             );
           }
@@ -143,18 +177,18 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
 
       default: {
         return {
-          open: false
+          open: !!open,
         };
       }
     }
   };
 
-  return [{ state, dialogProps: getDialogProps(state) }, handleReset];
+  return { state, dialogProps: getDialogProps(state), reset: handleReset };
 };
 
 // TODO(burdon): Replace RedeemDialog
-export const PartyJoinDialog = () => {
-  const [{ dialogProps }/*, reset */] = usePartyJoinDialogState();
+export const PartyJoinDialog = (props: DialogProps) => {
+  const {dialogProps} = usePartyJoinDialogState(props);
 
   return (
     <CustomizableDialog {...dialogProps} />

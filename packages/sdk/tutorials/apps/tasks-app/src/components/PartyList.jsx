@@ -24,7 +24,7 @@ import {
 } from '@mui/icons-material';
 
 import { useParties } from '@dxos/react-client';
-import { RedeemDialog } from '@dxos/react-framework';
+import { PartyJoinDialog } from '@dxos/react-framework';
 
 import { getPartyTitle } from '../utils/hacks.utils';
 import PartySettings from './PartySettings';
@@ -66,7 +66,7 @@ const useStyles = makeStyles(theme => ({
  */
 const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
   const classes = useStyles();
-  const [redeemDialog, setRedeemDialog] = useState(false);
+  const [partyJoinDialog, setPartyJoinDialog] = useState(false);
   const [{ settingsDialog, settingsPartyKey }, setSettingsDialog] = useState({});
   const parties = useParties();
 
@@ -77,7 +77,7 @@ const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
   };
 
   const handleRedeemParty = () => {
-    setRedeemDialog(true);
+    setPartyJoinDialog(true);
   };
 
   // TODO(burdon): Why was party.open renamed party.activate?
@@ -99,10 +99,9 @@ const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
         />
       )}
 
-      {redeemDialog && (
-        <RedeemDialog
-          open
-          pinless
+      {partyJoinDialog && (
+        <PartyJoinDialog
+          open={partyJoinDialog}
           onClose={() => setRedeemDialog(false)}
         // TODO(burdon): Get party key from dialog.
         />
