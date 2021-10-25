@@ -13,6 +13,7 @@ import React, { ReactElement, useEffect, useState } from 'react';
 
 import { keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';
+
 import { JsonTreeViewProps } from './JsonTreeViewProps';
 
 const StyledTreeView = styled(MuiTreeView)({ overflowX: 'hidden' });
