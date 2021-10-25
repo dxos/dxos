@@ -8,7 +8,6 @@ package dxos.config;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/descriptor.proto";
-import "google/protobuf/struct.proto";
 
 message Config {
   //
@@ -31,14 +30,43 @@ message Config {
   /// App configuration. Incuded if this configuration is for a bot.
   Bot bot = 102 [(env) = "BOT"];
 
-  /// Custom configuration as untyped JSON.
-  Struct custom = 1001;
+  /// Custom configuration as string key-value pairs.
+  map<string, string> custom = 1001;
 }
 
 message System {
+  message Storage {
+    enum StorageType {
+      RAM = 0;
+      IDB = 1;
+      CHROME = 2;
+      FIREFOX = 3;
+      NODE = 4;
+    }
+
+    enum KeyStorageType {
+      RAM_KEY_STORAGE = 0;
+      LEVELJS = 1;
+      JSONDOWN = 2;
+    }
+
+    bool persistent = 1;
+    StorageType type = 2;
+    KeyStorageType key_storage = 3;
+    string path = 4;
+  }
+
   // TODO(dmaretskyi): Move into KUBE service?
   string certEndpoint = 1;
   string debug = 2 [(env) = "DEBUG"];
+  Storage storage = 3;
+  bool enable_snapshots = 4;
+
+  /// Milliseconds
+  int32 snapshot_interval = 5;
+
+  /// Milliseconds
+  int32 invitation_expiration = 6;
 }
 
 /// Services provided to all DXOS agents
