@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
-
 import {
   Alert,
   Card,
@@ -17,6 +15,7 @@ import {
   DialogTitle,
   LinearProgress
 } from '@mui/material';
+import React from 'react';
 
 export interface CustomizableDialogProps extends DialogProps {
   title?: string
@@ -60,7 +59,7 @@ export const CustomizableDialog = ({
         {actions?.() || null}
       </DialogActions>
     </Dialog>
-  )
+  );
 };
 
 /**
@@ -105,5 +104,5 @@ export const TestCustomizableDialog = ({
         {actions?.() || null}
       </CardActions>
     </Card>
-  )
+  );
 };
