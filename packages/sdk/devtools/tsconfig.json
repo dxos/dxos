@@ -27,6 +27,9 @@
       "path": "../../mesh/network-devtools"
     },
     {
+      "path": "../react-components"
+    },
+    {
       "path": "../react-framework"
     },
     {
