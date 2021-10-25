@@ -16,6 +16,10 @@ export default {
 
 export const Primary = () => {
   return (
-    <ProfileDialog open={true} onCreate={handleClose} onCancel={handleClose} />
+    <ProfileDialog
+      open={true}
+      onCreate={handleClose}
+      onCancel={handleClose}
+    />
   );
 };

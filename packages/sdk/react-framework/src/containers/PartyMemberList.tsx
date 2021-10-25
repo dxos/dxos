@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Party, PartyMember } from '@dxos/echo-db';
 
-import { useMembers } from '../hooks';
 import { MembersList } from '../components';
+import { useMembers } from '../hooks';
 
 /**
  * @deprecated

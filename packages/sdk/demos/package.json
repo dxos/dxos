@@ -2,7 +2,7 @@
   "name": "@dxos/demos",
   "version": "2.10.10",
   "private": true,
-  "description": "ECHO database demo app.",
+  "description": "SDK demos and storybooks.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
@@ -14,7 +14,7 @@
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "scripts": {
-    "book": "../../../../esbuild-server/bin/main.js book 'stories/**/*.tsx' '../tutorials/apps/tasks-app/stories/**/*.tsx' '../react-{client,components,framework,registry-client}/stories/**/*.{stories,story}.tsx'",
+    "book": "esbuild-server book 'stories/**/*.tsx' '../tutorials/apps/tasks-app/stories/**/*.tsx' '../react-{client,components,framework,registry-client}/stories/**/*.{stories,story}.tsx'",
     "build": "tsc --noEmit",
     "build-storybook": "build-storybook --quiet",
     "build-storybook-docs": "build-storybook --quiet --docs",
@@ -67,7 +67,7 @@
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/esbuild-server": "~1.0.1",
+    "@dxos/esbuild-server": "~1.2.0",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@storybook/addon-essentials": "^6.3.11",

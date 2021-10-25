@@ -6,7 +6,8 @@ import { firefox } from 'playwright';
 
 import { Browser, TaskApp } from './utils';
 
-describe('Party Test Cases', () => {
+// TODO(rzadp): Add back after `PartyJoinDialog` and `PartyInvitationDialog` API is stable.
+describe.skip('Party Test Cases', () => {
   const initialUrl = 'http://localhost:3000/';
   let chocolatesCounter = 1
   let listName = 'My Party List';

@@ -9,10 +9,8 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
-    "build-storybook": "build-storybook --quiet",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "test": "toolchain test"
   },
   "dependencies": {
@@ -20,14 +18,14 @@
     "@dxos/client": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
     "assert": "^2.0.0",
     "debug": "^4.1.1",
     "react-display-name": "^0.2.5",
-    "use-subscription": "^1.4.1",
-    "@dxos/debug": "workspace:*"
+    "use-subscription": "^1.4.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

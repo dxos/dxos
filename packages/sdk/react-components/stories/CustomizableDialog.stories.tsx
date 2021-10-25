@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+/* eslint-disable react/display-name */
 
 import {
   Box,
@@ -10,6 +10,7 @@ import {
   TextField,
   Typography
 } from '@mui/material';
+import React, { useEffect, useState } from 'react';
 
 import { ErrorBoundary } from '@dxos/react-client';
 
@@ -52,7 +53,7 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
     open: true,
     processing,
     error
-  }
+  };
 
   const handleNext = () => {
     if (!value.length) {
@@ -61,7 +62,7 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
       setError(undefined);
       setState(TestState.VALIDATE);
     }
-  }
+  };
 
   const handleProcessing = () => {
     setProcessing(true);
@@ -113,7 +114,7 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
       default: {
         return {
           open: false
-        }
+        };
       }
     }
   };
@@ -142,7 +143,7 @@ export const Primary = () => {
       />
     </ErrorBoundary>
   );
-}
+};
 
 export const Secondary = () => {
   const [{ dialogProps, ...rest }, reset] = useTestDialogState(TestState.INIT);
@@ -165,4 +166,4 @@ export const Secondary = () => {
       </Box>
     </ErrorBoundary>
   );
-}
+};

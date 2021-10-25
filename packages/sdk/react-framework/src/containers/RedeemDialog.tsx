@@ -20,12 +20,11 @@ import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 
 import { DialogHeading } from '../components';
 import { handleRedeemError } from '../helpers';
+import { DialogProps } from './DialogProps';
 
-interface RedeemDialogProps {
-  open: boolean
+interface RedeemDialogProps extends DialogProps {
   code?: string
   pinless?: boolean
-  onClose: () => void
 }
 
 /**
@@ -49,7 +48,7 @@ export const RedeemDialog = ({ open, code = '', onClose, pinless = false }: Rede
     setInvitationCode('');
     setPinCode('');
     setIsProcessing(false);
-    onClose();
+    onClose?.();
   };
 
   const handleInvitationError = (error: string) => {
@@ -104,7 +103,7 @@ export const RedeemDialog = ({ open, code = '', onClose, pinless = false }: Rede
     <Dialog
       fullWidth
       maxWidth='xs'
-      open={open}
+      open={!!open}
       onClose={step === 0 ? handleDone : undefined} // No click away when in the middle of a flow.
     >
       <DialogHeading title='Redeem Invitation' icon={RedeemIcon} />

@@ -5,9 +5,9 @@
 import { Box, Button, Toolbar, styled } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
-import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient } from '@dxos/react-client';
-import { FullScreen, TestCustomizableDialog } from '@dxos/react-components';
 import { PublicKey } from '@dxos/crypto';
+import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient, useParties } from '@dxos/react-client';
+import { FullScreen, CopyText, TestCustomizableDialog } from '@dxos/react-components';
 
 import {
   ErrorView,
@@ -19,32 +19,52 @@ export default {
   title: 'react-framework/Invitations'
 };
 
+const Parties = () => {
+  const parties = useParties();
+
+  return (
+    <Box>
+      {parties.map(party => (
+        <Box key={party.key.toHex()}>
+          <CopyText value={party.key.toHex()} />
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
 const Sender = () => {
   const client = useClient();
   const [partyKey, setPartyKey] = useState<PublicKey>();
-  const [{ dialogProps }, reset] = usePartyInvitationDialogState(partyKey);
+  const { dialogProps, reset } = usePartyInvitationDialogState({ partyKey, open: true });
+
+  const handleCreateParty = async () => {
+    const party = await client.echo.createParty();
+    setPartyKey(party.key);
+  };
 
   useEffect(() => {
-    setImmediate(async () => {
-      const party = await client.echo.createParty();
-      setPartyKey(party.key);
-    });
+    void handleCreateParty();
   }, []);
 
   return (
     <Box>
       <Toolbar>
         <Button onClick={reset}>Reset</Button>
+        <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
       <TestCustomizableDialog
         {...dialogProps}
       />
+      <Box sx={{ marginTop: 2, padding: 1 }}>
+        <Parties />
+      </Box>
     </Box>
   );
-}
+};
 
 const Receiver = () => {
-  const [{ dialogProps }, reset] = usePartyJoinDialogState();
+  const { dialogProps, reset } = usePartyJoinDialogState({ open: true });
 
   return (
     <Box>
@@ -54,18 +74,22 @@ const Receiver = () => {
       <TestCustomizableDialog
         {...dialogProps}
       />
+      <Box sx={{ marginTop: 2, padding: 1 }}>
+        <Parties />
+      </Box>
     </Box>
   );
-}
+};
 
 // TODO(burdon): Error handling, retry, etc.
 
 const Column = styled('div')({
   display: 'flex',
   flexDirection: 'column',
+  overflow: 'hidden',
   flex: 1,
   flexShrink: 0,
-  margin: 16
+  padding: 16
 });
 
 export const Primary = () => {
@@ -95,4 +119,4 @@ export const Primary = () => {
       </ErrorBoundary>
     </FullScreen>
   );
-}
+};

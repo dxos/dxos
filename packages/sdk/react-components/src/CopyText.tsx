@@ -15,7 +15,6 @@ export interface CopyTextProps extends TypographyProps {
 }
 
 export const CopyText = ({ value, length, sx, ...rest }: CopyTextProps) => {
-
   // TODO(burdon): Only expand to limit of div.
   return (
     <Box sx={{
