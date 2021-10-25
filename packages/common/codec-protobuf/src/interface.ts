@@ -1,3 +1,7 @@
+//
+// Copyright 2021 DXOS.org
+//
+
 export interface Codec<T> {
   encode(value: T): Uint8Array
   decode(data: Uint8Array): T

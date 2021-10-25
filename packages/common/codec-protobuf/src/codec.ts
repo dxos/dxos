@@ -4,8 +4,8 @@
 
 import protobufjs, { IConversionOptions } from 'protobufjs';
 
-import { BidirectionalMapingDescriptors, mapMessage } from './mapping';
 import { Codec } from './interface';
+import { BidirectionalMapingDescriptors, mapMessage } from './mapping';
 import type { Schema } from './schema';
 
 export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
@@ -27,18 +27,18 @@ export class ProtoCodec<T = any> implements Codec<T> {
   /**
    * Underlying protobuf.js type descriptor.
    */
-  get protoType(): protobufjs.Type {
+  get protoType (): protobufjs.Type {
     return this._type;
   }
 
-  get substitutionMappings(): BidirectionalMapingDescriptors {
+  get substitutionMappings (): BidirectionalMapingDescriptors {
     return this._mapping;
   }
 
   /**
    * Reference to the protobuf schema this codec was created from.
    */
-  get schema(): Schema<any> {
+  get schema (): Schema<any> {
     return this._schema;
   }
 
