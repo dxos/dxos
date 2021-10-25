@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Button, Table, TableBody, TableCell, TableRow } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableRow, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
@@ -39,10 +39,11 @@ export const usePartyInvitationDialogState = ({ partyKey, onClose, open }: usePa
   const handleReset = () => {
     resetPin();
     setInvitationCode(undefined);
+    setState(PartyInvitationState.INIT);
   };
 
   const handleCancel = () => {
-    setState(PartyInvitationState.INIT);
+    handleReset();
     onClose?.();
   };
 
@@ -99,6 +100,30 @@ export const usePartyInvitationDialogState = ({ partyKey, onClose, open }: usePa
             return (
             <>
               <Button onClick={handleCancel}>Cancel</Button>
+            </>
+            );
+          }
+        };
+      }
+
+      case PartyInvitationState.DONE: {
+        return {
+          open: !!open,
+          title: 'Shared Party',
+          processing: false,
+          content: function SharedPartyContent () {
+            return (
+            <>
+              <Typography variant='body1' gutterBottom>
+                Successfully shared an invitation to a party!
+              </Typography>
+            </>
+            );
+          },
+          actions: function SharedPartyActions () {
+            return (
+            <>
+              <Button onClick={handleCancel}>OK</Button>
             </>
             );
           }

@@ -53,10 +53,11 @@ export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, op
     setInvitationCode('');
     setPin('');
     setProcessing(false);
+    setState(PartyJoinState.INIT);
   };
 
   const handleCancel = () => {
-    setState(PartyJoinState.INIT);
+    handleReset();
     onClose?.();
   };
 
@@ -73,6 +74,7 @@ export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, op
     const party = await client.echo.joinParty(invitation, secretProvider);
     await party.open();
 
+    setProcessing(false);
     setState(PartyJoinState.DONE);
   };
 
