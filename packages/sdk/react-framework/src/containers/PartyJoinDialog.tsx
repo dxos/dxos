@@ -76,7 +76,8 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
         return {
           open: true,
           title: 'Join Party',
-          content: () => (
+          content: function JoinPartyContent () {
+            return (
             <>
               <TextField
                 autoFocus
@@ -91,13 +92,16 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
                 rows={6}
               />
             </>
-          ),
-          actions: () => (
+            );
+          },
+          actions: function JoinPartyActions () {
+            return (
             <>
               <Button onClick={() => setState(PartyJoinState.CANCEL)}>Cancel</Button>
               <Button onClick={handleProcessInvitation}>Process</Button>
             </>
-          )
+            );
+          }
         };
       }
 
@@ -105,7 +109,8 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
         return {
           open: true,
           title: 'Authenticate',
-          content: () => (
+          content: function AuthenticateContent () {
+            return (
             <>
               <Typography variant='body1' gutterBottom>
                 Enter the PIN number.
@@ -123,13 +128,16 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
                 onKeyDown={handleKey('Enter', handleAuthenticate)}
               />
             </>
-          ),
-          actions: () => (
+            );
+          },
+          actions: function AuthenticateActions () {
+            return (
             <>
               <Button onClick={() => setState(PartyJoinState.CANCEL)}>Cancel</Button>
               <Button onClick={handleAuthenticate}>Submit</Button>
             </>
-          )
+            );
+          }
         };
       }
 
@@ -146,7 +154,7 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
 
 // TODO(burdon): Replace RedeemDialog
 export const PartyJoinDialog = () => {
-  const [{ dialogProps }, reset] = usePartyJoinDialogState();
+  const [{ dialogProps }/*, reset */] = usePartyJoinDialogState();
 
   return (
     <CustomizableDialog {...dialogProps} />

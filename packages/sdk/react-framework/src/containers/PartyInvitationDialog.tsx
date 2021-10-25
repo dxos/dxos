@@ -66,7 +66,8 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
           open: true,
           title: 'Share Party',
           processing: !!pin,
-          content: () => (
+          content: function SharePartyContent () {
+            return (
             <>
               <Button onClick={handleCreateInvitation}>Create Invitation</Button>
               <Table>
@@ -82,12 +83,15 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
                 </TableBody>
               </Table>
             </>
-          ),
-          actions: () => (
+            );
+          },
+          actions: function SharePartyActions () {
+            return (
             <>
               <Button onClick={() => setState(PartyInvitationState.CANCEL)}>Cancel</Button>
             </>
-          )
+            );
+          }
         };
       }
 
@@ -104,7 +108,7 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
 
 // TODO(burdon): Replace ShareDialog
 export const PartyInvitationDialog = () => {
-  const [{ dialogProps }, reset] = usePartyInvitationDialogState();
+  const [{ dialogProps }/*, reset */] = usePartyInvitationDialogState();
 
   return (
     <CustomizableDialog {...dialogProps} />
