@@ -71,4 +71,4 @@ export const PartyMemberList = ({
       onShare={onShare}
     />
   );
-}
+};

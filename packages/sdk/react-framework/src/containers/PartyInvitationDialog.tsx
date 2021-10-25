@@ -6,8 +6,8 @@ import { Button, Table, TableBody, TableCell, TableRow } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
-import { CopyText, CustomizableDialog, CustomizableDialogProps } from '@dxos/react-components';
 import { encodeInvitation, useClient, useSecretGenerator } from '@dxos/react-client';
+import { CopyText, CustomizableDialog, CustomizableDialogProps } from '@dxos/react-components';
 
 enum PartyInvitationState {
   INIT,
@@ -30,6 +30,12 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
   const [secretProvider, pin, resetPin] = useSecretGenerator();
   const client = useClient();
 
+  const handleReset = () => {
+    resetPin();
+    setInvitationCode(undefined);
+    setState(PartyInvitationState.INIT);
+  };
+
   useEffect(() => {
     handleReset();
   }, [partyKey]);
@@ -38,13 +44,7 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
     if (state === PartyInvitationState.INIT) {
       handleReset();
     }
-  }, [state])
-
-  const handleReset = () => {
-    resetPin();
-    setInvitationCode(undefined);
-    setState(PartyInvitationState.INIT);
-  }
+  }, [state]);
 
   const handleCreateInvitation = () => {
     setImmediate(async () => {
@@ -88,13 +88,13 @@ export const usePartyInvitationDialogState = (partyKey?: PublicKey): [PartyInvit
               <Button onClick={() => setState(PartyInvitationState.CANCEL)}>Cancel</Button>
             </>
           )
-        }
+        };
       }
 
       default: {
         return {
           open: false
-        }
+        };
       }
     }
   };
@@ -109,4 +109,4 @@ export const PartyInvitationDialog = () => {
   return (
     <CustomizableDialog {...dialogProps} />
   );
-}
+};

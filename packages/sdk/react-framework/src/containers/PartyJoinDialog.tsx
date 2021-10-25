@@ -9,8 +9,8 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
-import { CustomizableDialog, CustomizableDialogProps } from '@dxos/react-components';
 import { decodeInvitation, useClient, useSecretProvider } from '@dxos/react-client';
+import { CustomizableDialog, CustomizableDialogProps } from '@dxos/react-components';
 
 // TODO(burdon): Util.
 const handleKey = (key: string, callback: () => void) => (event: { key: string }) => {
@@ -42,18 +42,18 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
   const client = useClient();
 
-  useEffect(() => {
-    if (state === PartyJoinState.INIT) {
-      handleReset();
-    }
-  }, [state])
-
   const handleReset = () => {
     setInvitationCode('');
     setPin('');
     setProcessing(false);
     setState(PartyJoinState.INIT);
-  }
+  };
+
+  useEffect(() => {
+    if (state === PartyJoinState.INIT) {
+      handleReset();
+    }
+  }, [state]);
 
   const handleProcessInvitation = async () => {
     const invitation = decodeInvitation(invitationCode);
@@ -63,14 +63,14 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
     await party.open();
 
     setState(PartyJoinState.DONE);
-  }
+  };
 
   const handleAuthenticate = () => {
     setProcessing(true);
     secretResolver(Buffer.from(pin));
-  }
+  };
 
-  const getDialogPropse = (state: PartyJoinState) => {
+  const getDialogProps = (state: PartyJoinState) => {
     switch (state) {
       case PartyJoinState.INIT: {
         return {
@@ -130,18 +130,18 @@ export const usePartyJoinDialogState = (initialState = PartyJoinState.INIT): [Pa
               <Button onClick={handleAuthenticate}>Submit</Button>
             </>
           )
-        }
+        };
       }
 
       default: {
         return {
           open: false
-        }
+        };
       }
     }
   };
 
-  return [{ state, dialogProps: getDialogPropse(state) }, handleReset];
+  return [{ state, dialogProps: getDialogProps(state) }, handleReset];
 };
 
 // TODO(burdon): Replace RedeemDialog
@@ -151,4 +151,4 @@ export const PartyJoinDialog = () => {
   return (
     <CustomizableDialog {...dialogProps} />
   );
-}
+};

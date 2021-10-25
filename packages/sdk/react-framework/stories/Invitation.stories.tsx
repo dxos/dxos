@@ -5,9 +5,9 @@
 import { Box, Button, Toolbar, styled } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
+import { PublicKey } from '@dxos/crypto';
 import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient } from '@dxos/react-client';
 import { FullScreen, TestCustomizableDialog } from '@dxos/react-components';
-import { PublicKey } from '@dxos/crypto';
 
 import {
   ErrorView,
@@ -41,7 +41,7 @@ const Sender = () => {
       />
     </Box>
   );
-}
+};
 
 const Receiver = () => {
   const [{ dialogProps }, reset] = usePartyJoinDialogState();
@@ -56,7 +56,7 @@ const Receiver = () => {
       />
     </Box>
   );
-}
+};
 
 // TODO(burdon): Error handling, retry, etc.
 
@@ -95,4 +95,4 @@ export const Primary = () => {
       </ErrorBoundary>
     </FullScreen>
   );
-}
+};
