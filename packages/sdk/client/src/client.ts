@@ -13,9 +13,7 @@ import { Invitation, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import {
-  ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically
-} from '@dxos/echo-db';
+import { ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';

@@ -24,25 +24,29 @@ const handleKey = (key: string, callback: () => void) => (event: { key: string }
 enum PartyJoinState {
   INIT,
   AUTHENTICATE,
-  CANCEL,
   DONE,
   ERROR
 }
 
-export interface usePartyJoinDialogStateProps extends DialogProps {
-  initialState?: PartyJoinState,
+export interface PartyJoinDialogStateResult {
+  dialogProps: CustomizableDialogProps
+  state: PartyJoinState
+  reset: () => void
 }
 
-export interface usePartyJoinDialogStateResult {
-  dialogProps: CustomizableDialogProps,
-  state: PartyJoinState,
-  reset: () => void,
+export interface PartyJoinDialogStateProps extends DialogProps {
+  initialState?: PartyJoinState
+  closeOnSuccess?: boolean
 }
 
 /**
  * Manages the workflow for joining a party using an invitation code.
  */
-export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, open, onClose }: usePartyJoinDialogStateProps): usePartyJoinDialogStateResult => {
+export const usePartyJoinDialogState = ({
+  initialState = PartyJoinState.INIT,
+  closeOnSuccess,
+  open
+}: PartyJoinDialogStateProps): PartyJoinDialogStateResult => {
   const [state, setState] = useState<PartyJoinState>(initialState);
   const [invitationCode, setInvitationCode] = useState('');
   const [pin, setPin] = useState('');
@@ -52,16 +56,18 @@ export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, op
   const client = useClient();
 
   const handleReset = () => {
+    setError(undefined);
+    setProcessing(false);
     setInvitationCode('');
     setPin('');
-    setProcessing(false);
     setState(PartyJoinState.INIT);
-  };
+  }
 
-  const handleCancel = () => {
-    handleReset();
-    onClose?.();
-  };
+  const handleCancel = () => setState(PartyJoinState.DONE);
+
+  console.log(':::', closeOnSuccess);
+
+  const handleDone = () => closeOnSuccess ? setState(PartyJoinState.DONE) : handleReset();
 
   useEffect(() => {
     if (state === PartyJoinState.INIT) {
@@ -83,8 +89,7 @@ export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, op
       return;
     }
 
-    setProcessing(false);
-    setState(PartyJoinState.DONE);
+    handleDone();
   };
 
   const handleAuthenticate = () => {
@@ -161,26 +166,6 @@ export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, op
         };
       }
 
-      // TODO(burdon): Why?
-      case PartyJoinState.DONE: {
-        return {
-          open: !!open,
-          title: 'Joined Party',
-          content: function JoinedPartyContent () {
-            return (
-              <Typography variant='body1' gutterBottom>
-                Successfully joined invitation to a party!
-              </Typography>
-            );
-          },
-          actions: function JoinedPartyActions () {
-            return (
-              <Button onClick={handleCancel}>OK</Button>
-            );
-          }
-        };
-      }
-
       case PartyJoinState.ERROR: {
         return {
           open: !!open,
@@ -196,7 +181,7 @@ export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, op
 
       default: {
         return {
-          open: !!open
+          open: false
         };
       }
     }

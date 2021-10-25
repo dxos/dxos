@@ -36,7 +36,7 @@ const Parties = () => {
 const Sender = () => {
   const client = useClient();
   const [partyKey, setPartyKey] = useState<PublicKey>();
-  const { dialogProps, reset } = usePartyInvitationDialogState({ partyKey, open: true });
+  const { dialogProps, reset } = usePartyInvitationDialogState({ partyKey, open: true, closeOnSuccess: false });
 
   const handleCreateParty = async () => {
     const party = await client.echo.createParty();
@@ -64,7 +64,7 @@ const Sender = () => {
 };
 
 const Receiver = () => {
-  const { dialogProps, reset } = usePartyJoinDialogState({ open: true });
+  const { dialogProps, reset } = usePartyJoinDialogState({ open: true, closeOnSuccess: true });
 
   return (
     <Box>

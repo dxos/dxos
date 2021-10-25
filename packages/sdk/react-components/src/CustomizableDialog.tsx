@@ -3,7 +3,7 @@
 //
 
 import {
-  Alert,
+  Alert as MuiAlert,
   Card,
   CardActions,
   CardContent,
@@ -13,7 +13,8 @@ import {
   DialogContent,
   DialogProps,
   DialogTitle,
-  LinearProgress
+  LinearProgress,
+  styled
 } from '@mui/material';
 import React from 'react';
 
@@ -24,6 +25,15 @@ export interface CustomizableDialogProps extends DialogProps {
   processing?: boolean
   error?: string
 }
+
+const Alert = styled(MuiAlert)({
+  marginTop: 4,
+  marginBottom: 4,
+  '.MuiAlert-Message': {
+    paddingRight: 8,
+    wordBreak: 'break-word'
+  }
+});
 
 /**
  * @constructor
@@ -53,7 +63,7 @@ export const CustomizableDialog = ({
         <LinearProgress />
       )}
       {error && (
-        <Alert sx={{ marginTop: 2 }} severity='error'>{error}</Alert>
+        <Alert severity='error'>{error}</Alert>
       )}
       <DialogActions>
         {actions?.() || null}
@@ -96,7 +106,7 @@ export const TestCustomizableDialog = ({
         <LinearProgress />
       )}
       {error && (
-        <Alert sx={{ marginTop: 2 }} severity='error'>{error}</Alert>
+        <Alert severity='error'>{error}</Alert>
       )}
       <CardActions sx={{
         justifyContent: 'flex-end'

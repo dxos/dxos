@@ -13,43 +13,46 @@ import { DialogProps } from './DialogProps';
 
 enum PartyInvitationState {
   INIT,
+  ERROR,
   DONE
 }
 
-export interface usePartyInvitationDialogStateProps extends DialogProps {
-  partyKey?: PublicKey
-}
-
-export interface usePartyInvitationDialogStateResult {
+export interface PartyInvitationDialogStateResult {
   reset: () => void,
   state: PartyInvitationState
   dialogProps: CustomizableDialogProps
 }
 
+export interface PartyInvitationDialogStateProps extends DialogProps {
+  partyKey?: PublicKey
+  closeOnSuccess?: boolean
+}
+
 /**
  * Manages the workflow for inviting a user to a party.
  */
-export const usePartyInvitationDialogState = ({ partyKey, onClose, open }: usePartyInvitationDialogStateProps): usePartyInvitationDialogStateResult => {
+export const usePartyInvitationDialogState = ({
+  partyKey,
+  closeOnSuccess,
+  open,
+}: PartyInvitationDialogStateProps): PartyInvitationDialogStateResult => {
   const [state, setState] = useState<PartyInvitationState>(PartyInvitationState.INIT);
   // TODO(burdon): Multiple invitations at once (show useMembers).
   const [invitationCode, setInvitationCode] = useState<string>();
   const [secretProvider, pin, resetPin] = useSecretGenerator();
+  const [error, setError] = useState<string | undefined>(undefined);
   const client = useClient();
 
   const handleReset = () => {
-    resetPin();
+    setError(undefined);
     setInvitationCode(undefined);
+    resetPin();
     setState(PartyInvitationState.INIT);
   };
 
-  const handleCancel = () => {
-    handleReset();
-    onClose?.();
-  };
+  const handleCancel = () => setState(PartyInvitationState.DONE);
 
-  useEffect(() => {
-    setState(PartyInvitationState.INIT);
-  }, [partyKey]);
+  const handleDone = () => closeOnSuccess ? setState(PartyInvitationState.DONE) : handleReset();
 
   useEffect(() => {
     if (state === PartyInvitationState.INIT) {
@@ -57,12 +60,16 @@ export const usePartyInvitationDialogState = ({ partyKey, onClose, open }: usePa
     }
   }, [state]);
 
+  useEffect(() => {
+    setState(PartyInvitationState.INIT);
+  }, [partyKey]);
+
   const handleCreateInvitation = () => {
     setImmediate(async () => {
       // TODO(burdon): Handle offline (display members).
       const invitation = await client.createInvitation(partyKey!, secretProvider, {
         onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
-          handleReset();
+          handleDone();
         }
       });
 
@@ -106,25 +113,14 @@ export const usePartyInvitationDialogState = ({ partyKey, onClose, open }: usePa
         };
       }
 
-      case PartyInvitationState.DONE: {
+      case PartyInvitationState.ERROR: {
         return {
           open: !!open,
-          title: 'Shared Party',
-          processing: false,
-          content: function SharedPartyContent () {
+          title: 'Invitation Failed',
+          error,
+          actions: function JoinedPartyActions () {
             return (
-            <>
-              <Typography variant='body1' gutterBottom>
-                Successfully shared an invitation to a party!
-              </Typography>
-            </>
-            );
-          },
-          actions: function SharedPartyActions () {
-            return (
-            <>
-              <Button onClick={handleCancel}>OK</Button>
-            </>
+              <Button onClick={handleReset}>Retry</Button>
             );
           }
         };
@@ -132,7 +128,7 @@ export const usePartyInvitationDialogState = ({ partyKey, onClose, open }: usePa
 
       default: {
         return {
-          open: !!open
+          open: false
         };
       }
     }

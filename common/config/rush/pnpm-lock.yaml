@@ -1538,7 +1538,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ^1.2.0
+      '@dxos/esbuild-server': ~1.2.0
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/object-model': workspace:*
@@ -1740,6 +1740,7 @@ importers:
       '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       assert: 2.0.0
+      base-x: 3.0.9
       debug: 4.3.1
       react-display-name: 0.2.5
       use-subscription: 1.5.1_react@17.0.2
@@ -1804,6 +1805,7 @@ importers:
       babel-jest: ^26.6.0
       babel-loader: ^8.1.0
       babel-plugin-add-module-exports: ^1.0.4
+      base-x: ~3.0.9
       debug: ^4.1.1
       fork-ts-checker-webpack-plugin: ~6.2.5
       jest: ^26.6.3
@@ -6816,7 +6818,7 @@ packages:
       '@polkadot/util': 6.11.1
       '@polkadot/wasm-crypto': 4.2.1_f80d9c849439331b28facb2e7d2e7aba
       '@polkadot/x-randomvalues': 6.11.1
-      base-x: 3.0.8
+      base-x: 3.0.9
       base64-js: 1.5.1
       blakejs: 1.1.1
       bn.js: 4.12.0
@@ -11049,11 +11051,11 @@ packages:
   /balanced-match/1.0.2:
     resolution:
       integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
-  /base-x/3.0.8:
+  /base-x/3.0.9:
     dependencies:
       safe-buffer: 5.2.1
     resolution:
-      integrity: sha512-Rl/1AWP4J/zRrk54hhlxH4drNxPJXYUaKffODVI53/dAsV4t9fBxyxYKAVPU1XBHxYwOWP9h9H0hM2MVw4YfJA==
+      integrity: sha512-H7JU6iBHTal1gp56aKoaa//YUxEaAOUiydvrV/pILqIHXTtqxSkATOnDA2u+jZ/61sD+L/412+7kzXRtWukhpQ==
   /base/0.11.2:
     dependencies:
       cache-base: 1.0.1
@@ -11397,7 +11399,7 @@ packages:
       integrity: sha512-pd8DCoxmbgc7hyPKOvxtqNcjYoOsABPQdcCUjGp3d42VR2CX1ORhk2A87oqqu5R1kk+76nsxZupkmyd+MVtCog==
   /bs58/4.0.1:
     dependencies:
-      base-x: 3.0.8
+      base-x: 3.0.9
     resolution:
       integrity: sha1-vhYedsNU9veIrkBx9j806MTwpCo=
   /bs58check/2.1.2:
@@ -20235,7 +20237,7 @@ packages:
       integrity: sha1-2e6GFHQwiUEaTZrH0h04qmjDbkA=
   /multibase/0.6.1:
     dependencies:
-      base-x: 3.0.8
+      base-x: 3.0.9
       buffer: 5.7.1
     deprecated: This module has been superseded by the multiformats module
     dev: false
@@ -20243,7 +20245,7 @@ packages:
       integrity: sha512-pFfAwyTjbbQgNc3G7D48JkJxWtoJoBMaR4xQUOuB8RnCgRqaYmWNFeJTTvrJ2w51bjLq2zTby6Rqj9TQ9elSUw==
   /multibase/0.7.0:
     dependencies:
-      base-x: 3.0.8
+      base-x: 3.0.9
       buffer: 5.7.1
     deprecated: This module has been superseded by the multiformats module
     dev: false
@@ -20251,7 +20253,7 @@ packages:
       integrity: sha512-TW8q03O0f6PNFTQDvh3xxH03c8CjGaaYrjkl9UQPG6rz53TQzzxJVCIWVjzcbN/Q5Y53Zd0IBQBMVktVgNx4Fg==
   /multibase/1.0.1:
     dependencies:
-      base-x: 3.0.8
+      base-x: 3.0.9
       buffer: 5.7.1
     deprecated: This module has been superseded by the multiformats module
     dev: false
