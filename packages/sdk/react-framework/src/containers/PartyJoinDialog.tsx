@@ -14,7 +14,7 @@ import { CustomizableDialog, CustomizableDialogProps } from '@dxos/react-compone
 
 import { DialogProps } from './DialogProps';
 
-// TODO(burdon): Util.
+// TODO(burdon): Move to react-components?
 const handleKey = (key: string, callback: () => void) => (event: { key: string }) => {
   if (event.key === key) {
     callback();
@@ -25,7 +25,8 @@ enum PartyJoinState {
   INIT,
   AUTHENTICATE,
   CANCEL,
-  DONE
+  DONE,
+  ERROR
 }
 
 export interface usePartyJoinDialogStateProps extends DialogProps {
@@ -47,6 +48,7 @@ export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, op
   const [pin, setPin] = useState('');
   const [processing, setProcessing] = useState<boolean>(false);
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
+  const [error, setError] = useState<string | undefined>(undefined);
   const client = useClient();
 
   const handleReset = () => {
@@ -71,8 +73,15 @@ export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, op
     const invitation = decodeInvitation(invitationCode);
     setState(PartyJoinState.AUTHENTICATE);
 
-    const party = await client.echo.joinParty(invitation, secretProvider);
-    await party.open();
+    try {
+      const party = await client.echo.joinParty(invitation, secretProvider);
+      await party.open();
+    } catch (err) {
+      console.log(err);
+      setError(err.message);
+      setState(PartyJoinState.ERROR);
+      return;
+    }
 
     setProcessing(false);
     setState(PartyJoinState.DONE);
@@ -89,9 +98,8 @@ export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, op
         return {
           open: !!open,
           title: 'Join Party',
-          content: function JoinPartyContent () {
+          content: function JoinPartyContent () { // TODO(burdon): Why functions?
             return (
-            <>
               <TextField
                 autoFocus
                 fullWidth
@@ -104,15 +112,14 @@ export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, op
                 onKeyDown={handleKey('Enter', handleProcessInvitation)}
                 rows={6}
               />
-            </>
             );
           },
           actions: function JoinPartyActions () {
             return (
-            <>
-              <Button onClick={handleCancel}>Cancel</Button>
-              <Button onClick={handleProcessInvitation}>Process</Button>
-            </>
+              <>
+                <Button onClick={handleCancel}>Cancel</Button>
+                <Button onClick={handleProcessInvitation}>Process</Button>
+              </>
             );
           }
         };
@@ -124,54 +131,64 @@ export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, op
           title: 'Authenticate',
           content: function AuthenticateContent () {
             return (
-            <>
-              <Typography variant='body1' gutterBottom>
-                Enter the PIN number.
-              </Typography>
-              <TextField
-                value={pin}
-                onChange={(event) => setPin(event.target.value)}
-                variant='outlined'
-                margin='normal'
-                required
-                fullWidth
-                label='PIN Code'
-                autoFocus
-                disabled={processing}
-                onKeyDown={handleKey('Enter', handleAuthenticate)}
-              />
-            </>
+              <>
+                <Typography variant='body1' gutterBottom>
+                  Enter the PIN number.
+                </Typography>
+                <TextField
+                  value={pin}
+                  onChange={(event) => setPin(event.target.value)}
+                  variant='outlined'
+                  margin='normal'
+                  required
+                  fullWidth
+                  label='PIN Code'
+                  autoFocus
+                  disabled={processing}
+                  onKeyDown={handleKey('Enter', handleAuthenticate)}
+                />
+              </>
             );
           },
           actions: function AuthenticateActions () {
             return (
-            <>
-              <Button onClick={handleCancel}>Cancel</Button>
-              <Button onClick={handleAuthenticate}>Submit</Button>
-            </>
+              <>
+                <Button onClick={handleCancel}>Cancel</Button>
+                <Button onClick={handleAuthenticate}>Submit</Button>
+              </>
             );
           }
         };
       }
 
+      // TODO(burdon): Why?
       case PartyJoinState.DONE: {
         return {
           open: !!open,
           title: 'Joined Party',
           content: function JoinedPartyContent () {
             return (
-            <>
               <Typography variant='body1' gutterBottom>
                 Successfully joined invitation to a party!
               </Typography>
-            </>
             );
           },
           actions: function JoinedPartyActions () {
             return (
-            <>
               <Button onClick={handleCancel}>OK</Button>
-            </>
+            );
+          }
+        };
+      }
+
+      case PartyJoinState.ERROR: {
+        return {
+          open: !!open,
+          title: 'Invitation Failed',
+          error,
+          actions: function JoinedPartyActions () {
+            return (
+              <Button onClick={handleReset}>Retry</Button>
             );
           }
         };

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { useTheme, Box, Divider, TextField } from '@mui/material';
+import { useTheme, Box, Button, Divider, TextField } from '@mui/material';
 import React from 'react';
 
 import { CopyText } from '../src';
@@ -15,15 +15,15 @@ export default {
 
 export const Primary = () => {
   const theme = useTheme();
-  const value = 'ef235aacf90d9f4aadd8c92e4b2562e1d9eb97f0df9ba3b508258739cb013db2';
+  const key = 'ef235aacf90d9f4aadd8c92e4b2562e1d9eb97f0df9ba3b508258739cb013db2';
 
   return (
     <Container>
       <Box sx={{ padding: 1 }}>
         <Box sx={{ width: 240 }}>
           <CopyText value='Text' />
-          <CopyText value={value} sx={{ fontFamily: 'monospace' }} color={theme.palette.primary.main} />
-          <CopyText value={value} sx={{ fontFamily: 'monospace' }} length={8} />
+          <CopyText value={key} sx={{ fontFamily: 'monospace' }} color={theme.palette.primary.main} />
+          <CopyText value={key} sx={{ fontFamily: 'monospace' }} length={8} />
         </Box>
         <Divider />
         <TextField
@@ -31,6 +31,19 @@ export const Primary = () => {
           spellCheck={false}
           fullWidth
         />
+      </Box>
+
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: 1
+      }}>
+        <Box sx={{ flex: 1, flexShrink: 0, overflow: 'hidden' }}>
+          <CopyText value='hello' sx={{ fontFamily: 'monospace' }}  />
+        </Box>
+        <Box sx={{ flex: 1, flexShrink: 0, overflow: 'hidden' }}>
+          <CopyText value={key} sx={{ fontFamily: 'monospace' }}  />
+        </Box>
       </Box>
     </Container>
   );
