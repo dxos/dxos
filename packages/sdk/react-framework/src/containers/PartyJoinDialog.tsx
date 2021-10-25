@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 
 import { decodeInvitation, useClient, useSecretProvider } from '@dxos/react-client';
 import { CustomizableDialog, CustomizableDialogProps } from '@dxos/react-components';
+
 import { DialogProps } from './DialogProps';
 
 // TODO(burdon): Util.
@@ -40,7 +41,7 @@ export interface usePartyJoinDialogStateResult {
 /**
  * Manages the workflow for joining a party using an invitation code.
  */
-export const usePartyJoinDialogState = ({initialState = PartyJoinState.INIT, open, onClose}: usePartyJoinDialogStateProps): usePartyJoinDialogStateResult => {
+export const usePartyJoinDialogState = ({ initialState = PartyJoinState.INIT, open, onClose }: usePartyJoinDialogStateProps): usePartyJoinDialogStateResult => {
   const [state, setState] = useState<PartyJoinState>(initialState);
   const [invitationCode, setInvitationCode] = useState('');
   const [pin, setPin] = useState('');
@@ -54,11 +55,10 @@ export const usePartyJoinDialogState = ({initialState = PartyJoinState.INIT, ope
     setProcessing(false);
   };
 
-
   const handleCancel = () => {
     setState(PartyJoinState.INIT);
     onClose?.();
-  }
+  };
 
   useEffect(() => {
     if (state === PartyJoinState.INIT) {
@@ -177,7 +177,7 @@ export const usePartyJoinDialogState = ({initialState = PartyJoinState.INIT, ope
 
       default: {
         return {
-          open: !!open,
+          open: !!open
         };
       }
     }
@@ -188,7 +188,7 @@ export const usePartyJoinDialogState = ({initialState = PartyJoinState.INIT, ope
 
 // TODO(burdon): Replace RedeemDialog
 export const PartyJoinDialog = (props: DialogProps) => {
-  const {dialogProps} = usePartyJoinDialogState(props);
+  const { dialogProps } = usePartyJoinDialogState(props);
 
   return (
     <CustomizableDialog {...dialogProps} />
