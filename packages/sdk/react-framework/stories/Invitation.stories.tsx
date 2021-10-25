@@ -25,13 +25,13 @@ const Parties = () => {
   return (
     <Box>
       {parties.map(party => (
-        <Box>
+        <Box key={party.key.toHex()}>
           <CopyText value={party.key.toHex()} />
         </Box>
       ))}
     </Box>
   );
-}
+};
 
 const Sender = () => {
   const client = useClient();
@@ -41,7 +41,7 @@ const Sender = () => {
   const handleCreateParty = async () => {
     const party = await client.echo.createParty();
     setPartyKey(party.key);
-  }
+  };
 
   useEffect(() => {
     void handleCreateParty();
