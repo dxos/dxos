@@ -38,40 +38,40 @@ jobs:
 
         # Publish
         node common/scripts/install-run-rush.js publish --publish --include-all --tag latest
-  publish-storybooks:
-    runs-on: [self-hosted, dind-actions-runner]
-    timeout-minutes: 25
-    strategy:
-      matrix:
-        node-version: [16.0]
-    env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Check, install and build
-      run: |
-        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+#   publish-storybooks:
+#     runs-on: [self-hosted, dind-actions-runner]
+#     timeout-minutes: 25
+#     strategy:
+#       matrix:
+#         node-version: [16.0]
+#     env:
+#       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+#       CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+#     steps:
+#     - uses: actions/checkout@v2
+#       with:
+#         fetch-depth: 0
+#     - name: Check, install and build
+#       run: |
+#         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
 
-        npm install -g @microsoft/rush pnpm
-        sudo ./common/scripts/install-dependencies.sh
+#         npm install -g @microsoft/rush pnpm
+#         sudo ./common/scripts/install-dependencies.sh
         
-        # Install dependencies
-        echo "::group::Install"
-        node common/scripts/install-run-rush.js install
-        echo "::endgroup::"
+#         # Install dependencies
+#         echo "::group::Install"
+#         node common/scripts/install-run-rush.js install
+#         echo "::endgroup::"
 
-        # Quick build
-        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose
-    - name: Chromatic
-      run:  |
-        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-        npm install -g @microsoft/rush pnpm
+#         # Quick build
+#         node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose
+#     - name: Chromatic
+#       run:  |
+#         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+#         npm install -g @microsoft/rush pnpm
 
-        cd packages/sdk/demos
-        rushx chromatic-docs
+#         cd packages/sdk/demos
+#         rushx chromatic-docs
   publish-extension:
     runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 25
