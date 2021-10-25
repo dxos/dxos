@@ -14,6 +14,8 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import { keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';
 
+import { JsonTreeViewProps } from './JsonTreeViewProps';
+
 const StyledTreeView = styled(MuiTreeView)({ overflowX: 'hidden' });
 
 const ItemRoot = styled(MuiTreeItem)({
@@ -97,15 +99,6 @@ const TreeItem = ({
     </ItemRoot>
   );
 };
-
-interface JsonTreeViewProps {
-  className?: string
-  data?: any
-  depth?: number
-  onSelect?: () => void
-  root?: string
-  size?: string
-}
 
 /**
  * Visualizes an object as a tree view of all properties.
