@@ -102,7 +102,7 @@ const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
       {partyJoinDialog && (
         <PartyJoinDialog
           open={partyJoinDialog}
-          onClose={() => setRedeemDialog(false)}
+          onClose={() => setPartyJoinDialog(false)}
         // TODO(burdon): Get party key from dialog.
         />
       )}
