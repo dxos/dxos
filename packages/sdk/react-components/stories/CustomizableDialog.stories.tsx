@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+/* eslint-disable react/display-name */
+
 import {
   Box,
   Button,

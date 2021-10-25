@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { useTheme, Box, Button, Divider, TextField } from '@mui/material';
+import { useTheme, Box, Divider, TextField } from '@mui/material';
 import React from 'react';
 
 import { CopyText } from '../src';
@@ -39,10 +39,10 @@ export const Primary = () => {
         padding: 1
       }}>
         <Box sx={{ flex: 1, flexShrink: 0, overflow: 'hidden' }}>
-          <CopyText value='hello' sx={{ fontFamily: 'monospace' }}  />
+          <CopyText value='hello' sx={{ fontFamily: 'monospace' }} />
         </Box>
         <Box sx={{ flex: 1, flexShrink: 0, overflow: 'hidden' }}>
-          <CopyText value={key} sx={{ fontFamily: 'monospace' }}  />
+          <CopyText value={key} sx={{ fontFamily: 'monospace' }} />
         </Box>
       </Box>
     </Container>
