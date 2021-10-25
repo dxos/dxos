@@ -14,10 +14,10 @@
   ],
   "scripts": {
     "build": "pnpm run gen && tsc",
-    "build:test": "pnpm run build && pnpm run test",
+    "build:test": "pnpm run build && pnpm run lint && pnpm run test",
     "gen": "ts-node src/main.ts test/proto/schema.proto test/proto/another.proto -s test/proto/substitutions.ts -o test/proto/gen",
     "lint": "eslint 'src/**/*.ts'",
-    "test": "pnpm run lint && jest 2>&1"
+    "test": "jest 2>&1"
   },
   "eslintConfig": {
     "extends": "plugin:@dxos/recomended"

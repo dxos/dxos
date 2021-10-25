@@ -4,10 +4,11 @@
 
 import protobufjs, { IConversionOptions } from 'protobufjs';
 
+import { Codec } from './interface';
 import { BidirectionalMapingDescriptors, mapMessage } from './mapping';
 import type { Schema } from './schema';
 
-const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
+export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
   // Represent long integers as strings.
   longs: String,
 
@@ -16,12 +17,30 @@ const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
   arrays: true
 };
 
-export class Codec<T = any> {
+export class ProtoCodec<T = any> implements Codec<T> {
   constructor (
     private readonly _type: protobufjs.Type,
     private readonly _mapping: BidirectionalMapingDescriptors,
     private readonly _schema: Schema<any>
   ) {}
+
+  /**
+   * Underlying protobuf.js type descriptor.
+   */
+  get protoType (): protobufjs.Type {
+    return this._type;
+  }
+
+  get substitutionMappings (): BidirectionalMapingDescriptors {
+    return this._mapping;
+  }
+
+  /**
+   * Reference to the protobuf schema this codec was created from.
+   */
+  get schema (): Schema<any> {
+    return this._schema;
+  }
 
   encode (value: T): Uint8Array {
     const sub = mapMessage(this._type, this._mapping.encode, value, [this._schema]);

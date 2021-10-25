@@ -6,6 +6,7 @@ import protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
 import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
+import { serializeSchemaToJson } from '../protobuf-json';
 
 const f = ts.factory;
 
@@ -38,7 +39,7 @@ export function createSerializerDefinition (
         f.createCallExpression(
           f.createPropertyAccessExpression(f.createIdentifier('JSON'), 'parse'),
           undefined,
-          [f.createStringLiteral(JSON.stringify(postprocessProtobufJson(root.toJSON())))]
+          [f.createStringLiteral(JSON.stringify(serializeSchemaToJson(root)))]
         )
       )
     ], ts.NodeFlags.Const)
@@ -63,25 +64,5 @@ export function createSerializerDefinition (
   return {
     imports: [schemaImport],
     exports: [schemaJsonExport, schemaExport]
-  };
-}
-
-interface ProtobufJson {
-  nested?: Record<string, ProtobufJson>
-  [K: string]: any
-}
-
-function postprocessProtobufJson (protobufJson: ProtobufJson): ProtobufJson {
-  if (!protobufJson.nested) {
-    return protobufJson;
-  }
-
-  const newNested = Object.fromEntries(Object.entries(protobufJson.nested)
-    .sort((b, a) => b[0].localeCompare(a[0]))
-    .map(([key, value]) => [key, postprocessProtobufJson(value)]));
-
-  return {
-    ...protobufJson,
-    nested: newNested
   };
 }

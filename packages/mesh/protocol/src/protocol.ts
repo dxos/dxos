@@ -52,7 +52,7 @@ export interface ProtocolOptions {
   /**
    * Define a codec to encode/decode messages from extensions.
    */
-  codec?: Codec
+  codec?: Codec<any>
 
   initiator: boolean,
   userSession?: Record<string, any>,

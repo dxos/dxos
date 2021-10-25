@@ -5,7 +5,7 @@
 import merge from 'lodash.merge';
 import protobufjs, { Root } from 'protobufjs';
 
-import { Codec } from './codec';
+import { ProtoCodec } from './codec';
 import { Substitutions } from './common';
 import { BidirectionalMapingDescriptors, createMappingDescriptors } from './mapping';
 import { ServiceDescriptor } from './service';
@@ -25,20 +25,20 @@ export class Schema<T, S = {}> {
     this._mapping = createMappingDescriptors(substitutions);
   }
 
-  getCodecForType<K extends keyof T & string> (typeName: K): Codec<T[K]> {
+  getCodecForType<K extends keyof T & string> (typeName: K): ProtoCodec<T[K]> {
     if (typeof typeName !== 'string') {
       throw new TypeError('Expected `typeName` argument to be a string');
     }
     const type = this._typesRoot.lookupType(typeName);
-    return new Codec(type, this._mapping, this);
+    return new ProtoCodec(type, this._mapping, this);
   }
 
-  tryGetCodecForType (typeName: string): Codec {
+  tryGetCodecForType (typeName: string): ProtoCodec {
     if (typeof typeName !== 'string') {
       throw new TypeError('Expected `typeName` argument to be a string');
     }
     const type = this._typesRoot.lookupType(typeName);
-    return new Codec(type, this._mapping, this);
+    return new ProtoCodec(type, this._mapping, this);
   }
 
   getService<K extends keyof S & string> (name: K): ServiceDescriptor<S[K]> {
