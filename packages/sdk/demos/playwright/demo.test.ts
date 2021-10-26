@@ -80,6 +80,7 @@ describe('Demo - Primary and Peers', async function () {
 
   it('Peers - Alice invites Bob to a party', async () => {
     await alice.page!.goto(peersUrl);
+    await alice.page!.reload(); // For some reason a required fix for firefox. In chromium not needed.
     await createParty(alice.page!);
     const invitationFromAlice = await createInvitation(alice.page!);
 
@@ -92,10 +93,12 @@ describe('Demo - Primary and Peers', async function () {
 
   it('Peers - Replication in party', async () => {
     await alice.page!.goto(peersUrl);
+    await alice.page!.reload();
     await createParty(alice.page!);
     const invitationFromAlice = await createInvitation(alice.page!);
 
     await bob.page!.goto(peersUrl);
+    await bob.page!.reload();
     await bob.page!.fill('#start-dialog-invitation-input', invitationFromAlice);
     await bob.page!.click('button:has-text("Join Party")');
 
