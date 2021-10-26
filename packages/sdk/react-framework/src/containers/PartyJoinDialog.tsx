@@ -61,7 +61,7 @@ export const usePartyJoinDialogState = ({
     setInvitationCode('');
     setPin('');
     setState(PartyJoinState.INIT);
-  }
+  };
 
   const handleCancel = () => setState(PartyJoinState.DONE);
 
@@ -98,35 +98,66 @@ export const usePartyJoinDialogState = ({
   };
 
   const getDialogProps = (state: PartyJoinState) => {
+    const joinPartyContent = () => (
+      <TextField
+        autoFocus
+        fullWidth
+        multiline
+        variant='standard'
+        placeholder='Paste invitation code.'
+        spellCheck={false}
+        value={invitationCode}
+        onChange={(event) => setInvitationCode(event.target.value)}
+        onKeyDown={handleKey('Enter', handleProcessInvitation)}
+        rows={6}
+      />
+    );
+
+    const joinPartyActions = () => (
+      <>
+        <Button onClick={handleCancel}>Cancel</Button>
+        <Button onClick={handleProcessInvitation}>Process</Button>
+      </>
+    );
+
+    const authenticateContent = () => (
+      <>
+        <Typography variant='body1' gutterBottom>
+          Enter the PIN number.
+        </Typography>
+        <TextField
+          value={pin}
+          onChange={(event) => setPin(event.target.value)}
+          variant='outlined'
+          margin='normal'
+          required
+          fullWidth
+          label='PIN Code'
+          autoFocus
+          disabled={processing}
+          onKeyDown={handleKey('Enter', handleAuthenticate)}
+        />
+      </>
+    );
+
+    const authenticateActions = () => (
+      <>
+        <Button onClick={handleCancel}>Cancel</Button>
+        <Button onClick={handleAuthenticate}>Submit</Button>
+      </>
+    );
+
+    const errorActions = () => (
+      <Button onClick={handleReset}>Retry</Button>
+    );
+
     switch (state) {
       case PartyJoinState.INIT: {
         return {
           open: !!open,
           title: 'Join Party',
-          content: function JoinPartyContent () { // TODO(burdon): Why functions?
-            return (
-              <TextField
-                autoFocus
-                fullWidth
-                multiline
-                variant='standard'
-                placeholder='Paste invitation code.'
-                spellCheck={false}
-                value={invitationCode}
-                onChange={(event) => setInvitationCode(event.target.value)}
-                onKeyDown={handleKey('Enter', handleProcessInvitation)}
-                rows={6}
-              />
-            );
-          },
-          actions: function JoinPartyActions () {
-            return (
-              <>
-                <Button onClick={handleCancel}>Cancel</Button>
-                <Button onClick={handleProcessInvitation}>Process</Button>
-              </>
-            );
-          }
+          content: joinPartyContent,
+          actions: joinPartyActions
         };
       }
 
@@ -134,35 +165,8 @@ export const usePartyJoinDialogState = ({
         return {
           open: !!open,
           title: 'Authenticate',
-          content: function AuthenticateContent () {
-            return (
-              <>
-                <Typography variant='body1' gutterBottom>
-                  Enter the PIN number.
-                </Typography>
-                <TextField
-                  value={pin}
-                  onChange={(event) => setPin(event.target.value)}
-                  variant='outlined'
-                  margin='normal'
-                  required
-                  fullWidth
-                  label='PIN Code'
-                  autoFocus
-                  disabled={processing}
-                  onKeyDown={handleKey('Enter', handleAuthenticate)}
-                />
-              </>
-            );
-          },
-          actions: function AuthenticateActions () {
-            return (
-              <>
-                <Button onClick={handleCancel}>Cancel</Button>
-                <Button onClick={handleAuthenticate}>Submit</Button>
-              </>
-            );
-          }
+          content: authenticateContent,
+          actions: authenticateActions
         };
       }
 
@@ -171,11 +175,7 @@ export const usePartyJoinDialogState = ({
           open: !!open,
           title: 'Invitation Failed',
           error,
-          actions: function JoinedPartyActions () {
-            return (
-              <Button onClick={handleReset}>Retry</Button>
-            );
-          }
+          actions: errorActions
         };
       }
 

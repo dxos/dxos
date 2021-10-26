@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Button, Table, TableBody, TableCell, TableRow, Typography } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableRow } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
@@ -34,7 +34,7 @@ export interface PartyInvitationDialogStateProps extends DialogProps {
 export const usePartyInvitationDialogState = ({
   partyKey,
   closeOnSuccess,
-  open,
+  open
 }: PartyInvitationDialogStateProps): PartyInvitationDialogStateResult => {
   const [state, setState] = useState<PartyInvitationState>(PartyInvitationState.INIT);
   // TODO(burdon): Multiple invitations at once (show useMembers).
@@ -78,38 +78,42 @@ export const usePartyInvitationDialogState = ({
   };
 
   const getDialogProps = (state: PartyInvitationState) => {
+    const sharePartyContent = () => (
+      <>
+        <Button onClick={handleCreateInvitation}>Create Invitation</Button>
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell>
+                <CopyText value={invitationCode} length={4} />
+              </TableCell>
+              <TableCell sx={{ width: 0 }}>
+                <CopyText value={pin} />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </>
+    );
+
+    const sharePartyActions = () => (
+      <>
+        <Button onClick={handleCancel}>Cancel</Button>
+      </>
+    );
+
+    const errorActions = () => (
+      <Button onClick={handleReset}>Retry</Button>
+    );
+
     switch (state) {
       case PartyInvitationState.INIT: {
         return {
           open: !!open,
           title: 'Share Party',
           processing: !!pin,
-          content: function SharePartyContent () {
-            return (
-            <>
-              <Button onClick={handleCreateInvitation}>Create Invitation</Button>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>
-                      <CopyText value={invitationCode} length={4} />
-                    </TableCell>
-                    <TableCell sx={{ width: 0 }}>
-                      <CopyText value={pin} />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </>
-            );
-          },
-          actions: function SharePartyActions () {
-            return (
-            <>
-              <Button onClick={handleCancel}>Cancel</Button>
-            </>
-            );
-          }
+          content: sharePartyContent,
+          actions: sharePartyActions
         };
       }
 
@@ -118,11 +122,7 @@ export const usePartyInvitationDialogState = ({
           open: !!open,
           title: 'Invitation Failed',
           error,
-          actions: function JoinedPartyActions () {
-            return (
-              <Button onClick={handleReset}>Retry</Button>
-            );
-          }
+          actions: errorActions
         };
       }
 
