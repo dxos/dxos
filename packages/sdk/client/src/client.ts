@@ -9,6 +9,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
+import { Config } from '@dxos/config';
 import { Invitation, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
@@ -21,7 +22,6 @@ import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { createStorage } from '@dxos/random-access-multi-storage';
 import { Registry } from '@wirelineio/registry-client';
-import { Config } from '@dxos/config'
 
 import { DevtoolsContext } from './devtools-context';
 import { InvalidConfigurationError } from './errors';
@@ -97,7 +97,7 @@ export class Client {
    * Requires initialization after creating by calling `.initialize()`.
    */
   constructor (config: ClientConfig | Config = {}) {
-    if(config instanceof Config) {
+    if (config instanceof Config) {
       this._config = defaultsDeep({}, defaultConfig, config.values);
     } else {
       this._config = defaultsDeep({}, defaultConfig, config);

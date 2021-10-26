@@ -6,6 +6,7 @@ import { boolean } from 'boolean';
 import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
 import set from 'lodash.set';
+
 import { sanitizeConfig } from './sanitizer';
 import { ConfigObject, ConfigKey, DeepIndex, ParseKey } from './types';
 
@@ -114,10 +115,10 @@ export class Config {
 
   /**
    * Returns config key without type checking.
-   * 
-   * @deprecated Use the type-checked version. 
+   *
+   * @deprecated Use the type-checked version.
    */
-  getUnchecked<T>(key: string, defaultValue?: T): T {
+  getUnchecked<T> (key: string, defaultValue?: T): T {
     return get(this._config, key, defaultValue);
   }
 }

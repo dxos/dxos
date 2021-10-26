@@ -4,4 +4,4 @@
 
 export * from './config';
 export * from './loaders/index';
-export { ConfigObject } from './sanitizer'
+export { ConfigObject } from './sanitizer';
