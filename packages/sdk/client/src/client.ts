@@ -21,6 +21,7 @@ import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { createStorage } from '@dxos/random-access-multi-storage';
 import { Registry } from '@wirelineio/registry-client';
+import { Config } from '@dxos/config'
 
 import { DevtoolsContext } from './devtools-context';
 import { InvalidConfigurationError } from './errors';
@@ -95,8 +96,12 @@ export class Client {
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  constructor (config: ClientConfig = {}) {
-    this._config = defaultsDeep({}, defaultConfig, config);
+  constructor (config: ClientConfig | Config = {}) {
+    if(config instanceof Config) {
+      this._config = defaultsDeep({}, defaultConfig, config.values);
+    } else {
+      this._config = defaultsDeep({}, defaultConfig, config);
+    }
     const {
       storage,
       swarm,

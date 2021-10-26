@@ -27,7 +27,8 @@
     "assert": "^2.0.0",
     "debug": "^4.1.1",
     "react-display-name": "^0.2.5",
-    "use-subscription": "^1.4.1"
+    "use-subscription": "^1.4.1",
+    "@dxos/config": "workspace:*"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

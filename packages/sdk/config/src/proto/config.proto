@@ -30,6 +30,9 @@ message Config {
   /// App configuration. Incuded if this configuration is for a bot.
   Bot bot = 102 [(env) = "BOT"];
 
+  /// CLI configuration.
+  CLI cli = 103;
+
   /// Custom configuration as string key-value pairs.
   map<string, string> custom = 1001;
 }
@@ -162,7 +165,10 @@ message Bot {
   Ipc ipc = 13 [(env) = "IPC"];
 }
 
-
+// CLI configuration
+message CLI {
+  string node_path = 1;
+}
 
 extend google.protobuf.FieldOptions {
   /**

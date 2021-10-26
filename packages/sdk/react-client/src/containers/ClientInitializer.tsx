@@ -6,20 +6,21 @@ import React, { useState, useEffect, ReactNode, ErrorInfo } from 'react';
 
 import { Client, ClientConfig } from '@dxos/client';
 import { MaybePromise } from '@dxos/util';
+import type { Config } from '@dxos/config';
 
 import { ErrorComponentProps, ErrorBoundary, ErrorCallbackType } from '../components';
 import { ClientProvider } from './ClientProvider';
 
 interface ClientLoaderProps {
   children?: ReactNode
-  config?: ClientConfig | (() => MaybePromise<ClientConfig>)
+  config?: ClientConfig | (() => MaybePromise<ClientConfig | Config>)
   onInit?: (client: Client) => void
   loaderComponent?: React.ComponentType
 }
 
 interface ClientLoaderProps {
   children?: ReactNode
-  config?: ClientConfig | (() => MaybePromise<ClientConfig>)
+  config?: ClientConfig | (() => MaybePromise<ClientConfig | Config>)
   onInit?: (client: Client) => void
   loaderComponent?: React.ComponentType
 }
@@ -64,7 +65,7 @@ export const ClientLoader = ({
 
 interface ClientInitializerProps {
   children?: ReactNode
-  config?: ClientConfig | (() => MaybePromise<ClientConfig>)
+  config?: ClientConfig | (() => MaybePromise<ClientConfig | Config>)
   onError?: ErrorCallbackType
   errorComponent?: React.ComponentType<ErrorComponentProps>
   loaderComponent?: React.ComponentType

@@ -23,8 +23,8 @@ export type ParseKey<K extends string> =
 type Keys = (keyof any)[]
 
 export type DeepIndex<T, KS extends Keys, Fail = undefined> =
-  KS extends [infer F, ...infer R] ? F extends keyof T ? R extends Keys ?
-  DeepIndex<T[F], R, Fail> : Fail : Fail : T;
+  KS extends [infer F, ...infer R] ? F extends keyof Exclude<T, undefined> ? R extends Keys ?
+  DeepIndex<Exclude<T, undefined>[F], R, Fail> : Fail : Fail : T;
 
 export type ConfigKey = DotNestedKeys<ConfigObject> 
 

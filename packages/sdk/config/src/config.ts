@@ -108,7 +108,7 @@ export class Config {
   /**
    * Returns the given config property.
    */
-  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigObject, ParseKey<K>>): DeepIndex<ConfigObject, ParseKey<K>> {
+  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigObject, ParseKey<K>>): Exclude<DeepIndex<ConfigObject, ParseKey<K>>, undefined> {
     return get(this._config, key, defaultValue);
   }
 
