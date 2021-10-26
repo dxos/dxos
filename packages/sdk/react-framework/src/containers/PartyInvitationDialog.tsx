@@ -25,7 +25,6 @@ export interface PartyInvitationDialogStateResult {
 
 export interface PartyInvitationDialogStateProps extends DialogProps {
   partyKey?: PublicKey
-  closeOnSuccess?: boolean
 }
 
 /**

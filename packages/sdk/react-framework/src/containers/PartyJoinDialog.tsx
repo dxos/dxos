@@ -36,7 +36,6 @@ export interface PartyJoinDialogStateResult {
 
 export interface PartyJoinDialogStateProps extends DialogProps {
   initialState?: PartyJoinState
-  closeOnSuccess?: boolean
 }
 
 /**
@@ -64,8 +63,6 @@ export const usePartyJoinDialogState = ({
   };
 
   const handleCancel = () => setState(PartyJoinState.DONE);
-
-  console.log(':::', closeOnSuccess);
 
   const handleDone = () => closeOnSuccess ? setState(PartyJoinState.DONE) : handleReset();
 
