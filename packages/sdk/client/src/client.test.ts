@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { defs } from '@dxos/config';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
@@ -51,10 +52,12 @@ test('creating profile returns the profile', async () => {
 });
 
 test('persistent storage', async () => {
-  const config = {
-    storage: {
-      persistent: true,
-      path: `/tmp/dxos-${Date.now()}`
+  const config: defs.Config = {
+    system: {
+      storage: {
+        persistent: true,
+        path: `/tmp/dxos-${Date.now()}`
+      }
     }
   };
 

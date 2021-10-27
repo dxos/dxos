@@ -25,6 +25,7 @@ import {
 } from '@dxos/protocol-plugin-bot';
 
 import { getClientConfig } from './config';
+import { Config } from '@dxos/config';
 
 const CONNECT_TIMEOUT = 30000;
 const HEARTBEAT_INTERVAL = 180 * 1000;
@@ -92,13 +93,14 @@ export class Bot extends EventEmitter {
     this._plugin = new BotPlugin(this._controlPeerKey, (protocol, message) => this._botMessageHandler(protocol, message));
 
     log('Starting.');
-    this._client = new Client({
-      storage: {
-        persistent: this._persistent,
-        path: join(this._cwd, BOT_STORAGE)
-      },
-      swarm: getClientConfig(this._config).swarm
-    });
+    this._client = new Client(new Config(this._config.values, {
+      system: {
+        storage: {
+          persistent: this._persistent,
+          path: join(this._cwd, BOT_STORAGE)
+        },
+      }
+    }));
     await this._preInit();
     await this._client.initialize();
 

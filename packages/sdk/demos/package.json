@@ -60,7 +60,8 @@
     "immutability-helper": "^3.0.2",
     "mobile-detect": "~1.4.5",
     "playwright": "^1.7.0",
-    "react-resize-aware": "^3.1.1"
+    "react-resize-aware": "^3.1.1",
+    "@dxos/config": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",

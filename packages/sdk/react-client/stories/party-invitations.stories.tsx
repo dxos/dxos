@@ -185,15 +185,13 @@ const TestApp = () => {
 };
 
 export const Primary = () => {
-  // Configure in-memory swarm.
-  const config = { swarm: { signal: undefined } };
   const peers = 3;
 
   return (
     <Container>
       <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
         {[...new Array(peers)].map((_, i) => (
-          <ClientInitializer key={i} config={config}>
+          <ClientInitializer key={i} config={{}}>
             <ProfileInitializer>
               <TestApp/>
             </ProfileInitializer>

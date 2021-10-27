@@ -12,6 +12,7 @@ import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/reac
 import { JsonTreeView } from '@dxos/react-framework';
 
 import { PartyCard } from '../../src';
+import { ConfigObject } from '@dxos/config';
 
 faker.seed(0);
 
@@ -85,12 +86,14 @@ export const Memory = () => {
  * Browser storage HALO.
  */
 export const Persistent = () => {
-  const config = {
-    storage: {
-      persistent: true
-    },
-    snapshots: true,
-    snapshotInterval: 10
+  const config: ConfigObject = {
+    system: {
+      storage: {
+        persistent: true
+      },
+      enableSnapshots: true,
+      snapshotInterval: 10
+    }
   };
 
   return (

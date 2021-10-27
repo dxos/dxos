@@ -58,14 +58,7 @@ export class Orchestrator {
     this._config = config;
 
     const { local = true } = options;
-    this._client = new Client({
-      storage: createStorage('', STORAGE_RAM),
-      // TODO(egorgripasov): Factor out (use main config).
-      swarm: {
-        signal: this._config.get('services.signal.server'),
-        ice: this._config.get('services.ice')
-      }
-    });
+    this._client = new Client(this._config);
     this._localRun = local;
   }
 

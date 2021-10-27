@@ -5,7 +5,8 @@
 import { renderHook } from '@testing-library/react-hooks';
 import React from 'react';
 
-import { Client, ClientConfig } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { defs } from '@dxos/config';
 
 import { useClient } from '.';
 import { ClientProvider } from '../../containers';
@@ -19,10 +20,12 @@ describe('Client hook', () => {
   });
 
   test('should return client when used properly in a context', () => {
-    const config: ClientConfig = {
-      storage: {
-        persistent: false
-      }
+    const config: defs.Config = {
+      system: {
+        storage: {
+          persistent: false
+        }
+      },
     };
     const client = new Client(config);
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;

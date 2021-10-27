@@ -96,9 +96,7 @@ export class BotFactory {
    * Start factory.
    */
   async start () {
-    this._client = new Client({
-      swarm: getClientConfig(this._config).swarm
-    });
+    this._client = new Client(this._config);
     await this._client.initialize();
 
     this._botManager = new BotManager(this._config, this._botContainers, this._client, {
