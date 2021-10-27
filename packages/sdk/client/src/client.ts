@@ -386,7 +386,7 @@ const createKeyStorage = (path: string, type?: KeyStorageType) => {
 
 const toStorageType = (type: defs.System.Storage.StorageDriver | undefined): StorageType | undefined => {
   switch (type) {
-    case undefined: return undefined
+    case undefined: return undefined;
     case defs.System.Storage.StorageDriver.RAM: return 'ram';
     case defs.System.Storage.StorageDriver.CHROME: return 'chrome';
     case defs.System.Storage.StorageDriver.FIREFOX: return 'firefox';
@@ -398,7 +398,7 @@ const toStorageType = (type: defs.System.Storage.StorageDriver | undefined): Sto
 
 const toKeyStorageType = (type: defs.System.Storage.StorageDriver | undefined): KeyStorageType | undefined => {
   switch (type) {
-    case undefined: return undefined
+    case undefined: return undefined;
     case defs.System.Storage.StorageDriver.RAM: return 'ram';
     case defs.System.Storage.StorageDriver.LEVELJS: return 'leveljs';
     case defs.System.Storage.StorageDriver.JSONDOWN: return 'jsondown';
