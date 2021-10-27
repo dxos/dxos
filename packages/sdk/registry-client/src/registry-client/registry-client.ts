@@ -297,7 +297,7 @@ export class RegistryClient implements IRegistryClient {
       type: {
         protobufDefs: encodeProtobuf(schema),
         messageName,
-        protobufFile: meta.sourceIpfsCid?.toString()
+        protobufFile: meta.sourceIpfsCid
       }
     });
 

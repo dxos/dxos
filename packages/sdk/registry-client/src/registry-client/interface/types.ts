@@ -85,7 +85,7 @@ export interface SuppliedRecordMetadata {
 export type RecordMetadata = InferredRecordMetadata & SuppliedRecordMetadata
 
 export interface TypeRecordMetadata extends SuppliedRecordMetadata {
-  sourceIpfsCid?: CID
+  sourceIpfsCid?: string
 }
 
 export enum RecordKind {
