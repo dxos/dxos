@@ -20,7 +20,7 @@ message App {
    */
   string version = 1;
 
-  /// IPFS CID of the app bundle.
+  /// App bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
   bytes hash = 2;
   string repository = 3;
   string repository_version = 4;
@@ -43,7 +43,7 @@ message Bot {
    */
   string version = 1;
 
-  // IPFS CID of the bot bundle.
+  /// Bot bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
   bytes hash = 2;
   string repository = 3;
   string repository_version = 4;
@@ -59,7 +59,7 @@ message File {
   string content_type = 1;
   string file_name = 2;
 
-  // IPFS CID of the file.
+  /// File content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
   bytes hash = 3;
 
   Record.Extension extension = 100;
