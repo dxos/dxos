@@ -39,23 +39,22 @@ message Config {
 
 message System {
   message Storage {
-    enum StorageType {
+    enum StorageDriver {
       RAM = 0;
       IDB = 1;
       CHROME = 2;
       FIREFOX = 3;
       NODE = 4;
-    }
+      
+      // Only for key storage:
 
-    enum KeyStorageType {
-      RAM_KEY_STORAGE = 0;
-      LEVELJS = 1;
-      JSONDOWN = 2;
+      LEVELJS = 11;
+      JSONDOWN = 12;
     }
 
     bool persistent = 1;
-    StorageType type = 2;
-    KeyStorageType key_storage = 3;
+    StorageDriver storage_type = 2;
+    StorageDriver key_storage = 3;
     string path = 4;
   }
 

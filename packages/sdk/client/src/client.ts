@@ -9,7 +9,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
-import { Config } from '@dxos/config';
+import { Config, defs } from '@dxos/config';
 import { Invitation, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
@@ -98,7 +98,7 @@ export class Client {
    */
   constructor (config: ClientConfig | Config = {}) {
     if (config instanceof Config) {
-      this._config = defaultsDeep({}, defaultConfig, config.values);
+      this._config = defaultsDeep({}, defaultConfig, getClientConfig(config));
     } else {
       this._config = defaultsDeep({}, defaultConfig, config);
     }
@@ -428,3 +428,44 @@ const createKeyStorage = (path: string, type?: KeyStorageType) => {
       throw new InvalidConfigurationError(`Invalid key storage type: ${defaultedType}`);
   }
 };
+
+const getClientConfig = (config: Config): ClientConfig => {
+  return {
+    invitationExpiration: config.get('system.invitationExpiration'),
+    snapshotInterval:  config.get('system.snapshotInterval'),
+    snapshots: config.get('system.enableSnapshots'),
+    ipfs: config.get('services.ipfs') && {
+      gateway: config.get('services.ipfs.gateway'),
+      server: config.get('services.ipfs.server'),
+    },
+    swarm: config.get('services.signal') && {
+      signal: config.get('services.signal.server'),
+      ice: config.get('services.ice') as any
+    },
+    storage: {
+      persistent: config.get('system.storage.persistent'),
+      type: config.get('system.storage.storageType') !== undefined ? toStorageType(config.get('system.storage.storageType')) : undefined,
+      keyStorage: config.get('system.storage.keyStorage') !== undefined ? toKeyStorageType(config.get('system.storage.keyStorage')) : undefined,
+    }
+  }
+}
+
+const toStorageType = (type: defs.System.Storage.StorageDriver): StorageType => {
+  switch(type) {
+    case defs.System.Storage.StorageDriver.RAM: return 'ram'
+    case defs.System.Storage.StorageDriver.CHROME: return 'chrome'
+    case defs.System.Storage.StorageDriver.FIREFOX: return 'firefox'
+    case defs.System.Storage.StorageDriver.IDB: return 'idb'
+    case defs.System.Storage.StorageDriver.NODE: return 'node'
+    default: throw new Error(`Invalid storage type: ${defs.System.Storage.StorageDriver[type]}`)
+  }
+}
+
+const toKeyStorageType = (type: defs.System.Storage.StorageDriver): KeyStorageType => {
+  switch(type) {
+    case defs.System.Storage.StorageDriver.RAM: return 'ram'
+    case defs.System.Storage.StorageDriver.LEVELJS: return 'leveljs'
+    case defs.System.Storage.StorageDriver.JSONDOWN: return 'jsondown'
+    default: throw new Error(`Invalid key storage type: ${defs.System.Storage.StorageDriver[type]}`)
+  }
+}
