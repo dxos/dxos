@@ -35,7 +35,7 @@ export const defaultTestingConfig: defs.Config = {
     signal: {
       server: 'ws://localhost:4000'
     }
-  },
+  }
 };
 
 /**
@@ -385,21 +385,21 @@ const createKeyStorage = (path: string, type?: KeyStorageType) => {
 };
 
 const toStorageType = (type: defs.System.Storage.StorageDriver): StorageType => {
-  switch(type) {
-    case defs.System.Storage.StorageDriver.RAM: return 'ram'
-    case defs.System.Storage.StorageDriver.CHROME: return 'chrome'
-    case defs.System.Storage.StorageDriver.FIREFOX: return 'firefox'
-    case defs.System.Storage.StorageDriver.IDB: return 'idb'
-    case defs.System.Storage.StorageDriver.NODE: return 'node'
-    default: throw new Error(`Invalid storage type: ${defs.System.Storage.StorageDriver[type]}`)
+  switch (type) {
+    case defs.System.Storage.StorageDriver.RAM: return 'ram';
+    case defs.System.Storage.StorageDriver.CHROME: return 'chrome';
+    case defs.System.Storage.StorageDriver.FIREFOX: return 'firefox';
+    case defs.System.Storage.StorageDriver.IDB: return 'idb';
+    case defs.System.Storage.StorageDriver.NODE: return 'node';
+    default: throw new Error(`Invalid storage type: ${defs.System.Storage.StorageDriver[type]}`);
   }
-}
+};
 
 const toKeyStorageType = (type: defs.System.Storage.StorageDriver): KeyStorageType => {
-  switch(type) {
-    case defs.System.Storage.StorageDriver.RAM: return 'ram'
-    case defs.System.Storage.StorageDriver.LEVELJS: return 'leveljs'
-    case defs.System.Storage.StorageDriver.JSONDOWN: return 'jsondown'
-    default: throw new Error(`Invalid key storage type: ${defs.System.Storage.StorageDriver[type]}`)
+  switch (type) {
+    case defs.System.Storage.StorageDriver.RAM: return 'ram';
+    case defs.System.Storage.StorageDriver.LEVELJS: return 'leveljs';
+    case defs.System.Storage.StorageDriver.JSONDOWN: return 'jsondown';
+    default: throw new Error(`Invalid key storage type: ${defs.System.Storage.StorageDriver[type]}`);
   }
-}
+};

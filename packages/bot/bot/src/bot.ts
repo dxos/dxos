@@ -9,6 +9,7 @@ import { join } from 'path';
 
 import { promiseTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
+import { Config } from '@dxos/config';
 import { randomBytes, keyToBuffer, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { StarTopology, transportProtocolProvider } from '@dxos/network-manager';
@@ -23,9 +24,6 @@ import {
   Message,
   InvitationMessage
 } from '@dxos/protocol-plugin-bot';
-
-import { getClientConfig } from './config';
-import { Config } from '@dxos/config';
 
 const CONNECT_TIMEOUT = 30000;
 const HEARTBEAT_INTERVAL = 180 * 1000;
@@ -98,7 +96,7 @@ export class Bot extends EventEmitter {
         storage: {
           persistent: this._persistent,
           path: join(this._cwd, BOT_STORAGE)
-        },
+        }
       }
     }));
     await this._preInit();

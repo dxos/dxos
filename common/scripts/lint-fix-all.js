@@ -20,8 +20,12 @@ console.log(`Detected changes in ${changedPackages.length} package(s):\n\n${chan
 
 for(const pkgPath of changedPackages) {
   console.log(`\nRunning "yarn lint --fix" in "${pkgPath}"`)
-  childProcess.execSync('yarn lint --fix', {
-    cwd: pkgPath,
-    stdio: 'inherit'
-  })
+  try {
+    childProcess.execSync('yarn lint --fix', {
+      cwd: pkgPath,
+      stdio: 'inherit'
+    })
+  } catch(err) {
+    console.error(err)
+  }
 }

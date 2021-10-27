@@ -7,8 +7,8 @@ import React, { useState, useEffect, ReactNode, ErrorInfo } from 'react';
 import { Client } from '@dxos/client';
 
 import { ErrorComponentProps, ErrorBoundary, ErrorCallbackType } from '../components';
-import { ClientProvider } from './ClientProvider';
 import { SuppliedConfig, unwrapConfig } from '../config';
+import { ClientProvider } from './ClientProvider';
 
 interface ClientLoaderProps {
   children?: ReactNode

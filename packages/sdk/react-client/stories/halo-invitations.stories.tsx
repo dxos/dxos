@@ -26,7 +26,6 @@ import {
   useProvider,
   Container
 } from './helpers';
-import { ConfigObject } from '@dxos/config';
 
 export default {
   title: 'react-client/HALO Invitations'

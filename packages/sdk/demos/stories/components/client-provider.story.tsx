@@ -7,12 +7,12 @@ import { makeStyles } from '@mui/styles';
 import * as faker from 'faker';
 import React from 'react';
 
+import { ConfigObject } from '@dxos/config';
 import { createKeyPair } from '@dxos/crypto';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-framework';
 
 import { PartyCard } from '../../src';
-import { ConfigObject } from '@dxos/config';
 
 faker.seed(0);
 

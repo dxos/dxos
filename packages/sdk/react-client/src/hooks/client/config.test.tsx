@@ -6,7 +6,7 @@ import { renderHook } from '@testing-library/react-hooks';
 import React from 'react';
 
 import { Client } from '@dxos/client';
-import { ConfigObject } from '@dxos/config'
+import { ConfigObject } from '@dxos/config';
 
 import { useConfig } from '.';
 import { ClientProvider } from '../../containers';

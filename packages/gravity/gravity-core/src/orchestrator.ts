@@ -15,7 +15,6 @@ import { Invitation } from '@dxos/credentials';
 import { SIGNATURE_LENGTH, keyToBuffer, createKeyPair, keyToString, verify, sha256 } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 import { SpawnOptions } from '@dxos/protocol-plugin-bot';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { Agent } from './agent';
 import { FACTORY_OUT_DIR, getTestConfig, mapConfigToEnv } from './config';

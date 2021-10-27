@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { defs } from '@dxos/config';
 import expect from 'expect';
 import { it as test } from 'mocha';
+
+import { defs } from '@dxos/config';
 
 import { Client } from './client';
 

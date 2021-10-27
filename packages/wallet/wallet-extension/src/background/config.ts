@@ -10,7 +10,7 @@ export const config: ConfigObject = {
       persistent: true,
       storageType: defs.System.Storage.StorageDriver.IDB,
       path: '/tmp/dxos'
-    },
+    }
   },
   services: {
     signal: {
@@ -24,5 +24,5 @@ export const config: ConfigObject = {
         credential: 'dxos'
       }
     ]
-  },
+  }
 };

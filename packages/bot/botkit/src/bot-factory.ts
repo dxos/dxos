@@ -31,7 +31,6 @@ import {
 } from '@dxos/protocol-plugin-bot';
 
 import { BotManager } from './bot-manager';
-import { getClientConfig } from './config';
 import { BotContainer, LocalDevBotContainer } from './containers';
 import { NATIVE_ENV, NODE_ENV, getPlatformInfo } from './env';
 import { log } from './log';
