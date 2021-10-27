@@ -20,11 +20,11 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/feed-store": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/node": "^14.0.9",
     "debug": "^4.1.1"
