@@ -361,10 +361,10 @@ const createStorageObjects = (config: defs.System.Storage, snapshotsEnabled = fa
   }
 
   return {
-    feedStorage: createStorage(`${path}/feeds`, toStorageType(storageType && persistent ? storageType : defs.System.Storage.StorageDriver.RAM)),
-    keyStorage: createKeyStorage(`${path}/keystore`, toKeyStorageType(keyStorage && persistent ? keyStorage : defs.System.Storage.StorageDriver.RAM)),
-    snapshotStorage: createStorage(`${path}/snapshots`, toStorageType(storageType && persistent && snapshotsEnabled ? storageType : defs.System.Storage.StorageDriver.RAM)),
-    metadataStorage: createStorage(`${path}/metadata`, toStorageType(storageType && persistent ? storageType : defs.System.Storage.StorageDriver.RAM))
+    feedStorage: createStorage(`${path}/feeds`, persistent ? toStorageType(storageType) : 'ram'),
+    keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram'),
+    snapshotStorage: createStorage(`${path}/snapshots`, persistent && snapshotsEnabled ? toStorageType(storageType) : 'ram'),
+    metadataStorage: createStorage(`${path}/metadata`, persistent ? toStorageType(storageType) : 'ram')
   };
 };
 
@@ -384,8 +384,9 @@ const createKeyStorage = (path: string, type?: KeyStorageType) => {
   }
 };
 
-const toStorageType = (type: defs.System.Storage.StorageDriver): StorageType => {
+const toStorageType = (type: defs.System.Storage.StorageDriver | undefined): StorageType | undefined => {
   switch (type) {
+    case undefined: return undefined
     case defs.System.Storage.StorageDriver.RAM: return 'ram';
     case defs.System.Storage.StorageDriver.CHROME: return 'chrome';
     case defs.System.Storage.StorageDriver.FIREFOX: return 'firefox';
@@ -395,8 +396,9 @@ const toStorageType = (type: defs.System.Storage.StorageDriver): StorageType => 
   }
 };
 
-const toKeyStorageType = (type: defs.System.Storage.StorageDriver): KeyStorageType => {
+const toKeyStorageType = (type: defs.System.Storage.StorageDriver | undefined): KeyStorageType | undefined => {
   switch (type) {
+    case undefined: return undefined
     case defs.System.Storage.StorageDriver.RAM: return 'ram';
     case defs.System.Storage.StorageDriver.LEVELJS: return 'leveljs';
     case defs.System.Storage.StorageDriver.JSONDOWN: return 'jsondown';
