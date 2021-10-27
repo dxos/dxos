@@ -84,6 +84,10 @@ export interface SuppliedRecordMetadata {
 
 export type RecordMetadata = InferredRecordMetadata & SuppliedRecordMetadata
 
+export interface TypeRecordMetadata extends SuppliedRecordMetadata {
+  sourceIpfsCid?: CID
+}
+
 export enum RecordKind {
   Type = 'TYPE',
   Data = 'DATA'

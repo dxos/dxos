@@ -19,7 +19,7 @@ import { DomainKey as BaseDomainKey, Multihash, Resource as BaseResource } from 
 import { CID, DomainKey, DXN } from '../models';
 import { schema as dxnsSchema } from '../proto/gen';
 import { Filtering, IQuery } from '../querying';
-import { Domain, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, UpdateResourceOptions } from './interface';
+import { Domain, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, TypeRecordMetadata, UpdateResourceOptions } from './interface';
 
 export class RegistryClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, RegistryRecord>(cid => cid.toB58String())
@@ -287,7 +287,7 @@ export class RegistryClient implements IRegistryClient {
     return this.insertRawRecord(encoded);
   }
 
-  async insertTypeRecord (schema: protobuf.Root, messageName: string, meta: SuppliedRecordMetadata = {}) {
+  async insertTypeRecord (schema: protobuf.Root, messageName: string, meta: TypeRecordMetadata = {}) {
     // Make sure message type exists
     schema.lookupType(messageName);
 
@@ -296,8 +296,8 @@ export class RegistryClient implements IRegistryClient {
       created: new Date(),
       type: {
         protobufDefs: encodeProtobuf(schema),
-        messageName
-        // TODO(marik-d): Source reference.
+        messageName,
+        protobufFile: meta.sourceIpfsCid?.toString()
       }
     });
 
