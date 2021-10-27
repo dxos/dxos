@@ -81,7 +81,7 @@ const Main = () => {
         <Toolbar>
           <WorkIcon className={classes.logo} />
           <Typography variant="h6" noWrap>
-            {client.config.app.title || 'DXOS'}
+            {client.config.get('app.title', 'DXOS')}
           </Typography>
           <div className={classes.flexGrow} />
           <Tooltip title={profile.username}>
