@@ -27,7 +27,7 @@ export const PartyJoinPanel = (
       setInvitationCode('');
       setPin('');
     }
-  }, [status])
+  }, [status]);
 
   return (
     <Box sx={{ padding: 1 }}>
