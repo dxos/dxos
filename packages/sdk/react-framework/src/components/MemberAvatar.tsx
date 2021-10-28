@@ -35,6 +35,7 @@ interface AvatarProps {
 
 type OwnerState = Record<string, any>
 
+// TODO(burdon): Rename to disambiguate.
 export const Avatar: StyledComponent<AvatarProps, OwnerState, Theme> = styled(MuiAvatar)(({ publicKey, theme }) => {
   const color = publicKey ? getColor(publicKey) : theme.palette.grey[200];
 

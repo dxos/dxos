@@ -17,13 +17,13 @@ import {
   ProfileInitializer,
   useClient,
   useParties,
-  useProfile
+  useProfile,
+  useSecretGenerator,
+  useSecretProvider
 } from '../src';
 import {
-  useSecretProvider,
   ClientPanel,
-  RedeemInvitationPanel,
-  useProvider,
+  PartyJoinPanel,
   Container
 } from './helpers';
 
@@ -39,7 +39,7 @@ export default {
 const HaloInvitationContainer = () => {
   const client = useClient();
   const [invitationCode, setInvitationCode] = useState<string>();
-  const [secretProvider, pin, resetPin] = useSecretProvider();
+  const [secretProvider, pin, resetPin] = useSecretGenerator();
 
   const handleCreateInvitation = async () => {
     // TODO(burdon): Remove? Where is this used?
@@ -106,7 +106,7 @@ const HaloInvitationContainer = () => {
 const HaloAuthenticationContainer = () => {
   const client = useClient();
   const [status, setStatus] = useState<any>({});
-  const [secretProvider, secretResolver] = useProvider<Buffer>();
+  const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
 
   const handleSubmit = async (invitationCode: string) => {
     try {
@@ -128,7 +128,7 @@ const HaloAuthenticationContainer = () => {
   };
 
   return (
-    <RedeemInvitationPanel
+    <PartyJoinPanel
       status={status}
       onSubmit={handleSubmit}
       onAuthenticate={handleAuthenticate}

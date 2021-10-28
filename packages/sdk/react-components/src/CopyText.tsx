@@ -15,6 +15,7 @@ export interface CopyTextProps extends TypographyProps {
 }
 
 export const CopyText = ({ value, length, sx, ...rest }: CopyTextProps) => {
+  // TODO(burdon): Only expand to limit of div.
   return (
     <Box sx={{
       display: 'flex',
@@ -37,7 +38,7 @@ export const CopyText = ({ value, length, sx, ...rest }: CopyTextProps) => {
         <>
           <Box sx={{ flex: 1 }} />
           <Box sx={{ flexShrink: 0, width: 40, marginLeft: '2px' }}>
-            <CopyToClipboard text={value} />
+            <CopyToClipboard text={value} onCopy={value => console.log(value)} />
           </Box>
         </>
       )}

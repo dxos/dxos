@@ -38,6 +38,10 @@ export class TaskApp extends AppSimulator {
     expect(createdList).toBeDefined();
   }
 
+  async selectTaskList(listName: string) {
+    await this.browser.getPage().click(`text="${listName}"`);
+  }
+
   async checkTaskListIsCreated(listName: string) {
     const createdList = await this.browser.getPage().waitForSelector(`text="${listName}"`)
 

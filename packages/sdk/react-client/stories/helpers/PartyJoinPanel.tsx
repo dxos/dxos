@@ -3,11 +3,11 @@
 //
 
 import { Box, Button, TextField, Toolbar } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { JsonPanel } from './JsonPanel';
 
-export const RedeemInvitationPanel = (
+export const PartyJoinPanel = (
   {
     status,
     onSubmit,
@@ -20,6 +20,14 @@ export const RedeemInvitationPanel = (
 ) => {
   const [invitationCode, setInvitationCode] = useState<string>('');
   const [pin, setPin] = useState<string>('');
+
+  useEffect(() => {
+    if (status.party) {
+      // Joined successfully, can reset the form.
+      setInvitationCode('');
+      setPin('');
+    }
+  }, [status]);
 
   return (
     <Box sx={{ padding: 1 }}>
