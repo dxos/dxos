@@ -11,7 +11,7 @@ import { PartyMember } from '@dxos/echo-db';
 
 import { Avatar, MemberAvatar } from './MemberAvatar';
 
-export const MembersList = ({ members = [], onShare }: { members?: PartyMember[], onShare: () => void }) => {
+export const MembersList = ({ members = [], onShare }: { members?: PartyMember[], onShare?: () => void }) => {
   const theme = useTheme() as Theme;
 
   return (
@@ -33,11 +33,13 @@ export const MembersList = ({ members = [], onShare }: { members?: PartyMember[]
         ))}
       </AvatarGroup>
 
-      <Tooltip title='Share' placement='top'>
-        <Avatar theme={theme} onClick={onShare}>
-          <ShareIcon />
-        </Avatar>
-      </Tooltip>
+      {onShare && (
+        <Tooltip title='Share' placement='top'>
+          <Avatar theme={theme} onClick={onShare}>
+            <ShareIcon />
+          </Avatar>
+        </Tooltip>
+      )}
     </Box>
   );
 };

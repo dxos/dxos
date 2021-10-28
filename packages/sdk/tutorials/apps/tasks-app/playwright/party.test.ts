@@ -6,8 +6,7 @@ import { firefox } from 'playwright';
 
 import { Browser, TaskApp } from './utils';
 
-// TODO(rzadp): Add back after `PartyJoinDialog` and `PartyInvitationDialog` API is stable.
-describe.skip('Party Test Cases', () => {
+describe('Party Test Cases', () => {
   const initialUrl = 'http://localhost:3000/';
   let chocolatesCounter = 1
   let listName = 'My Party List';
@@ -37,6 +36,8 @@ describe.skip('Party Test Cases', () => {
 
   describe('', () => {
     beforeEach(async () => {
+      await alice.browser.page?.reload();
+      await alice.selectTaskList(listName);
       invitationToken = await alice.party.copyInvitationCode()
 
       bob = new TaskApp(new Browser());
@@ -55,15 +56,14 @@ describe.skip('Party Test Cases', () => {
 
     describe('As a user that has been invited to a party then', () => {
       it('I should be able to redeem my invitation', async () => {
-        await bob.party.redeemInvitation(invitationToken);
+        await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
       });
     });
 
 
     describe('As a user that has joined a party then', () => {
       beforeEach(async () => {
-        await bob.party.redeemInvitation(invitationToken);
-
+        await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
         await bob.checkTaskListIsCreated(listName)
       });
 
@@ -72,7 +72,7 @@ describe.skip('Party Test Cases', () => {
 
     describe('As a user that has joined a party then', () => {
       beforeEach(async () => {
-        await bob.party.redeemInvitation(invitationToken);
+        await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
 
         await bob.checkTaskListIsCreated(listName)
 
@@ -88,7 +88,7 @@ describe.skip('Party Test Cases', () => {
 
     describe('As a user that has joined a party then', () => {
       beforeEach(async () => {
-        await bob.party.redeemInvitation(invitationToken);
+        await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
 
         await bob.checkTaskListIsCreated(listName)
 
@@ -100,7 +100,7 @@ describe.skip('Party Test Cases', () => {
 
     describe('As a user that has joined a party then', () => {
       beforeEach(async () => {
-        await bob.party.redeemInvitation(invitationToken);
+        await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
 
         await bob.checkTaskListIsCreated(listName)
 
@@ -114,7 +114,7 @@ describe.skip('Party Test Cases', () => {
 
     describe('As a user that has joined a party then', () => {
       beforeEach(async () => {
-        await bob.party.redeemInvitation(invitationToken);
+        await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
 
         await bob.checkTaskListIsCreated(listName)
 
@@ -126,7 +126,7 @@ describe.skip('Party Test Cases', () => {
 
     describe('As a user that has joined a party then', () => {
       beforeEach(async () => {
-        await bob.party.redeemInvitation(invitationToken);
+        await bob.party.redeemInvitation(invitationToken, async () => alice.party.getPinCode());
 
         await bob.checkTaskListIsCreated(listName)
 

@@ -24,7 +24,6 @@ const handleKey = (key: string, callback: () => void) => (event: { key: string }
 enum PartyJoinState {
   INIT,
   AUTHENTICATE,
-  DONE,
   ERROR
 }
 
@@ -44,7 +43,8 @@ export interface PartyJoinDialogStateProps extends DialogProps {
 export const usePartyJoinDialogState = ({
   initialState = PartyJoinState.INIT,
   closeOnSuccess,
-  open
+  open,
+  onClose
 }: PartyJoinDialogStateProps): PartyJoinDialogStateResult => {
   const [state, setState] = useState<PartyJoinState>(initialState);
   const [invitationCode, setInvitationCode] = useState('');
@@ -62,9 +62,19 @@ export const usePartyJoinDialogState = ({
     setState(PartyJoinState.INIT);
   };
 
-  const handleCancel = () => setState(PartyJoinState.DONE);
+  const handleCancel = () => {
+    setState(PartyJoinState.INIT);
+    onClose?.();
+  };
 
-  const handleDone = () => closeOnSuccess ? setState(PartyJoinState.DONE) : handleReset();
+  const handleDone = () => {
+    if (closeOnSuccess) {
+      setState(PartyJoinState.INIT);
+      onClose?.();
+    } else {
+      handleReset();
+    }
+  };
 
   useEffect(() => {
     if (state === PartyJoinState.INIT) {
