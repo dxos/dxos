@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "2.16.2",
+  "version": "2.16.3",
   "description": "React client API",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -9,10 +9,8 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
-    "build-storybook": "build-storybook --quiet",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
-    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook --ci",
     "test": "toolchain test"
   },
   "dependencies": {
@@ -28,7 +26,8 @@
     "debug": "^4.1.1",
     "react-display-name": "^0.2.5",
     "use-subscription": "^1.4.1",
-    "@dxos/config": "workspace:*"
+    "@dxos/config": "workspace:*",
+    "base-x": "~3.0.9"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

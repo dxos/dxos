@@ -9,7 +9,9 @@ export enum RedeemErrorType {
   ALREADY_CONNECTED = 'Already connected.'
 }
 
-// TODO(burdon): Rename (not handler).
+/**
+ * @deprecated
+ */
 export const handleRedeemError = (error: string) => {
   if (error.includes('SyntaxError: Unexpected token') || error.includes('InvalidCharacterError')) {
     return RedeemErrorType.INVALID_CODE;
