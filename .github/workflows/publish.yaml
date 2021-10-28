@@ -72,6 +72,8 @@ jobs:
       run: |
         set -e
         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+        npm install -g yarn
+
         yarn global add @dxos/cli@v2.8.2-alpha.0
         yarn global add @dxos/cli-dxns@v2.8.2-alpha.0
         yarn global add @dxos/cli-app@v2.8.2-alpha.0
