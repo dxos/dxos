@@ -95,7 +95,7 @@ export class Config {
    * @constructor
    * @param objects
    */
-  constructor (...objects: [any, ...any]) {
+  constructor (...objects: [ConfigObject, ...ConfigObject[]]) {
     this._config = sanitizeConfig(defaultsDeep(...objects));
   }
 
@@ -108,8 +108,12 @@ export class Config {
 
   /**
    * Returns the given config property.
+   *
+   * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
+   * @param defaultValue Default value to return if option is not present in the config.
+   * @returns The config value or undefined if the option is not present.
    */
-  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigObject, ParseKey<K>>): Exclude<DeepIndex<ConfigObject, ParseKey<K>>, undefined> {
+  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigObject, ParseKey<K>>): DeepIndex<ConfigObject, ParseKey<K>> {
     return get(this._config, key, defaultValue);
   }
 
