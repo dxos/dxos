@@ -24,7 +24,7 @@ export interface InvitationOptions {
   /**
    * A function to be called when the invitation is closed (successfully or not).
    */
-  onFinish?: ({ expired }: {expired?: boolean}) => void
+  onFinish?: ({ expired }: { expired?: boolean }) => void
 
   /**
    * Date.now()-style timestamp of when this invitation should expire.

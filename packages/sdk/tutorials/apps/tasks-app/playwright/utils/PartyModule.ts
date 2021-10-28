@@ -1,3 +1,4 @@
+import { decodeInvitation } from '@dxos/react-client';
 import expect from 'expect';
 
 import { AppSimulator } from './AppSimulator';
@@ -38,17 +39,22 @@ export class PartyModule extends AppSimulator {
     let invitationText: string;
 
     const invitationPromise = this.browser.getPage().waitForEvent('console', message => {
-      if (message.text().match(/^(.*?(\bswarmKey\b)[^$]*)$/) && !/\s/.test(message.text())) {
-        invitationText = message.text();
-        return true;
+      const text = message.text();
+      try {
+        const invitation = decodeInvitation(text);
+        if (!!invitation.hash) {
+          invitationText = text;
+          return true
+        }
+        return false;
+      } catch {
+        return false;
       }
-
-      return false;
     });
 
     await this.browser.getPage().click('[title="Invite people"]');
-
-    await this.browser.getPage().$('text="Invite code copied to your clipboard."');
+    await this.browser.getPage().click("//*[contains(text(),'Create Invitation')]");
+    await this.browser.getPage().click('[title="Copy to clipboard"]');
 
     await invitationPromise;
 
@@ -57,41 +63,30 @@ export class PartyModule extends AppSimulator {
     return invitationText!;
   }
 
-  async redeemInvitation(invitationCode: string) {
+  async redeemInvitation(invitationCode: string, getPinFromInviter: () => Promise<string>) {
     await this.browser.getPage().click('[title="Redeem invitation"]');
 
     await this.browser.getPage().fill('textarea', invitationCode);
 
-    await this.browser.getPage().click('button:has-text("Submit")');
-  }
+    await this.browser.getPage().click('button:has-text("Process")');
 
-  async checkPinCodeModal() {
-    const pinCodeModal = await this.browser.getPage().waitForSelector('text=PIN', { timeout: 5000 })
-
-    expect(pinCodeModal).toBeDefined();
+    await this.enterPinCode(await getPinFromInviter())
   }
 
   async getPinCode(): Promise<string> {
-    const passcode = await this.browser.getPage().waitForSelector('span:right-of(:text("Passcode"))', { timeout: 5000 })
+    const passcode = await this.browser.getPage().waitForSelector('#party-invitation-dialog-pin', { timeout: 5000 });
 
     expect(passcode).toBeDefined();
 
-    const invitationCode = await passcode.innerText();
+    const pinCode = await passcode.innerText();
 
-    expect(invitationCode).toBeDefined();
+    expect(pinCode).toBeDefined();
 
-    await this.browser.getPage().click('button:has-text("Done")');
-
-    return invitationCode;
+    return pinCode;
   }
 
   async enterPinCode(pinCode: string) {
-    await this.browser.getPage().fill('input:above(:text("Submit"))', pinCode);
-
-    const submitButton = await this.browser.getPage().$('button :text("Submit")');
-
-    expect(submitButton).toBeDefined();
-
-    await submitButton?.click();
+    await this.browser.getPage().fill('input', pinCode);
+    await this.browser.getPage().click('button:has-text("Submit")');
   }
 }

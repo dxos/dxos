@@ -20,19 +20,19 @@ import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 
 import { DialogHeading } from '../components';
 import { handleRedeemError } from '../helpers';
+import { DialogProps } from './DialogProps';
 
-interface RedeemDialogProps {
+interface RedeemDialogProps extends DialogProps {
   code?: string
-  open: boolean
   pinless?: boolean
-  onClose: () => void
 }
 
 /**
  * Component used for claiming invitations to Parties.
  * Works for both regular and `Offline` invitations.
+ * @deprecated
  */
-export const RedeemDialog = ({ code = '', open, onClose, pinless = false }: RedeemDialogProps) => {
+export const RedeemDialog = ({ open, code = '', onClose, pinless = false }: RedeemDialogProps) => {
   const [isOffline] = useState(false);
   // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
   // const [isOffline, setIsOffline] = useState(false);
@@ -48,7 +48,7 @@ export const RedeemDialog = ({ code = '', open, onClose, pinless = false }: Rede
     setInvitationCode('');
     setPinCode('');
     setIsProcessing(false);
-    onClose();
+    onClose?.();
   };
 
   const handleInvitationError = (error: string) => {
@@ -58,7 +58,7 @@ export const RedeemDialog = ({ code = '', open, onClose, pinless = false }: Rede
   };
 
   const [redeemCode, setPin] = useInvitationRedeemer({
-    onDone: () => handleDone(),
+    onDone: () => handleDone,
     onError: (error?: string) => handleInvitationError(String(error)),
     isOffline
   });
@@ -103,7 +103,7 @@ export const RedeemDialog = ({ code = '', open, onClose, pinless = false }: Rede
     <Dialog
       fullWidth
       maxWidth='xs'
-      open={open}
+      open={!!open}
       onClose={step === 0 ? handleDone : undefined} // No click away when in the middle of a flow.
     >
       <DialogHeading title='Redeem Invitation' icon={RedeemIcon} />

@@ -24,8 +24,10 @@ import {
   Share as ShareIcon,
 } from '@mui/icons-material';
 
+import {PartyInvitationDialog} from '@dxos/react-framework'
+
 import { ObjectModel } from '@dxos/object-model';
-import { useParty, useSelection, useInvitation } from '@dxos/react-client';
+import { useParty, useSelection } from '@dxos/react-client';
 
 const useStyles = makeStyles(theme => ({
   toolbar: {
@@ -75,7 +77,6 @@ const TASK_TYPE = 'example.com/type/task';
 // TODO(burdon): Scrolling list.
 
 const TaskList = ({ partyKey, hideShare = false }) => {
-  const [copiedSnackBarOpen, setCopiedSnackBarOpen] = useState(false);
   const classes = useStyles();
   const [taskTitle, setTaskTitle] = useState('');
   const scrollListRef = useRef(null);
@@ -86,13 +87,11 @@ const TaskList = ({ partyKey, hideShare = false }) => {
     .items)
   , [partyKey]);
 
+  const [partyInvitationDialog, setPartyInvitationDialog] = useState(false);
+
   useEffect(() => {
     scrollListRef.current.scrollTop = -scrollListRef.current.scrollHeight;
   }, [items]);
-
-  const handleShare = () => {
-    handleCopyInvite();
-  };
 
   const handleCreateTask = async () => {
     if (!taskTitle.length) {
@@ -120,20 +119,9 @@ const TaskList = ({ partyKey, hideShare = false }) => {
     await item.model.setProperty('complete', event.target.checked);
   };
 
-  const handleCopyInvite = async () => {
-    const invitation = await party.createInvitation();
-
-    const invitationText = JSON.stringify(invitation.toQueryParameters());
-    await navigator.clipboard.writeText(invitationText);
-    console.log(invitationText); // Console log is required for E2E tests.
-    setCopiedSnackBarOpen(true);
-  };
-
-
   if (!partyKey) {
     return null;
   }
-
 
   return (
     <div className={classes.fillVertically}>
@@ -198,6 +186,12 @@ const TaskList = ({ partyKey, hideShare = false }) => {
         </List>
       </div>
 
+      <PartyInvitationDialog
+        open={partyInvitationDialog}
+        onClose={() => setPartyInvitationDialog(false)}
+        partyKey={partyKey}
+      />
+
       {!hideShare && (
         <div className={classes.actions}>
           <Fab
@@ -205,15 +199,12 @@ const TaskList = ({ partyKey, hideShare = false }) => {
             color="secondary"
             aria-label="invite"
             title="Invite people"
-            onClick={handleShare}
+            onClick={() => setPartyInvitationDialog(true)}
           >
             <ShareIcon />
           </Fab>
         </div>
       )}
-
-      <Snackbar open={copiedSnackBarOpen} onClose={() => setCopiedSnackBarOpen(false)} autoHideDuration={15000} message={`Invite code copied to your clipboard.`}>
-      </Snackbar>
     </div>
   );
 };
