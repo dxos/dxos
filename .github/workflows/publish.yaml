@@ -79,7 +79,7 @@ jobs:
         yarn global add @dxos/cli-app@v2.8.2-alpha.0
 
         export PATH="$PATH:$(yarn global bin)"
-        dx profile init --name $DX_PROFILE --template-url "$DX_PROFILE_URL"
+        ./common/scripts/publish-apps.sh
     - name: Publish apps
       run:  |
         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
