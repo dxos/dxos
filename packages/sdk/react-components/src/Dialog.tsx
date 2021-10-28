@@ -8,10 +8,10 @@ import {
   CardActions,
   CardContent,
   CardHeader,
-  Dialog,
+  Dialog as MuiDialog,
   DialogActions,
   DialogContent,
-  DialogProps,
+  DialogProps as MuiDialogProps,
   DialogTitle,
   LinearProgress,
   styled
@@ -27,7 +27,7 @@ const Alert = styled(MuiAlert)({
   }
 });
 
-export interface CustomizableDialogProps extends DialogProps {
+export interface DialogProps extends MuiDialogProps {
   modal?: boolean
   title?: string
   content?: () => JSX.Element
@@ -37,12 +37,13 @@ export interface CustomizableDialogProps extends DialogProps {
 }
 
 /**
+ * A standard dialog component that implements a non-modal implementation for testing.
  * @constructor
  */
-export const CustomizableDialog = ({
+export const Dialog = ({
   modal = true,
   ...rest
-}: CustomizableDialogProps) => {
+}: DialogProps) => {
   if (modal) {
     return <ModalDialog {...rest} />
   } else {
@@ -57,11 +58,11 @@ export const ModalDialog = ({
   processing,
   error,
   ...dialogProps
-}: CustomizableDialogProps) => {
+}: DialogProps) => {
   const { open, maxWidth = 'xs', fullWidth = true, ...other } = dialogProps;
 
   return (
-    <Dialog
+    <MuiDialog
       open={open}
       maxWidth={maxWidth}
       fullWidth={fullWidth}
@@ -80,7 +81,7 @@ export const ModalDialog = ({
       <DialogActions>
         {actions?.() || null}
       </DialogActions>
-    </Dialog>
+    </MuiDialog>
   );
 };
 
@@ -97,7 +98,7 @@ export const NonModalDialog = ({
   processing,
   error,
   ...dialogProps
-}: CustomizableDialogProps) => {
+}: DialogProps) => {
   const { open } = dialogProps;
   if (!open) {
     return null;

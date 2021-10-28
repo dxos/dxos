@@ -5,23 +5,24 @@
 import { Button, TextField, } from '@mui/material';
 import React, { useState } from 'react';
 
-import { CustomizableDialog } from '../CustomizableDialog';
+import { Dialog } from '@dxos/react-components';
 
 /**
  * Dialog to export keyring to file.
  */
-export const ExportKeyringDialog = ({
+export const ExportDialog = ({
   open,
-  topic,
-  encrypter,
-  onClose
+  onClose,
+  filename,
+  encrypter
 }: {
   open: boolean,
-  topic: string,
-  encrypter: (passphrase: string) => string,
-  onClose: () => void
+  onClose: () => void,
+  filename: string,
+  encrypter: (passphrase: string) => Promise<string>,
 }) => {
   const [error, setError] = useState<string>();
+  const minLength = 8;
 
   let passphrase = '';
   const handleChange = (event: React.SyntheticEvent) => {
@@ -29,29 +30,28 @@ export const ExportKeyringDialog = ({
   };
 
   const handleExport = async () => {
-    const minLength = 8;
     if (passphrase.length < minLength) {
       setError(`The passphrase must have more than ${minLength} characters.`);
       return;
     }
 
-    const encrypted = encrypter(passphrase);
+    const encrypted = await encrypter(passphrase);
     const file = new Blob([encrypted], { type: 'text/plain' });
 
     const element = document.createElement('a');
     element.href = URL.createObjectURL(file);
-    element.download = `${topic}.keyring`;
+    element.download = `${filename}`;
     element.click();
 
     onClose();
   };
 
   return (
-    <CustomizableDialog
+    <Dialog
       open={open}
       onClose={onClose}
       title='Export Keys'
-      content={(
+      content={() => (
         <TextField
           autoFocus
           fullWidth
@@ -61,7 +61,7 @@ export const ExportKeyringDialog = ({
           onChange={handleChange}
         />
       )}
-      actions={(
+      actions={() => (
         <>
           <Button onClick={onClose}>Cancel</Button>
           <Button variant='contained' color='primary' onClick={handleExport}>Export</Button>

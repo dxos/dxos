@@ -4,12 +4,10 @@
 
 export * from './icons';
 
-export * from './KeyRing';
-
 export * from './CopyText';
 export * from './CopyToClipboard';
 export * from './CustomTextField';
-export * from './CustomizableDialog';
+export * from './Dialog';
 export * from './FullScreen';
 export * from './JsonTreeView';
 export * from './MemberAvatar';

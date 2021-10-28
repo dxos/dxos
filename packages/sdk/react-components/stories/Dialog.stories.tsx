@@ -14,7 +14,7 @@ import React, { useEffect, useState } from 'react';
 
 import { ErrorBoundary } from '@dxos/react-client';
 
-import { CustomizableDialog, CustomizableDialogProps } from '../src';
+import { Dialog, DialogProps } from '../src';
 
 export default {
   title: 'react-components/CustomizableDialog'
@@ -34,7 +34,7 @@ enum TestState {
 interface TestDialogState {
   state: TestState
   value: string | undefined
-  dialogProps: CustomizableDialogProps
+  dialogProps: DialogProps
 }
 
 const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, () => void] => {
@@ -133,7 +133,7 @@ export const Primary = () => {
     <ErrorBoundary>
       <Button onClick={reset}>Reset</Button>
 
-      <CustomizableDialog
+      <Dialog
         {...dialogProps}
         sx={{
           '.MuiDialog-paper': {
@@ -160,7 +160,7 @@ export const Secondary = () => {
         padding: 2,
         width: 444
       }}>
-        <CustomizableDialog
+        <Dialog
           modal={false}
           {...dialogProps}
         />

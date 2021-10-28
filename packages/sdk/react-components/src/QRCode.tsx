@@ -2,18 +2,19 @@
 // Copyright 2021 DXOS.org
 //
 
+import QRCodeReact from 'qrcode.react';
 import React from 'react';
-import { useQRCode } from 'react-qrcodes';
 
 export const QRCode = ({
-  text = '',
-  options = {}
+  value = ''
 }: {
-  text?: string,
-  options?: {}
+  value: string
 }) => {
-  const [inputRef] = useQRCode({ text, options });
+  // https://www.npmjs.com/package/qrcode.react
   return (
-    <canvas ref={inputRef as React.MutableRefObject<any>} />
+    <QRCodeReact
+      value={value}
+      size={256}
+    />
   );
 };
