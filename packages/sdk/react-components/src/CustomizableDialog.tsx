@@ -89,6 +89,7 @@ export const ModalDialog = ({
  * For example, this enables the testing of multiple dialogs in parallel from different client context.
  * @constructor
  */
+// TODO(burdon): Rename non-modal.
 export const NonModalDialog = ({
   title,
   content,
