@@ -38,40 +38,58 @@ jobs:
 
         # Publish
         node common/scripts/install-run-rush.js publish --publish --include-all --tag latest
-#   publish-storybooks:
-#     runs-on: [self-hosted, dind-actions-runner]
-#     timeout-minutes: 25
-#     strategy:
-#       matrix:
-#         node-version: [16.0]
-#     env:
-#       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-#       CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-#     steps:
-#     - uses: actions/checkout@v2
-#       with:
-#         fetch-depth: 0
-#     - name: Check, install and build
-#       run: |
-#         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+  publish-apps:
+    runs-on: [self-hosted, dind-actions-runner]
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      DX_PROFILE_URL: ${{ secrets.dx_profile_url }}
+      DX_DXNS_USER_URI: ${{ secrets.DX_DXNS_USER_URI }}
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+      DX_PROFILE: ci
+    timeout-minutes: 25
+    strategy:
+      matrix:
+        node-version: [16.0]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Check, install and build
+      run: |
+        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
 
-#         npm install -g @microsoft/rush pnpm
-#         sudo ./common/scripts/install-dependencies.sh
+        npm install -g @microsoft/rush pnpm
+        sudo ./common/scripts/install-dependencies.sh
         
-#         # Install dependencies
-#         echo "::group::Install"
-#         node common/scripts/install-run-rush.js install
-#         echo "::endgroup::"
+        # Install dependencies
+        echo "::group::Install"
+        node common/scripts/install-run-rush.js install
+        echo "::endgroup::"
 
-#         # Quick build
-#         node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose
-#     - name: Chromatic
-#       run:  |
-#         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
-#         npm install -g @microsoft/rush pnpm
+        # Quick build
+        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose
+    - name: Initialize CLI
+      run: |
+        set -e
+        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+        yarn global add @dxos/cli@v2.8.2-alpha.0
+        yarn global add @dxos/cli-dxns@v2.8.2-alpha.0
+        yarn global add @dxos/cli-app@v2.8.2-alpha.0
 
-#         cd packages/sdk/demos
-#         rushx chromatic-docs
+        dx profile init --name $DX_PROFILE --template-url "$DX_PROFILE_URL"
+    - name: Publish apps
+      run:  |
+        \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
+
+        cd packages/sdk/tutorials/apps/tasks-app
+        DXOS_DOMAIN="${DXOS_DOMAIN:-dxos}"
+        PKG_NAME=`cat package.json | jq -r '.name' | cut -d'/' -f2- | sed 's/-app$//'`
+
+        # Canary deployment
+        dx app deploy --name "app.${PKG_NAME}" --domain $DXOS_DOMAIN --tag dev --version=false
+
+        # Latest version deployment
+        dx app deploy --name "app.${PKG_NAME}" --domain $DXOS_DOMAIN --tag latest --skipExisting
   publish-extension:
     runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 25
