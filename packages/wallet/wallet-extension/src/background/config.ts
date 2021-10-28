@@ -2,16 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ClientConfig } from '@dxos/client';
+import { ConfigObject, defs } from '@dxos/config';
 
-export const config: ClientConfig = {
-  storage: {
-    persistent: true,
-    type: 'idb',
-    path: '/tmp/dxos'
+export const config: ConfigObject = {
+  system: {
+    storage: {
+      persistent: true,
+      storageType: defs.System.Storage.StorageDriver.IDB,
+      path: '/tmp/dxos'
+    }
   },
-  swarm: {
-    signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal',
+  services: {
+    signal: {
+      server: 'wss://apollo3.kube.moon.dxos.network/dxos/signal'
+    },
     ice: [
       { urls: 'stun:apollo3.kube.moon.dxos.network:3478' },
       {

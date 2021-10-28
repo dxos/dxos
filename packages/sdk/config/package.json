@@ -17,16 +17,20 @@
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
+  "toolchain": {
+    "testingFramework": "mocha"
+  },
   "dependencies": {
     "@dxos/debug": "workspace:*",
-    "ajv": "~8.6.2",
     "boolean": "^3.0.1",
     "debug": "^4.1.1",
     "js-yaml": "^3.13.1",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "protobufjs": "^6.9.0",
+    "@dxos/codec-protobuf": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
@@ -36,7 +40,9 @@
     "@types/lodash.set": "~4.3.6",
     "@types/node": "^14.0.9",
     "esbuild": "^0.11.23",
-    "webpack": "4.44.2"
+    "webpack": "4.44.2",
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2"
   },
   "publishConfig": {
     "access": "public"

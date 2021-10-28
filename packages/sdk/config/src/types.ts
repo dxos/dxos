@@ -2,34 +2,49 @@
 // Copyright 2021 DXOS.org
 //
 
-export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
-export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
+import type { Config as ConfigObject } from './proto/gen/dxos/config';
 
-export interface ConfigSchema {
-  storage?: {
-    persistent?: boolean,
-    type?: StorageType,
-    keyStorage?: KeyStorageType,
-    path?: string
-  },
-  swarm?: {
-    signal?: string | string[],
-    ice?: {
-      urls: string,
-      username?: string,
-      credential?: string,
-    }[],
-  },
-  wns?: {
-    server: string,
-    chainId: string,
-  },
-  ipfs?: {
-    server: string,
-    gateway: string,
-  }
-  snapshots?: boolean
-  snapshotInterval?: number,
-  invitationExpiration?: number,
-  [key: string]: any
-}
+export type { ConfigObject };
+
+type DotPrefix<T extends string> = T extends '' ? '' : `.${T}`
+
+/**
+ * Returns all dot-separated nested keys for an object.
+ *
+ * Read more: https://stackoverflow.com/a/68404823.
+ */
+type DotNestedKeys<T> = (
+  T extends object
+    ? {
+      [K in Exclude<keyof T, symbol>]: `${K}${DotPrefix<DotNestedKeys<T[K]>>}`
+    }[Exclude<keyof T, symbol>]
+    : ''
+  ) extends infer D ? Extract<D, string> : never;
+
+/**
+ * Parse a dot separated nested key into an array of keys.
+ *
+ * Example: 'services.signal.server' -> ['services', 'signal', 'server'].
+ */
+export type ParseKey<K extends string> =
+    K extends `${infer L}.${infer Rest}` ? [L, ...ParseKey<Rest>]
+    : [K]
+
+/**
+ * Array of types that can act as an object key.
+ */
+type Keys = (keyof any)[]
+
+/**
+ * Retrieves a property type in a series of nested objects.
+ *
+ * Read more: https://stackoverflow.com/a/61648690.
+ */
+export type DeepIndex<T, KS extends Keys, Fail = undefined> =
+  KS extends [infer F, ...infer R] ? F extends keyof Exclude<T, undefined> ? R extends Keys ?
+  DeepIndex<Exclude<T, undefined>[F], R, Fail> : Fail : Fail : T;
+
+/**
+ * Any nested dot separated key that can be in config.
+ */
+export type ConfigKey = DotNestedKeys<ConfigObject>

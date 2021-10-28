@@ -7,8 +7,8 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
 import set from 'lodash.set';
 
-import { validateConfig } from './schema-validator';
-import { ConfigSchema } from './types';
+import { sanitizeConfig } from './sanitizer';
+import { ConfigObject, ConfigKey, DeepIndex, ParseKey } from './types';
 
 type MappingSpec = Record<string, { path: string, type?: string }>;
 
@@ -95,23 +95,47 @@ export class Config {
    * @constructor
    * @param objects
    */
-  constructor (...objects: [any, ...any]) {
-    this._config = defaultsDeep(...objects);
-
-    validateConfig(this._config);
+  constructor (...objects: [ConfigObject, ...ConfigObject[]]) {
+    this._config = sanitizeConfig(defaultsDeep(...objects));
   }
 
   /**
    * Returns an immutable config JSON object.
    */
-  get values (): ConfigSchema {
+  get values (): ConfigObject {
     return this._config;
   }
 
   /**
    * Returns the given config property.
+   *
+   * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
+   * @param defaultValue Default value to return if option is not present in the config.
+   * @returns The config value or undefined if the option is not present.
    */
-  get <T> (key: string, defaultValue?: T): T {
+  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigObject, ParseKey<K>>): DeepIndex<ConfigObject, ParseKey<K>> {
     return get(this._config, key, defaultValue);
+  }
+
+  /**
+   * Returns config key without type checking.
+   *
+   * @deprecated Use the type-checked version.
+   */
+  getUnchecked<T> (key: string, defaultValue?: T): T {
+    return get(this._config, key, defaultValue);
+  }
+
+  /**
+   * Returns the given config property or throw if it doesn't exist.
+   *
+   * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
+   */
+  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<ConfigObject, ParseKey<K>>, undefined> {
+    const value = this.get(this._config, key);
+    if (!value) {
+      throw new Error(`Config option not present: ${key}`);
+    }
+    return value;
   }
 }

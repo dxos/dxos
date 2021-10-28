@@ -31,7 +31,6 @@ import {
 } from '@dxos/protocol-plugin-bot';
 
 import { BotManager } from './bot-manager';
-import { getClientConfig } from './config';
 import { BotContainer, LocalDevBotContainer } from './containers';
 import { NATIVE_ENV, NODE_ENV, getPlatformInfo } from './env';
 import { log } from './log';
@@ -75,8 +74,8 @@ export class BotFactory {
 
     this._botContainers = this._localDev
       ? {
-          [NODE_ENV]: new LocalDevBotContainer(config.get('cli.nodePath')),
-          [NATIVE_ENV]: new LocalDevBotContainer(config.get('cli.nodePath'))
+          [NODE_ENV]: new LocalDevBotContainer(config.getOrThrow('cli.nodePath')),
+          [NATIVE_ENV]: new LocalDevBotContainer(config.getOrThrow('cli.nodePath'))
         }
       : botContainers;
 
@@ -96,9 +95,7 @@ export class BotFactory {
    * Start factory.
    */
   async start () {
-    this._client = new Client({
-      swarm: getClientConfig(this._config).swarm
-    });
+    this._client = new Client(this._config);
     await this._client.initialize();
 
     this._botManager = new BotManager(this._config, this._botContainers, this._client, {

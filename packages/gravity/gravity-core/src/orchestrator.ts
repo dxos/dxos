@@ -15,7 +15,6 @@ import { Invitation } from '@dxos/credentials';
 import { SIGNATURE_LENGTH, keyToBuffer, createKeyPair, keyToString, verify, sha256 } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 import { SpawnOptions } from '@dxos/protocol-plugin-bot';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { Agent } from './agent';
 import { FACTORY_OUT_DIR, getTestConfig, mapConfigToEnv } from './config';
@@ -58,14 +57,7 @@ export class Orchestrator {
     this._config = config;
 
     const { local = true } = options;
-    this._client = new Client({
-      storage: createStorage('', STORAGE_RAM),
-      // TODO(egorgripasov): Factor out (use main config).
-      swarm: {
-        signal: this._config.get('services.signal.server'),
-        ice: this._config.get('services.ice')
-      }
-    });
+    this._client = new Client(this._config);
     this._localRun = local;
   }
 

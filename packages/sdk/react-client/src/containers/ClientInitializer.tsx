@@ -4,22 +4,22 @@
 
 import React, { useState, useEffect, ReactNode, ErrorInfo } from 'react';
 
-import { Client, ClientConfig } from '@dxos/client';
-import { MaybePromise } from '@dxos/util';
+import { Client } from '@dxos/client';
 
 import { ErrorComponentProps, ErrorBoundary, ErrorCallbackType } from '../components';
+import { SuppliedConfig, unwrapConfig } from '../config';
 import { ClientProvider } from './ClientProvider';
 
 interface ClientLoaderProps {
   children?: ReactNode
-  config?: ClientConfig | (() => MaybePromise<ClientConfig>)
+  config?: SuppliedConfig
   onInit?: (client: Client) => void
   loaderComponent?: React.ComponentType
 }
 
 interface ClientLoaderProps {
   children?: ReactNode
-  config?: ClientConfig | (() => MaybePromise<ClientConfig>)
+  config?: SuppliedConfig
   onInit?: (client: Client) => void
   loaderComponent?: React.ComponentType
 }
@@ -38,7 +38,7 @@ export const ClientLoader = ({
 
   useEffect(() => {
     setImmediate(async () => {
-      const client = new Client(typeof config === 'function' ? await config() : config);
+      const client = new Client(await unwrapConfig(config));
       await client.initialize();
       setClient(client);
       onInit && onInit(client);
@@ -64,7 +64,7 @@ export const ClientLoader = ({
 
 interface ClientInitializerProps {
   children?: ReactNode
-  config?: ClientConfig | (() => MaybePromise<ClientConfig>)
+  config?: SuppliedConfig
   onError?: ErrorCallbackType
   errorComponent?: React.ComponentType<ErrorComponentProps>
   loaderComponent?: React.ComponentType
