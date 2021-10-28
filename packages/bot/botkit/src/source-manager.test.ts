@@ -16,7 +16,9 @@ import { SourceManager } from './source-manager';
 // TODO(marik-d): Do we need this test?
 test.skip('Download & install bot', async () => {
   const sourceManager = new SourceManager(new Config({
-    localDev: false,
+    bot: {
+      localDev: false,
+    },
     services: {
       ipfs: {
         gateway: 'https://apollo3.kube.moon.dxos.network/dxos/ipfs/gateway/'

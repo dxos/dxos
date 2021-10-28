@@ -125,4 +125,18 @@ export class Config {
   getUnchecked<T> (key: string, defaultValue?: T): T {
     return get(this._config, key, defaultValue);
   }
+
+  /**
+   * Returns the given config property or throw if it doesn't exist.
+   *
+   * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
+   */
+  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<ConfigObject, ParseKey<K>>, undefined> {
+    const value = this.get(this._config, key);
+    if(!value) {
+      throw new Error(`Config option not present: ${key}`)
+    }
+    return value
+  }
+
 }
