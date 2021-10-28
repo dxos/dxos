@@ -133,10 +133,9 @@ export class Config {
    */
   getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<ConfigObject, ParseKey<K>>, undefined> {
     const value = this.get(this._config, key);
-    if(!value) {
-      throw new Error(`Config option not present: ${key}`)
+    if (!value) {
+      throw new Error(`Config option not present: ${key}`);
     }
-    return value
+    return value;
   }
-
 }

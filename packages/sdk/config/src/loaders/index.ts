@@ -9,10 +9,9 @@
 import fs from 'fs';
 import yaml from 'js-yaml';
 import path from 'path';
-import { ConfigObject } from '../types';
 
 import { mapFromKeyValues } from '../config';
-import { Config } from '..';
+import { ConfigObject } from '../types';
 
 const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
 

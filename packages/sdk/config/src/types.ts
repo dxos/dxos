@@ -10,7 +10,7 @@ type DotPrefix<T extends string> = T extends '' ? '' : `.${T}`
 
 /**
  * Returns all dot-separated nested keys for an object.
- * 
+ *
  * Read more: https://stackoverflow.com/a/68404823.
  */
 type DotNestedKeys<T> = (
@@ -23,7 +23,7 @@ type DotNestedKeys<T> = (
 
 /**
  * Parse a dot separated nested key into an array of keys.
- * 
+ *
  * Example: 'services.signal.server' -> ['services', 'signal', 'server'].
  */
 export type ParseKey<K extends string> =
@@ -37,7 +37,7 @@ type Keys = (keyof any)[]
 
 /**
  * Retrieves a property type in a series of nested objects.
- * 
+ *
  * Read more: https://stackoverflow.com/a/61648690.
  */
 export type DeepIndex<T, KS extends Keys, Fail = undefined> =

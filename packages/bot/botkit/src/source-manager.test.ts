@@ -17,7 +17,7 @@ import { SourceManager } from './source-manager';
 test.skip('Download & install bot', async () => {
   const sourceManager = new SourceManager(new Config({
     bot: {
-      localDev: false,
+      localDev: false
     },
     services: {
       ipfs: {
