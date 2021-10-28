@@ -15,7 +15,7 @@
   "author": "DXOS.org",
   "scripts": {
     "book": "esbuild-server book 'stories/**/*.tsx' '../tutorials/apps/tasks-app/stories/**/*.tsx' '../react-{client,components,framework,registry-client}/stories/**/*.{stories,story}.tsx'",
-    "build": "tsc --noEmit",
+    "build": "tsc --noEmit && npm run book -- --build",
     "build-storybook": "build-storybook --quiet",
     "build-storybook-docs": "build-storybook --quiet --docs",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
