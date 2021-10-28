@@ -38,7 +38,7 @@ export const CopyText = ({ value, length, sx, ...rest }: CopyTextProps) => {
         <>
           <Box sx={{ flex: 1 }} />
           <Box sx={{ flexShrink: 0, width: 40, marginLeft: '2px' }}>
-            <CopyToClipboard text={value} onCopy={value => console.log(value)} />
+            <CopyToClipboard text={value} />
           </Box>
         </>
       )}

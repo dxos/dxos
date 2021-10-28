@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { Party, PartyMember } from '@dxos/echo-db';
+import { MemberList } from '@dxos/react-components';
 
-import { MemberList } from '../components';
 import { useMembers } from '../hooks';
 
 /**

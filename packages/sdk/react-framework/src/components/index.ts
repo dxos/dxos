@@ -10,8 +10,6 @@ export * from './ErrorBoundary';
 export * from './ErrorView';
 export * from './FullScreen';
 export * from './JsonTreeView';
-export * from './MemberAvatar';
-export * from './MemberList';
 export * from './Passcode';
 export * from './ProfileDialog';
 export * from './Theme';

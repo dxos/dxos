@@ -7,12 +7,12 @@ import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient, useParties } from '@dxos/react-client';
-import { FullScreen, CopyText, CustomizableDialog } from '@dxos/react-components';
+import { FullScreen, CopyText } from '@dxos/react-components';
 
 import {
   ErrorView,
-  usePartyInvitationDialogState,
-  usePartyJoinDialogState
+  PartyInvitationDialog,
+  PartyJoinDialog,
 } from '../src';
 
 export default {
@@ -34,9 +34,9 @@ const Parties = () => {
 };
 
 const Sender = () => {
-  const client = useClient();
+  const [open, setOpen] = useState(true);
   const [partyKey, setPartyKey] = useState<PublicKey>();
-  const { dialogProps, reset } = usePartyInvitationDialogState({ partyKey, open: true, closeOnSuccess: false });
+  const client = useClient();
 
   const handleCreateParty = async () => {
     const party = await client.echo.createParty();
@@ -50,12 +50,14 @@ const Sender = () => {
   return (
     <Box>
       <Toolbar>
-        <Button onClick={reset}>Reset</Button>
+        <Button onClick={() => setOpen(true)}>Open</Button>
         <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
-      <CustomizableDialog
+      <PartyInvitationDialog
+        partyKey={partyKey}
+        open={open}
+        onClose={() => setOpen(false)}
         modal={false}
-        {...dialogProps}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
@@ -65,16 +67,18 @@ const Sender = () => {
 };
 
 const Receiver = () => {
-  const { dialogProps, reset } = usePartyJoinDialogState({ open: true, closeOnSuccess: true });
+  const [open, setOpen] = useState(true);
 
   return (
     <Box>
       <Toolbar>
-        <Button onClick={reset}>Reset</Button>
+        <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
-      <CustomizableDialog
+      <PartyJoinDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        closeOnSuccess={false}
         modal={false}
-        {...dialogProps}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
