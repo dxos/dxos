@@ -62,6 +62,7 @@ const PartyInviatationContainer = () => {
         : await client.createInvitation(partyKey!, secretProvider, {
           onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
             setInvitationCode(undefined);
+            resetPin();
           }
         });
 
