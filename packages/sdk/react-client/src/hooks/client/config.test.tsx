@@ -5,7 +5,8 @@
 import { renderHook } from '@testing-library/react-hooks';
 import React from 'react';
 
-import { Client, ClientConfig } from '@dxos/client';
+import { Client } from '@dxos/client';
+import { ConfigObject } from '@dxos/config';
 
 import { useConfig } from '.';
 import { ClientProvider } from '../../containers';
@@ -27,15 +28,17 @@ describe('Config hook', () => {
   });
 
   test('should return custom client config when used properly in a context', () => {
-    const config: ClientConfig = {
-      storage: {
-        persistent: false
+    const config: ConfigObject = {
+      system: {
+        storage: {
+          persistent: false
+        }
       }
     };
     const client = new Client(config);
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
     expect(result.error?.message).not.toBeDefined();
-    expect(result.current.storage).toEqual(config.storage);
+    expect(result.current.get('system.storage')).toEqual(config.system?.storage);
   });
 });

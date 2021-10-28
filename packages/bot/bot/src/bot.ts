@@ -9,6 +9,7 @@ import { join } from 'path';
 
 import { promiseTimeout } from '@dxos/async';
 import { Client } from '@dxos/client';
+import { Config } from '@dxos/config';
 import { randomBytes, keyToBuffer, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { StarTopology, transportProtocolProvider } from '@dxos/network-manager';
@@ -23,8 +24,6 @@ import {
   Message,
   InvitationMessage
 } from '@dxos/protocol-plugin-bot';
-
-import { getClientConfig } from './config';
 
 const CONNECT_TIMEOUT = 30000;
 const HEARTBEAT_INTERVAL = 180 * 1000;
@@ -92,13 +91,14 @@ export class Bot extends EventEmitter {
     this._plugin = new BotPlugin(this._controlPeerKey, (protocol, message) => this._botMessageHandler(protocol, message));
 
     log('Starting.');
-    this._client = new Client({
-      storage: {
-        persistent: this._persistent,
-        path: join(this._cwd, BOT_STORAGE)
-      },
-      swarm: getClientConfig(this._config).swarm
-    });
+    this._client = new Client(new Config(this._config.values, {
+      system: {
+        storage: {
+          persistent: this._persistent,
+          path: join(this._cwd, BOT_STORAGE)
+        }
+      }
+    }));
     await this._preInit();
     await this._client.initialize();
 

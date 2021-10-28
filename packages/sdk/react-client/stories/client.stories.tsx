@@ -29,7 +29,7 @@ export const Primary = () => {
   return (
     <ThemeProvider>
       <ErrorBoundary>
-        <ClientInitializer config={{ swarm: { signal: undefined } }}>
+        <ClientInitializer config={{}}>
           <TestApp />
         </ClientInitializer>
       </ErrorBoundary>
