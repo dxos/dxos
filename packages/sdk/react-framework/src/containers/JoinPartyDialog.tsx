@@ -36,18 +36,19 @@ export interface PartyJoinDialogProps {
  * Manages joining HALO and parties.
  */
 // TODO(burdon): Make work for HALO (device invitations).
-export const PartyJoinDialog = ({
+export const JoinPartyDialog = ({
   modal,
   open,
   onClose,
   closeOnSuccess = true
 }: PartyJoinDialogProps) => {
   const [state, setState] = useState(PartyJoinState.INIT);
-  const [invitationCode, setInvitationCode] = useState('');
-  const [pin, setPin] = useState('');
-  const [processing, setProcessing] = useState<boolean>(false);
-  const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
   const [error, setError] = useState<string | undefined>(undefined);
+  const [processing, setProcessing] = useState<boolean>(false);
+  const [invitationCode, setInvitationCode] = useState('');
+
+  const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
+  const [pin, setPin] = useState('');
   const client = useClient();
 
   const handleReset = () => {
@@ -156,7 +157,7 @@ export const PartyJoinDialog = ({
 
       case PartyJoinState.AUTHENTICATE: {
         return {
-          title: 'Authenticate',
+          title: 'Authenticate Invitation',
           content: authenticateContent,
           actions: authenticateActions
         };

@@ -24,22 +24,22 @@ export interface PartyInvitationDialogProps {
   partyKey?: PublicKey
 }
 
-// TODO(burdon): Evolve this into PartySharingDialog.
-
 /**
  * Manages the workflow for inviting a user to a party.
  */
-export const PartyInvitationDialog = ({
+export const PartySharingDialog = ({
   open,
   modal,
   onClose,
   partyKey
 }: PartyInvitationDialogProps) => {
   const [state, setState] = useState(PartyInvitationState.INIT);
-  // TODO(burdon): Multiple invitations at once (show useMembers). Timeout, etc.
+  const [error, setError] = useState<string | undefined>(undefined); // TODO(burdon): Error handling.
+
+  // TODO(burdon): Multiple invitations at once (see Braneframe PartySharingDialog). Timeouts, etc.
   const [invitationCode, setInvitationCode] = useState<string>();
   const [secretProvider, pin, resetPin] = useSecretGenerator();
-  const [error, setError] = useState<string | undefined>(undefined); // TODO(burdon): Error handling.
+
   const client = useClient();
   const party = useParty(partyKey);
   const members = useMembers(party!);
@@ -71,8 +71,7 @@ export const PartyInvitationDialog = ({
       // TODO(burdon): Handle offline (display members).
       const invitation = await client.createInvitation(partyKey!, secretProvider, {
         onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
-          // TODO(burdon): Update state.
-          resetPin();
+          handleReset();
         }
       });
 
@@ -83,21 +82,26 @@ export const PartyInvitationDialog = ({
   const getDialogProps = (state: PartyInvitationState) => {
     const sharePartyContent = () => (
       <>
-        <Button onClick={handleCreateInvitation}>Create Invitation</Button>
+        <Box>
+          <Button onClick={handleCreateInvitation}>Create Invitation</Button>
+        </Box>
         <Table>
           <TableBody>
             <TableRow>
               <TableCell>
-                <CopyText value={invitationCode} length={4} />
-              </TableCell>
-              <TableCell sx={{ width: 0 }}>
-                <CopyText id='party-invitation-dialog-pin' value={pin} />
+                {!pin && (
+                  <CopyText value={invitationCode} length={8} />
+                )}
+                {pin && (
+                  <CopyText value={pin} />
+                )}
               </TableCell>
             </TableRow>
           </TableBody>
         </Table>
-        <Box p={1}>
-          <MemberList members={members} onShare={() => {}}/>
+        <Box sx={{ marginTop: 2 }}>
+          {/* TODO(burdon): Invite from address book. */}
+          <MemberList members={members} />
         </Box>
       </>
     );
@@ -115,7 +119,7 @@ export const PartyInvitationDialog = ({
     switch (state) {
       case PartyInvitationState.INIT: {
         return {
-          title: 'Share Party',
+          title: 'Party Sharing',
           processing: !!pin,
           content: sharePartyContent,
           actions: sharePartyActions
@@ -124,7 +128,7 @@ export const PartyInvitationDialog = ({
 
       case PartyInvitationState.ERROR: {
         return {
-          title: 'Invitation Failed',
+          title: 'Party Sharing',
           error,
           actions: errorActions
         };

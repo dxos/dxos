@@ -11,8 +11,8 @@ import { FullScreen, CopyText } from '@dxos/react-components';
 
 import {
   ErrorView,
-  PartyInvitationDialog,
-  PartyJoinDialog,
+  JoinPartyDialog,
+  PartySharingDialog
 } from '../src';
 
 export default {
@@ -53,7 +53,7 @@ const Sender = () => {
         <Button onClick={() => setOpen(true)}>Open</Button>
         <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
-      <PartyInvitationDialog
+      <PartySharingDialog
         partyKey={partyKey}
         open={open}
         onClose={() => setOpen(false)}
@@ -74,7 +74,7 @@ const Receiver = () => {
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
-      <PartyJoinDialog
+      <JoinPartyDialog
         open={open}
         onClose={() => setOpen(false)}
         closeOnSuccess={false}
