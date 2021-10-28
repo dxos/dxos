@@ -18,7 +18,7 @@ message Record {
     /// Set of protobuf messages encoded in JSON.
     string protobuf_defs = 2;                     
     /// CID of protobuf source file.
-    string protobuf_file = 3;                     
+    string protobuf_ipfs_cid = 3;                     
   }
 
   /**
