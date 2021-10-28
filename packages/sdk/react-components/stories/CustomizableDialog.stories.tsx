@@ -14,7 +14,7 @@ import React, { useEffect, useState } from 'react';
 
 import { ErrorBoundary } from '@dxos/react-client';
 
-import { CustomizableDialog, CustomizableDialogProps, TestCustomizableDialog } from '../src';
+import { CustomizableDialog, CustomizableDialogProps } from '../src';
 
 export default {
   title: 'react-components/CustomizableDialog'
@@ -160,7 +160,8 @@ export const Secondary = () => {
         padding: 2,
         width: 444
       }}>
-        <TestCustomizableDialog
+        <CustomizableDialog
+          modal={false}
           {...dialogProps}
         />
       </Box>

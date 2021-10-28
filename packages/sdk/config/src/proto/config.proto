@@ -1,0 +1,184 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.config;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/descriptor.proto";
+
+message Config {
+  //
+  // Global configuration sections
+  //
+
+  System system = 1 [(env) = "SYSTEM"];
+  Services services = 2;
+
+  /// Build metdata
+  Build build = 11;
+
+  //
+  // Agent-specific sections
+  //
+
+  /// App configuration. Incuded if this configuration is for an app.
+  App app = 101 [(env) = "APP"];
+
+  /// App configuration. Incuded if this configuration is for a bot.
+  Bot bot = 102 [(env) = "BOT"];
+
+  /// CLI configuration.
+  CLI cli = 103;
+
+  /// Custom configuration as string key-value pairs.
+  map<string, string> custom = 1001;
+}
+
+message System {
+  message Storage {
+    enum StorageDriver {
+      RAM = 0;
+      IDB = 1;
+      CHROME = 2;
+      FIREFOX = 3;
+      NODE = 4;
+      
+      // Only for key storage:
+
+      LEVELJS = 11;
+      JSONDOWN = 12;
+    }
+
+    bool persistent = 1;
+    StorageDriver storage_type = 2;
+    StorageDriver key_storage = 3;
+    string path = 4;
+  }
+
+  // TODO(dmaretskyi): Move into KUBE service?
+  string certEndpoint = 1;
+  string debug = 2 [(env) = "DEBUG"];
+  Storage storage = 3;
+  bool enable_snapshots = 4;
+
+  /// Milliseconds
+  int32 snapshot_interval = 5;
+
+  /// Milliseconds
+  int32 invitation_expiration = 6;
+}
+
+/// Services provided to all DXOS agents
+message Services {
+  message Kube {
+
+    message Endpoints {
+      string logs = 1;
+      string services = 2;
+    }
+  
+    Endpoints endpoints = 1;
+  }
+
+  message AppServer {
+    string prefix = 1;
+    string server = 2;
+  }
+
+  message Dxns {
+    /// DXNS endpoint.
+    string server = 1;
+
+    /**
+     * Substrate account URI. This is a secret.
+     * KUBEs do not serve this with the config but we store it in profile.yml.
+     *
+     * TODO(dmaretskyi): Deprecate this and move it to keyring.
+     */
+    string accountUri = 2;
+  }
+
+  message Ipfs {
+    string server = 1;
+    string gateway = 2;
+  }
+
+  message Signal {
+    string server = 1;
+  }
+
+  message Ice {
+    string urls = 1;
+    string username = 2;
+    string credential = 3;
+  }
+
+  Kube kube = 1;
+  AppServer app_server = 2;
+  Dxns dxns = 3;
+  Ipfs ipfs = 4;
+  Signal signal = 5;
+  repeated Ice ice = 6;
+}
+
+/// Build metadata
+message Build {
+  string version = 1;
+  string commit_hash = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+/// App configuration
+message App {
+    string title = 1;
+    string org = 2;
+    string theme = 3;
+    string website = 4;
+    string publicUrl = 5 [(env) = "PUBLIC_URL"];
+}
+
+/// Bot configuration
+message Bot {
+
+  message Ipc {
+    int32 portFrom = 1 [(env) = "PORT_FROM"];
+    int32 portTo = 2 [(env) = "PORT_TO"];
+    string serverId = 3 [(env) = "SERVER_ID"];
+  }
+
+  string uid = 1 [(env) = "UID"];
+  string name = 2 [(env) = "NAME"];
+  string cwd = 3 [(env) = "CWD"];
+  bool restarted = 4 [(env) = "RESTARTED"];
+  bool reset = 5 [(env) = "RESET"];
+  string peerId = 6 [(env) = "PEER_ID"];
+  string topic = 7 [(env) = "TOPIC"];
+  string secretKey = 8 [(env) = "SECRET_KEY"];
+  bool localDev = 9 [(env) = "LOCAL_DEV"];
+  string nodePath = 10 [(env) = "NODE_PATH"];
+  string controlTopic = 11 [(env) = "CONTROL_TOPIC"];
+  string dumpFile = 12 [(env) = "DUMP_FILE"];
+  Ipc ipc = 13 [(env) = "IPC"];
+}
+
+// CLI configuration
+message CLI {
+  string node_path = 1;
+}
+
+extend google.protobuf.FieldOptions {
+  /**
+   * Name of the system env variable this config option maps to.
+   * For nested defintions names are concatenated with underscores.
+   */
+  string env = 5001;
+
+  /**
+   * Regex to validate string options.
+   */
+  string regex = 5002;
+}
+

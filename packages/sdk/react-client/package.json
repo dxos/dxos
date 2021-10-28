@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "2.16.2",
+  "version": "2.16.3",
   "description": "React client API",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -16,6 +16,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -23,10 +24,10 @@
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
     "assert": "^2.0.0",
+    "base-x": "~3.0.9",
     "debug": "^4.1.1",
     "react-display-name": "^0.2.5",
-    "use-subscription": "^1.4.1",
-    "base-x": "~3.0.9"
+    "use-subscription": "^1.4.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

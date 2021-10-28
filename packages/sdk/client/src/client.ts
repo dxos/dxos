@@ -5,10 +5,10 @@
 import assert from 'assert';
 import jsondown from 'jsondown';
 import leveljs from 'level-js';
-import defaultsDeep from 'lodash.defaultsdeep';
 import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
+import { Config, defs } from '@dxos/config';
 import { Invitation, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
@@ -18,7 +18,6 @@ import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { createStorage } from '@dxos/random-access-multi-storage';
-import { Registry } from '@wirelineio/registry-client';
 
 import { DevtoolsContext } from './devtools-context';
 import { InvalidConfigurationError } from './errors';
@@ -27,52 +26,13 @@ import { isNode } from './platform';
 export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
 
-// CAUTION: Breaking changes to this interface require corresponding changes in https://github.com/dxos/kube/blob/main/remote.yml
-// TODO(marik-d): For now these types are duplicates of ones in @dxos/config. Think about a way to unify them.
-export interface ClientConfig {
-  storage?: {
-    persistent?: boolean,
-    type?: StorageType,
-    keyStorage?: KeyStorageType,
-    path?: string
-  },
-  swarm?: {
-    signal?: string | string[],
-    ice?: {
-      urls: string,
-      username?: string,
-      credential?: string,
-    }[],
-  },
-  wns?: {
-    server: string,
-    chainId: string,
-  },
-  ipfs?: {
-    server: string,
-    gateway: string,
-  },
-  services?: {
-    dxns?: {
-      server: string,
-      uri?: string
-    },
-  },
-  // TODO(burdon): Make hierarchical (e.g., snapshot.[enabled, interval]); and in ECHO constructor.
-  snapshots?: boolean
-  snapshotInterval?: number,
-  invitationExpiration?: number,
-}
+export const defaultConfig: defs.Config = {};
 
-export const defaultConfig: ClientConfig = {
-  swarm: {
-    signal: undefined // In-memory.
-  }
-};
-
-export const defaultTestingConfig: ClientConfig = {
-  swarm: {
-    signal: 'ws://localhost:4000' // Locally running signal server.
+export const defaultTestingConfig: defs.Config = {
+  services: {
+    signal: {
+      server: 'ws://localhost:4000'
+    }
   }
 };
 
@@ -81,7 +41,7 @@ export const defaultTestingConfig: ClientConfig = {
  * An entrypoint to ECHO, HALO, DXNS.
  */
 export class Client {
-  private readonly _config: ClientConfig;
+  private readonly _config: Config;
 
   private readonly _echo: ECHO;
 
@@ -93,17 +53,17 @@ export class Client {
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  constructor (config: ClientConfig = {}) {
-    this._config = defaultsDeep({}, defaultConfig, config);
-    const {
-      storage,
-      swarm,
-      wns,
-      snapshots,
-      snapshotInterval
-    } = this._config;
+  constructor (config: defs.Config | Config = {}) {
+    if (config instanceof Config) {
+      this._config = config;
+    } else {
+      this._config = new Config(config);
+    }
 
-    const { feedStorage, keyStorage, snapshotStorage, metadataStorage } = createStorageObjects(storage, snapshots);
+    const { feedStorage, keyStorage, snapshotStorage, metadataStorage } = createStorageObjects(
+      this._config.get('system.storage', {})!,
+      this._config.get('system.enableSnapshots', false)
+    );
 
     this._echo = new ECHO({
       feedStorage,
@@ -111,16 +71,16 @@ export class Client {
       snapshotStorage,
       metadataStorage,
       networkManagerOptions: {
-        signal: swarm?.signal ? Array.isArray(swarm.signal) ? swarm.signal : [swarm.signal] : undefined,
-        ice: swarm?.ice,
+        signal: this._config.get('services.signal.server') ? [this._config.get('services.signal.server')!] : undefined,
+        ice: this._config.get('services.ice'),
         log: true
       },
-      snapshots,
-      snapshotInterval
+      snapshots: this._config.get('system.enableSnapshots', false),
+      snapshotInterval: this._config.get('system.snapshotInterval')
     });
 
     // TODO(burdon): Remove.
-    this._wnsRegistry = wns ? new Registry(wns.server, wns.chainId) : undefined;
+    this._wnsRegistry = undefined;
   }
 
   toString () {
@@ -135,7 +95,7 @@ export class Client {
     };
   }
 
-  get config (): ClientConfig {
+  get config (): Config {
     return this._config;
   }
 
@@ -377,32 +337,32 @@ export class Client {
 }
 
 // TODO(burdon): Factor out.
-const createStorageObjects = (config: ClientConfig['storage'], snapshotsEnabled = false) => {
+const createStorageObjects = (config: defs.System.Storage, snapshotsEnabled = false) => {
   const {
     path = 'dxos/storage', // TODO(burdon): Factor out const.
-    type,
+    storageType,
     keyStorage,
     persistent = false
   } = config ?? {};
 
-  if (persistent && type === 'ram') {
+  if (persistent && storageType === defs.System.Storage.StorageDriver.RAM) {
     throw new InvalidConfigurationError('RAM storage cannot be used in persistent mode.');
   }
-  if (!persistent && (type !== undefined && type !== 'ram')) {
+  if (!persistent && (storageType !== undefined && storageType !== defs.System.Storage.StorageDriver.RAM)) {
     throw new InvalidConfigurationError('Cannot use a persistent storage in not persistent mode.');
   }
-  if (persistent && keyStorage === 'ram') {
+  if (persistent && keyStorage === defs.System.Storage.StorageDriver.RAM) {
     throw new InvalidConfigurationError('RAM key storage cannot be used in persistent mode.');
   }
-  if (!persistent && (keyStorage !== 'ram' && keyStorage !== undefined)) {
+  if (!persistent && (keyStorage !== defs.System.Storage.StorageDriver.RAM && keyStorage !== undefined)) {
     throw new InvalidConfigurationError('Cannot use a persistent key storage in not persistent mode.');
   }
 
   return {
-    feedStorage: createStorage(`${path}/feeds`, persistent ? type : 'ram'),
-    keyStorage: createKeyStorage(`${path}/keystore`, persistent ? keyStorage : 'ram'),
-    snapshotStorage: createStorage(`${path}/snapshots`, persistent && snapshotsEnabled ? type : 'ram'),
-    metadataStorage: createStorage(`${path}/metadata`, persistent ? type : 'ram')
+    feedStorage: createStorage(`${path}/feeds`, persistent ? toStorageType(storageType) : 'ram'),
+    keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram'),
+    snapshotStorage: createStorage(`${path}/snapshots`, persistent && snapshotsEnabled ? toStorageType(storageType) : 'ram'),
+    metadataStorage: createStorage(`${path}/metadata`, persistent ? toStorageType(storageType) : 'ram')
   };
 };
 
@@ -419,5 +379,27 @@ const createKeyStorage = (path: string, type?: KeyStorageType) => {
       return memdown();
     default:
       throw new InvalidConfigurationError(`Invalid key storage type: ${defaultedType}`);
+  }
+};
+
+const toStorageType = (type: defs.System.Storage.StorageDriver | undefined): StorageType | undefined => {
+  switch (type) {
+    case undefined: return undefined;
+    case defs.System.Storage.StorageDriver.RAM: return 'ram';
+    case defs.System.Storage.StorageDriver.CHROME: return 'chrome';
+    case defs.System.Storage.StorageDriver.FIREFOX: return 'firefox';
+    case defs.System.Storage.StorageDriver.IDB: return 'idb';
+    case defs.System.Storage.StorageDriver.NODE: return 'node';
+    default: throw new Error(`Invalid storage type: ${defs.System.Storage.StorageDriver[type]}`);
+  }
+};
+
+const toKeyStorageType = (type: defs.System.Storage.StorageDriver | undefined): KeyStorageType | undefined => {
+  switch (type) {
+    case undefined: return undefined;
+    case defs.System.Storage.StorageDriver.RAM: return 'ram';
+    case defs.System.Storage.StorageDriver.LEVELJS: return 'leveljs';
+    case defs.System.Storage.StorageDriver.JSONDOWN: return 'jsondown';
+    default: throw new Error(`Invalid key storage type: ${defs.System.Storage.StorageDriver[type]}`);
   }
 };

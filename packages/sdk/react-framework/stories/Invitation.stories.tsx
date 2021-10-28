@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient, useParties } from '@dxos/react-client';
-import { FullScreen, CopyText, TestCustomizableDialog } from '@dxos/react-components';
+import { FullScreen, CopyText, CustomizableDialog } from '@dxos/react-components';
 
 import {
   ErrorView,
@@ -53,7 +53,8 @@ const Sender = () => {
         <Button onClick={reset}>Reset</Button>
         <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
-      <TestCustomizableDialog
+      <CustomizableDialog
+        modal={false}
         {...dialogProps}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
@@ -71,7 +72,8 @@ const Receiver = () => {
       <Toolbar>
         <Button onClick={reset}>Reset</Button>
       </Toolbar>
-      <TestCustomizableDialog
+      <CustomizableDialog
+        modal={false}
         {...dialogProps}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>

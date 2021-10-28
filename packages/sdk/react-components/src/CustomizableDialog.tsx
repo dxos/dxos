@@ -18,14 +18,6 @@ import {
 } from '@mui/material';
 import React from 'react';
 
-export interface CustomizableDialogProps extends DialogProps {
-  title?: string
-  content?: () => JSX.Element
-  actions?: () => JSX.Element
-  processing?: boolean
-  error?: string
-}
-
 const Alert = styled(MuiAlert)({
   marginTop: 4,
   marginBottom: 4,
@@ -35,10 +27,30 @@ const Alert = styled(MuiAlert)({
   }
 });
 
+export interface CustomizableDialogProps extends DialogProps {
+  modal?: boolean
+  title?: string
+  content?: () => JSX.Element
+  actions?: () => JSX.Element
+  processing?: boolean
+  error?: string
+}
+
 /**
  * @constructor
  */
 export const CustomizableDialog = ({
+  modal = true,
+  ...rest
+}: CustomizableDialogProps) => {
+  if (modal) {
+    return <ModalDialog {...rest} />
+  } else {
+    return <NonModalDialog {...rest} />
+  }
+}
+
+export const ModalDialog = ({
   title,
   content,
   actions,
@@ -77,7 +89,7 @@ export const CustomizableDialog = ({
  * For example, this enables the testing of multiple dialogs in parallel from different client context.
  * @constructor
  */
-export const TestCustomizableDialog = ({
+export const NonModalDialog = ({
   title,
   content,
   actions,

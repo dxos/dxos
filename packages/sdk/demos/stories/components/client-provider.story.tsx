@@ -7,6 +7,7 @@ import { makeStyles } from '@mui/styles';
 import * as faker from 'faker';
 import React from 'react';
 
+import { ConfigObject } from '@dxos/config';
 import { createKeyPair } from '@dxos/crypto';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-framework';
@@ -85,12 +86,14 @@ export const Memory = () => {
  * Browser storage HALO.
  */
 export const Persistent = () => {
-  const config = {
-    storage: {
-      persistent: true
-    },
-    snapshots: true,
-    snapshotInterval: 10
+  const config: ConfigObject = {
+    system: {
+      storage: {
+        persistent: true
+      },
+      enableSnapshots: true,
+      snapshotInterval: 10
+    }
   };
 
   return (

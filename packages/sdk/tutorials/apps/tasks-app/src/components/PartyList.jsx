@@ -63,7 +63,9 @@ const useStyles = makeStyles(theme => ({
  * Party list.
  * @param selectedPartyKey
  * @param onSelectParty
+ * @param hideRedeem
  */
+// TODO(burdon): Remove hideRedeem.
 const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
   const classes = useStyles();
   const [partyJoinDialog, setPartyJoinDialog] = useState(false);
@@ -103,6 +105,7 @@ const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
         <PartyJoinDialog
           open={partyJoinDialog}
           onClose={() => setPartyJoinDialog(false)}
+          closeOnSuccess
         // TODO(burdon): Get party key from dialog.
         />
       )}

@@ -4,4 +4,5 @@
 
 export * from './config';
 export * from './loaders/index';
-export * from './types';
+export { ConfigObject } from './sanitizer';
+export * as defs from './proto/gen/dxos/config';

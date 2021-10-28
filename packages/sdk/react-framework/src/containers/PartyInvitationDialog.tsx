@@ -2,19 +2,22 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Button, Table, TableBody, TableCell, TableRow } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableRow, Typography } from '@mui/material';
+import { Box } from '@mui/system';
 import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
-import { encodeInvitation, useClient, useSecretGenerator } from '@dxos/react-client';
+import { encodeInvitation, useClient, useParty, useSecretGenerator } from '@dxos/react-client';
 import { CopyText, CustomizableDialog, CustomizableDialogProps } from '@dxos/react-components';
 
+import { MemberList } from '../components';
+import { useMembers } from '../hooks';
 import { DialogProps } from './DialogProps';
 
 enum PartyInvitationState {
   INIT,
+  INVITING,
   ERROR,
-  DONE
 }
 
 export interface PartyInvitationDialogStateResult {
@@ -33,7 +36,8 @@ export interface PartyInvitationDialogStateProps extends DialogProps {
 export const usePartyInvitationDialogState = ({
   partyKey,
   closeOnSuccess,
-  open
+  open,
+  onClose
 }: PartyInvitationDialogStateProps): PartyInvitationDialogStateResult => {
   const [state, setState] = useState<PartyInvitationState>(PartyInvitationState.INIT);
   // TODO(burdon): Multiple invitations at once (show useMembers).
@@ -41,6 +45,8 @@ export const usePartyInvitationDialogState = ({
   const [secretProvider, pin, resetPin] = useSecretGenerator();
   const [error, setError] = useState<string | undefined>(undefined);
   const client = useClient();
+  const party = useParty(partyKey);
+  const members = useMembers(party!);
 
   const handleReset = () => {
     setError(undefined);
@@ -49,9 +55,19 @@ export const usePartyInvitationDialogState = ({
     setState(PartyInvitationState.INIT);
   };
 
-  const handleCancel = () => setState(PartyInvitationState.DONE);
+  const handleCancel = () => {
+    setState(PartyInvitationState.INIT);
+    onClose?.();
+  };
 
-  const handleDone = () => closeOnSuccess ? setState(PartyInvitationState.DONE) : handleReset();
+  const handleDone = () => {
+    if (closeOnSuccess) {
+      setState(PartyInvitationState.INIT);
+      onClose?.();
+    } else {
+      handleReset();
+    }
+  };
 
   useEffect(() => {
     if (state === PartyInvitationState.INIT) {
@@ -64,6 +80,7 @@ export const usePartyInvitationDialogState = ({
   }, [partyKey]);
 
   const handleCreateInvitation = () => {
+    setState(PartyInvitationState.INVITING);
     setImmediate(async () => {
       // TODO(burdon): Handle offline (display members).
       const invitation = await client.createInvitation(partyKey!, secretProvider, {
@@ -76,7 +93,7 @@ export const usePartyInvitationDialogState = ({
     });
   };
 
-  const getDialogProps = (state: PartyInvitationState) => {
+  const getDialogProps = () => {
     const sharePartyContent = () => (
       <>
         <Button onClick={handleCreateInvitation}>Create Invitation</Button>
@@ -87,17 +104,21 @@ export const usePartyInvitationDialogState = ({
                 <CopyText value={invitationCode} length={4} />
               </TableCell>
               <TableCell sx={{ width: 0 }}>
-                <CopyText value={pin} />
+                <CopyText id='party-invitation-dialog-pin' value={pin} />
               </TableCell>
             </TableRow>
           </TableBody>
         </Table>
+        <Box m={1}>
+          <Typography>Members</Typography>
+          <MemberList members={members} />
+        </Box>
       </>
     );
 
     const sharePartyActions = () => (
       <>
-        <Button onClick={handleCancel}>Cancel</Button>
+        <Button onClick={handleCancel}>{state === PartyInvitationState.INIT ? 'Close' : 'Cancel'}</Button>
       </>
     );
 
@@ -106,7 +127,8 @@ export const usePartyInvitationDialogState = ({
     );
 
     switch (state) {
-      case PartyInvitationState.INIT: {
+      case PartyInvitationState.INIT:
+      case PartyInvitationState.INVITING: {
         return {
           open: !!open,
           title: 'Share Party',
@@ -133,7 +155,7 @@ export const usePartyInvitationDialogState = ({
     }
   };
 
-  return { state, dialogProps: getDialogProps(state), reset: handleReset };
+  return { state, dialogProps: getDialogProps(), reset: handleReset };
 };
 
 // TODO(burdon): Replace ShareDialog

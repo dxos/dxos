@@ -5,3 +5,4 @@
 export * from './PartyInvitationDialog';
 export * from './PartyJoinDialog';
 export * from './PartyMemberList';
+export * from './RedeemDialog';

@@ -1,0 +1,2 @@
+name: demos
+build: npm run build

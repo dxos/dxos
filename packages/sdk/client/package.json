@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "2.16.2",
+  "version": "2.16.3",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -34,7 +34,8 @@
     "jsondown": "dxos/jsondown#main",
     "level-js": "^5.0.2",
     "lodash.defaultsdeep": "^4.6.1",
-    "memdown": "^5.1.0"
+    "memdown": "^5.1.0",
+    "@dxos/config": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random-access-multi-storage": "workspace:*",

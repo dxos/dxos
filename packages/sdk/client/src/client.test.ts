@@ -5,6 +5,8 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { defs } from '@dxos/config';
+
 import { Client } from './client';
 
 test('initialize and destroy in a reasonable time', async () => {
@@ -51,10 +53,12 @@ test('creating profile returns the profile', async () => {
 });
 
 test('persistent storage', async () => {
-  const config = {
-    storage: {
-      persistent: true,
-      path: `/tmp/dxos-${Date.now()}`
+  const config: defs.Config = {
+    system: {
+      storage: {
+        persistent: true,
+        path: `/tmp/dxos-${Date.now()}`
+      }
     }
   };
 
