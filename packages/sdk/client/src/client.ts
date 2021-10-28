@@ -63,7 +63,7 @@ export class Client {
     }
 
     const { feedStorage, keyStorage, snapshotStorage, metadataStorage } = createStorageObjects(
-      this._config.get('system.storage'),
+      this._config.get('system.storage', {})!,
       this._config.get('system.enableSnapshots', false)
     );
 
@@ -73,7 +73,7 @@ export class Client {
       snapshotStorage,
       metadataStorage,
       networkManagerOptions: {
-        signal: this._config.get('services.signal.server') ? [this._config.get('services.signal.server')] : undefined,
+        signal: this._config.get('services.signal.server') ? [this._config.get('services.signal.server')!] : undefined,
         ice: this._config.get('services.ice'),
         log: true
       },
