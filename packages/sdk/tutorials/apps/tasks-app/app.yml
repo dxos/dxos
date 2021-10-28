@@ -1,0 +1,2 @@
+name: tasks-app
+build: npm run build
