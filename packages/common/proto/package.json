@@ -1,0 +1,35 @@
+{
+  "name": "@dxos/proto",
+  "version": "2.16.4",
+  "description": "Protobuf definitions for DXOS protocols.",
+  "bugs": {
+    "url": "'https://github.com/dxos/protocols/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/protocols.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "@dxos/codec-protobuf": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
