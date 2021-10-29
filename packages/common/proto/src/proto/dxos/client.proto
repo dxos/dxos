@@ -18,7 +18,8 @@ message RecoverProfileRequest {
 }
 
 message Invitation {
-
+  // TODO(dmaretskyi): Split into fields.
+  string data = 1;
 }
 
 message InvitationProcess {

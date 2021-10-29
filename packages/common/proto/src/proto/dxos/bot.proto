@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+import "./client.proto";
 
 package dxos.bot;
 
@@ -28,12 +29,16 @@ message GetBotsResponse {
 
 message SpawnBotRequest {
   BotPackageSpecifier package = 1;
+
+  /// Invitation for the bot to join the target party.
+  dxos.client.Invitation invitation = 2;
 }
 
 message SendCommandRequest {
   bytes command = 1;
 }
 
+/// Service that is used by clients to communicate with bot factory.
 service BotFactoryService {
   rpc GetBots(google.protobuf.Empty) returns (GetBotsResponse);
 
@@ -41,8 +46,9 @@ service BotFactoryService {
  
   // TODO(dmaretskyi): Invitations.
 
-  rpc StartBot(Bot) returns (Bot);
+  rpc Start(Bot) returns (Bot);
   rpc Stop(Bot) returns (Bot);
+  rpc Remove(Bot) returns (google.protobuf.Empty);
  
   // TODO(dmaretskyi): querying metrics/state.
  
