@@ -24,6 +24,9 @@
       "path": "../client"
     },
     {
+      "path": "../config"
+    },
+    {
       "path": "../../halo/credentials"
     },
     {
