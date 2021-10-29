@@ -21,3 +21,15 @@ message TestRpcResponse {
 service TestStreamService {
   rpc TestCall (TestRpcRequest) returns (stream TestRpcResponse);
 }
+
+message PingRequest {
+  int32 nonce = 1;
+}
+
+message PingReponse {
+  int32 nonce = 1;
+}
+
+service PingService {
+  rpc Ping (PingRequest) returns (PingReponse);
+}
