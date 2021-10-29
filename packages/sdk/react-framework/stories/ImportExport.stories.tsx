@@ -31,7 +31,7 @@ export const Import = () => {
   const handleClose = (text?: string) => {
     setValue(text);
     setOpen(false);
-  }
+  };
 
   const decrypter = async (text: string, passphrase: string) => text;
 

@@ -29,14 +29,14 @@ const COLORS = [
 
 const getColor = (publicKey: PublicKeyLike) => {
   return COLORS[parseInt(publicKey.toString('hex').slice(0, 4), 16) % COLORS.length];
-}
+};
 
 const avatarStyles = {
   width: 32,
   height: 32
-}
+};
 
-export const ShareButon = ({ onClick }: { onClick: () => void }) => {
+export const ShareButton = ({ onClick }: { onClick: () => void }) => {
   const theme = useTheme();
 
   return (
@@ -52,7 +52,7 @@ export const ShareButon = ({ onClick }: { onClick: () => void }) => {
       </Avatar>
     </Tooltip>
   );
-}
+};
 
 // TODO(burdon): Remove PartyMember dep and create type here.
 export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement => {
@@ -66,7 +66,7 @@ export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement
     );
   }
 
-  const color = getColor(member.publicKey)
+  const color = getColor(member.publicKey);
   const name = member.displayName || humanize(member.publicKey.toString());
 
   return (
@@ -80,4 +80,4 @@ export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement
       </Avatar>
     </Tooltip>
   );
-}
+};

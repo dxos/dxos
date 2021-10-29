@@ -10,7 +10,7 @@ import {
 import React, { useState } from 'react';
 
 import { decodeInvitation, useClient, useSecretProvider } from '@dxos/react-client';
-import { CustomizableDialog } from '@dxos/react-components';
+import { Dialog } from '@dxos/react-components';
 
 // TODO(burdon): Move to react-components?
 const handleKey = (key: string, callback: () => void) => (event: { key: string }) => {
@@ -180,7 +180,7 @@ export const JoinPartyDialog = ({
   const dialogProps = getDialogProps(state);
 
   return (
-    <CustomizableDialog
+    <Dialog
       modal={modal}
       open={open}
       {...dialogProps}

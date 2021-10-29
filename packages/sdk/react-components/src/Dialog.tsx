@@ -36,21 +36,6 @@ export interface DialogProps extends MuiDialogProps {
   error?: string
 }
 
-/**
- * A standard dialog component that implements a non-modal implementation for testing.
- * @constructor
- */
-export const Dialog = ({
-  modal = true,
-  ...rest
-}: DialogProps) => {
-  if (modal) {
-    return <ModalDialog {...rest} />
-  } else {
-    return <NonModalDialog {...rest} />
-  }
-}
-
 export const ModalDialog = ({
   title,
   content,
@@ -129,4 +114,19 @@ export const NonModalDialog = ({
       </CardActions>
     </Card>
   );
+};
+
+/**
+ * A standard dialog component that implements a non-modal implementation for testing.
+ * @constructor
+ */
+ export const Dialog = ({
+  modal = true,
+  ...rest
+}: DialogProps) => {
+  if (modal) {
+    return <ModalDialog {...rest} />;
+  } else {
+    return <NonModalDialog {...rest} />;
+  }
 };
