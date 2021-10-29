@@ -70,7 +70,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/esbuild-server": "~1.2.0",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.2.0",
     "@dxos/toolchain-node-library": "workspace:*",
     "@storybook/addon-essentials": "^6.3.11",
     "@storybook/addon-links": "^6.3.11",
