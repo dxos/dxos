@@ -141,6 +141,7 @@ export class PublicKey {
 /**
  * All representations that can be converted to a PublicKey.
  */
+// TODO(burdon): Remove this.
 export type PublicKeyLike =
   | PublicKey
   | Buffer

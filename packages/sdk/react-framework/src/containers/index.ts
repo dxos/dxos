@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './PartyInvitationDialog';
-export * from './PartyJoinDialog';
+export * from './JoinPartyDialog';
 export * from './PartyMemberList';
+export * from './PartySharingDialog';
 export * from './RedeemDialog';

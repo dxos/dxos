@@ -7,12 +7,10 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { decodeInvitation, useClient, useSecretProvider } from '@dxos/react-client';
-import { CustomizableDialog, CustomizableDialogProps } from '@dxos/react-components';
-
-import { DialogProps } from './DialogProps';
+import { Dialog } from '@dxos/react-components';
 
 // TODO(burdon): Move to react-components?
 const handleKey = (key: string, callback: () => void) => (event: { key: string }) => {
@@ -27,31 +25,30 @@ enum PartyJoinState {
   ERROR
 }
 
-export interface PartyJoinDialogStateResult {
-  dialogProps: CustomizableDialogProps
-  state: PartyJoinState
-  reset: () => void
-}
-
-export interface PartyJoinDialogStateProps extends DialogProps {
-  initialState?: PartyJoinState
+export interface PartyJoinDialogProps {
+  open: boolean
+  modal?: boolean
+  onClose?: () => void
+  closeOnSuccess?: boolean
 }
 
 /**
- * Manages the workflow for joining a party using an invitation code.
+ * Manages joining HALO and parties.
  */
-export const usePartyJoinDialogState = ({
-  initialState = PartyJoinState.INIT,
-  closeOnSuccess,
+// TODO(burdon): Make work for HALO (device invitations).
+export const JoinPartyDialog = ({
+  modal,
   open,
-  onClose
-}: PartyJoinDialogStateProps): PartyJoinDialogStateResult => {
-  const [state, setState] = useState<PartyJoinState>(initialState);
-  const [invitationCode, setInvitationCode] = useState('');
-  const [pin, setPin] = useState('');
-  const [processing, setProcessing] = useState<boolean>(false);
-  const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
+  onClose,
+  closeOnSuccess = true
+}: PartyJoinDialogProps) => {
+  const [state, setState] = useState(PartyJoinState.INIT);
   const [error, setError] = useState<string | undefined>(undefined);
+  const [processing, setProcessing] = useState<boolean>(false);
+  const [invitationCode, setInvitationCode] = useState('');
+
+  const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
+  const [pin, setPin] = useState('');
   const client = useClient();
 
   const handleReset = () => {
@@ -63,24 +60,16 @@ export const usePartyJoinDialogState = ({
   };
 
   const handleCancel = () => {
-    setState(PartyJoinState.INIT);
+    handleReset();
     onClose?.();
   };
 
   const handleDone = () => {
+    handleReset();
     if (closeOnSuccess) {
-      setState(PartyJoinState.INIT);
       onClose?.();
-    } else {
-      handleReset();
     }
   };
-
-  useEffect(() => {
-    if (state === PartyJoinState.INIT) {
-      handleReset();
-    }
-  }, [state]);
 
   const handleProcessInvitation = async () => {
     const invitation = decodeInvitation(invitationCode);
@@ -90,7 +79,6 @@ export const usePartyJoinDialogState = ({
       const party = await client.echo.joinParty(invitation, secretProvider);
       await party.open();
     } catch (err) {
-      console.log(err);
       setError(err.message);
       setState(PartyJoinState.ERROR);
       return;
@@ -161,7 +149,6 @@ export const usePartyJoinDialogState = ({
     switch (state) {
       case PartyJoinState.INIT: {
         return {
-          open: !!open,
           title: 'Join Party',
           content: joinPartyContent,
           actions: joinPartyActions
@@ -170,8 +157,7 @@ export const usePartyJoinDialogState = ({
 
       case PartyJoinState.AUTHENTICATE: {
         return {
-          open: !!open,
-          title: 'Authenticate',
+          title: 'Authenticate Invitation',
           content: authenticateContent,
           actions: authenticateActions
         };
@@ -179,7 +165,6 @@ export const usePartyJoinDialogState = ({
 
       case PartyJoinState.ERROR: {
         return {
-          open: !!open,
           title: 'Invitation Failed',
           error,
           actions: errorActions
@@ -187,21 +172,18 @@ export const usePartyJoinDialogState = ({
       }
 
       default: {
-        return {
-          open: false
-        };
+        return {};
       }
     }
   };
 
-  return { state, dialogProps: getDialogProps(state), reset: handleReset };
-};
-
-// TODO(burdon): Replace RedeemDialog
-export const PartyJoinDialog = (props: DialogProps) => {
-  const { dialogProps } = usePartyJoinDialogState(props);
+  const dialogProps = getDialogProps(state);
 
   return (
-    <CustomizableDialog {...dialogProps} />
+    <Dialog
+      modal={modal}
+      open={open}
+      {...dialogProps}
+    />
   );
 };

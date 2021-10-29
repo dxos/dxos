@@ -20,9 +20,10 @@ import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 
 import { DialogHeading } from '../components';
 import { handleRedeemError } from '../helpers';
-import { DialogProps } from './DialogProps';
 
-interface RedeemDialogProps extends DialogProps {
+interface RedeemDialogProps {
+  open: boolean
+  onClose?: () => void
   code?: string
   pinless?: boolean
 }

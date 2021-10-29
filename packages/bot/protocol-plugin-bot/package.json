@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-bot",
-  "version": "2.16.4",
+  "version": "2.16.5",
   "description": "Protocol plugin for managing the life-cycle of bots.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-bot#readme",
   "bugs": {
