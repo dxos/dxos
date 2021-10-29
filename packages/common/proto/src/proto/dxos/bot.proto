@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package dxos.bot;
+
+message BotPackageSpecifier {
+  oneof kind {
+    string dxn = 1;
+    string ipfs_cid = 2;
+    string local_path = 3;
+  }
+}
+
+message Bot {
+  enum Status {
+    STOPPED = 0;
+    RUNNING = 1;
+  }
+
+  string id = 1;
+  Status status = 2;
+}
+
+message GetBotsResponse {
+  repeated Bot bots = 1;
+}
+
+message SpawnBotRequest {
+  BotPackageSpecifier package = 1;
+}
+
+message SendCommandRequest {
+  bytes command = 1;
+}
+
+service BotFactoryService {
+  rpc GetBots(google.protobuf.Empty) returns (GetBotsResponse);
+
+  rpc SpawnBot(SpawnBotRequest) returns (Bot);
+ 
+  // TODO(dmaretskyi): Invitations.
+
+  rpc StartBot(Bot) returns (Bot);
+  rpc Stop(Bot) returns (Bot);
+ 
+  // TODO(dmaretskyi): querying metrics/state.
+ 
+  rpc SendCommand(SendCommandRequest) returns (google.protobuf.Empty);
+ }
