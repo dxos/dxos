@@ -14,7 +14,14 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import { keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';
 
-import { JsonTreeViewProps } from './JsonTreeViewProps';
+export interface JsonTreeViewProps {
+  className?: string
+  data?: any
+  depth?: number
+  onSelect?: () => void
+  root?: string
+  size?: string
+}
 
 const StyledTreeView = styled(MuiTreeView)({ overflowX: 'hidden' });
 
@@ -103,16 +110,13 @@ const TreeItem = ({
 /**
  * Visualizes an object as a tree view of all properties.
  * Works with JSON and other objects with nested values.
- * @param data The object to be visualized
- * @param depth Maximum nest depth to be visualized. Unlimited by default.
- * @param onSelect Callback for when one or more nodes are selected by the user.
  */
 export const JsonTreeView = ({
   data = {},
-  depth = Infinity,
-  onSelect = () => {},
   root,
-  size
+  size,
+  depth = Infinity,
+  onSelect = () => {}
 }: JsonTreeViewProps) => {
   if (!data) {
     data = {};

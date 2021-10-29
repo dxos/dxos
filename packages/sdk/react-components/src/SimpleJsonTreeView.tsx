@@ -6,18 +6,18 @@ import { useTheme } from '@mui/material';
 import React from 'react';
 import ReactJsonView from 'react-json-view';
 
-import { JsonTreeViewProps } from './JsonTreeViewProps';
+import { JsonTreeViewProps } from './JsonTreeView';
 
 /**
  * Displays the config JSON object.
+ * @deprecated
  */
-export const JsonTreeView = ({
+export const SimpleJsonTreeView = ({
   data = {},
   onSelect
 }: JsonTreeViewProps) => {
   const theme = useTheme();
 
-  // TODO(burdon): Replace with class that allows custom rendering (e.g., CID, links, etc.)
   // https://www.npmjs.com/package/react-json-view
   return (
     <ReactJsonView

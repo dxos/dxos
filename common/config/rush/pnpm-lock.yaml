@@ -1838,6 +1838,7 @@ importers:
       debug: 4.3.1
       lodash.defaultsdeep: 4.6.1
       lodash.isplainobject: 4.0.6
+      qrcode.react: 1.0.1_react@17.0.2
       react-copy-to-clipboard: 5.0.3_react@17.0.2
       react-json-view: 1.21.3_3b7f7b84f013384d046f72a4522eddf8
       url-join: 4.0.1
@@ -1857,6 +1858,7 @@ importers:
       '@types/debug': 4.1.5
       '@types/faker': 5.5.5
       '@types/lodash.isplainobject': 4.0.6
+      '@types/qrcode.react': 1.0.2
       '@types/react': 17.0.24
       '@types/react-copy-to-clipboard': 5.0.1
       '@types/url-join': 4.0.1
@@ -1883,6 +1885,7 @@ importers:
       '@types/debug': ^4.1.1
       '@types/faker': ~5.5.1
       '@types/lodash.isplainobject': ^4.0.6
+      '@types/qrcode.react': ^1.0.2
       '@types/react': ^17.0.24
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/url-join': ~4.0.1
@@ -1891,6 +1894,7 @@ importers:
       faker: ^5.1.0
       lodash.defaultsdeep: ^4.6.1
       lodash.isplainobject: ^4.0.6
+      qrcode.react: ~1.0.1
       react: ^17.0.2
       react-copy-to-clipboard: ~5.0.3
       react-dom: ^17.0.2
@@ -9092,6 +9096,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-1HcDas8SEj4z1Wc696tH56G8OlRaH/sqZOynNNB+HF0WOeXPaxTtbYzJY2oEfiUxjSKjhCKr+MvR7dCHcEelug==
+  /@types/qrcode.react/1.0.2:
+    dependencies:
+      '@types/react': 17.0.24
+    dev: true
+    resolution:
+      integrity: sha512-I9Oq5Cjlkgy3Tw7krCnCXLw2/zMhizkTere49OOcta23tkvH0xBTP0yInimTh0gstLRtb8Ki9NZVujE5UI6ffQ==
   /@types/qs/6.9.6:
     resolution:
       integrity: sha512-0/HnwIfW4ki2D8L8c9GVcG5I72s9jP5GSLVF0VIXDW00kmIpA6O33G7a8n59Tmh7Nz0WUC3rSb7PTY/sdW2JzA==
@@ -11065,11 +11075,6 @@ packages:
   /balanced-match/1.0.2:
     resolution:
       integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
-  /base-x/3.0.8:
-    dependencies:
-      safe-buffer: 5.2.1
-    resolution:
-      integrity: sha512-Rl/1AWP4J/zRrk54hhlxH4drNxPJXYUaKffODVI53/dAsV4t9fBxyxYKAVPU1XBHxYwOWP9h9H0hM2MVw4YfJA==
   /base-x/3.0.9:
     dependencies:
       safe-buffer: 5.2.1
@@ -11418,7 +11423,7 @@ packages:
       integrity: sha512-pd8DCoxmbgc7hyPKOvxtqNcjYoOsABPQdcCUjGp3d42VR2CX1ORhk2A87oqqu5R1kk+76nsxZupkmyd+MVtCog==
   /bs58/4.0.1:
     dependencies:
-      base-x: 3.0.8
+      base-x: 3.0.9
     resolution:
       integrity: sha1-vhYedsNU9veIrkBx9j806MTwpCo=
   /bs58check/2.1.2:
@@ -20256,7 +20261,7 @@ packages:
       integrity: sha1-2e6GFHQwiUEaTZrH0h04qmjDbkA=
   /multibase/0.6.1:
     dependencies:
-      base-x: 3.0.8
+      base-x: 3.0.9
       buffer: 5.7.1
     deprecated: This module has been superseded by the multiformats module
     dev: false
@@ -20264,7 +20269,7 @@ packages:
       integrity: sha512-pFfAwyTjbbQgNc3G7D48JkJxWtoJoBMaR4xQUOuB8RnCgRqaYmWNFeJTTvrJ2w51bjLq2zTby6Rqj9TQ9elSUw==
   /multibase/0.7.0:
     dependencies:
-      base-x: 3.0.8
+      base-x: 3.0.9
       buffer: 5.7.1
     deprecated: This module has been superseded by the multiformats module
     dev: false
@@ -20272,7 +20277,7 @@ packages:
       integrity: sha512-TW8q03O0f6PNFTQDvh3xxH03c8CjGaaYrjkl9UQPG6rz53TQzzxJVCIWVjzcbN/Q5Y53Zd0IBQBMVktVgNx4Fg==
   /multibase/1.0.1:
     dependencies:
-      base-x: 3.0.8
+      base-x: 3.0.9
       buffer: 5.7.1
     deprecated: This module has been superseded by the multiformats module
     dev: false
@@ -22734,6 +22739,21 @@ packages:
       teleport: '>=0.2.0'
     resolution:
       integrity: sha1-fjL3W0E4EpHQRhHxvxQQmsAGUdc=
+  /qr.js/0.0.0:
+    dev: false
+    resolution:
+      integrity: sha1-ys6GOG9ZoNuAUPqQ2baw6IoeNk8=
+  /qrcode.react/1.0.1_react@17.0.2:
+    dependencies:
+      loose-envify: 1.4.0
+      prop-types: 15.7.2
+      qr.js: 0.0.0
+      react: 17.0.2
+    dev: false
+    peerDependencies:
+      react: ^15.5.3 || ^16.0.0 || ^17.0.0
+    resolution:
+      integrity: sha512-8d3Tackk8IRLXTo67Y+c1rpaiXjoz/Dd2HpcMdW//62/x8J1Nbho14Kh8x974t9prsLHN6XqVgcnRiBGFptQmg==
   /qs/6.10.1:
     dependencies:
       side-channel: 1.0.4
