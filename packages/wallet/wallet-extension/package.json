@@ -15,6 +15,7 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -27,8 +28,7 @@
     "react": "^17.0.2",
     "react-copy-to-clipboard": "~5.0.3",
     "react-dom": "^17.0.2",
-    "react-router-dom": "^5.1.2",
-    "@dxos/config": "workspace:*"
+    "react-router-dom": "^5.1.2"
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",

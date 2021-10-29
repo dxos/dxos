@@ -30,6 +30,9 @@
     },
     {
       "path": "../react-client"
+    },
+    {
+      "path": "../react-components"
     }
   ]
 }
