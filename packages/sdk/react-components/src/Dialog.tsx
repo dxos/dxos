@@ -8,23 +8,15 @@ import {
   CardActions,
   CardContent,
   CardHeader,
-  Dialog,
+  Dialog as MuiDialog,
   DialogActions,
   DialogContent,
-  DialogProps,
+  DialogProps as MuiDialogProps,
   DialogTitle,
   LinearProgress,
   styled
 } from '@mui/material';
 import React from 'react';
-
-export interface CustomizableDialogProps extends DialogProps {
-  title?: string
-  content?: () => JSX.Element
-  actions?: () => JSX.Element
-  processing?: boolean
-  error?: string
-}
 
 const Alert = styled(MuiAlert)({
   marginTop: 4,
@@ -35,21 +27,27 @@ const Alert = styled(MuiAlert)({
   }
 });
 
-/**
- * @constructor
- */
-export const CustomizableDialog = ({
+export interface DialogProps extends MuiDialogProps {
+  modal?: boolean
+  title?: string
+  content?: () => JSX.Element
+  actions?: () => JSX.Element
+  processing?: boolean
+  error?: string
+}
+
+export const ModalDialog = ({
   title,
   content,
   actions,
   processing,
   error,
   ...dialogProps
-}: CustomizableDialogProps) => {
+}: DialogProps) => {
   const { open, maxWidth = 'xs', fullWidth = true, ...other } = dialogProps;
 
   return (
-    <Dialog
+    <MuiDialog
       open={open}
       maxWidth={maxWidth}
       fullWidth={fullWidth}
@@ -68,7 +66,7 @@ export const CustomizableDialog = ({
       <DialogActions>
         {actions?.() || null}
       </DialogActions>
-    </Dialog>
+    </MuiDialog>
   );
 };
 
@@ -77,14 +75,15 @@ export const CustomizableDialog = ({
  * For example, this enables the testing of multiple dialogs in parallel from different client context.
  * @constructor
  */
-export const TestCustomizableDialog = ({
+// TODO(burdon): Rename non-modal.
+export const NonModalDialog = ({
   title,
   content,
   actions,
   processing,
   error,
   ...dialogProps
-}: CustomizableDialogProps) => {
+}: DialogProps) => {
   const { open } = dialogProps;
   if (!open) {
     return null;
@@ -115,4 +114,19 @@ export const TestCustomizableDialog = ({
       </CardActions>
     </Card>
   );
+};
+
+/**
+ * A standard dialog component that implements a non-modal implementation for testing.
+ * @constructor
+ */
+export const Dialog = ({
+  modal = true,
+  ...rest
+}: DialogProps) => {
+  if (modal) {
+    return <ModalDialog {...rest} />;
+  } else {
+    return <NonModalDialog {...rest} />;
+  }
 };

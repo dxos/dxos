@@ -5,17 +5,27 @@
 import React from 'react';
 
 import { Party, PartyMember } from '@dxos/echo-db';
+import { MemberList } from '@dxos/react-components';
 
-import { MembersList } from '../components';
 import { useMembers } from '../hooks';
 
 /**
  * @deprecated
  */
-export const PartyMemberList = ({ party, onShare }: { party: Party, onShare: () => void }) => {
-  const members: PartyMember[] = useMembers(party); // TODO(burdon): Pass-in to make dumb component.
+export const PartyMemberList = ({
+  party,
+  onShare
+}: {
+  party: Party,
+  onShare: () => void
+}) => {
+  // TODO(burdon): Pass-in to make dumb component.
+  const members: PartyMember[] = useMembers(party);
 
   return (
-    <MembersList members={members} onShare={onShare} />
+    <MemberList
+      members={members}
+      onShare={onShare}
+    />
   );
 };
