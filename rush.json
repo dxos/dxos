@@ -519,6 +519,12 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
+    {
+      "packageName": "@dxos/proto",
+      "projectFolder": "packages/common/proto",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
 
     //
     // sdk
