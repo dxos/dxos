@@ -83,12 +83,11 @@ export class RegistryClient implements IRegistryClient {
 
     const decoded = dxnsSchema.getCodecForType('dxos.registry.Record').decode(Buffer.from(record.data));
 
-    const meta: RecordMetadata = {
-      description: decoded.description,
-      created: (decoded.created && !isNaN(decoded.created.getTime())) ? decoded.created : undefined
-    };
-
     if (decoded.payload) {
+      const meta: RecordMetadata = {
+        description: decoded.description,
+        created: (decoded.created && !isNaN(decoded.created.getTime())) ? decoded.created : undefined
+      };
       assert(decoded.payload.typeRecord);
       assert(decoded.payload.data);
 
@@ -106,6 +105,11 @@ export class RegistryClient implements IRegistryClient {
         data: await decodeExtensionPayload(decoded.payload, async cid => (await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`)))
       };
     } else if (decoded.type) {
+      const meta: TypeRecordMetadata = {
+        description: decoded.description,
+        created: (decoded.created && !isNaN(decoded.created.getTime())) ? decoded.created : undefined,
+        sourceIpfsCid: decoded.type.protobufIpfsCid
+      };
       assert(decoded.type.protobufDefs);
       assert(decoded.type.messageName);
 
