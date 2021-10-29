@@ -8,6 +8,7 @@ import { it as test } from 'mocha';
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 
+import { createMultiRpcClient, createBundledRpcServer, createServiceBundle } from '.';
 import { SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
 import { TestStreamService } from './proto/gen/dxos/rpc/test';
@@ -78,7 +79,7 @@ describe('Protobuf service', () => {
     let error!: Error;
     try {
       await client.rpc.TestCall({ data: 'requestData' });
-    } catch (err) {
+    } catch (err: any) {
       error = err;
     }
 
@@ -148,6 +149,51 @@ describe('Protobuf service', () => {
       await closedPromise;
 
       expect(lastData).toEqual('baz');
+    });
+  });
+
+  describe('multiple services', () => {
+    it('call different services', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const TestService = schema.getService('dxos.rpc.test.TestService');
+      const PingService = schema.getService('dxos.rpc.test.PingService');
+
+      const services = createServiceBundle({
+        TestService,
+        PingService
+      });
+
+      const server: RpcPeer = createBundledRpcServer({
+        services,
+        handlers: {
+          TestService: {
+            TestCall: async (req) => {
+              expect(req.data).toEqual('requestData');
+              return { data: 'responseData' };
+            }
+          },
+          PingService: {
+            Ping: async (req) => ({ nonce: req.nonce })
+          }
+        },
+        port: alicePort
+      });
+
+      const client = createMultiRpcClient(services, {
+        port: bobPort
+      });
+
+      await Promise.all([
+        server.open(),
+        client.open()
+      ]);
+
+      const response = await client.rpc.TestService.TestCall({ data: 'requestData' });
+      expect(response.data).toEqual('responseData');
+
+      const ping = await client.rpc.PingService.Ping({ nonce: 5 });
+      expect(ping.nonce).toEqual(5);
     });
   });
 });
