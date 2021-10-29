@@ -8,12 +8,11 @@ import { it as test } from 'mocha';
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 
-import { createMultiRpcClient, createBundledRpcServer, createServiceBundle } from '.';
 import { SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
 import { TestStreamService } from './proto/gen/dxos/rpc/test';
 import { RpcPeer } from './rpc';
-import { createRpcClient, createRpcServer, ProtoRpcClient } from './service';
+import { createRpcClient, createRpcServer, ProtoRpcClient, createBundledRpcClient, createBundledRpcServer, createServiceBundle } from './service';
 import { createLinkedPorts } from './testutil';
 
 describe('Protobuf service', () => {
@@ -180,7 +179,7 @@ describe('Protobuf service', () => {
         port: alicePort
       });
 
-      const client = createMultiRpcClient(services, {
+      const client = createBundledRpcClient(services, {
         port: bobPort
       });
 
