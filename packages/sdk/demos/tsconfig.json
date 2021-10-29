@@ -32,6 +32,9 @@
       "path": "../client"
     },
     {
+      "path": "../config"
+    },
+    {
       "path": "../../common/crypto"
     },
     {
