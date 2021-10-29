@@ -63,19 +63,19 @@ export function createRpcServer<S> ({ service, handlers, ...rest }: ProtoRpcServ
   return peer;
 }
 
-export type ServiceBundle<S extends Record<string, {}>> = { [K in keyof S]: ServiceDescriptor<S[K]> }
+export type ServiceBundle<S> = { [K in keyof S]: ServiceDescriptor<S[K]> }
 
 /**
  * Groups multiple services together so they can be served over one RPC peer.
  */
-export function createServiceBundle<S extends Record<string, {}>> (services: ServiceBundle<S>): ServiceBundle<S> {
+export function createServiceBundle<S> (services: ServiceBundle<S>): ServiceBundle<S> {
   return services;
 }
 
 /**
  * Create type-safe RPC client from a service bundle.
  */
-export function createBundledRpcClient<S extends Record<string, {}>> (descriptors: ServiceBundle<S>, options: Omit<RpcPeerOptions, 'messageHandler'>): ProtoRpcClient<S> {
+export function createBundledRpcClient<S> (descriptors: ServiceBundle<S>, options: Omit<RpcPeerOptions, 'messageHandler'>): ProtoRpcClient<S> {
   const peer = new RpcPeer({
     ...options,
     messageHandler: () => {
@@ -94,7 +94,7 @@ export function createBundledRpcClient<S extends Record<string, {}>> (descriptor
   return new ProtoRpcClient(rpc, peer);
 }
 
-export interface ProtoRpcBundledServerOptions<S extends Record<string, {}>> extends Omit<RpcPeerOptions, 'messageHandler'> {
+export interface ProtoRpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
   services: ServiceBundle<S>,
   handlers: S,
 }
@@ -102,10 +102,10 @@ export interface ProtoRpcBundledServerOptions<S extends Record<string, {}>> exte
 /**
  * Create type-safe RPC server from a service bundle.
  */
-export function createBundledRpcServer<S extends Record<string, {}>> ({ services, handlers, ...rest }: ProtoRpcBundledServerOptions<S>): RpcPeer {
+export function createBundledRpcServer<S> ({ services, handlers, ...rest }: ProtoRpcBundledServerOptions<S>): RpcPeer {
   const rpc: Record<string, ServiceHandler<any>> = {};
-  for (const serviceName of Object.keys(services)) {
-    rpc[serviceName] = services[serviceName].createServer(handlers[serviceName] as any);
+  for (const serviceName of Object.keys(services) as (keyof S)[]) {
+    rpc[serviceName as any] = services[serviceName].createServer(handlers[serviceName] as any);
   }
 
   const peer = new RpcPeer({

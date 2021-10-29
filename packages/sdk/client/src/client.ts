@@ -17,14 +17,9 @@ import { ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTop
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
-import { createStorage } from '@dxos/random-access-multi-storage';
 
 import { DevtoolsContext } from './devtools-context';
-import { InvalidConfigurationError } from './errors';
-import { isNode } from './platform';
-
-export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
-export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
+import { ClientServiceHost, LocalClientServiceHost } from './service-host';
 
 export const defaultConfig: defs.Config = {};
 
@@ -43,7 +38,7 @@ export const defaultTestingConfig: defs.Config = {
 export class Client {
   private readonly _config: Config;
 
-  private readonly _echo: ECHO;
+  private readonly _serviceHost: ClientServiceHost;
 
   private readonly _wnsRegistry?: any; // TODO(burdon): Remove.
 
@@ -60,24 +55,7 @@ export class Client {
       this._config = new Config(config);
     }
 
-    const { feedStorage, keyStorage, snapshotStorage, metadataStorage } = createStorageObjects(
-      this._config.get('system.storage', {})!,
-      this._config.get('system.enableSnapshots', false)
-    );
-
-    this._echo = new ECHO({
-      feedStorage,
-      keyStorage,
-      snapshotStorage,
-      metadataStorage,
-      networkManagerOptions: {
-        signal: this._config.get('services.signal.server') ? [this._config.get('services.signal.server')!] : undefined,
-        ice: this._config.get('services.ice'),
-        log: true
-      },
-      snapshots: this._config.get('system.enableSnapshots', false),
-      snapshotInterval: this._config.get('system.snapshotInterval')
-    });
+    this._serviceHost = new LocalClientServiceHost(this._config);
 
     // TODO(burdon): Remove.
     this._wnsRegistry = undefined;
@@ -111,7 +89,7 @@ export class Client {
    * ECHO database.
    */
   get echo () {
-    return this._echo;
+    return this._serviceHost.echo;
   }
 
   /**
@@ -119,7 +97,7 @@ export class Client {
    */
   get halo () {
     // TODO(burdon): Why is this constructed inside ECHO?
-    return this._echo.halo;
+    return this._serviceHost.echo.halo;
   }
 
   /**
@@ -146,7 +124,9 @@ export class Client {
       throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
 
-    await this._echo.open(onProgressCallback);
+    await this._serviceHost.open();
+
+    await this._serviceHost.echo.open(onProgressCallback);
 
     this._initialized = true;
     clearInterval(timeout);
@@ -160,7 +140,9 @@ export class Client {
     if (!this._initialized) {
       return;
     }
-    await this._echo.close();
+    await this._serviceHost.echo.close();
+
+    await this._serviceHost.close();
     this._initialized = false;
   }
 
@@ -172,7 +154,7 @@ export class Client {
   //   Recreate echo instance? Big impact on hooks. Test.
   @synchronized
   async reset () {
-    await this._echo.reset();
+    await this._serviceHost.echo.reset();
     this._initialized = false;
   }
 
@@ -186,7 +168,7 @@ export class Client {
    */
   @synchronized
   async createPartyFromSnapshot (snapshot: DatabaseSnapshot) {
-    const party = await this._echo.createParty();
+    const party = await this._serviceHost.echo.createParty();
     const items = snapshot.items ?? [];
 
     // We have a brand new item ids after creation, which breaks the old structure of id-parentId mapping.
@@ -309,7 +291,7 @@ export class Client {
    */
   // TODO(burdon): Expose echo directly?
   registerModel (constructor: ModelConstructor<any>): this {
-    this._echo.modelFactory.registerModel(constructor);
+    this._serviceHost.echo.modelFactory.registerModel(constructor);
     return this;
   }
 
@@ -325,10 +307,10 @@ export class Client {
   getDevtoolsContext (): DevtoolsContext {
     const devtoolsContext: DevtoolsContext = {
       client: this,
-      feedStore: this._echo.feedStore,
-      networkManager: this._echo.networkManager,
-      modelFactory: this._echo.modelFactory,
-      keyring: this._echo.halo.keyring,
+      feedStore: this._serviceHost.echo.feedStore,
+      networkManager: this._serviceHost.echo.networkManager,
+      modelFactory: this._serviceHost.echo.modelFactory,
+      keyring: this._serviceHost.echo.halo.keyring,
       debug
     };
 
@@ -336,70 +318,3 @@ export class Client {
   }
 }
 
-// TODO(burdon): Factor out.
-const createStorageObjects = (config: defs.System.Storage, snapshotsEnabled = false) => {
-  const {
-    path = 'dxos/storage', // TODO(burdon): Factor out const.
-    storageType,
-    keyStorage,
-    persistent = false
-  } = config ?? {};
-
-  if (persistent && storageType === defs.System.Storage.StorageDriver.RAM) {
-    throw new InvalidConfigurationError('RAM storage cannot be used in persistent mode.');
-  }
-  if (!persistent && (storageType !== undefined && storageType !== defs.System.Storage.StorageDriver.RAM)) {
-    throw new InvalidConfigurationError('Cannot use a persistent storage in not persistent mode.');
-  }
-  if (persistent && keyStorage === defs.System.Storage.StorageDriver.RAM) {
-    throw new InvalidConfigurationError('RAM key storage cannot be used in persistent mode.');
-  }
-  if (!persistent && (keyStorage !== defs.System.Storage.StorageDriver.RAM && keyStorage !== undefined)) {
-    throw new InvalidConfigurationError('Cannot use a persistent key storage in not persistent mode.');
-  }
-
-  return {
-    feedStorage: createStorage(`${path}/feeds`, persistent ? toStorageType(storageType) : 'ram'),
-    keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram'),
-    snapshotStorage: createStorage(`${path}/snapshots`, persistent && snapshotsEnabled ? toStorageType(storageType) : 'ram'),
-    metadataStorage: createStorage(`${path}/metadata`, persistent ? toStorageType(storageType) : 'ram')
-  };
-};
-
-// TODO(burdon): Factor out.
-const createKeyStorage = (path: string, type?: KeyStorageType) => {
-  const defaultedType = type ?? (isNode() ? 'jsondown' : 'leveljs');
-
-  switch (defaultedType) {
-    case 'leveljs':
-      return leveljs(path);
-    case 'jsondown':
-      return jsondown(path);
-    case 'ram':
-      return memdown();
-    default:
-      throw new InvalidConfigurationError(`Invalid key storage type: ${defaultedType}`);
-  }
-};
-
-const toStorageType = (type: defs.System.Storage.StorageDriver | undefined): StorageType | undefined => {
-  switch (type) {
-    case undefined: return undefined;
-    case defs.System.Storage.StorageDriver.RAM: return 'ram';
-    case defs.System.Storage.StorageDriver.CHROME: return 'chrome';
-    case defs.System.Storage.StorageDriver.FIREFOX: return 'firefox';
-    case defs.System.Storage.StorageDriver.IDB: return 'idb';
-    case defs.System.Storage.StorageDriver.NODE: return 'node';
-    default: throw new Error(`Invalid storage type: ${defs.System.Storage.StorageDriver[type]}`);
-  }
-};
-
-const toKeyStorageType = (type: defs.System.Storage.StorageDriver | undefined): KeyStorageType | undefined => {
-  switch (type) {
-    case undefined: return undefined;
-    case defs.System.Storage.StorageDriver.RAM: return 'ram';
-    case defs.System.Storage.StorageDriver.LEVELJS: return 'leveljs';
-    case defs.System.Storage.StorageDriver.JSONDOWN: return 'jsondown';
-    default: throw new Error(`Invalid key storage type: ${defs.System.Storage.StorageDriver[type]}`);
-  }
-};

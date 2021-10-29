@@ -1,0 +1,3 @@
+syntax = "proto3";
+
+import "@dxos/proto/src/proto/dxos/client.proto";
