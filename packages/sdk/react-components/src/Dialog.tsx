@@ -120,7 +120,7 @@ export const NonModalDialog = ({
  * A standard dialog component that implements a non-modal implementation for testing.
  * @constructor
  */
- export const Dialog = ({
+export const Dialog = ({
   modal = true,
   ...rest
 }: DialogProps) => {

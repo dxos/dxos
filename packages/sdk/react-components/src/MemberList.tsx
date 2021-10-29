@@ -37,7 +37,7 @@ const BasicMemberList = ({ members }: {
 /**
  * Displays a horizontal list of avataors.
  */
- export const MemberList = ({
+export const MemberList = ({
   members,
   onShare
 }: {
