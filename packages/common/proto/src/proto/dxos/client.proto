@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package dxos.client;
+
+message Profile {
+  bytes publicKey = 1;
+  string displayName = 2;
+}
+
+message CreateProfileRequest {
+  string displayName = 1;
+}
+
+message RecoverProfileRequest { 
+  string seedPhrase = 1;
+}
+
+message Invitation {
+
+}
+
+message InvitationProcess {
+
+}
+
+message SubmitInvitationSecretRequest {
+  InvitationProcess process = 1;
+  string secret = 2;
+}
+
+message Contact {
+  bytes publicKey = 1;
+  string displayName = 2;
+}
+
+message Contacts {
+  repeated Contact contacts = 1;
+}
+
+service ProfileService {
+  rpc SubscribeProfile (google.protobuf.Empty) returns (stream Profile);
+
+  rpc CreateProfile(CreateProfileRequest) returns (Profile);
+    
+  rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
+    
+  rpc CreateHALOInvitation(google.protobuf.Empty) returns (Invitation);
+    
+  rpc JoinHALO(Invitation) returns (InvitationProcess);
+  rpc SubmitInvitationSecret(SubmitInvitationSecretRequest) returns (Profile);
+    
+  rpc SubscribeContacts(google.protobuf.Empty) returns (stream Contacts);
+
+  rpc Reset (google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+message Party {
+  bytes key = 1;
+}
+
+message SubscribePartiesResponse {
+  repeated Party parties = 1;
+}
+
+message CreateInvitationRequest {
+  bytes partyKey = 1;
+}
+
+service PartyService {
+  rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
+
+  rpc CreateParty(google.protobuf.Empty) returns(Party);
+
+  rpc CreateInvitation(CreateInvitationRequest) returns (Invitation);
+
+  rpc JoinParty(Invitation) returns (InvitationProcess);
+  rpc SubmitInvitationSecret(SubmitInvitationSecretRequest) returns (Profile);
+}
+
+message ItemDescriptorSet {
+  message Item {
+    bytes id = 1;
+    string modelDxn = 2;
+    string type = 3;
+  }
+}
+
+// TODO(dmaretskyi): Import those from echo-protocol.
+message EchoMutation {}
+message MutationReceipt {}
+message ItemSnapshot {}
+
+message SubscribeItemStreamResponse {
+  oneof kind {
+    ItemSnapshot snapshot = 1;
+    EchoMutation mutation = 2;
+  }
+}
+
+message SubscribeItemsRequest {
+  bytes partyKey = 1;
+}
+
+message SubscribeItemStreamRequest {
+  bytes partyKey = 1;
+  bytes itemId = 2;
+}
+
+message CreateItemRequest {
+
+}
+
+service DataService {
+  rpc SubscribeItems(SubscribeItemsRequest) returns (stream ItemDescriptorSet);
+
+  rpc SubscribeItemStream(SubscribeItemStreamRequest) returns (stream SubscribeItemStreamResponse);
+   
+  rpc MakeMutation(EchoMutation) returns (MutationReceipt);
+
+  rpc CreateItem(CreateItemRequest) returns (ItemDescriptorSet.Item);
+}

@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package dxos;
-
-message TestMessage {
-  string field = 1;
-}
