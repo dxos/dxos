@@ -12,9 +12,10 @@ import { CopyToClipboard } from './CopyToClipboard';
 export interface CopyTextProps extends TypographyProps {
   value?: string
   length?: number
+  onCopyToClipboard?: (text: string) => void
 }
 
-export const CopyText = ({ value, length, sx, ...rest }: CopyTextProps) => {
+export const CopyText = ({ value, length, sx, onCopyToClipboard, ...rest }: CopyTextProps) => {
   // TODO(burdon): Only expand to limit of div.
   return (
     <Box sx={{
@@ -38,7 +39,7 @@ export const CopyText = ({ value, length, sx, ...rest }: CopyTextProps) => {
         <>
           <Box sx={{ flex: 1 }} />
           <Box sx={{ flexShrink: 0, width: 40, marginLeft: '2px' }}>
-            <CopyToClipboard text={value} />
+            <CopyToClipboard text={value} onCopy={onCopyToClipboard} />
           </Box>
         </>
       )}

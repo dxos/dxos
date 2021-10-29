@@ -23,7 +23,7 @@ import {
   Share as ShareIcon,
 } from '@mui/icons-material';
 
-import {PartyInvitationDialog} from '@dxos/react-framework'
+import { PartySharingDialog } from '@dxos/react-framework'
 
 import { ObjectModel } from '@dxos/object-model';
 import { useParty, useSelection } from '@dxos/react-client';
@@ -185,7 +185,7 @@ const TaskList = ({ partyKey, hideShare = false }) => {
         </List>
       </div>
 
-      <PartyInvitationDialog
+      <PartySharingDialog
         open={partyInvitationDialog}
         onClose={() => setPartyInvitationDialog(false)}
         partyKey={partyKey}

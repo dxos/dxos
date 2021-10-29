@@ -90,10 +90,10 @@ export const PartySharingDialog = ({
             <TableRow>
               <TableCell>
                 {!pin && (
-                  <CopyText value={invitationCode} length={8} />
+                  <CopyText value={invitationCode} length={8} onCopyToClipboard={(value) => console.log(value)} />
                 )}
                 {pin && (
-                  <CopyText value={pin} />
+                  <CopyText id='party-invitation-dialog-pin' value={pin} onCopyToClipboard={(value) => console.log(value)} />
                 )}
               </TableCell>
             </TableRow>

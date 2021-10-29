@@ -24,7 +24,7 @@ import {
 } from '@mui/icons-material';
 
 import { useParties } from '@dxos/react-client';
-import { PartyJoinDialog } from '@dxos/react-framework';
+import { JoinPartyDialog } from '@dxos/react-framework';
 
 import { getPartyTitle } from '../utils/hacks.utils';
 import PartySettings from './PartySettings';
@@ -102,7 +102,7 @@ const PartyList = ({ selectedPartyKey, onSelectParty, hideRedeem = false }) => {
       )}
 
       {partyJoinDialog && (
-        <PartyJoinDialog
+        <JoinPartyDialog
           open={partyJoinDialog}
           onClose={() => setPartyJoinDialog(false)}
           closeOnSuccess
