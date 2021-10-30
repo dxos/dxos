@@ -24,7 +24,7 @@ const init = async () => {
       clearInterval(checkInterval);
     }
     const port = createWindowPort();
-    const clientApi = new RpcClientAPI(port, devtoolsContext.serviceHost.services.DevtoolsHost, devtoolsContext.serviceHost.devtoolsEvents);
+    const clientApi = new RpcClientAPI(port, devtoolsContext.serviceHost.services.DevtoolsHost);
     await clientApi.run();
     console.log('[DXOS devtools] Init client API finished');
   } else {

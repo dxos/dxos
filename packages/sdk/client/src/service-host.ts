@@ -35,9 +35,6 @@ export interface ClientServiceHost {
 
   close(): Promise<void>
 
-  /** @deprecated TODO(dmaretskyi): Remove */
-  devtoolsEvents: DevtoolsHostEvents;
-
   // TODO(dmaretskyi): Remove and rely on services
   /**
    * @deprecated
@@ -125,6 +122,7 @@ export class LocalClientServiceHost implements ClientServiceHost {
 
   async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
     await this._echo.open(onProgressCallback);
+    this._devtoolsEvents.ready.emit();
   }
 
   async close () {
@@ -133,10 +131,6 @@ export class LocalClientServiceHost implements ClientServiceHost {
 
   get echo () {
     return this._echo;
-  }
-
-  get devtoolsEvents() {
-    return this._devtoolsEvents;
   }
 
   /**

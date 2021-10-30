@@ -5,10 +5,8 @@
 import { schema, DevtoolsHost } from '@dxos/devtools';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 
-import { DevtoolsHostEvents } from '@dxos/client';
-
 export class RpcClientAPI {
-  constructor (private readonly _port: RpcPort, private readonly _devtoolsHost: DevtoolsHost, private readonly _events: DevtoolsHostEvents) {}
+  constructor (private readonly _port: RpcPort, private readonly _devtoolsHost: DevtoolsHost) {}
 
   async run () {
     const service = schema.getService('dxos.devtools.DevtoolsHost');
@@ -19,6 +17,5 @@ export class RpcClientAPI {
     });
 
     await server.open();
-    this._events.ready.emit();
   }
 }
