@@ -1,7 +1,7 @@
 import { DataService, PartyService, ProfileService } from "./proto/gen/dxos/client";
 import { createServiceBundle } from '@dxos/rpc'
 import { schema } from "./proto/gen";
-import { ECHO } from "@dxos/echo-db";
+import { ECHO, OpenProgress } from "@dxos/echo-db";
 import { Config } from "@dxos/config";
 import { createStorageObjects } from "./storage";
 
@@ -20,7 +20,7 @@ const serviceBundle = createServiceBundle<ClientServices>({
 export interface ClientServiceHost {
   services: ClientServices
 
-  open(): Promise<void>
+  open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined): Promise<void>
 
   close(): Promise<void>
 
@@ -78,12 +78,12 @@ export class LocalClientServiceHost implements ClientServiceHost {
     DataService: undefined as any, // TODO: will probably be implemented internally in ECHO
   }
 
-  async open() {
-
+  async open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
+    await this._echo.open(onProgressCallback);
   }
 
   async close() {
-
+    await this._echo.close();
   }
 
   get echo() {

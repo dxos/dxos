@@ -124,9 +124,7 @@ export class Client {
       throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
 
-    await this._serviceHost.open();
-
-    await this._serviceHost.echo.open(onProgressCallback);
+    await this._serviceHost.open(onProgressCallback);
 
     this._initialized = true;
     clearInterval(timeout);
@@ -140,7 +138,6 @@ export class Client {
     if (!this._initialized) {
       return;
     }
-    await this._serviceHost.echo.close();
 
     await this._serviceHost.close();
     this._initialized = false;
