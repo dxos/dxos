@@ -84,9 +84,11 @@ export interface SuppliedRecordMetadata {
 
 export type RecordMetadata = InferredRecordMetadata & SuppliedRecordMetadata
 
-export interface TypeRecordMetadata extends SuppliedRecordMetadata {
+export interface SuppliedTypeRecordMetadata extends SuppliedRecordMetadata {
   sourceIpfsCid?: string
 }
+
+export type TypeRecordMetadata = InferredRecordMetadata & SuppliedTypeRecordMetadata
 
 export enum RecordKind {
   Type = 'TYPE',
@@ -107,7 +109,7 @@ export interface RegistryRecordBase {
  */
 export interface RegistryTypeRecord extends RegistryRecordBase {
   kind: RecordKind.Type
-
+  meta: TypeRecordMetadata
   /**
    * FQN of the root message in the protobuf definitions.
    *

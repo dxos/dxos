@@ -19,10 +19,11 @@ import { defaultInvitationAuthenticator, InvitationDescriptor } from '@dxos/echo
 import { useClient, useInvitationRedeemer } from '@dxos/react-client';
 
 import { DialogHeading } from '../components';
-import { handleRedeemError } from '../helpers';
-import { DialogProps } from './DialogProps';
+import { handleRedeemError, handleKey } from '../helpers';
 
-interface RedeemDialogProps extends DialogProps {
+interface RedeemDialogProps {
+  open: boolean
+  onClose?: () => void
   code?: string
   pinless?: boolean
 }
@@ -93,12 +94,6 @@ export const RedeemDialog = ({ open, code = '', onClose, pinless = false }: Rede
     setPin(pinCode);
   };
 
-  const handleKeyDown = (event: { key: string }) => {
-    if (event.key === 'Enter') {
-      void handleEnterInvitationCode();
-    }
-  };
-
   return (
     <Dialog
       fullWidth
@@ -120,7 +115,7 @@ export const RedeemDialog = ({ open, code = '', onClose, pinless = false }: Rede
               spellCheck={false}
               value={invitationCode}
               onChange={(event) => setInvitationCode(event.target.value)}
-              onKeyDown={handleKeyDown}
+              onKeyDown={handleKey('Enter', handleEnterInvitationCode)}
               rows={6}
             />
 

@@ -30,31 +30,18 @@ const Alert = styled(MuiAlert)({
 export interface DialogProps extends MuiDialogProps {
   modal?: boolean
   title?: string
+  dividers?: boolean
   content?: () => JSX.Element
   actions?: () => JSX.Element
   processing?: boolean
   error?: string
 }
 
-/**
- * A standard dialog component that implements a non-modal implementation for testing.
- * @constructor
- */
-export const Dialog = ({
-  modal = true,
-  ...rest
-}: DialogProps) => {
-  if (modal) {
-    return <ModalDialog {...rest} />
-  } else {
-    return <NonModalDialog {...rest} />
-  }
-}
-
 export const ModalDialog = ({
   title,
   content,
   actions,
+  dividers = false,
   processing,
   error,
   ...dialogProps
@@ -69,7 +56,7 @@ export const ModalDialog = ({
       {...other}
     >
       <DialogTitle>{title}</DialogTitle>
-      <DialogContent dividers>
+      <DialogContent dividers={dividers}>
         {content?.() || null}
       </DialogContent>
       {processing && (
@@ -129,4 +116,19 @@ export const NonModalDialog = ({
       </CardActions>
     </Card>
   );
+};
+
+/**
+ * A standard dialog component that implements a non-modal implementation for testing.
+ * @constructor
+ */
+export const Dialog = ({
+  modal = true,
+  ...rest
+}: DialogProps) => {
+  if (modal) {
+    return <ModalDialog {...rest} />;
+  } else {
+    return <NonModalDialog {...rest} />;
+  }
 };

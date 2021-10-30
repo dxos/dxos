@@ -7,34 +7,9 @@ import React from 'react';
 
 import { PartyMember } from '@dxos/echo-db';
 
-import { MemberAvatar, ShareButon } from './MemberAvatar';
+import { MemberAvatar, ShareButton } from './MemberAvatar';
 
 // TODO(burdon): Move to react-components.
-
-/**
- * Displays a horizontal list of avataors.
- */
-export const MemberList = ({
-  members,
-  onShare
-}: {
-  members: PartyMember[],
-  onShare?: () => void
-}) => {
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row'
-      }}
-    >
-      <BasicMemberList members={members} />
-      {onShare && ( // TODO(burdon): Break into multiple components.
-        <ShareButon onClick={onShare} />
-      )}
-    </Box>
-  );
-};
 
 /**
  * List of member avatars.
@@ -55,6 +30,31 @@ const BasicMemberList = ({ members }: {
           <MemberAvatar key={member.publicKey.toString()} member={member} />
         ))}
       </AvatarGroup>
+    </Box>
+  );
+};
+
+/**
+ * Displays a horizontal list of avataors.
+ */
+export const MemberList = ({
+  members,
+  onShare
+}: {
+  members: PartyMember[],
+  onShare?: () => void
+}) => {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'row'
+      }}
+    >
+      <BasicMemberList members={members} />
+      {onShare && ( // TODO(burdon): Break into multiple components.
+        <ShareButton onClick={onShare} />
+      )}
     </Box>
   );
 };

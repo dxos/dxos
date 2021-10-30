@@ -2,41 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
-import { LockOutlined as LockOutlinedIcon } from '@mui/icons-material';
-import {
-  Avatar,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  styled,
-  TextField,
-  Toolbar,
-  Typography
-} from '@mui/material';
+import { Box, Button, TextField } from '@mui/material';
 import React, { useState } from 'react';
 
-const StyledAvatar = styled(Avatar)(({ theme }) => ({
-  backgroundColor: theme.palette.secondary.main,
-  marginRight: theme.spacing(2)
-}));
+import { Dialog } from '@dxos/react-components';
 
-const Content = styled(DialogContent)(({ theme }) => ({
-  paddingTop: `${theme.spacing(1)} !important`
-}));
+import { handleKey } from '../helpers';
 
-interface IRegister{
-  username: string;
-}
-
-export interface IProfileDialog {
+export interface ProfileDialogProps {
   open: boolean;
-  onCreate: ({ username }: IRegister)=>void;
+  onCreate: ({ username }: { username: string }) => void;
   onCancel?: () => void;
 }
 
-export const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
+// TODO(burdon): Replace with RegistrationDialog.
+export const ProfileDialog = ({ open, onCreate, onCancel }: ProfileDialogProps) => {
   const [username, setUsername] = useState('');
 
   const handleUpdate = () => {
@@ -49,46 +29,43 @@ export const ProfileDialog = ({ open, onCreate, onCancel } :IProfileDialog) => {
     }
   };
 
+  // TODO(burdon): Use New Dialog.
   return (
-    <Dialog open={open} fullWidth maxWidth='xs'>
-      <DialogTitle>
-        <Toolbar variant='dense' disableGutters>
-          <StyledAvatar>
-            <LockOutlinedIcon />
-          </StyledAvatar>
-          <Typography component='h1' variant='h5'>
-            Create Profile
-          </Typography>
-        </Toolbar>
-      </DialogTitle>
-      <Content>
-        <TextField
-          autoFocus
-          fullWidth
-          required
-          value={username}
-          onChange={event => setUsername(event.target.value)}
-          onKeyPress={event => (event.key === 'Enter') && handleUpdate()}
-          label='Username'
-          variant='outlined'
-          spellCheck={false}
-        />
-      </Content>
-      <DialogActions>
-        <Button
-          onClick={handleCancel}
-          color='secondary'
-        >
-          Cancel
-        </Button>
-        <Button
-          color='primary'
-          disabled={!username}
-          onClick={handleUpdate}
-        >
-          Create
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <Dialog
+      open={open}
+      title='Create Profile'
+      content={() => (
+        <Box sx={{ paddingTop: 1 }}>
+          <TextField
+            autoFocus
+            fullWidth
+            required
+            value={username}
+            onChange={event => setUsername(event.target.value)}
+            onKeyPress={handleKey('Enter', handleUpdate)}
+            label='Username'
+            variant='outlined'
+            spellCheck={false}
+          />
+        </Box>
+      )}
+      actions={() => (
+        <>
+          <Button
+            onClick={handleCancel}
+            color='secondary'
+          >
+            Cancel
+          </Button>
+          <Button
+            color='primary'
+            disabled={!username}
+            onClick={handleUpdate}
+          >
+            Done
+          </Button>
+        </>
+      )}
+    />
   );
 };
