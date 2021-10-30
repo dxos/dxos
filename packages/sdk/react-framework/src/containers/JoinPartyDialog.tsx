@@ -2,15 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import {
-  Button,
-  TextField,
-  Typography
-} from '@mui/material';
+import { Box, Button, TextField, Typography } from '@mui/material';
 import React, { useState } from 'react';
 
 import { decodeInvitation, useClient, useSecretProvider } from '@dxos/react-client';
-import { Dialog } from '@dxos/react-components';
+import { Dialog, Passcode } from '@dxos/react-components';
 
 import { handleKey } from '../helpers';
 
@@ -43,14 +39,12 @@ export const JoinPartyDialog = ({
   const [invitationCode, setInvitationCode] = useState('');
 
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
-  const [pin, setPin] = useState('');
   const client = useClient();
 
   const handleReset = () => {
     setError(undefined);
     setProcessing(false);
     setInvitationCode('');
-    setPin('');
     setState(PartyJoinState.INIT);
   };
 
@@ -67,14 +61,27 @@ export const JoinPartyDialog = ({
   };
 
   const handleProcessInvitation = async () => {
-    const invitation = decodeInvitation(invitationCode);
-    setState(PartyJoinState.AUTHENTICATE);
+    if (!invitationCode.length) {
+      return;
+    }
+
+    let invitation
+    try {
+      invitation = decodeInvitation(invitationCode);
+      setState(PartyJoinState.AUTHENTICATE);
+    } catch (err) {
+      setError('Invalid invitation code.');
+      setState(PartyJoinState.ERROR);
+      return;
+    }
 
     try {
+      setState(PartyJoinState.AUTHENTICATE);
       const party = await client.echo.joinParty(invitation, secretProvider);
       await party.open();
     } catch (err) {
-      setError(err.message);
+      // TODO(burdon): Extract human error (e.g., currently "Already connected to swarm").
+      setError(err.responseMessage || err.message);
       setState(PartyJoinState.ERROR);
       return;
     }
@@ -82,7 +89,7 @@ export const JoinPartyDialog = ({
     handleDone();
   };
 
-  const handleAuthenticate = () => {
+  const handleAuthenticate = (pin: string) => {
     setProcessing(true);
     secretResolver(Buffer.from(pin));
   };
@@ -94,7 +101,7 @@ export const JoinPartyDialog = ({
         fullWidth
         multiline
         variant='standard'
-        placeholder='Paste invitation code.'
+        placeholder='Copy the invitation code.'
         spellCheck={false}
         value={invitationCode}
         onChange={(event) => setInvitationCode(event.target.value)}
@@ -113,27 +120,17 @@ export const JoinPartyDialog = ({
     const authenticateContent = () => (
       <>
         <Typography variant='body1' gutterBottom>
-          Enter the PIN number.
+          Enter the PIN.
         </Typography>
-        <TextField
-          value={pin}
-          onChange={(event) => setPin(event.target.value)}
-          variant='outlined'
-          margin='normal'
-          required
-          fullWidth
-          label='PIN Code'
-          autoFocus
-          disabled={processing}
-          onKeyDown={handleKey('Enter', handleAuthenticate)}
-        />
+        <Box sx={{ marginTop: 2 }}>
+          <Passcode length={4} onSubmit={value => handleAuthenticate(value)} />
+        </Box>
       </>
     );
 
     const authenticateActions = () => (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
-        <Button onClick={handleAuthenticate}>Submit</Button>
       </>
     );
 
@@ -144,8 +141,8 @@ export const JoinPartyDialog = ({
     switch (state) {
       case PartyJoinState.INIT: {
         return {
-          open: !!open,
           title: 'Join Party',
+          processing,
           content: joinPartyContent,
           actions: joinPartyActions
         };
@@ -154,6 +151,7 @@ export const JoinPartyDialog = ({
       case PartyJoinState.AUTHENTICATE: {
         return {
           title: 'Authenticate Invitation',
+          processing,
           content: authenticateContent,
           actions: authenticateActions
         };
