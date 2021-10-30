@@ -3,9 +3,6 @@
 //
 
 import assert from 'assert';
-import jsondown from 'jsondown';
-import leveljs from 'level-js';
-import memdown from 'memdown';
 
 import { synchronized } from '@dxos/async';
 import { Config, defs } from '@dxos/config';
@@ -13,7 +10,7 @@ import { Invitation, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { ECHO, InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
+import { InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
@@ -314,4 +311,3 @@ export class Client {
     return devtoolsContext;
   }
 }
-

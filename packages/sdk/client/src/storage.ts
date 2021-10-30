@@ -1,10 +1,16 @@
-import { defs } from "@dxos/config";
-import { createStorage } from "@dxos/random-access-multi-storage";
-import { InvalidConfigurationError } from "./errors";
-import { isNode } from "./platform";
+//
+// Copyright 2021 DXOS.org
+//
+
 import jsondown from 'jsondown';
 import leveljs from 'level-js';
 import memdown from 'memdown';
+
+import { defs } from '@dxos/config';
+import { createStorage } from '@dxos/random-access-multi-storage';
+
+import { InvalidConfigurationError } from './errors';
+import { isNode } from './platform';
 
 export type StorageType = 'ram' | 'idb' | 'chrome' | 'firefox' | 'node';
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
