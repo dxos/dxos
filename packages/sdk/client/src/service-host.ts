@@ -6,7 +6,7 @@ import { Config } from '@dxos/config';
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 import { createServiceBundle } from '@dxos/rpc';
 import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
-import { DevtoolsContext } from '.';
+import { DevtoolsHook, DevtoolsServiceDependencies } from '.';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
 
 import { schema } from './proto/gen';
@@ -117,7 +117,7 @@ export class LocalClientServiceHost implements ClientServiceHost {
         }
       },
       DataService: undefined as any, // TODO: will probably be implemented internally in ECHO
-      DevtoolsHost: createDevtoolsHost(this._getDevtoolsContext(), this._devtoolsEvents),
+      DevtoolsHost: this._createDevtoolsService(),
     }
   }
 
@@ -143,10 +143,10 @@ export class LocalClientServiceHost implements ClientServiceHost {
    * Returns devtools context.
    * Used by the DXOS DevTool Extension.
    */
-  private _getDevtoolsContext (): DevtoolsContext {
-    const devtoolsContext: DevtoolsContext = {
-      client: undefined as any, // TODO(marik-d): DevtoolsContext type should be changed in the future to not depend on client.
-      serviceHost: this,
+  private _createDevtoolsService (): DevtoolsHost {
+    const dependencies: DevtoolsServiceDependencies = {
+      config: this._config,
+      echo: this._echo,
       feedStore: this._echo.feedStore,
       networkManager: this._echo.networkManager,
       modelFactory: this._echo.modelFactory,
@@ -154,6 +154,6 @@ export class LocalClientServiceHost implements ClientServiceHost {
       debug
     };
 
-    return devtoolsContext;
+    return createDevtoolsHost(dependencies, this._devtoolsEvents);
   }
 }

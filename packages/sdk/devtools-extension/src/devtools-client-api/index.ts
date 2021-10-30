@@ -6,7 +6,7 @@ import Bridge from 'crx-bridge';
 
 import { createWindowPort } from '../utils';
 import { RpcClientAPI } from './client-api';
-import { DevtoolsContext } from '@dxos/client';
+import { DevtoolsHook } from '@dxos/client';
 
 Bridge.setNamespace('dxos.devtools');
 Bridge.allowWindowMessaging('dxos.devtools');
@@ -18,7 +18,7 @@ let checkCount = 0;
 const init = async () => {
   checkCount++;
   if ((window as any).__DXOS__) {
-    const devtoolsContext: DevtoolsContext = (window as any).__DXOS__;
+    const devtoolsContext: DevtoolsHook = (window as any).__DXOS__;
 
     if (checkInterval) {
       clearInterval(checkInterval);

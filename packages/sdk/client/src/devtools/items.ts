@@ -3,10 +3,10 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { DevtoolsContext } from '..';
+import { DevtoolsHook, DevtoolsServiceDependencies } from '..';
 import { SubscribeToItemsResponse } from '../proto/gen/dxos/devtools';
 
-function getData (echo: DevtoolsContext['client']['echo']): SubscribeToItemsResponse {
+function getData (echo: DevtoolsHook['client']['echo']): SubscribeToItemsResponse {
   // TODO(marik-d): Display items hierarchically
   const res: Record<string, any> = {};
   const parties = echo.queryParties().value;
@@ -31,19 +31,17 @@ function getData (echo: DevtoolsContext['client']['echo']): SubscribeToItemsResp
   };
 }
 
-export const subscribeToItems = (hook: DevtoolsContext) => {
+export const subscribeToItems = (hook: DevtoolsServiceDependencies) => {
   return new Stream<SubscribeToItemsResponse>(({ next }) => {
-    const client = hook.client;
+    const echo = hook.echo;
     const update = () => {
-      const res = getData(client.echo);
+      const res = getData(echo);
       next(res);
     };
 
     setImmediate(async () => {
-      await client.initialize();
-
       const partySubscriptions: any[] = [];
-      client.echo.queryParties().subscribe((parties) => {
+      echo.queryParties().subscribe((parties) => {
         partySubscriptions.forEach(unsub => unsub());
 
         for (const party of parties) {

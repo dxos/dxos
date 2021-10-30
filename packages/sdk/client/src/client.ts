@@ -15,7 +15,7 @@ import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 
-import { DevtoolsContext } from './devtools/devtools-context';
+import { DevtoolsHook } from './devtools/devtools-context';
 import { ClientServiceHost, LocalClientServiceHost } from './service-host';
 
 export const defaultConfig: defs.Config = {};
@@ -300,15 +300,10 @@ export class Client {
    * 
    * @deprecated Service host implements the devtools service itself. This is left for legacy devtools versions.
    */
-  getDevtoolsContext (): DevtoolsContext {
-    const devtoolsContext: DevtoolsContext = {
+  getDevtoolsContext (): DevtoolsHook {
+    const devtoolsContext: DevtoolsHook = {
       client: this,
       serviceHost: this._serviceHost,
-      feedStore: this._serviceHost.echo.feedStore,
-      networkManager: this._serviceHost.echo.networkManager,
-      modelFactory: this._serviceHost.echo.modelFactory,
-      keyring: this._serviceHost.echo.halo.keyring,
-      debug
     };
 
     return devtoolsContext;

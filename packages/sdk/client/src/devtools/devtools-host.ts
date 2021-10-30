@@ -4,7 +4,7 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 
-import { DevtoolsContext } from './devtools-context';
+import { DevtoolsHook } from './devtools-context';
 import { getConfig } from './config';
 import { enableDebugLogging, disableDebugLogging } from './debug-logging';
 import { DevtoolsHostEvents } from './devtools-host-events';
@@ -19,8 +19,9 @@ import {
 } from './network';
 import { resetStorage } from './storage';
 import { DevtoolsHost, Event as ClientAPIEvent } from '../proto/gen/dxos/devtools';
+import { DevtoolsServiceDependencies } from '..';
 
-export const createDevtoolsHost = (context: DevtoolsContext, events: DevtoolsHostEvents) : DevtoolsHost => {
+export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events: DevtoolsHostEvents) : DevtoolsHost => {
   return {
     Events: () => {
       return new Stream<ClientAPIEvent>(({ next }) => {

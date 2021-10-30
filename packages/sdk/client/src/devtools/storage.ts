@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { DevtoolsContext } from "..";
+import { DevtoolsHook, DevtoolsServiceDependencies } from "..";
 
-export const resetStorage = async (hook: DevtoolsContext) => {
-  await hook.client.reset();
+export const resetStorage = async (hook: DevtoolsServiceDependencies) => {
+  await hook.echo.reset();
   window.location.reload();
 };

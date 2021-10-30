@@ -2,11 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import { DevtoolsServiceDependencies } from '..';
 import { GetConfigResponse } from '../proto/gen/dxos/devtools';
-import { DevtoolsContext } from './devtools-context';
 
-export const getConfig = (hook: DevtoolsContext): GetConfigResponse => {
+export const getConfig = (hook: DevtoolsServiceDependencies): GetConfigResponse => {
   return {
-    config: JSON.stringify(hook.client.config) // make sure the config is serializable
+    config: JSON.stringify(hook.config.values) // TODO(marik-d): Serialize config with protobuf.
   };
 };
