@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { DevtoolsContext } from '@dxos/client';
+import { DevtoolsContext } from "..";
 
 export const resetStorage = async (hook: DevtoolsContext) => {
   await hook.client.reset();

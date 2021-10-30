@@ -2,18 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { DevtoolsContext } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/crypto';
-import {
-  GetNetworkPeersRequest,
-  GetNetworkPeersResponse,
-  SubscribeToNetworkTopicsResponse,
-  SubscribeToSignalStatusResponse,
-  SubscribeToSignalTraceResponse,
-  SubscribeToSwarmInfoResponse
-} from '@dxos/devtools';
+
 import { SignalApi } from '@dxos/network-manager';
+import { DevtoolsContext } from '..';
+import { GetNetworkPeersRequest, GetNetworkPeersResponse, SubscribeToNetworkTopicsResponse, SubscribeToSignalStatusResponse, SubscribeToSignalTraceResponse, SubscribeToSwarmInfoResponse } from '../proto/gen/dxos/devtools';
 
 export const subscribeToNetworkStatus = (hook: DevtoolsContext) => {
   return new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {

@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { DevtoolsContext } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
-import { SubscribeToItemsResponse } from '@dxos/devtools';
+import { DevtoolsContext } from '..';
+import { SubscribeToItemsResponse } from '../proto/gen/dxos/devtools';
 
 function getData (echo: DevtoolsContext['client']['echo']): SubscribeToItemsResponse {
   // TODO(marik-d): Display items hierarchically

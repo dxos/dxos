@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { DevtoolsContext } from '@dxos/client';
-import { GetKeyringKeysResponse } from '@dxos/devtools';
+import { DevtoolsContext } from "..";
+import { GetKeyringKeysResponse } from "../proto/gen/dxos/devtools";
+
 
 export const getKeyringKeys = (hook: DevtoolsContext): GetKeyringKeysResponse => {
   const { keyring } = hook;

@@ -2,10 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DevtoolsContext } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
-import { Event as ClientAPIEvent, DevtoolsHost } from '@dxos/devtools';
 
+import { DevtoolsContext } from './devtools-context';
 import { getConfig } from './config';
 import { enableDebugLogging, disableDebugLogging } from './debug-logging';
 import { DevtoolsHostEvents } from './devtools-host-events';
@@ -19,6 +18,7 @@ import {
   subscribeToSwarmInfo
 } from './network';
 import { resetStorage } from './storage';
+import { DevtoolsHost, Event as ClientAPIEvent } from '../proto/gen/dxos/devtools';
 
 export const createDevtoolsHost = (context: DevtoolsContext, events: DevtoolsHostEvents) : DevtoolsHost => {
   return {

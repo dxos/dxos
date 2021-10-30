@@ -5,7 +5,7 @@
 import { schema, DevtoolsHost } from '@dxos/devtools';
 import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
 
-import { DevtoolsHostEvents } from './handlers';
+import { DevtoolsHostEvents } from '@dxos/client';
 
 export class RpcClientAPI {
   constructor (private readonly _port: RpcPort, private readonly _devtoolsHost: DevtoolsHost, private readonly _events: DevtoolsHostEvents) {}
