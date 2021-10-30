@@ -17,7 +17,7 @@ import { ClientServiceHost } from '../service-host';
  */
 export interface DevtoolsHook
 {
-  // TODO(marik-d): Reduce to just exporting DevtoolsHost.
+  // TODO(marik-d): Reduce to just exporting ClientServices.
 
   serviceHost: ClientServiceHost,
   client: Client,
