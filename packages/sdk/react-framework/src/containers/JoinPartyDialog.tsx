@@ -65,7 +65,7 @@ export const JoinPartyDialog = ({
       return;
     }
 
-    let invitation
+    let invitation;
     try {
       invitation = decodeInvitation(invitationCode);
       setState(PartyJoinState.AUTHENTICATE);
