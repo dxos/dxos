@@ -30,6 +30,7 @@ const Alert = styled(MuiAlert)({
 export interface DialogProps extends MuiDialogProps {
   modal?: boolean
   title?: string
+  dividers?: boolean
   content?: () => JSX.Element
   actions?: () => JSX.Element
   processing?: boolean
@@ -40,6 +41,7 @@ export const ModalDialog = ({
   title,
   content,
   actions,
+  dividers = false,
   processing,
   error,
   ...dialogProps
@@ -54,7 +56,7 @@ export const ModalDialog = ({
       {...other}
     >
       <DialogTitle>{title}</DialogTitle>
-      <DialogContent dividers>
+      <DialogContent dividers={dividers}>
         {content?.() || null}
       </DialogContent>
       {processing && (
