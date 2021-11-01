@@ -33,12 +33,12 @@ type Size = 'small' | 'medium' | 'large';
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
 // https://developer.apple.com/documentation/security/password_autofill/enabling_password_autofill_on_an_html_input_element
 const customAttrs = {
-  'autoComplete': 'one-time-code',
+  autoComplete: 'one-time-code',
   'data-com-onepassword-filled': 'dark'
 };
 
 const stylesBySize = {
-  'small': {
+  small: {
     margin: '0 2px',
     padding: '4px',
     width: 16,
@@ -48,7 +48,7 @@ const stylesBySize = {
     fontWeight: 100,
     borderRadius: '2px'
   },
-  'medium': { // Standard 40px text field height.
+  medium: { // Standard 40px text field height.
     margin: '0 4px',
     padding: '8px',
     width: 22,
@@ -58,7 +58,7 @@ const stylesBySize = {
     fontWeight: 200,
     borderRadius: '4px'
   },
-  'large': {
+  large: {
     margin: '0 6px',
     padding: '6px',
     width: 36,

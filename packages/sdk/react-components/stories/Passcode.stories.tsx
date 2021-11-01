@@ -3,7 +3,7 @@
 //
 
 import {
-  ContentCopy as CopyIcon,
+  ContentCopy as CopyIcon
 } from '@mui/icons-material';
 import { Box, IconButton, TextField, Typography } from '@mui/material';
 import React, { useState } from 'react';
@@ -25,7 +25,7 @@ export const Primary = () => {
     setTimeout(() => {
       setAttempt(attempt + 1);
     }, 1000);
-  }
+  };
 
   return (
     <Container>
