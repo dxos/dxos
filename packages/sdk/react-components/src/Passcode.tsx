@@ -28,8 +28,50 @@ const shakerKeyFrames = keyframes`
 
 type Size = 'small' | 'medium' | 'large';
 
+// https://support.1password.com/compatible-website-design
+// https://github.com/apple/password-manager-resources
+// https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
+// https://developer.apple.com/documentation/security/password_autofill/enabling_password_autofill_on_an_html_input_element
+const customAttrs = {
+  'autoComplete': 'one-time-code',
+  'data-com-onepassword-filled': 'dark'
+};
+
+const stylesBySize = {
+  'small': {
+    margin: '0 2px',
+    padding: '4px',
+    width: 16,
+    height: 16,
+    fontSize: 16,
+    fontFamily: 'monospace',
+    fontWeight: 100,
+    borderRadius: '2px'
+  },
+  'medium': { // Standard 40px text field height.
+    margin: '0 4px',
+    padding: '8px',
+    width: 22,
+    height: 22,
+    fontSize: 22,
+    fontFamily: 'monospace',
+    fontWeight: 200,
+    borderRadius: '4px'
+  },
+  'large': {
+    margin: '0 6px',
+    padding: '6px',
+    width: 36,
+    height: 36,
+    fontSize: 30,
+    fontFamily: 'monospace',
+    fontWeight: 200,
+    borderRadius: '4px'
+  }
+};
+
 export interface PasscodeProps {
-  attempt?: number // NOTE: Required to reset.
+  attempt?: number // Required to reset.
   disabled?: boolean
   shake?: boolean
   size?: Size
@@ -106,47 +148,7 @@ export const Passcode = ({
     chars[i] = i < value.length ? value[i] : '\u00A0'; // TODO(burdon): ???
   }
 
-  // https://support.1password.com/compatible-website-design
-  // https://github.com/apple/password-manager-resources
-  // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
-  // https://developer.apple.com/documentation/security/password_autofill/enabling_password_autofill_on_an_html_input_element
-  const customAttrs = {
-    'autoComplete': 'one-time-code',
-    'data-com-onepassword-filled': 'dark'
-  };
-
-  const styles = {
-    'small': {
-      margin: '0 2px',
-      padding: '4px',
-      width: 16,
-      height: 16,
-      fontSize: 16,
-      fontFamily: 'monospace',
-      fontWeight: 100,
-      borderRadius: '2px'
-    },
-    'medium': { // NOTE: Standard 40px text field height.
-      margin: '0 4px',
-      padding: '8px',
-      width: 22,
-      height: 22,
-      fontSize: 22,
-      fontFamily: 'monospace',
-      fontWeight: 200,
-      borderRadius: '4px'
-    },
-    'large': {
-      margin: '0 6px',
-      padding: '6px',
-      width: 36,
-      height: 36,
-      fontSize: 30,
-      fontFamily: 'monospace',
-      fontWeight: 200,
-      borderRadius: '4px'
-    }
-  }[size];
+  const styles = stylesBySize[size];
 
   return (
     <Box

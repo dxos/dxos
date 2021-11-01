@@ -29,7 +29,6 @@ export const ProfileDialog = ({ open, onCreate, onCancel }: ProfileDialogProps) 
     }
   };
 
-  // TODO(burdon): Use New Dialog.
   return (
     <Dialog
       open={open}
