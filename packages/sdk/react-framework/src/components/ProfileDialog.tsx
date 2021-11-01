@@ -61,7 +61,7 @@ export const ProfileDialog = ({ open, onCreate, onCancel }: ProfileDialogProps) 
             disabled={!username}
             onClick={handleUpdate}
           >
-            Done
+            Create
           </Button>
         </>
       )}
