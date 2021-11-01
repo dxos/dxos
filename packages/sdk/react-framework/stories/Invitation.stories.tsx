@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient, useParties } from '@dxos/react-client';
-import { FullScreen, CopyText } from '@dxos/react-components';
+import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
   ErrorView,

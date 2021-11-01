@@ -34,6 +34,7 @@ const DEFAULT_PATTERN = /^[0-9]*$/;
 
 /**
  * Displays a multi-digit passcode, which may optionally be editable.
+ * @deprecated
  */
 export const Passcode = (
   props: {
