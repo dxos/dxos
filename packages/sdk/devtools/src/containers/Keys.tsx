@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import KeyTable from '../components/KeyTable';
 import { useDevtoolsHost } from '../contexts';
-import { KeyRecord } from '../proto/gen/dxos/credentials/keys';
+import { KeyRecord } from '../proto/gen/dxos/halo/keys';
 
 const useStyles = makeStyles(theme => ({
   root: {

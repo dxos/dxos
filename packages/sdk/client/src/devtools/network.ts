@@ -2,20 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import { DevtoolsContext } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/crypto';
-import {
-  GetNetworkPeersRequest,
-  GetNetworkPeersResponse,
-  SubscribeToNetworkTopicsResponse,
-  SubscribeToSignalStatusResponse,
-  SubscribeToSignalTraceResponse,
-  SubscribeToSwarmInfoResponse
-} from '@dxos/devtools';
 import { SignalApi } from '@dxos/network-manager';
 
-export const subscribeToNetworkStatus = (hook: DevtoolsContext) => {
+import { DevtoolsServiceDependencies } from '..';
+import { GetNetworkPeersRequest, GetNetworkPeersResponse, SubscribeToNetworkTopicsResponse, SubscribeToSignalStatusResponse, SubscribeToSignalTraceResponse, SubscribeToSwarmInfoResponse } from '../proto/gen/dxos/devtools';
+
+export const subscribeToNetworkStatus = (hook: DevtoolsServiceDependencies) => {
   return new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
     const update = () => {
       try {
@@ -30,7 +24,7 @@ export const subscribeToNetworkStatus = (hook: DevtoolsContext) => {
   });
 };
 
-export const subscribeToSignalTrace = (hook: DevtoolsContext) => {
+export const subscribeToSignalTrace = (hook: DevtoolsServiceDependencies) => {
   return new Stream<SubscribeToSignalTraceResponse>(({ next }) => {
     next({ events: [] });
     const trace: SignalApi.CommandTrace[] = [];
@@ -41,7 +35,7 @@ export const subscribeToSignalTrace = (hook: DevtoolsContext) => {
   });
 };
 
-export const subscribeToNetworkTopics = (hook: DevtoolsContext) => {
+export const subscribeToNetworkTopics = (hook: DevtoolsServiceDependencies) => {
   return new Stream<SubscribeToNetworkTopicsResponse>(({ next, close }) => {
     const update = () => {
       try {
@@ -61,9 +55,9 @@ export const subscribeToNetworkTopics = (hook: DevtoolsContext) => {
   });
 };
 
-export const subscribeToSwarmInfo = (hook: DevtoolsContext) => {
+export const subscribeToSwarmInfo = (hook: DevtoolsServiceDependencies) => {
   return new Stream<SubscribeToSwarmInfoResponse>(({ next }) => {
-    const networkManager = hook.client.echo.networkManager;
+    const networkManager = hook.networkManager;
     const update = () => {
       const info = networkManager.connectionLog?.swarms;
       if (info) {
@@ -75,7 +69,7 @@ export const subscribeToSwarmInfo = (hook: DevtoolsContext) => {
   });
 };
 
-export const getNetworkPeers = (hook: DevtoolsContext, request: GetNetworkPeersRequest): GetNetworkPeersResponse => {
+export const getNetworkPeers = (hook: DevtoolsServiceDependencies, request: GetNetworkPeersRequest): GetNetworkPeersResponse => {
   if (!request.topic) {
     throw new Error('Expected a network topic');
   }

@@ -1,9 +1,4 @@
-//
-// Copyright 2021 DXOS.org
-//
-
 syntax = "proto3";
 
-package dxos.devtools;
-
+import "@dxos/proto/src/proto/dxos/client.proto";
 import "@dxos/proto/src/proto/dxos/devtools.proto";
