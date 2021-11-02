@@ -3,12 +3,12 @@
 //
 
 import { Config } from '@dxos/config';
+import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 import { createServiceBundle } from '@dxos/rpc';
-import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
-import { DevtoolsHook, DevtoolsServiceDependencies } from '.';
-import * as debug from '@dxos/debug'; // TODO(burdon): ???
 
+import { DevtoolsHook, DevtoolsServiceDependencies } from '.';
+import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
 import { schema } from './proto/gen';
 import { DataService, PartyService, ProfileService } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
@@ -25,7 +25,7 @@ export const serviceBundle = createServiceBundle<ClientServices>({
   ProfileService: schema.getService('dxos.client.ProfileService'),
   PartyService: schema.getService('dxos.client.PartyService'),
   DataService: schema.getService('dxos.client.DataService'),
-  DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost'),
+  DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost')
 });
 
 export interface ClientServiceHost {
@@ -114,8 +114,8 @@ export class LocalClientServiceHost implements ClientServiceHost {
         }
       },
       DataService: undefined as any, // TODO: will probably be implemented internally in ECHO
-      DevtoolsHost: this._createDevtoolsService(),
-    }
+      DevtoolsHost: this._createDevtoolsService()
+    };
   }
 
   readonly services: ClientServices;

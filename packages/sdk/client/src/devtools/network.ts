@@ -4,8 +4,8 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/crypto';
-
 import { SignalApi } from '@dxos/network-manager';
+
 import { DevtoolsServiceDependencies } from '..';
 import { GetNetworkPeersRequest, GetNetworkPeersResponse, SubscribeToNetworkTopicsResponse, SubscribeToSignalStatusResponse, SubscribeToSignalTraceResponse, SubscribeToSwarmInfoResponse } from '../proto/gen/dxos/devtools';
 

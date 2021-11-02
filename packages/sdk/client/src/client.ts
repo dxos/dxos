@@ -297,13 +297,13 @@ export class Client {
   /**
    * Returns devtools context.
    * Used by the DXOS DevTool Extension.
-   * 
+   *
    * @deprecated Service host implements the devtools service itself. This is left for legacy devtools versions.
    */
   getDevtoolsContext (): DevtoolsHook {
     const devtoolsContext: DevtoolsHook = {
       client: this,
-      serviceHost: this._serviceHost,
+      serviceHost: this._serviceHost
     };
 
     return devtoolsContext;

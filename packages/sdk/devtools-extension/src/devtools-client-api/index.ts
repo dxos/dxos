@@ -4,9 +4,10 @@
 
 import Bridge from 'crx-bridge';
 
+import { DevtoolsHook } from '@dxos/client';
+
 import { createWindowPort } from '../utils';
 import { RpcClientAPI } from './client-api';
-import { DevtoolsHook } from '@dxos/client';
 
 Bridge.setNamespace('dxos.devtools');
 Bridge.allowWindowMessaging('dxos.devtools');

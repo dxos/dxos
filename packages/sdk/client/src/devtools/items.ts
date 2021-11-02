@@ -3,6 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
+
 import { DevtoolsHook, DevtoolsServiceDependencies } from '..';
 import { SubscribeToItemsResponse } from '../proto/gen/dxos/devtools';
 
