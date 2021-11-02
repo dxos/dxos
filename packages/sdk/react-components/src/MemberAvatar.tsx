@@ -1,6 +1,7 @@
 //
 // Copyright 2020 DXOS.org
 //
+
 import {
   Face as FaceIcon,
   Share as ShareIcon

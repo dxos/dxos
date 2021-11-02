@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { encodeInvitation, useClient, useParty, useSecretGenerator } from '@dxos/react-client';
-import { CopyText, Dialog, MemberList } from '@dxos/react-components';
+import { CopyText, CopyToClipboard, Dialog, MemberList, Passcode } from '@dxos/react-components';
 
 import { useMembers } from '../hooks';
 
@@ -85,7 +85,7 @@ export const PartySharingDialog = ({
         <Box>
           <Button onClick={handleCreateInvitation}>Create Invitation</Button>
         </Box>
-        <Table>
+        <Table size='small'>
           <TableBody>
             <TableRow>
               <TableCell>
@@ -93,7 +93,10 @@ export const PartySharingDialog = ({
                   <CopyText value={invitationCode} length={8} onCopyToClipboard={(value) => console.log(value)} />
                 )}
                 {pin && (
-                  <CopyText id='party-invitation-dialog-pin' value={pin} onCopyToClipboard={(value) => console.log(value)} />
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Passcode value={pin} size='small' />
+                    <CopyToClipboard text={pin} />
+                  </Box>
                 )}
               </TableCell>
             </TableRow>
