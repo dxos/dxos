@@ -43,7 +43,7 @@ export const createRpcClient = <S>(serviceDef: ServiceDescriptor<S>, options: Om
   return new ProtoRpcClient(client, peer);
 };
 
-export interface ProtoRpcServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
+export interface RpcServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
   service: ServiceDescriptor<S>,
   handlers: S,
 }
@@ -51,7 +51,7 @@ export interface ProtoRpcServerOptions<S> extends Omit<RpcPeerOptions, 'messageH
 /**
  * Create a type-safe RPC server.
  */
-export const createRpcServer = <S>({ service, handlers, ...rest }: ProtoRpcServerOptions<S>): RpcPeer => {
+export const createRpcServer = <S>({ service, handlers, ...rest }: RpcServerOptions<S>): RpcPeer => {
   const server = service.createServer(handlers);
 
   const peer = new RpcPeer({
@@ -92,7 +92,7 @@ export const createBundledRpcClient = <S>(descriptors: ServiceBundle<S>, options
   return new ProtoRpcClient(rpc, peer);
 };
 
-export interface ProtoRpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
+export interface RpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
   services: ServiceBundle<S>,
   handlers: S,
 }
@@ -100,7 +100,7 @@ export interface ProtoRpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'm
 /**
  * Create type-safe RPC server from a service bundle.
  */
-export const createBundledRpcServer = <S>({ services, handlers, ...rest }: ProtoRpcBundledServerOptions<S>): RpcPeer => {
+export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBundledServerOptions<S>): RpcPeer => {
   const rpc: Record<string, ServiceHandler<any>> = {};
   for (const serviceName of Object.keys(services) as (keyof S)[]) {
     rpc[serviceName as any] = services[serviceName].createServer(handlers[serviceName] as any);
