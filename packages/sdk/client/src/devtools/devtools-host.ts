@@ -8,7 +8,6 @@ import { DevtoolsServiceDependencies } from '..';
 import { DevtoolsHost, Event as ClientAPIEvent } from '../proto/gen/dxos/devtools';
 import { getConfig } from './config';
 import { enableDebugLogging, disableDebugLogging } from './debug-logging';
-import { DevtoolsHook } from './devtools-context';
 import { DevtoolsHostEvents } from './devtools-host-events';
 import { subscribeToItems } from './items';
 import { getKeyringKeys } from './keys';

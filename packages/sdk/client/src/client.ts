@@ -9,13 +9,12 @@ import { Config, defs } from '@dxos/config';
 import { Invitation, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
-import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 
-import { DevtoolsHook } from './devtools/devtools-context';
+import { DevtoolsHook } from './devtools';
 import { ClientServiceHost, LocalClientServiceHost } from './service-host';
 
 export const defaultConfig: defs.Config = {};

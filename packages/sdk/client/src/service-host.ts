@@ -7,7 +7,7 @@ import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 import { createServiceBundle } from '@dxos/rpc';
 
-import { DevtoolsHook, DevtoolsServiceDependencies } from '.';
+import { DevtoolsServiceDependencies } from '.';
 import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
 import { schema } from './proto/gen';
 import { DataService, PartyService, ProfileService } from './proto/gen/dxos/client';
