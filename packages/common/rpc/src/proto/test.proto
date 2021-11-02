@@ -7,6 +7,7 @@ syntax = "proto3";
 package dxos.rpc.test;
 
 service TestService {
+  // TODO(dmaretskyi): Rename to "Test".
   rpc TestCall (TestRpcRequest) returns (TestRpcResponse);
 }
 
