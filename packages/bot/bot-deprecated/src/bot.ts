@@ -23,7 +23,7 @@ import {
   createEvent,
   Message,
   InvitationMessage
-} from '@dxos/protocol-plugin-bot';
+} from '../../protocol-plugin-bot-deprecated/src';
 
 const CONNECT_TIMEOUT = 30000;
 const HEARTBEAT_INTERVAL = 180 * 1000;

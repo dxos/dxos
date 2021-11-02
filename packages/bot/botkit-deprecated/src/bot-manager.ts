@@ -24,7 +24,7 @@ import {
   createSignResponse,
   createBotCommand,
   SpawnOptions
-} from '@dxos/protocol-plugin-bot';
+} from '@dxos/protocol-plugin-bot-deprecated';
 import { CID, createApiPromise, DXN, IRegistryClient, RegistryClient } from '@dxos/registry-client';
 
 import { BOT_CONFIG_FILENAME } from './config';

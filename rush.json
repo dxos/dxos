@@ -730,32 +730,32 @@
     //
 
     {
-      "packageName": "@dxos/bot",
-      "projectFolder": "packages/bot/bot",
+      "packageName": "@dxos/bot-deprecated",
+      "projectFolder": "packages/bot/bot-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/botkit",
-      "projectFolder": "packages/bot/botkit",
+      "packageName": "@dxos/botkit-deprecated",
+      "projectFolder": "packages/bot/botkit-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/botkit-client",
-      "projectFolder": "packages/bot/botkit-client",
+      "packageName": "@dxos/botkit-client-deprecated",
+      "projectFolder": "packages/bot/botkit-client-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/protocol-plugin-bot",
-      "projectFolder": "packages/bot/protocol-plugin-bot",
+      "packageName": "@dxos/protocol-plugin-bot-deprecated",
+      "projectFolder": "packages/bot/protocol-plugin-bot-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
-      "packageName": "@dxos/test-bot",
-      "projectFolder": "packages/bot/test-bot",
+      "packageName": "@dxos/test-bot-deprecated",
+      "projectFolder": "packages/bot/test-bot-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },

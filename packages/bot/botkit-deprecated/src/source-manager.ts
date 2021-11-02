@@ -8,7 +8,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import url from 'url';
 
-import { SpawnOptions } from '@dxos/protocol-plugin-bot';
+import { SpawnOptions } from '@dxos/protocol-plugin-bot-deprecated';
 
 import { log } from './log';
 

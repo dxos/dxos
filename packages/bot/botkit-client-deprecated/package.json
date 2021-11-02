@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/botkit-client",
+  "name": "@dxos/botkit-client-deprecated",
   "version": "2.16.7",
   "description": "Botkit client",
   "keywords": [],
@@ -17,7 +17,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/protocol-plugin-bot": "workspace:*",
+    "@dxos/protocol-plugin-bot-deprecated": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.1.1",
     "hypercore-crypto": "^2.3.0"

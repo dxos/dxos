@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/bot",
+  "name": "@dxos/bot-deprecated",
   "version": "2.16.7",
   "description": "Botkit",
   "license": "AGPL-3.0",
@@ -19,7 +19,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/protocol-plugin-bot": "workspace:*",
+    "@dxos/protocol-plugin-bot-deprecated": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "debug": "^4.1.1",

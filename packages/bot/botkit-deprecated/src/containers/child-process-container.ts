@@ -8,7 +8,7 @@ import kill from 'tree-kill';
 
 import { Event } from '@dxos/async';
 import { keyToString } from '@dxos/crypto';
-import { SpawnOptions as BotSpawnOptions } from '@dxos/protocol-plugin-bot';
+import { SpawnOptions as BotSpawnOptions } from '@dxos/protocol-plugin-bot-deprecated';
 
 import { BotId, BotInfo } from '../bot-manager';
 import { log, logBot } from '../log';

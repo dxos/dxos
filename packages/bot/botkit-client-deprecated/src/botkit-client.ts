@@ -22,9 +22,9 @@ import {
   createBotCommand,
   SpawnOptions,
   BotCommandResponse
-} from '@dxos/protocol-plugin-bot';
+} from '../../protocol-plugin-bot-deprecated/src';
 
-const { log } = logs('dxos:botkit-client');
+const { log } = logs('dxos:botkit-client-deprecated');
 
 const CONNECT_TIMEOUT = 30000;
 const WAIT_FOR_CONNECT_TIMEOUT = 10000;

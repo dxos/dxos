@@ -8,7 +8,7 @@ import { it as test } from 'mocha';
 import { Config } from '@dxos/config';
 import { createId, PublicKey } from '@dxos/crypto';
 import { NetworkManager, StarTopology, transportProtocolProvider } from '@dxos/network-manager';
-import { BotPlugin } from '@dxos/protocol-plugin-bot';
+import { BotPlugin } from '../../protocol-plugin-bot-deprecated/src';
 
 import { Bot } from './bot';
 

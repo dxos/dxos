@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/botkit",
+  "name": "@dxos/botkit-deprecated",
   "version": "2.16.7",
   "description": "Botkit",
   "keywords": [],
@@ -28,7 +28,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@dxos/protocol-plugin-bot": "workspace:*",
+    "@dxos/protocol-plugin-bot-deprecated": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@types/chance": "^1.1.0",
     "@types/debug": "^4.1.1",

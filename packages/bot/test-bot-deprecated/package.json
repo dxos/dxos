@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/test-bot",
+  "name": "@dxos/test-bot-deprecated",
   "version": "2.16.7",
   "description": "Test bot",
   "license": "AGPL-3.0",
@@ -13,7 +13,7 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "@dxos/bot": "workspace:*"
+    "@dxos/bot-deprecated": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*"

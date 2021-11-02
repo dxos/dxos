@@ -4,7 +4,7 @@
 
 import path from 'path';
 
-import { SpawnOptions } from '@dxos/protocol-plugin-bot';
+import { SpawnOptions } from '@dxos/protocol-plugin-bot-deprecated';
 
 import { LOCAL_BOT_MAIN_FILE } from '../source-manager';
 import { CommandInfo, ChildProcessContainer } from './child-process-container';

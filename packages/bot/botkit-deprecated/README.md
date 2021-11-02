@@ -1,9 +1,9 @@
-# @dxos/botkit
+# @dxos/botkit-deprecated
 
 ## Install
 
 ```
-$ npm install @dxos/botkit
+$ npm install @dxos/botkit-deprecated
 ```
 
 ## Concepts
@@ -18,7 +18,7 @@ $ npm install @dxos/botkit
 ## Usage
 
 ```javascript
-import { Bot, getConfig } from '@dxos/botkit';
+import { Bot, getConfig } from '@dxos/botkit-deprecated';
 
 new Bot(null, getConfig()).start();
 ```

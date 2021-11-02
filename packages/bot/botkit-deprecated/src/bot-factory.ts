@@ -28,7 +28,7 @@ import {
   Message,
   Invite,
   SpawnOptions
-} from '@dxos/protocol-plugin-bot';
+} from '@dxos/protocol-plugin-bot-deprecated';
 
 import { BotManager } from './bot-manager';
 import { BotContainer, LocalDevBotContainer } from './containers';

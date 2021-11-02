@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { buildBot, publishBot } from '@dxos/botkit';
+import { buildBot, publishBot } from '@dxos/botkit-deprecated';
 
 const log = debug('dxos:testing:distributor');
 
