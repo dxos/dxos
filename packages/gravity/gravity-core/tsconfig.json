@@ -21,13 +21,13 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../bot/bot"
+      "path": "../../bot/bot-deprecated"
     },
     {
-      "path": "../../bot/botkit"
+      "path": "../../bot/botkit-deprecated"
     },
     {
-      "path": "../../bot/botkit-client"
+      "path": "../../bot/botkit-client-deprecated"
     },
     {
       "path": "../../sdk/client"
@@ -48,7 +48,7 @@
       "path": "../../echo/messenger-model"
     },
     {
-      "path": "../../bot/protocol-plugin-bot"
+      "path": "../../bot/protocol-plugin-bot-deprecated"
     },
     {
       "path": "../../common/random-access-multi-storage"

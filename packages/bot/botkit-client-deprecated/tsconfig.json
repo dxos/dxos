@@ -27,7 +27,7 @@
       "path": "../../mesh/network-manager"
     },
     {
-      "path": "../protocol-plugin-bot"
+      "path": "../protocol-plugin-bot-deprecated"
     }
   ]
 }
