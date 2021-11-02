@@ -13,6 +13,7 @@ import { Config } from '@dxos/config';
 import { randomBytes, keyToBuffer, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { StarTopology, transportProtocolProvider } from '@dxos/network-manager';
+
 import {
   COMMAND_BOT_INVITE,
   BOT_COMMAND,
