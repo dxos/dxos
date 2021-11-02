@@ -59,7 +59,7 @@ export const RedeemDialog = ({ open, code = '', onClose, pinless = false }: Rede
   };
 
   const [redeemCode, setPin] = useInvitationRedeemer({
-    onDone: () => handleDone,
+    onDone: () => handleDone(),
     onError: (error?: string) => handleInvitationError(String(error)),
     isOffline
   });
