@@ -13,7 +13,6 @@ import { Config } from '@dxos/config';
 import { randomBytes, keyToBuffer, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { StarTopology, transportProtocolProvider } from '@dxos/network-manager';
-
 import {
   COMMAND_BOT_INVITE,
   BOT_COMMAND,
@@ -24,7 +23,7 @@ import {
   createEvent,
   Message,
   InvitationMessage
-} from '../../protocol-plugin-bot-deprecated/src';
+} from '@dxos/protocol-plugin-bot-deprecated';
 
 const CONNECT_TIMEOUT = 30000;
 const HEARTBEAT_INTERVAL = 180 * 1000;

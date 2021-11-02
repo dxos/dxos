@@ -22,7 +22,7 @@ import {
   createBotCommand,
   SpawnOptions,
   BotCommandResponse
-} from '../../protocol-plugin-bot-deprecated/src';
+} from '@dxos/protocol-plugin-bot-deprecated';
 
 const { log } = logs('dxos:botkit-client-deprecated');
 
