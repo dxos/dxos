@@ -71,6 +71,12 @@ export class LocalClientServiceHost implements ClientServiceHost {
 
     this.services = {
       ProfileService: {
+        GetConfig: () => {
+          throw new Error('Not implemented');
+        },
+        Reset: () => {
+          throw new Error('Not implemented');
+        },
         SubscribeProfile: () => {
           throw new Error('Not implemented');
         },
@@ -80,21 +86,18 @@ export class LocalClientServiceHost implements ClientServiceHost {
         RecoverProfile: () => {
           throw new Error('Not implemented');
         },
-        CreateHALOInvitation: () => {
+        CreateInvitation: () => {
           throw new Error('Not implemented');
         },
-        JoinHALO: () => {
+        AcceptInvitation: () => {
           throw new Error('Not implemented');
         },
-        SubmitInvitationSecret: () => {
+        AuthenticateInvitation: () => {
           throw new Error('Not implemented');
         },
         SubscribeContacts: () => {
           throw new Error('Not implemented');
         },
-        Reset: () => {
-          throw new Error('Not implemented');
-        }
       },
       PartyService: {
         SubscribeParties: () => {
@@ -106,10 +109,10 @@ export class LocalClientServiceHost implements ClientServiceHost {
         CreateInvitation: () => {
           throw new Error('Not implemented');
         },
-        JoinParty: () => {
+        AcceptInvitation: () => {
           throw new Error('Not implemented');
         },
-        SubmitInvitationSecret: () => {
+        AuthenticateInvitation: () => {
           throw new Error('Not implemented');
         }
       },
