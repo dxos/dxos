@@ -1,6 +1,6 @@
 {
   "name": "@dxos/random-access-multi-storage",
-  "version": "2.16.7",
+  "version": "2.16.8",
   "description": "Multiple random storage types.",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
