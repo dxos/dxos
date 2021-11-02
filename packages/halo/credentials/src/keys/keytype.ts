@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { KeyType } from '../proto/gen/dxos/credentials/keys';
+import { KeyType } from '../proto/gen/dxos/halo/keys';
 
 export type SecretKey = Buffer;
 export type DiscoveryKey = Buffer;

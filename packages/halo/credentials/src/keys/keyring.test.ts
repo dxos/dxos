@@ -327,7 +327,7 @@ it('To/from Protobuf', async () => {
   }
 
   const copy = new Keyring();
-  const codec = schema.getCodecForType('dxos.credentials.keys.KeyRecordList');
+  const codec = schema.getCodecForType('dxos.halo.keys.KeyRecordList');
   const bytes = codec.encode(original.export());
   const decoded = codec.decode(bytes);
   await copy.import(decoded);

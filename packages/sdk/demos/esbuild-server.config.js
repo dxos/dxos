@@ -8,10 +8,14 @@ const {
   NodeModulesPlugin
 } = require('@dxos/esbuild-plugins');
 
+/** @type {import('@dxos/esbuild-server').Config} */
 module.exports = {
   plugins: [
     NodeGlobalsPolyfillPlugin(),
     FixMemdownPlugin(),
     NodeModulesPlugin()
-  ]
+  ],
+  overrides: {
+    sourcemap: 'inline',
+  }
 }

@@ -27,11 +27,11 @@ export default {
       };
     }
   },
-  'dxos.credentials.keys.PubKey': {
+  'dxos.halo.keys.PubKey': {
     encode: (value: PublicKey) => ({ data: value.asUint8Array() }),
     decode: (value: any) => PublicKey.from(value.data)
   },
-  'dxos.credentials.keys.PrivKey': {
+  'dxos.halo.keys.PrivKey': {
     encode: (value: SecretKey) => ({ data: value }),
     decode: (value: any) => Buffer.from(value.data)
   }

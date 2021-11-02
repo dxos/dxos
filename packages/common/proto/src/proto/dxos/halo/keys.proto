@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-package dxos.credentials.keys;
+package dxos.halo.keys;
 
 import "signed.proto";
 import "google/protobuf/any.proto";
