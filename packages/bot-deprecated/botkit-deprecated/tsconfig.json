@@ -1,0 +1,40 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": [
+      "DOM"
+    ]
+  },
+  "types": [
+    "jest",
+    "node"
+  ],
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../protocol-plugin-bot-deprecated"
+    },
+    {
+      "path": "../../sdk/registry-client"
+    }
+  ]
+}

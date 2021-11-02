@@ -9,12 +9,12 @@ import path from 'path';
 import kill from 'tree-kill';
 
 import { promiseTimeout } from '@dxos/async';
-import { BotFactoryClient } from '@dxos/botkit-client';
+import { BotFactoryClient } from '@dxos/botkit-client-deprecated';
 import { Client } from '@dxos/client';
 import { Invitation } from '@dxos/credentials';
 import { SIGNATURE_LENGTH, keyToBuffer, createKeyPair, keyToString, verify, sha256 } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
-import { SpawnOptions } from '@dxos/protocol-plugin-bot';
+import { SpawnOptions } from '@dxos/protocol-plugin-bot-deprecated';
 
 import { Agent } from './agent';
 import { FACTORY_OUT_DIR, getTestConfig, mapConfigToEnv } from './config';
