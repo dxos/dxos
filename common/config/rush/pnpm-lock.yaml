@@ -1,7 +1,7 @@
 importers:
   .:
     specifiers: {}
-  ../../packages/bot/bot-deprecated:
+  ../../packages/bot-deprecated/bot-deprecated:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -33,7 +33,7 @@ importers:
       debug: ^4.1.1
       expect: ~27.0.2
       lodash.defaultsdeep: ^4.6.1
-  ../../packages/bot/botkit-client-deprecated:
+  ../../packages/bot-deprecated/botkit-client-deprecated:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/crypto': link:../../common/crypto
@@ -55,7 +55,7 @@ importers:
       assert: ^2.0.0
       debug: ^4.1.1
       hypercore-crypto: ^2.3.0
-  ../../packages/bot/botkit-deprecated:
+  ../../packages/bot-deprecated/botkit-deprecated:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -139,7 +139,7 @@ importers:
       sodium-universal: ~3.0.4
       tar: ^6.0.5
       tree-kill: ^1.2.2
-  ../../packages/bot/protocol-plugin-bot-deprecated:
+  ../../packages/bot-deprecated/protocol-plugin-bot-deprecated:
     dependencies:
       '@dxos/broadcast': link:../../mesh/broadcast
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -165,7 +165,7 @@ importers:
       ngraph.generators: ^18.0.1
       pump: ^3.0.0
       wait-for-expect: ^3.0.2
-  ../../packages/bot/test-bot-deprecated:
+  ../../packages/bot-deprecated/test-bot-deprecated:
     dependencies:
       '@dxos/bot-deprecated': link:../bot-deprecated
     devDependencies:
@@ -730,9 +730,9 @@ importers:
   ../../packages/gravity/gravity-core:
     dependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/bot-deprecated': link:../../bot/bot-deprecated
-      '@dxos/botkit-client-deprecated': link:../../bot/botkit-client-deprecated
-      '@dxos/botkit-deprecated': link:../../bot/botkit-deprecated
+      '@dxos/bot-deprecated': link:../../bot-deprecated/bot-deprecated
+      '@dxos/botkit-client-deprecated': link:../../bot-deprecated/botkit-client-deprecated
+      '@dxos/botkit-deprecated': link:../../bot-deprecated/botkit-deprecated
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../halo/credentials
@@ -740,7 +740,7 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/messenger-model': link:../../echo/messenger-model
-      '@dxos/protocol-plugin-bot-deprecated': link:../../bot/protocol-plugin-bot-deprecated
+      '@dxos/protocol-plugin-bot-deprecated': link:../../bot-deprecated/protocol-plugin-bot-deprecated
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/signal': link:../../mesh/signal
       '@types/debug': 4.1.5
@@ -25995,7 +25995,7 @@ packages:
       micromatch: 4.0.4
       semver: 7.3.5
       typescript: 4.3.5
-      webpack: 4.44.2_webpack-cli@4.7.2
+      webpack: 4.44.2
     dev: true
     engines:
       node: '>=10.0.0'
