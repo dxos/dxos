@@ -16,8 +16,10 @@ describe('In-Memory', () => {
     const [agentPort, botControllerPort] = createLinkedPorts();
     const agent = new BotFactoryAgent(agentPort);
     const botController = new BotController(new InMemoryBotFactory(), botControllerPort);
-    await botController.start();
-    await agent.start();
+    await Promise.all([
+      botController.start(),
+      agent.start()
+    ]);
     await agent.botFactory.SpawnBot({});
     const { bots } = await agent.botFactory.GetBots({});
     expect(bots).toBeDefined();

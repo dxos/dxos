@@ -19,11 +19,11 @@ export class BotFactoryAgent {
     );
   }
 
-  async start () {
+  async start (): Promise<void> {
     await this._rpc.open();
   }
 
-  get botFactory () {
+  get botFactory (): BotFactoryService{
     return this._rpc.rpc;
   }
 }
