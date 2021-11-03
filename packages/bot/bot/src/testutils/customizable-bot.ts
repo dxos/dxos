@@ -7,7 +7,7 @@ import { RpcPort, RpcPeer, createRpcServer } from '@dxos/rpc';
 import { schema } from '../proto/gen';
 import { BotService } from '../proto/gen/dxos/bot';
 
-export class InMemoryBot {
+export class InMemoryCustomizableBot {
   private readonly _rpc: RpcPeer;
 
   constructor (port: RpcPort, handlers: BotService) {
@@ -18,7 +18,7 @@ export class InMemoryBot {
     });
   }
 
-  async start (): Promise<void> {
+  async open (): Promise<void> {
     await this._rpc.open();
   }
 }

@@ -10,7 +10,7 @@ import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
 import { BotHandle } from './bot-handle';
 import { Bot } from './proto/gen/dxos/bot';
-import { BotFactoryAgent, InMemoryBot } from './testutils';
+import { BotFactoryAgent, InMemoryCustomizableBot } from './testutils';
 
 describe('In-Memory', () => {
   it('Spawns a bot', async () => {
@@ -27,7 +27,7 @@ describe('In-Memory', () => {
     ]);
 
     let botInitialized = false;
-    const bot = new InMemoryBot(botPort, {
+    const bot = new InMemoryCustomizableBot(botPort, {
       Initialize: async () => {
         botInitialized = true;
         return {};
@@ -36,7 +36,7 @@ describe('In-Memory', () => {
         return {};
       }
     });
-    void bot.start();
+    void bot.open();
 
     await agent.botFactory.SpawnBot({});
 
