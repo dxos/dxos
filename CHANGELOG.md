@@ -56,7 +56,7 @@
   - [ ] Move low-level components: Fullscreen, JSON, Editable, etc.
 
 - [ ] react-framework dialogs
-  - [ ] RedeemDialog
+  - [x] RedeemDialog
   - [ ] ProfileDialog
   - [ ] wallet components/containers
 
