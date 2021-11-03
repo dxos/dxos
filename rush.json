@@ -725,13 +725,13 @@
     },
 
     //
-    // bot-deprecate
+    // bot
     //
 
     {
       "packageName": "@dxos/bot",
       "projectFolder": "packages/bot/bot",
-      "shouldPublish": true,
+      "shouldPublish": false,
       "versionPolicyName": "lockStepPolicy"
     },
 
