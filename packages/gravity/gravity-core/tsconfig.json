@@ -24,10 +24,10 @@
       "path": "../../bot-deprecated/bot-deprecated"
     },
     {
-      "path": "../../bot-deprecated/botkit-deprecated"
+      "path": "../../bot-deprecated/botkit-client-deprecated"
     },
     {
-      "path": "../../bot-deprecated/botkit-client-deprecated"
+      "path": "../../bot-deprecated/botkit-deprecated"
     },
     {
       "path": "../../sdk/client"

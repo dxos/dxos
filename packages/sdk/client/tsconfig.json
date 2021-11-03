@@ -17,6 +17,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/codec-protobuf"
+    },
+    {
       "path": "../config"
     },
     {
@@ -45,6 +48,12 @@
     },
     {
       "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../common/proto"
+    },
+    {
+      "path": "../../common/rpc"
     },
     {
       "path": "../../common/random-access-multi-storage"
