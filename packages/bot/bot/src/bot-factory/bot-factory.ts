@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { InMemoryBot } from '../bot-handle';
 import { Bot, BotFactoryService, BotService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import type { Empty } from '../proto/gen/google/protobuf';
 
@@ -11,8 +10,10 @@ export interface BotInstance {
   handle: BotService
 }
 
-export class InMemoryBotFactory implements BotFactoryService {
+export class BotFactory implements BotFactoryService {
   private readonly _bots: BotInstance[] = [];
+
+  constructor (private readonly _botHandleFactory: () => BotService) {}
 
   async GetBots (request: Empty) {
     return {
@@ -21,7 +22,7 @@ export class InMemoryBotFactory implements BotFactoryService {
   }
 
   async SpawnBot (request: SpawnBotRequest) {
-    const handle = new InMemoryBot();
+    const handle = this._botHandleFactory();
     await handle.Initialize({});
     this._bots.push({
       bot: {

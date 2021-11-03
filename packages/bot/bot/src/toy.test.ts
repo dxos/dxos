@@ -7,7 +7,8 @@ import expect from 'expect';
 import { createLinkedPorts } from '@dxos/rpc';
 
 import { BotController } from './bot-controller';
-import { InMemoryBotFactory } from './bot-factory';
+import { BotFactory } from './bot-factory';
+import { InMemoryBot } from './bot-handle';
 import { Bot } from './proto/gen/dxos/bot';
 import { BotFactoryAgent } from './testutils';
 
@@ -15,7 +16,7 @@ describe('In-Memory', () => {
   it('Spawns a bot', async () => {
     const [agentPort, botControllerPort] = createLinkedPorts();
     const agent = new BotFactoryAgent(agentPort);
-    const botController = new BotController(new InMemoryBotFactory(), botControllerPort);
+    const botController = new BotController(new BotFactory(() => new InMemoryBot()), botControllerPort);
     await Promise.all([
       botController.start(),
       agent.start()
