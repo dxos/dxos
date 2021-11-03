@@ -15,7 +15,7 @@ export class BotController {
       service: schema.getService('dxos.bot.BotFactoryService'),
       handlers: botFactory,
       port
-    })
+    });
   }
 
   async start (): Promise<void> {

@@ -23,7 +23,7 @@ export class BotFactoryAgent {
     await this._rpc.open();
   }
 
-  get botFactory (): BotFactoryService{
+  get botFactory (): BotFactoryService {
     return this._rpc.rpc;
   }
 }
