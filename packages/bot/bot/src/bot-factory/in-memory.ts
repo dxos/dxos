@@ -11,25 +11,8 @@ export interface BotInstance {
   handle: BotService
 }
 
-// const factory = () => {
-//   const bots: any[] = [];
-//   return {
-//     GetBots: async (request: Empty) => {
-//       return {
-//         bots: bots.map(bot => bot.bot)
-//       };
-//     }
-//   }
-// }
-
 export class InMemoryBotFactory implements BotFactoryService {
   private readonly _bots: BotInstance[] = [];
-
-  // Caveman mode
-  // constructor () {
-  //   this.GetBots = this.GetBots.bind(this);
-  //   this.SpawnBot = this.SpawnBot.bind(this);
-  // }
 
   async GetBots (request: Empty) {
     return {
