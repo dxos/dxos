@@ -16,8 +16,8 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/bot-deprecated": "workspace:*",
-    "@dxos/botkit-deprecated": "workspace:*",
     "@dxos/botkit-client-deprecated": "workspace:*",
+    "@dxos/botkit-deprecated": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
