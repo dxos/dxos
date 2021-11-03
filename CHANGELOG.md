@@ -24,9 +24,9 @@
 
 - [ ] Hooks
   - [ ] Normalize THREE client invitation methods (party, offline party, halo)
-  - [ ] useInvitation
-  - [ ] useOfflineInvitation (merge with useInvitation)
-  - [ ] useInvitationRedeemer
+  - [x] useInvitation
+  - [x] useOfflineInvitation (merge with useInvitation)
+  - [x] useInvitationRedeemer
   - [ ] useAuthenticator (merge with useInvitationRedeemer)
 
 - [ ] Initializers
