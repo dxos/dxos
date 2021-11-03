@@ -2,14 +2,28 @@
 // Copyright 2021 DXOS.org
 //
 
-import { BotService, InitializeRequest, SendCommandRequest } from '../proto/gen/dxos/bot';
+import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
-export class InMemoryBot implements BotService {
-  async Initialize (request: InitializeRequest) {
-    return {};
+import { schema } from '../proto/gen';
+import { BotService } from '../proto/gen/dxos/bot';
+
+export class BotHandle {
+  private readonly _rpc: ProtoRpcClient<BotService>;
+
+  constructor (port: RpcPort) {
+    this._rpc = createRpcClient(
+      schema.getService('dxos.bot.BotService'),
+      {
+        port: port
+      }
+    );
   }
 
-  async Command (request: SendCommandRequest) {
-    return {};
+  get rpc () {
+    return this._rpc.rpc;
+  }
+
+  async open (): Promise<void> {
+    await this._rpc.open();
   }
 }

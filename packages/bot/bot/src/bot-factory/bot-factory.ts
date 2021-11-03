@@ -2,18 +2,19 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Bot, BotFactoryService, BotService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
+import { BotHandle } from '../bot-handle';
+import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import type { Empty } from '../proto/gen/google/protobuf';
 
 export interface BotInstance {
   bot: Bot,
-  handle: BotService
+  handle: BotHandle
 }
 
 export class BotFactory implements BotFactoryService {
   private readonly _bots: BotInstance[] = [];
 
-  constructor (private readonly _botHandleFactory: () => BotService) {}
+  constructor (private readonly _botHandleFactory: () => BotHandle) {}
 
   async GetBots (request: Empty) {
     return {
@@ -23,7 +24,8 @@ export class BotFactory implements BotFactoryService {
 
   async SpawnBot (request: SpawnBotRequest) {
     const handle = this._botHandleFactory();
-    await handle.Initialize({});
+    await handle.open();
+    await handle.rpc.Initialize({});
     this._bots.push({
       bot: {
         status: Bot.Status.RUNNING

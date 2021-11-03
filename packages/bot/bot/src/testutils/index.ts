@@ -3,3 +3,4 @@
 //
 
 export * from './agent';
+export * from './bot';
