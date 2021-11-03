@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { sleep } from '@dxos/async';
 import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-framework';
+import { FullScreen } from '@dxos/react-components';
 
 import DialogHeading from '../components/DialogHeading';
 import RegistrationDialog from '../components/RegistrationDialog';
