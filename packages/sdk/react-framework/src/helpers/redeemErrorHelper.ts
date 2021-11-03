@@ -3,10 +3,10 @@
 //
 
 export enum RedeemErrorType {
+  ALREADY_CONNECTED = 'Already connected.',
   INVALID_CODE = 'Invalid invitation code.',
   NOT_AUTHORIZED = 'Invitation not authorized.',
-  TIMEOUT = 'Timed out.',
-  ALREADY_CONNECTED = 'Already connected.'
+  TIMEOUT = 'Timed out.'
 }
 
 /**

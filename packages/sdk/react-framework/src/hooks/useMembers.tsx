@@ -6,6 +6,10 @@ import { useEffect, useState } from 'react';
 
 import { Party, PartyMember } from '@dxos/echo-db';
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Move to react-client.
 export const useMembers = (party: Party) => {
   const [members, setMembers] = useState<PartyMember[]>([]);
 
@@ -13,6 +17,7 @@ export const useMembers = (party: Party) => {
     if (!party) {
       return;
     }
+
     const result = party.queryMembers();
     setMembers(result.value);
 

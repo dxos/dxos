@@ -247,6 +247,14 @@ importers:
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
       debug: ^4.1.1
+  ../../packages/common/proto:
+    dependencies:
+      '@dxos/codec-protobuf': link:../codec-protobuf
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
   ../../packages/common/protobuf-compiler:
     dependencies:
       argparse: 2.0.1
@@ -1907,6 +1915,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       lodash.defaultsdeep: 4.6.1
       lodash.isplainobject: 4.0.6
+      mobile-detect: 1.4.5
       react-copy-to-clipboard: 5.0.3_react@17.0.2
       url-join: 4.0.1
     devDependencies:
@@ -1956,6 +1965,7 @@ importers:
       babel-plugin-add-module-exports: ^1.0.4
       lodash.defaultsdeep: ^4.6.1
       lodash.isplainobject: ^4.0.6
+      mobile-detect: ~1.4.5
       react: ^17.0.2
       react-copy-to-clipboard: ~5.0.3
       react-dom: ^17.0.2
