@@ -17,7 +17,7 @@ import {
 } from '../src';
 
 export default {
-  title: 'react-framework/PartyInvitation'
+  title: 'react-framework/HaloInvitations'
 };
 
 const Parties = () => {
@@ -47,10 +47,6 @@ const Sender = () => {
   useEffect(() => {
     void handleCreateParty();
   }, []);
-
-  if (!partyKey) {
-    return null;
-  }
 
   return (
     <Box>
