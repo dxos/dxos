@@ -58,7 +58,7 @@ export class BotFactory implements BotFactoryService {
       if (!bot) {
         throw new Error('Bot not found');
       }
-      await bot.handle.rpc.Command({ botId: bot.bot.id });
+      await bot.handle.rpc.Command(request);
     }
     return {};
   }
