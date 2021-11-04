@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "2.16.7",
+  "version": "2.16.9",
   "description": "Config utilities",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -9,7 +9,8 @@
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
-    "ConfigPlugin.js"
+    "ConfigPlugin.js",
+    "esbuild-plugin.js"
   ],
   "scripts": {
     "build": "toolchain build",

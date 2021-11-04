@@ -24,13 +24,13 @@ describe('SignalApi', () => {
   const signalApiPort = randomInt(10000, 50000);
   const signalApiUrl = 'http://0.0.0.0:' + signalApiPort;
 
-  // let broker2: ReturnType<typeof createBroker>;
+  // code let broker2: ReturnType<typeof createBroker>;
   const signalApiPort2 = randomInt(10000, 50000);
   const signalApiUrl2 = 'http://0.0.0.0:' + signalApiPort2;
 
   before(async function () {
     broker = await createTestBroker(signalApiPort);
-    // broker2 = await createTestBroker(signalApiPort2);
+    // code broker2 = await createTestBroker(signalApiPort2);
   });
 
   beforeEach(() => {
@@ -43,7 +43,7 @@ describe('SignalApi', () => {
     this.timeout(0);
     await api.close();
     await broker.stop();
-    // await broker2.stop();
+    // code await broker2.stop();
   });
 
   test('join', async () => {
@@ -115,7 +115,7 @@ describe('SignalApi', () => {
     }, 4_000);
   }).timeout(5_000);
 
-  // skip because communication between signal servers is not yet implemented
+  // Skip because communication between signal servers is not yet implemented.
   test.skip('newly joined peer can receive signals from other signal servers', async () => {
     const offerMock = mockFn<(msg: SignalApi.SignalMessage) => Promise<SignalApi.Answer>>()
       .resolvesTo({ accept: true });

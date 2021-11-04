@@ -36,7 +36,7 @@ export class IDbStorage extends AbstractStorage {
   }
 
   protected override _create (filename: string) {
-    // Looking up the file in the regirty
+    // Looking up the file in the registry.
     if (this._fileRegistry.has(filename)) {
       const record = this._fileRegistry.get(filename);
       assert(record, 'File registry is corrupt');
@@ -63,10 +63,10 @@ export class IDbStorage extends AbstractStorage {
     return new Promise<void>((resolve, reject) => {
       const request = indexedDB.deleteDatabase(this._root);
       request.onupgradeneeded = () => {
-        resolve(); // TODO: or reject?
+        resolve(); // TODO(unknown): Or reject?
       };
       request.onblocked = () => {
-        resolve(); // TODO: or reject?
+        resolve(); // TODO(unknown): Or reject?
       };
       request.onsuccess = () => {
         resolve();

@@ -47,7 +47,7 @@ describe('PartyCore', () => {
     await party.open();
     afterTest(async () => party.close());
 
-    // PartyGenesis (self-signed by Party)
+    // PartyGenesis (self-signed by Party).
     await party.processor.writeHaloMessage(createPartyGenesisMessage(
       keyring,
       partyKey,

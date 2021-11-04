@@ -29,14 +29,22 @@ declare module 'hypercore-protocol' {
 
   export interface ProtocolStreamCtorOpts {
     live?: boolean;
-    encrypted?: true, // set to false to disable encryption if you are already piping through a encrypted stream
-    noise?: true, // set to false to disable the NOISE handshake completely. Requires encrypted = false, and also disables the capability verification
-    timeout?: 20000, // stream timeout. set to 0 or false to disable.
-    keyPair?: { publicKey: any, secretKey: any }, // use this keypair for the stream authentication
-    onauthenticate?: (remotePublicKey: any, done: any) => any, // hook to verify the remotes public key
-    onhandshake?: (protocol: Protocol) => any, // function called when the stream handshake has finished
-    ondiscoverykey?: (discoveryKey: any) => any, // function called when the remote stream opens a channel you have not
-    onchannelclose?: (discoveryKey: any, publicKey: any) => any // function called when a feed-channel closes
+    // Set to false to disable encryption if you are already piping through a encrypted stream.
+    encrypted?: true,
+    // Set to false to disable the NOISE handshake completely. Requires encrypted = false, and also disables the capability verification.
+    noise?: true,
+    // Stream timeout. Set to 0 or false to disable.
+    timeout?: 20000,
+    // Use this keypair for the stream authentication.
+    keyPair?: { publicKey: any, secretKey: any },
+    // Hook to verify the remotes public key.
+    onauthenticate?: (remotePublicKey: any, done: any) => any,
+    // Function called when the stream handshake has finished.
+    onhandshake?: (protocol: Protocol) => any,
+    // Function called when the remote stream opens a channel you have not.
+    ondiscoverykey?: (discoveryKey: any) => any,
+    // Function called when a feed-channel closes.
+    onchannelclose?: (discoveryKey: any, publicKey: any) => any
   }
 
   interface ChannelHandlers {

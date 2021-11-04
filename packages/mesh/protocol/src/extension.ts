@@ -286,7 +286,7 @@ export class Extension extends Nanomessage {
     }
   }
 
-  // Nanomesssage interface
+  // Nanomesssage interface.
   private async _open () {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
@@ -298,7 +298,7 @@ export class Extension extends Nanomessage {
     await super._open();
   }
 
-  // @override
+  // code @override
   private async _close () {
     try {
       await super._close();

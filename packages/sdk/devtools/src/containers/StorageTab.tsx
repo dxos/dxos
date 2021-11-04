@@ -2,12 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import Button from '@mui/material/Button';
 import React from 'react';
+
+import Button from '@mui/material/Button';
 
 import { useDevtoolsHost } from '../contexts';
 
-export default function StorageTab () {
+const StorageTab = () => {
   const devtoolsHost = useDevtoolsHost();
 
   async function handleReset () {
@@ -21,4 +22,6 @@ export default function StorageTab () {
       <Button variant='outlined' size='small' onClick={handleReset}>Reset storage</Button>
     </div>
   );
-}
+};
+
+export default StorageTab;

@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Button, TextField, Toolbar } from '@mui/material';
 import debug from 'debug';
 import React, { useState } from 'react';
 import useResizeAware from 'react-resize-aware';
+
+import { Button, TextField, Toolbar } from '@mui/material';
 
 import { createId, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';
@@ -112,7 +113,7 @@ const Story = () => {
 export const Primary = () => (
   <ClientInitializer config={ONLINE_CONFIG}>
     <ProfileInitializer>
-      <Story/>
+      <Story />
     </ProfileInitializer>
   </ClientInitializer>
 );

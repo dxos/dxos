@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useState } from 'react';
+
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import StorageIcon from '@mui/icons-material/Dns';
 import SwarmIcon from '@mui/icons-material/Router';
@@ -16,7 +18,6 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import * as colors from '@mui/material/colors';
 import { makeStyles } from '@mui/styles';
-import React, { useState } from 'react';
 
 import { ConfigView } from './containers/ConfigView';
 import { DebugLoggingView } from './containers/DebugLoggingView';

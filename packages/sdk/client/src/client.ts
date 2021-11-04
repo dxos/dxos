@@ -210,7 +210,7 @@ export class Client {
         assert(decodedItemSnapshot.root);
         ValueUtil.applyValue(obj, 'root', decodedItemSnapshot.root);
 
-        // The planner board models have a structure in the object model, which needs to be recreated on new ids
+        // The planner board models have a structure in the object model, which needs to be recreated on new ids.
         if (item.itemType === 'dxos.org/type/planner/card' && obj.root.listId) {
           obj.root.listId = oldToNewIdMap.get(obj.root.listId);
           assert(obj.root.listId, 'Failed to recreate child-parent structure of a planner card');
@@ -276,7 +276,7 @@ export class Client {
   }
 
   //
-  // ECHO
+  // ECHO.
   //
 
   /**
@@ -289,7 +289,7 @@ export class Client {
   }
 
   //
-  // Deprecated
+  // Deprecated.
   // TODO(burdon): Separate wrapper for devtools?
   //
 

@@ -137,7 +137,7 @@ test('complete: broadcast a message.', async () => {
   await publishAndSync(network.peers, Buffer.from('message1'));
   await publishAndSync(network.peers, Buffer.from('message1'));
 
-  // The cache should have always the limit of 100
+  // The cache should have always the limit of 100.
   expect(network.peers.slice(1).reduce((prev: any, next: any) => {
     return prev && next.seenMessagesSize === 2;
   }, true)).toBeTruthy();

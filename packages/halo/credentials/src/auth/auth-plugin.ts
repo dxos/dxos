@@ -56,18 +56,19 @@ export class AuthPlugin extends EventEmitter {
    * If the session can not be authenticated, a ERR_EXTENSION_RESPONSE_FAILED will be thrown.
    * @fires AuthPlugin#authenticated
    */
-  // TODO(dboreham): Improve Protocol to avoid this:
-  // Below, the pattern throw(ERR_EXTENSION_RESPONSE_FAILED(<details>) is used in place of
-  // simply sending a response to the peer's authentication request.
-  // This is done because there is no known way using the current lower layer
-  // implementation (Protocol, dependencies) to explicitly send such a response message.
-  // TODO(telackey): supply further background/detail and correct anything incorrect above.
-  private async _onHandshake (protocol: Protocol /* , context */) { // TODO(burdon): ???
+  /* TODO(dboreham): Improve Protocol to avoid this:
+   * Below, the pattern throw(ERR_EXTENSION_RESPONSE_FAILED(<details>) is used in place of
+   * simply sending a response to the peer's authentication request.
+   * This is done because there is no known way using the current lower layer
+   * implementation (Protocol, dependencies) to explicitly send such a response message.
+   */
+  // TODO(telackey): Supply further background/detail and correct anything incorrect above.
+  private async _onHandshake (protocol: Protocol /* code , context */) { // TODO(burdon): ???
     assert(protocol);
 
     // Obtain the credentials from the session.
-    // At this point credentials is protobuf encoded and base64-encoded
-    // Note protocol.session.credentials is our data
+    // At this point credentials is protobuf encoded and base64-encoded.
+    // Note `protocol.session.credentials` is our data.
     const { credentials, peerId: sessionPeerId } = protocol?.getSession() ?? {};
     if (!credentials) {
       // If we only require auth when certain extensions are active, check if those are present.
@@ -81,8 +82,9 @@ export class AuthPlugin extends EventEmitter {
           }
         }
 
-        // We can allow the unauthenticated connection, because none of the extensions which
-        // require authentication to use are active on this connection.
+        /* We can allow the unauthenticated connection, because none of the extensions which
+         * require authentication to use are active on this connection.
+         */
         if (!authRequired) {
           log(`Unauthenticated access allowed for ${sessionPeerId};`,
             'no extensions which require authentication are active on remote Protocol.');
@@ -97,8 +99,8 @@ export class AuthPlugin extends EventEmitter {
 
     let wrappedCredentials;
     try {
-      // TODO(dboreham): credentials is a base64-encoded string. Determine if that's the type we expect
-      // TODO(dboreham): should have assert(isString(credentials)) ?
+      // TODO(dboreham): Credentials is a base64-encoded string. Determine if that's the type we expect.
+      // TODO(dboreham): Should have assert(isString(credentials)) ?
       wrappedCredentials = codec.decode(Buffer.from(credentials, 'base64'));
     } catch (err) {
       protocol.stream.destroy();
@@ -115,10 +117,11 @@ export class AuthPlugin extends EventEmitter {
       throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, ERR_AUTH_REJECTED, 'Authentication rejected: bad peerId.');
     }
 
-    // TODO(telackey): The signed credentials ought to contain verifiable information for both ends, eg,
-    // the ID of both source and target, and a nonce or challenge provided by the target to the source
-    // for this particular exchange. We will need to add appropriate hooks between the connect and
-    // handshake calls to do that though.
+    /* TODO(telackey): The signed credentials ought to contain verifiable information for both ends, eg,
+     * the ID of both source and target, and a nonce or challenge provided by the target to the source
+     * for this particular exchange. We will need to add appropriate hooks between the connect and
+     * handshake calls to do that though.
+     */
 
     // Ask the Authenticator if this checks out.
     const authenticated = await this._authenticator.authenticate(payload);
@@ -129,8 +132,9 @@ export class AuthPlugin extends EventEmitter {
 
     // Success!
     log(`Authenticated peer: ${credsPeerId.toHex()}`);
-    // TODO(dboreham): should this be a callback rather than an event, or communicated some other way to
-    //   code that needs to know about auth success events?
+    /* TODO(dboreham): Should this be a callback rather than an event, or communicated some other way to
+     *   code that needs to know about auth success events?
+     */
     this.emit('authenticated', credsPeerId.asBuffer());
   }
 }

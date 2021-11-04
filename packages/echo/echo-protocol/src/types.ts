@@ -8,18 +8,18 @@ import { PublicKey } from '@dxos/crypto';
 import { EchoEnvelope, FeedMessage } from './proto';
 
 //
-// Keys
+// Keys.
 //
 
 // TODO(burdon): Move defs to @dxos/crypto. Define KeyPair.
 // TODO(telackey): Removing the specific PartyKey/FeedKey/IdentityKey types is advisable.
-//  They are not different types of things, only distinct uses, and the same key may be used in more than one way
-//  (e.g., as both the IdentityKey for the user and as the PartyKey for their HALO).
+//  They are not different types of things, only distinct uses, and the same key may be used in more than one way.
+//  (eg, as both the IdentityKey for the user and as the PartyKey for their HALO).
 
 export type SwarmKey = Uint8Array;
 
 //
-// Feed
+// Feed.
 //
 
 export type FeedKey = PublicKey;
@@ -59,8 +59,7 @@ export type FeedBlock = IFeedGenericBlock<FeedMessage>;
 
 export interface IHaloStream {
   meta: FeedMeta;
-  // TODO(telackey): Rename dxos.halo.IHaloEnvelope
-  // eslint-disable-next-line camelcase
+  // TODO(telackey): Rename `dxos.halo.IHaloEnvelope`.
   data: HaloMessage;
 }
 
@@ -70,7 +69,7 @@ export interface IEchoStream {
 }
 
 //
-// Item
+// Item.
 //
 
 // TODO(burdon): Change to Buffer.
@@ -79,14 +78,15 @@ export type ItemID = string;
 export type ItemType = string;
 
 //
-// Party
+// Party.
 //
 
-// TODO(burdon): How does this map into IPLD? (https://ipld.io) and DXN?
+// TODO(burdon): How does this map into IPLD? And DXN?
+// https://ipld.io
 export type PartyKey = PublicKey;
 
 //
-// Identity
+// Identity.
 //
 
 export type IdentityKey = PublicKey;

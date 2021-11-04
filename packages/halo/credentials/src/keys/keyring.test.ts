@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-// dxos-testing-browser
+// DXOS testing browser.
 
 import assert from 'assert';
 import expect from 'expect';
@@ -360,10 +360,10 @@ it('Authenticate flow for Kube/Keyhole authentication', async () => {
 
   const keychain = Keyring.buildKeyChain(userDevice.publicKey, keyMessages);
 
-  // User's device signs a message using the keychain with a challenge token given by KUBE
+  // User's device signs a message using the keychain with a challenge token given by KUBE.
   const signedCredential = userKeyring.sign({ message: 'Let me in!' }, [keychain], Buffer.from('challenge token'));
 
-  // KUBE verifies user's credential
+  // KUBE verifies user's credential.
   expect(signedCredential.signatures!.length).toBe(1);
   expect(signedCredential.signatures![0].key.toHex()).toEqual(userDevice.publicKey.toHex());
   expect(signedCredential.signatures![0].keyChain).toBeTruthy();

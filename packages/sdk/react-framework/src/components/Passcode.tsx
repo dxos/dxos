@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { colors, styled } from '@mui/material';
 import React, { createRef, useEffect, useState } from 'react';
 
-// TODO(burdon): Reconcile with @dxos/console
+import { colors, styled } from '@mui/material';
+
+// TODO(burdon): Reconcile with @dxos/console.
 
 const Root = styled('div')({ display: 'flex' });
 

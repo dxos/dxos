@@ -4,13 +4,14 @@
 
 /* eslint-disable react/display-name */
 
+import React, { useEffect, useState } from 'react';
+
 import {
   Box,
   Button,
   TextField,
   Typography
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
 
 import { ErrorBoundary } from '@dxos/react-client';
 
@@ -21,7 +22,7 @@ export default {
 };
 
 //
-// Test
+// Test.
 //
 
 enum TestState {
@@ -78,7 +79,7 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
         return {
           ...props,
           title: 'Enter Name',
-          content: () => (
+          content: (
             <TextField
               fullWidth
               autoFocus
@@ -86,7 +87,7 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
               onChange={event => setValue(event.target.value)}
             />
           ),
-          actions: () => (
+          actions: (
             <>
               <Button onClick={handleNext}>Next</Button>
               <Button onClick={() => setState(TestState.CANCEL)}>Cancel</Button>

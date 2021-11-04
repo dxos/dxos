@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { createTheme as createMuiTheme, ThemeProvider } from '@mui/material';
-import CssBaseline from '@mui/material/CssBaseline';
 import React from 'react';
 import ReactDOM from 'react-dom';
+
+import { createTheme as createMuiTheme, ThemeProvider } from '@mui/material';
+import CssBaseline from '@mui/material/CssBaseline';
 
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';

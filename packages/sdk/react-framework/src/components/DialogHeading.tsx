@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import React from 'react';
+
 import { Box, DialogTitle, SvgIconTypeMap, Toolbar, Typography } from '@mui/material';
 import { OverridableComponent } from '@mui/material/OverridableComponent';
-import React from 'react';
 
 /**
  * @deprecated

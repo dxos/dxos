@@ -2,15 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useState } from 'react';
+
 import RestoreIcon from '@mui/icons-material/Restore';
 import { createTheme, Dialog, DialogContent, DialogContentText, LinearProgress } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import React, { useState } from 'react';
 
 import { sleep } from '@dxos/async';
 import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-framework';
+import { FullScreen } from '@dxos/react-components';
 
 import DialogHeading from '../components/DialogHeading';
 import RegistrationDialog from '../components/RegistrationDialog';
@@ -21,6 +22,10 @@ const useStyles = makeStyles((theme) => ({
   }
 }), { defaultTheme: createTheme({}) });
 
+/**
+ * @deprecated see react-framework.
+ * @constructor
+ */
 const Registration = () => {
   const classes = useStyles();
 
@@ -38,7 +43,7 @@ const Registration = () => {
     // TODO(rzadp): Recovering halo requires another device to be online.
     // No point in having real recovering in storybook as long as we don't have device initiations as well.
     await sleep(2000); // Simulate recovering.
-    // await client.echo.halo.recover(seedPhrase);
+    // code await client.echo.halo.recover(seedPhrase);
 
     await client.halo.createProfile(keyPairFromSeedPhrase(seedPhrase)); // We don't have device recovery, so just recreating halo from scratch.
 
@@ -60,7 +65,7 @@ const Registration = () => {
       />
       {recovering && (
         <Dialog open maxWidth='sm'>
-          <DialogHeading title='Recovering wallet' icon={RestoreIcon}/>
+          <DialogHeading title='Recovering wallet' icon={RestoreIcon} />
           <DialogContent>
             <LinearProgress className={classes.progressBar} />
             <DialogContentText>One of your other devices needs to be online.</DialogContentText>

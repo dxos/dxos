@@ -34,10 +34,10 @@ describe('WebrtcTransport', () => {
     };
     connection.closed.once(closedCb);
 
-    await sleep(10); // Let simple-peer process events
+    await sleep(10); // Let simple-peer process events.
     await connection.close();
 
-    await sleep(1); // Process events
+    await sleep(1); // Process events.
 
     expect(callsCounter).toEqual(1);
   }).timeout(1_000);

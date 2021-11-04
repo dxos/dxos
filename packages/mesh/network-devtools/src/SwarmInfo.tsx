@@ -2,10 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import React from 'react';
+
 import ArrowBackIos from '@mui/icons-material/ArrowBackIos';
 import InfoIcon from '@mui/icons-material/Info';
 import { IconButton, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
-import React from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { ConnectionState, SwarmInfo } from '@dxos/network-manager';
@@ -24,7 +25,7 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
     <div>Active: {swarmInfo.isActive ? 'yes' : 'no'}</div>
     <div>Active connection count: {swarmInfo.connections.filter(c => c.state !== ConnectionState.CLOSED).length}</div>
     <div>Total connection count: {swarmInfo.connections.length}</div>
-    <hr/>
+    <hr />
     <div>Connections:</div>
     <List>
       {swarmInfo.connections.map(connection => (
@@ -44,7 +45,8 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
       <IconButton size='small' onClick={onReturn} title='Back' style={{ borderRadius: 5 }}>
         <ArrowBackIos />
         Back
-      </IconButton>)
+      </IconButton>
+    )
     }
   </div>
 );

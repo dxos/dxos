@@ -21,6 +21,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/network-devtools": "workspace:*",
+    "@dxos/proto": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-framework": "workspace:*",
     "@dxos/rpc": "workspace:*",
@@ -36,8 +37,7 @@
     "moment": "^2.24.0",
     "react": "^17.0.2",
     "react-copy-to-clipboard": "~5.0.3",
-    "react-dom": "^17.0.2",
-    "@dxos/proto": "workspace:*"
+    "react-dom": "^17.0.2"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",

@@ -2,14 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
+import isPlainObject from 'lodash.isplainobject';
+import React, { ReactElement, useEffect, useState } from 'react';
+
 import {
   ChevronRight as ChevronRightIcon,
   ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import { TreeItem as MuiTreeItem, TreeView as MuiTreeView } from '@mui/lab';
 import { styled, Typography } from '@mui/material';
-import isPlainObject from 'lodash.isplainobject';
-import React, { ReactElement, useEffect, useState } from 'react';
 
 import { keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';
@@ -152,7 +153,7 @@ export const JsonTreeView = ({
         : <TreeItem size={size} key={path} nodeId={path} label={key}>{items}</TreeItem>;
     }
 
-    // TODO(burdon): Pluggable types (e.g., date, string, number, boolean, etc).
+    // TODO(burdon): Pluggable types (eg, date, string, number, boolean, etc).
     let ValueComponent: any = DefaultValue;
     if (value instanceof Uint8Array) {
       value = truncateString(keyToString(value), 16);
@@ -172,7 +173,7 @@ export const JsonTreeView = ({
     setExpanded(nodeIds);
   };
 
-  // TODO(burdon): Controller
+  // TODO(burdon): Controller.
   return (
     <StyledTreeView
       defaultCollapseIcon={<ExpandMoreIcon />}

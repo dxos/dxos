@@ -20,8 +20,8 @@ describe('record encoding', () => {
   it('record without extensions', async () => {
     const data = {
       '@type': serviceType.cid,
-      type: 'foo',
-      kube: createCID().value
+      'type': 'foo',
+      'kube': createCID().value
     };
     const encoded = await encodeExtensionPayload(data, lookupType);
 
@@ -36,12 +36,12 @@ describe('record encoding', () => {
   it('record with extensions', async () => {
     const data = {
       '@type': serviceType.cid,
-      type: 'ipfs',
-      kube: createCID().value,
-      extension: {
+      'type': 'ipfs',
+      'kube': createCID().value,
+      'extension': {
         '@type': ipfsType.cid,
-        protocol: 'ipfs/0.1.0',
-        addresses: [
+        'protocol': 'ipfs/0.1.0',
+        'addresses': [
           '/ip4/123.123.123.123/tcp/5566'
         ]
       }

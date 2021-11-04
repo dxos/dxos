@@ -34,7 +34,7 @@ const RedeemDevice = ({ profile, onProfileCreated } : RedeemDeviceProps) => {
   const [inProgress, setInProgress] = useState(false);
 
   if (profile && profile.username && profile.publicKey) {
-    return <Redirect to='/user'/>;
+    return <Redirect to='/user' />;
   }
 
   const onJoin = async () => {
@@ -77,7 +77,7 @@ const RedeemDevice = ({ profile, onProfileCreated } : RedeemDeviceProps) => {
             onChange={e => setInvitation(e.target.value)}
             variant='outlined'
             required
-            helperText={<div> The shared invitation code. </div>}/>
+            helperText={<div> The shared invitation code. </div>} />
         </Grid>
         <Grid item xs={12}>
           <TextField
@@ -88,7 +88,7 @@ const RedeemDevice = ({ profile, onProfileCreated } : RedeemDeviceProps) => {
             onChange={e => setPasscode(e.target.value)}
             variant='outlined'
             required
-            helperText={<div> The passcode you get from the inviter.  </div>}/>
+            helperText={<div> The passcode you get from the inviter.  </div>} />
         </Grid>
         <Grid item xs={6}>
           <BackButton />

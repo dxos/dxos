@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-// dxos-testing-browser
+// DXOS testing browser.
 /* eslint-disable jest/expect-expect, import/order */
 
 import EventEmitter from 'events';

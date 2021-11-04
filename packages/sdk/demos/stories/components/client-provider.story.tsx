@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Box, Button, createTheme, Grid, Toolbar } from '@mui/material';
-import { makeStyles } from '@mui/styles';
 import * as faker from 'faker';
 import React from 'react';
+
+import { Box, Button, createTheme, Grid, Toolbar } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 
 import { ConfigObject } from '@dxos/config';
 import { createKeyPair } from '@dxos/crypto';

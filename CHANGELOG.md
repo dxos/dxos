@@ -24,9 +24,9 @@
 
 - [ ] Hooks
   - [ ] Normalize THREE client invitation methods (party, offline party, halo)
-  - [ ] useInvitation
-  - [ ] useOfflineInvitation (merge with useInvitation)
-  - [ ] useInvitationRedeemer
+  - [x] useInvitation
+  - [x] useOfflineInvitation (merge with useInvitation)
+  - [x] useInvitationRedeemer
   - [ ] useAuthenticator (merge with useInvitationRedeemer)
 
 - [ ] Initializers
@@ -56,7 +56,7 @@
   - [ ] Move low-level components: Fullscreen, JSON, Editable, etc.
 
 - [ ] react-framework dialogs
-  - [ ] RedeemDialog
+  - [x] RedeemDialog
   - [ ] ProfileDialog
   - [ ] wallet components/containers
 

@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { BotFactoryClient } from '@dxos/botkit-client';
+import { BotFactoryClient } from '@dxos/botkit-client-deprecated';
 
 export class Agent {
   _botId: string;

@@ -9,8 +9,8 @@ export const JsonPanel = ({ value }: { value: any }) => {
     <pre
       style={{
         margin: 0,
-        // whiteSpace: 'pre-wrap',
-        // wordBreak: 'break-all',
+        // code whiteSpace: 'pre-wrap',
+        // code wordBreak: 'break-all',
         overflow: 'hidden',
         textOverflow: 'ellipsis'
       }}

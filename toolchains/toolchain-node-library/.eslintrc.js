@@ -1,5 +1,8 @@
 module.exports = {
-  extends: 'plugin:@dxos/recomended',
+  extends: [
+    'plugin:@dxos/jest',
+    'plugin:@dxos/recomended'
+  ],
   rules: { // TODO(marik-d): Move them to DXOS eslint config
     'import/export': 'off',
     'no-extra-parens': 'off',

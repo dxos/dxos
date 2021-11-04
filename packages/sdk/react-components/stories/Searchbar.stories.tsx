@@ -2,8 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Box, Divider } from '@mui/material';
 import React, { useState } from 'react';
+
+import { Box, Divider } from '@mui/material';
 
 import { Searchbar } from '../src';
 import { Container } from './helpers';

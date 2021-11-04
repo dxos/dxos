@@ -15,9 +15,10 @@ import { ConfigObject } from '../types';
 
 const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
 
-// NOTE: we need to export LocalStorage and Dynamics
-// for typescript to typecheck browser code.
-// See ConfigPlugin.js:33
+/* NOTE: we need to export LocalStorage and Dynamics
+ * for typescript to typecheck browser code.
+ * See `ConfigPlugin.js:33`.
+ */
 
 export const LocalStorage = (): ConfigObject => ({});
 

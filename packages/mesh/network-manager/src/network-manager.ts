@@ -182,7 +182,7 @@ export interface SwarmOptions {
   /**
    * Presence plugin for network mapping, if exists.
    */
-  presence?: any /* Presence */
+  presence?: any /* Presence. */
 
   /**
    * Custom label assigned to this swarm. Used in devtools to display human-readable names for swarms.

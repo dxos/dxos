@@ -2,10 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import React from 'react';
+
 import {
   FormControl, InputLabel, MenuItem, Select, SelectChangeEvent
 } from '@mui/material';
-import React from 'react';
 
 /**
  * Displays contact selector.

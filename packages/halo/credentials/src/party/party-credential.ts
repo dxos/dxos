@@ -185,7 +185,7 @@ export function unwrapMessage (message: any): any {
  * Unwrap a SignedMessage from its Envelopes.
  */
 export const unwrapEnvelopes = (message: any): SignedMessage => {
-  // Unwrap any Envelopes
+  // Unwrap any Envelopes.
   while (isEnvelope(message)) {
     message = message.signed.payload.envelope.message.payload;
   }
