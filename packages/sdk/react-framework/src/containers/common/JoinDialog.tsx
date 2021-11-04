@@ -6,12 +6,12 @@ import React, { useState } from 'react';
 
 import { Box, Button, TextField, Typography } from '@mui/material';
 
-import { decodeInvitation, useClient, useSecretProvider } from '@dxos/react-client';
+import type { SecretProvider } from '@dxos/credentials';
+import { InvitationDescriptor, Party } from '@dxos/echo-db';
+import { decodeInvitation, useSecretProvider } from '@dxos/react-client';
 import { Dialog, Passcode } from '@dxos/react-components';
 
 import { handleKey } from '../../helpers';
-import { InvitationDescriptor, Party } from '@dxos/echo-db';
-import type { SecretProvider } from '@dxos/credentials';
 
 enum PartyJoinState {
   INIT,

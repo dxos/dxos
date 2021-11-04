@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useClient } from '@dxos/react-client';
 import React from 'react';
+
+import { useClient } from '@dxos/react-client';
 
 import { JoinDialog, JoinDialogProps } from './common';
 
@@ -17,7 +18,7 @@ export const JoinHaloDialog = (props: Omit<JoinDialogProps, 'onJoin' | 'title'>)
     const party = await client.halo.join(invitation, secretProvider);
     await party.open();
     return party;
-  }
+  };
 
   return (
     <JoinDialog {...props} title='Join Halo' onJoin={handleJoin} />
