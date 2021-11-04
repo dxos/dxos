@@ -23,13 +23,13 @@ const baseTheme = createMuiTheme({
   }
 });
 
-function Popup () {
+const Popup = () => {
   return (
     <ThemeProvider theme={baseTheme}>
       <CssBaseline />
       <Root />
     </ThemeProvider>
   );
-}
+};
 
 export default Popup;

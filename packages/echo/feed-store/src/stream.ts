@@ -9,12 +9,10 @@ import type { HypercoreFeed } from './hypercore-types';
 
 const error = debug('dxos:stream:error');
 
-//
-// Stream utils.
-// https://nodejs.org/api/stream.html
-// NOTE: Turn on 'dxox:*:error' to see errors within callbacks that cause the following error:
-// Error [ERR_MULTIPLE_CALLBACK]: Callback called multiple times
-//
+/* Stream utils, `https://nodejs.org/api/stream.html`.
+ * NOTE: Turn on 'dxox:*:error' to see errors within callbacks that cause the following error:
+ * Error [ERR_MULTIPLE_CALLBACK]: Callback called multiple times.
+ */
 
 /**
  * Returns a stream that appends messages directly to a hypercore feed.

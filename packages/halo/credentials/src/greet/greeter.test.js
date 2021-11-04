@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-// dxos-testing-browser
+// DXOS testing browser.
 
 import expect from 'expect';
 
@@ -49,8 +49,9 @@ it('Good invitation', async () => {
     keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey, secretValidator, secretProvider
   );
 
-  // The `BEGIN` command informs the Greeter the Invitee has connected. This gives the Greeter an opportunity
-  // to do things like create a passphrase on-demand rather than in advance.
+  /* The `BEGIN` command informs the Greeter the Invitee has connected. This gives the Greeter an opportunity
+   * to do things like create a passphrase on-demand rather than in advance.
+   */
   {
     const message = codecLoop({
       payload: {
@@ -62,9 +63,10 @@ it('Good invitation', async () => {
     await greeter.handleMessage(message.payload, invitation.id, randomBytes());
   }
 
-  // The `HANDSHAKE` command allows the Greeter and Invitee to exchange any initial settings or details for
-  // completing the exchange. It returns the `nonce` to use in the signed credential messages and the publicKey
-  // of the target Party.
+  /* The `HANDSHAKE` command allows the Greeter and Invitee to exchange any initial settings or details for
+   * completing the exchange. It returns the `nonce` to use in the signed credential messages and the publicKey
+   * of the target Party.
+   */
   let nonce;
   {
     const message = codecLoop({
@@ -81,10 +83,11 @@ it('Good invitation', async () => {
     nonce = response.nonce;
   }
 
-  // In the `NOTARIZE` command, the Invitee 'submits' signed credentials to the Greeter to be written to the Party.
-  // The Greeter wraps these credentials in an Envelope, which it signs, and returns signed copies to the Invitee.
-  // The Greeter also returns 'hints' about the member keys and feeds keys already in the Party, so that the Invitee
-  // will know whom to trust for replication.
+  /* In the `NOTARIZE` command, the Invitee 'submits' signed credentials to the Greeter to be written to the Party.
+   * The Greeter wraps these credentials in an Envelope, which it signs, and returns signed copies to the Invitee.
+   * The Greeter also returns 'hints' about the member keys and feeds keys already in the Party, so that the Invitee
+   * will know whom to trust for replication.
+   */
   {
     const message = {
       payload: {

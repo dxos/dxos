@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import React from 'react';
+
 import {
   Card,
   CardActions,
@@ -12,7 +14,6 @@ import {
 } from '@mui/material';
 import { grey } from '@mui/material/colors';
 import { makeStyles } from '@mui/styles';
-import React from 'react';
 
 import { ItemAdapter } from './adapter';
 

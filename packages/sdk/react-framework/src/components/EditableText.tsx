@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { InputBase, TextField } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
+
+import { InputBase, TextField } from '@mui/material';
 
 /**
  * @deprecated Moved to react-components.

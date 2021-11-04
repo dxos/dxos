@@ -71,13 +71,13 @@ describe('hypercore-protocol', () => {
 
     await createPromiseFromCallback(cb => pump(alice as any, bob as any, alice as any, cb));
 
-    // aliceChannel.data({ index: 1, value: '{ block: 42 }'})
+    // code aliceChannel.data({ index: 1, value: '{ block: 42 }'})
 
     expect(aliceHandshake).toBe(true);
     expect(bobHandshake).toBe(true);
     expect(aliceOptions).toBe(true);
     expect(bobOptions).toBe(true);
-    expect(aliceOnExtension).toBe(false); // bob never register an extension over the channel.
+    expect(aliceOnExtension).toBe(false); // Bob never register an extension over the channel.
     expect(bobOnExtension).toBe(true);
     expect(aliceReceivedMessageInExtension).toEqual(Buffer.from([4, 5, 6]));
   });

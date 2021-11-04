@@ -24,10 +24,12 @@ export const SwarmDetails = ({ swarms } : SwarmDetailsProps) => {
       .find(swarm => swarm.id.equals(swarmId))
       ?.connections.find(conn => conn.sessionId.equals(sessionId));
     if (connectionInfo) {
-      return <ConnectionInfoView
+      return (
+<ConnectionInfoView
               connectionInfo={connectionInfo}
               onReturn={() => setSessionId(undefined)}
-            />;
+            />
+      );
     } else {
       return (
         <div>
@@ -40,11 +42,13 @@ export const SwarmDetails = ({ swarms } : SwarmDetailsProps) => {
   if (swarmId) {
     const swarmInfo = swarms.find(swarm => swarm.id.equals(swarmId));
     if (swarmInfo) {
-      return <SwarmInfoView
+      return (
+<SwarmInfoView
               swarmInfo={swarmInfo}
               onConnectionClick={id => setSessionId(id)}
               onReturn={() => setSwarmId(undefined)}
-            />;
+            />
+      );
     } else {
       return (
         <div>
@@ -55,7 +59,7 @@ export const SwarmDetails = ({ swarms } : SwarmDetailsProps) => {
   }
 
   return (
-    <SwarmTable swarms={swarms} onClick={id => setSwarmId(id)}/>
+    <SwarmTable swarms={swarms} onClick={id => setSwarmId(id)} />
   );
 };
 

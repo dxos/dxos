@@ -117,9 +117,9 @@ export class Item<M extends Model<any>> {
     return !!this._link;
   }
 
-  // TODO(burdon): Experimental (event?)
+  // TODO(burdon): Experimental. (Event?)
   select (): Selection<any> {
-    // TODO: Update should be triggered when item's child set or any related links change.
+    // TODO(unknown): Update should be triggered when item's child set or any related links change.
     return new Selection(() => [this], this._onUpdate.discardParameter());
   }
 

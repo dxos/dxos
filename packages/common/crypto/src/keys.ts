@@ -16,11 +16,10 @@ export const SIGNATURE_LENGTH = 64;
 
 export const zeroKey = () => new Uint8Array(32);
 
-//
-// The purpose of this module is to assure consistent use of keys throughout the project.
-// NOTE: keys should be maintained as buffers in objects and proto definitions, and converted to hex
-// strings as late as possible (e.g., to log/display).
-//
+/* The purpose of this module is to assure consistent use of keys throughout the project.
+ * Keys should be maintained as buffers in objects and proto definitions, and converted to hex
+ * strings as late as possible (eg, to log/display).
+ */
 
 export interface KeyPair {
   publicKey: Buffer

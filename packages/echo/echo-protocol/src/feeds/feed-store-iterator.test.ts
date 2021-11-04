@@ -56,7 +56,7 @@ describe('feed store iterator', () => {
         return { i, candidate };
       }).filter(Boolean);
 
-      // TODO(burdon): Create test for this (e.g., feed with depedencies hasn't synced yet).
+      // TODO(burdon): Create test for this (eg, feed with depedencies hasn't synced yet).
       if (!next.length) {
         log('Waiting for dependencies...', candidates.map((candidate, i) => ({
           i, timeframe: candidate?.data?.echo?.timeframe

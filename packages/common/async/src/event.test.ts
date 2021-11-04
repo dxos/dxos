@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-// dxos-testing-browser
+// DXOS testing browser.
 
 import { sleep } from './async';
 import { Event } from './event';

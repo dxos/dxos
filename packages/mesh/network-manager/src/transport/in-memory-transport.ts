@@ -89,11 +89,11 @@ export class InMemoryTransport implements Transport {
       InMemoryTransport._connections.delete(this._remoteKey);
 
       // TODO(marik-d): Hypercore streams do not seem to have the unpipe method.
-      // this._stream
-      //   .unpipe(this._outgoingDelay)
-      //   .unpipe(this._remoteConnection._stream)
-      //   .unpipe(this._incomingDelay)
-      //   .unpipe(this._stream);
+      // code this._stream
+      // code   .unpipe(this._outgoingDelay)
+      // code   .unpipe(this._remoteConnection._stream)
+      // code   .unpipe(this._incomingDelay)
+      // code   .unpipe(this._stream);
 
       this._outgoingDelay.unpipe();
       this._incomingDelay.unpipe();

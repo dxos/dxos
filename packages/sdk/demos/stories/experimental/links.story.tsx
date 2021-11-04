@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as colors from '@mui/material/colors';
-import { makeStyles } from '@mui/styles';
 import debug from 'debug';
 import React, { useEffect } from 'react';
+
+import * as colors from '@mui/material/colors';
+import { makeStyles } from '@mui/styles';
 
 import { Generator, OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK } from '@dxos/echo-testing';
 import { ClientInitializer, ProfileInitializer, useSelection } from '@dxos/react-client';
@@ -38,14 +39,14 @@ const useStyles = makeStyles(() => ({
     backgroundColor: colors.grey[50]
   },
   items: {
-    position: 'absolute',
-    zIndex: 1,
-    left: 0,
-    top: 0,
-    bottom: 0,
-    overflow: 'scroll',
+    'position': 'absolute',
+    'zIndex': 1,
+    'left': 0,
+    'top': 0,
+    'bottom': 0,
+    'overflow': 'scroll',
 
-    color: colors.grey[700],
+    'color': colors.grey[700],
     '& .org': {
       color: colors.blue[700]
     },

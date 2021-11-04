@@ -42,7 +42,7 @@ const DEFAULT_TIMEOUT = 30_000;
 export class GreetingInitiator {
   private _greeterPlugin?: GreetingCommandPlugin;
 
-  // TODO(dboreham): can we use the same states as the responder?
+  // TODO(dboreham): Can we use the same states as the responder?
   private _state: GreetingState = GreetingState.INITIALIZED;
 
   /**
@@ -71,21 +71,22 @@ export class GreetingInitiator {
   async connect (timeout = DEFAULT_TIMEOUT) {
     assert(this._state === GreetingState.INITIALIZED);
 
-    // TODO(telackey): Clarify what this comment means:
+    // TODO(telackey): Clarify what the following comment means.
     // TODO(telackey): We don't have the descriptor yet, but it must include at least this.
     const { swarmKey, invitation } = this._invitationDescriptor;
 
-    // Due to limitations in @dxos/protocol and hypercore-protocol, a requester in a request/response
-    // interaction with a responder must know the responder's peer id. Therefore we communicate its peer
-    // id in the invitation, as the greet swarm key. That is: greet swarm key, which is a unique key to serve
-    // its purpose of uniquely identifying each greeter, is by convention also used as the peer id by the greeter
-    // and so can be used here as the responder peer id in the greeting interaction.
+    /* Due to limitations in @dxos/protocol and hypercore-protocol, a requester in a request/response
+     * interaction with a responder must know the responder's peer id. Therefore we communicate its peer
+     * id in the invitation, as the greet swarm key. That is: greet swarm key, which is a unique key to serve
+     * its purpose of uniquely identifying each greeter, is by convention also used as the peer id by the greeter
+     * and so can be used here as the responder peer id in the greeting interaction.
+     */
     const responderPeerId = Buffer.from(swarmKey);
 
     // Use the invitation ID as our peerId.
     // This is due to a bug in the protocol where the invitation id is omitted from the payload.
     // Therefore at present the greeter discovers the invitation id from session metadata, via the invitee's peer id.
-    // TODO(dboreham): invitation is actually invitationID.
+    // TODO(dboreham): Invitation is actually invitationID.
     const localPeerId = invitation;
     log('Local PeerId:', keyToString(localPeerId));
     this._greeterPlugin = new GreetingCommandPlugin(localPeerId, new Greeter().createMessageHandler());
@@ -118,21 +119,19 @@ export class GreetingInitiator {
 
     const responderPeerId = Buffer.from(swarmKey);
 
-    //
-    // The first step in redeeming the Invitation is the BEGIN command.
-    // On the Greeter end, this is when it takes action (e.g., generating a passcode)
-    // starting the redemption of the Invitation.
-    //
+    /* The first step in redeeming the Invitation is the BEGIN command.
+     * On the Greeter end, this is when it takes action (eg, generating a passcode)
+     * starting the redemption of the Invitation.
+     */
 
     assert(this._greeterPlugin); // Needed because typechecker complains that `_greeterPlugin` can possibly be undefined.
     const { info } = await this._greeterPlugin.send(responderPeerId, createGreetingBeginMessage() as any) as any;
 
-    //
-    // The next step is the HANDSHAKE command, which allow us to exchange additional
-    // details with the Greeter. This step requires authentication, so we must obtain
-    // a signature in the case of bot/key auth, or interactively from the user in the
-    // case of PIN/passphrase auth.
-    //
+    /* The next step is the HANDSHAKE command, which allow us to exchange additional
+     * details with the Greeter. This step requires authentication, so we must obtain
+     * a signature in the case of bot/key auth, or interactively from the user in the
+     * case of PIN/passphrase auth.
+     */
 
     log('Requesting secret...');
     const secret = Buffer.from(await secretProvider(info));
@@ -141,11 +140,10 @@ export class GreetingInitiator {
     const handshakeResponse = await this._greeterPlugin.send(responderPeerId,
       createGreetingHandshakeMessage(secret)) as any;
 
-    //
-    // The last step is the NOTARIZE command, where we submit our signed credentials to the Greeter.
-    // Until this point, we did not know the publicKey of the Party we had been invited to join.
-    // Now we must know it, because it (and the nonce) are needed in our signed credentials.
-    //
+    /* The last step is the NOTARIZE command, where we submit our signed credentials to the Greeter.
+     * Until this point, we did not know the publicKey of the Party we had been invited to join.
+     * Now we must know it, because it (and the nonce) are needed in our signed credentials.
+     */
 
     // The result will include the partyKey and a nonce used when signing the response.
     const { nonce } = handshakeResponse;

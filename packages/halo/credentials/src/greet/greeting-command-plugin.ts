@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(burdon): Rename CommandPlugin
-// TODO(dboreham): This class is not specific to Greeting (apart from the codec chosen) and so should be renamed
-//   and moved somewhere more abstract (RpcProtocolPlugin?).
+// TODO(burdon): Rename CommandPlugin.
+/* TODO(dboreham): This class is not specific to Greeting (apart from the codec chosen) and so should be renamed
+ *   and moved somewhere more abstract (RpcProtocolPlugin?).
+ */
 
 import assert from 'assert';
 import debug from 'debug';
@@ -44,7 +45,7 @@ const getPeerId = (protocol: Protocol) => {
  * @event GreetingCommandPlugin#'peer:joined' - Peer joined swarm
  * @event GreetingCommandPlugin#'peer:exited' - Peer exits swarm
  */
-// TODO(burdon): Rename GreetingPlugin
+// TODO(burdon): Rename GreetingPlugin.
 export class GreetingCommandPlugin extends EventEmitter {
   public static EXTENSION_NAME = 'dxos.credentials.greeting';
 
@@ -111,7 +112,7 @@ export class GreetingCommandPlugin extends EventEmitter {
    */
   async _send (peerId: PeerId, message: Command, oneway: boolean) {
     assert(Buffer.isBuffer(peerId));
-    // peerId is a Buffer, but here we only need its string form.
+    // `peerId` is a Buffer, but here we only need its string form.
     const peerIdStr = keyToString(peerId);
     const peer = this._peers.get(peerIdStr);
     assert(peer, `Peer not connected: ${peerIdStr}`);
@@ -130,7 +131,7 @@ export class GreetingCommandPlugin extends EventEmitter {
     try {
       result = await extension.send(encoded, { oneway });
     } catch (error) {
-      // TODO(dboreham): Temporary work around for https://github.com/dxos/protocol/issues/12
+      // TODO(dboreham): Temporary work around for `https://github.com/dxos/protocol/issues/12`.
       if (!(error instanceof Error)) {
         if (error.code) {
           throw new Error(error.code);

@@ -4,7 +4,7 @@
 // Copyright 2021 DXOS.org
 //
 
-// TODO(burdon): Refactor and rename (main) so that this is imported from bin/signal.js
+// TODO(burdon): Refactor and rename (main) so that this is imported from `bin/signal.js`.
 
 import crypto from 'crypto';
 import yargs from 'yargs';

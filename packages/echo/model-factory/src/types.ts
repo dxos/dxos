@@ -8,7 +8,7 @@ import type { Codec } from '@dxos/codec-protobuf';
 import { MutationMeta, ItemID, FeedWriter } from '@dxos/echo-protocol';
 
 //
-// Types
+// Types.
 //
 
 export type ModelType = string;
@@ -16,7 +16,7 @@ export type ModelType = string;
 export type ModelMeta = {
   type: ModelType,
 
-  // TODO(marik-d): Specify generic type param here to match model's expected message type
+  // TODO(marik-d): Specify generic type param here to match model's expected message type.
   mutation: Codec<any>
 
   /**

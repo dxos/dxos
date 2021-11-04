@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useEffect, useState } from 'react';
+
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import React, { useEffect, useState } from 'react';
 
 import { useDevtoolsHost } from '../contexts';
 
@@ -14,8 +15,9 @@ export const DebugLoggingView = () => {
 
   useEffect(() => {
     const fetchNamespaces = async () => {
-      // debug module API only allows fetching the current namespaces by calling disable()
-      // so we need to then call enable() in order to restore the existing config.
+      /* Debug module API only allows fetching the current namespaces by calling disable()
+       * so we need to then call enable() in order to restore the existing config.
+       */
       const namespacesFetched = await devtoolsHost.DisableDebugLogging({});
       await devtoolsHost.EnableDebugLogging({ namespaces: namespacesFetched?.enabledNamespaces });
       if (namespacesFetched?.enabledNamespaces) {
@@ -37,7 +39,7 @@ export const DebugLoggingView = () => {
   };
 
   const handleCustomLogging = async () => {
-    // Disable first otherwise the new namespaces are added to the existing enabled set
+    // Disable first otherwise the new namespaces are added to the existing enabled set.
     await devtoolsHost.DisableDebugLogging({});
     await devtoolsHost.EnableDebugLogging({ namespaces });
   };

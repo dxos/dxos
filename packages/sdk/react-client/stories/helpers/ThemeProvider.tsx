@@ -2,8 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material';
 import React from 'react';
+
+import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material';
 
 const theme = createTheme({
   components: {

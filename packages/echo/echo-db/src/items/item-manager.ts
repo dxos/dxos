@@ -49,8 +49,9 @@ export class ItemManager {
   // Map of active items.
   private readonly _items = new Map<ItemID, Item<any>>();
 
-  // TODO(burdon): Lint issue: Unexpected whitespace between function name and paren
-  // Map of item promises (waiting for item construction after genesis message has been written).
+  /* TODO(burdon): Lint issue: Unexpected whitespace between function name and paren
+   * Map of item promises (waiting for item construction after genesis message has been written).
+   */
   // eslint-disable-next-line func-call-spacing
   private readonly _pendingItems = new Map<ItemID, (item: Item<any>) => void>();
 

@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { AvatarGroup, Box } from '@mui/material';
 import React from 'react';
+
+import { AvatarGroup, Box } from '@mui/material';
 
 import { PartyMember } from '@dxos/echo-db';
 

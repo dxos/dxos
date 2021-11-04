@@ -18,7 +18,7 @@ export const BOT_CONFIG_FILENAME = 'bot.yml';
 export const getConfig = () => {
   const keyPair = createKeyPair();
 
-  // process.env is replaced
+  // `process.env` is replaced.
   const env = typeof window !== 'undefined' && window.process?.env ? window.process.env : process.env;
 
   const config = new Config(

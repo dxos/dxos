@@ -2,12 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
+import React, { useRef, useState } from 'react';
+
 import {
   Clear as ResetIcon,
   Edit as EditIcon
 } from '@mui/icons-material';
 import { useTheme, Box, IconButton, InputAdornment, TextField, Typography } from '@mui/material';
-import React, { useRef, useState } from 'react';
 
 export interface CustomTextFieldProps {
   value?: string

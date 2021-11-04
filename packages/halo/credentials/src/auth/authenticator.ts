@@ -20,12 +20,14 @@ const MAX_AGE = 24 * 60 * 60; // One day.
  * Abstract base class for Authenticators.
  * Used by AuthPlugin for authenticating nodes during handshake.
  */
-// TODO(telackey): explain here the intention behind the abstract base class: is in the future to have
-//   different authentication methods (besides the current PartyAuthenticator) for replication auth,
-//   or to use this base class everywhere auth is done in the project (not used in greeting at present, for example)?
+/* TODO(telackey): Explain here the intention behind the abstract base class: is in the future to have
+ *   different authentication methods (besides the current PartyAuthenticator) for replication auth,
+ *   or to use this base class everywhere auth is done in the project (not used in greeting at present, for example)?
+ */
 export abstract class Authenticator {
-  // TODO(dboreham): The following static methods:
-  // temporary work around move encapsualtion breaking code from data-client/partitions.js.
+  /* TODO(dboreham): The following static methods:
+   * temporary work around move encapsualtion breaking code from `data-client/partitions.js`.
+   */
   /**
    * @param {Message} credentials
    */
@@ -72,8 +74,9 @@ export class PartyAuthenticator extends Authenticator {
    * @param credentials
    * @returns {boolean} true if authenticated, else false
    */
-  // TODO(dboreham): verify that credentials is a message of type dxos.credentials.SignedMessage signing a
-  //  message of type dxos.credentials.auth.Auth.
+  /* TODO(dboreham): Verify that credentials is a message of type `dxos.credentials.SignedMessage` signing a
+   *  message of type `dxos.credentials.auth.Auth`.
+   */
   override async authenticate (credentials: any) {
     if (!credentials || !isSignedMessage(credentials)) {
       log('Bad credentials:', credentials);
@@ -87,10 +90,11 @@ export class PartyAuthenticator extends Authenticator {
       return false;
     }
 
-    // TODO(telackey): This is not how it should be done. We would rather use the remote
-    // nonce for anti-replay, but we will need to add hooks for retrieving it and signing it
-    // between connect() and handshake() to do that. In the meantime, not allowing infinite replay
-    // is at least something.
+    /* TODO(telackey): This is not how it should be done. We would rather use the remote
+     * nonce for anti-replay, but we will need to add hooks for retrieving it and signing it
+     * between connect() and handshake() to do that. In the meantime, not allowing infinite replay
+     * is at least something.
+     */
     const then = moment(created, 'YYYY-MM-DDTHH:mm:ssZ', true);
     if (!then.isValid()) {
       log(`Bad credentials: invalid created ${created} time.`);

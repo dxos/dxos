@@ -17,13 +17,14 @@ import { PartyFeedProvider } from './party-feed-provider';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
 
-const DEFAULT_SNAPSHOT_INTERVAL = 100; // every 100 messages
+const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
 
 export interface PartyOptions {
   readLogger?: (msg: any) => void;
   writeLogger?: (msg: any) => void;
   readOnly?: boolean;
-  // TODO(burdon): Hierarchical options ({ snapshot: { enabled: true, interval: 100 } })
+  // TODO(burdon): Hierarchical options.
+  // code ({ snapshot: { enabled: true, interval: 100 } })
   snapshots?: boolean;
   snapshotInterval?: number;
 }

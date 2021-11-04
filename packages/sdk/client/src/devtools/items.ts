@@ -8,7 +8,7 @@ import { DevtoolsHook, DevtoolsServiceDependencies } from '..';
 import { SubscribeToItemsResponse } from '../proto/gen/dxos/devtools';
 
 function getData (echo: DevtoolsHook['client']['echo']): SubscribeToItemsResponse {
-  // TODO(marik-d): Display items hierarchically
+  // TODO(marik-d): Display items hierarchically.
   const res: Record<string, any> = {};
   const parties = echo.queryParties().value;
   for (const party of parties) {
@@ -57,6 +57,6 @@ export const subscribeToItems = (hook: DevtoolsServiceDependencies) => {
       update();
     });
 
-    // TODO(yivlad): Add cleanup logic
+    // TODO(yivlad): Add cleanup logic.
   });
 };

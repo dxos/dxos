@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useState } from 'react';
+
 import { createTheme } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { PeerGraph } from '@dxos/network-devtools';
@@ -55,7 +56,7 @@ const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => {
   };
 };
 
-export default function Signal () {
+const Signal = () => {
   const classes = useStyles();
   const devtoolsHost = useDevtoolsHost();
   const [selectedTopic, setSelectedTopic] = useState('');
@@ -100,4 +101,6 @@ export default function Signal () {
           )}
     </div>
   );
-}
+};
+
+export default Signal;

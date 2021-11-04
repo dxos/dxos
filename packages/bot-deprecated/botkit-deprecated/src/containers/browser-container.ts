@@ -47,7 +47,7 @@ export class BrowserContainer implements BotContainer {
       DX_BOT_NAME: name,
       DX_BOT_CWD: '/dxos/bot',
       DX_BOT_RESTARTED: false, // TODO(marik-d): Remove.
-      DX_BOT_PERSISTENT: 'false' // Storage is currently broken
+      DX_BOT_PERSISTENT: 'false' // Storage is currently broken.
     };
 
     log('Creating context');

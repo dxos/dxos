@@ -41,7 +41,7 @@ export const ReplicationGrid = () => {
   return (
     <ClientInitializer config={ONLINE_CONFIG}>
       <ProfileInitializer>
-        <Root/>
+        <Root />
       </ProfileInitializer>
     </ClientInitializer>
   );
