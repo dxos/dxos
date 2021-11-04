@@ -29,8 +29,8 @@ export interface SharingDialogProps {
 /**
  * Reusable sharing logic for inviting to a regular party and to a HALO party.
  * Not exported for the end user.
- * See PartySharingDialog and HaloSharingDialog.
- * @param partyKey - The party key to invite to. Applicable for HALO party as well.
+ * See PartySharingDialog and DeviceSharingDialog.
+ * @param partyKey - The party key to invite to. Not applicable for HALO invitations.
  */
 export const SharingDialog = ({
   open,

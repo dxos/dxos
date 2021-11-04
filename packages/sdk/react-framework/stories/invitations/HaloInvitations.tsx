@@ -13,7 +13,7 @@ import { CopyText, FullScreen } from '@dxos/react-components';
 import {
   ErrorView,
   JoinHaloDialog,
-  HaloSharingDialog
+  DeviceSharingDialog
 } from '../../src';
 
 import {Column} from '../helpers'
@@ -41,7 +41,7 @@ const Sender = () => {
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
-      <HaloSharingDialog
+      <DeviceSharingDialog
         open={open}
         onClose={() => setOpen(false)}
         modal={false}
