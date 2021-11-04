@@ -10,5 +10,5 @@ export * from './gen/dxos/credentials';
 export * from './gen/dxos/credentials/auth';
 export * from './gen/dxos/credentials/greet';
 export * from './gen/dxos/credentials/identity';
-export * from './gen/dxos/credentials/keys';
+export * from './gen/dxos/halo/keys';
 export * from './gen/dxos/credentials/party';

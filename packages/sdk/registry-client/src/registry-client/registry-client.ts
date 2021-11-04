@@ -19,7 +19,7 @@ import { DomainKey as BaseDomainKey, Multihash, Resource as BaseResource } from 
 import { CID, DomainKey, DXN } from '../models';
 import { schema as dxnsSchema } from '../proto/gen';
 import { Filtering, IQuery } from '../querying';
-import { Domain, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, TypeRecordMetadata, UpdateResourceOptions } from './interface';
+import { Domain, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, SuppliedTypeRecordMetadata, TypeRecordMetadata, UpdateResourceOptions } from './interface';
 
 export class RegistryClient implements IRegistryClient {
   private readonly _recordCache = new ComplexMap<CID, RegistryRecord>(cid => cid.toB58String())
@@ -106,13 +106,17 @@ export class RegistryClient implements IRegistryClient {
         data: await decodeExtensionPayload(decoded.payload, async cid => (await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`)))
       };
     } else if (decoded.type) {
+      const typeMeta: TypeRecordMetadata = {
+        ...meta,
+        sourceIpfsCid: decoded.type.protobufIpfsCid
+      };
       assert(decoded.type.protobufDefs);
       assert(decoded.type.messageName);
 
       return {
         kind: RecordKind.Type,
         cid,
-        meta,
+        meta: typeMeta,
         protobufDefs: decodeProtobuf(decoded.type.protobufDefs),
         messageName: decoded.type.messageName
       };
@@ -287,7 +291,7 @@ export class RegistryClient implements IRegistryClient {
     return this.insertRawRecord(encoded);
   }
 
-  async insertTypeRecord (schema: protobuf.Root, messageName: string, meta: TypeRecordMetadata = {}) {
+  async insertTypeRecord (schema: protobuf.Root, messageName: string, meta: SuppliedTypeRecordMetadata = {}) {
     // Make sure message type exists
     schema.lookupType(messageName);
 

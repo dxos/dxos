@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { waitForCondition } from '@dxos/async';
-import { Bot, getConfig } from '@dxos/bot';
+import { Bot, getConfig } from '@dxos/bot-deprecated';
 import { createId } from '@dxos/crypto';
 import { MessengerModel } from '@dxos/messenger-model';
 

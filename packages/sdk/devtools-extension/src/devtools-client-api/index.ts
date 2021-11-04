@@ -4,9 +4,10 @@
 
 import Bridge from 'crx-bridge';
 
+import { DevtoolsHook } from '@dxos/client';
+
 import { createWindowPort } from '../utils';
 import { RpcClientAPI } from './client-api';
-import { createDevtoolsHost, DevtoolsHostEvents } from './handlers';
 
 Bridge.setNamespace('dxos.devtools');
 Bridge.allowWindowMessaging('dxos.devtools');
@@ -18,13 +19,13 @@ let checkCount = 0;
 const init = async () => {
   checkCount++;
   if ((window as any).__DXOS__) {
+    const devtoolsContext: DevtoolsHook = (window as any).__DXOS__;
+
     if (checkInterval) {
       clearInterval(checkInterval);
     }
     const port = createWindowPort();
-    const devtoolsEvents = new DevtoolsHostEvents();
-    const devtoolsHost = createDevtoolsHost((window as any).__DXOS__, devtoolsEvents);
-    const clientApi = new RpcClientAPI(port, devtoolsHost, devtoolsEvents);
+    const clientApi = new RpcClientAPI(port, devtoolsContext.serviceHost.services.DevtoolsHost);
     await clientApi.run();
     console.log('[DXOS devtools] Init client API finished');
   } else {
