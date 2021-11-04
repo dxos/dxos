@@ -109,11 +109,9 @@ export const Primary = () => {
           </ClientInitializer>
 
           <ClientInitializer>
-            <ProfileInitializer>
               <Column>
                 <Receiver />
               </Column>
-            </ProfileInitializer>
           </ClientInitializer>
         </Box>
       </ErrorBoundary>
