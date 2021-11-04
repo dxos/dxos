@@ -82,8 +82,14 @@ export const JoinDialog = ({
 
     try {
       setState(PartyJoinState.AUTHENTICATE);
-      const party = await client.echo.joinParty(invitation, secretProvider);
-      await party.open();
+      if (type === 'party') {
+        const party = await client.echo.joinParty(invitation, secretProvider);
+        await party.open();
+      } else if (type === 'halo') {
+        const party = await client.echo.halo.join(invitation, secretProvider);
+        await party.open(); // Should I do this?
+      }
+      
     } catch (err: any) {
       // TODO(burdon): Extract human error (eg, currently "Already connected to swarm").
       setError(err.responseMessage || err.message);

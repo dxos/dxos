@@ -12,8 +12,8 @@ import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
   ErrorView,
-  JoinPartyDialog,
-  PartySharingDialog
+  JoinHaloDialog,
+  HaloSharingDialog
 } from '../../src';
 
 import {Column} from '../helpers'
@@ -34,30 +34,14 @@ const Parties = () => {
 
 const Sender = () => {
   const [open, setOpen] = useState(true);
-  const [partyKey, setPartyKey] = useState<PublicKey>();
   const client = useClient();
-
-  const handleCreateParty = async () => {
-    const party = await client.echo.createParty();
-    setPartyKey(party.key);
-  };
-
-  useEffect(() => {
-    void handleCreateParty();
-  }, []);
-
-  if (!partyKey) {
-    return null;
-  }
 
   return (
     <Box>
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
-        <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
-      <PartySharingDialog
-        partyKey={partyKey}
+      <HaloSharingDialog
         open={open}
         onClose={() => setOpen(false)}
         modal={false}
@@ -77,7 +61,7 @@ const Receiver = () => {
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
-      <JoinPartyDialog
+      <JoinHaloDialog
         open={open}
         onClose={() => setOpen(false)}
         closeOnSuccess={false}
@@ -109,9 +93,9 @@ export const Primary = () => {
           </ClientInitializer>
 
           <ClientInitializer>
-              <Column>
-                <Receiver />
-              </Column>
+            <Column>
+              <Receiver />
+            </Column>
           </ClientInitializer>
         </Box>
       </ErrorBoundary>

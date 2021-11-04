@@ -10,8 +10,9 @@ import { Box } from '@mui/system';
 import { PublicKey } from '@dxos/crypto';
 import { encodeInvitation, useClient, useParty, useSecretGenerator, useMembers } from '@dxos/react-client';
 import { CopyText, CopyToClipboard, Dialog, MemberList, Passcode } from '@dxos/react-components';
+import { HALO, InvitationOptions } from '@dxos/echo-db';
 
-enum PartyInvitationState {
+enum InvitationState {
   INIT,
   ERROR,
 }
@@ -20,7 +21,8 @@ export interface SharingDialogProps {
   open: boolean
   modal?: boolean
   onClose?: () => void
-  partyKey: PublicKey,
+  partyKey?: PublicKey,
+  title: string,
   type: 'party' | 'halo'
 }
 
@@ -35,9 +37,10 @@ export const SharingDialog = ({
   modal,
   onClose,
   partyKey,
+  title,
   type
 }: SharingDialogProps) => {
-  const [state, setState] = useState(PartyInvitationState.INIT);
+  const [state, setState] = useState(InvitationState.INIT);
   const [error, setError] = useState<string | undefined>(undefined); // TODO(burdon): Error handling.
 
   // TODO(burdon): Multiple invitations at once (see Braneframe PartySharingDialog). Timeouts, etc.
@@ -52,7 +55,7 @@ export const SharingDialog = ({
     setError(undefined);
     setInvitationCode(undefined);
     resetPin();
-    setState(PartyInvitationState.INIT);
+    setState(InvitationState.INIT);
   };
 
   const handleDone = () => {
@@ -61,29 +64,36 @@ export const SharingDialog = ({
   };
 
   useEffect(() => {
-    if (state === PartyInvitationState.INIT) {
+    if (state === InvitationState.INIT) {
       handleReset();
     }
   }, [state]);
 
   useEffect(() => {
-    setState(PartyInvitationState.INIT);
+    setState(InvitationState.INIT);
   }, [partyKey]);
 
   const handleCreateInvitation = () => {
     setImmediate(async () => {
-      // TODO(burdon): Handle offline (display members).
-      const invitation = await client.createInvitation(partyKey!, secretProvider, {
+      const options: InvitationOptions = {
         onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
           handleReset();
         }
-      });
-
-      setInvitationCode(encodeInvitation(invitation));
+      }
+      if (type === 'party') {
+        // TODO(burdon): Handle offline (display members).
+        const invitation = await client.createInvitation(partyKey!, secretProvider, options);
+        setInvitationCode(encodeInvitation(invitation));
+      } else if (type === 'halo') {
+        const invitation = await client.createHaloInvitation(secretProvider, options)
+        setInvitationCode(encodeInvitation(invitation));
+      } else {
+        throw new Error(`Unsupported invitation type: "${type}"`)
+      }
     });
   };
 
-  const getDialogProps = (state: PartyInvitationState) => {
+  const getDialogProps = (state: InvitationState) => {
     const sharePartyContent = () => (
       <>
         <Box>
@@ -124,18 +134,18 @@ export const SharingDialog = ({
     );
 
     switch (state) {
-      case PartyInvitationState.INIT: {
+      case InvitationState.INIT: {
         return {
-          title: 'Party Sharing',
+          title,
           processing: !!pin,
           content: sharePartyContent,
           actions: sharePartyActions
         };
       }
 
-      case PartyInvitationState.ERROR: {
+      case InvitationState.ERROR: {
         return {
-          title: 'Party Sharing',
+          title,
           error,
           actions: errorActions
         };
