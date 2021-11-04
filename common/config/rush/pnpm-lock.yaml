@@ -1512,7 +1512,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.2.0
+      '@dxos/esbuild-server': 1.2.1
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@storybook/addon-essentials': 6.3.12_c86ec7d94593fc421030610c98243b1b
       '@storybook/addon-links': 6.3.12_react-dom@17.0.2+react@17.0.2
@@ -1556,7 +1556,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.2.0
+      '@dxos/esbuild-server': ~1.2.1
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/object-model': workspace:*
@@ -1921,6 +1921,7 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/react-client': link:../react-client
@@ -1944,6 +1945,7 @@ importers:
     specifiers:
       '@babel/core': ~7.13.15
       '@babel/plugin-transform-runtime': ^7.11.5
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
@@ -5075,7 +5077,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-9m1Ftf+1RsQvf9JIDOZTJouHyT3X4kdqn1/tDSL9NrvOgLFjp/cA/vzyMcPAZTJCBkcF+xIkR/Peu2/jhwy0gQ==
-  /@dxos/esbuild-server/1.2.0:
+  /@dxos/esbuild-server/1.2.1:
     dependencies:
       chalk: 4.1.2
       esbuild: 0.12.29
@@ -5091,7 +5093,7 @@ packages:
     dev: true
     hasBin: true
     resolution:
-      integrity: sha512-5bFDfPJ4ZDxo7B/bq22Duei6MmkLUW3q72V4lz7DWXmKqKdkcQvfjgO8IzEEf60U49ZaSZSvZUcNWqskAOSmdg==
+      integrity: sha512-5BiZWUCxA93ijJqjxvInsIDonmNs0ZbSwtprGcUgX3aeiBqkRMzakfP7s80rsdYwLnrF89vclK5GDy470BHpXw==
   /@dxos/eslint-plugin/1.0.16_eslint@7.26.0+typescript@4.3.5:
     dependencies:
       '@rushstack/eslint-patch': 1.0.6
