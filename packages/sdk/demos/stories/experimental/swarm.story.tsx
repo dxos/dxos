@@ -12,9 +12,10 @@ import { createId, PublicKey } from '@dxos/crypto';
 import { InvitationDescriptor } from '@dxos/echo-db';
 import { FullScreen, SVG, useGrid } from '@dxos/gem-core';
 import { Markers } from '@dxos/gem-spore';
-import { ClientInitializer, ProfileInitializer, useClient } from '@dxos/react-client';
+import { ClientInitializer, ProfileInitializer, useClient, useMembers } from '@dxos/react-client';
+import { MemberList } from '@dxos/react-components';
 
-import { EchoGraph, MemberList, Node, ONLINE_CONFIG } from '../../src';
+import { EchoGraph, Node, ONLINE_CONFIG } from '../../src';
 
 const log = debug('dxos:echo:story');
 
@@ -70,6 +71,7 @@ const Story = () => {
   };
 
   const activeParty = client.echo.queryParties().value[0];
+  const partyMembers = useMembers(activeParty)
 
   return (
     <FullScreen>
@@ -90,7 +92,7 @@ const Story = () => {
           </div>
         </Toolbar>
 
-        {activeParty && <MemberList party={client.echo.queryParties().first} />}
+        {activeParty && <MemberList members={partyMembers} />}
 
         <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
           {resizeListener}
