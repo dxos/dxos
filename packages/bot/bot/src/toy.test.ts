@@ -11,6 +11,7 @@ import { BotFactory } from './bot-factory';
 import { BotHandle } from './bot-handle';
 import { Bot } from './proto/gen/dxos/bot';
 import { BotFactoryAgent, InMemoryCustomizableBot } from './testutils';
+import { PublicKey } from '../../../halo/credentials/node_modules/@dxos/crypto/dist/src';
 
 describe('In-Memory', () => {
   it('Spawns a bot', async () => {
@@ -27,14 +28,14 @@ describe('In-Memory', () => {
     ]);
 
     let botInitialized = false;
-    let commandReceived = false;
+    let commandReceived: Uint8Array | undefined;
     const bot = new InMemoryCustomizableBot(botPort, {
       Initialize: async () => {
         botInitialized = true;
         return {};
       },
-      Command: async () => {
-        commandReceived = true;
+      Command: async (request) => {
+        commandReceived = request.command;
         return {};
       }
     });
@@ -50,8 +51,10 @@ describe('In-Memory', () => {
     expect(bots![0].status).toBe(Bot.Status.RUNNING);
     expect(botInitialized).toBe(true);
 
-    await agent.botFactory.SendCommand({ botId });
+    const command = PublicKey.random().asUint8Array();
+    await agent.botFactory.SendCommand({ botId, command });
 
-    expect(commandReceived).toBe(true);
+    expect(commandReceived).toBeDefined();
+    expect(Buffer.from(command).equals(Buffer.from(commandReceived!))).toBe(true);
   });
 });
