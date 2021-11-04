@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Box, Button, Toolbar, styled } from '@mui/material';
+import { Box, Button, Toolbar } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
 import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient, useParties } from '@dxos/react-client';
@@ -14,7 +14,9 @@ import {
   ErrorView,
   JoinPartyDialog,
   PartySharingDialog
-} from '../src';
+} from '../../src';
+
+import {Column} from '../helpers'
 
 export default {
   title: 'react-framework/PartyInvitation'
@@ -93,15 +95,6 @@ const Receiver = () => {
 };
 
 // TODO(burdon): Error handling, retry, etc.
-
-const Column = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  overflow: 'hidden',
-  flex: 1,
-  flexShrink: 0,
-  padding: 16
-});
 
 export const Primary = () => {
   return (
