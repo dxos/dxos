@@ -17,7 +17,7 @@ import {
 } from '../src';
 
 export default {
-  title: 'react-framework/Invitations'
+  title: 'react-framework/PartyInvitation'
 };
 
 const Parties = () => {
