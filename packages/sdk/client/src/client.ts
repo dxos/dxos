@@ -281,7 +281,6 @@ export class Client {
    *
    * To be used with `client.halo.join` on the invitee side.
    *
-   * @param partyKey the Party to create the invitation for.
    * @param secretProvider supplies the pin code
    * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
    * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
