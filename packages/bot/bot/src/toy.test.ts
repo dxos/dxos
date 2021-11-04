@@ -4,6 +4,7 @@
 
 import expect from 'expect';
 
+import { PublicKey } from '@dxos/crypto';
 import { createLinkedPorts } from '@dxos/rpc';
 
 import { BotController } from './bot-controller';
@@ -11,7 +12,6 @@ import { BotFactory } from './bot-factory';
 import { BotHandle } from './bot-handle';
 import { Bot } from './proto/gen/dxos/bot';
 import { BotFactoryAgent, InMemoryCustomizableBot } from './testutils';
-import { PublicKey } from '../../../halo/credentials/node_modules/@dxos/crypto/dist/src';
 
 describe('In-Memory', () => {
   it('Spawns a bot', async () => {
