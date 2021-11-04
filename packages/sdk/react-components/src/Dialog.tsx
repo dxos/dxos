@@ -16,7 +16,8 @@ import {
   DialogProps as MuiDialogProps,
   DialogTitle,
   LinearProgress,
-  styled
+  styled,
+  useTheme
 } from '@mui/material';
 
 const Alert = styled(MuiAlert)({
@@ -28,12 +29,23 @@ const Alert = styled(MuiAlert)({
   }
 });
 
+type ComponentOrFunction = React.FunctionComponent | React.ReactNode
+
+const render = (component?: ComponentOrFunction) => {
+  if (component instanceof Function) {
+    const Component = component as React.FunctionComponent;
+    return <Component />;
+  } else {
+    return component;
+  }
+};
+
 export interface DialogProps extends MuiDialogProps {
   modal?: boolean
   title?: string
   dividers?: boolean
-  content?: () => JSX.Element
-  actions?: () => JSX.Element
+  content?: ComponentOrFunction
+  actions?: ComponentOrFunction
   processing?: boolean
   error?: string
 }
@@ -47,6 +59,7 @@ export const ModalDialog = ({
   error,
   ...dialogProps
 }: DialogProps) => {
+  const theme = useTheme();
   const { open, maxWidth = 'xs', fullWidth = true, ...other } = dialogProps;
 
   return (
@@ -54,11 +67,16 @@ export const ModalDialog = ({
       open={open}
       maxWidth={maxWidth}
       fullWidth={fullWidth}
+      sx={{
+        '.MuiDialogContent-root > .MuiTypography-root': {
+          color: theme.palette.text.secondary
+        }
+      }}
       {...other}
     >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers={dividers}>
-        {content?.() || null}
+        {render(content)}
       </DialogContent>
       {processing && (
         <LinearProgress />
@@ -67,7 +85,7 @@ export const ModalDialog = ({
         <Alert severity='error'>{error}</Alert>
       )}
       <DialogActions>
-        {actions?.() || null}
+        {render(actions)}
       </DialogActions>
     </MuiDialog>
   );
@@ -78,7 +96,6 @@ export const ModalDialog = ({
  * For example, this enables the testing of multiple dialogs in parallel from different client context.
  * @constructor
  */
-// TODO(burdon): Rename non-modal.
 export const NonModalDialog = ({
   title,
   content,
@@ -102,7 +119,7 @@ export const NonModalDialog = ({
     >
       <CardHeader title={title} />
       <CardContent>
-        {content?.() || null}
+        {render(content)}
       </CardContent>
       {processing && (
         <LinearProgress />
@@ -113,7 +130,7 @@ export const NonModalDialog = ({
       <CardActions sx={{
         justifyContent: 'flex-end'
       }}>
-        {actions?.() || null}
+        {render(actions)}
       </CardActions>
     </Card>
   );

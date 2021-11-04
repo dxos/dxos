@@ -8,10 +8,8 @@ import { Button, Table, TableBody, TableCell, TableRow } from '@mui/material';
 import { Box } from '@mui/system';
 
 import { PublicKey } from '@dxos/crypto';
-import { encodeInvitation, useClient, useParty, useSecretGenerator } from '@dxos/react-client';
+import { encodeInvitation, useClient, useParty, useSecretGenerator, useMembers } from '@dxos/react-client';
 import { CopyText, CopyToClipboard, Dialog, MemberList, Passcode } from '@dxos/react-components';
-
-import { useMembers } from '../hooks';
 
 enum PartyInvitationState {
   INIT,

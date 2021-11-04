@@ -79,7 +79,7 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
         return {
           ...props,
           title: 'Enter Name',
-          content: () => (
+          content: (
             <TextField
               fullWidth
               autoFocus
@@ -87,7 +87,7 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
               onChange={event => setValue(event.target.value)}
             />
           ),
-          actions: () => (
+          actions: (
             <>
               <Button onClick={handleNext}>Next</Button>
               <Button onClick={() => setState(TestState.CANCEL)}>Cancel</Button>

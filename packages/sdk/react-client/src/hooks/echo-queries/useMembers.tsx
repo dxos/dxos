@@ -13,6 +13,7 @@ export const useMembers = (party: Party) => {
     if (!party) {
       return;
     }
+
     const result = party.queryMembers();
     setMembers(result.value);
 

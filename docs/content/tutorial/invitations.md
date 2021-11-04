@@ -69,13 +69,13 @@ On your browser, when selecting your party from the list, you will see a share b
 
 ## Redeem Invitation
 
-We now need to give our users the possibility to redeem an invitation so they are able to join the party. Lucky for us, the `@dxos/react-framework` package already exports a `RedeemDialog` component that we can make usage of.
+We now need to give our users the possibility to redeem an invitation so they are able to join the party. Lucky for us, the `@dxos/react-framework` package already exports a `JoinPartyDialog` component that we can make usage of.
 
 Let's got now to our `src/components/PartyList.js` component and place the following:
 
 ```jsx:title=src/components/PartyList.js
 // ...
-import { RedeemDialog } from '@dxos/react-framework';
+import { JoinPartyDialog } from '@dxos/react-framework';
 
 const PartyList = ({ onSelectParty }) => {
   const [redeemDialog, setRedeemDialog] = useState(false);
@@ -86,7 +86,7 @@ const PartyList = ({ onSelectParty }) => {
     <div>
       {/* ... PartySettings */}
 
-      {redeemDialog && <RedeemDialog pinless onClose={() => setRedeemDialog(false)} />}
+      <JoinPartyDialog open={redeemDialog} onClose={() => setRedeemDialog(false)} />
 
       {/* ... Parties */}
 
@@ -104,7 +104,7 @@ const PartyList = ({ onSelectParty }) => {
 export default PartyList;
 ```
 
-We are rendering now the `RedeemDialog` and also a button to show it.
+We are rendering now the `JoinPartyDialog` and also a button to show it.
 
 If you go to your app in the browser, you will see that button next to the create party button. Go ahead and try it yourself.
 

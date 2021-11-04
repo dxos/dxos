@@ -4,20 +4,15 @@ title: Invitations
 
 ## Create an Invitation
 
-To create an invitation, we first need to call to `useInvitation` hook provided by `@dxos/react-client`:
+To create an invitation, we first need to call to `useSecretGenerator` hook provided by `@dxos/react-client`:
 
 ```jsx
-import { useParty, useInvitation } from '@dxos/react-client';
+import { useParty, useSecretGenerator } from '@dxos/react-client';
 
 const Component = ({ partyKey }) => {
   const party = useParty(partyKey);
 
-  const [inviteCode, pin] = useInvitation(party.key, {
-    onDone: () => {},
-    onError: () => {},
-    onExpiration: () => {},
-    expiration: new Date(),
-  });
+  const [secretProvider, pin, resetPin] = useSecretGenerator();
 
   // ...
 };
@@ -25,52 +20,33 @@ const Component = ({ partyKey }) => {
 
 The Invitation flow requires the inviter and invitee to be online at the same time and is protected by a generated pin code.
 
-### Params
-
-| Property       | Description                                                                  |
-| -------------- | ---------------------------------------------------------------------------- |
-| `party.key`    | The Party to create the invitation for.                                      |
-| `onDone`       | Callback function called once the invite flow finishes successfully.         |
-| `onError`      | Callback function called if the invite flow produces an error.               |
-| `onExpiration` | Callback function called if the invite flow expired.                         |
-| `expiration`   | (optional) Date.now()-style timestamp of when this invitation should expire. |
-
 ### Return Values
 
-| Property     | Description                                                                            |
-| ------------ | -------------------------------------------------------------------------------------- |
-| `inviteCode` | Generated code that the invitee should complete to join the party                      |
-| `pin`        | Protection pin code that the invitee should fill in once the `inviteCode` is validated |
+| Property            | Description                                                                               |
+| ------------------- | ----------------------------------------------------------------------------------------- |
+| `secretProvider`    | Shared secret provider, the other peer creating the invitation must have the same secret. |
+| `resetPin`          | Function allowing you to reset the flow with a new pin code                               |
+| `pin`               | Protection pin code that the invitee should fill in once the `inviteCode` is validated    |
 
 ## Redeem an Invitation
 
-As a user invited to a party, you need to validate both the `inviteCode` and the `pin` code. For this, you should use the `useInvitationRedeemer` hook from `@dxos/react-client`:
+As a user invited to a party, you need to validate both the `inviteCode` and the `pin` code. For this, you should use the `useSecretProvider` hook from `@dxos/react-client`:
 
 ```jsx
-import { useParty, useInvitationRedeemer } from '@dxos/react-client';
+import { useParty, useSecretProvider } from '@dxos/react-client';
 
 const Component = ({ partyKey }) => {
   const party = useParty(partyKey);
 
-  const [redeemCode, setPin] = useInvitationRedeemer({
-    onDone: () => {},
-    onError: () => {},
-  });
+  const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
 
   // ...
 };
 ```
 
-### Params
-
-| Property  | Description                                                          |
-| --------- | -------------------------------------------------------------------- |
-| `onDone`  | Callback function called once the invite flow finishes successfully. |
-| `onError` | Callback function called if the invite flow produces an error.       |
-
 ### Return Values
 
-| Property     | Description                                                        |
-| ------------ | ------------------------------------------------------------------ |
-| `redeemCode` | Function which you should call with the `invitationCode`.          |
-| `setPin`     | Function which you should call with the `pin` code once available. |
+| Property         | Description                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| `secretProvider` | Shared secret provider, the other peer creating the invitation must have the same secret. |
+| `secretResolver` | Function which you should call with the `pin` code once available.                        |
