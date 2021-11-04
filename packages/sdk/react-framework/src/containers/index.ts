@@ -3,5 +3,4 @@
 //
 
 export * from './JoinPartyDialog';
-export * from './PartyMemberList';
 export * from './PartySharingDialog';
