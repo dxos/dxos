@@ -25,8 +25,8 @@ export class ApiTransactionHandler {
         } catch (err) {
           reject(err);
         }
-        // TODO(marcin): provide ensureTransaction which makes sure the given transaction has been finalized.
-        // see: https://github.com/dxos/dot/issues/167
+        // TODO(marcin): Provide ensureTransaction which makes sure the given transaction has been finalized.
+        // https://github.com/dxos/dot/issues/167
         if (status.isFinalized || status.isInBlock) {
           resolve(events);
         }
@@ -41,7 +41,7 @@ export class ApiTransactionHandler {
   }
 
   getErrorName (rejectionEvent: Event) : string {
-    // Checking if event is fail event
+    // Checking if event is fail event.
     if (this.api.events.system.ExtrinsicFailed.is(rejectionEvent)) {
       const rejectionType = rejectionEvent.data[0];
       if (rejectionType.isBadOrigin) {

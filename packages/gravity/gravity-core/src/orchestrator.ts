@@ -33,7 +33,7 @@ export const BROWSER_ENV = 'browser';
 // Important: this regulates how often bot gets downloaded from ipfs.
 const testTime = Date.now();
 const getBotIdentifiers = (botPath: string, env: string | undefined) => {
-  const name = `wrn://dxos/bot/${env}/${path.basename(botPath)}`; // TODO(burdon): dxn.
+  const name = `wrn://dxos/bot/${env}/${path.basename(botPath)}`; // TODO(burdon): DXN.
   const id = sha256(`${name}${testTime}`);
   return { id, name };
 };
@@ -74,7 +74,7 @@ export class Orchestrator {
 
     // Start BotFactory.
     // TODO(egorgripasov): Generally, we might want to use a set of already running factories.
-    // This could be turned into the list as well;
+    // This could be turned into the list as well.
     this._factory = await this._startBotFactory();
     this._factoryClient = new BotFactoryClient(this._client.echo.networkManager, this._factory.topic);
   }

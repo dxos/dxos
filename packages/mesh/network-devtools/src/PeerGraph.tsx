@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useState, useEffect } from 'react';
+
 import { colors } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import React, { useState, useEffect } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { SVG, useGrid, Grid } from '@dxos/gem-core';
@@ -26,11 +27,11 @@ const useCustomStyles = makeStyles(() => ({
       stroke: (colors as any)[color][700]
     };
 
-    // map[`& g.node.${color} text`] = {
-    //   fontFamily: 'sans-serif',
-    //   fontSize: 12,
-    //   fill: colors['grey'][700]
-    // };
+    // code map[`& g.node.${color} text`] = {
+    // code   fontFamily: 'sans-serif',
+    // code   fontSize: 12,
+    // code   fill: colors['grey'][700]
+    // code };
 
     return map;
   }, {})

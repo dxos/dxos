@@ -42,12 +42,16 @@ const WithDevtoolsRpc = ({ port, children } : WithDevtoolsRpcProps) => {
 
   return (
     <>
-      {(!ready || !rpcClient) && (<div>
+      {(!ready || !rpcClient) && (
+<div>
           <div style={{ padding: 8 }}> Waiting for DXOS client... </div>
-        </div>)}
-      {(ready && rpcClient) && (<WithDevtoolsHostContext devtoolsHost={rpcClient?.rpc}>
+        </div>
+      )}
+      {(ready && rpcClient) && (
+<WithDevtoolsHostContext devtoolsHost={rpcClient?.rpc}>
           {children}
-        </WithDevtoolsHostContext>)}
+        </WithDevtoolsHostContext>
+      )}
     </>
   );
 };

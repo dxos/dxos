@@ -140,7 +140,7 @@ describe('Registry Client', () => {
         versionedDxn = DXN.fromDomainKey(domainKey, versionedName);
         await registryApi.updateResource(versionedDxn, version2, { tags: ['beta'], version: '2.0.0' });
         await registryApi.updateResource(versionedDxn, version3, { tags: ['alpha'], version: '3.0.0' });
-        await registryApi.updateResource(versionedDxn, version4); // latest tag by default.
+        await registryApi.updateResource(versionedDxn, version4); // Latest tag by default.
       });
 
       it('Properly Registers resource with tags and versions', async () => {
@@ -204,8 +204,8 @@ describe('Registry Client', () => {
         kube: createCID().value,
         extension: {
           '@type': ipfsTypeCid,
-          protocol: 'ipfs/0.1.0',
-          addresses: [
+          'protocol': 'ipfs/0.1.0',
+          'addresses': [
             '/ip4/123.123.123.123/tcp/5566'
           ]
         }

@@ -86,7 +86,7 @@ export class TextModel extends Model<Mutation> {
     let childLength = 0;
 
     if (node instanceof XmlFragment && node.length === 0) {
-      // Empty doc, create an empty paragraph
+      // Empty doc, create an empty paragraph.
       const paragraph = new XmlElement('paragraph');
       paragraph.insert(0, [new XmlText('')]);
       node.insert(0, [paragraph]);
@@ -102,8 +102,8 @@ export class TextModel extends Model<Mutation> {
 
       childLength += inserted;
 
-      // Previous node length = inserted
-      // Jump block = 1
+      // Previous node length = inserted.
+      // Jump block = 1.
       innerIndex -= inserted + 1;
     }
 

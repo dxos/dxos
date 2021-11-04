@@ -333,8 +333,9 @@ export class PartyState extends EventEmitter {
         const feedKey = await this._processFeedAdmitMessage(message, !envelopedMessage);
         this._credentialMessages.set(feedKey.publicKey.toHex(), original);
 
-        // This uses 'message' rather than 'original', since in a Greeting/Envelope case we want to record the
-        // feed's actual owner, not the Greeter writing the message on their behalf.
+        /* This uses 'message' rather than 'original', since in a Greeting/Envelope case we want to record the
+         * feed's actual owner, not the Greeter writing the message on their behalf.
+         */
         const admittedBy = this._determineAdmittingMember(feedKey.publicKey, message);
         assert(admittedBy);
         this._admittedBy.set(feedKey.publicKey.toHex(), admittedBy);

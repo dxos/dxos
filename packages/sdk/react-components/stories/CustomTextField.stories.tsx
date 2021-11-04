@@ -2,8 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Box } from '@mui/material';
 import React, { useState } from 'react';
+
+import { Box } from '@mui/material';
 
 import { CustomTextField } from '../src';
 import { Container } from './helpers';

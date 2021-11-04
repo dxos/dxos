@@ -15,14 +15,14 @@ describe('test model', () => {
     const itemId = createId();
     const model = new TestModel(TestModel.meta, itemId);
 
-    // Model
+    // Model.
     expect(model.itemId).toBe(itemId);
     expect(model.readOnly).toBeTruthy();
 
-    // TestModel
+    // TestModel.
     expect(model.keys).toHaveLength(0);
 
-    // Set mutation
+    // Set mutation.
     const { publicKey: feedKey } = createKeyPair();
 
     await model.processMessage({ feedKey, seq: 1, memberKey: feedKey }, { key: 'title', value: 'DXOS' });

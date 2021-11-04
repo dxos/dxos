@@ -18,7 +18,7 @@ export default {
         value: data
       };
     },
-    decode: (value: any, schema: CodecSchema<any>): any => { // TODO(marik-d): Should be KnownAny
+    decode: (value: any, schema: CodecSchema<any>): any => { // TODO(marik-d): Should be KnownAny.
       const codec = schema.tryGetCodecForType(value.type_url);
       const data = codec.decode(value.value);
       return {

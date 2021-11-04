@@ -61,7 +61,7 @@ describe('MetadataStore in-memory', () => {
     expect(store.parties?.[0].feedKeys?.[0]).toEqual(feedKey);
   });
 
-  // TODO(yivlad) Doesn't work for now
+  // TODO(yivlad): Doesn't work for now.
   it.skip('Resets storage', async () => {
     const store = new MetadataStore(createRamStorage());
 

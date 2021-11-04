@@ -69,7 +69,7 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
   };
 
   if (profile && profile.username && profile.publicKey) {
-    return <Redirect to='/user'/>;
+    return <Redirect to='/user' />;
   }
 
   return (
@@ -88,7 +88,7 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
               onChange={e => setUsername(e.target.value)}
               variant='outlined'
               required
-              helperText={<div> This will be your username visible to everyone. </div>}/>
+              helperText={<div> This will be your username visible to everyone. </div>} />
           </Grid>
         </Grid>
         <Grid item xs={12}>
@@ -107,7 +107,7 @@ const CreateProfile = ({ onProfileCreated, profile } : CreateProfileProps) => {
             <Link component='button'>Import using seedphrase</Link>
           </Grid>
           <Grid container justify='center'>
-            <Divider className={classes.divider} orientation='horizontal'/>
+            <Divider className={classes.divider} orientation='horizontal' />
           </Grid>
           <Grid container justify='center' onClick={() => onNavigation('redeem-device')}>
             <Link component='button'>Redeem device invitation</Link>

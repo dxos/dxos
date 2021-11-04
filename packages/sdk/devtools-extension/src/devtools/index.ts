@@ -11,7 +11,7 @@ let checkCount = 0;
 let loadCheckInterval: NodeJS.Timeout;
 
 function createPanel () {
-  // stop trying if above 120 seconds or already made
+  // Stop trying if above 120 seconds or already made.
   if (panelCreated || checkCount++ > 120) {
     return;
   }
@@ -20,17 +20,17 @@ function createPanel () {
   chrome.devtools.inspectedWindow.eval(
     '!!(window.__DXOS__);',
     (result, isException) => {
-      // TODO(elmasse) How should we better handle this error?
+      // TODO(elmasse): How should we better handle this error?
       if (isException) {
         console.log('DXOS devtools', isException);
       }
 
-      // already created or no client
+      // Already created or no client.
       if (!result || panelCreated) {
         return;
       }
 
-      // clear watcher
+      // Clear watcher.
       if (loadCheckInterval) {
         clearInterval(loadCheckInterval);
       }
@@ -45,12 +45,12 @@ function createPanel () {
   );
 }
 
-// Attempt to create panel on navigations as well
+// Attempt to create panel on navigations as well.
 chrome.devtools.network.onNavigated.addListener(createPanel);
 
-// Attempt to create panel once per second in case
-// DXOS is loaded after page load
+// Attempt to create panel once per second in case.
+// DXOS is loaded after page load.
 loadCheckInterval = setInterval(createPanel, 1000);
 
-// Start the first attempt immediately
+// Start the first attempt immediately.
 createPanel();

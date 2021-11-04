@@ -13,11 +13,11 @@ describe('Registry API querying', () => {
   // TODO(marik-d): Fix those tests.
   describe('Resources filtering', () => {
     it('Filters by type, when equal, then filtered in', () => {
-      // const data = [{ messageFqn: 'app' } as unknown as Resource, { mesageFqn: 'bot' } as unknown as Resource];
-      // const actual = data.filter(item => Filtering.matchResource(item, { type: 'app' }));
+      // code const data = [{ messageFqn: 'app' } as unknown as Resource, { mesageFqn: 'bot' } as unknown as Resource];
+      // code const actual = data.filter(item => Filtering.matchResource(item, { type: 'app' }));
 
-      // expect(actual).to.have.length(1);
-      // expect(actual[0].messageFqn).to.be.equal('app');
+      // code expect(actual).to.have.length(1);
+      // code expect(actual[0].messageFqn).to.be.equal('app');
     });
 
     it('Filters by text, when contains text, then filtered in', () => {
@@ -68,7 +68,7 @@ describe('Registry API querying', () => {
     });
 
     it('Filters by text', () => {
-      expect(records.filter(item => Filtering.matchRecord(item, { text: 'app' }))).to.have.length(3); // 2 Applications and App type
+      expect(records.filter(item => Filtering.matchRecord(item, { text: 'app' }))).to.have.length(3); // 2 Applications and App type.
       expect(records.filter(item => Filtering.matchRecord(item, { text: 'application' }))).to.have.length(2);
       expect(records.filter(item => Filtering.matchRecord(item, { text: 'botter' }))).to.have.length(1);
       expect(records.filter(item => Filtering.matchRecord(item, { text: 'ipfs' }))).to.have.length(0);

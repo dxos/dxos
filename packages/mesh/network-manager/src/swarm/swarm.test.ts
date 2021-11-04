@@ -28,11 +28,11 @@ const setup = () => {
     new FullyConnectedTopology(),
     () => new Protocol(),
     async msg => {
-      await sleep(10); // Simulating network delay
+      await sleep(10); // Simulating network delay.
       return swarm2.onOffer(msg);
     },
     async msg => {
-      await sleep(10); // Simulating network delay
+      await sleep(10); // Simulating network delay.
       await swarm2.onSignal(msg);
     },
     () => {},
@@ -45,11 +45,11 @@ const setup = () => {
     new FullyConnectedTopology(),
     () => new Protocol(),
     async msg => {
-      await sleep(10); // Simulating network delay
+      await sleep(10); // Simulating network delay.
       return swarm1.onOffer(msg);
     },
     async msg => {
-      await sleep(10); // Simulating network delay
+      await sleep(10); // Simulating network delay.
       await swarm1.onSignal(msg);
     },
     () => {},

@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
-import { makeStyles } from '@mui/styles';
 import moment from 'moment';
 import React from 'react';
+
+import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 
 import { keyTypeName } from '@dxos/credentials';
 import { CopyText } from '@dxos/react-components';

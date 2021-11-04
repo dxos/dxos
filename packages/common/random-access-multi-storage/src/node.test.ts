@@ -32,12 +32,12 @@ describe('testing node storage types', () => {
     const storage = createStorage(directory);
     expect(storage.type).toBe(STORAGE_NODE);
 
-    // Check write a file
+    // Check write a file.
     const file = storage.createOrOpen('file1');
     await write(file);
     await expect(fs.access(path.join(directory, 'file1'), constants.F_OK)).resolves.toBeUndefined();
 
-    // Check destroy
+    // Check destroy.
     await storage.destroy();
     await expect(fs.access(directory, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });

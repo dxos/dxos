@@ -35,7 +35,7 @@ export interface ClientServiceHost {
 
   close(): Promise<void>
 
-  // TODO(dmaretskyi): Remove and rely on services
+  // TODO(dmaretskyi): Remove and rely on services.
   /**
    * @deprecated
    */
@@ -113,7 +113,7 @@ export class LocalClientServiceHost implements ClientServiceHost {
           throw new Error('Not implemented');
         }
       },
-      DataService: undefined as any, // TODO: will probably be implemented internally in ECHO
+      DataService: undefined as any, // TODO(unknown): Will probably be implemented internally in ECHO.
       DevtoolsHost: this._createDevtoolsService()
     };
   }

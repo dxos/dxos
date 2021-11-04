@@ -2,13 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
+import faker from 'faker';
+import React, { useState } from 'react';
+
 import {
   Check as TrueIcon,
   Clear as Falseicon
 } from '@mui/icons-material';
 import { Box, Checkbox, IconButton } from '@mui/material';
-import faker from 'faker';
-import React, { useState } from 'react';
 
 import { GetRowHeightProps, DataCellProps, VirtualTable, FullScreen } from '../src';
 

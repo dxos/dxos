@@ -22,7 +22,7 @@ const SwarmDetails = () => {
     return <div> No swarms to display. </div>;
   }
 
-  return <SwarmComponent swarms={swarms?.data as SwarmInfo[]}/>;
+  return <SwarmComponent swarms={swarms?.data as SwarmInfo[]} />;
 };
 
 export default SwarmDetails;

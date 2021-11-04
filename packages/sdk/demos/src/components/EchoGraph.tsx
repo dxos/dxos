@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useEffect, useRef, useState } from 'react';
+
 import * as colors from '@mui/material/colors';
 import { makeStyles } from '@mui/styles';
-import React, { useEffect, useRef, useState } from 'react';
 
 import { ECHO, Item } from '@dxos/echo-db';
 import {
@@ -174,7 +175,7 @@ const EchoGraph = (
       node: {
         radius: 8,
         showLabels: true,
-        // TODO(burdon): Properties on node directly (e.g., radius, class). Arrows use radius.
+        // TODO(burdon): Properties on node directly (eg, radius, class). Arrows use radius.
         propertyAdapter: ({ type }: {type: 'database' | 'party' | 'item'}) => ({
           class: type,
           radius: {

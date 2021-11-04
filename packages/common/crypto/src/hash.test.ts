@@ -1,4 +1,4 @@
-// dxos-testing-browser
+// DXOS testing browser.
 
 //
 // Copyright 2020 DXOS.org

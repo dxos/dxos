@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useEffect, useState } from 'react';
+
 import { createTheme } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import React, { useEffect, useState } from 'react';
 
 import KeyTable from '../components/KeyTable';
 import { useDevtoolsHost } from '../contexts';

@@ -47,7 +47,8 @@ const Main = () => {
           <RedeemDevice profile={profile} onProfileCreated={setProfile} />
         </Route>
         {profile && profile.username && profile.publicKey
-          ? <Switch>
+          ? (
+<Switch>
             <Route path='/user'>
               <User profile={profile} />
             </Route>
@@ -58,6 +59,7 @@ const Main = () => {
               <JoinParty />
             </Route>
           </Switch>
+            )
           : null}
         <Redirect to='/create' />
       </Switch>

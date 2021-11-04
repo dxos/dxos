@@ -6,7 +6,7 @@ import path from 'path';
 
 import { ChildProcessContainer } from './child-process-container';
 
-// Js file inside Node.js bot package.
+// Js file inside NodeJS bot package.
 const NODE_BOT_MAIN_FILE = 'main.js';
 
 /**

@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { makeStyles } from '@mui/styles';
 import update from 'immutability-helper';
 import React, { useState, useEffect } from 'react';
 import useResizeAware from 'react-resize-aware';
+
+import { makeStyles } from '@mui/styles';
 
 import { SVG, useGrid } from '@dxos/gem-core';
 import {
@@ -25,7 +26,7 @@ const useStyles = makeStyles(() => ({
   root: {
     display: 'flex',
     flex: 1,
-    position: 'relative' // Important
+    position: 'relative' // Important.
   }
 }));
 
@@ -40,7 +41,7 @@ interface LinksGraphProps {
 const GraphView = ({
   data, onSelect = () => {}, onCreate = () => {}, classes = {}, propertyAdapter = () => ({})
 }: LinksGraphProps) => {
-  const clazzes = { ...useStyles(), ...classes }; // TODO(burdon): merge()
+  const clazzes = { ...useStyles(), ...classes }; // TODO(burdon): `merge()`.
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
   const grid = useGrid({ width, height });
@@ -59,7 +60,7 @@ const GraphView = ({
     <div className={clazzes.root}>
       {resizeListener}
       <SVG width={size.width} height={size.height}>
-        <Markers arrowSize={10}/>
+        <Markers arrowSize={10} />
         <GraphLinker
           grid={grid}
           drag={drag}

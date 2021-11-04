@@ -8,7 +8,7 @@ import { it as test } from 'mocha';
 import { waitForCondition } from '@dxos/async';
 import { MessengerModel } from '@dxos/messenger-model';
 
-import { /* BROWSER_ENV, NODE_ENV, */ Orchestrator } from '..';
+import { /* code BROWSER_ENV, NODE_ENV, */ Orchestrator } from '..';
 import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents/test-agent';
 import { AGENT_PATH } from './agent';
 import '../testing/setup';

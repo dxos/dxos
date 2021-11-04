@@ -33,10 +33,11 @@ export interface InvitationQueryParameters {
   type: string
 }
 
-// TODO(telackey): Add class description:
-// TODO(telackey): Add comment explaining in brief what is going on.
-//  e.g. what is hash for?
-//  e.g. do we expect users of this class to serialize it themselves?
+// TODO(telackey): Add class description.
+/* TODO(telackey): Add comment explaining in brief what is going on.
+ * (eg, What is hash for?)
+ * (eg, Do we expect users of this class to serialize it themselves?)
+ */
 /**
  * Description of what this class is for goes here.
  */

@@ -2,6 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import faker from 'faker';
+import React, { useState } from 'react';
+
 import AddIcon from '@mui/icons-material/Add';
 import OrgIcon from '@mui/icons-material/Business';
 import DefaultIcon from '@mui/icons-material/CheckBoxOutlineBlank';
@@ -9,8 +12,6 @@ import PersonIcon from '@mui/icons-material/PersonOutline';
 import ProjectIcon from '@mui/icons-material/WorkOutline';
 import { Chip, createTheme, IconButton, Typography } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import faker from 'faker';
-import React, { useState } from 'react';
 
 import { Database, Item } from '@dxos/echo-db';
 import {
@@ -38,12 +39,12 @@ const Icon = ({ item: { type } }: { item: Item<any> }) => {
     return null;
   }
 
-  return <Icon/>;
+  return <Icon />;
 };
 
 const useStyles = makeStyles(theme => ({
   sublist: {
-    marginTop: theme.spacing(1),
+    'marginTop': theme.spacing(1),
     '& table': {
       tableLayout: 'fixed',
       borderCollapse: 'collapse',
@@ -57,10 +58,10 @@ const useStyles = makeStyles(theme => ({
     marginTop: theme.spacing(2)
   },
   chip: {
-    height: 20,
-    padding: 2,
-    marginRight: 4,
-    borderRadius: 6,
+    'height': 20,
+    'padding': 2,
+    'marginRight': 4,
+    'borderRadius': 6,
     '& span': {
       paddingLeft: 6,
       paddingRight: 6,
@@ -161,7 +162,7 @@ export const createAdapter = (database: Database) => {
             {handleCreate && (
               <>
                 <IconButton size='small' onClick={() => setDialog(true)}>
-                  <AddIcon/>
+                  <AddIcon />
                 </IconButton>
 
                 <ItemDialog
@@ -184,7 +185,7 @@ export const createAdapter = (database: Database) => {
         return (
           <div className={classes.chips}>
             {Object.values(labels).map((label, i) => (
-              <Chip key={i} label={label} className={classes.chip}/>
+              <Chip key={i} label={label} className={classes.chip} />
             ))}
           </div>
         );
@@ -230,7 +231,7 @@ export const createAdapter = (database: Database) => {
         }
       }
 
-      slices.push(<Labels labels={labels}/>);
+      slices.push(<Labels labels={labels} />);
 
       return slices;
     }

@@ -9,7 +9,8 @@
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
-    "ConfigPlugin.js"
+    "ConfigPlugin.js",
+    "esbuild-plugin.js"
   ],
   "scripts": {
     "build": "toolchain build",

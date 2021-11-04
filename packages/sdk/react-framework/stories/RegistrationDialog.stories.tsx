@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import Box from '@mui/material/Box';
 import React, { useState } from 'react';
+
+import Box from '@mui/material/Box';
 
 import { sleep } from '@dxos/async';
 

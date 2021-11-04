@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Box, Typography, TypographyProps } from '@mui/material';
 import React from 'react';
+
+import { Box, Typography, TypographyProps } from '@mui/material';
 
 import { truncateString } from '@dxos/debug';
 

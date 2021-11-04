@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import React from 'react';
+
 import { createTheme, DialogTitle, SvgIconTypeMap, Toolbar, Typography } from '@mui/material';
 import { OverridableComponent } from '@mui/material/OverridableComponent';
 import { makeStyles } from '@mui/styles';
-import React from 'react';
 
 const useStyles = makeStyles((theme) => ({
   title: {
