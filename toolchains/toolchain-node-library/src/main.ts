@@ -22,7 +22,7 @@ function execBuild () {
     process.stderr.write(chalk`{yellow warn}: jest config in package.json is ignored\n`);
   }
 
-  if (project.packageJsonContents.eslintConfig) {
+  if (project.packageJsonContents.eslintConfig && !project.packageJsonContents.toolchain?.allowExtendedEslintConfig) {
     process.stderr.write(chalk`{yellow warn}: eslint config in package.json is ignored\n`);
   }
 

@@ -63,6 +63,7 @@
     "access": "public"
   },
   "toolchain": {
-    "testingFramework": "mocha"
+    "testingFramework": "mocha",
+    "allowExtendedEslintConfig": true
   }
 }
