@@ -10,6 +10,8 @@ import { decodeInvitation, useClient, useSecretProvider } from '@dxos/react-clie
 import { Dialog, Passcode } from '@dxos/react-components';
 
 import { handleKey } from '../../helpers';
+import { InvitationDescriptor, Party } from '@dxos/echo-db';
+import type { SecretProvider } from '@dxos/credentials';
 
 enum PartyJoinState {
   INIT,
@@ -22,7 +24,7 @@ export interface JoinDialogProps {
   modal?: boolean
   onClose?: () => void
   closeOnSuccess?: boolean,
-  type: 'party' | 'halo',
+  onJoin: (invitation: InvitationDescriptor, secretProvider: SecretProvider) => Promise<Party>
   title: string
 }
 
@@ -37,8 +39,8 @@ export const JoinDialog = ({
   open,
   onClose,
   closeOnSuccess = true,
-  type,
-  title
+  title,
+  onJoin
 }: JoinDialogProps) => {
   const [state, setState] = useState(PartyJoinState.INIT);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -46,7 +48,6 @@ export const JoinDialog = ({
   const [invitationCode, setInvitationCode] = useState('');
 
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
-  const client = useClient();
 
   const handleReset = () => {
     setError(undefined);
@@ -84,13 +85,7 @@ export const JoinDialog = ({
 
     try {
       setState(PartyJoinState.AUTHENTICATE);
-      if (type === 'party') {
-        const party = await client.echo.joinParty(invitation, secretProvider);
-        await party.open();
-      } else if (type === 'halo') {
-        const party = await client.echo.halo.join(invitation, secretProvider);
-        await party.open(); // Should I do this?
-      }
+      await onJoin(invitation, secretProvider);
     } catch (err: any) {
       // TODO(burdon): Extract human error (eg, currently "Already connected to swarm").
       setError(err.responseMessage || err.message);
