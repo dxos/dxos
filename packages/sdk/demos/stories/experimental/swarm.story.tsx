@@ -71,7 +71,7 @@ const Story = () => {
   };
 
   const activeParty = client.echo.queryParties().value[0];
-  const partyMembers = useMembers(activeParty)
+  const partyMembers = useMembers(activeParty);
 
   return (
     <FullScreen>
