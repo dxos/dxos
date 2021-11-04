@@ -97,7 +97,7 @@ export class LocalClientServiceHost implements ClientServiceHost {
         },
         SubscribeContacts: () => {
           throw new Error('Not implemented');
-        },
+        }
       },
       PartyService: {
         SubscribeParties: () => {
