@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Button, Toolbar } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
-import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient, useParties } from '@dxos/react-client';
+import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
@@ -34,10 +34,13 @@ const Parties = () => {
 
 const Sender = () => {
   const [open, setOpen] = useState(true);
-  const client = useClient();
+  const profile = useProfile();
 
   return (
     <Box>
+      <Box sx={{ padding: 1 }}>
+        <p>{profile?.username}</p>
+      </Box>
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
@@ -55,16 +58,20 @@ const Sender = () => {
 
 const Receiver = () => {
   const [open, setOpen] = useState(true);
+  const profile = useProfile();
 
   return (
     <Box>
+      <Box sx={{ padding: 1 }}>
+        <p>{profile?.username ?? 'Profile not created.'}</p>
+      </Box>
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
       <JoinHaloDialog
         open={open}
         onClose={() => setOpen(false)}
-        closeOnSuccess={false}
+        closeOnSuccess={true}
         modal={false}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>

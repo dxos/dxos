@@ -8,9 +8,9 @@ import { JoinDialog, JoinDialogProps } from './common';
 /**
  * Manages the workflow of joining a Party invitation.
  */
-export const JoinPartyDialog = (props: Omit<JoinDialogProps, 'type'>) => {
+export const JoinPartyDialog = (props: Omit<JoinDialogProps, 'type' | 'title'>) => {
   return (
-    <JoinDialog {...props} type="party"/>
+    <JoinDialog {...props} type="party" title="Join Party" />
   )
 };
 

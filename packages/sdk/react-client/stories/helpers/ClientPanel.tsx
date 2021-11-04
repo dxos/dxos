@@ -10,6 +10,7 @@ import { Client } from '@dxos/client';
 import { Party } from '@dxos/echo-db';
 
 import { JsonPanel } from './JsonPanel';
+import { useProfile } from '../../src';
 
 export const ClientPanel = ({
   client,
@@ -17,7 +18,7 @@ export const ClientPanel = ({
   parties = []
 }: {
   client: Client,
-  profile?: any, // TODO(burdon): Require type definition.
+  profile?: Partial<ReturnType<typeof useProfile>>,
   parties?: Party[]
 }) => {
   const data = (parties.length !== 0)

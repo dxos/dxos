@@ -22,7 +22,8 @@ export interface JoinDialogProps {
   modal?: boolean
   onClose?: () => void
   closeOnSuccess?: boolean,
-  type: 'party' | 'halo'
+  type: 'party' | 'halo',
+  title: string
 }
 
 /**
@@ -36,7 +37,8 @@ export const JoinDialog = ({
   open,
   onClose,
   closeOnSuccess = true,
-  type
+  type,
+  title
 }: JoinDialogProps) => {
   const [state, setState] = useState(PartyJoinState.INIT);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -152,7 +154,7 @@ export const JoinDialog = ({
     switch (state) {
       case PartyJoinState.INIT: {
         return {
-          title: 'Join Party',
+          title,
           processing,
           content: joinPartyContent,
           actions: joinPartyActions
