@@ -5,6 +5,8 @@
 import Box from '@mui/material/Box';
 import React, { useState } from 'react';
 
+import { sleep } from '@dxos/async';
+
 import { RegistrationDialog } from '../src';
 
 export default {
@@ -15,19 +17,12 @@ export default {
 export const Primary = () => {
   const [open, setOpen] = useState(true);
 
-  const handleFinishCreate = (username, seedPhrase) => {
-    setTimeout(() => {
-      setOpen(false);
-    }, 1000);
-  };
-
   return (
     <Box m={2}>
       <RegistrationDialog
         open={open}
-        onFinishCreate={handleFinishCreate}
-        onFinishRestore={() => console.warn('Not implemented.')}
-        keyringDecrypter={() => console.warn('Not implemented.')}
+        onComplete={() => sleep(1000).then(() => setOpen(false)) }
+        onRestore={() => sleep(1000).then(() => { throw new Error('Corrupt seed phrase.'); })}
       />
     </Box>
   );

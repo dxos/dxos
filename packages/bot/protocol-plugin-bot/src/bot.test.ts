@@ -14,6 +14,7 @@ import { BotPlugin } from './bot';
 import { createSpawnCommand } from './botkit-messages';
 import { Message } from './proto';
 
+// TODO(burdon): Factor out.
 const random = <T> (arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
 const createNode = async (topic: Buffer) => {

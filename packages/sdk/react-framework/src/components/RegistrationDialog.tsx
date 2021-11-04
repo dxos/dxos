@@ -8,111 +8,50 @@ import {
 } from '@mui/icons-material';
 import {
   Avatar,
+  Box,
   Button,
   Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   Grid,
-  LinearProgress,
   Paper,
   TextField,
-  Typography
+  Typography,
+  styled,
+  useTheme
 } from '@mui/material';
-
-import assert from 'assert';
-import MobileDetect from 'mobile-detect';
 import React, { useRef, useState } from 'react';
 
 import { generateSeedPhrase } from '@dxos/crypto';
+import { Dialog } from '@dxos/react-components';
 
-// TODO(burdon): Enum.
+import { pickUnique, isMobile, ordinal, createDownloadLink } from '../helpers';
+
 enum Stage {
-  PENDING,
   START,
   RESTORE,
   ENTER_USERNAME,
   SHOW_SEED_PHRASE,
-  CHECK_SEED_PHRASE,
-  IMPORT_KEYRING
+  CHECK_SEED_PHRASE
 }
 
-// TODO(burdon): Factor out (helpers).
-const ordinal = (n: number) => String(n) + ((n === 1) ? 'st' : (n === 2) ? 'nd' : (n === 3) ? 'rd' : 'th');
+const numSeedWordTests = 4;
 
-// TODO(burdon): Factor out (helpers, context?)
-const mobile = new MobileDetect(window.navigator.userAgent).mobile();
+const useSeedWords = (seedPhrase: string, n: number): [string[], number[]] => {
+  const words = seedPhrase.split(' ');
+  const indexes = pickUnique<number>([...new Array(words.length)].map((_, i) => i), n);
+  return [words, indexes];
+}
 
-/*
-const useStyles = makeStyles((theme: Theme) => ({
-  paper: {
-    minWidth: 700,
-    minHeight: 300
-  },
+const isSeedPhraseValid = (value: string) => {
+  return value.trim().toLowerCase().split(/\s+/g).length === 12;
+}
 
-  container: {
-    display: 'flex',
-    flex: 1,
-    justifyContent: 'space-between'
-  },
-
-  choice: {
-    width: 300,
-    height: 240,
-    margin: theme.spacing(1),
-    padding: theme.spacing(2),
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-
-  icon: {
-    margin: theme.spacing(2),
-    fontSize: 'xx-large'
-  },
-
-  caption: {
-    textAlign: 'center',
-    marginBottom: theme.spacing(4)
-  },
-
-  seedPhraseActions: {
-    justifyContent: 'space-between'
-  },
-
-  seedPhrase: {
-    marginTop: theme.spacing(3),
-    marginBottom: theme.spacing(3)
-  },
-  seedChip: {
-    width: 128,
-    justifyContent: 'inherit',
-    margin: theme.spacing(0.5)
-  },
-  seedLabel: {
-    paddingLeft: theme.spacing(1)
-  },
-  seedNumber: {
-    margin: 0,
-    fontSize: 11,
-    height: 24,
-    width: 24,
-    marginLeft: 5,
-    backgroundColor: theme.palette.primary.dark,
-    color: 'white'
-  }
-}), { defaultTheme });
-*/
+const seedPhraseFile = 'dxos-recovery-seedphrase.txt';
 
 export interface RegistrationDialogProps {
   open: boolean
-  debug: boolean
-  onFinishCreate: (username: string, seedPhrase: string) => void // TODO(burdon): Rename.
-  onFinishRestore: (seedPhrase: string) => void // TODO(burdon): Rename.
-  keyringDecrypter: (text: string | ArrayBuffer | null, passphrase: number) => string
+  debug?: boolean
+  onRestore: (seedPhrase: string) => void
+  onComplete: (seedPhrase: string, username: string) => void
 }
 
 /**
@@ -123,44 +62,40 @@ export interface RegistrationDialogProps {
 export const RegistrationDialog = ({
   open = true,
   debug = false,
-  onFinishCreate,
-  onFinishRestore,
-  keyringDecrypter
+  onRestore,
+  onComplete
 }: RegistrationDialogProps) => {
-  const classes = {}; // TODO(burdon): Replace with SX.
-  const [stage, setStage] = useState(Stage.START);
+  const [stage, _setStage] = useState(Stage.START);
+  const [error, setError] = useState<string>();
+  const [processing, setProcessing] = useState(false);
   const [seedPhrase] = useState(generateSeedPhrase());
   const [username, setUsername] = useState('');
-  const [recoveredSeedPhrase, setRecoveredSeedPhrase] = useState('');
-  const usernameRef = useRef();
-  const seedPhraseRef = useRef();
+  const usernameRef = useRef<HTMLInputElement>();
+  const seedphraseRef = useRef<HTMLInputElement>();
+  const seedRefs = [...new Array(numSeedWordTests)].map(() => useRef<HTMLInputElement>());
+  const [seedWords, seedWordTestIndexes] = useSeedWords(seedPhrase, numSeedWordTests);
 
-  const words = seedPhrase.split(' ');
-  const selected = [Math.floor(Math.random() * words.length), Math.floor(Math.random() * words.length)];
-  while (selected[0] === selected[1]) {
-    selected[1] = Math.floor(Math.random() * words.length);
-  }
-  selected.sort((a, b) => (a < b ? -1 : a === b ? 0 : 1));
+  const setStage = (stage: Stage) => {
+    setError(undefined);
+    setProcessing(false);
+    _setStage(stage);
+  };
 
   const handleDownloadSeedPhrase = (seedPhrase: string) => {
-    const file = new Blob([seedPhrase], { type: 'text/plain' });
-    const element = document.createElement('a');
-    element.href = URL.createObjectURL(file);
-    element.download = 'dxos-recovery-seedphrase.txt'; // TODO(burdon): Const.
+    const text = seedPhrase.split(' ').map((word, i) => `[${String(i + 1).padStart(2, '0')}] = ${word}`).join('\n');
+    const element = createDownloadLink(seedPhraseFile, text);
     element.click();
   };
 
-  const restoreSeedPhraseValid = () => {
-    return recoveredSeedPhrase.trim().toLowerCase().split(/\s+/g).length === 12;
-  }
-
   const handleNext = async (ev: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> => {
+    setError(undefined);
+    setProcessing(false);
+
     switch (stage) {
       case Stage.ENTER_USERNAME: {
-        assert(usernameRef.current);
-        const inputElement = (usernameRef.current as unknown as HTMLInputElement);
-        if (inputElement.value.trim().length > 0) {
-          setUsername(inputElement.value.trim());
+        const value = usernameRef.current!.value.trim();
+        if (value.length > 0) {
+          setUsername(value);
           setStage(Stage.SHOW_SEED_PHRASE);
         }
         break;
@@ -172,16 +107,17 @@ export const RegistrationDialog = ({
       }
 
       case Stage.CHECK_SEED_PHRASE: {
-        const testWords = (seedPhraseRef.current as unknown as HTMLInputElement).value.trim().toLowerCase().split(/\s+/);
+        const testWords = seedRefs.map(seedRef => seedRef.current!.value);
+        // Find first word that doesn't match.
+        const match = undefined === testWords.find((word, i) => {
+          return word !== seedWords[seedWordTestIndexes[i]] ? true : undefined;
+        });
 
-        const match = (testWords.length === 2 &&
-          testWords[0] === words[selected[0]] && testWords[1] === words[selected[1]]);
-
-        // TODO(burdon): Decide policy.
-        const skipMatch = (debug || ev.shiftKey || !!mobile);
+        const skipMatch = (debug || ev.shiftKey || !!isMobile);
         if (match || skipMatch) {
-          setStage(Stage.PENDING);
-          await onFinishCreate(username, seedPhrase);
+          setProcessing(true);
+          await onComplete(username, seedPhrase);
+          setProcessing(false);
         } else {
           setStage(Stage.SHOW_SEED_PHRASE);
         }
@@ -189,41 +125,70 @@ export const RegistrationDialog = ({
       }
 
       case Stage.RESTORE: {
-        const restoreSeedPhrase = recoveredSeedPhrase.trim().toLowerCase();
-
-        // Sanity check that it looks like a seed phrase.
-        if (!restoreSeedPhraseValid()) {
-          throw new Error('Invalid seed phrase.');
+        const restoreSeedPhrase = seedphraseRef.current!.value.trim().toLowerCase();
+        if (!isSeedPhraseValid(restoreSeedPhrase)) {
+          setError('Invalid seed phrase.');
         } else {
-          // TODO(dboreham): Do more checks on input (not all strings containing 12 words are valid seed phrases).
-          setStage(Stage.PENDING);
-          await onFinishRestore(restoreSeedPhrase);
+          setProcessing(true);
+          try {
+            await onRestore(restoreSeedPhrase);
+          } catch (err) {
+            // TODO(burdon): Detech user-facing message or display generic.
+            setError(err.message);
+          }
+          setProcessing(false);
         }
         break;
       }
 
-      default:
+      default: {
         setStage(Stage.ENTER_USERNAME);
+      }
     }
   };
 
   const handleKeyDown = async (event: React.SyntheticEvent) => {
-    if ((event as React.KeyboardEvent).key === 'Enter') { // TODO(burdon): Use util.
+    if ((event as React.KeyboardEvent).key === 'Enter') {
       await handleNext(event as React.MouseEvent<HTMLButtonElement, MouseEvent>);
     }
   };
 
+  // TODO(burdon): Factor out.
   const SeedPhrasePanel = ({ value }: { value: string }) => {
+    const theme = useTheme();
     const words = value.split(' ');
 
     return (
-      <Grid container className={classes.seedPhrase} spacing={0}>
+      <Grid container spacing={0}>
         {words.map((word, i) => (
           <Grid item key={i} xs={3}>
             <Chip
               key={i}
-              icon={<Avatar className={classes.seedNumber}>{i + 1}</Avatar>}
-              classes={{ root: classes.seedChip, label: classes.seedLabel }}
+              sx={{
+                width: 128,
+                justifyContent: 'inherit',
+                margin: '4px',
+                '.MuiChip-icon': {
+                  color: theme.palette.background.paper
+                },
+                '.MuiChip-label': {
+                  paddingLeft: '16px'
+                }
+              }}
+              icon={(
+                <Avatar
+                  sx={{
+                    margin: 0,
+                    fontSize: 11,
+                    height: 24,
+                    width: 24,
+                    marginLeft: 5,
+                    backgroundColor: theme.palette.primary.dark
+                  }}
+                >
+                  {i + 1}
+                </Avatar>
+              )}
               label={word}
               data-testid='chip'
             />
@@ -233,154 +198,177 @@ export const RegistrationDialog = ({
     );
   };
 
-  // TODO(burdon): Configure title.
-  const getStage = (stage: number) => {
+  const getStage = (stage: Stage) => {
     switch (stage) {
       case Stage.START: {
-        return (
-          <>
-            <DialogTitle>User Profile</DialogTitle>
-            <DialogContent className={classes.container}>
-              <div>
-                <Paper className={classes.choice} variant='outlined'>
-                  <CreateIcon className={classes.icon} />
-                  <Typography className={classes.caption}>
-                    Create a new profile<br />and wallet.
-                  </Typography>
-                  <Button variant='contained' color='primary' onClick={() => setStage(Stage.ENTER_USERNAME)}>
-                    Create Wallet
-                  </Button>
-                </Paper>
-              </div>
-              <div>
-                <Paper className={classes.choice} variant='outlined'>
-                  <RestoreIcon className={classes.icon} />
-                  <Typography className={classes.caption}>
-                    Enter your seed phrase<br />to recover your profile.
-                  </Typography>
-                  <Button variant='contained' color='primary' onClick={() => setStage(Stage.RESTORE)}>
-                    Recover Wallet
-                  </Button>
-                </Paper>
-              </div>
-            </DialogContent>
-            {/* ISSUE: https://github.com/dxos/echo/issues/339#issuecomment-735918728 */}
-            {/*
-            <DialogActions>
-              <Button variant='text' color='secondary' onClick={() => setStage(Stage.IMPORT_KEYRING)}>Import Keyring</Button>
-            </DialogActions>
-            */}
-          </>
-        );
+        return {
+          title: 'User profile',
+          content: () => {
+            const Option = styled(Paper)({
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              textAlign: 'center',
+              width: 260,
+              height: 220,
+              margin: 16,
+              '& .MuiSvgIcon-root': {
+                fontSize: 32
+              }
+            });
+
+            return (
+              <Box sx={{
+                display: 'flex',
+                justifyContent: 'space-around'
+              }}>
+                <Box>
+                  <Option variant='outlined'>
+                    <CreateIcon />
+                    <Typography sx={{ padding: 3 }}>
+                      Create a new profile.<br />&nbsp;
+                    </Typography>
+                    <Button variant='contained' color='primary' onClick={() => setStage(Stage.ENTER_USERNAME)}>
+                      Create Profile
+                    </Button>
+                  </Option>
+                </Box>
+                <Box>
+                  <Option variant='outlined'>
+                    <RestoreIcon/>
+                    <Typography sx={{ padding: 3 }}>
+                      Enter your seed phrase<br/>to recover your profile.
+                    </Typography>
+                    <Button variant='contained' color='primary' onClick={() => setStage(Stage.RESTORE)}>
+                      Recover Profile
+                    </Button>
+                  </Option>
+                </Box>
+              </Box>
+            )
+          }
+        }
       }
 
       case Stage.RESTORE: {
-        return (
-          <>
-            <DialogTitle>Restoring your Wallet</DialogTitle>
-            <DialogContent>
-              <DialogContentText>Enter the seed phrase.</DialogContentText>
+        return {
+          title: 'Restoring your profile',
+          content: (
+            <Box sx={{ marginTop: 1 }}>
+              <TextField
+                autoFocus
+                fullWidth
+                inputRef={seedphraseRef}
+                placeholder='Enter your seed phrase.'
+                onKeyDown={handleKeyDown}
+              />
+            </Box>
+          ),
+          actions: (
+            <Box sx={{ display: 'flex', flex: 1 }}>
+              {/* TODO(burdon): Import. */}
+              <Button disabled>
+                Import Keyring
+              </Button>
+              <Box sx={{ flex: 1 }}/>
+              <Button color='primary' onClick={() => setStage(Stage.START)}>
+                Back
+              </Button>
+              <Button
+                color='primary'
+                variant='contained'
+                onClick={handleNext}
+              >
+                Restore
+              </Button>
+            </Box>
+          )
+        };
+      }
+
+      case Stage.ENTER_USERNAME: {
+        return {
+          title: 'Create your profile',
+          content: (
+            <Box sx={{ marginTop: 1 }}>
               <TextField
                 autoFocus
                 fullWidth
                 spellCheck={false}
-                value={recoveredSeedPhrase}
-                onChange={e => setRecoveredSeedPhrase(e.target.value)}
+                inputRef={usernameRef}
                 onKeyDown={handleKeyDown}
+                placeholder='Enter a username.'
               />
-            </DialogContent>
-            <DialogActions>
-              <Button color='primary' onClick={() => setStage(Stage.START)}>Back</Button>
-              <Button variant='contained' color='primary' onClick={handleNext} disabled={!restoreSeedPhraseValid()}>Restore</Button>
-            </DialogActions>
-          </>
-        );
-      }
-
-      case Stage.ENTER_USERNAME: {
-        return (
-          <>
-            <DialogTitle>Create your Identity</DialogTitle>
-            <DialogContent>
-              <DialogContentText>Enter a username.</DialogContentText>
-              <TextField autoFocus fullWidth spellCheck={false} inputRef={usernameRef} onKeyDown={handleKeyDown} />
-            </DialogContent>
-            <DialogActions>
+            </Box>
+          ),
+          actions: () => (
+            <>
               <Button color='primary' onClick={() => setStage(Stage.START)}>Back</Button>
               <Button variant='contained' color='primary' onClick={handleNext}>Next</Button>
-            </DialogActions>
-          </>
-        );
+            </>
+          )
+        };
       }
 
       case Stage.SHOW_SEED_PHRASE: {
-        return (
-          <>
-            <DialogTitle>Seed Phrase</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
+        return {
+          title: 'Seed phrase',
+          content: (
+            <>
+              <Typography sx={{ marginBottom: 1 }}>
                 Your recovery seed phrase consists of the twelve words below.
-                <br />
-                You will need to enter the seed phrase if you ever need to recover your wallet.
-              </DialogContentText>
+              </Typography>
+              <Typography sx={{ marginBottom: 3 }}>
+                You will need to enter the seed phrase if you ever need to recover your profile.
+              </Typography>
               <SeedPhrasePanel value={seedPhrase} />
-              <DialogContentText>
+              <Typography sx={{ marginTop: 3 }}>
                 <b>NEVER</b> share your recovery seed phrase with anyone.
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions className={classes.seedPhraseActions}>
-              <div>
-                <Button onClick={() => handleDownloadSeedPhrase(seedPhrase)}>Download</Button>
-              </div>
-              <div>
-                <Button color='primary' onClick={() => setStage(Stage.ENTER_USERNAME)}>Back</Button>
-                <Button variant='contained' color='primary' onClick={handleNext}>Next</Button>
-              </div>
-            </DialogActions>
-          </>
-        );
+              </Typography>
+            </>
+          ),
+          actions: (
+            <Box sx={{ display: 'flex', flex: 1 }}>
+              <Button onClick={() => handleDownloadSeedPhrase(seedPhrase)}>Download</Button>
+              <Box sx={{ flex: 1 }} />
+              <Button color='primary' onClick={() => setStage(Stage.ENTER_USERNAME)}>Back</Button>
+              <Button variant='contained' color='primary' onClick={handleNext}>Next</Button>
+            </Box>
+          )
+        };
       }
 
       case Stage.CHECK_SEED_PHRASE: {
-        return (
-          <>
-            <DialogTitle>Verify The Seed Phrase</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                You will need to enter the seed phrase if you ever need to recover your wallet.
-              </DialogContentText>
-              <DialogContentText>
-                {`Enter the ${ordinal(selected[0] + 1)} and ${ordinal(selected[1] + 1)} words.`}
-              </DialogContentText>
-              <TextField autoFocus fullWidth spellCheck={false} inputRef={seedPhraseRef} onKeyDown={handleKeyDown} />
-            </DialogContent>
-            <DialogActions>
+        return {
+          title: 'Verify the seed phrase',
+          content: (
+            <>
+              <Typography sx={{ marginBottom: 2 }}>
+                You will need to enter the entire seed phrase if you ever need to recover your profile.
+              </Typography>
+              <Typography sx={{ marginBottom: 3 }}>
+                Confirm the following words from your seed phrase.
+              </Typography>
+              {seedRefs.map((seedRef, i) => (
+                <TextField
+                  key={i}
+                  autoFocus={i === 0}
+                  inputRef={seedRef}
+                  placeholder={`${ordinal(seedWordTestIndexes[i] + 1)} word`}
+                  onKeyDown={i === seedRefs.length - 1 ? handleKeyDown : undefined}
+                  sx={{ width: 120, marginRight: 1 }}
+                />
+              ))}
+            </>
+          ),
+          actions: (
+            <>
               <Button color='primary' onClick={() => setStage(Stage.ENTER_USERNAME)}>Back</Button>
               <Button variant='contained' color='primary' onClick={handleNext}>Finish</Button>
-            </DialogActions>
-          </>
-        );
-      }
-
-      case Stage.PENDING: {
-        return (
-          <>
-            <DialogTitle>Initializing...</DialogTitle>
-            <DialogContent>
-              <LinearProgress />
-            </DialogContent>
-          </>
-        );
-      }
-
-      case Stage.IMPORT_KEYRING: {
-        return null;
-        /*
-        return (
-          // open attribute deleted as it is not present in ImportKeyringDialog
-          <ImportKeyringDialog onClose={() => setStage(Stage.START)} decrypter={keyringDecrypter} />
-        );
-        */
+            </>
+          )
+        };
       }
 
       default: {
@@ -390,9 +378,14 @@ export const RegistrationDialog = ({
   };
 
   // TODO(burdon): Convert to react-components CustomDialog.
+  const props = getStage(stage);
   return (
-    <Dialog open={open} maxWidth='sm' fullWidth classes={{ paper: classes.paper }}>
-      {getStage(stage)}
-    </Dialog>
+    <Dialog
+      open={open}
+      maxWidth='sm'
+      error={error}
+      processing={processing}
+      {...props}
+    />
   );
 };

@@ -5,3 +5,4 @@
 export * from './events';
 export * from './ipfs-helper';
 export * from './redeemErrorHelper';
+export * from './util';
