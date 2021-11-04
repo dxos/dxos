@@ -18,7 +18,7 @@ const useStyles = makeStyles(theme => ({
   }
 }), { defaultTheme: createTheme({}) });
 
-const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
+export const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
   const clazzes = { ...useStyles(), ...classes };
   const [text, setText] = useState('');
 
@@ -81,5 +81,3 @@ const SearchBar = ({ classes = {}, onUpdate = console.debug }) => {
     </div>
   );
 };
-
-export default SearchBar;

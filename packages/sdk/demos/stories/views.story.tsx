@@ -8,9 +8,12 @@ import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
 import { useClient, ClientInitializer, ProfileInitializer, useProfile } from '@dxos/react-client';
 
-import { ONLINE_CONFIG } from '../../src';
-import Main from './Main';
-import StartDialog from './StartDialog';
+import { ONLINE_CONFIG, StartDialog } from '../src';
+import { Main } from './helpers';
+
+export default {
+  title: 'demos/views'
+};
 
 /**
  * Simple demo.
@@ -99,9 +102,4 @@ export const Peers = () => {
       </ProfileInitializer>
     </ClientInitializer>
   );
-};
-
-export default {
-  title: 'Demo',
-  component: Primary
 };

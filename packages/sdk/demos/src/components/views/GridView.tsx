@@ -34,7 +34,10 @@ export interface GridViewProps {
   items: any[]
 }
 
-const GridView = ({ adapter, items = [] }: GridViewProps) => {
+export const GridView = ({
+  adapter,
+  items = []
+}: GridViewProps) => {
   const classes = useStyles();
 
   return (
@@ -53,5 +56,3 @@ const GridView = ({ adapter, items = [] }: GridViewProps) => {
     </Box>
   );
 };
-
-export default GridView;

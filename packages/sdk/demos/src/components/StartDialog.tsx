@@ -22,7 +22,7 @@ interface HomeProps {
 /**
  * Home page.
  */
-const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
+export const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
   const [invitationCode, setInvitationCode] = useState('');
   const [inProgress, setInProgress] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -82,5 +82,3 @@ const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
     </Dialog>
   );
 };
-
-export default StartDialog;

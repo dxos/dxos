@@ -29,17 +29,21 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-interface LinksGraphProps {
+export interface GraphViewProps {
   data: GraphData,
+  classes?: any,
   onCreate?: Function,
   onSelect?: Function,
-  classes?: any,
   propertyAdapter?: Function
 }
 
-const GraphView = ({
-  data, onSelect = () => {}, onCreate = () => {}, classes = {}, propertyAdapter = () => ({})
-}: LinksGraphProps) => {
+export const GraphView = ({
+  data,
+  classes = {},
+  onSelect = () => {},
+  onCreate = () => {},
+  propertyAdapter = () => ({})
+}: GraphViewProps) => {
   const clazzes = { ...useStyles(), ...classes }; // TODO(burdon): merge()
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
@@ -80,5 +84,3 @@ const GraphView = ({
     </div>
   );
 };
-
-export default GraphView;

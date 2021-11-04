@@ -19,10 +19,10 @@ import {
   graphSelector,
   useGenerator,
   ONLINE_CONFIG
-} from '../../src';
+} from '../src';
 
 export default {
-  title: 'Experimental/Links'
+  title: 'demos/Links'
 };
 
 debug.enable('dxos:echo:story:*, dxos:*:error');

@@ -21,7 +21,10 @@ export interface ListViewProps {
   items: any[]
 }
 
-const ListView = ({ adapter, items = [] }: ListViewProps) => {
+export const ListView = ({
+  adapter,
+  items = []
+}: ListViewProps) => {
   const classes = useStyles();
 
   return (
@@ -42,5 +45,3 @@ const ListView = ({ adapter, items = [] }: ListViewProps) => {
     </List>
   );
 };
-
-export default ListView;

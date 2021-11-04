@@ -9,8 +9,15 @@ interface TypeMap {
   [key: string]: Function;
 }
 
-// TODO(burdon): Use ToggleButton, ToggleButtonGroup (react 5; currently incompatible with storybook).
-const ToggleGroup = ({ types, type, onChange }: { types: TypeMap, type: string, onChange: (key: string) => void }) => {
+export const ItemTypeSelector = ({
+  types,
+  type,
+  onChange
+}: {
+  types: TypeMap,
+  type: string,
+  onChange: (key: string) => void }
+) => {
   return (
     <div>
       {Object.entries(types).map(([key, Icon]) => (
@@ -21,5 +28,3 @@ const ToggleGroup = ({ types, type, onChange }: { types: TypeMap, type: string, 
     </div>
   );
 };
-
-export default ToggleGroup;
