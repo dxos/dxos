@@ -729,7 +729,7 @@
     //
 
     {
-      "packageName": "@dxos/bot",
+      "packageName": "@dxos/botkit",
       "projectFolder": "packages/bot/bot",
       "shouldPublish": false,
       "versionPolicyName": "lockStepPolicy"
