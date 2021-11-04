@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { PublicKey } from '@dxos/crypto';
+
 import { BotHandle } from '../bot-handle';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import type { Empty } from '../proto/gen/google/protobuf';
@@ -26,13 +28,16 @@ export class BotFactory implements BotFactoryService {
     const handle = this._botHandleFactory();
     await handle.open();
     await handle.rpc.Initialize({});
+    const botId = PublicKey.random().toString();
+    const bot: Bot = {
+      id: botId,
+      status: Bot.Status.RUNNING
+    };
     this._bots.push({
-      bot: {
-        status: Bot.Status.RUNNING
-      },
+      bot,
       handle
     });
-    return {};
+    return bot;
   }
 
   async Start (request: Bot) {
@@ -48,6 +53,13 @@ export class BotFactory implements BotFactoryService {
   }
 
   async SendCommand (request: SendCommandRequest) {
+    if (request.botId) {
+      const bot = this._bots.find(bot => bot.bot.id === request.botId);
+      if (!bot) {
+        throw new Error('Bot not found');
+      }
+      await bot.handle.rpc.Command({ botId: bot.bot.id });
+    }
     return {};
   }
 }

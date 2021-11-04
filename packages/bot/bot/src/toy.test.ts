@@ -27,18 +27,21 @@ describe('In-Memory', () => {
     ]);
 
     let botInitialized = false;
+    let commandReceived = false;
     const bot = new InMemoryCustomizableBot(botPort, {
       Initialize: async () => {
         botInitialized = true;
         return {};
       },
       Command: async () => {
+        commandReceived = true;
         return {};
       }
     });
     void bot.open();
 
-    await agent.botFactory.SpawnBot({});
+    const { id: botId } = await agent.botFactory.SpawnBot({});
+    expect(botId).toBeDefined();
 
     const { bots } = await agent.botFactory.GetBots({});
     expect(bots).toBeDefined();
@@ -46,5 +49,9 @@ describe('In-Memory', () => {
     expect(bots![0].status).toBeDefined();
     expect(bots![0].status).toBe(Bot.Status.RUNNING);
     expect(botInitialized).toBe(true);
+
+    await agent.botFactory.SendCommand({ botId });
+
+    expect(commandReceived).toBe(true);
   });
 });
