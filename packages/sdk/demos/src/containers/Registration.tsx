@@ -21,6 +21,10 @@ const useStyles = makeStyles((theme) => ({
   }
 }), { defaultTheme: createTheme({}) });
 
+/**
+ * @deprecated see react-framework.
+ * @constructor
+ */
 const Registration = () => {
   const classes = useStyles();
 

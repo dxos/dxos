@@ -13,4 +13,5 @@ export * from './ImportDialog';
 export * from './JsonTreeView';
 export * from './Passcode';
 export * from './ProfileDialog';
+export * from './RegistrationDialog';
 export * from './Theme';
