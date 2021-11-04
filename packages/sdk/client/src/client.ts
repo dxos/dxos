@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
 import { Config, defs } from '@dxos/config';
-import { defaultSecretValidator, Invitation, SecretProvider } from '@dxos/credentials';
+import { defaultSecretValidator, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
 import { InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
@@ -286,7 +286,7 @@ export class Client {
    * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
    * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
-   async createHaloInvitation (secretProvider: SecretProvider, options?: InvitationOptions) {
+  async createHaloInvitation (secretProvider: SecretProvider, options?: InvitationOptions) {
     return await this.halo.createInvitation({
       secretProvider,
       secretValidator: defaultSecretValidator

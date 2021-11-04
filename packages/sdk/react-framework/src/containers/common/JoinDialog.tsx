@@ -91,7 +91,6 @@ export const JoinDialog = ({
         const party = await client.echo.halo.join(invitation, secretProvider);
         await party.open(); // Should I do this?
       }
-      
     } catch (err: any) {
       // TODO(burdon): Extract human error (eg, currently "Already connected to swarm").
       setError(err.responseMessage || err.message);

@@ -3,6 +3,7 @@
 //
 
 import React from 'react';
+
 import { JoinDialog, JoinDialogProps } from './common';
 
 /**
@@ -10,6 +11,6 @@ import { JoinDialog, JoinDialogProps } from './common';
  */
 export const JoinHaloDialog = (props: Omit<JoinDialogProps, 'type' | 'title'>) => {
   return (
-    <JoinDialog {...props} type="halo" title="Join Halo" />
-  )
+    <JoinDialog {...props} type='halo' title='Join Halo' />
+  );
 };

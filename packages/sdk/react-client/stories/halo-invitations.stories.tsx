@@ -45,7 +45,7 @@ const HaloInvitationContainer = () => {
         setInvitationCode(undefined);
         resetPin();
       }
-    })
+    });
 
     setInvitationCode(encodeInvitation(invitation));
   };

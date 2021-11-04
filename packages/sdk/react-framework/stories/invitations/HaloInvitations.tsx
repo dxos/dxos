@@ -2,21 +2,18 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { PublicKey } from '@dxos/crypto';
-import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
+import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, useProfile } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
-  ErrorView,
-  JoinHaloDialog,
-  DeviceSharingDialog
+  DeviceSharingDialog, ErrorView,
+  JoinHaloDialog
 } from '../../src';
-
-import {Column} from '../helpers'
+import { Column } from '../helpers';
 
 const Parties = () => {
   const parties = useParties();

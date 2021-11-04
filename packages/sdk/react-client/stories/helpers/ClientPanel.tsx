@@ -9,8 +9,8 @@ import { Box } from '@mui/material';
 import { Client } from '@dxos/client';
 import { Party } from '@dxos/echo-db';
 
-import { JsonPanel } from './JsonPanel';
 import { useProfile } from '../../src';
+import { JsonPanel } from './JsonPanel';
 
 export const ClientPanel = ({
   client,

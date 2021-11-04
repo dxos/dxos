@@ -15,8 +15,7 @@ import {
   JoinPartyDialog,
   PartySharingDialog
 } from '../../src';
-
-import {Column} from '../helpers'
+import { Column } from '../helpers';
 
 const Parties = () => {
   const parties = useParties();

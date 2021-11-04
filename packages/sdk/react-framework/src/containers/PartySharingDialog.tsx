@@ -3,6 +3,7 @@
 //
 
 import React from 'react';
+
 import { SharingDialog, SharingDialogProps } from './common';
 
 /**
@@ -10,7 +11,6 @@ import { SharingDialog, SharingDialogProps } from './common';
  */
 export const PartySharingDialog = (props: Omit<SharingDialogProps, 'type' | 'title'>) => {
   return (
-    <SharingDialog {...props} type="party" title="Party Sharing" />
-  )
+    <SharingDialog {...props} type='party' title='Party Sharing' />
+  );
 };
-

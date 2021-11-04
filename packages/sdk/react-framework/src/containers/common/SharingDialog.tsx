@@ -8,9 +8,9 @@ import { Button, Table, TableBody, TableCell, TableRow } from '@mui/material';
 import { Box } from '@mui/system';
 
 import { PublicKey } from '@dxos/crypto';
+import { InvitationOptions } from '@dxos/echo-db';
 import { encodeInvitation, useClient, useParty, useSecretGenerator, useMembers } from '@dxos/react-client';
 import { CopyText, CopyToClipboard, Dialog, MemberList, Passcode } from '@dxos/react-components';
-import { HALO, InvitationOptions } from '@dxos/echo-db';
 
 enum InvitationState {
   INIT,
@@ -79,16 +79,16 @@ export const SharingDialog = ({
         onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
           handleReset();
         }
-      }
+      };
       if (type === 'party') {
         // TODO(burdon): Handle offline (display members).
         const invitation = await client.createInvitation(partyKey!, secretProvider, options);
         setInvitationCode(encodeInvitation(invitation));
       } else if (type === 'halo') {
-        const invitation = await client.createHaloInvitation(secretProvider, options)
+        const invitation = await client.createHaloInvitation(secretProvider, options);
         setInvitationCode(encodeInvitation(invitation));
       } else {
-        throw new Error(`Unsupported invitation type: "${type}"`)
+        throw new Error(`Unsupported invitation type: "${type}"`);
       }
     });
   };

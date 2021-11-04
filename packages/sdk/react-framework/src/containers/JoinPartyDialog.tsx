@@ -3,6 +3,7 @@
 //
 
 import React from 'react';
+
 import { JoinDialog, JoinDialogProps } from './common';
 
 /**
@@ -10,7 +11,6 @@ import { JoinDialog, JoinDialogProps } from './common';
  */
 export const JoinPartyDialog = (props: Omit<JoinDialogProps, 'type' | 'title'>) => {
   return (
-    <JoinDialog {...props} type="party" title="Join Party" />
-  )
+    <JoinDialog {...props} type='party' title='Join Party' />
+  );
 };
-
