@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useRef, useState } from 'react';
+
 import {
   AddCircleOutline as CreateIcon,
   Restore as RestoreIcon
@@ -18,7 +20,6 @@ import {
   styled,
   useTheme
 } from '@mui/material';
-import React, { useRef, useState } from 'react';
 
 import { generateSeedPhrase } from '@dxos/crypto';
 import { Dialog } from '@dxos/react-components';
@@ -165,9 +166,9 @@ export const RegistrationDialog = ({
             <Chip
               key={i}
               sx={{
-                width: 128,
-                justifyContent: 'inherit',
-                margin: '4px',
+                'width': 128,
+                'justifyContent': 'inherit',
+                'margin': '4px',
                 '.MuiChip-icon': {
                   color: theme.palette.background.paper
                 },
@@ -205,14 +206,14 @@ export const RegistrationDialog = ({
           title: 'User profile',
           content: () => {
             const Option = styled(Paper)({
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              textAlign: 'center',
-              width: 260,
-              height: 220,
-              margin: 16,
+              'display': 'flex',
+              'flexDirection': 'column',
+              'justifyContent': 'center',
+              'alignItems': 'center',
+              'textAlign': 'center',
+              'width': 260,
+              'height': 220,
+              'margin': 16,
               '& .MuiSvgIcon-root': {
                 fontSize: 32
               }
@@ -236,9 +237,9 @@ export const RegistrationDialog = ({
                 </Box>
                 <Box>
                   <Option variant='outlined'>
-                    <RestoreIcon/>
+                    <RestoreIcon />
                     <Typography sx={{ padding: 3 }}>
-                      Enter your seed phrase<br/>to recover your profile.
+                      Enter your seed phrase<br />to recover your profile.
                     </Typography>
                     <Button variant='contained' color='primary' onClick={() => setStage(Stage.RESTORE)}>
                       Recover Profile
@@ -271,7 +272,7 @@ export const RegistrationDialog = ({
               <Button disabled>
                 Import Keyring
               </Button>
-              <Box sx={{ flex: 1 }}/>
+              <Box sx={{ flex: 1 }} />
               <Button color='primary' onClick={() => setStage(Stage.START)}>
                 Back
               </Button>
