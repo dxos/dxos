@@ -16,10 +16,23 @@ import { BotFactoryAgent, InMemoryCustomizableBot } from './testutils';
 describe('In-Memory', () => {
   it('Spawns a bot', async () => {
     const [agentPort, botControllerPort] = createLinkedPorts();
-    const [botHandlePort, botPort] = createLinkedPorts();
 
     const agent = new BotFactoryAgent(agentPort);
-    const botFactory = new BotFactory(() => new BotHandle(botHandlePort));
+    const botFactory = new BotFactory(() => { 
+      const [botHandlePort, botPort] = createLinkedPorts();
+      const bot = new InMemoryCustomizableBot(botPort, {
+        Initialize: async () => {
+          botInitialized = true;
+          return {};
+        },
+        Command: async (request) => {
+          commandReceived = request.command;
+          return {};
+        }
+      });
+      void bot.open();
+      return new BotHandle(botHandlePort); 
+    });
     const botController = new BotController(botFactory, botControllerPort);
 
     await Promise.all([
@@ -29,17 +42,6 @@ describe('In-Memory', () => {
 
     let botInitialized = false;
     let commandReceived: Uint8Array | undefined;
-    const bot = new InMemoryCustomizableBot(botPort, {
-      Initialize: async () => {
-        botInitialized = true;
-        return {};
-      },
-      Command: async (request) => {
-        commandReceived = request.command;
-        return {};
-      }
-    });
-    void bot.open();
 
     const { id: botId } = await agent.botFactory.SpawnBot({});
     expect(botId).toBeDefined();

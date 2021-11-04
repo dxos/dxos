@@ -7,6 +7,9 @@ import { createRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 import { schema } from '../proto/gen';
 import { BotFactoryService } from '../proto/gen/dxos/bot';
 
+/**
+ * Exposes BotFactoryService for external agents.
+ */
 export class BotController {
   private readonly _rpc: RpcPeer;
 
