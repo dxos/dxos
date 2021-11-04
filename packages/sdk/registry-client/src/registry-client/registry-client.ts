@@ -33,7 +33,7 @@ export class RegistryClient implements IRegistryClient {
     this.transactionsHandler = new ApiTransactionHandler(api, signer);
   }
 
-  // TODO(burdon): Uppercase CID
+  // TODO(burdon): Uppercase CID.
   async resolveRecordCid (dxn: DXN): Promise<CID | undefined> {
     let domainKey: DomainKey | undefined;
     if (dxn.domain) {
@@ -292,7 +292,7 @@ export class RegistryClient implements IRegistryClient {
   }
 
   async insertTypeRecord (schema: protobuf.Root, messageName: string, meta: SuppliedTypeRecordMetadata = {}) {
-    // Make sure message type exists
+    // Make sure message type exists.
     schema.lookupType(messageName);
 
     const encoded = dxnsSchema.getCodecForType('dxos.registry.Record').encode({

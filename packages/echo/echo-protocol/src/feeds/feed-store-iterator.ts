@@ -16,10 +16,11 @@ import { FeedBlock, FeedKey } from '../types';
 const log = debug('dxos:echo:feed-store-iterator:log');
 const STALL_TIMEOUT = 1000;
 
-// TODO(burdon): Redesign FeedStore:
-// - event handlers
-// - remove path and metadata
-// - construction separate from open
+/* TODO(burdon): Redesign FeedStore:
+ * - Event handlers.
+ * - Remove path and metadata.
+ * - Construction separate from open.
+ */
 
 // TODO(burdon): Invert (ask for set of feed keys).
 export interface FeedSetProvider {
@@ -185,7 +186,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const [_, feed] of this._openFeeds) {
       if (feed.sendQueue.length === 0) {
-        // TODO(burdon): then/catch?
+        // TODO(burdon): Then/catch?
         feed.iterator.next()
           .then(result => {
             assert(!result.done);
@@ -213,10 +214,11 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
   private async _waitForData () {
     this._pollFeeds();
 
-    //   There is a (rare) potential race condition where one feed gets blocked on a message that is enqueue
-    //   in a demuxed stream. Meanwhile the inbound queue dries up (or is deadlocked) so this trigger is not
-    //   awoken. A timeout would enable the iterator to restart.
-    //   NOTE: When implementing this mechanism be sure to maintain the comment above.
+    /*   There is a (rare) potential race condition where one feed gets blocked on a message that is enqueue
+     *   in a demuxed stream. Meanwhile the inbound queue dries up (or is deadlocked) so this trigger is not
+     *   awoken. A timeout would enable the iterator to restart.
+     *   NOTE: When implementing this mechanism be sure to maintain the comment above.
+     */
     const timeoutId = setTimeout(() => {
       const candidates = this._getMessageCandidates();
       if (candidates.length > 0) {

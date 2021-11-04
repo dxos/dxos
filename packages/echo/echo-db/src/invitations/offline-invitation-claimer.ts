@@ -144,8 +144,9 @@ export class OfflineInvitationClaimer {
       // The Party will have validated the Invitation already, so we only need to extract the bits we need.
       const { inviteeKey } = invitationMessage.signed.payload;
 
-      // Create a Keyring containing only the PublicKey of the contact we invited. Only a message signed by
-      // by the matching private key, or a KeyChain which traces back to that key, will be verified.
+      /* Create a Keyring containing only the PublicKey of the contact we invited. Only a message signed by
+       * by the matching private key, or a KeyChain which traces back to that key, will be verified.
+       */
       const keyring = new Keyring();
       await keyring.addPublicKey({
         publicKey: inviteeKey,
@@ -172,8 +173,9 @@ export class OfflineInvitationClaimer {
   static createSecretProvider (identity: Identity): SecretProvider {
     return async (info?: SecretInfo) => {
       return Buffer.from(Authenticator.encodePayload(
-        // The signed portion of the Auth message includes the ID and authNonce provided
-        // by the `info` object. These values will be validated on the other end.
+        /* The signed portion of the Auth message includes the ID and authNonce provided
+         * by the `info` object. These values will be validated on the other end.
+         */
         createAuthMessage(
           identity.signer,
           info!.id.value,

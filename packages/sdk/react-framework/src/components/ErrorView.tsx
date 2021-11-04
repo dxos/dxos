@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import React from 'react';
+
 import {
   ErrorOutline as ErrorIcon
 } from '@mui/icons-material';
@@ -15,7 +17,6 @@ import {
   Typography,
   styled
 } from '@mui/material';
-import React from 'react';
 
 import { CopyToClipboard } from './CopyToClipboard';
 import { DialogHeading } from './DialogHeading';

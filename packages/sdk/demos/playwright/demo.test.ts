@@ -36,7 +36,7 @@ const createInvitation = async (page: Page): Promise<string> => {
 
 const createItem = async (page: Page): Promise<string> => {
   const itemName = `${Math.random().toString().slice(5)}`;
-  await page.click('.MuiFab-root'); // The 'Add" fab button
+  await page.click('.MuiFab-root'); // The 'Add' fab button.
   await page.fill('#item-dialog-item-name', itemName);
   await page.click('button:has-text("Create")');
   return itemName;
@@ -104,10 +104,10 @@ describe('Demo - Primary and Peers', async function () {
 
     await bob.page!.waitForSelector('span:has-text("Koch - Macejkovic")');
 
-    // Bob creates an item..
+    // Bob creates an item...
     const itemName = await createItem(bob.page!);
 
-    // ..item gets replicated over to Alice.
+    // ...Item gets replicated over to Alice.
     await alice.page!.waitForSelector(`span:has-text("${itemName}")`);
   });
 });

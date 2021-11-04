@@ -2,10 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import React, { useState } from 'react';
+
 import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
-import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptorType } from '@dxos/echo-db';
@@ -33,7 +34,7 @@ export default {
   title: 'react-client/Party Invitations'
 };
 
-// debug.enable('dxos:*');
+// code debug.enable('dxos:*');
 
 /**
  * Creates party and invitations.
@@ -177,9 +178,9 @@ const TestApp = () => {
       <Paper>
         <ClientPanel client={client} profile={profile} parties={parties} />
         <Divider />
-        <PartyInviatationContainer/>
+        <PartyInviatationContainer />
         <Divider />
-        <PartyJoinContainer/>
+        <PartyJoinContainer />
       </Paper>
     </Box>
   );
@@ -194,7 +195,7 @@ export const Primary = () => {
         {[...new Array(peers)].map((_, i) => (
           <ClientInitializer key={i} config={{}}>
             <ProfileInitializer>
-              <TestApp/>
+              <TestApp />
             </ProfileInitializer>
           </ClientInitializer>
         ))}

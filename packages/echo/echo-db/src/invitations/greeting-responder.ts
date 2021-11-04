@@ -197,8 +197,9 @@ export class GreetingResponder {
     assert(this._state === GreetingState.CONNECTED);
     assert(this._identity.deviceKeyChain);
 
-    // These messages will be self-signed by keys not yet admitted to the Party,, so we cannot check
-    // for a trusted key, only that the signatures are valid.
+    /* These messages will be self-signed by keys not yet admitted to the Party,, so we cannot check
+     * for a trusted key, only that the signatures are valid.
+     */
     for (const message of messages) {
       const ok = Keyring.validateSignatures(message.payload);
       if (!ok) {

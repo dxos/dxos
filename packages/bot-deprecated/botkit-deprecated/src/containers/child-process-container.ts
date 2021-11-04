@@ -82,13 +82,13 @@ export abstract class ChildProcessContainer implements BotContainer {
 
     // TODO(marik-d): Fix this.
     // TODO(marik-d): Causes leaks.
-    // const timeState = {
-    //   started: moment.utc(),
-    //   lastActive: moment.utc()
-    // };
-    // const watcher = watch(storageDirectory, { recursive: true }, () => {
-    //   timeState.lastActive = moment.utc();
-    // });
+    // code const timeState = {
+    // code   started: moment.utc(),
+    // code   lastActive: moment.utc()
+    // code };
+    // code const watcher = watch(storageDirectory, { recursive: true }, () => {
+    // code   timeState.lastActive = moment.utc();
+    // code });
 
     log(`Spawned bot: ${JSON.stringify({ pid: botProcess.pid, command, args, dxEnv, cwd: storageDirectory })}`);
 

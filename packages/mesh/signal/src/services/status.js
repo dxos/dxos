@@ -243,7 +243,7 @@ export const StatusService = {
 
     (async () => {
       while (!signal.aborted) {
-        // TODO: this could be an option (pollInterval)
+        // TODO(unknown): This could be an option (pollInterval).
         await delay(10 * 1000, signal);
         const system = await getSystemInfo().catch(() => {});
         const services = await getServiceInfo().catch(() => {});

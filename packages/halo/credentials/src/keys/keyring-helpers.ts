@@ -124,10 +124,11 @@ export const createKeyRecord = (attributes: Partial<KeyRecord> = {},
 // TODO(burdon): Factor out.
 export const canonicalStringify = (obj: any) => {
   return stableStringify(obj, {
-    // The point of signing and verifying is not that the internal, private state of the objects be
-    // identical, but that the public contents can be verified not to have been altered. For that reason,
-    // really private fields (indicated by '__') are not included in the signature. In practice, this skips __type_url,
-    // and it also gives a mechanism for attaching other attributes to an object without breaking the signature.
+    /* The point of signing and verifying is not that the internal, private state of the objects be
+     * identical, but that the public contents can be verified not to have been altered. For that reason,
+     * really private fields (indicated by '__') are not included in the signature. In practice, this skips __type_url,
+     * and it also gives a mechanism for attaching other attributes to an object without breaking the signature.
+     */
     replacer: (key: any, value: any) => {
       if (key.toString().startsWith('__')) {
         return undefined;

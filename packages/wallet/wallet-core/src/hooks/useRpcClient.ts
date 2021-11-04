@@ -40,7 +40,7 @@ export const useRpcClient = <S>({ port, service, timeout } : UseRpcClientProps<S
       }
     });
 
-    // TODO: Make sure close is not called before open is finished (maybe put @synchronized in RPC client?).
+    // TODO(unknown): Make sure close is not called before open is finished. (Maybe put @synchronized in RPC client?)
     return () => {
       client.close();
     };

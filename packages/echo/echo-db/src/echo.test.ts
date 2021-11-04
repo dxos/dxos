@@ -390,7 +390,7 @@ describe('ECHO', () => {
       expect(b2.queryParties().value.length).toBe(1);
       expect(b1.queryParties().value[0].key).toEqual(b2.queryParties().value[0].key);
 
-      // A and B now both belong to the Party
+      // A and B now both belong to the Party.
       expect(a1.queryParties().value[0].key).toEqual(b1.queryParties().value[0].key);
     }
 
@@ -542,7 +542,7 @@ describe('ECHO', () => {
     expect(partyA.isActive).toBe(true);
     expect(partyA.title).toBe('A');
 
-    // The party at this point is open and activate (see expects above), however setTitle seems to be hanging forever
+    // The party at this point is open and activate (see expects above), however setTitle seems to be hanging forever.
     await partyA.setTitle('A2');
     expect(partyA.title).toBe('A2');
   });
@@ -655,9 +655,10 @@ describe('ECHO', () => {
     expect(b.queryParties().value[0].isOpen).toBe(true);
   });
 
-  // TODO(burdon): Sporadically fails: https://github.com/dxos/echo/issues/391
+  // TODO(burdon): Sporadically fails.
+  // https://github.com/dxos/echo/issues/391
   test('Setting title propagates to other devices AND other party members', async () => {
-    // User creating the party
+    // User creating the party.
     const a = new ECHO();
     await a.open();
     afterTest(() => a.close());
@@ -666,7 +667,7 @@ describe('ECHO', () => {
     await a.halo.createIdentity(keyPairFromSeedPhrase(seedPhrase));
     await a.halo.create();
 
-    // User's other device, joined by device invitation
+    // User's other device, joined by device invitation.
     const b = await setup();
 
     // User's  other device, joined by seed phrase recovery.
@@ -720,10 +721,10 @@ describe('ECHO', () => {
       expect(_party.title).toEqual('Test');
     }
 
-    // For the other member of the party, title propagates correctly as well
+    // For the other member of the party, title propagates correctly as well.
     await waitForCondition(() => partyD.getProperty('title') === 'Test', 3000);
     await waitForCondition(() => partyD.title === 'Test', 3000);
-    expect(partyD.title).toEqual('Test'); // However this does not
+    expect(partyD.title).toEqual('Test'); // However this does not.
   }).retries(1);
 
   test('invited party member has his display name available', async () => {
@@ -745,10 +746,10 @@ describe('ECHO', () => {
 
   // TODO(burdon): Fix.
   // Note: The reason I wrote this test is because it does not seem to be working properly in Teamwork.
-  // I don't seem to be receiving an update after which party.title holds correct value.
+  // I don't seem to be receiving an update after which `party.title` holds correct value.
   // https://github.com/dxos/teamwork/issues/496#issuecomment-739862830
   // However it seems to be working fine in this test.
-  /*
+  /* code
   test.skip('Party update event is emitted after the title is set', async () => {
     const { partyManager: partyManagerA, identityManager: identityManagerA, seedPhrase } = await setup(true, true);
     const { partyManager: partyManagerB, identityManager: identityManagerB } = await setup(true, false);

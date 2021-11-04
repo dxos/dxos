@@ -2,12 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import { createTheme } from '@mui/material';
-import { makeStyles } from '@mui/styles';
 import assert from 'assert';
 import React from 'react';
 
-// import { PeerGraph } from '@dxos/network-devtools';
+import { createTheme } from '@mui/material';
+import { makeStyles } from '@mui/styles';
+
+// code import { PeerGraph } from '@dxos/network-devtools';
 import { SignalStatus, SignalTrace } from '@dxos/network-devtools';
 import { SignalApi } from '@dxos/network-manager';
 
@@ -64,7 +65,7 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
   };
 };
 
-export default function Signal () {
+const Signal = () => {
   const classes = useStyles();
   const devtoolsHost = useDevtoolsHost();
   const status = useStream(() => devtoolsHost.SubscribeToSignalStatus({}));
@@ -90,4 +91,6 @@ export default function Signal () {
       {trace.events.length < 1 ? <SignalTrace trace={trace?.events?.map(event => JSON.parse(event))} /> : <div> No signal trace. </div>}
     </div>
   );
-}
+};
+
+export default Signal;

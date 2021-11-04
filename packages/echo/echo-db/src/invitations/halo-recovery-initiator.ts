@@ -145,8 +145,9 @@ export class HaloRecoveryInitiator {
   // The secretProvider should provide an `Auth` message signed directly by the Identity key.
   createSecretProvider (): SecretProvider {
     return async (info: any) => Buffer.from(Authenticator.encodePayload(
-      // The signed portion of the Auth message includes the ID and authNonce provided
-      // by "info". These values will be validated on the other end.
+      /* The signed portion of the Auth message includes the ID and authNonce provided
+       * by "info". These values will be validated on the other end.
+       */
       createAuthMessage(
         this._identity.signer,
         info.id.value,
@@ -169,8 +170,9 @@ export class HaloRecoveryInitiator {
         throw new InvalidInvitationError();
       }
 
-      // Create a Keyring containing only our own PublicKey. Only a message signed by the matching private key,
-      // or a KeyChain which traces back to that key, will be verified.
+      /* Create a Keyring containing only our own PublicKey. Only a message signed by the matching private key,
+       * or a KeyChain which traces back to that key, will be verified.
+       */
       const keyring = new Keyring();
       await keyring.addPublicKey({
         publicKey: identity.identityKey.publicKey,

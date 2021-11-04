@@ -219,7 +219,7 @@ importers:
       lodash.merge: 4.6.2
       protobufjs: 6.11.2
     devDependencies:
-      '@dxos/eslint-plugin': 1.0.16_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.18_eslint@7.26.0+typescript@4.3.5
       '@types/assert': 1.5.4
       '@types/jest': 26.0.23
       '@types/lodash.merge': 4.6.6
@@ -230,7 +230,7 @@ importers:
       ts-node: 9.1.1_typescript@4.3.5
       typescript: 4.3.5
     specifiers:
-      '@dxos/eslint-plugin': ~1.0.16
+      '@dxos/eslint-plugin': ~1.0.18
       '@types/assert': ^1.5.4
       '@types/jest': ^26.0.7
       '@types/lodash.merge': ~4.6.6
@@ -292,7 +292,7 @@ importers:
       ts-morph: 10.0.2
     devDependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
-      '@dxos/eslint-plugin': 1.0.16_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.18_eslint@7.26.0+typescript@4.3.5
       '@dxos/protobuf-test': link:../protobuf-test
       '@types/argparse': 2.0.5
       '@types/jest': 26.0.23
@@ -304,7 +304,7 @@ importers:
       typescript: 4.3.5
     specifiers:
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/eslint-plugin': ~1.0.16
+      '@dxos/eslint-plugin': ~1.0.18
       '@dxos/protobuf-test': workspace:*
       '@types/argparse': ^2.0.0
       '@types/jest': ^26.0.7
@@ -2381,7 +2381,7 @@ importers:
       util: ~0.12.4
   ../../toolchains/toolchain-node-library:
     dependencies:
-      '@dxos/eslint-plugin': 1.0.16_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.18_eslint@7.26.0+typescript@4.3.5
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@types/yargs': 16.0.1
       chalk: 4.1.2
@@ -2400,7 +2400,7 @@ importers:
       '@types/node': 14.14.45
       ts-node: 9.1.1_typescript@4.3.5
     specifiers:
-      '@dxos/eslint-plugin': ~1.0.16
+      '@dxos/eslint-plugin': ~1.0.18
       '@dxos/protobuf-compiler': workspace:*
       '@types/glob': ~7.1.3
       '@types/jest': ^26.0.7
@@ -5134,7 +5134,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-5bFDfPJ4ZDxo7B/bq22Duei6MmkLUW3q72V4lz7DWXmKqKdkcQvfjgO8IzEEf60U49ZaSZSvZUcNWqskAOSmdg==
-  /@dxos/eslint-plugin/1.0.16_eslint@7.26.0+typescript@4.3.5:
+  /@dxos/eslint-plugin/1.0.18_eslint@7.26.0+typescript@4.3.5:
     dependencies:
       '@rushstack/eslint-patch': 1.0.6
       '@typescript-eslint/eslint-plugin': 4.28.4_ed91d8a9a45fee40b4f28fa6457a3abe
@@ -5151,7 +5151,7 @@ packages:
       eslint: '*'
       typescript: '*'
     resolution:
-      integrity: sha512-hNQkDFhu1FuvUkUGgQWAUyDWApwHInLByqZ+IajF88YN3FECGOTK7f4VqDpX7PHEvNa3CIOpJocrwRJrTtUxmw==
+      integrity: sha512-YRwCQz2cFVLDywTLoQFQvQ5kIYM3qUxRv4PlhngFs+TOk1BkD+vVbt05BRBJnYHN2TxkaxqWBeljhhUHmafTfQ==
   /@dxos/gem-core/1.0.0-beta.34_@types+react@17.0.24:
     dependencies:
       '@material-ui/core': 4.11.4_c9c9d4a2eab4f2a56fbc8dec3114b22b
@@ -26029,7 +26029,7 @@ packages:
       micromatch: 4.0.4
       semver: 7.3.5
       typescript: 4.3.5
-      webpack: 4.44.2_webpack-cli@4.7.2
+      webpack: 4.44.2
     dev: true
     engines:
       node: '>=10.0.0'

@@ -17,7 +17,7 @@ import { schema } from './proto/gen';
 export class Messenger extends EventEmitter {
   static EXTENSION_NAME = 'dxos.protocol.messenger';
 
-  // @type {Map<{string, Protocol>}
+  // code @type {Map<{string, Protocol>}
   _peers = new Map();
 
   /**
@@ -37,7 +37,7 @@ export class Messenger extends EventEmitter {
         this.emit('message', message);
         peerMessageHandler(protocol, message);
       } catch (err) {
-        // do nothing
+        // Do nothing.
       }
     };
 
@@ -125,7 +125,7 @@ export class Messenger extends EventEmitter {
     assert(type);
     assert(Buffer.isBuffer(payload));
 
-    // Backward compatibility (peerId should always be a Buffer)
+    // Backward compatibility (peerId should always be a Buffer).
     if (typeof peerId === 'string') {
       peerId = Buffer.from(peerId, 'hex');
     }

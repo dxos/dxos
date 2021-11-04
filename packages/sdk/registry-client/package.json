@@ -1,6 +1,6 @@
 {
   "name": "@dxos/registry-client",
-  "version": "2.16.9",
+  "version": "2.16.10",
   "description": "DXNS API",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -17,6 +17,11 @@
     "test:int": "NODE_ENV=test mocha '{src,test,int}/**/*.int-test.ts'",
     "test:int:auctions": "NODE_ENV=test mocha '{src,test,int}/**/auctions-api.int-test.ts'",
     "test:int:registry": "NODE_ENV=test mocha '{src,test,int}/**/registry-client.int-test.ts'"
+  },
+  "eslintConfig": {
+    "ignorePatterns": [
+      "src/interfaces"
+    ]
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
@@ -58,6 +63,7 @@
     "access": "public"
   },
   "toolchain": {
-    "testingFramework": "mocha"
+    "testingFramework": "mocha",
+    "allowExtendedEslintConfig": true
   }
 }

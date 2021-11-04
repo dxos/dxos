@@ -43,7 +43,7 @@ export const Primary = () => {
   return (
     <ClientInitializer>
       <ProfileInitializer>
-        <Story/>
+        <Story />
       </ProfileInitializer>
     </ClientInitializer>
   );
@@ -95,7 +95,7 @@ export const Peers = () => {
   return (
     <ClientInitializer config={ONLINE_CONFIG}>
       <ProfileInitializer>
-        <Root/>
+        <Root />
       </ProfileInitializer>
     </ClientInitializer>
   );

@@ -43,12 +43,12 @@ const User = ({ profile } : UserProps) => {
   return (
     <Card className={classes.card} raised={true}>
       <CardHeader
-        title={
+        title={(
           <Typography gutterBottom variant='h5' component='h2'>
             {profile.username}
           </Typography>
-        }
-        subheader={
+        )}
+        subheader={(
           <Grid container alignContent='space-between' alignItems='center'>
             <Grid item xs={11} md={8} lg={6}>
               <Typography variant='body2' color='textSecondary' className={classes.ellipsis}>
@@ -56,15 +56,15 @@ const User = ({ profile } : UserProps) => {
               </Typography>
             </Grid>
             <Grid item xs={1} md={4} lg={6}>
-              <CopyButton text={profile.publicKey ?? ''}/>
+              <CopyButton text={profile.publicKey ?? ''} />
             </Grid>
           </Grid>
-        }
-        action={
+        )}
+        action={(
           <IconButton aria-label='settings' ref={actions} onClick={() => setMenuOpen(m => !m)}>
             <MoreVertIcon />
           </IconButton>
-        }/>
+        )} />
       <Menu
         open={menuOpen}
         anchorEl={actions.current} // https://github.com/mui-org/material-ui/issues/7961

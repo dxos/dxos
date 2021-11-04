@@ -32,14 +32,15 @@ it('Create cold identity key and recover', async () => {
   const newKeyring = new Keyring();
   await newKeyring.addKeyRecord({ ...recoveredKeyPair, type: KeyType.IDENTITY } as any);
 
-  // Expect a message signed with the identity key in this new keyring to be verified as
-  // being signed by the identity key in the original keyring.
+  /* Expect a message signed with the identity key in this new keyring to be verified as
+   * being signed by the identity key in the original keyring.
+   */
   const signed = newKeyring.sign({ message: 'Test' }, [
     newKeyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY })) as any
   ]);
 
-  // Note -- original keyring used to verify:
-  // TODO(dboreham): fix Keyring.verify() so it does a trusted verify -- someone broke this at some point.
+  // Note -- original keyring used to verify.
+  // TODO(dboreham): Fix `Keyring.verify()` so it does a trusted verify -- someone broke this at some point.
   const verified = origKeyring.verify(signed);
   expect(verified).toBe(true);
 });

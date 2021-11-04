@@ -206,7 +206,7 @@ describe('FeedStore', () => {
     await feedStore.openReadOnlyFeed(key);
     await feedStore.openReadOnlyFeed(key);
 
-    await sleep(20); // To flush events
+    await sleep(20); // To flush events.
 
     expect(timesCalled).toEqual(1);
   });

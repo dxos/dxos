@@ -8,6 +8,10 @@ import "google/protobuf/empty.proto";
 
 package dxos.client;
 
+//
+// HALO
+//
+
 message Profile {
   bytes publicKey = 1;
   string displayName = 2;
@@ -30,7 +34,7 @@ message InvitationProcess {
 
 }
 
-message SubmitInvitationSecretRequest {
+message AuthenticateInvitationRequest {
   InvitationProcess process = 1;
   string secret = 2;
 }
@@ -46,20 +50,23 @@ message Contacts {
 
 service ProfileService {
   rpc SubscribeProfile (google.protobuf.Empty) returns (stream Profile);
-
   rpc CreateProfile(CreateProfileRequest) returns (Profile);
-    
   rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
     
-  rpc CreateHALOInvitation(google.protobuf.Empty) returns (Invitation);
-    
-  rpc JoinHALO(Invitation) returns (InvitationProcess);
-  rpc SubmitInvitationSecret(SubmitInvitationSecretRequest) returns (Profile);
+  rpc CreateInvitation(google.protobuf.Empty) returns (Invitation);
+  rpc AcceptInvitation(Invitation) returns (InvitationProcess);
+  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (Profile);
     
   rpc SubscribeContacts(google.protobuf.Empty) returns (stream Contacts);
 
+  // TODO(dmaretskyi): Separate into config/system service.
+  rpc GetConfig(google.protobuf.Empty) returns (Config);
   rpc Reset (google.protobuf.Empty) returns (google.protobuf.Empty);
 }
+
+//
+// ECHO
+//
 
 message Party {
   bytes key = 1;
@@ -80,8 +87,8 @@ service PartyService {
 
   rpc CreateInvitation(CreateInvitationRequest) returns (Invitation);
 
-  rpc JoinParty(Invitation) returns (InvitationProcess);
-  rpc SubmitInvitationSecret(SubmitInvitationSecretRequest) returns (Profile);
+  rpc AcceptInvitation(Invitation) returns (InvitationProcess);
+  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (Profile);
 }
 
 message ItemDescriptorSet {
@@ -96,6 +103,7 @@ message ItemDescriptorSet {
 message EchoMutation {}
 message MutationReceipt {}
 message ItemSnapshot {}
+message Config {}
 
 message SubscribeItemStreamResponse {
   oneof kind {

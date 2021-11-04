@@ -71,7 +71,7 @@ export class ProtocolNetworkGenerator extends EventEmitter {
       },
       createConnection: async (fromPeer, toPeer): Promise<Stream> => {
         const r1 = fromPeer.createStream?.({ initiator: true, topic, channel: topic, options: protocol });
-        // Target peer shouldn't get the topic, this help us to simulate the network like discovery-swarm/hyperswarm
+        // Target peer shouldn't get the topic, this help us to simulate the network like discovery-swarm/hyperswarm.
         const r2 = toPeer.createStream?.({ initiator: false, options: protocol });
         assert(isStream(r1), 'createStream function must return a stream');
         assert(isStream(r1), 'createStream function must return a stream');

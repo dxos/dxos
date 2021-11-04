@@ -60,7 +60,7 @@ class Peer extends EventEmitter {
     return this._protocol.handshakeHash ? crypto.discoveryKey(this._protocol.handshakeHash) : null;
   }
 
-  // the broadcast use an `id` prop
+  // The broadcast use an `id` prop.
   get id () {
     return this.remotePublicKey;
   }
@@ -195,7 +195,7 @@ class Messenger extends NanoresourcePromise {
 
   _middleware () {
     return {
-      // send must be async
+      // Send must be async.
       send: async (packet, node) => node.broadcast(packet),
       subscribe: (onData) => {
         const onMessage = (ch, message) => {

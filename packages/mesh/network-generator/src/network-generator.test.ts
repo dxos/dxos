@@ -84,7 +84,7 @@ test('insert pre-made peers', async () => {
   expect(network.peers.length).toBe(0);
   expect(network.connections.length).toBe(0);
 
-  // genericTest above doesn't work for less than three peers so we add three.
+  // `genericTest` above doesn't work for less than three peers so we add three.
   const id1 = crypto.randomBytes(32);
   const id2 = crypto.randomBytes(32);
   const id3 = crypto.randomBytes(32);

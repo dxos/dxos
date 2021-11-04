@@ -21,7 +21,7 @@ export const buildBot = async (botPath: string, browser: boolean, buildPath?: st
     bundle: true,
     platform: browser ? 'browser' : 'node',
     format: 'cjs',
-    // sourcemap: 'inline',
+    // code sourcemap: 'inline',
     outfile: buildPath,
     external: browser
       ? ['read-pkg-up']

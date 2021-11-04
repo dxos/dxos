@@ -130,7 +130,7 @@ export class HALO {
    * Closes HALO. Automatically called when client is destroyed.
    */
   async close () {
-    // TODO(marik-d): Should be _identityManager.close().
+    // TODO(marik-d): Should be `_identityManager.close()`.
     await this.identity.halo?.close();
   }
 
@@ -158,7 +158,7 @@ export class HALO {
 
     if (this.identity.identityKey) {
       // TODO(burdon): Bad API: Semantics change based on options.
-      // TODO(burdon): createProfile isn't part of this package.
+      // TODO(burdon): `createProfile` isn't part of this package.
       throw new Error('Identity key already exists. Call createProfile without a keypair to only create a halo party.');
     }
 

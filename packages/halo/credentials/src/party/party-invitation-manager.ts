@@ -78,7 +78,7 @@ export class PartyInvitationManager {
   _verifyAndParse (invitationMessage: SignedMessage) {
     assert(invitationMessage);
 
-    // Verify Message
+    // Verify Message.
     if (!this._party.verifySignatures(invitationMessage)) {
       throw new Error(`Unverifiable message: ${invitationMessage}`);
     }

@@ -82,7 +82,7 @@ export class WebsocketRpc {
           assert(this._socket, 'No socket');
           this._socket.onmessage = async e => {
             try {
-              // e.data is Buffer in node, and Blob in chrome
+              // `e.data` is Buffer in node, and Blob in chrome.
               let data: Buffer;
               if (Object.getPrototypeOf(e.data).constructor.name === 'Blob') {
                 data = Buffer.from(await (e.data as any).arrayBuffer());

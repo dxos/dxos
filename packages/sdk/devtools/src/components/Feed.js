@@ -2,6 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import clsx from 'clsx';
+import ColorHash from 'color-hash';
+import React, { useState } from 'react';
+
 import Link from '@mui/material/Link';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -12,9 +16,6 @@ import TableRow from '@mui/material/TableRow';
 import blue from '@mui/material/colors/blue';
 import red from '@mui/material/colors/red';
 import { makeStyles } from '@mui/styles';
-import clsx from 'clsx';
-import ColorHash from 'color-hash';
-import React, { useState } from 'react';
 
 import { truncateString } from '@dxos/debug';
 import { JsonTreeView } from '@dxos/react-framework';
@@ -97,7 +98,7 @@ const Feed = ({ messages, onSelect }) => {
 
               return (
                 <TableRow key={rowKey} size='small' className={clsx({ [classes.system]: type === 'halo' })}>
-                  {/* Feed */}
+                  {/* Feed. */}
                   <TableCell
                     className={clsx(classes.outerCell, classes.meta)}
                     style={{ color: colorHash.hex(feedKey) }}
@@ -106,10 +107,10 @@ const Feed = ({ messages, onSelect }) => {
                     {truncateString(feedKey, 8)}
                   </TableCell>
 
-                  {/* # */}
+                  {/* Number. */}
                   <TableCell className={clsx(classes.outerCell, classes.block)}>{seq}</TableCell>
 
-                  {/* Type */}
+                  {/* Type. */}
                   <TableCell className={classes.outerCell}>
                     <Link
                       style={{ color: color(type), cursor: 'pointer' }}
@@ -119,7 +120,7 @@ const Feed = ({ messages, onSelect }) => {
                     </Link>
                   </TableCell>
 
-                  {/* Payload */}
+                  {/* Payload. */}
                   {/* TODO(burdon): Custom rendering of links for public keys. */}
                   <TableCell className={classes.outerCell}>
                     <JsonTreeView

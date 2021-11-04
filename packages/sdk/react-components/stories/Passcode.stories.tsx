@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useState } from 'react';
+
 import {
   ContentCopy as CopyIcon
 } from '@mui/icons-material';
 import { Box, IconButton, TextField, Typography } from '@mui/material';
-import React, { useState } from 'react';
 
 import { Passcode } from '../src';
 import { Container } from './helpers';

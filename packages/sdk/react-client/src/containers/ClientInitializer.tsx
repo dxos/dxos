@@ -48,7 +48,7 @@ export const ClientLoader = ({
   if (!client) {
     if (LoaderComponent) {
       return (
-        <LoaderComponent/>
+        <LoaderComponent />
       );
     }
 

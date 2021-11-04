@@ -198,11 +198,12 @@ describe('Party manager', () => {
     const identityManager = new IdentityManager(keyring, haloFactory, metadataStore);
     const partyManager = new PartyManager(metadataStore, snapshotStore, () => identityManager.identity, partyFactory);
 
-    // TODO(telackey): Injecting "raw" Parties into the feeds behind the scenes seems fishy to me, as it writes the
-    // Party messages in a slightly different way than the code inside PartyFactory does, and so could easily diverge
-    // from reality. Perhaps the thing to do would be to setup temporary storage, add the Parties in the usual way
-    // via PartyManager/PartyFactory, close everything, and then compare the end-state after re-opening using the
-    // same storage.
+    /* TODO(telackey): Injecting "raw" Parties into the feeds behind the scenes seems fishy to me, as it writes the
+     * Party messages in a slightly different way than the code inside PartyFactory does, and so could easily diverge
+     * from reality. Perhaps the thing to do would be to setup temporary storage, add the Parties in the usual way
+     * via PartyManager/PartyFactory, close everything, and then compare the end-state after re-opening using the
+     * same storage.
+     */
 
     // Create raw parties.
     const numParties = 3;

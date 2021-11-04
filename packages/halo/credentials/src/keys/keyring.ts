@@ -754,8 +754,9 @@ export class Keyring implements Signer {
           const tmpKeys = new Keyring();
           tmpKeys._addTempKeyRecord(key);
 
-          // Starting from the message containing the trusted key, add the signing keys and walk forward
-          // until we reach the end.
+          /* Starting from the message containing the trusted key, add the signing keys and walk forward
+           * until we reach the end.
+           */
           for (const message of messages) {
             // Verification will fail if the message is not signed by an already trusted key.
             const verified = tmpKeys.verify(message);

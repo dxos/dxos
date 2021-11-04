@@ -68,7 +68,7 @@ const JoinParty = () => {
             onChange={e => setInvitation(e.target.value)}
             variant='outlined'
             required
-            helperText={<div> The shared invitation code. </div>}/>
+            helperText={<div> The shared invitation code. </div>} />
         </Grid>
         <Grid item xs={12}>
           <TextField
@@ -79,7 +79,7 @@ const JoinParty = () => {
             onChange={e => setPasscode(e.target.value)}
             variant='outlined'
             required
-            helperText={<div> The passcode you get from the party owner.  </div>}/>
+            helperText={<div> The passcode you get from the party owner.  </div>} />
         </Grid>
         <Grid item xs={6}>
           <BackButton />

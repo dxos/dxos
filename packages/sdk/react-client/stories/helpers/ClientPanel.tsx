@@ -2,8 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Box } from '@mui/material';
 import React from 'react';
+
+import { Box } from '@mui/material';
 
 import { Client } from '@dxos/client';
 import { Party } from '@dxos/echo-db';

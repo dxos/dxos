@@ -132,7 +132,7 @@ export class PartyManager {
   }
 
   //
-  // Party
+  // Party.
   //
 
   /**
@@ -157,15 +157,17 @@ export class PartyManager {
    * @param partyKey
    * @param hints
    */
-  // TODO(telackey): Remove 'feeds' since should not be listed here. The set of trusted feeds is the
-  // under the authority of the PartyStateMachine.
+  /* TODO(telackey): Remove 'feeds' since should not be listed here. The set of trusted feeds is the
+   * under the authority of the PartyStateMachine.
+   */
   @synchronized
   async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     assert(this._open, 'PartyManager is not open.');
 
-    // The caller should have checked if the Party existed before calling addParty, but that check
-    // is not within a single critical section, and so things may have changed. So we must perform that
-    // check again, here within the synchronized block.
+    /* The caller should have checked if the Party existed before calling addParty, but that check
+     * is not within a single critical section, and so things may have changed. So we must perform that
+     * check again, here within the synchronized block.
+     */
     if (this._parties.has(partyKey)) {
       log(`Already had party partyKey=${partyKey.toHex()}`);
       return this._parties.get(partyKey);
@@ -182,15 +184,16 @@ export class PartyManager {
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
     assert(this._open, 'PartyManager is not open.');
 
-    // TODO(marik-d): Somehow check that we don't already have this party
-    // TODO(telackey): ^^ We can check the PartyKey during the greeting flow.
+    // TODO(marik-d): Somehow check that we don't already have this party.
+    // TODO(telackey): We can check the PartyKey during the greeting flow.
     const party = await this._partyFactory.joinParty(invitationDescriptor, secretProvider);
     await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
 
     // TODO(telackey): This is wrong, as we'll just open both writable feeds of it next time causing confusion.
     if (this._parties.has(party.key)) {
       await party.close();
-      throw new Error(`Party already exists ${party.key.toHex()}`); // TODO(marik-d): Handle this gracefully
+      // TODO(marik-d): Handle this gracefully.
+      throw new Error(`Party already exists ${party.key.toHex()}`);
     }
 
     this._setParty(party);
@@ -249,7 +252,7 @@ export class PartyManager {
     }
   }
 
-  // TODO(burdon): Reconcile with Halo.ContactManager
+  // TODO(burdon): Reconcile with `Halo.ContactManager`.
   private async _updateContactList (party: PartyInternal) {
     // Prevent any updates after we closed ECHO.
     // This will get re-run next time echo is loaded so we don't loose any data.

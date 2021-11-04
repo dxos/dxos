@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-// dxos-testing-browser
+// DXOS testing browser.
 
 import debug from 'debug';
 import expect from 'expect';
@@ -36,8 +36,9 @@ const createPartyKeyrings = async () => {
 
   const partyKey = keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey;
 
-  // This Keyring will have nothing but the public key of the Party. This mimics the initial state
-  // when joining a Party, since all that is known at that time know at that time is the public key.
+  /* This Keyring will have nothing but the public key of the Party. This mimics the initial state
+   * when joining a Party, since all that is known at that time know at that time is the public key.
+   */
   const bareKeyring = new Keyring();
   await bareKeyring.addPublicKey({
     publicKey: partyKey,
