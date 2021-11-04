@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-// dxos-testing-browser
+// DXOS testing browser.
 
 import expect from 'expect';
 import memdown from 'memdown';

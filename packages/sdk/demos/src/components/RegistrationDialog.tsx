@@ -2,6 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+import MobileDetect from 'mobile-detect';
+import React, { useRef, useState } from 'react';
+
 import CreateIcon from '@mui/icons-material/AddCircleOutline';
 import RestoreIcon from '@mui/icons-material/Restore';
 import { createTheme, Theme } from '@mui/material';
@@ -19,9 +23,6 @@ import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { makeStyles, withStyles } from '@mui/styles';
-import assert from 'assert';
-import MobileDetect from 'mobile-detect';
-import React, { useRef, useState } from 'react';
 
 import { generateSeedPhrase } from '@dxos/crypto';
 
@@ -261,8 +262,8 @@ const RegistrationDialog = ({
                 </Paper>
               </div>
             </DialogContent>
-            {/* ISSUE: https://github.com/dxos/echo/issues/339#issuecomment-735918728 */}
-            {/* <DialogActions>
+            {/* https://github.com/dxos/echo/issues/339#issuecomment-735918728 */}
+            {/* code <DialogActions>
               <Button variant='text' color='secondary' onClick={() => setStage(STAGE_IMPORT_KEYRING)}>Import Keyring</Button>
             </DialogActions> */}
           </>
@@ -281,7 +282,7 @@ const RegistrationDialog = ({
                 spellCheck={false}
                 value={recoveredSeedPhrase}
                 onChange={e => setRecoveredSeedPhrase(e.target.value)}
-                onKeyDown={handleKeyDown}/>
+                onKeyDown={handleKeyDown} />
             </DialogContent>
             <DialogActions>
               <Button color='primary' onClick={() => setStage(STAGE_START)}>Back</Button>
@@ -369,7 +370,7 @@ const RegistrationDialog = ({
 
       case STAGE_IMPORT_KEYRING: {
         return (
-          // open attribute deleted as it is not present in ImportKeyringDialog
+          // Open attribute deleted as it is not present in ImportKeyringDialog.
           <ImportKeyringDialog onClose={() => setStage(STAGE_START)} decrypter={keyringDecrypter} />
         );
       }

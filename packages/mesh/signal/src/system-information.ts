@@ -79,7 +79,7 @@ const getSystemInfo = async () => {
     os: {
       arch: os.arch(),
       platform: os.platform(),
-      version: os.version ? os.version() : undefined // Node > 13
+      version: os.version ? os.version() : undefined // Node > 13.
     },
 
     time: {

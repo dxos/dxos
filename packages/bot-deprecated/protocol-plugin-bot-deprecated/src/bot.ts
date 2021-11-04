@@ -33,7 +33,7 @@ export class BotPlugin extends EventEmitter {
   private extensionsCreated = 0;
   private readonly _peerId: Buffer;
 
-  private readonly _peers = new Map<string, any /* Protocol */>();
+  private readonly _peers = new Map<string, any /* Protocol. */>();
 
   private readonly _onMessage: (protocol: Protocol, message: Message) => Promise<Uint8Array | undefined>;
 

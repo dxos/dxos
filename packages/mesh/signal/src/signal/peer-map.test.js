@@ -29,7 +29,7 @@ test('basic operations', () => {
   expect(map.delete(bf('topic3'), bf('peer4'))).toBe(true);
   expect(map.delete(bf('topic3'), bf('peer5'))).toBe(true);
 
-  // delete false
+  // Delete false.
   expect(map.delete(bf('topicx'), bf('peer6'))).toBe(false);
   expect(map.delete(bf('topic2'), bf('peerx'))).toBe(false);
 

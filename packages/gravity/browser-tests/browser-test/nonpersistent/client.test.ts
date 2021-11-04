@@ -58,7 +58,7 @@ describe('Client - nonpersistent', () => {
 
   it('invitations', async function () {
     if (browserMocha.context.browser === 'webkit') {
-      // TODO: Doesn't work on CI for unknown reason.
+      // TODO(unknown): Doesn't work on CI for unknown reason.
       this.skip();
     }
 
@@ -92,7 +92,7 @@ describe('Client - nonpersistent', () => {
 
   it('offline invitations', async function () {
     if (browserMocha.context.browser === 'webkit') {
-      // TODO: Doesn't work on CI for unknown reason.
+      // TODO(unknown): Doesn't work on CI for unknown reason.
       this.skip();
     }
 
@@ -105,7 +105,7 @@ describe('Client - nonpersistent', () => {
     const profileB = await clientB.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 2' });
 
     // Wait for invited person to arrive.
-    // TODO(marik-d): Comparing by public key as a workaround for https://github.com/dxos/protocols/issues/372.
+    // TODO(marik-d): Comparing by public key as a workaround for `https://github.com/dxos/protocols/issues/372`.
     const contactPromise = clientA.halo.queryContacts()
       .update.waitFor(contacts => !!contacts.find(contact => contact.publicKey.equals(profileB.publicKey)));
 

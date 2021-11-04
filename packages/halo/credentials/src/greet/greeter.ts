@@ -82,7 +82,7 @@ export class Greeter {
     this._invitations.set(invitation.id.toString('hex'), invitation);
 
     // TODO(burdon): Would event handlers help with error handling?
-    // (e.g., return Invitation and inv = xxx.createInvitation(); inv.on('finish'), inv.on('error'), etc?
+    // (eg, return Invitation and `inv = xxx.createInvitation()`; `inv.on('finish')`, `inv.on('error')`, etc?
     return {
       id: invitation.id
     };
@@ -187,8 +187,9 @@ export class Greeter {
       throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_STATE, 'Invalid invitation or out-of-order command sequence.');
     }
 
-    // Mark it as having been presented and do any actions required
-    // by specific Invitation type such as generate or gather the secret info.
+    /* Mark it as having been presented and do any actions required
+     * by specific Invitation type such as generate or gather the secret info.
+     */
     await invitation.begin();
 
     return {
@@ -236,8 +237,9 @@ export class Greeter {
         throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_MSG_TYPE, `Invalid type: ${messageType}`);
       }
 
-      // The signature needs to check out, but we cannot check for an already trusted key, since these messages
-      // will all be self-signed.
+      /* The signature needs to check out, but we cannot check for an already trusted key, since these messages
+       * will all be self-signed.
+       */
       const verified = Keyring.validateSignatures(message.payload);
       if (!verified) {
         throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_INVALID_SIGNATURE, 'Invalid signature');

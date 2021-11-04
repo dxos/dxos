@@ -230,7 +230,7 @@ export class Broadcast<P extends Peer = Peer> {
         return;
       }
 
-      // Ignore packets produced by me and forwarded by others
+      // Ignore packets produced by me and forwarded by others.
       if (Buffer.from(packet.origin).equals(this._id)) {
         return;
       }

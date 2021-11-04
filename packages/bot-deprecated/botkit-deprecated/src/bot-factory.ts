@@ -266,7 +266,7 @@ export class BotFactory {
       await container.stop();
     }
     // TODO(marik-d): Network-manager clean-up.
-    // await this._client!.networkManager.close();
+    // code await this._client!.networkManager.close();
   }
 
   signChallenge (challenge: Buffer) {

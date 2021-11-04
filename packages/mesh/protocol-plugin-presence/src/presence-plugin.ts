@@ -343,7 +343,7 @@ export class PresencePlugin {
       await this.ping();
     }
 
-    // We clear the._graph graph.
+    // We clear `this._graph` graph.
     const localPeerId = this._peerId.toString('hex');
     this._graph.forEachNode((node) => {
       if (node.id === localPeerId) {

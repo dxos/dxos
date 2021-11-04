@@ -2,14 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Box } from '@mui/material';
 import React from 'react';
+
+import { Box } from '@mui/material';
 
 import { ClientInitializer, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-framework';
 
 // TODO(burdon): Which package should this be in?
-// import { RegistrationDialog } from '../src';
+// code import { RegistrationDialog } from '../src';
 
 export default {
   title: 'Tutorials/Registration'
@@ -33,7 +34,7 @@ export const Primary = () => {
     return null;
 
     // TODO(burdon): Set defaults.
-    /*
+    /* code
     return (
       <>
         <Box m={2}>

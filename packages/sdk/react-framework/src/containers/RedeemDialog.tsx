@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useState } from 'react';
+
 import { Redeem as RedeemIcon } from '@mui/icons-material';
 import {
   Alert,
@@ -13,7 +15,6 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import React, { useState } from 'react';
 
 import { defaultInvitationAuthenticator, InvitationDescriptor } from '@dxos/echo-db';
 import { useClient, useInvitationRedeemer } from '@dxos/react-client';
@@ -35,8 +36,8 @@ interface RedeemDialogProps {
  */
 export const RedeemDialog = ({ open, code = '', onClose, pinless = false }: RedeemDialogProps) => {
   const [isOffline] = useState(false);
-  // issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
-  // const [isOffline, setIsOffline] = useState(false);
+  // TODO(grazianoramiro): `https://github.com/dxos/protocols/issues/197`.
+  // code const [isOffline, setIsOffline] = useState(false);
   const [error, setError] = useState<string>();
   const [step, setStep] = useState(0); // TODO(burdon): Const.
   const [invitationCode, setInvitationCode] = useState(code);
@@ -119,8 +120,8 @@ export const RedeemDialog = ({ open, code = '', onClose, pinless = false }: Rede
               rows={6}
             />
 
-            {/*
-            issue(grazianoramiro): https://github.com/dxos/protocols/issues/197
+            {/* TODO(grazianoramiro): `https://github.com/dxos/protocols/issues/197`. */}
+            {/* code
             <FormControlLabel
               className={classes.marginTop}
               control={<Checkbox checked={isOffline} onChange={(event) => setIsOffline(event.target.checked)} />}

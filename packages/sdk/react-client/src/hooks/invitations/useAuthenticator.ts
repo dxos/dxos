@@ -40,7 +40,7 @@ export const useAuthenticator = (invitation: InvitationDescriptor) => {
           }
         }
       } catch (err) {
-        // TODO(burdon): Doesn't support retry. Provide hint (e.g., should retry/cancel).
+        // TODO(burdon): Doesn't support retry. Provide hint (eg, should retry/cancel).
         if (!signal.aborted) {
           setState({ error: String(err) });
         }

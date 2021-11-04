@@ -2,6 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+import React, { useState, useRef } from 'react';
+
 import { createTheme, DialogContentText } from '@mui/material';
 import Button from '@mui/material/Button';
 import DialogActions from '@mui/material/DialogActions';
@@ -9,8 +12,6 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
 import { makeStyles } from '@mui/styles';
-import assert from 'assert';
-import React, { useState, useRef } from 'react';
 
 const useStyles = makeStyles(theme => ({
   marginTop: {
@@ -32,7 +33,7 @@ const ImportKeyringDialog = ({
   ) => string
 }) => {
   const classes = useStyles();
-  // const config = useConfig();
+  // code const config = useConfig();
   const buttonRef = useRef(null);
   const fileRef = useRef(null);
   const [passphrase, setPassphrase] = useState(0);
@@ -56,8 +57,8 @@ const ImportKeyringDialog = ({
           await decrypter((event.target as FileReader).result, passphrase);
           // TODO(burdon): Pass through global action handler from layout.
 
-          // app is not present on ClientConfig
-          // reload(config.app.publicUrl);
+          // `app` is not present on ClientConfig.
+          // code reload(config.app.publicUrl);
           window.location.reload();
         } catch (e) {
           setError(e);

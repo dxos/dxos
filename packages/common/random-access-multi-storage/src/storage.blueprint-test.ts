@@ -62,7 +62,7 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     it('reads from empty file', async function () {
       const storage = createStorage();
 
-      // TODO(yivlad): doesn't work for node
+      // TODO(yivlad): Doesn't work for node.
       if (storage.type === STORAGE_NODE) {
         this.skip();
       }
@@ -74,18 +74,18 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     });
 
     it('reopen', async () => {
-      // open
+      // Open.
       const storage = createStorage();
       const fileName = randomText();
       const file = storage.createOrOpen(fileName);
 
-      // write & close
+      // Write & close.
       await writeAndCheck(file, Buffer.from(randomText()));
       await pify(file.close.bind(file))();
 
-      // open again
+      // Open again.
       const file2 = storage.createOrOpen('EchoMetadata');
-      // write & close
+      // Write & close.
       await writeAndCheck(file2, Buffer.from(randomText()));
       await pify(file2.close.bind(file2))();
     });
@@ -110,7 +110,7 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     it('subdirectories', async function () {
       const rootStorage = createStorage();
 
-      // TODO(yivlad): Doesn't work for STORAGE_NODE
+      // TODO(yivlad): Doesn't work for STORAGE_NODE.
       if (rootStorage.type === STORAGE_NODE) {
         this.skip();
       }
@@ -142,7 +142,7 @@ export function storageTests (testGroupName: string, createStorage: () => IStora
     it('destroys file', async function () {
       const storage = createStorage();
 
-      // TODO(yivlad): Works only for STORAGE_RAM
+      // TODO(yivlad): Works only for STORAGE_RAM.
       if (storage.type !== STORAGE_RAM) {
         this.skip();
       }

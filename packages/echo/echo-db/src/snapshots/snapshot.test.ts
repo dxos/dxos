@@ -17,7 +17,7 @@ import { createTestInstance } from '../util';
 
 const log = debug('dxos:snapshot:test');
 
-// TODO(burdon): Remove "foo", etc. from tests.
+// TODO(burdon): Remove "foo", etc from tests.
 
 test.skip('loading large party', async () => {
   const echo = await createTestInstance({ initialize: true });

@@ -2,10 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import React from 'react';
+
 import InfoIcon from '@mui/icons-material/Info';
 import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import React from 'react';
 
 import { PublicKey } from '@dxos/crypto';
 import { SwarmInfo } from '@dxos/network-manager';

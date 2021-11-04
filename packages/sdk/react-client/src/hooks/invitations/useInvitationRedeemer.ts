@@ -30,7 +30,7 @@ type UseInvitationRedeemerProps = {
 export const useInvitationRedeemer = ({
   onDone = noOp, // TODO(burdon): Hooks shouldn't have callbacks (return state?)
   onError = noOp,
-  isOffline = false // TODO(burdon): Document? Rename "offline"
+  isOffline = false // TODO(burdon): Document? Rename "offline".
 }: UseInvitationRedeemerProps = {}) => {
   const client = useClient();
   const [invitationCode, setInvitationCode] = useState<string>();

@@ -4,13 +4,14 @@
 
 /* eslint-disable react/display-name */
 
+import React, { useEffect, useState } from 'react';
+
 import {
   Box,
   Button,
   TextField,
   Typography
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
 
 import { ErrorBoundary } from '@dxos/react-client';
 
@@ -21,7 +22,7 @@ export default {
 };
 
 //
-// Test
+// Test.
 //
 
 enum TestState {

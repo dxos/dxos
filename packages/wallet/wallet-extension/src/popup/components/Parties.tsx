@@ -64,11 +64,13 @@ const Parties = () => {
         <Grid item xs={12}>
           <List>
             {!parties?.partyKeys?.length
-              ? <ListItem>
+              ? (
+<ListItem>
               You have no parties
               </ListItem>
+                )
               : null}
-            {parties?.partyKeys?.map(key =>
+            {parties?.partyKeys?.map(key => (
               <ListItem key={key}>
                 <ListItemIcon>
                   <FolderIcon />
@@ -83,6 +85,7 @@ const Parties = () => {
                   <CopyButton text={key} />
                 </ListItemSecondaryAction>
               </ListItem>
+            )
             )}
           </List>
         </Grid>

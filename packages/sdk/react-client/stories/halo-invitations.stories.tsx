@@ -2,10 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import React, { useState } from 'react';
+
 import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
-import React, { useState } from 'react';
 
 import { defaultSecretValidator } from '@dxos/credentials';
 import { InvitationAuthenticator } from '@dxos/echo-db';
@@ -31,7 +32,7 @@ export default {
   title: 'react-client/HALO Invitations'
 };
 
-// debug.enable('dxos:*');
+// code debug.enable('dxos:*');
 
 /**
  * Creates device invitation.
@@ -43,7 +44,7 @@ const HaloInvitationContainer = () => {
 
   const handleCreateInvitation = async () => {
     // TODO(burdon): Remove? Where is this used?
-    // const authenticator: InvitationAuthenticator = defaultInvitationAuthenticator;
+    // code const authenticator: InvitationAuthenticator = defaultInvitationAuthenticator;
     const authenticator: InvitationAuthenticator = {
       secretProvider,
       secretValidator: defaultSecretValidator // TODO(burdon): Normalize with other invitation methods.
@@ -118,7 +119,7 @@ const HaloAuthenticationContainer = () => {
         setStatus({ identity: invitation.identityKey.toString() });
       }
     } catch (err) {
-      // TODO(burdon): Doesn't support retry. Provide hint (e.g., should retry/cancel).
+      // TODO(burdon): Doesn't support retry. Provide hint (eg, should retry/cancel).
       setStatus({ error: err });
     }
   };
@@ -152,12 +153,12 @@ const TestApp = () => {
     }}>
       <Paper>
         <ClientPanel client={client} profile={profile} parties={parties} />
-        <Divider/>
-        <HaloInvitationContainer/>
+        <Divider />
+        <HaloInvitationContainer />
         {!client.echo.halo.isInitialized && (
           <>
-            <Divider/>
-            <HaloAuthenticationContainer/>
+            <Divider />
+            <HaloAuthenticationContainer />
           </>
         )}
       </Paper>
@@ -171,17 +172,17 @@ export const Primary = () => {
   return (
     <Container>
       <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
-        {/* Instantiated Client */}
+        {/* Instantiated Client. */}
         <ClientInitializer config={{}}>
           <ProfileInitializer>
-            <TestApp/>
+            <TestApp />
           </ProfileInitializer>
         </ClientInitializer>
 
-        {/* Joiners */}
+        {/* Joiners. */}
         {[...new Array(peers)].map((_, i) => (
           <ClientInitializer key={i} config={{}}>
-            <TestApp/>
+            <TestApp />
           </ClientInitializer>
         ))}
       </Box>

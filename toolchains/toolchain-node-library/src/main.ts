@@ -90,7 +90,7 @@ yargs(process.argv.slice(2))
       execTest();
 
       // Additional test steps execution placed here to allow to run tests without additional steps.
-      // Additional test steps are executed by default only when build:test is run
+      // Additional test steps are executed by default only when build:test is run.
       for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
         console.log(chalk.bold`\n${step}`);
         execPackageScript(project, step, []);

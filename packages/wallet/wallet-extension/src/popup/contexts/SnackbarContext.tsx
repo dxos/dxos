@@ -34,11 +34,13 @@ const WithSnackbarContext = ({ children } : { children: React.ReactNode }) => {
   return (
     <SnackbarContext.Provider value={setSnackbar}>
       {message
-        ? <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+        ? (
+<Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
           <Alert onClose={handleClose} severity={message.severity}>
             {message.message}
           </Alert>
         </Snackbar>
+          )
         : null}
       {children}
     </SnackbarContext.Provider>

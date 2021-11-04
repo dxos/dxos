@@ -46,7 +46,7 @@ export function logs (name) {
         const { name, message } = err;
         error(`${name}: ${message}`);
 
-        // TODO(burdon): source-map support?
+        // TODO(burdon): Source-map support?
         // https://www.npmjs.com/package/stacktracey
         // https://www.npmjs.com/package/source-map-support
         console.error(err);

@@ -6,7 +6,7 @@
 export const WRN_TYPE_BOT = 'wrn:bot';
 export const WRN_TYPE_BOT_FACTORY = 'wrn:bot-factory';
 
-// Registry client has no types
+// Registry client has no types.
 export interface QueryRecord {
   attributes: {
     version: string,

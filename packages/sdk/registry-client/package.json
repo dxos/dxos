@@ -18,6 +18,11 @@
     "test:int:auctions": "NODE_ENV=test mocha '{src,test,int}/**/auctions-api.int-test.ts'",
     "test:int:registry": "NODE_ENV=test mocha '{src,test,int}/**/registry-client.int-test.ts'"
   },
+  "eslintConfig": {
+    "ignorePatterns": [
+      "src/interfaces"
+    ]
+  },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",

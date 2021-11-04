@@ -17,8 +17,8 @@ export const useMembers = (party: Party) => {
     setMembers(result.value);
 
     return result.subscribe(() => {
-      // TODO(wittjosiah): result not triggering update when name loads
-      // ISSUE: https://github.com/dxos/protocols/issues/372
+      // TODO(wittjosiah): Result not triggering update when name loads.
+      // https://github.com/dxos/protocols/issues/372
       const update = setInterval(() => {
         const newMembers = party.queryMembers().value;
         const isNameFilled = newMembers.every(m => m.displayName);

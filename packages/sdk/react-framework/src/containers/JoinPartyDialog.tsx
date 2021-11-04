@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Box, Button, TextField, Typography } from '@mui/material';
 import React, { useState } from 'react';
+
+import { Box, Button, TextField, Typography } from '@mui/material';
 
 import { decodeInvitation, useClient, useSecretProvider } from '@dxos/react-client';
 import { Dialog, Passcode } from '@dxos/react-components';
@@ -80,7 +81,7 @@ export const JoinPartyDialog = ({
       const party = await client.echo.joinParty(invitation, secretProvider);
       await party.open();
     } catch (err) {
-      // TODO(burdon): Extract human error (e.g., currently "Already connected to swarm").
+      // TODO(burdon): Extract human error (eg, currently "Already connected to swarm").
       setError(err.responseMessage || err.message);
       setState(PartyJoinState.ERROR);
       return;

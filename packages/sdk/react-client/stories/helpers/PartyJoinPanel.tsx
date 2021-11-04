@@ -2,8 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Box, Button, TextField, Toolbar } from '@mui/material';
 import React, { useEffect, useState } from 'react';
+
+import { Box, Button, TextField, Toolbar } from '@mui/material';
 
 import { JsonPanel } from './JsonPanel';
 

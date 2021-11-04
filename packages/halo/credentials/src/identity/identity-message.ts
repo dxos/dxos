@@ -60,7 +60,7 @@ export const isIdentityMessage = (message: Message | SignedMessage) => {
   message = extractContents(unwrapEnvelopes(unwrapMessage(message)));
   const type = getTypeUrl(message);
 
-  // Since message.payload may not exist, make safe and return false.
+  // Since `message.payload` may not exist, make safe and return false.
   return type && type.startsWith('dxos.credentials.identity.');
 };
 

@@ -136,7 +136,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    */
   once (callback: (data: T) => void): () => void {
     if (this._listeners.has(callback)) {
-      return () => { /* noop */ };
+      return () => { /* No-op. */ };
     }
 
     this._onceListeners.add(callback);

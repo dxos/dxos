@@ -2,8 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Box, Button, Toolbar, styled } from '@mui/material';
 import React, { useEffect, useState } from 'react';
+
+import { Box, Button, Toolbar, styled } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
 import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient, useParties } from '@dxos/react-client';

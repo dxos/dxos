@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Box } from '@mui/material';
 import React from 'react';
+
+import { Box } from '@mui/material';
 
 import { FullScreen } from '@dxos/react-components';
 

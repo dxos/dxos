@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useState } from 'react';
+
 import {
   Box,
   Button,
@@ -13,7 +15,6 @@ import {
   TextField
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import React, { useState } from 'react';
 
 import { Item } from '@dxos/echo-db';
 

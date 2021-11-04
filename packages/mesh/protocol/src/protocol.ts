@@ -330,7 +330,7 @@ export class Protocol {
     this.handshake.emit(this);
     this._connected = true;
 
-    // TODO: Redo this
+    // TODO(unknown): Redo this.
     this._stream.on('feed', async (discoveryKey: Buffer) => {
       try {
         for (const [name, extension] of this._extensionMap) {
@@ -353,11 +353,11 @@ export class Protocol {
           throw new ERR_PROTOCOL_CONNECTION_INVALID('key not found');
         }
 
-        // init stream
+        // Init stream.
         this._channel = this._stream.open(initialKey, {
           onextension: this._extensionHandler
 
-        }); // needs a list of extension right away.
+        }); // Needs a list of extension right away.
       } catch (err) {
         let newErr = err;
         if (!ERR_PROTOCOL_CONNECTION_INVALID.equals(newErr)) {
@@ -367,13 +367,14 @@ export class Protocol {
       }
     };
 
-    // If this protocol stream is being created via a swarm connection event,
-    // only the client side will know the topic (i.e. initial feed key to share).
+    /* If this protocol stream is being created via a swarm connection event,
+     * only the client side will know the topic (ie, initial feed key to share).
+     */
     if (this._discoveryKey) {
       openChannel(this._discoveryKey);
     } else {
       // Wait for the peer to share the initial feed and see if we have the public key for that.
-      this._stream.once('feed', openChannel); // TODO: probably not working anymore.
+      this._stream.once('feed', openChannel); // TODO(unknown): Probably not working anymore.
     }
   }
 

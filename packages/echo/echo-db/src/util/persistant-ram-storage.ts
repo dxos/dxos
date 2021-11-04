@@ -20,7 +20,7 @@ export function createRamStorage (): IStorage {
       return files.get(name)!;
     }
     const file = storage.createOrOpen(name);
-    file.close = (cb: any) => cb?.(null); // fix
+    file.close = (cb: any) => cb?.(null); // Fix.
     files.set(name, file);
     return file;
   };
