@@ -14,7 +14,7 @@ import { JoinDialog, JoinDialogProps } from './common';
 export const JoinPartyDialog = (props: Omit<JoinDialogProps, 'onJoin' | 'title'>) => {
   const client = useClient();
 
-  const handleJoin: JoinDialogProps['onJoin'] = async ({invitation, secretProvider}) => {
+  const handleJoin: JoinDialogProps['onJoin'] = async ({ invitation, secretProvider }) => {
     const party = await client.echo.joinParty(invitation, secretProvider);
     await party.open();
     return party;

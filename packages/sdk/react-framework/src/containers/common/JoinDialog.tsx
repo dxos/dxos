@@ -90,7 +90,7 @@ export const JoinDialog = ({
 
     try {
       setState(PartyJoinState.AUTHENTICATE);
-      await onJoin({invitation, secretProvider});
+      await onJoin({ invitation, secretProvider });
     } catch (err: any) {
       // TODO(burdon): Extract human error (eg, currently "Already connected to swarm").
       setError(err.responseMessage || err.message);

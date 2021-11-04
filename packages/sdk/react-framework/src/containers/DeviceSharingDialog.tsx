@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useClient } from '@dxos/react-client';
 import React from 'react';
+
+import { useClient } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './common';
 
@@ -13,7 +14,7 @@ import { SharingDialog, SharingDialogProps } from './common';
 export const DeviceSharingDialog = (props: Omit<SharingDialogProps, 'onShare' | 'title' | 'members'>) => {
   const client = useClient();
 
-  const handleShare: SharingDialogProps['onShare'] = async ({options, secretProvider}) => {
+  const handleShare: SharingDialogProps['onShare'] = async ({ options, secretProvider }) => {
     return await client.createHaloInvitation(secretProvider, options);
   };
 

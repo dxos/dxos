@@ -7,11 +7,10 @@ import React, { useEffect, useState } from 'react';
 import { Button, Table, TableBody, TableCell, TableRow } from '@mui/material';
 import { Box } from '@mui/system';
 
-import { PublicKey } from '@dxos/crypto';
-import { InvitationDescriptor, InvitationOptions, PartyMember } from '@dxos/echo-db';
-import { encodeInvitation, useClient, useParty, useSecretGenerator, useMembers } from '@dxos/react-client';
-import { CopyText, CopyToClipboard, Dialog, MemberList, Passcode } from '@dxos/react-components';
 import type { SecretProvider } from '@dxos/credentials';
+import { InvitationDescriptor, InvitationOptions, PartyMember } from '@dxos/echo-db';
+import { encodeInvitation, useSecretGenerator } from '@dxos/react-client';
+import { CopyText, CopyToClipboard, Dialog, MemberList, Passcode } from '@dxos/react-components';
 
 enum InvitationState {
   INIT,
@@ -52,7 +51,6 @@ export const SharingDialog = ({
   // TODO(burdon): Multiple invitations at once (see Braneframe PartySharingDialog). Timeouts, etc.
   const [invitationCode, setInvitationCode] = useState<string>();
   const [secretProvider, pin, resetPin] = useSecretGenerator();
-
 
   const handleReset = () => {
     setError(undefined);
