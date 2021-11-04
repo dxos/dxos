@@ -26,7 +26,7 @@ export class BotHandle {
     this._bot = {
       id: PublicKey.random().toString(),
       status: Bot.Status.STOPPED
-    }
+    };
   }
 
   get rpc () {

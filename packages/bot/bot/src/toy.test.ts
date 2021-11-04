@@ -18,7 +18,7 @@ describe('In-Memory', () => {
     const [agentPort, botControllerPort] = createLinkedPorts();
 
     const agent = new BotFactoryAgent(agentPort);
-    const botFactory = new BotFactory(() => { 
+    const botFactory = new BotFactory(() => {
       const [botHandlePort, botPort] = createLinkedPorts();
       const bot = new InMemoryCustomizableBot(botPort, {
         Initialize: async () => {
@@ -31,7 +31,7 @@ describe('In-Memory', () => {
         }
       });
       void bot.open();
-      return new BotHandle(botHandlePort); 
+      return new BotHandle(botHandlePort);
     });
     const botController = new BotController(botFactory, botControllerPort);
 
