@@ -70,10 +70,6 @@ export const SharingDialog = ({
     }
   }, [state]);
 
-  // useEffect(() => {
-  //   setState(InvitationState.INIT);
-  // }, [partyKey]);
-
   const handleCreateInvitation = () => {
     setImmediate(async () => {
       const options: InvitationOptions = {
