@@ -109,6 +109,7 @@ const DialogActions = withStyles(theme => ({
 
 /**
  * Registration and recovery dialog.
+ * @deprecated see react-framework.
  */
 const RegistrationDialog = ({
   open = true,

@@ -28,13 +28,13 @@ const resolveAsyncProvider = async <T extends any>(provider: AsyncProvider<T>): 
   return (typeof provider === 'function') ? await (provider as CallableFunction)() : provider;
 };
 
-type ConfigProvier = AsyncProvider<RegistryClientConfig>
+type ConfigProvider = AsyncProvider<RegistryClientConfig>
 
 /**
  *
  */
 // TODO(burdon): Move to registry-client?
-const createRegistryClient = async (configProvider: ConfigProvier) => {
+const createRegistryClient = async (configProvider: ConfigProvider) => {
   const config = await resolveAsyncProvider(configProvider);
   if (!config.services?.dxns) {
     throw new Error('Config missing DXNS endpoint');
@@ -52,7 +52,7 @@ const createRegistryClient = async (configProvider: ConfigProvier) => {
 
 interface RegistryInitializerProps {
   children?: ReactNode
-  config?: ConfigProvier
+  config?: ConfigProvider
 }
 
 /**
