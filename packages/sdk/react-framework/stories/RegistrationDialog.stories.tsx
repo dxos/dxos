@@ -22,7 +22,9 @@ export const Primary = () => {
       <RegistrationDialog
         open={open}
         onComplete={() => sleep(1000).then(() => setOpen(false)) }
-        onRestore={() => sleep(1000).then(() => { throw new Error('Corrupt seed phrase.'); })}
+        onRestore={() => sleep(1000).then(() => {
+          throw new Error('Corrupt seed phrase.');
+        })}
       />
     </Box>
   );
