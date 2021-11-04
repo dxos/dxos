@@ -14,7 +14,7 @@ import { JoinDialog, JoinDialogProps } from './common';
 export const JoinHaloDialog = (props: Omit<JoinDialogProps, 'onJoin' | 'title'>) => {
   const client = useClient();
 
-  const handleJoin: JoinDialogProps['onJoin'] = async (invitation, secretProvider) => {
+  const handleJoin: JoinDialogProps['onJoin'] = async ({invitation, secretProvider}) => {
     const party = await client.halo.join(invitation, secretProvider);
     await party.open();
     return party;

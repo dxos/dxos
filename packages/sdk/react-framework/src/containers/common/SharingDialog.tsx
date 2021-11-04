@@ -8,22 +8,28 @@ import { Button, Table, TableBody, TableCell, TableRow } from '@mui/material';
 import { Box } from '@mui/system';
 
 import { PublicKey } from '@dxos/crypto';
-import { InvitationOptions } from '@dxos/echo-db';
+import { InvitationDescriptor, InvitationOptions, PartyMember } from '@dxos/echo-db';
 import { encodeInvitation, useClient, useParty, useSecretGenerator, useMembers } from '@dxos/react-client';
 import { CopyText, CopyToClipboard, Dialog, MemberList, Passcode } from '@dxos/react-components';
+import type { SecretProvider } from '@dxos/credentials';
 
 enum InvitationState {
   INIT,
   ERROR,
 }
 
+type ShareOptions = {
+  secretProvider: SecretProvider,
+  options: InvitationOptions
+}
+
 export interface SharingDialogProps {
   open: boolean
   modal?: boolean
   onClose?: () => void
-  partyKey?: PublicKey,
+  onShare: (shareOptions: ShareOptions) => Promise<InvitationDescriptor>
   title: string,
-  type: 'party' | 'halo'
+  members?: PartyMember[] // TODO(rzadp): Support HALO members as well (different devices).
 }
 
 /**
@@ -36,9 +42,9 @@ export const SharingDialog = ({
   open,
   modal,
   onClose,
-  partyKey,
   title,
-  type
+  onShare,
+  members = []
 }: SharingDialogProps) => {
   const [state, setState] = useState(InvitationState.INIT);
   const [error, setError] = useState<string | undefined>(undefined); // TODO(burdon): Error handling.
@@ -47,9 +53,6 @@ export const SharingDialog = ({
   const [invitationCode, setInvitationCode] = useState<string>();
   const [secretProvider, pin, resetPin] = useSecretGenerator();
 
-  const client = useClient();
-  const party = useParty(partyKey);
-  const members = useMembers(party);
 
   const handleReset = () => {
     setError(undefined);
@@ -69,9 +72,9 @@ export const SharingDialog = ({
     }
   }, [state]);
 
-  useEffect(() => {
-    setState(InvitationState.INIT);
-  }, [partyKey]);
+  // useEffect(() => {
+  //   setState(InvitationState.INIT);
+  // }, [partyKey]);
 
   const handleCreateInvitation = () => {
     setImmediate(async () => {
@@ -80,16 +83,8 @@ export const SharingDialog = ({
           handleReset();
         }
       };
-      if (type === 'party') {
-        // TODO(burdon): Handle offline (display members).
-        const invitation = await client.createInvitation(partyKey!, secretProvider, options);
-        setInvitationCode(encodeInvitation(invitation));
-      } else if (type === 'halo') {
-        const invitation = await client.createHaloInvitation(secretProvider, options);
-        setInvitationCode(encodeInvitation(invitation));
-      } else {
-        throw new Error(`Unsupported invitation type: "${type}"`);
-      }
+      const invitation = await onShare({ secretProvider, options });
+      setInvitationCode(encodeInvitation(invitation));
     });
   };
 

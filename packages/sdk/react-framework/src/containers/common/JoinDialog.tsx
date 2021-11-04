@@ -19,12 +19,17 @@ enum PartyJoinState {
   ERROR
 }
 
+type JoinOptions = {
+  invitation: InvitationDescriptor,
+  secretProvider: SecretProvider
+}
+
 export interface JoinDialogProps {
   open: boolean
   modal?: boolean
   onClose?: () => void
   closeOnSuccess?: boolean,
-  onJoin: (invitation: InvitationDescriptor, secretProvider: SecretProvider) => Promise<Party>
+  onJoin: (joinOptions: JoinOptions) => Promise<Party>
   title: string
 }
 
@@ -85,7 +90,7 @@ export const JoinDialog = ({
 
     try {
       setState(PartyJoinState.AUTHENTICATE);
-      await onJoin(invitation, secretProvider);
+      await onJoin({invitation, secretProvider});
     } catch (err: any) {
       // TODO(burdon): Extract human error (eg, currently "Already connected to swarm").
       setError(err.responseMessage || err.message);
