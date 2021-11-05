@@ -82,7 +82,10 @@ export interface CardViewProps {
   items: any[]
 }
 
-const CardView = ({ adapter, items = [] }: CardViewProps) => {
+export const CardView = ({
+  adapter,
+  items = []
+}: CardViewProps) => {
   const classes = useStyles();
 
   return (
@@ -97,5 +100,3 @@ const CardView = ({ adapter, items = [] }: CardViewProps) => {
     </Grid>
   );
 };
-
-export default CardView;
