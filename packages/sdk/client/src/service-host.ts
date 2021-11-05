@@ -11,9 +11,10 @@ import { createServiceBundle } from '@dxos/rpc';
 import { DevtoolsServiceDependencies } from '.';
 import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
 import { schema } from './proto/gen';
-import { DataService, PartyService, ProfileService } from './proto/gen/dxos/client';
+import { Contacts, DataService, PartyService, ProfileService } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
+import { resultSetToStream } from './util/subscription';
 
 export interface ClientServices {
   ProfileService: ProfileService;
@@ -80,18 +81,10 @@ export class ClientServiceHost implements ClientServiceProvider {
         },
         SubscribeProfile: () => new Stream(({ next }) => {
           next(this._echo.halo.getProfile() ?? {});
-          return this._echo.halo.subscribeToProfile(() => next(this._echo.halo.getProfile() ?? {}))
+          return this._echo.halo.subscribeToProfile(() => next(this._echo.halo.getProfile() ?? {}));
         }),
         CreateProfile: async (opts) => {
-          const profile = await this._echo.halo.createProfile({
-            username: opts.displayName,
-            publicKey: opts.publicKey,
-            secretKey: opts.secretKey,
-          })
-          return {
-            displayName: profile.username,
-            publicKey: profile.publicKey,
-          }
+          return this._echo.halo.createProfile(opts);
         },
         RecoverProfile: () => {
           throw new Error('Not implemented');
@@ -106,7 +99,17 @@ export class ClientServiceHost implements ClientServiceProvider {
           throw new Error('Not implemented');
         },
         SubscribeContacts: () => {
-          throw new Error('Not implemented');
+          if(this._echo.halo.isInitialized) {
+            return resultSetToStream(this._echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }))
+          } else {
+            return new Stream(({ next }) => {
+              this._echo.halo.identityReady.on(() => {
+                const resultSet = this._echo.halo.queryContacts();
+                next({ contacts: resultSet.value })
+                resultSet.update.on(() => next({ contacts: resultSet.value }))
+              });
+            });
+          }
         }
       },
       PartyService: {

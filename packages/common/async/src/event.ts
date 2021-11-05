@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { resolve } from "path";
+
 // TODO(burdon): Rename (don't have both "event" and "events" files). Deprecate "events"?
 
 export type Effect = () => (() => void) | undefined;
@@ -78,11 +80,11 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    */
   emit (data: T) {
     for (const listener of this._listeners) {
-      this._trigger(listener, data);
+      void this._trigger(listener, data);
     }
 
     for (const listener of this._onceListeners) {
-      this._trigger(listener, data);
+      void this._trigger(listener, data);
       this._onceListeners.delete(listener);
     }
   }
@@ -254,10 +256,9 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     return this as any;
   }
 
-  private _trigger (listener: (data: T) => void, data: T) {
-    setImmediate(() => {
-      listener(data);
-    });
+  private async _trigger (listener: (data: T) => void, data: T) {
+    await waitImmediate(); // Acts like setImmediate but preserves the stack-trace.
+    listener(data);
   }
 
   private _runEffects () {
@@ -336,3 +337,8 @@ export interface ReadOnlyEvent<T = void> {
    */
   discardParameter(): Event<void>;
 }
+
+/**
+ * Like setImmediate but for async/await API. Useful for preserving stack-traces.
+ */
+const waitImmediate = () => new Promise((resolve) => setImmediate(resolve));

@@ -14,6 +14,7 @@ import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 
+import { HaloProxy } from './api/HaloProxy';
 import { DevtoolsHook } from './devtools';
 import { ClientServiceProvider, ClientServiceHost } from './service-host';
 
@@ -36,9 +37,9 @@ export class Client {
 
   private readonly _serviceHost: ClientServiceProvider;
 
-  private readonly _wnsRegistry?: any; // TODO(burdon): Remove.
-
   private _initialized = false;
+
+  private _halo: HaloProxy;
 
   /**
    * Creates the client object based on supplied configuration.
@@ -53,8 +54,7 @@ export class Client {
 
     this._serviceHost = new ClientServiceHost(this._config);
 
-    // TODO(burdon): Remove.
-    this._wnsRegistry = undefined;
+    this._halo = new HaloProxy(this._serviceHost);
   }
 
   toString () {
@@ -64,7 +64,6 @@ export class Client {
   info () {
     return {
       initialized: this.initialized,
-      halo: this.halo.info(),
       echo: this.echo.info()
     };
   }
@@ -91,18 +90,8 @@ export class Client {
   /**
    * HALO credentials.
    */
-  get halo () {
-    // TODO(burdon): Why is this constructed inside ECHO?
-    return this._serviceHost.echo.halo;
-  }
-
-  /**
-   * WNS registry.
-   * @deprecated
-   */
-  // TODO(burdon): Remove.
-  get wnsRegistry () {
-    return this._wnsRegistry;
+  get halo (): HaloProxy {
+    return this._halo;
   }
 
   /**
@@ -122,6 +111,8 @@ export class Client {
 
     await this._serviceHost.open(onProgressCallback);
 
+    this._halo.open();
+
     this._initialized = true;
     clearInterval(timeout);
   }
@@ -131,6 +122,8 @@ export class Client {
    */
   @synchronized
   async destroy () {
+    this._halo.close();
+
     if (!this._initialized) {
       return;
     }
