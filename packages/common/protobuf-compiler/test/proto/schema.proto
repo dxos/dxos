@@ -4,6 +4,7 @@ package dxos.test;
 
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 import "any.proto";
 import "@dxos/protobuf-test";
 import "extensions.proto";
@@ -120,4 +121,13 @@ service TestService {
 
   /// Subscribe to task list updates.
   rpc SubscribeTasks(Key) returns (stream Task);
+}
+
+message WithEmptyField {
+  google.protobuf.Empty emptyField = 1;
+}
+
+service ServiceWithEmpty {
+  rpc EmptyRpc(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc EmptyStreamRpc(google.protobuf.Empty) returns (stream google.protobuf.Empty);
 }

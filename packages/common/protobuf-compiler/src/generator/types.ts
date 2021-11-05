@@ -72,6 +72,8 @@ type PbType = protobufjs.Enum | protobufjs.Type | string
 export function types (type: PbType, containingObject: protobufjs.ReflectionObject, subs: SubstitutionsMap) {
   if (typeof type === 'string') {
     return getPrimitiveType(type);
+  } else if (type.fullName === '.google.protobuf.Empty') {
+    return f.createKeywordTypeNode(ts.SyntaxKind.VoidKeyword);
   } else if (subs[type.fullName.slice(1)]) {
     return createSubstitutionsReference(type.fullName.slice(1));
   } else {
