@@ -1521,7 +1521,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.2.0
+      '@dxos/esbuild-server': 1.2.2
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@storybook/addon-essentials': 6.3.12_c86ec7d94593fc421030610c98243b1b
       '@storybook/addon-links': 6.3.12_react-dom@17.0.2+react@17.0.2
@@ -1565,7 +1565,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.2.0
+      '@dxos/esbuild-server': ~1.2.1
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/object-model': workspace:*
@@ -5093,7 +5093,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-9m1Ftf+1RsQvf9JIDOZTJouHyT3X4kdqn1/tDSL9NrvOgLFjp/cA/vzyMcPAZTJCBkcF+xIkR/Peu2/jhwy0gQ==
-  /@dxos/esbuild-server/1.2.0:
+  /@dxos/esbuild-server/1.2.2:
     dependencies:
       chalk: 4.1.2
       esbuild: 0.12.29
@@ -5109,7 +5109,7 @@ packages:
     dev: true
     hasBin: true
     resolution:
-      integrity: sha512-5bFDfPJ4ZDxo7B/bq22Duei6MmkLUW3q72V4lz7DWXmKqKdkcQvfjgO8IzEEf60U49ZaSZSvZUcNWqskAOSmdg==
+      integrity: sha512-NWDLDbLJC3VJGbPiyw/doVcB/s88tRm968FkMFxfHQjtFl5gPJIb89mU1HYtbbP1g3cdVeyG7NScx8qdzMxBJw==
   /@dxos/eslint-plugin/1.0.18_eslint@7.26.0+typescript@4.3.5:
     dependencies:
       '@rushstack/eslint-patch': 1.0.6

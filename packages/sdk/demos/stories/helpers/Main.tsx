@@ -26,7 +26,14 @@ import { ObjectModel } from '@dxos/object-model';
 import { useSelection, searchSelector } from '@dxos/react-client';
 
 import {
-  CardView, GraphView, ListView, GridView, SearchBar, ItemCard, ItemDialog, graphSelector
+  CardView,
+  GraphView,
+  ListView,
+  GridView,
+  SearchBar,
+  ItemCard,
+  ItemDialog,
+  graphSelector
 } from '../../src';
 import { createAdapter, TYPES } from './adapter';
 
@@ -82,8 +89,7 @@ interface MainProps {
   code?: string
 }
 
-// TODO(burdon): Factor out.
-const Main = ({ party, code }: MainProps) => {
+export const Main = ({ party, code }: MainProps) => {
   const classes = useStyles();
 
   const [adapter] = useState(createAdapter(party.database));
@@ -203,5 +209,3 @@ const Main = ({ party, code }: MainProps) => {
     </div>
   );
 };
-
-export default Main;

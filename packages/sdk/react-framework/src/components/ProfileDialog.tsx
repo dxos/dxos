@@ -16,7 +16,9 @@ export interface ProfileDialogProps {
   onCancel?: () => void;
 }
 
-// TODO(burdon): Replace with RegistrationDialog.
+/**
+ * @deprecated Replace with RegistrationDialog.
+ */
 export const ProfileDialog = ({ open, onCreate, onCancel }: ProfileDialogProps) => {
   const [username, setUsername] = useState('');
 
