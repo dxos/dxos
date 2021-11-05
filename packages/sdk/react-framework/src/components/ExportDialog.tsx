@@ -54,6 +54,7 @@ export const ExportDialog = ({
       title='Export Keys'
       content={() => (
         <TextField
+          sx={{ marginTop: 1 }}
           autoFocus
           fullWidth
           error={!!error}

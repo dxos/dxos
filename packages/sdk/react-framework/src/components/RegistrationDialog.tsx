@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 
 import {
   AddCircleOutline as CreateIcon,
@@ -74,13 +74,19 @@ export const RegistrationDialog = ({
   const usernameRef = useRef<HTMLInputElement>();
   const seedphraseRef = useRef<HTMLInputElement>();
   const seedRefs = [...new Array(numSeedWordTests)].map(() => useRef<HTMLInputElement>());
-  const [seedWords, seedWordTestIndexes] = useSeedWords(seedPhrase, numSeedWordTests);
+  const [seedWords, seedWordTestIndexes] = useMemo(() => useSeedWords(seedPhrase, numSeedWordTests), [seedPhrase]);
 
   const setStage = (stage: Stage) => {
     setError(undefined);
     setProcessing(false);
     _setStage(stage);
   };
+
+  useEffect(() => {
+    if (open) {
+      setStage(Stage.START);
+    }
+  }, [open]);
 
   const handleDownloadSeedPhrase = (seedPhrase: string) => {
     const text = seedPhrase.split(' ').map((word, i) => `[${String(i + 1).padStart(2, '0')}] = ${word}`).join('\n');

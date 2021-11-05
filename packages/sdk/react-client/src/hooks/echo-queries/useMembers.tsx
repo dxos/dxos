@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { Party, PartyMember } from '@dxos/echo-db';
 
-export const useMembers = (party: Party) => {
+export const useMembers = (party: Party | undefined) => {
   const [members, setMembers] = useState<PartyMember[]>([]);
 
   useEffect(() => {
