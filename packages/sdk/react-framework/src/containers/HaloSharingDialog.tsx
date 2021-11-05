@@ -11,7 +11,7 @@ import { SharingDialog, SharingDialogProps } from './common';
 /**
  * Manages the workflow for inviting a new device to a HALO party.
  */
-export const DeviceSharingDialog = (props: Omit<SharingDialogProps, 'onShare' | 'title' | 'members'>) => {
+export const HaloSharingDialog = (props: Omit<SharingDialogProps, 'onShare' | 'title' | 'members'>) => {
   const client = useClient();
 
   const handleShare: SharingDialogProps['onShare'] = async ({ options, secretProvider }) => {
@@ -19,6 +19,6 @@ export const DeviceSharingDialog = (props: Omit<SharingDialogProps, 'onShare' | 
   };
 
   return (
-    <SharingDialog {...props} title='Device Sharing' onShare={handleShare} />
+    <SharingDialog {...props} title='Halo Sharing' onShare={handleShare} />
   );
 };

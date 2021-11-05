@@ -10,7 +10,7 @@ import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, usePr
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
-  DeviceSharingDialog, ErrorView,
+  HaloSharingDialog, ErrorView,
   JoinHaloDialog
 } from '../../src';
 import { Column } from '../helpers';
@@ -38,7 +38,7 @@ const Sender = () => {
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
-      <DeviceSharingDialog
+      <HaloSharingDialog
         open={open}
         onClose={() => setOpen(false)}
         modal={false}
