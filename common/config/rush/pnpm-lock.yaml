@@ -1925,6 +1925,7 @@ importers:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
+      assert: 2.0.0
       lodash.defaultsdeep: 4.6.1
       lodash.isplainobject: 4.0.6
       mobile-detect: 1.4.5
@@ -1935,6 +1936,7 @@ importers:
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/react-client': link:../react-client
       '@dxos/react-components': link:../react-components
@@ -1959,6 +1961,7 @@ importers:
       '@babel/plugin-transform-runtime': ^7.11.5
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
@@ -1976,6 +1979,7 @@ importers:
       '@types/react': ^17.0.24
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/url-join': ~4.0.1
+      assert: ^2.0.0
       babel-plugin-add-module-exports: ^1.0.4
       lodash.defaultsdeep: ^4.6.1
       lodash.isplainobject: ^4.0.6
@@ -26001,7 +26005,7 @@ packages:
       micromatch: 4.0.4
       semver: 7.3.5
       typescript: 4.3.5
-      webpack: 4.44.2_webpack-cli@4.7.2
+      webpack: 4.44.2
     dev: true
     engines:
       node: '>=10.0.0'
