@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-// dxos-testing-browser
+// DXOS testing browser.
 
 import assert from 'assert';
 import debug from 'debug';
@@ -50,7 +50,7 @@ class ExpectedKeyAuthenticator extends Authenticator {
     super();
   }
 
-  override async authenticate (credentials: any) { // TODO(marik-d): Use more specific type
+  override async authenticate (credentials: any) { // TODO(marik-d): Use more specific type.
     if (this._keyring.verify(credentials)) {
       if (this._expectedKey.equals(credentials.signatures[0].key)) {
         return true;

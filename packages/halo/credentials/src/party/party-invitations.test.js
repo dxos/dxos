@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-// dxos-testing-browser
+// DXOS testing browser.
 
 import debug from 'debug';
 import expect from 'expect';

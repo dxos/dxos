@@ -2,9 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { useTheme } from '@mui/material';
 import React from 'react';
 import ReactJsonView from 'react-json-view';
+
+import { useTheme } from '@mui/material';
 
 import { JsonTreeViewProps } from './JsonTreeView';
 
@@ -29,7 +30,7 @@ export const SimpleJsonTreeView = ({
       quotesOnKeys={false}
       sortKeys={true}
       onSelect={onSelect}
-      // collapsed={1}
+      // code collapsed={1}
     />
   );
 };

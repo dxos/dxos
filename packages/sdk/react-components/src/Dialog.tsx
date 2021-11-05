@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import React from 'react';
+
 import {
   Alert as MuiAlert,
   Box,
@@ -18,11 +20,10 @@ import {
   styled,
   useTheme
 } from '@mui/material';
-import React from 'react';
 
 const Alert = styled(MuiAlert)({
-  marginTop: 4,
-  marginBottom: 4,
+  'marginTop': 4,
+  'marginBottom': 4,
   '.MuiAlert-Message': {
     paddingRight: 8,
     wordBreak: 'break-word'

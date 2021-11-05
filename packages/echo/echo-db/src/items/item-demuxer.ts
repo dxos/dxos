@@ -86,7 +86,7 @@ export class ItemDemuxer {
 
         if (this._options.snapshots) {
           if (!item.modelMeta.snapshotCodec) {
-            // If the model doesn't support mutations natively we save & replay it's mutations
+            // If the model doesn't support mutations natively we save & replay it's mutations.
             this._beginRecordingItemModelMutations(itemId);
           }
 

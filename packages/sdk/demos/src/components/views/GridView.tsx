@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import React from 'react';
+
 import { Box, createTheme, Typography } from '@mui/material';
 import { teal } from '@mui/material/colors';
 import { makeStyles } from '@mui/styles';
-import React from 'react';
 
 import { ItemAdapter } from './adapter';
 
@@ -16,12 +17,12 @@ const useStyles = makeStyles(theme => ({
     alignContent: 'flex-start'
   },
   card: {
-    width: 240,
-    height: 240,
-    overflow: 'hidden',
-    backgroundColor: teal[50],
-    margin: 2,
-    padding: theme.spacing(1),
+    'width': 240,
+    'height': 240,
+    'overflow': 'hidden',
+    'backgroundColor': teal[50],
+    'margin': 2,
+    'padding': theme.spacing(1),
     '& h6': {
       lineHeight: 1.2,
       marginBottom: theme.spacing(1)

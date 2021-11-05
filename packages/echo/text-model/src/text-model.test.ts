@@ -26,9 +26,9 @@ describe('TextModel', () => {
     expect(item1.model.textContent).toBe('Hello DXOS World!');
 
     // TODO(burdon): Errors. Race condition?
-    // for await (const peer of peers) {
-    //   await peer.close();
-    // }
+    // code for await (const peer of peers) {
+    // code   await peer.close();
+    // code }
   });
 
   test('snapshot', async () => {
@@ -50,8 +50,8 @@ describe('TextModel', () => {
     const { items: [item1, item2], peers } = await createModelTestBench({ model: TextModel });
     after(async () => Promise.all(peers.map(peer => peer.close())));
 
-    // item1.model.modelUpdate.on(() => console.log(`m1 ${item1.model.textContent}`));
-    // item2.model.modelUpdate.on(() => console.log(`m2 ${item2.model.textContent}`));
+    // code item1.model.modelUpdate.on(() => console.log(`m1 ${item1.model.textContent}`));
+    // code item2.model.modelUpdate.on(() => console.log(`m2 ${item2.model.textContent}`));
 
     item1.model.insert(0, 'Hello');
     await item2.model.modelUpdate.waitForCount(1);

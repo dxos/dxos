@@ -45,7 +45,7 @@ class BootstrapNode {
 
     this._dht = dht({ ephemeral: true, adaptive: true, id: this._id });
 
-    // runs the bootstrap UDP node in a specific port
+    // Runs the bootstrap UDP node in a specific port.
     this._dht.listen(this._port);
 
     await pEvent(this._dht, 'ready');

@@ -8,7 +8,9 @@
 export class SerializedRpcError extends Error {
   constructor (name: string, message: string, public readonly remoteStack: string, public readonly rpcMethod: string) {
     super(message);
-    Object.setPrototypeOf(this, new.target.prototype); // Restore prototype chain. https://stackoverflow.com/a/48342359
+    // Restore prototype chain.
+    // https://stackoverflow.com/a/48342359
+    Object.setPrototypeOf(this, new.target.prototype);
     this.name = name;
     this.stack = remoteStack + `\n    ========[ RPC call: ${rpcMethod} ]========\n` + preprocessStack(this.stack!);
   }
@@ -28,7 +30,9 @@ function preprocessStack (stack: string) {
 export class RpcClosedError extends Error {
   constructor () {
     super('Request was terminated because the RPC endpoint has been closed.');
-    Object.setPrototypeOf(this, new.target.prototype); // Restore prototype chain. https://stackoverflow.com/a/48342359
+    // Restore prototype chain.
+    // https://stackoverflow.com/a/48342359
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
@@ -38,6 +42,8 @@ export class RpcClosedError extends Error {
 export class RpcNotOpenError extends Error {
   constructor () {
     super('RPC has not been opened.');
-    Object.setPrototypeOf(this, new.target.prototype); // Restore prototype chain. https://stackoverflow.com/a/48342359
+    // Restore prototype chain.
+    // https://stackoverflow.com/a/48342359
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }

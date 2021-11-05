@@ -21,13 +21,13 @@ const baseTheme = createMuiTheme({
   }
 });
 
-function Fullscreen () {
+const Fullscreen = () => {
   return (
     <ThemeProvider theme={baseTheme}>
       <CssBaseline />
       <Root />
     </ThemeProvider>
   );
-}
+};
 
 export default Fullscreen;

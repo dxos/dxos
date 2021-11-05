@@ -50,12 +50,13 @@ export class PartyProcessor {
     this._state = new PartyState(this._partyKey);
     this._authenticator = new PartyAuthenticator(this._state);
 
-    // TODO(telackey) @dxos/credentials was only half converted to TS. In its current state, the KeyRecord type
-    // is not exported, and the PartyStateMachine being used is not properly understood as an EventEmitter by TS.
-    // Casting to 'any' is a workaround for the compiler, but the fix is fully to convert @dxos/credentials to TS.
+    /* TODO(telackey): `@dxos/credentials` was only half converted to TS. In its current state, the KeyRecord type
+     * is not exported, and the PartyStateMachine being used is not properly understood as an EventEmitter by TS.
+     * Casting to 'any' is a workaround for the compiler, but the fix is fully to convert @dxos/credentials to TS.
+     */
     const state = this._state as any;
 
-    // TODO(marik-d): Use Event.wrap here.
+    // TODO(marik-d): Use `Event.wrap` here.
     state.on(PartyEventType.ADMIT_FEED, (keyRecord: any) => {
       log(`Feed key admitted ${keyRecord.publicKey.toHex()}`);
       this._feedAdded.emit(keyRecord.publicKey);
@@ -112,7 +113,7 @@ export class PartyProcessor {
    */
   getFeedOwningMember (feedKey: FeedKey): PublicKey | undefined {
     // TODO(marik-d): Commented out beacuse it breaks tests currently.
-    // assert(this._stateMachine.isMemberFeed(feedKey), 'Not a member feed');
+    // code assert(this._stateMachine.isMemberFeed(feedKey), 'Not a member feed');
     return this._state.getAdmittedBy(feedKey);
   }
 
@@ -131,9 +132,10 @@ export class PartyProcessor {
   async takeHints (hints: KeyHint[]) {
     log(`addHints ${hints.length}`);
     // Gives state machine hints on initial feed set from where to read party genesis message.
-    // TODO(telackey): Hints were not intended to provide a feed set for PartyGenesis messages. They are about
-    // what feeds and keys to trust immediately after Greeting, before we have had the opportunity to replicate the
-    // credential messages for ourselves.
+    /* TODO(telackey): Hints were not intended to provide a feed set for PartyGenesis messages. They are about
+     * what feeds and keys to trust immediately after Greeting, before we have had the opportunity to replicate the
+     * credential messages for ourselves.
+     */
     await this._state.takeHints(hints);
   }
 

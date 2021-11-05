@@ -2,14 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(dboreham): move this code to @dxos/crypto
-
 import assert from 'assert';
 import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
 
 import { createKeyPair } from '.';
 
-// Util functions for Identity: export, import, create
+// Util functions for Identity: export, import, create.
 
 /**
  * Generate bip39 seed phrase (aka mnemonic).

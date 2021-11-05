@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Box } from '@mui/material';
 import React, { useState } from 'react';
+
+import { Box } from '@mui/material';
 
 import { ImportDialog, ExportDialog } from '../src';
 import { Container } from './helpers';

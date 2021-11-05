@@ -2,6 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import debug from 'debug';
+import React, { useEffect, useRef, useState } from 'react';
+
 import {
   ArrowUpward as UpIcon,
   ArrowDownward as Downicon
@@ -9,14 +12,12 @@ import {
 import {
   Box, IconButton, Table, TableCell, TableContainer, TableBody, TableHead, TableRow
 } from '@mui/material';
-import debug from 'debug';
-// import isEqualWith from 'lodash.isequalwith';
-import React, { useEffect, useRef, useState } from 'react';
+// code import isEqualWith from 'lodash.isequalwith';
 
 const log = debug('dxos:console:virtual-table');
 
 //
-// Data
+// Data.
 //
 
 export type RowData = { [index: string]: any }
@@ -38,7 +39,7 @@ interface Row {
 type SortDirection = 'up' | 'down' | undefined
 
 //
-// Table Header
+// Table Header.
 //
 
 interface HeaderCellProps {
@@ -91,7 +92,7 @@ const HeaderCell = ({ column: { key, title, width, sortable }, sortDirection, on
 };
 
 //
-// Table Cell
+// Table Cell.
 //
 
 const rowHeight = 42;
@@ -169,7 +170,7 @@ const VirtualTableCell = ({ column, row, height, renderCell, rowSelected, getVal
 };
 
 //
-// Table Row
+// Table Row.
 //
 
 interface VirtualTableRowProps {
@@ -233,16 +234,16 @@ const MemoVirtualTableRow = React.memo(VirtualTableRow, (oldProps, newProps) => 
 
   // Shallow compare data.
   // https://lodash.com/docs/4.17.15#isEqualWith
-  // if (isEqualWith(oldProps.row.data, newProps.row.data, (/* oldValue, newValue */) => {})) {
-  //   log('Changed data', oldProps.row.key);
-  //   return false;
-  // }
+  // code if (isEqualWith(oldProps.row.data, newProps.row.data, (/* oldValue, newValue */) => {})) {
+  // code   log('Changed data', oldProps.row.key);
+  // code   return false;
+  // code }
 
   return true; // Skip render.
 });
 
 //
-// Scroll handler
+// Scroll handler.
 //
 
 interface ScrollState {
@@ -278,7 +279,7 @@ const useScrollHandler = (scrollContainerRef: React.RefObject<HTMLDivElement>): 
 };
 
 //
-// Table
+// Table.
 //
 
 export type SelectionModel = string[]
@@ -303,10 +304,10 @@ export interface VirtualTableProps<T> {
   renderCell?: (props: DataCellProps) => JSX.Element | undefined
 }
 
-// TODO(burdon): Side/bottom master/detail
-// TODO(burdon): Column filter
-// TODO(burdon): Request more data callback
-// TODO(burdon): Paging (vs. virtual scroll).
+// TODO(burdon): Side/bottom master/detail.
+// TODO(burdon): Column filter.
+// TODO(burdon): Request more data callback.
+// TODO(burdon): Paging (vs virtual scroll).
 export const VirtualTable = <T extends RowData> (
   {
     rows: dataRows = [],
@@ -437,7 +438,7 @@ export const VirtualTable = <T extends RowData> (
         <Table
           stickyHeader
         >
-          {/* Columns */}
+          {/* Columns. */}
           <TableHead>
             <TableRow>
               {columns.map((column) => (
@@ -451,7 +452,7 @@ export const VirtualTable = <T extends RowData> (
             </TableRow>
           </TableHead>
 
-          {/* Data rows */}
+          {/* Data rows. */}
           <TableBody
             sx={{
               position: 'relative', // Anchor for layout.
@@ -477,7 +478,7 @@ export const VirtualTable = <T extends RowData> (
         </Table>
       </TableContainer>
 
-      {/* Footer */}
+      {/* Footer. */}
       <TableFooter
         rows={dataRows}
       />

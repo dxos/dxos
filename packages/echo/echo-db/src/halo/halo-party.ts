@@ -57,7 +57,7 @@ export class HaloParty {
 
   //
   // TODO(burdon): Factor out getters into other class abstractions (grouping functionality).
-  //   E.g., identity, credentials, device management.
+  // (eg, identity, credentials, device management.)
   //
 
   get invitationManager () {

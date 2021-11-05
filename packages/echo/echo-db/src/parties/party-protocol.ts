@@ -37,7 +37,7 @@ export interface PartyProvider {
   get(): PartyInternal
 }
 
-// TODO(burdon): Exercise in refactoring (i.e., "dependency inversion").
+// TODO(burdon): Exercise in refactoring (ie, "dependency inversion").
 // TODO(burdon): Consistently use crypto utils for asBuffer, toString('base64'), toHex, etc?
 
 /**
@@ -127,7 +127,7 @@ export class PartyProtocol {
         }
 
         // TODO(marik-d): Why does this do side effects?
-        // TODO(burdon): Remove need for external closure (i.e., pass object to this callback).
+        // TODO(burdon): Remove need for external closure (ie, pass object to this callback).
         protocol.setContext({ topic: this._partyKey.toHex() });
 
         // TODO(burdon): Inconsistent use of toHex and asBuffer.
@@ -183,7 +183,7 @@ class ReplicatorProtocolPluginFactory {
 
         replicate: async (remoteFeeds, info) => {
           // We can ignore remoteFeeds entirely, since the set of feeds we want to replicate is dictated by the Party.
-          // TODO(telackey): why are we opening feeds? Necessary or belt/braces thinking, or because open party does it?
+          // TODO(telackey): Why are we opening feeds? Necessary or belt/braces thinking, or because open party does it?
           log(`Replicating: peerId=${info.session}; feeds=${this._activeFeeds.get().map(key => key.toHex())}`);
           return Promise.all(this._activeFeeds.get().map(feedKey => this._openFeed(feedKey)));
         }

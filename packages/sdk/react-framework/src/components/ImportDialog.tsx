@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Button, TextField } from '@mui/material';
 import assert from 'assert';
 import React, { useState, useRef } from 'react';
+
+import { Button, TextField } from '@mui/material';
 
 import { Dialog } from '@dxos/react-components';
 

@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import React from 'react';
+
 import Autocomplete from '@mui/lab/Autocomplete';
 import TextField from '@mui/material/TextField';
 import { makeStyles } from '@mui/styles';
-import React from 'react';
 
 const useStyles = makeStyles(() => ({
   input: {
@@ -24,7 +25,9 @@ const AutocompleteFilter = ({ label, onChange, value = null, options = [] }) => 
       freeSolo
       autoComplete
       clearOnEscape
-      value={value} // Make default to null, see https://github.com/mui-org/material-ui/issues/18173#issuecomment-552420187
+      // Make default to null.
+      // https://github.com/mui-org/material-ui/issues/18173#issuecomment-552420187
+      value={value}
       options={options}
       getOptionLabel={option => option}
       onChange={(ev, newValue) => {

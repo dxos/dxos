@@ -2,9 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
+import React, { useRef, useState } from 'react';
+
 import { Clear as ResetIcon } from '@mui/icons-material';
 import { FormControl, IconButton, Input, InputAdornment } from '@mui/material';
-import React, { useRef, useState } from 'react';
 
 export interface SearchBarProps {
   placeholder?: string

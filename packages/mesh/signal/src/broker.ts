@@ -80,7 +80,7 @@ export const createBroker = (topic: Buffer, opts: CreateBrokerOpts = {}) => {
     nodeID: keyPair.publicKey.toString('hex'),
     logger,
     logLevel,
-    // repl,
+    // code repl,
     transporter: new ProtocolTransporter({
       topic,
       keyPair,
@@ -108,9 +108,9 @@ export const createBroker = (topic: Buffer, opts: CreateBrokerOpts = {}) => {
       }
     },
     errorHandler (err: any, info) {
-      // Handle the error
+      // Handle the error.
       if (err.code) {
-        // ignore webrtc peer errors
+        // Ignore webrtc peer errors.
         (this.logger as any).debug('GLOBAL_ERROR:', err);
         return;
       }

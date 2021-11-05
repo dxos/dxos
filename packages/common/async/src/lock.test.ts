@@ -67,7 +67,7 @@ describe('Lock', () => {
     const lock = new Lock();
 
     const promise = lock.executeSynchronized(async () => {
-      await lock.executeSynchronized(async () => { /* noop */ });
+      await lock.executeSynchronized(async () => { /* No-op. */ });
     });
 
     let resolved = false;
@@ -96,7 +96,7 @@ describe('Lock', () => {
       }
     );
 
-    const p2 = lock.executeSynchronized(async () => { /* noop */ })
+    const p2 = lock.executeSynchronized(async () => { /* No-op. */ })
       .then(
         () => {
           p2Status = 'resolved';

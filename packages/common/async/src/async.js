@@ -15,7 +15,7 @@ export const noop = (...args) => args;
 export const sleep = timeout => new Promise((resolve) => {
   const finish = Date.now() + timeout;
 
-  // setTimeout does not guarantee execution at >= the scheduled time and may execute slightly early.
+  // `setTimeout` does not guarantee execution at >= the scheduled time and may execute slightly early.
   const sleeper = () => {
     const delta = finish - Date.now();
     if (delta > 0) {
@@ -102,7 +102,7 @@ export const waitForCondition = (condFn, timeout = 0, interval = 10) => {
           break;
         }
       } catch (e) {
-        // pass...
+        // Pass...
       }
       // eslint-disable-next-line no-await-in-loop
       await sleep(interval);

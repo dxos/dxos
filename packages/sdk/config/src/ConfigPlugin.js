@@ -28,9 +28,10 @@ export class ConfigPlugin {
    * @returns {void}
    */
   apply (compiler) {
-    // Grab info from compiler, and set a __DXOS_CONFIG__ with { publicUrl, useLocal }. Add to generated keys.
-    // Append the generated keys to DefinePlugin (see constructor)
-    // Use Context Replacement to use loaders/browser
+    /* Grab info from compiler, and set a __DXOS_CONFIG__ with { publicUrl, useLocal }. Add to generated keys.
+     * Append the generated keys to DefinePlugin (see constructor)
+     * Use Context Replacement to use loaders/browser.
+     */
     const definitions = Object.entries(KEYS_TO_FILE).reduce((prev, [key, value]) => {
       let content = {};
       try {
@@ -40,12 +41,12 @@ export class ConfigPlugin {
           content = mapFromKeyValues(content, process.env);
         }
       } catch (error) {
-        // compiler.hooks.thisCompilation.tap('ConfigPlugin', compilation => {
-        //   const error = new WebpackError(`
-        //   `)
-        //   error.name = 'EnvVariableNotDefinedError';
-        //   compilation.errors.push(error);
-        // });
+        // code compiler.hooks.thisCompilation.tap('ConfigPlugin', compilation => {
+        // code   const error = new WebpackError(`
+        // code   `)
+        // code   error.name = 'EnvVariableNotDefinedError';
+        // code   compilation.errors.push(error);
+        // code });
       }
       return {
         ...prev,

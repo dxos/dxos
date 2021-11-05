@@ -12,7 +12,7 @@ import { Peer } from './peer';
 import { schemaJson } from './proto/gen';
 import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
 
-// const log = debug('dxos.replicator');
+// code const log = debug('dxos.replicator');
 
 const defaultReplicate: ReplicateFunction = async () => [];
 const defaultSubscribe: SubscribeFunction = () => () => {};

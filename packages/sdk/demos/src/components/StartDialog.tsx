@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useState } from 'react';
+
 import {
   Button,
   Dialog,
@@ -12,7 +14,6 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import React, { useState } from 'react';
 
 interface HomeProps {
   onCreate: () => void,

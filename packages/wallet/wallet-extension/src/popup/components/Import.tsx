@@ -72,13 +72,16 @@ const Import = ({ onProfileCreated } : ImportProps) => {
             variant='outlined'
             required
             helperText={<div> Your public and private keys will be recreated using this seedphrase. You will have all the accesses you had before.</div>}
-            type={showSeed ? 'string' : 'password'}/>
+            type={showSeed ? 'string' : 'password'} />
         </Grid>
         <Grid item xs={12}>
           <FormControlLabel
-            control={<Checkbox checked={showSeed} onChange={(e) => {
-              setShowseed(e.target.checked);
-            }} name='showSeed' color='primary' />}
+            control={(
+<Checkbox
+checked={showSeed} onChange={(e) => {
+  setShowseed(e.target.checked);
+}} name='showSeed' color='primary' />
+)}
             label='Show Secret Recovery Phrase'
           />
         </Grid>
@@ -91,7 +94,7 @@ const Import = ({ onProfileCreated } : ImportProps) => {
             onChange={e => setUsername(e.target.value)}
             variant='outlined'
             required
-            helperText={<div> We cannot restore your username using your seedphrase, so you need to create a new one. </div>}/>
+            helperText={<div> We cannot restore your username using your seedphrase, so you need to create a new one. </div>} />
         </Grid>
         <Grid item xs={6}>
           <BackButton />

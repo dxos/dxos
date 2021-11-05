@@ -3,4 +3,5 @@
 //
 
 export * from './client';
-export * from './devtools-context';
+export * from './devtools/devtools-context';
+export * from './devtools/devtools-host-events';

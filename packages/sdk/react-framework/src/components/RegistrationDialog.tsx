@@ -39,11 +39,11 @@ const useSeedWords = (seedPhrase: string, n: number): [string[], number[]] => {
   const words = seedPhrase.split(' ');
   const indexes = pickUnique<number>([...new Array(words.length)].map((_, i) => i), n);
   return [words, indexes];
-}
+};
 
 const isSeedPhraseValid = (value: string) => {
   return value.trim().toLowerCase().split(/\s+/g).length === 12;
-}
+};
 
 const seedPhraseFile = 'dxos-recovery-seedphrase.txt';
 
@@ -171,9 +171,9 @@ export const RegistrationDialog = ({
             <Chip
               key={i}
               sx={{
-                width: 128,
-                justifyContent: 'inherit',
-                margin: '4px',
+                'width': 128,
+                'justifyContent': 'inherit',
+                'margin': '4px',
                 '.MuiChip-icon': {
                   color: theme.palette.background.paper
                 },
@@ -211,14 +211,14 @@ export const RegistrationDialog = ({
           title: 'User profile',
           content: () => {
             const Option = styled(Paper)({
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              textAlign: 'center',
-              width: 260,
-              height: 220,
-              margin: 16,
+              'display': 'flex',
+              'flexDirection': 'column',
+              'justifyContent': 'center',
+              'alignItems': 'center',
+              'textAlign': 'center',
+              'width': 260,
+              'height': 220,
+              'margin': 16,
               '& .MuiSvgIcon-root': {
                 fontSize: 32
               }
@@ -242,9 +242,9 @@ export const RegistrationDialog = ({
                 </Box>
                 <Box>
                   <Option variant='outlined'>
-                    <RestoreIcon/>
+                    <RestoreIcon />
                     <Typography sx={{ padding: 3 }}>
-                      Enter your seed phrase<br/>to recover your profile.
+                      Enter your seed phrase<br />to recover your profile.
                     </Typography>
                     <Button variant='contained' color='primary' onClick={() => setStage(Stage.RESTORE)}>
                       Recover Profile
@@ -252,9 +252,9 @@ export const RegistrationDialog = ({
                   </Option>
                 </Box>
               </Box>
-            )
+            );
           }
-        }
+        };
       }
 
       case Stage.RESTORE: {
@@ -277,7 +277,7 @@ export const RegistrationDialog = ({
               <Button disabled>
                 Import Keyring
               </Button>
-              <Box sx={{ flex: 1 }}/>
+              <Box sx={{ flex: 1 }} />
               <Button color='primary' onClick={() => setStage(Stage.START)}>
                 Back
               </Button>
@@ -308,7 +308,7 @@ export const RegistrationDialog = ({
               />
             </Box>
           ),
-          actions: () => (
+          actions: (
             <>
               <Button color='primary' onClick={() => setStage(Stage.START)}>Back</Button>
               <Button variant='contained' color='primary' onClick={handleNext}>Next</Button>

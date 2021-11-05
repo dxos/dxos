@@ -51,7 +51,7 @@ export class HaloFactory {
   }
 
   async createHalo (options: HaloCreationOptions = {}): Promise<PartyInternal> {
-    // Don't use identityManager.identityKey, because that doesn't check for the secretKey.
+    // Don't use `identityManager.identityKey`, because that doesn't check for the secretKey.
     const identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
     assert(identityKey, 'Identity key required.');
 
@@ -65,16 +65,18 @@ export class HaloFactory {
     // Connect the pipeline.
     await halo.open();
 
-    // 2. Write a PartyGenesis message for the HALO. This message must be signed by the:
-    //    A. Identity key (in the case of the HALO, this serves as the Party key)
-    //    B. Device key (the first "member" of the Identity's HALO)
-    //    C. Feed key (the feed owned by the Device)
+    /* 2. Write a PartyGenesis message for the HALO. This message must be signed by the:
+     *    A. Identity key (in the case of the HALO, this serves as the Party key).
+     *    B. Device key (the first "member" of the Identity's HALO).
+     *    C. Feed key (the feed owned by the Device).
+     */
     const feedKeyPair = this._keyring.getKey(feed.key);
     assert(feedKeyPair);
     await halo.processor.writeHaloMessage(createPartyGenesisMessage(this._keyring, identityKey, feedKeyPair.publicKey, deviceKey));
 
-    // 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
-    //    message will be copied into other Parties which we create or join.
+    /* 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
+     *    message will be copied into other Parties which we create or join.
+     */
     await halo.processor.writeHaloMessage(createKeyAdmitMessage(this._keyring, identityKey.publicKey, identityKey));
 
     if (options.identityDisplayName) {

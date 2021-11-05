@@ -179,7 +179,7 @@ export class ValueUtil {
 
     // Apply object.
     // TODO(burdon): Throw or unset?
-    // throw new Error(`Unhandled value: ${JSON.stringify(value)}`);
+    // code throw new Error(`Unhandled value: ${JSON.stringify(value)}`);
     delete object[key];
   }
 }

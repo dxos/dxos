@@ -363,7 +363,7 @@ export function inMemoryTests () {
         const protocol = createProtocolFactory(m.topic, this.peerId, [presence]);
 
         peer.networkManager.joinProtocolSwarm({
-          peerId: this.peerId, // TODO(burdon): this?
+          peerId: this.peerId, // TODO(burdon): `this`?
           topic: m.topic,
           protocol,
           topology: new FullyConnectedTopology(),
