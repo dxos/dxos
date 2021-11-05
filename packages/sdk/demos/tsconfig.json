@@ -53,6 +53,9 @@
       "path": "../react-client"
     },
     {
+      "path": "../react-components"
+    },
+    {
       "path": "../react-framework"
     },
     {
