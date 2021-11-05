@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useEffect, useRef, useMemo, useState } from 'react';
+
 import {
   AddCircleOutline as CreateIcon,
   Restore as RestoreIcon
@@ -18,7 +20,6 @@ import {
   styled,
   useTheme
 } from '@mui/material';
-import React, { useEffect, useRef, useMemo, useState } from 'react';
 
 import { generateSeedPhrase } from '@dxos/crypto';
 import { Dialog } from '@dxos/react-components';
