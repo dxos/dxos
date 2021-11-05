@@ -35,9 +35,6 @@ const Sender = () => {
 
   return (
     <Box>
-      <Box sx={{ padding: 1 }}>
-        <p>{profile?.username}</p>
-      </Box>
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
@@ -49,6 +46,9 @@ const Sender = () => {
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
       </Box>
+      <Box sx={{ padding: 1 }}>
+        <p>{profile?.username}</p>
+      </Box>
     </Box>
   );
 };
@@ -59,9 +59,6 @@ const Receiver = () => {
 
   return (
     <Box>
-      <Box sx={{ padding: 1 }}>
-        <p>{profile?.username ?? 'Profile not created.'}</p>
-      </Box>
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
@@ -73,6 +70,9 @@ const Receiver = () => {
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
+      </Box>
+      <Box sx={{ padding: 1 }}>
+        <p>{profile?.username ?? 'Profile not created.'}</p>
       </Box>
     </Box>
   );
