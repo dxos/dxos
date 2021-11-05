@@ -29,8 +29,7 @@ export const serviceBundle = createServiceBundle<ClientServices>({
   DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost')
 });
 
-// TODO(dmaretskyi): Rename to ClientServiceProvider.
-export interface ClientServiceHost {
+export interface ClientServiceProvider {
   services: ClientServices
 
   open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined): Promise<void>
@@ -44,8 +43,7 @@ export interface ClientServiceHost {
   echo: ECHO
 }
 
-// TODO(dmaretskyi): Rename to ClientServiceHost.
-export class LocalClientServiceHost implements ClientServiceHost {
+export class ClientServiceHost implements ClientServiceProvider {
   private readonly _echo: ECHO;
 
   private readonly _devtoolsEvents = new DevtoolsHostEvents();
