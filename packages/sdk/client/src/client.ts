@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
 import { Config, defs } from '@dxos/config';
-import { Invitation, SecretProvider } from '@dxos/credentials';
+import { defaultSecretValidator, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
 import { InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
@@ -249,16 +249,14 @@ export class Client {
   async createInvitation (partyKey: PublicKey, secretProvider: SecretProvider, options?: InvitationOptions) {
     const party = await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createInvitation({
-      // TODO(marik-d): Probably an error here.
-      secretValidator:
-        async (invitation: Invitation, secret: Buffer) => secret && secret.equals((invitation as any).secret),
+      secretValidator: defaultSecretValidator,
       secretProvider
     },
     options);
   }
 
   /**
-   * Hook to create an Offline Invitation for a recipient to a given party.
+   * Function to create an Offline Invitation for a recipient to a given party.
    * Offline Invitation, unlike regular invitation, does NOT require
    * the inviter and invitee to be online at the same time - hence `Offline` Invitation.
    * The invitee (recipient) needs to be known ahead of time.
@@ -273,6 +271,26 @@ export class Client {
   async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
     const party = await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createOfflineInvitation(recipientKey);
+  }
+
+  /**
+   * Creates an invitation to a HALO party.
+   * Used to authorize another device of the same user.
+   * The Invitation flow requires the inviter device and invitee device to be online at the same time.
+   * The invitation flow is protected by a generated pin code.
+   *
+   * To be used with `client.halo.join` on the invitee side.
+   *
+   * @param secretProvider supplies the pin code
+   * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
+   * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
+   */
+  async createHaloInvitation (secretProvider: SecretProvider, options?: InvitationOptions) {
+    return await this.halo.createInvitation({
+      secretProvider,
+      secretValidator: defaultSecretValidator
+    },
+    options);
   }
 
   //
