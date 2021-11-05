@@ -45,7 +45,7 @@ export const GraphView = ({
   onCreate = () => {},
   propertyAdapter = () => ({})
 }: GraphViewProps) => {
-  const clazzes = { ...useStyles(), ...classes }; // TODO(burdon): merge().
+  const clazzes = { ...useStyles(), ...classes }; // TODO(burdon): Merge().
   const [resizeListener, size] = useResizeAware();
   const { width, height } = size;
   const grid = useGrid({ width, height });
