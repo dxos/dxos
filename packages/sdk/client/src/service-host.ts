@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { ECHO, OpenProgress } from '@dxos/echo-db';
@@ -28,6 +29,7 @@ export const serviceBundle = createServiceBundle<ClientServices>({
   DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost')
 });
 
+// TODO(dmaretskyi): Rename to ClientServiceProvider.
 export interface ClientServiceHost {
   services: ClientServices
 
@@ -42,6 +44,7 @@ export interface ClientServiceHost {
   echo: ECHO
 }
 
+// TODO(dmaretskyi): Rename to ClientServiceHost.
 export class LocalClientServiceHost implements ClientServiceHost {
   private readonly _echo: ECHO;
 
@@ -74,14 +77,23 @@ export class LocalClientServiceHost implements ClientServiceHost {
         GetConfig: () => {
           throw new Error('Not implemented');
         },
-        Reset: () => {
-          throw new Error('Not implemented');
+        Reset: async () => {
+          await this._echo.reset();
         },
-        SubscribeProfile: () => {
-          throw new Error('Not implemented');
-        },
-        CreateProfile: () => {
-          throw new Error('Not implemented');
+        SubscribeProfile: () => new Stream(({ next }) => {
+          next(this._echo.halo.getProfile() ?? {});
+          return this._echo.halo.subscribeToProfile(() => next(this._echo.halo.getProfile() ?? {}))
+        }),
+        CreateProfile: async (opts) => {
+          const profile = await this._echo.halo.createProfile({
+            username: opts.displayName,
+            publicKey: opts.publicKey,
+            secretKey: opts.secretKey,
+          })
+          return {
+            displayName: profile.username,
+            publicKey: profile.publicKey,
+          }
         },
         RecoverProfile: () => {
           throw new Error('Not implemented');
