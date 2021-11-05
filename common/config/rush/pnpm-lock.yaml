@@ -1,7 +1,7 @@
 importers:
   .:
     specifiers: {}
-  ../../packages/bot/bot:
+  ../../packages/bot-deprecated/bot-deprecated:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -9,7 +9,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
+      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
       '@types/debug': 4.1.5
       '@types/lodash.defaultsdeep': 4.6.6
       debug: 4.3.1
@@ -25,7 +25,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot': workspace:*
+      '@dxos/protocol-plugin-bot-deprecated': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/debug': ^4.1.1
       '@types/lodash.defaultsdeep': ^4.6.6
@@ -33,7 +33,29 @@ importers:
       debug: ^4.1.1
       expect: ~27.0.2
       lodash.defaultsdeep: ^4.6.1
-  ../../packages/bot/botkit:
+  ../../packages/bot-deprecated/botkit-client-deprecated:
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
+      assert: 2.0.0
+      debug: 4.3.1
+      hypercore-crypto: 2.3.0
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocol-plugin-bot-deprecated': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      assert: ^2.0.0
+      debug: ^4.1.1
+      hypercore-crypto: ^2.3.0
+  ../../packages/bot-deprecated/botkit-deprecated:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -41,7 +63,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
+      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
       '@dxos/registry-client': link:../../sdk/registry-client
       '@types/chance': 1.1.1
       '@types/debug': 4.1.5
@@ -83,7 +105,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot': workspace:*
+      '@dxos/protocol-plugin-bot-deprecated': workspace:*
       '@dxos/registry-client': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/chance': ^1.1.0
@@ -117,29 +139,7 @@ importers:
       sodium-universal: ~3.0.4
       tar: ^6.0.5
       tree-kill: ^1.2.2
-  ../../packages/bot/botkit-client:
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/debug': link:../../common/debug
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocol-plugin-bot': link:../protocol-plugin-bot
-      assert: 2.0.0
-      debug: 4.3.1
-      hypercore-crypto: 2.3.0
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      assert: ^2.0.0
-      debug: ^4.1.1
-      hypercore-crypto: ^2.3.0
-  ../../packages/bot/protocol-plugin-bot:
+  ../../packages/bot-deprecated/protocol-plugin-bot-deprecated:
     dependencies:
       '@dxos/broadcast': link:../../mesh/broadcast
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -165,13 +165,13 @@ importers:
       ngraph.generators: ^18.0.1
       pump: ^3.0.0
       wait-for-expect: ^3.0.2
-  ../../packages/bot/test-bot:
+  ../../packages/bot-deprecated/test-bot-deprecated:
     dependencies:
-      '@dxos/bot': link:../bot
+      '@dxos/bot-deprecated': link:../bot-deprecated
     devDependencies:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
     specifiers:
-      '@dxos/bot': workspace:*
+      '@dxos/bot-deprecated': workspace:*
       '@dxos/toolchain-node-library': workspace:*
   ../../packages/common/async:
     dependencies:
@@ -191,7 +191,7 @@ importers:
       lodash.merge: 4.6.2
       protobufjs: 6.11.2
     devDependencies:
-      '@dxos/eslint-plugin': 1.0.16_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.18_eslint@7.26.0+typescript@4.3.5
       '@types/assert': 1.5.4
       '@types/jest': 26.0.23
       '@types/lodash.merge': 4.6.6
@@ -202,7 +202,7 @@ importers:
       ts-node: 9.1.1_typescript@4.3.5
       typescript: 4.3.5
     specifiers:
-      '@dxos/eslint-plugin': ~1.0.16
+      '@dxos/eslint-plugin': ~1.0.18
       '@types/assert': ^1.5.4
       '@types/jest': ^26.0.7
       '@types/lodash.merge': ~4.6.6
@@ -264,7 +264,7 @@ importers:
       ts-morph: 10.0.2
     devDependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
-      '@dxos/eslint-plugin': 1.0.16_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.18_eslint@7.26.0+typescript@4.3.5
       '@dxos/protobuf-test': link:../protobuf-test
       '@types/argparse': 2.0.5
       '@types/jest': 26.0.23
@@ -276,7 +276,7 @@ importers:
       typescript: 4.3.5
     specifiers:
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/eslint-plugin': ~1.0.16
+      '@dxos/eslint-plugin': ~1.0.18
       '@dxos/protobuf-test': workspace:*
       '@types/argparse': ^2.0.0
       '@types/jest': ^26.0.7
@@ -730,9 +730,9 @@ importers:
   ../../packages/gravity/gravity-core:
     dependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/bot': link:../../bot/bot
-      '@dxos/botkit': link:../../bot/botkit
-      '@dxos/botkit-client': link:../../bot/botkit-client
+      '@dxos/bot-deprecated': link:../../bot-deprecated/bot-deprecated
+      '@dxos/botkit-client-deprecated': link:../../bot-deprecated/botkit-client-deprecated
+      '@dxos/botkit-deprecated': link:../../bot-deprecated/botkit-deprecated
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../halo/credentials
@@ -740,7 +740,7 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/messenger-model': link:../../echo/messenger-model
-      '@dxos/protocol-plugin-bot': link:../../bot/protocol-plugin-bot
+      '@dxos/protocol-plugin-bot-deprecated': link:../../bot-deprecated/protocol-plugin-bot-deprecated
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/signal': link:../../mesh/signal
       '@types/debug': 4.1.5
@@ -769,9 +769,9 @@ importers:
       wrtc: 0.4.7
     specifiers:
       '@dxos/async': workspace:*
-      '@dxos/bot': workspace:*
-      '@dxos/botkit': workspace:*
-      '@dxos/botkit-client': workspace:*
+      '@dxos/bot-deprecated': workspace:*
+      '@dxos/botkit-client-deprecated': workspace:*
+      '@dxos/botkit-deprecated': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
@@ -779,7 +779,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/messenger-model': workspace:*
-      '@dxos/protocol-plugin-bot': workspace:*
+      '@dxos/protocol-plugin-bot-deprecated': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/toolchain-node-library': workspace:*
@@ -812,6 +812,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/feed-store': link:../../echo/feed-store
+      '@dxos/proto': link:../../common/proto
       '@dxos/protocol': link:../../mesh/protocol
       '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
@@ -853,6 +854,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/proto': workspace:*
       '@dxos/protocol': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
@@ -1372,6 +1374,7 @@ importers:
   ../../packages/sdk/client:
     dependencies:
       '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
@@ -1382,6 +1385,8 @@ importers:
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
+      '@dxos/proto': link:../../common/proto
+      '@dxos/rpc': link:../../common/rpc
       '@wirelineio/registry-client': 1.1.0-beta.3
       abstract-leveldown: 7.0.0
       assert: 2.0.0
@@ -1404,6 +1409,7 @@ importers:
       mocha: 8.4.0
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
@@ -1414,7 +1420,9 @@ importers:
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
+      '@dxos/proto': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
@@ -1489,6 +1497,7 @@ importers:
       '@dxos/gem-spore': 1.0.0-beta.34_@types+react@17.0.24
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/react-client': link:../react-client
+      '@dxos/react-components': link:../react-components
       '@dxos/react-framework': link:../react-framework
       '@dxos/util': link:../../common/util
       '@emotion/react': 11.4.1_9bfa804cd21315a6b28257b6309f6867
@@ -1512,7 +1521,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.2.1
+      '@dxos/esbuild-server': 1.2.2
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@storybook/addon-essentials': 6.3.12_c86ec7d94593fc421030610c98243b1b
       '@storybook/addon-links': 6.3.12_react-dom@17.0.2+react@17.0.2
@@ -1561,6 +1570,7 @@ importers:
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
@@ -1616,6 +1626,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/network-devtools': link:../../mesh/network-devtools
+      '@dxos/proto': link:../../common/proto
       '@dxos/react-components': link:../react-components
       '@dxos/react-framework': link:../react-framework
       '@dxos/rpc': link:../../common/rpc
@@ -1648,6 +1659,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/network-devtools': workspace:*
       '@dxos/network-manager': workspace:*
+      '@dxos/proto': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
       '@dxos/rpc': workspace:*
@@ -2341,7 +2353,7 @@ importers:
       util: ~0.12.4
   ../../toolchains/toolchain-node-library:
     dependencies:
-      '@dxos/eslint-plugin': 1.0.16_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.18_eslint@7.26.0+typescript@4.3.5
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@types/yargs': 16.0.1
       chalk: 4.1.2
@@ -2360,7 +2372,7 @@ importers:
       '@types/node': 14.14.45
       ts-node: 9.1.1_typescript@4.3.5
     specifiers:
-      '@dxos/eslint-plugin': ~1.0.16
+      '@dxos/eslint-plugin': ~1.0.18
       '@dxos/protobuf-compiler': workspace:*
       '@types/glob': ~7.1.3
       '@types/jest': ^26.0.7
@@ -5077,7 +5089,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-9m1Ftf+1RsQvf9JIDOZTJouHyT3X4kdqn1/tDSL9NrvOgLFjp/cA/vzyMcPAZTJCBkcF+xIkR/Peu2/jhwy0gQ==
-  /@dxos/esbuild-server/1.2.1:
+  /@dxos/esbuild-server/1.2.2:
     dependencies:
       chalk: 4.1.2
       esbuild: 0.12.29
@@ -5093,8 +5105,8 @@ packages:
     dev: true
     hasBin: true
     resolution:
-      integrity: sha512-5BiZWUCxA93ijJqjxvInsIDonmNs0ZbSwtprGcUgX3aeiBqkRMzakfP7s80rsdYwLnrF89vclK5GDy470BHpXw==
-  /@dxos/eslint-plugin/1.0.16_eslint@7.26.0+typescript@4.3.5:
+      integrity: sha512-NWDLDbLJC3VJGbPiyw/doVcB/s88tRm968FkMFxfHQjtFl5gPJIb89mU1HYtbbP1g3cdVeyG7NScx8qdzMxBJw==
+  /@dxos/eslint-plugin/1.0.18_eslint@7.26.0+typescript@4.3.5:
     dependencies:
       '@rushstack/eslint-patch': 1.0.6
       '@typescript-eslint/eslint-plugin': 4.28.4_ed91d8a9a45fee40b4f28fa6457a3abe
@@ -5111,7 +5123,7 @@ packages:
       eslint: '*'
       typescript: '*'
     resolution:
-      integrity: sha512-hNQkDFhu1FuvUkUGgQWAUyDWApwHInLByqZ+IajF88YN3FECGOTK7f4VqDpX7PHEvNa3CIOpJocrwRJrTtUxmw==
+      integrity: sha512-YRwCQz2cFVLDywTLoQFQvQ5kIYM3qUxRv4PlhngFs+TOk1BkD+vVbt05BRBJnYHN2TxkaxqWBeljhhUHmafTfQ==
   /@dxos/gem-core/1.0.0-beta.34_@types+react@17.0.24:
     dependencies:
       '@material-ui/core': 4.11.4_c9c9d4a2eab4f2a56fbc8dec3114b22b
@@ -18170,7 +18182,7 @@ packages:
       integrity: sha512-t5qdIj/bCj2j7NFVHb2nFB4aUdfucDn3JRKgrZnplb8nieAirAzRSHP8uDEd+qV6ygzg9Pz4YG7UTJf94LPSyg==
   /jest-diff/26.6.2:
     dependencies:
-      chalk: 4.1.1
+      chalk: 4.1.2
       diff-sequences: 26.6.2
       jest-get-type: 26.3.0
       pretty-format: 26.6.2

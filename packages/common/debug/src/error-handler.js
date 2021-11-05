@@ -17,7 +17,7 @@ export class ErrorHandler extends EventEmitter {
       this.emit('error', message);
 
       // Default logging.
-      // event.preventDefault();
+      // code event.preventDefault();
     };
 
     // https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event

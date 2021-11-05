@@ -42,7 +42,7 @@ export class Matcher {
 
     switch (predicate.op) {
       //
-      // Boolean operators
+      // Boolean operators.
       //
 
       case Predicate.Operation.OR: {
@@ -53,12 +53,12 @@ export class Matcher {
         return predicate.predicates!.findIndex((predicate: Predicate) => !this._matchItem(item, predicate)) === -1;
       }
 
-      case Predicate.Operation.NOT: { // NAND
+      case Predicate.Operation.NOT: { // NAND.
         return predicate.predicates!.findIndex((predicate: Predicate) => !this._matchItem(item, predicate)) !== -1;
       }
 
       //
-      // Equivalence
+      // Equivalence.
       //
 
       case Predicate.Operation.IN: {

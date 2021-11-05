@@ -124,7 +124,7 @@ export class Selection<I extends Item<any>> {
    * Creates a new selection from the source of the current set of links.
    */
   source (this: Selection<Link<any, any, any>>) {
-    // TODO(burdon): Assert links (or sub-class Object/LinkSelection classes?)
+    // TODO(burdon): Assert links (or sub-class Object/LinkSelection classes?).
     return new Selection(() => deduplicate(this._getItems().map(link => link.source)), this._update);
   }
 
@@ -132,7 +132,7 @@ export class Selection<I extends Item<any>> {
    * Creates a new selection from the target of the current set of links.
    */
   target (this: Selection<Link<any, any, any>>) {
-    // TODO(burdon): Assert links (or sub-class Object/LinkSelection classes?)
+    // TODO(burdon): Assert links (or sub-class Object/LinkSelection classes?).
     return new Selection(() => deduplicate(this._getItems().map(link => link.target)), this._update);
   }
 }

@@ -47,7 +47,7 @@ const Root = () => {
             </Tooltip>
           </Toolbar>
         </AppBar>
-        <Main/>
+        <Main />
       </WithSnackbarContext>
     </WithBackgroundContext>
   );

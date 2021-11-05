@@ -95,7 +95,7 @@ export class Database {
   /**
    * Creates a new item with the given queryable type and model.
    */
-  // TODO(burdon): Get modelType from somewhere other than ObjectModel.meta.type.
+  // TODO(burdon): Get modelType from somewhere other than `ObjectModel.meta.type`.
   async createItem <M extends Model<any>> (options: ItemCreationOptions<M>): Promise<Item<M>> {
     this._assertInitialized();
 

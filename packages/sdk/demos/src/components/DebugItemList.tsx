@@ -2,19 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
-import { makeStyles } from '@mui/styles';
 import clsx from 'clsx';
 import React from 'react';
+
+import { makeStyles } from '@mui/styles';
 
 import { Item } from '@dxos/echo-db';
 
 const useStyles = makeStyles(() => ({
   root: {
-    backgroundColor: 'white',
-    opacity: 0.7,
-    fontFamily: 'monospace',
-    fontSize: 12,
-    color: '#666',
+    'backgroundColor': 'white',
+    'opacity': 0.7,
+    'fontFamily': 'monospace',
+    'fontSize': 12,
+    'color': '#666',
     '& th': {
       textAlign: 'left',
       fontWeight: 100

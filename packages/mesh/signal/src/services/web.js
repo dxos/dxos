@@ -29,17 +29,17 @@ export const WebService = {
       resolvers: {
         Timestamp: {
           __parseValue (value) {
-            return moment(value); // value from the client
+            return moment(value); // Value from the client.
           },
           __serialize (value) {
             if (typeof value === 'string') {
               return value;
             }
-            return value.toISOString(); // value sent to the client
+            return value.toISOString(); // Value sent to the client.
           },
           __parseLiteral (ast) {
             if (ast.kind === Kind.INT) {
-              return parseInt(ast.value, 10); // ast value is always in string format
+              return parseInt(ast.value, 10); // `ast.value` is always in string format.
             }
 
             return null;

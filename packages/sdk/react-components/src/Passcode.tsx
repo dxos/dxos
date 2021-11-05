@@ -3,8 +3,9 @@
 //
 
 import { keyframes } from '@emotion/react';
-import { useTheme, Box } from '@mui/material';
 import React, { createRef, useEffect, useState } from 'react';
+
+import { useTheme, Box } from '@mui/material';
 
 const DEFAULT_PATTERN = /^[0-9]*$/;
 
@@ -33,7 +34,7 @@ type Size = 'small' | 'medium' | 'large';
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
 // https://developer.apple.com/documentation/security/password_autofill/enabling_password_autofill_on_an_html_input_element
 const customAttrs = {
-  autoComplete: 'one-time-code',
+  'autoComplete': 'one-time-code',
   'data-com-onepassword-filled': 'dark'
 };
 
@@ -165,7 +166,7 @@ export const Passcode = ({
         <form
           style={{
             position: 'absolute',
-            top: -5000, // Offscreen
+            top: -5000, // Offscreen.
             outline: 'none',
             border: 'none'
           }}

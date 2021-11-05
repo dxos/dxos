@@ -2,12 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
+import React from 'react';
+
 import {
   CheckCircleOutline as YesIcon,
   RadioButtonUnchecked as NoIcon
 } from '@mui/icons-material';
 import { colors } from '@mui/material';
-import React from 'react';
 
 /**
  * @deprecated Move out of framework (not too app-specific).

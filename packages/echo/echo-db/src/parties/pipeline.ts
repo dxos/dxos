@@ -116,7 +116,7 @@ export class Pipeline {
           const { data: message } = block;
 
           //
-          // HALO
+          // HALO.
           //
           if (message.halo) {
             await this._partyProcessor.processMessage({
@@ -126,7 +126,7 @@ export class Pipeline {
           }
 
           //
-          // ECHO
+          // ECHO.
           //
           if (message.echo) {
             this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);

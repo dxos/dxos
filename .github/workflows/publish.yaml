@@ -77,23 +77,11 @@ jobs:
         yarn global add @dxos/cli@v2.8.2-alpha.0
         yarn global add @dxos/cli-dxns@v2.8.2-alpha.0
         yarn global add @dxos/cli-app@v2.8.2-alpha.0
-
-        export PATH="$PATH:$(yarn global bin)"
-        ./common/scripts/publish-apps.sh
     - name: Publish apps
       run:  |
         \. "$NVM_DIR/nvm.sh" && nvm use ${{ matrix.node-version }}
         export PATH="$PATH:$(yarn global bin)"
-
-        cd packages/sdk/tutorials/apps/tasks-app
-        DXOS_DOMAIN="${DXOS_DOMAIN:-dxos}"
-        PKG_NAME=`cat package.json | jq -r '.name' | cut -d'/' -f2- | sed 's/-app$//'`
-
-        # Canary deployment
-        dx app deploy --name "app.${PKG_NAME}" --domain $DXOS_DOMAIN --tag dev --version=false
-
-        # Latest version deployment
-        dx app deploy --name "app.${PKG_NAME}" --domain $DXOS_DOMAIN --tag latest --skipExisting
+        ./common/scripts/publish-apps.sh
   publish-extension:
     runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 25

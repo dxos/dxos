@@ -2,6 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+import faker from 'faker';
+import React, { useState } from 'react';
+
 import AddIcon from '@mui/icons-material/Add';
 import GraphIcon from '@mui/icons-material/BubbleChart';
 import ListIcon from '@mui/icons-material/Reorder';
@@ -15,9 +19,6 @@ import {
   Toolbar
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import assert from 'assert';
-import faker from 'faker';
-import React, { useState } from 'react';
 
 import { Party } from '@dxos/echo-db';
 import { labels } from '@dxos/echo-testing';
@@ -100,7 +101,7 @@ export const Main = ({ party, code }: MainProps) => {
   }
 
   // TODO(burdon): Use subset.
-  // const data = useSelection(items && new Selection(items, new Event()), graphSelector);
+  // code const data = useSelection(items && new Selection(items, new Event()), graphSelector);
   const data = useSelection(party.database.select(graphSelector(adapter)));
   const [selected, setSelected] = useState();
   const [view, setView] = useState(VIEW_LIST);

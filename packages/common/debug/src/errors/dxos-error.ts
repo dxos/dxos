@@ -13,6 +13,8 @@ export class DXOSError extends Error {
     readonly dxosErrorMessage?: string
   ) {
     super(dxosErrorMessage ? `${code}: ${dxosErrorMessage}` : code.toString());
-    Object.setPrototypeOf(this, new.target.prototype); // Restore prototype chain. https://stackoverflow.com/a/48342359
+    // Restore prototype chain.
+    // https://stackoverflow.com/a/48342359
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }

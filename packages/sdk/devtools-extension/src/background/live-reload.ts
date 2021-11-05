@@ -4,7 +4,7 @@
 
 import browser from 'webextension-polyfill';
 
-// Taken from https://github.com/xpl/crx-hotreload.
+// Taken from `https://github.com/xpl/crx-hotreload`.
 
 const filesInDirectory = (dir: FileSystemDirectoryEntry): Promise<File[]> => new Promise(resolve =>
   dir.createReader().readEntries(entries =>
@@ -25,7 +25,7 @@ const timestampForFilesInDirectory = (dir: FileSystemDirectoryEntry) =>
 const watchChanges = async (dir: FileSystemDirectoryEntry, lastTimestamp?: string) => {
   const timestamp = await timestampForFilesInDirectory(dir);
   if (!lastTimestamp || (lastTimestamp === timestamp)) {
-    setTimeout(() => watchChanges(dir, timestamp), 1000); // retry after 1s
+    setTimeout(() => watchChanges(dir, timestamp), 1000); // Retry after 1s.
   } else {
     console.log('Reloading extension..');
     browser.runtime.reload();
@@ -37,7 +37,8 @@ export async function startLiveReload () {
 
   if (self.installType === 'development') {
     chrome.runtime.getPackageDirectoryEntry(dir => watchChanges(dir));
-    chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => { // NB: see https://github.com/xpl/crx-hotreload/issues/5
+    // NB: see `https://github.com/xpl/crx-hotreload/issues/5`.
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
       if (tabs[0]) {
         chrome.tabs.reload(tabs[0].id!);
       }

@@ -115,8 +115,9 @@ export class PartyFactory {
   async addParty (partyKey: PartyKey, hints: KeyHint[] = []) {
     const identity = this._identityProvider();
 
-    // TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
-    // mechanism is broken by not waiting on the messages to be processed before returning.
+    /* TODO(telackey): We shouldn't have to add our key here, it should be in the hints, but our hint
+     * mechanism is broken by not waiting on the messages to be processed before returning.
+     */
 
     const feedProvider = this._createFeedProvider(partyKey);
     const { feed } = await feedProvider.createOrOpenWritableFeed();

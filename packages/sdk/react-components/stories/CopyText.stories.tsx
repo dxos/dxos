@@ -2,8 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { useTheme, Box, Divider, TextField } from '@mui/material';
 import React from 'react';
+
+import { useTheme, Box, Divider, TextField } from '@mui/material';
 
 import { CopyText } from '../src';
 import { Container } from './helpers';

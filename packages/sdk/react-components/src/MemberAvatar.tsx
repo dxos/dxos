@@ -2,12 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { ReactElement } from 'react';
+
 import {
   Face as FaceIcon,
   Share as ShareIcon
 } from '@mui/icons-material';
 import { Avatar, Tooltip, colors, useTheme } from '@mui/material';
-import React, { ReactElement } from 'react';
 
 import { PublicKeyLike, humanize } from '@dxos/crypto';
 import { PartyMember } from '@dxos/echo-db';

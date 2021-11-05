@@ -39,11 +39,11 @@ const useSeedWords = (seedPhrase: string, n: number): [string[], number[]] => {
   const words = seedPhrase.split(' ');
   const indexes = pickUnique<number>([...new Array(words.length)].map((_, i) => i), n);
   return [words, indexes];
-}
+};
 
 const isSeedPhraseValid = (value: string) => {
   return value.trim().toLowerCase().split(/\s+/g).length === 12;
-}
+};
 
 const seedPhraseFile = 'dxos-recovery-seedphrase.txt';
 
@@ -211,14 +211,14 @@ export const RegistrationDialog = ({
           title: 'User profile',
           content: () => {
             const Option = styled(Paper)({
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              textAlign: 'center',
-              width: 260,
-              height: 220,
-              margin: 16,
+              'display': 'flex',
+              'flexDirection': 'column',
+              'justifyContent': 'center',
+              'alignItems': 'center',
+              'textAlign': 'center',
+              'width': 260,
+              'height': 220,
+              'margin': 16,
               '& .MuiSvgIcon-root': {
                 fontSize: 32
               }
@@ -254,7 +254,7 @@ export const RegistrationDialog = ({
               </Box>
             )
           }
-        }
+        };
       }
 
       case Stage.RESTORE: {
@@ -308,7 +308,7 @@ export const RegistrationDialog = ({
               />
             </Box>
           ),
-          actions: () => (
+          actions: (
             <>
               <Button color='primary' onClick={() => setStage(Stage.START)}>Back</Button>
               <Button variant='contained' color='primary' onClick={handleNext}>Next</Button>
