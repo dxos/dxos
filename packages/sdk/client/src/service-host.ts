@@ -99,14 +99,14 @@ export class ClientServiceHost implements ClientServiceProvider {
           throw new Error('Not implemented');
         },
         SubscribeContacts: () => {
-          if(this._echo.halo.isInitialized) {
-            return resultSetToStream(this._echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }))
+          if (this._echo.halo.isInitialized) {
+            return resultSetToStream(this._echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
           } else {
             return new Stream(({ next }) => {
               this._echo.halo.identityReady.on(() => {
                 const resultSet = this._echo.halo.queryContacts();
-                next({ contacts: resultSet.value })
-                resultSet.update.on(() => next({ contacts: resultSet.value }))
+                next({ contacts: resultSet.value });
+                resultSet.update.on(() => next({ contacts: resultSet.value }));
               });
             });
           }

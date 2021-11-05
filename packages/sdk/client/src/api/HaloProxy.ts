@@ -28,7 +28,7 @@ export class HaloProxy {
     return this._profile;
   }
 
-  hasProfile(): boolean {
+  hasProfile (): boolean {
     return !!this.getProfile();
   }
 
@@ -90,7 +90,7 @@ export class HaloProxy {
    *
    * @private
    */
-  open() {
+  open () {
     const profileStream = this._serviceProvider.services.ProfileService.SubscribeProfile();
     profileStream.subscribe(data => {
       this._profile = data;

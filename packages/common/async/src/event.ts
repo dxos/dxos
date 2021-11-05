@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { resolve } from "path";
-
 // TODO(burdon): Rename (don't have both "event" and "events" files). Deprecate "events"?
 
 export type Effect = () => (() => void) | undefined;
