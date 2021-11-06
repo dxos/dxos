@@ -121,6 +121,7 @@ export const SharingDialog = ({
   onShare,
   onClose
 }: SharingDialogProps) => {
+  // TODO(burdon): Expiration.
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
 
   const handleCreateInvitation = async () => {
