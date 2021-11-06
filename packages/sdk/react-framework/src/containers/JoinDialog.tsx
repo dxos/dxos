@@ -11,7 +11,7 @@ import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { decodeInvitation, useSecretProvider } from '@dxos/react-client';
 import { Dialog, Passcode } from '@dxos/react-components';
 
-import { handleKey } from '../../helpers';
+import { handleKey } from '../helpers';
 
 enum PartyJoinState {
   INIT,
@@ -107,7 +107,7 @@ export const JoinDialog = ({
   };
 
   const getDialogProps = (state: PartyJoinState) => {
-    const joinPartyContent = () => (
+    const joinPartyContent = (
       <TextField
         autoFocus
         fullWidth
@@ -122,14 +122,14 @@ export const JoinDialog = ({
       />
     );
 
-    const joinPartyActions = () => (
+    const joinPartyActions = (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
         <Button onClick={handleProcessInvitation}>Process</Button>
       </>
     );
 
-    const authenticateContent = () => (
+    const authenticateContent = (
       <>
         <Typography variant='body1' gutterBottom>
           Enter the PIN.
@@ -140,13 +140,13 @@ export const JoinDialog = ({
       </>
     );
 
-    const authenticateActions = () => (
+    const authenticateActions = (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
       </>
     );
 
-    const errorActions = () => (
+    const errorActions = (
       <Button onClick={handleReset}>Retry</Button>
     );
 

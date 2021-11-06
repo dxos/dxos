@@ -30,34 +30,23 @@ const Alert = styled(MuiAlert)({
   }
 });
 
-type ComponentOrFunction = React.FunctionComponent | React.ReactNode
-
-const render = (component?: ComponentOrFunction) => {
-  if (component instanceof Function) {
-    const Component = component as React.FunctionComponent;
-    return <Component />;
-  } else {
-    return component;
-  }
-};
-
 export interface DialogProps extends MuiDialogProps {
   modal?: boolean
   title?: string
   dividers?: boolean
-  content?: ComponentOrFunction
-  actions?: ComponentOrFunction
-  processing?: boolean
   error?: string
+  processing?: boolean
+  content?: JSX.Element
+  actions?: JSX.Element
 }
 
 export const ModalDialog = ({
   title,
+  dividers = false,
+  error,
+  processing,
   content,
   actions,
-  dividers = false,
-  processing,
-  error,
   ...dialogProps
 }: DialogProps) => {
   const theme = useTheme();
@@ -77,7 +66,7 @@ export const ModalDialog = ({
     >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers={dividers}>
-        {render(content)}
+        {content}
       </DialogContent>
       <Box sx={{ height: 8 }}>
         {processing && (
@@ -88,7 +77,7 @@ export const ModalDialog = ({
         <Alert severity='error'>{error}</Alert>
       )}
       <DialogActions>
-        {render(actions)}
+        {actions}
       </DialogActions>
     </MuiDialog>
   );
@@ -122,7 +111,7 @@ export const NonModalDialog = ({
     >
       <CardHeader title={title} />
       <CardContent>
-        {render(content)}
+        {content}
       </CardContent>
       {processing && (
         <LinearProgress />
@@ -133,7 +122,7 @@ export const NonModalDialog = ({
       <CardActions sx={{
         justifyContent: 'flex-end'
       }}>
-        {render(actions)}
+        {actions}
       </CardActions>
     </Card>
   );

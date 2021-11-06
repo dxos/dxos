@@ -2,15 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
-
-import { Button, Table, TableBody, TableCell, TableRow } from '@mui/material';
+import {
+  QrCode2 as QRCodeIcon,
+  Clear as CancelIcon
+} from '@mui/icons-material';
+import { Button, IconButton, Popover, Table, TableBody, TableCell, TableRow } from '@mui/material';
 import { Box } from '@mui/system';
+import React, { useEffect, useState } from 'react';
 
 import type { SecretProvider } from '@dxos/credentials';
 import { InvitationDescriptor, InvitationOptions, PartyMember } from '@dxos/echo-db';
 import { encodeInvitation, useSecretGenerator } from '@dxos/react-client';
-import { CopyText, CopyToClipboard, Dialog, MemberList, Passcode } from '@dxos/react-components';
+import {
+  CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
+} from '@dxos/react-components';
 
 enum InvitationState {
   INIT,
@@ -46,15 +51,16 @@ export const SharingDialog = ({
   members = []
 }: SharingDialogProps) => {
   const [state, setState] = useState(InvitationState.INIT);
-  const [error, setError] = useState<string | undefined>(undefined); // TODO(burdon): Error handling.
+  const [error, setError] = useState<string>(); // TODO(burdon): Error handling.
 
   // TODO(burdon): Multiple invitations at once (see Braneframe PartySharingDialog). Timeouts, etc.
-  const [invitationCode, setInvitationCode] = useState<string>();
+  const [invitationCode, setInvitationCode] = useState<string | null>(null);
+  const [popoverAnchor, setPopoverAnchor] = useState<HTMLButtonElement | null>(null);
   const [secretProvider, pin, resetPin] = useSecretGenerator();
 
   const handleReset = () => {
     setError(undefined);
-    setInvitationCode(undefined);
+    setInvitationCode(null);
     resetPin();
     setState(InvitationState.INIT);
   };
@@ -83,7 +89,7 @@ export const SharingDialog = ({
   };
 
   const getDialogProps = (state: InvitationState) => {
-    const sharePartyContent = () => (
+    const sharePartyContent = (
       <>
         <Box>
           <Button onClick={handleCreateInvitation}>Create Invitation</Button>
@@ -92,15 +98,59 @@ export const SharingDialog = ({
           <TableBody>
             <TableRow>
               <TableCell>
-                {!pin && (
-                  <CopyText value={invitationCode} length={8} onCopyToClipboard={(value) => console.log(value)} />
-                )}
-                {pin && (
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', flex: 1, alignItems: 'center' }}>
+                  {invitationCode && (
+                    <>
+                      <Box sx={{ marginRight: 2 }}>
+                        <HashIcon sx={{ width: 32, height: 32 }} value={invitationCode} />
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        Pending invitation (05:00)
+                      </Box>
+                    </>
+                  )}
+
+                  {invitationCode && !pin && (
+                    <>
+                      <CopyToClipboard
+                        text={invitationCode}
+                      />
+                      <IconButton
+                        sx={{ marginLeft: 1 }}
+                        onClick={(event: React.MouseEvent<HTMLButtonElement>) => setPopoverAnchor(event.currentTarget)}
+                      >
+                        <QRCodeIcon />
+                      </IconButton>
+                      <Popover
+                        open={Boolean(popoverAnchor)}
+                        anchorEl={popoverAnchor}
+                        anchorOrigin={{
+                          vertical: 'center',
+                          horizontal: 'right'
+                        }}
+                        transformOrigin={{
+                          vertical: 'center',
+                          horizontal: 'left'
+                        }}
+                        onClose={() => setPopoverAnchor(null)}
+                      >
+                        <Box sx={{ padding: 1 }}>
+                          <QRCode value={invitationCode!} />
+                        </Box>
+                      </Popover>
+                    </>
+                  )}
+
+                  {pin && (
                     <Passcode value={pin} size='small' />
-                    <CopyToClipboard text={pin} />
-                  </Box>
-                )}
+                  )}
+
+                  {invitationCode && (
+                    <IconButton onClick={() => setInvitationCode(null)}>
+                      <CancelIcon />
+                    </IconButton>
+                  )}
+                </Box>
               </TableCell>
             </TableRow>
           </TableBody>
@@ -112,13 +162,13 @@ export const SharingDialog = ({
       </>
     );
 
-    const sharePartyActions = () => (
+    const sharePartyActions = (
       <>
         <Button onClick={handleDone}>Close</Button>
       </>
     );
 
-    const errorActions = () => (
+    const errorActions = (
       <Button onClick={handleReset}>Retry</Button>
     );
 

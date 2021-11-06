@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 
-import { JoinDialog, JoinDialogProps } from './common';
+import { JoinDialog, JoinDialogProps } from './JoinDialog';
 
 /**
  * Manages the workflow of joining a HALO invitation.
