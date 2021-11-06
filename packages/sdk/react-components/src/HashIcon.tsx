@@ -3,19 +3,35 @@
 //
 
 import {
+  // Sport.
   SportsTennis as TennisIcon,
   SportsMotorsports as HelmetIcon,
   SportsBaseball as BallIcon,
   DownhillSkiing as SkiierIcon,
+
+  // Transport.
   Train as TrainIcon,
   LocalAirport as PlaneIcon,
   DirectionsCar as CarIcon,
-  DirectionsBoat as BoatIcon
+  DirectionsBoat as BoatIcon,
+  DeliveryDining as ScooterIcon,
+  AirportShuttle as BusIcon,
+
+  // Food.
+  LocalBar as GlassIcon,
+  Cake as CakeIcon,
+  RamenDining as NoodlesIcon,
+
+  // Things.
+  Agriculture as FarmIcon,
+  LocalFlorist as FlowerIcon,
+  BeachAccess as Umbrella,
 } from '@mui/icons-material';
 import { Box, colors } from '@mui/material';
 import React from 'react';
 import hash from 'string-hash';
 
+// https://mui.com/components/material-icons/
 const hashIcons = [
   [TennisIcon, 'bat'],
   [HelmetIcon, 'helmet'],
@@ -24,26 +40,60 @@ const hashIcons = [
   [TrainIcon, 'train'],
   [PlaneIcon, 'plane'],
   [CarIcon, 'car'],
-  [BoatIcon, 'boat']
+  [BoatIcon, 'boat'],
+  [ScooterIcon, 'scooter'],
+  [BusIcon, 'bus'],
+  [GlassIcon, 'glass'],
+  [CakeIcon, 'cake'],
+  [NoodlesIcon, 'noodles'],
+  [FarmIcon, 'farm'],
+  [FlowerIcon, 'flower'],
+  [Umbrella, 'umbrella']
 ];
 
+// https://mui.com/customization/color/#color-palette
 const hashColors = [
   [colors.red, 'red'],
-  [colors.deepPurple, 'purple'],
+  [colors.pink, 'pink'],
+  [colors.purple, 'purple'],
   [colors.blue, 'blue'],
   [colors.green, 'green'],
   [colors.orange, 'orange'],
   [colors.brown, 'brown'],
-  [colors.blueGrey, 'grey'],
   [colors.cyan, 'cyan']
 ];
 
 const colorDepth = 500;
 
+type Size = 'small' | 'medium' | 'large';
+
+const sizes = {
+  'small': {
+    width: 16,
+    height: 16
+  },
+  'medium': {
+    width: 24,
+    height: 24
+  },
+  'large': {
+    width: 32,
+    height: 32
+  },
+};
+
 /**
  * A stable generic icon based on a hash.
  */
-export const HashIcon = ({ value, sx, ...props }: { value: string, sx: any }) => {
+export const HashIcon = ({
+  value,
+  sx,
+  size='medium',
+  ...props }: {
+  value: string,
+  sx?: any,
+  size?: Size
+}) => {
   const num = hash(value);
   const icon = hashIcons[num % hashIcons.length];
   const color = hashColors[num % hashColors.length];
@@ -53,7 +103,7 @@ export const HashIcon = ({ value, sx, ...props }: { value: string, sx: any }) =>
 
   return (
     <Box title={title}>
-      <Icon sx={{ color: color[0][colorDepth], ...sx }} {...props} />
+      <Icon sx={{ color: color[0][colorDepth], ...sizes[size], ...sx }} {...props} />
     </Box>
   );
 };

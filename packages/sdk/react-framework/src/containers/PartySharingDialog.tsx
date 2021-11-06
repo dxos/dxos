@@ -29,6 +29,11 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
   };
 
   return (
-    <SharingDialog {...props} title='Party Sharing' onShare={handleShare} members={members} />
+    <SharingDialog
+      {...props}
+      title='Party Sharing'
+      onShare={handleShare}
+      members={members}
+    />
   );
 };

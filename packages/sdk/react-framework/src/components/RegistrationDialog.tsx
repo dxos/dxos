@@ -205,55 +205,53 @@ export const RegistrationDialog = ({
   };
 
   const getStage = (stage: Stage) => {
+    const Option = styled(Paper)({
+      'display': 'flex',
+      'flexDirection': 'column',
+      'justifyContent': 'center',
+      'alignItems': 'center',
+      'textAlign': 'center',
+      'width': 260,
+      'height': 220,
+      'margin': 16,
+      '& .MuiSvgIcon-root': {
+        fontSize: 32
+      }
+    });
+
     switch (stage) {
       case Stage.START: {
         return {
           title: 'User profile',
-          content: () => {
-            const Option = styled(Paper)({
-              'display': 'flex',
-              'flexDirection': 'column',
-              'justifyContent': 'center',
-              'alignItems': 'center',
-              'textAlign': 'center',
-              'width': 260,
-              'height': 220,
-              'margin': 16,
-              '& .MuiSvgIcon-root': {
-                fontSize: 32
-              }
-            });
-
-            return (
-              <Box sx={{
-                display: 'flex',
-                justifyContent: 'space-around'
-              }}>
-                <Box>
-                  <Option variant='outlined'>
-                    <CreateIcon />
-                    <Typography sx={{ padding: 3 }}>
-                      Create a new profile.<br />&nbsp;
-                    </Typography>
-                    <Button variant='contained' color='primary' onClick={() => setStage(Stage.ENTER_USERNAME)}>
-                      Create Profile
-                    </Button>
-                  </Option>
-                </Box>
-                <Box>
-                  <Option variant='outlined'>
-                    <RestoreIcon/>
-                    <Typography sx={{ padding: 3 }}>
-                      Enter your seed phrase<br/>to recover your profile.
-                    </Typography>
-                    <Button variant='contained' color='primary' onClick={() => setStage(Stage.RESTORE)}>
-                      Recover Profile
-                    </Button>
-                  </Option>
-                </Box>
+          content: (
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'space-around'
+            }}>
+              <Box>
+                <Option variant='outlined'>
+                  <CreateIcon />
+                  <Typography sx={{ padding: 3 }}>
+                    Create a new profile.<br />&nbsp;
+                  </Typography>
+                  <Button variant='contained' color='primary' onClick={() => setStage(Stage.ENTER_USERNAME)}>
+                    Create Profile
+                  </Button>
+                </Option>
               </Box>
-            )
-          }
+              <Box>
+                <Option variant='outlined'>
+                  <RestoreIcon />
+                  <Typography sx={{ padding: 3 }}>
+                    Enter your seed phrase<br/>to recover your profile.
+                  </Typography>
+                  <Button variant='contained' color='primary' onClick={() => setStage(Stage.RESTORE)}>
+                    Recover Profile
+                  </Button>
+                </Option>
+              </Box>
+            </Box>
+          )
         };
       }
 
