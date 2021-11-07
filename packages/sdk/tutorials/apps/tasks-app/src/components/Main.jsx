@@ -9,11 +9,13 @@ import { makeStyles } from '@mui/styles';
 import {
   AccountCircle as AccountIcon,
   DeleteForever as ResetIcon,
+  Devices as DevicesIcon,
   Work as WorkIcon,
   MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 
 import { useClient, useProfile } from '@dxos/react-client';
+import { HaloSharingDialog } from '@dxos/react-framework';
 
 import PartyList from './PartyList';
 import TaskList from './TaskList';
@@ -56,6 +58,7 @@ const Main = () => {
   const classes = useStyles();
   const client = useClient();
   const profile = useProfile();
+  const [haloInviteOpen, setHaloInviteOpen] = useState(false);
   const [partyKey, setPartyKey] = useState();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -70,6 +73,9 @@ const Main = () => {
       await client.reset();
       window.location.reload();
     }
+  };
+  const handleInviteDevice = () => {
+    setHaloInviteOpen(true);
   };
 
   return (
@@ -114,6 +120,12 @@ const Main = () => {
                 </ListItemIcon>
                 <ListItemText primary="Reset Storage"></ListItemText>
               </ListItem>
+              <ListItem component="button" button onClick={handleInviteDevice} title="Invite Device Button">
+                <ListItemIcon>
+                  <DevicesIcon className='devices-icon' />
+                </ListItemIcon>
+                <ListItemText primary="Invite Device"></ListItemText>
+              </ListItem>
             </List>
           </Popover>
         </Toolbar>
@@ -141,6 +153,11 @@ const Main = () => {
           </>
         )}
       </main>
+
+      <HaloSharingDialog
+        open={haloInviteOpen}
+        onClose={() => setHaloInviteOpen(false)}
+      />
     </div>
   );
 };

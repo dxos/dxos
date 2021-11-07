@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { useClient, useProfile } from '@dxos/react-client';
-import { ProfileDialog } from '@dxos/react-framework';
+import { JoinHaloDialog, ProfileDialog } from '@dxos/react-framework';
 
 import Main from './Main';
 
@@ -15,6 +15,7 @@ import Main from './Main';
 const Root = () => {
   const client = useClient();
   const profile = useProfile();
+  const [joiningHalo, setJoiningHalo] = useState(false);
   // TODO(zarco): add a get parameter to trigger the first party so we avoid triggering all the time.
   // const createFirstParty = async () => {
   //   // Default Party Creation
@@ -33,7 +34,14 @@ const Root = () => {
     };
 
     return (
-      <ProfileDialog open={!profile} onCreate={handleRegistration} />
+      <>
+        <ProfileDialog
+          open={!joiningHalo}
+          onJoinHalo={() => setJoiningHalo(true)}
+          onCreate={handleRegistration}
+        />
+        <JoinHaloDialog open={joiningHalo} />
+      </>
     );
   }
 
