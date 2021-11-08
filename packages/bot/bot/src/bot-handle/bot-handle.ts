@@ -41,4 +41,8 @@ export class BotHandle {
     await this._rpc.open();
     this._bot.status = Bot.Status.RUNNING;
   }
+
+  toString () {
+    return `BotHandle: ${this._bot.id}`;
+  }
 }

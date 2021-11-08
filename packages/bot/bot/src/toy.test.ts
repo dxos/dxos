@@ -33,6 +33,7 @@ describe('In-Memory', () => {
       void bot.open();
       return new BotHandle(botHandlePort);
     });
+
     const botController = new BotController(botFactory, botControllerPort);
 
     await Promise.all([
@@ -47,9 +48,7 @@ describe('In-Memory', () => {
     expect(botId).toBeDefined();
 
     const { bots } = await agent.botFactory.GetBots({});
-    expect(bots).toBeDefined();
     expect(bots).toHaveLength(1);
-    expect(bots![0].status).toBeDefined();
     expect(bots![0].status).toBe(Bot.Status.RUNNING);
     expect(botInitialized).toBe(true);
 
