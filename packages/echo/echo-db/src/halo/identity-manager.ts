@@ -44,7 +44,7 @@ export class IdentityManager {
   get initialized (): boolean {
     const haloParty = this._identity.halo;
     return haloParty !== undefined &&
-      haloParty.isOpen && 
+      haloParty.isOpen &&
       !!haloParty!.memberKeys.length &&
       !!haloParty!.identityGenesis &&
       !!this._identity.deviceKeyChain;
