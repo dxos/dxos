@@ -1,0 +1,37 @@
+{
+  "name": "@dxos/botkit",
+  "version": "2.16.8",
+  "description": "Bot",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/proto": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "base-x": "~3.0.9",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/crypto": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/mocha": "~8.2.2",
+    "@types/node": "^14.0.9",
+    "expect": "~27.0.2",
+    "@types/expect": "~24.3.0",
+    "@dxos/client": "workspace:*"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
+  }
+}

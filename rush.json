@@ -726,6 +726,17 @@
 
     //
     // bot
+    //
+
+    {
+      "packageName": "@dxos/botkit",
+      "projectFolder": "packages/bot/botkit",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
+    },
+
+    //
+    // bot-deprecated
     // NOTE: KEEP SORTED
     //
 
