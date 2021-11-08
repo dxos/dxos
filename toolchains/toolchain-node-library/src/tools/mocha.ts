@@ -6,13 +6,16 @@ import { execTool } from './common';
 
 export interface ExecMochaOpts {
   forceClose?: boolean,
-  userArgs?: string[]
+  userArgs?: string[],
+  jsdom?: boolean
 }
 
-export function execMocha ({ userArgs = [], forceClose }: ExecMochaOpts) {
+export function execMocha ({ userArgs = [], forceClose, jsdom = false }: ExecMochaOpts) {
+  const jsdomArray = jsdom ? ['-r', 'jsdom-global/register'] : [];
   execTool('mocha', [
     '-r', 'ts-node/register/transpile-only',
     '-r', require.resolve('./wtfnode.js'),
+    ...jsdomArray,
 
     forceClose ? '--exit' : '--no-exit',
     '-t', '15000',
