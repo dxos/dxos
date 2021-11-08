@@ -39,18 +39,12 @@ export const Left = () => {
         <Toolbar
           disableGutters
           variant='dense'
-          sx={{
-            marginLeft: 1,
-            marginRight: 1
-          }}
+          sx={{ marginLeft: 1, marginRight: 1 }}
         >
           {!open && (
-            <OpenButton
-              onOpen={() => setOpen(true)}
-              sx={{ marginRight: 1 }}
-            />
+            <OpenButton onOpen={() => setOpen(true)} />
           )}
-          <Typography>APPBAR</Typography>
+          <Typography sx={{ marginLeft: 1 }}>APPBAR</Typography>
         </Toolbar>
       </SlidingAppBar>
 
@@ -61,7 +55,7 @@ export const Left = () => {
         drawerWidth={width}
       >
         <Toolbar variant='dense' />
-        <Typography sx={{ padding: 1 }}>{text}</Typography>
+        <Typography sx={{ padding: 2 }}>{text}</Typography>
       </SlidingContent>
 
       {/* Sidebar. */}
@@ -75,7 +69,7 @@ export const Left = () => {
         <Toolbar
           disableGutters
           variant='dense'
-          sx={{ marginLeft: 1, marginRight: 1 }}
+          sx={{ marginLeft: 2, marginRight: 1 }}
         >
           <Typography>HEADER</Typography>
           <Box sx={{ flex: 1 }} />
@@ -85,7 +79,7 @@ export const Left = () => {
           />
         </Toolbar>
         <Divider />
-        <Typography sx={{ padding: 1 }}>SIDEBAR</Typography>
+        <Typography sx={{ padding: 2 }}>SIDEBAR</Typography>
       </SlidingDrawer>
     </FullScreen>
   );
@@ -105,10 +99,7 @@ export const Right = () => {
         <Toolbar
           disableGutters
           variant='dense'
-          sx={{
-            marginLeft: 1,
-            marginRight: 1
-          }}
+          sx={{ marginLeft: 2, marginRight: 1 }}
         >
           <Typography>APPBAR</Typography>
           <Box sx={{ flex: 1 }} />
@@ -116,7 +107,6 @@ export const Right = () => {
             <OpenButton
               direction='right'
               onOpen={() => setOpen(true)}
-              sx={{ marginLeft: 1 }}
             />
           )}
         </Toolbar>
@@ -129,7 +119,7 @@ export const Right = () => {
         drawerWidth={width}
       >
         <Toolbar variant='dense' />
-        <Typography sx={{ padding: 1 }}>{text}</Typography>
+        <Typography sx={{ padding: 2 }}>{text}</Typography>
       </SlidingContent>
 
       {/* Sidebar. */}
@@ -149,10 +139,10 @@ export const Right = () => {
             direction='right'
             onClose={() => setOpen(false)}
           />
-          <Typography>HEADER</Typography>
+          <Typography sx={{ marginLeft: 1 }}>HEADER</Typography>
         </Toolbar>
         <Divider />
-        <Typography sx={{ padding: 1 }}>SIDEBAR</Typography>
+        <Typography sx={{ padding: 2 }}>SIDEBAR</Typography>
       </SlidingDrawer>
     </FullScreen>
   );
