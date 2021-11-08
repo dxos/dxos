@@ -126,13 +126,10 @@ export const SharingDialog = ({
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
 
   const handleCreateInvitation = async () => {
-    // Called when otherside joins the invitation party.
+    // Called when other side joins the invitation party.
     const secretProvider = () => {
       pendingInvitation.pin = generatePasscode();
-      setInvitations(invitations => {
-        return [...invitations];
-      });
-
+      setInvitations(invitations => [...invitations]);
       return Promise.resolve(Buffer.from(pendingInvitation.pin));
     };
 
@@ -146,7 +143,7 @@ export const SharingDialog = ({
 
     const pendingInvitation: PendingInvitation = {
       invitationCode: encodeInvitation(invitation),
-      pin: undefined
+      pin: undefined // Generated above.
     };
 
     setInvitations(invitations => [...invitations, pendingInvitation]);
