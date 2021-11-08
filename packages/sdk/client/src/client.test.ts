@@ -5,10 +5,10 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
 
 import { Client } from './client';
-import { waitForCondition } from '@dxos/async';
 
 test('initialize and destroy in a reasonable time', async () => {
   const client = new Client();
@@ -35,7 +35,7 @@ test('initialize', async () => {
   //   On test close: A worker process has failed to exit gracefully and has been force exited.
   await client.halo.createProfile({ username: 'test-user' });
 
-  await waitForCondition(() => client.halo.hasProfile())
+  await waitForCondition(() => client.halo.hasProfile());
   expect(client.halo.profile).toBeDefined();
 
   await client.destroy();
@@ -68,7 +68,7 @@ test('persistent storage', async () => {
     await client.initialize();
 
     await client.halo.createProfile({ username: 'test-user' });
-    await waitForCondition(() => client.halo.hasProfile())
+    await waitForCondition(() => client.halo.hasProfile());
 
     expect(client.halo.profile).toBeDefined();
 
@@ -78,7 +78,7 @@ test('persistent storage', async () => {
   {
     const client = new Client(config);
     await client.initialize();
-    await waitForCondition(() => client.halo.hasProfile())
+    await waitForCondition(() => client.halo.hasProfile());
 
     expect(client.halo.profile).toBeDefined();
     await client.destroy();
@@ -90,10 +90,10 @@ test('creating profile twice throws an error', async () => {
   await client.initialize();
 
   await client.halo.createProfile({ username: 'test-user' });
-  await waitForCondition(() => client.halo.hasProfile())
+  await waitForCondition(() => client.halo.hasProfile());
 
   await expect(client.halo.createProfile({ username: 'test-user' })).rejects.toThrow();
-  await waitForCondition(() => client.halo.hasProfile())
+  await waitForCondition(() => client.halo.hasProfile());
 
   await client.destroy();
 });
