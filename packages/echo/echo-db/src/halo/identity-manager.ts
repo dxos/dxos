@@ -41,12 +41,13 @@ export class IdentityManager {
     return this._identity;
   }
 
-  get initialized () {
+  get initialized (): boolean {
     const haloParty = this._identity.halo;
-    return haloParty !== undefined && 
-      haloParty!.memberKeys.length &&
-      haloParty!.identityGenesis &&
-      this._identity.deviceKeyChain;
+    return haloParty !== undefined &&
+      haloParty.isOpen && 
+      !!haloParty!.memberKeys.length &&
+      !!haloParty!.identityGenesis &&
+      !!this._identity.deviceKeyChain;
   }
 
   private async _initialize (halo: PartyInternal) {

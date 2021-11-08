@@ -40,6 +40,14 @@ test('initialize', async () => {
   await client.destroy();
 });
 
+test('initialize and open echo', async () => {
+  const client = new Client();
+  await client.initialize();
+  await client.halo.createProfile({ username: 'test-user' });
+  await client.echo.open();
+  await client.destroy();
+}).timeout(200);
+
 test('creating profile returns the profile', async () => {
   const client = new Client();
   await client.initialize();

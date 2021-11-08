@@ -7,6 +7,7 @@ import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 import { createServiceBundle } from '@dxos/rpc';
+import { SubscriptionGroup } from '@dxos/util';
 
 import { DevtoolsServiceDependencies } from '.';
 import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
@@ -107,11 +108,14 @@ export class ClientServiceHost implements ClientServiceProvider {
             return resultSetToStream(this._echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
           } else {
             return new Stream(({ next }) => {
-              this._echo.halo.identityReady.on(() => {
+              const subGroup = new SubscriptionGroup();
+              subGroup.push(this._echo.halo.identityReady.on(() => {
                 const resultSet = this._echo.halo.queryContacts();
                 next({ contacts: resultSet.value });
-                resultSet.update.on(() => next({ contacts: resultSet.value }));
-              });
+                subGroup.push(resultSet.update.on(() => next({ contacts: resultSet.value })));
+              }));
+
+              return () => subGroup.unsubscribe();
             });
           }
         }

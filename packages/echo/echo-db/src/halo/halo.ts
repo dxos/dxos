@@ -72,7 +72,7 @@ export class HALO {
    * Whether the current identity manager has been initialized.
    */
   get isInitialized (): boolean {
-    return this.identity.halo !== undefined;
+    return this._identityManager.initialized;
   }
 
   /**
