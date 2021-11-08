@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import React from 'react';
+
 import {
   Box,
   Button,
@@ -14,7 +16,6 @@ import {
   Typography,
   styled
 } from '@mui/material';
-import React from 'react';
 
 import { CopyToClipboard } from '@dxos/react-components';
 
