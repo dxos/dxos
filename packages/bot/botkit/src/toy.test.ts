@@ -17,6 +17,8 @@ describe('In-Memory', () => {
   it('Spawns a bot', async () => {
     const [agentPort, botControllerPort] = createLinkedPorts();
 
+    let botInitialized = false;
+
     const agent = new BotFactoryAgent(agentPort);
     const botFactory = new BotFactory(() => {
       const [botHandlePort, botPort] = createLinkedPorts();
@@ -26,8 +28,7 @@ describe('In-Memory', () => {
           return {};
         },
         Command: async (request) => {
-          commandReceived = request.command;
-          return {};
+          return { response: request.command };
         }
       });
       void bot.open();
@@ -41,9 +42,6 @@ describe('In-Memory', () => {
       agent.start()
     ]);
 
-    let botInitialized = false;
-    let commandReceived: Uint8Array | undefined;
-
     const { id: botId } = await agent.botFactory.SpawnBot({});
     expect(botId).toBeDefined();
 
@@ -53,9 +51,9 @@ describe('In-Memory', () => {
     expect(botInitialized).toBe(true);
 
     const command = PublicKey.random().asUint8Array();
-    await agent.botFactory.SendCommand({ botId, command });
+    const repsonse = await agent.botFactory.SendCommand({ botId, command });
 
-    expect(commandReceived).toBeDefined();
-    expect(Buffer.from(command).equals(Buffer.from(commandReceived!))).toBe(true);
+    expect(repsonse.response).toBeDefined();
+    expect(Buffer.from(command).equals(Buffer.from(repsonse.response!))).toBe(true);
   });
 });
