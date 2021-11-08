@@ -31,7 +31,9 @@ describe('In-Memory', () => {
           return { response: request.command };
         }
       });
+
       void bot.open();
+
       return new BotHandle(botHandlePort);
     });
 
