@@ -2,13 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useState } from 'react';
+
 import {
   QrCode2 as QRCodeIcon,
   Clear as CancelIcon
 } from '@mui/icons-material';
 import { Button, IconButton, Popover, Typography } from '@mui/material';
 import { Box } from '@mui/system';
-import React, { useState } from 'react';
 
 import { SecretProvider, generatePasscode } from '@dxos/credentials';
 import { InvitationDescriptor, InvitationOptions, PartyMember } from '@dxos/echo-db';
@@ -126,6 +127,8 @@ export const SharingDialog = ({
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
 
   const handleCreateInvitation = async () => {
+    let pendingInvitation: PendingInvitation; // eslint-disable-line prefer-const
+
     // Called when other side joins the invitation party.
     const secretProvider = () => {
       pendingInvitation.pin = generatePasscode();
@@ -141,7 +144,7 @@ export const SharingDialog = ({
       }
     }});
 
-    const pendingInvitation: PendingInvitation = {
+    pendingInvitation = {
       invitationCode: encodeInvitation(invitation),
       pin: undefined // Generated above.
     };

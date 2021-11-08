@@ -2,6 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import React from 'react';
+import hash from 'string-hash';
+
 import {
   // Sport.
   SportsTennis as TennisIcon,
@@ -25,11 +28,9 @@ import {
   // Things.
   Agriculture as FarmIcon,
   LocalFlorist as FlowerIcon,
-  BeachAccess as Umbrella,
+  BeachAccess as Umbrella
 } from '@mui/icons-material';
 import { Box, colors } from '@mui/material';
-import React from 'react';
-import hash from 'string-hash';
 
 // https://mui.com/components/material-icons/
 const hashIcons = [
@@ -79,7 +80,7 @@ const sizes = {
   'large': {
     width: 32,
     height: 32
-  },
+  }
 };
 
 /**
