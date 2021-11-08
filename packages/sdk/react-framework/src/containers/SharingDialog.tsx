@@ -113,7 +113,6 @@ export interface SharingDialogProps {
  * Reusable sharing logic for inviting to a regular party and to a HALO party.
  * Not exported for the end user.
  * See PartySharingDialog and DeviceSharingDialog.
- * @param partyKey - The party key to invite to. Not applicable for HALO invitations.
  */
 export const SharingDialog = ({
   open,
@@ -127,6 +126,7 @@ export const SharingDialog = ({
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
 
   const handleCreateInvitation = async () => {
+    // Called when otherside joins the invitation party.
     const secretProvider = () => {
       pendingInvitation.pin = generatePasscode();
       setInvitations(invitations => {
@@ -138,6 +138,7 @@ export const SharingDialog = ({
 
     const invitation = await onShare({ secretProvider, options: {
       onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
+        // Remove the pending invitation.
         setInvitations(invitations => invitations
           .filter(invitation => invitation.invitationCode !== pendingInvitation.invitationCode));
       }
@@ -148,7 +149,7 @@ export const SharingDialog = ({
       pin: undefined
     };
 
-    setInvitations([...invitations, pendingInvitation]);
+    setInvitations(invitations => [...invitations, pendingInvitation]);
   };
 
   return (
