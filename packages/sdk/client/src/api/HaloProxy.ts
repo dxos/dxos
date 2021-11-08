@@ -62,7 +62,7 @@ export class HaloProxy {
    */
   async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}): Promise<Profile> {
     this._profile = await this._serviceProvider.services.ProfileService.CreateProfile({ publicKey, secretKey, username });
-    return this._profile
+    return this._profile;
   }
 
   /**
