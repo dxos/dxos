@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import expect from 'expect';
 import { screen, render } from '@testing-library/react';
+import expect from 'expect';
 // code import '@testing-library/jest-dom/extend-expect';
 import React from 'react';
 

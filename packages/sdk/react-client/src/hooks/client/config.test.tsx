@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import expect from 'expect';
-
 import { renderHook } from '@testing-library/react-hooks';
+import expect from 'expect';
 import React from 'react';
 
 import { Client } from '@dxos/client';
