@@ -21,27 +21,38 @@ export class HaloProxy {
 
   constructor (private readonly _serviceProvider: ClientServiceProvider) {}
 
+  toString () {
+    return `HaloProxy(${this._profile?.publicKey})`;
+  }
+
   /**
    * User profile info.
-   */
+  */
+  get profile (): Profile | undefined {
+    return this._profile;
+  }
+
+  /**
+   * @deprecated Use `profile` instead.
+  */
   getProfile (): Profile | undefined {
     return this._profile;
   }
 
   hasProfile (): boolean {
-    return !!this.getProfile();
+    return !!this.profile;
+  }
+
+  /**
+   * Reset the identity and delete all key records.
+  */
+  async reset () {
+    await this._serviceProvider.services.ProfileService.Reset();
   }
 
   // TODO(burdon): Should be part of profile object. Or use standard Result object.
   subscribeToProfile (cb: () => void): () => void {
     return this._profileChanged.on(cb);
-  }
-
-  /**
-   * Query for contacts. Contacts represent member keys across all known Parties.
-   */
-  queryContacts (): ResultSet<Contact> {
-    return new ResultSet(this._contactsChanged, () => this._contacts);
   }
 
   /**
@@ -58,16 +69,23 @@ export class HaloProxy {
   }
 
   /**
+   * Query for contacts. Contacts represent member keys across all known Parties.
+   */
+  queryContacts (): ResultSet<Contact> {
+    return new ResultSet(this._contactsChanged, () => this._contacts);
+  }
+
+  /**
    * Joins an existing identity HALO from a recovery seed phrase.
    */
-  async recover (seedPhrase: string) {
+  async recoverProfile (seedPhrase: string) {
     await this._serviceProvider.echo.halo.recover(seedPhrase);
   }
 
   /**
    * Joins an existing identity HALO by invitation.
    */
-  async join (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
+  async acceptInvitation (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
     return this._serviceProvider.echo.halo.join(invitationDescriptor, secretProvider);
   }
 
@@ -76,13 +94,6 @@ export class HaloProxy {
    */
   async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions) {
     return this._serviceProvider.echo.halo.createInvitation(authenticationDetails, options);
-  }
-
-  /**
-   * Reset the identity and delete all key records.
-   */
-  async reset () {
-    await this._serviceProvider.services.ProfileService.Reset();
   }
 
   /**
