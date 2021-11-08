@@ -3,6 +3,7 @@
 //
 
 import { renderHook } from '@testing-library/react-hooks';
+import expect from 'expect';
 import React from 'react';
 
 import { Client } from '@dxos/client';
@@ -14,12 +15,12 @@ import { ClientProvider } from '../../containers';
 describe('Config hook', () => {
   const render = () => useConfig();
 
-  test('should throw when used outside a context', () => {
+  it('should throw when used outside a context', () => {
     const { result } = renderHook(render);
     expect(result.error?.message).toBeDefined();
   });
 
-  test('should return default client config when no config is passed in a context', () => {
+  it('should return default client config when no config is passed in a context', () => {
     const client = new Client({});
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
@@ -27,7 +28,7 @@ describe('Config hook', () => {
     expect(Object.entries(result.current).length).toBeGreaterThan(0);
   });
 
-  test('should return custom client config when used properly in a context', () => {
+  it('should return custom client config when used properly in a context', () => {
     const config: ConfigObject = {
       system: {
         storage: {

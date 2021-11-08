@@ -3,6 +3,7 @@
 //
 
 import { renderHook } from '@testing-library/react-hooks';
+import expect from 'expect';
 import React from 'react';
 
 import { Client } from '@dxos/client';
@@ -14,12 +15,12 @@ import { ClientProvider } from '../../containers';
 describe('Client hook', () => {
   const render = () => useClient();
 
-  test('should throw when used outside a context', () => {
+  it('should throw when used outside a context', () => {
     const { result } = renderHook(render);
     expect(result.error?.message).toBeDefined();
   });
 
-  test('should return client when used properly in a context', () => {
+  it('should return client when used properly in a context', () => {
     const config: defs.Config = {
       system: {
         storage: {
