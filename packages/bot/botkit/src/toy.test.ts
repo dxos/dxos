@@ -25,7 +25,6 @@ describe('In-Memory', () => {
       const bot = new InMemoryCustomizableBot(botPort, {
         Initialize: async () => {
           botInitialized = true;
-          return {};
         },
         Command: async (request) => {
           return { response: request.command };
@@ -47,7 +46,7 @@ describe('In-Memory', () => {
     const { id: botId } = await agent.botFactory.SpawnBot({});
     expect(botId).toBeDefined();
 
-    const { bots } = await agent.botFactory.GetBots({});
+    const { bots } = await agent.botFactory.GetBots();
     expect(bots).toHaveLength(1);
     expect(bots![0].status).toBe(Bot.Status.RUNNING);
     expect(botInitialized).toBe(true);

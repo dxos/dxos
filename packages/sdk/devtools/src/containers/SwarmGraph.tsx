@@ -62,7 +62,7 @@ const Signal = () => {
   const [selectedTopic, setSelectedTopic] = useState('');
   const [peers, setPeers] = useState<PeerInfo[]>([]);
 
-  const networkTopics = useStream(() => devtoolsHost.SubscribeToNetworkTopics({}));
+  const networkTopics = useStream(() => devtoolsHost.SubscribeToNetworkTopics());
 
   useAsyncEffect(async () => {
     if (!selectedTopic && !PublicKey.isPublicKey(selectedTopic)) {

@@ -60,7 +60,8 @@ export class Stream<T> {
     const disposeCb = producer({
       next: msg => {
         if (this._isClosed) {
-          throw new Error('Stream is closed.');
+          console.warn('Stream is closed, dropping message.');
+          return;
         }
 
         if (this._messageHandler) {

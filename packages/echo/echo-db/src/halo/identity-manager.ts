@@ -41,8 +41,13 @@ export class IdentityManager {
     return this._identity;
   }
 
-  get initialized () {
-    return this._identity.halo !== undefined;
+  get initialized (): boolean {
+    const haloParty = this._identity.halo;
+    return haloParty !== undefined &&
+      haloParty.isOpen &&
+      !!haloParty!.memberKeys.length &&
+      !!haloParty!.identityGenesis &&
+      !!this._identity.deviceKeyChain;
   }
 
   private async _initialize (halo: PartyInternal) {
@@ -54,11 +59,7 @@ export class IdentityManager {
     this._identity.setHalo(haloParty);
 
     // Wait for the minimum set of keys and messages we need for proper function.
-    await waitForCondition(() =>
-      haloParty!.memberKeys.length &&
-      haloParty!.identityGenesis &&
-      this._identity.deviceKeyChain
-    );
+    await waitForCondition(() => this.initialized);
 
     log('HALO initialized.');
     this.ready.emit();
