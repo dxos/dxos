@@ -6,11 +6,13 @@ import assert from 'assert';
 import faker from 'faker';
 import React, { useState } from 'react';
 
-import AddIcon from '@mui/icons-material/Add';
-import GraphIcon from '@mui/icons-material/BubbleChart';
-import ListIcon from '@mui/icons-material/Reorder';
-import CardIcon from '@mui/icons-material/ViewComfy';
-import GridIcon from '@mui/icons-material/ViewModule';
+import {
+  Add as AddIcon,
+  BubbleChart as GraphIcon,
+  Reorder as ListIcon,
+  ViewComfy as CardIcon,
+  ViewModule as GridIcon
+} from '@mui/icons-material';
 import {
   Button,
   createTheme,
@@ -35,7 +37,6 @@ import {
   ItemDialog,
   graphSelector
 } from '../../src';
-
 import { createAdapter, TYPES } from './adapter';
 
 // TODO(wittjosiah): Refactor, makeStyles is deprecated.
