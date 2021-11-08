@@ -50,7 +50,7 @@ const HaloInvitationContainer = () => {
     setInvitationCode(encodeInvitation(invitation));
   };
 
-  if (!client.halo.isInitialized) {
+  if (!client.halo.hasProfile()) {
     return null;
   }
 

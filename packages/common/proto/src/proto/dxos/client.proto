@@ -14,8 +14,12 @@ package dxos.client;
 //
 
 message Profile {
-  dxos.halo.keys.PubKey publicKey = 1; 
+  required dxos.halo.keys.PubKey publicKey = 1; 
   string username = 2;
+}
+
+message SubscribeProfileResponse {
+  Profile profile = 1;
 }
 
 message CreateProfileRequest {
@@ -52,7 +56,7 @@ message Contacts {
 }
 
 service ProfileService {
-  rpc SubscribeProfile (google.protobuf.Empty) returns (stream Profile);
+  rpc SubscribeProfile (google.protobuf.Empty) returns (stream SubscribeProfileResponse);
   rpc CreateProfile(CreateProfileRequest) returns (Profile);
   rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
     

@@ -93,7 +93,7 @@ export class HaloProxy {
   open () {
     const profileStream = this._serviceProvider.services.ProfileService.SubscribeProfile();
     profileStream.subscribe(data => {
-      this._profile = data;
+      this._profile = data.profile;
       this._profileChanged.emit();
     }, () => {});
     this._subscriptions.push(() => profileStream.close());

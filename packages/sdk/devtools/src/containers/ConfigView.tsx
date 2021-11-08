@@ -14,7 +14,7 @@ export const ConfigView = () => {
 
   useEffect(() => {
     void (async () => {
-      const config = await devtoolsHost.GetConfig({});
+      const config = await devtoolsHost.GetConfig();
       config.config && setConfig(JSON.parse(config.config));
     })();
   }, []);

@@ -4,7 +4,6 @@
 
 import { BotHandle } from '../bot-handle';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
-import type { Empty } from '../proto/gen/google/protobuf';
 
 /**
  * Handles creation and managing bots.
@@ -14,7 +13,7 @@ export class BotFactory implements BotFactoryService {
 
   constructor (private readonly _botFactory: () => BotHandle) {}
 
-  async GetBots (request: Empty) {
+  async GetBots () {
     return {
       bots: this._bots.map(handle => handle.bot)
     };
@@ -29,16 +28,14 @@ export class BotFactory implements BotFactoryService {
   }
 
   async Start (request: Bot) {
-    return {};
+    return request;
   }
 
   async Stop (request: Bot) {
-    return {};
+    return request;
   }
 
-  async Remove (request: Bot) {
-    return {};
-  }
+  async Remove (request: Bot) {}
 
   async SendCommand (request: SendCommandRequest) {
     if (request.botId) {
