@@ -55,7 +55,8 @@
   },
   "toolchain": {
     "testingFramework": "mocha",
-    "jsdom": true
+    "jsdom": true,
+    "forceCloseTests": true
   },
   "publishConfig": {
     "access": "public"
