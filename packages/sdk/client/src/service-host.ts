@@ -80,8 +80,12 @@ export class ClientServiceHost implements ClientServiceProvider {
           await this._echo.reset();
         },
         SubscribeProfile: () => new Stream(({ next }) => {
-          next({ profile: this._echo.halo.getProfile() });
-          return this._echo.halo.subscribeToProfile(() => next({ profile: this._echo.halo.getProfile() }));
+          const emitNext = () => next({
+            profile: this._echo.halo.isInitialized && this._echo.halo.identityReady ? this._echo.halo.getProfile() : undefined,
+          });
+          
+          emitNext()
+          return this._echo.halo.subscribeToProfile(emitNext);
         }),
         CreateProfile: async (opts) => {
           return this._echo.halo.createProfile(opts);
