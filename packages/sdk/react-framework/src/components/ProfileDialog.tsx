@@ -14,12 +14,13 @@ export interface ProfileDialogProps {
   open: boolean;
   onCreate: ({ username }: { username: string }) => void;
   onCancel?: () => void;
+  onJoinHalo?: () => void;
 }
 
 /**
  * @deprecated Replace with RegistrationDialog.
  */
-export const ProfileDialog = ({ open, onCreate, onCancel }: ProfileDialogProps) => {
+export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileDialogProps) => {
   const [username, setUsername] = useState('');
 
   const handleUpdate = () => {
@@ -59,6 +60,14 @@ export const ProfileDialog = ({ open, onCreate, onCancel }: ProfileDialogProps) 
           >
             Cancel
           </Button>
+          {onJoinHalo && (
+            <Button
+              onClick={onJoinHalo}
+              color='secondary'
+            >
+              Join HALO
+            </Button>
+          )}
           <Button
             color='primary'
             disabled={!username}

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-framework",
-  "version": "2.16.10",
+  "version": "2.16.11",
   "description": "Application framework components",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -19,14 +19,14 @@
     "test": "toolchain test"
   },
   "dependencies": {
-    "assert": "^2.0.0",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "assert": "^2.0.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.isplainobject": "^4.0.6",
+    "mobile-detect": "~1.4.5",
     "react-copy-to-clipboard": "~5.0.3",
-    "url-join": "^4.0.1",
-    "mobile-detect": "~1.4.5"
+    "url-join": "^4.0.1"
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
