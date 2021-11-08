@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Box, Typography, TypographyProps } from '@mui/material';
+import { Box, IconButton, Typography, TypographyProps } from '@mui/material';
 
 import { truncateString } from '@dxos/debug';
 
@@ -40,7 +40,9 @@ export const CopyText = ({ value, length, sx, onCopyToClipboard, ...rest }: Copy
         <>
           <Box sx={{ flex: 1 }} />
           <Box sx={{ flexShrink: 0, width: 40, marginLeft: '2px' }}>
-            <CopyToClipboard text={value} onCopy={value => console.log(value)} />
+            <IconButton>
+              <CopyToClipboard text={value} />
+            </IconButton>
           </Box>
         </>
       )}

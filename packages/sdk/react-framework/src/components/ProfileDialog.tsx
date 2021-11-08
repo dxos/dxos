@@ -37,7 +37,7 @@ export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileD
     <Dialog
       open={open}
       title='Create Profile'
-      content={() => (
+      content={(
         <Box sx={{ paddingTop: 1 }}>
           <TextField
             autoFocus
@@ -52,7 +52,7 @@ export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileD
           />
         </Box>
       )}
-      actions={() => (
+      actions={(
         <>
           <Button
             onClick={handleCancel}

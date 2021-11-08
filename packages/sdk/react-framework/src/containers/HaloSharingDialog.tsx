@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 
-import { SharingDialog, SharingDialogProps } from './common';
+import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
 /**
  * Manages the workflow for inviting a new device to a HALO party.
@@ -19,6 +19,10 @@ export const HaloSharingDialog = (props: Omit<SharingDialogProps, 'onShare' | 't
   };
 
   return (
-    <SharingDialog {...props} title='Halo Sharing' onShare={handleShare} />
+    <SharingDialog
+      {...props}
+      title='Halo Sharing'
+      onShare={handleShare}
+    />
   );
 };
