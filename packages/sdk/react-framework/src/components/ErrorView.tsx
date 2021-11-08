@@ -5,21 +5,19 @@
 import React from 'react';
 
 import {
-  ErrorOutline as ErrorIcon
-} from '@mui/icons-material';
-import {
   Button,
   Dialog,
   DialogActions,
   DialogContent,
+  DialogTitle,
+  IconButton,
   Link,
   Toolbar,
   Typography,
   styled
 } from '@mui/material';
 
-import { CopyToClipboard } from './CopyToClipboard';
-import { DialogHeading } from './DialogHeading';
+import { CopyToClipboard } from '@dxos/react-components';
 
 const DEFAULT_TITLE = 'Error';
 const DEFAULT_ISSUE_LINK = 'https://github.com/dxos/sdk/issues/new';
@@ -59,7 +57,9 @@ export const ErrorView = ({
 
   return (
     <Dialog open fullWidth maxWidth='sm'>
-      <DialogHeading title={title} icon={ErrorIcon} />
+      <DialogTitle>
+        {title}
+      </DialogTitle>
       <DialogContent>
         {!isDev && (
           <Typography>Something went wrong that requires the app to be reloaded.</Typography>
@@ -74,7 +74,9 @@ export const ErrorView = ({
             <Toolbar variant='dense' disableGutters sx={{ padding: 0.5 }}>
               <Typography>Context</Typography>
               <div style={{ display: 'flex', flex: 1 }} />
-              <CopyToClipboard text={stack} />
+              <IconButton>
+                <CopyToClipboard text={stack} />
+              </IconButton>
             </Toolbar>
             <Code>
               {JSON.stringify(context, undefined, 2)}

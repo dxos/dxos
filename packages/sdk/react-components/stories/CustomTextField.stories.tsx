@@ -28,6 +28,10 @@ export const Primary = () => {
         <CustomTextField
           placeholder='Enter title'
         />
+        <CustomTextField
+          placeholder='Click to edit'
+          clickToEdit
+        />
       </Box>
     </Container>
   );
