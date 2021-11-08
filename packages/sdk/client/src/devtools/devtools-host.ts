@@ -35,7 +35,6 @@ export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events:
     },
     ResetStorage: async () => {
       await resetStorage(context);
-      return {};
     },
     EnableDebugLogging: async (request) => {
       enableDebugLogging(context, request);

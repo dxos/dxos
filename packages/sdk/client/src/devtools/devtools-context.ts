@@ -10,7 +10,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { Client } from '../client';
-import { ClientServiceHost } from '../service-host';
+import { ClientServiceProvider } from '../service-host';
 
 /**
  * A hook bound to window.__DXOS__.
@@ -19,7 +19,7 @@ export interface DevtoolsHook
 {
   // TODO(marik-d): Reduce to just exporting ClientServices.
 
-  serviceHost: ClientServiceHost,
+  serviceHost: ClientServiceProvider,
   client: Client,
 }
 

@@ -5,6 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
 
 import { Client } from './client';
@@ -34,11 +35,18 @@ test('initialize', async () => {
   //   On test close: A worker process has failed to exit gracefully and has been force exited.
   await client.halo.createProfile({ username: 'test-user' });
 
-  expect(client.halo.hasProfile()).toBeTruthy();
-  expect(client.halo.getProfile()).toBeDefined();
+  expect(client.halo.profile).toBeDefined();
 
   await client.destroy();
 });
+
+test('initialize and open echo', async () => {
+  const client = new Client();
+  await client.initialize();
+  await client.halo.createProfile({ username: 'test-user' });
+  await client.echo.open();
+  await client.destroy();
+}).timeout(200);
 
 test('creating profile returns the profile', async () => {
   const client = new Client();
@@ -68,7 +76,7 @@ test('persistent storage', async () => {
 
     await client.halo.createProfile({ username: 'test-user' });
 
-    expect(client.halo.getProfile()).toBeDefined();
+    expect(client.halo.profile).toBeDefined();
 
     await client.destroy();
   }
@@ -76,8 +84,9 @@ test('persistent storage', async () => {
   {
     const client = new Client(config);
     await client.initialize();
+    await waitForCondition(() => client.halo.hasProfile());
 
-    expect(client.halo.getProfile()).toBeDefined();
+    expect(client.halo.profile).toBeDefined();
     await client.destroy();
   }
 });

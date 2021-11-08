@@ -3,7 +3,7 @@
 //
 
 export interface CreateProfileOptions {
-  publicKey?: Buffer
-  secretKey?: Buffer
+  publicKey?: Uint8Array
+  secretKey?: Uint8Array
   username?: string
 }

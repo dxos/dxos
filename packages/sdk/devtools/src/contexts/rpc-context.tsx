@@ -29,7 +29,7 @@ const WithDevtoolsRpc = ({ port, children } : WithDevtoolsRpcProps) => {
       await client.open();
       open = true;
       setRpcClient(client);
-      const stream = client.rpc.Events({});
+      const stream = client.rpc.Events();
       stream.subscribe((msg) => {
         msg.ready && setReady(true);
       }, () => {});
