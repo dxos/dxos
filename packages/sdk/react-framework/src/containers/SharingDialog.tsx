@@ -41,14 +41,16 @@ const PendingInvitation = ({
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLButtonElement | null>(null);
 
   return (
-    <Box sx={{ display: 'flex', flex: 1, alignItems: 'center' }}>
+    <Box sx={{
+      display: 'flex',
+      flex: 1,
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    }}>
       {invitationCode && (
         <>
-          <HashIcon
-            sx={{ marginRight: 2 }}
-            value={invitationCode}
-          />
-          <Typography>
+          <HashIcon value={invitationCode} />
+          <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2 }}>
             Pending invitation (05:00)
           </Typography>
         </>

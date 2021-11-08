@@ -1855,6 +1855,7 @@ importers:
     dependencies:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
+      '@mui/core': 5.0.0-alpha.53_3b7f7b84f013384d046f72a4522eddf8
       debug: 4.3.1
       lodash.defaultsdeep: 4.6.1
       lodash.isplainobject: 4.0.6
@@ -1900,6 +1901,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
+      '@mui/core': ~5.0.0-alpha.53
       '@mui/icons-material': ^5.0.1
       '@mui/lab': ^5.0.0-alpha.48
       '@mui/material': ^5.0.1
@@ -6130,6 +6132,30 @@ packages:
         optional: true
     resolution:
       integrity: sha512-H/QQwKsr2EqPAnP35DGDpWihk5BOFYGhO52rIHb3XKOfoUjDCrCHBy2kvr3dLWJDmJXr/QzYj3AX10n5XzlaMg==
+  /@mui/core/5.0.0-alpha.53_3b7f7b84f013384d046f72a4522eddf8:
+    dependencies:
+      '@babel/runtime': 7.15.4
+      '@emotion/is-prop-valid': 1.1.0
+      '@mui/utils': 5.0.1_react@17.0.2
+      '@popperjs/core': 2.9.2
+      '@types/react': 17.0.24
+      clsx: 1.1.1
+      prop-types: 15.7.2
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      react-is: 17.0.2
+    dev: false
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.2
+      react-dom: ^17.0.2
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-dTwuhzE0puewJ+/Cw35iAiaBGVcZqVyqspheQHVJuhysSd+o58SONRAiM6MQgI/iFKiJ57HKh+En1MwuC7DMLw==
   /@mui/icons-material/5.0.1_4708d87537568924a83ffdea00ac702d:
     dependencies:
       '@babel/runtime': 7.15.4
