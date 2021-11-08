@@ -138,7 +138,8 @@ export const JoinDialog = ({
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          marginTop: 3 }}
+          marginTop: 3
+        }}
         >
           <Passcode
             length={4}

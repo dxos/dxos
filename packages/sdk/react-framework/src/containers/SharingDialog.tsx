@@ -2,13 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import React, { useState } from 'react';
+
 import {
   QrCode2 as QRCodeIcon,
   Clear as CancelIcon
 } from '@mui/icons-material';
 import { Button, IconButton, Popover, Typography } from '@mui/material';
 import { Box } from '@mui/system';
-import React, { useState } from 'react';
 
 import { SecretProvider, generatePasscode } from '@dxos/credentials';
 import { InvitationDescriptor, InvitationOptions, PartyMember } from '@dxos/echo-db';
@@ -136,13 +137,16 @@ export const SharingDialog = ({
       return Promise.resolve(Buffer.from(pendingInvitation.pin));
     };
 
-    const invitation = await onShare({ secretProvider, options: {
-      onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
+    const invitation = await onShare({
+      secretProvider,
+      options: {
+        onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
         // Remove the pending invitation.
-        setInvitations(invitations => invitations
-          .filter(invitation => invitation.invitationCode !== pendingInvitation.invitationCode));
+          setInvitations(invitations => invitations
+            .filter(invitation => invitation.invitationCode !== pendingInvitation.invitationCode));
+        }
       }
-    }});
+    });
 
     const pendingInvitation: PendingInvitation = {
       invitationCode: encodeInvitation(invitation),

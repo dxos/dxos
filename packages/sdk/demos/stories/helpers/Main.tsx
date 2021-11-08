@@ -35,7 +35,6 @@ import {
   ItemDialog,
   graphSelector
 } from '../../src';
-
 import { createAdapter, TYPES } from './adapter';
 
 // TODO(wittjosiah): Refactor, makeStyles is deprecated.
