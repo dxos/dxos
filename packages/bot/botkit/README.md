@@ -1,0 +1,3 @@
+# @dxos/bot
+
+Bots implementation.

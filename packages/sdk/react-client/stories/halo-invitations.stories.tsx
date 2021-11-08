@@ -8,9 +8,6 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { defaultSecretValidator } from '@dxos/credentials';
-import { InvitationAuthenticator } from '@dxos/echo-db';
-
 import {
   ClientInitializer,
   decodeInvitation,
@@ -43,16 +40,7 @@ const HaloInvitationContainer = () => {
   const [secretProvider, pin, resetPin] = useSecretGenerator();
 
   const handleCreateInvitation = async () => {
-    // TODO(burdon): Remove? Where is this used?
-    // code const authenticator: InvitationAuthenticator = defaultInvitationAuthenticator;
-    const authenticator: InvitationAuthenticator = {
-      secretProvider,
-      secretValidator: defaultSecretValidator // TODO(burdon): Normalize with other invitation methods.
-    };
-
-    // TODO(burdon): Move to client package method.
-    // TODO(burdon): Don't use default (normalize with invitation flow).
-    const invitation = await client.echo.halo.createInvitation(authenticator, {
+    const invitation = await client.createHaloInvitation(secretProvider, {
       onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
         setInvitationCode(undefined);
         resetPin();

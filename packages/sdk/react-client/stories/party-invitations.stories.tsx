@@ -39,7 +39,7 @@ export default {
 /**
  * Creates party and invitations.
  */
-const PartyInviatationContainer = () => {
+const PartyInvitationContainer = () => {
   const client = useClient();
   const [partyKey, setPartyKey] = useState<PublicKey>();
   const [invitationCode, setInvitationCode] = useState<string>();
@@ -178,7 +178,7 @@ const TestApp = () => {
       <Paper>
         <ClientPanel client={client} profile={profile} parties={parties} />
         <Divider />
-        <PartyInviatationContainer />
+        <PartyInvitationContainer />
         <Divider />
         <PartyJoinContainer />
       </Paper>

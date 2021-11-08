@@ -2,23 +2,18 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import { Box, Button, Toolbar, styled } from '@mui/material';
+import { Box, Button, Toolbar } from '@mui/material';
 
-import { PublicKey } from '@dxos/crypto';
-import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient, useParties } from '@dxos/react-client';
+import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, useProfile } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
-  ErrorView,
-  JoinPartyDialog,
-  PartySharingDialog
-} from '../src';
-
-export default {
-  title: 'react-framework/Invitations'
-};
+  HaloSharingDialog, ErrorView,
+  JoinHaloDialog
+} from '../../src';
+import { Column } from '../helpers';
 
 const Parties = () => {
   const parties = useParties();
@@ -36,32 +31,23 @@ const Parties = () => {
 
 const Sender = () => {
   const [open, setOpen] = useState(true);
-  const [partyKey, setPartyKey] = useState<PublicKey>();
-  const client = useClient();
-
-  const handleCreateParty = async () => {
-    const party = await client.echo.createParty();
-    setPartyKey(party.key);
-  };
-
-  useEffect(() => {
-    void handleCreateParty();
-  }, []);
+  const profile = useProfile();
 
   return (
     <Box>
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
-        <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
-      <PartySharingDialog
-        partyKey={partyKey}
+      <HaloSharingDialog
         open={open}
         onClose={() => setOpen(false)}
         modal={false}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
+      </Box>
+      <Box sx={{ padding: 1 }}>
+        <p>{profile?.username}</p>
       </Box>
     </Box>
   );
@@ -69,35 +55,30 @@ const Sender = () => {
 
 const Receiver = () => {
   const [open, setOpen] = useState(true);
+  const profile = useProfile();
 
   return (
     <Box>
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
-      <JoinPartyDialog
+      <JoinHaloDialog
         open={open}
         onClose={() => setOpen(false)}
-        closeOnSuccess={false}
+        closeOnSuccess={true}
         modal={false}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
+      </Box>
+      <Box sx={{ padding: 1 }}>
+        <p>{profile?.username ?? 'Profile not created.'}</p>
       </Box>
     </Box>
   );
 };
 
 // TODO(burdon): Error handling, retry, etc.
-
-const Column = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  overflow: 'hidden',
-  flex: 1,
-  flexShrink: 0,
-  padding: 16
-});
 
 export const Primary = () => {
   return (
@@ -116,11 +97,9 @@ export const Primary = () => {
           </ClientInitializer>
 
           <ClientInitializer>
-            <ProfileInitializer>
-              <Column>
-                <Receiver />
-              </Column>
-            </ProfileInitializer>
+            <Column>
+              <Receiver />
+            </Column>
           </ClientInitializer>
         </Box>
       </ErrorBoundary>

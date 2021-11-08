@@ -82,7 +82,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     const handler = this._handlers[methodName as keyof S];
     assert(handler, `Handler is missing: ${methodName}`);
 
-    const response = await (handler as any)(requestDecoded);
+    const response = await (handler as any).bind(this._handlers)(requestDecoded);
 
     const responseEncoded = responseCodec.encode(response);
 
@@ -99,7 +99,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     const handler = this._handlers[methodName as keyof S];
     assert(handler, `Handler is missing: ${methodName}`);
 
-    const responseStream = (handler as any)(requestDecoded) as Stream<unknown>;
+    const responseStream = (handler as any).bind(this._handlers)(requestDecoded) as Stream<unknown>;
     return new Stream<Uint8Array>(({ next, close }) => {
       responseStream.subscribe(data => next(responseCodec.encode(data)), close);
       return () => responseStream.close();
