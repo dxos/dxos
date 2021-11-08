@@ -39,4 +39,5 @@ export interface ToolchainConfig {
   forceCloseTests?: boolean,
   testingFramework?: 'mocha' | 'jest';
   additionalTestSteps?: string[];
+  jsdom?: boolean,
 }
