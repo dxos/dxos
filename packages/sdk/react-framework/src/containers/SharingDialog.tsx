@@ -29,14 +29,16 @@ type PendingInvitation = {
 }
 
 interface PendingInvitationProps {
-  onCancel: () => void
   invitationCode: string
   pin: string | undefined
+  createUrl: (invitationCode: string) => string
+  onCancel: () => void
 }
 
 const PendingInvitation = ({
   invitationCode,
   pin,
+  createUrl,
   onCancel
 }: PendingInvitationProps) => {
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLButtonElement | null>(null);
@@ -60,7 +62,7 @@ const PendingInvitation = ({
       {invitationCode && !pin && (
         <>
           <IconButton size='small'>
-            <CopyToClipboard text={invitationCode} />
+            <CopyToClipboard text={createUrl(invitationCode)} />
           </IconButton>
           <IconButton
             size='small'
@@ -82,7 +84,7 @@ const PendingInvitation = ({
             onClose={() => setPopoverAnchor(null)}
           >
             <Box sx={{ padding: 1 }}>
-              <QRCode value={invitationCode!} />
+              <QRCode value={createUrl(invitationCode)} />
             </Box>
           </Popover>
         </>
@@ -152,6 +154,9 @@ export const SharingDialog = ({
     setInvitations(invitations => [...invitations, pendingInvitation]);
   };
 
+  // TODO(burdon): By-pass keyhole.
+  const createUrl = (invitationCode: string) => `${window.origin}/#/invitation/${invitationCode}`;
+
   return (
     <Dialog
       open={open}
@@ -176,6 +181,7 @@ export const SharingDialog = ({
                 key={i}
                 invitationCode={invitationCode}
                 pin={pin}
+                createUrl={createUrl}
                 onCancel={() => {
                   invitations.splice(i, 1);
                   setInvitations([...invitations]);

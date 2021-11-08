@@ -73,6 +73,13 @@ export const JoinDialog = ({
     }
   };
 
+  const handleUpdateInvitationCode = (text: string) => {
+    // Parse URL.
+    const index = text.lastIndexOf('/');
+    const invitationCode = text.substring(index + 1);
+    setInvitationCode(invitationCode);
+  }
+
   const handleProcessInvitation = async () => {
     if (!invitationCode.length) {
       return;
@@ -81,7 +88,6 @@ export const JoinDialog = ({
     let invitation;
     try {
       invitation = decodeInvitation(invitationCode);
-      setState(PartyJoinState.AUTHENTICATE);
     } catch (err) {
       setError('Invalid invitation code.');
       setState(PartyJoinState.ERROR);
@@ -92,8 +98,16 @@ export const JoinDialog = ({
       setState(PartyJoinState.AUTHENTICATE);
       await onJoin({ invitation, secretProvider });
     } catch (err: any) {
-      // TODO(burdon): Extract human error (eg, currently "Already connected to swarm").
-      setError(err.responseMessage || err.message);
+      // TODO(burdon): Extract human error (e.g., currently "Already connected to swarm").
+      const parseError = (err: any) => {
+        const messages: {[index: string]: string} = {
+          ERR_EXTENSION_RESPONSE_FAILED: 'Authentication failed.',
+          ERR_GREET_ALREADY_CONNECTED_TO_SWARM: 'Already member of party.'
+        };
+        return messages[err.responseCode];
+      }
+
+      setError(parseError(err) || err.responseMessage || err.message);
       setState(PartyJoinState.ERROR);
       return;
     }
@@ -113,10 +127,10 @@ export const JoinDialog = ({
         fullWidth
         multiline
         variant='standard'
-        placeholder='Copy the invitation code.'
+        placeholder='Copy the invitation code or URL.'
         spellCheck={false}
         value={invitationCode}
-        onChange={(event) => setInvitationCode(event.target.value)}
+        onChange={(event) => handleUpdateInvitationCode(event.target.value)}
         onKeyDown={handleKey('Enter', handleProcessInvitation)}
         rows={6}
       />
