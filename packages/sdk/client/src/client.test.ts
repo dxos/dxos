@@ -35,7 +35,6 @@ test('initialize', async () => {
   //   On test close: A worker process has failed to exit gracefully and has been force exited.
   await client.halo.createProfile({ username: 'test-user' });
 
-  await waitForCondition(() => client.halo.hasProfile());
   expect(client.halo.profile).toBeDefined();
 
   await client.destroy();
@@ -68,7 +67,6 @@ test('persistent storage', async () => {
     await client.initialize();
 
     await client.halo.createProfile({ username: 'test-user' });
-    await waitForCondition(() => client.halo.hasProfile());
 
     expect(client.halo.profile).toBeDefined();
 
@@ -90,10 +88,10 @@ test('creating profile twice throws an error', async () => {
   await client.initialize();
 
   await client.halo.createProfile({ username: 'test-user' });
-  await waitForCondition(() => client.halo.hasProfile());
+  expect(client.halo.hasProfile()).toBeTruthy();
 
   await expect(client.halo.createProfile({ username: 'test-user' })).rejects.toThrow();
-  await waitForCondition(() => client.halo.hasProfile());
+  expect(client.halo.hasProfile()).toBeTruthy();
 
   await client.destroy();
 });

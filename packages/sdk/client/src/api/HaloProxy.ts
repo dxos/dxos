@@ -61,11 +61,8 @@ export class HaloProxy {
    * @returns {ProfileInfo} User profile info.
    */
   async createProfile ({ publicKey, secretKey, username }: CreateProfileOptions = {}): Promise<Profile> {
-    return await this._serviceProvider.services.ProfileService.CreateProfile({
-      username,
-      publicKey,
-      secretKey
-    });
+    this._profile = await this._serviceProvider.services.ProfileService.CreateProfile({ publicKey, secretKey, username });
+    return this._profile
   }
 
   /**
