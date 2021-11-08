@@ -173,7 +173,7 @@ importers:
     specifiers:
       '@dxos/bot-deprecated': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-  ../../packages/bot/bot:
+  ../../packages/bot/botkit:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
@@ -26033,7 +26033,7 @@ packages:
       micromatch: 4.0.4
       semver: 7.3.5
       typescript: 4.3.5
-      webpack: 4.44.2_webpack-cli@4.7.2
+      webpack: 4.44.2
     dev: true
     engines:
       node: '>=10.0.0'
