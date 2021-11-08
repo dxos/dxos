@@ -9,12 +9,13 @@
     ],
     // Have to specify typings explicitly here because fork-ts-checker-webpack-plugin can't find them automatically with PNPM.
     "types": [
-      "jest"
+      "mocha"
     ]
   },
   "include": [
     "src",
-    "stories"
+    "stories",
+    "tests"
   ],
   "references": [
     {
