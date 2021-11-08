@@ -89,8 +89,9 @@ const sizes = {
 export const HashIcon = ({
   value,
   sx,
-  size='medium',
-  ...props }: {
+  size = 'medium',
+  ...props
+}: {
   value: string,
   sx?: any,
   size?: Size
