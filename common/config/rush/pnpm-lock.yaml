@@ -1,178 +1,6 @@
 importers:
   .:
     specifiers: {}
-  ../../packages/bot-deprecated/bot-deprecated:
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
-      '@types/debug': 4.1.5
-      '@types/lodash.defaultsdeep': 4.6.6
-      debug: 4.3.1
-      lodash.defaultsdeep: 4.6.1
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/mocha': 8.2.2
-      expect: 27.0.2
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot-deprecated': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.1
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/mocha': ~8.2.2
-      debug: ^4.1.1
-      expect: ~27.0.2
-      lodash.defaultsdeep: ^4.6.1
-  ../../packages/bot-deprecated/botkit-client-deprecated:
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/debug': link:../../common/debug
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
-      assert: 2.0.0
-      debug: 4.3.1
-      hypercore-crypto: 2.3.0
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot-deprecated': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      assert: ^2.0.0
-      debug: ^4.1.1
-      hypercore-crypto: ^2.3.0
-  ../../packages/bot-deprecated/botkit-deprecated:
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
-      '@dxos/registry-client': link:../../sdk/registry-client
-      '@types/chance': 1.1.1
-      '@types/debug': 4.1.5
-      '@types/download': 6.2.4
-      '@types/fs-extra': 9.0.11
-      '@types/js-yaml': 3.12.6
-      '@types/lodash.defaultsdeep': 4.6.6
-      '@types/lodash.get': 4.4.6
-      '@types/node': 14.14.45
-      '@types/node-fetch': 2.5.10
-      '@types/tar': 4.0.4
-      '@wirelineio/registry-client': 1.1.0-beta.3
-      assert: 2.0.0
-      chance: 1.1.7
-      debug: 4.3.1
-      download: 7.1.0
-      esbuild: 0.11.23
-      fs-extra: 8.1.0
-      js-yaml: 3.14.1
-      lodash.defaults: 4.2.0
-      lodash.defaultsdeep: 4.6.1
-      lodash.get: 4.4.2
-      moment: 2.29.1
-      node-fetch: 2.6.1
-      pkg-up: 3.1.0
-      playwright: 1.11.0
-      read-pkg-up: 7.0.1
-      sodium-universal: 3.0.4
-      tar: 6.1.0
-      tree-kill: 1.2.2
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/mocha': 8.2.2
-      expect: 27.0.2
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/esbuild-plugins': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot-deprecated': workspace:*
-      '@dxos/registry-client': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/chance': ^1.1.0
-      '@types/debug': ^4.1.1
-      '@types/download': ^6.2.4
-      '@types/fs-extra': ^9.0.4
-      '@types/js-yaml': ^3.12.5
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/lodash.get': ^4.4.6
-      '@types/mocha': ~8.2.2
-      '@types/node': ^14.0.9
-      '@types/node-fetch': ^2.5.10
-      '@types/tar': ^4.0.4
-      '@wirelineio/registry-client': ~1.1.0-beta.3
-      assert: ^2.0.0
-      chance: ^1.1.6
-      debug: ^4.1.1
-      download: ^7.1.0
-      esbuild: ^0.11.23
-      expect: ~27.0.2
-      fs-extra: ^8.1.0
-      js-yaml: ^3.13.1
-      lodash.defaults: ^4.2.0
-      lodash.defaultsdeep: ^4.6.1
-      lodash.get: ^4.4.2
-      moment: ^2.24.0
-      node-fetch: ^2.6.0
-      pkg-up: ^3.1.0
-      playwright: ^1.7.0
-      read-pkg-up: ^7.0.1
-      sodium-universal: ~3.0.4
-      tar: ^6.0.5
-      tree-kill: ^1.2.2
-  ../../packages/bot-deprecated/protocol-plugin-bot-deprecated:
-    dependencies:
-      '@dxos/broadcast': link:../../mesh/broadcast
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/protocol': link:../../mesh/protocol
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/jest': 26.0.23
-      '@types/node': 14.14.45
-      '@types/pump': 1.1.1
-      ngraph.generators: 18.0.1
-      pump: 3.0.0
-      wait-for-expect: 3.0.2
-    specifiers:
-      '@dxos/broadcast': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/protocol': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/jest': ^26.0.7
-      '@types/node': ^14.0.9
-      '@types/pump': ^1.1.0
-      ngraph.generators: ^18.0.1
-      pump: ^3.0.0
-      wait-for-expect: ^3.0.2
-  ../../packages/bot-deprecated/test-bot-deprecated:
-    dependencies:
-      '@dxos/bot-deprecated': link:../bot-deprecated
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-    specifiers:
-      '@dxos/bot-deprecated': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
   ../../packages/bot/botkit:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -399,6 +227,178 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
+  ../../packages/deprecated/bot/bot-deprecated:
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/echo-db': link:../../../echo/echo-db
+      '@dxos/network-manager': link:../../../mesh/network-manager
+      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
+      '@types/debug': 4.1.5
+      '@types/lodash.defaultsdeep': 4.6.6
+      debug: 4.3.1
+      lodash.defaultsdeep: 4.6.1
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocol-plugin-bot-deprecated': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/debug': ^4.1.1
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/mocha': ~8.2.2
+      debug: ^4.1.1
+      expect: ~27.0.2
+      lodash.defaultsdeep: ^4.6.1
+  ../../packages/deprecated/bot/botkit-client-deprecated:
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/network-manager': link:../../../mesh/network-manager
+      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
+      assert: 2.0.0
+      debug: 4.3.1
+      hypercore-crypto: 2.3.0
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocol-plugin-bot-deprecated': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      assert: ^2.0.0
+      debug: ^4.1.1
+      hypercore-crypto: ^2.3.0
+  ../../packages/deprecated/bot/botkit-deprecated:
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/esbuild-plugins': link:../../../../toolchains/esbuild-plugins
+      '@dxos/network-manager': link:../../../mesh/network-manager
+      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
+      '@dxos/registry-client': link:../../../sdk/registry-client
+      '@types/chance': 1.1.1
+      '@types/debug': 4.1.5
+      '@types/download': 6.2.4
+      '@types/fs-extra': 9.0.11
+      '@types/js-yaml': 3.12.6
+      '@types/lodash.defaultsdeep': 4.6.6
+      '@types/lodash.get': 4.4.6
+      '@types/node': 14.14.45
+      '@types/node-fetch': 2.5.10
+      '@types/tar': 4.0.4
+      '@wirelineio/registry-client': 1.1.0-beta.3
+      assert: 2.0.0
+      chance: 1.1.7
+      debug: 4.3.1
+      download: 7.1.0
+      esbuild: 0.11.23
+      fs-extra: 8.1.0
+      js-yaml: 3.14.1
+      lodash.defaults: 4.2.0
+      lodash.defaultsdeep: 4.6.1
+      lodash.get: 4.4.2
+      moment: 2.29.1
+      node-fetch: 2.6.1
+      pkg-up: 3.1.0
+      playwright: 1.11.0
+      read-pkg-up: 7.0.1
+      sodium-universal: 3.0.4
+      tar: 6.1.0
+      tree-kill: 1.2.2
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/esbuild-plugins': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocol-plugin-bot-deprecated': workspace:*
+      '@dxos/registry-client': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/chance': ^1.1.0
+      '@types/debug': ^4.1.1
+      '@types/download': ^6.2.4
+      '@types/fs-extra': ^9.0.4
+      '@types/js-yaml': ^3.12.5
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.get': ^4.4.6
+      '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
+      '@types/node-fetch': ^2.5.10
+      '@types/tar': ^4.0.4
+      '@wirelineio/registry-client': ~1.1.0-beta.3
+      assert: ^2.0.0
+      chance: ^1.1.6
+      debug: ^4.1.1
+      download: ^7.1.0
+      esbuild: ^0.11.23
+      expect: ~27.0.2
+      fs-extra: ^8.1.0
+      js-yaml: ^3.13.1
+      lodash.defaults: ^4.2.0
+      lodash.defaultsdeep: ^4.6.1
+      lodash.get: ^4.4.2
+      moment: ^2.24.0
+      node-fetch: ^2.6.0
+      pkg-up: ^3.1.0
+      playwright: ^1.7.0
+      read-pkg-up: ^7.0.1
+      sodium-universal: ~3.0.4
+      tar: ^6.0.5
+      tree-kill: ^1.2.2
+  ../../packages/deprecated/bot/protocol-plugin-bot-deprecated:
+    dependencies:
+      '@dxos/broadcast': link:../../../mesh/broadcast
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/protocol': link:../../../mesh/protocol
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
+      '@types/jest': 26.0.23
+      '@types/node': 14.14.45
+      '@types/pump': 1.1.1
+      ngraph.generators: 18.0.1
+      pump: 3.0.0
+      wait-for-expect: 3.0.2
+    specifiers:
+      '@dxos/broadcast': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/protocol': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
+      '@types/pump': ^1.1.0
+      ngraph.generators: ^18.0.1
+      pump: ^3.0.0
+      wait-for-expect: ^3.0.2
+  ../../packages/deprecated/bot/test-bot-deprecated:
+    dependencies:
+      '@dxos/bot-deprecated': link:../bot-deprecated
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
+    specifiers:
+      '@dxos/bot-deprecated': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
   ../../packages/echo/echo-db:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -758,9 +758,9 @@ importers:
   ../../packages/gravity/gravity-core:
     dependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/bot-deprecated': link:../../bot-deprecated/bot-deprecated
-      '@dxos/botkit-client-deprecated': link:../../bot-deprecated/botkit-client-deprecated
-      '@dxos/botkit-deprecated': link:../../bot-deprecated/botkit-deprecated
+      '@dxos/bot-deprecated': link:../../deprecated/bot/bot-deprecated
+      '@dxos/botkit-client-deprecated': link:../../deprecated/bot/botkit-client-deprecated
+      '@dxos/botkit-deprecated': link:../../deprecated/bot/botkit-deprecated
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../halo/credentials
@@ -768,7 +768,7 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/messenger-model': link:../../echo/messenger-model
-      '@dxos/protocol-plugin-bot-deprecated': link:../../bot-deprecated/protocol-plugin-bot-deprecated
+      '@dxos/protocol-plugin-bot-deprecated': link:../../deprecated/bot/protocol-plugin-bot-deprecated
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/signal': link:../../mesh/signal
       '@types/debug': 4.1.5

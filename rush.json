@@ -742,31 +742,31 @@
 
     {
       "packageName": "@dxos/bot-deprecated",
-      "projectFolder": "packages/bot-deprecated/bot-deprecated",
+      "projectFolder": "packages/deprecated/bot/bot-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/botkit-deprecated",
-      "projectFolder": "packages/bot-deprecated/botkit-deprecated",
+      "projectFolder": "packages/deprecated/bot/botkit-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/botkit-client-deprecated",
-      "projectFolder": "packages/bot-deprecated/botkit-client-deprecated",
+      "projectFolder": "packages/deprecated/bot/botkit-client-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/protocol-plugin-bot-deprecated",
-      "projectFolder": "packages/bot-deprecated/protocol-plugin-bot-deprecated",
+      "projectFolder": "packages/deprecated/bot/protocol-plugin-bot-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
     {
       "packageName": "@dxos/test-bot-deprecated",
-      "projectFolder": "packages/bot-deprecated/test-bot-deprecated",
+      "projectFolder": "packages/deprecated/bot/test-bot-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
