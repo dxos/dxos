@@ -101,7 +101,7 @@ ncu --deep -u '@storybook/*'
 ### Release process
 1. Trigger [Release packages to npm](https://github.com/dxos/protocols/actions/workflows/npm-release.yml) job.
 2. Create a github release.
-    * You can get release notes from the output of the job.
+    * Changelog notes can be created automatically in the Github UI.
 
 ### Updating typescript project references and sort `package.json`
 
