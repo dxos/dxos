@@ -68,8 +68,8 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
 const Signal = () => {
   const classes = useStyles();
   const devtoolsHost = useDevtoolsHost();
-  const status = useStream(() => devtoolsHost.SubscribeToSignalStatus({}));
-  const trace = useStream(() => devtoolsHost.SubscribeToSignalTrace({}));
+  const status = useStream(() => devtoolsHost.SubscribeToSignalStatus());
+  const trace = useStream(() => devtoolsHost.SubscribeToSignalTrace());
 
   if (!status?.servers) {
     return <div> Loading servers statuses... </div>;

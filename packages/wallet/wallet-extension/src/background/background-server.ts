@@ -23,7 +23,7 @@ export class BackgroundServer {
       service,
       handlers: {
         GetProfile: async () => {
-          const profile = this._client.halo.getProfile();
+          const profile = this._client.halo.profile;
           return {
             publicKey: profile?.publicKey.toHex(),
             username: profile?.username
@@ -36,7 +36,7 @@ export class BackgroundServer {
           };
         },
         SignMessage: async request => {
-          const profile = this._client.halo.getProfile();
+          const profile = this._client.halo.profile;
           return {
             publicKey: profile?.publicKey.toHex(),
             username: profile?.username,
@@ -46,8 +46,8 @@ export class BackgroundServer {
         CreateProfile: async request => {
           await this._client.halo.createProfile({ ...createKeyPair(), ...request });
           return {
-            username: this._client.halo.getProfile()?.username,
-            publicKey: this._client.halo.getProfile()?.publicKey.toHex()
+            username: this._client.halo.profile?.username,
+            publicKey: this._client.halo.profile?.publicKey.toHex()
           };
         },
         RestoreProfile: async request => {
@@ -57,8 +57,8 @@ export class BackgroundServer {
           const keyPair = keyPairFromSeedPhrase(request.seedPhrase);
           await this._client.halo.createProfile({ ...keyPair, username: request.username });
           return {
-            username: this._client.halo.getProfile()?.username,
-            publicKey: this._client.halo.getProfile()?.publicKey.toHex()
+            username: this._client.halo.profile?.username,
+            publicKey: this._client.halo.profile?.publicKey.toHex()
           };
         },
         GetParties: async request => {
@@ -100,7 +100,7 @@ export class BackgroundServer {
           }
           const invitation = decodeInvitation(request.invitation);
           try {
-            const joinedParty = await this._client.halo.join(invitation, async () => Buffer.from(request.passcode!));
+            const joinedParty = await this._client.halo.acceptInvitation(invitation, async () => Buffer.from(request.passcode!));
             return {
               partyKey: joinedParty.key.toHex()
             };
