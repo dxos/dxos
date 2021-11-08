@@ -127,6 +127,8 @@ export const SharingDialog = ({
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
 
   const handleCreateInvitation = async () => {
+    let pendingInvitation: PendingInvitation; // eslint-disable-line prefer-const
+
     // Called when otherside joins the invitation party.
     const secretProvider = () => {
       pendingInvitation.pin = generatePasscode();
@@ -148,7 +150,7 @@ export const SharingDialog = ({
       }
     });
 
-    const pendingInvitation: PendingInvitation = {
+    pendingInvitation = {
       invitationCode: encodeInvitation(invitation),
       pin: undefined
     };
