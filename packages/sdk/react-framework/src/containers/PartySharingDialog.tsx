@@ -8,7 +8,7 @@ import React from 'react';
 import type { PublicKey } from '@dxos/crypto';
 import { useClient, useMembers, useParty } from '@dxos/react-client';
 
-import { SharingDialog, SharingDialogProps } from './common';
+import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
 export interface PartySharingDialogProps extends Omit<SharingDialogProps, 'onShare' | 'title' | 'members'> {
   partyKey: PublicKey,
@@ -29,6 +29,11 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
   };
 
   return (
-    <SharingDialog {...props} title='Party Sharing' onShare={handleShare} members={members} />
+    <SharingDialog
+      {...props}
+      title='Party Sharing'
+      onShare={handleShare}
+      members={members}
+    />
   );
 };

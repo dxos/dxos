@@ -9,9 +9,9 @@ import { Box, Button, TextField, Typography } from '@mui/material';
 import type { SecretProvider } from '@dxos/credentials';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { decodeInvitation, useSecretProvider } from '@dxos/react-client';
-import { Dialog, Passcode } from '@dxos/react-components';
+import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
-import { handleKey } from '../../helpers';
+import { handleKey } from '../helpers';
 
 enum PartyJoinState {
   INIT,
@@ -107,7 +107,7 @@ export const JoinDialog = ({
   };
 
   const getDialogProps = (state: PartyJoinState) => {
-    const joinPartyContent = () => (
+    const joinPartyContent = (
       <TextField
         autoFocus
         fullWidth
@@ -122,31 +122,45 @@ export const JoinDialog = ({
       />
     );
 
-    const joinPartyActions = () => (
+    const joinPartyActions = (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
         <Button onClick={handleProcessInvitation}>Process</Button>
       </>
     );
 
-    const authenticateContent = () => (
+    const authenticateContent = (
       <>
-        <Typography variant='body1' gutterBottom>
+        <Typography variant='body1'>
           Enter the PIN.
         </Typography>
-        <Box sx={{ marginTop: 2 }}>
-          <Passcode length={4} onSubmit={value => handleAuthenticate(value)} />
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginTop: 3
+        }}
+        >
+          <Passcode
+            length={4}
+            onSubmit={value => handleAuthenticate(value)}
+          />
+          <HashIcon
+            sx={{ marginLeft: 2 }}
+            size='large'
+            value={invitationCode}
+          />
         </Box>
       </>
     );
 
-    const authenticateActions = () => (
+    const authenticateActions = (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
       </>
     );
 
-    const errorActions = () => (
+    const errorActions = (
       <Button onClick={handleReset}>Retry</Button>
     );
 

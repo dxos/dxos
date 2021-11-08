@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 
-import { JoinDialog, JoinDialogProps } from './common';
+import { JoinDialog, JoinDialogProps } from './JoinDialog';
 
 /**
  * Manages the workflow of joining a Party invitation.
@@ -21,6 +21,10 @@ export const JoinPartyDialog = (props: Omit<JoinDialogProps, 'onJoin' | 'title'>
   };
 
   return (
-    <JoinDialog {...props} title='Join Party' onJoin={handleJoin} />
+    <JoinDialog
+      {...props}
+      title='Join Party'
+      onJoin={handleJoin}
+    />
   );
 };

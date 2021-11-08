@@ -100,10 +100,10 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
         return {
           ...props,
           title: 'Check Name',
-          content: () => (
+          content: (
             <Typography>Value: {value}</Typography>
           ),
-          actions: () => (
+          actions: (
             <>
               <Button onClick={() => setState(TestState.INIT)}>BACK</Button>
               <Button onClick={handleProcessing}>Done</Button>
