@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-components",
-  "version": "2.16.10",
+  "version": "2.16.11",
   "description": "Low-level material components.",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -14,6 +14,7 @@
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",
+    "build:watch": "tsc --watch",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },

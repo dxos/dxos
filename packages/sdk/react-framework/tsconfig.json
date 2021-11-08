@@ -23,7 +23,13 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../client"
+    },
+    {
+      "path": "../../halo/credentials"
     },
     {
       "path": "../../echo/echo-db"

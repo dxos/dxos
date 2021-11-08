@@ -29,7 +29,7 @@ const useStyles = makeStyles(() => ({
 /**
  * Items panel.
  */
-const DebugItemList = ({ items = [] }: {items?: Item<any>[]}) => {
+export const DebugItemList = ({ items = [] }: {items?: Item<any>[]}) => {
   const classes = useStyles();
   if (!items.length) {
     return null;
@@ -78,5 +78,3 @@ const DebugItemList = ({ items = [] }: {items?: Item<any>[]}) => {
     </div>
   );
 };
-
-export default DebugItemList;

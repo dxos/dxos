@@ -46,8 +46,6 @@ const PartySettings = ({ partyKey = undefined, onClose }) => {
       await party.setProperty('title', title);
     } else {
       // Create a new party.
-      // TODO(burdon): Why is the type not inferred by Webstorm? - because react-client is not in typescript.
-      // ISSUE(rzadp): https://github.com/dxos/sdk/issues/319
       // TODO(burdon): Set properties here.
       // ISSUE(rzadp): https://github.com/dxos/echo/issues/312
       const party = await client.echo.createParty({ title });

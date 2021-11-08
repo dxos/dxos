@@ -18,7 +18,7 @@ import { makeStyles } from '@mui/styles';
 
 import { Item } from '@dxos/echo-db';
 
-import ToggleGroup from '../ToggleGroup';
+import { ItemTypeSelector } from './ItemTypeSelector';
 
 const useStyles = makeStyles(theme => ({
   field: {
@@ -48,7 +48,7 @@ interface ItemDialogProps {
 /**
  * Creates a new typed item.
  */
-const ItemDialog = ({
+export const ItemDialog = ({
   open, type: initialType, types, handleCreate, handleClose
 }: ItemDialogProps) => {
   const classes = useStyles();
@@ -69,7 +69,7 @@ const ItemDialog = ({
         <Box m={2} flexDirection='column'>
           {!initialType && (
             <div className={classes.field}>
-              <ToggleGroup types={types} type={type} onChange={type => setType(type)} />
+              <ItemTypeSelector types={types} type={type} onChange={type => setType(type)} />
             </div>
           )}
 
@@ -91,5 +91,3 @@ const ItemDialog = ({
     </Dialog>
   );
 };
-
-export default ItemDialog;

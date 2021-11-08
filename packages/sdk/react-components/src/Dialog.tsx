@@ -6,6 +6,7 @@ import React from 'react';
 
 import {
   Alert as MuiAlert,
+  Box,
   Card,
   CardActions,
   CardContent,
@@ -78,9 +79,11 @@ export const ModalDialog = ({
       <DialogContent dividers={dividers}>
         {render(content)}
       </DialogContent>
-      {processing && (
-        <LinearProgress />
-      )}
+      <Box sx={{ height: 8 }}>
+        {processing && (
+          <LinearProgress />
+        )}
+      </Box>
       {error && (
         <Alert severity='error'>{error}</Alert>
       )}

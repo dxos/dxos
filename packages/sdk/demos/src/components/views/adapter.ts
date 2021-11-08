@@ -6,6 +6,9 @@ import React from 'react';
 
 import { Item } from '@dxos/echo-db';
 
+/**
+ * Adapts item to data structure used by views.
+ */
 export interface ItemAdapter {
   key: (key: any) => string
   primary: (item: Item<any>) => string
