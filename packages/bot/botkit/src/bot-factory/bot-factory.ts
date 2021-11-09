@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-handle';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
@@ -34,12 +36,10 @@ export class BotFactory implements BotFactoryService {
   }
 
   async Stop (request: Bot) {
-    if (request.id) {
-      const bot = this._getBot(request.id);
-      const respone = await bot.rpc.Stop({});
-      return respone;
-    }
-    return {};
+    assert(request.id);
+    const bot = this._getBot(request.id);
+    const respone = await bot.rpc.Stop({});
+    return respone;
   }
 
   async Remove (request: Bot) {
@@ -47,19 +47,20 @@ export class BotFactory implements BotFactoryService {
   }
 
   async SendCommand (request: SendCommandRequest) {
-    if (request.botId) {
-      const bot = this._getBot(request.botId);
-      const respone = await bot.rpc.Command(request);
-      return respone;
-    }
+    assert(request.botId);
+    const bot = this._getBot(request.botId);
+    const respone = await bot.rpc.Command(request);
+    return respone;
+  }
+
+  async Destroy (request: Empty) {
+    await Promise.all(this._bots.map(bot => bot.rpc.Stop({})));
     return {};
   }
 
   private _getBot (botId: string) {
     const bot = this._bots.find(bot => bot.bot.id === botId);
-    if (!bot) {
-      throw new Error('Bot not found');
-    }
+    assert(bot, 'Bot not found');
     return bot;
   }
 }

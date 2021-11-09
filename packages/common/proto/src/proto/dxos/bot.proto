@@ -61,6 +61,8 @@ service BotFactoryService {
   // TODO(dmaretskyi): querying metrics/state.
  
   rpc SendCommand(SendCommandRequest) returns (SendCommandResponse);
+
+  rpc Destroy(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 message InitializeRequest {

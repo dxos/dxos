@@ -28,7 +28,7 @@ describe('In-Memory', () => {
 
       let botInitialized = false;
 
-      const agent = new BotFactoryClient(agentPort);
+      const botFactoryClient = new BotFactoryClient(agentPort);
 
       const botContainer = new InProcessBotContainer(() => {
         return {
@@ -48,25 +48,25 @@ describe('In-Memory', () => {
 
       await Promise.all([
         botController.start(),
-        agent.start()
+        botFactoryClient.start()
       ]);
 
-      const { id: botId } = await agent.botFactory.SpawnBot({});
+      const { id: botId } = await botFactoryClient.botFactory.SpawnBot({});
       expect(botId).toBeDefined();
 
-      const { bots } = await agent.botFactory.GetBots({});
+      const { bots } = await botFactoryClient.botFactory.GetBots({});
       expect(bots).toHaveLength(1);
       expect(bots![0].status).toBe(Bot.Status.RUNNING);
       expect(botInitialized).toBe(true);
 
       const command = PublicKey.random().asUint8Array();
-      const repsonse = await agent.botFactory.SendCommand({ botId, command });
+      const repsonse = await botFactoryClient.botFactory.SendCommand({ botId, command });
 
       expect(repsonse.response).toBeDefined();
       expect(Buffer.from(command).equals(Buffer.from(repsonse.response!))).toBe(true);
 
-      await agent.botFactory.Stop({ id: botId });
-      agent.stop();
+      await botFactoryClient.botFactory.Destroy({});
+      botFactoryClient.stop();
     });
   });
 
@@ -178,8 +178,7 @@ describe('In-Memory', () => {
       const savedText = items[0].model.getProperty('text');
       expect(savedText).toBe(PublicKey.from(text).toString());
 
-      await botFactoryClient.botFactory.Stop({ id });
-
+      await botFactoryClient.botFactory.Destroy({});
       botFactoryClient.stop();
     });
   });
