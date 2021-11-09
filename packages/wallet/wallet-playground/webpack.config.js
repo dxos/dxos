@@ -3,7 +3,10 @@
 //
 
 const path = require('path');
+const webpack = require('webpack');
 const HtmlWebPackPlugin = require( 'html-webpack-plugin' );
+const { ConfigPlugin } = require('@dxos/config/ConfigPlugin');
+
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 module.exports = {
@@ -30,6 +33,12 @@ module.exports = {
       aggregateTimeout: 600
     }
   },
+
+  node: {
+    fs: 'empty',
+    Buffer: false
+  },
+
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
   },
@@ -38,9 +47,16 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
   },
   plugins: [
+    new ConfigPlugin({
+      path: path.resolve(__dirname, 'config'),
+      dynamic: process.env.CONFIG_DYNAMIC
+    }),
     new HtmlWebPackPlugin({
        template: path.resolve( __dirname, 'public/index.html' ),
        filename: 'index.html'
-    })
+    }),
+    new webpack.ProvidePlugin({
+      Buffer: [require.resolve('buffer/'), 'Buffer']
+    }),
  ]
 }

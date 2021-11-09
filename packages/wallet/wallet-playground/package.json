@@ -21,7 +21,12 @@
     "@dxos/wallet-extension": "workspace:*",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "@dxos/client": "workspace:*"
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-framework": "workspace:*",
+    "@dxos/react-components": "workspace:*",
+    "@mui/material": "^5.0.1"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",

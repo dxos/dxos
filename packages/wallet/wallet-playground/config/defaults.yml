@@ -1,0 +1,4 @@
+app:
+  title: "Wallet Playground App"
+system:
+  remote: true

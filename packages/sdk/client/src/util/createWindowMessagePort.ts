@@ -6,7 +6,7 @@ import { RpcPort } from '@dxos/rpc';
 
 import { isNode } from '../platform';
 
-export function createWindowMessagePort (): RpcPort {
+export const createWindowMessagePort = (): RpcPort => {
   if (isNode()) {
     throw new Error('Connecting to wallet extension is not available in Node environment.');
   }

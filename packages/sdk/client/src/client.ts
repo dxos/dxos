@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
 import { Config, defs } from '@dxos/config';
@@ -22,6 +23,8 @@ import { isNode } from './platform';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
 import { createWindowMessagePort } from './util';
+
+const log = debug('dxos:client');
 
 export const defaultConfig: defs.Config = {};
 
@@ -68,9 +71,10 @@ export class Client {
       if (!opts.rpcPort && isNode()) {
         throw new Error('RPC port is required to run client in remote mode on Node environment.');
       }
-
+      log('Creating client in *REMOTE* mode.')
       this._serviceProvider = new ClientServiceProxy(opts.rpcPort ?? createWindowMessagePort());
     } else {
+      log('Creating client in *LOCAL* mode.')
       this._serviceProvider = new ClientServiceHost(this._config);
     }
 
