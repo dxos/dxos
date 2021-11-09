@@ -51,6 +51,9 @@ module.exports = {
       path: path.resolve(__dirname, 'config'),
       dynamic: process.env.CONFIG_DYNAMIC
     }),
+    new webpack.EnvironmentPlugin({
+      DEBUG: '',
+    }),
     new HtmlWebPackPlugin({
        template: path.resolve( __dirname, 'public/index.html' ),
        filename: 'index.html'

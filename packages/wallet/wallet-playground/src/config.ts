@@ -6,6 +6,6 @@ import { Config, Envs, Defaults, Dynamics } from '@dxos/config';
 
 export const initConfig = async () => new Config(
   await Dynamics(),
-  Envs(),
-  Defaults()
+  Defaults(),
+  Envs()
 );

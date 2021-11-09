@@ -66,6 +66,7 @@ export class Client {
     } else {
       this._config = new Config(config);
     }
+    debug.enable(this._config.values.system?.debug ?? process.env.DEBUG ?? '');
 
     if (this._config.values.system?.remote) {
       if (!opts.rpcPort && isNode()) {
