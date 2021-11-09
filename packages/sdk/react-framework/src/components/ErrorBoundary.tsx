@@ -4,7 +4,7 @@
 
 import React, { Component, ErrorInfo } from 'react';
 
-import { ErrorView } from '../components';
+import { ErrorView } from './ErrorView';
 
 /**
  * Root-level error boundary.
@@ -56,7 +56,13 @@ export class ErrorBoundary extends Component<Props, State> {
     const { children, onRestart, onReset } = this.props;
     const { error } = this.state;
     if (error) {
-      return <ErrorView error={error} onRestart={onRestart} onReset={onReset} />;
+      return (
+        <ErrorView
+          error={error}
+          onRestart={onRestart}
+          onReset={onReset}
+        />
+      );
     }
 
     return children;

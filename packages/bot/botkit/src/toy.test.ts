@@ -34,12 +34,11 @@ describe('In-Memory', () => {
         return {
           Initialize: async () => {
             botInitialized = true;
-            return {};
           },
           Command: async (request) => {
             return { response: request.command };
           },
-          Stop: async () => ({})
+          Stop: async () => {}
         };
       });
       const botFactory = new BotFactory(botContainer);
@@ -54,7 +53,7 @@ describe('In-Memory', () => {
       const { id: botId } = await botFactoryClient.botFactory.SpawnBot({});
       expect(botId).toBeDefined();
 
-      const { bots } = await botFactoryClient.botFactory.GetBots({});
+      const { bots } = await botFactoryClient.botFactory.GetBots();
       expect(bots).toHaveLength(1);
       expect(bots![0].status).toBe(Bot.Status.RUNNING);
       expect(botInitialized).toBe(true);
@@ -65,7 +64,7 @@ describe('In-Memory', () => {
       expect(repsonse.response).toBeDefined();
       expect(Buffer.from(command).equals(Buffer.from(repsonse.response!))).toBe(true);
 
-      await botFactoryClient.botFactory.Destroy({});
+      await botFactoryClient.botFactory.Destroy();
       botFactoryClient.stop();
     });
   });
@@ -106,17 +105,10 @@ describe('In-Memory', () => {
               const botSecretProvider: SecretProvider = async () => request.secret as Buffer;
               party = await client.echo.joinParty(invitation, botSecretProvider);
             }
-
-            return {};
           },
           Command: async (request) => {
-            if (!party) {
-              throw new Error('Bot is not initialized');
-            }
-
-            if (!request.command) {
-              throw new Error('No command');
-            }
+            assert(party, 'Bot is not initialized');
+            assert(request.command, 'Command must be provided');
 
             await party.database.createItem({
               model: ObjectModel,
@@ -130,7 +122,6 @@ describe('In-Memory', () => {
           },
           Stop: async () => {
             await client.destroy();
-            return {};
           }
         };
       });
@@ -178,7 +169,7 @@ describe('In-Memory', () => {
       const savedText = items[0].model.getProperty('text');
       expect(savedText).toBe(PublicKey.from(text).toString());
 
-      await botFactoryClient.botFactory.Destroy({});
+      await botFactoryClient.botFactory.Destroy();
       botFactoryClient.stop();
     });
   });

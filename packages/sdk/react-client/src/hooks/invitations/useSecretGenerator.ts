@@ -15,5 +15,5 @@ export const useSecretGenerator = (): [() => Promise<Buffer>, string | undefined
     return Promise.resolve(Buffer.from(pin));
   };
 
-  return [provider, pin, () => setPin('')];
+  return [provider, pin, () => setPin(undefined)];
 };

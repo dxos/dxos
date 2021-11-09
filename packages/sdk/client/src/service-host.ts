@@ -2,17 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 import { createServiceBundle } from '@dxos/rpc';
+import { SubscriptionGroup } from '@dxos/util';
 
 import { DevtoolsServiceDependencies } from '.';
 import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
 import { schema } from './proto/gen';
-import { DataService, PartyService, ProfileService } from './proto/gen/dxos/client';
+import { Contacts, DataService, PartyService, ProfileService } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
+import { resultSetToStream } from './util/subscription';
 
 export interface ClientServices {
   ProfileService: ProfileService;
@@ -28,7 +31,7 @@ export const serviceBundle = createServiceBundle<ClientServices>({
   DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost')
 });
 
-export interface ClientServiceHost {
+export interface ClientServiceProvider {
   services: ClientServices
 
   open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined): Promise<void>
@@ -42,7 +45,7 @@ export interface ClientServiceHost {
   echo: ECHO
 }
 
-export class LocalClientServiceHost implements ClientServiceHost {
+export class ClientServiceHost implements ClientServiceProvider {
   private readonly _echo: ECHO;
 
   private readonly _devtoolsEvents = new DevtoolsHostEvents();
@@ -74,14 +77,19 @@ export class LocalClientServiceHost implements ClientServiceHost {
         GetConfig: () => {
           throw new Error('Not implemented');
         },
-        Reset: () => {
-          throw new Error('Not implemented');
+        Reset: async () => {
+          await this._echo.reset();
         },
-        SubscribeProfile: () => {
-          throw new Error('Not implemented');
-        },
-        CreateProfile: () => {
-          throw new Error('Not implemented');
+        SubscribeProfile: () => new Stream(({ next }) => {
+          const emitNext = () => next({
+            profile: this._echo.halo.isInitialized ? this._echo.halo.getProfile() : undefined
+          });
+
+          emitNext();
+          return this._echo.halo.subscribeToProfile(emitNext);
+        }),
+        CreateProfile: async (opts) => {
+          return this._echo.halo.createProfile(opts);
         },
         RecoverProfile: () => {
           throw new Error('Not implemented');
@@ -96,7 +104,20 @@ export class LocalClientServiceHost implements ClientServiceHost {
           throw new Error('Not implemented');
         },
         SubscribeContacts: () => {
-          throw new Error('Not implemented');
+          if (this._echo.halo.isInitialized) {
+            return resultSetToStream(this._echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
+          } else {
+            return new Stream(({ next }) => {
+              const subGroup = new SubscriptionGroup();
+              subGroup.push(this._echo.halo.identityReady.on(() => {
+                const resultSet = this._echo.halo.queryContacts();
+                next({ contacts: resultSet.value });
+                subGroup.push(resultSet.update.on(() => next({ contacts: resultSet.value })));
+              }));
+
+              return () => subGroup.unsubscribe();
+            });
+          }
         }
       },
       PartyService: {

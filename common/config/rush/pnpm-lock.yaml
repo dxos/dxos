@@ -1,178 +1,6 @@
 importers:
   .:
     specifiers: {}
-  ../../packages/bot-deprecated/bot-deprecated:
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
-      '@types/debug': 4.1.5
-      '@types/lodash.defaultsdeep': 4.6.6
-      debug: 4.3.1
-      lodash.defaultsdeep: 4.6.1
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/mocha': 8.2.2
-      expect: 27.0.2
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot-deprecated': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/debug': ^4.1.1
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/mocha': ~8.2.2
-      debug: ^4.1.1
-      expect: ~27.0.2
-      lodash.defaultsdeep: ^4.6.1
-  ../../packages/bot-deprecated/botkit-client-deprecated:
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/debug': link:../../common/debug
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
-      assert: 2.0.0
-      debug: 4.3.1
-      hypercore-crypto: 2.3.0
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot-deprecated': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      assert: ^2.0.0
-      debug: ^4.1.1
-      hypercore-crypto: ^2.3.0
-  ../../packages/bot-deprecated/botkit-deprecated:
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
-      '@dxos/registry-client': link:../../sdk/registry-client
-      '@types/chance': 1.1.1
-      '@types/debug': 4.1.5
-      '@types/download': 6.2.4
-      '@types/fs-extra': 9.0.11
-      '@types/js-yaml': 3.12.6
-      '@types/lodash.defaultsdeep': 4.6.6
-      '@types/lodash.get': 4.4.6
-      '@types/node': 14.14.45
-      '@types/node-fetch': 2.5.10
-      '@types/tar': 4.0.4
-      '@wirelineio/registry-client': 1.1.0-beta.3
-      assert: 2.0.0
-      chance: 1.1.7
-      debug: 4.3.1
-      download: 7.1.0
-      esbuild: 0.11.23
-      fs-extra: 8.1.0
-      js-yaml: 3.14.1
-      lodash.defaults: 4.2.0
-      lodash.defaultsdeep: 4.6.1
-      lodash.get: 4.4.2
-      moment: 2.29.1
-      node-fetch: 2.6.1
-      pkg-up: 3.1.0
-      playwright: 1.11.0
-      read-pkg-up: 7.0.1
-      sodium-universal: 3.0.4
-      tar: 6.1.0
-      tree-kill: 1.2.2
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/mocha': 8.2.2
-      expect: 27.0.2
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/esbuild-plugins': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocol-plugin-bot-deprecated': workspace:*
-      '@dxos/registry-client': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/chance': ^1.1.0
-      '@types/debug': ^4.1.1
-      '@types/download': ^6.2.4
-      '@types/fs-extra': ^9.0.4
-      '@types/js-yaml': ^3.12.5
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/lodash.get': ^4.4.6
-      '@types/mocha': ~8.2.2
-      '@types/node': ^14.0.9
-      '@types/node-fetch': ^2.5.10
-      '@types/tar': ^4.0.4
-      '@wirelineio/registry-client': ~1.1.0-beta.3
-      assert: ^2.0.0
-      chance: ^1.1.6
-      debug: ^4.1.1
-      download: ^7.1.0
-      esbuild: ^0.11.23
-      expect: ~27.0.2
-      fs-extra: ^8.1.0
-      js-yaml: ^3.13.1
-      lodash.defaults: ^4.2.0
-      lodash.defaultsdeep: ^4.6.1
-      lodash.get: ^4.4.2
-      moment: ^2.24.0
-      node-fetch: ^2.6.0
-      pkg-up: ^3.1.0
-      playwright: ^1.7.0
-      read-pkg-up: ^7.0.1
-      sodium-universal: ~3.0.4
-      tar: ^6.0.5
-      tree-kill: ^1.2.2
-  ../../packages/bot-deprecated/protocol-plugin-bot-deprecated:
-    dependencies:
-      '@dxos/broadcast': link:../../mesh/broadcast
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/protocol': link:../../mesh/protocol
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-      '@types/jest': 26.0.23
-      '@types/node': 14.14.45
-      '@types/pump': 1.1.1
-      ngraph.generators: 18.0.1
-      pump: 3.0.0
-      wait-for-expect: 3.0.2
-    specifiers:
-      '@dxos/broadcast': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/protocol': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
-      '@types/jest': ^26.0.7
-      '@types/node': ^14.0.9
-      '@types/pump': ^1.1.0
-      ngraph.generators: ^18.0.1
-      pump: ^3.0.0
-      wait-for-expect: ^3.0.2
-  ../../packages/bot-deprecated/test-bot-deprecated:
-    dependencies:
-      '@dxos/bot-deprecated': link:../bot-deprecated
-    devDependencies:
-      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
-    specifiers:
-      '@dxos/bot-deprecated': workspace:*
-      '@dxos/toolchain-node-library': workspace:*
   ../../packages/bot/botkit:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -183,18 +11,18 @@ importers:
       base-x: 3.0.9
     devDependencies:
       '@dxos/client': link:../../sdk/client
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/expect': 24.3.0
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
-      '@types/wtfnode': 0.7.0
       assert: 2.0.0
       expect: 27.0.2
-      wtfnode: 0.9.1
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/object-model': workspace:*
@@ -204,11 +32,9 @@ importers:
       '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
-      '@types/wtfnode': ~0.7.0
       assert: ^2.0.0
       base-x: ~3.0.9
       expect: ~27.0.2
-      wtfnode: ~0.9.1
   ../../packages/common/async:
     dependencies:
       '@dxos/debug': link:../debug
@@ -407,6 +233,178 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
+  ../../packages/deprecated/bot/bot-deprecated:
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/echo-db': link:../../../echo/echo-db
+      '@dxos/network-manager': link:../../../mesh/network-manager
+      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
+      '@types/debug': 4.1.5
+      '@types/lodash.defaultsdeep': 4.6.6
+      debug: 4.3.1
+      lodash.defaultsdeep: 4.6.1
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocol-plugin-bot-deprecated': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/debug': ^4.1.1
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/mocha': ~8.2.2
+      debug: ^4.1.1
+      expect: ~27.0.2
+      lodash.defaultsdeep: ^4.6.1
+  ../../packages/deprecated/bot/botkit-client-deprecated:
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/network-manager': link:../../../mesh/network-manager
+      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
+      assert: 2.0.0
+      debug: 4.3.1
+      hypercore-crypto: 2.3.0
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocol-plugin-bot-deprecated': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      assert: ^2.0.0
+      debug: ^4.1.1
+      hypercore-crypto: ^2.3.0
+  ../../packages/deprecated/bot/botkit-deprecated:
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/esbuild-plugins': link:../../../../toolchains/esbuild-plugins
+      '@dxos/network-manager': link:../../../mesh/network-manager
+      '@dxos/protocol-plugin-bot-deprecated': link:../protocol-plugin-bot-deprecated
+      '@dxos/registry-client': link:../../../sdk/registry-client
+      '@types/chance': 1.1.1
+      '@types/debug': 4.1.5
+      '@types/download': 6.2.4
+      '@types/fs-extra': 9.0.11
+      '@types/js-yaml': 3.12.6
+      '@types/lodash.defaultsdeep': 4.6.6
+      '@types/lodash.get': 4.4.6
+      '@types/node': 14.14.45
+      '@types/node-fetch': 2.5.10
+      '@types/tar': 4.0.4
+      '@wirelineio/registry-client': 1.1.0-beta.3
+      assert: 2.0.0
+      chance: 1.1.7
+      debug: 4.3.1
+      download: 7.1.0
+      esbuild: 0.11.23
+      fs-extra: 8.1.0
+      js-yaml: 3.14.1
+      lodash.defaults: 4.2.0
+      lodash.defaultsdeep: 4.6.1
+      lodash.get: 4.4.2
+      moment: 2.29.1
+      node-fetch: 2.6.1
+      pkg-up: 3.1.0
+      playwright: 1.11.0
+      read-pkg-up: 7.0.1
+      sodium-universal: 3.0.4
+      tar: 6.1.0
+      tree-kill: 1.2.2
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/esbuild-plugins': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocol-plugin-bot-deprecated': workspace:*
+      '@dxos/registry-client': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/chance': ^1.1.0
+      '@types/debug': ^4.1.1
+      '@types/download': ^6.2.4
+      '@types/fs-extra': ^9.0.4
+      '@types/js-yaml': ^3.12.5
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.get': ^4.4.6
+      '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
+      '@types/node-fetch': ^2.5.10
+      '@types/tar': ^4.0.4
+      '@wirelineio/registry-client': ~1.1.0-beta.3
+      assert: ^2.0.0
+      chance: ^1.1.6
+      debug: ^4.1.1
+      download: ^7.1.0
+      esbuild: ^0.11.23
+      expect: ~27.0.2
+      fs-extra: ^8.1.0
+      js-yaml: ^3.13.1
+      lodash.defaults: ^4.2.0
+      lodash.defaultsdeep: ^4.6.1
+      lodash.get: ^4.4.2
+      moment: ^2.24.0
+      node-fetch: ^2.6.0
+      pkg-up: ^3.1.0
+      playwright: ^1.7.0
+      read-pkg-up: ^7.0.1
+      sodium-universal: ~3.0.4
+      tar: ^6.0.5
+      tree-kill: ^1.2.2
+  ../../packages/deprecated/bot/protocol-plugin-bot-deprecated:
+    dependencies:
+      '@dxos/broadcast': link:../../../mesh/broadcast
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/protocol': link:../../../mesh/protocol
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
+      '@types/jest': 26.0.23
+      '@types/node': 14.14.45
+      '@types/pump': 1.1.1
+      ngraph.generators: 18.0.1
+      pump: 3.0.0
+      wait-for-expect: 3.0.2
+    specifiers:
+      '@dxos/broadcast': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/protocol': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/jest': ^26.0.7
+      '@types/node': ^14.0.9
+      '@types/pump': ^1.1.0
+      ngraph.generators: ^18.0.1
+      pump: ^3.0.0
+      wait-for-expect: ^3.0.2
+  ../../packages/deprecated/bot/test-bot-deprecated:
+    dependencies:
+      '@dxos/bot-deprecated': link:../bot-deprecated
+    devDependencies:
+      '@dxos/toolchain-node-library': link:../../../../toolchains/toolchain-node-library
+    specifiers:
+      '@dxos/bot-deprecated': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
   ../../packages/echo/echo-db:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -766,9 +764,9 @@ importers:
   ../../packages/gravity/gravity-core:
     dependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/bot-deprecated': link:../../bot-deprecated/bot-deprecated
-      '@dxos/botkit-client-deprecated': link:../../bot-deprecated/botkit-client-deprecated
-      '@dxos/botkit-deprecated': link:../../bot-deprecated/botkit-deprecated
+      '@dxos/bot-deprecated': link:../../deprecated/bot/bot-deprecated
+      '@dxos/botkit-client-deprecated': link:../../deprecated/bot/botkit-client-deprecated
+      '@dxos/botkit-deprecated': link:../../deprecated/bot/botkit-deprecated
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../halo/credentials
@@ -776,7 +774,7 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
       '@dxos/messenger-model': link:../../echo/messenger-model
-      '@dxos/protocol-plugin-bot-deprecated': link:../../bot-deprecated/protocol-plugin-bot-deprecated
+      '@dxos/protocol-plugin-bot-deprecated': link:../../deprecated/bot/protocol-plugin-bot-deprecated
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/signal': link:../../mesh/signal
       '@types/debug': 4.1.5
@@ -1423,6 +1421,7 @@ importers:
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/proto': link:../../common/proto
       '@dxos/rpc': link:../../common/rpc
+      '@dxos/util': link:../../common/util
       '@wirelineio/registry-client': 1.1.0-beta.3
       abstract-leveldown: 7.0.0
       assert: 2.0.0
@@ -1460,6 +1459,7 @@ importers:
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
       '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
@@ -1812,44 +1812,26 @@ importers:
       react-display-name: 0.2.5
       use-subscription: 1.5.1_react@17.0.2
     devDependencies:
-      '@babel/cli': 7.13.16_@babel+core@7.13.16
-      '@babel/core': 7.13.16
-      '@babel/plugin-proposal-class-properties': 7.13.0_@babel+core@7.13.16
-      '@babel/plugin-proposal-export-default-from': 7.12.13_@babel+core@7.13.16
-      '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
-      '@babel/preset-env': 7.14.2_@babel+core@7.13.16
-      '@babel/preset-react': 7.9.4_@babel+core@7.13.16
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@mui/material': 5.0.1_3b7f7b84f013384d046f72a4522eddf8
       '@testing-library/react': 11.2.6_react-dom@17.0.2+react@17.0.2
       '@testing-library/react-hooks': 5.1.2_fc2bb8a5b006d3f25c5f84ea777e678d
-      '@types/jest': 26.0.23
       '@types/level-js': 4.0.1
+      '@types/mocha': 8.2.2
       '@types/node': 14.14.45
       '@types/react': 17.0.24
       '@types/testing-library__jest-dom': 5.9.5
       '@types/use-subscription': 1.0.0
-      babel-jest: 26.6.3_@babel+core@7.13.16
-      babel-loader: 8.2.2_0c9ed85c987bca43d65931123ef87b6c
-      babel-plugin-add-module-exports: 1.0.4
+      expect: 27.0.2
       fork-ts-checker-webpack-plugin: 6.2.7
-      jest: 26.6.3
       level-js: 5.0.2
       react: 17.0.2
       react-docgen-typescript-loader: 3.7.2_typescript@4.3.5+webpack@4.44.2
       react-dom: 17.0.2_react@17.0.2
       react-test-renderer: 17.0.2_react@17.0.2
-      ts-jest: 26.5.6_jest@26.6.3+typescript@4.3.5
       typescript: 4.3.5
       webpack: 4.44.2
     specifiers:
-      '@babel/cli': ^7.0.0
-      '@babel/core': ~7.13.15
-      '@babel/plugin-proposal-class-properties': ^7.12.1
-      '@babel/plugin-proposal-export-default-from': ^7.2.0
-      '@babel/plugin-transform-runtime': ^7.11.5
-      '@babel/preset-env': ^7.12.7
-      '@babel/preset-react': 7.9.4
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
@@ -1863,27 +1845,23 @@ importers:
       '@testing-library/react': ^11.0.4
       '@testing-library/react-hooks': 5.1.2
       '@types/debug': ^4.1.1
-      '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
+      '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/react': ^17.0.24
       '@types/testing-library__jest-dom': ~5.9.5
       '@types/use-subscription': ^1.0.0
       assert: ^2.0.0
-      babel-jest: ^26.6.0
-      babel-loader: ^8.1.0
-      babel-plugin-add-module-exports: ^1.0.4
       base-x: ~3.0.9
       debug: ^4.1.1
+      expect: ~27.0.2
       fork-ts-checker-webpack-plugin: ~6.2.5
-      jest: ^26.6.3
       level-js: ^5.0.2
       react: ^17.0.2
       react-display-name: ^0.2.5
       react-docgen-typescript-loader: ^3.7.2
       react-dom: ^17.0.2
       react-test-renderer: ^17.0.2
-      ts-jest: ^26.5.6
       typescript: ^4.3.5
       use-subscription: ^1.4.1
       webpack: 4.44.2
@@ -1897,6 +1875,7 @@ importers:
       qrcode.react: 1.0.1_react@17.0.2
       react-copy-to-clipboard: 5.0.3_react@17.0.2
       react-json-view: 1.21.3_3b7f7b84f013384d046f72a4522eddf8
+      string-hash: 1.1.3
       url-join: 4.0.1
     devDependencies:
       '@babel/core': 7.13.16
@@ -1907,6 +1886,7 @@ importers:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@emotion/react': 11.4.1_9bfa804cd21315a6b28257b6309f6867
       '@emotion/styled': 11.3.0_7153564620b9f6be3c75efaa2248597b
+      '@mui/core': 5.0.0-alpha.54_3b7f7b84f013384d046f72a4522eddf8
       '@mui/icons-material': 5.0.1_4708d87537568924a83ffdea00ac702d
       '@mui/lab': 5.0.0-alpha.48_e04118610eda033f1ee88460ea4d497a
       '@mui/material': 5.0.1_604b72d74923f30e2e755c544d7c2813
@@ -1917,6 +1897,7 @@ importers:
       '@types/qrcode.react': 1.0.2
       '@types/react': 17.0.24
       '@types/react-copy-to-clipboard': 5.0.1
+      '@types/string-hash': 1.1.1
       '@types/url-join': 4.0.1
       babel-plugin-add-module-exports: 1.0.4
       faker: 5.5.3
@@ -1934,6 +1915,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
+      '@mui/core': ~5.0.0-alpha.53
       '@mui/icons-material': ^5.0.1
       '@mui/lab': ^5.0.0-alpha.48
       '@mui/material': ^5.0.1
@@ -1944,6 +1926,7 @@ importers:
       '@types/qrcode.react': ^1.0.2
       '@types/react': ^17.0.24
       '@types/react-copy-to-clipboard': ~5.0.1
+      '@types/string-hash': ^1.1.1
       '@types/url-join': ~4.0.1
       babel-plugin-add-module-exports: ^1.0.4
       debug: ^4.1.1
@@ -1955,6 +1938,7 @@ importers:
       react-copy-to-clipboard: ~5.0.3
       react-dom: ^17.0.2
       react-json-view: ~1.21.3
+      string-hash: ~1.1.3
       typescript: ^4.3.5
       url-join: ^4.0.1
   ../../packages/sdk/react-framework:
@@ -2400,6 +2384,8 @@ importers:
       eslint: 7.26.0
       glob: 7.1.7
       jest: 26.6.3_ts-node@9.1.1
+      jsdom: 18.0.1
+      jsdom-global: 3.0.2_jsdom@18.0.1
       mocha: 8.4.0
       pkg-dir: 5.0.0
       ts-jest: 26.5.6_jest@26.6.3+typescript@4.3.5
@@ -2422,6 +2408,8 @@ importers:
       eslint: ^7.7.0
       glob: ~7.1.6
       jest: ^26.6.3
+      jsdom: ~18.0.1
+      jsdom-global: ~3.0.2
       mocha: ~8.4.0
       pkg-dir: ~5.0.0
       ts-jest: ^26.5.6
@@ -2524,25 +2512,6 @@ packages:
       node: '>=8.0.0'
     resolution:
       integrity: sha512-lNUmDRVGpanCsiUN3NWxFTdwmdFI53xwhkTFfHDGTYk46ca7Ind3nanJc+U6Zj9Tv+9nTCWRBscWEW1DyKOpTw==
-  /@babel/cli/7.13.16_@babel+core@7.13.16:
-    dependencies:
-      '@babel/core': 7.13.16
-      commander: 4.1.1
-      convert-source-map: 1.7.0
-      fs-readdir-recursive: 1.1.0
-      glob: 7.1.7
-      make-dir: 2.1.0
-      slash: 2.0.0
-      source-map: 0.5.7
-    dev: true
-    hasBin: true
-    optionalDependencies:
-      '@nicolo-ribaudo/chokidar-2': 2.1.8-no-fsevents
-      chokidar: 3.5.1
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-    resolution:
-      integrity: sha512-cL9tllhqvsQ6r1+d9Invf7nNXg/3BlfL1vvvL/AdH9fZ2l5j0CeBcoq6UjsqHpvyN1v5nXSZgqJZoGeK+ZOAbw==
   /@babel/code-frame/7.10.4:
     dependencies:
       '@babel/highlight': 7.14.5
@@ -4896,6 +4865,14 @@ packages:
       node: '>=6.9.0'
     resolution:
       integrity: sha512-99catp6bHCaxr4sJ/DbTGgHS4+Rs2RVd2g7iOap6SLGPDknRK9ztKNsE/Fg6QhSeh1FGE5f6gHGQmvvn3I3xhw==
+  /@babel/runtime/7.16.0:
+    dependencies:
+      regenerator-runtime: 0.13.7
+    dev: true
+    engines:
+      node: '>=6.9.0'
+    resolution:
+      integrity: sha512-Nht8L0O8YCktmsDV6FqFue7vQLRx3Hb0B37lS5y0jDRqRxlBG4wIJHnf9/bgSE2UyipKFA01YtS+npRdTWBUyw==
   /@babel/template/7.12.13:
     dependencies:
       '@babel/code-frame': 7.12.13
@@ -6162,6 +6139,30 @@ packages:
         optional: true
     resolution:
       integrity: sha512-H/QQwKsr2EqPAnP35DGDpWihk5BOFYGhO52rIHb3XKOfoUjDCrCHBy2kvr3dLWJDmJXr/QzYj3AX10n5XzlaMg==
+  /@mui/core/5.0.0-alpha.54_3b7f7b84f013384d046f72a4522eddf8:
+    dependencies:
+      '@babel/runtime': 7.16.0
+      '@emotion/is-prop-valid': 1.1.0
+      '@mui/utils': 5.1.0_react@17.0.2
+      '@popperjs/core': 2.9.2
+      '@types/react': 17.0.24
+      clsx: 1.1.1
+      prop-types: 15.7.2
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      react-is: 17.0.2
+    dev: true
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      '@types/react': ^16.8.6 || ^17.0.0
+      react: ^17.0.2
+      react-dom: ^17.0.2
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    resolution:
+      integrity: sha512-8TxdHqDdSb6wjhsnpE5n7qtkFKDG3PUSlVY0gR3VcdsHXscUY13l3VbMQW1brI4D/R9zx5VYmxIHWaHFgw4RtA==
   /@mui/icons-material/5.0.1_4708d87537568924a83ffdea00ac702d:
     dependencies:
       '@babel/runtime': 7.15.4
@@ -6517,27 +6518,25 @@ packages:
       react: ^17.0.2
     resolution:
       integrity: sha512-GWO104N+o9KG5fKiTEYnAg7kONKEg3vLN+VROAU0f3it6lFGLCVPcQYex/1gJ4QAy96u6Ez8/Hmmhi1+3cX0tQ==
+  /@mui/utils/5.1.0_react@17.0.2:
+    dependencies:
+      '@babel/runtime': 7.16.0
+      '@types/prop-types': 15.7.4
+      '@types/react-is': 17.0.2
+      prop-types: 15.7.2
+      react: 17.0.2
+      react-is: 17.0.2
+    dev: true
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      react: ^17.0.2
+    resolution:
+      integrity: sha512-TbAa3DZBGE6xjrVsQ6e0Iw0jwgGZqPg/48aZJJWXJJjU8NU5OhBRutYhrk/kbdDRmsIArHNdpJayBSi7yETYvg==
   /@multiformats/base-x/4.0.1:
     dev: false
     resolution:
       integrity: sha512-eMk0b9ReBbV23xXU693TAIrLyeO5iTgBZGSJfpqriG8UkYvr/hC9u9pyMlAakDNHWmbhMZCDs6KQO0jzKD8OTw==
-  /@nicolo-ribaudo/chokidar-2/2.1.8-no-fsevents:
-    dependencies:
-      anymatch: 2.0.0
-      async-each: 1.0.3
-      braces: 2.3.2
-      glob-parent: 3.1.0
-      inherits: 2.0.4
-      is-binary-path: 1.0.1
-      is-glob: 4.0.1
-      normalize-path: 3.0.0
-      path-is-absolute: 1.0.1
-      readdirp: 2.2.1
-      upath: 1.2.0
-    dev: true
-    optional: true
-    resolution:
-      integrity: sha512-+nb9vWloHNNMFHjGofEam3wopE3m1yuambrrd/fnPc+lFOMB9ROTqQlche9ByFWNkdNqfSgR/kkQtQ8DzEWt2w==
   /@nodelib/fs.scandir/2.1.4:
     dependencies:
       '@nodelib/fs.stat': 2.0.4
@@ -8439,6 +8438,12 @@ packages:
       react-dom: '*'
     resolution:
       integrity: sha512-TXMCg0jT8xmuU8BkKMtp8l7Z50Ykew5WNX8UoIKTaLFwKkP2+1YDhOLA2Ga3wY4x29jyntk7EWfum0kjlYiSjQ==
+  /@tootallnate/once/2.0.0:
+    dev: false
+    engines:
+      node: '>= 10'
+    resolution:
+      integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==
   /@ts-morph/common/0.9.1:
     dependencies:
       fast-glob: 3.2.5
@@ -9276,6 +9281,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-s8Y6/EV1LPn9fDlJKSlD8r+14hWXVDn+wPAGwWRzTUq/4MqdoQNEzQxP6Jq91qvFYxR3OlFAPXcv6ToplnAgFQ==
+  /@types/string-hash/1.1.1:
+    dev: true
+    resolution:
+      integrity: sha512-ijt3zdHi2DmZxQpQTmozXszzDo78V4R3EdvX0jFMfnMH2ZzQSmCbaWOMPGXFUYSzSIdStv78HDjg32m5dxc+tA==
   /@types/tapable/1.0.7:
     resolution:
       integrity: sha512-0VBprVqfgFD7Ehb2vd8Lh9TG3jP98gvr8rgehQqzztZNI7o8zS8Ad4jyZneKELphpuE212D8J70LnSNQSyO6bQ==
@@ -9355,10 +9364,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-d/7W23JAXPodQNbOZNXvl2K+bqAQrCMwlh/nuQsPSQk6Fq0opHoPrUw43aHsvSbIiQPr8Of2hkFbnz1XBFVyZQ==
-  /@types/wtfnode/0.7.0:
-    dev: true
-    resolution:
-      integrity: sha512-kdBHgE9+M1Os7UqWZtiLhKye5reFl8cPBYyCsP2fatwZRz7F7GdIxIHZ20Kkc0hYBfbXE+lzPOTUU1I0qgjtHA==
   /@types/yargs-parser/20.2.0:
     resolution:
       integrity: sha512-37RSHht+gzzgYeobbG+KWryeAW8J33Nhr69cjTqSYymXVZEN9NbRYWoYlRtDhHKPVT1FyNKwaTPC1NynKZpzRA==
@@ -10001,6 +10006,13 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-Ibt84YwBDDA890eDiDCEqcbwvHlBvzzDkU2cGBBDDI1QWT12jTiXIOn2CIw5KK4i6N5Z2HUxwYjzriDyqaqqZg==
+  /acorn/8.5.0:
+    dev: false
+    engines:
+      node: '>=0.4.0'
+    hasBin: true
+    resolution:
+      integrity: sha512-yXbYeFy+jUuYd3/CDcg2NkIYE991XYX/bje7LmjJigUciaeO1JR4XxXgCIV1/Zc/dRuFEyw1L0pbA+qynJkW5Q==
   /address/1.1.2:
     engines:
       node: '>= 0.12.0'
@@ -13014,6 +13026,10 @@ packages:
   /cssom/0.4.4:
     resolution:
       integrity: sha512-p3pvU7r1MyyqbTk+WbNJIgJjG2VmTIaB10rI93LzVPrmDJKkzKYMtxxyAvQXR/NS6otuzveI7+7BBq3SjBS2mw==
+  /cssom/0.5.0:
+    dev: false
+    resolution:
+      integrity: sha512-iKuQcq+NdHqlAcwUY0o/HL69XQrUaQdMjmStJ8JFmUaiiQErlhrmuigkg/CU4E2J0IyUKUrMAgl36TvN67MqTw==
   /cssstyle/2.3.0:
     dependencies:
       cssom: 0.3.8
@@ -13499,6 +13515,16 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-X5eWTSXO/BJmpdIKCRuKUgSCgAN0OwliVK3yPKbwIWU1Tdw5BRajxlzMidvh+gwko9AfQ9zIj52pzF91Q3YAvQ==
+  /data-urls/3.0.1:
+    dependencies:
+      abab: 2.0.5
+      whatwg-mimetype: 3.0.0
+      whatwg-url: 10.0.0
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-Ds554NeT5Gennfoo9KN50Vh6tpgtvYEwraYjejXnyTpu1C7oXKxdFk75REooENHE8ndTVOJuv+BEs4/J/xcozw==
   /dataloader/2.0.0:
     dev: false
     resolution:
@@ -13595,6 +13621,10 @@ packages:
   /decimal.js/10.2.1:
     resolution:
       integrity: sha512-KaL7+6Fw6i5A2XSnsbhm/6B+NuEA7TZ4vqxnd5tXz9sbKtrN9Srj8ab4vKVdK8YAqZO9P1kg45Y6YLoduPf+kw==
+  /decimal.js/10.3.1:
+    dev: false
+    resolution:
+      integrity: sha512-V0pfhfr8suzyPGOx3nmq4aHqabehUZn6Ch9kyFpV79TGDTWFmHqUqXdabR7QHqxzrYolF4+tVmJhUG4OURg5dQ==
   /decode-uri-component/0.2.0:
     engines:
       node: '>=0.10'
@@ -14094,6 +14124,14 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-yxJ2mFy/sibVQlu5qHjOkf9J3K6zgmCxgJ94u2EdvDOV09H+32LtRswEcUsmUWN72pVLOEnTSRaIVVzVQgS0dg==
+  /domexception/4.0.0:
+    dependencies:
+      webidl-conversions: 7.0.0
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-A2is4PLG+eeSfoTMA95/s4pvAoSo2mKtiM5jlHkAVewmiO8ISFTFKZjH7UAM1Atli/OT/7JHOrJRJiMKUZKYBw==
   /domhandler/2.4.2:
     dependencies:
       domelementtype: 1.3.1
@@ -15797,6 +15835,16 @@ packages:
       node: '>= 6'
     resolution:
       integrity: sha512-RHkBKtLWUVwd7SqRIvCZMEvAMoGUp0XU+seQiZejj0COz3RI3hWP4sCv3gZWWLjJTd7rGwcsF5eKZGii0r/hbg==
+  /form-data/4.0.0:
+    dependencies:
+      asynckit: 0.4.0
+      combined-stream: 1.0.8
+      mime-types: 2.1.30
+    dev: false
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==
   /format/0.2.2:
     dev: true
     engines:
@@ -15903,10 +15951,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-cybjIfiiE+pTWicSCLFHSrXZ6EilF30oh91FDP9S2B051prEa7QWfrVTQm10/dDpswBDXZugPa1Ogu8Yh+HV0Q==
-  /fs-readdir-recursive/1.1.0:
-    dev: true
-    resolution:
-      integrity: sha512-GNanXlVr2pf02+sPN40XN8HG+ePaNcvM0q5mZBd668Obwb0yD5GiUbZOFgwn8kGMY6I3mdyDJzieUy3PTYyTRA==
   /fs-write-stream-atomic/1.0.10:
     dependencies:
       graceful-fs: 4.2.6
@@ -16838,6 +16882,14 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-D5JbOMBIR/TVZkubHT+OyT2705QvogUW4IBn6nHd756OwieSF9aDYFj4dv6HHEVGYbHaLETa3WggZYWWMyy3ZQ==
+  /html-encoding-sniffer/3.0.0:
+    dependencies:
+      whatwg-encoding: 2.0.0
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-oWv4T4yJ52iKrufjnyZPkrN0CH3QnrUqdB6In1g5Fe1mia8GmF36gnfNySxoZtxD5+NmYw1EElVXiBk93UeskA==
   /html-entities/1.4.0:
     resolution:
       integrity: sha512-8nxjcBcd8wovbeKx7h3wTji4e6+rhaVuPNpMqwWgnHh+N9ToqsCs6XztWRBPQ+UtzsoMAdKZtUENoVzU/EMtZA==
@@ -16974,6 +17026,16 @@ packages:
   /http-parser-js/0.5.3:
     resolution:
       integrity: sha512-t7hjvef/5HEK7RWTdUzVUhl8zkEu+LlaE0IYzdMuvbSDipxBRpOn4Uhw8ZyECEa808iVT8XCjzo6xmYt4CiLZg==
+  /http-proxy-agent/5.0.0:
+    dependencies:
+      '@tootallnate/once': 2.0.0
+      agent-base: 6.0.2
+      debug: 4.3.1
+    dev: false
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-n2hY8YdoRE1i7r6M0w9DIw5GgZN0G25P8zLCRQ8rjXtTU3vsNFBI/vWK/UIeE6g5MUUz6avwAPXmL6Fy9D/90w==
   /http-proxy-middleware/0.19.1_debug@4.3.1:
     dependencies:
       http-proxy: 1.18.1_debug@4.3.1
@@ -17170,6 +17232,14 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==
+  /iconv-lite/0.6.3:
+    dependencies:
+      safer-buffer: 2.1.2
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==
   /icss-utils/4.1.1:
     dependencies:
       postcss: 7.0.36
@@ -18804,6 +18874,14 @@ packages:
   /jsbn/0.1.1:
     resolution:
       integrity: sha1-peZUwuWi3rXyAdls77yoDA7y9RM=
+  /jsdom-global/3.0.2_jsdom@18.0.1:
+    dependencies:
+      jsdom: 18.0.1
+    dev: false
+    peerDependencies:
+      jsdom: '>=10.0.0'
+    resolution:
+      integrity: sha1-a9KZwTsMRiay2iwDk81DhdYGrLk=
   /jsdom/16.5.3:
     dependencies:
       abab: 2.0.5
@@ -18841,6 +18919,45 @@ packages:
         optional: true
     resolution:
       integrity: sha512-Qj1H+PEvUsOtdPJ056ewXM4UJPCi4hhLA8wpiz9F2YvsRBhuFsXxtrIFAgGBDynQA9isAMGE91PfUYbdMPXuTA==
+  /jsdom/18.0.1:
+    dependencies:
+      abab: 2.0.5
+      acorn: 8.5.0
+      acorn-globals: 6.0.0
+      cssom: 0.5.0
+      cssstyle: 2.3.0
+      data-urls: 3.0.1
+      decimal.js: 10.3.1
+      domexception: 4.0.0
+      escodegen: 2.0.0
+      form-data: 4.0.0
+      html-encoding-sniffer: 3.0.0
+      http-proxy-agent: 5.0.0
+      https-proxy-agent: 5.0.0
+      is-potential-custom-element-name: 1.0.1
+      nwsapi: 2.2.0
+      parse5: 6.0.1
+      saxes: 5.0.1
+      symbol-tree: 3.2.4
+      tough-cookie: 4.0.0
+      w3c-hr-time: 1.0.2
+      w3c-xmlserializer: 3.0.0
+      webidl-conversions: 7.0.0
+      whatwg-encoding: 2.0.0
+      whatwg-mimetype: 3.0.0
+      whatwg-url: 10.0.0
+      ws: 8.2.3
+      xml-name-validator: 4.0.0
+    dev: false
+    engines:
+      node: '>=12'
+    peerDependencies:
+      canvas: ^2.5.0
+    peerDependenciesMeta:
+      canvas:
+        optional: true
+    resolution:
+      integrity: sha512-mgVzrYP4IJiJKVqXkAdBn+jg+nQgPusBxTJulz3m1Y/1RIrkk8aDoNaQE5BNbHwe72WwiwE7k3Av2THXDpvzPQ==
   /jsesc/0.5.0:
     hasBin: true
     resolution:
@@ -25117,6 +25234,10 @@ packages:
       node: '>=0.6.19'
     resolution:
       integrity: sha512-a1uQGz7IyVy9YwhqjZIZu1c8JO8dNIe20xBmSS6qu9kv++k3JGzCVmprbNN5Kn+BgzD5E7YYwg1CcjuJMRNsvg==
+  /string-hash/1.1.3:
+    dev: false
+    resolution:
+      integrity: sha1-6Kr8CsGFW0Zmkp7X3RJ1311sgRs=
   /string-length/4.0.2:
     dependencies:
       char-regex: 1.0.2
@@ -25948,6 +26069,14 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-3n1qG+/5kg+jrbTzwAykB5yRYtQCTqOGKq5U5PE3b0a1/mzo6snDhjGS0zJVJunO0NrT3Dg1MLy5TjWP/UJppg==
+  /tr46/3.0.0:
+    dependencies:
+      punycode: 2.1.1
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-l7FvfAHlcmulp8kr+flpQZmVwtu7nfRV7NZujtN0OqES8EL4O4e0qqzL0DC5gAvx/ZC/9lk6rhcUwYvkBnBnYA==
   /tree-kill/1.2.2:
     hasBin: true
     resolution:
@@ -26037,7 +26166,7 @@ packages:
       micromatch: 4.0.4
       semver: 7.3.5
       typescript: 4.3.5
-      webpack: 4.44.2_webpack-cli@4.7.2
+      webpack: 4.44.2
     dev: true
     engines:
       node: '>=10.0.0'
@@ -26784,6 +26913,14 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-4tzD0mF8iSiMiNs30BiLO3EpfGLZUT2MSX/G+o7ZywDzliWQ3OPtTZ0PTC3B3ca1UAf4cJMHB+2Bf56EriJuRA==
+  /w3c-xmlserializer/3.0.0:
+    dependencies:
+      xml-name-validator: 4.0.0
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-3WFqGEgSXIyGhOmAFtlicJNMjEps8b1MG31NCA0/vOF9+nKMUW1ckhi9cnNHmf88Rzw5V+dwIwsm2C7X8k9aQg==
   /wait-for-expect/3.0.2:
     dev: true
     resolution:
@@ -26858,6 +26995,12 @@ packages:
       node: '>=10.4'
     resolution:
       integrity: sha512-qBIvFLGiBpLjfwmYAaHPXsn+ho5xZnGvyGvsarywGNc8VyQJUMHJ8OBKGGrPER0okBeMDaan4mNBlgBROxuI8w==
+  /webidl-conversions/7.0.0:
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==
   /webpack-cli/4.7.2_b24347012da62a72aee59d51298aa452:
     dependencies:
       '@discoveryjs/json-ext': 0.5.3
@@ -27210,6 +27353,14 @@ packages:
       iconv-lite: 0.4.24
     resolution:
       integrity: sha512-b5lim54JOPN9HtzvK9HFXvBma/rnfFeqsic0hSpjtDbVxR3dJKLc+KB4V6GgiGOvl7CY/KNh8rxSo9DKQrnUEw==
+  /whatwg-encoding/2.0.0:
+    dependencies:
+      iconv-lite: 0.6.3
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-p41ogyeMUrw3jWclHWTQg1k05DSVXPLcVxRTYsXUk+ZooOCZLcoYgPZ/HL/D/N+uQPOtcp1me1WhBEaX02mhWg==
   /whatwg-fetch/3.6.2:
     dev: false
     resolution:
@@ -27217,6 +27368,21 @@ packages:
   /whatwg-mimetype/2.3.0:
     resolution:
       integrity: sha512-M4yMwr6mAnQz76TbJm914+gPpB/nCwvZbJU28cUD6dR004SAxDLOOSUaB1JDRqLtaOV/vi0IC5lEAGFgrjGv/g==
+  /whatwg-mimetype/3.0.0:
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==
+  /whatwg-url/10.0.0:
+    dependencies:
+      tr46: 3.0.0
+      webidl-conversions: 7.0.0
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-CLxxCmdUby142H5FZzn4D8ikO1cmypvXVQktsgosNy4a4BHrDHeciBBGZhb0bNoR5/MltoCatso+vFjjGx8t0w==
   /whatwg-url/8.5.0:
     dependencies:
       lodash: 4.17.21
@@ -27549,13 +27715,34 @@ packages:
         optional: true
     resolution:
       integrity: sha512-xzyu3hFvomRfXKH8vOFMU3OguG6oOvhXMo3xsGy3xWExqaM2dxBbVxuD99O7m3ZUFMvvscsZDqxfgMaRr/Nr1g==
+  /ws/8.2.3:
+    dev: false
+    engines:
+      node: '>=10.0.0'
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: ^5.0.2
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+    resolution:
+      integrity: sha512-wBuoj1BDpC6ZQ1B7DWQBYVLphPWkm8i9Y0/3YdHjHKHiohOJ1ws+3OccDWtH+PoC9DZD5WOTrJvNbWvjS6JWaA==
   /wtfnode/0.9.1:
+    dev: false
     hasBin: true
     resolution:
       integrity: sha512-Ip6C2KeQPl/F3aP1EfOnPoQk14Udd9lffpoqWDNH3Xt78svxPbv53ngtmtfI0q2Te3oTq79XKTnRNXVIn/GsPA==
   /xml-name-validator/3.0.0:
     resolution:
       integrity: sha512-A5CUptxDsvxKJEU3yO6DuWBSJz/qizqzJKOMIfUJHETbBw/sFaDxgd6fxm1ewUaM0jZ444Fc5vC5ROYurg/4Pw==
+  /xml-name-validator/4.0.0:
+    dev: false
+    engines:
+      node: '>=12'
+    resolution:
+      integrity: sha512-ICP2e+jsHvAj2E2lIHxa5tjXRlKDJo4IdvPvCXbXQGdzSfmSpNVyIKMvoZHjDY9DP0zV17iI85o90vRFXNccRw==
   /xmlbuilder/10.1.1:
     dev: true
     engines:

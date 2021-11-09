@@ -12,6 +12,9 @@ interface CopyButtonProps {
   text: string
 }
 
+/**
+ * @deprecated Use react-components.
+ */
 const CopyButton = ({ text } : CopyButtonProps) => {
   const [isCopied, setIsCopied] = useState(false);
   const [clearTimer, setClearTimer] = useState<NodeJS.Timeout | undefined>();
@@ -30,11 +33,11 @@ const CopyButton = ({ text } : CopyButtonProps) => {
 
   return (
     <Tooltip title={isCopied ? 'Copied!' : 'Copy to clipboard'} arrow>
-      <CopyToClipboard text={text} onCopy={handleCopy}>
-        <IconButton>
+      <IconButton>
+        <CopyToClipboard text={text} onCopy={handleCopy}>
           <FileCopyOutlinedIcon fontSize='small' />
-        </IconButton>
-      </CopyToClipboard>
+        </CopyToClipboard>
+      </IconButton>
     </Tooltip>
   );
 };

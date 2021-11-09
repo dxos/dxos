@@ -72,7 +72,7 @@ export class HALO {
    * Whether the current identity manager has been initialized.
    */
   get isInitialized (): boolean {
-    return this.identity.halo !== undefined;
+    return this._identityManager.initialized;
   }
 
   /**
@@ -243,7 +243,7 @@ export class HALO {
       throw new Error('Both publicKey and secretKey must be provided or neither.');
     }
 
-    const keyPair = publicKey ? { publicKey, secretKey: secretKey! } : createKeyPair();
+    const keyPair = publicKey ? { publicKey: Buffer.from(publicKey), secretKey: Buffer.from(secretKey!) } : createKeyPair();
     await this.createIdentity(keyPair);
 
     await this.create(username);

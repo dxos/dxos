@@ -9,9 +9,9 @@ import { Box, Button, TextField, Typography } from '@mui/material';
 import type { SecretProvider } from '@dxos/credentials';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { decodeInvitation, useSecretProvider } from '@dxos/react-client';
-import { Dialog, Passcode } from '@dxos/react-components';
+import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
-import { handleKey } from '../../helpers';
+import { handleKey } from '../helpers';
 
 enum PartyJoinState {
   INIT,
@@ -20,17 +20,17 @@ enum PartyJoinState {
 }
 
 type JoinOptions = {
-  invitation: InvitationDescriptor,
+  invitation: InvitationDescriptor
   secretProvider: SecretProvider
 }
 
 export interface JoinDialogProps {
   open: boolean
   modal?: boolean
-  onClose?: () => void
-  closeOnSuccess?: boolean,
-  onJoin: (joinOptions: JoinOptions) => Promise<Party>
   title: string
+  closeOnSuccess?: boolean
+  onClose?: () => void
+  onJoin: (joinOptions: JoinOptions) => Promise<Party>
 }
 
 /**
@@ -51,7 +51,6 @@ export const JoinDialog = ({
   const [error, setError] = useState<string | undefined>(undefined);
   const [processing, setProcessing] = useState<boolean>(false);
   const [invitationCode, setInvitationCode] = useState('');
-
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
 
   const handleReset = () => {
@@ -73,15 +72,21 @@ export const JoinDialog = ({
     }
   };
 
+  const handleUpdateInvitationCode = (text: string) => {
+    // Parse URL.
+    const index = text.lastIndexOf('/');
+    const invitationCode = text.substring(index + 1);
+    setInvitationCode(invitationCode);
+  };
+
   const handleProcessInvitation = async () => {
     if (!invitationCode.length) {
       return;
     }
 
-    let invitation;
+    let invitation: InvitationDescriptor;
     try {
       invitation = decodeInvitation(invitationCode);
-      setState(PartyJoinState.AUTHENTICATE);
     } catch (err) {
       setError('Invalid invitation code.');
       setState(PartyJoinState.ERROR);
@@ -92,8 +97,17 @@ export const JoinDialog = ({
       setState(PartyJoinState.AUTHENTICATE);
       await onJoin({ invitation, secretProvider });
     } catch (err: any) {
-      // TODO(burdon): Extract human error (eg, currently "Already connected to swarm").
-      setError(err.responseMessage || err.message);
+      // TODO(burdon): The client package should only throw errors with user-facing messages.
+      const parseError = (err: any) => {
+        const messages: {[index: string]: string} = {
+          ERR_EXTENSION_RESPONSE_FAILED: 'Authentication failed.',
+          ERR_GREET_ALREADY_CONNECTED_TO_SWARM: 'Already member of party.'
+        };
+
+        return messages[err.responseCode];
+      };
+
+      setError(parseError(err) || err.responseMessage || err.message);
       setState(PartyJoinState.ERROR);
       return;
     }
@@ -107,46 +121,60 @@ export const JoinDialog = ({
   };
 
   const getDialogProps = (state: PartyJoinState) => {
-    const joinPartyContent = () => (
+    const joinPartyContent = (
       <TextField
         autoFocus
         fullWidth
         multiline
         variant='standard'
-        placeholder='Copy the invitation code.'
+        placeholder='Copy the invitation code or URL.'
         spellCheck={false}
         value={invitationCode}
-        onChange={(event) => setInvitationCode(event.target.value)}
+        onChange={(event) => handleUpdateInvitationCode(event.target.value)}
         onKeyDown={handleKey('Enter', handleProcessInvitation)}
         rows={6}
       />
     );
 
-    const joinPartyActions = () => (
+    const joinPartyActions = (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
         <Button onClick={handleProcessInvitation}>Process</Button>
       </>
     );
 
-    const authenticateContent = () => (
+    const authenticateContent = (
       <>
-        <Typography variant='body1' gutterBottom>
+        <Typography variant='body1'>
           Enter the PIN.
         </Typography>
-        <Box sx={{ marginTop: 2 }}>
-          <Passcode length={4} onSubmit={value => handleAuthenticate(value)} />
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginTop: 3
+        }}
+        >
+          <Passcode
+            length={4}
+            onSubmit={value => handleAuthenticate(value)}
+          />
+          <HashIcon
+            sx={{ marginLeft: 2 }}
+            size='large'
+            value={invitationCode}
+          />
         </Box>
       </>
     );
 
-    const authenticateActions = () => (
+    const authenticateActions = (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
       </>
     );
 
-    const errorActions = () => (
+    const errorActions = (
       <Button onClick={handleReset}>Retry</Button>
     );
 

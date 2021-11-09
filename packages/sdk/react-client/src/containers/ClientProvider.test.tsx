@@ -3,6 +3,7 @@
 //
 
 import { screen, render } from '@testing-library/react';
+import expect from 'expect';
 // code import '@testing-library/jest-dom/extend-expect';
 import React from 'react';
 
@@ -24,18 +25,18 @@ const TestComponent = () => {
 describe('ClientProvider', () => {
   let client: Client;
 
-  beforeAll(async () => {
+  before(async () => {
     client = new Client();
     await client.initialize();
     await client.halo.createProfile({ username: 'test-user' });
     await client.echo.open();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await client.destroy();
   });
 
-  test('Renders with children', async () => {
+  it('Renders with children', async () => {
     render(
       <ClientProvider client={client}>
         <TestComponent />
@@ -45,7 +46,7 @@ describe('ClientProvider', () => {
     expect(() => screen.getByText('Hello World')).not.toThrow();
   });
 
-  test('Provides the client', async () => {
+  it('Provides the client', async () => {
     render(
       <ClientProvider client={client}>
         <TestComponent />

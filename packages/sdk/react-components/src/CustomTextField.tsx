@@ -8,24 +8,29 @@ import {
   Clear as ResetIcon,
   Edit as EditIcon
 } from '@mui/icons-material';
-import { useTheme, Box, IconButton, InputAdornment, TextField, Typography } from '@mui/material';
+import {
+  useTheme, Box, IconButton, InputAdornment, TextField, Typography
+} from '@mui/material';
 
 export interface CustomTextFieldProps {
   value?: string
   onUpdate?: (value: string) => void
   readonly?: boolean
   saveOnBlur?: boolean
+  clickToEdit?: boolean
   placeholder?: string
 }
 
 /**
  * Click-to-edit text field.
  */
+// TODO(burdon): Implement variant.
 export const CustomTextField = ({
   value,
   onUpdate,
   readonly = false,
   saveOnBlur = true,
+  clickToEdit = false,
   placeholder
 }: CustomTextFieldProps) => {
   const inputRef = useRef<HTMLInputElement>();
@@ -52,7 +57,6 @@ export const CustomTextField = ({
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     const { key } = event;
-
     switch (key) {
       case 'Enter': {
         handleUpdate();
@@ -73,17 +77,13 @@ export const CustomTextField = ({
   if (editing) {
     return (
       <TextField
-        value={text || ''}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        onBlur={() => {
-          if (saveOnBlur) {
-            handleUpdate();
-          }
-        }}
         fullWidth
         autoFocus
+        value={text || ''}
         placeholder={placeholder}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onBlur={() => saveOnBlur && handleUpdate()}
         inputRef={inputRef}
         inputProps={{
           inputprops: {
@@ -119,9 +119,8 @@ export const CustomTextField = ({
       onMouseLeave={() => setMouseOver(false)}
     >
       <Typography
-        sx={{
-          color: text ? undefined : theme.palette.text.disabled
-        }}
+        onClick={() => !readonly && clickToEdit && setEditing(true)}
+        sx={{ color: text ? undefined : theme.palette.text.disabled }}
       >
         {text || placeholder}
       </Typography>

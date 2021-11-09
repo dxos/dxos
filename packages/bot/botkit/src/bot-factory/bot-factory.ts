@@ -7,7 +7,6 @@ import assert from 'assert';
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-handle';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
-import type { Empty } from '../proto/gen/google/protobuf';
 
 /**
  * Handles creation and managing bots.
@@ -17,7 +16,7 @@ export class BotFactory implements BotFactoryService {
 
   constructor (private readonly _botContainer: BotContainer) {}
 
-  async GetBots (request: Empty) {
+  async GetBots () {
     return {
       bots: this._bots.map(handle => handle.bot)
     };
@@ -32,19 +31,17 @@ export class BotFactory implements BotFactoryService {
   }
 
   async Start (request: Bot) {
-    return {};
+    return request;
   }
 
   async Stop (request: Bot) {
     assert(request.id);
     const bot = this._getBot(request.id);
-    const respone = await bot.rpc.Stop({});
-    return respone;
+    await bot.rpc.Stop();
+    return bot.bot;
   }
 
-  async Remove (request: Bot) {
-    return {};
-  }
+  async Remove (request: Bot) {}
 
   async SendCommand (request: SendCommandRequest) {
     assert(request.botId);
@@ -53,9 +50,8 @@ export class BotFactory implements BotFactoryService {
     return respone;
   }
 
-  async Destroy (request: Empty) {
-    await Promise.all(this._bots.map(bot => bot.rpc.Stop({})));
-    return {};
+  async Destroy () {
+    await Promise.all(this._bots.map(bot => bot.rpc.Stop()));
   }
 
   private _getBot (botId: string) {

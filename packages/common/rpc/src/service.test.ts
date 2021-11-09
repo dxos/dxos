@@ -27,7 +27,8 @@ describe('Protobuf service', () => {
         TestCall: async (req) => {
           expect(req.data).toEqual('requestData');
           return { data: 'responseData' };
-        }
+        },
+        VoidCall: async () => {}
       },
       port: alicePort
     });
@@ -61,7 +62,8 @@ describe('Protobuf service', () => {
           }
 
           return await handlerFn();
-        }
+        },
+        VoidCall: async () => {}
       },
       port: alicePort
     });
@@ -126,6 +128,35 @@ describe('Protobuf service', () => {
       ]);
     });
 
+    test('calls methods with google.protobuf.Empty parameters and return values', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const service = schema.getService('dxos.rpc.test.TestService');
+
+      const server: RpcPeer = createRpcServer({
+        service,
+        handlers: {
+          TestCall: async (req) => {
+            expect(req.data).toEqual('requestData');
+            return { data: 'responseData' };
+          },
+          VoidCall: async () => {}
+        },
+        port: alicePort
+      });
+
+      const client = createRpcClient(service, {
+        port: bobPort
+      });
+
+      await Promise.all([
+        server.open(),
+        client.open()
+      ]);
+
+      await client.rpc.VoidCall();
+    });
+
     test('consumed stream', async () => {
       const stream = client.rpc.TestCall({ data: 'requestData' });
 
@@ -170,7 +201,8 @@ describe('Protobuf service', () => {
             TestCall: async (req) => {
               expect(req.data).toEqual('requestData');
               return { data: 'responseData' };
-            }
+            },
+            VoidCall: async () => {}
           },
           PingService: {
             Ping: async (req) => ({ nonce: req.nonce })
