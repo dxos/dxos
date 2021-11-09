@@ -4,7 +4,13 @@
 
 import { RpcPort } from '@dxos/rpc';
 
+import { isNode } from '../platform';
+
 export function createWindowMessagePort (): RpcPort {
+  if (isNode()) {
+    throw new Error('Connecting to wallet extension is not available in Node environment.');
+  }
+
   return {
     send: async (msg) => window.postMessage({ payloadFromAppToContentScript: Array.from(msg) }, '*'),
     subscribe: (cb) => {

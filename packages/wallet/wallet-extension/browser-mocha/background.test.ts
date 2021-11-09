@@ -3,9 +3,10 @@
 //
 
 import expect from 'expect';
-import { createWindowMessagePort, useBackgroundService, schema, BackgroundService } from '@dxos/wallet-core';
+import { useBackgroundService, schema, BackgroundService } from '@dxos/wallet-core';
 import { RpcPort, ProtoRpcClient, createRpcClient } from '@dxos/rpc';
 import faker from 'faker';
+import { createWindowMessagePort } from '@dxos/client';
 
 
 describe('Background service tested through the content script', () => {

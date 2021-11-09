@@ -44,6 +44,7 @@ importers:
   ../../packages/common/codec-protobuf:
     dependencies:
       assert: 2.0.0
+      debug: 4.3.1
       lodash.merge: 4.6.2
       protobufjs: 6.11.2
     devDependencies:
@@ -64,6 +65,7 @@ importers:
       '@types/lodash.merge': ~4.6.6
       '@types/node': ^14.0.9
       assert: ^2.0.0
+      debug: ^4.1.1
       eslint: ^7.7.0
       jest: ^26.6.3
       lodash.merge: ^4.6.2
@@ -1415,6 +1417,7 @@ importers:
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/proto': link:../../common/proto
       '@dxos/rpc': link:../../common/rpc
+      '@dxos/util': link:../../common/util
       '@wirelineio/registry-client': 1.1.0-beta.3
       abstract-leveldown: 7.0.0
       assert: 2.0.0
@@ -1426,6 +1429,7 @@ importers:
       memdown: 5.1.0
     devDependencies:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
+      '@dxos/testutils': link:../../common/testutils
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/expect': 24.3.0
       '@types/jest': 26.0.23
@@ -1451,7 +1455,9 @@ importers:
       '@dxos/proto': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/testutils': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
       '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1

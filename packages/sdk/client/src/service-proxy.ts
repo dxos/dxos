@@ -5,7 +5,7 @@
 import { OpenProgress } from '@dxos/echo-db';
 import { createBundledRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
-import { ClientServiceProvider, ClientServices, serviceBundle } from './interfaces';
+import { ClientServiceProvider, ClientServices, clientServiceBundle } from './interfaces';
 
 /**
  * Implements services that are not local to the app.
@@ -14,10 +14,8 @@ import { ClientServiceProvider, ClientServices, serviceBundle } from './interfac
 export class ClientServiceProxy implements ClientServiceProvider {
   private readonly _client: ProtoRpcClient<ClientServices>;
 
-  constructor (
-    private port: RpcPort
-  ) {
-    this._client = createBundledRpcClient(serviceBundle, {
+  constructor (port: RpcPort) {
+    this._client = createBundledRpcClient(clientServiceBundle, {
       port
     });
 

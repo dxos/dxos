@@ -16,7 +16,7 @@ export interface ClientServices {
   DevtoolsHost: DevtoolsHost;
 }
 
-export const serviceBundle = createServiceBundle<ClientServices>({
+export const clientServiceBundle = createServiceBundle<ClientServices>({
   ProfileService: schema.getService('dxos.client.ProfileService'),
   PartyService: schema.getService('dxos.client.PartyService'),
   DataService: schema.getService('dxos.client.DataService'),

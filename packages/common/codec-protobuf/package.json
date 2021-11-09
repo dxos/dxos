@@ -29,7 +29,8 @@
   "dependencies": {
     "assert": "^2.0.0",
     "lodash.merge": "^4.6.2",
-    "protobufjs": "^6.9.0"
+    "protobufjs": "^6.9.0",
+    "debug": "^4.1.1"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.18",
