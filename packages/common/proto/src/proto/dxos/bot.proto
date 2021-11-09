@@ -32,6 +32,8 @@ message SpawnBotRequest {
 
   /// Invitation for the bot to join the target party.
   dxos.client.Invitation invitation = 2;
+
+  bytes secret = 3;
 }
 
 message SendCommandRequest {
@@ -67,6 +69,8 @@ message InitializeRequest {
 
   /// Invitation for the bot to join the target party.
   dxos.client.Invitation invitation = 2;
+
+  bytes secret = 3;
 }
 
 /// Service that is used by bots communicating with bot factory.

@@ -32,7 +32,8 @@
     "@dxos/client": "workspace:*",
     "base-x": "~3.0.9",
     "@dxos/object-model": "workspace:*",
-    "assert": "^2.0.0"
+    "assert": "^2.0.0",
+    "@dxos/credentials": "workspace:*"
   },
   "toolchain": {
     "testingFramework": "mocha"

@@ -6,6 +6,7 @@ import assert from 'assert';
 import expect from 'expect';
 
 import { Client } from '@dxos/client';
+import { SecretProvider, SecretValidator } from '@dxos/credentials';
 import { createKeyPair, PublicKey } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
@@ -69,7 +70,6 @@ describe('In-Memory', () => {
 
   it('Spawns a bot with a client', async () => {
     const [agentPort, botControllerPort] = createLinkedPorts();
-    const botKeyPair = createKeyPair();
 
     const botContainer = new InProcessBotContainer(() => {
       const client = new Client();
@@ -78,12 +78,15 @@ describe('In-Memory', () => {
       return {
         Initialize: async (request) => {
           await client.initialize();
-          await client.echo.halo.createIdentity({ ...botKeyPair });
+          await client.echo.halo.createIdentity({ ...createKeyPair() });
           await client.echo.halo.create('Bot');
 
           if (request.invitation?.data) {
+            assert(request.secret, 'Secret must be provided with invitation');
             const invitation = decodeInvitation(request.invitation.data);
-            party = await client.echo.joinParty(invitation);
+            // TODO(yivlad): Field secret is actually a buffer here.
+            const botSecretProvider: SecretProvider = async () => request.secret as Buffer;
+            party = await client.echo.joinParty(invitation, botSecretProvider);
           }
 
           return {};
@@ -130,11 +133,16 @@ describe('In-Memory', () => {
       botFactoryClient.start()
     ]);
 
-    const invitation = await party.createOfflineInvitation(PublicKey.from(botKeyPair.publicKey));
+    const partySecret = Buffer.from('SECRET');
+    const secretProvider: SecretProvider = async () => partySecret;
+    const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(partySecret);
+
+    const invitation = await party.createInvitation({ secretProvider, secretValidator });
     const { id } = await botFactoryClient.botFactory.SpawnBot({
       invitation: {
         data: encodeInvitation(invitation)
-      }
+      },
+      secret: partySecret
     });
     assert(id);
 
