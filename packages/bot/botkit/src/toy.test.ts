@@ -11,7 +11,7 @@ import { Party } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import { createLinkedPorts } from '@dxos/rpc';
 
-import { InProcessBotContaier } from './bot-container';
+import { InProcessBotContainer } from './bot-container';
 import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
 import { Bot } from './proto/gen/dxos/bot';
@@ -28,7 +28,7 @@ describe('In-Memory', () => {
 
     const agent = new BotFactoryClient(agentPort);
 
-    const botContainer = new InProcessBotContaier(() => {
+    const botContainer = new InProcessBotContainer(() => {
       return {
         Initialize: async () => {
           botInitialized = true;
@@ -69,7 +69,7 @@ describe('In-Memory', () => {
     const [agentPort, botControllerPort] = createLinkedPorts();
     const botKeyPair = createKeyPair();
 
-    const botContainer = new InProcessBotContaier(() => {
+    const botContainer = new InProcessBotContainer(() => {
       const client = new Client();
       let party: Party | undefined;
 
@@ -101,7 +101,7 @@ describe('In-Memory', () => {
             model: ObjectModel,
             type: ECHO_TYPE,
             props: {
-              text: request.command?.toString()
+              text: PublicKey.from(request.command).toString()
             }
           });
 
@@ -143,6 +143,15 @@ describe('In-Memory', () => {
     await party.database.waitForItem({
       type: ECHO_TYPE
     });
+
+    const items = party.database.select(s => s
+      .filter({ type: ECHO_TYPE })
+      .items
+    ).getValue();
+
+    expect(items.length).toBe(1);
+    const savedText = items[0].model.getProperty('text');
+    expect(savedText).toBe(PublicKey.from(text).toString());
 
     await botFactoryClient.botFactory.SendCommand({
       botId: id

@@ -12,7 +12,7 @@ export interface BotContainer {
   spawn: (pkg: BotPackageSpecifier) => Promise<BotHandle>
 }
 
-export class InProcessBotContaier implements BotContainer {
+export class InProcessBotContainer implements BotContainer {
   private _rpc: RpcPeer | undefined;
 
   constructor (private readonly _createBot: () => BotService) { }
