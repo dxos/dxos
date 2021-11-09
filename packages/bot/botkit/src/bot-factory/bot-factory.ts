@@ -34,6 +34,11 @@ export class BotFactory implements BotFactoryService {
   }
 
   async Stop (request: Bot) {
+    if (request.id) {
+      const bot = this._getBot(request.id);
+      const respone = await bot.rpc.Stop({});
+      return respone;
+    }
     return {};
   }
 
@@ -43,13 +48,18 @@ export class BotFactory implements BotFactoryService {
 
   async SendCommand (request: SendCommandRequest) {
     if (request.botId) {
-      const bot = this._bots.find(bot => bot.bot.id === request.botId);
-      if (!bot) {
-        throw new Error('Bot not found');
-      }
+      const bot = this._getBot(request.botId);
       const respone = await bot.rpc.Command(request);
       return respone;
     }
     return {};
+  }
+
+  private _getBot (botId: string) {
+    const bot = this._bots.find(bot => bot.bot.id === botId);
+    if (!bot) {
+      throw new Error('Bot not found');
+    }
+    return bot;
   }
 }

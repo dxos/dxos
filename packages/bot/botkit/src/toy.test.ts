@@ -36,7 +36,8 @@ describe('In-Memory', () => {
         },
         Command: async (request) => {
           return { response: request.command };
-        }
+        },
+        Stop: async () => ({})
       };
     });
     const botFactory = new BotFactory(botContainer);
@@ -62,6 +63,7 @@ describe('In-Memory', () => {
     expect(repsonse.response).toBeDefined();
     expect(Buffer.from(command).equals(Buffer.from(repsonse.response!))).toBe(true);
 
+    await agent.botFactory.Stop({ id: botId });
     agent.stop();
   });
 
@@ -92,9 +94,7 @@ describe('In-Memory', () => {
           }
 
           if (!request.command) {
-            // TODO(yivlad): Serves as a stop command.
-            await client.destroy();
-            return {};
+            throw new Error('No command');
           }
 
           await party.database.createItem({
@@ -106,6 +106,10 @@ describe('In-Memory', () => {
           });
 
           return { response: request.command };
+        },
+        Stop: async () => {
+          await client.destroy();
+          return {};
         }
       };
     });
@@ -153,9 +157,7 @@ describe('In-Memory', () => {
     const savedText = items[0].model.getProperty('text');
     expect(savedText).toBe(PublicKey.from(text).toString());
 
-    await botFactoryClient.botFactory.SendCommand({
-      botId: id
-    });
+    await botFactoryClient.botFactory.Stop({ id });
 
     await botFactoryClientDXOSClient.destroy();
     botFactoryClient.stop();
