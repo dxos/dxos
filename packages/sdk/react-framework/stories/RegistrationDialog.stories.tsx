@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import Box from '@mui/material/Box';
+import { Box, Button } from '@mui/material';
 
 import { sleep } from '@dxos/async';
 
@@ -20,6 +20,7 @@ export const Primary = () => {
 
   return (
     <Box m={2}>
+      <Button onClick={() => setOpen(true)}>Open</Button>
       <RegistrationDialog
         open={open}
         onComplete={() => sleep(1000).then(() => setOpen(false)) }

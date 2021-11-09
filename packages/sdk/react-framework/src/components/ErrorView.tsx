@@ -5,6 +5,7 @@
 import React from 'react';
 
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
@@ -12,21 +13,20 @@ import {
   DialogTitle,
   IconButton,
   Link,
-  Toolbar,
   Typography,
   styled
 } from '@mui/material';
 
 import { CopyToClipboard } from '@dxos/react-components';
 
-const DEFAULT_TITLE = 'Error';
+const DEFAULT_TITLE = 'Runtime Error';
 const DEFAULT_ISSUE_LINK = 'https://github.com/dxos/sdk/issues/new';
 
 const Code = styled('div')(({ theme }) => ({
+  padding: 8,
   maxHeight: 156,
   overflow: 'scroll',
   whiteSpace: 'break-spaces',
-  padding: 8,
   backgroundColor: theme.palette.action.hover
 }));
 
@@ -65,21 +65,27 @@ export const ErrorView = ({
           <Typography>Something went wrong that requires the app to be reloaded.</Typography>
         )}
         {isDev && (
-          <Code>
-            {stack}
-          </Code>
+          <>
+            <Code>
+              {stack}
+            </Code>
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              marginTop: '-40px',
+              marginRight: '6px',
+              paddingBottom: '32px'
+            }}>
+              <IconButton size='small'>
+                <CopyToClipboard text={stack} />
+              </IconButton>
+            </Box>
+          </>
         )}
         {(isDev && context) && (
           <>
-            <Toolbar variant='dense' disableGutters sx={{ padding: 0.5 }}>
-              <Typography>Context</Typography>
-              <div style={{ display: 'flex', flex: 1 }} />
-              <IconButton>
-                <CopyToClipboard text={stack} />
-              </IconButton>
-            </Toolbar>
             <Code>
-              {JSON.stringify(context, undefined, 2)}
+              {JSON.stringify({ context }, undefined, 2)}
             </Code>
           </>
         )}
