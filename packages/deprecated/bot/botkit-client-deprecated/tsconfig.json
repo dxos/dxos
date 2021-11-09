@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
     "jsx": "react",
@@ -15,16 +15,16 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../../common/async"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../../common/crypto"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../../common/debug"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../../mesh/network-manager"
     },
     {
       "path": "../protocol-plugin-bot-deprecated"
