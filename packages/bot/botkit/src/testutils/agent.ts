@@ -26,4 +26,8 @@ export class BotFactoryAgent {
   async start (): Promise<void> {
     await this._rpc.open();
   }
+
+  stop () {
+    this._rpc.close();
+  }
 }
