@@ -2,11 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-
 import { OpenProgress } from '@dxos/echo-db';
 import { createBundledRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
-import {ClientServiceProvider, ClientServices, serviceBundle} from './interfaces'
+import { ClientServiceProvider, ClientServices, serviceBundle } from './interfaces';
 
 /**
  * Implements services that are not local to the app.
@@ -19,8 +18,8 @@ export class ClientServiceProxy implements ClientServiceProvider {
     private port: RpcPort
   ) {
     this._client = createBundledRpcClient(serviceBundle, {
-      port,
-    })
+      port
+    });
 
     this.services = this._client.rpc;
   }
@@ -37,6 +36,6 @@ export class ClientServiceProxy implements ClientServiceProvider {
 
   get echo () {
     throw new Error('Service proxy does not expose ECHO directly.');
-    return null as any
+    return null as any;
   }
 }

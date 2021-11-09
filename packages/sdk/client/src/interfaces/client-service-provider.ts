@@ -4,6 +4,7 @@
 
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 import { createServiceBundle } from '@dxos/rpc';
+
 import { schema } from '../proto/gen';
 import { DataService, PartyService, ProfileService } from '../proto/gen/dxos/client';
 import { DevtoolsHost } from '../proto/gen/dxos/devtools';

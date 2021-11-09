@@ -6,7 +6,6 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { ECHO, OpenProgress } from '@dxos/echo-db';
-import { createServiceBundle } from '@dxos/rpc';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { DevtoolsServiceDependencies } from '.';

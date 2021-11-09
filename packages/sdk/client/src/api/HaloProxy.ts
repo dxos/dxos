@@ -7,8 +7,8 @@ import { SecretProvider } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationAuthenticator, InvitationDescriptor, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
+import { ClientServiceProvider } from '../interfaces';
 import { Profile } from '../proto/gen/dxos/client';
-import { ClientServiceProvider } from '../service-host';
 
 export class HaloProxy {
   private _profile?: Profile;

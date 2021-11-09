@@ -16,7 +16,8 @@ import { ValueUtil } from '@dxos/object-model';
 
 import { HaloProxy } from './api/HaloProxy';
 import { DevtoolsHook } from './devtools';
-import { ClientServiceProvider, ClientServiceHost } from './service-host';
+import { ClientServiceProvider } from './interfaces';
+import { ClientServiceHost } from './service-host';
 
 export const defaultConfig: defs.Config = {};
 
