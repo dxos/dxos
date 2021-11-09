@@ -15,7 +15,7 @@ import { InProcessBotContaier } from './bot-container';
 import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
 import { Bot } from './proto/gen/dxos/bot';
-import { BotFactoryAgent, ClientAgent } from './testutils';
+import { BotFactoryClient } from './testutils';
 import { decodeInvitation, encodeInvitation } from './testutils/intivitations';
 
 const ECHO_TYPE = 'bot/text';
@@ -26,7 +26,7 @@ describe('In-Memory', () => {
 
     let botInitialized = false;
 
-    const agent = new BotFactoryAgent(agentPort);
+    const agent = new BotFactoryClient(agentPort);
 
     const botContainer = new InProcessBotContaier(() => {
       return {
@@ -113,16 +113,21 @@ describe('In-Memory', () => {
     const botFactory = new BotFactory(botContainer);
 
     const botController = new BotController(botFactory, botControllerPort);
-    const agent = new ClientAgent(agentPort);
+
+    const botFactoryClient = new BotFactoryClient(agentPort);
+    const botFactoryClientDXOSClient = new Client();
+    await botFactoryClientDXOSClient.initialize();
+    await botFactoryClientDXOSClient.echo.halo.createIdentity({ ...createKeyPair() });
+    await botFactoryClientDXOSClient.echo.halo.create('Agent');
+    const party = await botFactoryClientDXOSClient.echo.createParty();
 
     await Promise.all([
       botController.start(),
-      agent.start()
+      botFactoryClient.start()
     ]);
-    assert(agent.party);
 
-    const invitation = await agent.party.createOfflineInvitation(PublicKey.from(botKeyPair.publicKey));
-    const { id } = await agent.botFactory.SpawnBot({
+    const invitation = await party.createOfflineInvitation(PublicKey.from(botKeyPair.publicKey));
+    const { id } = await botFactoryClient.botFactory.SpawnBot({
       invitation: {
         data: encodeInvitation(invitation)
       }
@@ -130,20 +135,20 @@ describe('In-Memory', () => {
     assert(id);
 
     const text = PublicKey.random().asUint8Array();
-    await agent.botFactory.SendCommand({
+    await botFactoryClient.botFactory.SendCommand({
       botId: id,
       command: text
     });
 
-    await agent.party.database.waitForItem({
+    await party.database.waitForItem({
       type: ECHO_TYPE
     });
 
-    await agent.botFactory.SendCommand({
+    await botFactoryClient.botFactory.SendCommand({
       botId: id
     });
 
-    await agent.client.destroy();
-    agent.stop();
+    await botFactoryClientDXOSClient.destroy();
+    botFactoryClient.stop();
   });
 });

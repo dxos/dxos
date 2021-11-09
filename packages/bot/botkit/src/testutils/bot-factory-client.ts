@@ -7,7 +7,7 @@ import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 import { schema } from '../proto/gen';
 import { BotFactoryService } from '../proto/gen/dxos/bot';
 
-export class BotFactoryAgent {
+export class BotFactoryClient {
   private readonly _rpc: ProtoRpcClient<BotFactoryService>;
 
   constructor (port: RpcPort) {

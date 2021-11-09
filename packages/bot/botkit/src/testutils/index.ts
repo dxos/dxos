@@ -2,5 +2,4 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './agent';
-export * from './client-agent';
+export * from './bot-factory-client';
