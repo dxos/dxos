@@ -29,10 +29,10 @@ export default {
   },
   'dxos.halo.keys.PubKey': {
     encode: (value: PublicKey) => ({ data: value.asUint8Array() }),
-    decode: (value: any) => PublicKey.from(value.data)
+    decode: (value: any) => PublicKey.from(new Uint8Array(value.data))
   },
   'dxos.halo.keys.PrivKey': {
     encode: (value: SecretKey) => ({ data: value }),
-    decode: (value: any) => Buffer.from(value.data)
+    decode: (value: any) => Buffer.from(new Uint8Array(value.data))
   }
 };

@@ -73,10 +73,13 @@ export const createServiceBundle = <S>(services: ServiceBundle<S>): ServiceBundl
 /**
  * Create type-safe RPC client from a service bundle.
  */
-export const createBundledRpcClient = <S>(descriptors: ServiceBundle<S>, options: Omit<RpcPeerOptions, 'messageHandler'>): ProtoRpcClient<S> => {
+export const createBundledRpcClient = <S>(descriptors: ServiceBundle<S>, options: Omit<RpcPeerOptions, 'messageHandler' | 'streamHandler'>): ProtoRpcClient<S> => {
   const peer = new RpcPeer({
     ...options,
     messageHandler: () => {
+      throw new Error('Requests to client are not supported.');
+    },
+    streamHandler: () => {
       throw new Error('Requests to client are not supported.');
     }
   });

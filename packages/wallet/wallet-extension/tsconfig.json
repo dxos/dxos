@@ -44,9 +44,6 @@
       "path": "../../common/rpc"
     },
     {
-      "path": "../wallet-core"
-    },
-    {
       "path": "../../gravity/browser-mocha"
     }
   ]

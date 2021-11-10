@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import Fullscreen from './components/Fullscreen';
+import { Fullscreen } from './containers';
 import render from './render';
 
 render(<Fullscreen />);

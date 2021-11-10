@@ -1,0 +1,8 @@
+#
+# ENV mapping
+#
+
+NODE_ENV:
+  path: custom.mode
+DEBUG:
+  path: system.debug

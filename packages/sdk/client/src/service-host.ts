@@ -6,44 +6,15 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { ECHO, OpenProgress } from '@dxos/echo-db';
-import { createServiceBundle } from '@dxos/rpc';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { DevtoolsServiceDependencies } from '.';
 import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
-import { schema } from './proto/gen';
-import { Contacts, DataService, PartyService, ProfileService } from './proto/gen/dxos/client';
+import { ClientServiceProvider, ClientServices } from './interfaces';
+import { Contacts } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
 import { resultSetToStream } from './util/subscription';
-
-export interface ClientServices {
-  ProfileService: ProfileService;
-  PartyService: PartyService;
-  DataService: DataService;
-  DevtoolsHost: DevtoolsHost;
-}
-
-export const serviceBundle = createServiceBundle<ClientServices>({
-  ProfileService: schema.getService('dxos.client.ProfileService'),
-  PartyService: schema.getService('dxos.client.PartyService'),
-  DataService: schema.getService('dxos.client.DataService'),
-  DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost')
-});
-
-export interface ClientServiceProvider {
-  services: ClientServices
-
-  open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined): Promise<void>
-
-  close(): Promise<void>
-
-  // TODO(dmaretskyi): Remove and rely on services.
-  /**
-   * @deprecated
-   */
-  echo: ECHO
-}
 
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _echo: ECHO;

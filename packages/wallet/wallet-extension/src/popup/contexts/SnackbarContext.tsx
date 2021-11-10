@@ -4,8 +4,7 @@
 
 import React, { useContext, useState } from 'react';
 
-import Snackbar from '@material-ui/core/Snackbar';
-import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
+import { Snackbar, Alert as MuiAlert, AlertProps } from '@mui/material';
 
 interface SnackbarMessage {
   message: string,
@@ -35,7 +34,7 @@ const WithSnackbarContext = ({ children } : { children: React.ReactNode }) => {
     <SnackbarContext.Provider value={setSnackbar}>
       {message
         ? (
-<Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+        <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
           <Alert onClose={handleClose} severity={message.severity}>
             {message.message}
           </Alert>

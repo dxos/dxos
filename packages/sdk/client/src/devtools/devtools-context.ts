@@ -10,7 +10,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 
 import { Client } from '../client';
-import { ClientServiceProvider } from '../service-host';
+import { ClientServiceProvider } from '../interfaces';
 
 /**
  * A hook bound to window.__DXOS__.
