@@ -10,10 +10,10 @@
     "src"
   ],
   "scripts": {
-    "build": "webpack",
+    "build": "tsc --noEmit && esbuild-server build",
     "build:test": "pnpm run build && pnpm run test",
     "lint": "toolchain lint",
-    "start": "webpack serve --mode development",
+    "start": "esbuild-server dev",
     "test": "pnpm run lint"
   },
   "dependencies": {
@@ -34,12 +34,8 @@
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
-    "html-webpack-plugin": "^4.3.0",
-    "rollup-plugin-node-globals": "^1.4.0",
-    "ts-loader": "~8.1.0",
     "typescript": "^4.3.5",
-    "webpack": "4.44.2",
-    "webpack-cli": "^4.7.0",
-    "webpack-dev-server": "^3.11.2"
+    "@dxos/esbuild-server": "~1.2.3",
+    "@dxos/esbuild-plugins": "workspace:*"
   }
 }
