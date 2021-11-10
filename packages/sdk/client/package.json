@@ -51,7 +51,9 @@
     "@types/memdown": "^3.0.0",
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2",
-    "mocha": "~8.4.0"
+    "mocha": "~8.4.0",
+    "@dxos/testutils": "workspace:*",
+    "@types/debug": "^4.1.1"
   },
   "publishConfig": {
     "access": "public"

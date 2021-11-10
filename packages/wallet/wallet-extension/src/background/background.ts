@@ -8,10 +8,11 @@ import { wrapPort } from '../utils/wrapPort';
 import { BackgroundServer } from './background-server';
 
 void (async () => {
+  const server = new BackgroundServer();
+  void server.open();
   browser.runtime.onConnect.addListener((port: Runtime.Port) => {
     console.log(`Background process connected on port ${port.name}`);
 
-    const server = new BackgroundServer(wrapPort(port));
-    void server.run();
+    void server.handlePort(wrapPort(port));
   });
 })();

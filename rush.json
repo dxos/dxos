@@ -795,12 +795,6 @@
     //
 
     {
-      "packageName": "@dxos/wallet-core",
-      "projectFolder": "packages/wallet/wallet-core",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
       "packageName": "@dxos/wallet-extension",
       "projectFolder": "packages/wallet/wallet-extension"
     },

@@ -3,6 +3,9 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
+
+const log = debug('dxos:codec-protobuf:stream');
 
 type Producer<T> = (callbacks: {
   next: (message: T) => void,
@@ -60,7 +63,7 @@ export class Stream<T> {
     const disposeCb = producer({
       next: msg => {
         if (this._isClosed) {
-          console.warn('Stream is closed, dropping message.');
+          log('Stream is closed, dropping message.');
           return;
         }
 

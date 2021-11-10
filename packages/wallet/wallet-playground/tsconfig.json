@@ -17,11 +17,5 @@
     "/dist/"
   ],
   "references": [
-    {
-      "path": "../wallet-core"
-    },
-    {
-      "path": "../wallet-extension"
-    }
   ]
 }

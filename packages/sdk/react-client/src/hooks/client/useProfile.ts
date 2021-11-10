@@ -12,10 +12,10 @@ import { useClient } from './useClient';
  */
 export const useProfile = () => {
   const client = useClient();
-  const [profile, setProfile] = useState(() => client.halo.getProfile());
+  const [profile, setProfile] = useState(() => client.halo.profile);
 
   useEffect(() => {
-    return client.halo.subscribeToProfile(() => setProfile(client.halo.getProfile()));
+    return client.halo.subscribeToProfile(() => setProfile(client.halo.profile));
   }, [client]);
 
   return profile;

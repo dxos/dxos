@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
 import { Config, defs } from '@dxos/config';
@@ -13,10 +14,17 @@ import { InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologic
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
+import { RpcPort } from '@dxos/rpc';
 
 import { HaloProxy } from './api/HaloProxy';
 import { DevtoolsHook } from './devtools';
-import { ClientServiceProvider, ClientServiceHost } from './service-host';
+import { ClientServiceProvider, ClientServices } from './interfaces';
+import { isNode } from './platform';
+import { ClientServiceHost } from './service-host';
+import { ClientServiceProxy } from './service-proxy';
+import { createWindowMessagePort } from './util';
+
+const log = debug('dxos:client');
 
 export const defaultConfig: defs.Config = {};
 
@@ -28,6 +36,13 @@ export const defaultTestingConfig: defs.Config = {
   }
 };
 
+export interface ClientConstructorOpts {
+  /**
+   * Only used when remote=true.
+   */
+  rpcPort?: RpcPort;
+}
+
 /**
  * Main DXOS client object.
  * An entrypoint to ECHO, HALO, DXNS.
@@ -35,26 +50,36 @@ export const defaultTestingConfig: defs.Config = {
 export class Client {
   private readonly _config: Config;
 
-  private readonly _serviceHost: ClientServiceProvider;
+  private readonly _serviceProvider: ClientServiceProvider;
+
+  private readonly _halo: HaloProxy;
 
   private _initialized = false;
-
-  private _halo: HaloProxy;
 
   /**
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  constructor (config: defs.Config | Config = {}) {
+  constructor (config: defs.Config | Config = {}, opts: ClientConstructorOpts = {}) {
     if (config instanceof Config) {
       this._config = config;
     } else {
       this._config = new Config(config);
     }
+    debug.enable(this._config.values.system?.debug ?? process.env.DEBUG ?? '');
 
-    this._serviceHost = new ClientServiceHost(this._config);
+    if (this._config.values.system?.remote) {
+      if (!opts.rpcPort && isNode()) {
+        throw new Error('RPC port is required to run client in remote mode on Node environment.');
+      }
+      log('Creating client in *REMOTE* mode.');
+      this._serviceProvider = new ClientServiceProxy(opts.rpcPort ?? createWindowMessagePort());
+    } else {
+      log('Creating client in *LOCAL* mode.');
+      this._serviceProvider = new ClientServiceHost(this._config);
+    }
 
-    this._halo = new HaloProxy(this._serviceHost);
+    this._halo = new HaloProxy(this._serviceProvider);
   }
 
   toString () {
@@ -84,7 +109,7 @@ export class Client {
    * ECHO database.
    */
   get echo () {
-    return this._serviceHost.echo;
+    return this._serviceProvider.echo;
   }
 
   /**
@@ -92,6 +117,13 @@ export class Client {
    */
   get halo (): HaloProxy {
     return this._halo;
+  }
+
+  /**
+   * Client services that can be proxied.
+   */
+  get services (): ClientServices {
+    return this._serviceProvider.services;
   }
 
   /**
@@ -109,7 +141,7 @@ export class Client {
       throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
 
-    await this._serviceHost.open(onProgressCallback);
+    await this._serviceProvider.open(onProgressCallback);
 
     this._halo.open();
 
@@ -128,7 +160,7 @@ export class Client {
       return;
     }
 
-    await this._serviceHost.close();
+    await this._serviceProvider.close();
     this._initialized = false;
   }
 
@@ -140,7 +172,7 @@ export class Client {
   //   Recreate echo instance? Big impact on hooks. Test.
   @synchronized
   async reset () {
-    await this._serviceHost.echo.reset();
+    await this._serviceProvider.echo.reset();
     this._initialized = false;
   }
 
@@ -154,7 +186,7 @@ export class Client {
    */
   @synchronized
   async createPartyFromSnapshot (snapshot: DatabaseSnapshot) {
-    const party = await this._serviceHost.echo.createParty();
+    const party = await this._serviceProvider.echo.createParty();
     const items = snapshot.items ?? [];
 
     // We have a brand new item ids after creation, which breaks the old structure of id-parentId mapping.
@@ -295,7 +327,7 @@ export class Client {
    */
   // TODO(burdon): Expose echo directly?
   registerModel (constructor: ModelConstructor<any>): this {
-    this._serviceHost.echo.modelFactory.registerModel(constructor);
+    this._serviceProvider.echo.modelFactory.registerModel(constructor);
     return this;
   }
 
@@ -313,7 +345,7 @@ export class Client {
   getDevtoolsContext (): DevtoolsHook {
     const devtoolsContext: DevtoolsHook = {
       client: this,
-      serviceHost: this._serviceHost
+      serviceHost: this._serviceProvider
     };
 
     return devtoolsContext;

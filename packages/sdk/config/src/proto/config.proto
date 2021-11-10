@@ -69,6 +69,9 @@ message System {
 
   /// Milliseconds
   int32 invitation_expiration = 6;
+
+  /// Whether the client services are local with ClientServiceHost or remote and need to be accessed via ClientServiceProxy.
+  bool remote = 7;
 }
 
 /// Services provided to all DXOS agents
