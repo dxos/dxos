@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 
 import { useClient, useParties, useProfile } from '@dxos/react-client';
+import { createKeyPair } from '@dxos/crypto';
 
 const App = () => {
   const client = useClient();
@@ -20,7 +21,12 @@ const App = () => {
   }
 
   if (!profile) {
-    return <p>You have no DXOS profile. Create it in the DXOS Wallet extension.</p>;
+    return <>
+      <p>You have no DXOS profile. Create it in the DXOS Wallet extension.</p>
+      <button onClick={async () => {
+        await client.halo.createProfile({...createKeyPair(), username: 'test'});
+      }}>Create test profile</button>
+    </>;
   }
 
   return (
