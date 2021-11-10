@@ -2,8 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Client } from '@dxos/client';
-import { clientServiceBundle } from '@dxos/client/src/interfaces';
+import { Client, clientServiceBundle, ClientServices } from '@dxos/client';
 import { createBundledRpcServer, RpcPort, RpcPeer } from '@dxos/rpc';
 
 import { config } from './config';
@@ -30,9 +29,21 @@ export class BackgroundServer {
    * Will block until connection handshake is completed.
    */
   public async handlePort (port: RpcPort) {
+    const handlers: ClientServices = {
+      ...this._client.services,
+      ProfileService: {
+        ...this._client.services.ProfileService,
+        Reset: async () => {
+          await this._client.services.ProfileService.Reset();
+          // Override the Rest handler with a reload - Client does not recover properly after reset.
+          window.location.reload();
+        }
+      }
+    }
+
     const server = createBundledRpcServer({
       services: clientServiceBundle,
-      handlers: this._client.services,
+      handlers,
       port
     });
     this._connections.add(server);
