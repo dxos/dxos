@@ -31,8 +31,8 @@ const App = () => {
 
   return (
     <div style={{ minWidth: 400 }}>
-      <p>Hello, {profile.username ?? profile.publicKey}</p>
-      <p>{profile.publicKey}</p>
+      <p>Hello, {profile.username ?? profile.publicKey.toString()}</p>
+      <p>{profile.publicKey.toString()}</p>
     </div>
   );
 };
