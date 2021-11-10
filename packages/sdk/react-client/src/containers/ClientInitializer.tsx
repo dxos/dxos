@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect, ReactNode, ErrorInfo } from 'react';
 
-import { Client } from '@dxos/client';
+import { Client, ClientConstructorOpts } from '@dxos/client';
 
 import { ErrorComponentProps, ErrorBoundary, ErrorCallbackType } from '../components';
 import { SuppliedConfig, unwrapConfig } from '../config';
@@ -13,13 +13,7 @@ import { ClientProvider } from './ClientProvider';
 interface ClientLoaderProps {
   children?: ReactNode
   config?: SuppliedConfig
-  onInit?: (client: Client) => void
-  loaderComponent?: React.ComponentType
-}
-
-interface ClientLoaderProps {
-  children?: ReactNode
-  config?: SuppliedConfig
+  clientOpts?: ClientConstructorOpts
   onInit?: (client: Client) => void
   loaderComponent?: React.ComponentType
 }
@@ -31,6 +25,7 @@ interface ClientLoaderProps {
 export const ClientLoader = ({
   children,
   config = {},
+  clientOpts,
   onInit,
   loaderComponent: LoaderComponent
 }: ClientLoaderProps) => {
@@ -38,7 +33,7 @@ export const ClientLoader = ({
 
   useEffect(() => {
     setImmediate(async () => {
-      const client = new Client(await unwrapConfig(config));
+      const client = new Client(await unwrapConfig(config), clientOpts);
       await client.initialize();
       setClient(client);
       onInit && onInit(client);
@@ -64,7 +59,8 @@ export const ClientLoader = ({
 
 interface ClientInitializerProps {
   children?: ReactNode
-  config?: SuppliedConfig
+  config?: SuppliedConfig,
+  clientOpts?: ClientConstructorOpts
   onError?: ErrorCallbackType
   errorComponent?: React.ComponentType<ErrorComponentProps>
   loaderComponent?: React.ComponentType
@@ -78,6 +74,7 @@ interface ClientInitializerProps {
 export const ClientInitializer = ({
   children,
   config = {},
+  clientOpts,
   onError,
   errorComponent: ErrorComponent,
   loaderComponent: LoaderComponent
@@ -113,6 +110,7 @@ export const ClientInitializer = ({
     >
       <ClientLoader
         config={config}
+        clientOpts={clientOpts}
         loaderComponent={LoaderComponent}
         onInit={setClient}
       >

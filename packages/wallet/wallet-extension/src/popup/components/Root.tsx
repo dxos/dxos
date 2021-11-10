@@ -14,6 +14,8 @@ import { inFullScreenMode } from '../utils';
 import Main from './Main';
 import { ErrorView } from '@dxos/react-framework';
 import { ClientInitializer } from '@dxos/react-client';
+import { SuppliedConfig } from '@dxos/react-client/src/config';
+import { useExtensionPort } from '../hooks';
 
 const useStyles = makeStyles({
   logo: {
@@ -27,6 +29,7 @@ const useStyles = makeStyles({
 
 const Root = () => {
   const classes = useStyles();
+  const rpcPort = useExtensionPort();
 
   const onExpandToFullscreen = async () => {
     if (inFullScreenMode()) {
@@ -37,7 +40,12 @@ const Root = () => {
   };
 
   return (
-    <ClientInitializer config={{system: {remote: true}}} loaderComponent={() => <LinearProgress />} errorComponent={ErrorView}>
+    <ClientInitializer
+      config={{system: {remote: true}}}
+      clientOpts={{rpcPort}}
+      loaderComponent={() => <LinearProgress />}
+      errorComponent={ErrorView}
+    >
       <WithSnackbarContext>
         <AppBar position='static' color='default'>
           <Toolbar>

@@ -3,4 +3,5 @@
 //
 
 export * from './useExtensionBackground';
+export * from './useExtensionPort';
 export * from './useUIError';
