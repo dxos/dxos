@@ -49,7 +49,7 @@ const Main = () => {
   }
 
   if (!client.initialized) {
-    return <p>Connecting to the DXOS Wallet Extension...</p>
+    return <p>Connecting to the DXOS Wallet Extension...</p>;
   }
 
   if (!profile) {

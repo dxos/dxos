@@ -2221,6 +2221,7 @@ importers:
       '@hot-loader/react-dom': 17.0.1_react@17.0.2
       '@mui/icons-material': 5.0.1_4708d87537568924a83ffdea00ac702d
       '@mui/material': 5.0.1_3b7f7b84f013384d046f72a4522eddf8
+      '@mui/styles': 5.0.1_9b26932173ac5a93c18fc8634be19f05
       mocha: 8.4.0
       react: 17.0.2
       react-copy-to-clipboard: 5.0.3_react@17.0.2
@@ -2265,6 +2266,7 @@ importers:
       '@hot-loader/react-dom': 17.0.1
       '@mui/icons-material': ^5.0.1
       '@mui/material': ^5.0.1
+      '@mui/styles': ^5.0.1
       '@types/faker': ~5.5.1
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
@@ -6173,8 +6175,8 @@ packages:
       integrity: sha512-+/JJzRcORUf5MiZnzuqsPFRgxm3/0CUi1wE97ZQ2y7r+EnDVsjJLcjAH9Q9GY3k9zkPIpYb9Hig/+HT6AGZRnQ==
   /@mui/private-theming/5.0.1_9b26932173ac5a93c18fc8634be19f05:
     dependencies:
-      '@babel/runtime': 7.15.4
-      '@mui/utils': 5.0.1_react@17.0.2
+      '@babel/runtime': 7.16.0
+      '@mui/utils': 5.1.0_react@17.0.2
       '@types/react': 17.0.24
       prop-types: 15.7.2
       react: 17.0.2
@@ -6230,11 +6232,11 @@ packages:
       integrity: sha512-j40nCbaKr1HAZYqpX61XvZYsadYskjo3u6+pRFFaewSViAkkD1rjjbubpnh15nqVfYmijtHMZJ9/l1x1hamvfQ==
   /@mui/styles/5.0.1_9b26932173ac5a93c18fc8634be19f05:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       '@emotion/hash': 0.8.0
       '@mui/private-theming': 5.0.1_9b26932173ac5a93c18fc8634be19f05
       '@mui/types': 7.0.0_@types+react@17.0.24
-      '@mui/utils': 5.0.1_react@17.0.2
+      '@mui/utils': 5.1.0_react@17.0.2
       '@types/react': 17.0.24
       clsx: 1.1.1
       csstype: 3.0.9
@@ -12680,7 +12682,7 @@ packages:
       integrity: sha512-tRpdppF7TRazZrjJ6v3stzv93qxRcSsFmW6cX0Zm2NVKpxE1WV1HblnghVv9TreireHkqI/VDEsfolRF1p6y7Q==
   /css-vendor/2.0.8:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       is-in-browser: 1.1.3
     dev: false
     resolution:
@@ -18848,7 +18850,7 @@ packages:
       integrity: sha1-MT5mvB5cwG5Di8G3SZwuXFastqI=
   /jss-plugin-camel-case/10.8.0:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       hyphenate-style-name: 1.0.4
       jss: 10.8.0
     dev: false
@@ -18856,21 +18858,21 @@ packages:
       integrity: sha512-yxlXrXwcCdGw+H4BC187dEu/RFyW8joMcWfj8Rk9UPgWTKu2Xh7Sib4iW3xXjHe/t5phOHF1rBsHleHykWix7g==
   /jss-plugin-default-unit/10.8.0:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       jss: 10.8.0
     dev: false
     resolution:
       integrity: sha512-9XJV546cY9zV9OvIE/v/dOaxSi4062VfYQQfwbplRExcsU2a79Yn+qDz/4ciw6P4LV1Naq90U+OffAGRHfNq/Q==
   /jss-plugin-global/10.8.0:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       jss: 10.8.0
     dev: false
     resolution:
       integrity: sha512-H/8h/bHd4e7P0MpZ9zaUG8NQSB2ie9rWo/vcCP6bHVerbKLGzj+dsY22IY3+/FNRS8zDmUyqdZx3rD8k4nmH4w==
   /jss-plugin-nested/10.8.0:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       jss: 10.8.0
       tiny-warning: 1.0.3
     dev: false
@@ -18878,14 +18880,14 @@ packages:
       integrity: sha512-MhmINZkSxyFILcFBuDoZmP1+wj9fik/b9SsjoaggkGjdvMQCES21mj4K5ZnRGVm448gIXyi9j/eZjtDzhaHUYQ==
   /jss-plugin-props-sort/10.8.0:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       jss: 10.8.0
     dev: false
     resolution:
       integrity: sha512-VY+Wt5WX5GMsXDmd+Ts8+O16fpiCM81svbox++U3LDbJSM/g9FoMx3HPhwUiDfmgHL9jWdqEuvSl/JAk+mh6mQ==
   /jss-plugin-rule-value-function/10.8.0:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       jss: 10.8.0
       tiny-warning: 1.0.3
     dev: false
@@ -18893,7 +18895,7 @@ packages:
       integrity: sha512-R8N8Ma6Oye1F9HroiUuHhVjpPsVq97uAh+rMI6XwKLqirIu2KFb5x33hPj+vNBMxSHc9jakhf5wG0BbQ7fSDOg==
   /jss-plugin-vendor-prefixer/10.8.0:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       css-vendor: 2.0.8
       jss: 10.8.0
     dev: false
@@ -18901,7 +18903,7 @@ packages:
       integrity: sha512-G1zD0J8dFwKZQ+GaZaay7A/Tg7lhDw0iEkJ/iFFA5UPuvZFpMprCMQttXcTBhLlhhWnyZ8YPn4yqp+amrhQekw==
   /jss/10.8.0:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       csstype: 3.0.9
       is-in-browser: 1.1.3
       tiny-warning: 1.0.3

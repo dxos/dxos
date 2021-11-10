@@ -5,12 +5,13 @@
 import React from 'react';
 import { browser } from 'webextension-polyfill-ts';
 
-import { AppBar as MuiAppBar, IconButton, makeStyles, Toolbar, Tooltip, Typography } from '@material-ui/core';
 import { Fullscreen as FullscreenIcon } from '@mui/icons-material';
+import { AppBar as MuiAppBar, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 
 import { inFullScreenMode } from '../utils';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(theme => ({
   logo: {
     maxWidth: 20,
     margin: 5
@@ -18,7 +19,7 @@ const useStyles = makeStyles({
   title: {
     flexGrow: 1
   }
-});
+}));
 
 export const AppBar = () => {
   const classes = useStyles();
