@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { createKeyPair } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
+import { ProfileDialog } from '@dxos/react-framework';
 
 const App = () => {
   const client = useClient();
@@ -52,10 +53,10 @@ const App = () => {
 
   if (!profile) {
     return (
-      <>
-        <p>You have no DXOS profile. Create it in the DXOS Wallet extension.</p>
-        <button disabled={inProgress} onClick={handleCreateProfile}>Create test profile</button>
-      </>
+      <ProfileDialog
+        open={true}
+        onCreate={handleCreateProfile}
+      />
     );
   }
 

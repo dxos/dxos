@@ -28,9 +28,7 @@ export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileD
   };
 
   const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    }
+    onCancel?.();
   };
 
   return (
@@ -54,12 +52,14 @@ export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileD
       )}
       actions={(
         <>
-          <Button
-            onClick={handleCancel}
-            color='secondary'
-          >
-            Cancel
-          </Button>
+          {onCancel && (
+            <Button
+              onClick={handleCancel}
+              color='secondary'
+            >
+              Cancel
+            </Button>
+          )}
           {onJoinHalo && (
             <Button
               onClick={onJoinHalo}
