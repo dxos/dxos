@@ -51,7 +51,7 @@ const seedPhraseFile = 'dxos-recovery-seedphrase.txt';
 export interface RegistrationDialogProps {
   open: boolean
   debug?: boolean
-  onRestore: (seedPhrase: string) => void
+  onRestore: (seedPhrase: string) => void // TODO(burdon): Optional (hide option).
   onComplete: (seedPhrase: string, username: string) => void
 }
 
@@ -123,7 +123,7 @@ export const RegistrationDialog = ({
         const skipMatch = (debug || ev.shiftKey || !!isMobile);
         if (match || skipMatch) {
           setProcessing(true);
-          await onComplete(username, seedPhrase);
+          await onComplete(seedPhrase, username);
           setProcessing(false);
         } else {
           setStage(Stage.SHOW_SEED_PHRASE);

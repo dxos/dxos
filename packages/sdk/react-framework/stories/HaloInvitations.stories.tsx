@@ -12,8 +12,12 @@ import { CopyText, FullScreen } from '@dxos/react-components';
 import {
   HaloSharingDialog, ErrorView,
   JoinHaloDialog
-} from '../../src';
-import { Column } from '../helpers';
+} from '../src';
+import { Column } from './helpers';
+
+export default {
+  title: 'react-framework/HaloInvitations'
+};
 
 const Parties = () => {
   const parties = useParties();
