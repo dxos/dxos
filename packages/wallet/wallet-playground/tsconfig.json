@@ -17,8 +17,5 @@
     "/dist/"
   ],
   "references": [
-    {
-      "path": "../wallet-core"
-    }
   ]
 }
