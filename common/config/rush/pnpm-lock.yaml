@@ -11,22 +11,28 @@ importers:
       base-x: 3.0.9
     devDependencies:
       '@dxos/client': link:../../sdk/client
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/object-model': link:../../echo/object-model
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/expect': 24.3.0
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
+      assert: 2.0.0
       expect: 27.0.2
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/object-model': workspace:*
       '@dxos/proto': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
+      assert: ^2.0.0
       base-x: ~3.0.9
       expect: ~27.0.2
   ../../packages/common/async:
@@ -47,7 +53,7 @@ importers:
       lodash.merge: 4.6.2
       protobufjs: 6.11.2
     devDependencies:
-      '@dxos/eslint-plugin': 1.0.18_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.19_eslint@7.26.0+typescript@4.3.5
       '@types/assert': 1.5.4
       '@types/jest': 26.0.23
       '@types/lodash.merge': 4.6.6
@@ -58,7 +64,7 @@ importers:
       ts-node: 9.1.1_typescript@4.3.5
       typescript: 4.3.5
     specifiers:
-      '@dxos/eslint-plugin': ~1.0.18
+      '@dxos/eslint-plugin': ~1.0.19
       '@types/assert': ^1.5.4
       '@types/jest': ^26.0.7
       '@types/lodash.merge': ~4.6.6
@@ -120,7 +126,7 @@ importers:
       ts-morph: 10.0.2
     devDependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
-      '@dxos/eslint-plugin': 1.0.18_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.19_eslint@7.26.0+typescript@4.3.5
       '@dxos/protobuf-test': link:../protobuf-test
       '@types/argparse': 2.0.5
       '@types/jest': 26.0.23
@@ -132,7 +138,7 @@ importers:
       typescript: 4.3.5
     specifiers:
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/eslint-plugin': ~1.0.18
+      '@dxos/eslint-plugin': ~1.0.19
       '@dxos/protobuf-test': workspace:*
       '@types/argparse': ^2.0.0
       '@types/jest': ^26.0.7
@@ -1415,6 +1421,7 @@ importers:
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/proto': link:../../common/proto
       '@dxos/rpc': link:../../common/rpc
+      '@dxos/util': link:../../common/util
       '@wirelineio/registry-client': 1.1.0-beta.3
       abstract-leveldown: 7.0.0
       assert: 2.0.0
@@ -1452,6 +1459,7 @@ importers:
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
       '@types/expect': ~24.3.0
       '@types/jest': ^26.0.7
       '@types/level-js': ~4.0.1
@@ -1878,7 +1886,7 @@ importers:
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@emotion/react': 11.4.1_9bfa804cd21315a6b28257b6309f6867
       '@emotion/styled': 11.3.0_7153564620b9f6be3c75efaa2248597b
-      '@mui/core': 5.0.0-alpha.53_3b7f7b84f013384d046f72a4522eddf8
+      '@mui/core': 5.0.0-alpha.54_3b7f7b84f013384d046f72a4522eddf8
       '@mui/icons-material': 5.0.1_4708d87537568924a83ffdea00ac702d
       '@mui/lab': 5.0.0-alpha.48_e04118610eda033f1ee88460ea4d497a
       '@mui/material': 5.0.1_604b72d74923f30e2e755c544d7c2813
@@ -2369,7 +2377,7 @@ importers:
       util: ~0.12.4
   ../../toolchains/toolchain-node-library:
     dependencies:
-      '@dxos/eslint-plugin': 1.0.18_eslint@7.26.0+typescript@4.3.5
+      '@dxos/eslint-plugin': 1.0.19_eslint@7.26.0+typescript@4.3.5
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@types/yargs': 16.0.1
       chalk: 4.1.2
@@ -2390,7 +2398,7 @@ importers:
       '@types/node': 14.14.45
       ts-node: 9.1.1_typescript@4.3.5
     specifiers:
-      '@dxos/eslint-plugin': ~1.0.18
+      '@dxos/eslint-plugin': ~1.0.19
       '@dxos/protobuf-compiler': workspace:*
       '@types/glob': ~7.1.3
       '@types/jest': ^26.0.7
@@ -4857,6 +4865,14 @@ packages:
       node: '>=6.9.0'
     resolution:
       integrity: sha512-99catp6bHCaxr4sJ/DbTGgHS4+Rs2RVd2g7iOap6SLGPDknRK9ztKNsE/Fg6QhSeh1FGE5f6gHGQmvvn3I3xhw==
+  /@babel/runtime/7.16.0:
+    dependencies:
+      regenerator-runtime: 0.13.7
+    dev: true
+    engines:
+      node: '>=6.9.0'
+    resolution:
+      integrity: sha512-Nht8L0O8YCktmsDV6FqFue7vQLRx3Hb0B37lS5y0jDRqRxlBG4wIJHnf9/bgSE2UyipKFA01YtS+npRdTWBUyw==
   /@babel/template/7.12.13:
     dependencies:
       '@babel/code-frame': 7.12.13
@@ -5107,7 +5123,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-nJy7ktTad7QXfDH70DoN1HuxvmZXrN1xwBBHp7foI6875wYrFUk0peJ2E++ySNiuLqmdyIUFntbHODX9QjXE0w==
-  /@dxos/eslint-plugin/1.0.18_eslint@7.26.0+typescript@4.3.5:
+  /@dxos/eslint-plugin/1.0.19_eslint@7.26.0+typescript@4.3.5:
     dependencies:
       '@rushstack/eslint-patch': 1.0.6
       '@typescript-eslint/eslint-plugin': 4.28.4_ed91d8a9a45fee40b4f28fa6457a3abe
@@ -5124,7 +5140,7 @@ packages:
       eslint: '*'
       typescript: '*'
     resolution:
-      integrity: sha512-YRwCQz2cFVLDywTLoQFQvQ5kIYM3qUxRv4PlhngFs+TOk1BkD+vVbt05BRBJnYHN2TxkaxqWBeljhhUHmafTfQ==
+      integrity: sha512-FE185B6IGp9o36eAXglrpQ/YV21ACvCLF4JblYcLnjBdupZnlmsv1SFu54B/7phLikxPqxWkywPzwfljh4+/Ow==
   /@dxos/gem-core/1.0.0-beta.34_@types+react@17.0.24:
     dependencies:
       '@material-ui/core': 4.11.4_c9c9d4a2eab4f2a56fbc8dec3114b22b
@@ -6123,11 +6139,11 @@ packages:
         optional: true
     resolution:
       integrity: sha512-H/QQwKsr2EqPAnP35DGDpWihk5BOFYGhO52rIHb3XKOfoUjDCrCHBy2kvr3dLWJDmJXr/QzYj3AX10n5XzlaMg==
-  /@mui/core/5.0.0-alpha.53_3b7f7b84f013384d046f72a4522eddf8:
+  /@mui/core/5.0.0-alpha.54_3b7f7b84f013384d046f72a4522eddf8:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       '@emotion/is-prop-valid': 1.1.0
-      '@mui/utils': 5.0.1_react@17.0.2
+      '@mui/utils': 5.1.0_react@17.0.2
       '@popperjs/core': 2.9.2
       '@types/react': 17.0.24
       clsx: 1.1.1
@@ -6146,7 +6162,7 @@ packages:
       '@types/react':
         optional: true
     resolution:
-      integrity: sha512-dTwuhzE0puewJ+/Cw35iAiaBGVcZqVyqspheQHVJuhysSd+o58SONRAiM6MQgI/iFKiJ57HKh+En1MwuC7DMLw==
+      integrity: sha512-8TxdHqDdSb6wjhsnpE5n7qtkFKDG3PUSlVY0gR3VcdsHXscUY13l3VbMQW1brI4D/R9zx5VYmxIHWaHFgw4RtA==
   /@mui/icons-material/5.0.1_4708d87537568924a83ffdea00ac702d:
     dependencies:
       '@babel/runtime': 7.15.4
@@ -6502,6 +6518,21 @@ packages:
       react: ^17.0.2
     resolution:
       integrity: sha512-GWO104N+o9KG5fKiTEYnAg7kONKEg3vLN+VROAU0f3it6lFGLCVPcQYex/1gJ4QAy96u6Ez8/Hmmhi1+3cX0tQ==
+  /@mui/utils/5.1.0_react@17.0.2:
+    dependencies:
+      '@babel/runtime': 7.16.0
+      '@types/prop-types': 15.7.4
+      '@types/react-is': 17.0.2
+      prop-types: 15.7.2
+      react: 17.0.2
+      react-is: 17.0.2
+    dev: true
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      react: ^17.0.2
+    resolution:
+      integrity: sha512-TbAa3DZBGE6xjrVsQ6e0Iw0jwgGZqPg/48aZJJWXJJjU8NU5OhBRutYhrk/kbdDRmsIArHNdpJayBSi7yETYvg==
   /@multiformats/base-x/4.0.1:
     dev: false
     resolution:
@@ -10479,7 +10510,6 @@ packages:
     resolution:
       integrity: sha1-45sJrqne+Gao8gbiiK9jkZuuOcQ=
   /array-filter/1.0.0:
-    dev: false
     resolution:
       integrity: sha1-uveeYubvTCpMC4MSMtr/7CUfnYM=
   /array-flatten/1.1.1:
@@ -10601,7 +10631,6 @@ packages:
       is-nan: 1.3.2
       object-is: 1.1.5
       util: 0.12.4
-    dev: false
     resolution:
       integrity: sha512-se5Cd+js9dXJnu6Ag2JFc00t+HmHOen+8Q+L7O9zI0PqQXr20uk2J0XQqMxZEeo5U50o8Nvmmx7dZrl+Ufr35A==
   /assertion-error/1.1.0:
@@ -10690,7 +10719,6 @@ packages:
   /available-typed-arrays/1.0.2:
     dependencies:
       array-filter: 1.0.0
-    dev: false
     engines:
       node: '>= 0.4'
     resolution:
@@ -14507,7 +14535,6 @@ packages:
     resolution:
       integrity: sha1-p96IkUGgWpSwhUQDstCg+/qY87c=
   /es6-object-assign/1.1.0:
-    dev: false
     resolution:
       integrity: sha1-wsNYJlYkfDnqEHyx5mUrb58kUjw=
   /es6-shim/0.35.6:
@@ -15741,7 +15768,6 @@ packages:
     resolution:
       integrity: sha1-gQaNKVqBQuwKxybG4iAMMPttXoA=
   /foreach/2.0.5:
-    dev: false
     resolution:
       integrity: sha1-C+4AUBiusmDQo6865ljdATbsG5k=
   /foreground-child/2.0.0:
@@ -17696,7 +17722,6 @@ packages:
     resolution:
       integrity: sha512-cTIB4yPYL/Grw0EaSzASzg6bBy9gqCofvWN8okThAYIxKJZC+udlRAmGbM0XLeniEJSs8uEgHPGuHSe1XsOLSQ==
   /is-generator-function/1.0.9:
-    dev: false
     engines:
       node: '>= 0.4'
     resolution:
@@ -17750,7 +17775,6 @@ packages:
     dependencies:
       call-bind: 1.0.2
       define-properties: 1.1.3
-    dev: false
     engines:
       node: '>= 0.4'
     resolution:
@@ -17937,7 +17961,6 @@ packages:
       es-abstract: 1.18.0
       foreach: 2.0.5
       has-symbols: 1.0.2
-    dev: false
     engines:
       node: '>= 0.4'
     resolution:
@@ -26143,7 +26166,7 @@ packages:
       micromatch: 4.0.4
       semver: 7.3.5
       typescript: 4.3.5
-      webpack: 4.44.2_webpack-cli@4.7.2
+      webpack: 4.44.2
     dev: true
     engines:
       node: '>=10.0.0'
@@ -26752,7 +26775,6 @@ packages:
       is-typed-array: 1.1.5
       safe-buffer: 5.2.1
       which-typed-array: 1.1.4
-    dev: false
     resolution:
       integrity: sha512-bxZ9qtSlGUWSOy9Qa9Xgk11kSslpuZwaxCg4sNIDj6FLucDab2JxnHwyNTCpHMtK1MjoQiWQ6DiUMZYbSrO+Sw==
   /utila/0.4.0:
@@ -27395,7 +27417,6 @@ packages:
       function-bind: 1.1.1
       has-symbols: 1.0.2
       is-typed-array: 1.1.5
-    dev: false
     engines:
       node: '>= 0.4'
     resolution:

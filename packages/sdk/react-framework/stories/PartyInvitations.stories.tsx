@@ -161,7 +161,7 @@ const AutoInvitationGenerator = ({
       )}
     </Box>
   );
-}
+};
 
 export const Secondary = () => {
   const [invitationCode, setInvitationCode] = useState<string>();
