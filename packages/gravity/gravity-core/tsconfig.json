@@ -21,12 +21,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/crypto"
-    },
-    {
-      "path": "../../common/random-access-multi-storage"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -36,25 +30,19 @@
       "path": "../../halo/credentials"
     },
     {
+      "path": "../../common/crypto"
+    },
+    {
       "path": "../../echo/echo-db"
     },
     {
       "path": "../../echo/messenger-model"
     },
     {
+      "path": "../../common/random-access-multi-storage"
+    },
+    {
       "path": "../../mesh/signal"
-    },
-    {
-      "path": "../../deprecated/bot/bot-deprecated"
-    },
-    {
-      "path": "../../deprecated/bot/botkit-client-deprecated"
-    },
-    {
-      "path": "../../deprecated/bot/botkit-deprecated"
-    },
-    {
-      "path": "../../deprecated/bot/protocol-plugin-bot-deprecated"
     }
   ]
 }

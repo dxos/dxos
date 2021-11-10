@@ -8,5 +8,25 @@
   ],
   "exclude": [
     "node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../common/proto"
+    },
+    {
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../../sdk/client"
+    }
   ]
 }

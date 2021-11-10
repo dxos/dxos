@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { CustomTextField } from '../src';
 import { Container } from './helpers';
@@ -14,25 +14,35 @@ export default {
   component: CustomTextField
 };
 
+type Size = 'small' | 'medium' | undefined;
+type Variant = 'filled' | 'outlined' | 'standard' | undefined;
+
+const sizes: Size[] = ['small', 'medium'];
+const variants: Variant[] = ['standard', 'outlined', 'filled'];
+
 export const Primary = () => {
   const [text, setText] = useState<string>('CustomTextField');
 
   return (
     <Container>
-      <Box sx={{ padding: 1 }}>
-        <CustomTextField
-          value={text}
-          onUpdate={setText}
-          placeholder='Enter title'
-        />
-        <CustomTextField
-          placeholder='Enter title'
-        />
-        <CustomTextField
-          placeholder='Click to edit'
-          clickToEdit
-        />
-      </Box>
+      {sizes.map(size => (
+        <Box key={size}>
+          {variants.map(variant => (
+            <Box key={size} sx={{ padding: 2 }}>
+              <Typography color='primary' gutterBottom>{size}-{variant}</Typography>
+              <CustomTextField
+                margin='none'
+                size={size}
+                variant={variant}
+                placeholder='Click to edit (filled)'
+                value={text}
+                onUpdate={setText}
+                clickToEdit
+              />
+            </Box>
+          ))}
+        </Box>
+      ))}
     </Container>
   );
 };

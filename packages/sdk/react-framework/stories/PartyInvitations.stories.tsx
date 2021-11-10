@@ -7,15 +7,27 @@ import React, { useEffect, useState } from 'react';
 import { Box, Button, Toolbar } from '@mui/material';
 
 import { PublicKey } from '@dxos/crypto';
-import { ClientInitializer, ErrorBoundary, ProfileInitializer, useClient, useParties } from '@dxos/react-client';
-import { CopyText, FullScreen } from '@dxos/react-components';
+import {
+  ClientInitializer,
+  ErrorBoundary,
+  ProfileInitializer,
+  encodeInvitation,
+  useClient,
+  useParties,
+  useSecretGenerator
+} from '@dxos/react-client';
+import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 
 import {
   ErrorView,
   JoinPartyDialog,
   PartySharingDialog
-} from '../../src';
-import { Column } from '../helpers';
+} from '../src';
+import { Column } from './helpers';
+
+export default {
+  title: 'react-framework/PartyInvitations'
+};
 
 const Parties = () => {
   const parties = useParties();
@@ -68,7 +80,7 @@ const Sender = () => {
   );
 };
 
-const Receiver = () => {
+const Receiver = ({ invitationCode }: { invitationCode?: string }) => {
   const [open, setOpen] = useState(true);
 
   return (
@@ -78,8 +90,9 @@ const Receiver = () => {
       </Toolbar>
       <JoinPartyDialog
         open={open}
+        invitationCode={invitationCode}
         onClose={() => setOpen(false)}
-        closeOnSuccess={false}
+        closeOnSuccess={true}
         modal={false}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
@@ -111,6 +124,73 @@ export const Primary = () => {
             <ProfileInitializer>
               <Column>
                 <Receiver />
+              </Column>
+            </ProfileInitializer>
+          </ClientInitializer>
+        </Box>
+      </ErrorBoundary>
+    </FullScreen>
+  );
+};
+
+const AutoInvitationGenerator = ({
+  onInvite
+}: {
+  onInvite: (invitationCode: string) => void
+}) => {
+  const client = useClient();
+  const [secretProvider, pin, resetPin] = useSecretGenerator();
+
+  useEffect(() => {
+    setImmediate(async () => {
+      const party = await client.echo.createParty();
+      const invitation = await client.createInvitation(party.key, secretProvider, {
+        onFinish: () => {
+          resetPin();
+        }
+      });
+
+      onInvite(encodeInvitation(invitation));
+    });
+  }, []);
+
+  return (
+    <Box>
+      {pin && (
+        <Passcode value={pin} />
+      )}
+    </Box>
+  );
+};
+
+export const Secondary = () => {
+  const [invitationCode, setInvitationCode] = useState<string>();
+
+  return (
+    <FullScreen>
+      <ErrorBoundary errorComponent={ErrorView}>
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-around'
+        }}>
+          <ClientInitializer>
+            <ProfileInitializer>
+              <Column>
+                <AutoInvitationGenerator
+                  onInvite={invitationCode => setInvitationCode(invitationCode)}
+                />
+              </Column>
+            </ProfileInitializer>
+          </ClientInitializer>
+
+          <ClientInitializer>
+            <ProfileInitializer>
+              <Column>
+                {invitationCode && (
+                  <Receiver
+                    invitationCode={invitationCode}
+                  />
+                )}
               </Column>
             </ProfileInitializer>
           </ClientInitializer>
