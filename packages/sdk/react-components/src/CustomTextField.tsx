@@ -111,12 +111,13 @@ export const CustomTextField = ({
     );
   }
 
+  // eslint-disable-next-line
   // TODO(burdon): Use https://mui.com/components/text-fields/#unstyled.
   const variantProps: {[key: string]: any | undefined} = {
     'small': {
       'standard': {
         '.MuiTypography-root': {
-          height: 29 // Total=29
+          height: 29 // Total=29.
         },
         '& .edit-button': {
           height: '0.01em',
@@ -125,7 +126,7 @@ export const CustomTextField = ({
       },
       'filled': {
         '.MuiTypography-root': {
-          height: 28, // Total=48
+          height: 28, // Total=48.
           paddingTop: '20px',
           paddingLeft: '12px'
         },
@@ -139,7 +140,7 @@ export const CustomTextField = ({
           height: 32, // Total=40.
           paddingTop: '8px',
           paddingLeft: '14px',
-          paddingRight: '17px',
+          paddingRight: '17px'
         },
         '& .edit-button': {
           paddingTop: '3px',
@@ -150,7 +151,7 @@ export const CustomTextField = ({
     'medium': {
       'standard': {
         '.MuiTypography-root': {
-          height: 29, // Total=32
+          height: 29, // Total=32.
           paddingTop: '3px'
         },
         '& .edit-button': {
@@ -160,7 +161,7 @@ export const CustomTextField = ({
       },
       'filled': {
         '.MuiTypography-root': {
-          height: 32, // Total=56
+          height: 32, // Total=56.
           paddingTop: '24px',
           paddingLeft: '12px'
         },
@@ -181,7 +182,7 @@ export const CustomTextField = ({
           paddingRight: '14px'
         }
       }
-    },
+    }
   };
 
   const customProps = variantProps[size || 'small'][variant || 'outlined'];
