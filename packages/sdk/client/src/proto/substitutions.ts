@@ -8,7 +8,7 @@ import type { ConnectionEvent } from '@dxos/network-manager';
 export default {
   'dxos.halo.keys.PubKey': {
     encode: (value: PublicKey) => ({ data: value.asUint8Array() }),
-    decode: (value: any) => PublicKey.from(new Uint8Array(value.data)),
+    decode: (value: any) => PublicKey.from(new Uint8Array(value.data))
   },
   'dxos.halo.keys.PrivKey': {
     encode: (value: Buffer) => ({ data: new Uint8Array(value) }),

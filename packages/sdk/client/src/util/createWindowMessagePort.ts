@@ -24,4 +24,4 @@ export const createWindowMessagePort = (): RpcPort => {
       return () => window.removeEventListener('message', listener);
     }
   };
-}
+};

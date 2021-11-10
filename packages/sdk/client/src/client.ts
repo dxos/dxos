@@ -72,10 +72,10 @@ export class Client {
       if (!opts.rpcPort && isNode()) {
         throw new Error('RPC port is required to run client in remote mode on Node environment.');
       }
-      log('Creating client in *REMOTE* mode.')
+      log('Creating client in *REMOTE* mode.');
       this._serviceProvider = new ClientServiceProxy(opts.rpcPort ?? createWindowMessagePort());
     } else {
-      log('Creating client in *LOCAL* mode.')
+      log('Creating client in *LOCAL* mode.');
       this._serviceProvider = new ClientServiceHost(this._config);
     }
 
