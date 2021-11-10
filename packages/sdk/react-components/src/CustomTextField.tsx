@@ -9,10 +9,10 @@ import {
   Edit as EditIcon
 } from '@mui/icons-material';
 import {
-  useTheme, Box, IconButton, InputAdornment, TextField, Typography
+  useTheme, Box, IconButton, InputAdornment, TextField, BaseTextFieldProps, Typography
 } from '@mui/material';
 
-export interface CustomTextFieldProps {
+export interface CustomTextFieldProps extends BaseTextFieldProps {
   value?: string
   onUpdate?: (value: string) => void
   readonly?: boolean
@@ -24,14 +24,16 @@ export interface CustomTextFieldProps {
 /**
  * Click-to-edit text field.
  */
-// TODO(burdon): Implement variant.
 export const CustomTextField = ({
   value,
   onUpdate,
   readonly = false,
   saveOnBlur = true,
   clickToEdit = false,
-  placeholder
+  placeholder,
+  variant = 'outlined',
+  size = 'small',
+  ...props
 }: CustomTextFieldProps) => {
   const inputRef = useRef<HTMLInputElement>();
   const [editing, setEditing] = useState(false);
@@ -72,7 +74,6 @@ export const CustomTextField = ({
     }
   };
 
-  // TODO(burdon): Compact version (without border).
   // https://mui.com/components/text-fields/#components
   if (editing) {
     return (
@@ -94,27 +95,100 @@ export const CustomTextField = ({
           endAdornment: (
             <InputAdornment position='end'>
               <IconButton
+                size='small'
                 color='primary'
-                onMouseDown={handleReset} // NOTE: onMouseDown fires before onBlur above.
+                onMouseDown={handleReset} // NOTE: onMouseDown (used instead of onClick) fires before onBlur above.
               >
                 <ResetIcon />
               </IconButton>
             </InputAdornment>
           )
         }}
+        size={size}
+        variant={variant}
+        {...props}
       />
     );
   }
 
+  // TODO(burdon): Use https://mui.com/components/text-fields/#unstyled.
+  const variantProps: {[key: string]: any | undefined} = {
+    'small': {
+      'standard': {
+        '.MuiTypography-root': {
+          height: 29 // Total=29
+        },
+        '& .edit-button': {
+          height: '0.01em',
+          marginTop: '-3px'
+        }
+      },
+      'filled': {
+        '.MuiTypography-root': {
+          height: 28, // Total=48
+          paddingTop: '20px',
+          paddingLeft: '12px'
+        },
+        '& .edit-button': {
+          paddingTop: '7px',
+          paddingRight: '12px'
+        }
+      },
+      'outlined': {
+        '.MuiTypography-root': {
+          height: 32, // Total=40.
+          paddingTop: '8px',
+          paddingLeft: '14px',
+          paddingRight: '17px',
+        },
+        '& .edit-button': {
+          paddingTop: '3px',
+          paddingRight: '14px'
+        }
+      }
+    },
+    'medium': {
+      'standard': {
+        '.MuiTypography-root': {
+          height: 29, // Total=32
+          paddingTop: '3px'
+        },
+        '& .edit-button': {
+          height: '0.01em',
+          marginTop: '-1px'
+        }
+      },
+      'filled': {
+        '.MuiTypography-root': {
+          height: 32, // Total=56
+          paddingTop: '24px',
+          paddingLeft: '12px'
+        },
+        '& .edit-button': {
+          paddingTop: '11px',
+          paddingRight: '12px'
+        }
+      },
+      'outlined': {
+        '.MuiTypography-root': {
+          height: 40, // Total=56.
+          paddingTop: '16px',
+          paddingLeft: '14px',
+          paddingRight: '17px'
+        },
+        '& .edit-button': {
+          paddingTop: '11px',
+          paddingRight: '14px'
+        }
+      }
+    },
+  };
+
+  const customProps = variantProps[size || 'small'][variant || 'outlined'];
+
   return (
     <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        height: 40,
-        paddingLeft: '14px',
-        paddingRight: '17px'
-      }}
+      sx={{ display: 'flex', alignItems: 'flex-start', ...customProps }}
       onMouseOver={() => setMouseOver(true)}
       onMouseLeave={() => setMouseOver(false)}
     >
@@ -124,15 +198,18 @@ export const CustomTextField = ({
       >
         {text || placeholder}
       </Typography>
+
       <Box sx={{ flex: 1 }} />
-      {mouseOver && (
-        <IconButton
-          size='small'
-          onClick={() => !readonly && setEditing(true)}
-          sx={{ paddingLeft: '8px' }}
-        >
-          <EditIcon />
-        </IconButton>
+      {(mouseOver) && (
+        <Box className='edit-button'>
+          <IconButton
+            size='small'
+            onClick={() => !readonly && setEditing(true)}
+            title='Edit'
+          >
+            <EditIcon />
+          </IconButton>
+        </Box>
       )}
     </Box>
   );
