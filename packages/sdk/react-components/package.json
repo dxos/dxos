@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-components",
-  "version": "2.16.13",
+  "version": "2.16.14",
   "description": "Low-level material components.",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -39,7 +39,6 @@
     "@dxos/toolchain-node-library": "workspace:*",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
-    "@mui/core": "~5.0.0-alpha.53",
     "@mui/icons-material": "^5.0.1",
     "@mui/lab": "^5.0.0-alpha.48",
     "@mui/material": "^5.0.1",
@@ -61,7 +60,6 @@
   "peerDependencies": {
     "@emotion/react": ">=11.0.0",
     "@emotion/styled": ">=11.0.0",
-    "@mui/core": ">=5.0.0",
     "@mui/icons-material": ">=5.0.0",
     "@mui/lab": ">=5.0.0-alpha",
     "@mui/material": ">=5.0.0",
