@@ -48,6 +48,7 @@ export class HaloProxy {
   */
   async reset () {
     await this._serviceProvider.services.ProfileService.Reset();
+    this._profileChanged.emit();
   }
 
   // TODO(burdon): Should be part of profile object. Or use standard Result object.

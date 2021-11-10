@@ -18,14 +18,30 @@ const App = () => {
     try {
       await client.halo.createProfile({ ...createKeyPair(), username: 'test' });
     } catch (e: any) {
+      console.error(e);
       setError(e);
     } finally {
       setInProgress(false);
     }
   };
 
+  const handleReset = async () => {
+    setInProgress(true);
+    try {
+      await client.halo.reset();
+    } catch (e: any) {
+      console.error(e);
+      setError(e);
+    } finally {
+      setInProgress(false);
+    }
+  }
+
   if (error) {
-    return <p>Connection failed.</p>;
+    return <>
+      <p>Something went wrong.</p>
+      <details>{String(error)}</details>
+    </>
   }
 
   if (!client.initialized) {
@@ -45,6 +61,7 @@ const App = () => {
     <div style={{ minWidth: 400 }}>
       <p>Hello, {profile.username ?? profile.publicKey.toString()}</p>
       <p>{profile.publicKey.toString()}</p>
+      <button disabled={inProgress} onClick={handleReset}>Reset</button>
     </div>
   );
 };
