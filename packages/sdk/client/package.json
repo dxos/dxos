@@ -30,6 +30,7 @@
     "@dxos/object-model": "workspace:*",
     "@dxos/proto": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@wirelineio/registry-client": "~1.1.0-beta.3",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
@@ -38,8 +39,7 @@
     "jsondown": "dxos/jsondown#main",
     "level-js": "^5.0.2",
     "lodash.defaultsdeep": "^4.6.1",
-    "memdown": "^5.1.0",
-    "@dxos/util": "workspace:*"
+    "memdown": "^5.1.0"
   },
   "devDependencies": {
     "@dxos/random-access-multi-storage": "workspace:*",
