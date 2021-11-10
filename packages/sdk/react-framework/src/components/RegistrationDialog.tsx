@@ -58,15 +58,13 @@ export interface RegistrationDialogProps {
 /**
  * Registration and recovery dialog.
  */
-// TODO(burdon): Splitup.
-// TODO(burdon): Replace component in demos.
 export const RegistrationDialog = ({
   open = true,
   debug = false,
   onRestore,
   onComplete
 }: RegistrationDialogProps) => {
-  const [stage, _setStage] = useState(Stage.START);
+  const [stage, setCurrentStage] = useState(Stage.START);
   const [error, setError] = useState<string>();
   const [processing, setProcessing] = useState(false);
   const [seedPhrase] = useState(generateSeedPhrase());
@@ -79,12 +77,12 @@ export const RegistrationDialog = ({
   const setStage = (stage: Stage) => {
     setError(undefined);
     setProcessing(false);
-    _setStage(stage);
+    setCurrentStage(stage);
   };
 
   useEffect(() => {
     if (open) {
-      setStage(Stage.START);
+      setStage(Stage.CHECK_SEED_PHRASE);
     }
   }, [open]);
 
@@ -355,16 +353,18 @@ export const RegistrationDialog = ({
               <Typography sx={{ marginBottom: 3 }}>
                 Confirm the following words from your seed phrase.
               </Typography>
-              {seedRefs.map((seedRef, i) => (
-                <TextField
-                  key={i}
-                  autoFocus={i === 0}
-                  inputRef={seedRef}
-                  placeholder={`${ordinal(seedWordTestIndexes[i] + 1)} word`}
-                  onKeyDown={i === seedRefs.length - 1 ? handleKeyDown : undefined}
-                  sx={{ width: 120, marginRight: 1 }}
-                />
-              ))}
+              <Box sx={{}}>
+                {seedRefs.map((seedRef, i) => (
+                  <TextField
+                    key={i}
+                    autoFocus={i === 0}
+                    inputRef={seedRef}
+                    placeholder={`${ordinal(seedWordTestIndexes[i] + 1)} word`}
+                    onKeyDown={i === seedRefs.length - 1 ? handleKeyDown : undefined}
+                    sx={{ width: 120, marginRight: 1 }}
+                  />
+                ))}
+              </Box>
             </>
           ),
           actions: (
