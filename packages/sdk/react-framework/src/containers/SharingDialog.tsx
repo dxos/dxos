@@ -157,8 +157,9 @@ export const SharingDialog = ({
     setInvitations(invitations => [...invitations, pendingInvitation]);
   };
 
-  // TODO(burdon): By-pass keyhole.
-  const createUrl = (invitationCode: string) => `${window.origin}/#/invitation/${invitationCode}`;
+  // TODO(burdon): By-pass keyhole with fake code.
+  const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
+  const createUrl = (invitationCode: string) => `${window.origin}?code=${kubeCode}/#/invitation/${invitationCode}`;
 
   return (
     <Dialog
