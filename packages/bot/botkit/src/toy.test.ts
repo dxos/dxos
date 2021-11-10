@@ -101,8 +101,7 @@ describe('In-Memory', () => {
             if (request.invitation?.data) {
               assert(request.secret, 'Secret must be provided with invitation');
               const invitation = decodeInvitation(request.invitation.data);
-              // TODO(yivlad): Field secret is actually a buffer here.
-              const botSecretProvider: SecretProvider = async () => request.secret as Buffer;
+              const botSecretProvider: SecretProvider = async () => Buffer.from(request.secret!);
               party = await client.echo.joinParty(invitation, botSecretProvider);
             }
           },
@@ -137,7 +136,8 @@ describe('In-Memory', () => {
         botFactoryClient.start()
       ]);
 
-      const partySecret = Buffer.from('SECRET');
+      const partySecretString = PublicKey.random().toString();
+      const partySecret = Buffer.from(partySecretString);
       const secretProvider: SecretProvider = async () => partySecret;
       const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(partySecret);
 
@@ -146,7 +146,7 @@ describe('In-Memory', () => {
         invitation: {
           data: encodeInvitation(invitation)
         },
-        secret: partySecret
+        secret: partySecretString
       });
       assert(id);
 
