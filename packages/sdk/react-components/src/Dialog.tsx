@@ -104,10 +104,7 @@ export const NonModalDialog = ({
   return (
     <Card
       raised
-      sx={{
-        minWidth: 444
-      }}
-      {...dialogProps}
+      sx={{ minWidth: 444 }}
     >
       <CardHeader title={title} />
       <CardContent>
