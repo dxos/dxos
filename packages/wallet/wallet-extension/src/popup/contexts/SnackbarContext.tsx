@@ -4,8 +4,7 @@
 
 import React, { useContext, useState } from 'react';
 
-import Snackbar from '@material-ui/core/Snackbar';
-import MuiAlert, { AlertProps } from '@material-ui/lab/Alert';
+import {Snackbar, Alert as MuiAlert, AlertProps} from '@mui/material'
 
 interface SnackbarMessage {
   message: string,
