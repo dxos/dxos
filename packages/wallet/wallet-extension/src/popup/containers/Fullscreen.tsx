@@ -4,14 +4,16 @@
 
 import React from 'react';
 
-import { CssBaseline, ThemeProvider, createMuiTheme } from '@material-ui/core';
+import { createTheme as createMuiTheme, ThemeProvider, CssBaseline } from '@mui/material';
+
+import { FullScreen as FullScreenComponent } from '@dxos/react-components';
 
 import Root from './Root';
 
 const baseTheme = createMuiTheme({
-  overrides: {
+  components: {
     MuiCssBaseline: {
-      '@global': {
+      'styleOverrides': {
         body: {
           margin: 0,
           overflow: 'hidden'
@@ -25,7 +27,9 @@ export const Fullscreen = () => {
   return (
     <ThemeProvider theme={baseTheme}>
       <CssBaseline />
-      <Root />
+      <FullScreenComponent>
+        <Root />
+      </FullScreenComponent>
     </ThemeProvider>
   );
 };

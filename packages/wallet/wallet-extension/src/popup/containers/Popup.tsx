@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { CssBaseline, ThemeProvider, createMuiTheme } from '@material-ui/core';
+import { createTheme as createMuiTheme, ThemeProvider, CssBaseline } from '@mui/material';
 
 import Root from './Root';
 
 const baseTheme = createMuiTheme({
-  overrides: {
+  components: {
     MuiCssBaseline: {
-      '@global': {
+      'styleOverrides': {
         body: {
           margin: 0,
           overflow: 'hidden',
@@ -25,10 +25,10 @@ const baseTheme = createMuiTheme({
 
 export const Popup = () => {
   return (
-    <ThemeProvider theme={baseTheme}>
-      <CssBaseline />
-      <Root />
-    </ThemeProvider>
+  <ThemeProvider theme={baseTheme}>
+    <CssBaseline />
+    <Root />
+  </ThemeProvider>
   );
 };
 
