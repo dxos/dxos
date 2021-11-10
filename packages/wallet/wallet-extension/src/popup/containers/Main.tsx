@@ -35,13 +35,15 @@ const Main = () => {
     } finally {
       setInProgress(false);
     }
-  }
+  };
 
   if (error) {
-    return <>
+    return (
+<>
       <p>Something went wrong.</p>
       <details>{String(error)}</details>
     </>
+    );
   }
 
   if (!client.initialized) {

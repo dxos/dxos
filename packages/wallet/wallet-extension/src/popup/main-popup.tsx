@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import Popup from './components/Popup';
+import { Popup } from './containers';
 import render from './render';
 
 render(<Popup />);

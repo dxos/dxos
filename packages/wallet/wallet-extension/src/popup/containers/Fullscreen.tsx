@@ -14,16 +14,14 @@ const baseTheme = createMuiTheme({
       '@global': {
         body: {
           margin: 0,
-          overflow: 'hidden',
-          width: 600,
-          height: 450
+          overflow: 'hidden'
         }
       }
     }
   }
 });
 
-const Popup = () => {
+export const Fullscreen = () => {
   return (
     <ThemeProvider theme={baseTheme}>
       <CssBaseline />
@@ -32,4 +30,4 @@ const Popup = () => {
   );
 };
 
-export default Popup;
+export default Fullscreen;

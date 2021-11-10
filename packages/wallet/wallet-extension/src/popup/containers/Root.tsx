@@ -6,16 +6,16 @@ import React from 'react';
 import { browser } from 'webextension-polyfill-ts';
 
 import { AppBar, IconButton, makeStyles, Toolbar, Tooltip, Typography } from '@material-ui/core';
-import { LinearProgress } from '@mui/material';
 import { Fullscreen as FullscreenIcon } from '@mui/icons-material';
+import { LinearProgress } from '@mui/material';
 
-import { WithBackgroundContext, WithSnackbarContext } from '../contexts';
+import { ClientInitializer } from '@dxos/react-client';
+import { ErrorView } from '@dxos/react-framework';
+
+import { WithSnackbarContext } from '../contexts';
+import { useExtensionPort } from '../hooks';
 import { inFullScreenMode } from '../utils';
 import Main from './Main';
-import { ErrorView } from '@dxos/react-framework';
-import { ClientInitializer } from '@dxos/react-client';
-import { SuppliedConfig } from '@dxos/react-client/src/config';
-import { useExtensionPort } from '../hooks';
 
 const useStyles = makeStyles({
   logo: {
@@ -41,8 +41,8 @@ const Root = () => {
 
   return (
     <ClientInitializer
-      config={{system: {remote: true}}}
-      clientOpts={{rpcPort}}
+      config={{ system: { remote: true } }}
+      clientOpts={{ rpcPort }}
       loaderComponent={() => <LinearProgress />}
       errorComponent={ErrorView}
     >
