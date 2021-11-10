@@ -6,11 +6,14 @@ import React from 'react';
 import { browser } from 'webextension-polyfill-ts';
 
 import { AppBar, IconButton, makeStyles, Toolbar, Tooltip, Typography } from '@material-ui/core';
-import FullscreenIcon from '@material-ui/icons/Fullscreen';
+import { LinearProgress } from '@mui/material';
+import { Fullscreen as FullscreenIcon } from '@mui/icons-material';
 
 import { WithBackgroundContext, WithSnackbarContext } from '../contexts';
 import { inFullScreenMode } from '../utils';
 import Main from './Main';
+import { ErrorView } from '@dxos/react-framework';
+import { ClientInitializer } from '@dxos/react-client';
 
 const useStyles = makeStyles({
   logo: {
@@ -34,7 +37,7 @@ const Root = () => {
   };
 
   return (
-    <WithBackgroundContext>
+    <ClientInitializer config={{system: {remote: true}}} loaderComponent={() => <LinearProgress />} errorComponent={ErrorView}>
       <WithSnackbarContext>
         <AppBar position='static' color='default'>
           <Toolbar>
@@ -49,7 +52,7 @@ const Root = () => {
         </AppBar>
         <Main />
       </WithSnackbarContext>
-    </WithBackgroundContext>
+    </ClientInitializer>
   );
 };
 

@@ -1,69 +1,68 @@
 //
-// Copyright 2021 DXOS.org
+// Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
-import { HashRouter, Switch, Route, Redirect } from 'react-router-dom';
+import React, { useState } from 'react';
 
-import { useBackgroundContext } from '../contexts/BackgroundContext';
-import type { Profile } from '../utils/types';
-import CreateProfile from './CreateProfile';
-import Import from './Import';
-import JoinParty from './JoinParty';
-import Parties from './Parties';
-import RedeemDevice from './RedeemDevice';
-import User from './User';
+import { createKeyPair } from '@dxos/crypto';
+import { useClient, useProfile } from '@dxos/react-client';
 
 const Main = () => {
-  const [profile, setProfile] = useState<Profile | undefined>(undefined);
+  const client = useClient();
+  const profile = useProfile();
+  const [error, setError] = useState<Error | undefined>(undefined);
+  const [inProgress, setInProgress] = useState(false);
 
-  const backgroundService = useBackgroundContext();
-
-  useEffect(() => {
-    if (backgroundService === undefined) {
-      return;
+  const handleCreateProfile = async () => {
+    setInProgress(true);
+    try {
+      await client.halo.createProfile({ ...createKeyPair(), username: 'test' });
+    } catch (e: any) {
+      console.error(e);
+      setError(e);
+    } finally {
+      setInProgress(false);
     }
+  };
 
-    setImmediate(async () => {
-      const response = await backgroundService.rpc.GetProfile({});
-      setProfile(response);
-    });
-  }, [backgroundService]);
+  const handleReset = async () => {
+    setInProgress(true);
+    try {
+      await client.halo.reset();
+    } catch (e: any) {
+      console.error(e);
+      setError(e);
+    } finally {
+      setInProgress(false);
+    }
+  }
 
-  if (!backgroundService) {
-    return <p>Connecting to background...</p>;
+  if (error) {
+    return <>
+      <p>Something went wrong.</p>
+      <details>{String(error)}</details>
+    </>
+  }
+
+  if (!client.initialized) {
+    return <p>Connecting to the DXOS Wallet Extension...</p>;
+  }
+
+  if (!profile) {
+    return (
+      <>
+        <p>You have no DXOS profile. Create it in the DXOS Wallet extension.</p>
+        <button disabled={inProgress} onClick={handleCreateProfile}>Create test profile</button>
+      </>
+    );
   }
 
   return (
-    <HashRouter hashType='noslash'>
-      <Switch>
-        <Route path='/import'>
-          <Import onProfileCreated={setProfile} />
-        </Route>
-        <Route path='/create'>
-          <CreateProfile profile={profile} onProfileCreated={setProfile} />
-        </Route>
-        <Route path='/redeem-device'>
-          <RedeemDevice profile={profile} onProfileCreated={setProfile} />
-        </Route>
-        {profile && profile.username && profile.publicKey
-          ? (
-<Switch>
-            <Route path='/user'>
-              <User profile={profile} />
-            </Route>
-            <Route path='/parties'>
-              <Parties />
-            </Route>
-            <Route path='/joinparty'>
-              <JoinParty />
-            </Route>
-          </Switch>
-            )
-          : null}
-        <Redirect to='/create' />
-      </Switch>
-    </HashRouter>
+    <div style={{ minWidth: 400 }}>
+      <p>Hello, {profile.username ?? profile.publicKey.toString()}</p>
+      <p>{profile.publicKey.toString()}</p>
+      <button disabled={inProgress} onClick={handleReset}>Reset</button>
+    </div>
   );
 };
 

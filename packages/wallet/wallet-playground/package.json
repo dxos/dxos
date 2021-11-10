@@ -27,7 +27,8 @@
     "@dxos/react-framework": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@mui/material": "^5.0.1",
-    "@dxos/crypto": "workspace:*"
+    "@dxos/crypto": "workspace:*",
+    "@mui/icons-material": "^5.0.1"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
