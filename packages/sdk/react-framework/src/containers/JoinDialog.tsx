@@ -26,11 +26,12 @@ type JoinOptions = {
 
 export interface JoinDialogProps {
   open: boolean
-  modal?: boolean
   title: string
-  closeOnSuccess?: boolean
-  onClose?: () => void
+  invitationCode?: string
   onJoin: (joinOptions: JoinOptions) => Promise<Party>
+  onClose?: () => void
+  closeOnSuccess?: boolean
+  modal?: boolean
 }
 
 /**
@@ -40,17 +41,18 @@ export interface JoinDialogProps {
  */
 // TODO(burdon): Make work for HALO (device invitations).
 export const JoinDialog = ({
-  modal,
   open,
+  invitationCode: initialCode, // TODO(burdon): Automatically go to next step if set.
+  title,
+  onJoin,
   onClose,
   closeOnSuccess = true,
-  title,
-  onJoin
+  modal
 }: JoinDialogProps) => {
   const [state, setState] = useState(PartyJoinState.INIT);
   const [error, setError] = useState<string | undefined>(undefined);
   const [processing, setProcessing] = useState<boolean>(false);
-  const [invitationCode, setInvitationCode] = useState('');
+  const [invitationCode, setInvitationCode] = useState(initialCode || '');
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
 
   const handleReset = () => {
@@ -169,9 +171,7 @@ export const JoinDialog = ({
     );
 
     const authenticateActions = (
-      <>
-        <Button onClick={handleCancel}>Cancel</Button>
-      </>
+      <Button onClick={handleCancel}>Cancel</Button>
     );
 
     const errorActions = (
@@ -215,6 +215,7 @@ export const JoinDialog = ({
 
   return (
     <Dialog
+      maxWidth='xs'
       modal={modal}
       open={open}
       {...dialogProps}
