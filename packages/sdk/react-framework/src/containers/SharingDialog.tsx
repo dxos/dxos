@@ -157,9 +157,13 @@ export const SharingDialog = ({
     setInvitations(invitations => [...invitations, pendingInvitation]);
   };
 
-  // TODO(burdon): By-pass keyhole with fake code.
-  const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
-  const createUrl = (invitationCode: string) => `${window.origin}?code=${kubeCode}/#/invitation/${invitationCode}`;
+  const createUrl = (invitationCode: string) => {
+    // TODO(burdon): By-pass keyhole with fake code.
+    const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
+    const invitationPath = `/invitation/${invitationCode}`; // TODO(burdon): App-specific (hence pass in).
+    const { origin, pathname } = window.location;
+    return `${origin}${pathname}?code=${kubeCode}/#${invitationPath}`; // TODO(burdon): Use URL concat util?
+  }
 
   return (
     <Dialog
