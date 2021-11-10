@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { createKeyPair } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
+import { ProfileDialog, ProfileDialogProps } from '@dxos/react-framework';
 
 const Main = () => {
   const client = useClient();
@@ -13,10 +14,10 @@ const Main = () => {
   const [error, setError] = useState<Error | undefined>(undefined);
   const [inProgress, setInProgress] = useState(false);
 
-  const handleCreateProfile = async () => {
+  const handleCreateProfile: ProfileDialogProps['onCreate'] = async ({ username }) => {
     setInProgress(true);
     try {
-      await client.halo.createProfile({ ...createKeyPair(), username: 'test' });
+      await client.halo.createProfile({ ...createKeyPair(), username });
     } catch (e: any) {
       console.error(e);
       setError(e);
@@ -52,10 +53,10 @@ const Main = () => {
 
   if (!profile) {
     return (
-      <>
-        <p>You have no DXOS profile. Create it in the DXOS Wallet extension.</p>
-        <button disabled={inProgress} onClick={handleCreateProfile}>Create test profile</button>
-      </>
+      <ProfileDialog
+        open={true}
+        onCreate={handleCreateProfile}
+      />
     );
   }
 
