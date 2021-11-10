@@ -39,7 +39,7 @@ export class BackgroundServer {
           window.location.reload();
         }
       }
-    }
+    };
 
     const server = createBundledRpcServer({
       services: clientServiceBundle,

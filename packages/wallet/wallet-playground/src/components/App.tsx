@@ -30,6 +30,7 @@ const App = () => {
     setInProgress(true);
     try {
       await client.halo.reset();
+      window.location.reload();
     } catch (e: any) {
       console.error(e);
       setError(e);

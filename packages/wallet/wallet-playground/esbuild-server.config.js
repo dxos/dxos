@@ -2,11 +2,6 @@ const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = requi
 const { ConfigPlugin } = require('@dxos/config/esbuild-plugin');
 
 module.exports = {
-  overrides: {
-    define: {
-      'process.env.DEBUG': JSON.stringify(process.env.DEBUG),
-    }
-  },
   entryPoints: [
     'src/main.tsx'
   ],
