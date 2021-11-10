@@ -101,12 +101,12 @@ ncu --deep -u '@storybook/*'
 ### Release process
 1. Trigger [Release packages to npm](https://github.com/dxos/protocols/actions/workflows/npm-release.yml) job.
 
-![run-workflow](../images/run-workflow.png)
+<img src="../images/run-workflow.png" alt="run-workflow" width="450"/>
 
 2. Create a github release.
     * Changelog notes can be created automatically in the Github UI.
 
-![release-notes](../images/release-notes.png)
+<img src="../images/release-notes.png" alt="release-notes" width="300"/>
 
 ### Updating typescript project references and sort `package.json`
 
