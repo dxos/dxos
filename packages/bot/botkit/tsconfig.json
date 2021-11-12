@@ -27,6 +27,12 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../echo/object-model"
     }
   ]
 }

@@ -22,15 +22,15 @@
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
+    "@dxos/credentials": "workspace:*",
+    "@dxos/object-model": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/expect": "~24.3.0",
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
-    "expect": "~27.0.2",
-    "base-x": "~3.0.9",
-    "@dxos/object-model": "workspace:*",
     "assert": "^2.0.0",
-    "@dxos/credentials": "workspace:*"
+    "base-x": "~3.0.9",
+    "expect": "~27.0.2"
   },
   "publishConfig": {
     "access": "public"

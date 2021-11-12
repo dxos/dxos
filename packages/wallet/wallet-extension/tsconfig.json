@@ -41,6 +41,12 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-components"
+    },
+    {
+      "path": "../../sdk/react-framework"
+    },
+    {
       "path": "../../common/rpc"
     },
     {

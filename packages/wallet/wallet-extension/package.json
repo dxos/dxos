@@ -23,14 +23,14 @@
     "@dxos/react-framework": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@hot-loader/react-dom": "17.0.1",
+    "@mui/icons-material": "^5.0.1",
+    "@mui/material": "^5.0.1",
+    "@mui/styles": "^5.0.1",
     "mocha": "~8.4.0",
     "react": "^17.0.2",
     "react-copy-to-clipboard": "~5.0.3",
     "react-dom": "^17.0.2",
-    "react-router-dom": "^5.1.2",
-    "@mui/material": "^5.0.1",
-    "@mui/icons-material": "^5.0.1",
-    "@mui/styles": "^5.0.1"
+    "react-router-dom": "^5.1.2"
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
