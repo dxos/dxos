@@ -60,6 +60,9 @@
     },
     {
       "path": "../../common/random-access-multi-storage"
+    },
+    {
+      "path": "../../common/testutils"
     }
   ]
 }

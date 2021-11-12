@@ -43,7 +43,9 @@
   },
   "devDependencies": {
     "@dxos/random-access-multi-storage": "workspace:*",
+    "@dxos/testutils": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
+    "@types/debug": "^4.1.1",
     "@types/expect": "~24.3.0",
     "@types/jest": "^26.0.7",
     "@types/level-js": "~4.0.1",
@@ -51,9 +53,7 @@
     "@types/memdown": "^3.0.0",
     "@types/mocha": "~8.2.2",
     "expect": "~27.0.2",
-    "mocha": "~8.4.0",
-    "@dxos/testutils": "workspace:*",
-    "@types/debug": "^4.1.1"
+    "mocha": "~8.4.0"
   },
   "publishConfig": {
     "access": "public"
