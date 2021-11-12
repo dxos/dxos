@@ -163,7 +163,7 @@ export const SharingDialog = ({
     const invitationPath = `/invitation/${invitationCode}`; // TODO(burdon): App-specific (hence pass in).
     const { origin, pathname } = window.location;
     return `${origin}${pathname}?code=${kubeCode}/#${invitationPath}`; // TODO(burdon): Use URL concat util?
-  }
+  };
 
   return (
     <Dialog
