@@ -4,9 +4,9 @@
 
 import React, { useState } from 'react';
 
-import { createKeyPair } from '@dxos/crypto';
+import { createKeyPair, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
-import { ProfileDialog } from '@dxos/react-framework';
+import { ProfileDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
 
 const App = () => {
   const client = useClient();
@@ -14,10 +14,11 @@ const App = () => {
   const [error, setError] = useState<Error | undefined>(undefined);
   const [inProgress, setInProgress] = useState(false);
 
-  const handleCreateProfile = async () => {
+  const handleCreateProfile: RegistrationDialogProps['onComplete'] = async (seed, username) => {
     setInProgress(true);
     try {
-      await client.halo.createProfile({ ...createKeyPair(), username: 'test' });
+      const keypair = keyPairFromSeedPhrase(seed);
+      await client.halo.createProfile({ ...keypair, username });
     } catch (e: any) {
       console.error(e);
       setError(e);
@@ -54,9 +55,10 @@ const App = () => {
 
   if (!profile) {
     return (
-      <ProfileDialog
+      <RegistrationDialog
         open={true}
-        onCreate={handleCreateProfile}
+        onComplete={handleCreateProfile}
+        onRestore={null as any}
       />
     );
   }
