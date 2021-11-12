@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Divider, Typography } from '@mui/material';
 
 import { CustomTextField } from '../src';
 import { Container } from './helpers';
@@ -28,7 +28,7 @@ export const Primary = () => {
       {sizes.map(size => (
         <Box key={size}>
           {variants.map(variant => (
-            <Box key={size} sx={{ padding: 2 }}>
+            <Box key={variant} sx={{ padding: 2 }}>
               <Typography color='primary' gutterBottom>{size}-{variant}</Typography>
               <CustomTextField
                 margin='none'
@@ -39,10 +39,34 @@ export const Primary = () => {
                 onUpdate={setText}
                 clickToEdit
               />
+              <Divider />
             </Box>
           ))}
         </Box>
       ))}
+    </Container>
+  );
+};
+
+export const Secondary = () => {
+  const [editing, setEditing] = useState(true);
+
+  return (
+    <Container>
+      <Box>
+        <CustomTextField
+          autoFocus
+          clickToEdit
+          variant='standard'
+          editing={editing}
+          value='Test'
+        />
+      </Box>
+      <Box sx={{ padding: 2 }}>
+        <Button onClick={() => setEditing(!editing)}>
+          Toggle
+        </Button>
+      </Box>
     </Container>
   );
 };
