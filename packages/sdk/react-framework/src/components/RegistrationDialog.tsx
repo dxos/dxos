@@ -82,7 +82,7 @@ export const RegistrationDialog = ({
 
   useEffect(() => {
     if (open) {
-      setStage(Stage.CHECK_SEED_PHRASE);
+      setStage(Stage.START);
     }
   }, [open]);
 
