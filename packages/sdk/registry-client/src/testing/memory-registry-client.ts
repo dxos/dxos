@@ -92,6 +92,10 @@ export class MemoryRegistryClient implements IRegistryClient {
     return undefined;
   }
 
+  async deleteResource (): Promise<void> {
+    return undefined;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async resolveRecordCid (id: DXN): Promise<CID | undefined> {
     return undefined;

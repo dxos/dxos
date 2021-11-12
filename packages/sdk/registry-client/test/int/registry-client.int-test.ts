@@ -20,7 +20,7 @@ chai.use(chaiAsPromised);
 
 const protoSchema = protobuf.Root.fromJSON(schemaJson);
 
-describe('Registry Client', () => {
+describe.only('Registry Client', () => {
   let registryApi: IRegistryClient;
   let keypair: ReturnType<Keyring['addFromUri']>;
   let apiPromise: ApiPromise;
@@ -111,6 +111,13 @@ describe('Registry Client', () => {
       expect(Object.keys(resource!.versions).length).to.equal(0);
       expect(Object.keys(resource!.tags).length).to.equal(1);
       expect(resource!.tags.latest?.toString()).to.be.equal(contentCid.toString());
+    });
+
+    it('Deletes a single resource', async () => {
+      const id = DXN.fromDomainKey(domainKey, appResourceName);
+      await registryApi.deleteResource(id);
+      const resource = await registryApi.getResource(id);
+      expect(resource).to.be.undefined;
     });
 
     describe('Tags and versions', () => {
