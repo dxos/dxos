@@ -20,7 +20,7 @@ chai.use(chaiAsPromised);
 
 const protoSchema = protobuf.Root.fromJSON(schemaJson);
 
-describe.only('Registry Client', () => {
+describe('Registry Client', () => {
   let registryApi: IRegistryClient;
   let keypair: ReturnType<Keyring['addFromUri']>;
   let apiPromise: ApiPromise;
