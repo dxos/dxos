@@ -34,9 +34,6 @@
     },
     {
       "path": "../../sdk/react-framework"
-    },
-    {
-      "path": "../wallet-extension"
     }
   ]
 }

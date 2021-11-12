@@ -23,7 +23,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-framework": "workspace:*",
-    "@dxos/wallet-extension": "workspace:*",
     "@mui/icons-material": "^5.0.1",
     "@mui/material": "^5.0.1",
     "react": "^17.0.2",
