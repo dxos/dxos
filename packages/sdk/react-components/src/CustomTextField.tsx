@@ -2,23 +2,25 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { FunctionComponent, useEffect, useRef, useState } from 'react';
 
 import {
   Clear as ResetIcon,
-  Edit as EditIcon
+  MenuOpen as DefaultEditIcon
 } from '@mui/icons-material';
 import {
-  useTheme, Box, IconButton, InputAdornment, TextField, BaseTextFieldProps, Typography
+  useTheme, BaseTextFieldProps, Box, IconButton, InputAdornment, TextField, Typography
 } from '@mui/material';
 
 export interface CustomTextFieldProps extends BaseTextFieldProps {
   value?: string
-  onUpdate?: (value: string) => void
+  editing?: boolean
   readonly?: boolean
   saveOnBlur?: boolean
   clickToEdit?: boolean
   placeholder?: string
+  editIcon?: FunctionComponent
+  onUpdate?: (value: string) => void
 }
 
 /**
@@ -26,30 +28,38 @@ export interface CustomTextFieldProps extends BaseTextFieldProps {
  */
 export const CustomTextField = ({
   value,
-  onUpdate,
+  editing: editOnly = false,
   readonly = false,
   saveOnBlur = true,
   clickToEdit = false,
   placeholder,
+  editIcon: EditIcon = DefaultEditIcon,
+  onUpdate,
+
+  // BaseTextFieldProps
   variant = 'outlined',
   size = 'small',
   ...props
 }: CustomTextFieldProps) => {
   const inputRef = useRef<HTMLInputElement>();
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(editOnly);
   const [mouseOver, setMouseOver] = useState(false);
   const [text, setText] = useState(value || '');
   const theme = useTheme();
 
+  useEffect(() => {
+    setEditing(editOnly);
+  }, [editOnly]);
+
   const handleUpdate = () => {
-    setEditing(false);
+    !editOnly && setEditing(false);
     if (text !== value) {
-      onUpdate && onUpdate(text);
+      onUpdate?.(text);
     }
   };
 
   const handleReset = () => {
-    setEditing(false);
+    !editOnly && setEditing(false);
     setText(value || '');
   };
 
@@ -172,8 +182,8 @@ export const CustomTextField = ({
       },
       'outlined': {
         '.MuiTypography-root': {
-          height: 40, // Total=56.
-          paddingTop: '16px',
+          height: 41, // Total=56.
+          paddingTop: '15px',
           paddingLeft: '14px',
           paddingRight: '17px'
         },
