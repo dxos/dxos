@@ -199,13 +199,13 @@ export const CustomTextField = ({
 
   return (
     <Box
-      sx={{ display: 'flex', alignItems: 'flex-start', ...customProps }}
+      sx={{ display: 'flex', flex: 1, alignItems: 'flex-start', ...customProps }}
       onMouseOver={() => setMouseOver(true)}
       onMouseLeave={() => setMouseOver(false)}
     >
       <Typography
-        onClick={() => !readonly && clickToEdit && setEditing(true)}
         sx={{ color: text ? undefined : theme.palette.text.disabled }}
+        onClick={() => !readonly && clickToEdit && setEditing(true)}
       >
         {text || placeholder}
       </Typography>
