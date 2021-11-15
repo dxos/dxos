@@ -18,6 +18,7 @@ export interface SwarmInfoViewProps {
   onReturn?: () => void,
 }
 
+// TODO(burdon): Convert to table.
 export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmInfoViewProps) => (
   <div>
     <div>Topic: <CopyText value={swarmInfo.topic.toHex()} /></div>
@@ -46,7 +47,6 @@ export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmI
         <ArrowBackIos />
         Back
       </IconButton>
-    )
-    }
+    )}
   </div>
 );

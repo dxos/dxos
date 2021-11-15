@@ -172,7 +172,7 @@ export class Client {
   //   Recreate echo instance? Big impact on hooks. Test.
   @synchronized
   async reset () {
-    await this._serviceProvider.echo.reset();
+    await this.echo.reset();
     this._initialized = false;
   }
 
@@ -186,7 +186,7 @@ export class Client {
    */
   @synchronized
   async createPartyFromSnapshot (snapshot: DatabaseSnapshot) {
-    const party = await this._serviceProvider.echo.createParty();
+    const party = await this.echo.createParty();
     const items = snapshot.items ?? [];
 
     // We have a brand new item ids after creation, which breaks the old structure of id-parentId mapping.
@@ -327,7 +327,7 @@ export class Client {
    */
   // TODO(burdon): Expose echo directly?
   registerModel (constructor: ModelConstructor<any>): this {
-    this._serviceProvider.echo.modelFactory.registerModel(constructor);
+    this.echo.modelFactory.registerModel(constructor);
     return this;
   }
 

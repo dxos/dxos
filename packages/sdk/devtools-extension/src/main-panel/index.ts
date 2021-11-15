@@ -8,6 +8,7 @@ import { createDevtoolsPort } from '../utils';
 import { initPanel } from './init-panel';
 import { createDevtoolsRpc } from './rpc-client';
 
+// TODO(burdon): No code in index file.
 void (async () => {
   await Bridge.sendMessage('extension.inject-client-script', {}, 'content-script');
   const port = createDevtoolsPort();

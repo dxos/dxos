@@ -11,10 +11,9 @@ import { PublicKey } from '@dxos/crypto';
 import { PeerGraph } from '@dxos/network-devtools';
 import { PeerInfo } from '@dxos/network-manager';
 
-import AutocompleteFilter from '../components/AutocompleteFilter';
+import { AutocompleteFilter } from '../components';
 import { useDevtoolsHost } from '../contexts';
-import { useStream } from '../hooks';
-import { useAsyncEffect } from '../hooks/async-effect';
+import { useAsyncEffect, useStream } from '../hooks';
 import { SubscribeToNetworkTopicsResponse } from '../proto';
 
 const useStyles = makeStyles(theme => ({
@@ -56,7 +55,7 @@ const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => {
   };
 };
 
-const Signal = () => {
+export const SwarmGraph = () => {
   const classes = useStyles();
   const devtoolsHost = useDevtoolsHost();
   const [selectedTopic, setSelectedTopic] = useState('');
@@ -89,18 +88,14 @@ const Signal = () => {
       <div className={classes.filter}>
         <AutocompleteFilter label='Topic' options={options.map(topic => topic.topic)} onChange={setSelectedTopic} value={selectedTopic as any} />
       </div>
-      {selectedTopic
-        ? (
+      {selectedTopic ? (
         <PeerGraph
           peers={peers}
           size={{ width: 400, height: 400 }}
         />
-          )
-        : (
+      ) : (
         <p>Topic not selected</p>
-          )}
+      )}
     </div>
   );
 };
-
-export default Signal;

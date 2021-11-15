@@ -9,7 +9,7 @@ import { SwarmInfo } from '@dxos/network-manager';
 
 import { ConnectionInfoView } from './ConnectionInfoView';
 import { SwarmInfoView } from './SwarmInfo';
-import SwarmTable from './SwarmTable';
+import { SwarmTable } from './SwarmTable';
 
 interface SwarmDetailsProps {
   swarms: SwarmInfo[]
@@ -20,15 +20,14 @@ export const SwarmDetails = ({ swarms } : SwarmDetailsProps) => {
   const [sessionId, setSessionId] = useState<PublicKey | undefined>();
 
   if (swarmId && sessionId) {
-    const connectionInfo = swarms
-      .find(swarm => swarm.id.equals(swarmId))
-      ?.connections.find(conn => conn.sessionId.equals(sessionId));
+    const connectionInfo = swarms.find(
+      swarm => swarm.id.equals(swarmId))?.connections.find(conn => conn.sessionId.equals(sessionId));
     if (connectionInfo) {
       return (
-<ConnectionInfoView
-              connectionInfo={connectionInfo}
-              onReturn={() => setSessionId(undefined)}
-            />
+        <ConnectionInfoView
+          connectionInfo={connectionInfo}
+          onReturn={() => setSessionId(undefined)}
+        />
       );
     } else {
       return (
@@ -43,11 +42,11 @@ export const SwarmDetails = ({ swarms } : SwarmDetailsProps) => {
     const swarmInfo = swarms.find(swarm => swarm.id.equals(swarmId));
     if (swarmInfo) {
       return (
-<SwarmInfoView
-              swarmInfo={swarmInfo}
-              onConnectionClick={id => setSessionId(id)}
-              onReturn={() => setSwarmId(undefined)}
-            />
+        <SwarmInfoView
+          swarmInfo={swarmInfo}
+          onConnectionClick={id => setSessionId(id)}
+          onReturn={() => setSwarmId(undefined)}
+        />
       );
     } else {
       return (
@@ -62,5 +61,3 @@ export const SwarmDetails = ({ swarms } : SwarmDetailsProps) => {
     <SwarmTable swarms={swarms} onClick={id => setSwarmId(id)} />
   );
 };
-
-export default SwarmDetails;

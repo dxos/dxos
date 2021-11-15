@@ -36,6 +36,7 @@ const init = async () => {
   }
 };
 
+// TODO(burdon): No code in index file.
 console.log('[DXOS devtools] Init client API started');
 checkInterval = setInterval(init, 500);
 void init();
