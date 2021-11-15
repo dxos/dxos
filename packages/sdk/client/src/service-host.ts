@@ -52,11 +52,11 @@ export class ClientServiceHost implements ClientServiceProvider {
               ...this._config.values.build,
               timestamp: undefined // TODO(rzadp): Substitution did not kick in here?.
             }
-          }
+          };
         },
         Reset: async () => {
           await this._echo.reset();
-        },
+        }
       },
       ProfileService: {
         SubscribeProfile: () => new Stream(({ next }) => {
