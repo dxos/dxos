@@ -113,6 +113,13 @@ describe('Registry Client', () => {
       expect(resource!.tags.latest?.toString()).to.be.equal(contentCid.toString());
     });
 
+    it('Deletes a single resource', async () => {
+      const id = DXN.fromDomainKey(domainKey, appResourceName);
+      await registryApi.deleteResource(id);
+      const resource = await registryApi.getResource(id);
+      expect(resource).to.be.undefined;
+    });
+
     describe('Tags and versions', () => {
       const versionedName = 'versionedApp';
       let version2: CID;

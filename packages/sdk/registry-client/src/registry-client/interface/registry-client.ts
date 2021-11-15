@@ -52,4 +52,10 @@ export interface IRegistryClient extends IReadOnlyRegistryClient {
      contentCid: CID,
      opts?: UpdateResourceOptions
   ): Promise<void>
+
+  /**
+   * Deletes a resource in the system.
+   * @param resource Identifies the domain and name of the resource.
+   */
+  deleteResource (resource: DXN): Promise<void>
 }
