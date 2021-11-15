@@ -52,7 +52,8 @@ export interface RegistrationDialogProps {
   open: boolean
   debug?: boolean
   onRestore: (seedPhrase: string) => void // TODO(burdon): Optional (hide option).
-  onComplete: (seedPhrase: string, username: string) => void
+  onComplete: (seedPhrase: string, username: string) => void,
+  onJoinHalo?: () => void,
 }
 
 /**
@@ -62,7 +63,8 @@ export const RegistrationDialog = ({
   open = true,
   debug = false,
   onRestore,
-  onComplete
+  onComplete,
+  onJoinHalo
 }: RegistrationDialogProps) => {
   const [stage, setCurrentStage] = useState(Stage.START);
   const [error, setError] = useState<string>();
@@ -250,7 +252,15 @@ export const RegistrationDialog = ({
                 </Option>
               </Box>
             </Box>
-          )
+          ),
+          actions: onJoinHalo ? (
+            <Box sx={{ display: 'flex', flex: 1 }}>
+              <Box sx={{ flex: 1 }} />
+              <Button color='primary' onClick={onJoinHalo}>
+                Join HALO invitation
+              </Button>
+            </Box>
+          ) : undefined
         };
       }
 

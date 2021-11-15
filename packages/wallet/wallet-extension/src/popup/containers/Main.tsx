@@ -4,9 +4,9 @@
 
 import React, { useState } from 'react';
 
-import { createKeyPair } from '@dxos/crypto';
+import { createKeyPair, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
-import { ProfileDialog, ProfileDialogProps } from '@dxos/react-framework';
+import { RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
 
 const Main = () => {
   const client = useClient();
@@ -14,10 +14,11 @@ const Main = () => {
   const [error, setError] = useState<Error | undefined>(undefined);
   const [inProgress, setInProgress] = useState(false);
 
-  const handleCreateProfile: ProfileDialogProps['onCreate'] = async ({ username }) => {
+  const handleCreateProfile: RegistrationDialogProps['onComplete'] = async (seed, username) => {
     setInProgress(true);
     try {
-      await client.halo.createProfile({ ...createKeyPair(), username });
+      const keypair = keyPairFromSeedPhrase(seed);
+      await client.halo.createProfile({ ...keypair, username });
     } catch (e: any) {
       console.error(e);
       setError(e);
@@ -54,9 +55,11 @@ const Main = () => {
 
   if (!profile) {
     return (
-      <ProfileDialog
-        open={true}
-        onCreate={handleCreateProfile}
+      <RegistrationDialog
+        open
+        onComplete={handleCreateProfile}
+        onRestore={null as any}
+        // onJoinHalo={() => setJoinHaloDialog(true)} // TODO(rzadp): Uncomment after ProfileService is implemented fully.
       />
     );
   }
