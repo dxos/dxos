@@ -4,14 +4,14 @@
 
 1. Grab a build from the [latest build](https://github.com/dxos/protocols).
 
-<img src="images/jobs.png">
+<img src="images/jobs.png" width="520px">
 
-<img src="images/artifacts.png">
+<img src="images/artifacts.png" width="420px">
 
 2. Unzip the downloaded file.
 3. Go to `chrome://extensions/` and enable developer mode.
 
-<img src="images/developer-mode.png">
+<img src="images/developer-mode.png" width="220px">
 
 4. Select `Load unpacked` and select the unzipped Devtools folder.
 
