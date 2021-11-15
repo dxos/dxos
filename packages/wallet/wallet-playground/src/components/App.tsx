@@ -4,20 +4,23 @@
 
 import React, { useState } from 'react';
 
-import { createKeyPair } from '@dxos/crypto';
+import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
-import { ProfileDialog } from '@dxos/react-framework';
+import { HaloSharingDialog, JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
 
 const App = () => {
   const client = useClient();
   const profile = useProfile();
   const [error, setError] = useState<Error | undefined>(undefined);
   const [inProgress, setInProgress] = useState(false);
+  const [joinHaloDialog, setJoinHaloDialog] = useState(false);
+  const [haloSharingDialog, setHaloSharingDialog] = useState(false);
 
-  const handleCreateProfile = async () => {
+  const handleCreateProfile: RegistrationDialogProps['onComplete'] = async (seed, username) => {
     setInProgress(true);
     try {
-      await client.halo.createProfile({ ...createKeyPair(), username: 'test' });
+      const keypair = keyPairFromSeedPhrase(seed);
+      await client.halo.createProfile({ ...keypair, username });
     } catch (e: any) {
       console.error(e);
       setError(e);
@@ -54,10 +57,19 @@ const App = () => {
 
   if (!profile) {
     return (
-      <ProfileDialog
-        open={true}
-        onCreate={handleCreateProfile}
-      />
+      <>
+        <RegistrationDialog
+          open={!joinHaloDialog}
+          onComplete={handleCreateProfile}
+          onRestore={null as any}
+          // onJoinHalo={() => setJoinHaloDialog(true)} // TODO(rzadp): Uncomment after ProfileService is implemented fully.
+        />
+        <JoinHaloDialog
+          open={joinHaloDialog}
+          closeOnSuccess
+          onClose={() => setJoinHaloDialog(false)}
+        />
+      </>
     );
   }
 
@@ -66,6 +78,11 @@ const App = () => {
       <p>Hello, {profile.username ?? profile.publicKey.toString()}</p>
       <p>{profile.publicKey.toString()}</p>
       <button disabled={inProgress} onClick={handleReset}>Reset</button>
+      {/* <Button onClick={() => setHaloSharingDialog(true)}>Share HALO</Button> //TODO(rzadp): Uncomment after ProfileService is implemented fully.  */}
+      <HaloSharingDialog
+        open={haloSharingDialog}
+        onClose={() => setHaloSharingDialog(false)}
+      />
     </div>
   );
 };

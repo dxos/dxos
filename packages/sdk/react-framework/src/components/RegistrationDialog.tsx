@@ -50,9 +50,11 @@ const seedPhraseFile = 'dxos-recovery-seedphrase.txt';
 
 export interface RegistrationDialogProps {
   open: boolean
+  modal?: boolean
   debug?: boolean
   onRestore: (seedPhrase: string) => void // TODO(burdon): Optional (hide option).
-  onComplete: (seedPhrase: string, username: string) => void
+  onComplete: (seedPhrase: string, username: string) => void,
+  onJoinHalo?: () => void,
 }
 
 /**
@@ -60,9 +62,11 @@ export interface RegistrationDialogProps {
  */
 export const RegistrationDialog = ({
   open = true,
+  modal = true,
   debug = false,
   onRestore,
-  onComplete
+  onComplete,
+  onJoinHalo
 }: RegistrationDialogProps) => {
   const [stage, setCurrentStage] = useState(Stage.START);
   const [error, setError] = useState<string>();
@@ -138,7 +142,7 @@ export const RegistrationDialog = ({
           try {
             await onRestore(restoreSeedPhrase);
           } catch (err) {
-            // TODO(burdon): Detech user-facing message or display generic.
+            // TODO(burdon): Detect user-facing message or display generic.
             setError(err.message);
           }
           setProcessing(false);
@@ -250,7 +254,15 @@ export const RegistrationDialog = ({
                 </Option>
               </Box>
             </Box>
-          )
+          ),
+          actions: onJoinHalo ? (
+            <Box sx={{ display: 'flex', flex: 1 }}>
+              <Box sx={{ flex: 1 }} />
+              <Button color='primary' onClick={onJoinHalo}>
+                Join HALO invitation
+              </Button>
+            </Box>
+          ) : undefined
         };
       }
 
@@ -382,11 +394,11 @@ export const RegistrationDialog = ({
     }
   };
 
-  // TODO(burdon): Convert to react-components CustomDialog.
   const props = getStage(stage);
   return (
     <Dialog
       open={open}
+      modal={modal}
       maxWidth='sm'
       error={error}
       processing={processing}
