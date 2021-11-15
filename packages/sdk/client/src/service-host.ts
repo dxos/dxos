@@ -5,13 +5,13 @@
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { ECHO, OpenProgress } from '@dxos/echo-db';
+import { ECHO, OpenProgress, Party } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { DevtoolsServiceDependencies } from '.';
 import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
-import { Contacts } from './proto/gen/dxos/client';
+import { Contacts, SubscribePartiesResponse } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
 import { resultSetToStream } from './util/subscription';
@@ -93,10 +93,11 @@ export class ClientServiceHost implements ClientServiceProvider {
       },
       PartyService: {
         SubscribeParties: () => {
-          throw new Error('Not implemented');
+          return resultSetToStream(this._echo.queryParties(), (parties): SubscribePartiesResponse => ({ parties: parties.map(party => ({ key: party.key.asUint8Array() })) }));
         },
-        CreateParty: () => {
-          throw new Error('Not implemented');
+        CreateParty: async () => {
+          const party = await this._echo.createParty();
+          return { key: party.key.asUint8Array() };
         },
         CreateInvitation: () => {
           throw new Error('Not implemented');
