@@ -47,7 +47,7 @@ export class HaloProxy {
    * Reset the identity and delete all key records.
   */
   async reset () {
-    await this._serviceProvider.services.ProfileService.Reset();
+    await this._serviceProvider.services.SystemService.Reset();
     this._profileChanged.emit();
   }
 
