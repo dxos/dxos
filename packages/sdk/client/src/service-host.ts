@@ -46,7 +46,13 @@ export class ClientServiceHost implements ClientServiceProvider {
     this.services = {
       SystemService: {
         GetConfig: async () => {
-          return this._config.values
+          return {
+            ...this._config.values,
+            build: {
+              ...this._config.values.build,
+              timestamp: undefined // TODO(rzadp): Substitution did not kick in here?.
+            }
+          }
         },
         Reset: async () => {
           await this._echo.reset();
