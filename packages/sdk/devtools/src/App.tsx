@@ -26,7 +26,7 @@ import Keys from './containers/Keys';
 import Signal from './containers/Signal';
 import StorageTab from './containers/StorageTab';
 import SwarmDetails from './containers/SwarmDetails';
-import SwarmGraph from './containers/SwarmGraph';
+// import SwarmGraph from './containers/SwarmGraph'; // TODO(rzadp): Fix the tab and enable it back.
 
 // TODO(wittjosiah): Refactor, makeStyles is deprecated.
 const useStyles = makeStyles(theme => ({
@@ -94,11 +94,11 @@ const items = [
   {
     title: 'MESH',
     items: [
-      {
-        id: 'mesh.swarmgraph',
-        title: 'Swarm Graph',
-        icon: SwarmIcon
-      },
+      // {
+      //   id: 'mesh.swarmgraph',
+      //   title: 'Swarm Graph',
+      //   icon: SwarmIcon
+      // },
       {
         id: 'mesh.swarminfo',
         title: 'Swarm Info',
@@ -178,9 +178,9 @@ const App = () => {
       <div className={className('mesh.signal')}>
         <Signal />
       </div>
-      <div className={className('mesh.swarmgraph')}>
+      {/* <div className={className('mesh.swarmgraph')}>
         <SwarmGraph />
-      </div>
+      </div> */}
       <div className={className('mesh.swarminfo')}>
         <SwarmDetails />
       </div>
