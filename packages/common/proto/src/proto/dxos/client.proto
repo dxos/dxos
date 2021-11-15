@@ -115,7 +115,6 @@ message ItemDescriptorSet {
 message EchoMutation {}
 message MutationReceipt {}
 message ItemSnapshot {}
-message Config {}
 
 message SubscribeItemStreamResponse {
   oneof kind {
