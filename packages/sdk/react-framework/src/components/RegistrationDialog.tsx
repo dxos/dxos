@@ -50,6 +50,7 @@ const seedPhraseFile = 'dxos-recovery-seedphrase.txt';
 
 export interface RegistrationDialogProps {
   open: boolean
+  modal?: boolean
   debug?: boolean
   onRestore: (seedPhrase: string) => void // TODO(burdon): Optional (hide option).
   onComplete: (seedPhrase: string, username: string) => void,
@@ -61,6 +62,7 @@ export interface RegistrationDialogProps {
  */
 export const RegistrationDialog = ({
   open = true,
+  modal = true,
   debug = false,
   onRestore,
   onComplete,
@@ -392,11 +394,11 @@ export const RegistrationDialog = ({
     }
   };
 
-  // TODO(burdon): Convert to react-components CustomDialog.
   const props = getStage(stage);
   return (
     <Dialog
       open={open}
+      modal={modal}
       maxWidth='sm'
       error={error}
       processing={processing}

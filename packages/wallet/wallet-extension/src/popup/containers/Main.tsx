@@ -57,6 +57,7 @@ const Main = () => {
     return (
       <RegistrationDialog
         open
+        modal={false}
         onComplete={handleCreateProfile}
         onRestore={null as any}
         // onJoinHalo={() => setJoinHaloDialog(true)} // TODO(rzadp): Uncomment after ProfileService is implemented fully.
