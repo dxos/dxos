@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { createKeyPair, keyPairFromSeedPhrase } from '@dxos/crypto';
+import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
 import { RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
 

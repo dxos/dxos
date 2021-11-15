@@ -6,17 +6,7 @@ import React, { useState } from 'react';
 
 import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  LinearProgress,
-  TextField,
-  Typography
-} from '@mui/material';
-import { RegistrationDialog, RegistrationDialogProps, JoinHaloDialog, HaloSharingDialog } from '@dxos/react-framework';
+import { HaloSharingDialog, JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
 
 const App = () => {
   const client = useClient();
