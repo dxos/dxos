@@ -425,7 +425,6 @@ importers:
       '@emotion/react': 11.4.1_9bfa804cd21315a6b28257b6309f6867
       '@emotion/styled': 11.3.0_7153564620b9f6be3c75efaa2248597b
       '@mui/icons-material': 5.0.1_4708d87537568924a83ffdea00ac702d
-      '@mui/lab': 5.0.0-alpha.48_71572d761b264d60c5af9e5a6a4c3026
       '@mui/material': 5.0.1_604b72d74923f30e2e755c544d7c2813
       '@mui/styles': 5.0.1_9b26932173ac5a93c18fc8634be19f05
       clsx: 1.1.1
@@ -439,6 +438,7 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/color-hash': 1.0.1
       '@types/react': 17.0.24
       '@types/react-copy-to-clipboard': 5.0.1
       '@types/react-dom': 17.0.9
@@ -461,9 +461,9 @@ importers:
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
       '@mui/icons-material': ^5.0.1
-      '@mui/lab': ^5.0.0-alpha.48
       '@mui/material': ^5.0.1
       '@mui/styles': ^5.0.1
+      '@types/color-hash': ^1.0.1
       '@types/react': ^17.0.24
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-dom': ^17.0.9
@@ -8341,6 +8341,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-m7GG7IKKGuJUXvkZ1qqG3ChccdIM/qBBo913z+Xft0nKCX4hAU/IxKwZBU4cpRZ7GS5kV4vOblUkILtSShCPXQ==
+  /@types/color-hash/1.0.1:
+    dev: true
+    resolution:
+      integrity: sha512-vCASMW58k1TVDTjc72mNXI4fz+EEgcXLhCuR8oix4W3wwlUtPli9LQ8OjDiA5/ENi/HhWUblF4ZdizmVGnY3dQ==
   /@types/color-name/1.1.1:
     dev: true
     resolution:
