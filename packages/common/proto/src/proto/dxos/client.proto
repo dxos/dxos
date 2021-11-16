@@ -10,6 +10,15 @@ import "halo/keys.proto";
 package dxos.client;
 
 //
+// SYSTEM
+//
+
+service SystemService {
+  rpc GetConfig(google.protobuf.Empty) returns (Config);
+  rpc Reset (google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+//
 // HALO
 //
 
@@ -65,10 +74,6 @@ service ProfileService {
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (Profile);
     
   rpc SubscribeContacts(google.protobuf.Empty) returns (stream Contacts);
-
-  // TODO(dmaretskyi): Separate into config/system service.
-  rpc GetConfig(google.protobuf.Empty) returns (Config);
-  rpc Reset (google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 //
@@ -110,7 +115,6 @@ message ItemDescriptorSet {
 message EchoMutation {}
 message MutationReceipt {}
 message ItemSnapshot {}
-message Config {}
 
 message SubscribeItemStreamResponse {
   oneof kind {

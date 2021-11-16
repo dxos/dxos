@@ -28,7 +28,8 @@
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
     "node-fetch": "^2.6.0",
-    "protobufjs": "^6.9.0"
+    "protobufjs": "^6.9.0",
+    "@dxos/proto": "workspace:*"
   },
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
