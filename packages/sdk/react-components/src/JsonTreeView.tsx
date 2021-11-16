@@ -15,16 +15,9 @@ import { styled, Typography } from '@mui/material';
 import { keyToString } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';
 
-export interface JsonTreeViewProps {
-  className?: string
-  data?: any
-  depth?: number
-  onSelect?: () => void
-  root?: string
-  size?: string
-}
-
 const StyledTreeView = styled(MuiTreeView)({ overflowX: 'hidden' });
+
+// TODO(burdon): Inline styles.
 
 const ItemRoot = styled(MuiTreeItem)({
   display: 'flex',
@@ -108,6 +101,16 @@ const TreeItem = ({
   );
 };
 
+// TODO(burdon): Extend MuiJsonTreeView
+export interface JsonTreeViewProps {
+  className?: string
+  data?: any
+  depth?: number
+  root?: string
+  size?: string
+  onSelect?: () => void
+}
+
 /**
  * Visualizes an object as a tree view of all properties.
  * Works with JSON and other objects with nested values.
@@ -177,6 +180,7 @@ export const JsonTreeView = ({
   // TODO(burdon): Controller.
   return (
     <StyledTreeView
+      disableSelection
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
       onNodeSelect={onSelect}

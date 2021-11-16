@@ -10,7 +10,6 @@ export * from './ErrorBoundary';
 export * from './ErrorView';
 export * from './ExportDialog';
 export * from './ImportDialog';
-export * from './JsonTreeView';
 export * from './Passcode';
 export * from './ProfileDialog';
 export * from './RegistrationDialog';

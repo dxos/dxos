@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { PublicKey } from '@dxos/crypto';
+import { FullScreen } from '@dxos/react-components';
 
 import { KeyTable } from '../src';
 import { KeyRecord, KeyType } from '../src/proto/gen/dxos/halo/keys';
@@ -14,7 +15,7 @@ export default {
 };
 
 export const Primary = () => {
-  const keys: KeyRecord[] = [...new Array(5)].map(() => ({
+  const keys: KeyRecord[] = [...new Array(20)].map(() => ({
     type: KeyType.FEED,
     publicKey: PublicKey.random(),
     added: new Date().toUTCString(),
@@ -23,8 +24,10 @@ export const Primary = () => {
   }));
 
   return (
-    <KeyTable
-      keys={keys}
-    />
+    <FullScreen>
+      <KeyTable
+        keys={keys}
+      />
+    </FullScreen>
   )
 }

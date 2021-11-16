@@ -8,7 +8,7 @@ import { Box, DialogTitle, SvgIconTypeMap, Toolbar, Typography } from '@mui/mate
 import { OverridableComponent } from '@mui/material/OverridableComponent';
 
 /**
- * @deprecated
+ * @deprecated Remove.
  */
 export const DialogHeading = ({
   title,

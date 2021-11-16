@@ -4,5 +4,5 @@
 
 export * from './Autocomplete';
 export * from './ErrorBoundary';
-export * from './Feed';
 export * from './KeyTable';
+export * from './MessageTable';

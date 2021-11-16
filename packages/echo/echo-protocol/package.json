@@ -28,6 +28,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",

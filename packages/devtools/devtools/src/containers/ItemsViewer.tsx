@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { JsonTreeView } from '@dxos/react-framework';
+import { JsonTreeView } from '@dxos/react-components';
 
 import { useDevtoolsHost } from '../contexts';
 import { useStream } from '../hooks';

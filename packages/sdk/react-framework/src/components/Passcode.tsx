@@ -34,8 +34,7 @@ const Char = styled('div')(({ theme }) => ({
 const DEFAULT_PATTERN = /^[0-9]*$/;
 
 /**
- * Displays a multi-digit passcode, which may optionally be editable.
- * @deprecated
+ * @deprecated Moved to react-components.
  */
 export const Passcode = (
   props: {
