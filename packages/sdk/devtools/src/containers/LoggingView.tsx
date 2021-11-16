@@ -39,7 +39,7 @@ export const LoggingView = () => {
         await devtoolsHost.DisableDebugLogging({});
       }
 
-      console.log('Logging:', enabled, namespaces);
+      console.log('Logging:', { enabled, namespaces });
     });
   };
 
