@@ -44,13 +44,21 @@ export class ClientServiceHost implements ClientServiceProvider {
     });
 
     this.services = {
-      ProfileService: {
-        GetConfig: () => {
-          throw new Error('Not implemented');
+      SystemService: {
+        GetConfig: async () => {
+          return {
+            ...this._config.values,
+            build: {
+              ...this._config.values.build,
+              timestamp: undefined // TODO(rzadp): Substitution did not kick in here?.
+            }
+          };
         },
         Reset: async () => {
           await this._echo.reset();
-        },
+        }
+      },
+      ProfileService: {
         SubscribeProfile: () => new Stream(({ next }) => {
           const emitNext = () => next({
             profile: this._echo.halo.isInitialized ? this._echo.halo.getProfile() : undefined
