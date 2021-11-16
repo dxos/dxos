@@ -5,6 +5,8 @@
 // REQUIRED FOR THE BRIDGE TO WORK.
 import Bridge from 'crx-bridge';
 
+// TODO(burdon): No code in index file.
+
 import { startLiveReload } from './live-reload';
 
 void startLiveReload();

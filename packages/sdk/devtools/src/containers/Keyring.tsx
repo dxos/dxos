@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { createTheme } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
-import KeyTable from '../components/KeyTable';
+import { KeyTable } from '../components';
 import { useDevtoolsHost } from '../contexts';
 import { KeyRecord } from '../proto/gen/dxos/halo/keys';
 
@@ -34,7 +34,7 @@ const useStyles = makeStyles(theme => ({
   }
 }), { defaultTheme: createTheme({}) });
 
-const Keys = () => {
+export const Keyring = () => {
   const classes = useStyles();
   const devtoolsHost = useDevtoolsHost();
   const [keys, setKeys] = useState<KeyRecord[]>([]);
@@ -57,12 +57,6 @@ const Keys = () => {
   }
 
   return (
-    <div className={classes.root}>
-      <div className={classes.keys}>
-        <KeyTable keys={keys} />
-      </div>
-    </div>
+    <KeyTable keys={keys} />
   );
 };
-
-export default Keys;

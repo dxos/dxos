@@ -40,7 +40,7 @@ export interface SwarmListProps {
   onClick?: (id: PublicKey) => void
 }
 
-const SwarmTable = ({ swarms, onClick }: SwarmListProps) => {
+export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => {
   const classes = useStyle();
 
   return (
@@ -74,5 +74,3 @@ const SwarmTable = ({ swarms, onClick }: SwarmListProps) => {
     </Table>
   );
 };
-
-export default SwarmTable;

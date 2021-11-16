@@ -9,7 +9,7 @@ import { JsonTreeView } from '@dxos/react-framework';
 import { useDevtoolsHost } from '../contexts';
 import { useStream } from '../hooks';
 
-const ItemsViewer = () => {
+export const ItemsViewer = () => {
   const devtoolsHost = useDevtoolsHost();
   const data = useStream(() => devtoolsHost.SubscribeToItems({}));
 
@@ -29,5 +29,3 @@ const ItemsViewer = () => {
     />
   );
 };
-
-export default ItemsViewer;

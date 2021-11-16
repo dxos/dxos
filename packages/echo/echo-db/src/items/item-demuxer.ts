@@ -73,8 +73,8 @@ export class ItemDemuxer {
         // TODO(marik-d): Investigate whether gensis message shoudl be able to set parentId.
         const item = await this._itemManager.constructItem({
           itemId,
-          modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
           itemType,
+          modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
           readStream: itemStream,
           initialMutations: mutation ? [{ mutation, meta }] : undefined,
           link: genesis.link
@@ -141,7 +141,8 @@ export class ItemDemuxer {
     } else {
       model = {
         array: {
-          mutations: this._modelMutations.get(item.id) ?? raise(new Error('Model does not support mutations natively and it\'s weren\'t tracked by the system.'))
+          mutations: this._modelMutations.get(item.id) ??
+            raise(new Error('Model does not support mutations natively and it\'s weren\'t tracked by the system.'))
         }
       };
     }

@@ -23,7 +23,6 @@ const useStyles = makeStyles(theme => ({
     flex: 1,
     overflow: 'hidden',
     padding: theme.spacing(2),
-    fontSize: '1.5em',
     overflowY: 'auto',
     overflowX: 'auto'
   },
@@ -65,32 +64,32 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
   };
 };
 
-const Signal = () => {
+export const Signal = () => {
   const classes = useStyles();
   const devtoolsHost = useDevtoolsHost();
   const status = useStream(() => devtoolsHost.SubscribeToSignalStatus());
   const trace = useStream(() => devtoolsHost.SubscribeToSignalTrace());
 
   if (!status?.servers) {
-    return <div> Loading servers statuses... </div>;
+    return <div>Loading servers status...</div>;
   }
 
   if (!trace?.events) {
-    return <div> Loading trace... </div>;
+    return <div>Loading trace...</div>;
   }
 
   return (
     <div className={classes.root}>
-      {status?.servers.length < 1
-        ? (
+      {status?.servers.length < 1 ? (
         <p>Status unknown.</p>
-          )
-        : (
+      ) : (
         <SignalStatus status={status.servers.map(signalStatus)} />
-          )}
-      {trace.events.length < 1 ? <SignalTrace trace={trace?.events?.map(event => JSON.parse(event))} /> : <div> No signal trace. </div>}
+      )}
+      {trace.events.length < 1 ? (
+        <SignalTrace trace={trace?.events?.map(event => JSON.parse(event))} />
+      ) : (
+        <div>No signal trace.</div>
+      )}
     </div>
   );
 };
-
-export default Signal;

@@ -10,6 +10,7 @@ let checkCount = 0;
 // eslint-disable-next-line prefer-const
 let loadCheckInterval: NodeJS.Timeout;
 
+// TODO(burdon): No code in index file.
 function createPanel () {
   // Stop trying if above 120 seconds or already made.
   if (panelCreated || checkCount++ > 120) {
