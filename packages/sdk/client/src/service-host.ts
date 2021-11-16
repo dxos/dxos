@@ -4,20 +4,39 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
-import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { ECHO, OpenProgress } from '@dxos/echo-db';
-import { SubscriptionGroup } from '@dxos/util';
+import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
+import { v4 } from 'uuid';
 
-import { DevtoolsServiceDependencies } from '.';
+import * as debug from '@dxos/debug'; // TODO(burdon): ???
+import { defaultInvitationAuthenticator, ECHO, OpenProgress } from '@dxos/echo-db';
+import { SubscriptionGroup } from '@dxos/util';
+import assert from 'assert';
+
+import { decodeInvitation, DevtoolsServiceDependencies, encodeInvitation } from '.';
 import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
 import { Contacts, SubscribePartiesResponse } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
 import { resultSetToStream } from './util/subscription';
+import { latch } from '@dxos/async';
+
+interface InviterInvitation {
+  invitationCode: string
+  secret: string | undefined
+}
+
+interface InviteeInvitation {
+  id: string
+  secret?: string | undefined
+  secretTrigger?: () => void
+  joinPromise?: () => Promise<any>
+}
 
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _echo: ECHO;
+  private readonly _inviterInvitations: InviterInvitation[] = [];
+  private readonly _inviteeInvitations: InviteeInvitation[] = [];
 
   private readonly _devtoolsEvents = new DevtoolsHostEvents();
 
@@ -73,14 +92,47 @@ export class ClientServiceHost implements ClientServiceProvider {
         RecoverProfile: () => {
           throw new Error('Not implemented');
         },
-        CreateInvitation: () => {
-          throw new Error('Not implemented');
+        CreateInvitation: () => new Stream(({ next }) => {
+          setImmediate(async () => {
+            const secret = generatePasscode()
+            const secretProvider = () => {
+              return Promise.resolve(Buffer.from(secret));
+            };
+            const invitation = await this._echo.halo.createInvitation({
+              secretProvider,
+              secretValidator: defaultSecretValidator
+            }, {});
+            const invitationCode = encodeInvitation(invitation);
+            this._inviterInvitations.push({ invitationCode, secret });
+            next({ invitationCode, secret });
+          })
+        }),
+        AcceptInvitation: async (request) => {
+          const id = v4()
+          assert(request.invitationCode, 'InvitationCode not provided.')
+          const [secretLatch, secretTrigger] = latch()
+          const inviteeInvitation: InviteeInvitation = { id, secretTrigger }
+          const secretProvider: SecretProvider = async () => {
+            await secretLatch
+            const secret = inviteeInvitation.secret
+            if (!secret) throw new Error('Secret not provided.')
+            return Buffer.from(secret);
+          }
+          const haloPartyPromise = this._echo.halo.join(decodeInvitation(request.invitationCode), secretProvider)
+          inviteeInvitation.joinPromise = () => haloPartyPromise;
+          this._inviteeInvitations.push(inviteeInvitation);
+          return {id}
         },
-        AcceptInvitation: () => {
-          throw new Error('Not implemented');
-        },
-        AuthenticateInvitation: () => {
-          throw new Error('Not implemented');
+        AuthenticateInvitation: async (request) => {
+          const invitation = this._inviteeInvitations.find(inviteeInvitation => inviteeInvitation.id === request.process?.id)
+          assert(invitation, 'Invitation not found.')
+          assert(request.secret, 'Secret not provided.')
+          invitation.secret = request.secret
+          invitation.secretTrigger?.()
+          await (invitation.joinPromise?.())
+          const profile = this._echo.halo.getProfile()
+          assert(profile, 'Profile not created.')
+          return profile
         },
         SubscribeContacts: () => {
           if (this._echo.halo.isInitialized) {
