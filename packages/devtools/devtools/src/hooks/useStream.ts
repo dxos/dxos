@@ -11,7 +11,6 @@ export const useStream = <T>(streamFactory: () => Stream<T>, deps: React.Depende
 
   useEffect(() => {
     const stream = streamFactory();
-
     stream.subscribe(msg => {
       setValue(msg);
     }, () => {});

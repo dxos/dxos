@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-export function useAsyncEffect (body: () => Promise<void | undefined | (() => void)>, deps?: readonly any[]) {
+export const useAsyncEffect = (body: () => Promise<void | undefined | (() => void)>, deps?: readonly any[]) => {
   useEffect(() => {
     const promise = body();
     return () => {
