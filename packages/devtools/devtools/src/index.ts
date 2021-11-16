@@ -3,4 +3,6 @@
 //
 
 export * from './bootstrap';
+export * from './components';
+export * from './containers';
 export * from './proto';

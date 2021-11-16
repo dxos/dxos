@@ -9,6 +9,7 @@ interface ErrorBoundaryState {
   error?: any
 }
 
+// NOTE: Has to be Component, not arrow function.
 export class ErrorBoundary extends Component<{}, ErrorBoundaryState> {
   constructor (props: {}) {
     super(props);
@@ -28,9 +29,9 @@ export class ErrorBoundary extends Component<{}, ErrorBoundaryState> {
       return (
         <div style={{ height: '100vh', background: 'white' }}>
           <h1>Something went wrong.</h1>
-          <p style={{ whiteSpace: 'pre', fontFamily: 'monospace' }}>
+          <div style={{ whiteSpace: 'pre', fontFamily: 'monospace' }}>
             {this.state.error?.stack ?? this.state.error?.message ?? String(this.state.error)}
-          </p>
+          </div>
         </div>
       );
     }

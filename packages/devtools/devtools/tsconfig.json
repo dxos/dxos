@@ -8,14 +8,12 @@
     ]
   },
   "include": [
-    "src"
+    "src",
+    "stories"
   ],
   "references": [
     {
       "path": "../../common/codec-protobuf"
-    },
-    {
-      "path": "../../halo/credentials"
     },
     {
       "path": "../../common/crypto"
@@ -24,22 +22,22 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../mesh/network-devtools"
-    },
-    {
       "path": "../../common/proto"
-    },
-    {
-      "path": "../react-components"
-    },
-    {
-      "path": "../react-framework"
     },
     {
       "path": "../../common/rpc"
     },
     {
+      "path": "../../halo/credentials"
+    },
+    {
       "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../../sdk/react-components"
+    },
+    {
+      "path": "../../sdk/react-framework"
     }
   ]
 }

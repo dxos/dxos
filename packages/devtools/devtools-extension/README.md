@@ -1,23 +1,25 @@
-# DevTools Extension
+# DevTools browser extension
+
+Devtools browser extension.
 
 ## Installation
 
 1. Grab a build from the [latest build](https://github.com/dxos/protocols).
 
-<img src="images/jobs.png" width="520px">
+`<img src="images/jobs.png" width="520px">`
 
-<img src="images/artifacts.png" width="420px">
+`<img src="images/artifacts.png" width="420px">`
 
 2. Unzip the downloaded file.
-3. Go to `chrome://extensions/` and enable developer mode.
+3. Go to `chrome://extensions` and enable developer mode.
 
-<img src="images/developer-mode.png" width="220px">
+`<img src="images/developer-mode.png" width="220px">`
 
 4. Select `Load unpacked` and select the unzipped Devtools folder.
 
 ## Extension startup sequence
 
-<img src="docs/extension.png">
+`<img src="docs/extension.png">`
 
 1. SDK sets `window.__DXOS__` hook.
 1. Content script is injected into the page automatically by chrome.

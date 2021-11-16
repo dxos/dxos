@@ -50,17 +50,12 @@ const useStyles = makeStyles(theme => ({
     backgroundColor: colors.grey[100],
     borderRight: `1px solid ${theme.palette.divider}`
   },
-  icon: {
-    // TODO(burdon): Fix since Mui classes not working.
-    '&.MuiListItemIcon-root': {
-      minWidth: 36
-    }
-  },
   content: {
     display: 'flex',
     flex: 1,
     flexDirection: 'column',
-    overflow: 'hidden'
+    overflowX: 'hidden',
+    overflowY: 'auto'
   },
   contentHidden: {
     display: 'none'
@@ -163,8 +158,11 @@ export const App = () => {
                   selected={selected === id}
                   onClick={(event) => handleListItemClick(event, id)}
                 >
-                  {/* TODO(burdon): extending root class not working. */}
-                  <ListItemIcon classes={{ root: classes.icon }}>
+                  <ListItemIcon sx={{
+                    '&.MuiListItemIcon-root': {
+                      minWidth: 36
+                    }
+                  }}>
                     <Icon />
                   </ListItemIcon>
                   <ListItemText

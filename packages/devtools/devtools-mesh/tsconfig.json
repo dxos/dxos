@@ -18,10 +18,10 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../network-manager"
+      "path": "../../mesh/network-manager"
     },
     {
-      "path": "../protocol-plugin-presence"
+      "path": "../../mesh/protocol-plugin-presence"
     },
     {
       "path": "../../sdk/react-components"

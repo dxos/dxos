@@ -8,8 +8,8 @@ import React from 'react';
 import { createTheme } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
-// code import { PeerGraph } from '@dxos/network-devtools';
-import { SignalStatus, SignalTrace } from '@dxos/network-devtools';
+// code import { PeerGraph } from '@dxos/devtools-mesh';
+import { SignalStatus, SignalTrace } from '@dxos/devtools-mesh';
 import { SignalApi } from '@dxos/network-manager';
 
 import { useDevtoolsHost } from '../contexts';
@@ -81,7 +81,7 @@ export const Signal = () => {
   return (
     <div className={classes.root}>
       {status?.servers.length < 1 ? (
-        <p>Status unknown.</p>
+        <div>Status unknown.</div>
       ) : (
         <SignalStatus status={status.servers.map(signalStatus)} />
       )}

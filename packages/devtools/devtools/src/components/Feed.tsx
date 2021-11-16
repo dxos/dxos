@@ -6,15 +6,16 @@ import clsx from 'clsx';
 import ColorHash from 'color-hash';
 import React, { useState } from 'react';
 
-import Link from '@mui/material/Link';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import blue from '@mui/material/colors/blue';
-import red from '@mui/material/colors/red';
+import {
+  Link,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  colors,
+} from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
 import { truncateString } from '@dxos/debug';
@@ -24,7 +25,7 @@ const colorHash = new ColorHash({ saturation: 1 });
 
 const useStyles = makeStyles(() => ({
   system: {
-    backgroundColor: red[50]
+    backgroundColor: colors.red[50]
   },
 
   outerCell: {
@@ -43,11 +44,12 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const color = (type) => {
-  return type === 'halo' ? red[500] : blue[500];
+const color = (type: string) => {
+  return type === 'halo' ? colors.red[500] : colors.blue[500];
 };
 
-function getType (message) {
+// TODO(burdon): Factor out.
+function getType (message: any) {
   if (message.echo) {
     if (message.echo.genesis) {
       return 'item genesis';
@@ -67,12 +69,24 @@ function getType (message) {
   }
 }
 
-export const Feed = ({ messages, onSelect }) => {
+// TODO(burdon): Proto.
+type Message = {
+  key: string
+  seq: string
+  data: any
+}
+
+export interface FeedProps {
+  messages: Message[]
+  onSelect: (data: any) => {}
+}
+
+export const Feed = ({ messages, onSelect }: FeedProps) => {
   const classes = useStyles();
 
   // Dynamically expand for performance.
-  const [expanded, setExpanded] = useState({});
-  const handleExpand = (rowKey) => {
+  const [expanded, setExpanded] = useState<{[index: string]: any}>({});
+  const handleExpand = (rowKey: string) => {
     setExpanded({ ...expanded, ...{ [rowKey]: true } });
   };
 
@@ -92,12 +106,14 @@ export const Feed = ({ messages, onSelect }) => {
             // Messages with feed metadata.
             messages.map(({ key, seq, data }) => {
               const feedKey = key;
-
               const rowKey = `key-${feedKey}-${seq}`;
               const type = getType(data);
 
               return (
-                <TableRow key={rowKey} size='small' className={clsx({ [classes.system]: type === 'halo' })}>
+                <TableRow
+                  key={rowKey}
+                  className={clsx({ [classes.system]: type === 'halo' })}
+                >
                   {/* Feed. */}
                   <TableCell
                     className={clsx(classes.outerCell, classes.meta)}

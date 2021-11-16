@@ -7,9 +7,11 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
+    "book": "esbuild-server book",
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
+    "storybook": "start-storybook -s ./stories/static -p 9001 -c .storybook",
     "test": "toolchain test"
   },
   "browserslist": [
@@ -20,7 +22,9 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/network-devtools": "workspace:*",
+    "@dxos/devtools-mesh": "workspace:*",
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.2.3",
     "@dxos/proto": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-framework": "workspace:*",
@@ -28,7 +32,6 @@
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
     "@mui/icons-material": "^5.0.1",
-    "@mui/lab": "^5.0.0-alpha.48",
     "@mui/material": "^5.0.1",
     "@mui/styles": "^5.0.1",
     "clsx": "^1.1.0",

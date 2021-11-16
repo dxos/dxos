@@ -8,10 +8,10 @@ import { createTheme } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
 import { PublicKey } from '@dxos/crypto';
-import { PeerGraph } from '@dxos/network-devtools';
+import { PeerGraph } from '@dxos/devtools-mesh';
 import { PeerInfo } from '@dxos/network-manager';
 
-import { AutocompleteFilter } from '../components';
+import { Autocomplete } from '../components';
 import { useDevtoolsHost } from '../contexts';
 import { useAsyncEffect, useStream } from '../hooks';
 import { SubscribeToNetworkTopicsResponse } from '../proto';
@@ -58,7 +58,7 @@ const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => {
 export const SwarmGraph = () => {
   const classes = useStyles();
   const devtoolsHost = useDevtoolsHost();
-  const [selectedTopic, setSelectedTopic] = useState('');
+  const [selectedTopic, setSelectedTopic] = useState<string>();
   const [peers, setPeers] = useState<PeerInfo[]>([]);
 
   const networkTopics = useStream(() => devtoolsHost.SubscribeToNetworkTopics());
@@ -86,7 +86,12 @@ export const SwarmGraph = () => {
   return (
     <div className={classes.root}>
       <div className={classes.filter}>
-        <AutocompleteFilter label='Topic' options={options.map(topic => topic.topic)} onChange={setSelectedTopic} value={selectedTopic as any} />
+        <Autocomplete
+          label='Topic'
+          options={options.map(topic => topic.topic)}
+          value={selectedTopic as any}
+          onUpdate={setSelectedTopic}
+        />
       </div>
       {selectedTopic ? (
         <PeerGraph
@@ -94,7 +99,7 @@ export const SwarmGraph = () => {
           size={{ width: 400, height: 400 }}
         />
       ) : (
-        <p>Topic not selected</p>
+        <div>Topic not selected.</div>
       )}
     </div>
   );

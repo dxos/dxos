@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { SwarmDetails as SwarmComponent } from '@dxos/network-devtools';
+import { SwarmDetails as SwarmComponent } from '@dxos/devtools-mesh';
 import { SwarmInfo } from '@dxos/network-manager';
 
 import { useDevtoolsHost } from '../contexts';

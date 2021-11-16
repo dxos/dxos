@@ -527,6 +527,24 @@
     },
 
     //
+    // devtools
+    // NOTE: KEEP SORTED
+    //
+
+    {
+      "packageName": "@dxos/devtools",
+      "projectFolder": "packages/devtools/devtools"
+    },
+    {
+      "packageName": "@dxos/devtools-extension",
+      "projectFolder": "packages/devtools/devtools-extension"
+    },
+    {
+      "packageName": "@dxos/devtools-mesh",
+      "projectFolder": "packages/devtools/devtools-mesh"
+    },
+
+    //
     // sdk
     // NOTE: KEEP SORTED
     //
@@ -546,14 +564,6 @@
     {
       "packageName": "@dxos/demos",
       "projectFolder": "packages/sdk/demos"
-    },
-    {
-      "packageName": "@dxos/devtools",
-      "projectFolder": "packages/sdk/devtools"
-    },
-    {
-      "packageName": "@dxos/devtools-extension",
-      "projectFolder": "packages/sdk/devtools-extension"
     },
     {
       "packageName": "@dxos/react-client",
@@ -672,12 +682,6 @@
     {
       "packageName": "@dxos/network-manager",
       "projectFolder": "packages/mesh/network-manager",
-      "shouldPublish": true,
-      "versionPolicyName": "lockStepPolicy"
-    },
-    {
-      "packageName": "@dxos/network-devtools",
-      "projectFolder": "packages/mesh/network-devtools",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },

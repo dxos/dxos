@@ -12,20 +12,24 @@
     "rootDir": "src"
   },
   "include": [
-    "src"
+    "src",
+    "stories"
   ],
   "references": [
-    {
-      "path": "../../common/async"
-    },
     {
       "path": "../client"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../devtools"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../react-framework"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
     },
     {
       "path": "../../common/crypto"
@@ -34,16 +38,13 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../devtools"
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../../halo/credentials"
     },
     {
       "path": "../../mesh/network-manager"
-    },
-    {
-      "path": "../react-framework"
-    },
-    {
-      "path": "../../common/rpc"
     }
   ]
 }

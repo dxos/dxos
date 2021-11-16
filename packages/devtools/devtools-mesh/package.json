@@ -1,6 +1,7 @@
 {
-  "name": "@dxos/network-devtools",
+  "name": "@dxos/devtools-mesh",
   "version": "2.16.17",
+  "private": true,
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
