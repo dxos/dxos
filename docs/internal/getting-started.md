@@ -8,8 +8,10 @@ The project is developed using [rush](https://rushjs.io/) and NodeJS version `16
 To install dependencies:
 
 ```bash
-npm install -g @microsoft/rush pnpm
 nodenv install 16.1.0
+npm install -g @microsoft/rush pnpm
+nodenv rehash
+
 sudo ./common/scripts/install-dependencies.sh
 ```
 
