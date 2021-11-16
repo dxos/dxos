@@ -31,7 +31,6 @@ export interface ItemConstructionOptions {
   itemId: ItemID,
   modelType: ModelType,
   itemType: ItemType | undefined,
-  readStream: NodeJS.ReadableStream,
   parentId?: ItemID,
   initialMutations?: ModelMessage<Uint8Array>[],
   modelSnapshot?: Uint8Array,
@@ -181,7 +180,6 @@ export class ItemManager {
     itemId,
     modelType,
     itemType,
-    readStream,
     parentId,
     initialMutations,
     modelSnapshot,
@@ -189,7 +187,6 @@ export class ItemManager {
   }: ItemConstructionOptions) {
     assert(itemId);
     assert(modelType);
-    assert(readStream);
 
     const parent = parentId ? this._items.get(parentId) : null;
     if (parentId && !parent) {
@@ -203,19 +200,6 @@ export class ItemManager {
     const modelMeta = this._modelFactory.getModelMeta(modelType);
 
     //
-    // Convert inbound envelope message to model specific mutation.
-    //
-    const inboundTransform = createTransform<IEchoStream, ModelMessage<unknown>>(async (message: IEchoStream) => {
-      const { meta, data: { itemId: mutationItemId, mutation } } = message;
-      assert(mutationItemId === itemId);
-      assert(mutation);
-      return {
-        meta,
-        mutation: modelMeta.mutation.decode(mutation)
-      };
-    });
-
-    //
     // Convert model-specific outbound mutation to outbound envelope message.
     //
     const outboundTransform = this._writeStream && mapFeedWriter<unknown, EchoEnvelope>(mutation => ({
@@ -226,9 +210,6 @@ export class ItemManager {
     // Create the model with the outbound stream.
     const model: Model<any> = this._modelFactory.createModel(modelType, itemId, outboundTransform);
     assert(model, `Invalid model: ${modelType}`);
-
-    // Connect the streams.
-    readStream.pipe(inboundTransform).pipe(model.processor);
 
     if (link) {
       assert(link.source);
@@ -285,6 +266,21 @@ export class ItemManager {
   }
 
   /**
+   * Process a mesage directed to a specific model.
+   * @param itemId Id of the item containing the model.
+   * @param message Encoded model message
+   */
+  async processModelMessage(itemId: ItemID, message: ModelMessage<Uint8Array>) {
+    const item = this._items.get(itemId)
+    assert(item)
+
+    const decoded = item.modelMeta.mutation.decode(message.mutation);
+
+    assert(item.model instanceof Model)
+    await item.model.processMessage(message.meta, decoded);
+  }
+
+  /**
    * Retrieves a item from the index.
    * @param itemId
    */
@@ -313,7 +309,7 @@ export class ItemManager {
    * Reconstruct an item with a default model when that model becomes registered.
    * New model instance is created and streams are reconnected.
    */
-  async reconstructItemWithDefaultModel (itemId: ItemID, readStream: NodeJS.ReadableStream) {
+  async reconstructItemWithDefaultModel (itemId: ItemID) {
     const item = this._items.get(itemId);
     assert(item);
     assert(item.model instanceof DefaultModel);
@@ -327,7 +323,6 @@ export class ItemManager {
       itemId,
       itemType: item.type,
       modelType: item.model.originalModelType,
-      readStream,
       initialMutations: item.model.mutations,
       modelSnapshot: item.model.snapshot
     });

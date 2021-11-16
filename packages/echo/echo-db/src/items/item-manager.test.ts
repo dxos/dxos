@@ -13,7 +13,7 @@ import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 
 import { ItemManager } from './item-manager';
 
-describe('items', () => {
+describe('ItemManager', () => {
   test('item construction', async () => {
     const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
     const { publicKey, secretKey } = createKeyPair();

@@ -47,8 +47,6 @@ export abstract class Model<T> {
       assert(mutation);
 
       await this.processMessage(meta, mutation);
-
-      this._messageProcessed.emit(meta);
     });
   }
 
@@ -61,6 +59,9 @@ export abstract class Model<T> {
   }
 
   // TODO(burdon): Rename.
+  /**
+   * @deprecated Use processMessage.
+   */
   get processor (): NodeJS.WritableStream {
     return this._processor;
   }
@@ -74,6 +75,7 @@ export abstract class Model<T> {
     if (modified) {
       this.modelUpdate.emit(this);
     }
+    this._messageProcessed.emit(meta);
   }
 
   createSnapshot (): any {
@@ -113,5 +115,5 @@ export abstract class Model<T> {
    * @param {Object} meta
    * @param {Object} message
    */
-  abstract _processMessage (meta: MutationMeta, message: T): Promise<boolean>;
+  protected abstract _processMessage (meta: MutationMeta, message: T): Promise<boolean>;
 }
