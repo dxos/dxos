@@ -15,7 +15,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const AutocompleteFilter = ({ label, onChange, value = null, options = [] }) => {
+export const AutocompleteFilter = ({ label, onChange, value = null, options = [] }) => {
   const classes = useStyles();
 
   return (
@@ -43,5 +43,3 @@ const AutocompleteFilter = ({ label, onChange, value = null, options = [] }) => 
     />
   );
 };
-
-export default AutocompleteFilter;

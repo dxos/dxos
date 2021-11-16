@@ -54,7 +54,7 @@ const PendingInvitation = ({
         <>
           <HashIcon value={invitationCode} />
           <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2 }}>
-            Pending invitation (05:00)
+            Pending invitation...
           </Typography>
         </>
       )}

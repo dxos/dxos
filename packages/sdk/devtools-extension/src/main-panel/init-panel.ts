@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DevtoolsHost, initDevTool } from '@dxos/devtools';
+import { DevtoolsHost, initialize } from '@dxos/devtools';
 
 declare let chrome: any;
 
 export const initPanel = (devtoolsHost: DevtoolsHost) => {
-  initDevTool({
+  initialize({
     connect (onConnect) {
       onConnect(devtoolsHost);
     },

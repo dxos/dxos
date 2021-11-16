@@ -8,14 +8,14 @@ import ReactDOM from 'react-dom';
 import { createTheme as createMuiTheme, ThemeProvider } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 
-import App from './App';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { App } from './App';
+import { ErrorBoundary } from './components';
 import { WithDevtoolsHostContext } from './contexts';
 import { DevtoolsHost } from './proto';
 
 const theme = createMuiTheme({
   typography: {
-    fontSize: 10
+    fontSize: 11
   },
   components: {
     MuiButtonBase: {
@@ -32,7 +32,7 @@ export interface Shell {
   onReload(cb: () => void): void;
 }
 
-export const initApp = (shell: Shell) => {
+export const initialize = (shell: Shell) => {
   shell.connect(devtoolsHost => {
     ReactDOM.render(
       <ErrorBoundary>
@@ -46,10 +46,7 @@ export const initApp = (shell: Shell) => {
       document.getElementById('root')
     );
   });
-};
 
-export const initDevTool = (shell: Shell) => {
-  initApp(shell);
   shell.onReload(() => {
     window.location.reload();
   });

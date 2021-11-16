@@ -5,7 +5,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-ReactDOM.render(
-  <div>Open the Developer Tools and select the DXOS tab.</div>,
-  document.getElementById('root')
-);
+const App = () => {
+  return (
+    <div style={{
+      whiteSpace: 'nowrap',
+      cursor: 'pointer',
+      padding: 8
+    }}>
+      Open the DXOS Developer Tools extension.
+    </div>
+  );
+};
+
+ReactDOM.render(<App />, document.getElementById('root'));
