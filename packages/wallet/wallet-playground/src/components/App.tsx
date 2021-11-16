@@ -18,6 +18,11 @@ const App = () => {
   const [inProgress, setInProgress] = useState(false);
   const [joinHaloDialog, setJoinHaloDialog] = useState(false);
   const [haloSharingDialog, setHaloSharingDialog] = useState(false);
+  const [remoteConfig, setRemoteConfig] = useState<string>('');
+
+  useEffect(() => {
+    client.services.SystemService.GetConfig().then(remote => setRemoteConfig(JSON.stringify(remote))).catch(setError);
+  }, []);
 
   useEffect(() => {
     const partyStream = client.services.PartyService.SubscribeParties();
@@ -107,6 +112,16 @@ const App = () => {
 
       <Button disabled={inProgress} onClick={handleCreateParty} variant='outlined'>Create party</Button>
       <p>You have {parties.length} parties.</p>
+
+      <details>
+        <summary>Local Client config</summary>
+        {JSON.stringify(client.config.values)}
+      </details>
+
+      <details>
+        <summary>Remote Client config</summary>
+        {remoteConfig}
+      </details>
     </div>
   );
 };

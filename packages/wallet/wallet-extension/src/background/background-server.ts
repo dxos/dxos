@@ -31,10 +31,10 @@ export class BackgroundServer {
   public async handlePort (port: RpcPort) {
     const handlers: ClientServices = {
       ...this._client.services,
-      ProfileService: {
-        ...this._client.services.ProfileService,
+      SystemService: {
+        ...this._client.services.SystemService,
         Reset: async () => {
-          await this._client.services.ProfileService.Reset();
+          await this._client.services.SystemService.Reset();
           // Override the Rest handler with a reload - Client does not recover properly after reset.
           window.location.reload();
         }
