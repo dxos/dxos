@@ -29,18 +29,6 @@ export const LoggingView = () => {
     fetchNamespaces().catch(console.error);
   }, []);
 
-  useEffect(() => {
-    handleUpdate();
-  }, [enabled]);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      handleUpdate();
-    }, 2000);
-
-    return () => clearTimeout(t);
-  }, [namespaces])
-
   const handleUpdate = () => {
     setImmediate(async () => {
       if (enabled) {
@@ -53,11 +41,23 @@ export const LoggingView = () => {
 
       console.log('Logging:', enabled, namespaces);
     });
-  }
+  };
+
+  useEffect(() => {
+    handleUpdate();
+  }, [enabled]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      handleUpdate();
+    }, 2000);
+
+    return () => clearTimeout(t);
+  }, [namespaces]);
 
   const handleEnabled = async (event: React.ChangeEvent<HTMLInputElement>) => {
     setEnabled(event.target.checked);
-  }
+  };
 
   return (
     <Box sx={{ display: 'flex', padding: 2 }}>
