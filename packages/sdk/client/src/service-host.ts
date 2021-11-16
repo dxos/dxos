@@ -13,13 +13,12 @@ import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { decodeInvitation, DevtoolsServiceDependencies, encodeInvitation } from '.';
-import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
+import { decodeInvitation, resultSetToStream, encodeInvitation } from './util';
+import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
 import { Contacts, SubscribePartiesResponse } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
-import { resultSetToStream } from './util/subscription';
 
 interface InviterInvitation {
   invitationCode: string
