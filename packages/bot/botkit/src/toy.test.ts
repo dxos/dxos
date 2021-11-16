@@ -5,7 +5,7 @@
 import assert from 'assert';
 import expect from 'expect';
 
-import { Client } from '@dxos/client';
+import { Client, decodeInvitation, encodeInvitation } from '@dxos/client';
 import { SecretProvider, SecretValidator } from '@dxos/credentials';
 import { createKeyPair, PublicKey } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
@@ -17,7 +17,6 @@ import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
 import { Bot } from './proto/gen/dxos/bot';
 import { BotFactoryClient } from './testutils';
-import { decodeInvitation, encodeInvitation } from './testutils/intivitations';
 
 const ECHO_TYPE = 'bot/text';
 
