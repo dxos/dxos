@@ -7,10 +7,13 @@ import { ModelMeta, Model } from '@dxos/model-factory';
 
 import { Message, schema } from './proto';
 
+/**
+ * MessengerModel is a simple model which represents a chat as an array of Messages.
+ */
 export class MessengerModel extends Model<Message> {
   static meta: ModelMeta = {
-    type: 'wrn://protocol.dxos.org/teamwork/messenger',
-    mutation: schema.getCodecForType('dxos.teamwork.messenger.Message')
+    type: 'dxos:model.messenger',
+    mutation: schema.getCodecForType('dxos.model.messenger.Message')
   };
 
   private readonly _messages: Message[] = [];

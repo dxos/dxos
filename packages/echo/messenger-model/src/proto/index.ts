@@ -3,4 +3,4 @@
 //
 
 export * from './gen';
-export * from './gen/dxos/teamwork/messenger';
+export * from './gen/dxos/model/messenger';
