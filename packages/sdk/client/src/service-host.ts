@@ -2,15 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+import { v4 } from 'uuid';
+
+import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
-import { v4 } from 'uuid';
-
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { defaultInvitationAuthenticator, ECHO, OpenProgress } from '@dxos/echo-db';
+import { ECHO, OpenProgress } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
-import assert from 'assert';
 
 import { decodeInvitation, DevtoolsServiceDependencies, encodeInvitation } from '.';
 import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
@@ -19,7 +20,6 @@ import { Contacts, SubscribePartiesResponse } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
 import { resultSetToStream } from './util/subscription';
-import { latch } from '@dxos/async';
 
 interface InviterInvitation {
   invitationCode: string
@@ -94,7 +94,7 @@ export class ClientServiceHost implements ClientServiceProvider {
         },
         CreateInvitation: () => new Stream(({ next }) => {
           setImmediate(async () => {
-            const secret = generatePasscode()
+            const secret = generatePasscode();
             const secretProvider = () => {
               return Promise.resolve(Buffer.from(secret));
             };
@@ -105,34 +105,36 @@ export class ClientServiceHost implements ClientServiceProvider {
             const invitationCode = encodeInvitation(invitation);
             this._inviterInvitations.push({ invitationCode, secret });
             next({ invitationCode, secret });
-          })
+          });
         }),
         AcceptInvitation: async (request) => {
-          const id = v4()
-          assert(request.invitationCode, 'InvitationCode not provided.')
-          const [secretLatch, secretTrigger] = latch()
-          const inviteeInvitation: InviteeInvitation = { id, secretTrigger }
+          const id = v4();
+          assert(request.invitationCode, 'InvitationCode not provided.');
+          const [secretLatch, secretTrigger] = latch();
+          const inviteeInvitation: InviteeInvitation = { id, secretTrigger };
           const secretProvider: SecretProvider = async () => {
-            await secretLatch
-            const secret = inviteeInvitation.secret
-            if (!secret) throw new Error('Secret not provided.')
+            await secretLatch;
+            const secret = inviteeInvitation.secret;
+            if (!secret) {
+              throw new Error('Secret not provided.');
+            }
             return Buffer.from(secret);
-          }
-          const haloPartyPromise = this._echo.halo.join(decodeInvitation(request.invitationCode), secretProvider)
+          };
+          const haloPartyPromise = this._echo.halo.join(decodeInvitation(request.invitationCode), secretProvider);
           inviteeInvitation.joinPromise = () => haloPartyPromise;
           this._inviteeInvitations.push(inviteeInvitation);
-          return {id}
+          return { id };
         },
         AuthenticateInvitation: async (request) => {
-          const invitation = this._inviteeInvitations.find(inviteeInvitation => inviteeInvitation.id === request.process?.id)
-          assert(invitation, 'Invitation not found.')
-          assert(request.secret, 'Secret not provided.')
-          invitation.secret = request.secret
-          invitation.secretTrigger?.()
-          await (invitation.joinPromise?.())
-          const profile = this._echo.halo.getProfile()
-          assert(profile, 'Profile not created.')
-          return profile
+          const invitation = this._inviteeInvitations.find(inviteeInvitation => inviteeInvitation.id === request.process?.id);
+          assert(invitation, 'Invitation not found.');
+          assert(request.secret, 'Secret not provided.');
+          invitation.secret = request.secret;
+          invitation.secretTrigger?.();
+          await (invitation.joinPromise?.());
+          const profile = this._echo.halo.getProfile();
+          assert(profile, 'Profile not created.');
+          return profile;
         },
         SubscribeContacts: () => {
           if (this._echo.halo.isInitialized) {

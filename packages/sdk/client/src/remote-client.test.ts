@@ -4,14 +4,13 @@
 
 import expect from 'expect';
 import { it as test } from 'mocha';
-import waitForExpect from 'wait-for-expect';
 
+import { latch } from '@dxos/async';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from './client';
 import { clientServiceBundle } from './interfaces';
-import { latch } from '@dxos/async';
 
 const createServiceProviderPort = async () => {
   const [proxyPort, hostPort] = createLinkedPorts();
@@ -55,7 +54,7 @@ describe('Remote client', () => {
     await client.destroy();
   }).timeout(200);
 
-  test.only('creates and joins a HALO invitation', async () => {
+  test('creates and joins a HALO invitation', async () => {
     const inviterRpcPort = await createServiceProviderPort();
     const inviteeRpcPort = await createServiceProviderPort();
 
@@ -66,17 +65,21 @@ describe('Remote client', () => {
 
     await inviter.halo.createProfile({ username: 'test-user' });
 
-    inviter.services.ProfileService.CreateInvitation().subscribe(inviterInvitation => {
-      console.log({inviterInvitation})
-    }, (error) => {throw error})
+    inviter.services.ProfileService.CreateInvitation().subscribe(async inviterInvitation => {
+      const inviteeInvitationProcess = await invitee.services.ProfileService.AcceptInvitation({ invitationCode: inviterInvitation.invitationCode });
+      await invitee.services.ProfileService.AuthenticateInvitation({ process: inviteeInvitationProcess, secret: inviterInvitation.secret });
+    }, (error) => {
+      throw error;
+    });
 
-    
     const [inviteeProfileLatch, inviteeProfileTrigger] = latch();
     invitee.services.ProfileService.SubscribeProfile().subscribe(inviteeProfile => {
       if (inviteeProfile.profile?.username === 'test-user') {
         inviteeProfileTrigger();
       }
-    }, error => {throw error})
-    await inviteeProfileLatch
+    }, error => {
+      throw error;
+    });
+    await inviteeProfileLatch;
   }).timeout(5000);
 });
