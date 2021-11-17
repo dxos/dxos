@@ -43,11 +43,14 @@ message RecoverProfileRequest {
 
 message Invitation {
   // TODO(dmaretskyi): Split into fields.
-  string data = 1;
+  string invitationCode = 1;
+  string secret = 2;
+  bool finished = 3;
+  string error = 5;
 }
 
 message InvitationProcess {
-
+  string id = 1;
 }
 
 message AuthenticateInvitationRequest {
@@ -69,7 +72,7 @@ service ProfileService {
   rpc CreateProfile(CreateProfileRequest) returns (Profile);
   rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
     
-  rpc CreateInvitation(google.protobuf.Empty) returns (Invitation);
+  rpc CreateInvitation(google.protobuf.Empty) returns (stream Invitation);
   rpc AcceptInvitation(Invitation) returns (InvitationProcess);
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (Profile);
     
