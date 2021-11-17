@@ -611,12 +611,20 @@ importers:
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
     devDependencies:
+      '@dxos/echo-db': link:../echo-db
+      '@dxos/object-model': link:../object-model
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/mocha': 8.2.2
+      expect: 27.0.2
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/model-factory': workspace:*
+      '@dxos/object-model': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@types/mocha': ~8.2.2
+      expect: ~27.0.2
   ../../packages/echo/model-factory:
     dependencies:
       '@dxos/async': link:../../common/async
@@ -1489,6 +1497,7 @@ importers:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
+      '@dxos/proto': link:../../common/proto
       boolean: 3.0.4
       debug: 4.3.1
       js-yaml: 3.14.1
@@ -1511,6 +1520,7 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/proto': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/js-yaml': ^3.12.5
       '@types/lodash.defaultsdeep': ^4.6.6
@@ -2299,7 +2309,6 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
-      '@dxos/wallet-extension': link:../wallet-extension
       '@mui/icons-material': 5.0.1_4708d87537568924a83ffdea00ac702d
       '@mui/material': 5.0.1_3b7f7b84f013384d046f72a4522eddf8
       react: 17.0.2
@@ -2321,7 +2330,6 @@ importers:
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@dxos/wallet-extension': workspace:*
       '@mui/icons-material': ^5.0.1
       '@mui/material': ^5.0.1
       '@types/react': ^17.0.24
