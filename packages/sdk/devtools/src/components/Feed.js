@@ -67,7 +67,7 @@ function getType (message) {
   }
 }
 
-const Feed = ({ messages, onSelect }) => {
+export const Feed = ({ messages, onSelect }) => {
   const classes = useStyles();
 
   // Dynamically expand for performance.
@@ -140,5 +140,3 @@ const Feed = ({ messages, onSelect }) => {
     </TableContainer>
   );
 };
-
-export default Feed;

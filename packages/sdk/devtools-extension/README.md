@@ -4,14 +4,14 @@
 
 1. Grab a build from the [latest build](https://github.com/dxos/protocols).
 
-<img src="images/jobs.png">
+<img src="images/jobs.png" width="520px">
 
-<img src="images/artifacts.png">
+<img src="images/artifacts.png" width="420px">
 
 2. Unzip the downloaded file.
 3. Go to `chrome://extensions/` and enable developer mode.
 
-<img src="images/developer-mode.png">
+<img src="images/developer-mode.png" width="220px">
 
 4. Select `Load unpacked` and select the unzipped Devtools folder.
 
@@ -40,7 +40,9 @@
 rushx build
 ```
 
-2. (Optional) Run the `rushx build:watch` for both `extension` and `devtools` and open the devtools in your browser.
+2. (Optional) Run the `rushx build:watch` for both `devtools-extension` and `devtools` and open the devtools in your browser.
+
+TODO(burdon): `build:watch` not configured.
 
 3. Open the __extensions__ manager in your browser: 
 
@@ -51,7 +53,7 @@ rushx build
 - Safari (Not Supported Yet)
 
 4. Make sure you have the `developer` toggle __on__ and click on `Load Unpacked Extension` button.
-5. Search for the extension __dist__ folder (`<repo-root>/packages/extension/dist`) and select it.
+5. Search for the extension __dist__ folder (`<repo-root>/packages/devtools-extension/dist`) and select it.
 
 ## Design
 

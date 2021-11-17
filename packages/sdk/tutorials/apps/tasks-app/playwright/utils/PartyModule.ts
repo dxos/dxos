@@ -1,4 +1,4 @@
-import { decodeInvitation } from '@dxos/react-client';
+import { decodeInvitation } from '@dxos/client';
 import expect from 'expect';
 
 import { AppSimulator } from './AppSimulator';

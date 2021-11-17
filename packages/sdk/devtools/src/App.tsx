@@ -4,29 +4,37 @@
 
 import React, { useState } from 'react';
 
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import StorageIcon from '@mui/icons-material/Dns';
-import SwarmIcon from '@mui/icons-material/Router';
-import ConfigIcon from '@mui/icons-material/Settings';
-import LoggingIcon from '@mui/icons-material/Subject';
-import KeyIcon from '@mui/icons-material/VpnKey';
-import { createTheme } from '@mui/material';
-import Divider from '@mui/material/Divider';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import * as colors from '@mui/material/colors';
+// https://mui.com/components/material-icons
+import {
+  FilterTiltShift as SwarmIcon,
+  AccountTree as ItemsIcon,
+  Dns as StorageIcon,
+  Router as SignalIcon,
+  Settings as ConfigIcon,
+  Subject as LoggingIcon,
+  VpnKey as KeyIcon
+} from '@mui/icons-material';
+import {
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  colors,
+  createTheme
+} from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
-import { ConfigView } from './containers/ConfigView';
-import { DebugLoggingView } from './containers/DebugLoggingView';
-import ItemsViewer from './containers/ItemsViewer';
-import Keys from './containers/Keys';
-import Signal from './containers/Signal';
-import StorageTab from './containers/StorageTab';
-import SwarmDetails from './containers/SwarmDetails';
-import SwarmGraph from './containers/SwarmGraph';
+import {
+  ConfigView,
+  LoggingView,
+  ItemsViewer,
+  Keyring,
+  Signal,
+  StorageTab,
+  SwarmDetails
+  // SwarmGraph
+} from './containers';
 
 // TODO(wittjosiah): Refactor, makeStyles is deprecated.
 const useStyles = makeStyles(theme => ({
@@ -38,16 +46,20 @@ const useStyles = makeStyles(theme => ({
   },
   sidebar: {
     flexShrink: 0,
-    width: 140,
+    width: 120,
     backgroundColor: colors.grey[100],
     borderRight: `1px solid ${theme.palette.divider}`
   },
   icon: {
-    minWidth: 28
+    // TODO(burdon): Fix since Mui classes not working.
+    '&.MuiListItemIcon-root': {
+      minWidth: 36
+    }
   },
   content: {
     display: 'flex',
     flex: 1,
+    flexDirection: 'column',
     overflow: 'hidden'
   },
   contentHidden: {
@@ -57,7 +69,7 @@ const useStyles = makeStyles(theme => ({
 
 const items = [
   {
-    title: 'Application',
+    title: 'CLIENT',
     items: [
       {
         id: 'config',
@@ -87,27 +99,29 @@ const items = [
       {
         id: 'echo.items',
         title: 'Items',
-        icon: AccountTreeIcon
+        icon: ItemsIcon
       }
     ]
   },
   {
     title: 'MESH',
     items: [
+      /*
       {
         id: 'mesh.swarmgraph',
         title: 'Swarm Graph',
         icon: SwarmIcon
       },
+      */
       {
         id: 'mesh.swarminfo',
-        title: 'Swarm Info',
+        title: 'Swarm',
         icon: SwarmIcon
       },
       {
         id: 'mesh.signal',
         title: 'Signal',
-        icon: SwarmIcon
+        icon: SignalIcon
       }
     ]
   },
@@ -123,7 +137,7 @@ const items = [
   }
 ];
 
-const App = () => {
+export const App = () => {
   const classes = useStyles();
   const [selected, setSelected] = useState(items[0].items[0].id);
 
@@ -136,7 +150,7 @@ const App = () => {
   return (
     <div className={classes.root}>
       <div className={classes.sidebar}>
-        <List dense aria-label='main tools'>
+        <List dense disablePadding>
           {items.map(({ title, items = [] }) => (
             <div key={title}>
               <ListItem>
@@ -149,10 +163,14 @@ const App = () => {
                   selected={selected === id}
                   onClick={(event) => handleListItemClick(event, id)}
                 >
+                  {/* TODO(burdon): extending root class not working. */}
                   <ListItemIcon classes={{ root: classes.icon }}>
                     <Icon />
                   </ListItemIcon>
-                  <ListItemText primary={title} />
+                  <ListItemText
+                    style={{ whiteSpace: 'nowrap' }}
+                    primary={title}
+                  />
                 </ListItem>
               ))}
               <Divider />
@@ -170,7 +188,7 @@ const App = () => {
         <StorageTab />
       </div>
       <div className={className('halo.keyring')}>
-        <Keys />
+        <Keyring />
       </div>
       <div className={className('echo.items')}>
         <ItemsViewer />
@@ -178,17 +196,17 @@ const App = () => {
       <div className={className('mesh.signal')}>
         <Signal />
       </div>
+      {/*
       <div className={className('mesh.swarmgraph')}>
         <SwarmGraph />
       </div>
+      */}
       <div className={className('mesh.swarminfo')}>
         <SwarmDetails />
       </div>
       <div className={className('debug.logging')}>
-        <DebugLoggingView />
+        <LoggingView />
       </div>
     </div>
   );
 };
-
-export default App;

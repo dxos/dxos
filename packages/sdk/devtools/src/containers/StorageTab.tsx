@@ -8,7 +8,7 @@ import Button from '@mui/material/Button';
 
 import { useDevtoolsHost } from '../contexts';
 
-const StorageTab = () => {
+export const StorageTab = () => {
   const devtoolsHost = useDevtoolsHost();
 
   async function handleReset () {
@@ -23,5 +23,3 @@ const StorageTab = () => {
     </div>
   );
 };
-
-export default StorageTab;

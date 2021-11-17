@@ -40,7 +40,7 @@ const useStyle = makeStyles(() => ({
 // TODO(burdon): Use type.
 const sorter = (a: any, b: any) => (a.type < b.type ? -1 : a.type > b.type ? 1 : a.own ? -1 : 1);
 
-const KeyTable = ({ keys }: { keys: any[] }) => {
+export const KeyTable = ({ keys }: { keys: any[] }) => {
   const classes = useStyle();
 
   return (
@@ -77,5 +77,3 @@ const KeyTable = ({ keys }: { keys: any[] }) => {
     </Table>
   );
 };
-
-export default KeyTable;

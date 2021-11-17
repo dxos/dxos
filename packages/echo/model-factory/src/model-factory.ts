@@ -27,6 +27,10 @@ export class ModelFactory {
     return this._models.get(modelType);
   }
 
+  getModels () {
+    return Array.from(this._models.values());
+  }
+
   registerModel (constructor: ModelConstructor<any>): this {
     validateModelClass(constructor);
     const { meta } = constructor;

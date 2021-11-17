@@ -26,8 +26,7 @@ import {
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 
-import { PeerGraph, SignalStatus, SignalTrace } from '../src';
-import { SwarmDetails } from '../src/SwarmDetails';
+import { PeerGraph, SignalStatus, SignalTrace, SwarmDetails } from '../src';
 
 export default {
   title: 'Devtools'

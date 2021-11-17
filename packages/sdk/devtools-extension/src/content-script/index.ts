@@ -5,6 +5,8 @@
 import Bridge from 'crx-bridge';
 import browser from 'webextension-polyfill';
 
+// TODO(burdon): No code in index file.
+
 Bridge.setNamespace('dxos.devtools');
 Bridge.allowWindowMessaging('dxos.devtools');
 

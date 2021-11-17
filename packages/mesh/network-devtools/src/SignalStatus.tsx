@@ -31,21 +31,26 @@ export const SignalStatus = ({ status }: SignalStatusProps) => {
     return () => clearInterval(id);
   }, []);
 
+  // TODO(burdon): Use format tool (mins, sec, etc.)
+  const format = (n: number, unit = 's') => `${n.toLocaleString()}${unit}`;
+
   return (
-    <ul>
-      {status.map(s => (
-        <li
+    <div>
+      {status.map(status => (
+        <div
           style={{
-            color: getColor(s.state)
+            color: getColor(status.state)
           }}
-          key={s.host}
+          key={status.host}
         >
-          {s.host} {s.state}
-          {s.error && <div>{s.error}</div>}
-          {s.state === SignalApi.State.DISCONNECTED && <div>Will reconnect in {Math.floor((s.lastStateChange + s.reconnectIn - time) / 1000)} s</div>}
-          {s.state === SignalApi.State.CONNECTED && <div>Connected for {Math.floor((time - s.connectionStarted) / 1000)} s</div>}
-        </li>
+          {status.host} {status.state}
+          {status.error && <div>{status.error}</div>}
+          {status.state === SignalApi.State.DISCONNECTED &&
+            <div>Will reconnect in {format(Math.floor((status.lastStateChange + status.reconnectIn - time) / 1000))}</div>}
+          {status.state === SignalApi.State.CONNECTED &&
+            <div>Connected for {format(Math.floor((time - status.connectionStarted) / 1000))}</div>}
+        </div>
       ))}
-    </ul>
+    </div>
   );
 };

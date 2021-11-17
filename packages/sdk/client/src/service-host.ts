@@ -2,22 +2,39 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+import { v4 } from 'uuid';
+
+import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
+import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { DevtoolsServiceDependencies } from '.';
-import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
+import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
-import { Contacts } from './proto/gen/dxos/client';
+import { Contacts, SubscribePartiesResponse } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
-import { resultSetToStream } from './util/subscription';
+import { decodeInvitation, resultSetToStream, encodeInvitation } from './util';
+
+interface InviterInvitation {
+  invitationCode: string
+  secret: string | undefined
+}
+
+interface InviteeInvitation {
+  secret?: string | undefined // Can be undefined initially, then set after receiving secret from the inviter.
+  secretTrigger?: () => void // Is triggered after supplying the secret.
+  joinPromise?: () => Promise<any> // Resolves when the joining process finishes.
+}
 
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _echo: ECHO;
+  private readonly _inviterInvitations: InviterInvitation[] = []; // List of pending invitations from the inviter side.
+  private readonly _inviteeInvitations: Map<string, InviteeInvitation> = new Map(); // Map of pending invitations from the invitee side.
 
   private readonly _devtoolsEvents = new DevtoolsHostEvents();
 
@@ -44,13 +61,21 @@ export class ClientServiceHost implements ClientServiceProvider {
     });
 
     this.services = {
-      ProfileService: {
-        GetConfig: () => {
-          throw new Error('Not implemented');
+      SystemService: {
+        GetConfig: async () => {
+          return {
+            ...this._config.values,
+            build: {
+              ...this._config.values.build,
+              timestamp: undefined // TODO(rzadp): Substitution did not kick in here?.
+            }
+          };
         },
         Reset: async () => {
           await this._echo.reset();
-        },
+        }
+      },
+      ProfileService: {
         SubscribeProfile: () => new Stream(({ next }) => {
           const emitNext = () => next({
             profile: this._echo.halo.isInitialized ? this._echo.halo.getProfile() : undefined
@@ -65,14 +90,58 @@ export class ClientServiceHost implements ClientServiceProvider {
         RecoverProfile: () => {
           throw new Error('Not implemented');
         },
-        CreateInvitation: () => {
-          throw new Error('Not implemented');
+        CreateInvitation: () => new Stream(({ next }) => {
+          setImmediate(async () => {
+            const secret = generatePasscode();
+            const secretProvider = async () => Buffer.from(secret);
+            const invitation = await this._echo.halo.createInvitation({
+              secretProvider,
+              secretValidator: defaultSecretValidator
+            }, {});
+            const invitationCode = encodeInvitation(invitation);
+            this._inviterInvitations.push({ invitationCode, secret });
+            next({ invitationCode, secret });
+          });
+        }),
+        AcceptInvitation: async (request) => {
+          const id = v4();
+          assert(request.invitationCode, 'InvitationCode not provided.');
+          const [secretLatch, secretTrigger] = latch();
+          const inviteeInvitation: InviteeInvitation = { secretTrigger };
+
+          // Secret will be provided separately (in AuthenticateInvitation).
+          // Process will continue when `secretLatch` resolves, triggered by `secretTrigger`.
+          const secretProvider: SecretProvider = async () => {
+            await secretLatch;
+            const secret = inviteeInvitation.secret;
+            if (!secret) {
+              throw new Error('Secret not provided.');
+            }
+            return Buffer.from(secret);
+          };
+
+          // Joining process is kicked off, and will await authentication with a secret.
+          const haloPartyPromise = this._echo.halo.join(decodeInvitation(request.invitationCode), secretProvider);
+          inviteeInvitation.joinPromise = () => haloPartyPromise; // After awaiting this we have a finished joining flow.
+          this._inviteeInvitations.set(id, inviteeInvitation);
+          return { id };
         },
-        AcceptInvitation: () => {
-          throw new Error('Not implemented');
-        },
-        AuthenticateInvitation: () => {
-          throw new Error('Not implemented');
+        AuthenticateInvitation: async (request) => {
+          assert(request.process?.id, 'Process ID is missing.');
+          const invitation = this._inviteeInvitations.get(request.process?.id);
+          assert(invitation, 'Invitation not found.');
+          assert(request.secret, 'Secret not provided.');
+
+          // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
+          invitation.secret = request.secret;
+          invitation.secretTrigger?.();
+
+          // Wait for the join process to finish.
+          await (invitation.joinPromise?.());
+
+          const profile = this._echo.halo.getProfile();
+          assert(profile, 'Profile not created.');
+          return profile;
         },
         SubscribeContacts: () => {
           if (this._echo.halo.isInitialized) {
@@ -93,10 +162,11 @@ export class ClientServiceHost implements ClientServiceProvider {
       },
       PartyService: {
         SubscribeParties: () => {
-          throw new Error('Not implemented');
+          return resultSetToStream(this._echo.queryParties(), (parties): SubscribePartiesResponse => ({ parties: parties.map(party => ({ key: party.key.asUint8Array() })) }));
         },
-        CreateParty: () => {
-          throw new Error('Not implemented');
+        CreateParty: async () => {
+          const party = await this._echo.createParty();
+          return { key: party.key.asUint8Array() };
         },
         CreateInvitation: () => {
           throw new Error('Not implemented');

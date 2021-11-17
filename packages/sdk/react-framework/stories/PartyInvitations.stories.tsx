@@ -6,12 +6,12 @@ import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
+import { encodeInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import {
   ClientInitializer,
   ErrorBoundary,
   ProfileInitializer,
-  encodeInvitation,
   useClient,
   useParties,
   useSecretGenerator
