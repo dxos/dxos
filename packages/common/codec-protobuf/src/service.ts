@@ -91,6 +91,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
   callStream (methodName: string, request: Uint8Array): Stream<Uint8Array> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
+    console.log({method, methodName})
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
     assert(method.responseStream, 'Invalid RPC method call: response streaming mismatch.');
 

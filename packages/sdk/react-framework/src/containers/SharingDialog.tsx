@@ -109,6 +109,7 @@ export interface SharingDialogProps {
   title: string,
   members?: PartyMember[] // TODO(rzadp): Support HALO members as well (different devices).
   onShare: (shareOptions: ShareOptions) => Promise<InvitationDescriptor>
+  onCreateInvitation?: () => Promise<PendingInvitation>
   onClose?: () => void
 }
 
@@ -123,6 +124,7 @@ export const SharingDialog = ({
   title,
   members = [],
   onShare,
+  onCreateInvitation,
   onClose
 }: SharingDialogProps) => {
   // TODO(burdon): Expiration.
@@ -173,7 +175,7 @@ export const SharingDialog = ({
       content={(
         <>
           <Box>
-            <Button onClick={handleCreateInvitation}>Create Invitation</Button>
+            <Button onClick={onCreateInvitation ?? handleCreateInvitation}>Create Invitation</Button>
           </Box>
 
           <Box sx={{

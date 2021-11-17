@@ -29,7 +29,7 @@ export interface JoinDialogProps {
   open: boolean
   title: string
   invitationCode?: string
-  onJoin: (joinOptions: JoinOptions) => Promise<Party>
+  onJoin: (joinOptions: JoinOptions) => Promise<Party | void>
   onClose?: () => void
   closeOnSuccess?: boolean
   modal?: boolean
