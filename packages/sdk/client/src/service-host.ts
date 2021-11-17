@@ -112,6 +112,8 @@ export class ClientServiceHost implements ClientServiceProvider {
           const [secretLatch, secretTrigger] = latch();
           const inviteeInvitation: InviteeInvitation = { id, secretTrigger };
 
+          // Secret will be provided separately (in AuthenticateInvitation).
+          // Process will continue when `secretLatch` resolves, triggered by `secretTrigger`.
           const secretProvider: SecretProvider = async () => {
             await secretLatch;
             const secret = inviteeInvitation.secret;
@@ -121,8 +123,9 @@ export class ClientServiceHost implements ClientServiceProvider {
             return Buffer.from(secret);
           };
 
+          // Joining process is kicked off, and will await authentication with a secret.
           const haloPartyPromise = this._echo.halo.join(decodeInvitation(request.invitationCode), secretProvider);
-          inviteeInvitation.joinPromise = () => haloPartyPromise;
+          inviteeInvitation.joinPromise = () => haloPartyPromise; // After awaiting this we have a finished joining flow.
           this._inviteeInvitations.push(inviteeInvitation);
           return { id };
         },
