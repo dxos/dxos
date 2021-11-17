@@ -38,7 +38,7 @@ interface UserProps {
   joining?: boolean;
 }
 
-const User = ({sharing, joining}: UserProps) => {
+const User = ({ sharing, joining }: UserProps) => {
   const [shareOpen, setShareOpen] = useState(!!sharing && !joining);
   const [joinOpen, setJoinOpen] = useState(!!joining && !sharing);
   const profile = useProfile();
