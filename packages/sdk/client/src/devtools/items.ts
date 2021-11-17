@@ -12,6 +12,8 @@ const getData = (echo: DevtoolsHook['client']['echo']): SubscribeToItemsResponse
     parties: []
   };
 
+  console.log('###############');
+  /*
   const { value: parties } = echo.queryParties();
   for (const party of parties) {
     const partyInfo: any = {
@@ -31,6 +33,7 @@ const getData = (echo: DevtoolsHook['client']['echo']): SubscribeToItemsResponse
 
     result.parties.push(partyInfo);
   }
+  */
 
   return {
     data: JSON.stringify(result)
@@ -51,7 +54,7 @@ export const subscribeToItems = (hook: DevtoolsServiceDependencies) => {
         partySubscriptions.forEach(unsub => unsub());
 
         for (const party of parties) {
-          const sub = party.database.select(s => s.items).update.on(() => {
+          const sub = party.database.select(selection => selection.items).update.on(() => {
             update();
           });
           partySubscriptions.push(sub);

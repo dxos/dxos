@@ -4,13 +4,14 @@
 
 /* global chrome */
 
+// TODO(burdon): No code in index file.
+
 let panelCreated = false;
 let checkCount = 0;
 
 // eslint-disable-next-line prefer-const
 let loadCheckInterval: NodeJS.Timeout;
 
-// TODO(burdon): No code in index file.
 function createPanel () {
   // Stop trying if above 120 seconds or already made.
   if (panelCreated || checkCount++ > 120) {
@@ -23,7 +24,7 @@ function createPanel () {
     (result, isException) => {
       // TODO(elmasse): How should we better handle this error?
       if (isException) {
-        console.log('DXOS devtools', isException);
+        console.log('DXOS devtools:', isException);
       }
 
       // Already created or no client.
@@ -35,13 +36,10 @@ function createPanel () {
       if (loadCheckInterval) {
         clearInterval(loadCheckInterval);
       }
+
       panelCreated = true;
 
-      chrome.devtools.panels.create(
-        'DXOS',
-        '',
-        'main-panel.html'
-      );
+      chrome.devtools.panels.create('DXOS', '', 'main-panel.html');
     }
   );
 }

@@ -9,7 +9,7 @@ import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow }
 
 import { keyTypeName } from '@dxos/credentials';
 import { CopyText } from '@dxos/react-components';
-import { BooleanIcon } from '@dxos/react-framework';
+import { BooleanIcon } from '@dxos/react-framework'; // TODO(burdon): Remove.
 
 import { KeyRecord } from '../proto/gen/dxos/halo/keys';
 

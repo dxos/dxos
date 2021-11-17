@@ -66,3 +66,9 @@ It then sets-up a bridge that enables the devtools (and other components) to acc
 
 - Anatomy of an extension: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#Background_pages
 - This package is loosely based on the [Apollo DevTools](https://github.com/apollographql/apollo-client-devtools).
+
+
+## Troubleshooting
+
+- Remove all tabs that contain the extension then remove the extension and reload it.
+

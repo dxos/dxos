@@ -13,9 +13,9 @@ const createPort = (destination: string): RpcPort => {
     send: async (msg) => {
       await Bridge.sendMessage(MESSAGE_ID, Array.from(msg), destination);
     },
-    subscribe: cb => {
+    subscribe: callback => {
       Bridge.onMessage(MESSAGE_ID, (message) => {
-        cb(new Uint8Array(message.data));
+        callback(new Uint8Array(message.data));
       });
     }
   };
