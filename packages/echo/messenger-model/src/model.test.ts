@@ -14,14 +14,14 @@ describe('MessengerModel', () => {
     const { items: [item1, item2], peers } = await createModelTestBench({ model: MessengerModel });
     after(async () => Promise.all(peers.map(peer => peer.close())));
 
-    await item1.model.sendMessage({ text: 'Hello!', sender: 'peer1' });
+    await item1.model.sendMessage({ text: 'ping', sender: 'peer1' });
 
     await item2.model.modelUpdate.waitForCount(1);
-    expect(item2.model.messages[0].text).toBe('Hello!');
+    expect(item2.model.messages[0].text).toBe('ping');
 
-    await item2.model.sendMessage({ text: 'Greeting', sender: 'peer2' });
+    await item2.model.sendMessage({ text: 'pong', sender: 'peer2' });
 
     await item1.model.modelUpdate.waitForCount(1);
-    expect(item1.model.messages[1].text).toBe('Greeting');
+    expect(item1.model.messages[1].text).toBe('pong');
   });
 });
