@@ -4,13 +4,13 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 
-import { DevtoolsHook, DevtoolsServiceDependencies } from './devtools-context';
 import { SubscribeToItemsResponse } from '../proto/gen/dxos/devtools';
+import { DevtoolsHook, DevtoolsServiceDependencies } from './devtools-context';
 
 const getData = (echo: DevtoolsHook['client']['echo']): SubscribeToItemsResponse => {
   const result: any = {
     parties: []
-  }
+  };
 
   const { value: parties } = echo.queryParties();
   for (const party of parties) {
@@ -35,7 +35,7 @@ const getData = (echo: DevtoolsHook['client']['echo']): SubscribeToItemsResponse
   return {
     data: JSON.stringify(result)
   };
-}
+};
 
 export const subscribeToItems = (hook: DevtoolsServiceDependencies) => {
   return new Stream<SubscribeToItemsResponse>(({ next }) => {
