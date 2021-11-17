@@ -26,7 +26,6 @@ interface InviterInvitation {
 }
 
 interface InviteeInvitation {
-  id: string
   secret?: string | undefined // Can be undefined initially, then set after receiving secret from the inviter.
   secretTrigger?: () => void // Is triggered after supplying the secret.
   joinPromise?: () => Promise<any> // Resolves when the joining process finishes.
@@ -35,7 +34,7 @@ interface InviteeInvitation {
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _echo: ECHO;
   private readonly _inviterInvitations: InviterInvitation[] = []; // List of pending invitations from the inviter side.
-  private readonly _inviteeInvitations: InviteeInvitation[] = []; // List of pending invitations from the invitee side.
+  private readonly _inviteeInvitations: Map<string, InviteeInvitation> = new Map(); // Map of pending invitations from the invitee side.
 
   private readonly _devtoolsEvents = new DevtoolsHostEvents();
 
@@ -108,7 +107,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           const id = v4();
           assert(request.invitationCode, 'InvitationCode not provided.');
           const [secretLatch, secretTrigger] = latch();
-          const inviteeInvitation: InviteeInvitation = { id, secretTrigger };
+          const inviteeInvitation: InviteeInvitation = { secretTrigger };
 
           // Secret will be provided separately (in AuthenticateInvitation).
           // Process will continue when `secretLatch` resolves, triggered by `secretTrigger`.
@@ -124,11 +123,12 @@ export class ClientServiceHost implements ClientServiceProvider {
           // Joining process is kicked off, and will await authentication with a secret.
           const haloPartyPromise = this._echo.halo.join(decodeInvitation(request.invitationCode), secretProvider);
           inviteeInvitation.joinPromise = () => haloPartyPromise; // After awaiting this we have a finished joining flow.
-          this._inviteeInvitations.push(inviteeInvitation);
+          this._inviteeInvitations.set(id, inviteeInvitation);
           return { id };
         },
         AuthenticateInvitation: async (request) => {
-          const invitation = this._inviteeInvitations.find(inviteeInvitation => inviteeInvitation.id === request.process?.id);
+          assert(request.process?.id, 'Process ID is missing.');
+          const invitation = this._inviteeInvitations.get(request.process?.id);
           assert(invitation, 'Invitation not found.');
           assert(request.secret, 'Secret not provided.');
 
