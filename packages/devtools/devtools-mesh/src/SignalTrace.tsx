@@ -16,7 +16,10 @@ export const SignalTrace = ({ trace }: SignalTraceProps) => (
     {trace.map(msg => (
       <div style={{ color: msg.error ? 'red' : undefined }} key={msg.messageId}>
         {msg.incoming ? 'inc' : 'out'} {msg.method} {msg.time} ms
-        <JsonTreeView data={{ msg }} depth={0} root={undefined as any} size={undefined as any} onSelect={undefined as any} />
+        <JsonTreeView
+          data={{ msg }}
+          depth={0}
+        />
       </div>
     ))}
   </div>

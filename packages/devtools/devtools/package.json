@@ -22,6 +22,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools-mesh": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/esbuild-server": "~1.2.3",
     "@dxos/proto": "workspace:*",

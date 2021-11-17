@@ -3,53 +3,18 @@
 //
 
 import isPlainObject from 'lodash.isplainobject';
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, ReactNode, useEffect, useState } from 'react';
 
 import {
   ChevronRight as ChevronRightIcon,
-  ExpandMore as ExpandMoreIcon
+  ExpandMore as ExpandMoreIcon,
+  MoreHoriz as BulletIcon
 } from '@mui/icons-material';
 import { TreeItem as MuiTreeItem, TreeView as MuiTreeView } from '@mui/lab';
-import { styled, Typography } from '@mui/material';
+import { Box, Typography, styled, useTheme } from '@mui/material';
 
-import { keyToString } from '@dxos/crypto';
+import { keyToString, PublicKey } from '@dxos/crypto';
 import { truncateString } from '@dxos/debug';
-
-const StyledTreeView = styled(MuiTreeView)({ overflowX: 'hidden' });
-
-// TODO(burdon): Inline styles.
-
-const ItemRoot = styled(MuiTreeItem)({
-  display: 'flex',
-  flexDirection: 'column',
-  overflowX: 'hidden'
-});
-
-const LabelRoot = styled('div')({
-  display: 'flex',
-  overflowX: 'hidden'
-});
-
-const Label = styled(Typography)(({ fontSize }: { fontSize?: string }) => ({
-  fontSize: fontSize === 'small' ? 14 : undefined
-}));
-
-const DefaultValue = styled(Typography)(({ fontSize }: { fontSize?: string }) => ({
-  overflowX: 'hidden',
-  paddingLeft: 8,
-  whiteSpace: 'pre-line',
-  wordBreak: 'break-word',
-  fontSize: fontSize === 'small' ? 14 : undefined
-}));
-
-const KeyStrValue = styled(DefaultValue)(({ theme }) => ({
-  color: theme.palette.info.main,
-  fontFamily: 'monospace'
-}));
-
-const BooleanValue = styled(DefaultValue)(({ theme }) => ({
-  color: theme.palette.info.main
-}));
 
 //
 // Calculate all IDs.
@@ -70,6 +35,38 @@ const visitor = (value: any, depth = 1, path = '', ids: string[] = [], i = 0) =>
   return ids;
 };
 
+// https://mui.com/customization/default-theme
+const DefaultValue = styled(Typography)(({ size }: { size?: Size }) => ({
+  overflowX: 'hidden',
+  paddingLeft: 8,
+  whiteSpace: 'pre-line',
+  wordBreak: 'break-word',
+  fontSize: size === 'small' ? 14 : undefined
+}));
+
+const KeyValue = styled(DefaultValue)(({ theme }) => ({
+  color: theme.palette.info.dark,
+  fontFamily: 'monospace'
+}));
+
+const ConstValue = styled(DefaultValue)(({ theme }) => ({
+  color: theme.palette.warning.dark,
+  fontFamily: 'monospace'
+}));
+
+const BooleanValue = styled(DefaultValue)(({ theme, value }: { theme?: any, value: boolean }) => ({
+  color: value ? theme.palette.success.dark : theme.palette.error.dark,
+  fontFamily: 'monospace'
+}));
+
+const NumberValue = styled(DefaultValue)(({ theme }) => ({
+  color: theme.palette.warning.dark
+}));
+
+const ScalarValue = styled(DefaultValue)(({ theme }) => ({
+  color: theme.palette.success.dark
+}));
+
 /**
  * TreeItem wrapper.
  */
@@ -81,33 +78,50 @@ const TreeItem = ({
   children
 }: {
   nodeId: string,
-  size: string | undefined,
+  size?: Size,
   label: string,
   value?: ReactElement,
-  children?: React.ReactNode
+  children?: ReactNode
 }) => {
+  const theme = useTheme();
+
   return (
-    <ItemRoot
+    <MuiTreeItem sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      overflowX: 'hidden'
+    }}
       nodeId={nodeId}
       label={(
-        <LabelRoot>
-          <Label color='primary' fontSize={size}>{label}</Label>
+        <Box sx={{
+          display: 'flex',
+          overflowX: 'hidden'
+        }}>
+          <Typography sx={{
+            color: theme.palette.text.secondary,
+            fontWeight: 200,
+            fontSize: size === 'small' ? 14 : undefined
+          }}>
+            {label}
+          </Typography>
+          {value !== undefined ? ':' : ''}
           {value}
-        </LabelRoot>
+        </Box>
       )}
     >
       {children}
-    </ItemRoot>
+    </MuiTreeItem>
   );
 };
 
+type Size = 'small' | 'medium' | undefined
+
 // TODO(burdon): Extend MuiJsonTreeView
 export interface JsonTreeViewProps {
-  className?: string
-  data?: any
+  sx?: any
+  size?: Size
   depth?: number
-  root?: string
-  size?: string
+  data?: any
   onSelect?: () => void
 }
 
@@ -116,11 +130,11 @@ export interface JsonTreeViewProps {
  * Works with JSON and other objects with nested values.
  */
 export const JsonTreeView = ({
-  data = {},
-  root,
+  sx,
   size,
   depth = Infinity,
-  onSelect = () => {}
+  data = {},
+  onSelect
 }: JsonTreeViewProps) => {
   if (!data) {
     data = {};
@@ -128,6 +142,7 @@ export const JsonTreeView = ({
 
   const [expanded, setExpanded] = useState<string[]>([]);
 
+  // TODO(burdon): Auto-exapnds.
   // Needed to determine if data has changed.
   const diff = JSON.stringify(data);
   useEffect(() => {
@@ -138,57 +153,88 @@ export const JsonTreeView = ({
   //
   // Recursively render items.
   //
-  const renderNode = (value: any, key: string, level = 0, path = ''): any => {
+  const renderNode = (value: any, key = '', level = 0, path = ''): any => {
     if (value === undefined || value === '') {
       return;
     }
 
     if (isPlainObject(value)) {
       const items = Object.entries(value).map(([key, value]) => renderNode(value, key, level + 1, `${path}.${key}`)).filter(Boolean);
-      return (!root && level === 0)
-        ? items
-        : <TreeItem size={size} key={path} nodeId={path || '.'} label={key}>{items}</TreeItem>;
+      return (level === 0) ? items : (
+        <TreeItem
+          key={path}
+          nodeId={path || '.'}
+          size={size}
+          label={key}
+        >
+          {items}
+        </TreeItem>
+      );
     }
 
     if (Array.isArray(value)) {
       const items = value.map((value, key) => renderNode(value, `[${key}]`, level + 1, `${path}.${key}`)).filter(Boolean);
-      return (!root && level === 0)
-        ? items
-        : <TreeItem size={size} key={path} nodeId={path} label={key}>{items}</TreeItem>;
+      return (level === 0) ? items : (
+        <TreeItem
+          key={path}
+          nodeId={path}
+          size={size}
+          label={key}
+        >
+          {items}
+        </TreeItem>
+      );
     }
 
     // TODO(burdon): Pluggable types (eg, date, string, number, boolean, etc).
-    let ValueComponent: any = DefaultValue;
+    let itemValue;
     if (value instanceof Uint8Array) {
-      value = truncateString(keyToString(value), 16);
-      ValueComponent = KeyStrValue;
+      itemValue = <KeyValue size={size}>{truncateString(keyToString(value), 8)}</KeyValue>;
+    } else if (value instanceof PublicKey) {
+      itemValue = <KeyValue size={size}>{truncateString(value.toHex(), 8)}</KeyValue>;
+    } else if (value === null) {
+      itemValue = <ConstValue size={size}>null</ConstValue>;
     } else if (typeof value === 'boolean') {
-      ValueComponent = BooleanValue;
+      itemValue = <BooleanValue size={size} value={value}>{String(value)}</BooleanValue>;
+    } else if (typeof value === 'number') {
+      itemValue = <NumberValue size={size}>{String(value)}</NumberValue>;
+    } else if (typeof value === 'string') {
+      itemValue = <ScalarValue size={size}>{`'${value}'`}</ScalarValue>;
+    } else {
+      itemValue = <DefaultValue size={size}>{String(value)}</DefaultValue>;
     }
 
-    const itemValue = value !== undefined
-      ? <ValueComponent fontSize={size}>{String(value)}</ValueComponent>
-      : undefined;
-
-    return <TreeItem size={size} key={path} nodeId={path} label={key} value={itemValue} />;
+    return (
+      <TreeItem
+        key={path}
+        nodeId={path}
+        size={size}
+        label={key}
+        value={itemValue}
+      />
+    );
   };
 
   const handleToggle = (_event: React.ChangeEvent<unknown>, nodeIds: string[]) => {
     setExpanded(nodeIds);
   };
 
-  // TODO(burdon): Controller.
   return (
-    <StyledTreeView
-      disableSelection
+    <MuiTreeView
+      sx={{
+        overflowX: 'hidden',
+        ...sx
+      }}
+      disableSelection={!onSelect}
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
+      defaultEndIcon={<BulletIcon sx={{ width: 10 }} />}
+      expanded={expanded}
+      selected={onSelect ? [] : undefined}
       onNodeSelect={onSelect}
       onNodeToggle={handleToggle}
-      expanded={expanded}
-      selected={[]}
     >
-      {renderNode(data, root || '')}
-    </StyledTreeView>
+      {renderNode(data)}
+    </MuiTreeView>
   );
 };

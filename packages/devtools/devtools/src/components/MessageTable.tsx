@@ -141,7 +141,6 @@ export const MessageTable = ({
                     <TableCell>
                       <JsonTreeView
                         size='small'
-                        root='data'
                         depth={0}
                         data={expanded[rowKey] ? data : { dummy: undefined }}
                         onSelect={() => handleExpand(rowKey)}
