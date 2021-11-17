@@ -2,31 +2,65 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
-import { DevtoolsHost } from '../proto';
+import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
-interface WithDevtoolsHostContextProps {
-  devtoolsHost: DevtoolsHost,
+import { DevtoolsHost, schema } from '../proto';
+
+export const DevtoolsContent = React.createContext<DevtoolsHost | undefined>(undefined);
+
+export const useDevtoolsHost = () => {
+  const host = useContext(DevtoolsContent);
+  if (!host) {
+    throw new Error('DevtoolsContent not set.');
+  }
+
+  return host;
+};
+
+interface WithDevtoolsRpcProps {
+  port: RpcPort
   children: React.ReactNode
 }
 
-const UseDevtoolsHost = React.createContext<DevtoolsHost | undefined>(undefined);
+// TODO(burdon): HOC not used?
+export const WithDevtoolsRpc = ({ port, children } : WithDevtoolsRpcProps) => {
+  const [rpcClient, setRpcClient] = useState<ProtoRpcClient<DevtoolsHost> | undefined>(undefined);
+  const [ready, setReady] = useState(false);
 
-export const useDevtoolsHost = () => {
-  const context = useContext(UseDevtoolsHost);
-  if (!context) {
-    throw new Error('DevtoolsHostContext not set.');
+  useEffect(() => {
+    let open = false;
+
+    const service = schema.getService('dxos.devtools.DevtoolsHost');
+    const client = createRpcClient(service, {
+      port: port
+    });
+
+    setImmediate(async () => {
+      await client.open();
+      open = true;
+      setRpcClient(client);
+      const stream = client.rpc.Events();
+      stream.subscribe((msg) => {
+        msg.ready && setReady(true);
+      }, () => {});
+    });
+
+    return () => {
+      open && client.close();
+    };
+  });
+
+  if (!ready || !rpcClient) {
+    return  (
+      <div style={{ padding: 8 }}>Waiting for DXOS client...</div>
+    );
   }
 
-  return context;
-};
-
-// TODO(burdon): Why wrap this?
-export const WithDevtoolsHostContext = ({ devtoolsHost, children } : WithDevtoolsHostContextProps) => {
   return (
-    <UseDevtoolsHost.Provider value={devtoolsHost}>
+    <DevtoolsContent.Provider value={rpcClient?.rpc}>
       {children}
-    </UseDevtoolsHost.Provider>
+    </DevtoolsContent.Provider>
   );
 };

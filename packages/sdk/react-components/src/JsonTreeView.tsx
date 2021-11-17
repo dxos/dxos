@@ -86,11 +86,12 @@ const TreeItem = ({
   const theme = useTheme();
 
   return (
-    <MuiTreeItem sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      overflowX: 'hidden'
-    }}
+    <MuiTreeItem
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        overflowX: 'hidden'
+      }}
       nodeId={nodeId}
       label={(
         <Box sx={{
