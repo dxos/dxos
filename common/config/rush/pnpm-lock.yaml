@@ -8,7 +8,6 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/proto': link:../../common/proto
       '@dxos/rpc': link:../../common/rpc
-      base-x: 3.0.9
     devDependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/credentials': link:../../halo/credentials
@@ -33,7 +32,6 @@ importers:
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       assert: ^2.0.0
-      base-x: ~3.0.9
       expect: ~27.0.2
   ../../packages/common/async:
     dependencies:
@@ -1429,12 +1427,14 @@ importers:
       '@wirelineio/registry-client': 1.1.0-beta.3
       abstract-leveldown: 7.0.0
       assert: 2.0.0
+      base-x: 3.0.9
       debug: 4.3.1
       del: 5.1.0
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
       level-js: 5.0.2
       lodash.defaultsdeep: 4.6.1
       memdown: 5.1.0
+      uuid: 3.4.0
     devDependencies:
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/testutils': link:../../common/testutils
@@ -1446,8 +1446,10 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.6
       '@types/memdown': 3.0.0
       '@types/mocha': 8.2.2
+      '@types/uuid': 8.3.1
       expect: 27.0.2
       mocha: 8.4.0
+      wait-for-expect: 3.0.2
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
@@ -1474,9 +1476,11 @@ importers:
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/memdown': ^3.0.0
       '@types/mocha': ~8.2.2
+      '@types/uuid': ~8.3.1
       '@wirelineio/registry-client': ~1.1.0-beta.3
       abstract-leveldown: ~7.0.0
       assert: ^2.0.0
+      base-x: ~3.0.9
       debug: ^4.1.1
       del: ^5.1.0
       expect: ~27.0.2
@@ -1485,10 +1489,13 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       memdown: ^5.1.0
       mocha: ~8.4.0
+      uuid: ^3.3.2
+      wait-for-expect: ^3.0.2
   ../../packages/sdk/config:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
+      '@dxos/proto': link:../../common/proto
       boolean: 3.0.4
       debug: 4.3.1
       js-yaml: 3.14.1
@@ -1511,6 +1518,7 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/proto': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/js-yaml': ^3.12.5
       '@types/lodash.defaultsdeep': ^4.6.6
@@ -1815,7 +1823,6 @@ importers:
       '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       assert: 2.0.0
-      base-x: 3.0.9
       debug: 4.3.1
       react-display-name: 0.2.5
       use-subscription: 1.5.1_react@17.0.2
@@ -1860,7 +1867,6 @@ importers:
       '@types/testing-library__jest-dom': ~5.9.5
       '@types/use-subscription': ^1.0.0
       assert: ^2.0.0
-      base-x: ~3.0.9
       debug: ^4.1.1
       expect: ~27.0.2
       fork-ts-checker-webpack-plugin: ~6.2.5
@@ -2299,7 +2305,6 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
-      '@dxos/wallet-extension': link:../wallet-extension
       '@mui/icons-material': 5.0.1_4708d87537568924a83ffdea00ac702d
       '@mui/material': 5.0.1_3b7f7b84f013384d046f72a4522eddf8
       react: 17.0.2
@@ -2321,7 +2326,6 @@ importers:
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@dxos/wallet-extension': workspace:*
       '@mui/icons-material': ^5.0.1
       '@mui/material': ^5.0.1
       '@types/react': ^17.0.24
