@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, useProfile } from '@dxos/react-client';
+import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, useRemoteParties, useProfile } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
@@ -14,9 +14,20 @@ import {
   JoinHaloDialog
 } from '../src';
 import { Column } from './helpers';
+import { SuppliedConfig } from '@dxos/react-client';
 
 export default {
   title: 'react-framework/HaloInvitations'
+};
+
+const RemoteParties = () => {
+  const parties = useRemoteParties();
+
+  return (
+    <Box>
+      <p>You have {parties.length} parties.</p>
+    </Box>
+  );
 };
 
 const Parties = () => {
@@ -36,9 +47,10 @@ const Parties = () => {
 interface UserProps {
   sharing?: boolean;
   joining?: boolean;
+  remote?: boolean
 }
 
-const User = ({ sharing, joining }: UserProps) => {
+const User = ({ sharing, joining, remote }: UserProps) => {
   const [shareOpen, setShareOpen] = useState(!!sharing && !joining);
   const [joinOpen, setJoinOpen] = useState(!!joining && !sharing);
   const profile = useProfile();
@@ -53,6 +65,7 @@ const User = ({ sharing, joining }: UserProps) => {
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         modal={false}
+        remote={remote}
       />
       <JoinHaloDialog
         open={joinOpen}
@@ -61,7 +74,7 @@ const User = ({ sharing, joining }: UserProps) => {
         modal={false}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
-        <Parties />
+        {remote ? <RemoteParties /> : <Parties />}
       </Box>
       <Box sx={{ padding: 1 }}>
         <p>{profile?.username ?? 'Profile not created.'}</p>
@@ -91,6 +104,31 @@ export const Primary = () => {
           <ClientInitializer>
             <Column>
               <User joining />
+            </Column>
+          </ClientInitializer>
+        </Box>
+      </ErrorBoundary>
+    </FullScreen>
+  );
+};
+
+export const Remote = () => {
+  const remoteConfig: SuppliedConfig = {
+    system: {
+      remote: true
+    }
+  }
+
+  return (
+    <FullScreen>
+      <ErrorBoundary errorComponent={ErrorView}>
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-around'
+        }}>
+          <ClientInitializer config={remoteConfig}>
+            <Column>
+              <User remote sharing joining />
             </Column>
           </ClientInitializer>
         </Box>
