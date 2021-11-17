@@ -14,7 +14,6 @@ import {
   JoinHaloDialog
 } from '../src';
 import { Column } from './helpers';
-import { SuppliedConfig } from '@dxos/react-client/src/config';
 
 export default {
   title: 'react-framework/HaloInvitations'
@@ -92,31 +91,6 @@ export const Primary = () => {
           <ClientInitializer>
             <Column>
               <User joining />
-            </Column>
-          </ClientInitializer>
-        </Box>
-      </ErrorBoundary>
-    </FullScreen>
-  );
-};
-
-export const Remote = () => {
-  const remoteConfig: SuppliedConfig = {
-    system: {
-      remote: true
-    }
-  }
-
-  return (
-    <FullScreen>
-      <ErrorBoundary errorComponent={ErrorView}>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-around'
-        }}>
-          <ClientInitializer config={remoteConfig}>
-            <Column>
-              <User sharing joining />
             </Column>
           </ClientInitializer>
         </Box>
