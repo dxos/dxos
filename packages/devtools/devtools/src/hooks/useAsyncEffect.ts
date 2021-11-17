@@ -15,4 +15,4 @@ export const useAsyncEffect = (body: () => Promise<void | undefined | (() => voi
       });
     };
   }, deps);
-}
+};

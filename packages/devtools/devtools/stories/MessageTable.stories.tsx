@@ -33,5 +33,5 @@ export const Primary = () => {
         messages={messages}
       />
     </FullScreen>
-  )
-}
+  );
+};

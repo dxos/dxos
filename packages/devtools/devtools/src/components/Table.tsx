@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Box, Table as MuiTable, TableProps as MuiTableProps, TableContainer } from '@mui/material';
 
-export interface TableProps extends MuiTableProps {}
+export type TableProps = MuiTableProps
 
 /**
  * Scrolling table.

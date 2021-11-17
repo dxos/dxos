@@ -8,8 +8,8 @@ import { it as test } from 'mocha';
 import { waitForCondition } from '@dxos/async';
 import { MessengerModel } from '@dxos/messenger-model';
 
-import { /* code BROWSER_ENV, NODE_ENV, */ Orchestrator } from '../orchestrator';
 import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents';
+import { /* code BROWSER_ENV, NODE_ENV, */ Orchestrator } from '../orchestrator';
 import { AGENT_PATH } from './agent';
 import '../testing';
 

@@ -53,7 +53,7 @@ export const WithDevtoolsRpc = ({ port, children } : WithDevtoolsRpcProps) => {
   });
 
   if (!ready || !rpcClient) {
-    return  (
+    return (
       <div style={{ padding: 8 }}>Waiting for DXOS client...</div>
     );
   }

@@ -29,5 +29,5 @@ export const Primary = () => {
         keys={keys}
       />
     </FullScreen>
-  )
-}
+  );
+};

@@ -7,8 +7,8 @@ import { it as test } from 'mocha';
 import { MessengerModel } from '@dxos/messenger-model';
 
 import { Agent } from '../agent';
-import { BROWSER_ENV, /* code NODE_ENV, */ Orchestrator } from '../orchestrator';
 import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents';
+import { BROWSER_ENV, /* code NODE_ENV, */ Orchestrator } from '../orchestrator';
 import { AGENT_PATH } from './agent';
 import '../testing';
 

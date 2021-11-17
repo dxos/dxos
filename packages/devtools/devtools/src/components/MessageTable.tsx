@@ -55,7 +55,7 @@ const getType = (message: any) => {
       return message.halo.payload?.__type_url ?? 'halo message';
     }
   }
-}
+};
 
 export interface MessageTableProps {
   messages: IFeedGenericBlock<any>[]
