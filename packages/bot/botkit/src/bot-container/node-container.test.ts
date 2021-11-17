@@ -4,9 +4,7 @@
 
 import assert from 'assert';
 import { fork } from 'child_process';
-import debug from 'debug';
 import expect from 'expect';
-import * as readline from 'readline';
 
 import { PublicKey } from '@dxos/crypto';
 import { createRpcClient } from '@dxos/rpc';
@@ -15,9 +13,6 @@ import { TEST_ECHO_TYPE } from '../bots';
 import { schema } from '../proto/gen';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createIpcPort, NodeContainer } from './node-container';
-import { sleep } from '@dxos/async';
-
-const log = debug('dxos:botkit:node-container:test');
 
 describe('Node container', () => {
   it('Starts an empty node bot', async () => {
@@ -117,15 +112,6 @@ describe('IPC port', () => {
         serialization: 'advanced',
         stdio: 'inherit'
       });
-      // const rl = readline.createInterface(child.stdout!);
-      // rl.on('line', line => {
-      //   process.stdout.write(`[${child.pid}] ${line}\n`)
-      // })
-
-      // const rl2 = readline.createInterface(child.stderr!);
-      // rl2.on('line', line => {
-      //   process.stderr.write(`[${child.pid}] ${line}\n`)
-      // })
 
       const port = createIpcPort(child);
 

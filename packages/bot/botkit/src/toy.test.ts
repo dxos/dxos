@@ -4,21 +4,17 @@
 
 import assert from 'assert';
 import expect from 'expect';
-import { Client } from '@dxos/client';
-import { SecretProvider, SecretValidator } from '@dxos/credentials';
-import { createKeyPair, PublicKey } from '@dxos/crypto';
-import { Party } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
+
+import { PublicKey } from '@dxos/crypto';
 import { createLinkedPorts } from '@dxos/rpc';
 
 import { InProcessBotContainer } from './bot-container';
 import { NodeContainer } from './bot-container/node-container';
 import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
+import { EchoBot, EmptyBot } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
 import { BotFactoryClient, BrokerSetup, ClientSetup, setupBroker, setupClient } from './testutils';
-import { decodeInvitation, encodeInvitation } from './utils/intivitations';
-import { ClientBot, EchoBot, EmptyBot } from './bots';
 
 const ECHO_TYPE = 'bot/text';
 
@@ -29,7 +25,7 @@ describe('In-Memory', () => {
 
       let botInitialized = false;
       class TestBot extends EmptyBot {
-        override async onInit() {
+        override async onInit () {
           botInitialized = true;
         }
       }
@@ -87,7 +83,7 @@ describe('In-Memory', () => {
         botController.start(),
         botFactoryClient.start()
       ]);
-  
+
       const { id } = await botFactoryClient.botFactory.SpawnBot({
         initializeRequest: {
           invitation: {
@@ -145,7 +141,7 @@ describe('Node', () => {
     });
 
     it('Spawns an echo-bot', async () => {
-      const { party, invitation , secret} = clientSetup;
+      const { party, invitation, secret } = clientSetup;
       const { config } = brokerSetup;
       const [agentPort, botControllerPort] = createLinkedPorts();
 

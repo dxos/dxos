@@ -5,7 +5,7 @@
 import { Client } from '@dxos/client';
 import { defs } from '@dxos/config';
 import { SecretProvider, SecretValidator } from '@dxos/credentials';
-import { createKeyPair, PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 
 import { encodeInvitation } from '../utils';

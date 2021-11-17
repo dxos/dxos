@@ -58,7 +58,7 @@ export function createIpcPort (proc: IpcProcessLike): RpcPort {
           reject(new Error('Given port is not able to send messages'));
           return;
         }
-        const sent = proc.send(msg, (err) => {
+        proc.send(msg, (err) => {
           if (err) {
             reject(err);
           } else {
