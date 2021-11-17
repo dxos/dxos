@@ -8,10 +8,10 @@ import { it as test } from 'mocha';
 import { waitForCondition } from '@dxos/async';
 import { MessengerModel } from '@dxos/messenger-model';
 
-import { /* code BROWSER_ENV, NODE_ENV, */ Orchestrator } from '..';
-import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents/test-agent';
+import { /* code BROWSER_ENV, NODE_ENV, */ Orchestrator } from '../orchestrator';
+import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents';
 import { AGENT_PATH } from './agent';
-import '../testing/setup';
+import '../testing';
 
 test.skip('invite two agents to a party', async () => {
   const orchestrator = await Orchestrator.create({ local: true });

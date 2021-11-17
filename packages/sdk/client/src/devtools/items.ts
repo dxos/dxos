@@ -4,31 +4,36 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 
-import { DevtoolsHook, DevtoolsServiceDependencies } from '..';
+import { DevtoolsHook, DevtoolsServiceDependencies } from './devtools-context';
 import { SubscribeToItemsResponse } from '../proto/gen/dxos/devtools';
 
-function getData (echo: DevtoolsHook['client']['echo']): SubscribeToItemsResponse {
-  // TODO(marik-d): Display items hierarchically.
-  const res: Record<string, any> = {};
-  const parties = echo.queryParties().value;
-  for (const party of parties) {
-    const partyInfo: Record<string, any> = {};
-    res[`Party ${party.key.toHex()}`] = partyInfo;
+const getData = (echo: DevtoolsHook['client']['echo']): SubscribeToItemsResponse => {
+  const result: any = {
+    parties: []
+  }
 
-    const items = party.database.select(s => s.items).getValue();
+  const { value: parties } = echo.queryParties();
+  for (const party of parties) {
+    const partyInfo: any = {
+      key: party.key.toHex(),
+      items: []
+    };
+
+    const items = party.database.select(selection => selection.items).getValue();
     for (const item of items) {
-      const modelName = Object.getPrototypeOf(item.model).constructor.name;
-      partyInfo[`${modelName} ${item.type} ${item.id}`] = {
+      partyInfo.items.push({
         id: item.id,
         type: item.type,
-        modelType: item.model._meta.type,
-        modelName
-      };
+        modelType: item.model._meta.type, // TODO(burdon): Private.
+        modelName: Object.getPrototypeOf(item.model).constructor.name
+      });
     }
+
+    result.parties.push(partyInfo);
   }
 
   return {
-    data: Object.keys(res).length !== 0 ? JSON.stringify(res) : undefined
+    data: JSON.stringify(result)
   };
 }
 

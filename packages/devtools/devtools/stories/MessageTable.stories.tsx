@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { PublicKey } from '@dxos/crypto';
+import { randomBytes } from '@dxos/crypto';
 import { IFeedGenericBlock } from '@dxos/echo-protocol';
 import { FullScreen } from '@dxos/react-components';
 
@@ -15,9 +15,11 @@ export default {
 };
 
 export const Primary = () => {
-  const messages: IFeedGenericBlock[] = [...new Array(20)].map((_, i) => ({
-    key: PublicKey.random().toHex(),
+  const messages: IFeedGenericBlock<any>[] = [...new Array(20)].map((_, i) => ({
+    key: randomBytes(),
     seq: i,
+    sync: true,
+    path: '',
     data: { // TODO(burdon): Generate protos.
       info: {
         value: true

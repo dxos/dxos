@@ -6,10 +6,11 @@ import { it as test } from 'mocha';
 
 import { MessengerModel } from '@dxos/messenger-model';
 
-import { Agent, BROWSER_ENV, /* code NODE_ENV, */ Orchestrator } from '..';
-import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents/test-agent';
+import { Agent } from '../agent';
+import { BROWSER_ENV, /* code NODE_ENV, */ Orchestrator } from '../orchestrator';
+import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents';
 import { AGENT_PATH } from './agent';
-import '../testing/setup';
+import '../testing';
 
 test.skip('multiple agents', async () => {
   const numAgents = 5;

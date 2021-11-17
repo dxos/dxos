@@ -7,10 +7,10 @@ import { it as test } from 'mocha';
 
 import { MessengerModel } from '@dxos/messenger-model';
 
-import { BROWSER_ENV, NODE_ENV, Orchestrator } from '..';
-import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents/test-agent';
+import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../orchestrator';
+import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents';
 import { AGENT_PATH } from './agent';
-import '../testing/setup';
+import '../testing';
 
 test('local source', async () => {
   const orchestrator = await Orchestrator.create({ local: true });

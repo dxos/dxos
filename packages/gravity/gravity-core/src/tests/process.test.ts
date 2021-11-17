@@ -8,9 +8,9 @@ import processExists from 'process-exists';
 import psTree from 'pstree.remy';
 import { promisify } from 'util';
 
-import { Orchestrator } from '..';
+import '../testing';
+import { Orchestrator } from '../orchestrator';
 import { AGENT_PATH } from './agent';
-import '../testing/setup';
 
 const BOT_NUMBER = 5;
 

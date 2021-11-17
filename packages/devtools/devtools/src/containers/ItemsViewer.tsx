@@ -11,21 +11,18 @@ import { useStream } from '../hooks';
 
 export const ItemsViewer = () => {
   const devtoolsHost = useDevtoolsHost();
-  const data = useStream(() => devtoolsHost.SubscribeToItems({}));
-
-  if (data === undefined) {
-    return <div> Loading items... </div>;
+  const result = useStream(() => devtoolsHost.SubscribeToItems({}));
+  if (result === undefined || result.data === undefined) {
+    return <div>Loading items...</div>;
   }
 
-  if (data.data === undefined) {
-    return <div> No items to display. </div>;
-  }
+  console.log(result);
 
   return (
     <JsonTreeView
       size='small'
-      data={JSON.parse(data.data)}
       depth={4}
+      data={JSON.parse(result.data)} // TODO(burdon): Why parse?
     />
   );
 };

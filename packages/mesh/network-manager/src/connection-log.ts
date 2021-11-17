@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionState, Swarm } from '.';
+import { ConnectionState, Swarm } from './swarm';
 
 export interface SwarmInfo {
   id: PublicKey

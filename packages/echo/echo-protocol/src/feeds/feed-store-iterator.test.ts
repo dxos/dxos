@@ -13,11 +13,10 @@ import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { FeedStoreIterator } from '.';
 import { codec, createTestItemMutation, schema } from '../proto';
 import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
-import { FeedSelector } from './feed-store-iterator';
+import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
 
 const log = debug('dxos:echo:feed-store-iterator:test');
 

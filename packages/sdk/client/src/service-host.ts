@@ -8,13 +8,12 @@ import * as debug from '@dxos/debug'; // TODO(burdon): ???
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { DevtoolsServiceDependencies } from '.';
-import { createDevtoolsHost, DevtoolsHostEvents } from './devtools';
+import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
 import { Contacts, SubscribePartiesResponse } from './proto/gen/dxos/client';
 import { DevtoolsHost } from './proto/gen/dxos/devtools';
 import { createStorageObjects } from './storage';
-import { resultSetToStream } from './util/subscription';
+import { resultSetToStream } from './util';
 
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _echo: ECHO;
