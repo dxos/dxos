@@ -18,7 +18,8 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/proto": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "base-x": "~3.0.9"
+    "base-x": "~3.0.9",
+    "debug": "^4.1.1"
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
@@ -30,12 +31,19 @@
     "@types/node": "^14.0.9",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
-    "expect": "~27.0.2"
+    "expect": "~27.0.2",
+    "@types/debug": "^4.1.1",
+    "@dxos/signal": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "wtfnode": "~0.9.1",
+    "@types/wtfnode": "~0.7.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "toolchain": {
-    "testingFramework": "mocha"
+    "testingFramework": "mocha",
+    "forceCloseTests": true
   }
 }

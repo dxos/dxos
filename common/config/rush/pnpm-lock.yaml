@@ -9,17 +9,25 @@ importers:
       '@dxos/proto': link:../../common/proto
       '@dxos/rpc': link:../../common/rpc
       base-x: 3.0.9
+      debug: 4.3.1
     devDependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/object-model': link:../../echo/object-model
+      '@dxos/signal': link:../../mesh/signal
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@dxos/util': link:../../common/util
+      '@types/debug': 4.1.5
       '@types/expect': 24.3.0
       '@types/mocha': 8.2.2
       '@types/node': 14.14.45
+      '@types/wtfnode': 0.7.0
       assert: 2.0.0
       expect: 27.0.2
+      wtfnode: 0.9.1
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
@@ -28,13 +36,19 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/proto': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/signal': workspace:*
       '@dxos/toolchain-node-library': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.1
       '@types/expect': ~24.3.0
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
+      '@types/wtfnode': ~0.7.0
       assert: ^2.0.0
       base-x: ~3.0.9
+      debug: ^4.1.1
       expect: ~27.0.2
+      wtfnode: ~0.9.1
   ../../packages/common/async:
     dependencies:
       '@dxos/debug': link:../debug
@@ -2299,7 +2313,6 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
-      '@dxos/wallet-extension': link:../wallet-extension
       '@mui/icons-material': 5.0.1_4708d87537568924a83ffdea00ac702d
       '@mui/material': 5.0.1_3b7f7b84f013384d046f72a4522eddf8
       react: 17.0.2
@@ -2321,7 +2334,6 @@ importers:
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@dxos/wallet-extension': workspace:*
       '@mui/icons-material': ^5.0.1
       '@mui/material': ^5.0.1
       '@types/react': ^17.0.24
@@ -9189,6 +9201,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-d/7W23JAXPodQNbOZNXvl2K+bqAQrCMwlh/nuQsPSQk6Fq0opHoPrUw43aHsvSbIiQPr8Of2hkFbnz1XBFVyZQ==
+  /@types/wtfnode/0.7.0:
+    dev: true
+    resolution:
+      integrity: sha512-kdBHgE9+M1Os7UqWZtiLhKye5reFl8cPBYyCsP2fatwZRz7F7GdIxIHZ20Kkc0hYBfbXE+lzPOTUU1I0qgjtHA==
   /@types/yargs-parser/20.2.0:
     resolution:
       integrity: sha512-37RSHht+gzzgYeobbG+KWryeAW8J33Nhr69cjTqSYymXVZEN9NbRYWoYlRtDhHKPVT1FyNKwaTPC1NynKZpzRA==
@@ -27390,7 +27406,6 @@ packages:
     resolution:
       integrity: sha512-wBuoj1BDpC6ZQ1B7DWQBYVLphPWkm8i9Y0/3YdHjHKHiohOJ1ws+3OccDWtH+PoC9DZD5WOTrJvNbWvjS6JWaA==
   /wtfnode/0.9.1:
-    dev: false
     hasBin: true
     resolution:
       integrity: sha512-Ip6C2KeQPl/F3aP1EfOnPoQk14Udd9lffpoqWDNH3Xt78svxPbv53ngtmtfI0q2Te3oTq79XKTnRNXVIn/GsPA==

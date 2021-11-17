@@ -19,7 +19,8 @@ export class BotHandle {
     this._rpc = createRpcClient(
       schema.getService('dxos.bot.BotService'),
       {
-        port: port
+        port,
+        timeout: 5000
       }
     );
 
@@ -40,6 +41,10 @@ export class BotHandle {
   async open (): Promise<void> {
     await this._rpc.open();
     this._bot.status = Bot.Status.RUNNING;
+  }
+
+  async close () {
+    this._rpc.close();
   }
 
   toString () {

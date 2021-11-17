@@ -31,9 +31,7 @@ message SpawnBotRequest {
   BotPackageSpecifier package = 1;
 
   /// Invitation for the bot to join the target party.
-  dxos.client.Invitation invitation = 2;
-
-  string secret = 3;
+  InitializeRequest initialize_request = 2;
 }
 
 message SendCommandRequest {

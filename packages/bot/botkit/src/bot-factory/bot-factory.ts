@@ -25,7 +25,7 @@ export class BotFactory implements BotFactoryService {
   async SpawnBot (request: SpawnBotRequest) {
     const handle = await this._botContainer.spawn(request.package ?? {});
     await handle.open();
-    await handle.rpc.Initialize(request);
+    await handle.rpc.Initialize(request.initializeRequest ?? {});
     this._bots.push(handle);
     return handle.bot;
   }

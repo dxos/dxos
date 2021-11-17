@@ -257,6 +257,8 @@ export class RpcPeer {
   }
 
   private async _sendMessage (message: RpcMessage) {
+    log(`Sending ${JSON.stringify(message)}`)
+
     await this._options.port.send(codec.encode(message));
   }
 
