@@ -27,15 +27,15 @@ interface InviterInvitation {
 
 interface InviteeInvitation {
   id: string
-  secret?: string | undefined
-  secretTrigger?: () => void
-  joinPromise?: () => Promise<any>
+  secret?: string | undefined // Can be undefined initially, then set after receiving secret from the inviter.
+  secretTrigger?: () => void // Is triggered after supplying the secret.
+  joinPromise?: () => Promise<any> // Resolves when the joining process finishes.
 }
 
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _echo: ECHO;
-  private readonly _inviterInvitations: InviterInvitation[] = [];
-  private readonly _inviteeInvitations: InviteeInvitation[] = [];
+  private readonly _inviterInvitations: InviterInvitation[] = []; // List of pending invitations from the inviter side.
+  private readonly _inviteeInvitations: InviteeInvitation[] = []; // List of pending invitations from the invitee side.
 
   private readonly _devtoolsEvents = new DevtoolsHostEvents();
 
@@ -111,6 +111,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           assert(request.invitationCode, 'InvitationCode not provided.');
           const [secretLatch, secretTrigger] = latch();
           const inviteeInvitation: InviteeInvitation = { id, secretTrigger };
+
           const secretProvider: SecretProvider = async () => {
             await secretLatch;
             const secret = inviteeInvitation.secret;
@@ -119,6 +120,7 @@ export class ClientServiceHost implements ClientServiceProvider {
             }
             return Buffer.from(secret);
           };
+
           const haloPartyPromise = this._echo.halo.join(decodeInvitation(request.invitationCode), secretProvider);
           inviteeInvitation.joinPromise = () => haloPartyPromise;
           this._inviteeInvitations.push(inviteeInvitation);
@@ -128,9 +130,14 @@ export class ClientServiceHost implements ClientServiceProvider {
           const invitation = this._inviteeInvitations.find(inviteeInvitation => inviteeInvitation.id === request.process?.id);
           assert(invitation, 'Invitation not found.');
           assert(request.secret, 'Secret not provided.');
+
+          // Supply the secret, and move the internal invitation process by triggering the secretTrigger.
           invitation.secret = request.secret;
           invitation.secretTrigger?.();
+
+          // Wait for the join process to finish.
           await (invitation.joinPromise?.());
+
           const profile = this._echo.halo.getProfile();
           assert(profile, 'Profile not created.');
           return profile;
