@@ -85,11 +85,9 @@ describe('In-Memory', () => {
       ]);
 
       const { id } = await botFactoryClient.botFactory.SpawnBot({
-        initializeRequest: {
-          invitation: {
-            invitationCode: invitation,
-            secret
-          }
+        invitation: {
+          invitationCode: invitation,
+          secret
         }
       });
       assert(id);
@@ -146,7 +144,7 @@ describe('Node', () => {
       const [agentPort, botControllerPort] = createLinkedPorts();
 
       const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
-      const botFactory = new BotFactory(botContainer);
+      const botFactory = new BotFactory(botContainer, config);
       const botController = new BotController(botFactory, botControllerPort);
       const botFactoryClient = new BotFactoryClient(agentPort);
 
@@ -159,13 +157,9 @@ describe('Node', () => {
         package: {
           localPath: require.resolve('./bots/echo-bot')
         },
-        initializeRequest: {
-          // TODO: Remove config from here
-          config: JSON.stringify(config),
-          invitation: {
-            invitationCode: invitation,
-            secret
-          }
+        invitation: {
+          invitationCode: invitation,
+          secret
         }
       });
       assert(id);

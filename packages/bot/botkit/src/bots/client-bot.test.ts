@@ -27,7 +27,7 @@ describe('Client Bot', () => {
     const bot = new ClientBot();
 
     await bot.Initialize({
-      config: JSON.stringify(config),
+      config,
       invitation: {
         invitationCode: invitation,
         secret

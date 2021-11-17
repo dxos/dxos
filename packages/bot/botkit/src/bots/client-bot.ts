@@ -19,7 +19,7 @@ export class ClientBot implements BotService {
 
   async Initialize (request: InitializeRequest) {
     if (request.config) {
-      this.client = new Client(JSON.parse(request.config));
+      this.client = new Client(request.config);
     } else {
       this.client = new Client();
     }

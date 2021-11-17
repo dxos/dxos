@@ -27,7 +27,7 @@ describe('Echo Bot', () => {
     const bot = new EchoBot(TEST_ECHO_TYPE);
 
     await bot.Initialize({
-      config: JSON.stringify(config),
+      config: config,
       invitation: {
         invitationCode: invitation,
         secret

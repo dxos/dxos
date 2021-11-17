@@ -51,7 +51,7 @@ describe('Node container', () => {
 
       await handle.open();
       await handle.rpc.Initialize({
-        config: JSON.stringify(config),
+        config,
         invitation: {
           invitationCode: invitation,
           secret
@@ -75,7 +75,7 @@ describe('Node container', () => {
 
       await handle.open();
       await handle.rpc.Initialize({
-        config: JSON.stringify(config),
+        config,
         invitation: {
           invitationCode: invitation,
           secret
