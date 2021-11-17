@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { setupBroker, setupClient } from "../testutils";
-import { EchoBot, TEST_ECHO_TYPE } from "./echo-bot";
+import { setupBroker, setupClient } from '../testutils';
+import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
 
 describe('Echo Bot', () => {
   it('Starts a bot', async () => {

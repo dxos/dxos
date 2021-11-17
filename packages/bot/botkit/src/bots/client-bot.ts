@@ -4,16 +4,16 @@
 
 import assert from 'assert';
 
+import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { SecretProvider } from '@dxos/credentials';
-import { createKeyPair } from '@dxos/crypto';
+import { createKeyPair, PublicKey } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
 
 import { createIpcPort } from '../bot-container';
 import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
 import { decodeInvitation } from '../utils/intivitations';
 import { startBot } from './start-bot';
-import { sleep } from '@dxos/async';
 
 export class ClientBot implements BotService {
   protected client: Client | undefined;
@@ -29,9 +29,10 @@ export class ClientBot implements BotService {
     await this.client.echo.halo.createProfile({ username: 'Bot' });
 
     if (request.invitation?.data) {
-      assert(request.secret, 'Secret must be provided with invitation');
+      const secret = request.secret
+      assert(secret, 'Secret must be provided with invitation');
       const invitation = decodeInvitation(request.invitation.data);
-      const botSecretProvider: SecretProvider = async () => Buffer.from(request.secret!);
+      const botSecretProvider: SecretProvider = async () => Buffer.from(secret);
       this.party = await this.client.echo.joinParty(invitation, botSecretProvider);
     }
     await this.onInit(request);

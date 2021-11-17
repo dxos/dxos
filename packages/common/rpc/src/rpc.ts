@@ -61,6 +61,7 @@ export class RpcPeer {
   private readonly _localStreams = new Map<number, Stream<any>>();
 
   private readonly _remoteOpenTrigger = new Trigger();
+  private readonly _remoteHandshakeTrigger = new Trigger();
 
   private _nextId = 0;
   private _open = false;
@@ -81,13 +82,23 @@ export class RpcPeer {
 
     this._unsubscribe = this._options.port.subscribe(this._receive.bind(this)) as any;
 
-    await this._sendMessage({ open: true });
-    await this._remoteOpenTrigger.wait();
 
-    // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
-    await this._sendMessage({ open: true });
+    log('Sending first handshake')
+    await this._sendMessage({ handshake: true });
+    await this._remoteHandshakeTrigger.wait();
+    log('Received remote handshake')
+
+    // Send an "handshake" message in case the other peer has missed our first "handshake" message and is still waiting.
+    log('Sending second handshake')
+    await this._sendMessage({ handshake: true });
 
     this._open = true;
+    log('open=true')
+
+    log('Sending "open" message')
+    await this._sendMessage({ open: true });
+    await this._remoteOpenTrigger.wait();
+    log('Received remote "open" message')
   }
 
   /**
@@ -107,6 +118,9 @@ export class RpcPeer {
    */
   private async _receive (msg: Uint8Array): Promise<void> {
     const decoded = codec.decode(msg);
+
+    log(`Received ${JSON.stringify(decoded)}`)
+
     if (decoded.request) {
       if (!this._open) {
         await this._sendMessage({ response: { error: encodeError(new RpcClosedError()) } });
@@ -140,6 +154,8 @@ export class RpcPeer {
       }
 
       item.resolve(decoded.response);
+    } else if (decoded.handshake) {
+      this._remoteHandshakeTrigger.wake();
     } else if (decoded.open) {
       this._remoteOpenTrigger.wake();
     } else if (decoded.streamClose) {
