@@ -58,9 +58,9 @@ describe('Node container', () => {
       await handle.rpc.Initialize({
         config: JSON.stringify(config),
         invitation: {
-          data: invitation
-        },
-        secret
+          invitationCode: invitation,
+          secret
+        }
       });
 
       await handle.rpc.Stop();
@@ -82,9 +82,9 @@ describe('Node container', () => {
       await handle.rpc.Initialize({
         config: JSON.stringify(config),
         invitation: {
-          data: invitation
-        },
-        secret
+          invitationCode: invitation,
+          secret
+        }
       });
       const command = PublicKey.random().asUint8Array();
       await handle.rpc.Command({ command: command });

@@ -28,10 +28,10 @@ export class ClientBot implements BotService {
     await this.client.initialize();
     await this.client.echo.halo.createProfile({ username: 'Bot' });
 
-    if (request.invitation?.data) {
-      const secret = request.secret
+    if (request.invitation?.invitationCode) {
+      const secret = request.invitation.secret;;
       assert(secret, 'Secret must be provided with invitation');
-      const invitation = decodeInvitation(request.invitation.data);
+      const invitation = decodeInvitation(request.invitation.invitationCode);
       const botSecretProvider: SecretProvider = async () => Buffer.from(secret);
       this.party = await this.client.echo.joinParty(invitation, botSecretProvider);
     }

@@ -12,9 +12,9 @@ describe('Client Bot', () => {
 
     await bot.Initialize({
       invitation: {
-        data: invitation
-      },
-      secret
+        invitationCode: invitation,
+        secret
+      }
     });
 
     await bot.Stop();
@@ -29,9 +29,9 @@ describe('Client Bot', () => {
     await bot.Initialize({
       config: JSON.stringify(config),
       invitation: {
-        data: invitation
-      },
-      secret
+        invitationCode: invitation,
+        secret
+      }
     });
 
     await broker.stop();
