@@ -7,7 +7,7 @@ import ForceGraph from './force-graph';
 import { Broadcast } from '../src';
 import { addPeer as _addPeer, removePeer as _removePeer, findPeer, nodesToArray } from './utils';
 
-// TODO(burdon): No code in index.
+// TODO(burdon): No code in index file.
 
 const MAX_PEERS = 2;
 const TOPIC = Buffer.from('batman');

@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Box, FormControlLabel, Switch, TextField } from '@mui/material';
 
-import { useDevtoolsHost } from '../contexts';
+import { useDevtoolsHost } from '../hooks';
 
 export const LoggingView = () => {
   const devtoolsHost = useDevtoolsHost();

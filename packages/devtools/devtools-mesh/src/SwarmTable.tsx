@@ -11,7 +11,8 @@ import { makeStyles } from '@mui/styles';
 import { PublicKey } from '@dxos/crypto';
 import { SwarmInfo } from '@dxos/network-manager';
 import { CopyText } from '@dxos/react-components';
-import { BooleanIcon } from '@dxos/react-framework';
+
+import { BooleanIcon } from './BooleanIcon';
 
 // TODO(wittjosiah): Refactor, makeStyles is deprecated.
 const useStyle = makeStyles(() => ({
@@ -62,7 +63,9 @@ export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => {
             <TableCell className={classes.colLabel}>
               <CopyText value={swarm.topic.toHex()} />
             </TableCell>
-            <TableCell> <BooleanIcon yes={swarm.isActive} /> </TableCell>
+            <TableCell>
+              <BooleanIcon value={swarm.isActive ? true : undefined} />
+            </TableCell>
             <TableCell>
               <IconButton onClick={() => onClick?.(swarm.id)} title='Details'>
                 <InfoIcon />

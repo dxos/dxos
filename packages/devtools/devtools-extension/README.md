@@ -34,19 +34,26 @@ Devtools browser extension.
     1. Client API sends "ready" message.
 1. Devtools pannel is ready.
 
+
 ## Development
 
 1. Clone this repo then install dependencies and build:
 
 ```
+rushx build --to rush build --to @dxos/devtools
+```
+
+2. Then to build the extension.
+
+```
 rushx build
 ```
 
-2. (Optional) Run the `rushx build:watch` for both `devtools-extension` and `devtools` and open the devtools in your browser.
+3. (Optional) Run the `rushx build:watch` for both `devtools-extension` and `devtools` and open the devtools in your browser.
 
 TODO(burdon): `build:watch` not configured.
 
-3. Open the __extensions__ manager in your browser: 
+4. Open the __extensions__ manager in your browser: 
 
 - [brave://extensions](brave://extensions)
 - [chrome://extensions](chrome://extensions)
@@ -54,8 +61,12 @@ TODO(burdon): `build:watch` not configured.
 - Edge (Not Supported Yet)
 - Safari (Not Supported Yet)
 
-4. Make sure you have the `developer` toggle __on__ and click on `Load Unpacked Extension` button.
-5. Search for the extension __dist__ folder (`<repo-root>/packages/devtools-extension/dist`) and select it.
+5. Make sure you have the `developer` toggle __on__ and click on `Load Unpacked Extension` button.
+6. Search for the extension __dist__ folder (`<repo-root>/packages/devtools-extension/dist`) and select it.
+
+## Troubleshooting
+
+- Remove all tabs that contain the extension then remove the extension and reload it.
 
 ## Design
 
@@ -66,9 +77,4 @@ It then sets-up a bridge that enables the devtools (and other components) to acc
 
 - Anatomy of an extension: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#Background_pages
 - This package is loosely based on the [Apollo DevTools](https://github.com/apollographql/apollo-client-devtools).
-
-
-## Troubleshooting
-
-- Remove all tabs that contain the extension then remove the extension and reload it.
 

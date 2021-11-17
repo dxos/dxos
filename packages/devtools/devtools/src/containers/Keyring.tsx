@@ -8,7 +8,7 @@ import { createTheme } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
 import { KeyTable } from '../components';
-import { useDevtoolsHost } from '../contexts';
+import { useDevtoolsHost } from '../hooks';
 import { KeyRecord } from '../proto/gen/dxos/halo/keys';
 
 const useStyles = makeStyles(theme => ({

@@ -7,14 +7,15 @@ import React, { useState, useEffect } from 'react';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { DevtoolsHost, schema } from '../proto';
-import { WithDevtoolsHostContext } from './devtools-host-context';
+import { WithDevtoolsHostContext } from '../hooks';
 
 interface WithDevtoolsRpcProps {
-  port: RpcPort,
+  port: RpcPort
   children: React.ReactNode
 }
 
-const WithDevtoolsRpc = ({ port, children } : WithDevtoolsRpcProps) => {
+// TODO(burdon): HOC not used. Move to hooks or containers?
+export const WithDevtoolsRpc = ({ port, children } : WithDevtoolsRpcProps) => {
   const [rpcClient, setRpcClient] = useState<ProtoRpcClient<DevtoolsHost> | undefined>(undefined);
   const [ready, setReady] = useState(false);
 
@@ -43,17 +44,15 @@ const WithDevtoolsRpc = ({ port, children } : WithDevtoolsRpcProps) => {
   return (
     <>
       {(!ready || !rpcClient) && (
-<div>
-          <div style={{ padding: 8 }}> Waiting for DXOS client... </div>
+        <div>
+          <div style={{ padding: 8 }}>Waiting for DXOS client...</div>
         </div>
       )}
       {(ready && rpcClient) && (
-<WithDevtoolsHostContext devtoolsHost={rpcClient?.rpc}>
+        <WithDevtoolsHostContext devtoolsHost={rpcClient?.rpc}>
           {children}
         </WithDevtoolsHostContext>
       )}
     </>
   );
 };
-
-export { WithDevtoolsRpc };

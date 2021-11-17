@@ -12,8 +12,7 @@ import { makeStyles } from '@mui/styles';
 import { SignalStatus, SignalTrace } from '@dxos/devtools-mesh';
 import { SignalApi } from '@dxos/network-manager';
 
-import { useDevtoolsHost } from '../contexts';
-import { useStream } from '../hooks';
+import { useDevtoolsHost, useStream } from '../hooks';
 import { SubscribeToSignalStatusResponse } from '../proto';
 
 const useStyles = makeStyles(theme => ({

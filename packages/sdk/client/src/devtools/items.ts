@@ -12,8 +12,6 @@ const getData = (echo: DevtoolsHook['client']['echo']): SubscribeToItemsResponse
     parties: []
   };
 
-  console.log('###############');
-  /*
   const { value: parties } = echo.queryParties();
   for (const party of parties) {
     const partyInfo: any = {
@@ -33,7 +31,6 @@ const getData = (echo: DevtoolsHook['client']['echo']): SubscribeToItemsResponse
 
     result.parties.push(partyInfo);
   }
-  */
 
   return {
     data: JSON.stringify(result)

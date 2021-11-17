@@ -6,7 +6,7 @@ import React from 'react';
 
 import Button from '@mui/material/Button';
 
-import { useDevtoolsHost } from '../contexts';
+import { useDevtoolsHost } from '../hooks';
 
 export const StorageTab = () => {
   const devtoolsHost = useDevtoolsHost();

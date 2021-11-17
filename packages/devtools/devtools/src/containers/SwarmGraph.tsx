@@ -12,8 +12,7 @@ import { PeerGraph } from '@dxos/devtools-mesh';
 import { PeerInfo } from '@dxos/network-manager';
 
 import { Autocomplete } from '../components';
-import { useDevtoolsHost } from '../contexts';
-import { useAsyncEffect, useStream } from '../hooks';
+import { useAsyncEffect, useDevtoolsHost, useStream } from '../hooks';
 import { SubscribeToNetworkTopicsResponse } from '../proto';
 
 const useStyles = makeStyles(theme => ({

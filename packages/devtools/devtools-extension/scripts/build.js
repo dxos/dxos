@@ -1,19 +1,23 @@
-const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = require('@dxos/esbuild-plugins')
-const { build } = require('esbuild')
+//
+// Copyright 2020 DXOS.org
+//
+
+const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = require('@dxos/esbuild-plugins');
+const { build } = require('esbuild');
 const rmdir = require('rmdir');
-const { promisify } = require('util')
-const copy = require('copy')
-const { join } = require('path')
-const fs = require('fs')
-const chalk = require('chalk')
+const { promisify } = require('util');
+const copy = require('copy');
+const { join } = require('path');
+const fs = require('fs');
+const chalk = require('chalk');
 
-const distDir = join(__dirname, '../dist')
-const srcDir = join(__dirname, '../src')
-const publicDir = join(__dirname, '../public')
+const distDir = join(__dirname, '../dist');
+const srcDir = join(__dirname, '../src');
+const publicDir = join(__dirname, '../public');
 
-; (async () => {
-  if(fs.existsSync(distDir)) {
-    await promisify(rmdir)(distDir)
+(async () => {
+  if (fs.existsSync(distDir)) {
+    await promisify(rmdir)(distDir);
   }
 
   try {
@@ -43,11 +47,9 @@ const publicDir = join(__dirname, '../public')
        })} : false,
     })
   } catch (err) {
-    console.error(err); // \/ Turns out, they're not always printed.
+    console.error(err);
     process.exit(-1); // Diagnostics are already printed.
   }
-  
 
-  await promisify(copy)(`${publicDir}/**`, distDir)
+  await promisify(copy)(`${publicDir}/**`, distDir);
 })()
-

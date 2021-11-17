@@ -10,7 +10,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 
 import { App } from './App';
 import { ErrorBoundary } from './components';
-import { WithDevtoolsHostContext } from './contexts';
+import { WithDevtoolsHostContext } from './hooks';
 import { DevtoolsHost } from './proto';
 
 const theme = createMuiTheme({

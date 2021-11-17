@@ -12,7 +12,7 @@ import { buildTests } from './build';
 import { runTests } from './run';
 import { runSetup } from './run-setup';
 
-// TODO(burdon): No code in index.
+// TODO(burdon): No code in index file.
 
 export enum Browser {
   CHROMIUM = 'chromium',

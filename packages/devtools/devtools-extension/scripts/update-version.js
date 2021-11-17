@@ -1,3 +1,7 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 const fs = require('fs')
 const { join } = require('path')
 
