@@ -82,23 +82,15 @@ export class RpcPeer {
 
     this._unsubscribe = this._options.port.subscribe(this._receive.bind(this)) as any;
 
-
-    log('Sending first handshake')
     await this._sendMessage({ handshake: true });
     await this._remoteHandshakeTrigger.wait();
-    log('Received remote handshake')
 
     // Send an "handshake" message in case the other peer has missed our first "handshake" message and is still waiting.
-    log('Sending second handshake')
     await this._sendMessage({ handshake: true });
 
     this._open = true;
-    log('open=true')
-
-    log('Sending "open" message')
     await this._sendMessage({ open: true });
     await this._remoteOpenTrigger.wait();
-    log('Received remote "open" message')
   }
 
   /**
@@ -118,8 +110,6 @@ export class RpcPeer {
    */
   private async _receive (msg: Uint8Array): Promise<void> {
     const decoded = codec.decode(msg);
-
-    log(`Received ${JSON.stringify(decoded)}`)
 
     if (decoded.request) {
       if (!this._open) {
@@ -273,8 +263,6 @@ export class RpcPeer {
   }
 
   private async _sendMessage (message: RpcMessage) {
-    log(`Sending ${JSON.stringify(message)}`)
-
     await this._options.port.send(codec.encode(message));
   }
 
