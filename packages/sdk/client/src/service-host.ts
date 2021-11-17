@@ -94,9 +94,7 @@ export class ClientServiceHost implements ClientServiceProvider {
         CreateInvitation: () => new Stream(({ next }) => {
           setImmediate(async () => {
             const secret = generatePasscode();
-            const secretProvider = () => {
-              return Promise.resolve(Buffer.from(secret));
-            };
+            const secretProvider = async () => Buffer.from(secret);
             const invitation = await this._echo.halo.createInvitation({
               secretProvider,
               secretValidator: defaultSecretValidator
