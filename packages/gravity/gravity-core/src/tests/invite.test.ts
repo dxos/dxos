@@ -11,13 +11,11 @@ import { MessengerModel } from '@dxos/messenger-model';
 import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents';
 import { /* code BROWSER_ENV, NODE_ENV, */ Orchestrator } from '../orchestrator';
 import { AGENT_PATH } from './agent';
-import '../testing';
+import './testing';
 
 test.skip('invite two agents to a party', async () => {
   const orchestrator = await Orchestrator.create({ local: true });
-
   orchestrator.client.registerModel(MessengerModel);
-
   await orchestrator.start();
 
   await orchestrator.party.database.createItem({ model: MessengerModel, type: 'dxos.org/type/testing/object' });
@@ -33,7 +31,6 @@ test.skip('invite two agents to a party', async () => {
 
   const messages1 = await agent1.sendCommand({ type: GET_ALL_COMMAND });
   const messages2 = await agent2.sendCommand({ type: GET_ALL_COMMAND });
-
   expect(messages1).toHaveLength(2);
   expect(messages2).toHaveLength(2);
 

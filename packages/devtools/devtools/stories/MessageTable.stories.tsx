@@ -15,6 +15,7 @@ export default {
 };
 
 export const Primary = () => {
+  // TODO(burdon): Factor out.
   const messages: IFeedGenericBlock<any>[] = [...new Array(20)].map((_, i) => ({
     key: randomBytes(),
     seq: i,

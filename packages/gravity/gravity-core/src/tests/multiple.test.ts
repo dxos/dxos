@@ -10,7 +10,7 @@ import { Agent } from '../agent';
 import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents';
 import { BROWSER_ENV, /* code NODE_ENV, */ Orchestrator } from '../orchestrator';
 import { AGENT_PATH } from './agent';
-import '../testing';
+import './testing';
 
 test.skip('multiple agents', async () => {
   const numAgents = 5;

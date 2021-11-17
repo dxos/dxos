@@ -15,6 +15,7 @@ export default {
 };
 
 export const Primary = () => {
+  // TODO(burdon): Factor out.
   const keys: KeyRecord[] = [...new Array(20)].map(() => ({
     type: KeyType.FEED,
     publicKey: PublicKey.random(),

@@ -10,13 +10,11 @@ import { MessengerModel } from '@dxos/messenger-model';
 import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents';
 import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../orchestrator';
 import { AGENT_PATH } from './agent';
-import '../testing';
+import './testing';
 
 test('local source', async () => {
   const orchestrator = await Orchestrator.create({ local: true });
-
   orchestrator.client.registerModel(MessengerModel);
-
   await orchestrator.start();
 
   const agent = await orchestrator.startAgent({ botPath: AGENT_PATH });
@@ -27,7 +25,6 @@ test('local source', async () => {
   await agent.sendCommand({ type: APPEND_COMMAND });
 
   const messages = await agent.sendCommand({ type: GET_ALL_COMMAND });
-
   expect(messages).toHaveLength(2);
 
   await orchestrator.destroy();
@@ -35,9 +32,7 @@ test('local source', async () => {
 
 test.skip('remote source', async () => {
   const orchestrator = await Orchestrator.create({ local: false });
-
   orchestrator.client.registerModel(MessengerModel);
-
   await orchestrator.start();
 
   const agent = await orchestrator.startAgent({ botPath: AGENT_PATH, env: NODE_ENV });
@@ -51,9 +46,7 @@ test.skip('remote source', async () => {
 
 test.skip('browser', async () => {
   const orchestrator = await Orchestrator.create({ local: false });
-
   orchestrator.client.registerModel(MessengerModel);
-
   await orchestrator.start();
 
   const agent = await orchestrator.startAgent({ botPath: './src/agents/test-agent.js', env: BROWSER_ENV });
@@ -64,7 +57,6 @@ test.skip('browser', async () => {
   await agent.sendCommand({ type: APPEND_COMMAND });
 
   const messages = await agent.sendCommand({ type: GET_ALL_COMMAND });
-
   expect(messages).toHaveLength(2);
 
   await orchestrator.destroy();
