@@ -170,11 +170,12 @@ export const SharingDialog = ({
       pin: undefined // Generated above.
     };
 
-    setInvitations(invitations => [...invitations, pendingInvitation]);
+    return pendingInvitation;
   };
 
   const handleCreateInvitation = async () => {
-    const invitation = await (onCreateInvitation ?? createLocalInvitation)()
+    const pendingInvitation = await (onCreateInvitation ?? createLocalInvitation)()
+    setInvitations(invitations => [...invitations, pendingInvitation]);
   }
 
   return (
@@ -185,7 +186,7 @@ export const SharingDialog = ({
       content={(
         <>
           <Box>
-            <Button onClick={onCreateInvitation ?? handleCreateInvitation}>Create Invitation</Button>
+            <Button onClick={handleCreateInvitation}>Create Invitation</Button>
           </Box>
 
           <Box sx={{
