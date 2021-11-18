@@ -1,0 +1,41 @@
+{
+  "name": "@dxos/test-bot",
+  "version": "2.16.17",
+  "description": "Bot",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "@dxos/botkit": "workspace:*",
+    "sodium-native": "~3.3.0",
+    "fatfs": "~0.10.7",
+    "runtimejs": "~0.2.16",
+    "wrtc": "^0.4.7",
+    "avsc": "~5.7.3",
+    "thrift": "~0.15.0",
+    "utp-native": "~2.5.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/node": "^14.0.9",
+    "@types/expect": "~24.3.0",
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/rpc": "workspace:*"
+  },
+  "toolchain": {
+    "testingFramework": "mocha",
+    "forceCloseTests": true
+  }
+}

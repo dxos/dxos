@@ -1,3 +1,3 @@
-# @dxos/bot
+# @dxos/botkit
 
 Bots implementation.

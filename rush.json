@@ -730,11 +730,18 @@
 
     //
     // bot
+    // NOTE: KEEP SORTED
     //
 
     {
       "packageName": "@dxos/botkit",
       "projectFolder": "packages/bot/botkit",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
+      "packageName": "@dxos/test-bot",
+      "projectFolder": "packages/bot/test-bot",
       "shouldPublish": false,
       "versionPolicyName": "lockStepPolicy"
     },

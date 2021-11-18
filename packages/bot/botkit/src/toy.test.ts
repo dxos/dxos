@@ -12,11 +12,9 @@ import { InProcessBotContainer } from './bot-container';
 import { NodeContainer } from './bot-container/node-container';
 import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
-import { EchoBot, EmptyBot } from './bots';
+import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
 import { BotFactoryClient, BrokerSetup, ClientSetup, setupBroker, setupClient } from './testutils';
-
-const ECHO_TYPE = 'bot/text';
 
 describe('In-Memory', () => {
   describe('No client', () => {
@@ -74,7 +72,7 @@ describe('In-Memory', () => {
       const { party, invitation, secret } = clientSetup;
       const [agentPort, botControllerPort] = createLinkedPorts();
 
-      const botContainer = new InProcessBotContainer(() => new EchoBot(ECHO_TYPE));
+      const botContainer = new InProcessBotContainer(() => new EchoBot(TEST_ECHO_TYPE));
       const botFactory = new BotFactory(botContainer);
       const botController = new BotController(botFactory, botControllerPort);
       const botFactoryClient = new BotFactoryClient(agentPort);
@@ -99,16 +97,11 @@ describe('In-Memory', () => {
       });
 
       await party.database.waitForItem({
-        type: ECHO_TYPE
+        type: TEST_ECHO_TYPE
       });
 
-      const items = party.database.select(s => s
-        .filter({ type: ECHO_TYPE })
-        .items
-      ).getValue();
-
-      expect(items.length).toBe(1);
-      const payload = items[0].model.getProperty('payload');
+      const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
+      const payload = item.model.getProperty('payload');
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(text).toString());
 
       await botFactoryClient.botFactory.Destroy();
@@ -170,17 +163,8 @@ describe('Node', () => {
         command: text
       });
 
-      await party.database.waitForItem({
-        type: ECHO_TYPE
-      });
-
-      const items = party.database.select(s => s
-        .filter({ type: ECHO_TYPE })
-        .items
-      ).getValue();
-
-      expect(items.length).toBe(1);
-      const payload = items[0].model.getProperty('payload');
+      const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
+      const payload = item.model.getProperty('payload');
       expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(text).toString());
 
       await botFactoryClient.botFactory.Destroy();

@@ -10,6 +10,7 @@ importers:
       '@dxos/rpc': link:../../common/rpc
       base-x: 3.0.9
       debug: 4.3.1
+      esbuild: 0.11.23
     devDependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -46,7 +47,42 @@ importers:
       assert: ^2.0.0
       base-x: ~3.0.9
       debug: ^4.1.1
+      esbuild: ^0.11.23
       expect: ~27.0.2
+  ../../packages/bot/test-bot:
+    dependencies:
+      '@dxos/botkit': link:../botkit
+      avsc: 5.7.3
+      fatfs: 0.10.7
+      runtimejs: 0.2.16
+      sodium-native: 3.3.0
+      thrift: 0.15.0
+      utp-native: 2.5.3
+      wrtc: 0.4.7
+    devDependencies:
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/rpc': link:../../common/rpc
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/expect': 24.3.0
+      '@types/mocha': 8.2.2
+      '@types/node': 14.14.45
+      expect: 27.0.2
+    specifiers:
+      '@dxos/botkit': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/expect': ~24.3.0
+      '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
+      avsc: ~5.7.3
+      expect: ~27.0.2
+      fatfs: ~0.10.7
+      runtimejs: ~0.2.16
+      sodium-native: ~3.3.0
+      thrift: ~0.15.0
+      utp-native: ~2.5.3
+      wrtc: ^0.4.7
   ../../packages/common/async:
     dependencies:
       '@dxos/debug': link:../debug
@@ -5508,7 +5544,7 @@ packages:
       hashlru: 2.3.0
       protocol-buffers-encodings: 1.1.1
       record-cache: 1.1.0
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
     dev: false
     resolution:
       integrity: sha512-wMBbz0m8rgQMERt/Ot6BGo5Y8+ovJSZmqxF0oA2xYPT8vCVBIr8g2F1BkQcLbX2iKRLXRnhic02OEq8b41M0sw==
@@ -5522,7 +5558,7 @@ packages:
       integrity: sha512-LM0DxxXYFEOZoUhN4g9VhHKGeM2mQIf8rnfSu/epBLmASAKNoKMijgGUZwhrh06wPROdBSJumjVzKl+8GPnRhA==
   /@hyperswarm/hypersign/2.1.1:
     dependencies:
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
     dev: false
     resolution:
       integrity: sha512-RcczqJsu2VScRoyJdLbxpYMBNq+73HJT3FVzDZXSOob/WqEeiN2WIvuDtvmFoufAuO/3YVfde/NpZFc/OPjmjw==
@@ -5530,7 +5566,7 @@ packages:
     dependencies:
       '@hyperswarm/discovery': 2.0.1
       nanoresource: 1.3.0
-      utp-native: 2.4.0
+      utp-native: 2.5.3
     dev: false
     resolution:
       integrity: sha512-TvRRRd//a3q+JhpSh5PaHJfnP4oLM/0eZikyDh2Z+eaJpIZP+vZwdlpPd10neTsPq1zfJX8weRjYLFHNpoMZVg==
@@ -10400,6 +10436,10 @@ packages:
       safer-buffer: 2.1.2
     resolution:
       integrity: sha512-jxwzQpLQjSmWXgwaCZE9Nz+glAG01yF1QnWgbhGwHI5A6FRIEY6IVqtHhIepHqI7/kyEyQEagBC5mBEFlIYvdg==
+  /assert-error/1.0.3:
+    dev: false
+    resolution:
+      integrity: sha1-ReesJZtc7gOVOthHnEeNm0zLNBs=
   /assert-plus/1.0.0:
     engines:
       node: '>=0.8'
@@ -10510,6 +10550,12 @@ packages:
       node: '>= 0.4'
     resolution:
       integrity: sha512-XWX3OX8Onv97LMk/ftVyBibpGwY5a8SmuxZPzeOxqmuEqUCOM9ZE+uIaD1VNJ5QnvU2UQusvmKbuM1FR8QWGfQ==
+  /avsc/5.7.3:
+    dev: false
+    engines:
+      node: '>=0.11'
+    resolution:
+      integrity: sha512-uUbetCWczQHbsKyX1C99XpQHBM8SWfovvaZhPIj23/1uV7SQf0WeRZbiLpw0JZm+LHTChfNgrLfDJOVoU2kU+A==
   /aws-sign2/0.7.0:
     resolution:
       integrity: sha1-tG6JCTSpWR8tL2+G1+ap8bP+dqg=
@@ -11066,6 +11112,10 @@ packages:
     dev: false
     resolution:
       integrity: sha1-AfqHSHhcpwlV1QESF9GzE5lpyiI=
+  /bit-twiddle/1.0.2:
+    dev: false
+    resolution:
+      integrity: sha1-DGwfq+KyPRcXPZpht7cJPrnhdp4=
   /bitfield-rle/2.2.1:
     dependencies:
       buffer-alloc-unsafe: 1.1.0
@@ -11090,7 +11140,7 @@ packages:
   /blake2b-universal/1.0.1:
     dependencies:
       blake2b: 2.1.3
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
     dev: false
     resolution:
       integrity: sha512-vmMqpF8E9RCde8/+Su/s2rZRxOBwAYQsTyCgok4kLWhWrzMrX0CzID6pVheNJSESY0S0FNTOG4QfRJqnSLOjFA==
@@ -11202,6 +11252,10 @@ packages:
   /brorand/1.1.0:
     resolution:
       integrity: sha1-EsJe/kCkXjwyPrhnWgoM5XsiNx8=
+  /browser-or-node/1.3.0:
+    dev: false
+    resolution:
+      integrity: sha512-0F2z/VSnLbmEeBcUrSuDH5l0HxTXdQQzLjkmBR4cYfvg1zJrKSlmIZFqyFR8oX0NrwPhy3c3HQ6i3OxMbew4Tg==
   /browser-process-hrtime/1.0.0:
     resolution:
       integrity: sha512-9o5UecI3GhkpM6DrXr69PblIuWxPKk9Y0jHBRhdocZ2y7YECBFCsHm79Pr3OyR2AvjhDkabFJaDJMYRazHgsow==
@@ -13734,7 +13788,7 @@ packages:
       ipv4-peers: 2.0.0
       k-bucket: 5.1.0
       protocol-buffers-encodings: 1.1.1
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
       speedometer: 1.1.0
       stream-collector: 1.0.1
       time-ordered-set: 1.0.2
@@ -14826,6 +14880,10 @@ packages:
       node: '>= 0.6'
     resolution:
       integrity: sha1-Qa4u62XvpiJorr/qg6x9eSmbCIc=
+  /event-controller/1.0.1:
+    dev: false
+    resolution:
+      integrity: sha1-jPgatbIyadDT/dGq/M1kJIbtBWY=
   /event-emitter/0.3.5:
     dependencies:
       d: 1.0.1
@@ -14844,6 +14902,12 @@ packages:
   /eventemitter3/4.0.7:
     resolution:
       integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
+  /events/1.1.1:
+    dev: false
+    engines:
+      node: '>=0.4.x'
+    resolution:
+      integrity: sha1-nr23Y1rQmccNzEwqH1AEKI6L2SQ=
   /events/3.3.0:
     engines:
       node: '>=0.8.x'
@@ -15171,6 +15235,14 @@ packages:
       reusify: 1.0.4
     resolution:
       integrity: sha512-7Eczs8gIPDrVzT+EksYBcupqMyxSHXXrHOLRRxU2/DicV8789MRBRR8+Hc2uWzUupOs4YS4JzBmBxjjCVBxD/g==
+  /fatfs/0.10.7:
+    dependencies:
+      fifolock: 1.0.0
+      struct-fu: 1.2.1
+      xok: 1.0.0
+    dev: false
+    resolution:
+      integrity: sha512-MYhg+WjcgyidtfEngBySpF1tm7kgPKDBVd7S9wZSg6Ij3P++UIsPV1Lj9TdpAhIybnTHVLVLP/5DnUe5EFgDcg==
   /fault/1.0.4:
     dependencies:
       format: 0.2.2
@@ -15217,6 +15289,10 @@ packages:
       pend: 1.2.0
     resolution:
       integrity: sha1-JcfInLH5B3+IkbvmHY85Dq4lbx4=
+  /fifolock/1.0.0:
+    dev: false
+    resolution:
+      integrity: sha1-o35U8+vmnRNIDZWoKrxCt6XBeS0=
   /figgy-pudding/3.5.2:
     resolution:
       integrity: sha512-0btnI/H8f2pavGMN8w40mlSKOfTK2SVJmBfBeVIj3kNw0swwgzyRq0d5TJVOwodFmtvpPeWPN/MCcfuWF0Ezbw==
@@ -16599,7 +16675,7 @@ packages:
   /hmac-blake2b/2.0.0:
     dependencies:
       nanoassert: 1.1.0
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
       sodium-universal: 3.0.4
     resolution:
       integrity: sha512-JbGNtM1YRd8EQH/2vNTAP1oy5lJVPlBFYZfCJTu3k8sqOUm0rRIf/3+MCd5noVykETwTbun6jEOc+4Tu78ubHA==
@@ -16984,7 +17060,7 @@ packages:
     dependencies:
       '@hyperswarm/network': 2.1.0
       shuffled-priority-queue: 2.1.0
-      utp-native: 2.4.0
+      utp-native: 2.5.3
     dev: false
     resolution:
       integrity: sha512-bESly7s6X7cLMWCn4dsAVE/ttNbbB13o6jku2B7fV2wIV/g7NVC/yF7S3NiknGlftKn/uLU3fhMmbOfdBvQ5IA==
@@ -17201,6 +17277,10 @@ packages:
   /inspect-custom-symbol/1.1.1:
     resolution:
       integrity: sha512-GOucsp9EcdlLdhPUyOTvQDnbFJtp2WBWZV1Jqe+mVnkJQBL3w96+fB84C+JL+EKXOspMdB0eMDQPDp5w9fkfZA==
+  /int64-buffer/0.1.10:
+    dev: false
+    resolution:
+      integrity: sha1-J3siiofZWtd30HwTgyAiQGpHNCM=
   /internal-ip/4.3.0:
     dependencies:
       default-gateway: 4.2.0
@@ -17835,6 +17915,10 @@ packages:
   /isexe/2.0.0:
     resolution:
       integrity: sha1-6PvzdNxVb/iUehDcsFctYz8s+hA=
+  /isint/1.0.1:
+    dev: false
+    resolution:
+      integrity: sha1-2JB5UP0oaUiHP1G5rhmFkwEfCOM=
   /isobject/2.1.0:
     dependencies:
       isarray: 1.0.0
@@ -17852,6 +17936,14 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-S/2fF5wH8SJA/kmwr6HYhK/RI/OkhD84k8ntalo0iJjZikgq1XFvR5M8NPT1x5F7fBwCG3qHfnzeP/Vh/ZxCUA==
+  /isomorphic-ws/4.0.1_ws@5.2.2:
+    dependencies:
+      ws: 5.2.2
+    dev: false
+    peerDependencies:
+      ws: '*'
+    resolution:
+      integrity: sha512-BhBvN2MBpWTaSHdWRb/bwdZJ1WaehQ2L1KngkCkfLUGF0mAWAT1sQUQacEmQ0jXkFw/czDXPNQSL5u2/Krsz1w==
   /isomorphic-ws/4.0.1_ws@7.4.5:
     dependencies:
       ws: 7.4.5
@@ -20102,6 +20194,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-hJaO0mwDXmZS4ghXsvPVriOhsxQ7ofcpQdm8dE+jISUOKopitvnXFQmpRR7jd2K6VBG6E26gU3IAbXXGIbu4sQ==
+  /module-singleton/2.0.1:
+    dev: false
+    resolution:
+      integrity: sha1-KNt86awxOKEbFzLsYVi8GnP+KXw=
   /moleculer-apollo-server/0.3.4_graphql@15.5.0+moleculer@0.14.13:
     dependencies:
       '@apollographql/graphql-playground-html': 1.6.28
@@ -20587,6 +20683,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-MN6ZpzmfNCRM+3t57PTJHgHyw/h4OWnZ6mR8P5j/uZtqQr46RRuDE/P+g3n0YR/AiYXeWixZZzaip77gdICfRg==
+  /node-gyp-build/4.3.0:
+    hasBin: true
+    resolution:
+      integrity: sha512-iWjXZvmboq0ja1pUGULQBexmxq8CV4xBhX7VDOTbL7ZR4FOowwY/VOtRxBN/yKxmdGoIp4j5ysNT4u3S2pDQ3Q==
   /node-int64/0.4.0:
     resolution:
       integrity: sha1-h6kGXNs1XTGC2PlM4RGIuCXGijs=
@@ -21368,6 +21468,10 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-s2PlXoAGym/iF4TS2yK9FdeRfxQ=
+  /path-browserify/0.0.0:
+    dev: false
+    resolution:
+      integrity: sha1-oLhwcpquIUAFt9UDLsLLuw+0RRo=
   /path-browserify/0.0.1:
     resolution:
       integrity: sha512-BapA40NHICOS+USX9SN4tyhq+A2RrN/Ws5F0Z5aMHDp98Fl86lX8Oti8B7uN93L4Ifv4fHOEA+pQw87gmMO/lQ==
@@ -22777,6 +22881,7 @@ packages:
     resolution:
       integrity: sha1-nsYfeQSYdXB9aUFFlv2Qek1xHnM=
   /querystring/0.2.0:
+    deprecated: The querystring API is considered Legacy. new code should use the URLSearchParams API instead.
     engines:
       node: '>=0.4.x'
     resolution:
@@ -24056,6 +24161,31 @@ packages:
       aproba: 1.2.0
     resolution:
       integrity: sha1-6Eg5bwV9Ij8kOGkkYY4laUFh7Ec=
+  /runtimejs/0.2.16:
+    dependencies:
+      assert: 1.5.0
+      assert-error: 1.0.3
+      bit-twiddle: 1.0.2
+      buffer: 4.9.2
+      constants-browserify: 1.0.0
+      event-controller: 1.0.1
+      events: 1.1.1
+      int64-buffer: 0.1.10
+      isint: 1.0.1
+      module-singleton: 2.0.1
+      path-browserify: 0.0.0
+      punycode: 1.4.1
+      querystring-es3: 0.2.1
+      readable-stream: 2.3.7
+      string_decoder: 0.10.31
+      typeutils: 1.0.2
+      u8-view: 1.0.1
+      url: 0.11.0
+      util: 0.10.3
+    dev: false
+    requiresBuild: true
+    resolution:
+      integrity: sha1-wlf/ukh3IRgzZB0jLt+ZJ8ml8O8=
   /rw/1.3.3:
     dev: false
     resolution:
@@ -24679,13 +24809,12 @@ packages:
       xsalsa20: 1.1.0
     resolution:
       integrity: sha512-J2Zzj61bo41oBO4yEM9hTaNo3J98AcmFctjRg3D7+0A5cXdB1jlQOHV1qo2NavDU3BpqCfxdHW5UXCv565zh6Q==
-  /sodium-native/3.2.1:
+  /sodium-native/3.3.0:
     dependencies:
-      ini: 1.3.8
-      node-gyp-build: 4.2.3
+      node-gyp-build: 4.3.0
     requiresBuild: true
     resolution:
-      integrity: sha512-EgDZ/Z7PxL2kCasKk7wnRkV8W9kvwuIlHuHXAxkQm3FF0MgVsjyLBXGjSRGhjE6u7rhSpk3KaMfFM23bfMysIQ==
+      integrity: sha512-rg6lCDM/qa3p07YGqaVD+ciAbUqm6SoO4xmlcfkbU5r1zIGrguXztLiEtaLYTV5U6k8KSIUFmnU3yQUSKmf6DA==
   /sodium-universal/3.0.4:
     dependencies:
       blake2b: 2.1.3
@@ -24696,7 +24825,7 @@ packages:
       sha512-universal: 1.1.2
       siphash24: 1.1.1
       sodium-javascript: 0.7.3
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
       xsalsa20: 1.1.0
     resolution:
       integrity: sha512-WnBQ0GDo/82shKQHZBZT9h4q4miCtxkbzcwVLsCBPWNq4qbq8BXhKICt9nPwQAsJ43ct/rF61FKu4t0druUBug==
@@ -25078,6 +25207,10 @@ packages:
       define-properties: 1.1.3
     resolution:
       integrity: sha512-jh6e984OBfvxS50tdY2nRZnoC5/mLFKOREQfw8t5yytkoUsJRNxvI/E39qu1sD0OtWI3OC0XgKSmcWwziwYuZw==
+  /string_decoder/0.10.31:
+    dev: false
+    resolution:
+      integrity: sha1-YuIDvEF2bGwoyfyEMB2rHFMQ+pQ=
   /string_decoder/1.1.1:
     dependencies:
       safe-buffer: 5.1.2
@@ -25202,6 +25335,10 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-k55yxKHwaXnpYGsOzg4Vl8+tDrWylxDEpknGjhTiZB8dFRU5rTo9CAzeycivxV3s+zlTKwrs6WxMxR95n26kwg==
+  /struct-fu/1.2.1:
+    dev: false
+    resolution:
+      integrity: sha512-QrtfoBRe+RixlBJl852/Gu7tLLTdx3kWs3MFzY1OHNrSsYYK7aIAnzqsncYRWrKGG/QSItDmOTlELMxehw4Gjw==
   /style-loader/1.3.0_webpack@4.44.2:
     dependencies:
       loader-utils: 2.0.0
@@ -25604,6 +25741,18 @@ packages:
   /text-table/0.2.0:
     resolution:
       integrity: sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
+  /thrift/0.15.0:
+    dependencies:
+      browser-or-node: 1.3.0
+      isomorphic-ws: 4.0.1_ws@5.2.2
+      node-int64: 0.4.0
+      q: 1.5.1
+      ws: 5.2.2
+    dev: false
+    engines:
+      node: '>= 10.18.0'
+    resolution:
+      integrity: sha512-RvuFCwHD8bAHIh0Evlr+8QJui/zzistIj9k668jX6jGvDF1OyOmI5TvY+YnqI/VQxpiE2OCGucYJs/nz/CfldA==
   /throat/5.0.0:
     resolution:
       integrity: sha512-fcwX4mndzpLQKBS1DVYhGAcYaYt7vsHNIvQV+WXMvnow5cgjPphq5CaayLaGsjRdSCKZFNGt7/GYAuXaNOiYCA==
@@ -26117,6 +26266,14 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-DqQgihaQ9cUrskJo9kIyW/+g0Vxsk8cDtZ52a3NGh0YNTfpUSArXSohyUGnvbPazEPLu398C0UxmKSOrPumUzA==
+  /typeutils/1.0.2:
+    dev: false
+    resolution:
+      integrity: sha1-IGZmc/d06qucZpt6woUunyogXH8=
+  /u8-view/1.0.1:
+    dev: false
+    resolution:
+      integrity: sha1-rUrqcVzwa3pA+iOQsZUu42029CE=
   /ua-parser-js/0.7.30:
     dev: false
     resolution:
@@ -26536,10 +26693,10 @@ packages:
       node: '>= 0.4.0'
     resolution:
       integrity: sha1-n5VxD1CiZ5R7LMwSR0HBAoQn5xM=
-  /utp-native/2.4.0:
+  /utp-native/2.5.3:
     dependencies:
       napi-macros: 2.0.0
-      node-gyp-build: 4.2.3
+      node-gyp-build: 4.3.0
       readable-stream: 3.6.0
       timeout-refresh: 1.0.3
       unordered-set: 2.0.1
@@ -26549,7 +26706,7 @@ packages:
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-jKwpFiEaDUuNH5S4vVk/+waAX+yA6f3Lw4flqOROH1ZE/jcT4mh0/hjIGSuPP9j9RbQcsBG6Fu6LaFk4ojXFxw==
+      integrity: sha512-sWTrWYXPhhWJh+cS2baPzhaZc89zwlWCfwSthUjGhLkZztyPhcQllo+XVVCbNGi7dhyRlxkWxN4NKU6FbA9Y8w==
   /uuid-browser/3.1.0:
     dev: true
     resolution:
@@ -27364,12 +27521,16 @@ packages:
   /xmlchars/2.2.0:
     resolution:
       integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==
+  /xok/1.0.0:
+    dev: false
+    resolution:
+      integrity: sha1-G04aLcjlk72JB9xM/Wof5uQlSJk=
   /xor-distance/2.0.0:
     resolution:
       integrity: sha512-AsAqZfPAuWx7qB/0kyRDUEvoU3QKsHWzHU9smFlkaiprEpGfJ/NBbLze2Uq0rdkxCxkNM9uOLvz/KoNBCbZiLQ==
   /xsalsa20-universal/1.0.0:
     dependencies:
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
       xsalsa20: 1.1.0
     resolution:
       integrity: sha512-0M/X61wiKKAGAMqsxEyJ0kY6NtjpcMiKinYSSsl4K7ypgvqXDTMwQK6hxnYE1s1Jm7h6YKcN8obDUg2CC+jVGA==

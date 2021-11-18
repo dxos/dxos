@@ -28,7 +28,9 @@ export class ClientBot implements BotService {
       assert(secret, 'Secret must be provided with invitation');
       const invitation = decodeInvitation(request.invitation.invitationCode);
       const botSecretProvider: SecretProvider = async () => Buffer.from(secret);
+      console.log('Before join');
       this.party = await this.client.echo.joinParty(invitation, botSecretProvider);
+      console.log('After join');
     }
     await this.onInit(request);
   }
