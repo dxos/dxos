@@ -11,13 +11,10 @@ message RpcMessage {
     Request request = 1;
     Response response = 2;
 
-    /// Means that the node is willing to open. First stage of the hasnshake protocol.
-    bool handshake = 3;
-
     /// Means that the node is open to receiving requests. Second stage of the hasnshake protocol.
-    bool open = 4;
+    bool open = 3;
 
-    StreamClose streamClose = 5;
+    StreamClose streamClose = 4;
   }
 }
 
