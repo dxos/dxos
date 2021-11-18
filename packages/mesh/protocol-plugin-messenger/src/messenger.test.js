@@ -9,7 +9,7 @@ import { keyToString } from '@dxos/crypto';
 import { Protocol } from '@dxos/protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 
-import { Messenger } from '.';
+import { Messenger } from './messenger';
 
 jest.setTimeout(30000);
 

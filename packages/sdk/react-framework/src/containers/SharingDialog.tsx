@@ -117,6 +117,7 @@ export interface SharingDialogProps {
  * Not exported for the end user.
  * See PartySharingDialog and DeviceSharingDialog.
  */
+// TODO(burdon): Move to components.
 export const SharingDialog = ({
   open,
   modal,
@@ -125,6 +126,7 @@ export const SharingDialog = ({
   onShare,
   onClose
 }: SharingDialogProps) => {
+  // TODO(burdon): Add to context (make persistent when closing dialog).
   // TODO(burdon): Expiration.
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
 
