@@ -341,9 +341,11 @@ export class ItemManager {
     const item = this._items.get(itemId);
     assert(item);
 
-    item.model
-    
     this._items.delete(itemId);
+
+    if(item.parent) {
+      item.parent._children.delete(item);
+    }
   }
 
   /**

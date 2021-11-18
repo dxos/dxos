@@ -28,8 +28,11 @@ export class Item<M extends Model<any>> {
   // Called whenever item processes mutation.
   private readonly _onUpdate = new Event<this>();
 
-  // Managed set of child items.
-  private readonly _children = new Set<Item<any>>();
+  /**
+   * Managed set of child items.
+   * @internal
+   */
+  readonly _children = new Set<Item<any>>();
 
   // Managed set of links with this item as the source.
   private readonly _links = new Set<Link<any, any, any>>();

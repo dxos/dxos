@@ -44,7 +44,7 @@ describe.only('ItemManager', () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
-      const item = await itemManager.constructItem(DEFAULT_OPTS)
+      const item = await itemManager.constructItem(defaultOpts())
 
       expect(itemManager.items.size).toEqual(1)
 
@@ -59,19 +59,19 @@ describe.only('ItemManager', () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
-      const parent = await itemManager.constructItem(DEFAULT_OPTS)
-      const child = await itemManager.constructItem({ ...DEFAULT_OPTS, parentId: parent.id })
+      const parent = await itemManager.constructItem(defaultOpts())
+      const child = await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id })
 
       expect(child.parent).toEqual(parent)
       expect(parent.children).toEqual([child])
     })
 
-    test.skip('when child is deleted parent no longer references it', async () => {
+    test('when child is deleted parent no longer references it', async () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
-      const parent = await itemManager.constructItem(DEFAULT_OPTS)
-      const child = await itemManager.constructItem({ ...DEFAULT_OPTS, parentId: parent.id })
+      const parent = await itemManager.constructItem(defaultOpts())
+      const child = await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id })
 
       itemManager.deconstructItem(child.id)
 
@@ -85,11 +85,11 @@ describe.only('ItemManager', () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
-      const source = await itemManager.constructItem(DEFAULT_OPTS)
-      const target = await itemManager.constructItem(DEFAULT_OPTS)
+      const source = await itemManager.constructItem(defaultOpts())
+      const target = await itemManager.constructItem(defaultOpts())
 
       const link = await itemManager.constructItem({
-        ...DEFAULT_OPTS,
+        ...defaultOpts(),
         link: {
           source: source.id,
           target: target.id,
@@ -108,8 +108,8 @@ describe.only('ItemManager', () => {
 
 });
 
-const DEFAULT_OPTS = {
+const defaultOpts = () => ({
   itemId: createId(),
   modelType: ObjectModel.meta.type,
   itemType: undefined,
-}
+})
