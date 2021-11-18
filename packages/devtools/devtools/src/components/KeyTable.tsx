@@ -7,8 +7,8 @@ import React from 'react';
 
 import { TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 
-import { BooleanIcon } from '@dxos/devtools-mesh';
 import { keyTypeName } from '@dxos/credentials';
+import { BooleanIcon } from '@dxos/devtools-mesh';
 import { CopyText } from '@dxos/react-components';
 
 import { KeyRecord } from '../proto/gen/dxos/halo/keys';
