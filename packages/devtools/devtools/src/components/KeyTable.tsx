@@ -7,11 +7,11 @@ import React from 'react';
 
 import { TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 
+import { BooleanIcon } from '@dxos/devtools-mesh';
 import { keyTypeName } from '@dxos/credentials';
 import { CopyText } from '@dxos/react-components';
 
 import { KeyRecord } from '../proto/gen/dxos/halo/keys';
-import { BooleanIcon } from './BooleanIcon';
 import { Table } from './Table';
 
 const styles = {
