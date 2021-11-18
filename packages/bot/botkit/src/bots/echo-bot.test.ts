@@ -5,6 +5,7 @@
 import expect from 'expect';
 
 import { PublicKey } from '@dxos/crypto';
+
 import { setupClient } from '../testutils';
 import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
 
@@ -36,7 +37,7 @@ describe('Echo Bot', () => {
     const payload = items[0].model.getProperty('payload');
     expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
-  await bot.Stop();
-  await client.destroy();
+    await bot.Stop();
+    await client.destroy();
   });
 });
