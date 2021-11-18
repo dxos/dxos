@@ -64,6 +64,10 @@ export class ItemManager {
      private readonly _writeStream?: FeedWriter<EchoEnvelope>
   ) {}
 
+  get items() {
+    return this._items;
+  }
+
   /**
    * Creates an item and writes the genesis message.
    * @param {ModelType} modelType
@@ -303,6 +307,15 @@ export class ItemManager {
 
   getItemsWithDefaultModels (): Item<DefaultModel>[] {
     return Array.from(this._items.values()).filter(item => item.model instanceof DefaultModel);
+  }
+
+  deconstructItem(itemId: ItemID) {
+    const item = this._items.get(itemId);
+    assert(item);
+
+    item.model
+    
+    this._items.delete(itemId);
   }
 
   /**

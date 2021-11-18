@@ -88,7 +88,7 @@ export class Item<M extends Model<any>> {
   }
 
   get readOnly () {
-    return !!this._writeStream;
+    return !this._writeStream;
   }
 
   get parent (): Item<any> | null {
