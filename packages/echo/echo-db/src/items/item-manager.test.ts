@@ -14,6 +14,9 @@ import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { ItemManager } from './item-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Link } from './link';
+import { ItemConstructionOptions } from '.';
+
+
 
 describe.only('ItemManager', () => {
   describe('basic', () => {
@@ -41,11 +44,7 @@ describe.only('ItemManager', () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
-      const item = await itemManager.constructItem({
-        itemId: createId(),
-        modelType: ObjectModel.meta.type,
-        itemType: undefined,
-      })
+      const item = await itemManager.constructItem(DEFAULT_OPTS)
 
       expect(itemManager.items.size).toEqual(1)
 
@@ -60,20 +59,24 @@ describe.only('ItemManager', () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
-      const parent = await itemManager.constructItem({
-        itemId: createId(),
-        modelType: ObjectModel.meta.type,
-        itemType: undefined,
-      })
-      const child = await itemManager.constructItem({
-        itemId: createId(),
-        modelType: ObjectModel.meta.type,
-        itemType: undefined,
-        parentId: parent.id,
-      })
+      const parent = await itemManager.constructItem(DEFAULT_OPTS)
+      const child = await itemManager.constructItem({ ...DEFAULT_OPTS, parentId: parent.id })
 
       expect(child.parent).toEqual(parent)
       expect(parent.children).toEqual([child])
+    })
+
+    test.skip('when child is deleted parent no longer references it', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const parent = await itemManager.constructItem(DEFAULT_OPTS)
+      const child = await itemManager.constructItem({ ...DEFAULT_OPTS, parentId: parent.id })
+
+      itemManager.deconstructItem(child.id)
+
+      expect(itemManager.items.size).toEqual(1)
+      expect(parent.children.length).toEqual(0)
     })
   })
 
@@ -82,21 +85,11 @@ describe.only('ItemManager', () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
-      const source = await itemManager.constructItem({
-        itemId: createId(),
-        modelType: ObjectModel.meta.type,
-        itemType: undefined,
-      })
-      const target = await itemManager.constructItem({
-        itemId: createId(),
-        modelType: ObjectModel.meta.type,
-        itemType: undefined,
-      })
+      const source = await itemManager.constructItem(DEFAULT_OPTS)
+      const target = await itemManager.constructItem(DEFAULT_OPTS)
 
       const link = await itemManager.constructItem({
-        itemId: createId(),
-        modelType: ObjectModel.meta.type,
-        itemType: undefined,
+        ...DEFAULT_OPTS,
         link: {
           source: source.id,
           target: target.id,
@@ -114,3 +107,9 @@ describe.only('ItemManager', () => {
   })
 
 });
+
+const DEFAULT_OPTS = {
+  itemId: createId(),
+  modelType: ObjectModel.meta.type,
+  itemType: undefined,
+}
