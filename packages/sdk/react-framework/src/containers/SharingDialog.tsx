@@ -11,9 +11,9 @@ import {
 import { Button, IconButton, Popover, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
+import { encodeInvitation } from '@dxos/client';
 import { SecretProvider, generatePasscode } from '@dxos/credentials';
 import { InvitationDescriptor, InvitationOptions, PartyMember } from '@dxos/echo-db';
-import { encodeInvitation } from '@dxos/react-client';
 import {
   CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
 } from '@dxos/react-components';
@@ -117,6 +117,7 @@ export interface SharingDialogProps {
  * Not exported for the end user.
  * See PartySharingDialog and DeviceSharingDialog.
  */
+// TODO(burdon): Move to components.
 export const SharingDialog = ({
   open,
   modal,
@@ -125,6 +126,7 @@ export const SharingDialog = ({
   onShare,
   onClose
 }: SharingDialogProps) => {
+  // TODO(burdon): Add to context (make persistent when closing dialog).
   // TODO(burdon): Expiration.
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
 

@@ -4,10 +4,9 @@
 
 import { expect } from 'chai';
 
-import { createMockResourceRecord } from '.';
 import { DXN } from '../models';
 import { IRegistryClient } from '../registry-client';
-import { createMockTypes } from './fake-data-generator';
+import { createMockTypes, createMockResourceRecord } from './fake-data-generator';
 import { MemoryRegistryClient } from './memory-registry-client';
 
 describe('Registry API mock', () => {

@@ -4,7 +4,8 @@
 
 import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
 
-import { createKeyPair, generateSeedPhrase, keyPairFromSeedPhrase } from '.';
+import { createKeyPair } from './keys';
+import { generateSeedPhrase, keyPairFromSeedPhrase } from './seedphrase';
 
 it('Basic bip39 operations work', async () => {
   const seedPhrase = generateMnemonic();
@@ -14,7 +15,7 @@ it('Basic bip39 operations work', async () => {
 
 it('Create keypair from seedphrase', async () => {
   const seedPhrase = generateSeedPhrase();
-  expect(typeof seedPhrase === 'string').toBeTruthy();
+  expect(typeof seedPhrase).toBe('string');
   expect(seedPhrase.split(/\s+/g).length).toEqual(12);
 
   const recoveredKeyPair = keyPairFromSeedPhrase(seedPhrase);

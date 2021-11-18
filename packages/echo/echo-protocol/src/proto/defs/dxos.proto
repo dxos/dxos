@@ -24,9 +24,8 @@ message FeedMessage {
   dxos.echo.EchoEnvelope echo = 2;
 }
 
-// 
-// A container for dxos.credentials.Message
 //
+// A container for dxos.credentials.Message
 // TODO(marik-d): Figure out how to import a protobuf type from @dxos/credentials package.
 //
 message CredentialsMessage {

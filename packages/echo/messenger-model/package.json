@@ -20,9 +20,16 @@
     "@dxos/model-factory": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/toolchain-node-library": "workspace:*"
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/object-model": "workspace:*",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@types/mocha": "~8.2.2",
+    "expect": "~27.0.2"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
   }
 }

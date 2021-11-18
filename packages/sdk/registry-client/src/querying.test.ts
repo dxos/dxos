@@ -4,10 +4,10 @@
 
 import { expect } from 'chai';
 
-import { createCID } from '.';
 import { DXN } from './models';
 import { Filtering } from './querying';
 import { Resource, RegistryRecord, RegistryTypeRecord, RegistryDataRecord, RecordKind } from './registry-client';
+import { createCID } from './testing';
 
 describe('Registry API querying', () => {
   // TODO(marik-d): Fix those tests.

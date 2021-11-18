@@ -5,7 +5,7 @@
 import assert from 'assert';
 import expect from 'expect';
 
-import { Client } from '@dxos/client';
+import { Client, decodeInvitation, encodeInvitation } from '@dxos/client';
 import { SecretProvider, SecretValidator } from '@dxos/credentials';
 import { createKeyPair, PublicKey } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';
@@ -17,7 +17,6 @@ import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
 import { Bot } from './proto/gen/dxos/bot';
 import { BotFactoryClient } from './testutils';
-import { decodeInvitation, encodeInvitation } from './testutils/intivitations';
 
 const ECHO_TYPE = 'bot/text';
 
@@ -59,10 +58,10 @@ describe('In-Memory', () => {
       expect(botInitialized).toBe(true);
 
       const command = PublicKey.random().asUint8Array();
-      const repsonse = await botFactoryClient.botFactory.SendCommand({ botId, command });
+      const response = await botFactoryClient.botFactory.SendCommand({ botId, command });
 
-      expect(repsonse.response).toBeDefined();
-      expect(Buffer.from(command).equals(Buffer.from(repsonse.response!))).toBe(true);
+      expect(response.response).toBeDefined();
+      expect(Buffer.from(command).equals(Buffer.from(response.response!))).toBe(true);
 
       await botFactoryClient.botFactory.Destroy();
       botFactoryClient.stop();
@@ -98,9 +97,9 @@ describe('In-Memory', () => {
             await client.echo.halo.createIdentity({ ...createKeyPair() });
             await client.echo.halo.create('Bot');
 
-            if (request.invitation?.data) {
+            if (request.invitation?.invitationCode) {
               assert(request.secret, 'Secret must be provided with invitation');
-              const invitation = decodeInvitation(request.invitation.data);
+              const invitation = decodeInvitation(request.invitation.invitationCode);
               const botSecretProvider: SecretProvider = async () => Buffer.from(request.secret!);
               party = await client.echo.joinParty(invitation, botSecretProvider);
             }
@@ -144,7 +143,7 @@ describe('In-Memory', () => {
       const invitation = await party.createInvitation({ secretProvider, secretValidator });
       const { id } = await botFactoryClient.botFactory.SpawnBot({
         invitation: {
-          data: encodeInvitation(invitation)
+          invitationCode: encodeInvitation(invitation)
         },
         secret: partySecretString
       });

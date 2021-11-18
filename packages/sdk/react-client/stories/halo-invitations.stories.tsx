@@ -8,10 +8,10 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
+import { encodeInvitation, decodeInvitation } from '@dxos/client';
+
 import {
   ClientInitializer,
-  decodeInvitation,
-  encodeInvitation,
   ProfileInitializer,
   useClient,
   useParties,

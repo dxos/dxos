@@ -8,13 +8,12 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
+import { encodeInvitation, decodeInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptorType } from '@dxos/echo-db';
 
 import {
   ClientInitializer,
-  decodeInvitation,
-  encodeInvitation,
   ProfileInitializer,
   useClient,
   useContacts,

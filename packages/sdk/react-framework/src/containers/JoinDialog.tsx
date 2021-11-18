@@ -6,9 +6,10 @@ import React, { useState } from 'react';
 
 import { Box, Button, TextField, Typography } from '@mui/material';
 
+import { decodeInvitation } from '@dxos/client';
 import type { SecretProvider } from '@dxos/credentials';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
-import { decodeInvitation, useSecretProvider } from '@dxos/react-client';
+import { useSecretProvider } from '@dxos/react-client';
 import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
 import { handleKey } from '../helpers';
@@ -39,7 +40,7 @@ export interface JoinDialogProps {
  * Not exported for the end user.
  * See JoinPartyDialog and JoinHaloDialog.
  */
-// TODO(burdon): Make work for HALO (device invitations).
+// TODO(burdon): Move to components.
 export const JoinDialog = ({
   open,
   invitationCode: initialCode, // TODO(burdon): Automatically go to next step if set.

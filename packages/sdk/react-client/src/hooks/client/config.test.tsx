@@ -9,8 +9,8 @@ import React from 'react';
 import { Client } from '@dxos/client';
 import { ConfigObject } from '@dxos/config';
 
-import { useConfig } from '.';
 import { ClientProvider } from '../../containers';
+import { useConfig } from './useConfig';
 
 describe('Config hook', () => {
   const render = () => useConfig();
