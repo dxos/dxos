@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
 import { Model, ModelMeta } from '@dxos/model-factory';
+import { Entity } from './entity';
 
 import type { Link } from './link';
 import { Selection } from './selection';
@@ -21,7 +22,7 @@ export interface LinkData {
  * Items are hermetic data structures contained within a Party. They may be hierarchical.
  * The Item data structure is governed by a Model class, which implements data consistency.
  */
-export class Item<M extends Model<any>> {
+export class Item<M extends Model<any>> extends Entity {
   // Parent item (or null if this item is a root item).
   private _parent: Item<any> | null = null;
 
@@ -58,14 +59,16 @@ export class Item<M extends Model<any>> {
    * @param {LinkData} [link]
    */
   constructor (
-    private readonly _itemId: ItemID,
-    private readonly _itemType: ItemType | undefined, // TODO(burdon): Why undefined?
+    itemId: ItemID,
+    itemType: ItemType | undefined, // TODO(burdon): Why undefined?
     private readonly _modelMeta: ModelMeta,
     private readonly _model: M,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null,
     link?: LinkData | null
   ) {
+    super(itemId, itemType);
+
     this._updateParent(parent);
     this._setLink(link ?? null);
 
@@ -73,16 +76,8 @@ export class Item<M extends Model<any>> {
     this._onUpdate.addEffect(() => this._model.subscribe(() => this._onUpdate.emit(this)));
   }
 
-  toString () {
-    return `Item(${JSON.stringify({ itemId: this._itemId, parentId: this.parent?.id, itemType: this._itemType })})`;
-  }
-
-  get id (): ItemID {
-    return this._itemId;
-  }
-
-  get type (): ItemType | undefined {
-    return this._itemType;
+  override toString () {
+    return `Item(${JSON.stringify({ itemId: this.id, parentId: this.parent?.id, itemType: this.type })})`;
   }
 
   get modelMeta (): ModelMeta {
@@ -140,7 +135,7 @@ export class Item<M extends Model<any>> {
   // TODO(telackey): This does not allow null or undefined as a parentId, but should it since we allow a null parent?
   async setParent (parentId: ItemID): Promise<void> {
     if (!this._writeStream) {
-      throw new Error(`Read-only model: ${this._itemId}`);
+      throw new Error(`Read-only model: ${this.id}`);
     }
 
     // Wait for mutation below to be processed.
@@ -148,7 +143,7 @@ export class Item<M extends Model<any>> {
     const onUpdate = this._onUpdate.waitFor(() => parentId === this._parent?.id);
 
     await this._writeStream.write({
-      itemId: this._itemId,
+      itemId: this.id,
       itemMutation: {
         parentId
       }
