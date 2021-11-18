@@ -7,8 +7,9 @@ import React, { useState } from 'react';
 import { Button, Toolbar } from '@mui/material';
 import { Party } from '@dxos/echo-db';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
-import { JsonTreeView, ProfileDialog } from '@dxos/react-framework';
-import PartySettings from '../src/components/PartySettings';
+import { JsonTreeView } from '@dxos/react-components';
+import { ProfileDialog } from '@dxos/react-framework';
+import { PartySettings } from '../src/components';
 import { getPartyTitle } from '../src/utils/hacks.utils';
 
 /**

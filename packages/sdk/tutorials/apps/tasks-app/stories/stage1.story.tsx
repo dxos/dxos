@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { ClientInitializer, useClient } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-framework';
+import { JsonTreeView } from '@dxos/react-components';
 
 /**
  * Demonstrate ClientInitializer

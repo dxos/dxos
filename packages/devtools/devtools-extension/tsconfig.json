@@ -1,0 +1,50 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ES6"
+    ],
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "jsx": "react",
+    "rootDir": "src"
+  },
+  "include": [
+    "src",
+    "stories"
+  ],
+  "references": [
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../devtools"
+    },
+    {
+      "path": "../react-framework"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    }
+  ]
+}

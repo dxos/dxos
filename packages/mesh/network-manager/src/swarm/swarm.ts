@@ -10,11 +10,11 @@ import { discoveryKey, PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { Topic } from '..';
 import { ProtocolProvider } from '../network-manager';
 import { SignalApi } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
+import { Topic } from '../types';
 import { Connection, ConnectionState } from './connection';
 
 const log = debug('dxos:network-manager:swarm');
