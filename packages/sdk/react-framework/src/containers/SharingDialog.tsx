@@ -3,6 +3,7 @@
 //
 
 import React, { useState } from 'react';
+import urlJoin from 'url-join';
 
 import {
   QrCode2 as QRCodeIcon,
@@ -103,6 +104,14 @@ const PendingInvitation = ({
   );
 };
 
+const defaultCreateUrl = (invitationCode: string) => {
+  // TODO(burdon): By-pass keyhole with fake code.
+  const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
+  const invitationPath = `/invitation/${invitationCode}`; // TODO(burdon): App-specific (hence pass in).
+  const { origin, pathname } = window.location;
+  return urlJoin(origin, pathname, `/?code=${kubeCode}`, `/#${invitationPath}`);
+};
+
 export interface SharingDialogProps {
   open: boolean
   modal?: boolean
@@ -110,6 +119,7 @@ export interface SharingDialogProps {
   members?: PartyMember[] // TODO(rzadp): Support HALO members as well (different devices).
   onShare: (shareOptions: ShareOptions) => Promise<InvitationDescriptor>
   onClose?: () => void
+  createUrl?: (invitationCode: string) => string
 }
 
 /**
@@ -123,6 +133,7 @@ export const SharingDialog = ({
   modal,
   title,
   members = [],
+  createUrl = defaultCreateUrl,
   onShare,
   onClose
 }: SharingDialogProps) => {
@@ -157,14 +168,6 @@ export const SharingDialog = ({
     };
 
     setInvitations(invitations => [...invitations, pendingInvitation]);
-  };
-
-  const createUrl = (invitationCode: string) => {
-    // TODO(burdon): By-pass keyhole with fake code.
-    const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
-    const invitationPath = `/invitation/${invitationCode}`; // TODO(burdon): App-specific (hence pass in).
-    const { origin, pathname } = window.location;
-    return `${origin}${pathname}?code=${kubeCode}/#${invitationPath}`; // TODO(burdon): Use URL concat util?
   };
 
   return (
