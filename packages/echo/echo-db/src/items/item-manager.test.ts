@@ -2,24 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
+import { createId } from '@dxos/crypto';
+import { MockFeedWriter } from '@dxos/echo-protocol';
+import { ModelFactory } from '@dxos/model-factory';
+import { ObjectModel } from '@dxos/object-model';
 import expect from 'expect';
 import { it as test } from 'mocha';
-
-import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
-import { createFeedWriter, MockFeedWriter } from '@dxos/echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
-import { ModelFactory } from '@dxos/model-factory';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
-
+import { DefaultModel } from '.';
 import { ItemManager } from './item-manager';
-import { ObjectModel } from '@dxos/object-model';
 import { Link } from './link';
-import { DefaultModel, ItemConstructionOptions } from '.';
-import exp from 'constants';
 
-
-
-describe.only('ItemManager', () => {
+describe('ItemManager', () => {
   describe('basic', () => {
     test('item construction', async () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
