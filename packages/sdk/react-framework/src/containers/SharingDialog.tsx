@@ -130,7 +130,8 @@ export const SharingDialog = ({
   // TODO(burdon): Expiration.
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
 
-  const handleCreateInvitation = async () => {
+  // The old way - before the migration to new Client API with Client Services.
+  const createLocalInvitation = async () => {
     let pendingInvitation: PendingInvitation; // eslint-disable-line prefer-const
 
     // Called when other side joins the invitation party.
@@ -166,6 +167,9 @@ export const SharingDialog = ({
     const { origin, pathname } = window.location;
     return `${origin}${pathname}?code=${kubeCode}/#${invitationPath}`; // TODO(burdon): Use URL concat util?
   };
+  const handleCreateInvitation = async () => {
+    const invitation = await (onCreateInvitation ?? createLocalInvitation)()
+  }
 
   return (
     <Dialog
