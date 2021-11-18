@@ -10,7 +10,7 @@ import { MessengerModel } from '@dxos/messenger-model';
 import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents';
 import { BROWSER_ENV, NODE_ENV, Orchestrator } from '../orchestrator';
 import { AGENT_PATH } from './agent';
-import './testing';
+import './setup';
 
 test('local source', async () => {
   const orchestrator = await Orchestrator.create({ local: true });
