@@ -11,9 +11,9 @@ import {
 import { Button, IconButton, Popover, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
+import { encodeInvitation } from '@dxos/client';
 import { SecretProvider, generatePasscode } from '@dxos/credentials';
 import { InvitationDescriptor, InvitationOptions, PartyMember } from '@dxos/echo-db';
-import { encodeInvitation } from '@dxos/react-client';
 import {
   CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
 } from '@dxos/react-components';

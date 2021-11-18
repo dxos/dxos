@@ -4,4 +4,3 @@
 
 export * from './useSecretGenerator';
 export * from './useSecretProvider';
-export * from './utils';
