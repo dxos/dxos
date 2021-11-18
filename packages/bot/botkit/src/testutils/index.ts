@@ -3,3 +3,5 @@
 //
 
 export * from './bot-factory-client';
+export * from './client-setup';
+export * from './broker-setup';
