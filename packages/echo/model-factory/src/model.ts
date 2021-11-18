@@ -98,13 +98,16 @@ export abstract class Model<T> {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
+    // Promise that resolves when this mutation has been processed.
+    const processed = this._messageProcessed.waitFor(meta =>
+      receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
+    )
+
     const receipt = await this._writeStream.write(mutation);
     return {
       ...receipt,
       waitToBeProcessed: async () => {
-        await this._messageProcessed.waitFor(meta =>
-          receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
-        );
+        await processed;
       }
     };
   }
