@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { ClientInitializer, useClient, useProfile } from '@dxos/react-client';
-import { JsonTreeView, ProfileDialog } from '@dxos/react-framework';
+import { JsonTreeView, ProfileDialog } from '@dxos/react-components';
 
 /**
  * Create the user's HALO profile.
