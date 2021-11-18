@@ -346,6 +346,10 @@ export class ItemManager {
     if(item.parent) {
       item.parent._children.delete(item);
     }
+
+    for(const child of item.children) {
+      this.deconstructItem(child.id)
+    }
   }
 
   /**

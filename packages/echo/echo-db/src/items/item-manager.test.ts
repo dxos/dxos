@@ -15,6 +15,7 @@ import { ItemManager } from './item-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Link } from './link';
 import { ItemConstructionOptions } from '.';
+import exp from 'constants';
 
 
 
@@ -77,6 +78,22 @@ describe.only('ItemManager', () => {
 
       expect(itemManager.items.size).toEqual(1)
       expect(parent.children.length).toEqual(0)
+    })
+
+    test('when parent is deleted children are deleted as well', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const parent = await itemManager.constructItem(defaultOpts())
+      const child1 = await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id })
+      const child2 = await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id })
+
+      expect(itemManager.items.size).toEqual(3)
+      expect(parent.children.length).toEqual(2)
+      
+      itemManager.deconstructItem(parent.id)
+
+      expect(itemManager.items.size).toEqual(0)
     })
   })
 
