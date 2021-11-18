@@ -157,6 +157,28 @@ describe.only('ItemManager', () => {
       expect(link.isDanglingLink).toBeTruthy()
       expect(target.refs).toEqual([])
     })
+
+    test('can become dangling', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const source = await itemManager.constructItem(defaultOpts())
+      const target = await itemManager.constructItem(defaultOpts())
+
+      const link = await itemManager.constructItem({
+        ...defaultOpts(),
+        link: {
+          source: source.id,
+          target: target.id,
+        }
+      }) as any as Link<any, any, any>
+
+      expect(itemManager.items.size).toEqual(3)
+
+      itemManager.deconstructItem(target.id)
+
+      expect(source.links).toEqual([])
+    })
   })
 
 });

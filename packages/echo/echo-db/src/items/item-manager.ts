@@ -350,6 +350,14 @@ export class ItemManager {
     for(const child of item.children) {
       this.deconstructItem(child.id)
     }
+
+    for(const ref of item.refs) {
+      ref._link!.target = undefined;
+    }
+
+    for(const link of item.links) {
+      link._link!.source = undefined;
+    }
   }
 
   /**

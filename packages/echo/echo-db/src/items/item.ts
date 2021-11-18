@@ -41,8 +41,11 @@ export class Item<M extends Model<any>> {
   private readonly _refs = new Set<Link<any, any, any>>();
 
   // TODO(burdon): Factor out into link/object derived classes.
-  // Link data (if this item is a link). Only to be set on item genesis.
-  protected _link: LinkData | null = null;
+  /**
+   * Link data (if this item is a link). Only to be set on item genesis.
+   * @internal
+   */
+  _link: LinkData | null = null;
 
   /**
    * Items are constructed by the `Database` object.
