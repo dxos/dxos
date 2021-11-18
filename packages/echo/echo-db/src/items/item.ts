@@ -107,7 +107,7 @@ export class Item<M extends Model<any>> {
   }
 
   get refs (): Link<any, any, any>[] {
-    return Array.from(this._refs.values());
+    return Array.from(this._refs.values()).filter(link => !link.isDanglingLink);
   }
 
   // TODO(burdon): Remove (should be error since referenced items should already have been processed).
@@ -189,8 +189,8 @@ export class Item<M extends Model<any>> {
   private _setLink (linkData: LinkData | null) {
     this._link = linkData;
     if (linkData) {
-      linkData?.source?._links?.add(this as any);
-      linkData?.target?._refs?.add(this as any);
+      linkData.source?._links.add(this as any);
+      linkData.target?._refs.add(this as any);
     }
   }
 }
