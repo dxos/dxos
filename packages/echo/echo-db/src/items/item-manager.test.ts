@@ -96,7 +96,7 @@ describe.only('ItemManager', () => {
         source: source.id,
         target: target.id,
       }
-    }) as Link<any, any, any>
+    }) as any as Link<any, any, any>
 
     expect(itemManager.items.size).toEqual(3)
 
@@ -104,6 +104,6 @@ describe.only('ItemManager', () => {
     expect(link.target).toEqual(target)
 
     expect(source.links).toEqual([link])
-    expect(target.links).toEqual([link])
+    expect(target.refs).toEqual([link])
   })
 });

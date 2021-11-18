@@ -37,6 +37,13 @@ export interface ItemConstructionOptions {
   link?: LinkData
 }
 
+interface ModelConstructionOptions {
+  itemId: ItemID
+  modelType: ModelType
+  initialMutations?: ModelMessage<Uint8Array>[],
+  modelSnapshot?: Uint8Array,
+}
+
 /**
  * Manages the creation and indexing of items.
  */
@@ -166,6 +173,44 @@ export class ItemManager {
     return link;
   }
 
+  private async _constructModel({ modelType, itemId, modelSnapshot, initialMutations }: ModelConstructionOptions): Promise<Model<any>> {
+    // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
+    if (!this._modelFactory.hasModel(modelType)) {
+      throw new UnknownModelError(modelType);
+    }
+    const modelMeta = this._modelFactory.getModelMeta(modelType);
+
+    //
+    // Convert model-specific outbound mutation to outbound envelope message.
+    //
+    const outboundTransform = this._writeStream && mapFeedWriter<unknown, EchoEnvelope>(mutation => ({
+      itemId,
+      mutation: modelMeta.mutation.encode(mutation)
+    }), this._writeStream);
+
+    // Create the model with the outbound stream.
+    const model: Model<any> = this._modelFactory.createModel(modelType, itemId, outboundTransform);
+    assert(model, `Invalid model: ${modelType}`);
+
+    if (modelSnapshot) {
+      if (model instanceof DefaultModel) {
+        model.snapshot = modelSnapshot;
+      } else {
+        assert(modelMeta.snapshotCodec, 'Model snapshot provided but the model does not support snapshots.');
+        await model.restoreFromSnapshot(modelMeta.snapshotCodec.decode(modelSnapshot));
+      }
+    }
+
+    // Process initial mutations.
+    if (initialMutations) {
+      for (const mutation of initialMutations) {
+        await model.processMessage(mutation.meta, modelMeta.mutation.decode(mutation.mutation));
+      }
+    }
+
+    return model
+  }
+
   /**
    * Constructs an item with the appropriate model.
    * @param itemId
@@ -203,17 +248,13 @@ export class ItemManager {
     }
     const modelMeta = this._modelFactory.getModelMeta(modelType);
 
-    //
-    // Convert model-specific outbound mutation to outbound envelope message.
-    //
-    const outboundTransform = this._writeStream && mapFeedWriter<unknown, EchoEnvelope>(mutation => ({
-      itemId,
-      mutation: modelMeta.mutation.encode(mutation)
-    }), this._writeStream);
-
     // Create the model with the outbound stream.
-    const model: Model<any> = this._modelFactory.createModel(modelType, itemId, outboundTransform);
-    assert(model, `Invalid model: ${modelType}`);
+    const model = await this._constructModel({
+      itemId,
+      modelType,
+      initialMutations,
+      modelSnapshot,
+    })
 
     if (link) {
       assert(link.source);
@@ -223,29 +264,16 @@ export class ItemManager {
     //
     // Create the Item.
     //
-    const item = link
-      ? new Link(itemId, itemType, modelMeta, model, this._writeStream, parent, {
+    let item: Item<any>;
+    if(link) {
+      item = new Link(itemId, itemType, modelMeta, model, this._writeStream, parent, {
         sourceId: link.source!,
         targetId: link.target!,
         source: this.getItem(link.source!),
         target: this.getItem(link.target!)
-      })
-      : new Item(itemId, itemType, modelMeta, model, this._writeStream, parent);
-
-    if (modelSnapshot) {
-      if (model instanceof DefaultModel) {
-        model.snapshot = modelSnapshot;
-      } else {
-        assert(modelMeta.snapshotCodec, 'Model snapshot provided but the model does not support snapshots.');
-        await model.restoreFromSnapshot(modelMeta.snapshotCodec.decode(modelSnapshot));
-      }
-    }
-
-    // Process initial mutations.
-    if (initialMutations) {
-      for (const mutation of initialMutations) {
-        await item.model.processMessage(mutation.meta, modelMeta.mutation.decode(mutation.mutation));
-      }
+      }) as any
+    } else {
+      item = new Item(itemId, itemType, modelMeta, model, this._writeStream, parent);
     }
 
     assert(!this._items.has(itemId));
