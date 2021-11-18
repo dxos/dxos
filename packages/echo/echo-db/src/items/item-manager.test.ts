@@ -14,7 +14,7 @@ import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
 import { ItemManager } from './item-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Link } from './link';
-import { ItemConstructionOptions } from '.';
+import { DefaultModel, ItemConstructionOptions } from '.';
 import exp from 'constants';
 
 
@@ -181,6 +181,27 @@ describe.only('ItemManager', () => {
     })
   })
 
+  describe('DefaultModel', () => {
+    test('item can be created and the model registered later', async () => {
+      const modelFactory = new ModelFactory().registerModel(DefaultModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const item = await itemManager.constructItem({
+        itemId: createId(),
+        modelType: DefaultModel.meta.type,
+        itemType: undefined,
+      })
+      item.model.originalModelType = ObjectModel.meta.type;
+
+      expect(item.model).toBeInstanceOf(DefaultModel)
+
+      modelFactory.registerModel(ObjectModel)
+      await itemManager.reconstructItemWithDefaultModel(item.id)
+
+      const reconstructedItem = itemManager.items.get(item.id)!
+      expect(reconstructedItem.model).toBeInstanceOf(ObjectModel)
+    })
+  })
 });
 
 const defaultOpts = () => ({
