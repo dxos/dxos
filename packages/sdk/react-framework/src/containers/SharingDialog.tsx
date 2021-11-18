@@ -3,6 +3,7 @@
 //
 
 import React, { useState } from 'react';
+import urlJoin from 'url-join';
 
 import {
   QrCode2 as QRCodeIcon,
@@ -103,6 +104,14 @@ const PendingInvitation = ({
   );
 };
 
+const defaultCreateUrl = (invitationCode: string) => {
+  // TODO(burdon): By-pass keyhole with fake code.
+  const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
+  const invitationPath = `/invitation/${invitationCode}`; // TODO(burdon): App-specific (hence pass in).
+  const { origin, pathname } = window.location;
+  return urlJoin(origin, pathname, `/?code=${kubeCode}`, `/#${invitationPath}`);
+};
+
 export interface SharingDialogProps {
   open: boolean
   modal?: boolean
@@ -111,6 +120,7 @@ export interface SharingDialogProps {
   onShare: (shareOptions: ShareOptions) => Promise<InvitationDescriptor>
   onCreateInvitation?: () => Promise<PendingInvitation>
   onClose?: () => void
+  createUrl?: (invitationCode: string) => string
 }
 
 /**
@@ -118,15 +128,18 @@ export interface SharingDialogProps {
  * Not exported for the end user.
  * See PartySharingDialog and DeviceSharingDialog.
  */
+// TODO(burdon): Move to components.
 export const SharingDialog = ({
   open,
   modal,
   title,
   members = [],
+  createUrl = defaultCreateUrl,
   onShare,
   onCreateInvitation,
   onClose
 }: SharingDialogProps) => {
+  // TODO(burdon): Add to context (make persistent when closing dialog).
   // TODO(burdon): Expiration.
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
 
@@ -160,13 +173,6 @@ export const SharingDialog = ({
     setInvitations(invitations => [...invitations, pendingInvitation]);
   };
 
-  const createUrl = (invitationCode: string) => {
-    // TODO(burdon): By-pass keyhole with fake code.
-    const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
-    const invitationPath = `/invitation/${invitationCode}`; // TODO(burdon): App-specific (hence pass in).
-    const { origin, pathname } = window.location;
-    return `${origin}${pathname}?code=${kubeCode}/#${invitationPath}`; // TODO(burdon): Use URL concat util?
-  };
   const handleCreateInvitation = async () => {
     const invitation = await (onCreateInvitation ?? createLocalInvitation)()
   }

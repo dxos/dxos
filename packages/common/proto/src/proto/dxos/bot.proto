@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 import "./client.proto";
+import "./config.proto";
 
 package dxos.bot;
 
@@ -67,7 +68,7 @@ service BotFactoryService {
 
 message InitializeRequest {
   // TODO(dmaretskyi): Use actuall config protobufs.
-  string config = 1;
+  Config config = 1;
 
   /// Invitation for the bot to join the target party.
   dxos.client.Invitation invitation = 2;

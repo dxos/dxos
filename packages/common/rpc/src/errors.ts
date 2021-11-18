@@ -29,7 +29,7 @@ function preprocessStack (stack: string) {
  */
 export class RpcClosedError extends Error {
   constructor () {
-    super('Request was terminated because the RPC endpoint has been closed.');
+    super('Request was terminated because the RPC endpoint is closed.');
     // Restore prototype chain.
     // https://stackoverflow.com/a/48342359
     Object.setPrototypeOf(this, new.target.prototype);

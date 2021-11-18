@@ -14,7 +14,8 @@ export class BotFactoryClient {
     this._rpc = createRpcClient(
       schema.getService('dxos.bot.BotFactoryService'),
       {
-        port: port
+        port,
+        timeout: 5000
       }
     );
   }

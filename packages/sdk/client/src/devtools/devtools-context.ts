@@ -15,8 +15,7 @@ import { ClientServiceProvider } from '../interfaces';
 /**
  * A hook bound to window.__DXOS__.
  */
-export interface DevtoolsHook
-{
+export interface DevtoolsHook {
   // TODO(marik-d): Reduce to just exporting ClientServices.
 
   serviceHost: ClientServiceProvider,
