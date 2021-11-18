@@ -157,8 +157,6 @@ export class ItemDemuxer {
       assert(item.modelType);
       assert(item.model);
 
-      const itemStream = createReadable();
-
       if (this._options.snapshots && item.model?.array) {
         // TODO(marik-d): Check if model supports snapshots natively.
         this._modelMutations.set(item.itemId, item.model.array.mutations ?? []);
