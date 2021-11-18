@@ -3,7 +3,7 @@
 //
 
 import { Awaited } from '@dxos/async';
-import { defs } from '@dxos/config';
+import type { defs } from '@dxos/config';
 import { createTestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 

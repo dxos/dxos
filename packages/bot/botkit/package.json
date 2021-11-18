@@ -35,7 +35,8 @@
     "@types/debug": "^4.1.1",
     "@dxos/signal": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@dxos/config": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { defs } from '@dxos/config';
+import type { defs } from '@dxos/config';
 
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-handle';

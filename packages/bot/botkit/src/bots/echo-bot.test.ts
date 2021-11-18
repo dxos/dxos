@@ -2,12 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { setupBroker, setupClient } from '../testutils';
+import expect from 'expect';
+
+import { PublicKey } from '@dxos/crypto';
+import { setupClient } from '../testutils';
 import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
 
 describe('Echo Bot', () => {
   it('Starts a bot', async () => {
-    const { client, invitation, secret } = await setupClient();
+    const { client, party, invitation, secret } = await setupClient();
     const bot = new EchoBot(TEST_ECHO_TYPE);
 
     await bot.Initialize({
@@ -17,25 +20,23 @@ describe('Echo Bot', () => {
       }
     });
 
-    await bot.Stop();
-    await client.destroy();
-  });
+    const command = PublicKey.random().asUint8Array();
+    await bot.Command({ command: command });
 
-  it('Starts a bot with a remote signal server', async () => {
-    const { broker, config } = await setupBroker();
-    const { client, invitation, secret } = await setupClient(config);
-    const bot = new EchoBot(TEST_ECHO_TYPE);
-
-    await bot.Initialize({
-      config: config,
-      invitation: {
-        invitationCode: invitation,
-        secret
-      }
+    await party.database.waitForItem({
+      type: TEST_ECHO_TYPE
     });
 
-    await bot.Stop();
-    await client.destroy();
-    await broker.stop();
+    const items = party.database.select(s => s
+      .filter({ type: TEST_ECHO_TYPE })
+      .items
+    ).getValue();
+
+    expect(items.length).toBe(1);
+    const payload = items[0].model.getProperty('payload');
+    expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
+
+  await bot.Stop();
+  await client.destroy();
   });
 });

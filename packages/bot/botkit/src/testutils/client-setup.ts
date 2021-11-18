@@ -3,7 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
-import { defs } from '@dxos/config';
+import type { defs } from '@dxos/config';
 import { SecretProvider, SecretValidator } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { Party } from '@dxos/echo-db';

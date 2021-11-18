@@ -18,11 +18,8 @@ export class ClientBot implements BotService {
   protected party: Party | undefined;
 
   async Initialize (request: InitializeRequest) {
-    if (request.config) {
-      this.client = new Client(request.config);
-    } else {
-      this.client = new Client();
-    }
+    this.client = new Client(request.config);
+
     await this.client.initialize();
     await this.client.echo.halo.createProfile({ username: 'Bot' });
 
