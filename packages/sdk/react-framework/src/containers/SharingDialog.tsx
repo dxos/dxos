@@ -3,6 +3,7 @@
 //
 
 import React, { useState } from 'react';
+import { CopyToClipboard as Clipboard } from 'react-copy-to-clipboard';
 
 import {
   QrCode2 as QRCodeIcon,
@@ -18,14 +19,11 @@ import {
   CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
 } from '@dxos/react-components';
 
+import { PendingInvitation, usePendingInvitations } from '../hooks';
+
 type ShareOptions = {
   secretProvider: SecretProvider
   options: InvitationOptions
-}
-
-type PendingInvitation = {
-  invitationCode: string
-  pin: string | undefined
 }
 
 interface PendingInvitationProps {
@@ -52,7 +50,11 @@ const PendingInvitation = ({
     }}>
       {invitationCode && (
         <>
-          <HashIcon value={invitationCode} />
+          <Clipboard text={pin || ''}>
+            <IconButton size='small'>
+              <HashIcon value={invitationCode} />
+            </IconButton>
+          </Clipboard>
           <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2 }}>
             Pending invitation...
           </Typography>
@@ -61,7 +63,7 @@ const PendingInvitation = ({
 
       {invitationCode && !pin && (
         <>
-          <IconButton size='small'>
+          <IconButton size='small' title='Copy passcode.'>
             <CopyToClipboard text={createUrl(invitationCode)} />
           </IconButton>
           <IconButton
@@ -126,9 +128,7 @@ export const SharingDialog = ({
   onShare,
   onClose
 }: SharingDialogProps) => {
-  // TODO(burdon): Add to context (make persistent when closing dialog).
-  // TODO(burdon): Expiration.
-  const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
+  const [invitations, setInvitations] = usePendingInvitations();
 
   const handleCreateInvitation = async () => {
     let pendingInvitation: PendingInvitation; // eslint-disable-line prefer-const

@@ -19,7 +19,7 @@ import { truncateString } from '@dxos/debug';
 //
 // Calculate all IDs.
 //
-const visitor = (value: any, depth = 1, path = '', ids: string[] = [], i = 0) => {
+  const visitor = (value: any, depth = 1, path = '', ids: string[] = [], i = 0) => {
   if (i >= depth) {
     return ids;
   }
@@ -105,7 +105,9 @@ const TreeItem = ({
           }}>
             {label}
           </Typography>
-          {value !== undefined ? ':' : ''}
+          <span style={{ fontSize: size === 'small' ? 14 : undefined }}>
+            {value !== undefined ? ':' : ''}
+          </span>
           {value}
         </Box>
       )}

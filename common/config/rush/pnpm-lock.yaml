@@ -415,9 +415,7 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/devtools-mesh': link:../devtools-mesh
-      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.2.3
+      '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/proto': link:../../common/proto
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-framework': link:../../sdk/react-framework
@@ -427,18 +425,23 @@ importers:
       '@mui/icons-material': 5.0.1_4708d87537568924a83ffdea00ac702d
       '@mui/material': 5.0.1_604b72d74923f30e2e755c544d7c2813
       '@mui/styles': 5.0.1_9b26932173ac5a93c18fc8634be19f05
-      clsx: 1.1.1
       color-hash: 1.1.1
       crx-bridge: 2.2.0
+      faker: 5.5.3
       moment: 2.29.1
       react: 17.0.2
       react-copy-to-clipboard: 5.0.3_react@17.0.2
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
       '@babel/core': 7.13.16
+      '@dxos/devtools-mesh': link:../devtools-mesh
+      '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
+      '@dxos/esbuild-server': 1.2.3
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@mui/system': 5.0.1_b0225674030c82891a5af23896d2c054
       '@types/color-hash': 1.0.1
+      '@types/faker': 5.5.5
       '@types/react': 17.0.24
       '@types/react-copy-to-clipboard': 5.0.1
       '@types/react-dom': 17.0.9
@@ -450,6 +453,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/devtools-mesh': workspace:*
+      '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': workspace:*
       '@dxos/esbuild-server': ~1.2.3
       '@dxos/network-manager': workspace:*
@@ -463,13 +467,15 @@ importers:
       '@mui/icons-material': ^5.0.1
       '@mui/material': ^5.0.1
       '@mui/styles': ^5.0.1
+      '@mui/system': ^5.0.1
       '@types/color-hash': ^1.0.1
+      '@types/faker': ^5.5.1
       '@types/react': ^17.0.24
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-dom': ^17.0.9
-      clsx: ^1.1.0
       color-hash: ^1.0.3
       crx-bridge: ^2.1.0
+      faker: ^5.1.0
       moment: ^2.24.0
       react: ^17.0.2
       react-copy-to-clipboard: ~5.0.3
@@ -738,7 +744,7 @@ importers:
       '@dxos/util': workspace:*
       '@types/chance': ^1.1.0
       '@types/debug': ^4.1.1
-      '@types/faker': ~5.5.1
+      '@types/faker': ^5.5.1
       '@types/jest': ^26.0.7
       '@types/node': ^14.0.9
       '@types/pify': ^3.0.2
@@ -766,7 +772,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/toolchain-node-library': workspace:*
-      '@types/faker': ~5.5.1
+      '@types/faker': ^5.5.1
       '@types/jest': ^26.0.7
       '@types/lodash': ^4.14.175
       faker: ^5.1.0
@@ -1766,7 +1772,7 @@ importers:
       '@mui/styles': ^5.0.1
       '@types/d3': ~7.0.0
       '@types/debug': ^4.1.1
-      '@types/faker': ~5.5.1
+      '@types/faker': ^5.5.1
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.isplainobject': ^4.0.6
       '@types/mocha': ~8.2.2
@@ -1921,7 +1927,7 @@ importers:
       '@mui/material': ^5.0.1
       '@mui/system': ^5.0.1
       '@types/debug': ^4.1.1
-      '@types/faker': ~5.5.1
+      '@types/faker': ^5.5.1
       '@types/lodash.isplainobject': ^4.0.6
       '@types/qrcode.react': ^1.0.2
       '@types/react': ^17.0.24
@@ -2092,7 +2098,7 @@ importers:
       '@polkadot/util-crypto': 6.11.1
       '@types/chai': ^4.2.15
       '@types/chai-as-promised': ^7.1.3
-      '@types/faker': ~5.5.1
+      '@types/faker': ^5.5.1
       '@types/fs-extra': ^9.0.4
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
@@ -2115,6 +2121,7 @@ importers:
       '@dxos/echo-db': link:../../../../echo/echo-db
       '@dxos/object-model': link:../../../../echo/object-model
       '@dxos/react-client': link:../../../react-client
+      '@dxos/react-components': link:../../../react-components
       '@dxos/react-framework': link:../../../react-framework
       '@emotion/react': 11.4.1_9bfa804cd21315a6b28257b6309f6867
       '@emotion/styled': 11.3.0_7153564620b9f6be3c75efaa2248597b
@@ -2165,6 +2172,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
       '@emotion/react': ^11.4.1
       '@emotion/styled': ^11.3.0
@@ -2261,7 +2269,7 @@ importers:
       '@mui/icons-material': ^5.0.1
       '@mui/material': ^5.0.1
       '@mui/styles': ^5.0.1
-      '@types/faker': ~5.5.1
+      '@types/faker': ^5.5.1
       '@types/mocha': ~8.2.2
       '@types/node': ^14.0.9
       '@types/react': ^17.0.24
@@ -4917,6 +4925,7 @@ packages:
       '@babel/types': 7.15.6
       debug: 4.3.1_supports-color@5.5.0
       globals: 11.12.0
+    dev: true
     engines:
       node: '>=6.9.0'
     peerDependencies:
@@ -5108,6 +5117,7 @@ packages:
       react-router-dom: 5.3.0_react@17.0.2
       styled-components: 5.3.1_281a4fa50a045c9112baf635f3bc27a7
       yargs: 17.2.1
+    dev: true
     hasBin: true
     resolution:
       integrity: sha512-nJy7ktTad7QXfDH70DoN1HuxvmZXrN1xwBBHp7foI6875wYrFUk0peJ2E++ySNiuLqmdyIUFntbHODX9QjXE0w==
@@ -5234,6 +5244,7 @@ packages:
   /@emotion/is-prop-valid/0.8.8:
     dependencies:
       '@emotion/memoize': 0.7.4
+    dev: true
     resolution:
       integrity: sha512-u5WtneEAr5IDG2Wv65yhunPSMLIpuKsbuOktRojfrEiEvRyC85LgPMZI63cr7NUqT8ZIGdSVg8ZKGxIug4lXcA==
   /@emotion/is-prop-valid/1.1.0:
@@ -5242,6 +5253,7 @@ packages:
     resolution:
       integrity: sha512-9RkilvXAufQHsSsjQ3PIzSns+pxuX4EW8EbGeSPjZMHuMx6z/MOzb9LpqNieQX4F3mre3NWS2+X3JNRHTQztUQ==
   /@emotion/memoize/0.7.4:
+    dev: true
     resolution:
       integrity: sha512-Ja/Vfqe3HpuzRsG1oBtWTHk2PGZ7GR+2Vz5iYGelAw8dx32K0y7PjVuxK6z1nMpZOqAFsRUPCkK1YjJ56qJlgw==
   /@emotion/memoize/0.7.5:
@@ -5346,6 +5358,7 @@ packages:
     resolution:
       integrity: sha512-fUoLcN3BfMiLlRhJ8CuPUMEyKkLEoM+n+UyAbnqGEsCd5IzKQ7VQFLtzpJOaCD2/VR2+1hXQTnSZXVJeiTNltA==
   /@emotion/stylis/0.8.5:
+    dev: true
     resolution:
       integrity: sha512-h6KtPihKFn3T9fuIrwvXXUOwlx3rfUvfZIcP5a6rh8Y7zjE3O06hT5Ss4S/YI1AYhuZ1kjaE/5EaOOI2NqSylQ==
   /@emotion/unitless/0.7.5:
@@ -6184,7 +6197,7 @@ packages:
       integrity: sha512-R8Cf2+32cG1OXFAqTighA5Mx9R5BQ57cN1ZVaNgfgdbI87Yig2fVMdFSPrw3txcjKlnwsvFJF8AdwQMqq1tJ3Q==
   /@mui/styled-engine/5.0.1_2305e84770652125202aaa4817ae97a9:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       '@emotion/cache': 11.4.0
       '@emotion/react': 11.4.1_9bfa804cd21315a6b28257b6309f6867
       '@emotion/styled': 11.3.0_7153564620b9f6be3c75efaa2248597b
@@ -6205,7 +6218,7 @@ packages:
       integrity: sha512-j40nCbaKr1HAZYqpX61XvZYsadYskjo3u6+pRFFaewSViAkkD1rjjbubpnh15nqVfYmijtHMZJ9/l1x1hamvfQ==
   /@mui/styled-engine/5.0.1_react@17.0.2:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       '@emotion/cache': 11.4.0
       prop-types: 15.7.2
       react: 17.0.2
@@ -6256,11 +6269,11 @@ packages:
       integrity: sha512-hCtR2ZVOkoIhpTan02I4UEShnZxe59WwhKRJqauMs/addXByhAHHCNheTdiV++Irl/fyyFObmzPM0CUD3q6FIA==
   /@mui/system/5.0.1_9b26932173ac5a93c18fc8634be19f05:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       '@mui/private-theming': 5.0.1_9b26932173ac5a93c18fc8634be19f05
       '@mui/styled-engine': 5.0.1_react@17.0.2
       '@mui/types': 7.0.0_@types+react@17.0.24
-      '@mui/utils': 5.0.1_react@17.0.2
+      '@mui/utils': 5.1.0_react@17.0.2
       '@types/react': 17.0.24
       clsx: 1.1.1
       csstype: 3.0.9
@@ -6284,13 +6297,13 @@ packages:
       integrity: sha512-pGNKUpjK5hm4apZAUZu7LugemBPoZnNvNNCI2miI/BXxqyx41mL9+iT9p6Qe9uDOh8Z6GUbLIzvOjSTP+ECRZw==
   /@mui/system/5.0.1_b0225674030c82891a5af23896d2c054:
     dependencies:
-      '@babel/runtime': 7.15.4
+      '@babel/runtime': 7.16.0
       '@emotion/react': 11.4.1_9bfa804cd21315a6b28257b6309f6867
       '@emotion/styled': 11.3.0_7153564620b9f6be3c75efaa2248597b
       '@mui/private-theming': 5.0.1_9b26932173ac5a93c18fc8634be19f05
       '@mui/styled-engine': 5.0.1_2305e84770652125202aaa4817ae97a9
       '@mui/types': 7.0.0_@types+react@17.0.24
-      '@mui/utils': 5.0.1_react@17.0.2
+      '@mui/utils': 5.1.0_react@17.0.2
       '@types/react': 17.0.24
       clsx: 1.1.1
       csstype: 3.0.9
@@ -6322,20 +6335,6 @@ packages:
         optional: true
     resolution:
       integrity: sha512-M/tkF2pZ4uoPhZ8pnNhlVnOFtz6F3dnYKIsnj8MuXKT6d26IE2u0UjA8B0275ggN74dR9rlHG5xJt5jgDx/Ung==
-  /@mui/utils/5.0.1_react@17.0.2:
-    dependencies:
-      '@babel/runtime': 7.15.4
-      '@types/prop-types': 15.7.4
-      '@types/react-is': 17.0.2
-      prop-types: 15.7.2
-      react: 17.0.2
-      react-is: 17.0.2
-    engines:
-      node: '>=12.0.0'
-    peerDependencies:
-      react: ^17.0.2
-    resolution:
-      integrity: sha512-GWO104N+o9KG5fKiTEYnAg7kONKEg3vLN+VROAU0f3it6lFGLCVPcQYex/1gJ4QAy96u6Ez8/Hmmhi1+3cX0tQ==
   /@mui/utils/5.1.0_react@17.0.2:
     dependencies:
       '@babel/runtime': 7.16.0
@@ -10772,11 +10771,13 @@ packages:
       babel-plugin-syntax-jsx: 6.18.0
       lodash: 4.17.21
       styled-components: 5.3.1_281a4fa50a045c9112baf635f3bc27a7
+    dev: true
     peerDependencies:
       styled-components: '>= 2'
     resolution:
       integrity: sha512-Vb1R3d4g+MUfPQPVDMCGjm3cDocJEUTR7Xq7QS95JWWeksN1wdFRYpD2kulDgI3Huuaf1CZd+NK4KQmqUFh5dA==
   /babel-plugin-syntax-jsx/6.18.0:
+    dev: true
     resolution:
       integrity: sha1-CvMqmm4Tyno/1QaeYtew9Y0NiUY=
   /babel-plugin-syntax-object-rest-spread/6.13.0:
@@ -11564,6 +11565,7 @@ packages:
     resolution:
       integrity: sha512-c7wVvbw3f37nuobQNtgsgG9POC9qMbNuMQmTCqZv23b6MIz0fcYpBiOlv9gEN/hdLdnZTDQhg6e9Dq5M1vKvfg==
   /camelize/1.0.0:
+    dev: true
     resolution:
       integrity: sha1-FkpUg+Yw+kMh5a8HAg5TGDGyYJs=
   /caniuse-api/3.0.0:
@@ -12526,6 +12528,7 @@ packages:
     resolution:
       integrity: sha512-LHz35Hr83dnFeipc7oqFDmsjHdljj3TQtxGGiNWSOsTLIAubSm4TEz8qCaKFpk7idaQ1GfWscF4E6mgpBysA1w==
   /css-color-keywords/1.0.0:
+    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -12624,6 +12627,7 @@ packages:
       camelize: 1.0.0
       css-color-keywords: 1.0.0
       postcss-value-parser: 4.1.0
+    dev: true
     resolution:
       integrity: sha512-Ro1yETZA813eoyUp2GDBhG2j+YggidUmzO1/v9eYBKR2EHVEniE2MI/NqpTQ954BMpTPZFsGNPm46qFB9dpaPQ==
   /css-tree/1.0.0-alpha.37:
@@ -13311,6 +13315,7 @@ packages:
     dependencies:
       ms: 2.1.2
       supports-color: 5.5.0
+    dev: true
     engines:
       node: '>=6.0'
     peerDependencies:
@@ -14317,6 +14322,7 @@ packages:
     resolution:
       integrity: sha512-iaiZZ9vUF5wJV8ob1tl+5aJTrwDczlvGP0JoMmnpC2B0ppiMCu8n8gmy5ZTGl5bcG081XBVn+U+jP+mPFm5T5Q==
   /esbuild/0.12.29:
+    dev: true
     hasBin: true
     requiresBuild: true
     resolution:
@@ -15944,6 +15950,7 @@ packages:
       minimatch: 3.0.4
       once: 1.4.0
       path-is-absolute: 1.0.1
+    dev: true
     resolution:
       integrity: sha512-lmLf6gtyrPq8tTjSmrO94wBeQbFR3HbLHbuyD69wuyQkImp2hWqMGB47OX65FBkPffO641IP9jWa1z4ivqG26Q==
   /global-modules/0.2.3:
@@ -20434,6 +20441,7 @@ packages:
     resolution:
       integrity: sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
   /ncp/2.0.0:
+    dev: true
     hasBin: true
     resolution:
       integrity: sha1-GVoh1sRuNh0vsSgbo4uR6d9727M=
@@ -24380,6 +24388,7 @@ packages:
     resolution:
       integrity: sha512-/6KqX+GVUdqPuPPd2LxDDxzX6CAbjJehAAOKlNpqqUpAqPM6HeL8f+o3a+JsyGjn2lv0WY8UsTgUJjU9Ok55NA==
   /shallowequal/1.1.0:
+    dev: true
     resolution:
       integrity: sha512-y0m1JoUZSlPAjXVtPPW70aZWfIL/dSP7AFkRnniLCrK/8MDKog3TySTBmckD+RObVxH0v4Tox67+F14PdED2oQ==
   /shebang-command/1.2.0:
@@ -25195,6 +25204,7 @@ packages:
       react-is: 17.0.2
       shallowequal: 1.1.0
       supports-color: 5.5.0
+    dev: true
     engines:
       node: '>=10'
     peerDependencies:
@@ -27469,6 +27479,7 @@ packages:
       string-width: 4.2.2
       y18n: 5.0.8
       yargs-parser: 20.2.7
+    dev: true
     engines:
       node: '>=12'
     resolution:

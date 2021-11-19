@@ -20,8 +20,10 @@ import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 
 import {
   ErrorView,
+  FrameworkContext,
   JoinPartyDialog,
-  PartySharingDialog
+  PartySharingDialog,
+  useFrameworkContextState
 } from '../src';
 import { Column } from './helpers';
 
@@ -67,12 +69,14 @@ const Sender = () => {
         <Button onClick={() => setOpen(true)}>Open</Button>
         <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
-      <PartySharingDialog
-        partyKey={partyKey}
-        open={open}
-        onClose={() => setOpen(false)}
-        modal={false}
-      />
+      {open && (
+        <PartySharingDialog
+          partyKey={partyKey}
+          open={open}
+          onClose={() => setOpen(false)}
+          modal={false}
+        />
+      )}
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
       </Box>
@@ -105,6 +109,8 @@ const Receiver = ({ invitationCode }: { invitationCode?: string }) => {
 // TODO(burdon): Error handling, retry, etc.
 
 export const Primary = () => {
+  const state = useFrameworkContextState();
+
   return (
     <FullScreen>
       <ErrorBoundary errorComponent={ErrorView}>
@@ -114,9 +120,11 @@ export const Primary = () => {
         }}>
           <ClientInitializer>
             <ProfileInitializer>
-              <Column>
-                <Sender />
-              </Column>
+              <FrameworkContext.Provider value={state}>
+                <Column>
+                  <Sender />
+                </Column>
+              </FrameworkContext.Provider>
             </ProfileInitializer>
           </ClientInitializer>
 

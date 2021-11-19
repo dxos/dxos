@@ -40,7 +40,7 @@
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/chance": "^1.1.0",
-    "@types/faker": "~5.5.1",
+    "@types/faker": "^5.5.1",
     "@types/jest": "^26.0.7",
     "@types/pify": "^3.0.2",
     "@types/pumpify": "~1.4.1",

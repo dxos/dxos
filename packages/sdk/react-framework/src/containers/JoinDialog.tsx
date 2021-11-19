@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Box, Button, TextField, Typography } from '@mui/material';
 
@@ -42,18 +42,24 @@ export interface JoinDialogProps {
 // TODO(burdon): Move to components.
 export const JoinDialog = ({
   open,
-  invitationCode: initialCode, // TODO(burdon): Automatically go to next step if set.
+  invitationCode: initialCode,
   title,
   onJoin,
   onClose,
   closeOnSuccess = true,
   modal
 }: JoinDialogProps) => {
-  const [state, setState] = useState(PartyJoinState.INIT);
+  const [state, setState] = useState(initialCode ? PartyJoinState.AUTHENTICATE : PartyJoinState.INIT);
   const [error, setError] = useState<string | undefined>(undefined);
   const [processing, setProcessing] = useState<boolean>(false);
   const [invitationCode, setInvitationCode] = useState(initialCode || '');
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
+
+  useEffect(() => {
+    if (initialCode) {
+      void handleProcessInvitation();
+    }
+  }, [initialCode]);
 
   const handleReset = () => {
     setError(undefined);
@@ -148,7 +154,7 @@ export const JoinDialog = ({
     const authenticateContent = (
       <>
         <Typography variant='body1'>
-          Enter the PIN.
+          Enter the passcode.
         </Typography>
         <Box sx={{
           display: 'flex',

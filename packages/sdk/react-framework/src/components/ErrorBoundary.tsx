@@ -25,6 +25,7 @@ interface State {
 }
 
 /**
+ * TODO(burdon): Compare to @dxos/client ErrorBoundary.
  * https://reactjs.org/docs/error-boundaries.html
  */
 export class ErrorBoundary extends Component<Props, State> {

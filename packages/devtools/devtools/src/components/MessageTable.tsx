@@ -5,13 +5,11 @@
 import ColorHash from 'color-hash';
 import React, { useState } from 'react';
 
+import { ChevronRight as ExpandIcon } from '@mui/icons-material';
 import {
-  Box,
+  IconButton,
   Link,
-  Table,
   TableBody,
-  TableCell,
-  TableContainer,
   TableHead,
   TableRow,
   colors,
@@ -23,21 +21,20 @@ import { truncateString } from '@dxos/debug';
 import { IFeedGenericBlock } from '@dxos/echo-protocol';
 import { JsonTreeView } from '@dxos/react-components';
 
-const colorHash = new ColorHash({ saturation: 0.5 });
+import { Table, TableCell } from './Table';
 
-const styles = {
-  monospace: {
-    fontSize: 'medium',
-    fontFamily: 'monospace'
-  }
-};
+const colorHash = new ColorHash({ saturation: 0.5 });
 
 const color = (type: string) => {
   return type === 'halo' ? colors.red[500] : colors.blue[500];
 };
 
-// TODO(burdon): Better way to determine type?
-const getType = (message: any) => {
+// TODO(burdon): What is this for?
+const defaultGetType = (message: any) => {
+  if (!message) {
+    return;
+  }
+
   if (message.echo) {
     if (message.echo.genesis) {
       return 'item genesis';
@@ -59,6 +56,7 @@ const getType = (message: any) => {
 
 export interface MessageTableProps {
   messages: IFeedGenericBlock<any>[]
+  getType?: (message: any) => string
   onSelect?: (data: any) => {}
 }
 
@@ -67,6 +65,7 @@ export interface MessageTableProps {
  */
 export const MessageTable = ({
   messages,
+  getType = defaultGetType,
   onSelect
 }: MessageTableProps) => {
   const theme = useTheme();
@@ -78,83 +77,89 @@ export const MessageTable = ({
   };
 
   return (
-    <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-      <TableContainer sx={{ height: '100%' }}>
-        <Table
-          stickyHeader
-          size='small'
-          sx={{
-            '& th': {
-              fontVariant: 'all-petite-caps',
-              verticalAlign: 'top'
-            },
-            '& td': {
-              verticalAlign: 'top'
-            }
-          }}
-        >
-          <TableHead>
-            <TableRow>
-              <TableCell>Key</TableCell>
-              <TableCell>Seq</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell sx={{ width: '90%' }}>Payload</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {
-              // Messages with feed metadata.
-              messages.map(({ key: feedKey, seq, data }) => {
-                const key = keyToString(feedKey);
-                const rowKey = `key-${key}-${seq}`;
-                const type = getType(data);
+    <Table
+      stickyHeader
+      size='small'
+    >
+      <TableHead>
+        <TableRow>
+          <TableCell>Key</TableCell>
+          <TableCell>Seq</TableCell>
+          <TableCell>Type</TableCell>
+          <TableCell sx={{ width: '90%' }}>Payload</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {
+          // Messages with feed metadata.
+          messages.map(({ key: feedKey, seq, data }) => {
+            const key = keyToString(feedKey);
+            const rowKey = `key-${key}-${seq}`;
+            const type = getType(data);
 
-                return (
-                  <TableRow
-                    key={rowKey}
-                    sx={{
-                      color: type === 'halo' ? theme.palette.warning.main : undefined
-                    }}
+            return (
+              <TableRow
+                key={rowKey}
+                sx={{
+                  color: type === 'halo' ? theme.palette.warning.main : undefined
+                }}
+              >
+                {/* Feed. */}
+                <TableCell
+                  monospace
+                  style={{ color: colorHash.hex(key) }}
+                  title={key}
+                >
+                  {truncateString(key, 8)}
+                </TableCell>
+
+                {/* Number. */}
+                <TableCell monospace>
+                  {seq}
+                </TableCell>
+
+                {/* Type. */}
+                <TableCell>
+                  <Link
+                    style={{ color: color(type), cursor: 'pointer' }}
+                    onClick={() => onSelect?.(data)}
                   >
-                    {/* Feed. */}
-                    <TableCell
-                      sx={styles.monospace}
-                      style={{ color: colorHash.hex(key) }}
-                      title={key}
+                    {type}
+                  </Link>
+                </TableCell>
+
+                {/* Payload. */}
+                {/* TODO(burdon): Custom rendering of links for public keys. */}
+                <TableCell>
+                  {expanded[rowKey] ? (
+                    <JsonTreeView
+                      size='small'
+                      depth={2}
+                      data={{ data }}
+                    />
+                  ) : ( // TODO(burdon): Factor out.
+                    <IconButton
+                      size='small'
+                      onClick={() => handleExpand(rowKey)}
+                      sx={{
+                        marginLeft: '5px',
+                        width: 21,
+                        height: 21,
+                        '& svg': {
+                          width: 18,
+                          height: 18
+                        }
+                      }}
                     >
-                      {truncateString(key, 8)}
-                    </TableCell>
-
-                    {/* Number. */}
-                    <TableCell sx={styles.monospace}>{seq}</TableCell>
-
-                    {/* Type. */}
-                    <TableCell>
-                      <Link
-                        style={{ color: color(type), cursor: 'pointer' }}
-                        onClick={() => onSelect?.(data)}
-                      >
-                        {type}
-                      </Link>
-                    </TableCell>
-
-                    {/* Payload. */}
-                    {/* TODO(burdon): Custom rendering of links for public keys. */}
-                    <TableCell>
-                      <JsonTreeView
-                        size='small'
-                        depth={0}
-                        data={expanded[rowKey] ? data : { dummy: undefined }}
-                        onSelect={() => handleExpand(rowKey)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            }
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
+                      <ExpandIcon />
+                    </IconButton>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })
+        }
+      </TableBody>
+    </Table>
   );
 };

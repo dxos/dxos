@@ -10,8 +10,11 @@ import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, usePr
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
-  HaloSharingDialog, ErrorView,
-  JoinHaloDialog
+  ErrorView,
+  FrameworkContext,
+  HaloSharingDialog,
+  JoinHaloDialog,
+  useFrameworkContextState
 } from '../src';
 import { Column } from './helpers';
 
@@ -42,11 +45,13 @@ const Sender = () => {
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
-      <HaloSharingDialog
-        open={open}
-        onClose={() => setOpen(false)}
-        modal={false}
-      />
+      {open && (
+        <HaloSharingDialog
+          open={open}
+          onClose={() => setOpen(false)}
+          modal={false}
+        />
+      )}
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
       </Box>
@@ -85,6 +90,8 @@ const Receiver = () => {
 // TODO(burdon): Error handling, retry, etc.
 
 export const Primary = () => {
+  const state = useFrameworkContextState();
+
   return (
     <FullScreen>
       <ErrorBoundary errorComponent={ErrorView}>
@@ -94,9 +101,11 @@ export const Primary = () => {
         }}>
           <ClientInitializer>
             <ProfileInitializer>
-              <Column>
-                <Sender />
-              </Column>
+              <FrameworkContext.Provider value={state}>
+                <Column>
+                  <Sender />
+                </Column>
+              </FrameworkContext.Provider>
             </ProfileInitializer>
           </ClientInitializer>
 
