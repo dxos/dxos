@@ -84,6 +84,7 @@ message Services {
     }
   
     Endpoints endpoints = 1;
+    string public_url = 2;
   }
 
   message AppServer {
@@ -111,6 +112,7 @@ message Services {
 
   message Signal {
     string server = 1;
+    string api = 2;
   }
 
   message Ice {
@@ -120,7 +122,7 @@ message Services {
   }
 
   Kube kube = 1;
-  AppServer app_server = 2;
+  AppServer app = 2;
   Dxns dxns = 3;
   Ipfs ipfs = 4;
   Signal signal = 5;
@@ -169,7 +171,29 @@ message Bot {
 
 // CLI configuration
 message CLI {
+  message AppServe {
+    message Serve {
+      string config = 1;
+      string login_app = 2;
+      string key_phrase = 3;
+    }
+
+    Serve serve = 1;
+  }
+
+  message Package {
+    string package = 1;
+    string channel = 2;
+    string bin = 3;
+  }
+
   string node_path = 1;
+  AppServe app = 2;
+  Package console = 3;
+  Package mdns = 4;
+  Package signal = 5;
+  string npm_client = 6;
+  string channel = 7;
 }
 
 extend google.protobuf.FieldOptions {
