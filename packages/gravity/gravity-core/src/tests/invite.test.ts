@@ -11,7 +11,7 @@ import { MessengerModel } from '@dxos/messenger-model';
 import { APPEND_COMMAND, GET_ALL_COMMAND } from '../agents';
 import { /* code BROWSER_ENV, NODE_ENV, */ Orchestrator } from '../orchestrator';
 import { AGENT_PATH } from './agent';
-import './testing';
+import './setup';
 
 test.skip('invite two agents to a party', async () => {
   const orchestrator = await Orchestrator.create({ local: true });

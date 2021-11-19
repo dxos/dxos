@@ -81,13 +81,13 @@ export class RpcPeer {
 
     this._unsubscribe = this._options.port.subscribe(this._receive.bind(this)) as any;
 
+    this._open = true;
+
     await this._sendMessage({ open: true });
     await this._remoteOpenTrigger.wait();
 
     // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
     await this._sendMessage({ open: true });
-
-    this._open = true;
   }
 
   /**
@@ -107,6 +107,7 @@ export class RpcPeer {
    */
   private async _receive (msg: Uint8Array): Promise<void> {
     const decoded = codec.decode(msg);
+
     if (decoded.request) {
       if (!this._open) {
         await this._sendMessage({ response: { error: encodeError(new RpcClosedError()) } });

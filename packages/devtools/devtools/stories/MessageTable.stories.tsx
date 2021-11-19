@@ -19,8 +19,8 @@ export default {
 const generateTree = (node = {}, level = 1) => {
   if (level > 0) {
     [...new Array(1 + Math.floor(Math.random() * 5))].forEach(() => {
-      (node as any)[faker.lorem.word()] = Math.random() > 0.5 ? Boolean(Math.random() > 0.5) :
-        (level - 1) > 0 ? generateTree({}, level - 1) : faker.lorem.word();
+      (node as any)[faker.lorem.word()] = Math.random() > 0.5 ? Boolean(Math.random() > 0.5)
+        : (level - 1) > 0 ? generateTree({}, level - 1) : faker.lorem.word();
     });
   }
 

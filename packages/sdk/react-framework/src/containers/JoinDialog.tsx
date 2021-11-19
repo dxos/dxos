@@ -6,9 +6,10 @@ import React, { useEffect, useState } from 'react';
 
 import { Box, Button, TextField, Typography } from '@mui/material';
 
+import { decodeInvitation } from '@dxos/client';
 import type { SecretProvider } from '@dxos/credentials';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
-import { decodeInvitation, useSecretProvider } from '@dxos/react-client';
+import { useSecretProvider } from '@dxos/react-client';
 import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
 import { handleKey } from '../helpers';
@@ -54,12 +55,6 @@ export const JoinDialog = ({
   const [processing, setProcessing] = useState<boolean>(false);
   const [invitationCode, setInvitationCode] = useState(initialCode || '');
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
-
-  useEffect(() => {
-    if (initialCode) {
-      void handleProcessInvitation();
-    }
-  }, [initialCode]);
 
   const handleReset = () => {
     setError(undefined);
@@ -127,6 +122,12 @@ export const JoinDialog = ({
     setProcessing(true);
     secretResolver(Buffer.from(pin));
   };
+
+  useEffect(() => {
+    if (initialCode) {
+      void handleProcessInvitation();
+    }
+  }, [initialCode]);
 
   const getDialogProps = (state: PartyJoinState) => {
     const joinPartyContent = (

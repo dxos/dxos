@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 import { CopyToClipboard as Clipboard } from 'react-copy-to-clipboard';
+import urlJoin from 'url-join';
 
 import {
   QrCode2 as QRCodeIcon,
@@ -12,9 +13,9 @@ import {
 import { Button, IconButton, Popover, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
+import { encodeInvitation } from '@dxos/client';
 import { SecretProvider, generatePasscode } from '@dxos/credentials';
 import { InvitationDescriptor, InvitationOptions, PartyMember } from '@dxos/echo-db';
-import { encodeInvitation } from '@dxos/react-client';
 import {
   CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
 } from '@dxos/react-components';
@@ -105,6 +106,14 @@ const PendingInvitation = ({
   );
 };
 
+const defaultCreateUrl = (invitationCode: string) => {
+  // TODO(burdon): By-pass keyhole with fake code.
+  const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
+  const invitationPath = `/invitation/${invitationCode}`; // TODO(burdon): App-specific (hence pass in).
+  const { origin, pathname } = window.location;
+  return urlJoin(origin, pathname, `/?code=${kubeCode}`, `/#${invitationPath}`);
+};
+
 export interface SharingDialogProps {
   open: boolean
   modal?: boolean
@@ -112,6 +121,7 @@ export interface SharingDialogProps {
   members?: PartyMember[] // TODO(rzadp): Support HALO members as well (different devices).
   onShare: (shareOptions: ShareOptions) => Promise<InvitationDescriptor>
   onClose?: () => void
+  createUrl?: (invitationCode: string) => string
 }
 
 /**
@@ -125,6 +135,7 @@ export const SharingDialog = ({
   modal,
   title,
   members = [],
+  createUrl = defaultCreateUrl,
   onShare,
   onClose
 }: SharingDialogProps) => {
@@ -157,14 +168,6 @@ export const SharingDialog = ({
     };
 
     setInvitations(invitations => [...invitations, pendingInvitation]);
-  };
-
-  const createUrl = (invitationCode: string) => {
-    // TODO(burdon): By-pass keyhole with fake code.
-    const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
-    const invitationPath = `/invitation/${invitationCode}`; // TODO(burdon): App-specific (hence pass in).
-    const { origin, pathname } = window.location;
-    return `${origin}${pathname}?code=${kubeCode}/#${invitationPath}`; // TODO(burdon): Use URL concat util?
   };
 
   return (

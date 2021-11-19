@@ -36,44 +36,30 @@ const Parties = () => {
   );
 };
 
-const Sender = () => {
-  const [open, setOpen] = useState(true);
+interface UserProps {
+  sharing?: boolean;
+  joining?: boolean;
+}
+
+const User = ({ sharing, joining }: UserProps) => {
+  const [shareOpen, setShareOpen] = useState(!!sharing && !joining);
+  const [joinOpen, setJoinOpen] = useState(!!joining && !sharing);
   const profile = useProfile();
 
   return (
     <Box>
       <Toolbar>
-        <Button onClick={() => setOpen(true)}>Open</Button>
+        {sharing && <Button disabled={shareOpen} onClick={() => setShareOpen(true)}>Share HALO</Button>}
+        {joining && <Button disabled={joinOpen} onClick={() => setJoinOpen(true)}>Join HALO</Button>}
       </Toolbar>
-      {open && (
-        <HaloSharingDialog
-          open={open}
-          onClose={() => setOpen(false)}
-          modal={false}
-        />
-      )}
-      <Box sx={{ marginTop: 2, padding: 1 }}>
-        <Parties />
-      </Box>
-      <Box sx={{ padding: 1 }}>
-        <p>{profile?.username}</p>
-      </Box>
-    </Box>
-  );
-};
-
-const Receiver = () => {
-  const [open, setOpen] = useState(true);
-  const profile = useProfile();
-
-  return (
-    <Box>
-      <Toolbar>
-        <Button onClick={() => setOpen(true)}>Open</Button>
-      </Toolbar>
+      <HaloSharingDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        modal={false}
+      />
       <JoinHaloDialog
-        open={open}
-        onClose={() => setOpen(false)}
+        open={joinOpen}
+        onClose={() => setJoinOpen(false)}
         closeOnSuccess={true}
         modal={false}
       />
@@ -103,7 +89,7 @@ export const Primary = () => {
             <ProfileInitializer>
               <FrameworkContext.Provider value={state}>
                 <Column>
-                  <Sender />
+                  <User sharing />
                 </Column>
               </FrameworkContext.Provider>
             </ProfileInitializer>
@@ -111,7 +97,7 @@ export const Primary = () => {
 
           <ClientInitializer>
             <Column>
-              <Receiver />
+              <User joining />
             </Column>
           </ClientInitializer>
         </Box>

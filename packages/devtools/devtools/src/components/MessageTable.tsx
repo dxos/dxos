@@ -142,9 +142,9 @@ export const MessageTable = ({
                       size='small'
                       onClick={() => handleExpand(rowKey)}
                       sx={{
-                        marginLeft: '5px',
-                        width: 21,
-                        height: 21,
+                        'marginLeft': '5px',
+                        'width': 21,
+                        'height': 21,
                         '& svg': {
                           width: 18,
                           height: 18
