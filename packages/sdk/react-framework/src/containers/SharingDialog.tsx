@@ -111,7 +111,8 @@ const defaultCreateUrl = (invitationCode: string) => {
   const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
   const invitationPath = `/invitation/${invitationCode}`; // App-specific.
   const { origin, pathname } = window.location;
-  return urlJoin(origin, pathname, `/?code=${kubeCode}`, `/#${invitationPath}`);
+  return urlJoin(origin, pathname, `/?code=${kubeCode}`, `/#${invitationPath}`)
+    .replace('?', '/?'); // TODO(burdon): Slash needed.
 };
 
 export interface SharingDialogProps {
