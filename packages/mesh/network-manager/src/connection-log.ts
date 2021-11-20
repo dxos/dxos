@@ -49,7 +49,7 @@ export class ConnectionLog {
   readonly update = new Event();
 
   getSwarmInfo (swarmId: PublicKey) {
-    return this._swarms.get(swarmId) ?? raise(new Error(`Swarm not found ${swarmId}`));
+    return this._swarms.get(swarmId) ?? raise(new Error(`Swarm not found: ${swarmId}`));
   }
 
   get swarms (): SwarmInfo[] {

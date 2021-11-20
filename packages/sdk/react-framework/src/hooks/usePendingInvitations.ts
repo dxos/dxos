@@ -27,6 +27,7 @@ type FrameworkContextState = {
  *   const state = useFrameworkContextState();
  *   return (
  *     <FrameworkContext.Provider value={state}>
+ *       ...
  *     </FrameworkContext.Provider>
  *   );
  * ```
@@ -43,7 +44,7 @@ export const useFrameworkContextState = (): FrameworkContextState => {
   };
 };
 
-// TODO(burdon): Expiration.
+// TODO(burdon): Expiration?
 export const usePendingInvitations = (): [PendingInvitation[], Dispatch<SetStateAction<PendingInvitation[]>>] => {
   const { invitations } = useContext(FrameworkContext) ?? raise(new Error('FrameworkContext not set.'));
   return invitations;
