@@ -119,8 +119,8 @@ export class RegistryClient implements IRegistryClient {
         type: CID.from(decoded.payload.typeRecord),
         dataRaw: decoded.payload.data,
         dataSize: decoded.payload.data.length,
-        data: await decodeExtensionPayload(decoded.payload, async cid => (await this.getTypeRecord(cid))
-          ?? raise(new Error(`Type not found: ${cid}`)))
+        data: await decodeExtensionPayload(decoded.payload, async cid => (await this.getTypeRecord(cid)) ??
+          raise(new Error(`Type not found: ${cid}`)))
       };
     } else if (decoded.type) {
       const typeMeta: TypeRecordMetadata = {
