@@ -109,7 +109,7 @@ const PendingInvitation = ({
 const defaultCreateUrl = (invitationCode: string) => {
   // TODO(burdon): By-pass keyhole with fake code.
   const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
-  const invitationPath = `/invitation/${invitationCode}`; // TODO(burdon): App-specific (hence pass in).
+  const invitationPath = `/invitation/${invitationCode}`; // App-specific.
   const { origin, pathname } = window.location;
   return urlJoin(origin, pathname, `/?code=${kubeCode}`, `/#${invitationPath}`);
 };
@@ -129,7 +129,7 @@ export interface SharingDialogProps {
  * Not exported for the end user.
  * See PartySharingDialog and DeviceSharingDialog.
  */
-// TODO(burdon): Move to components.
+// TODO(burdon): Rename AccessDialog?
 export const SharingDialog = ({
   open,
   modal,

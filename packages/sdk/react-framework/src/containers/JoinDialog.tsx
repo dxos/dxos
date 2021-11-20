@@ -40,7 +40,6 @@ export interface JoinDialogProps {
  * Not exported for the end user.
  * See JoinPartyDialog and JoinHaloDialog.
  */
-// TODO(burdon): Move to components.
 export const JoinDialog = ({
   open,
   invitationCode: initialCode,

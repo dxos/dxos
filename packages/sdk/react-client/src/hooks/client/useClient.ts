@@ -13,5 +13,5 @@ import { ClientContext } from './context';
  * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
  */
 export const useClient = () => {
-  return useContext(ClientContext) ?? raise(new Error('ClientProvider no set.'));
+  return useContext(ClientContext) ?? raise(new Error('ClientContext no set.'));
 };

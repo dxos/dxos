@@ -137,7 +137,7 @@ export class ComplexMap<K, V> implements Map<K, V> {
     }
 
     this._keys.forEach((key, primitive) => callbackfn(
-      this._values.get(primitive) ?? raise(new Error('Map corrupted')),
+      this._values.get(primitive) ?? raise(new Error('Map corrupted.')),
       key,
       this
     ));
@@ -164,7 +164,7 @@ export class ComplexMap<K, V> implements Map<K, V> {
 
   * [Symbol.iterator] (): IterableIterator<[K, V]> {
     for (const [primitive, key] of this._keys) {
-      const value = this._values.get(primitive) ?? raise(new Error('Map corrupted'));
+      const value = this._values.get(primitive) ?? raise(new Error('Map corrupted.'));
       yield [key, value];
     }
   }

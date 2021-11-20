@@ -13,6 +13,6 @@ import { ClientContext } from './context';
  * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
  */
 export const useConfig = () => {
-  const { config } = useContext(ClientContext) ?? raise(new Error('ClientProvider no set.'));
+  const { config } = useContext(ClientContext) ?? raise(new Error('ClientContext no set.'));
   return config;
 };
