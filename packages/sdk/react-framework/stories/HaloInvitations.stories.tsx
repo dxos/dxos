@@ -10,10 +10,9 @@ import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, usePr
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
-  ErrorView,
   FrameworkContextProvider,
   HaloSharingDialog,
-  JoinHaloDialog,
+  JoinHaloDialog
 } from '../src';
 import { Column } from './helpers';
 

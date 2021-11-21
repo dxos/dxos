@@ -137,7 +137,7 @@ export const JoinDialog = ({
     inputRef.current?.addEventListener('paste', pasteListener);
     return () => {
       inputRef.current?.removeEventListener('paste', pasteListener);
-    }
+    };
   }, []);
 
   const getDialogProps = (state: PartyJoinState) => {

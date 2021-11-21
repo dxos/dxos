@@ -19,10 +19,9 @@ import {
 import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 
 import {
-  ErrorView,
   FrameworkContextProvider,
   JoinPartyDialog,
-  PartySharingDialog,
+  PartySharingDialog
 } from '../src';
 import { Column } from './helpers';
 
