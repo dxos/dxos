@@ -10,11 +10,9 @@ import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, usePr
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
-  ErrorView,
-  FrameworkContext,
+  FrameworkContextProvider,
   HaloSharingDialog,
-  JoinHaloDialog,
-  useFrameworkContextState
+  JoinHaloDialog
 } from '../src';
 import { Column } from './helpers';
 
@@ -73,25 +71,21 @@ const User = ({ sharing, joining }: UserProps) => {
   );
 };
 
-// TODO(burdon): Error handling, retry, etc.
-
 export const Primary = () => {
-  const state = useFrameworkContextState();
-
   return (
     <FullScreen>
-      <ErrorBoundary errorComponent={ErrorView}>
+      <ErrorBoundary>
         <Box sx={{
           display: 'flex',
           justifyContent: 'space-around'
         }}>
           <ClientInitializer>
             <ProfileInitializer>
-              <FrameworkContext.Provider value={state}>
+              <FrameworkContextProvider>
                 <Column>
                   <User sharing />
                 </Column>
-              </FrameworkContext.Provider>
+              </FrameworkContextProvider>
             </ProfileInitializer>
           </ClientInitializer>
 
