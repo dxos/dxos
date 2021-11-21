@@ -5,6 +5,7 @@
 import React from 'react';
 
 import {
+  Alert,
   Box,
   Button,
   Dialog,
@@ -23,8 +24,9 @@ const DEFAULT_TITLE = 'Runtime Error';
 const DEFAULT_ISSUE_LINK = 'https://github.com/dxos/sdk/issues/new';
 
 const Code = styled('div')(({ theme }) => ({
-  padding: 8,
-  maxHeight: 156,
+  marginTop: 16,
+  padding: 16,
+  maxHeight: 220,
   overflow: 'scroll',
   whiteSpace: 'break-spaces',
   backgroundColor: theme.palette.action.hover
@@ -51,9 +53,20 @@ export const ErrorView = ({
   context?: any
 }) => {
   const isDev = process.env.NODE_ENV === 'development';
-  const stack = String(error?.stack);
+  if (!error) {
+    return null;
+  }
 
-  // TODO(burdon): Production button to post error.
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors
+  const message = String(error); // Error.name + Error.message
+  let stack = String(error?.stack);
+  if (stack.indexOf(message) === 0) {
+    stack = stack.substr(message.length).trim();
+  }
+
+  // Remove indents.
+  stack = stack.split('\n').map(text => text.trim()).join('\n');
 
   return (
     <Dialog open fullWidth maxWidth='sm'>
@@ -66,20 +79,14 @@ export const ErrorView = ({
         )}
         {isDev && (
           <>
-            <Code>
-              {stack}
-            </Code>
-            <Box sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              marginTop: '-40px',
-              marginRight: '6px',
-              paddingBottom: '32px'
-            }}>
-              <IconButton size='small'>
-                <CopyToClipboard text={stack} />
-              </IconButton>
-            </Box>
+            <Alert severity='error'>
+              {message}
+            </Alert>
+            {stack && (
+              <Code>
+                {stack}
+              </Code>
+            )}
           </>
         )}
         {(isDev && context) && (
@@ -91,14 +98,19 @@ export const ErrorView = ({
         )}
       </DialogContent>
       <DialogActions>
+        <IconButton size='small'>
+          <CopyToClipboard text={JSON.stringify({ message, stack })} />
+        </IconButton>
+
         <div style={{ display: 'flex', flex: 1 }} />
+
         {isDev && (
           <Button
             variant='text'
             onClick={() => {}}
           >
             <Link href={issueLink} underline='none' target='_blank'>
-              Create Issue
+              Github Issue
             </Link>
           </Button>
         )}

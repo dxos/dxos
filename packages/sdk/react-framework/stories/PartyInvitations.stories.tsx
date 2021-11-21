@@ -20,10 +20,9 @@ import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 
 import {
   ErrorView,
-  FrameworkContext,
+  FrameworkContextProvider,
   JoinPartyDialog,
   PartySharingDialog,
-  useFrameworkContextState
 } from '../src';
 import { Column } from './helpers';
 
@@ -106,25 +105,21 @@ const Receiver = ({ invitationCode }: { invitationCode?: string }) => {
   );
 };
 
-// TODO(burdon): Error handling, retry, etc.
-
 export const Primary = () => {
-  const state = useFrameworkContextState();
-
   return (
     <FullScreen>
-      <ErrorBoundary errorComponent={ErrorView}>
+      <ErrorBoundary>
         <Box sx={{
           display: 'flex',
           justifyContent: 'space-around'
         }}>
           <ClientInitializer>
             <ProfileInitializer>
-              <FrameworkContext.Provider value={state}>
+              <FrameworkContextProvider>
                 <Column>
                   <Sender />
                 </Column>
-              </FrameworkContext.Provider>
+              </FrameworkContextProvider>
             </ProfileInitializer>
           </ClientInitializer>
 
@@ -176,7 +171,7 @@ export const Secondary = () => {
 
   return (
     <FullScreen>
-      <ErrorBoundary errorComponent={ErrorView}>
+      <ErrorBoundary>
         <Box sx={{
           display: 'flex',
           justifyContent: 'space-around'
