@@ -121,12 +121,21 @@ message Services {
     string credential = 3;
   }
 
+  message Machine {
+    string do_access_token = 1;
+    string github_access_token = 2;
+    string github_username = 3;
+    string dns_domain = 4;
+    string npm_access_token = 5;
+  }
+
   Kube kube = 1;
   AppServer app = 2;
   Dxns dxns = 3;
   Ipfs ipfs = 4;
   Signal signal = 5;
   repeated Ice ice = 6;
+  Machine machine = 7;
 }
 
 /// Build metadata
