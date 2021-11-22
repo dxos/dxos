@@ -71,7 +71,7 @@ export class ItemManager {
      private readonly _writeStream?: FeedWriter<EchoEnvelope>
   ) {}
 
-  get items() {
+  get items () {
     return this._items;
   }
 
@@ -173,7 +173,7 @@ export class ItemManager {
     return link;
   }
 
-  private async _constructModel({ modelType, itemId, modelSnapshot, initialMutations }: ModelConstructionOptions): Promise<Model<any>> {
+  private async _constructModel ({ modelType, itemId, modelSnapshot, initialMutations }: ModelConstructionOptions): Promise<Model<any>> {
     // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
     if (!this._modelFactory.hasModel(modelType)) {
       throw new UnknownModelError(modelType);
@@ -208,7 +208,7 @@ export class ItemManager {
       }
     }
 
-    return model
+    return model;
   }
 
   /**
@@ -253,8 +253,8 @@ export class ItemManager {
       itemId,
       modelType,
       initialMutations,
-      modelSnapshot,
-    })
+      modelSnapshot
+    });
 
     if (link) {
       assert(link.source);
@@ -265,13 +265,13 @@ export class ItemManager {
     // Create the Item.
     //
     let item: Item<any>;
-    if(link) {
+    if (link) {
       item = new Link(itemId, itemType, modelMeta, model, this._writeStream, parent, {
         sourceId: link.source!,
         targetId: link.target!,
         source: this.getItem(link.source!),
         target: this.getItem(link.target!)
-      }) as any
+      }) as any;
     } else {
       item = new Item(itemId, itemType, modelMeta, model, this._writeStream, parent);
     }
@@ -302,13 +302,13 @@ export class ItemManager {
    * @param itemId Id of the item containing the model.
    * @param message Encoded model message
    */
-  async processModelMessage(itemId: ItemID, message: ModelMessage<Uint8Array>) {
-    const item = this._items.get(itemId)
-    assert(item)
+  async processModelMessage (itemId: ItemID, message: ModelMessage<Uint8Array>) {
+    const item = this._items.get(itemId);
+    assert(item);
 
     const decoded = item.modelMeta.mutation.decode(message.mutation);
 
-    assert(item.model instanceof Model)
+    assert(item.model instanceof Model);
     await item.model.processMessage(message.meta, decoded);
   }
 
@@ -337,25 +337,25 @@ export class ItemManager {
     return Array.from(this._items.values()).filter(item => item.model instanceof DefaultModel);
   }
 
-  deconstructItem(itemId: ItemID) {
+  deconstructItem (itemId: ItemID) {
     const item = this._items.get(itemId);
     assert(item);
 
     this._items.delete(itemId);
 
-    if(item.parent) {
+    if (item.parent) {
       item.parent._children.delete(item);
     }
 
-    for(const child of item.children) {
-      this.deconstructItem(child.id)
+    for (const child of item.children) {
+      this.deconstructItem(child.id);
     }
 
-    for(const ref of item.refs) {
+    for (const ref of item.refs) {
       ref._link!.target = undefined;
     }
 
-    for(const link of item.links) {
+    for (const link of item.links) {
       link._link!.source = undefined;
     }
   }

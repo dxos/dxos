@@ -5,8 +5,8 @@
 import { Event } from '@dxos/async';
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
 import { Model, ModelMeta } from '@dxos/model-factory';
-import { Entity } from './entity';
 
+import { Entity } from './entity';
 import type { Link } from './link';
 import { Selection } from './selection';
 
@@ -113,8 +113,6 @@ export class Item<M extends Model> extends Entity<M> {
     // TODO(unknown): Update should be triggered when item's child set or any related links change.
     return new Selection(() => [this], this._onUpdate.discardParameter());
   }
-
-  
 
   // TODO(telackey): This does not allow null or undefined as a parentId, but should it since we allow a null parent?
   async setParent (parentId: ItemID): Promise<void> {

@@ -105,14 +105,14 @@ export class ItemDemuxer {
       //
       if (mutation && !genesis) {
         assert(message.data.mutation);
-        const mutation = { meta: message.meta, mutation: message.data.mutation }
+        const mutation = { meta: message.meta, mutation: message.data.mutation };
 
         if (this._options.snapshots) {
           this._recordModelMutation(itemId, mutation);
         }
 
         // Forward mutations to the item's stream.
-        await this._itemManager.processModelMessage(itemId, mutation)
+        await this._itemManager.processModelMessage(itemId, mutation);
       }
     });
   }
