@@ -4,7 +4,6 @@
 
 import { Root } from 'protobufjs';
 
-import { createMockResourceRecords } from '.';
 import { CID, CIDLike, DomainKey, DXN } from '../models';
 import { IQuery, Filtering } from '../querying';
 import {
@@ -17,7 +16,7 @@ import {
   Resource,
   ResourceRecord
 } from '../registry-client';
-import { createMockTypes } from './fake-data-generator';
+import { createMockTypes, createMockResourceRecords } from './fake-data-generator';
 
 export class MemoryRegistryClient implements IRegistryClient {
   private records: RegistryRecord[]

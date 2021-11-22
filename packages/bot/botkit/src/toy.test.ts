@@ -5,19 +5,16 @@
 import assert from 'assert';
 import expect from 'expect';
 
-import { Client } from '@dxos/client';
-import { SecretProvider, SecretValidator } from '@dxos/credentials';
-import { createKeyPair, PublicKey } from '@dxos/crypto';
-import { Party } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/crypto';
 import { createLinkedPorts } from '@dxos/rpc';
 
 import { InProcessBotContainer } from './bot-container';
+import { NodeContainer } from './bot-container/node-container';
 import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
+import { EchoBot, EmptyBot } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
-import { BotFactoryClient } from './testutils';
-import { decodeInvitation, encodeInvitation } from './testutils/intivitations';
+import { BotFactoryClient, BrokerSetup, ClientSetup, setupBroker, setupClient } from './testutils';
 
 const ECHO_TYPE = 'bot/text';
 
@@ -27,22 +24,15 @@ describe('In-Memory', () => {
       const [agentPort, botControllerPort] = createLinkedPorts();
 
       let botInitialized = false;
+      class TestBot extends EmptyBot {
+        override async onInit () {
+          botInitialized = true;
+        }
+      }
 
       const botFactoryClient = new BotFactoryClient(agentPort);
-
-      const botContainer = new InProcessBotContainer(() => {
-        return {
-          Initialize: async () => {
-            botInitialized = true;
-          },
-          Command: async (request) => {
-            return { response: request.command };
-          },
-          Stop: async () => {}
-        };
-      });
+      const botContainer = new InProcessBotContainer(() => new TestBot());
       const botFactory = new BotFactory(botContainer);
-
       const botController = new BotController(botFactory, botControllerPort);
 
       await Promise.all([
@@ -59,10 +49,10 @@ describe('In-Memory', () => {
       expect(botInitialized).toBe(true);
 
       const command = PublicKey.random().asUint8Array();
-      const repsonse = await botFactoryClient.botFactory.SendCommand({ botId, command });
+      const response = await botFactoryClient.botFactory.SendCommand({ botId, command });
 
-      expect(repsonse.response).toBeDefined();
-      expect(Buffer.from(command).equals(Buffer.from(repsonse.response!))).toBe(true);
+      expect(response.response).toBeDefined();
+      expect(Buffer.from(command).equals(Buffer.from(response.response!))).toBe(true);
 
       await botFactoryClient.botFactory.Destroy();
       botFactoryClient.stop();
@@ -70,65 +60,23 @@ describe('In-Memory', () => {
   });
 
   describe('With a DXOS client', () => {
-    let client: Client;
-    let party: Party;
+    let clientSetup: ClientSetup;
 
     beforeEach(async () => {
-      client = new Client();
-      await client.initialize();
-      await client.echo.halo.createIdentity({ ...createKeyPair() });
-      await client.echo.halo.create('Agent');
-      party = await client.echo.createParty();
+      clientSetup = await setupClient();
     });
 
     afterEach(async () => {
-      await client.destroy();
+      await clientSetup.client.destroy();
     });
 
     it('Spawns a bot with a client', async () => {
+      const { party, invitation, secret } = clientSetup;
       const [agentPort, botControllerPort] = createLinkedPorts();
 
-      const botContainer = new InProcessBotContainer(() => {
-        const client = new Client();
-        let party: Party | undefined;
-
-        return {
-          Initialize: async (request) => {
-            await client.initialize();
-            await client.echo.halo.createIdentity({ ...createKeyPair() });
-            await client.echo.halo.create('Bot');
-
-            if (request.invitation?.data) {
-              assert(request.secret, 'Secret must be provided with invitation');
-              const invitation = decodeInvitation(request.invitation.data);
-              const botSecretProvider: SecretProvider = async () => Buffer.from(request.secret!);
-              party = await client.echo.joinParty(invitation, botSecretProvider);
-            }
-          },
-          Command: async (request) => {
-            assert(party, 'Bot is not initialized');
-            assert(request.command, 'Command must be provided');
-
-            await party.database.createItem({
-              model: ObjectModel,
-              type: ECHO_TYPE,
-              props: {
-                text: PublicKey.from(request.command).toString()
-              }
-            });
-
-            return { response: request.command };
-          },
-          Stop: async () => {
-            await client.destroy();
-          }
-        };
-      });
-
+      const botContainer = new InProcessBotContainer(() => new EchoBot(ECHO_TYPE));
       const botFactory = new BotFactory(botContainer);
-
       const botController = new BotController(botFactory, botControllerPort);
-
       const botFactoryClient = new BotFactoryClient(agentPort);
 
       await Promise.all([
@@ -136,17 +84,11 @@ describe('In-Memory', () => {
         botFactoryClient.start()
       ]);
 
-      const partySecretString = PublicKey.random().toString();
-      const partySecret = Buffer.from(partySecretString);
-      const secretProvider: SecretProvider = async () => partySecret;
-      const secretValidator: SecretValidator = async (invitation, secret) => secret.equals(partySecret);
-
-      const invitation = await party.createInvitation({ secretProvider, secretValidator });
       const { id } = await botFactoryClient.botFactory.SpawnBot({
         invitation: {
-          data: encodeInvitation(invitation)
-        },
-        secret: partySecretString
+          invitationCode: invitation,
+          secret
+        }
       });
       assert(id);
 
@@ -166,11 +108,84 @@ describe('In-Memory', () => {
       ).getValue();
 
       expect(items.length).toBe(1);
-      const savedText = items[0].model.getProperty('text');
-      expect(savedText).toBe(PublicKey.from(text).toString());
+      const payload = items[0].model.getProperty('payload');
+      expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(text).toString());
 
       await botFactoryClient.botFactory.Destroy();
       botFactoryClient.stop();
+    });
+  });
+});
+
+describe('Node', () => {
+  describe('With a DXOS client', () => {
+    let clientSetup: ClientSetup;
+    let brokerSetup: BrokerSetup;
+
+    before(async () => {
+      brokerSetup = await setupBroker();
+    });
+
+    after(async () => {
+      await brokerSetup.broker.stop();
+    });
+
+    beforeEach(async () => {
+      clientSetup = await setupClient(brokerSetup.config);
+    });
+
+    afterEach(async () => {
+      await clientSetup.client.destroy();
+    });
+
+    it('Spawns an echo-bot', async () => {
+      const { party, invitation, secret } = clientSetup;
+      const { config } = brokerSetup;
+      const [agentPort, botControllerPort] = createLinkedPorts();
+
+      const botContainer = new NodeContainer(['ts-node/register/transpile-only']);
+      const botFactory = new BotFactory(botContainer, config);
+      const botController = new BotController(botFactory, botControllerPort);
+      const botFactoryClient = new BotFactoryClient(agentPort);
+
+      await Promise.all([
+        botController.start(),
+        botFactoryClient.start()
+      ]);
+
+      const { id } = await botFactoryClient.botFactory.SpawnBot({
+        package: {
+          localPath: require.resolve('./bots/echo-bot')
+        },
+        invitation: {
+          invitationCode: invitation,
+          secret
+        }
+      });
+      assert(id);
+
+      const text = PublicKey.random().asUint8Array();
+      await botFactoryClient.botFactory.SendCommand({
+        botId: id,
+        command: text
+      });
+
+      await party.database.waitForItem({
+        type: ECHO_TYPE
+      });
+
+      const items = party.database.select(s => s
+        .filter({ type: ECHO_TYPE })
+        .items
+      ).getValue();
+
+      expect(items.length).toBe(1);
+      const payload = items[0].model.getProperty('payload');
+      expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(text).toString());
+
+      await botFactoryClient.botFactory.Destroy();
+      botFactoryClient.stop();
+      botContainer.killAll();
     });
   });
 });

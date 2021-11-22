@@ -13,6 +13,6 @@ import { ClientContext } from './context';
  * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
  */
 export const useConfig = () => {
-  const { config } = useContext(ClientContext) ?? raise(new Error('`useConfig` hook is called outside of ClientContext. Wrap the component with `ClientProvider` or `ClientInitializer`'));
+  const { config } = useContext(ClientContext) ?? raise(new Error('ClientContext no set.'));
   return config;
 };

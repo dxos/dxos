@@ -4,6 +4,8 @@
 
 import assert from 'assert';
 
+import type { defs } from '@dxos/config';
+
 import { BotContainer } from '../bot-container';
 import { BotHandle } from '../bot-handle';
 import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
@@ -14,7 +16,7 @@ import { Bot, BotFactoryService, SendCommandRequest, SpawnBotRequest } from '../
 export class BotFactory implements BotFactoryService {
   private readonly _bots: BotHandle[] = [];
 
-  constructor (private readonly _botContainer: BotContainer) {}
+  constructor (private readonly _botContainer: BotContainer, private readonly _botConfig: defs.Config = {}) {}
 
   async GetBots () {
     return {
@@ -25,7 +27,11 @@ export class BotFactory implements BotFactoryService {
   async SpawnBot (request: SpawnBotRequest) {
     const handle = await this._botContainer.spawn(request.package ?? {});
     await handle.open();
-    await handle.rpc.Initialize(request);
+    await handle.rpc.Initialize({
+      config: this._botConfig,
+      invitation: request.invitation,
+      secret: request.secret
+    });
     this._bots.push(handle);
     return handle.bot;
   }

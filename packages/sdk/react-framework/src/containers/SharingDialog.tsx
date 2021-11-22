@@ -3,6 +3,8 @@
 //
 
 import React, { useState } from 'react';
+import { CopyToClipboard as Clipboard } from 'react-copy-to-clipboard';
+import urlJoin from 'url-join';
 
 import {
   QrCode2 as QRCodeIcon,
@@ -11,21 +13,18 @@ import {
 import { Button, IconButton, Popover, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
+import { encodeInvitation } from '@dxos/client';
 import { SecretProvider, generatePasscode } from '@dxos/credentials';
 import { InvitationDescriptor, InvitationOptions, PartyMember } from '@dxos/echo-db';
-import { encodeInvitation } from '@dxos/react-client';
 import {
   CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
 } from '@dxos/react-components';
 
+import { PendingInvitation, usePendingInvitations } from '../hooks';
+
 type ShareOptions = {
   secretProvider: SecretProvider
   options: InvitationOptions
-}
-
-type PendingInvitation = {
-  invitationCode: string
-  pin: string | undefined
 }
 
 interface PendingInvitationProps {
@@ -52,7 +51,11 @@ const PendingInvitation = ({
     }}>
       {invitationCode && (
         <>
-          <HashIcon value={invitationCode} />
+          <Clipboard text={pin || ''}>
+            <IconButton size='small'>
+              <HashIcon value={invitationCode} />
+            </IconButton>
+          </Clipboard>
           <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2 }}>
             Pending invitation...
           </Typography>
@@ -61,7 +64,7 @@ const PendingInvitation = ({
 
       {invitationCode && !pin && (
         <>
-          <IconButton size='small'>
+          <IconButton size='small' title='Copy passcode.'>
             <CopyToClipboard text={createUrl(invitationCode)} />
           </IconButton>
           <IconButton
@@ -103,6 +106,15 @@ const PendingInvitation = ({
   );
 };
 
+const defaultCreateUrl = (invitationCode: string) => {
+  // TODO(burdon): By-pass keyhole with fake code.
+  const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
+  const invitationPath = `/invitation/${invitationCode}`; // App-specific.
+  const { origin, pathname } = window.location;
+  return urlJoin(origin, pathname, `/?code=${kubeCode}`, `/#${invitationPath}`)
+    .replace('?', '/?'); // TODO(burdon): Slash needed.
+};
+
 export interface SharingDialogProps {
   open: boolean
   modal?: boolean
@@ -110,6 +122,7 @@ export interface SharingDialogProps {
   members?: PartyMember[] // TODO(rzadp): Support HALO members as well (different devices).
   onShare: (shareOptions: ShareOptions) => Promise<InvitationDescriptor>
   onClose?: () => void
+  createUrl?: (invitationCode: string) => string
 }
 
 /**
@@ -117,16 +130,17 @@ export interface SharingDialogProps {
  * Not exported for the end user.
  * See PartySharingDialog and DeviceSharingDialog.
  */
+// TODO(burdon): Rename AccessDialog?
 export const SharingDialog = ({
   open,
   modal,
   title,
   members = [],
+  createUrl = defaultCreateUrl,
   onShare,
   onClose
 }: SharingDialogProps) => {
-  // TODO(burdon): Expiration.
-  const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
+  const [invitations, setInvitations] = usePendingInvitations();
 
   const handleCreateInvitation = async () => {
     let pendingInvitation: PendingInvitation; // eslint-disable-line prefer-const
@@ -155,14 +169,6 @@ export const SharingDialog = ({
     };
 
     setInvitations(invitations => [...invitations, pendingInvitation]);
-  };
-
-  const createUrl = (invitationCode: string) => {
-    // TODO(burdon): By-pass keyhole with fake code.
-    const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
-    const invitationPath = `/invitation/${invitationCode}`; // TODO(burdon): App-specific (hence pass in).
-    const { origin, pathname } = window.location;
-    return `${origin}${pathname}?code=${kubeCode}/#${invitationPath}`; // TODO(burdon): Use URL concat util?
   };
 
   return (

@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionState, Swarm } from '.';
+import { ConnectionState, Swarm } from './swarm';
 
 export interface SwarmInfo {
   id: PublicKey
@@ -49,7 +49,7 @@ export class ConnectionLog {
   readonly update = new Event();
 
   getSwarmInfo (swarmId: PublicKey) {
-    return this._swarms.get(swarmId) ?? raise(new Error(`Swarm not found ${swarmId}`));
+    return this._swarms.get(swarmId) ?? raise(new Error(`Swarm not found: ${swarmId}`));
   }
 
   get swarms (): SwarmInfo[] {

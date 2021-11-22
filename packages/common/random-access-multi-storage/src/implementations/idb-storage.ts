@@ -6,8 +6,7 @@ import assert from 'assert';
 import pify from 'pify';
 import randomAccessIdb from 'random-access-idb';
 
-import { IFile } from '..';
-import { StorageType, STORAGE_IDB } from '../interfaces/storage-types';
+import { IFile, StorageType, STORAGE_IDB } from '../interfaces';
 import { AbstractStorage } from './abstract-storage';
 
 interface FileRegistryRecord {

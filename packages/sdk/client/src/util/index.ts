@@ -3,4 +3,5 @@
 //
 
 export * from './createWindowMessagePort';
+export * from './invitations';
 export * from './subscription';
