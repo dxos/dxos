@@ -254,6 +254,15 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     return this as any;
   }
 
+  /**
+   * Overriden to not retun implementation details.
+   */
+  toJSON () {
+    return {
+      listenerCount: this.listenerCount()
+    };
+  }
+
   private async _trigger (listener: (data: T) => void, data: T) {
     await waitImmediate(); // Acts like setImmediate but preserves the stack-trace.
     listener(data);

@@ -5,30 +5,34 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
+import { isNotNullOrUndefined } from '@dxos/util';
 
+import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
 
-type SelectFilterFunction = (item: Item<any>) => Boolean;
+type SelectFilterFunction<T extends Entity<any>> = (item: T) => boolean;
 
 export interface SelectFilterByValue {
   type: string | string[];
 }
 
-export type SelectFilter = SelectFilterFunction | SelectFilterByValue;
+export type SelectFilter<T extends Entity<any>> = SelectFilterFunction<T> | SelectFilterByValue;
 
 /**
  * @param filter
  */
-const createArrayFilter = (filter: SelectFilterByValue) => {
+const createArrayFilter = (filter: SelectFilterByValue): SelectFilterFunction<Entity<any>> => {
   if (typeof filter.type === 'string') {
-    return (item: Item<any>) => item.type === filter.type;
+    return (item: Entity<any>) => item.type === filter.type;
   }
 
   // Any type in array.
   assert(Array.isArray(filter.type));
-  return (item: Item<any>) => item.type && filter.type.indexOf(item.type) !== -1;
+  return (entitiy: Entity<any>) => entitiy.type !== undefined && filter.type.indexOf(entitiy.type) !== -1;
 };
+
+const filterToPredicate = <T extends Entity<any>> (filter: SelectFilter<T>): SelectFilterFunction<T> => typeof filter === 'function' ? filter : createArrayFilter(filter);
 
 /**
  * Remove duplicate and undefined items.
@@ -41,7 +45,7 @@ const deduplicate = <T> (items: T[]) => Array.from(new Set(items.filter(Boolean)
  *
  * Based loosely on [d3](https://github.com/d3/d3-selection).
  */
-export class Selection<I extends Item<any>> {
+export class Selection<I extends Entity<any>> {
   /**
    * @param _items All items in the data set.
    * @param _update Update event handler.
@@ -60,20 +64,6 @@ export class Selection<I extends Item<any>> {
   }
 
   /**
-   * Creates a new selection with the parent nodes of the selection.
-   */
-  parent () {
-    return new Selection(() => this._getItems().map(item => item.parent).filter(Boolean) as Item<any>[], this._update);
-  }
-
-  /**
-   * Creates a new selection with the child nodes of the selection.
-   */
-  children () {
-    return new Selection(() => this._getItems().flatMap(item => item.children), this._update);
-  }
-
-  /**
    * Calls the given function with the current seleciton.
    * @param fn {Function} callback.
    */
@@ -87,7 +77,7 @@ export class Selection<I extends Item<any>> {
    * @param fn {Function} Visitor callback.
    */
   each (fn: (item: I, selection: Selection<I>) => void) {
-    this._getItems().forEach(item => fn(item as any, new Selection(() => [item], this._update)));
+    this._getItems().forEach(item => fn(item, new Selection(() => [item], this._update)));
     return this;
   }
 
@@ -95,9 +85,27 @@ export class Selection<I extends Item<any>> {
    * Creates a new selection by filtering the current selection.
    * @param filter
    */
-  filter (filter: SelectFilter): Selection<I> {
-    const fn = typeof filter === 'function' ? filter : createArrayFilter(filter as SelectFilterByValue);
+  filter (filter: SelectFilter<I>): Selection<I> {
+    const fn = filterToPredicate(filter);
     return new Selection(() => this._getItems().filter(fn), this._update);
+  }
+
+  //
+  // Item-specific
+  //
+
+  /**
+   * Creates a new selection with the parent nodes of the selection.
+   */
+  parent (this: Selection<Item<any>>) {
+    return new Selection(() => this._getItems().map(item => item.parent).filter(isNotNullOrUndefined), this._update);
+  }
+
+  /**
+   * Creates a new selection with the child nodes of the selection.
+   */
+  children (this: Selection<Item<any>>) {
+    return new Selection(() => this._getItems().flatMap(item => item.children), this._update);
   }
 
   /**
@@ -105,8 +113,8 @@ export class Selection<I extends Item<any>> {
    * @param filter
    */
   // TODO(burdon): Optional filter.
-  links (filter: SelectFilter): Selection<any> {
-    const fn = typeof filter === 'function' ? filter : createArrayFilter(filter as SelectFilterByValue);
+  links (this: Selection<Item<any>>, filter: SelectFilter<Link<any>>): Selection<any> {
+    const fn = filterToPredicate(filter);
     return new Selection(() => deduplicate(this._getItems().flatMap(item => item.links.filter(fn))), this._update);
   }
 
@@ -115,15 +123,19 @@ export class Selection<I extends Item<any>> {
    * @param filter
    */
   // TODO(burdon): Optional filter.
-  refs (filter: SelectFilter): Selection<any> {
-    const fn = typeof filter === 'function' ? filter : createArrayFilter(filter as SelectFilterByValue);
+  refs (this: Selection<Item<any>>, filter: SelectFilter<Link<any>>): Selection<any> {
+    const fn = filterToPredicate(filter);
     return new Selection(() => deduplicate(this._getItems().flatMap(item => item.refs.filter(fn))), this._update);
   }
+
+  //
+  // Link-specific
+  //
 
   /**
    * Creates a new selection from the source of the current set of links.
    */
-  source (this: Selection<Link<any, any, any>>) {
+  source (this: Selection<Link<any>>) {
     // TODO(burdon): Assert links (or sub-class Object/LinkSelection classes?).
     return new Selection(() => deduplicate(this._getItems().map(link => link.source)), this._update);
   }
@@ -131,7 +143,7 @@ export class Selection<I extends Item<any>> {
   /**
    * Creates a new selection from the target of the current set of links.
    */
-  target (this: Selection<Link<any, any, any>>) {
+  target (this: Selection<Link<any>>) {
     // TODO(burdon): Assert links (or sub-class Object/LinkSelection classes?).
     return new Selection(() => deduplicate(this._getItems().map(link => link.target)), this._update);
   }
