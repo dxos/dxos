@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelMeta } from '@dxos/model-factory';
+import { SubscriptionGroup } from '@dxos/util';
 
 /**
  * Base class for all ECHO entitities.
@@ -15,14 +16,16 @@ export class Entity<M extends Model> {
     // Called whenever item processes mutation.
     protected readonly _onUpdate = new Event<Entity<any>>();
 
+    private readonly _subscriptions = new SubscriptionGroup(); 
+
     constructor (
         private readonly _id: ItemID,
         private readonly _type: ItemType | undefined,
         private readonly _modelMeta: ModelMeta,
-        private readonly _model: M
+        private _model: M
     ) {
       // Model updates mean Item updates, so make sure we are subscribed as well.
-      this._onUpdate.addEffect(() => this._model.subscribe(() => this._onUpdate.emit(this)));
+      this._setModel(_model);
     }
 
     get id (): ItemID {
@@ -47,5 +50,15 @@ export class Entity<M extends Model> {
      */
     subscribe (listener: (entity: this) => void) {
       return this._onUpdate.on(listener as any);
+    }
+
+    /**
+     * @internal
+     */
+    _setModel(model: M) {
+      this._model = model;
+
+      this._subscriptions.unsubscribe();
+      this._subscriptions.push(this._model.subscribe(() => this._onUpdate.emit(this)))
     }
 }

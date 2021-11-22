@@ -380,18 +380,17 @@ export class ItemManager {
     assert(item);
     assert(item.model instanceof DefaultModel);
 
-    this._items.delete(itemId);
-
     // Disconnect the stream.
     await pify(item.model.processor.end.bind(item.model.processor))();
 
-    await this.constructItem({
+    item._setModel(await this._constructModel({
       itemId,
-      itemType: item.type,
       modelType: item.model.originalModelType,
       initialMutations: item.model.mutations,
       modelSnapshot: item.model.snapshot
-    });
+    }));
+
+    this._itemUpdate.emit(item);
   }
 
   private _matchesFilter (item: Item<any>, filter: ItemFilter) {
