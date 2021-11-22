@@ -13,7 +13,7 @@ export const DevtoolsContext = React.createContext<DevtoolsHost | undefined>(und
 export const useDevtoolsHost = () => {
   const host = useContext(DevtoolsContext);
   if (!host) {
-    throw new Error('DevtoolsContent not set.');
+    throw new Error('DevtoolsContext not set.');
   }
 
   return host;
