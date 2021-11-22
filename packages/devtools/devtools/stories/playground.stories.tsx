@@ -2,16 +2,28 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { Box, Button, CssBaseline, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, ThemeProvider, Typography, useTheme } from '@mui/material';
+import {
+  Box,
+  Button,
+  CssBaseline,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  ThemeProvider,
+  Typography,
+  useTheme
+} from '@mui/material';
 
 import { truncateString } from '@dxos/debug';
 import { Party } from '@dxos/echo-db';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
-import { createLinkedPorts, createRpcClient, createRpcServer } from '@dxos/rpc';
+import { RpcPort, createLinkedPorts, createRpcClient, createRpcServer } from '@dxos/rpc';
 import { TextModel } from '@dxos/text-model';
 
 import { App, ErrorBoundary, DevtoolsContext, DevtoolsHost, schema } from '../src';
@@ -20,16 +32,28 @@ export default {
   title: 'devtools/Playground'
 };
 
-const [playgroundPort, devtoolsPort] = createLinkedPorts();
-
-const DevTools = ({ host }: { host: DevtoolsHost }) => {
+const DevTools = ({ port }: { port: RpcPort }) => {
   const theme = useTheme();
+  const [devtoolsHost, setDevtoolsHost] = useState<DevtoolsHost>();
+
+  useEffect(() => {
+    setImmediate(async () => {
+      const service = schema.getService('dxos.devtools.DevtoolsHost');
+      const rpcClient = createRpcClient(service, { port });
+      await rpcClient.open();
+      setDevtoolsHost(rpcClient.rpc);
+    });
+  }, []);
+
+  if (!devtoolsHost) {
+    return <>Initializing devtools...</>;
+  }
 
   return (
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <DevtoolsContext.Provider value={host}>
+        <DevtoolsContext.Provider value={devtoolsHost}>
           <App />
         </DevtoolsContext.Provider>
       </ThemeProvider>
@@ -37,12 +61,25 @@ const DevTools = ({ host }: { host: DevtoolsHost }) => {
   );
 };
 
-const Controls = () => {
+const Controls = ({ port }: { port: RpcPort }) => {
   const client = useClient();
   const profile = useProfile();
   const parties = useParties();
   const [model, setModel] = useState('');
   const [itemModel, setItemModel] = useState('');
+
+  useEffect(() => {
+    setImmediate(async () => {
+      const service = schema.getService('dxos.devtools.DevtoolsHost');
+      const rpcServer = createRpcServer({
+        service,
+        handlers: client.services.DevtoolsHost,
+        port
+      });
+
+      await rpcServer.open();
+    });
+  }, []);
 
   const handleCreateProfile = () => {
     void client.halo.createProfile();
@@ -162,45 +199,15 @@ const Controls = () => {
   );
 };
 
-const Playground = () => {
-  const client = useClient();
-  const [devtoolsHost, setDevtoolsHost] = useState<DevtoolsHost>();
-
-  useEffect(() => {
-    setImmediate(async () => {
-      const service = schema.getService('dxos.devtools.DevtoolsHost');
-      const rpcClient = createRpcClient(service, { port: devtoolsPort });
-      const rpcServer = createRpcServer({
-        service,
-        handlers: client.services.DevtoolsHost,
-        port: playgroundPort
-      });
-
-      await Promise.all([
-        rpcServer.open(),
-        rpcClient.open()
-      ]);
-
-      setDevtoolsHost(rpcClient.rpc);
-    });
-  }, []);
-
-  if (!devtoolsHost) {
-    return <>Initializing devtools...</>;
-  }
+export const Primary = () => {
+  const [controlsPort, devtoolsPort] = useMemo(() => createLinkedPorts(), []);
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <DevTools host={devtoolsHost} />
-      <Controls />
+      <DevTools port={devtoolsPort} />
+      <ClientInitializer>
+        <Controls port={controlsPort} />
+      </ClientInitializer>
     </Box>
-  );
-};
-
-export const Primary = () => {
-  return (
-    <ClientInitializer>
-      <Playground />
-    </ClientInitializer>
   );
 };
