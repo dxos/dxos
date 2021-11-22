@@ -257,10 +257,10 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   /**
    * Overriden to not retun implementation details.
    */
-  toJSON() {
+  toJSON () {
     return {
       listenerCount: this.listenerCount()
-    }
+    };
   }
 
   private async _trigger (listener: (data: T) => void, data: T) {
