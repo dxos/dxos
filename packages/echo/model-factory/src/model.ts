@@ -18,7 +18,7 @@ export interface MutationWriteReceipt extends WriteReceipt {
  * Abstract base class for Models.
  * Models define a root message type, which is contained in the partent Item's message envelope.
  */
-export abstract class Model<T> {
+export abstract class Model<T = any> {
   public readonly modelUpdate = new Event<this>();
   private readonly _processor: NodeJS.WritableStream;
 

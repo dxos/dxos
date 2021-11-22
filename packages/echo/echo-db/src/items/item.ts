@@ -22,12 +22,9 @@ export interface LinkData {
  * Items are hermetic data structures contained within a Party. They may be hierarchical.
  * The Item data structure is governed by a Model class, which implements data consistency.
  */
-export class Item<M extends Model<any>> extends Entity {
+export class Item<M extends Model> extends Entity<M> {
   // Parent item (or null if this item is a root item).
   private _parent: Item<any> | null = null;
-
-  // Called whenever item processes mutation.
-  private readonly _onUpdate = new Event<this>();
 
   /**
    * Managed set of child items.
@@ -62,18 +59,15 @@ export class Item<M extends Model<any>> extends Entity {
     itemId: ItemID,
     itemType: ItemType | undefined, // TODO(burdon): Why undefined?
     private readonly _modelMeta: ModelMeta,
-    private readonly _model: M,
+    model: M,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null,
     link?: LinkData | null
   ) {
-    super(itemId, itemType);
+    super(itemId, itemType, model);
 
     this._updateParent(parent);
     this._setLink(link ?? null);
-
-    // Model updates mean Item updates, so make sure we are subscribed as well.
-    this._onUpdate.addEffect(() => this._model.subscribe(() => this._onUpdate.emit(this)));
   }
 
   override toString () {
@@ -82,10 +76,6 @@ export class Item<M extends Model<any>> extends Entity {
 
   get modelMeta (): ModelMeta {
     return this._modelMeta;
-  }
-
-  get model (): M {
-    return this._model;
   }
 
   get readOnly () {
@@ -124,13 +114,7 @@ export class Item<M extends Model<any>> extends Entity {
     return new Selection(() => [this], this._onUpdate.discardParameter());
   }
 
-  /**
-   * Subscribe for updates.
-   * @param listener
-   */
-  subscribe (listener: (item: Item<M>) => void) {
-    return this._onUpdate.on(listener);
-  }
+  
 
   // TODO(telackey): This does not allow null or undefined as a parentId, but should it since we allow a null parent?
   async setParent (parentId: ItemID): Promise<void> {
