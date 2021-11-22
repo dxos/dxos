@@ -13,7 +13,7 @@ import { Model, ModelMeta } from '@dxos/model-factory';
  */
 export class Entity<M extends Model> {
     // Called whenever item processes mutation.
-    protected readonly _onUpdate = new Event<this>();
+    protected readonly _onUpdate = new Event<Entity<any>>();
 
     constructor (
         private readonly _id: ItemID,
@@ -46,6 +46,6 @@ export class Entity<M extends Model> {
      * @param listener
      */
     subscribe (listener: (entity: this) => void) {
-      return this._onUpdate.on(listener);
+      return this._onUpdate.on(listener as any);
     }
 }

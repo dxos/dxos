@@ -18,6 +18,7 @@ import { ResultSet } from '../result';
 import { DefaultModel } from './default-model';
 import { Item } from './item';
 import { Link } from './link';
+import { Entity } from './entity';
 
 const log = debug('dxos:echo:item-manager');
 
@@ -48,18 +49,18 @@ interface ModelConstructionOptions {
  * Manages the creation and indexing of items.
  */
 export class ItemManager {
-  private readonly _itemUpdate = new Event<Item<any>>();
+  private readonly _itemUpdate = new Event<Entity<any>>();
 
   private readonly _debouncedItemUpdate = debounceEvent(this._itemUpdate.discardParameter());
 
   // Map of active items.
-  private readonly _items = new Map<ItemID, Item<any>>();
+  private readonly _items = new Map<ItemID, Entity<any>>();
 
   /* TODO(burdon): Lint issue: Unexpected whitespace between function name and paren
    * Map of item promises (waiting for item construction after genesis message has been written).
    */
   // eslint-disable-next-line func-call-spacing
-  private readonly _pendingItems = new Map<ItemID, (item: Item<any>) => void>();
+  private readonly _pendingItems = new Map<ItemID, (item: Entity<any>) => void>();
 
   /**
    * @param partyKey
@@ -106,7 +107,7 @@ export class ItemManager {
     }
 
     // Pending until constructed (after genesis block is read from stream).
-    const [waitForCreation, callback] = trigger<Item<any>>();
+    const [waitForCreation, callback] = trigger<Entity<any>>();
 
     const itemId = createId();
     this._pendingItems.set(itemId, callback);
@@ -125,7 +126,9 @@ export class ItemManager {
 
     // Unlocked by construct.
     log('Pending Item:', itemId);
-    return await waitForCreation();
+    const item = await waitForCreation();
+    assert(item instanceof Item);
+    return item;
   }
 
   @timed(5_000)
@@ -149,7 +152,7 @@ export class ItemManager {
     }
 
     // Pending until constructed (after genesis block is read from stream).
-    const [waitForCreation, callback] = trigger<Item<any>>();
+    const [waitForCreation, callback] = trigger<Entity<any>>();
 
     const itemId = createId();
     this._pendingItems.set(itemId, callback);
@@ -241,6 +244,7 @@ export class ItemManager {
     if (parentId && !parent) {
       throw new Error(`Missing parent: ${parentId}`);
     }
+    assert(!parent || parent instanceof Item)
 
     // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
     if (!this._modelFactory.hasModel(modelType)) {
@@ -317,7 +321,11 @@ export class ItemManager {
    * @param itemId
    */
   getItem<M extends Model<any> = any> (itemId: ItemID): Item<M> | undefined {
-    return this._items.get(itemId);
+    const entity = this._items.get(itemId);
+    if(entity) {
+      assert(entity instanceof Item);
+    }
+    return entity
   }
 
   /**
@@ -326,6 +334,7 @@ export class ItemManager {
    */
   queryItems <M extends Model<any> = any> (filter: ItemFilter = {}): ResultSet<Item<M>> {
     return new ResultSet(this._debouncedItemUpdate, () => Array.from(this._items.values())
+      .filter((entity): entity is Item<M> => entity instanceof Item)
       .filter(item =>
         !item.isLink &&
         !(item.model instanceof DefaultModel) &&
@@ -333,7 +342,7 @@ export class ItemManager {
       ));
   }
 
-  getItemsWithDefaultModels (): Item<DefaultModel>[] {
+  getItemsWithDefaultModels (): Entity<DefaultModel>[] {
     return Array.from(this._items.values()).filter(item => item.model instanceof DefaultModel);
   }
 
@@ -343,20 +352,22 @@ export class ItemManager {
 
     this._items.delete(itemId);
 
-    if (item.parent) {
-      item.parent._children.delete(item);
-    }
+    if(item instanceof Item) {
+      if (item.parent) {
+        item.parent._children.delete(item);
+      }
 
-    for (const child of item.children) {
-      this.deconstructItem(child.id);
-    }
+      for (const child of item.children) {
+        this.deconstructItem(child.id);
+      }
 
-    for (const ref of item.refs) {
-      ref._link!.target = undefined;
-    }
+      for (const ref of item.refs) {
+        ref._link!.target = undefined;
+      }
 
-    for (const link of item.links) {
-      link._link!.source = undefined;
+      for (const link of item.links) {
+        link._link!.source = undefined;
+      }
     }
   }
 
