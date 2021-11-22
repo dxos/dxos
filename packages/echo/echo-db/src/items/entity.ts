@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
-import { Model } from '@dxos/model-factory';
+import { Model, ModelMeta } from '@dxos/model-factory';
 
 /**
  * Base class for all ECHO entitities.
@@ -18,6 +18,7 @@ export class Entity<M extends Model> {
     constructor (
         private readonly _id: ItemID,
         private readonly _type: ItemType | undefined,
+        private readonly _modelMeta: ModelMeta,
         private readonly _model: M
     ) {
       // Model updates mean Item updates, so make sure we are subscribed as well.
@@ -30,6 +31,10 @@ export class Entity<M extends Model> {
 
     get type (): ItemType | undefined {
       return this._type;
+    }
+
+    get modelMeta (): ModelMeta {
+      return this._modelMeta;
     }
 
     get model (): M {

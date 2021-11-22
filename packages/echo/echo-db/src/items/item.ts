@@ -58,13 +58,13 @@ export class Item<M extends Model> extends Entity<M> {
   constructor (
     itemId: ItemID,
     itemType: ItemType | undefined, // TODO(burdon): Why undefined?
-    private readonly _modelMeta: ModelMeta,
+    modelMeta: ModelMeta,
     model: M,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null,
     link?: LinkData | null
   ) {
-    super(itemId, itemType, model);
+    super(itemId, itemType, modelMeta, model);
 
     this._updateParent(parent);
     this._setLink(link ?? null);
@@ -72,10 +72,6 @@ export class Item<M extends Model> extends Entity<M> {
 
   override toString () {
     return `Item(${JSON.stringify({ itemId: this.id, parentId: this.parent?.id, itemType: this.type })})`;
-  }
-
-  get modelMeta (): ModelMeta {
-    return this._modelMeta;
   }
 
   get readOnly () {
