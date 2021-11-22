@@ -30,6 +30,9 @@
     "preset": "ts-jest/presets/default",
     "testEnvironment": "node"
   },
+  "peerDependencies": {
+    "typescript": "^4.5.2"
+  },
   "dependencies": {
     "argparse": "^2.0.1",
     "chalk": "^4.1.0",
