@@ -9,16 +9,15 @@ import pify from 'pify';
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { EchoEnvelope, FeedWriter, IEchoStream, ItemID, ItemType, LinkData, mapFeedWriter } from '@dxos/echo-protocol';
-import { createTransform } from '@dxos/feed-store';
+import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
 
 import { UnknownModelError } from '../errors';
 import { ResultSet } from '../result';
 import { DefaultModel } from './default-model';
+import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
-import { Entity } from './entity';
 
 const log = debug('dxos:echo:item-manager');
 
@@ -57,10 +56,9 @@ export class ItemManager {
   // Map of active items.
   private readonly _items = new Map<ItemID, Entity<any>>();
 
-  /* TODO(burdon): Lint issue: Unexpected whitespace between function name and paren
+  /**
    * Map of item promises (waiting for item construction after genesis message has been written).
    */
-  // eslint-disable-next-line func-call-spacing
   private readonly _pendingItems = new Map<ItemID, (item: Entity<any>) => void>();
 
   /**
@@ -218,7 +216,7 @@ export class ItemManager {
   /**
    * Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entitiy to be constructed.
    */
-  private _addEntity(entity: Entity<any>) {
+  private _addEntity (entity: Entity<any>) {
     assert(!this._items.has(entity.id));
     this._items.set(entity.id, entity);
     log('New entity:', String(entity));
@@ -256,7 +254,7 @@ export class ItemManager {
     itemType,
     parentId,
     initialMutations,
-    modelSnapshot,
+    modelSnapshot
   }: ItemConstructionOptions): Promise<Item<any>> {
     assert(itemId);
     assert(modelType);
@@ -265,7 +263,7 @@ export class ItemManager {
     if (parentId && !parent) {
       throw new Error(`Missing parent: ${parentId}`);
     }
-    assert(!parent || parent instanceof Item)
+    assert(!parent || parent instanceof Item);
 
     const model = await this._constructModel({
       itemId,
@@ -310,7 +308,7 @@ export class ItemManager {
       targetId: target,
       source: this.getItem(source),
       target: this.getItem(target)
-    });  
+    });
     this._addEntity(link);
 
     return link;
@@ -337,10 +335,10 @@ export class ItemManager {
    */
   getItem<M extends Model<any> = any> (itemId: ItemID): Item<M> | undefined {
     const entity = this._items.get(itemId);
-    if(entity) {
+    if (entity) {
       assert(entity instanceof Item);
     }
-    return entity
+    return entity;
   }
 
   /**
@@ -367,7 +365,7 @@ export class ItemManager {
 
     this._items.delete(itemId);
 
-    if(item instanceof Item) {
+    if (item instanceof Item) {
       if (item.parent) {
         item.parent._children.delete(item);
       }

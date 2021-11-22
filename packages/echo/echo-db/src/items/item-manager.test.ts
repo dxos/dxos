@@ -12,7 +12,6 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { DefaultModel } from '.';
 import { ItemManager } from './item-manager';
-import { Link } from './link';
 
 describe('ItemManager', () => {
   describe('basic', () => {
@@ -80,8 +79,8 @@ describe('ItemManager', () => {
       const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
       const parent = await itemManager.constructItem(defaultOpts());
-      const child1 = await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
-      const child2 = await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
+      await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
+      await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
 
       expect(itemManager.items.size).toEqual(3);
       expect(parent.children.length).toEqual(2);
@@ -124,7 +123,7 @@ describe('ItemManager', () => {
       const link = await itemManager.constructLink({
         ...defaultOpts(),
         source: source.id,
-        target: createId(),
+        target: createId()
       });
 
       expect(link.isDanglingLink).toBeTruthy();
@@ -154,7 +153,7 @@ describe('ItemManager', () => {
       const source = await itemManager.constructItem(defaultOpts());
       const target = await itemManager.constructItem(defaultOpts());
 
-      const link = await itemManager.constructLink({
+      await itemManager.constructLink({
         ...defaultOpts(),
         source: source.id,
         target: target.id

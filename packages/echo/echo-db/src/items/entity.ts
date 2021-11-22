@@ -16,7 +16,7 @@ export class Entity<M extends Model> {
     // Called whenever item processes mutation.
     protected readonly _onUpdate = new Event<Entity<any>>();
 
-    private readonly _subscriptions = new SubscriptionGroup(); 
+    private readonly _subscriptions = new SubscriptionGroup();
 
     constructor (
         private readonly _id: ItemID,
@@ -55,10 +55,10 @@ export class Entity<M extends Model> {
     /**
      * @internal
      */
-    _setModel(model: M) {
+    _setModel (model: M) {
       this._model = model;
 
       this._subscriptions.unsubscribe();
-      this._subscriptions.push(this._model.subscribe(() => this._onUpdate.emit(this)))
+      this._subscriptions.push(this._model.subscribe(() => this._onUpdate.emit(this)));
     }
 }

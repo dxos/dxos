@@ -4,20 +4,19 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import { Readable } from 'stream';
 
 import { failUndefined, raise } from '@dxos/debug';
 import {
   DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
 } from '@dxos/echo-protocol';
-import { createReadable, createWritable } from '@dxos/feed-store';
+import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { jsonReplacer } from '@dxos/util';
 
 import { DefaultModel } from './default-model';
+import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
-import { Entity } from './entity';
 
 const log = debug('dxos:echo:item-demuxer');
 
@@ -65,25 +64,24 @@ export class ItemDemuxer {
         assert(modelType);
 
         let entity: Entity<any>;
-        if(genesis.link) {
+        if (genesis.link) {
           entity = await this._itemManager.constructLink({
             itemId,
             itemType,
             modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
             initialMutations: mutation ? [{ mutation, meta }] : undefined,
             source: genesis.link.source ?? failUndefined(),
-            target: genesis.link.target ?? failUndefined(),
+            target: genesis.link.target ?? failUndefined()
           });
         } else {
           entity = await this._itemManager.constructItem({
             itemId,
             itemType,
             modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
-            initialMutations: mutation ? [{ mutation, meta }] : undefined,
+            initialMutations: mutation ? [{ mutation, meta }] : undefined
           });
         }
 
-        
         if (entity.model instanceof DefaultModel) {
           entity.model.originalModelType = modelType;
         }
