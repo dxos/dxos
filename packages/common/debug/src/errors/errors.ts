@@ -6,12 +6,12 @@ import { DXOSError } from './dxos-error';
 
 export class InvalidParameterError extends DXOSError {
   constructor (message?: string) {
-    super('INVALID_PARAMETER', message);
+    super('DXOS_INVALID_PARAMETER', message);
   }
 }
 
 export class TimeoutError extends DXOSError {
   constructor (message?: string) {
-    super('TIMEOUT', message);
+    super('DXOS_TIMEOUT', message);
   }
 }
