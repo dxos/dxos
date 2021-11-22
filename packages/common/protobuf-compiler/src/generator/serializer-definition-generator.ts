@@ -21,7 +21,7 @@ export function createSerializerDefinition (
     [],
     [],
     f.createImportClause(false, undefined, f.createNamedImports([
-      f.createImportSpecifier(undefined, schemaIdentifier)
+      f.createImportSpecifier(false, undefined, schemaIdentifier)
     ])),
     f.createStringLiteral(CODEC_MODULE.importSpecifier(outFileDir))
   );

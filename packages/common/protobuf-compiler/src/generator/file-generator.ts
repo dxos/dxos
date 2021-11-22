@@ -95,7 +95,7 @@ function createStreamImport () {
     [],
     [],
     f.createImportClause(false, undefined, f.createNamedImports([
-      f.createImportSpecifier(undefined, f.createIdentifier('Stream'))
+      f.createImportSpecifier(true, undefined, f.createIdentifier('Stream'))
     ])),
     f.createStringLiteral(CODEC_MODULE.importSpecifier(''))
   );
