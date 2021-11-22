@@ -12,7 +12,7 @@ import { Item, LinkData } from './item';
 /**
  * Link variant of an item. Link two objects together. Can hold a custom model.
  */
-export class Link<M extends Model<any>, L extends Model<any>, R extends Model<any>> extends Item<M> {
+export class Link<M extends Model<any>, L extends Model<any> = any, R extends Model<any> = any> extends Item<M> {
   constructor (
     itemId: ItemID,
     itemType: ItemType | undefined,

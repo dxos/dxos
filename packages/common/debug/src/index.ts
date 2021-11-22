@@ -14,3 +14,4 @@ export * from './throw';
 export * from './timeout-warning';
 export * from './log-method';
 export * from './errors';
+export * from './fail';

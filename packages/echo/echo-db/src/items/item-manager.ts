@@ -28,21 +28,22 @@ export interface ItemFilter {
   id?: ItemID | ItemID[]
 }
 
-export interface ItemConstructionOptions {
-  itemId: ItemID,
-  modelType: ModelType,
-  itemType: ItemType | undefined,
-  parentId?: ItemID,
-  initialMutations?: ModelMessage<Uint8Array>[],
-  modelSnapshot?: Uint8Array,
-  link?: LinkData
-}
-
-interface ModelConstructionOptions {
+export interface ModelConstructionOptions {
   itemId: ItemID
   modelType: ModelType
   initialMutations?: ModelMessage<Uint8Array>[],
   modelSnapshot?: Uint8Array,
+}
+
+export interface ItemConstructionOptions extends ModelConstructionOptions {
+  itemType: ItemType | undefined,
+  parentId?: ItemID,
+}
+
+export interface LinkConstructionOptions extends ModelConstructionOptions {
+  itemType: ItemType | undefined,
+  source: ItemID;
+  target: ItemID;
 }
 
 /**
@@ -215,6 +216,29 @@ export class ItemManager {
   }
 
   /**
+   * Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entitiy to be constructed.
+   */
+  private _addEntity(entity: Entity<any>) {
+    assert(!this._items.has(entity.id));
+    this._items.set(entity.id, entity);
+    log('New entity:', String(entity));
+
+    if (!(entity.model instanceof DefaultModel)) {
+      // Notify Item was udpated.
+      // TODO(burdon): Update the item directly?
+      this._itemUpdate.emit(entity);
+
+      // TODO(telackey): Unsubscribe?
+      entity.subscribe(() => {
+        this._itemUpdate.emit(entity);
+      });
+    }
+
+    // Notify pending creates.
+    this._pendingItems.get(entity.id)?.(entity);
+  }
+
+  /**
    * Constructs an item with the appropriate model.
    * @param itemId
    * @param modelType
@@ -225,8 +249,6 @@ export class ItemManager {
    * @param modelSnapshot
    * @param link
    */
-  // TODO(marik-d): Convert optional params to typed object.
-  // TODO(burdon): Break up long function (helper function or comment blocks).
   @timed(5_000)
   async constructItem ({
     itemId,
@@ -235,8 +257,7 @@ export class ItemManager {
     parentId,
     initialMutations,
     modelSnapshot,
-    link
-  }: ItemConstructionOptions) {
+  }: ItemConstructionOptions): Promise<Item<any>> {
     assert(itemId);
     assert(modelType);
 
@@ -246,13 +267,6 @@ export class ItemManager {
     }
     assert(!parent || parent instanceof Item)
 
-    // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
-    if (!this._modelFactory.hasModel(modelType)) {
-      throw new UnknownModelError(modelType);
-    }
-    const modelMeta = this._modelFactory.getModelMeta(modelType);
-
-    // Create the model with the outbound stream.
     const model = await this._constructModel({
       itemId,
       modelType,
@@ -260,45 +274,46 @@ export class ItemManager {
       modelSnapshot
     });
 
-    if (link) {
-      assert(link.source);
-      assert(link.target);
-    }
-
-    //
-    // Create the Item.
-    //
-    let item: Item<any>;
-    if (link) {
-      item = new Link(itemId, itemType, modelMeta, model, this._writeStream, parent, {
-        sourceId: link.source!,
-        targetId: link.target!,
-        source: this.getItem(link.source!),
-        target: this.getItem(link.target!)
-      }) as any;
-    } else {
-      item = new Item(itemId, itemType, modelMeta, model, this._writeStream, parent);
-    }
-
-    assert(!this._items.has(itemId));
-    this._items.set(itemId, item);
-    log('Constructed:', String(item));
-
-    if (!(item.model instanceof DefaultModel)) {
-      // Notify Item was udpated.
-      // TODO(burdon): Update the item directly?
-      this._itemUpdate.emit(item);
-
-      // TODO(telackey): Unsubscribe?
-      item.subscribe(() => {
-        this._itemUpdate.emit(item);
-      });
-    }
-
-    // Notify pending creates.
-    this._pendingItems.get(itemId)?.(item);
+    const item = new Item(itemId, itemType, model.modelMeta, model, this._writeStream, parent);
+    this._addEntity(item);
 
     return item;
+  }
+
+  /**
+   * Constructs an item with the appropriate model.
+   * @param readStream - Inbound mutation stream (from multiplexer).
+   * @param parentId - ItemID of the parent of this Item (optional).
+   */
+  @timed(5_000)
+  async constructLink ({
+    itemId,
+    modelType,
+    itemType,
+    initialMutations,
+    modelSnapshot,
+    source,
+    target
+  }: LinkConstructionOptions): Promise<Link<any>> {
+    assert(itemId);
+    assert(modelType);
+
+    const model = await this._constructModel({
+      itemId,
+      modelType,
+      initialMutations,
+      modelSnapshot
+    });
+
+    const link = new Link(itemId, itemType, model.modelMeta, model, this._writeStream, null, {
+      sourceId: source,
+      targetId: target,
+      source: this.getItem(source),
+      target: this.getItem(target)
+    });  
+    this._addEntity(link);
+
+    return link;
   }
 
   /**

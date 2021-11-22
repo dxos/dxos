@@ -100,13 +100,11 @@ describe('ItemManager', () => {
       const source = await itemManager.constructItem(defaultOpts());
       const target = await itemManager.constructItem(defaultOpts());
 
-      const link = await itemManager.constructItem({
+      const link = await itemManager.constructLink({
         ...defaultOpts(),
-        link: {
-          source: source.id,
-          target: target.id
-        }
-      }) as any as Link<any, any, any>;
+        source: source.id,
+        target: target.id
+      });
 
       expect(itemManager.items.size).toEqual(3);
 
@@ -123,13 +121,11 @@ describe('ItemManager', () => {
 
       const source = await itemManager.constructItem(defaultOpts());
 
-      const link = await itemManager.constructItem({
+      const link = await itemManager.constructLink({
         ...defaultOpts(),
-        link: {
-          source: source.id,
-          target: createId()
-        }
-      }) as any as Link<any, any, any>;
+        source: source.id,
+        target: createId(),
+      });
 
       expect(link.isDanglingLink).toBeTruthy();
       expect(source.links).toEqual([]);
@@ -141,13 +137,11 @@ describe('ItemManager', () => {
 
       const target = await itemManager.constructItem(defaultOpts());
 
-      const link = await itemManager.constructItem({
+      const link = await itemManager.constructLink({
         ...defaultOpts(),
-        link: {
-          source: createId(),
-          target: target.id
-        }
-      }) as any as Link<any, any, any>;
+        source: createId(),
+        target: target.id
+      });
 
       expect(link.isDanglingLink).toBeTruthy();
       expect(target.refs).toEqual([]);
@@ -160,13 +154,11 @@ describe('ItemManager', () => {
       const source = await itemManager.constructItem(defaultOpts());
       const target = await itemManager.constructItem(defaultOpts());
 
-      const link = await itemManager.constructItem({
+      const link = await itemManager.constructLink({
         ...defaultOpts(),
-        link: {
-          source: source.id,
-          target: target.id
-        }
-      }) as any as Link<any, any, any>;
+        source: source.id,
+        target: target.id
+      });
 
       expect(itemManager.items.size).toEqual(3);
 

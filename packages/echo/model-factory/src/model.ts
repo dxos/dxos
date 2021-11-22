@@ -50,6 +50,10 @@ export abstract class Model<T = any> {
     });
   }
 
+  get modelMeta(): ModelMeta {
+    return this._meta;
+  }
+
   get itemId (): ItemID {
     return this._itemId;
   }

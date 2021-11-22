@@ -6,7 +6,7 @@ import assert from 'assert';
 import debug from 'debug';
 import { Readable } from 'stream';
 
-import { raise } from '@dxos/debug';
+import { failUndefined, raise } from '@dxos/debug';
 import {
   DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
 } from '@dxos/echo-protocol';
@@ -17,6 +17,7 @@ import { jsonReplacer } from '@dxos/util';
 import { DefaultModel } from './default-model';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
+import { Entity } from './entity';
 
 const log = debug('dxos:echo:item-demuxer');
 
@@ -63,22 +64,33 @@ export class ItemDemuxer {
         const { itemType, modelType } = genesis;
         assert(modelType);
 
-        // Create item.
-        // TODO(marik-d): Investigate whether gensis message shoudl be able to set parentId.
-        const item = await this._itemManager.constructItem({
-          itemId,
-          itemType,
-          modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
-          initialMutations: mutation ? [{ mutation, meta }] : undefined,
-          link: genesis.link
-        });
-        if (item.model instanceof DefaultModel) {
-          item.model.originalModelType = modelType;
+        let entity: Entity<any>;
+        if(genesis.link) {
+          entity = await this._itemManager.constructLink({
+            itemId,
+            itemType,
+            modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
+            initialMutations: mutation ? [{ mutation, meta }] : undefined,
+            source: genesis.link.source ?? failUndefined(),
+            target: genesis.link.target ?? failUndefined(),
+          });
+        } else {
+          entity = await this._itemManager.constructItem({
+            itemId,
+            itemType,
+            modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
+            initialMutations: mutation ? [{ mutation, meta }] : undefined,
+          });
         }
-        assert(item.id === itemId);
+
+        
+        if (entity.model instanceof DefaultModel) {
+          entity.model.originalModelType = modelType;
+        }
+        assert(entity.id === itemId);
 
         if (this._options.snapshots) {
-          if (!item.modelMeta.snapshotCodec) {
+          if (!entity.modelMeta.snapshotCodec) {
             // If the model doesn't support mutations natively we save & replay it's mutations.
             this._beginRecordingItemModelMutations(itemId);
           }
