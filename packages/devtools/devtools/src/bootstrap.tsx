@@ -10,7 +10,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 
 import { App } from './App';
 import { ErrorBoundary } from './components';
-import { DevtoolsContent } from './hooks';
+import { DevtoolsContext } from './hooks';
 import { DevtoolsHost } from './proto';
 
 const theme = createMuiTheme({
@@ -38,9 +38,9 @@ export const initialize = (shell: Shell) => {
       <ErrorBoundary>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <DevtoolsContent.Provider value={devtoolsHost}>
+          <DevtoolsContext.Provider value={devtoolsHost}>
             <App />
-          </DevtoolsContent.Provider>
+          </DevtoolsContext.Provider>
         </ThemeProvider>
       </ErrorBoundary>,
       document.getElementById('root')
