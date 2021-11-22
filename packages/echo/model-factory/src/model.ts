@@ -50,7 +50,7 @@ export abstract class Model<T = any> {
     });
   }
 
-  get modelMeta(): ModelMeta {
+  get modelMeta (): ModelMeta {
     return this._meta;
   }
 
@@ -105,7 +105,7 @@ export abstract class Model<T = any> {
     // Promise that resolves when this mutation has been processed.
     const processed = this._messageProcessed.waitFor(meta =>
       receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
-    )
+    );
 
     const receipt = await this._writeStream.write(mutation);
     return {
