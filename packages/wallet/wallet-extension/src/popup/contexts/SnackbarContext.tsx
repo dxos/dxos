@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useContext, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 import { Snackbar, Alert as MuiAlert, AlertProps } from '@mui/material';
 
@@ -13,7 +13,7 @@ interface SnackbarMessage {
 
 const Alert = (props: AlertProps) => <MuiAlert elevation={6} variant='filled' {...props} />;
 
-const SnackbarContext = React.createContext<((message : SnackbarMessage) => void) | undefined>(undefined);
+const SnackbarContext = createContext<((message : SnackbarMessage) => void) | undefined>(undefined);
 
 const useSnackbar = () => useContext(SnackbarContext);
 
