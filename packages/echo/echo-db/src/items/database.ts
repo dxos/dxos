@@ -15,6 +15,7 @@ import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { SelectFilter, Selection, SelectionResult } from './selection';
 import { TimeframeClock } from './timeframe-clock';
+import { Entity } from './entity';
 
 export interface ItemCreationOptions<M> {
   model: ModelConstructor<M>
@@ -151,7 +152,7 @@ export class Database {
   /**
    * Waits for item matching the filter to be present and returns it.
    */
-  async waitForItem<T extends Model<any> = any> (filter: SelectFilter): Promise<Item<T>> {
+  async waitForItem<T extends Model<any> = any> (filter: SelectFilter<Item<T>>): Promise<Item<T>> {
     const query = this.select(s => s.filter(filter).items);
     if (query.getValue().length > 0) {
       return query.getValue()[0];

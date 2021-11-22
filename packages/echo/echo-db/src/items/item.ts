@@ -9,13 +9,6 @@ import { Entity } from './entity';
 import type { Link } from './link';
 import { Selection } from './selection';
 
-export interface LinkData {
-  sourceId: ItemID
-  targetId: ItemID
-  source?: Item<any> // TODO(burdon): Separate type if items are not set?
-  target?: Item<any>
-}
-
 /**
  * A globally addressable data item.
  * Items are hermetic data structures contained within a Party. They may be hierarchical.
@@ -31,18 +24,17 @@ export class Item<M extends Model> extends Entity<M> {
    */
   readonly _children = new Set<Item<any>>();
 
-  // Managed set of links with this item as the source.
-  private readonly _links = new Set<Link<any, any, any>>();
-
-  // Managed set of links with this item as the target.
-  private readonly _refs = new Set<Link<any, any, any>>();
-
-  // TODO(burdon): Factor out into link/object derived classes.
   /**
-   * Link data (if this item is a link). Only to be set on item genesis.
+   * Managed set of links with this item as the source.
    * @internal
    */
-  _link: LinkData | null = null;
+  readonly _links = new Set<Link<any, any, any>>();
+
+  /**
+   * Managed set of links with this item as the target.
+   * @internal
+   */
+  readonly _refs = new Set<Link<any, any, any>>();
 
   /**
    * Items are constructed by the `Database` object.
@@ -61,12 +53,10 @@ export class Item<M extends Model> extends Entity<M> {
     model: M,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null,
-    link?: LinkData | null
   ) {
     super(itemId, itemType, modelMeta, model);
 
     this._updateParent(parent);
-    this._setLink(link ?? null);
   }
 
   override toString () {
@@ -86,21 +76,11 @@ export class Item<M extends Model> extends Entity<M> {
   }
 
   get links (): Link<any, any, any>[] {
-    return Array.from(this._links.values()).filter(link => !link.isDanglingLink);
+    return Array.from(this._links.values()).filter(link => !link._isDangling());
   }
 
   get refs (): Link<any, any, any>[] {
-    return Array.from(this._refs.values()).filter(link => !link.isDanglingLink);
-  }
-
-  // TODO(burdon): Remove (should be error since referenced items should already have been processed).
-  get isDanglingLink () {
-    return this._link && (!this._link.source || !this._link.target);
-  }
-
-  // TODO(burdon): Factor out link/object to derived classes from base item.
-  get isLink () {
-    return !!this._link;
+    return Array.from(this._refs.values()).filter(link => !link._isDangling());
   }
 
   // TODO(burdon): Experimental. (Event?)
@@ -154,18 +134,6 @@ export class Item<M extends Model> extends Entity<M> {
       this._parent._children.add(this);
     } else {
       this._parent = null;
-    }
-  }
-
-  /**
-   * Turn this item into a link.
-   */
-  // TODO(marik-d): Refactor by splitting `Item` into `Object` and `Link` subclasses.
-  private _setLink (linkData: LinkData | null) {
-    this._link = linkData;
-    if (linkData) {
-      linkData.source?._links.add(this as any);
-      linkData.target?._refs.add(this as any);
     }
   }
 }

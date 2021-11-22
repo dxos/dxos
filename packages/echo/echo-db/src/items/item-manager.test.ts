@@ -107,11 +107,13 @@ describe('ItemManager', () => {
 
       expect(itemManager.items.size).toEqual(3);
 
-      expect(link.source).toEqual(source);
-      expect(link.target).toEqual(target);
+      expect(link.source).toStrictEqual(source);
+      expect(link.target).toStrictEqual(target);
 
-      expect(source.links).toEqual([link]);
-      expect(target.refs).toEqual([link]);
+      expect(source.links).toHaveLength(1)
+      expect(target.refs).toHaveLength(1)
+      expect(source.links[0]).toStrictEqual(link);
+      expect(target.refs[0]).toStrictEqual(link);
     });
 
     test('target can be dangling', async () => {
@@ -126,7 +128,8 @@ describe('ItemManager', () => {
         target: createId()
       });
 
-      expect(link.isDanglingLink).toBeTruthy();
+      expect(link.source).toEqual(source);
+      expect(() => link.target).toThrow();
       expect(source.links).toEqual([]);
     });
 
@@ -142,7 +145,8 @@ describe('ItemManager', () => {
         target: target.id
       });
 
-      expect(link.isDanglingLink).toBeTruthy();
+      expect(() => link.source).toThrow();
+      expect(link.target).toEqual(target);
       expect(target.refs).toEqual([]);
     });
 

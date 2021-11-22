@@ -303,12 +303,23 @@ export class ItemManager {
       modelSnapshot
     });
 
-    const link = new Link(itemId, itemType, model.modelMeta, model, this._writeStream, null, {
+    const sourceItem = this.getItem(source);
+    const targetItem = this.getItem(target);
+
+    const link = new Link(itemId, itemType, model.modelMeta, model, {
       sourceId: source,
       targetId: target,
-      source: this.getItem(source),
-      target: this.getItem(target)
+      source: sourceItem,
+      target: targetItem
     });
+
+    if(sourceItem) {
+      sourceItem._links.add(link);
+    }
+    if(targetItem) {
+      targetItem._refs.add(link);
+    }
+
     this._addEntity(link);
 
     return link;
@@ -349,7 +360,6 @@ export class ItemManager {
     return new ResultSet(this._debouncedItemUpdate, () => Array.from(this._items.values())
       .filter((entity): entity is Item<M> => entity instanceof Item)
       .filter(item =>
-        !item.isLink &&
         !(item.model instanceof DefaultModel) &&
         this._matchesFilter(item, filter)
       ));

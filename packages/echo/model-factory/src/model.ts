@@ -117,6 +117,16 @@ export abstract class Model<T = any> {
   }
 
   /**
+   * Overriden to not retun implementation details.
+   */
+  toJSON() {
+    return {
+      id: this.itemId,
+      type: this._meta.type,
+    }
+  }
+
+  /**
    * Process the message.
    * @abstract
    * @param {Object} meta
