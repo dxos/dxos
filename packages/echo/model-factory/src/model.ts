@@ -119,11 +119,11 @@ export abstract class Model<T = any> {
   /**
    * Overriden to not retun implementation details.
    */
-  toJSON() {
+  toJSON () {
     return {
       id: this.itemId,
-      type: this._meta.type,
-    }
+      type: this._meta.type
+    };
   }
 
   /**

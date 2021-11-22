@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import * as fs from 'fs';
 import { sync as glob } from 'glob';
 import { join } from 'path';
-import yargs, { boolean } from 'yargs';
+import yargs from 'yargs';
 
 import { Project } from './project';
 import { execCommand, execTool } from './tools/common';
@@ -74,7 +74,7 @@ yargs(process.argv.slice(2))
       .option('watch', {
         alias: 'w',
         type: 'boolean',
-        default: false,
+        default: false
       })
       .strict(),
     (argv) => {
