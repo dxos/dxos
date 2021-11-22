@@ -10,10 +10,10 @@ import { Event } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 
+import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
 import { Selection } from './selection';
-import { Entity } from './entity';
 
 const OBJECT_ORG = 'dxn://dxos/object/org';
 const OBJECT_PERSON = 'dxn://dxos/object/person';
@@ -34,7 +34,7 @@ const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<
   target._refs.add(link);
 
   return link;
-}
+};
 
 const items: Item<any>[] = [
   createItem('item/1', OBJECT_ORG),

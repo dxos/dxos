@@ -52,7 +52,7 @@ export class Item<M extends Model> extends Entity<M> {
     modelMeta: ModelMeta,
     model: M,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
-    parent?: Item<any> | null,
+    parent?: Item<any> | null
   ) {
     super(itemId, itemType, modelMeta, model);
 

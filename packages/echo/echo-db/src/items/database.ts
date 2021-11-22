@@ -15,7 +15,6 @@ import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { SelectFilter, Selection, SelectionResult } from './selection';
 import { TimeframeClock } from './timeframe-clock';
-import { Entity } from './entity';
 
 export interface ItemCreationOptions<M> {
   model: ModelConstructor<M>

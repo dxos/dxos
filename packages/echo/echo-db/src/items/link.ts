@@ -7,8 +7,8 @@ import assert from 'assert';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelMeta } from '@dxos/model-factory';
 
-import { Item } from './item';
 import { Entity } from './entity';
+import { Item } from './item';
 
 export interface LinkData {
   sourceId: ItemID
@@ -21,7 +21,6 @@ export interface LinkData {
  * Link variant of an item. Link two objects together. Can hold a custom model.
  */
 export class Link<M extends Model<any>, L extends Model<any> = any, R extends Model<any> = any> extends Entity<M> {
-
   /**
    * @internal
    */
@@ -38,7 +37,7 @@ export class Link<M extends Model<any>, L extends Model<any> = any, R extends Mo
       itemId,
       itemType,
       modelMeta,
-      model,
+      model
     );
     this._link = link;
   }
@@ -68,7 +67,7 @@ export class Link<M extends Model<any>, L extends Model<any> = any, R extends Mo
   /**
    * @internal
    */
-  _isDangling() {
+  _isDangling () {
     return !this._link.source || !this._link.target;
   }
 }

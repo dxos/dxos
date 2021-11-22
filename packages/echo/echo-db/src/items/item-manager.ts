@@ -313,10 +313,10 @@ export class ItemManager {
       target: targetItem
     });
 
-    if(sourceItem) {
+    if (sourceItem) {
       sourceItem._links.add(link);
     }
-    if(targetItem) {
+    if (targetItem) {
       targetItem._refs.add(link);
     }
 

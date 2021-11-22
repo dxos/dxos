@@ -110,8 +110,8 @@ describe('ItemManager', () => {
       expect(link.source).toStrictEqual(source);
       expect(link.target).toStrictEqual(target);
 
-      expect(source.links).toHaveLength(1)
-      expect(target.refs).toHaveLength(1)
+      expect(source.links).toHaveLength(1);
+      expect(target.refs).toHaveLength(1);
       expect(source.links[0]).toStrictEqual(link);
       expect(target.refs[0]).toStrictEqual(link);
     });

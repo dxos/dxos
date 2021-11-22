@@ -5,11 +5,11 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
+import { isNotNullOrUndefined } from '@dxos/util';
 
+import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
-import { Entity } from './entity';
-import { isNotNullOrUndefined } from '@dxos/util';
 
 type SelectFilterFunction<T extends Entity<any>> = (item: T) => boolean;
 
