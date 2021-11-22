@@ -15,7 +15,11 @@ import { execLint } from './tools/lint';
 import { execMocha } from './tools/mocha';
 import { execPackageScript } from './tools/packageScript';
 
-function execBuild () {
+interface BuildOptions {
+  watch?: boolean
+}
+
+function execBuild (opts: BuildOptions = {}) {
   const project = Project.load();
 
   if (project.packageJsonContents.jest) {
@@ -44,7 +48,7 @@ function execBuild () {
   }
 
   console.log(chalk.bold`\ntypescript`);
-  execTool('tsc');
+  execTool('tsc', opts.watch ? ['--watch'] : []);
 }
 
 function execTest (userArgs?: string[]) {
@@ -63,14 +67,19 @@ function execTest (userArgs?: string[]) {
 
 // eslint-disable-next-line no-unused-expressions
 yargs(process.argv.slice(2))
-  .command(
+  .command<{ watch?: boolean }>(
     'build',
     'Build the package.',
     yargs => yargs
+      .option('watch', {
+        alias: 'w',
+        type: 'boolean',
+        default: false
+      })
       .strict(),
-    () => {
+    (argv) => {
       const before = Date.now();
-      execBuild();
+      execBuild({ watch: argv.watch });
       console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
     }
   )

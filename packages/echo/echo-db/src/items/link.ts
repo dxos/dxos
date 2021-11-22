@@ -4,61 +4,70 @@
 
 import assert from 'assert';
 
-import { EchoEnvelope, FeedWriter, ItemID, ItemType } from '@dxos/echo-protocol';
+import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, ModelMeta } from '@dxos/model-factory';
 
-import { Item, LinkData } from './item';
+import { Entity } from './entity';
+import { Item } from './item';
+
+export interface LinkData {
+  sourceId: ItemID
+  targetId: ItemID
+  source?: Item<any> // TODO(burdon): Separate type if items are not set?
+  target?: Item<any>
+}
 
 /**
  * Link variant of an item. Link two objects together. Can hold a custom model.
  */
-export class Link<M extends Model<any>, L extends Model<any>, R extends Model<any>> extends Item<M> {
+export class Link<M extends Model<any>, L extends Model<any> = any, R extends Model<any> = any> extends Entity<M> {
+  /**
+   * @internal
+   */
+  _link: LinkData;
+
   constructor (
     itemId: ItemID,
     itemType: ItemType | undefined,
     modelMeta: ModelMeta, // TODO(burdon): Why is this not part of the Model interface?
     model: M,
-    writeStream?: FeedWriter<EchoEnvelope>,
-    parent?: Item<any> | null,
-    link?: LinkData | null
+    link: LinkData
   ) {
     super(
       itemId,
       itemType,
       modelMeta,
-      model,
-      writeStream,
-      parent,
-      link
+      model
     );
-    assert(!parent, 'Links cannot have parent items.');
-    assert(!!link, 'Links must have link data.');
+    this._link = link;
   }
 
-  override get isLink (): true {
-    assert(super.isLink);
+  get isLink (): true {
     return true;
   }
 
   get sourceId (): ItemID {
-    assert(this._link);
     return this._link.sourceId;
   }
 
   get targetId (): ItemID {
-    assert(this._link);
     return this._link.targetId;
   }
 
   get source (): Item<L> {
-    assert(this._link);
     assert(this._link.source, 'Dangling link');
     return this._link.source;
   }
 
   get target (): Item<R> {
-    assert(this._link);
     assert(this._link.target, 'Dangling link');
     return this._link.target;
+  }
+
+  /**
+   * @internal
+   */
+  _isDangling () {
+    return !this._link.source || !this._link.target;
   }
 }

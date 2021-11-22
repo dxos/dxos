@@ -4,17 +4,17 @@
 
 import assert from 'assert';
 import debug from 'debug';
-import { Readable } from 'stream';
 
-import { raise } from '@dxos/debug';
+import { failUndefined, raise } from '@dxos/debug';
 import {
   DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
 } from '@dxos/echo-protocol';
-import { createReadable, createWritable } from '@dxos/feed-store';
+import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { jsonReplacer } from '@dxos/util';
 
 import { DefaultModel } from './default-model';
+import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
 
@@ -35,8 +35,6 @@ export class ItemDemuxer {
    */
   private readonly _modelMutations = new Map<ItemID, ModelMutation[]>();
 
-  private readonly _itemStreams = new Map<ItemID, Readable>();
-
   constructor (
     private readonly _itemManager: ItemManager,
     private readonly _modelFactory: ModelFactory,
@@ -47,7 +45,7 @@ export class ItemDemuxer {
     this._modelFactory.registered.on(async model => {
       for (const item of this._itemManager.getItemsWithDefaultModels()) {
         if (item.model.originalModelType === model.meta.type) {
-          await this._itemManager.reconstructItemWithDefaultModel(item.id, this._itemStreams.get(item.id)!);
+          await this._itemManager.reconstructItemWithDefaultModel(item.id);
         }
       }
     });
@@ -65,27 +63,32 @@ export class ItemDemuxer {
         const { itemType, modelType } = genesis;
         assert(modelType);
 
-        // Create inbound stream for item.
-        const itemStream = createReadable();
-        this._itemStreams.set(itemId, itemStream);
-
-        // Create item.
-        // TODO(marik-d): Investigate whether gensis message shoudl be able to set parentId.
-        const item = await this._itemManager.constructItem({
-          itemId,
-          itemType,
-          modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
-          readStream: itemStream,
-          initialMutations: mutation ? [{ mutation, meta }] : undefined,
-          link: genesis.link
-        });
-        if (item.model instanceof DefaultModel) {
-          item.model.originalModelType = modelType;
+        let entity: Entity<any>;
+        if (genesis.link) {
+          entity = await this._itemManager.constructLink({
+            itemId,
+            itemType,
+            modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
+            initialMutations: mutation ? [{ mutation, meta }] : undefined,
+            source: genesis.link.source ?? failUndefined(),
+            target: genesis.link.target ?? failUndefined()
+          });
+        } else {
+          entity = await this._itemManager.constructItem({
+            itemId,
+            itemType,
+            modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
+            initialMutations: mutation ? [{ mutation, meta }] : undefined
+          });
         }
-        assert(item.id === itemId);
+
+        if (entity.model instanceof DefaultModel) {
+          entity.model.originalModelType = modelType;
+        }
+        assert(entity.id === itemId);
 
         if (this._options.snapshots) {
-          if (!item.modelMeta.snapshotCodec) {
+          if (!entity.modelMeta.snapshotCodec) {
             // If the model doesn't support mutations natively we save & replay it's mutations.
             this._beginRecordingItemModelMutations(itemId);
           }
@@ -111,16 +114,15 @@ export class ItemDemuxer {
       // Model mutations.
       //
       if (mutation && !genesis) {
-        const itemStream = this._itemStreams.get(itemId);
-        assert(itemStream, `Missing item: ${itemId}`);
-
         assert(message.data.mutation);
+        const mutation = { meta: message.meta, mutation: message.data.mutation };
+
         if (this._options.snapshots) {
-          this._recordModelMutation(itemId, { meta: message.meta, mutation: message.data.mutation });
+          this._recordModelMutation(itemId, mutation);
         }
 
         // Forward mutations to the item's stream.
-        await itemStream.push(message);
+        await this._itemManager.processModelMessage(itemId, mutation);
       }
     });
   }
@@ -165,10 +167,6 @@ export class ItemDemuxer {
       assert(item.modelType);
       assert(item.model);
 
-      assert(!this._itemStreams.has(item.itemId));
-      const itemStream = createReadable();
-      this._itemStreams.set(item.itemId, itemStream);
-
       if (this._options.snapshots && item.model?.array) {
         // TODO(marik-d): Check if model supports snapshots natively.
         this._modelMutations.set(item.itemId, item.model.array.mutations ?? []);
@@ -178,7 +176,6 @@ export class ItemDemuxer {
         itemId: item.itemId,
         modelType: this._modelFactory.hasModel(item.modelType) ? item.modelType : DefaultModel.meta.type,
         itemType: item.itemType,
-        readStream: itemStream,
         parentId: item.parentId,
         initialMutations: item.model.array ? item.model.array.mutations : undefined,
         modelSnapshot: item.model.custom ? item.model.custom : undefined

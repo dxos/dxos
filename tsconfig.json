@@ -17,7 +17,8 @@
     "sourceMap": true,
     "strict": true,
     "target": "ES2018",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "stripInternal": true,
   },
   "include": ["**/src/**/*.ts","**/src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
