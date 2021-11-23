@@ -178,7 +178,7 @@ export class Swarm {
       disconnect: async peer => {
         try {
           await this._closeConnection(peer);
-        } catch (err) {
+        } catch (err: any) {
           this.errors.raise(err);
         }
         this._topology.update();
@@ -215,7 +215,7 @@ export class Swarm {
         if (answer.accept) {
           try {
             connection.connect();
-          } catch (err) {
+          } catch (err: any) {
             this.errors.raise(err);
           }
         } else {

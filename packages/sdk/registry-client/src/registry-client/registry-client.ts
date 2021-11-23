@@ -153,7 +153,7 @@ export class RegistryClient implements IRegistryClient {
         const record = await this.getRecord(CID.from(contentCid));
         assert(record);
         return record;
-      } catch (err) {
+      } catch (err: any) {
         return undefined;
       }
     }));

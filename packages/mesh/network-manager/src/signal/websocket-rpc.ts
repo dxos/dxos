@@ -54,7 +54,7 @@ export class WebsocketRpc {
         await this._rpc.open();
         log(`RPC open ${this._host}`);
         this.connected.emit();
-      } catch (err) {
+      } catch (err: any) {
         this.error.emit(err);
       }
     };
@@ -63,7 +63,7 @@ export class WebsocketRpc {
       this.disconnected.emit();
       try {
         await this._rpc.close();
-      } catch (err) {
+      } catch (err: any) {
         this.error.emit(err);
       }
     };
@@ -90,7 +90,7 @@ export class WebsocketRpc {
                 data = e.data as any;
               }
               next(data);
-            } catch (err) {
+            } catch (err: any) {
               this.error.emit(err);
             }
           };
@@ -136,7 +136,7 @@ export class WebsocketRpc {
       });
       log(`Signal RPC ${this._host}: ${method} ${JSON.stringify(payload)} ${JSON.stringify(response)}`);
       return response;
-    } catch (err) {
+    } catch (err: any) {
       log(`Signal RPC error ${this._host}: ${method} ${JSON.stringify(payload)} ${err.message}`);
       this.commandTrace.emit({
         messageId: `${this._host}-${this._messageId++}`,
@@ -179,7 +179,7 @@ export class WebsocketRpc {
             response
           });
           return response;
-        } catch (error) {
+        } catch (error: any) {
           this.commandTrace.emit({
             messageId: `${this._host}-${this._messageId++}`,
             host: this._host,

@@ -33,7 +33,7 @@ export class SnapshotStore {
 
       const data = await pify(file.read.bind(file))(0, size);
       return schema.getCodecForType('dxos.echo.snapshot.PartySnapshot').decode(data);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'ENOENT') {
         return undefined;
       } else {

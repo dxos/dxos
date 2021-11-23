@@ -271,7 +271,7 @@ export class RpcPeer {
         id: req.id,
         payload: response
       };
-    } catch (err) {
+    } catch (err: any) {
       return {
         id: req.id,
         error: encodeError(err)
@@ -308,7 +308,7 @@ export class RpcPeer {
         }
       );
       this._localStreams.set(req.id, responseStream);
-    } catch (err) {
+    } catch (err: any) {
       callback({
         id: req.id,
         error: encodeError(err)

@@ -116,7 +116,7 @@ function getDeviceKeyChainFromHalo (halo: HaloParty, deviceKey: KeyRecord) {
       halo.credentialMessages,
       halo.feedKeys
     );
-  } catch (err) {
+  } catch (err: any) {
     log('Unable to locate device KeyChain:', err); // TODO(burdon): ???
     return undefined;
   }

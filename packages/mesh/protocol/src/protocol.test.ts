@@ -200,7 +200,7 @@ describe('Protocol', () => {
 
         try {
           await bufferMessages.send(Buffer.from('crash'));
-        } catch (err) {
+        } catch (err: any) {
           // eslint-disable-next-line
           expect(ERR_EXTENSION_RESPONSE_FAILED.equals(err)).toBe(true);
           // eslint-disable-next-line
@@ -209,7 +209,7 @@ describe('Protocol', () => {
 
         try {
           await bufferMessages.send(Buffer.from('timeout'));
-        } catch (err) {
+        } catch (err: any) {
           // eslint-disable-next-line
           expect(ERR_EXTENSION_RESPONSE_TIMEOUT.equals(err)).toBe(true); // timeout.
         }

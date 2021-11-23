@@ -180,7 +180,7 @@ export class Extension extends Nanomessage {
       onmessage: async (msg: any) => {
         try {
           await this._subscribeCb?.(msg);
-        } catch (err) {
+        } catch (err: any) {
           log(`${this.name} failed to execute subscribe callback on message.`, { msg, err });
         }
       }
@@ -201,7 +201,7 @@ export class Extension extends Nanomessage {
       if (this._initHandler) {
         await this._initHandler(this._protocol);
       }
-    } catch (err) {
+    } catch (err: any) {
       throw ERR_EXTENSION_INIT_FAILED.from(err);
     }
   }
@@ -220,7 +220,7 @@ export class Extension extends Nanomessage {
       if (this._handshakeHandler) {
         await this._handshakeHandler(this._protocol);
       }
-    } catch (err) {
+    } catch (err: any) {
       throw ERR_EXTENSION_HANDSHAKE_FAILED.from(err);
     }
   }
@@ -241,7 +241,7 @@ export class Extension extends Nanomessage {
       if (this._feedHandler) {
         await this._feedHandler(this._protocol, discoveryKey);
       }
-    } catch (err) {
+    } catch (err: any) {
       throw ERR_EXTENSION_FEED_FAILED.from(err);
     }
   }
@@ -273,7 +273,7 @@ export class Extension extends Nanomessage {
       }
 
       return { response };
-    } catch (err) {
+    } catch (err: any) {
       if (ERR_EXTENSION_RESPONSE_FAILED.equals(err)) {
         throw err;
       }
@@ -306,7 +306,7 @@ export class Extension extends Nanomessage {
         assert(this._protocol);
         await this._closeHandler(this._protocol);
       }
-    } catch (err) {
+    } catch (err: any) {
       throw ERR_EXTENSION_CLOSE_FAILED.from(err);
     }
   }
@@ -338,7 +338,7 @@ export class Extension extends Nanomessage {
         const result = await this._messageHandler(this._protocol, msg);
         return this._buildMessage(result);
       }
-    } catch (err) {
+    } catch (err: any) {
       this.emit('error', err);
       const responseError = new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
       return {

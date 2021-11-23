@@ -126,7 +126,7 @@ describe('Lock', () => {
         await lock.executeSynchronized(async () => {
           await throwsError();
         });
-      } catch (err) {
+      } catch (err: any) {
         error = err;
         throw error;
       }

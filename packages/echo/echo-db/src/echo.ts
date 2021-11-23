@@ -261,7 +261,7 @@ export class ECHO {
       if (this._feedStore.storage.destroy) {
         await this._feedStore.storage.destroy();
       }
-    } catch (err) {
+    } catch (err: any) {
       log('Error clearing feed storage:', err);
     }
 
@@ -269,13 +269,13 @@ export class ECHO {
 
     try {
       await this._snapshotStore.clear();
-    } catch (err) {
+    } catch (err: any) {
       log('Error clearing snapshot storage:', err);
     }
 
     try {
       await this._metadataStore.clear();
-    } catch (err) {
+    } catch (err: any) {
       log('Error clearing metadata storage:', err);
     }
   }

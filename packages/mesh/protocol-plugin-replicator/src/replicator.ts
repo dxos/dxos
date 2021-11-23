@@ -116,7 +116,7 @@ export class Replicator {
 
       const feeds = await this._load(info) || [];
       await share(feeds);
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Load error: ', err);
     }
   }
@@ -139,7 +139,7 @@ export class Replicator {
           console.warn(`Invalid type: ${type}`);
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Message handler error', err);
     }
   }
@@ -154,7 +154,7 @@ export class Replicator {
     try {
       const feeds = await this._replicate(data, info) || [];
       peer?.replicate(feeds);
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Replicate feeds error', err);
     }
   }

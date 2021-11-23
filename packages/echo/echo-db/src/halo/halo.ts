@@ -140,7 +140,7 @@ export class HALO {
   async reset () {
     try {
       await this._keyring.deleteAllKeyRecords();
-    } catch (err) {
+    } catch (err: any) {
       log('Error clearing keyring:', err);
     }
   }

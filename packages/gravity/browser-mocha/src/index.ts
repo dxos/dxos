@@ -42,7 +42,7 @@ export async function run (options: RunOptions) {
   const tempDir = 'dist/browser-mocha';
   try {
     await fs.mkdir(tempDir, { recursive: true });
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
   }
 

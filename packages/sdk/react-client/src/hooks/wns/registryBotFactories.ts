@@ -34,7 +34,7 @@ export const useRegistryBotFactories = () => {
       let factoriesResult: QueryRecord[];
       try {
         factoriesResult = await registry.queryRecords({ type: WRN_TYPE_BOT_FACTORY });
-      } catch (e) {
+      } catch (e: any) {
         log('Querying bot factories unsuccessful.');
         log(e);
         return;

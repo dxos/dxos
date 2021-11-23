@@ -25,7 +25,7 @@ export const useUIError = () => {
         });
       }
       return { result };
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       if (!setSnackbar) {
         return;

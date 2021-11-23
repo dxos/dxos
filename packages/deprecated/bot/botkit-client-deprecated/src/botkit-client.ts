@@ -182,7 +182,7 @@ export class BotFactoryClient extends EventEmitter {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { message: { __type_url, ...data } } = status; // eslint-disable-line camelcase
       return { started: true, ...data };
-    } catch (err) {
+    } catch (err: any) {
       log(err);
       return { started: false };
     }
@@ -208,7 +208,7 @@ export class BotFactoryClient extends EventEmitter {
     if (this._swarm === SwarmingStatus.Connecting) {
       try {
         await waitForCondition(() => this._swarm === SwarmingStatus.Connected, WAIT_FOR_CONNECT_TIMEOUT, CONNECTION_CHECK_INTERVAL);
-      } catch (err) {
+      } catch (err: any) {
         log(`Connection was not established: ${err}`);
       }
     }

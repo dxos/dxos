@@ -20,7 +20,7 @@ export function createAutomaticSnapshots (
       try {
         const snapshot = party.createSnapshot();
         await store.save(snapshot);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to save snapshot');
         console.error(err);
       }
