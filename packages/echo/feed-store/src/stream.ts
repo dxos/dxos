@@ -50,7 +50,7 @@ export function createWritable<T> (callback: (message: T) => Promise<void>): Nod
       try {
         await callback(message);
         next();
-      } catch (err) {
+      } catch (err: any) {
         error(err);
         next(err);
       }
@@ -69,7 +69,7 @@ export function createTransform<R, W> (callback: (message: R) => Promise<W | und
       try {
         const response = await callback(message);
         next(null, response);
-      } catch (err) {
+      } catch (err: any) {
         error(err);
         next(err);
       }

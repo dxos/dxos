@@ -106,7 +106,7 @@ const HaloAuthenticationContainer = () => {
         await client.echo.halo.join(invitation, secretProvider);
         setStatus({ identity: invitation.identityKey.toString() });
       }
-    } catch (err) {
+    } catch (err: any) {
       // TODO(burdon): Doesn't support retry. Provide hint (eg, should retry/cancel).
       setStatus({ error: err });
     }

@@ -249,7 +249,7 @@ export class Broadcast<P extends Peer = Peer> {
 
       this.packet.emit(packet);
       return packet;
-    } catch (err) {
+    } catch (err: any) {
       this.subscribeError.emit(err);
     }
   }

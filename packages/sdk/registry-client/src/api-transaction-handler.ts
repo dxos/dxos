@@ -22,7 +22,7 @@ export class ApiTransactionHandler {
       transaction.signAndSend(signer, ({ events = [], status }) => {
         try {
           this.ensureExtrinsicNotFailed(events);
-        } catch (err) {
+        } catch (err: any) {
           reject(err);
         }
         // TODO(marcin): Provide ensureTransaction which makes sure the given transaction has been finalized.

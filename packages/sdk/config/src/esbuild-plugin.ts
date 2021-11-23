@@ -65,7 +65,7 @@ export function ConfigPlugin ({ configPath = DEFAULT_PATH, dynamic = false, publ
 
         try {
           content = yaml.load(readFileSync(resolve(configPath, value), 'utf-8'));
-        } catch (error) {
+        } catch (error: any) {
           console.error(error);
         }
 

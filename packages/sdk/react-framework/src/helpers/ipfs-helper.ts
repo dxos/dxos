@@ -58,7 +58,7 @@ export class IpfsHelper {
       if (!response.ok) {
         response = null;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       response = null;
     }

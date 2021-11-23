@@ -76,7 +76,7 @@ export class SourceManager {
     try {
       await download(botPackageUrl, baseDirectory, { extract: true, timeout: DOWNLOAD_TIMEOUT, rejectUnauthorized: false });
       log(`Bot package downloaded: ${baseDirectory}`);
-    } catch (err) {
+    } catch (err: any) {
       await fs.remove(baseDirectory);
       throw err;
     }
