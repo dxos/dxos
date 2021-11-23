@@ -126,7 +126,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           this._inviteeInvitations.set(id, inviteeInvitation);
           return { id };
         },
-        AuthenticateInvitation: async (request) => {
+        AuthenticateInvitation: (request) => new Stream(({ next }) => {
           assert(request.process?.id, 'Process ID is missing.');
           const invitation = this._inviteeInvitations.get(request.process?.id);
           assert(invitation, 'Invitation not found.');
@@ -136,13 +136,13 @@ export class ClientServiceHost implements ClientServiceProvider {
           invitation.secret = request.secret;
           invitation.secretTrigger?.();
 
-          // Wait for the join process to finish.
-          await (invitation.joinPromise?.());
-
-          const profile = this._echo.halo.getProfile();
-          assert(profile, 'Profile not created.');
-          return profile;
-        },
+          next({});
+          invitation.joinPromise?.().then(() => {
+            const profile = this._echo.halo.getProfile();
+            assert(profile, 'Profile not created.');
+            return { profile };
+          });
+        }),
         SubscribeContacts: () => {
           if (this._echo.halo.isInitialized) {
             return resultSetToStream(this._echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));

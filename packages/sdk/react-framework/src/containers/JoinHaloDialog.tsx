@@ -31,10 +31,9 @@ export const JoinHaloDialog = ({remote, ...props}: JoinHaloDialogProps) => {
       invitationCode: encodeInvitation(invitation)
     });
     console.log('authenticating...')
-    const profile = await client.services.ProfileService.AuthenticateInvitation({
+    await client.services.ProfileService.AuthenticateInvitation({
       process: invitationProcess, secret: (await secretProvider()).toString()
     })
-    console.log({profile})
   }
 
   return (

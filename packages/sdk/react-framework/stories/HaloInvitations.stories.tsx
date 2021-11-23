@@ -72,8 +72,9 @@ const User = ({ sharing, joining, remote }: UserProps) => {
       <JoinHaloDialog
         open={joinOpen}
         onClose={() => setJoinOpen(false)}
-        closeOnSuccess={true}
         modal={false}
+        closeOnSuccess={true}
+        remote={remote}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
         {remote ? <RemoteParties /> : <Parties />}
@@ -123,18 +124,20 @@ export const Remote = () => {
 
   return (
     <FullScreen>
-      <ErrorBoundary errorComponent={ErrorView}>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-around'
-        }}>
-          <ClientInitializer config={remoteConfig}>
-            <Column>
-              <User remote sharing joining />
-            </Column>
-          </ClientInitializer>
-        </Box>
-      </ErrorBoundary>
+      <FrameworkContextProvider>
+        <ErrorBoundary errorComponent={ErrorView}>
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-around'
+          }}>
+            <ClientInitializer config={remoteConfig}>
+              <Column>
+                <User remote sharing joining />
+              </Column>
+            </ClientInitializer>
+          </Box>
+        </ErrorBoundary>
+      </FrameworkContextProvider>
     </FullScreen>
   );
 };

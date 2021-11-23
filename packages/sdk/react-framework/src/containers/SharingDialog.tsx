@@ -56,9 +56,11 @@ const PendingInvitation = ({
               <HashIcon value={invitationCode} />
             </IconButton>
           </Clipboard>
-          <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2 }}>
-            Pending invitation...
-          </Typography>
+          <Clipboard text={invitationCode}>
+            <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2 }}>
+              Pending invitation...
+            </Typography>
+          </Clipboard>
         </>
       )}
 
