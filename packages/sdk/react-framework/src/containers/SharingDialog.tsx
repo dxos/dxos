@@ -3,6 +3,7 @@
 //
 
 import React, { useState } from 'react';
+import { CopyToClipboard as Clipboard } from 'react-copy-to-clipboard';
 import urlJoin from 'url-join';
 
 import {
@@ -19,14 +20,11 @@ import {
   CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
 } from '@dxos/react-components';
 
+import { PendingInvitation, usePendingInvitations } from '../hooks';
+
 type ShareOptions = {
   secretProvider: SecretProvider
   options: InvitationOptions
-}
-
-type PendingInvitation = {
-  invitationCode: string
-  pin: string | undefined
 }
 
 interface PendingInvitationProps {
@@ -53,7 +51,11 @@ const PendingInvitation = ({
     }}>
       {invitationCode && (
         <>
-          <CopyToClipboard text={invitationCode}><HashIcon value={invitationCode} /></CopyToClipboard>
+          <Clipboard text={pin || ''}>
+            <IconButton size='small'>
+              <HashIcon value={invitationCode} />
+            </IconButton>
+          </Clipboard>
           <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2 }}>
             Pending invitation...
           </Typography>
@@ -62,7 +64,7 @@ const PendingInvitation = ({
 
       {invitationCode && !pin && (
         <>
-          <IconButton size='small'>
+          <IconButton size='small' title='Copy passcode.'>
             <CopyToClipboard text={createUrl(invitationCode)} />
           </IconButton>
           <IconButton
@@ -107,9 +109,10 @@ const PendingInvitation = ({
 const defaultCreateUrl = (invitationCode: string) => {
   // TODO(burdon): By-pass keyhole with fake code.
   const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
-  const invitationPath = `/invitation/${invitationCode}`; // TODO(burdon): App-specific (hence pass in).
+  const invitationPath = `/invitation/${invitationCode}`; // App-specific.
   const { origin, pathname } = window.location;
-  return urlJoin(origin, pathname, `/?code=${kubeCode}`, `/#${invitationPath}`);
+  return urlJoin(origin, pathname, `/?code=${kubeCode}`, `/#${invitationPath}`)
+    .replace('?', '/?'); // TODO(burdon): Slash needed.
 };
 
 export interface SharingDialogProps {
@@ -128,7 +131,7 @@ export interface SharingDialogProps {
  * Not exported for the end user.
  * See PartySharingDialog and DeviceSharingDialog.
  */
-// TODO(burdon): Move to components.
+// TODO(burdon): Rename AccessDialog?
 export const SharingDialog = ({
   open,
   modal,
@@ -139,9 +142,7 @@ export const SharingDialog = ({
   onCreateInvitation,
   onClose
 }: SharingDialogProps) => {
-  // TODO(burdon): Add to context (make persistent when closing dialog).
-  // TODO(burdon): Expiration.
-  const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
+  const [invitations, setInvitations] = usePendingInvitations();
 
   // The old way - before the migration to new Client API with Client Services.
   const createLocalInvitation = async () => {

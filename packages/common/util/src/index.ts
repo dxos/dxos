@@ -11,3 +11,4 @@ export * from './randomInt';
 export * from './subscription';
 export * from './uint8array';
 export * from './typeguards';
+export * from './isNotNullOrUndefined';

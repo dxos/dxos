@@ -48,3 +48,20 @@ export function createMockFeedWriterFromStream (strem: NodeJS.WritableStream): F
     }
   };
 }
+
+export class MockFeedWriter<T> implements FeedWriter<T> {
+  readonly messages: T[] = []
+
+  constructor (
+    readonly feedKey = PublicKey.random()
+  ) {}
+
+  async write (message: T): Promise<WriteReceipt> {
+    this.messages.push(message);
+
+    return {
+      feedKey: this.feedKey,
+      seq: this.messages.length - 1
+    };
+  }
+}

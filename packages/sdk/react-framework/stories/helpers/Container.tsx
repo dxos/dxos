@@ -8,25 +8,29 @@ import { Box } from '@mui/material';
 
 import { FullScreen } from '@dxos/react-components';
 
+import { ErrorBoundary } from '../../src';
+
 export const Container = ({ children }: { children: React.ReactNode }) => (
   <FullScreen style={{ backgroundColor: '#EEE' }}>
-    <Box
-      sx={{
-        display: 'flex',
-        flex: 1,
-        justifyContent: 'center'
-      }}
-    >
+    <ErrorBoundary>
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'column',
-          width: 600,
-          backgroundColor: 'white'
+          flex: 1,
+          justifyContent: 'center'
         }}
       >
-        {children}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            width: 600,
+            backgroundColor: 'white'
+          }}
+        >
+          {children}
+        </Box>
       </Box>
-    </Box>
+    </ErrorBoundary>
   </FullScreen>
 );

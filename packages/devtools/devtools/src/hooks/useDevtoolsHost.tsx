@@ -8,12 +8,12 @@ import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { DevtoolsHost, schema } from '../proto';
 
-export const DevtoolsContent = React.createContext<DevtoolsHost | undefined>(undefined);
+export const DevtoolsContext = React.createContext<DevtoolsHost | undefined>(undefined);
 
 export const useDevtoolsHost = () => {
-  const host = useContext(DevtoolsContent);
+  const host = useContext(DevtoolsContext);
   if (!host) {
-    throw new Error('DevtoolsContent not set.');
+    throw new Error('DevtoolsContext not set.');
   }
 
   return host;
@@ -59,8 +59,8 @@ export const WithDevtoolsRpc = ({ port, children } : WithDevtoolsRpcProps) => {
   }
 
   return (
-    <DevtoolsContent.Provider value={rpcClient?.rpc}>
+    <DevtoolsContext.Provider value={rpcClient?.rpc}>
       {children}
-    </DevtoolsContent.Provider>
+    </DevtoolsContext.Provider>
   );
 };
