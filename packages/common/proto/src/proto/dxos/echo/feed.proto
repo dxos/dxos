@@ -4,9 +4,26 @@
 
 syntax = "proto3";
 
-package dxos.echo;
+package dxos.echo.feed;
 
 import "google/protobuf/any.proto";
+
+/**
+ * Outer message type decoded by Codec.
+ * This is what is written to the feeds.
+ */
+message FeedMessage {
+  CredentialsMessage halo = 1;
+  dxos.echo.EchoEnvelope echo = 2;
+}
+
+/**
+ * A container for dxos.credentials.Message
+ */
+message CredentialsMessage {
+  // TODO(marik-d): Use a protobuf type from credentials.
+  bytes data = 1;
+}
 
 //
 // Vector timestamp used to order messages.

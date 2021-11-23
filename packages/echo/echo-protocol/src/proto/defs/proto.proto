@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package dxos;
+
+import "@dxos/proto/src/proto/dxos/echo/feed.proto";
+import "@dxos/proto/src/proto/dxos/echo/snapshot.proto";

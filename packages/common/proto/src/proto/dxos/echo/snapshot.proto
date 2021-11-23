@@ -6,7 +6,7 @@ syntax = "proto3";
 
 package dxos.echo.snapshot;
 
-import "echo.proto";
+import "feed.proto";
 
 //
 // Snapshots define full party state at a given point in time.
