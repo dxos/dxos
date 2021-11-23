@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, useRemoteParties, useProfile } from '@dxos/react-client';
+import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, useRemoteParties, useProfile, SuppliedConfig } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
@@ -16,7 +16,6 @@ import {
   JoinHaloDialog
 } from '../src';
 import { Column } from './helpers';
-import { SuppliedConfig } from '@dxos/react-client';
 
 export default {
   title: 'react-framework/HaloInvitations'
@@ -120,7 +119,7 @@ export const Remote = () => {
     system: {
       remote: true
     }
-  }
+  };
 
   return (
     <FullScreen>

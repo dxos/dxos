@@ -4,49 +4,72 @@
 
 import React from 'react';
 
+import { encodeInvitation } from '@dxos/client';
+import { generatePasscode } from '@dxos/credentials';
 import { useClient } from '@dxos/react-client';
 
+import { PendingInvitation } from '../hooks';
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
-export interface HaloSharingDialogProps extends Omit<SharingDialogProps, 'onShare' | 'title' | 'members'> {
+export interface HaloSharingDialogProps extends Omit<SharingDialogProps, 'onCreateInvitation' | 'title' | 'members'> {
   remote?: boolean; // Whether the Client works in remote mode.
 }
 
 /**
  * Manages the workflow for inviting a new device to a HALO party.
  */
-export const HaloSharingDialog = ({remote, ...props}: HaloSharingDialogProps) => {
+export const HaloSharingDialog = ({ remote, ...props }: HaloSharingDialogProps) => {
   const client = useClient();
 
-  const handleShare: SharingDialogProps['onShare'] = async ({ options, secretProvider }) => {
-    return await client.createHaloInvitation(secretProvider, options);
+  // The old way - before the migration to new Client API with Client Services.
+  const createLocalInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
+    let pendingInvitation: PendingInvitation; // eslint-disable-line prefer-const
+
+    // Called when other side joins the invitation party.
+    const secretProvider = () => {
+      pendingInvitation.pin = generatePasscode();
+      setInvitations(invitations => [...invitations]);
+      return Promise.resolve(Buffer.from(pendingInvitation.pin));
+    };
+
+    const invitation = await client.createHaloInvitation(secretProvider, {
+      onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
+      // Remove the pending invitation.
+        setInvitations(invitations => invitations
+          .filter(invitation => invitation.invitationCode !== pendingInvitation.invitationCode));
+      }
+    });
+
+    pendingInvitation = {
+      invitationCode: encodeInvitation(invitation),
+      pin: undefined // Generated above.
+    };
+    setInvitations(invitations => [...invitations, pendingInvitation]);
   };
 
-  // Override for the remote client case.
-  const handleCreateInvitation: SharingDialogProps['onCreateInvitation'] = async () => {
-    console.log('sharing invitation...')
+  // The new way - using the remote Client API.
+  const createRemoteInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
+    console.log('sharing invitation...');
     const stream = await client.services.ProfileService.CreateInvitation();
-    return new Promise((resolve, reject) => {
-      stream.subscribe(invitation => {
-        console.log('stream on subscription', invitation)
-        if (!invitation.invitationCode) {
-          reject('Invitation Code is missing.')
-        }
-        if (!invitation.secret) {
-          reject('Secret is missing.')
-        }
-        resolve({invitationCode: invitation.invitationCode!, pin: invitation.secret})
-      }, reject)
-    })
-
+    stream.subscribe(invitationMsg => {
+      if (invitationMsg.finished) {
+        setInvitations(invitations => invitations
+          .filter(invitation => invitation.invitationCode !== invitationMsg.invitationCode));
+      } else {
+        const pendingInvitation: PendingInvitation = { invitationCode: invitationMsg.invitationCode!, pin: invitationMsg.secret };
+        setInvitations(invitations => [...invitations, pendingInvitation]);
+      }
+    }, error => {
+      console.error(error);
+      // TODO(rzadp): Handle error / retry.
+    });
   };
 
   return (
     <SharingDialog
       {...props}
       title='Halo Sharing'
-      onShare={handleShare}
-      onCreateInvitation={remote ? handleCreateInvitation : undefined}
+      onCreateInvitation={remote ? createRemoteInvitation : createLocalInvitation}
     />
   );
 };

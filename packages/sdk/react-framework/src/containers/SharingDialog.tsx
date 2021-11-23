@@ -2,30 +2,22 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { CopyToClipboard as Clipboard } from 'react-copy-to-clipboard';
 import urlJoin from 'url-join';
 
 import {
-  QrCode2 as QRCodeIcon,
-  Clear as CancelIcon
+  Clear as CancelIcon, QrCode2 as QRCodeIcon
 } from '@mui/icons-material';
 import { Button, IconButton, Popover, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
-import { encodeInvitation } from '@dxos/client';
-import { SecretProvider, generatePasscode } from '@dxos/credentials';
-import { InvitationDescriptor, InvitationOptions, PartyMember } from '@dxos/echo-db';
+import { PartyMember } from '@dxos/echo-db';
 import {
   CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
 } from '@dxos/react-components';
 
 import { PendingInvitation, usePendingInvitations } from '../hooks';
-
-type ShareOptions = {
-  secretProvider: SecretProvider
-  options: InvitationOptions
-}
 
 interface PendingInvitationProps {
   invitationCode: string
@@ -122,8 +114,7 @@ export interface SharingDialogProps {
   modal?: boolean
   title: string,
   members?: PartyMember[] // TODO(rzadp): Support HALO members as well (different devices).
-  onShare: (shareOptions: ShareOptions) => Promise<InvitationDescriptor>
-  onCreateInvitation?: () => Promise<PendingInvitation>
+  onCreateInvitation: (setInvitations: Dispatch<SetStateAction<PendingInvitation[]>>) => () => (void | Promise<void>)
   onClose?: () => void
   createUrl?: (invitationCode: string) => string
 }
@@ -140,46 +131,12 @@ export const SharingDialog = ({
   title,
   members = [],
   createUrl = defaultCreateUrl,
-  onShare,
   onCreateInvitation,
   onClose
 }: SharingDialogProps) => {
   const [invitations, setInvitations] = usePendingInvitations();
 
-  // The old way - before the migration to new Client API with Client Services.
-  const createLocalInvitation = async () => {
-    let pendingInvitation: PendingInvitation; // eslint-disable-line prefer-const
-
-    // Called when other side joins the invitation party.
-    const secretProvider = () => {
-      pendingInvitation.pin = generatePasscode();
-      setInvitations(invitations => [...invitations]);
-      return Promise.resolve(Buffer.from(pendingInvitation.pin));
-    };
-
-    const invitation = await onShare({
-      secretProvider,
-      options: {
-        onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
-        // Remove the pending invitation.
-          setInvitations(invitations => invitations
-            .filter(invitation => invitation.invitationCode !== pendingInvitation.invitationCode));
-        }
-      }
-    });
-
-    pendingInvitation = {
-      invitationCode: encodeInvitation(invitation),
-      pin: undefined // Generated above.
-    };
-
-    return pendingInvitation;
-  };
-
-  const handleCreateInvitation = async () => {
-    const pendingInvitation = await (onCreateInvitation ?? createLocalInvitation)()
-    setInvitations(invitations => [...invitations, pendingInvitation]);
-  }
+  const handleCreateInvitation = onCreateInvitation(setInvitations);
 
   return (
     <Dialog

@@ -97,7 +97,9 @@ export class ClientServiceHost implements ClientServiceProvider {
             const invitation = await this._echo.halo.createInvitation({
               secretProvider,
               secretValidator: defaultSecretValidator
-            }, {});
+            }, {
+              onFinish: () => next({finished: true})
+            });
             const invitationCode = encodeInvitation(invitation);
             this._inviterInvitations.push({ invitationCode, secret });
             next({ invitationCode, secret });
