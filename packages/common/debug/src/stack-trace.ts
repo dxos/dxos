@@ -5,7 +5,7 @@
 export function getStackTrace () {
   try {
     throw new Error();
-  } catch (err) {
+  } catch (err: any) {
     return err.stack.split('\n').slice(1).join('\n');
   }
 }
