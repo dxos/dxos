@@ -54,7 +54,7 @@ export class ItemManager {
   private readonly _debouncedItemUpdate = debounceEvent(this._itemUpdate.discardParameter());
 
   // Map of active items.
-  private readonly _items = new Map<ItemID, Entity<any>>();
+  private readonly _entities = new Map<ItemID, Entity<any>>();
 
   /**
    * Map of item promises (waiting for item construction after genesis message has been written).
@@ -71,8 +71,8 @@ export class ItemManager {
      private readonly _writeStream?: FeedWriter<EchoEnvelope>
   ) {}
 
-  get items () {
-    return this._items;
+  get entities () {
+    return this._entities;
   }
 
   /**
@@ -217,8 +217,8 @@ export class ItemManager {
    * Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entitiy to be constructed.
    */
   private _addEntity (entity: Entity<any>) {
-    assert(!this._items.has(entity.id));
-    this._items.set(entity.id, entity);
+    assert(!this._entities.has(entity.id));
+    this._entities.set(entity.id, entity);
     log('New entity:', String(entity));
 
     if (!(entity.model instanceof DefaultModel)) {
@@ -259,7 +259,7 @@ export class ItemManager {
     assert(itemId);
     assert(modelType);
 
-    const parent = parentId ? this._items.get(parentId) : null;
+    const parent = parentId ? this._entities.get(parentId) : null;
     if (parentId && !parent) {
       throw new Error(`Missing parent: ${parentId}`);
     }
@@ -331,7 +331,7 @@ export class ItemManager {
    * @param message Encoded model message
    */
   async processModelMessage (itemId: ItemID, message: ModelMessage<Uint8Array>) {
-    const item = this._items.get(itemId);
+    const item = this._entities.get(itemId);
     assert(item);
 
     const decoded = item.modelMeta.mutation.decode(message.mutation);
@@ -345,7 +345,7 @@ export class ItemManager {
    * @param itemId
    */
   getItem<M extends Model<any> = any> (itemId: ItemID): Item<M> | undefined {
-    const entity = this._items.get(itemId);
+    const entity = this._entities.get(itemId);
     if (entity) {
       assert(entity instanceof Item);
     }
@@ -357,7 +357,7 @@ export class ItemManager {
    * @param [filter]
    */
   queryItems <M extends Model<any> = any> (filter: ItemFilter = {}): ResultSet<Item<M>> {
-    return new ResultSet(this._debouncedItemUpdate, () => Array.from(this._items.values())
+    return new ResultSet(this._debouncedItemUpdate, () => Array.from(this._entities.values())
       .filter((entity): entity is Item<M> => entity instanceof Item)
       .filter(item =>
         !(item.model instanceof DefaultModel) &&
@@ -366,14 +366,14 @@ export class ItemManager {
   }
 
   getItemsWithDefaultModels (): Entity<DefaultModel>[] {
-    return Array.from(this._items.values()).filter(item => item.model instanceof DefaultModel);
+    return Array.from(this._entities.values()).filter(item => item.model instanceof DefaultModel);
   }
 
   deconstructItem (itemId: ItemID) {
-    const item = this._items.get(itemId);
+    const item = this._entities.get(itemId);
     assert(item);
 
-    this._items.delete(itemId);
+    this._entities.delete(itemId);
 
     if (item instanceof Item) {
       if (item.parent) {
@@ -399,7 +399,7 @@ export class ItemManager {
    * New model instance is created and streams are reconnected.
    */
   async reconstructItemWithDefaultModel (itemId: ItemID) {
-    const item = this._items.get(itemId);
+    const item = this._entities.get(itemId);
     assert(item);
     assert(item.model instanceof DefaultModel);
 
