@@ -19,7 +19,6 @@ export const HaloSharingDialog = ({remote, ...props}: HaloSharingDialogProps) =>
   const client = useClient();
 
   const handleShare: SharingDialogProps['onShare'] = async ({ options, secretProvider }) => {
-    throw new Error('shouldn happen now')
     return await client.createHaloInvitation(secretProvider, options);
   };
 
