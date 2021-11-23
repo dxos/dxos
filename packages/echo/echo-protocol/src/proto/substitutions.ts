@@ -9,11 +9,11 @@ import { Timeframe } from '../spacetime';
 
 export default {
   // TODO(marik-d): Temporary codec bridging logic until we can require proto declarations across package boundaries.
-  'dxos.CredentialsMessage': {
+  'dxos.echo.feed.CredentialsMessage': {
     encode: (msg: Message) => ({ data: codec.encode(msg) }),
     decode: (msg: any): Message => codec.decode(msg.data)
   },
-  'dxos.echo.TimeframeVector': {
+  'dxos.echo.feed.TimeframeVector': {
     encode: (timeframe: Timeframe) => ({
       frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq }))
     }),
@@ -23,7 +23,7 @@ export default {
         .map((frame: any) => [PublicKey.from(frame.feedKey), frame.seq])
     )
   },
-  'dxos.echo.keys.Key': {
+  'dxos.halo.keys.PubKey': {
     encode: (value: PublicKey) => ({ data: value.asUint8Array() }),
     decode: (value: any) => PublicKey.from(value.data)
   }
