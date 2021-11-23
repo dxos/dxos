@@ -14,9 +14,9 @@ message Message {
   required google.protobuf.Any payload = 1;
 }
 
-//
-// A generic container message used whenever messages are signed (e.g. PartyCredential)
-//
+/**
+ * A generic container message used whenever messages are signed (e.g. PartyCredential)
+ */
 message SignedMessage {
   //
   // Provides the common metadata needed for all signed objects.

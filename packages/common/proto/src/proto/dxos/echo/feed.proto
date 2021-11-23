@@ -25,9 +25,9 @@ message CredentialsMessage {
   bytes data = 1;
 }
 
-//
-// Vector timestamp used to order messages.
-//
+/**
+ * Vector timestamp used to order messages.
+ */
 message TimeframeVector {
   message Frame {
     // TODO(marik-d): Compress using numeric feed indexes.
@@ -39,9 +39,9 @@ message TimeframeVector {
   repeated Frame frames = 1;
 }
 
-//
-// Wrapper for all ECHO messages.
-//
+/**
+ * Wrapper for all ECHO messages.
+ */
 message EchoEnvelope {
   string itemId = 1;
   TimeframeVector timeframe = 2;
@@ -56,9 +56,9 @@ message EchoEnvelope {
   bytes mutation = 12;
 }
 
-//
-// Item creation.
-//
+/**
+ * Item creation.
+ */
 message ItemGenesis {
   string itemType = 1;
   string modelType = 2;
@@ -71,9 +71,9 @@ message LinkData {
   string target = 2;
 }
 
-//
-// Item mutation.
-//
+/**
+ * Item mutation.
+ */
 message ItemMutation {
   string parentId = 1;
 }

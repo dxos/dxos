@@ -12,9 +12,9 @@ package dxos.echo.object;
 // https://developers.google.com/protocol-buffers/docs/proto3#json
 //
 
-//
-// Generic value.
-//
+/**
+ * Generic value.
+ */
 message Value {
   oneof Type {
     bool      null                    = 1;    // Explicit null vs undefined.
@@ -33,31 +33,31 @@ message Value {
   }
 }
 
-//
-// Ordered collection of values.
-//
+/**
+ * Ordered collection of values.
+ */
 message Array {
   repeated Value values               = 1;
 }
 
-//
-// Key x Value tuple.
-//
+/**
+ * Key x Value tuple.
+ */
 message KeyValue {
   string key                          = 1;
   Value value                         = 2;
 }
 
-//
-// Object data definition.
-//
+/**
+ * Object data definition.
+ */
 message KeyValueObject {
   repeated KeyValue properties        = 1;
 }
 
-//
-// Query predicate.
-//
+/**
+ * Query predicate.
+ */
 message Predicate {
   enum Operation {
     OR                                = 0;
@@ -81,23 +81,23 @@ message Predicate {
   repeated Predicate predicates       = 4;
 }
 
-//
-// Query.
-//
+/**
+ * Query.
+ */
 message Query {
   Predicate root                      = 1;
 }
 
-//
-// State snapshot.
-//
+/**
+ * State snapshot.
+ */
 message ObjectSnapshot {
   Value root                          = 1;
 }
 
-//
-// Atomic mutation.
-//
+/**
+ * Atomic mutation.
+ */
 message ObjectMutation {
   enum Operation {
     SET                               = 0;    // Default.
@@ -113,9 +113,9 @@ message ObjectMutation {
   Value value                         = 3;
 }
 
-//
-// Set of mutations.
-//
+/**
+ * Set of mutations.
+ */
 message ObjectMutationSet {
   repeated ObjectMutation mutations   = 1;
 }
