@@ -25,7 +25,6 @@ describe('ItemManager', () => {
         modelType: ObjectModel.meta.type,
         itemType: undefined
       });
-
       expect(item.id).toEqual(itemId);
       expect(item.model).toBeInstanceOf(ObjectModel);
       expect(item.type).toBeUndefined();
@@ -104,7 +103,6 @@ describe('ItemManager', () => {
         source: source.id,
         target: target.id
       });
-
       expect(itemManager.items.size).toEqual(3);
 
       expect(link.source).toStrictEqual(source);
@@ -127,7 +125,6 @@ describe('ItemManager', () => {
         source: source.id,
         target: createId()
       });
-
       expect(link.source).toEqual(source);
       expect(() => link.target).toThrow();
       expect(source.links).toEqual([]);
@@ -144,7 +141,6 @@ describe('ItemManager', () => {
         source: createId(),
         target: target.id
       });
-
       expect(() => link.source).toThrow();
       expect(link.target).toEqual(target);
       expect(target.refs).toEqual([]);
@@ -162,7 +158,6 @@ describe('ItemManager', () => {
         source: source.id,
         target: target.id
       });
-
       expect(itemManager.items.size).toEqual(3);
 
       itemManager.deconstructItem(target.id);

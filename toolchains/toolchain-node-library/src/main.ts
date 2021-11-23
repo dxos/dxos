@@ -19,6 +19,11 @@ interface BuildOptions {
   watch?: boolean
 }
 
+/**
+ * Builds the current package with protobuf definitoins (optional) and typescript.
+ * 
+ * @param opts.watch Keep tsc running in watch mode.
+ */
 function execBuild (opts: BuildOptions = {}) {
   const project = Project.load();
 

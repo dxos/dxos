@@ -17,6 +17,7 @@ import { DefaultModel } from './default-model';
 import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
+import { ModelConstructionOptions } from '.';
 
 const log = debug('dxos:echo:item-demuxer');
 
@@ -63,22 +64,24 @@ export class ItemDemuxer {
         const { itemType, modelType } = genesis;
         assert(modelType);
 
+        const modelOpts: ModelConstructionOptions = {
+          itemId,
+          modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
+          initialMutations: mutation ? [{ mutation, meta }] : undefined,
+        }
+
         let entity: Entity<any>;
         if (genesis.link) {
           entity = await this._itemManager.constructLink({
-            itemId,
+            ...modelOpts,
             itemType,
-            modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
-            initialMutations: mutation ? [{ mutation, meta }] : undefined,
             source: genesis.link.source ?? failUndefined(),
             target: genesis.link.target ?? failUndefined()
           });
         } else {
           entity = await this._itemManager.constructItem({
-            itemId,
+            ...modelOpts,
             itemType,
-            modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
-            initialMutations: mutation ? [{ mutation, meta }] : undefined
           });
         }
 
