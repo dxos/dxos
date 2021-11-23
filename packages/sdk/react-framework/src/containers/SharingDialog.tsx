@@ -53,7 +53,7 @@ const PendingInvitation = ({
     }}>
       {invitationCode && (
         <>
-          <HashIcon value={invitationCode} />
+          <CopyToClipboard text={invitationCode}><HashIcon value={invitationCode} /></CopyToClipboard>
           <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2 }}>
             Pending invitation...
           </Typography>
