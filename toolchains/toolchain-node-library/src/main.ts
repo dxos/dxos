@@ -41,7 +41,7 @@ function execBuild (opts: BuildOptions = {}) {
     console.log(chalk.bold`\nprotobuf`);
 
     try {
-      fs.rmdirSync(join(project.packageRoot, 'src/proto/gen'), { recursive: true })
+      fs.rmSync(join(project.packageRoot, 'src/proto/gen'), { recursive: true })
     } catch(err: any) {
       console.warn(err.message);
     }
