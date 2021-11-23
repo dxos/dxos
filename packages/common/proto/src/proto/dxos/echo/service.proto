@@ -1,0 +1,44 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "../halo/keys.proto";
+
+package dxos.echo.service;
+
+message SubscribeEntitySetRequest {
+  PubKey partyKey = 1;
+}
+
+message SubscribeEntitySetResponse {
+  repeated ItemGenesis added = 1;
+  repeated ItemGenesis deleted = 2;
+}
+
+message SubscribeEntityStreamRequest {
+  bytes partyKey = 1;
+  string itemId = 2;
+}
+
+message SubscribeEntityStreamResponse {
+  oneof kind {
+    // TODO(dmaretskyi): Move spanshot into EchoEnvelope?
+    ItemSnapshot snapshot = 1;
+    EchoEnvelope mutation = 2;
+  }
+}
+
+message MutationReceipt {
+  PubKey feedKey = 1;
+  int32 seq = 2;
+}
+
+service DataService {
+  rpc SubscribeEntitySet(SubscribeEntitySetRequest) returns (stream SubscribeEntitySetResponse);
+
+  rpc SubscribeEntityStream(SubscribeEntityStreamRequest) returns (stream SubscribeEntityStreamResponse);
+   
+  rpc Write(EchoEnvelope) returns (MutationReceipt);
+}
