@@ -51,7 +51,7 @@ export interface LinkConstructionOptions extends ModelConstructionOptions {
 export class ItemManager {
   private readonly _itemUpdate = new Event<Entity<any>>();
 
-  private readonly _debouncedItemUpdate = debounceEvent(this._itemUpdate.discardParameter());
+  readonly debouncedItemUpdate = debounceEvent(this._itemUpdate.discardParameter());
 
   // Map of active items.
   private readonly _entities = new Map<ItemID, Entity<any>>();
@@ -357,7 +357,7 @@ export class ItemManager {
    * @param [filter]
    */
   queryItems <M extends Model<any> = any> (filter: ItemFilter = {}): ResultSet<Item<M>> {
-    return new ResultSet(this._debouncedItemUpdate, () => Array.from(this._entities.values())
+    return new ResultSet(this.debouncedItemUpdate, () => Array.from(this._entities.values())
       .filter((entity): entity is Item<M> => entity instanceof Item)
       .filter(item =>
         !(item.model instanceof DefaultModel) &&
