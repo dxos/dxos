@@ -106,45 +106,37 @@ service PartyService {
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (Profile);
 }
 
-message ItemDescriptorSet {
-  message Item {
-    bytes id = 1;
-    string modelDxn = 2;
-    string type = 3;
-  }
+message SubscribeEntitySetRequest {
+  PubKey partyKey = 1;
 }
 
-// TODO(dmaretskyi): Import those from echo-protocol.
-message EchoMutation {}
-message MutationReceipt {}
-message ItemSnapshot {}
+message SubscribeEntitySetResponse {
+  repeated ItemGenesis added = 1;
+  repeated ItemGenesis deleted = 2;
+}
 
-message SubscribeItemStreamResponse {
+message SubscribeEntityStreamRequest {
+  bytes partyKey = 1;
+  string itemId = 2;
+}
+
+message SubscribeEntityStreamResponse {
   oneof kind {
+    // TODO(dmaretskyi): Move spanshot into EchoEnvelope?
     ItemSnapshot snapshot = 1;
-    EchoMutation mutation = 2;
+    EchoEnvelope mutation = 2;
   }
 }
 
-message SubscribeItemsRequest {
-  bytes partyKey = 1;
-}
-
-message SubscribeItemStreamRequest {
-  bytes partyKey = 1;
-  bytes itemId = 2;
-}
-
-message CreateItemRequest {
-
+message MutationReceipt {
+  PubKey feedKey = 1;
+  int32 seq = 2;
 }
 
 service DataService {
-  rpc SubscribeItems(SubscribeItemsRequest) returns (stream ItemDescriptorSet);
+  rpc SubscribeEntitySet(SubscribeItemsRequest) returns (stream SubscribeItemsResponse);
 
-  rpc SubscribeItemStream(SubscribeItemStreamRequest) returns (stream SubscribeItemStreamResponse);
+  rpc SubscribeEntityStream(SubscribeEntityStreamRequest) returns (stream SubscribeEntityStreamResponse);
    
-  rpc MakeMutation(EchoMutation) returns (MutationReceipt);
-
-  rpc CreateItem(CreateItemRequest) returns (ItemDescriptorSet.Item);
+  rpc Write(EchoEnvelope) returns (MutationReceipt);
 }

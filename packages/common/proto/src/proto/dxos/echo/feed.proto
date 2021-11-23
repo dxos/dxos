@@ -14,7 +14,7 @@ import "google/protobuf/any.proto";
  */
 message FeedMessage {
   CredentialsMessage halo = 1;
-  dxos.echo.EchoEnvelope echo = 2;
+  EchoEnvelope echo = 2;
 }
 
 /**
