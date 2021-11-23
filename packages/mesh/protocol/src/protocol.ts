@@ -121,7 +121,7 @@ export class Protocol {
           await this.streamOptions?.onhandshake?.(this);
           await this._handshakeExtensions();
           this.extensionsHandshake.emit();
-        } catch (err) {
+        } catch (err: any) {
           process.nextTick(() => this._stream.destroy(err));
         }
       }
@@ -180,7 +180,7 @@ export class Protocol {
   getSession (): Record<string, any> | null {
     try {
       return this._extensionInit.remoteUserSession;
-    } catch (err) {
+    } catch (err: any) {
       return null;
     }
   }
@@ -234,7 +234,7 @@ export class Protocol {
     this._handshakes.push(async (protocol: Protocol) => {
       try {
         await handler(protocol);
-      } catch (err) {
+      } catch (err: any) {
         throw new ERR_PROTOCOL_HANDSHAKE_FAILED(err.message);
       }
     });
@@ -310,7 +310,7 @@ export class Protocol {
       }
 
       await this._extensionInit.continue();
-    } catch (err) {
+    } catch (err: any) {
       await this._extensionInit.break();
       throw err;
     }
@@ -337,7 +337,7 @@ export class Protocol {
           log(`feed extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
           await extension.onFeed(discoveryKey);
         }
-      } catch (err) {
+      } catch (err: any) {
         process.nextTick(() => this._stream.destroy(err));
       }
     });
@@ -358,7 +358,7 @@ export class Protocol {
           onextension: this._extensionHandler
 
         }); // Needs a list of extension right away.
-      } catch (err) {
+      } catch (err: any) {
         let newErr = err;
         if (!ERR_PROTOCOL_CONNECTION_INVALID.equals(newErr)) {
           newErr = ERR_PROTOCOL_CONNECTION_INVALID.from(newErr);

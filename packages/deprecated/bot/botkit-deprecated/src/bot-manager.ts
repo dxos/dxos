@@ -361,7 +361,7 @@ export class BotManager {
     let data = [];
     try {
       data = await fs.readJson(this._botsFile);
-    } catch (err) {
+    } catch (err: any) {
       if (!(err instanceof SyntaxError)) {
         logInfo(err);
       }
@@ -410,7 +410,7 @@ export class BotManager {
           await fs.readFile(path.join(process.cwd(), BOT_CONFIG_FILENAME)) as any // TODO(marik-d): Specify file encoding.
         );
         name = botInfo.name;
-      } catch (err) {
+      } catch (err: any) {
         name = chance.animal();
       }
       return { attributes: { name }, id: sha256(name) };

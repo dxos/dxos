@@ -18,7 +18,7 @@ export function logMethod (
         });
       }
       return result;
-    } catch (err) {
+    } catch (err: any) {
       console.log(`Thrown ${target.constructor.name}.${propertyName}`, err);
       throw err;
     }

@@ -55,7 +55,7 @@ export class WebrtcTransport implements Transport {
           topic: this._topic,
           data
         });
-      } catch (err) {
+      } catch (err: any) {
         this.errors.raise(err);
       }
     });
