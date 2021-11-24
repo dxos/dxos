@@ -41,7 +41,7 @@ const DevTools = ({ port }: { port: RpcPort }) => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <ClientInitializer
-          config={{ system: { remote: true }}}
+          config={{ system: { remote: true } }}
           clientOpts={{ rpcPort: port }}
         >
           <App />
