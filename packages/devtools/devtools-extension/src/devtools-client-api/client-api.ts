@@ -2,17 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import { schema, DevtoolsHost } from '@dxos/devtools';
-import { RpcPort, createRpcServer, RpcPeer } from '@dxos/rpc';
+import { clientServiceBundle, ClientServices } from '@dxos/client';
+import { schema } from '@dxos/devtools';
+import { RpcPort, createBundledRpcServer, RpcPeer } from '@dxos/rpc';
 
 export class RpcClientAPI {
-  constructor (private readonly _port: RpcPort, private readonly _devtoolsHost: DevtoolsHost) {}
+  constructor (private readonly _port: RpcPort, private readonly _clientServices: ClientServices) {}
 
   async run () {
-    const service = schema.getService('dxos.devtools.DevtoolsHost');
-    const server: RpcPeer = createRpcServer({
-      service,
-      handlers: this._devtoolsHost,
+    const server: RpcPeer = createBundledRpcServer({
+      services: clientServiceBundle,
+      handlers: this._clientServices,
       port: this._port
     });
 

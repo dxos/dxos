@@ -25,18 +25,18 @@ const init = async () => {
       clearInterval(checkInterval);
     }
     const port = createWindowPort();
-    const clientApi = new RpcClientAPI(port, devtoolsContext.serviceHost.services.DevtoolsHost);
+    const clientApi = new RpcClientAPI(port, devtoolsContext.serviceHost.services);
     await clientApi.run();
-    console.log('[DXOS devtools] Init client API finished');
+    console.log('[DXOS devtools] Init client API finished.');
   } else {
     if (checkCount > 20) {
       clearInterval(checkInterval);
-      console.log('[DXOS devtools] Init client API failed after too many retries');
+      console.log('[DXOS devtools] Init client API failed after too many retries.');
     }
   }
 };
 
 // TODO(burdon): No code in index file.
-console.log('[DXOS devtools] Init client API started');
+console.log('[DXOS devtools] Init client API started.');
 checkInterval = setInterval(init, 500);
 void init();
