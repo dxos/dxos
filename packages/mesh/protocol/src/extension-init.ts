@@ -96,7 +96,7 @@ export class ExtensionInit extends Extension {
       if (!this._remoteInit) {
         throw new Error('Connection closed during handshake.');
       }
-    } catch (err) {
+    } catch (err: any) {
       throw new ERR_PROTOCOL_INIT_INVALID(err.message);
     }
   }
@@ -108,6 +108,6 @@ export class ExtensionInit extends Extension {
       }
 
       await this.sendCommand('break');
-    } catch (err) {}
+    } catch (err: any) {}
   }
 }

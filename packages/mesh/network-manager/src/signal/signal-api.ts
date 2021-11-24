@@ -72,7 +72,7 @@ export class SignalApi {
     this._connectionStarted = Date.now();
     try {
       this._client = new WebsocketRpc(this._host);
-    } catch (error) {
+    } catch (error: any) {
       if (this._state === SignalApi.State.RE_CONNECTING) {
         this._reconnectAfter *= 2;
       }

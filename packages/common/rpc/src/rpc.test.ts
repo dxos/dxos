@@ -123,7 +123,7 @@ describe('RpcPeer', () => {
       let error!: Error;
       try {
         await bob.call('RpcMethodName', Buffer.from('request'));
-      } catch (err) {
+      } catch (err: any) {
         error = err;
       }
 

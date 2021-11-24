@@ -58,7 +58,7 @@ export class PartyInvitationClaimHandler {
       const invitationDescriptor = await this._greetingHandler(invitationID, remotePeerId, peerId);
       log(invitationDescriptor);
       return createGreetingClaimResponse(invitationDescriptor.invitation, invitationDescriptor.swarmKey);
-    } catch (err) {
+    } catch (err: any) {
       log(err);
       throw new ERR_EXTENSION_RESPONSE_FAILED(GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_GENERAL, 'Error handing off Invitation for Greeting.');
     }

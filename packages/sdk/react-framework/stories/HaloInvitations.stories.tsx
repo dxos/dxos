@@ -88,28 +88,30 @@ const User = ({ sharing, joining, remote }: UserProps) => {
 export const Primary = () => {
   return (
     <FullScreen>
-      <ErrorBoundary>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-around'
-        }}>
-          <ClientInitializer>
-            <ProfileInitializer>
-              <FrameworkContextProvider>
-                <Column>
-                  <User sharing />
-                </Column>
-              </FrameworkContextProvider>
-            </ProfileInitializer>
-          </ClientInitializer>
+      <FrameworkContextProvider>
+        <ErrorBoundary>
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-around'
+          }}>
+            <ClientInitializer>
+              <ProfileInitializer>
+                <FrameworkContextProvider>
+                  <Column>
+                    <User sharing />
+                  </Column>
+                </FrameworkContextProvider>
+              </ProfileInitializer>
+            </ClientInitializer>
 
-          <ClientInitializer>
-            <Column>
-              <User joining />
-            </Column>
-          </ClientInitializer>
-        </Box>
-      </ErrorBoundary>
+            <ClientInitializer>
+              <Column>
+                <User joining />
+              </Column>
+            </ClientInitializer>
+          </Box>
+        </ErrorBoundary>
+      </FrameworkContextProvider>
     </FullScreen>
   );
 };

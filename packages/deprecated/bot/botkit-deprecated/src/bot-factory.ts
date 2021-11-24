@@ -141,7 +141,7 @@ export class BotFactory {
           const { botName, options } = message;
           const botId = await this.spawnBot(botName, options);
           return createSpawnResponse(botId);
-        } catch (err) {
+        } catch (err: any) {
           log(err);
           return createSpawnResponse(undefined, err.message);
         }
@@ -160,7 +160,7 @@ export class BotFactory {
           const botId = await this.spawnBot(botName, options);
           await this.inviteBot(botId, { topic, invitation });
           return createSpawnResponse(botId);
-        } catch (err) {
+        } catch (err: any) {
           log(err);
           return createSpawnResponse(undefined, err.message);
         }
@@ -213,7 +213,7 @@ export class BotFactory {
           const result = await this._botManager!.sendDirectBotCommand(botId, command);
           const { message: { data, error } } = result;
           return createBotCommandResponse(data, error);
-        } catch (err) {
+        } catch (err: any) {
           return createBotCommandResponse(undefined, err.message);
         }
       }
@@ -228,7 +228,7 @@ export class BotFactory {
       let error: any = {};
       try {
         await runCommand();
-      } catch (err) {
+      } catch (err: any) {
         status = 'failed';
         error = err;
       }

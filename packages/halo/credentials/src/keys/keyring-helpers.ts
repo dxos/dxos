@@ -23,7 +23,7 @@ export function isValidPublicKey (key: PublicKeyLike): key is PublicKeyLike {
   try {
     PublicKey.from(key);
     return true;
-  } catch (e) {
+  } catch (e: any) {
   }
   return false;
 }

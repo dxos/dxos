@@ -106,7 +106,7 @@ export class GreetingResponder {
       if (onFinish) {
         try {
           await onFinish({ expired: expired === true });
-        } catch (err) {
+        } catch (err: any) {
           log(err);
         }
       }

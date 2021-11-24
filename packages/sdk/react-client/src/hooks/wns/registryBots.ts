@@ -42,7 +42,7 @@ export const useRegistryBots = (props: UseRegistryBotsProps = {}) => {
       let botsResult: QueryRecord[];
       try {
         botsResult = await registry.queryRecords({ type: WRN_TYPE_BOT });
-      } catch (e) {
+      } catch (e: any) {
         log('Querying bots unsuccessful.');
         log(e);
         return;

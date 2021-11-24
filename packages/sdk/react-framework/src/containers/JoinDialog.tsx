@@ -85,7 +85,7 @@ export const JoinDialog = ({
       // Parse URL.
       const invitationCode = text.substring(text.lastIndexOf('/') + 1);
       invitation = decodeInvitation(invitationCode);
-    } catch (err) {
+    } catch (err: any) {
       setError('Invalid invitation code.');
       setState(PartyJoinState.ERROR);
       return;

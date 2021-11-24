@@ -61,7 +61,7 @@ export class BotPlugin extends EventEmitter {
         if (response) {
           return codec.encode(response);
         }
-      } catch (err) {
+      } catch (err: any) {
         // Ignore with console error.
         console.error(err.stack);
       }

@@ -211,7 +211,7 @@ export class GreetingInitiator {
     // Tell the Greeter that we are done.
     try {
       await this._greeterPlugin.send(responderPeerId, createGreetingFinishMessage(secret));
-    } catch (err) {
+    } catch (err: any) {
       log('Sending finish message failed.', err);
       // Failing to inform Greeter that we are done is not a critical failure.
     }
