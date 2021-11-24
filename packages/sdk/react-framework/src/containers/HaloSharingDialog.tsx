@@ -50,7 +50,6 @@ export const HaloSharingDialog = ({ remote, ...props }: HaloSharingDialogProps) 
 
   // The new way - using the remote Client API.
   const createRemoteInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
-    console.log('sharing invitation...');
     const id = v4();
     const stream = await client.services.ProfileService.CreateInvitation();
     stream.subscribe(invitationMsg => {

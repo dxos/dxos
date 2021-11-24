@@ -26,11 +26,9 @@ export const JoinHaloDialog = ({ remote, ...props }: JoinHaloDialogProps) => {
   };
 
   const handleRemoteJoin: JoinDialogProps['onJoin'] = async ({ invitation, secretProvider }) => {
-    console.log('accepting..');
     const invitationProcess = await client.services.ProfileService.AcceptInvitation({
       invitationCode: encodeInvitation(invitation)
     });
-    console.log('authenticating...');
     await client.services.ProfileService.AuthenticateInvitation({
       process: invitationProcess, secret: (await secretProvider()).toString()
     });
