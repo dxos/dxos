@@ -3,5 +3,4 @@
 //
 
 export * from './useAsyncEffect';
-export * from './useDevtoolsHost';
 export * from './useStream';
