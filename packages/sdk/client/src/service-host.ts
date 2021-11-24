@@ -128,7 +128,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           this._inviteeInvitations.set(id, inviteeInvitation);
           return { id };
         },
-        AuthenticateInvitation: (request) => new Stream(({ next }) => {
+        AuthenticateInvitation: (request) => new Stream(({ next, close }) => {
           assert(request.process?.id, 'Process ID is missing.');
           const invitation = this._inviteeInvitations.get(request.process?.id);
           assert(invitation, 'Invitation not found.');
@@ -142,7 +142,8 @@ export class ClientServiceHost implements ClientServiceProvider {
           invitation.joinPromise?.().then(() => {
             const profile = this._echo.halo.getProfile();
             assert(profile, 'Profile not created.');
-            return { profile };
+            next({ profile });
+            close();
           });
         }),
         SubscribeContacts: () => {
