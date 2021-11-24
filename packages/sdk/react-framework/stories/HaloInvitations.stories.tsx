@@ -125,6 +125,7 @@ export const Remote = () => {
 
   return (
     <FullScreen>
+      <p>Caution: This story works with Wallet extension. It does not work when embedded in an iframe. Use story directly with /#/__story/ prefix.</p>
       <FrameworkContextProvider>
         <ErrorBoundary errorComponent={ErrorView}>
           <Box sx={{

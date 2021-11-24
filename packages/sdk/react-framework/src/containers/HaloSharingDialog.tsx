@@ -3,6 +3,7 @@
 //
 
 import React from 'react';
+import { v4 } from 'uuid';
 
 import { encodeInvitation } from '@dxos/client';
 import { generatePasscode } from '@dxos/credentials';
@@ -50,13 +51,14 @@ export const HaloSharingDialog = ({ remote, ...props }: HaloSharingDialogProps) 
   // The new way - using the remote Client API.
   const createRemoteInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
     console.log('sharing invitation...');
+    const id = v4();
     const stream = await client.services.ProfileService.CreateInvitation();
     stream.subscribe(invitationMsg => {
       if (invitationMsg.finished) {
         setInvitations(invitations => invitations
-          .filter(invitation => invitation.invitationCode !== invitationMsg.invitationCode));
+          .filter(invitation => invitation.id !== id));
       } else {
-        const pendingInvitation: PendingInvitation = { invitationCode: invitationMsg.invitationCode!, pin: invitationMsg.secret };
+        const pendingInvitation: PendingInvitation = { invitationCode: invitationMsg.invitationCode!, pin: invitationMsg.secret, id };
         setInvitations(invitations => [...invitations, pendingInvitation]);
       }
     }, error => {

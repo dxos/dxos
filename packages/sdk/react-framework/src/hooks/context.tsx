@@ -7,6 +7,7 @@ import React, { Dispatch, ReactNode, SetStateAction, createContext, useContext, 
 import { raise } from '@dxos/debug';
 
 export type PendingInvitation = {
+  id?: string,
   invitationCode: string
   pin: string | undefined
 }
