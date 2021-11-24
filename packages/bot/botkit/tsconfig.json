@@ -26,13 +26,25 @@
       "path": "../../common/rpc"
     },
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../halo/credentials"
     },
     {
       "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../mesh/signal"
+    },
+    {
+      "path": "../../common/util"
     }
   ]
 }

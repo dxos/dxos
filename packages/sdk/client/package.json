@@ -34,13 +34,13 @@
     "@wirelineio/registry-client": "~1.1.0-beta.3",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
+    "base-x": "~3.0.9",
     "debug": "^4.1.1",
     "del": "^5.1.0",
     "jsondown": "dxos/jsondown#main",
     "level-js": "^5.0.2",
     "lodash.defaultsdeep": "^4.6.1",
     "memdown": "^5.1.0",
-    "base-x": "~3.0.9",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
@@ -54,9 +54,9 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/memdown": "^3.0.0",
     "@types/mocha": "~8.2.2",
+    "@types/uuid": "~8.3.1",
     "expect": "~27.0.2",
     "mocha": "~8.4.0",
-    "@types/uuid": "~8.3.1",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
