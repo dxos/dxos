@@ -8,21 +8,17 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { encodeInvitation, decodeInvitation } from '@dxos/client';
+import { decodeInvitation, PendingInvitation } from '@dxos/client';
 
 import {
   ClientInitializer,
   ProfileInitializer,
   useClient,
   useParties,
-  useProfile,
-  useSecretGenerator,
-  useSecretProvider
+  useProfile, useSecretProvider
 } from '../src';
 import {
-  ClientPanel,
-  PartyJoinPanel,
-  Container
+  ClientPanel, Container, PartyJoinPanel
 } from './helpers';
 
 export default {
@@ -36,18 +32,16 @@ export default {
  */
 const HaloInvitationContainer = () => {
   const client = useClient();
-  const [invitationCode, setInvitationCode] = useState<string>();
-  const [secretProvider, pin, resetPin] = useSecretGenerator();
+  const [invitation, setInvitation] = useState<PendingInvitation | undefined>();
 
   const handleCreateInvitation = async () => {
-    const invitation = await client.createHaloInvitation(secretProvider, {
+    const invitation = await client.createHaloInvitation({
       onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
-        setInvitationCode(undefined);
-        resetPin();
+        setInvitation(undefined);
       }
     });
 
-    setInvitationCode(encodeInvitation(invitation));
+    setInvitation(invitation);
   };
 
   if (!client.halo.hasProfile()) {
@@ -64,24 +58,24 @@ const HaloInvitationContainer = () => {
         </Button>
       </Toolbar>
 
-      {invitationCode && (
+      {invitation && (
         <Box sx={{ marginTop: 1 }}>
           <TextField
             disabled
             multiline
             fullWidth
-            value={invitationCode}
+            value={invitation.invitationCode}
             maxRows={3}
           />
         </Box>
       )}
 
-      {pin && (
+      {invitation?.pin && (
         <Box sx={{ marginTop: 1 }}>
           <TextField
             disabled
             type='text'
-            value={pin}
+            value={invitation.pin}
           />
         </Box>
       )}

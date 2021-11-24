@@ -9,8 +9,8 @@ import { synchronized } from '@dxos/async';
 import { Config, defs } from '@dxos/config';
 import { defaultSecretValidator, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { raise, TimeoutError, InvalidParameterError } from '@dxos/debug';
-import { InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
+import { InvalidParameterError, raise, TimeoutError } from '@dxos/debug';
+import { InvitationDescriptor, InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
@@ -304,18 +304,28 @@ export class Client {
    * The Invitation flow requires the inviter device and invitee device to be online at the same time.
    * The invitation flow is protected by a generated pin code.
    *
-   * To be used with `client.halo.join` on the invitee side.
+   * To be used with `client.joinHaloInvitation` on the invitee side.
    *
-   * @param secretProvider supplies the pin code
    * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
    * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
-  async createHaloInvitation (secretProvider: SecretProvider, options?: InvitationOptions) {
-    return await this.halo.createInvitation({
-      secretProvider,
-      secretValidator: defaultSecretValidator
-    },
-    options);
+  async createHaloInvitation (options?: InvitationOptions) {
+    return await this.halo.createInvitation(options);
+  }
+
+  /**
+   * Creates an invitation to a HALO party.
+   * Used to authorize another device of the same user.
+   * The Invitation flow requires the inviter device and invitee device to be online at the same time.
+   * The invitation flow is protected by a generated pin code.
+   *
+   * To be used with `client.createHaloInvitation` on the inviter side.
+   *
+   * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
+   * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
+  */
+  async joinHaloInvitation (invitationDescriptor: InvitationDescriptor, secret: string) {
+    return await this.halo.acceptInvitation(invitationDescriptor, secret);
   }
 
   //

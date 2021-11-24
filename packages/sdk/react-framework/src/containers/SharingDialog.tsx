@@ -12,12 +12,13 @@ import {
 import { Button, IconButton, Popover, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
+import type { PendingInvitation } from '@dxos/client';
 import { PartyMember } from '@dxos/echo-db';
 import {
   CopyToClipboard, Dialog, HashIcon, MemberList, Passcode, QRCode
 } from '@dxos/react-components';
 
-import { PendingInvitation, usePendingInvitations } from '../hooks';
+import { usePendingInvitations } from '../hooks';
 
 interface PendingInvitationProps {
   invitationCode: string
@@ -26,7 +27,7 @@ interface PendingInvitationProps {
   onCancel: () => void
 }
 
-const PendingInvitation = ({
+const PendingInvitationView = ({
   invitationCode,
   pin,
   createUrl,
@@ -158,7 +159,7 @@ export const SharingDialog = ({
             overflow: 'auto'
           }}>
             {invitations.map(({ invitationCode, pin }, i) => (
-              <PendingInvitation
+              <PendingInvitationView
                 key={i}
                 invitationCode={invitationCode}
                 pin={pin}

@@ -4,12 +4,11 @@
 
 import React from 'react';
 
-import { encodeInvitation } from '@dxos/client';
+import { encodeInvitation, PendingInvitation } from '@dxos/client';
 import { generatePasscode } from '@dxos/credentials';
 import type { PublicKey } from '@dxos/crypto';
 import { useClient, useMembers, useParty } from '@dxos/react-client';
 
-import { PendingInvitation } from '../hooks';
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
 export interface PartySharingDialogProps extends Omit<SharingDialogProps, 'onCreateInvitation' | 'title' | 'members'> {

@@ -66,14 +66,12 @@ const User = ({ sharing, joining, remote }: UserProps) => {
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         modal={false}
-        remote={remote}
       />
       <JoinHaloDialog
         open={joinOpen}
         onClose={() => setJoinOpen(false)}
         modal={false}
         closeOnSuccess={true}
-        remote={remote}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
         {remote ? <RemoteParties /> : <Parties />}

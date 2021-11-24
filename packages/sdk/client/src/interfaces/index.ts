@@ -3,3 +3,4 @@
 //
 
 export * from './client-service-provider';
+export * from './pending-invitation';

@@ -4,41 +4,29 @@
 
 import React from 'react';
 
-import { encodeInvitation } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 import { JoinDialog, JoinDialogProps } from './JoinDialog';
 
-export interface JoinHaloDialogProps extends Omit<JoinDialogProps, 'onJoin' | 'title'> {
-  remote?: boolean;
-}
+export type JoinHaloDialogProps = Omit<JoinDialogProps, 'onJoin' | 'title'>
 
 /**
  * Manages the workflow of joining a HALO invitation.
  */
-export const JoinHaloDialog = ({ remote, ...props }: JoinHaloDialogProps) => {
+export const JoinHaloDialog = (props: JoinHaloDialogProps) => {
   const client = useClient();
 
+  // The new way - using the remote Client API.
   const handleJoin: JoinDialogProps['onJoin'] = async ({ invitation, secretProvider }) => {
-    const party = await client.halo.acceptInvitation(invitation, secretProvider);
-    await party.open();
-    return party;
-  };
-
-  const handleRemoteJoin: JoinDialogProps['onJoin'] = async ({ invitation, secretProvider }) => {
-    const invitationProcess = await client.services.ProfileService.AcceptInvitation({
-      invitationCode: encodeInvitation(invitation)
-    });
-    await client.services.ProfileService.AuthenticateInvitation({
-      process: invitationProcess, secret: (await secretProvider()).toString()
-    });
+    const secret = await secretProvider();
+    await client.joinHaloInvitation(invitation, secret.toString());
   };
 
   return (
     <JoinDialog
       {...props}
       title='Join Halo'
-      onJoin={remote ? handleRemoteJoin : handleJoin}
+      onJoin={handleJoin}
     />
   );
 };
