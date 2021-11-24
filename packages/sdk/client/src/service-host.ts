@@ -90,7 +90,7 @@ export class ClientServiceHost implements ClientServiceProvider {
         RecoverProfile: () => {
           throw new Error('Not implemented');
         },
-        CreateInvitation: () => new Stream(({ next }) => {
+        CreateInvitation: () => new Stream(({ next, close }) => {
           setImmediate(async () => {
             const secret = generatePasscode();
             const secretProvider = async () => Buffer.from(secret);
@@ -98,7 +98,10 @@ export class ClientServiceHost implements ClientServiceProvider {
               secretProvider,
               secretValidator: defaultSecretValidator
             }, {
-              onFinish: () => next({ finished: true })
+              onFinish: () => {
+                next({ finished: true });
+                close();
+              }
             });
             const invitationCode = encodeInvitation(invitation);
             this._inviterInvitations.push({ invitationCode, secret });
