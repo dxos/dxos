@@ -4,14 +4,16 @@
 
 import Bridge from 'crx-bridge';
 
+import { Client } from '@dxos/client';
+
 import { createDevtoolsPort } from '../utils';
 import { initPanel } from './init-panel';
-import { createDevtoolsRpc } from './rpc-client';
 
 // TODO(burdon): No code in index file.
 void (async () => {
   await Bridge.sendMessage('extension.inject-client-script', {}, 'content-script');
   const port = createDevtoolsPort();
-  const devtoolsHost = await createDevtoolsRpc(port);
-  initPanel(devtoolsHost);
+  const client = new Client({ system: { remote: true } }, { rpcPort: port });
+  await client.initialize();
+  initPanel(client);
 })();

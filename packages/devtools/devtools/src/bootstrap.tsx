@@ -5,13 +5,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { createTheme as createMuiTheme, ThemeProvider } from '@mui/material';
-import CssBaseline from '@mui/material/CssBaseline';
+import { CssBaseline, ThemeProvider, createTheme as createMuiTheme } from '@mui/material';
+
+import { Client } from '@dxos/client';
+import { ClientProvider } from '@dxos/react-client';
 
 import { App } from './App';
 import { ErrorBoundary } from './components';
-import { DevtoolsContext } from './hooks';
-import { DevtoolsHost } from './proto';
 
 const theme = createMuiTheme({
   typography: {
@@ -28,19 +28,19 @@ const theme = createMuiTheme({
 
 export interface Shell {
   tabId: number,
-  connect(cb: (devtoolsHost: DevtoolsHost) => void): void;
+  connect(cb: (client: Client) => void): void;
   onReload(cb: () => void): void;
 }
 
 export const initialize = (shell: Shell) => {
-  shell.connect(devtoolsHost => {
+  shell.connect(client => {
     ReactDOM.render(
       <ErrorBoundary>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <DevtoolsContext.Provider value={devtoolsHost}>
+          <ClientProvider client={client}>
             <App />
-          </DevtoolsContext.Provider>
+          </ClientProvider>
         </ThemeProvider>
       </ErrorBoundary>,
       document.getElementById('root')

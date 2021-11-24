@@ -17,6 +17,7 @@
     "> 5%"
   ],
   "dependencies": {
+    "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",

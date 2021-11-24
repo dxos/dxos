@@ -6,10 +6,11 @@ import React from 'react';
 
 import Button from '@mui/material/Button';
 
-import { useDevtoolsHost } from '../hooks';
+import { useClient } from '@dxos/react-client';
 
 export const StorageTab = () => {
-  const devtoolsHost = useDevtoolsHost();
+  const client = useClient();
+  const devtoolsHost = client.services.DevtoolsHost;
 
   async function handleReset () {
     if (window.confirm('RESET ALL DATA (CANNOT BE UNDONE)?')) {

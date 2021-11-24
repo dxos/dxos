@@ -6,11 +6,13 @@ import React from 'react';
 
 import { SwarmDetails as SwarmComponent } from '@dxos/devtools-mesh';
 import { SwarmInfo } from '@dxos/network-manager';
+import { useClient } from '@dxos/react-client';
 
-import { useDevtoolsHost, useStream } from '../hooks';
+import { useStream } from '../hooks';
 
 export const SwarmDetails = () => {
-  const devtoolsHost = useDevtoolsHost();
+  const client = useClient();
+  const devtoolsHost = client.services.DevtoolsHost;
   const swarms = useStream(() => devtoolsHost.SubscribeToSwarmInfo({}));
 
   if (!swarms?.data) {
