@@ -3,7 +3,6 @@
 //
 
 import { clientServiceBundle, ClientServices } from '@dxos/client';
-import { schema } from '@dxos/devtools';
 import { RpcPort, createBundledRpcServer, RpcPeer } from '@dxos/rpc';
 
 export class RpcClientAPI {
