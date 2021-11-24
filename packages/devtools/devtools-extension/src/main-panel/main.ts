@@ -9,7 +9,6 @@ import { Client } from '@dxos/client';
 import { createDevtoolsPort } from '../utils';
 import { initPanel } from './init-panel';
 
-// TODO(burdon): No code in index file.
 void (async () => {
   await Bridge.sendMessage('extension.inject-client-script', {}, 'content-script');
   const port = createDevtoolsPort();
