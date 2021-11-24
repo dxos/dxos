@@ -98,7 +98,7 @@ export class ClientServiceHost implements ClientServiceProvider {
               secretProvider,
               secretValidator: defaultSecretValidator
             }, {
-              onFinish: () => next({finished: true})
+              onFinish: () => next({ finished: true })
             });
             const invitationCode = encodeInvitation(invitation);
             this._inviterInvitations.push({ invitationCode, secret });
