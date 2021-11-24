@@ -194,7 +194,13 @@ export const Primary = () => {
   return (
     <Box sx={{ display: 'flex' }}>
       <DevTools port={devtoolsPort} />
-      <ClientInitializer>
+      <ClientInitializer config={{
+        services: {
+          signal: {
+            server: 'wss://enterprise.kube.dxos.network/dxos/signal'
+          }
+        }
+      }}>
         <Controls port={controlsPort} />
       </ClientInitializer>
     </Box>
