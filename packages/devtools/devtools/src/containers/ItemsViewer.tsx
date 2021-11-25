@@ -4,12 +4,14 @@
 
 import React from 'react';
 
+import { useClient } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
-import { useDevtoolsHost, useStream } from '../hooks';
+import { useStream } from '../hooks';
 
 export const ItemsViewer = () => {
-  const devtoolsHost = useDevtoolsHost();
+  const client = useClient();
+  const devtoolsHost = client.services.DevtoolsHost;
   const result = useStream(() => devtoolsHost.SubscribeToItems({}));
   if (result === undefined || result.data === undefined) {
     return <div>Loading items...</div>;
