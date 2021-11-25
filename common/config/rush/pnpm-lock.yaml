@@ -66,7 +66,7 @@ importers:
       lodash.merge: 4.6.2
       protobufjs: 6.11.2
     devDependencies:
-      '@dxos/eslint-plugin': 1.0.19_eslint@7.26.0+typescript@4.5.2
+      '@dxos/eslint-plugin': 1.0.20_eslint@7.26.0+typescript@4.5.2
       '@types/assert': 1.5.4
       '@types/debug': 4.1.5
       '@types/jest': 26.0.23
@@ -78,7 +78,7 @@ importers:
       ts-node: 9.1.1_typescript@4.5.2
       typescript: 4.5.2
     specifiers:
-      '@dxos/eslint-plugin': ~1.0.19
+      '@dxos/eslint-plugin': ~1.0.20
       '@types/assert': ^1.5.4
       '@types/debug': ^4.1.1
       '@types/jest': ^26.0.7
@@ -142,7 +142,7 @@ importers:
       ts-morph: 10.0.2
     devDependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
-      '@dxos/eslint-plugin': 1.0.19_eslint@7.26.0+typescript@4.5.2
+      '@dxos/eslint-plugin': 1.0.20_eslint@7.26.0+typescript@4.5.2
       '@dxos/protobuf-test': link:../protobuf-test
       '@types/argparse': 2.0.5
       '@types/jest': 26.0.23
@@ -154,7 +154,7 @@ importers:
       typescript: 4.5.2
     specifiers:
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/eslint-plugin': ~1.0.19
+      '@dxos/eslint-plugin': ~1.0.20
       '@dxos/protobuf-test': workspace:*
       '@types/argparse': ^2.0.0
       '@types/jest': ^26.0.7
@@ -449,7 +449,7 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.2.3
+      '@dxos/esbuild-server': 1.3.2
       '@dxos/messenger-model': link:../../echo/messenger-model
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
@@ -473,7 +473,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.2.3
+      '@dxos/esbuild-server': ~1.3.2
       '@dxos/messenger-model': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -1755,7 +1755,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.2.3
+      '@dxos/esbuild-server': 1.3.2
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/d3': 7.0.0
       '@types/faker': 5.5.5
@@ -1793,7 +1793,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.2.3
+      '@dxos/esbuild-server': ~1.3.2
       '@dxos/gem-core': ~1.0.0-beta.25
       '@dxos/gem-spore': ~1.0.0-beta.25
       '@dxos/object-model': workspace:*
@@ -1994,7 +1994,6 @@ importers:
       mobile-detect: 1.4.5
       react-copy-to-clipboard: 5.0.3_react@17.0.2
       url-join: 4.0.1
-      uuid: 3.4.0
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
@@ -2017,7 +2016,6 @@ importers:
       '@types/react': 17.0.24
       '@types/react-copy-to-clipboard': 5.0.1
       '@types/url-join': 4.0.1
-      '@types/uuid': 8.3.1
       babel-plugin-add-module-exports: 1.0.4
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -2046,7 +2044,6 @@ importers:
       '@types/react': ^17.0.24
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/url-join': ~4.0.1
-      '@types/uuid': ~8.3.1
       assert: ^2.0.0
       babel-plugin-add-module-exports: ^1.0.4
       debug: ^4.1.1
@@ -2058,7 +2055,6 @@ importers:
       react-dom: ^17.0.2
       typescript: ^4.5.2
       url-join: ^4.0.1
-      uuid: ^3.3.2
   ../../packages/sdk/react-registry-client:
     dependencies:
       '@dxos/debug': link:../../common/debug
@@ -2351,7 +2347,7 @@ importers:
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
       '@dxos/esbuild-plugins': link:../../../toolchains/esbuild-plugins
-      '@dxos/esbuild-server': 1.2.3
+      '@dxos/esbuild-server': 1.3.2
       '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
       '@types/react': 17.0.24
       '@types/react-dom': 17.0.9
@@ -2361,7 +2357,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/esbuild-plugins': workspace:*
-      '@dxos/esbuild-server': ~1.2.3
+      '@dxos/esbuild-server': ~1.3.2
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-framework': workspace:*
@@ -2415,7 +2411,7 @@ importers:
       util: ~0.12.4
   ../../toolchains/toolchain-node-library:
     dependencies:
-      '@dxos/eslint-plugin': 1.0.19_eslint@7.26.0+typescript@4.5.2
+      '@dxos/eslint-plugin': 1.0.20_eslint@7.26.0+typescript@4.5.2
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@types/yargs': 16.0.1
       chalk: 4.1.2
@@ -2436,7 +2432,7 @@ importers:
       '@types/node': 14.14.45
       ts-node: 9.1.1_typescript@4.5.2
     specifiers:
-      '@dxos/eslint-plugin': ~1.0.19
+      '@dxos/eslint-plugin': ~1.0.20
       '@dxos/protobuf-compiler': workspace:*
       '@types/glob': ~7.1.3
       '@types/jest': ^26.0.7
@@ -5143,7 +5139,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-9m1Ftf+1RsQvf9JIDOZTJouHyT3X4kdqn1/tDSL9NrvOgLFjp/cA/vzyMcPAZTJCBkcF+xIkR/Peu2/jhwy0gQ==
-  /@dxos/esbuild-server/1.2.3:
+  /@dxos/esbuild-server/1.3.2:
     dependencies:
       chalk: 4.1.2
       esbuild: 0.12.29
@@ -5159,8 +5155,8 @@ packages:
     dev: true
     hasBin: true
     resolution:
-      integrity: sha512-nJy7ktTad7QXfDH70DoN1HuxvmZXrN1xwBBHp7foI6875wYrFUk0peJ2E++ySNiuLqmdyIUFntbHODX9QjXE0w==
-  /@dxos/eslint-plugin/1.0.19_eslint@7.26.0+typescript@4.5.2:
+      integrity: sha512-7cQIKzb82amht3yzmx9SM/fFg2jGR3oWocMV64pVrIlL53UBQyPRw4Pup55s1dDOtCp9G+QMzFgXdlrWYlCj/g==
+  /@dxos/eslint-plugin/1.0.20_eslint@7.26.0+typescript@4.5.2:
     dependencies:
       '@rushstack/eslint-patch': 1.0.6
       '@typescript-eslint/eslint-plugin': 4.28.4_d3af276f67dcb00a474f41c3d49caf66
@@ -5177,7 +5173,7 @@ packages:
       eslint: '*'
       typescript: '*'
     resolution:
-      integrity: sha512-FE185B6IGp9o36eAXglrpQ/YV21ACvCLF4JblYcLnjBdupZnlmsv1SFu54B/7phLikxPqxWkywPzwfljh4+/Ow==
+      integrity: sha512-zFQi4ooCoatZmz5L4Ei1HOqFosi/+LrxMkrKx6HjZjJpPxYpAZ2EgCjUmg/JHhcMWelNhikQHTeZqBkI1yzQqg==
   /@dxos/gem-core/1.0.0-beta.34_@types+react@17.0.24:
     dependencies:
       '@material-ui/core': 4.11.4_c9c9d4a2eab4f2a56fbc8dec3114b22b
