@@ -1,29 +1,85 @@
 import { Stream } from "@dxos/codec-protobuf";
-import { DataService, EchoEnvelope, FeedWriter, MutationReceipt, SubscribeEntitySetRequest, SubscribeEntitySetResponse, SubscribeEntityStreamRequest, SubscribeEntityStreamResponse } from "@dxos/echo-protocol";
+import { DXOSError, failUndefined, raise } from "@dxos/debug";
+import { DataService, EchoEnvelope, FeedWriter, ItemGenesis, ItemID, MutationReceipt, SubscribeEntitySetRequest, SubscribeEntitySetResponse, SubscribeEntityStreamRequest, SubscribeEntityStreamResponse } from "@dxos/echo-protocol";
 import assert from "assert";
-import { ItemManager } from ".";
+import { ItemDemuxer, ItemManager } from ".";
+import { EntitiyNotFoundError } from "..";
+import { Link } from "./link";
 
-export class DataServiceHost implements DataService {
+/**
+ * Provides methods for DataService for a single party.
+ * 
+ * A DataServiceRouter must be placed before it to route requests to different DataServiceHost instances based on party id.
+ */
+export class DataServiceHost {
     constructor(
         private readonly _itemManager: ItemManager,
+        private readonly _itemDemuxer: ItemDemuxer,
         private readonly _writeStream?: FeedWriter<EchoEnvelope>
     ) {}
 
-    SubscribeEntitySet(request: SubscribeEntitySetRequest): Stream<SubscribeEntitySetResponse> {
+    subscribeEntitySet(): Stream<SubscribeEntitySetResponse> {
         return new Stream(({ next }) => {
-            function update() {
+            const trackedSet = new Set<ItemID>()
 
+            const entityInfo = (id: ItemID): EchoEnvelope => {
+                const entity = this._itemManager.entities.get(id) ?? failUndefined();
+                return {
+                    itemId: id,
+                    genesis: {
+                        itemType: entity.type,
+                        modelType: entity.modelMeta.type,
+                        link: entity instanceof Link ? {
+                            source: entity.sourceId,
+                            target: entity.targetId
+                        } : undefined,
+                    }
+                }
+            }
+            
+            const update = () => {
+                const added = new Set<ItemID>()
+                const deleted = new Set<ItemID>()
+
+                for(const entitiy of this._itemManager.entities.keys()) {
+                    if(!trackedSet.has(entitiy)) {
+                        added.add(entitiy)
+                        trackedSet.add(entitiy)
+                    }
+                }
+
+                for(const entitiy of trackedSet) {
+                    if(!this._itemManager.entities.has(entitiy)) {
+                        deleted.add(entitiy)
+                        trackedSet.delete(entitiy)
+                    }
+                }
+
+                next({
+                    added: Array.from(added).map(id => entityInfo(id)),
+                    deleted: Array.from(added).map((id): EchoEnvelope => ({ itemId: id })),
+                })
             }
             
             return this._itemManager.debouncedItemUpdate.on(update)
         })
     }
 
-    SubscribeEntityStream(request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
+    subscribeEntityStream(request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
+        return new Stream(({ next }) => {
+            assert(request.itemId);
+            const entity = this._itemManager.entities.get(request.itemId) ?? raise(new EntitiyNotFoundError(request.itemId))
+            const snapshot = this._itemDemuxer.createEntitySnapshot(entity)
 
+            next({ snapshot })
+
+            return this._itemDemuxer.mutation.on(mutation => {
+                next({ mutation })
+            })
+        })
     }
 
-    async Write(request: EchoEnvelope): Promise<MutationReceipt> {
+    async write(request: EchoEnvelope): Promise<MutationReceipt> {
         assert(this._writeStream, 'Cannot write mutations in readonly mode');
 
         return this._writeStream.write(request);

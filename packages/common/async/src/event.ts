@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { resolve } from "path";
+
 // TODO(burdon): Rename (don't have both "event" and "events" files). Deprecate "events"?
 
 export type Effect = () => (() => void) | undefined;
@@ -188,6 +190,17 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   waitForCount (expectedCount: number): Promise<T> {
     let count = 0;
     return this.waitFor(() => ++count === expectedCount);
+  }
+
+  /**
+   * Similar to waitFor, but the promise resolves immediatelly if the condition is already true.
+   */
+  async waitForCondition(predicate: () => boolean): Promise<void> {
+    if(predicate()) {
+      return;
+    } else {
+      await this.waitFor(predicate);
+    }
   }
 
   /**

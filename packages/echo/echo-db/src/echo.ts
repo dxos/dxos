@@ -8,7 +8,7 @@ import memdown from 'memdown';
 
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { codec, PartyKey } from '@dxos/echo-protocol';
+import { codec, DataService, PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
@@ -25,6 +25,7 @@ import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, Part
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
+import { DataServiceRouter } from './items/data-service-router';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
@@ -98,6 +99,7 @@ export class ECHO {
   private readonly _partyManager: PartyManager;
   private readonly _subs = new SubscriptionGroup();
   private readonly _metadataStore: MetadataStore;
+  private readonly _dataServiceRouter: DataServiceRouter;
 
   /**
    * Creates a new instance of ECHO.
@@ -171,6 +173,13 @@ export class ECHO {
         this._subs.push(autoPartyOpener(this.halo.identity.preferences!, this._partyManager));
       }
     });
+
+    this._dataServiceRouter = new DataServiceRouter();
+    this._partyManager.update.on(party => {
+      party.update.waitForCondition(() => party.isOpen).then(() => {
+        this._dataServiceRouter.trackParty(party.key, party.database.createDataServiceHost())
+      })
+    })
   }
 
   toString () {
@@ -207,6 +216,10 @@ export class ECHO {
 
   get modelFactory (): ModelFactory {
     return this._modelFactory;
+  }
+
+  get dataService(): DataService {
+    return this._dataServiceRouter;
   }
 
   /**

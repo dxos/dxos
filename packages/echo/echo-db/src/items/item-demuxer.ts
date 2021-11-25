@@ -7,7 +7,7 @@ import debug from 'debug';
 
 import { failUndefined, raise } from '@dxos/debug';
 import {
-  DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
+  DatabaseSnapshot, EchoEnvelope, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
 } from '@dxos/echo-protocol';
 import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
@@ -18,6 +18,7 @@ import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
 import { ModelConstructionOptions } from '.';
+import { Event } from '@dxos/async';
 
 const log = debug('dxos:echo:item-demuxer');
 
@@ -35,6 +36,8 @@ export class ItemDemuxer {
    * This array is only there if model doesn't have its own snapshot implementation.
    */
   private readonly _modelMutations = new Map<ItemID, ModelMutation[]>();
+
+  readonly mutation = new Event<EchoEnvelope>();
 
   constructor (
     private readonly _itemManager: ItemManager,
@@ -54,7 +57,8 @@ export class ItemDemuxer {
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
     return createWritable<IEchoStream>(async (message: IEchoStream) => {
       log('Reading:', JSON.stringify(message, jsonReplacer));
-      const { data: { itemId, genesis, itemMutation, mutation }, meta } = message;
+      const { data: echoEnvelope, meta } = message;
+      const { itemId, genesis, itemMutation, mutation } = echoEnvelope;
       assert(itemId);
 
       //
@@ -127,36 +131,38 @@ export class ItemDemuxer {
         // Forward mutations to the item's stream.
         await this._itemManager.processModelMessage(itemId, mutation);
       }
+
+      this.mutation.emit(echoEnvelope);
     });
   }
 
   createSnapshot (): DatabaseSnapshot {
     assert(this._options.snapshots, 'Snapshots are disabled');
     return {
-      items: this._itemManager.queryItems().value.map(item => this._createItemSnapshot(item))
+      items: this._itemManager.queryItems().value.map(item => this.createEntitySnapshot(item))
     };
   }
 
-  private _createItemSnapshot (item: Item<Model<any>>): ItemSnapshot {
+  createEntitySnapshot (entity: Entity<Model<any>>): ItemSnapshot {
     let model: ModelSnapshot;
-    if (item.modelMeta.snapshotCodec) {
+    if (entity.modelMeta.snapshotCodec) {
       model = {
-        custom: item.modelMeta.snapshotCodec.encode(item.model.createSnapshot())
+        custom: entity.modelMeta.snapshotCodec.encode(entity.model.createSnapshot())
       };
     } else {
       model = {
         array: {
-          mutations: this._modelMutations.get(item.id) ??
+          mutations: this._modelMutations.get(entity.id) ??
             raise(new Error('Model does not support mutations natively and it\'s weren\'t tracked by the system.'))
         }
       };
     }
 
     return {
-      itemId: item.id,
-      itemType: item.type,
-      modelType: item.modelMeta.type,
-      parentId: item.parent?.id,
+      itemId: entity.id,
+      itemType: entity.type,
+      modelType: entity.modelMeta.type,
+      parentId: (entity instanceof Item) ? entity.parent?.id : undefined,
       model
     };
   }

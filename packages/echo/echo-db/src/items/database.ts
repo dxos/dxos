@@ -15,6 +15,7 @@ import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { SelectFilter, Selection, SelectionResult } from './selection';
 import { TimeframeClock } from './timeframe-clock';
+import { DataServiceHost } from './data-service-host';
 
 export interface ItemCreationOptions<M> {
   model: ModelConstructor<M>
@@ -174,6 +175,14 @@ export class Database {
   createSnapshot () {
     this._assertInitialized();
     return this._itemDemuxer.createSnapshot();
+  }
+
+  createDataServiceHost() {
+    return new DataServiceHost(
+      this._itemManager,
+      this._itemDemuxer,
+      this._outboundStream ?? undefined,
+    )
   }
 
   private _assertInitialized () {

@@ -4,10 +4,18 @@
 
 import { PublicKey } from '@dxos/crypto';
 import { DXOSError } from '@dxos/debug';
+import { ItemID } from '@dxos/echo-protocol';
 
 export class PartyNotFoundError extends DXOSError {
   constructor (partyKey: PublicKey) {
     super('PARTY_NOT_FOUND', `Party with key not found: ${partyKey}`);
+  }
+}
+
+
+export class EntitiyNotFoundError extends DXOSError {
+  constructor (entityId: ItemID) {
+    super('ENTITY_NOT_FOUND', `Entitiy not found: ${entityId}`);
   }
 }
 

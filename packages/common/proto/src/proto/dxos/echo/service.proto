@@ -13,12 +13,12 @@ message SubscribeEntitySetRequest {
 }
 
 message SubscribeEntitySetResponse {
-  repeated ItemGenesis added = 1;
-  repeated ItemGenesis deleted = 2;
+  repeated EchoEnvelope added = 1;
+  repeated EchoEnvelope deleted = 2;
 }
 
 message SubscribeEntityStreamRequest {
-  bytes partyKey = 1;
+  PubKey partyKey = 1;
   string itemId = 2;
 }
 
@@ -28,6 +28,11 @@ message SubscribeEntityStreamResponse {
     ItemSnapshot snapshot = 1;
     EchoEnvelope mutation = 2;
   }
+}
+
+message WriteRequest {
+  PubKey partyKey = 1;
+  EchoEnvelope mutation = 2;
 }
 
 message MutationReceipt {
@@ -40,5 +45,5 @@ service DataService {
 
   rpc SubscribeEntityStream(SubscribeEntityStreamRequest) returns (stream SubscribeEntityStreamResponse);
    
-  rpc Write(EchoEnvelope) returns (MutationReceipt);
+  rpc Write(WriteRequest) returns (MutationReceipt);
 }
