@@ -13,16 +13,12 @@ import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
 export interface PartySharingDialogProps extends Omit<SharingDialogProps, 'onCreateInvitation' | 'title' | 'members'> {
   partyKey: PublicKey,
-  remote?: boolean; // Whether the Client works in remote mode.
 }
 
 /**
  * Manages the workflow for inviting a user to a party.
  */
-export const PartySharingDialog = ({ remote, partyKey, ...props }: PartySharingDialogProps) => {
-  if (remote) {
-    throw new Error('Remote party sharing not implemented.');
-  }
+export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogProps) => {
   const client = useClient();
   const party = useParty(partyKey);
   const members = useMembers(party);
