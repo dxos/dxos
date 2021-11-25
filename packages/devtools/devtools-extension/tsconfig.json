@@ -17,13 +17,7 @@
   ],
   "references": [
     {
-      "path": "../client"
-    },
-    {
       "path": "../devtools"
-    },
-    {
-      "path": "../react-framework"
     },
     {
       "path": "../../common/async"
@@ -45,6 +39,12 @@
     },
     {
       "path": "../../mesh/network-manager"
-    }
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/react-framework"
+    },
   ]
 }

@@ -11,8 +11,9 @@ import { makeStyles } from '@mui/styles';
 // code import { PeerGraph } from '@dxos/devtools-mesh';
 import { SignalStatus, SignalTrace } from '@dxos/devtools-mesh';
 import { SignalApi } from '@dxos/network-manager';
+import { useClient } from '@dxos/react-client';
 
-import { useDevtoolsHost, useStream } from '../hooks';
+import { useStream } from '../hooks';
 import { SubscribeToSignalStatusResponse } from '../proto';
 
 const useStyles = makeStyles(theme => ({
@@ -65,7 +66,8 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
 
 export const Signal = () => {
   const classes = useStyles();
-  const devtoolsHost = useDevtoolsHost();
+  const client = useClient();
+  const devtoolsHost = client.services.DevtoolsHost;
   const status = useStream(() => devtoolsHost.SubscribeToSignalStatus());
   const trace = useStream(() => devtoolsHost.SubscribeToSignalTrace());
 

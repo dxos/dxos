@@ -5,8 +5,6 @@
 import Bridge from 'crx-bridge';
 import browser from 'webextension-polyfill';
 
-// TODO(burdon): No code in index file.
-
 Bridge.setNamespace('dxos.devtools');
 Bridge.allowWindowMessaging('dxos.devtools');
 
@@ -14,7 +12,7 @@ Bridge.onMessage('extension.inject-client-script', () => {
   console.log('[DXOS devtools] Injecting client API...');
 
   const script = document.createElement('script');
-  script.src = browser.runtime.getURL('devtools-client-api/index.js');
+  script.src = browser.runtime.getURL('devtools-client-api/main.js');
   document.documentElement.appendChild(script);
 });
 

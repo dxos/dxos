@@ -18,15 +18,16 @@ import {
   useTheme
 } from '@mui/material';
 
+import { clientServiceBundle } from '@dxos/client';
 import { truncateString } from '@dxos/debug';
 import { Party } from '@dxos/echo-db';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
 import { ClientInitializer, useClient, useParties, useProfile } from '@dxos/react-client';
-import { RpcPort, createLinkedPorts, createRpcClient, createRpcServer } from '@dxos/rpc';
+import { RpcPort, createLinkedPorts, createBundledRpcServer } from '@dxos/rpc';
 import { TextModel } from '@dxos/text-model';
 
-import { App, ErrorBoundary, DevtoolsContext, DevtoolsHost, schema } from '../src';
+import { App, ErrorBoundary } from '../src';
 
 export default {
   title: 'devtools/Playground'
@@ -34,28 +35,17 @@ export default {
 
 const DevTools = ({ port }: { port: RpcPort }) => {
   const theme = useTheme();
-  const [devtoolsHost, setDevtoolsHost] = useState<DevtoolsHost>();
-
-  useEffect(() => {
-    setImmediate(async () => {
-      const service = schema.getService('dxos.devtools.DevtoolsHost');
-      const rpcClient = createRpcClient(service, { port });
-      await rpcClient.open();
-      setDevtoolsHost(rpcClient.rpc);
-    });
-  }, []);
-
-  if (!devtoolsHost) {
-    return <>Initializing devtools...</>;
-  }
 
   return (
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <DevtoolsContext.Provider value={devtoolsHost}>
+        <ClientInitializer
+          config={{ system: { remote: true } }}
+          clientOpts={{ rpcPort: port }}
+        >
           <App />
-        </DevtoolsContext.Provider>
+        </ClientInitializer>
       </ThemeProvider>
     </ErrorBoundary>
   );
@@ -70,10 +60,9 @@ const Controls = ({ port }: { port: RpcPort }) => {
 
   useEffect(() => {
     setImmediate(async () => {
-      const service = schema.getService('dxos.devtools.DevtoolsHost');
-      const rpcServer = createRpcServer({
-        service,
-        handlers: client.services.DevtoolsHost,
+      const rpcServer = createBundledRpcServer({
+        services: clientServiceBundle,
+        handlers: client.services,
         port
       });
 
@@ -205,7 +194,13 @@ export const Primary = () => {
   return (
     <Box sx={{ display: 'flex' }}>
       <DevTools port={devtoolsPort} />
-      <ClientInitializer>
+      <ClientInitializer config={{
+        services: {
+          signal: {
+            server: 'wss://enterprise.kube.dxos.network/dxos/signal'
+          }
+        }
+      }}>
         <Controls port={controlsPort} />
       </ClientInitializer>
     </Box>

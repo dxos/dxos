@@ -4,8 +4,6 @@
 
 /* global chrome */
 
-// TODO(burdon): No code in index file.
-
 let panelCreated = false;
 let checkCount = 0;
 
