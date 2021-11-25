@@ -4,12 +4,8 @@
 
 import React, { Dispatch, ReactNode, SetStateAction, createContext, useContext, useState } from 'react';
 
+import type { PendingInvitation } from '@dxos/client';
 import { raise } from '@dxos/debug';
-
-export type PendingInvitation = {
-  invitationCode: string
-  pin: string | undefined
-}
 
 // TODO(burdon): Is this required?
 type State<T> = [T, Dispatch<SetStateAction<T>>]
