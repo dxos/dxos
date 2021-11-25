@@ -10,9 +10,10 @@ import { makeStyles } from '@mui/styles';
 import { PublicKey } from '@dxos/crypto';
 import { PeerGraph } from '@dxos/devtools-mesh';
 import { PeerInfo } from '@dxos/network-manager';
+import { useClient } from '@dxos/react-client';
 
 import { Autocomplete } from '../components';
-import { useAsyncEffect, useDevtoolsHost, useStream } from '../hooks';
+import { useAsyncEffect, useStream } from '../hooks';
 import { SubscribeToNetworkTopicsResponse } from '../proto';
 
 const useStyles = makeStyles(theme => ({
@@ -56,7 +57,8 @@ const networkTopic = (topic: SubscribeToNetworkTopicsResponse.Topic): Topic => {
 
 export const SwarmGraph = () => {
   const classes = useStyles();
-  const devtoolsHost = useDevtoolsHost();
+  const client = useClient();
+  const devtoolsHost = client.services.DevtoolsHost;
   const [selectedTopic, setSelectedTopic] = useState<string>();
   const [peers, setPeers] = useState<PeerInfo[]>([]);
 

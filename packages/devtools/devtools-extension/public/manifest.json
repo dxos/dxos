@@ -24,12 +24,12 @@
   "web_accessible_resources": [
     "devtools.html",
     "main-panel.html",
-    "devtools-client-api/index.js"
+    "devtools-client-api/main.js"
   ],
   "manifest_version": 2,
   "background": {
     "scripts": [
-      "background/index.js"
+      "background/main.js"
     ],
     "persistent": false
   },
@@ -39,7 +39,7 @@
         "<all_urls>"
       ],
       "js": [
-        "content-script/index.js"
+        "content-script/main.js"
       ],
       "run_at": "document_start"
     }
