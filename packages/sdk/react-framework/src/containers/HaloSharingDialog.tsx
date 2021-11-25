@@ -18,7 +18,6 @@ export type HaloSharingDialogProps = Omit<SharingDialogProps, 'onCreateInvitatio
 export const HaloSharingDialog = (props: HaloSharingDialogProps) => {
   const client = useClient();
 
-  // The new way - using the remote Client API.
   const handleCreateInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
     const id = v4();
     const invitation = await client.createHaloInvitation({
