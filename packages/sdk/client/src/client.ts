@@ -321,11 +321,10 @@ export class Client {
    *
    * To be used with `client.createHaloInvitation` on the inviter side.
    *
-   * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
-   * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
+   * @returns An async function to provide secret and finishing the invitation process.
   */
-  async joinHaloInvitation (invitationDescriptor: InvitationDescriptor, secret: string) {
-    return await this.halo.acceptInvitation(invitationDescriptor, secret);
+  async joinHaloInvitation (invitationDescriptor: InvitationDescriptor) {
+    return await this.halo.acceptInvitation(invitationDescriptor);
   }
 
   //

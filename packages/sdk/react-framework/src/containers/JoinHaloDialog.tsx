@@ -19,7 +19,8 @@ export const JoinHaloDialog = (props: JoinHaloDialogProps) => {
   // The new way - using the remote Client API.
   const handleJoin: JoinDialogProps['onJoin'] = async ({ invitation, secretProvider }) => {
     const secret = await secretProvider();
-    await client.joinHaloInvitation(invitation, secret.toString());
+    const finishInvitation = await client.joinHaloInvitation(invitation);
+    await finishInvitation(secret.toString());
   };
 
   return (

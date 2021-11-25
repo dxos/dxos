@@ -82,14 +82,17 @@ export class HaloProxy {
 
   /**
    * Joins an existing identity HALO by invitation.
+   * @returns An async function to provide secret and finishing the invitation process.
    */
-  async acceptInvitation (invitationDescriptor: InvitationDescriptor, secret: string) {
+  async acceptInvitation (invitationDescriptor: InvitationDescriptor) {
     const invitationProcess = await this._serviceProvider.services.ProfileService.AcceptInvitation({
       invitationCode: encodeInvitation(invitationDescriptor)
     });
-    await this._serviceProvider.services.ProfileService.AuthenticateInvitation({
-      process: invitationProcess, secret: secret.toString()
-    });
+    return async (secret: string) => {
+      await this._serviceProvider.services.ProfileService.AuthenticateInvitation({
+        process: invitationProcess, secret
+      });
+    };
   }
 
   /**
