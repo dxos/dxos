@@ -24,7 +24,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
   const members = useMembers(party);
 
   // The old way - before the migration to new Client API with Client Services.
-  const createLocalInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
+  const createInvitation: SharingDialogProps['onCreateInvitation'] = (setInvitations) => async () => {
     let pendingInvitation: PendingInvitation; // eslint-disable-line prefer-const
 
     // Called when other side joins the invitation party.
@@ -54,7 +54,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
     <SharingDialog
       {...props}
       title='Party Sharing'
-      onCreateInvitation={createLocalInvitation}
+      onCreateInvitation={createInvitation}
       members={members}
     />
   );
