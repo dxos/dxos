@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.19",
+    "@dxos/eslint-plugin": "~1.0.20",
     "@dxos/protobuf-test": "workspace:*",
     "@types/argparse": "^2.0.0",
     "@types/jest": "^26.0.7",
