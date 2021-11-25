@@ -10,6 +10,10 @@ import { encodeInvitation } from '..';
 import { ClientServiceProvider, PendingInvitation } from '../interfaces';
 import { Profile } from '../proto/gen/dxos/client';
 
+export interface CreateInvitationOptions extends InvitationOptions {
+  onPinGenerated?: (pin: string) => void
+}
+
 export class HaloProxy {
   private _profile?: Profile;
   private _contacts: PartyMember[] = [];
@@ -98,7 +102,7 @@ export class HaloProxy {
   /**
    * Create an invitation to an exiting identity HALO.
    */
-  async createInvitation (options?: InvitationOptions): Promise<PendingInvitation> {
+  async createInvitation (options?: CreateInvitationOptions): Promise<PendingInvitation> {
     const stream = await this._serviceProvider.services.ProfileService.CreateInvitation();
     return new Promise((resolve, reject) => {
       stream.subscribe(invitationMsg => {
@@ -107,12 +111,17 @@ export class HaloProxy {
           stream.close();
         } else {
           const pendingInvitation = { invitationCode: invitationMsg.invitationCode!, pin: invitationMsg.secret };
+          if (invitationMsg.secret && options?.onPinGenerated) {
+            options.onPinGenerated(invitationMsg.secret);
+          }
           resolve(pendingInvitation);
         }
       }, error => {
-        console.error(error);
-        reject(error);
-        // TODO(rzadp): Handle retry.
+        if (error) {
+          console.error(error);
+          reject(error);
+          // TODO(rzadp): Handle retry.
+        }
       });
     });
   }

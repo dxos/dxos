@@ -34,12 +34,15 @@ export default {
 const HaloInvitationContainer = () => {
   const client = useClient();
   const [invitation, setInvitation] = useState<PendingInvitation | undefined>();
+  const [pin, setPin] = useState('');
 
   const handleCreateInvitation = async () => {
     const invitation = await client.createHaloInvitation({
       onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
         setInvitation(undefined);
-      }
+        setPin('');
+      },
+      onPinGenerated: setPin
     });
 
     setInvitation(invitation);
@@ -71,12 +74,12 @@ const HaloInvitationContainer = () => {
         </Box>
       )}
 
-      {invitation?.pin && (
+      {pin && (
         <Box sx={{ marginTop: 1 }}>
           <TextField
             disabled
             type='text'
-            value={invitation.pin}
+            value={pin}
           />
         </Box>
       )}

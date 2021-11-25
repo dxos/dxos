@@ -23,6 +23,18 @@ export const HaloSharingDialog = (props: HaloSharingDialogProps) => {
     const invitation = await client.createHaloInvitation({
       onFinish: () => {
         setInvitations(invitations => invitations.filter(invitation => invitation.id !== id));
+      },
+      onPinGenerated: (pin) => {
+        setInvitations(invitations => {
+          const invitationWithPin = invitations.find(invitation => invitation.id === id);
+          if (!invitationWithPin) {
+            return invitations;
+          }
+          return [
+            ...invitations.filter(invitation => invitation.id !== id),
+            { ...invitationWithPin, pin }
+          ];
+        });
       }
     });
 

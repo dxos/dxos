@@ -16,7 +16,7 @@ import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { RpcPort } from '@dxos/rpc';
 
-import { HaloProxy } from './api/HaloProxy';
+import { CreateInvitationOptions, HaloProxy } from './api/HaloProxy';
 import { DevtoolsHook } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
 import { isNode } from './platform';
@@ -309,7 +309,7 @@ export class Client {
    * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
    * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
-  async createHaloInvitation (options?: InvitationOptions) {
+  async createHaloInvitation (options?: CreateInvitationOptions) {
     return await this.halo.createInvitation(options);
   }
 

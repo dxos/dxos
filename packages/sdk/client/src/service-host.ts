@@ -10,7 +10,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { ECHO, OpenProgress } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor, OpenProgress } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
@@ -93,8 +93,12 @@ export class ClientServiceHost implements ClientServiceProvider {
         CreateInvitation: () => new Stream(({ next, close }) => {
           setImmediate(async () => {
             const secret = generatePasscode();
-            const secretProvider = async () => Buffer.from(secret);
-            const invitation = await this._echo.halo.createInvitation({
+            let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
+            const secretProvider = async () => {
+              next({ invitationCode: encodeInvitation(invitation), secret });
+              return Buffer.from(secret);
+            };
+            invitation = await this._echo.halo.createInvitation({
               secretProvider,
               secretValidator: defaultSecretValidator
             }, {
@@ -105,7 +109,7 @@ export class ClientServiceHost implements ClientServiceProvider {
             });
             const invitationCode = encodeInvitation(invitation);
             this._inviterInvitations.push({ invitationCode, secret });
-            next({ invitationCode, secret });
+            next({ invitationCode });
           });
         }),
         AcceptInvitation: async (request) => {

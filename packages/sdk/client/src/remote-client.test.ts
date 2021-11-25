@@ -11,6 +11,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Client } from './client';
 import { clientServiceBundle } from './interfaces';
+import { InvitationProcess } from './proto/gen/dxos/client';
 
 const createServiceProviderPort = async () => {
   const [proxyPort, hostPort] = createLinkedPorts();
@@ -65,9 +66,13 @@ describe('Remote client', () => {
 
     await inviter.halo.createProfile({ username: 'test-user' });
 
+    let inviteeInvitationProcess: InvitationProcess;
     inviter.services.ProfileService.CreateInvitation().subscribe(async inviterInvitation => {
-      const inviteeInvitationProcess = await invitee.services.ProfileService.AcceptInvitation({ invitationCode: inviterInvitation.invitationCode });
-      await invitee.services.ProfileService.AuthenticateInvitation({ process: inviteeInvitationProcess, secret: inviterInvitation.secret });
+      if (!inviteeInvitationProcess) {
+        inviteeInvitationProcess = await invitee.services.ProfileService.AcceptInvitation({ invitationCode: inviterInvitation.invitationCode });
+      } else if (inviterInvitation.secret) {
+        await invitee.services.ProfileService.AuthenticateInvitation({ process: inviteeInvitationProcess, secret: inviterInvitation.secret });
+      }
     }, (error) => {
       throw error;
     });
