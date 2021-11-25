@@ -6,10 +6,11 @@ import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, useProfile } from '@dxos/react-client';
+import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, useRemoteParties, useProfile, SuppliedConfig } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
+  ErrorView,
   FrameworkContextProvider,
   HaloSharingDialog,
   JoinHaloDialog
@@ -18,6 +19,16 @@ import { Column } from './helpers';
 
 export default {
   title: 'react-framework/HaloInvitations'
+};
+
+const RemoteParties = () => {
+  const parties = useRemoteParties();
+
+  return (
+    <Box>
+      <p>You have {parties.length} parties.</p>
+    </Box>
+  );
 };
 
 const Parties = () => {
@@ -37,9 +48,10 @@ const Parties = () => {
 interface UserProps {
   sharing?: boolean;
   joining?: boolean;
+  remote?: boolean
 }
 
-const User = ({ sharing, joining }: UserProps) => {
+const User = ({ sharing, joining, remote }: UserProps) => {
   const [shareOpen, setShareOpen] = useState(!!sharing && !joining);
   const [joinOpen, setJoinOpen] = useState(!!joining && !sharing);
   const profile = useProfile();
@@ -58,11 +70,11 @@ const User = ({ sharing, joining }: UserProps) => {
       <JoinHaloDialog
         open={joinOpen}
         onClose={() => setJoinOpen(false)}
-        closeOnSuccess={true}
         modal={false}
+        closeOnSuccess={true}
       />
       <Box sx={{ marginTop: 2, padding: 1 }}>
-        <Parties />
+        {remote ? <RemoteParties /> : <Parties />}
       </Box>
       <Box sx={{ padding: 1 }}>
         <p>{profile?.username ?? 'Profile not created.'}</p>
@@ -74,28 +86,58 @@ const User = ({ sharing, joining }: UserProps) => {
 export const Primary = () => {
   return (
     <FullScreen>
-      <ErrorBoundary>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-around'
-        }}>
-          <ClientInitializer>
-            <ProfileInitializer>
-              <FrameworkContextProvider>
-                <Column>
-                  <User sharing />
-                </Column>
-              </FrameworkContextProvider>
-            </ProfileInitializer>
-          </ClientInitializer>
+      <FrameworkContextProvider>
+        <ErrorBoundary>
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-around'
+          }}>
+            <ClientInitializer>
+              <ProfileInitializer>
+                <FrameworkContextProvider>
+                  <Column>
+                    <User sharing />
+                  </Column>
+                </FrameworkContextProvider>
+              </ProfileInitializer>
+            </ClientInitializer>
 
-          <ClientInitializer>
-            <Column>
-              <User joining />
-            </Column>
-          </ClientInitializer>
-        </Box>
-      </ErrorBoundary>
+            <ClientInitializer>
+              <Column>
+                <User joining />
+              </Column>
+            </ClientInitializer>
+          </Box>
+        </ErrorBoundary>
+      </FrameworkContextProvider>
+    </FullScreen>
+  );
+};
+
+export const Remote = () => {
+  const remoteConfig: SuppliedConfig = {
+    system: {
+      remote: true
+    }
+  };
+
+  return (
+    <FullScreen>
+      <p>Caution: This story works with Wallet extension. It does not work when embedded in an iframe. Use story directly with /#/__story/ prefix.</p>
+      <FrameworkContextProvider>
+        <ErrorBoundary errorComponent={ErrorView}>
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-around'
+          }}>
+            <ClientInitializer config={remoteConfig}>
+              <Column>
+                <User remote sharing joining />
+              </Column>
+            </ClientInitializer>
+          </Box>
+        </ErrorBoundary>
+      </FrameworkContextProvider>
     </FullScreen>
   );
 };

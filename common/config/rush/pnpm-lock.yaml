@@ -1994,6 +1994,7 @@ importers:
       mobile-detect: 1.4.5
       react-copy-to-clipboard: 5.0.3_react@17.0.2
       url-join: 4.0.1
+      uuid: 3.4.0
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.14.2_@babel+core@7.13.16
@@ -2016,6 +2017,7 @@ importers:
       '@types/react': 17.0.24
       '@types/react-copy-to-clipboard': 5.0.1
       '@types/url-join': 4.0.1
+      '@types/uuid': 8.3.1
       babel-plugin-add-module-exports: 1.0.4
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
@@ -2044,6 +2046,7 @@ importers:
       '@types/react': ^17.0.24
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/url-join': ~4.0.1
+      '@types/uuid': ~8.3.1
       assert: ^2.0.0
       babel-plugin-add-module-exports: ^1.0.4
       debug: ^4.1.1
@@ -2055,6 +2058,7 @@ importers:
       react-dom: ^17.0.2
       typescript: ^4.5.2
       url-join: ^4.0.1
+      uuid: ^3.3.2
   ../../packages/sdk/react-registry-client:
     dependencies:
       '@dxos/debug': link:../../common/debug
