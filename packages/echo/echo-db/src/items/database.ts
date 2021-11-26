@@ -5,18 +5,16 @@
 import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
-import { EchoEnvelope, FeedWriter, ItemID, ItemType, DatabaseSnapshot } from '@dxos/echo-protocol';
-import { Model, ModelConstructor, validateModelClass, ModelFactory } from '@dxos/model-factory';
+import { ItemID, ItemType } from '@dxos/echo-protocol';
+import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
+import { DataServiceHost } from './data-service-host';
+import { DatabaseBackend } from './database-backend';
 import { Item } from './item';
-import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { SelectFilter, Selection, SelectionResult } from './selection';
-import { TimeframeClock } from './timeframe-clock';
-import { DataServiceHost } from './data-service-host';
-import { DatabaseBackend } from './database-backend';
 
 export interface ItemCreationOptions<M> {
   model: ModelConstructor<M>
@@ -53,7 +51,7 @@ export class Database {
    */
   constructor (
     private readonly _modelFactory: ModelFactory,
-    private readonly _backend: DatabaseBackend,
+    private readonly _backend: DatabaseBackend
   ) {
     this._itemManager = new ItemManager(this._modelFactory, this._backend.getWriteStream());
   }
@@ -62,7 +60,7 @@ export class Database {
     return this._backend.isReadOnly();
   }
 
-  get update() {
+  get update () {
     return this._itemManager.debouncedItemUpdate;
   }
 
@@ -170,7 +168,7 @@ export class Database {
     return this._backend.createSnapshot();
   }
 
-  createDataServiceHost(): DataServiceHost {
+  createDataServiceHost (): DataServiceHost {
     return this._backend.createDataServiceHost();
   }
 

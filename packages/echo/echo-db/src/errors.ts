@@ -12,7 +12,6 @@ export class PartyNotFoundError extends DXOSError {
   }
 }
 
-
 export class EntitiyNotFoundError extends DXOSError {
   constructor (entityId: ItemID) {
     super('ENTITY_NOT_FOUND', `Entitiy not found: ${entityId}`);

@@ -18,7 +18,7 @@ export class Entity<M extends Model> {
 
   private readonly _subscriptions = new SubscriptionGroup();
 
-  constructor(
+  constructor (
     private readonly _id: ItemID,
     private readonly _type: ItemType | undefined,
     private readonly _modelMeta: ModelMeta,
@@ -28,19 +28,19 @@ export class Entity<M extends Model> {
     this._setModel(_model);
   }
 
-  get id(): ItemID {
+  get id (): ItemID {
     return this._id;
   }
 
-  get type(): ItemType | undefined {
+  get type (): ItemType | undefined {
     return this._type;
   }
 
-  get modelMeta(): ModelMeta {
+  get modelMeta (): ModelMeta {
     return this._modelMeta;
   }
 
-  get model(): M {
+  get model (): M {
     return this._model;
   }
 
@@ -48,14 +48,14 @@ export class Entity<M extends Model> {
    * Subscribe for updates.
    * @param listener
    */
-  subscribe(listener: (entity: this) => void) {
+  subscribe (listener: (entity: this) => void) {
     return this._onUpdate.on(listener as any);
   }
 
   /**
    * @internal
    */
-  _setModel(model: M) {
+  _setModel (model: M) {
     this._model = model;
 
     this._subscriptions.unsubscribe();

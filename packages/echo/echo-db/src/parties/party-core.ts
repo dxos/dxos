@@ -11,12 +11,12 @@ import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe 
 import { ModelFactory } from '@dxos/model-factory';
 
 import { Database, TimeframeClock } from '../items';
+import { FeedDatabaseBackend } from '../items/database-backend';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 import { createMessageSelector } from './message-selector';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
-import { FeedDatabaseBackend } from '../items/database-backend';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
 
@@ -130,7 +130,7 @@ export class PartyCore {
 
     this._database = new Database(
       this._modelFactory,
-      new FeedDatabaseBackend(readStream, writeStream, this._databaseSnapshot, { snapshots: true }),
+      new FeedDatabaseBackend(readStream, writeStream, this._databaseSnapshot, { snapshots: true })
     );
     await this._database.init();
 

@@ -5,20 +5,20 @@
 import assert from 'assert';
 import debug from 'debug';
 
+import { Event } from '@dxos/async';
 import { failUndefined, raise } from '@dxos/debug';
 import {
-  DatabaseSnapshot, EchoEnvelope, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
+  DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
 } from '@dxos/echo-protocol';
 import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { jsonReplacer } from '@dxos/util';
 
+import { ModelConstructionOptions } from '.';
 import { DefaultModel } from './default-model';
 import { Entity } from './entity';
 import { Item } from './item';
 import { ItemManager } from './item-manager';
-import { ModelConstructionOptions } from '.';
-import { Event } from '@dxos/async';
 
 const log = debug('dxos:echo:item-demuxer');
 
@@ -70,8 +70,8 @@ export class ItemDemuxer {
         const modelOpts: ModelConstructionOptions = {
           itemId,
           modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
-          initialMutations: mutation ? [{ mutation, meta }] : undefined,
-        }
+          initialMutations: mutation ? [{ mutation, meta }] : undefined
+        };
 
         let entity: Entity<any>;
         if (genesis.link) {
@@ -84,7 +84,7 @@ export class ItemDemuxer {
         } else {
           entity = await this._itemManager.constructItem({
             ...modelOpts,
-            itemType,
+            itemType
           });
         }
 

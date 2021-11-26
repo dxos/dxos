@@ -20,12 +20,12 @@ import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { DefaultModel } from './items';
+import { DataServiceRouter } from './items/data-service-router';
 import { MetadataStore } from './metadata';
 import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
 import { SnapshotStore } from './snapshots';
 import { createRamStorage } from './util';
-import { DataServiceRouter } from './items/data-service-router';
 
 // TODO(burdon): Log vs error.
 const log = debug('dxos:echo');
@@ -176,10 +176,10 @@ export class ECHO {
 
     this._dataServiceRouter = new DataServiceRouter();
     this._partyManager.update.on(party => {
-      party.update.waitForCondition(() => party.isOpen).then(() => {
-        this._dataServiceRouter.trackParty(party.key, party.database.createDataServiceHost())
-      })
-    })
+      void party.update.waitForCondition(() => party.isOpen).then(() => {
+        this._dataServiceRouter.trackParty(party.key, party.database.createDataServiceHost());
+      });
+    });
   }
 
   toString () {
@@ -218,7 +218,7 @@ export class ECHO {
     return this._modelFactory;
   }
 
-  get dataService(): DataService {
+  get dataService (): DataService {
     return this._dataServiceRouter;
   }
 
