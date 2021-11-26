@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - main
+name: main - release-please
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: dxos/release-please-action@v2.36.0
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: rush
+          package-name: '@dxos/protocols'
+          bump-minor-on-breaking: true
