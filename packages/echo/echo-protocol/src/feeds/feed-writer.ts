@@ -9,6 +9,7 @@ import type { HypercoreFeed } from '@dxos/feed-store';
 import { MaybePromise } from '@dxos/util';
 
 import { FeedKey } from '../types';
+import { Event } from '@dxos/async';
 
 export interface WriteReceipt {
   feedKey: FeedKey
@@ -52,6 +53,8 @@ export function createMockFeedWriterFromStream (strem: NodeJS.WritableStream): F
 export class MockFeedWriter<T> implements FeedWriter<T> {
   readonly messages: T[] = []
 
+  readonly written = new Event<[T, WriteReceipt]>()
+
   constructor (
     readonly feedKey = PublicKey.random()
   ) {}
@@ -59,9 +62,13 @@ export class MockFeedWriter<T> implements FeedWriter<T> {
   async write (message: T): Promise<WriteReceipt> {
     this.messages.push(message);
 
-    return {
+    const receipt: WriteReceipt = {
       feedKey: this.feedKey,
       seq: this.messages.length - 1
-    };
+    }
+
+    this.written.emit([message, receipt]);
+
+    return receipt;
   }
 }

@@ -13,6 +13,7 @@ message SubscribeEntitySetRequest {
 }
 
 message SubscribeEntitySetResponse {
+  // TODO(dmaretskyi): This is wrong, the first one should use item snapshot, and deleted should be just list of ids.
   repeated EchoEnvelope added = 1;
   repeated EchoEnvelope deleted = 2;
 }

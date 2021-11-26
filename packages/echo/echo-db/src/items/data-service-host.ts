@@ -5,6 +5,9 @@ import assert from "assert";
 import { ItemDemuxer, ItemManager } from ".";
 import { EntitiyNotFoundError } from "..";
 import { Link } from "./link";
+import debug from 'debug'
+
+const log = debug('dxos:echo:items:data-service-host')
 
 /**
  * Provides methods for DataService for a single party.
@@ -71,9 +74,11 @@ export class DataServiceHost {
             const entity = this._itemManager.entities.get(request.itemId) ?? raise(new EntitiyNotFoundError(request.itemId))
             const snapshot = this._itemDemuxer.createEntitySnapshot(entity)
 
+            log(`Entitiy stream ${request.itemId}: ${JSON.stringify({ snapshot })}`)
             next({ snapshot })
 
             return this._itemDemuxer.mutation.on(mutation => {
+                log(`Entitiy stream ${request.itemId}: ${JSON.stringify({ mutation })}`)
                 next({ mutation })
             })
         })

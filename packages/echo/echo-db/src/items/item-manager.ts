@@ -88,7 +88,7 @@ export class ItemManager {
     itemType?: ItemType,
     parentId?: ItemID,
     initProps?: any // TODO(burdon): Remove/change to array of mutations.
-  ): Promise<Item<any>> {
+  ): Promise<Item<Model<unknown>>> {
     assert(this._writeStream);
     assert(modelType);
 
