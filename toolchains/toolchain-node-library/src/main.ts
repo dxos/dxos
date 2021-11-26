@@ -43,7 +43,7 @@ function execBuild (opts: BuildOptions = {}) {
     try {
       fs.rmSync(join(project.packageRoot, 'src/proto/gen'), { recursive: true });
     } catch (err: any) {
-      console.warn(err.message);
+      console.log(err.message);
     }
 
     // TODO(burdon): Document this.
