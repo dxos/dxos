@@ -1,6 +1,6 @@
 {
   "name": "@dxos/browser-mocha",
-  "version": "2.10.10",
+  "version": "2.18.0",
   "description": "Run mocha test in the browser.",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
