@@ -2,17 +2,16 @@ on:
   push:
     branches:
       - main
-      - rzadp/release-please
 name: main - release-please
 jobs:
   release-please:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: dxos/release-please-action@v2.35.0
+      - uses: dxos/release-please-action@v2.36.0
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: simple
+          release-type: rush
           package-name: '@dxos/protocols'
-          bumpMinorOnBreaking: true # Not implemented yet
+          bump-minor-on-breaking: true
