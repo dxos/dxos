@@ -53,7 +53,6 @@ export class Database {
    */
   constructor (
     private readonly _modelFactory: ModelFactory,
-    private readonly _timeframeClock: TimeframeClock,
     private readonly _backend: DatabaseBackend,
   ) {
     this._itemManager = new ItemManager(this._modelFactory, this._backend.getWriteStream());
@@ -61,6 +60,10 @@ export class Database {
 
   get isReadOnly () {
     return this._backend.isReadOnly();
+  }
+
+  get update() {
+    return this._itemManager.debouncedItemUpdate;
   }
 
   @synchronized
