@@ -28,7 +28,7 @@ describe('DataMirror', () => {
     const stream = itemDemuxer.open();
     feed.written.on(([msg, meta]) => stream.write({
       data: msg,
-      meta
+      meta: { ...meta, memberKey: PublicKey.random() }
     } as any));
 
     const dataServiceHost = new DataServiceHost(itemManager, itemDemuxer);
