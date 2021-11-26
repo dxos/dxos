@@ -35,25 +35,7 @@
       "path": "../config"
     },
     {
-      "path": "../react-client"
-    },
-    {
-      "path": "../react-components"
-    },
-    {
-      "path": "../react-framework"
-    },
-    {
       "path": "../../common/crypto"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
     },
     {
       "path": "../../echo/echo-db"
@@ -66,6 +48,24 @@
     },
     {
       "path": "../../echo/object-model"
+    },
+    {
+      "path": "../react-client"
+    },
+    {
+      "path": "../react-components"
+    },
+    {
+      "path": "../react-framework"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
     }
   ]
 }
