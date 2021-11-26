@@ -5,6 +5,8 @@
 syntax = "proto3";
 
 import "../halo/keys.proto";
+import "feed.proto";
+import "snapshot.proto";
 
 package dxos.echo.service;
 
