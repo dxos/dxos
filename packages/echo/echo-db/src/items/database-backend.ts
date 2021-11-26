@@ -11,7 +11,6 @@ import { ItemDemuxer, ItemDemuxerOptions, ItemManager } from '..';
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 
-// TODO(dmaretskyi): Rename to DatabaseBackend
 export interface DatabaseBackend {
   open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void>
   close(): Promise<void>
