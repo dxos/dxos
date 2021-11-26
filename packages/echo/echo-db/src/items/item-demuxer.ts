@@ -5,6 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
+import { Event } from '@dxos/async';
 import { failUndefined, raise } from '@dxos/debug';
 import {
   DatabaseSnapshot, IEchoStream, ItemID, ItemSnapshot, ModelMutation, ModelSnapshot
@@ -13,6 +14,7 @@ import { createWritable } from '@dxos/feed-store';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { jsonReplacer } from '@dxos/util';
 
+import { ModelConstructionOptions } from '.';
 import { DefaultModel } from './default-model';
 import { Entity } from './entity';
 import { Item } from './item';
@@ -20,7 +22,7 @@ import { ItemManager } from './item-manager';
 
 const log = debug('dxos:echo:item-demuxer');
 
-export interface ItemManagerOptions {
+export interface ItemDemuxerOptions {
   snapshots?: boolean
 }
 
@@ -35,10 +37,12 @@ export class ItemDemuxer {
    */
   private readonly _modelMutations = new Map<ItemID, ModelMutation[]>();
 
+  readonly mutation = new Event<IEchoStream>();
+
   constructor (
     private readonly _itemManager: ItemManager,
     private readonly _modelFactory: ModelFactory,
-    private readonly _options: ItemManagerOptions = {}
+    private readonly _options: ItemDemuxerOptions = {}
   ) {}
 
   open (): NodeJS.WritableStream {
@@ -63,22 +67,24 @@ export class ItemDemuxer {
         const { itemType, modelType } = genesis;
         assert(modelType);
 
+        const modelOpts: ModelConstructionOptions = {
+          itemId,
+          modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
+          initialMutations: mutation ? [{ mutation, meta }] : undefined
+        };
+
         let entity: Entity<any>;
         if (genesis.link) {
           entity = await this._itemManager.constructLink({
-            itemId,
+            ...modelOpts,
             itemType,
-            modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
-            initialMutations: mutation ? [{ mutation, meta }] : undefined,
             source: genesis.link.source ?? failUndefined(),
             target: genesis.link.target ?? failUndefined()
           });
         } else {
           entity = await this._itemManager.constructItem({
-            itemId,
-            itemType,
-            modelType: this._modelFactory.hasModel(modelType) ? modelType : DefaultModel.meta.type,
-            initialMutations: mutation ? [{ mutation, meta }] : undefined
+            ...modelOpts,
+            itemType
           });
         }
 
@@ -124,36 +130,38 @@ export class ItemDemuxer {
         // Forward mutations to the item's stream.
         await this._itemManager.processModelMessage(itemId, mutation);
       }
+
+      this.mutation.emit(message);
     });
   }
 
   createSnapshot (): DatabaseSnapshot {
     assert(this._options.snapshots, 'Snapshots are disabled');
     return {
-      items: this._itemManager.queryItems().value.map(item => this._createItemSnapshot(item))
+      items: this._itemManager.queryItems().value.map(item => this.createEntitySnapshot(item))
     };
   }
 
-  private _createItemSnapshot (item: Item<Model<any>>): ItemSnapshot {
+  createEntitySnapshot (entity: Entity<Model<any>>): ItemSnapshot {
     let model: ModelSnapshot;
-    if (item.modelMeta.snapshotCodec) {
+    if (entity.modelMeta.snapshotCodec) {
       model = {
-        custom: item.modelMeta.snapshotCodec.encode(item.model.createSnapshot())
+        custom: entity.modelMeta.snapshotCodec.encode(entity.model.createSnapshot())
       };
     } else {
       model = {
         array: {
-          mutations: this._modelMutations.get(item.id) ??
+          mutations: this._modelMutations.get(entity.id) ??
             raise(new Error('Model does not support mutations natively and it\'s weren\'t tracked by the system.'))
         }
       };
     }
 
     return {
-      itemId: item.id,
-      itemType: item.type,
-      modelType: item.modelMeta.type,
-      parentId: item.parent?.id,
+      itemId: entity.id,
+      itemType: entity.type,
+      modelType: entity.modelMeta.type,
+      parentId: (entity instanceof Item) ? entity.parent?.id : undefined,
       model
     };
   }

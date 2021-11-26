@@ -13,4 +13,5 @@
     "command-line.json": "jsonc"
   },
   "search.followSymlinks": false,
+  "editor.tabSize": 2,
 }

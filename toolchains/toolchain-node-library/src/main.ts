@@ -19,6 +19,11 @@ interface BuildOptions {
   watch?: boolean
 }
 
+/**
+ * Builds the current package with protobuf definitoins (optional) and typescript.
+ *
+ * @param opts.watch Keep tsc running in watch mode.
+ */
 function execBuild (opts: BuildOptions = {}) {
   const project = Project.load();
 
@@ -34,6 +39,13 @@ function execBuild (opts: BuildOptions = {}) {
   const protoFiles = glob('src/proto/**/*.proto', { cwd: project.packageRoot });
   if (protoFiles.length > 0) {
     console.log(chalk.bold`\nprotobuf`);
+
+    try {
+      fs.rmSync(join(project.packageRoot, 'src/proto/gen'), { recursive: true });
+    } catch (err: any) {
+      console.log(err.message);
+    }
+
     // TODO(burdon): Document this.
     const substitutions = fs.existsSync(join(project.packageRoot, 'src/proto/substitutions.ts'))
       ? join(project.packageRoot, 'src/proto/substitutions.ts')

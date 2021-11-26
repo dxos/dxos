@@ -81,7 +81,7 @@ export class PartyManager {
 
     // TODO(burdon): Does this make sense?
     // Parties may be duplicated when there is more than one device.
-    partyKeys = unionWith(partyKeys, PublicKey.equals);
+    partyKeys = unionWith<PublicKey>(partyKeys, PublicKey.equals);
 
     onProgressCallback?.({ haloOpened: true, totalParties: partyKeys.length, partiesOpened: 0 });
 

@@ -5,7 +5,7 @@
 import { Timeframe } from '../spacetime';
 import { ItemID, ItemType } from '../types';
 import { schema } from './gen';
-import { FeedMessage } from './gen/dxos';
+import { FeedMessage } from './gen/dxos/echo/feed';
 
 //
 // ECHO generators.
