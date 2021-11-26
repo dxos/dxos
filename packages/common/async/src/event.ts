@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { resolve } from "path";
-
 // TODO(burdon): Rename (don't have both "event" and "events" files). Deprecate "events"?
 
 export type Effect = () => (() => void) | undefined;
@@ -195,10 +193,8 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   /**
    * Similar to waitFor, but the promise resolves immediatelly if the condition is already true.
    */
-  async waitForCondition(predicate: () => boolean): Promise<void> {
-    if(predicate()) {
-      return;
-    } else {
+  async waitForCondition (predicate: () => boolean): Promise<void> {
+    if (!predicate()) {
       await this.waitFor(predicate);
     }
   }
@@ -280,8 +276,8 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     try {
       await waitImmediate(); // Acts like setImmediate but preserves the stack-trace.
       listener(data);
-    } catch(err) {
-      console.error(err)
+    } catch (err) {
+      console.error(err);
     }
   }
 

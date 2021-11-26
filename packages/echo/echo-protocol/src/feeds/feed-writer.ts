@@ -4,12 +4,12 @@
 
 import pify from 'pify';
 
+import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import type { HypercoreFeed } from '@dxos/feed-store';
 import { MaybePromise } from '@dxos/util';
 
 import { FeedKey } from '../types';
-import { Event } from '@dxos/async';
 
 export interface WriteReceipt {
   feedKey: FeedKey
@@ -65,7 +65,7 @@ export class MockFeedWriter<T> implements FeedWriter<T> {
     const receipt: WriteReceipt = {
       feedKey: this.feedKey,
       seq: this.messages.length - 1
-    }
+    };
 
     this.written.emit([message, receipt]);
 
