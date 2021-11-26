@@ -29,7 +29,7 @@ export class Link<M extends Model<any>, L extends Model<any> = any, R extends Mo
   constructor (
     itemId: ItemID,
     itemType: ItemType | undefined,
-    modelMeta: ModelMeta, // TODO(burdon): Why is this not part of the Model interface?
+    modelMeta: ModelMeta,
     model: M,
     link: LinkData
   ) {

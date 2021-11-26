@@ -25,14 +25,13 @@ describe('ItemManager', () => {
         modelType: ObjectModel.meta.type,
         itemType: undefined
       });
-
       expect(item.id).toEqual(itemId);
       expect(item.model).toBeInstanceOf(ObjectModel);
       expect(item.type).toBeUndefined();
       expect(item.readOnly).toBeFalsy();
 
-      expect(itemManager.items.size).toEqual(1);
-      expect(itemManager.items.get(itemId)).toEqual(item);
+      expect(itemManager.entities.size).toEqual(1);
+      expect(itemManager.entities.get(itemId)).toEqual(item);
     });
 
     test('item deconstruction', async () => {
@@ -41,11 +40,11 @@ describe('ItemManager', () => {
 
       const item = await itemManager.constructItem(defaultOpts());
 
-      expect(itemManager.items.size).toEqual(1);
+      expect(itemManager.entities.size).toEqual(1);
 
       itemManager.deconstructItem(item.id);
 
-      expect(itemManager.items.size).toEqual(0);
+      expect(itemManager.entities.size).toEqual(0);
     });
   });
 
@@ -70,7 +69,7 @@ describe('ItemManager', () => {
 
       itemManager.deconstructItem(child.id);
 
-      expect(itemManager.items.size).toEqual(1);
+      expect(itemManager.entities.size).toEqual(1);
       expect(parent.children.length).toEqual(0);
     });
 
@@ -82,12 +81,12 @@ describe('ItemManager', () => {
       await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
       await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
 
-      expect(itemManager.items.size).toEqual(3);
+      expect(itemManager.entities.size).toEqual(3);
       expect(parent.children.length).toEqual(2);
 
       itemManager.deconstructItem(parent.id);
 
-      expect(itemManager.items.size).toEqual(0);
+      expect(itemManager.entities.size).toEqual(0);
     });
   });
 
@@ -104,8 +103,7 @@ describe('ItemManager', () => {
         source: source.id,
         target: target.id
       });
-
-      expect(itemManager.items.size).toEqual(3);
+      expect(itemManager.entities.size).toEqual(3);
 
       expect(link.source).toStrictEqual(source);
       expect(link.target).toStrictEqual(target);
@@ -127,7 +125,6 @@ describe('ItemManager', () => {
         source: source.id,
         target: createId()
       });
-
       expect(link.source).toEqual(source);
       expect(() => link.target).toThrow();
       expect(source.links).toEqual([]);
@@ -144,7 +141,6 @@ describe('ItemManager', () => {
         source: createId(),
         target: target.id
       });
-
       expect(() => link.source).toThrow();
       expect(link.target).toEqual(target);
       expect(target.refs).toEqual([]);
@@ -162,8 +158,7 @@ describe('ItemManager', () => {
         source: source.id,
         target: target.id
       });
-
-      expect(itemManager.items.size).toEqual(3);
+      expect(itemManager.entities.size).toEqual(3);
 
       itemManager.deconstructItem(target.id);
 
@@ -188,7 +183,7 @@ describe('ItemManager', () => {
       modelFactory.registerModel(ObjectModel);
       await itemManager.reconstructItemWithDefaultModel(item.id);
 
-      const reconstructedItem = itemManager.items.get(item.id)!;
+      const reconstructedItem = itemManager.entities.get(item.id)!;
       expect(reconstructedItem.model).toBeInstanceOf(ObjectModel);
     });
   });

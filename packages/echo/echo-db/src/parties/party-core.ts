@@ -11,6 +11,7 @@ import { createFeedWriter, DatabaseSnapshot, PartyKey, PartySnapshot, Timeframe 
 import { ModelFactory } from '@dxos/model-factory';
 
 import { Database, TimeframeClock } from '../items';
+import { FeedDatabaseBackend } from '../items/database-backend';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 import { createMessageSelector } from './message-selector';
 import { PartyFeedProvider } from './party-feed-provider';
@@ -129,10 +130,7 @@ export class PartyCore {
 
     this._database = new Database(
       this._modelFactory,
-      this._timeframeClock,
-      readStream,
-      writeStream ?? null,
-      this._databaseSnapshot
+      new FeedDatabaseBackend(readStream, writeStream, this._databaseSnapshot, { snapshots: true })
     );
     await this._database.init();
 

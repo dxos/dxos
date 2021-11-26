@@ -5,16 +5,16 @@
 import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
-import { EchoEnvelope, FeedWriter, ItemID, ItemType, DatabaseSnapshot } from '@dxos/echo-protocol';
-import { Model, ModelConstructor, validateModelClass, ModelFactory } from '@dxos/model-factory';
+import { ItemID, ItemType } from '@dxos/echo-protocol';
+import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
+import { DataServiceHost } from './data-service-host';
+import { DatabaseBackend } from './database-backend';
 import { Item } from './item';
-import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 import { Link } from './link';
 import { SelectFilter, Selection, SelectionResult } from './selection';
-import { TimeframeClock } from './timeframe-clock';
 
 export interface ItemCreationOptions<M> {
   model: ModelConstructor<M>
@@ -43,9 +43,6 @@ enum State {
  */
 export class Database {
   private readonly _itemManager: ItemManager;
-  private readonly _itemDemuxer: ItemDemuxer;
-
-  private _itemDemuxerInboundStream: NodeJS.WritableStream | undefined;
 
   private _state = State.INITIAL;
 
@@ -54,17 +51,17 @@ export class Database {
    */
   constructor (
     private readonly _modelFactory: ModelFactory,
-    private readonly _timeframeClock: TimeframeClock,
-    private readonly _inboundStream: NodeJS.ReadableStream,
-    private readonly _outboundStream: FeedWriter<EchoEnvelope> | null,
-    private readonly _snapshot?: DatabaseSnapshot
+    private readonly _backend: DatabaseBackend
   ) {
-    this._itemManager = new ItemManager(this._modelFactory, this._outboundStream ?? undefined);
-    this._itemDemuxer = new ItemDemuxer(this._itemManager, this._modelFactory, { snapshots: true });
+    this._itemManager = new ItemManager(this._modelFactory, this._backend.getWriteStream());
   }
 
   get isReadOnly () {
-    return !!this._outboundStream;
+    return this._backend.isReadOnly();
+  }
+
+  get update () {
+    return this._itemManager.debouncedItemUpdate;
   }
 
   @synchronized
@@ -73,12 +70,7 @@ export class Database {
       throw new Error('Invalid state: database was already initialized.');
     }
 
-    this._itemDemuxerInboundStream = this._itemDemuxer.open();
-    this._inboundStream.pipe(this._itemDemuxerInboundStream);
-
-    if (this._snapshot) {
-      await this._itemDemuxer.restoreFromSnapshot(this._snapshot);
-    }
+    await this._backend.open(this._itemManager, this._modelFactory);
     this._state = State.OPEN;
   }
 
@@ -88,7 +80,7 @@ export class Database {
       return;
     }
 
-    this._inboundStream?.unpipe(this._itemDemuxerInboundStream);
+    await this._backend.close();
     this._state = State.DESTROYED;
   }
 
@@ -113,7 +105,7 @@ export class Database {
       throw new TypeError('Optional parent item id must be a string id of an existing item.');
     }
 
-    return this._itemManager.createItem(options.model.meta.type, options.type, options.parent, options.props);
+    return this._itemManager.createItem(options.model.meta.type, options.type, options.parent, options.props) as any;
   }
 
   async createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>> (
@@ -173,7 +165,11 @@ export class Database {
 
   createSnapshot () {
     this._assertInitialized();
-    return this._itemDemuxer.createSnapshot();
+    return this._backend.createSnapshot();
+  }
+
+  createDataServiceHost (): DataServiceHost {
+    return this._backend.createDataServiceHost();
   }
 
   private _assertInitialized () {
