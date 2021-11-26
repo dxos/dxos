@@ -91,9 +91,9 @@ export class RemoteDatabaseBacked implements DatabaseBackend {
   getWriteStream(): FeedWriter<EchoEnvelope> | undefined {
     return {
       write: async (mutation) => {
-        const { feedKey, seq } = await this._service.Write({ mutation })
+        const { feedKey, seq } = await this._service.Write({ mutation, partyKey: this._partyKey })
         assert(feedKey)
-        assert(seq)
+        assert(seq !== undefined)
         return {
           feedKey,
           seq,

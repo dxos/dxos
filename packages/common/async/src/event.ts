@@ -277,8 +277,12 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   }
 
   private async _trigger (listener: (data: T) => void, data: T) {
-    await waitImmediate(); // Acts like setImmediate but preserves the stack-trace.
-    listener(data);
+    try {
+      await waitImmediate(); // Acts like setImmediate but preserves the stack-trace.
+      listener(data);
+    } catch(err) {
+      console.error(err)
+    }
   }
 
   private _runEffects () {

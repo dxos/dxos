@@ -130,7 +130,6 @@ export class PartyCore {
 
     this._database = new Database(
       this._modelFactory,
-      this._timeframeClock,
       new FeedDatabaseBackend(readStream, writeStream, this._databaseSnapshot, { snapshots: true }),
     );
     await this._database.init();

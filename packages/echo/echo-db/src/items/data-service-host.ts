@@ -6,6 +6,7 @@ import { ItemDemuxer, ItemManager } from ".";
 import { EntitiyNotFoundError } from "..";
 import { Link } from "./link";
 import debug from 'debug'
+import { PublicKey } from "@dxos/crypto";
 
 const log = debug('dxos:echo:items:data-service-host')
 
@@ -79,7 +80,16 @@ export class DataServiceHost {
 
             return this._itemDemuxer.mutation.on(mutation => {
                 log(`Entitiy stream ${request.itemId}: ${JSON.stringify({ mutation })}`)
-                next({ mutation })
+                next({
+                    mutation: {
+                        data: mutation.data,
+                        meta: {
+                            feedKey: PublicKey.from(mutation.meta.feedKey),
+                            memberKey: PublicKey.from(mutation.meta.memberKey),
+                            seq: mutation.meta.seq,
+                        }
+                    }
+                })
             })
         })
     }

@@ -37,7 +37,7 @@ export class ItemDemuxer {
    */
   private readonly _modelMutations = new Map<ItemID, ModelMutation[]>();
 
-  readonly mutation = new Event<EchoEnvelope>();
+  readonly mutation = new Event<IEchoStream>();
 
   constructor (
     private readonly _itemManager: ItemManager,
@@ -57,8 +57,7 @@ export class ItemDemuxer {
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
     return createWritable<IEchoStream>(async (message: IEchoStream) => {
       log('Reading:', JSON.stringify(message, jsonReplacer));
-      const { data: echoEnvelope, meta } = message;
-      const { itemId, genesis, itemMutation, mutation } = echoEnvelope;
+      const { data: { itemId, genesis, itemMutation, mutation }, meta } = message;
       assert(itemId);
 
       //
@@ -132,7 +131,7 @@ export class ItemDemuxer {
         await this._itemManager.processModelMessage(itemId, mutation);
       }
 
-      this.mutation.emit(echoEnvelope);
+      this.mutation.emit(message);
     });
   }
 

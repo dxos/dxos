@@ -5,6 +5,7 @@ import debug from 'debug'
 import assert from "assert";
 import { Entity } from "./entity";
 import { Model } from "@dxos/model-factory";
+import { failUndefined } from "@dxos/debug";
 
 const log = debug('dxos:echo:items:data-mirror');
 
@@ -74,12 +75,13 @@ export class DataMirror {
             }
           }
         } else if(upd.mutation) {
-          if(upd.mutation.mutation) {
+          if(upd.mutation.data?.mutation) {
+            assert(upd.mutation.meta)
             await entity.model.processMessage({
-              feedKey: PublicKey.random().asUint8Array(),
-              memberKey: PublicKey.random().asUint8Array(),
-              seq: 0,
-            }, entity.modelMeta.mutation.decode(upd.mutation.mutation))
+              feedKey: (upd.mutation.meta.feedKey ?? failUndefined()).asUint8Array(),
+              memberKey: (upd.mutation.meta.memberKey ?? failUndefined()).asUint8Array(),
+              seq: upd.mutation.meta.seq ?? failUndefined(),
+            }, entity.modelMeta.mutation.decode(upd.mutation.data.mutation ?? failUndefined()))
           }
         }
       },

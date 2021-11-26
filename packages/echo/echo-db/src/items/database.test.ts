@@ -11,13 +11,13 @@ import expect from 'expect'
 import { afterTest } from '@dxos/testutils'
 
 describe('Database', () => {
-  describe('remote', () => {
-    test.only('gets items synced from backend', async () => {
+  describe.only('remote', () => {
+    const setup = async () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
       const feed = new MockFeedWriter<EchoEnvelope>();
       const inboundStream = new Readable({ read() {}, objectMode: true })
-      feed.written.on(([data, meta]) => inboundStream.push({ data, meta }))
+      feed.written.on(([data, meta]) => inboundStream.push({ data, meta: { ...meta, memberKey: PublicKey.random() } }))
 
       const backend = new Database(
         modelFactory,
@@ -37,6 +37,12 @@ describe('Database', () => {
       await frontend.init();
       afterTest(() => frontend.destroy());
 
+      return { backend, frontend }
+    }
+
+    test('gets items synced from backend', async () => {
+      const { backend, frontend } = await setup();
+
       const [,backendItem] = await Promise.all([
         frontend.update.waitForCount(1),
         backend.createItem({ model: ObjectModel })
@@ -54,6 +60,45 @@ describe('Database', () => {
       ])
 
       expect(item!.model.getProperty('foo')).toEqual('bar')
+    })
+
+    test('create item', async () => {
+      const { frontend: database } = await setup();
+
+      const item = await database.createItem({ model: ObjectModel });
+
+      expect(item.id).not.toBeUndefined()
+      expect(item.model).toBeInstanceOf(ObjectModel)
+
+      const items = database.select(s => s.items).getValue()
+      expect(items).toHaveLength(1)
+      expect(items[0] === item).toBeTruthy()
+    })
+
+    test('mutate item with object model', async () => {
+      const { frontend: database } = await setup();
+
+      const item = await database.createItem({ model: ObjectModel });
+      
+      expect(item.model.getProperty('foo')).toBeUndefined()
+
+      await item.model.setProperty('foo', 'bar')
+
+      expect(item.model.getProperty('foo')).toEqual('bar')
+    })
+
+    test.skip('parent & child items', async () => {
+      const { frontend: database } = await setup();
+
+      const parent = await database.createItem({ model: ObjectModel });
+      const child = await database.createItem({ model: ObjectModel, parent: parent.id });
+
+      const items = database.select(s => s.items).getValue()
+      expect(items).toHaveLength(2)
+      expect(items).toEqual([parent, child])
+
+      expect(parent.children).toHaveLength(1)
+      expect(parent.children[0] === child).toBeTruthy()
     })
   })
 })
