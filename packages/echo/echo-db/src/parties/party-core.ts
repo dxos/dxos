@@ -16,6 +16,7 @@ import { createMessageSelector } from './message-selector';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PartyProcessor } from './party-processor';
 import { Pipeline } from './pipeline';
+import { FeedDatabaseBackend } from '../items/database-backend';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
 
@@ -130,9 +131,7 @@ export class PartyCore {
     this._database = new Database(
       this._modelFactory,
       this._timeframeClock,
-      readStream,
-      writeStream ?? null,
-      this._databaseSnapshot
+      new FeedDatabaseBackend(readStream, writeStream, this._databaseSnapshot, { snapshots: true }),
     );
     await this._database.init();
 

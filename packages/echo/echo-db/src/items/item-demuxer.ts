@@ -22,7 +22,7 @@ import { Event } from '@dxos/async';
 
 const log = debug('dxos:echo:item-demuxer');
 
-export interface ItemManagerOptions {
+export interface ItemDemuxerOptions {
   snapshots?: boolean
 }
 
@@ -42,7 +42,7 @@ export class ItemDemuxer {
   constructor (
     private readonly _itemManager: ItemManager,
     private readonly _modelFactory: ModelFactory,
-    private readonly _options: ItemManagerOptions = {}
+    private readonly _options: ItemDemuxerOptions = {}
   ) {}
 
   open (): NodeJS.WritableStream {

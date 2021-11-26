@@ -12,7 +12,7 @@ import expect from 'expect'
 import { Item } from '..';
 
 describe('DataMirror', () => {
-  test.only('basic', async () => {
+  test('basic', async () => {
     // Setup
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const feed = new MockFeedWriter<EchoEnvelope>();
