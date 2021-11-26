@@ -14,6 +14,8 @@ import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
 import { handleKey } from '../helpers';
 
+const invitationCodeFromUrl = (text: string) => text.substring(text.lastIndexOf('/') + 1);
+
 enum PartyJoinState {
   INIT,
   AUTHENTICATE,
@@ -29,7 +31,7 @@ export interface JoinDialogProps {
   open: boolean
   title: string
   invitationCode?: string
-  onJoin: (joinOptions: JoinOptions) => Promise<Party>
+  onJoin: (joinOptions: JoinOptions) => Promise<Party | void>
   onClose?: () => void
   closeOnSuccess?: boolean
   modal?: boolean
@@ -83,7 +85,7 @@ export const JoinDialog = ({
     let invitation: InvitationDescriptor;
     try {
       // Parse URL.
-      const invitationCode = text.substring(text.lastIndexOf('/') + 1);
+      const invitationCode = invitationCodeFromUrl(text);
       invitation = decodeInvitation(invitationCode);
     } catch (err: any) {
       setError('Invalid invitation code.');
@@ -180,7 +182,7 @@ export const JoinDialog = ({
           <HashIcon
             sx={{ marginLeft: 2 }}
             size='large'
-            value={invitationCode}
+            value={invitationCodeFromUrl(invitationCode)}
           />
         </Box>
       </>

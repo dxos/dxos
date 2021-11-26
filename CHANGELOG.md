@@ -1,5 +1,32 @@
 # Change Log
 
+### [2.18.1](https://www.github.com/dxos/protocols/compare/v2.18.0...v2.18.1) (2021-11-26)
+
+
+### Features
+
+* Fake feature to test release please ([b32cf02](https://www.github.com/dxos/protocols/commit/b32cf027bfc64fba26a81220a9161ecaffe92af7))
+* Introduce Release Pleaase ([#679](https://www.github.com/dxos/protocols/issues/679)) ([a40316c](https://www.github.com/dxos/protocols/commit/a40316c63aecb6f0bcb7e465636f74c26bfa37e0))
+
+## [2.18.0](https://www.github.com/dxos/protocols/compare/v2.17.1...v2.18.0) (2021-11-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* breaking feature to test release-please
+
+### Features
+
+* Another fake feature to test release-please ([74da53e](https://www.github.com/dxos/protocols/commit/74da53ef7c4bea3b7b2dbd72f8d0f6d386857ca1))
+* breaking feature to test release-please ([34b1554](https://www.github.com/dxos/protocols/commit/34b1554db716e343d2b83890444ff397a6b0c0e8))
+* Fake feature to test release-please ([a6ff171](https://www.github.com/dxos/protocols/commit/a6ff17116965471620730f0be1f121c85e903cd3))
+
+
+### Bug Fixes
+
+* Additional config defs for infra. ([eb4fa95](https://www.github.com/dxos/protocols/commit/eb4fa95f5d0d5ab96ae74501e7bc817f605862c3))
+* **sliding-drawer:** add fixes from old react-appkit-new package ([#670](https://www.github.com/dxos/protocols/issues/670)) ([7397437](https://www.github.com/dxos/protocols/commit/73974371052faf871fb2005d7ac43f5ba503de89))
+
 ## 2021-10-11
 
 - [ ] Config structure

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/deps-checker",
-  "version": "2.10.10",
+  "version": "2.18.1",
   "private": true,
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",

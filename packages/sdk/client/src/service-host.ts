@@ -10,7 +10,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import * as debug from '@dxos/debug'; // TODO(burdon): ???
-import { ECHO, OpenProgress } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor, OpenProgress } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from './devtools';
@@ -90,17 +90,26 @@ export class ClientServiceHost implements ClientServiceProvider {
         RecoverProfile: () => {
           throw new Error('Not implemented');
         },
-        CreateInvitation: () => new Stream(({ next }) => {
+        CreateInvitation: () => new Stream(({ next, close }) => {
           setImmediate(async () => {
             const secret = generatePasscode();
-            const secretProvider = async () => Buffer.from(secret);
-            const invitation = await this._echo.halo.createInvitation({
+            let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
+            const secretProvider = async () => {
+              next({ invitationCode: encodeInvitation(invitation), secret });
+              return Buffer.from(secret);
+            };
+            invitation = await this._echo.halo.createInvitation({
               secretProvider,
               secretValidator: defaultSecretValidator
-            }, {});
+            }, {
+              onFinish: () => {
+                next({ finished: true });
+                close();
+              }
+            });
             const invitationCode = encodeInvitation(invitation);
             this._inviterInvitations.push({ invitationCode, secret });
-            next({ invitationCode, secret });
+            next({ invitationCode });
           });
         }),
         AcceptInvitation: async (request) => {
@@ -126,7 +135,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           this._inviteeInvitations.set(id, inviteeInvitation);
           return { id };
         },
-        AuthenticateInvitation: async (request) => {
+        AuthenticateInvitation: (request) => new Stream(({ next, close }) => {
           assert(request.process?.id, 'Process ID is missing.');
           const invitation = this._inviteeInvitations.get(request.process?.id);
           assert(invitation, 'Invitation not found.');
@@ -136,13 +145,14 @@ export class ClientServiceHost implements ClientServiceProvider {
           invitation.secret = request.secret;
           invitation.secretTrigger?.();
 
-          // Wait for the join process to finish.
-          await (invitation.joinPromise?.());
-
-          const profile = this._echo.halo.getProfile();
-          assert(profile, 'Profile not created.');
-          return profile;
-        },
+          next({});
+          invitation.joinPromise?.().then(() => {
+            const profile = this._echo.halo.getProfile();
+            assert(profile, 'Profile not created.');
+            next({ profile });
+            close();
+          });
+        }),
         SubscribeContacts: () => {
           if (this._echo.halo.isInitialized) {
             return resultSetToStream(this._echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));

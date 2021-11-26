@@ -2,14 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DevtoolsHost, initialize } from '@dxos/devtools';
+import { Client } from '@dxos/client';
+import { initialize } from '@dxos/devtools';
 
 declare let chrome: any;
 
-export const initPanel = (devtoolsHost: DevtoolsHost) => {
+export const initPanel = (client: Client) => {
   initialize({
     connect (onConnect) {
-      onConnect(devtoolsHost);
+      onConnect(client);
     },
 
     tabId: chrome.devtools.inspectedWindow.tabId,

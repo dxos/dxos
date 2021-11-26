@@ -38,7 +38,7 @@ import {
 } from './interface';
 
 export class RegistryClient implements IRegistryClient {
-  private readonly _recordCache = new ComplexMap<CID, RegistryRecord>(cid => cid.toB58String())
+  private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String())
 
   private transactionsHandler: ApiTransactionHandler;
 
@@ -87,16 +87,7 @@ export class RegistryClient implements IRegistryClient {
     });
   }
 
-  async getRecord (cid: CID): Promise<RegistryRecord | undefined> {
-    if (this._recordCache.has(cid)) {
-      return this._recordCache.get(cid);
-    }
-
-    const record = (await this.api.query.registry.records(cid.value)).unwrapOr(undefined);
-    if (!record) {
-      return undefined;
-    }
-
+  private async _decodeRecord (cid: CID, record: Record<string, any>): Promise<RegistryRecord | undefined> {
     const decoded = dxnsSchema.getCodecForType('dxos.registry.Record').decode(Buffer.from(record.data));
 
     const meta: RecordMetadata = {
@@ -142,15 +133,35 @@ export class RegistryClient implements IRegistryClient {
     }
   }
 
+  private async _fetchRecord (cid: CID): Promise<RegistryRecord | undefined> {
+    const record = (await this.api.query.registry.records(cid.value)).unwrapOr(undefined);
+    if (!record) {
+      return undefined;
+    }
+
+    return this._decodeRecord(cid, record);
+  }
+
+  async getRecord (cid: CID): Promise<RegistryRecord | undefined> {
+    if (this._recordCache.has(cid)) {
+      return this._recordCache.get(cid);
+    }
+
+    const recordPromise = this._fetchRecord(cid);
+    this._recordCache.set(cid, recordPromise);
+
+    return recordPromise;
+  }
+
   async getRecords (query?: IQuery): Promise<RegistryRecord[]> {
     const records = await this.api.query.registry.records.entries();
 
-    const output = await Promise.all(records.map(async ([storageKey]): Promise<RegistryRecord | undefined> => {
+    const output = await Promise.all(records.map(async ([storageKey, value]): Promise<RegistryRecord | undefined> => {
       const contentCid = storageKey.args[0];
 
       try {
-        // TODO(marik-d): Very unoptimized.
-        const record = await this.getRecord(CID.from(contentCid));
+        // TODO(marik-d): Moderately unoptimized.
+        const record = await this._decodeRecord(CID.from(contentCid), value.unwrap());
         assert(record);
         return record;
       } catch (err: any) {
