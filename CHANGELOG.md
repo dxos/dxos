@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.18.1](https://www.github.com/dxos/protocols/compare/v2.18.0...v2.18.1) (2021-11-26)
+
+
+### Features
+
+* Fake feature to test release please ([b32cf02](https://www.github.com/dxos/protocols/commit/b32cf027bfc64fba26a81220a9161ecaffe92af7))
+* Introduce Release Pleaase ([#679](https://www.github.com/dxos/protocols/issues/679)) ([a40316c](https://www.github.com/dxos/protocols/commit/a40316c63aecb6f0bcb7e465636f74c26bfa37e0))
+
 ## [2.18.0](https://www.github.com/dxos/protocols/compare/v2.17.1...v2.18.0) (2021-11-26)
 
 
