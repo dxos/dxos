@@ -21,7 +21,7 @@ interface BuildOptions {
 
 /**
  * Builds the current package with protobuf definitoins (optional) and typescript.
- * 
+ *
  * @param opts.watch Keep tsc running in watch mode.
  */
 function execBuild (opts: BuildOptions = {}) {
@@ -41,8 +41,8 @@ function execBuild (opts: BuildOptions = {}) {
     console.log(chalk.bold`\nprotobuf`);
 
     try {
-      fs.rmSync(join(project.packageRoot, 'src/proto/gen'), { recursive: true })
-    } catch(err: any) {
+      fs.rmSync(join(project.packageRoot, 'src/proto/gen'), { recursive: true });
+    } catch (err: any) {
       console.warn(err.message);
     }
 
