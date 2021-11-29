@@ -101,14 +101,12 @@ ncu --deep -u '@storybook/*'
 ```
 
 ### Release process
-1. Trigger [Release packages to npm](https://github.com/dxos/protocols/actions/workflows/npm-release.yml) job.
 
-<img src="../images/run-workflow.png" alt="run-workflow" width="450"/>
+The `protocols` monorepo is set up to use our version of [Release Please](https://github.com/dxos/eng/wiki/Tools-~-Release-Please) for releasing packages to NPM.
 
-2. Create a github release.
-    * Changelog notes can be created automatically in the Github UI.
+The apps and storybooks are published to DXNS automatically using [this job](https://github.com/dxos/protocols/blob/main/.github/workflows/publish.yaml).
 
-<img src="../images/release-notes.png" alt="release-notes" width="300"/>
+The same job is used to publish browser extensions as Github job artifacts.
 
 ### Updating typescript project references and sort `package.json`
 
