@@ -5,7 +5,7 @@
 import assert from 'assert';
 import expect from 'expect';
 
-import { BrokerSetup, ClientSetup, setupBroker, setupClient } from '@dxos/botkit';
+import { BrokerSetup, ClientSetup, setupBroker, setupClient } from './testutils';
 import { PublicKey } from '@dxos/crypto';
 import { createLinkedPorts } from '@dxos/rpc';
 
