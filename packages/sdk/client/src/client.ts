@@ -16,6 +16,7 @@ import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { RpcPort } from '@dxos/rpc';
 
+import { EchoProxy } from './api/EchoProxy';
 import { CreateInvitationOptions, HaloProxy } from './api/HaloProxy';
 import { DevtoolsHook } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
@@ -23,7 +24,6 @@ import { isNode } from './platform';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
 import { createWindowMessagePort } from './util';
-import { EchoProxy } from './api/EchoProxy';
 
 const log = debug('dxos:client');
 
@@ -175,7 +175,7 @@ export class Client {
   //   Recreate echo instance? Big impact on hooks. Test.
   @synchronized
   async reset () {
-    await this.echo.reset();
+    await this.services.SystemService.Reset();
     this._initialized = false;
   }
 
@@ -275,7 +275,7 @@ export class Client {
    * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
   async createInvitation (partyKey: PublicKey, secretProvider: SecretProvider, options?: InvitationOptions) {
-    const party = await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
+    const party = await this._serviceProvider.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createInvitation({
       secretValidator: defaultSecretValidator,
       secretProvider
@@ -297,7 +297,7 @@ export class Client {
    */
   // TODO(burdon): Move to party.
   async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
-    const party = await this.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
+    const party = await this._serviceProvider.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createOfflineInvitation(recipientKey);
   }
 

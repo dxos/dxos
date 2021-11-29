@@ -72,7 +72,7 @@ export class FeedDatabaseBackend implements DatabaseBackend {
   }
 }
 
-export class RemoteDatabaseBacked implements DatabaseBackend {
+export class RemoteDatabaseBackend implements DatabaseBackend {
   private _itemManager!: ItemManager;
 
   constructor (

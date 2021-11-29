@@ -129,7 +129,7 @@ export class HaloProxy {
   /**
    * Allocate resources and set-up internal subscriptions.
    *
-   * @private
+   * @internal
    */
   open () {
     const profileStream = this._serviceProvider.services.ProfileService.SubscribeProfile();

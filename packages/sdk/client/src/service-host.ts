@@ -172,11 +172,11 @@ export class ClientServiceHost implements ClientServiceProvider {
       },
       PartyService: {
         SubscribeParties: () => {
-          return resultSetToStream(this._echo.queryParties(), (parties): SubscribePartiesResponse => ({ parties: parties.map(party => ({ key: party.key.asUint8Array() })) }));
+          return resultSetToStream(this._echo.queryParties(), (parties): SubscribePartiesResponse => ({ parties: parties.map(party => ({ publicKey: party.key })) }));
         },
         CreateParty: async () => {
           const party = await this._echo.createParty();
-          return { key: party.key.asUint8Array() };
+          return { publicKey: party.key };
         },
         CreateInvitation: () => {
           throw new Error('Not implemented');
@@ -188,7 +188,7 @@ export class ClientServiceHost implements ClientServiceProvider {
           throw new Error('Not implemented');
         }
       },
-      DataService: undefined as any, // TODO(unknown): Will probably be implemented internally in ECHO.
+      DataService: this._echo.dataService,
       DevtoolsHost: this._createDevtoolsService()
     };
   }
