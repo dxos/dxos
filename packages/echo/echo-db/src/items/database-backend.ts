@@ -11,11 +11,18 @@ import { ItemDemuxer, ItemDemuxerOptions, ItemManager } from '..';
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 
+/**
+ * Generic interface to represent a backend for the database.
+ *
+ * Interfaces with ItemManager to maintain the collection of entities up-to-date.
+ * Porvides a way to query for the write stream to make mutations.
+ * Creates data snapshots.
+ */
 export interface DatabaseBackend {
   open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void>
   close(): Promise<void>
 
-  isReadOnly(): boolean
+  isReadOnly: boolean
 
   getWriteStream(): FeedWriter<EchoEnvelope> | undefined
 
@@ -24,6 +31,12 @@ export interface DatabaseBackend {
   createDataServiceHost(): DataServiceHost
 }
 
+/**
+ * Database backend that operates on two streams: read and write.
+ *
+ * Mutations are read from the incoming streams and applied to the ItemManager via ItemDemuxer.
+ * Write operations result in mutations being written to the outgoing stream.
+ */
 export class FeedDatabaseBackend implements DatabaseBackend {
   private _itemDemuxerInboundStream!: NodeJS.WritableStream
   private _itemManager!: ItemManager;
@@ -51,7 +64,7 @@ export class FeedDatabaseBackend implements DatabaseBackend {
     this._inboundStream?.unpipe(this._itemDemuxerInboundStream);
   }
 
-  isReadOnly (): boolean {
+  get isReadOnly (): boolean {
     return !!this._outboundStream;
   }
 
@@ -72,6 +85,11 @@ export class FeedDatabaseBackend implements DatabaseBackend {
   }
 }
 
+/**
+ * Database backend that is backed by the DataService instance.
+ *
+ * Uses DataMirror to populate entities in ItemManager.
+ */
 export class RemoteDatabaseBacked implements DatabaseBackend {
   private _itemManager!: ItemManager;
 
@@ -92,7 +110,7 @@ export class RemoteDatabaseBacked implements DatabaseBackend {
     // Do nothing for now.
   }
 
-  isReadOnly (): boolean {
+  get isReadOnly (): boolean {
     return false;
   }
 
