@@ -18,8 +18,8 @@ export interface MutationWriteReceipt extends WriteReceipt {
  * Abstract base class for Models.
  * Models define a root message type, which is contained in the partent Item's message envelope.
  */
-export abstract class Model<T> {
-  public readonly modelUpdate = new Event<this>();
+export abstract class Model<T = any> {
+  public readonly modelUpdate = new Event<Model<T>>();
   private readonly _processor: NodeJS.WritableStream;
 
   private readonly _meta: ModelMeta;
@@ -47,9 +47,11 @@ export abstract class Model<T> {
       assert(mutation);
 
       await this.processMessage(meta, mutation);
-
-      this._messageProcessed.emit(meta);
     });
+  }
+
+  get modelMeta (): ModelMeta {
+    return this._meta;
   }
 
   get itemId (): ItemID {
@@ -61,12 +63,15 @@ export abstract class Model<T> {
   }
 
   // TODO(burdon): Rename.
+  /**
+   * @deprecated Use processMessage.
+   */
   get processor (): NodeJS.WritableStream {
     return this._processor;
   }
 
   subscribe (listener: (result: this) => void) {
-    return this.modelUpdate.on(listener);
+    return this.modelUpdate.on(listener as any);
   }
 
   async processMessage (meta: MutationMeta, message: T): Promise<void> {
@@ -74,6 +79,7 @@ export abstract class Model<T> {
     if (modified) {
       this.modelUpdate.emit(this);
     }
+    this._messageProcessed.emit(meta);
   }
 
   createSnapshot (): any {
@@ -96,14 +102,27 @@ export abstract class Model<T> {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
+    // Promise that resolves when this mutation has been processed.
+    const processed = this._messageProcessed.waitFor(meta =>
+      receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
+    );
+
     const receipt = await this._writeStream.write(mutation);
     return {
       ...receipt,
       waitToBeProcessed: async () => {
-        await this._messageProcessed.waitFor(meta =>
-          receipt.feedKey.equals(meta.feedKey) && meta.seq === receipt.seq
-        );
+        await processed;
       }
+    };
+  }
+
+  /**
+   * Overriden to not retun implementation details.
+   */
+  toJSON () {
+    return {
+      id: this.itemId,
+      type: this._meta.type
     };
   }
 
@@ -113,5 +132,5 @@ export abstract class Model<T> {
    * @param {Object} meta
    * @param {Object} message
    */
-  abstract _processMessage (meta: MutationMeta, message: T): Promise<boolean>;
+  protected abstract _processMessage (meta: MutationMeta, message: T): Promise<boolean>;
 }

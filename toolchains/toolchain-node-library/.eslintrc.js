@@ -24,7 +24,9 @@ module.exports = {
       }
     ],
     'node/no-callback-literal': 'off',
-    'jest/valid-expect': 'off'
+    'jest/valid-expect': 'off',
+    'func-call-spacing': 'off',
+    '@typescript-eslint/func-call-spacing': ['error']
   },
   ignorePatterns: [
     'src/proto/gen/*'

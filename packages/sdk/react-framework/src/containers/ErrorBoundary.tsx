@@ -2,9 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import React, { Component, ErrorInfo } from 'react';
 
-import { ErrorView } from './ErrorView';
+import { ErrorView } from '../components';
+
+const logError = debug('dxos:react-framework:error');
 
 /**
  * Root-level error boundary.
@@ -25,15 +28,19 @@ interface State {
 }
 
 /**
+ * Cannot be implemented via hooks.
  * https://reactjs.org/docs/error-boundaries.html
+ * https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
  */
+// TODO(burdon): Integrate with useError hook?
+//   https://github.com/tatethurston/react-use-error-boundary/blob/main/src/test.tsx
 export class ErrorBoundary extends Component<Props, State> {
   override state = {
     error: null
   };
 
   static defaultProps = {
-    onError: console.warn,
+    onError: logError,
     onRestart: () => {
       window.location.href = '/';
     },
@@ -46,15 +53,14 @@ export class ErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch (error: Error, errorInfo: ErrorInfo) {
     const { onError } = this.props;
-
-    // TODO(burdon): Show error indicator.
-    // TODO(burdon): Logging service; output error file to storage?
     onError(error, errorInfo);
   }
 
   override render () {
     const { children, onRestart, onReset } = this.props;
     const { error } = this.state;
+
+    // TODO(burdon): Customize view?
     if (error) {
       return (
         <ErrorView

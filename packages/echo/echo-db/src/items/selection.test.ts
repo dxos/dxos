@@ -10,6 +10,7 @@ import { Event } from '@dxos/async';
 import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 
+import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
 import { Selection } from './selection';
@@ -21,15 +22,21 @@ const LINK_EMPLOYEE = 'dxn://dxos/link/employee';
 const createItem = (id: ItemID, type: ItemType) =>
   new Item(id, type, ObjectModel.meta, new ObjectModel(ObjectModel.meta, id));
 
-const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) =>
-  new Link(id, type, ObjectModel.meta, new ObjectModel(ObjectModel.meta, id), undefined, undefined, {
+const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
+  const link = new Link(id, type, ObjectModel.meta, new ObjectModel(ObjectModel.meta, id), {
     sourceId: source.id,
     targetId: target.id,
     source: source,
     target: target
   });
 
-const objects: Item<any>[] = [
+  source._links.add(link);
+  target._refs.add(link);
+
+  return link;
+};
+
+const items: Item<any>[] = [
   createItem('item/1', OBJECT_ORG),
   createItem('item/2', OBJECT_ORG),
   createItem('item/3', OBJECT_PERSON),
@@ -37,15 +44,15 @@ const objects: Item<any>[] = [
   createItem('item/5', OBJECT_PERSON)
 ];
 
-const links: Item<any>[] = [
-  createLink('link/1', LINK_EMPLOYEE, objects[0], objects[2]),
-  createLink('link/2', LINK_EMPLOYEE, objects[0], objects[3]),
-  createLink('link/3', LINK_EMPLOYEE, objects[0], objects[4]),
-  createLink('link/4', LINK_EMPLOYEE, objects[1], objects[4])
+const links: Link<any>[] = [
+  createLink('link/1', LINK_EMPLOYEE, items[0], items[2]),
+  createLink('link/2', LINK_EMPLOYEE, items[0], items[3]),
+  createLink('link/3', LINK_EMPLOYEE, items[0], items[4]),
+  createLink('link/4', LINK_EMPLOYEE, items[1], items[4])
 ];
 
-const items: Item<any>[] = [
-  ...objects,
+const entities: Entity<any>[] = [
+  ...items,
   ...links
 ];
 
@@ -53,7 +60,7 @@ const items: Item<any>[] = [
 
 describe('Selection', () => {
   test('simple', () => {
-    expect(new Selection(() => items, new Event()).items).toHaveLength(items.length);
+    expect(new Selection(() => entities, new Event()).items).toHaveLength(entities.length);
   });
 
   test('filter', () => {
@@ -67,7 +74,7 @@ describe('Selection', () => {
       .filter({ type: [OBJECT_ORG, OBJECT_PERSON] }).items).toHaveLength(5);
 
     expect(new Selection(() => items, new Event())
-      .filter((item: Item<any>) => item.type === OBJECT_ORG).items).toHaveLength(2);
+      .filter(item => item.type === OBJECT_ORG).items).toHaveLength(2);
   });
 
   test('nested with duplicates', () => {

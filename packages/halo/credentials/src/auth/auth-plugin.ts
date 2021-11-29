@@ -102,7 +102,7 @@ export class AuthPlugin extends EventEmitter {
       // TODO(dboreham): Credentials is a base64-encoded string. Determine if that's the type we expect.
       // TODO(dboreham): Should have assert(isString(credentials)) ?
       wrappedCredentials = codec.decode(Buffer.from(credentials, 'base64'));
-    } catch (err) {
+    } catch (err: any) {
       protocol.stream.destroy();
       throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, ERR_AUTH_GENERAL, err);
     }

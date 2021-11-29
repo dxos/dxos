@@ -4,12 +4,12 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { useClient } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
-import { useDevtoolsHost } from '../hooks';
-
 export const ConfigView = () => {
-  const devtoolsHost = useDevtoolsHost();
+  const client = useClient();
+  const devtoolsHost = client.services.DevtoolsHost;
   const [config, setConfig] = useState<any>(undefined);
 
   useEffect(() => {

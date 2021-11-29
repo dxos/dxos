@@ -33,15 +33,18 @@ interface SlidingDrawerProps extends MuiDrawerProps {
 
 const Drawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => (prop !== 'direction' && prop !== 'drawerWidth')
-})<SlidingDrawerProps>(({ theme, direction, drawerWidth }) => ({
+})<SlidingDrawerProps>(({ theme, direction, drawerWidth, open }) => ({
   'width': drawerWidth,
   'flexShrink': 0,
   'position': 'absolute',
   'top': 0,
   'bottom': 0,
+  'overflow': 'hidden',
+  'pointerEvents': open ? 'auto' : 'none',
   '& .MuiDrawer-paper': {
     width: drawerWidth,
     boxSizing: 'content-box',
+    overflow: 'hidden',
     border: 'none',
     borderRight: (direction === 'left') ? `1px solid ${theme.palette.divider}` : undefined,
     borderLeft: (direction === 'right') ? `1px solid ${theme.palette.divider}` : undefined
@@ -101,6 +104,7 @@ const Content = styled('main', {
 })<ContentProps>(({ theme, direction = 'left', drawerOpen, drawerWidth }) => {
   return ({
     display: 'flex',
+    overflow: 'hidden',
     flexGrow: 1,
     flexDirection: 'column',
     transition: theme.transitions.create('margin', {

@@ -142,7 +142,7 @@ const PartyJoinContainer = () => {
       await party.open();
 
       setStatus({ party: party.key.toHex() });
-    } catch (error) {
+    } catch (error: any) {
       setStatus({ error });
     }
   };

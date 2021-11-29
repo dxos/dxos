@@ -5,22 +5,192 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createKeyPair, PublicKey } from '@dxos/crypto';
-import { createFeedWriter } from '@dxos/echo-protocol';
-import { FeedStore } from '@dxos/feed-store';
+import { createId } from '@dxos/crypto';
+import { MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
-import { createStorage, STORAGE_RAM } from '@dxos/random-access-multi-storage';
+import { ObjectModel } from '@dxos/object-model';
 
+import { DefaultModel } from '.';
 import { ItemManager } from './item-manager';
 
-describe('items', () => {
-  test('item construction', async () => {
-    const feedStore = new FeedStore(createStorage('', STORAGE_RAM));
-    const { publicKey, secretKey } = createKeyPair();
-    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+describe('ItemManager', () => {
+  describe('basic', () => {
+    test('item construction', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
 
-    const modelFactory = new ModelFactory();
-    const itemManager = new ItemManager(modelFactory, createFeedWriter(feed));
-    expect(itemManager).toBeTruthy();
+      const itemId = createId();
+      const item = await itemManager.constructItem({
+        itemId,
+        modelType: ObjectModel.meta.type,
+        itemType: undefined
+      });
+      expect(item.id).toEqual(itemId);
+      expect(item.model).toBeInstanceOf(ObjectModel);
+      expect(item.type).toBeUndefined();
+      expect(item.readOnly).toBeFalsy();
+
+      expect(itemManager.entities.size).toEqual(1);
+      expect(itemManager.entities.get(itemId)).toEqual(item);
+    });
+
+    test('item deconstruction', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const item = await itemManager.constructItem(defaultOpts());
+
+      expect(itemManager.entities.size).toEqual(1);
+
+      itemManager.deconstructItem(item.id);
+
+      expect(itemManager.entities.size).toEqual(0);
+    });
   });
+
+  describe('parent-child relationship', () => {
+    test('can be constructed and will have correct references', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const parent = await itemManager.constructItem(defaultOpts());
+      const child = await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
+
+      expect(child.parent).toEqual(parent);
+      expect(parent.children).toEqual([child]);
+    });
+
+    test('when child is deleted parent no longer references it', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const parent = await itemManager.constructItem(defaultOpts());
+      const child = await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
+
+      itemManager.deconstructItem(child.id);
+
+      expect(itemManager.entities.size).toEqual(1);
+      expect(parent.children.length).toEqual(0);
+    });
+
+    test('when parent is deleted children are deleted as well', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const parent = await itemManager.constructItem(defaultOpts());
+      await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
+      await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
+
+      expect(itemManager.entities.size).toEqual(3);
+      expect(parent.children.length).toEqual(2);
+
+      itemManager.deconstructItem(parent.id);
+
+      expect(itemManager.entities.size).toEqual(0);
+    });
+  });
+
+  describe('links', () => {
+    test('can be constructed and will have correct references', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const source = await itemManager.constructItem(defaultOpts());
+      const target = await itemManager.constructItem(defaultOpts());
+
+      const link = await itemManager.constructLink({
+        ...defaultOpts(),
+        source: source.id,
+        target: target.id
+      });
+      expect(itemManager.entities.size).toEqual(3);
+
+      expect(link.source).toStrictEqual(source);
+      expect(link.target).toStrictEqual(target);
+
+      expect(source.links).toHaveLength(1);
+      expect(target.refs).toHaveLength(1);
+      expect(source.links[0]).toStrictEqual(link);
+      expect(target.refs[0]).toStrictEqual(link);
+    });
+
+    test('target can be dangling', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const source = await itemManager.constructItem(defaultOpts());
+
+      const link = await itemManager.constructLink({
+        ...defaultOpts(),
+        source: source.id,
+        target: createId()
+      });
+      expect(link.source).toEqual(source);
+      expect(() => link.target).toThrow();
+      expect(source.links).toEqual([]);
+    });
+
+    test('source can be dangling', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const target = await itemManager.constructItem(defaultOpts());
+
+      const link = await itemManager.constructLink({
+        ...defaultOpts(),
+        source: createId(),
+        target: target.id
+      });
+      expect(() => link.source).toThrow();
+      expect(link.target).toEqual(target);
+      expect(target.refs).toEqual([]);
+    });
+
+    test('can become dangling', async () => {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const source = await itemManager.constructItem(defaultOpts());
+      const target = await itemManager.constructItem(defaultOpts());
+
+      await itemManager.constructLink({
+        ...defaultOpts(),
+        source: source.id,
+        target: target.id
+      });
+      expect(itemManager.entities.size).toEqual(3);
+
+      itemManager.deconstructItem(target.id);
+
+      expect(source.links).toEqual([]);
+    });
+  });
+
+  describe('DefaultModel', () => {
+    test('item can be created and the model registered later', async () => {
+      const modelFactory = new ModelFactory().registerModel(DefaultModel);
+      const itemManager = new ItemManager(modelFactory, new MockFeedWriter());
+
+      const item = await itemManager.constructItem({
+        itemId: createId(),
+        modelType: DefaultModel.meta.type,
+        itemType: undefined
+      });
+      item.model.originalModelType = ObjectModel.meta.type;
+
+      expect(item.model).toBeInstanceOf(DefaultModel);
+
+      modelFactory.registerModel(ObjectModel);
+      await itemManager.reconstructItemWithDefaultModel(item.id);
+
+      const reconstructedItem = itemManager.entities.get(item.id)!;
+      expect(reconstructedItem.model).toBeInstanceOf(ObjectModel);
+    });
+  });
+});
+
+const defaultOpts = () => ({
+  itemId: createId(),
+  modelType: ObjectModel.meta.type,
+  itemType: undefined
 });

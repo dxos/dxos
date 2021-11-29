@@ -164,7 +164,7 @@ export class Bot extends EventEmitter {
           const result = await this.botCommandHandler(decodedCommand);
           const data = Buffer.from(JSON.stringify(result || {}));
           return createBotCommandResponse(data);
-        } catch (error) {
+        } catch (error: any) {
           return createBotCommandResponse(undefined, error.message);
         }
       }

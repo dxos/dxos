@@ -9,13 +9,13 @@ import pify from 'pify';
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { EchoEnvelope, FeedWriter, IEchoStream, ItemID, ItemType, LinkData, mapFeedWriter } from '@dxos/echo-protocol';
-import { createTransform } from '@dxos/feed-store';
+import { EchoEnvelope, FeedWriter, ItemID, ItemType, mapFeedWriter } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage, ModelType } from '@dxos/model-factory';
 
 import { UnknownModelError } from '../errors';
 import { ResultSet } from '../result';
 import { DefaultModel } from './default-model';
+import { Entity } from './entity';
 import { Item } from './item';
 import { Link } from './link';
 
@@ -27,33 +27,39 @@ export interface ItemFilter {
   id?: ItemID | ItemID[]
 }
 
-export interface ItemConstructionOptions {
-  itemId: ItemID,
-  modelType: ModelType,
-  itemType: ItemType | undefined,
-  readStream: NodeJS.ReadableStream,
-  parentId?: ItemID,
+export interface ModelConstructionOptions {
+  itemId: ItemID
+  modelType: ModelType
   initialMutations?: ModelMessage<Uint8Array>[],
   modelSnapshot?: Uint8Array,
-  link?: LinkData
+}
+
+export interface ItemConstructionOptions extends ModelConstructionOptions {
+  itemType: ItemType | undefined,
+  parentId?: ItemID,
+}
+
+export interface LinkConstructionOptions extends ModelConstructionOptions {
+  itemType: ItemType | undefined,
+  source: ItemID;
+  target: ItemID;
 }
 
 /**
  * Manages the creation and indexing of items.
  */
 export class ItemManager {
-  private readonly _itemUpdate = new Event<Item<any>>();
+  private readonly _itemUpdate = new Event<Entity<any>>();
 
-  private readonly _debouncedItemUpdate = debounceEvent(this._itemUpdate.discardParameter());
+  readonly debouncedItemUpdate = debounceEvent(this._itemUpdate.discardParameter());
 
   // Map of active items.
-  private readonly _items = new Map<ItemID, Item<any>>();
+  private readonly _entities = new Map<ItemID, Entity<any>>();
 
-  /* TODO(burdon): Lint issue: Unexpected whitespace between function name and paren
+  /**
    * Map of item promises (waiting for item construction after genesis message has been written).
    */
-  // eslint-disable-next-line func-call-spacing
-  private readonly _pendingItems = new Map<ItemID, (item: Item<any>) => void>();
+  private readonly _pendingItems = new Map<ItemID, (item: Entity<any>) => void>();
 
   /**
    * @param partyKey
@@ -64,6 +70,10 @@ export class ItemManager {
      private readonly _modelFactory: ModelFactory,
      private readonly _writeStream?: FeedWriter<EchoEnvelope>
   ) {}
+
+  get entities () {
+    return this._entities;
+  }
 
   /**
    * Creates an item and writes the genesis message.
@@ -78,7 +88,7 @@ export class ItemManager {
     itemType?: ItemType,
     parentId?: ItemID,
     initProps?: any // TODO(burdon): Remove/change to array of mutations.
-  ): Promise<Item<any>> {
+  ): Promise<Item<Model<unknown>>> {
     assert(this._writeStream);
     assert(modelType);
 
@@ -96,7 +106,7 @@ export class ItemManager {
     }
 
     // Pending until constructed (after genesis block is read from stream).
-    const [waitForCreation, callback] = trigger<Item<any>>();
+    const [waitForCreation, callback] = trigger<Entity<any>>();
 
     const itemId = createId();
     this._pendingItems.set(itemId, callback);
@@ -115,7 +125,9 @@ export class ItemManager {
 
     // Unlocked by construct.
     log('Pending Item:', itemId);
-    return await waitForCreation();
+    const item = await waitForCreation();
+    assert(item instanceof Item);
+    return item;
   }
 
   @timed(5_000)
@@ -139,7 +151,7 @@ export class ItemManager {
     }
 
     // Pending until constructed (after genesis block is read from stream).
-    const [waitForCreation, callback] = trigger<Item<any>>();
+    const [waitForCreation, callback] = trigger<Entity<any>>();
 
     const itemId = createId();
     this._pendingItems.set(itemId, callback);
@@ -163,57 +175,12 @@ export class ItemManager {
     return link;
   }
 
-  /**
-   * Constructs an item with the appropriate model.
-   * @param itemId
-   * @param modelType
-   * @param itemType
-   * @param readStream - Inbound mutation stream (from multiplexer).
-   * @param [parentId] - ItemID of the parent of this Item (optional).
-   * @param initialMutations
-   * @param modelSnapshot
-   * @param link
-   */
-  // TODO(marik-d): Convert optional params to typed object.
-  // TODO(burdon): Break up long function (helper function or comment blocks).
-  @timed(5_000)
-  async constructItem ({
-    itemId,
-    modelType,
-    itemType,
-    readStream,
-    parentId,
-    initialMutations,
-    modelSnapshot,
-    link
-  }: ItemConstructionOptions) {
-    assert(itemId);
-    assert(modelType);
-    assert(readStream);
-
-    const parent = parentId ? this._items.get(parentId) : null;
-    if (parentId && !parent) {
-      throw new Error(`Missing parent: ${parentId}`);
-    }
-
+  private async _constructModel ({ modelType, itemId, modelSnapshot, initialMutations }: ModelConstructionOptions): Promise<Model<any>> {
     // TODO(burdon): Skip genesis message (and subsequent messages) if unknown model. Build map of ignored items.
     if (!this._modelFactory.hasModel(modelType)) {
       throw new UnknownModelError(modelType);
     }
     const modelMeta = this._modelFactory.getModelMeta(modelType);
-
-    //
-    // Convert inbound envelope message to model specific mutation.
-    //
-    const inboundTransform = createTransform<IEchoStream, ModelMessage<unknown>>(async (message: IEchoStream) => {
-      const { meta, data: { itemId: mutationItemId, mutation } } = message;
-      assert(mutationItemId === itemId);
-      assert(mutation);
-      return {
-        meta,
-        mutation: modelMeta.mutation.decode(mutation)
-      };
-    });
 
     //
     // Convert model-specific outbound mutation to outbound envelope message.
@@ -227,26 +194,6 @@ export class ItemManager {
     const model: Model<any> = this._modelFactory.createModel(modelType, itemId, outboundTransform);
     assert(model, `Invalid model: ${modelType}`);
 
-    // Connect the streams.
-    readStream.pipe(inboundTransform).pipe(model.processor);
-
-    if (link) {
-      assert(link.source);
-      assert(link.target);
-    }
-
-    //
-    // Create the Item.
-    //
-    const item = link
-      ? new Link(itemId, itemType, modelMeta, model, this._writeStream, parent, {
-        sourceId: link.source!,
-        targetId: link.target!,
-        source: this.getItem(link.source!),
-        target: this.getItem(link.target!)
-      })
-      : new Item(itemId, itemType, modelMeta, model, this._writeStream, parent);
-
     if (modelSnapshot) {
       if (model instanceof DefaultModel) {
         model.snapshot = modelSnapshot;
@@ -259,29 +206,138 @@ export class ItemManager {
     // Process initial mutations.
     if (initialMutations) {
       for (const mutation of initialMutations) {
-        await item.model.processMessage(mutation.meta, modelMeta.mutation.decode(mutation.mutation));
+        await model.processMessage(mutation.meta, modelMeta.mutation.decode(mutation.mutation));
       }
     }
 
-    assert(!this._items.has(itemId));
-    this._items.set(itemId, item);
-    log('Constructed:', String(item));
+    return model;
+  }
 
-    if (!(item.model instanceof DefaultModel)) {
+  /**
+   * Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entitiy to be constructed.
+   */
+  private _addEntity (entity: Entity<any>) {
+    assert(!this._entities.has(entity.id));
+    this._entities.set(entity.id, entity);
+    log('New entity:', String(entity));
+
+    if (!(entity.model instanceof DefaultModel)) {
       // Notify Item was udpated.
       // TODO(burdon): Update the item directly?
-      this._itemUpdate.emit(item);
+      this._itemUpdate.emit(entity);
 
       // TODO(telackey): Unsubscribe?
-      item.subscribe(() => {
-        this._itemUpdate.emit(item);
+      entity.subscribe(() => {
+        this._itemUpdate.emit(entity);
       });
     }
 
     // Notify pending creates.
-    this._pendingItems.get(itemId)?.(item);
+    this._pendingItems.get(entity.id)?.(entity);
+  }
+
+  /**
+   * Constructs an item with the appropriate model.
+   * @param itemId
+   * @param modelType
+   * @param itemType
+   * @param readStream - Inbound mutation stream (from multiplexer).
+   * @param [parentId] - ItemID of the parent of this Item (optional).
+   * @param initialMutations
+   * @param modelSnapshot
+   * @param link
+   */
+  @timed(5_000)
+  async constructItem ({
+    itemId,
+    modelType,
+    itemType,
+    parentId,
+    initialMutations,
+    modelSnapshot
+  }: ItemConstructionOptions): Promise<Item<any>> {
+    assert(itemId);
+    assert(modelType);
+
+    const parent = parentId ? this._entities.get(parentId) : null;
+    if (parentId && !parent) {
+      throw new Error(`Missing parent: ${parentId}`);
+    }
+    assert(!parent || parent instanceof Item);
+
+    const model = await this._constructModel({
+      itemId,
+      modelType,
+      initialMutations,
+      modelSnapshot
+    });
+
+    const item = new Item(itemId, itemType, model.modelMeta, model, this._writeStream, parent);
+    this._addEntity(item);
 
     return item;
+  }
+
+  /**
+   * Constructs an item with the appropriate model.
+   * @param readStream - Inbound mutation stream (from multiplexer).
+   * @param parentId - ItemID of the parent of this Item (optional).
+   */
+  @timed(5_000)
+  async constructLink ({
+    itemId,
+    modelType,
+    itemType,
+    initialMutations,
+    modelSnapshot,
+    source,
+    target
+  }: LinkConstructionOptions): Promise<Link<any>> {
+    assert(itemId);
+    assert(modelType);
+
+    const model = await this._constructModel({
+      itemId,
+      modelType,
+      initialMutations,
+      modelSnapshot
+    });
+
+    const sourceItem = this.getItem(source);
+    const targetItem = this.getItem(target);
+
+    const link = new Link(itemId, itemType, model.modelMeta, model, {
+      sourceId: source,
+      targetId: target,
+      source: sourceItem,
+      target: targetItem
+    });
+
+    if (sourceItem) {
+      sourceItem._links.add(link);
+    }
+    if (targetItem) {
+      targetItem._refs.add(link);
+    }
+
+    this._addEntity(link);
+
+    return link;
+  }
+
+  /**
+   * Process a mesage directed to a specific model.
+   * @param itemId Id of the item containing the model.
+   * @param message Encoded model message
+   */
+  async processModelMessage (itemId: ItemID, message: ModelMessage<Uint8Array>) {
+    const item = this._entities.get(itemId);
+    assert(item);
+
+    const decoded = item.modelMeta.mutation.decode(message.mutation);
+
+    assert(item.model instanceof Model);
+    await item.model.processMessage(message.meta, decoded);
   }
 
   /**
@@ -289,7 +345,11 @@ export class ItemManager {
    * @param itemId
    */
   getItem<M extends Model<any> = any> (itemId: ItemID): Item<M> | undefined {
-    return this._items.get(itemId);
+    const entity = this._entities.get(itemId);
+    if (entity) {
+      assert(entity instanceof Item);
+    }
+    return entity;
   }
 
   /**
@@ -297,40 +357,63 @@ export class ItemManager {
    * @param [filter]
    */
   queryItems <M extends Model<any> = any> (filter: ItemFilter = {}): ResultSet<Item<M>> {
-    return new ResultSet(this._debouncedItemUpdate, () => Array.from(this._items.values())
+    return new ResultSet(this.debouncedItemUpdate, () => Array.from(this._entities.values())
+      .filter((entity): entity is Item<M> => entity instanceof Item)
       .filter(item =>
-        !item.isLink &&
         !(item.model instanceof DefaultModel) &&
         this._matchesFilter(item, filter)
       ));
   }
 
-  getItemsWithDefaultModels (): Item<DefaultModel>[] {
-    return Array.from(this._items.values()).filter(item => item.model instanceof DefaultModel);
+  getItemsWithDefaultModels (): Entity<DefaultModel>[] {
+    return Array.from(this._entities.values()).filter(item => item.model instanceof DefaultModel);
+  }
+
+  deconstructItem (itemId: ItemID) {
+    const item = this._entities.get(itemId);
+    assert(item);
+
+    this._entities.delete(itemId);
+
+    if (item instanceof Item) {
+      if (item.parent) {
+        item.parent._children.delete(item);
+      }
+
+      for (const child of item.children) {
+        this.deconstructItem(child.id);
+      }
+
+      for (const ref of item.refs) {
+        ref._link!.target = undefined;
+      }
+
+      for (const link of item.links) {
+        link._link!.source = undefined;
+      }
+    }
   }
 
   /**
    * Reconstruct an item with a default model when that model becomes registered.
    * New model instance is created and streams are reconnected.
    */
-  async reconstructItemWithDefaultModel (itemId: ItemID, readStream: NodeJS.ReadableStream) {
-    const item = this._items.get(itemId);
+  async reconstructItemWithDefaultModel (itemId: ItemID) {
+    const item = this._entities.get(itemId);
     assert(item);
     assert(item.model instanceof DefaultModel);
-
-    this._items.delete(itemId);
 
     // Disconnect the stream.
     await pify(item.model.processor.end.bind(item.model.processor))();
 
-    await this.constructItem({
+    item._setModel(await this._constructModel({
       itemId,
-      itemType: item.type,
       modelType: item.model.originalModelType,
-      readStream,
       initialMutations: item.model.mutations,
       modelSnapshot: item.model.snapshot
-    });
+    }));
+
+    this._itemUpdate.emit(item);
   }
 
   private _matchesFilter (item: Item<any>, filter: ItemFilter) {

@@ -4,6 +4,7 @@
 
 import pify from 'pify';
 
+import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import type { HypercoreFeed } from '@dxos/feed-store';
 import { MaybePromise } from '@dxos/util';
@@ -47,4 +48,27 @@ export function createMockFeedWriterFromStream (strem: NodeJS.WritableStream): F
       };
     }
   };
+}
+
+export class MockFeedWriter<T> implements FeedWriter<T> {
+  readonly messages: T[] = []
+
+  readonly written = new Event<[T, WriteReceipt]>()
+
+  constructor (
+    readonly feedKey = PublicKey.random()
+  ) {}
+
+  async write (message: T): Promise<WriteReceipt> {
+    this.messages.push(message);
+
+    const receipt: WriteReceipt = {
+      feedKey: this.feedKey,
+      seq: this.messages.length - 1
+    };
+
+    this.written.emit([message, receipt]);
+
+    return receipt;
+  }
 }

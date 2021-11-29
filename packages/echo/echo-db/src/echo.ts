@@ -8,7 +8,7 @@ import memdown from 'memdown';
 
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { codec, PartyKey } from '@dxos/echo-protocol';
+import { codec, DataService, PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
@@ -20,6 +20,7 @@ import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
 import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { DefaultModel } from './items';
+import { DataServiceRouter } from './items/data-service-router';
 import { MetadataStore } from './metadata';
 import { OpenProgress, Party, PartyFactory, PartyFeedProvider, PartyFilter, PartyManager } from './parties';
 import { ResultSet } from './result';
@@ -98,6 +99,7 @@ export class ECHO {
   private readonly _partyManager: PartyManager;
   private readonly _subs = new SubscriptionGroup();
   private readonly _metadataStore: MetadataStore;
+  private readonly _dataServiceRouter: DataServiceRouter;
 
   /**
    * Creates a new instance of ECHO.
@@ -171,6 +173,13 @@ export class ECHO {
         this._subs.push(autoPartyOpener(this.halo.identity.preferences!, this._partyManager));
       }
     });
+
+    this._dataServiceRouter = new DataServiceRouter();
+    this._partyManager.update.on(party => {
+      void party.update.waitForCondition(() => party.isOpen).then(() => {
+        this._dataServiceRouter.trackParty(party.key, party.database.createDataServiceHost());
+      });
+    });
   }
 
   toString () {
@@ -207,6 +216,10 @@ export class ECHO {
 
   get modelFactory (): ModelFactory {
     return this._modelFactory;
+  }
+
+  get dataService (): DataService {
+    return this._dataServiceRouter;
   }
 
   /**
@@ -261,7 +274,7 @@ export class ECHO {
       if (this._feedStore.storage.destroy) {
         await this._feedStore.storage.destroy();
       }
-    } catch (err) {
+    } catch (err: any) {
       log('Error clearing feed storage:', err);
     }
 
@@ -269,13 +282,13 @@ export class ECHO {
 
     try {
       await this._snapshotStore.clear();
-    } catch (err) {
+    } catch (err: any) {
       log('Error clearing snapshot storage:', err);
     }
 
     try {
       await this._metadataStore.clear();
-    } catch (err) {
+    } catch (err: any) {
       log('Error clearing metadata storage:', err);
     }
   }

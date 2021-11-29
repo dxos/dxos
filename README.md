@@ -13,6 +13,10 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 
 ## Installation and usage
 
+## Deployment
+
+Packages are deployed via a Github action: https://github.com/dxos/protocols/actions
+
 ## Troubleshooting
 
 For debugging, use the [DXOS DevTools extension](./packages/sdk/devtools-extension/README.md).

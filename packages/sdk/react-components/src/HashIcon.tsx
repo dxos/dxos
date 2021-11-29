@@ -32,7 +32,7 @@ import {
 } from '@mui/icons-material';
 import { Box, colors } from '@mui/material';
 
-// https://mui.com/components/material-icons/
+// https://mui.com/components/material-icons
 const hashIcons = [
   [TennisIcon, 'bat'],
   [HelmetIcon, 'helmet'],

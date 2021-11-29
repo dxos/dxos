@@ -1,6 +1,6 @@
 {
   "name": "@dxos/botkit",
-  "version": "2.16.17",
+  "version": "2.18.1",
   "description": "Bot",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -23,21 +23,21 @@
     "esbuild": "^0.11.23"
   },
   "devDependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/object-model": "workspace:*",
+    "@dxos/signal": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@types/debug": "^4.1.1",
     "@types/expect": "~24.3.0",
     "@types/mocha": "~8.2.2",
     "@types/node": "^14.0.9",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
-    "expect": "~27.0.2",
-    "@types/debug": "^4.1.1",
-    "@dxos/signal": "workspace:*",
-    "@dxos/async": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@dxos/config": "workspace:*"
+    "expect": "~27.0.2"
   },
   "publishConfig": {
     "access": "public"

@@ -57,7 +57,7 @@ export const StartDialog = ({ onCreate, onJoin }: HomeProps) => {
             setError(undefined);
             try {
               await onJoin(invitationCode);
-            } catch (error) {
+            } catch (error: any) {
               console.error(error);
               setError(error);
             } finally {

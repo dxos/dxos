@@ -15,7 +15,16 @@ import { execLint } from './tools/lint';
 import { execMocha } from './tools/mocha';
 import { execPackageScript } from './tools/packageScript';
 
-function execBuild () {
+interface BuildOptions {
+  watch?: boolean
+}
+
+/**
+ * Builds the current package with protobuf definitoins (optional) and typescript.
+ *
+ * @param opts.watch Keep tsc running in watch mode.
+ */
+function execBuild (opts: BuildOptions = {}) {
   const project = Project.load();
 
   if (project.packageJsonContents.jest) {
@@ -30,6 +39,13 @@ function execBuild () {
   const protoFiles = glob('src/proto/**/*.proto', { cwd: project.packageRoot });
   if (protoFiles.length > 0) {
     console.log(chalk.bold`\nprotobuf`);
+
+    try {
+      fs.rmSync(join(project.packageRoot, 'src/proto/gen'), { recursive: true });
+    } catch (err: any) {
+      console.log(err.message);
+    }
+
     // TODO(burdon): Document this.
     const substitutions = fs.existsSync(join(project.packageRoot, 'src/proto/substitutions.ts'))
       ? join(project.packageRoot, 'src/proto/substitutions.ts')
@@ -44,7 +60,7 @@ function execBuild () {
   }
 
   console.log(chalk.bold`\ntypescript`);
-  execTool('tsc');
+  execTool('tsc', opts.watch ? ['--watch'] : []);
 }
 
 function execTest (userArgs?: string[]) {
@@ -63,14 +79,19 @@ function execTest (userArgs?: string[]) {
 
 // eslint-disable-next-line no-unused-expressions
 yargs(process.argv.slice(2))
-  .command(
+  .command<{ watch?: boolean }>(
     'build',
     'Build the package.',
     yargs => yargs
+      .option('watch', {
+        alias: 'w',
+        type: 'boolean',
+        default: false
+      })
       .strict(),
-    () => {
+    (argv) => {
       const before = Date.now();
-      execBuild();
+      execBuild({ watch: argv.watch });
       console.log(chalk`\n{green.bold BUILD COMPLETE} in {bold ${Date.now() - before}} ms`);
     }
   )

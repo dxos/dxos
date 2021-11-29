@@ -23,12 +23,12 @@ const publicDir = join(__dirname, '../public');
   try {
     await build({
       entryPoints: [
-        join(srcDir, 'background/index.ts'),
-        join(srcDir, 'content-script/index.ts'),
-        join(srcDir, 'devtools/index.ts'),
-        join(srcDir, 'devtools-client-api/index.ts'),
-        join(srcDir, 'main-panel/index.ts'),
-        join(srcDir, 'popup/index.tsx'),
+        join(srcDir, 'background/main.ts'),
+        join(srcDir, 'content-script/main.ts'),
+        join(srcDir, 'devtools/main.ts'),
+        join(srcDir, 'devtools-client-api/main.ts'),
+        join(srcDir, 'main-panel/main.ts'),
+        join(srcDir, 'popup/main.tsx'),
       ],
       outdir: distDir,
       write: true,

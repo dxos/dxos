@@ -2,7 +2,7 @@
 
 exports[`definitions 1`] = `
 "dxos/test/another.ts:
-import { Stream } from \\"@dxos/codec-protobuf\\";
+import type { Stream } from \\"@dxos/codec-protobuf\\";
 import substitutions from \\"../../../substitutions\\";
 import * as dxos_test from \\"../test\\";
 import * as dxos_test_any from \\"./any\\";
@@ -13,7 +13,7 @@ export interface AnotherMessage {
 }
 
 dxos/test/any.ts:
-import { Stream } from \\"@dxos/codec-protobuf\\";
+import type { Stream } from \\"@dxos/codec-protobuf\\";
 import substitutions from \\"../../../substitutions\\";
 import * as dxos_test from \\"../test\\";
 import * as dxos_test_another from \\"./another\\";
@@ -25,7 +25,7 @@ export interface Any {
 }
 
 dxos/test/extensions.ts:
-import { Stream } from \\"@dxos/codec-protobuf\\";
+import type { Stream } from \\"@dxos/codec-protobuf\\";
 import substitutions from \\"../../../substitutions\\";
 import * as dxos_test from \\"../test\\";
 import * as dxos_test_another from \\"./another\\";
@@ -51,7 +51,7 @@ export interface ContainingMessageWithExtensions {
 }
 
 dxos/test/testfoo.ts:
-import { Stream } from \\"@dxos/codec-protobuf\\";
+import type { Stream } from \\"@dxos/codec-protobuf\\";
 import substitutions from \\"../../../substitutions\\";
 import * as dxos_test from \\"../test\\";
 import * as dxos_test_another from \\"./another\\";
@@ -64,7 +64,7 @@ export interface TestFoo {
 }
 
 dxos/test.ts:
-import { Stream } from \\"@dxos/codec-protobuf\\";
+import type { Stream } from \\"@dxos/codec-protobuf\\";
 import substitutions from \\"../../substitutions\\";
 import * as dxos_test_another from \\"./test/another\\";
 import * as dxos_test_any from \\"./test/any\\";
@@ -181,7 +181,7 @@ export interface ServiceWithEmpty {
 }
 
 google/protobuf.ts:
-import { Stream } from \\"@dxos/codec-protobuf\\";
+import type { Stream } from \\"@dxos/codec-protobuf\\";
 import substitutions from \\"../../substitutions\\";
 import * as dxos_test from \\"../dxos/test\\";
 import * as dxos_test_another from \\"../dxos/test/another\\";

@@ -81,7 +81,7 @@ export class PartyManager {
 
     // TODO(burdon): Does this make sense?
     // Parties may be duplicated when there is more than one device.
-    partyKeys = unionWith(partyKeys, PublicKey.equals);
+    partyKeys = unionWith<PublicKey>(partyKeys, PublicKey.equals);
 
     onProgressCallback?.({ haloOpened: true, totalParties: partyKeys.length, partiesOpened: 0 });
 
@@ -206,7 +206,7 @@ export class PartyManager {
     const updateContact = async () => {
       try {
         await this._updateContactList(party);
-      } catch (err) {
+      } catch (err: any) {
         log('Error updating contact list:', err);
       }
     };
@@ -214,7 +214,7 @@ export class PartyManager {
     const updateTitle = async () => {
       try {
         await this._updatePartyTitle(party);
-      } catch (err) {
+      } catch (err: any) {
         log('Error updating stored Party title:', err);
       }
     };

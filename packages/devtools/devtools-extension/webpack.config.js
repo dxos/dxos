@@ -13,12 +13,12 @@ module.exports = {
   devtool: 'eval-source-map',
 
   entry: {
-    'background': `${__dirname}/src/background/index.ts`,
-    'content-script': `${__dirname}/src/content-script/index.ts`,
-    'devtools': `${__dirname}/src/devtools/index.ts`,
-    'devtools-client-api': `${__dirname}/src/devtools-client-api/index.ts`,
-    'main-panel': `${__dirname}/src/main-panel/index.ts`,
-    'popup': `${__dirname}/src/popup/index.tsx`
+    'background': `${__dirname}/src/background/main.ts`,
+    'content-script': `${__dirname}/src/content-script/main.ts`,
+    'devtools': `${__dirname}/src/devtools/main.ts`,
+    'devtools-client-api': `${__dirname}/src/devtools-client-api/main.ts`,
+    'main-panel': `${__dirname}/src/main-panel/main.ts`,
+    'popup': `${__dirname}/src/popup/main.tsx`
   },
 
   output: {

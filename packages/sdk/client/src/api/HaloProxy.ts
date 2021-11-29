@@ -3,12 +3,16 @@
 //
 
 import { Event } from '@dxos/async';
-import { SecretProvider } from '@dxos/credentials';
-import { Contact, CreateProfileOptions, InvitationAuthenticator, InvitationDescriptor, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
+import { Contact, CreateProfileOptions, InvitationDescriptor, InvitationOptions, PartyMember, ResultSet } from '@dxos/echo-db';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { ClientServiceProvider } from '../interfaces';
+import { encodeInvitation } from '..';
+import { ClientServiceProvider, PendingInvitation } from '../interfaces';
 import { Profile } from '../proto/gen/dxos/client';
+
+export interface CreateInvitationOptions extends InvitationOptions {
+  onPinGenerated?: (pin: string) => void
+}
 
 export class HaloProxy {
   private _profile?: Profile;
@@ -82,16 +86,44 @@ export class HaloProxy {
 
   /**
    * Joins an existing identity HALO by invitation.
+   * @returns An async function to provide secret and finishing the invitation process.
    */
-  async acceptInvitation (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
-    return this._serviceProvider.echo.halo.join(invitationDescriptor, secretProvider);
+  async acceptInvitation (invitationDescriptor: InvitationDescriptor) {
+    const invitationProcess = await this._serviceProvider.services.ProfileService.AcceptInvitation({
+      invitationCode: encodeInvitation(invitationDescriptor)
+    });
+    return async (secret: string) => {
+      await this._serviceProvider.services.ProfileService.AuthenticateInvitation({
+        process: invitationProcess, secret
+      });
+    };
   }
 
   /**
    * Create an invitation to an exiting identity HALO.
    */
-  async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions) {
-    return this._serviceProvider.echo.halo.createInvitation(authenticationDetails, options);
+  async createInvitation (options?: CreateInvitationOptions): Promise<PendingInvitation> {
+    const stream = await this._serviceProvider.services.ProfileService.CreateInvitation();
+    return new Promise((resolve, reject) => {
+      stream.subscribe(invitationMsg => {
+        if (invitationMsg.finished) {
+          options?.onFinish?.({});
+          stream.close();
+        } else {
+          const pendingInvitation = { invitationCode: invitationMsg.invitationCode!, pin: invitationMsg.secret };
+          if (invitationMsg.secret && options?.onPinGenerated) {
+            options.onPinGenerated(invitationMsg.secret);
+          }
+          resolve(pendingInvitation);
+        }
+      }, error => {
+        if (error) {
+          console.error(error);
+          reject(error);
+          // TODO(rzadp): Handle retry.
+        }
+      });
+    });
   }
 
   /**

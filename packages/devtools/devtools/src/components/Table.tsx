@@ -4,7 +4,15 @@
 
 import React from 'react';
 
-import { Box, Table as MuiTable, TableProps as MuiTableProps, TableContainer } from '@mui/material';
+import {
+  Box,
+  Table as MuiTable,
+  TableProps as MuiTableProps,
+  TableCell as MuiTableCell,
+  TableCellProps as MuiTableCellProps,
+  TableContainer,
+  styled
+} from '@mui/material';
 
 export type TableProps = MuiTableProps
 
@@ -26,10 +34,6 @@ export const Table = ({ children, ...props }: TableProps) => {
               overflow: 'hidden',
               whiteSpace: 'nowrap',
               textOverflow: 'ellipsis'
-            },
-            '& .MuiTableCell-root.monospace': {
-              fontFamily: 'monospace',
-              fontSize: 'medium'
             }
           }}
           {...props}
@@ -40,3 +44,16 @@ export const Table = ({ children, ...props }: TableProps) => {
     </Box>
   );
 };
+
+interface TableCellProps extends MuiTableCellProps {
+  monospace?: boolean;
+}
+
+const StyledTableCell = styled(MuiTableCell, {
+  shouldForwardProp: (prop) => prop !== 'monospace'
+})<TableCellProps>(({ monospace }) => ({
+  verticalAlign: 'top',
+  fontFamily: monospace ? 'monospace' : ''
+}));
+
+export const TableCell: React.FunctionComponent<TableCellProps> = StyledTableCell;

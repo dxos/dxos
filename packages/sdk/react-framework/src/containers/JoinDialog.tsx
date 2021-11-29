@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Box, Button, TextField, Typography } from '@mui/material';
 
@@ -13,6 +13,8 @@ import { useSecretProvider } from '@dxos/react-client';
 import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
 import { handleKey } from '../helpers';
+
+const invitationCodeFromUrl = (text: string) => text.substring(text.lastIndexOf('/') + 1);
 
 enum PartyJoinState {
   INIT,
@@ -29,7 +31,7 @@ export interface JoinDialogProps {
   open: boolean
   title: string
   invitationCode?: string
-  onJoin: (joinOptions: JoinOptions) => Promise<Party>
+  onJoin: (joinOptions: JoinOptions) => Promise<Party | void>
   onClose?: () => void
   closeOnSuccess?: boolean
   modal?: boolean
@@ -40,21 +42,21 @@ export interface JoinDialogProps {
  * Not exported for the end user.
  * See JoinPartyDialog and JoinHaloDialog.
  */
-// TODO(burdon): Move to components.
 export const JoinDialog = ({
   open,
-  invitationCode: initialCode, // TODO(burdon): Automatically go to next step if set.
+  invitationCode: initialCode,
   title,
   onJoin,
   onClose,
   closeOnSuccess = true,
   modal
 }: JoinDialogProps) => {
-  const [state, setState] = useState(PartyJoinState.INIT);
+  const [state, setState] = useState(initialCode ? PartyJoinState.AUTHENTICATE : PartyJoinState.INIT);
   const [error, setError] = useState<string | undefined>(undefined);
   const [processing, setProcessing] = useState<boolean>(false);
   const [invitationCode, setInvitationCode] = useState(initialCode || '');
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleReset = () => {
     setError(undefined);
@@ -75,22 +77,17 @@ export const JoinDialog = ({
     }
   };
 
-  const handleUpdateInvitationCode = (text: string) => {
-    // Parse URL.
-    const index = text.lastIndexOf('/');
-    const invitationCode = text.substring(index + 1);
-    setInvitationCode(invitationCode);
-  };
-
-  const handleProcessInvitation = async () => {
-    if (!invitationCode.length) {
+  const handleProcessInvitation = async (text: string) => {
+    if (!text.length) {
       return;
     }
 
     let invitation: InvitationDescriptor;
     try {
+      // Parse URL.
+      const invitationCode = invitationCodeFromUrl(text);
       invitation = decodeInvitation(invitationCode);
-    } catch (err) {
+    } catch (err: any) {
       setError('Invalid invitation code.');
       setState(PartyJoinState.ERROR);
       return;
@@ -103,8 +100,8 @@ export const JoinDialog = ({
       // TODO(burdon): The client package should only throw errors with user-facing messages.
       const parseError = (err: any) => {
         const messages: {[index: string]: string} = {
-          ERR_EXTENSION_RESPONSE_FAILED: 'Authentication failed.',
-          ERR_GREET_ALREADY_CONNECTED_TO_SWARM: 'Already member of party.'
+          ERR_EXTENSION_RESPONSE_FAILED: 'Authentication failed. Please try again.',
+          ERR_GREET_ALREADY_CONNECTED_TO_SWARM: 'Already a member of the party.'
         };
 
         return messages[err.responseCode];
@@ -123,33 +120,53 @@ export const JoinDialog = ({
     secretResolver(Buffer.from(pin));
   };
 
+  useEffect(() => {
+    if (initialCode) {
+      void handleProcessInvitation(initialCode);
+    }
+  }, [initialCode]);
+
+  useEffect(() => {
+    // TODO(burdon): The paste event only seems to be called the first time.
+    // https://developer.mozilla.org/en-US/docs/Web/API/Element/paste_event
+    const pasteListener = (event: any) => {
+      const invitationCode = (event.clipboardData).getData('text');
+      setInvitationCode(invitationCode);
+      void handleProcessInvitation(invitationCode);
+      event.preventDefault();
+    };
+
+    inputRef.current?.addEventListener('paste', pasteListener);
+    return () => {
+      inputRef.current?.removeEventListener('paste', pasteListener);
+    };
+  }, []);
+
   const getDialogProps = (state: PartyJoinState) => {
     const joinPartyContent = (
       <TextField
+        ref={inputRef}
         autoFocus
         fullWidth
-        multiline
-        variant='standard'
-        placeholder='Copy the invitation code or URL.'
+        placeholder='Paste the invitation code or URL.'
         spellCheck={false}
         value={invitationCode}
-        onChange={(event) => handleUpdateInvitationCode(event.target.value)}
-        onKeyDown={handleKey('Enter', handleProcessInvitation)}
-        rows={6}
+        onChange={(event) => setInvitationCode(event.target.value)}
+        onKeyDown={handleKey('Enter', () => handleProcessInvitation(invitationCode))}
       />
     );
 
     const joinPartyActions = (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
-        <Button onClick={handleProcessInvitation}>Process</Button>
+        <Button onClick={() => handleProcessInvitation(invitationCode)}>Process</Button>
       </>
     );
 
     const authenticateContent = (
       <>
         <Typography variant='body1'>
-          Enter the PIN.
+          Enter the passcode.
         </Typography>
         <Box sx={{
           display: 'flex',
@@ -165,7 +182,7 @@ export const JoinDialog = ({
           <HashIcon
             sx={{ marginLeft: 2 }}
             size='large'
-            value={invitationCode}
+            value={invitationCodeFromUrl(invitationCode)}
           />
         </Box>
       </>
@@ -176,7 +193,10 @@ export const JoinDialog = ({
     );
 
     const errorActions = (
-      <Button onClick={handleReset}>Retry</Button>
+      <>
+        <Button onClick={handleCancel}>Cancel</Button>
+        <Button onClick={handleReset}>Retry</Button>
+      </>
     );
 
     switch (state) {

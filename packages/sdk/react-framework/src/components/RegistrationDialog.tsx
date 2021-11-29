@@ -141,7 +141,7 @@ export const RegistrationDialog = ({
           setProcessing(true);
           try {
             await onRestore(restoreSeedPhrase);
-          } catch (err) {
+          } catch (err: any) {
             // TODO(burdon): Detect user-facing message or display generic.
             setError(err.message);
           }

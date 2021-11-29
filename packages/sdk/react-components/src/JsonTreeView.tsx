@@ -105,7 +105,9 @@ const TreeItem = ({
           }}>
             {label}
           </Typography>
-          {value !== undefined ? ':' : ''}
+          <span style={{ fontSize: size === 'small' ? 14 : undefined }}>
+            {value !== undefined ? ':' : ''}
+          </span>
           {value}
         </Box>
       )}

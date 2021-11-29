@@ -41,7 +41,7 @@ test.skip('multiple agents', async () => {
           clearTimeout(timeoutId);
           resolve();
         }
-      } catch (err) {
+      } catch (err: any) {
         reject(err);
       }
     }, 1000);

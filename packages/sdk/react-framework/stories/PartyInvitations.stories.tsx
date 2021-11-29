@@ -19,7 +19,7 @@ import {
 import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 
 import {
-  ErrorView,
+  FrameworkContextProvider,
   JoinPartyDialog,
   PartySharingDialog
 } from '../src';
@@ -67,12 +67,14 @@ const Sender = () => {
         <Button onClick={() => setOpen(true)}>Open</Button>
         <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
-      <PartySharingDialog
-        partyKey={partyKey}
-        open={open}
-        onClose={() => setOpen(false)}
-        modal={false}
-      />
+      {open && (
+        <PartySharingDialog
+          partyKey={partyKey}
+          open={open}
+          onClose={() => setOpen(false)}
+          modal={false}
+        />
+      )}
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
       </Box>
@@ -102,21 +104,21 @@ const Receiver = ({ invitationCode }: { invitationCode?: string }) => {
   );
 };
 
-// TODO(burdon): Error handling, retry, etc.
-
 export const Primary = () => {
   return (
     <FullScreen>
-      <ErrorBoundary errorComponent={ErrorView}>
+      <ErrorBoundary>
         <Box sx={{
           display: 'flex',
           justifyContent: 'space-around'
         }}>
           <ClientInitializer>
             <ProfileInitializer>
-              <Column>
-                <Sender />
-              </Column>
+              <FrameworkContextProvider>
+                <Column>
+                  <Sender />
+                </Column>
+              </FrameworkContextProvider>
             </ProfileInitializer>
           </ClientInitializer>
 
@@ -168,7 +170,7 @@ export const Secondary = () => {
 
   return (
     <FullScreen>
-      <ErrorBoundary errorComponent={ErrorView}>
+      <ErrorBoundary>
         <Box sx={{
           display: 'flex',
           justifyContent: 'space-around'

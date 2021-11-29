@@ -13,7 +13,7 @@ export class Project {
       throw new Error('Must be executed inside a package');
     }
 
-    const packageJson = JSON.parse(fs.readFileSync(join(packageRoot, 'package.json'), 'utf-8'));
+    const packageJson = JSON.parse(fs.readFileSync(join(packageRoot, 'package.json')).toString('utf-8'));
 
     return new Project(packageRoot, packageJson);
   }

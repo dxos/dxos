@@ -14,15 +14,31 @@ import { raise } from '@dxos/debug';
 import { ComplexMap } from '@dxos/util';
 
 import { ApiTransactionHandler } from '../api-transaction-handler';
-import { decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData } from '../encoding';
+import {
+  decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload, encodeProtobuf, sanitizeExtensionData
+} from '../encoding';
 import { DomainKey as BaseDomainKey, Multihash, Resource as BaseResource } from '../interfaces';
 import { CID, DomainKey, DXN } from '../models';
 import { schema as dxnsSchema } from '../proto/gen';
 import { Filtering, IQuery } from '../querying';
-import { Domain, IRegistryClient, RecordKind, RecordMetadata, RegistryDataRecord, RegistryRecord, RegistryTypeRecord, Resource, ResourceRecord, SuppliedRecordMetadata, SuppliedTypeRecordMetadata, TypeRecordMetadata, UpdateResourceOptions } from './interface';
+import {
+  Domain,
+  IRegistryClient,
+  RecordKind,
+  RecordMetadata,
+  RegistryDataRecord,
+  RegistryRecord,
+  RegistryTypeRecord,
+  Resource,
+  ResourceRecord,
+  SuppliedRecordMetadata,
+  SuppliedTypeRecordMetadata,
+  TypeRecordMetadata,
+  UpdateResourceOptions
+} from './interface';
 
 export class RegistryClient implements IRegistryClient {
-  private readonly _recordCache = new ComplexMap<CID, RegistryRecord>(cid => cid.toB58String())
+  private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String())
 
   private transactionsHandler: ApiTransactionHandler;
 
@@ -71,16 +87,7 @@ export class RegistryClient implements IRegistryClient {
     });
   }
 
-  async getRecord (cid: CID): Promise<RegistryRecord | undefined> {
-    if (this._recordCache.has(cid)) {
-      return this._recordCache.get(cid);
-    }
-
-    const record = (await this.api.query.registry.records(cid.value)).unwrapOr(undefined);
-    if (!record) {
-      return undefined;
-    }
-
+  private async _decodeRecord (cid: CID, record: Record<string, any>): Promise<RegistryRecord | undefined> {
     const decoded = dxnsSchema.getCodecForType('dxos.registry.Record').decode(Buffer.from(record.data));
 
     const meta: RecordMetadata = {
@@ -103,7 +110,8 @@ export class RegistryClient implements IRegistryClient {
         type: CID.from(decoded.payload.typeRecord),
         dataRaw: decoded.payload.data,
         dataSize: decoded.payload.data.length,
-        data: await decodeExtensionPayload(decoded.payload, async cid => (await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`)))
+        data: await decodeExtensionPayload(decoded.payload, async cid => (await this.getTypeRecord(cid)) ??
+          raise(new Error(`Type not found: ${cid}`)))
       };
     } else if (decoded.type) {
       const typeMeta: TypeRecordMetadata = {
@@ -125,18 +133,38 @@ export class RegistryClient implements IRegistryClient {
     }
   }
 
+  private async _fetchRecord (cid: CID): Promise<RegistryRecord | undefined> {
+    const record = (await this.api.query.registry.records(cid.value)).unwrapOr(undefined);
+    if (!record) {
+      return undefined;
+    }
+
+    return this._decodeRecord(cid, record);
+  }
+
+  async getRecord (cid: CID): Promise<RegistryRecord | undefined> {
+    if (this._recordCache.has(cid)) {
+      return this._recordCache.get(cid);
+    }
+
+    const recordPromise = this._fetchRecord(cid);
+    this._recordCache.set(cid, recordPromise);
+
+    return recordPromise;
+  }
+
   async getRecords (query?: IQuery): Promise<RegistryRecord[]> {
     const records = await this.api.query.registry.records.entries();
 
-    const output = await Promise.all(records.map(async ([storageKey]): Promise<RegistryRecord | undefined> => {
+    const output = await Promise.all(records.map(async ([storageKey, value]): Promise<RegistryRecord | undefined> => {
       const contentCid = storageKey.args[0];
 
       try {
-        // TODO(marik-d): Very unoptimized.
-        const record = await this.getRecord(CID.from(contentCid));
+        // TODO(marik-d): Moderately unoptimized.
+        const record = await this._decodeRecord(CID.from(contentCid), value.unwrap());
         assert(record);
         return record;
-      } catch (err) {
+      } catch (err: any) {
         return undefined;
       }
     }));
@@ -200,9 +228,11 @@ export class RegistryClient implements IRegistryClient {
       try {
         const record = await this.getRecord(selectedRecord);
         assert(record && RegistryRecord.isDataRecord(record));
-
         type = record.type;
-      } catch {} // TODO(marik-d): This will set type to `undefined` for both type records and when there's an error. We should be more precise.
+      } catch {
+        // TODO(marik-d): This will set type to `undefined` for both type records and when there's an error.
+        //   We should be more precise.
+      }
     }
 
     return {
@@ -226,7 +256,8 @@ export class RegistryClient implements IRegistryClient {
     const domainKey = id.domain ? await this.resolveDomainName(id.domain) : id.key;
     assert(domainKey);
 
-    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(domainKey.value, id.resource)).unwrapOr(undefined);
+    const resource = (await this.api.query.registry.resources<Option<BaseResource>>(domainKey.value, id.resource))
+      .unwrapOr(undefined);
     if (resource === undefined) {
       return undefined;
     }
@@ -236,15 +267,18 @@ export class RegistryClient implements IRegistryClient {
     };
   }
 
-  async getResourceRecord<R extends RegistryRecord = RegistryRecord> (id: DXN, versionOrTag = 'latest'): Promise<ResourceRecord<R> | undefined> {
+  async getResourceRecord<R extends RegistryRecord = RegistryRecord> (id: DXN, versionOrTag = 'latest'):
+    Promise<ResourceRecord<R> | undefined> {
     const resource = await this.getResource(id);
     if (resource === undefined) {
       return undefined;
     }
+
     const cid = resource.tags[versionOrTag] ?? resource.versions[versionOrTag];
     if (cid === undefined) {
       return undefined;
     }
+
     const record = await this.getRecord(cid);
     if (record === undefined) {
       return undefined;
@@ -285,7 +319,8 @@ export class RegistryClient implements IRegistryClient {
     const encoded = dxnsSchema.getCodecForType('dxos.registry.Record').encode({
       ...meta,
       created: new Date(),
-      payload: await encodeExtensionPayload(sanitizeExtensionData(data, CID.from(typeId)), async cid => (await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`)))
+      payload: await encodeExtensionPayload(sanitizeExtensionData(data, CID.from(typeId)),
+        async cid => (await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`)))
     });
 
     return this.insertRawRecord(encoded);
@@ -314,19 +349,22 @@ export class RegistryClient implements IRegistryClient {
     return domainKey;
   }
 
-  async updateResource (resource: DXN, contentCid: CID, opts: UpdateResourceOptions = { tags: ['latest'] }): Promise<void> {
+  async updateResource (
+    resource: DXN, contentCid: CID, opts: UpdateResourceOptions = { tags: ['latest'] }): Promise<void> {
     const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
     assert(domainKey);
 
     await this.transactionsHandler.sendTransaction(
-      this.api.tx.registry.updateResource(domainKey.value, resource.resource, contentCid.value, opts.version ?? null, opts.tags ?? []));
+      this.api.tx.registry.updateResource(
+        domainKey.value, resource.resource, contentCid.value, opts.version ?? null, opts.tags ?? []));
   }
 
   async deleteResource (resource: DXN): Promise<void> {
     const domainKey = resource.domain ? await this.resolveDomainName(resource.domain) : resource.key;
     assert(domainKey);
 
-    await this.transactionsHandler.sendTransaction(this.api.tx.registry.deleteResource(domainKey.value, resource.resource));
+    await this.transactionsHandler.sendTransaction(
+      this.api.tx.registry.deleteResource(domainKey.value, resource.resource));
   }
 }
 

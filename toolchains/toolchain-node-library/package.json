@@ -1,6 +1,6 @@
 {
   "name": "@dxos/toolchain-node-library",
-  "version": "2.10.10",
+  "version": "2.18.1",
   "private": true,
   "bin": {
     "toolchain": "./main.js"
@@ -11,7 +11,7 @@
     "lint": "ts-node src/main.ts lint"
   },
   "dependencies": {
-    "@dxos/eslint-plugin": "~1.0.19",
+    "@dxos/eslint-plugin": "~1.0.20",
     "@dxos/protobuf-compiler": "workspace:*",
     "@types/yargs": "~16.0.1",
     "chalk": "^4.1.0",
@@ -23,7 +23,7 @@
     "mocha": "~8.4.0",
     "pkg-dir": "~5.0.0",
     "ts-jest": "^26.5.6",
-    "typescript": "^4.3.5",
+    "typescript": "^4.5.2",
     "wtfnode": "~0.9.1",
     "yargs": "~16.2.0"
   },
