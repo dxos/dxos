@@ -15,7 +15,8 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 
 ## Deployment
 
-Packages are deployed via a Github action: https://github.com/dxos/protocols/actions
+Packages are deployed via a Github action: https://github.com/dxos/protocols/actions, which uses [Release Please](https://github.com/dxos/protocols/blob/main/docs/internal/getting-started.md#release-process)
+
 
 ## Troubleshooting
 
