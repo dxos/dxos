@@ -57,7 +57,7 @@ export class Database {
   }
 
   get isReadOnly () {
-    return this._backend.isReadOnly();
+    return this._backend.isReadOnly;
   }
 
   get update () {

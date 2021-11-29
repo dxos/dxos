@@ -22,13 +22,16 @@ const log = debug('dxos:echo:items:data-service-host');
  * A DataServiceRouter must be placed before it to route requests to different DataServiceHost instances based on party id.
  */
 export class DataServiceHost {
-  constructor (
-        private readonly _itemManager: ItemManager,
-        private readonly _itemDemuxer: ItemDemuxer,
-        private readonly _writeStream?: FeedWriter<EchoEnvelope>
-  ) {}
+  constructor(
+    private readonly _itemManager: ItemManager,
+    private readonly _itemDemuxer: ItemDemuxer,
+    private readonly _writeStream?: FeedWriter<EchoEnvelope>
+  ) { }
 
-  subscribeEntitySet (): Stream<SubscribeEntitySetResponse> {
+  /**
+   * Returns a stream with a list of active entities in the party.
+   */
+  subscribeEntitySet(): Stream<SubscribeEntitySetResponse> {
     return new Stream(({ next }) => {
       const trackedSet = new Set<ItemID>();
 
@@ -75,7 +78,13 @@ export class DataServiceHost {
     });
   }
 
-  subscribeEntityStream (request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
+  /**
+   * Returns a stream of uppdates for a single entity.
+   * 
+   * First message is a snapshot of the entity.
+   * Subsequent messages are updates.
+   */
+  subscribeEntityStream(request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
     return new Stream(({ next }) => {
       assert(request.itemId);
       const entity = this._itemManager.entities.get(request.itemId) ?? raise(new EntitiyNotFoundError(request.itemId));
@@ -100,7 +109,7 @@ export class DataServiceHost {
     });
   }
 
-  async write (request: EchoEnvelope): Promise<MutationReceipt> {
+  async write(request: EchoEnvelope): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
 
     return this._writeStream.write(request);
