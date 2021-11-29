@@ -13,7 +13,7 @@ import { DataServiceHost } from './data-service-host';
 
 /**
  * Generic interface to represent a backend for the database.
- * 
+ *
  * Interfaces with ItemManager to maintain the collection of entities up-to-date.
  * Porvides a way to query for the write stream to make mutations.
  * Creates data snapshots.
@@ -33,7 +33,7 @@ export interface DatabaseBackend {
 
 /**
  * Database backend that operates on two streams: read and write.
- * 
+ *
  * Mutations are read from the incoming streams and applied to the ItemManager via ItemDemuxer.
  * Write operations result in mutations being written to the outgoing stream.
  */
@@ -87,7 +87,7 @@ export class FeedDatabaseBackend implements DatabaseBackend {
 
 /**
  * Database backend that is backed by the DataService instance.
- * 
+ *
  * Uses DataMirror to populate entities in ItemManager.
  */
 export class RemoteDatabaseBacked implements DatabaseBackend {

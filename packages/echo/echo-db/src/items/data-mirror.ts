@@ -19,7 +19,7 @@ const log = debug('dxos:echo:items:data-mirror');
 
 /**
  * Maintains subscribtions via DataService to create a local copy of the entities (items and links) in the database.
- * 
+ *
  * Entities are updated using snapshots and mutations sourced from the DataService.
  * Entity and model mutations are forwarded to the DataService.
  * This class is analogous to ItemDemuxer but for databases running in remote mode.
