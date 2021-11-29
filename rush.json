@@ -734,6 +734,12 @@
     //
 
     {
+      "packageName": "@dxos/bot-factory",
+      "projectFolder": "packages/bot/bot-factory",
+      "shouldPublish": false,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/botkit",
       "projectFolder": "packages/bot/botkit",
       "shouldPublish": false,

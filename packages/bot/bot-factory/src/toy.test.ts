@@ -7,6 +7,7 @@ import expect from 'expect';
 
 import { PublicKey } from '@dxos/crypto';
 import { createLinkedPorts } from '@dxos/rpc';
+import { BrokerSetup, ClientSetup, setupBroker, setupClient } from '@dxos/botkit';
 
 import { InProcessBotContainer } from './bot-container';
 import { NodeContainer } from './bot-container/node-container';
@@ -14,7 +15,7 @@ import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
-import { BotFactoryClient, BrokerSetup, ClientSetup, setupBroker, setupClient } from './testutils';
+import { BotFactoryClient } from './testutils';
 
 describe('In-Memory', () => {
   describe('No client', () => {

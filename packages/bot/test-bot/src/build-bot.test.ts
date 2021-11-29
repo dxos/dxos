@@ -12,13 +12,15 @@ import { createId, PublicKey } from '@dxos/crypto';
 import { 
   buildBot,
   setupBroker,
-  setupClient,
+  setupClient
+} from '@dxos/botkit';
+import {
   NodeContainer,
   BotFactoryClient,
   TEST_ECHO_TYPE,
   BotController,
   BotFactory
-} from '@dxos/botkit';
+} from '@dxos/bot-factory';
 
 describe('Build bot', () => {
   let outfile: string;

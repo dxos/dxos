@@ -5,8 +5,8 @@
 import expect from 'expect';
 
 import { PublicKey } from '@dxos/crypto';
+import { setupClient } from '@dxos/botkit';
 
-import { setupClient } from '../testutils';
 import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
 
 describe('Echo Bot', () => {

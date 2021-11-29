@@ -2,7 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { setupBroker, setupClient } from '../testutils';
+import { setupBroker, setupClient } from '@dxos/botkit';
+
 import { ClientBot } from './client-bot';
 
 describe('Client Bot', () => {

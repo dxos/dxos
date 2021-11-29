@@ -8,10 +8,10 @@ import expect from 'expect';
 
 import { PublicKey } from '@dxos/crypto';
 import { createRpcClient } from '@dxos/rpc';
+import { setupClient, setupBroker, BrokerSetup } from '@dxos/botkit';
 
 import { TEST_ECHO_TYPE } from '../bots';
 import { schema } from '../proto/gen';
-import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createIpcPort, NodeContainer } from './node-container';
 
 describe('Node container', () => {

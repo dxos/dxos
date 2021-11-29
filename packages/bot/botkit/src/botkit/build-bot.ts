@@ -18,7 +18,14 @@ export const buildBot = async ({ entryPoint, outfile } : BuildBotOptions) => {
     format: 'cjs',
     platform: 'node',
     external: [
-      'wrtc'
+      'fatfs',
+      'runtimejs',
+      'wrtc',
+      'bip32',
+      'typeforce',
+      'sodium-universal',
+      'sodium-native',
+      'utp-native'
     ]
   });
 };

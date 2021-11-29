@@ -1,3 +1,3 @@
 # @dxos/botkit
 
-Bots implementation.
+Botkit implementation.
