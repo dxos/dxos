@@ -4,12 +4,13 @@
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
-import { Database, ECHO, RemoteDatabaseBackend } from '@dxos/echo-db';
+import { Database, ECHO, RemoteDatabaseBackend, Party as EchoParty } from '@dxos/echo-db';
 import { DataService, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ComplexMap } from '@dxos/util';
+import assert from 'assert';
 
-import { ClientServiceProvider } from '../interfaces';
+import { ClientServiceProvider, ClientServices } from '../interfaces';
 import { Party } from '../proto/gen/dxos/client';
 import { ClientServiceHost } from '../service-host';
 
@@ -17,14 +18,19 @@ export class PartyProxy {
   private readonly _database: Database;
 
   constructor (
-    private _dataService: DataService,
+    private _serviceProvider: ClientServiceProvider,
     private _modelFactory: ModelFactory,
     private _partyKey: Party['publicKey']
   ) {
     this._database = new Database(
       this._modelFactory,
-      new RemoteDatabaseBackend(this._dataService, this._partyKey)
+      new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._partyKey)
     );
+    
+  }
+
+  async open () {
+    await this._database.init(); 
   }
 
   /**
@@ -39,6 +45,18 @@ export class PartyProxy {
    */
   get database () {
     return this._database;
+  }
+
+  async createInvitation (...args: Parameters<EchoParty['createInvitation']>) {
+    const party = this._serviceProvider.echo.getParty(this._partyKey);
+    assert(party, 'Party not found');
+    return party!.createInvitation(...args);
+  }
+
+  async createOfflineInvitation (...args: Parameters<EchoParty['createOfflineInvitation']>) {
+    const party = this._serviceProvider.echo.getParty(this._partyKey);
+    assert(party, 'Party not found');
+    return party!.createOfflineInvitation(...args);
   }
 }
 
@@ -71,10 +89,11 @@ export class EchoProxy {
 
   open () {
     const partiesStream = this._serviceProvider.services.PartyService.SubscribeParties();
-    partiesStream.subscribe(data => {
+    partiesStream.subscribe(async data => {
       for (const party of data.parties ?? []) {
         if (!this._parties.has(party.publicKey)) {
           const partyProxy = this.createPartyProxy(party.publicKey);
+          await partyProxy.open();
           this._parties.set(party.publicKey, partyProxy);
         }
       }
@@ -91,7 +110,9 @@ export class EchoProxy {
    */
   async createParty (): Promise<PartyProxy> {
     const party = await this._serviceProvider.services.PartyService.CreateParty();
-    return this.createPartyProxy(party.publicKey);
+    const partyProxy = this.createPartyProxy(party.publicKey);
+    await partyProxy.open();
+    return partyProxy;
   }
 
   /**
@@ -102,7 +123,7 @@ export class EchoProxy {
   }
 
   private createPartyProxy (partyKey: PartyKey): PartyProxy {
-    return new PartyProxy(this._serviceProvider.services.DataService, this._modelFactory, partyKey);
+    return new PartyProxy(this._serviceProvider, this._modelFactory, partyKey);
   }
 
   queryParties (...args: Parameters<ECHO['queryParties']>) {
