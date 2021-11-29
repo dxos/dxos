@@ -28,7 +28,7 @@ export class PartyProxy {
   }
 
   /**
-   * Party key. Each party is identified by it's key.
+   * Party key. Each party is identified by its key.
    */
   get key (): PartyKey {
     return this._partyKey;
