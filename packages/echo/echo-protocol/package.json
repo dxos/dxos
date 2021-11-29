@@ -29,13 +29,13 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/feed-store": "workspace:*",
+    "@dxos/proto": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
     "@types/node": "^14.0.9",
     "@types/readable-stream": "^2.3.9",
     "debug": "^4.1.1",
-    "readable-stream": "^3.6.0",
-    "@dxos/proto": "workspace:*"
+    "readable-stream": "^3.6.0"
   },
   "devDependencies": {
     "@dxos/random-access-multi-storage": "workspace:*",
