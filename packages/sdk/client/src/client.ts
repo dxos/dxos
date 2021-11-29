@@ -23,6 +23,7 @@ import { isNode } from './platform';
 import { ClientServiceHost } from './service-host';
 import { ClientServiceProxy } from './service-proxy';
 import { createWindowMessagePort } from './util';
+import { EchoProxy } from './api/EchoProxy';
 
 const log = debug('dxos:client');
 
@@ -53,6 +54,7 @@ export class Client {
   private readonly _serviceProvider: ClientServiceProvider;
 
   private readonly _halo: HaloProxy;
+  private readonly _echo: EchoProxy;
 
   private _initialized = false;
 
@@ -80,6 +82,7 @@ export class Client {
     }
 
     this._halo = new HaloProxy(this._serviceProvider);
+    this._echo = new EchoProxy(this._serviceProvider);
   }
 
   toString () {
@@ -108,8 +111,8 @@ export class Client {
   /**
    * ECHO database.
    */
-  get echo () {
-    return this._serviceProvider.echo;
+  get echo (): EchoProxy {
+    return this._echo;
   }
 
   /**
