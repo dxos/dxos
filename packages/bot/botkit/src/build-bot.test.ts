@@ -7,11 +7,6 @@ import expect from 'expect';
 import fs from 'fs';
 import path from 'path';
 
-import {
-  buildBot,
-  setupBroker,
-  setupClient
-} from '@dxos/botkit';
 import { createId, PublicKey } from '@dxos/crypto';
 import { createLinkedPorts } from '@dxos/rpc';
 
@@ -20,6 +15,8 @@ import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
 import { TEST_ECHO_TYPE } from './bots';
 import { BotFactoryClient } from './testutils';
+import { buildBot } from './botkit';
+import { setupBroker, setupClient } from './testutils';
 
 describe('Build bot', () => {
   let outfile: string;
