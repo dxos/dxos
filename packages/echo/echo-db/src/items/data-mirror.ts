@@ -17,6 +17,13 @@ const log = debug('dxos:echo:items:data-mirror');
 
 // TODO(dmaretskyi): Subscription cleanup.
 
+/**
+ * Maintains subscribtions via DataService to create a local copy of the entities (items and links) in the database.
+ *
+ * Entities are updated using snapshots and mutations sourced from the DataService.
+ * Entity and model mutations are forwarded to the DataService.
+ * This class is analogous to ItemDemuxer but for databases running in remote mode.
+ */
 export class DataMirror {
   constructor (
     private readonly _itemManager: ItemManager,
@@ -28,30 +35,30 @@ export class DataMirror {
     const entities = this._dataService.SubscribeEntitySet({ partyKey: this._partkyKey });
     entities.subscribe(
       async diff => {
-        for (const ent of diff.added ?? []) {
-          assert(ent.itemId);
-          assert(ent.genesis);
-          assert(ent.genesis.modelType);
+        for (const addedEntitiy of diff.added ?? []) {
+          assert(addedEntitiy.itemId);
+          assert(addedEntitiy.genesis);
+          assert(addedEntitiy.genesis.modelType);
 
-          log(`Contstruct: ${JSON.stringify(ent)}`);
+          log(`Contstruct: ${JSON.stringify(addedEntitiy)}`);
 
           let entity: Entity<Model<any>>;
-          if (ent.genesis.link) {
-            assert(ent.genesis.link.source);
-            assert(ent.genesis.link.target);
+          if (addedEntitiy.genesis.link) {
+            assert(addedEntitiy.genesis.link.source);
+            assert(addedEntitiy.genesis.link.target);
 
             entity = await this._itemManager.constructLink({
-              itemId: ent.itemId,
-              itemType: ent.genesis.itemType,
-              modelType: ent.genesis.modelType,
-              source: ent.genesis.link.source,
-              target: ent.genesis.link.target
+              itemId: addedEntitiy.itemId,
+              itemType: addedEntitiy.genesis.itemType,
+              modelType: addedEntitiy.genesis.modelType,
+              source: addedEntitiy.genesis.link.source,
+              target: addedEntitiy.genesis.link.target
             });
           } else {
             entity = await this._itemManager.constructItem({
-              itemId: ent.itemId,
-              itemType: ent.genesis.itemType,
-              modelType: ent.genesis.modelType
+              itemId: addedEntitiy.itemId,
+              itemType: addedEntitiy.genesis.itemType,
+              modelType: addedEntitiy.genesis.modelType
             });
           }
 
@@ -59,7 +66,7 @@ export class DataMirror {
         }
       },
       err => {
-        log(`DataMirror connection closed: ${err}`);
+        log(`Connection closed: ${err}`);
       }
     );
   }
@@ -68,7 +75,7 @@ export class DataMirror {
     const stream = this._dataService.SubscribeEntityStream({ partyKey: this._partkyKey, itemId: entity.id });
     stream.subscribe(
       async upd => {
-        log(`Update ${entity.id}: ${JSON.stringify(upd)}`);
+        log(`Update[${entity.id}]: ${JSON.stringify(upd)}`);
         if (upd.snapshot) {
           assert(upd.snapshot.model);
           if (upd.snapshot.model.custom) {
@@ -92,7 +99,7 @@ export class DataMirror {
         }
       },
       err => {
-        log(`DataMirror connection closed: ${err}`);
+        log(`Connection closed: ${err}`);
       }
     );
   }
