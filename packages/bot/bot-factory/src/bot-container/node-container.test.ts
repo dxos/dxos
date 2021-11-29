@@ -6,9 +6,9 @@ import assert from 'assert';
 import { fork } from 'child_process';
 import expect from 'expect';
 
+import { setupClient, setupBroker, BrokerSetup } from '@dxos/botkit';
 import { PublicKey } from '@dxos/crypto';
 import { createRpcClient } from '@dxos/rpc';
-import { setupClient, setupBroker, BrokerSetup } from '@dxos/botkit';
 
 import { TEST_ECHO_TYPE } from '../bots';
 import { schema } from '../proto/gen';

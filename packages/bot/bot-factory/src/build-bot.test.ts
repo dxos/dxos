@@ -4,22 +4,22 @@
 
 import assert from 'assert';
 import expect from 'expect';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 
-import { createLinkedPorts } from '@dxos/rpc';
-import { createId, PublicKey } from '@dxos/crypto';
-import { 
+import {
   buildBot,
   setupBroker,
   setupClient
 } from '@dxos/botkit';
+import { createId, PublicKey } from '@dxos/crypto';
+import { createLinkedPorts } from '@dxos/rpc';
 
 import { NodeContainer } from './bot-container';
-import { BotFactory } from './bot-factory';
 import { BotController } from './bot-controller';
-import { BotFactoryClient} from './testutils';
+import { BotFactory } from './bot-factory';
 import { TEST_ECHO_TYPE } from './bots';
+import { BotFactoryClient } from './testutils';
 
 describe('Build bot', () => {
   let outfile: string;

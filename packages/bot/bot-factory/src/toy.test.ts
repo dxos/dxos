@@ -5,9 +5,9 @@
 import assert from 'assert';
 import expect from 'expect';
 
+import { BrokerSetup, ClientSetup, setupBroker, setupClient } from '@dxos/botkit';
 import { PublicKey } from '@dxos/crypto';
 import { createLinkedPorts } from '@dxos/rpc';
-import { BrokerSetup, ClientSetup, setupBroker, setupClient } from '@dxos/botkit';
 
 import { InProcessBotContainer } from './bot-container';
 import { NodeContainer } from './bot-container/node-container';

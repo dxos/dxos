@@ -7,10 +7,10 @@ import assert from 'assert';
 import { Client } from '@dxos/client';
 import { SecretProvider } from '@dxos/credentials';
 import { Party } from '@dxos/echo-db';
-import { decodeInvitation } from '../utils';
 
 import { createIpcPort } from '../bot-container';
 import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
+import { decodeInvitation } from '../utils';
 import { startBot } from './start-bot';
 
 export class ClientBot implements BotService {

@@ -745,12 +745,6 @@
       "shouldPublish": false,
       "versionPolicyName": "lockStepPolicy"
     },
-    {
-      "packageName": "@dxos/test-bot",
-      "projectFolder": "packages/bot/test-bot",
-      "shouldPublish": false,
-      "versionPolicyName": "lockStepPolicy"
-    },
 
     //
     // bot-deprecated
