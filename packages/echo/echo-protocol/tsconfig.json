@@ -23,6 +23,9 @@
       "path": "../feed-store"
     },
     {
+      "path": "../../common/proto"
+    },
+    {
       "path": "../../common/util"
     },
     {
