@@ -29,7 +29,11 @@ export class NodeContainer implements BotContainer {
     const child = fork(pkg.localPath, [], {
       execArgv: this._additionalRequireModules.flatMap(mod => ['-r', mod]),
       serialization: 'advanced',
-      stdio: 'inherit' // TODO: Pipe to file.
+      stdio: 'inherit', // TODO: Pipe to file.
+      env: {
+        ...process.env,
+        NODE_NO_WARNINGS: '1'
+      }
     });
     const port = createIpcPort(child);
     this._processes.push(child);

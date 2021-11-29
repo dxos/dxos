@@ -14,19 +14,19 @@ import {
   setupBroker,
   setupClient
 } from '@dxos/botkit';
-import {
-  NodeContainer,
-  BotFactoryClient,
-  TEST_ECHO_TYPE,
-  BotController,
-  BotFactory
-} from '@dxos/bot-factory';
+
+import { NodeContainer } from './bot-container';
+import { BotFactory } from './bot-factory';
+import { BotController } from './bot-controller';
+import { BotFactoryClient} from './testutils';
+import { TEST_ECHO_TYPE } from './bots';
 
 describe('Build bot', () => {
   let outfile: string;
+  const botPath = './bots/echo-bot.ts';
 
   beforeEach(() => {
-    outfile = path.join(path.dirname(require.resolve('./bot/main.ts')), createId() + '.js');
+    outfile = path.join(path.dirname(require.resolve(botPath)), createId() + '.js');
   });
 
   afterEach(() => {
@@ -35,7 +35,7 @@ describe('Build bot', () => {
 
   it('Builds and runs a test bot', async () => {
     await buildBot({
-      entryPoint: require.resolve('./bot/main.ts'),
+      entryPoint: require.resolve(botPath),
       outfile
     });
 
@@ -80,5 +80,5 @@ describe('Build bot', () => {
     botContainer.killAll();
     await broker.stop();
     await client.destroy();
-  });
+  }).timeout(60000);
 });

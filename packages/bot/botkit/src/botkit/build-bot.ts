@@ -24,8 +24,7 @@ export const buildBot = async ({ entryPoint, outfile } : BuildBotOptions) => {
       'bip32',
       'typeforce',
       'sodium-universal',
-      'sodium-native',
-      'utp-native'
+      'sodium-native'
     ]
   });
 };

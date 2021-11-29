@@ -18,17 +18,16 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/proto": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/botkit": "workspace:*",
     "base-x": "~3.0.9",
     "debug": "^4.1.1"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/botkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/object-model": "workspace:*",
-    "@dxos/signal": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
