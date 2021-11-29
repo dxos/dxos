@@ -3,7 +3,6 @@
 //
 
 import { setupBroker, setupClient } from '../testutils';
-
 import { ClientBot } from './client-bot';
 
 describe('Client Bot', () => {

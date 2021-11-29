@@ -6,12 +6,12 @@ import assert from 'assert';
 import { fork } from 'child_process';
 import expect from 'expect';
 
-import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { PublicKey } from '@dxos/crypto';
 import { createRpcClient } from '@dxos/rpc';
 
 import { TEST_ECHO_TYPE } from '../bots';
 import { schema } from '../proto/gen';
+import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createIpcPort, NodeContainer } from './node-container';
 
 describe('Node container', () => {

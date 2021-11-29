@@ -5,7 +5,6 @@
 import assert from 'assert';
 import expect from 'expect';
 
-import { BrokerSetup, ClientSetup, setupBroker, setupClient } from './testutils';
 import { PublicKey } from '@dxos/crypto';
 import { createLinkedPorts } from '@dxos/rpc';
 
@@ -15,7 +14,7 @@ import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot } from './proto/gen/dxos/bot';
-import { BotFactoryClient } from './testutils';
+import { BrokerSetup, ClientSetup, setupBroker, setupClient, BotFactoryClient } from './testutils';
 
 describe('In-Memory', () => {
   describe('No client', () => {

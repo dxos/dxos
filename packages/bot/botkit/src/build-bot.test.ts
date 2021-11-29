@@ -13,10 +13,9 @@ import { createLinkedPorts } from '@dxos/rpc';
 import { NodeContainer } from './bot-container';
 import { BotController } from './bot-controller';
 import { BotFactory } from './bot-factory';
-import { TEST_ECHO_TYPE } from './bots';
-import { BotFactoryClient } from './testutils';
 import { buildBot } from './botkit';
-import { setupBroker, setupClient } from './testutils';
+import { TEST_ECHO_TYPE } from './bots';
+import { BotFactoryClient, setupBroker, setupClient } from './testutils';
 
 describe('Build bot', () => {
   let outfile: string;
