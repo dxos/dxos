@@ -57,6 +57,10 @@ export class EchoProxy {
     return this._modelFactory;
   }
 
+  get networkManager () {
+    return this._serviceProvider.echo.networkManager;
+  }
+
   toString () {
     return 'EchoProxy';
   }
