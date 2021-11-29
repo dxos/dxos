@@ -58,6 +58,12 @@ export class PartyProxy {
     assert(party, 'Party not found');
     return party!.createOfflineInvitation(...args);
   }
+
+  async queryMembers (...args: Parameters<EchoParty['queryMembers']>) {
+    const party = this._serviceProvider.echo.getParty(this._partyKey);
+    assert(party, 'Party not found');
+    return party!.queryMembers(...args);
+  }
 }
 
 export class EchoProxy {

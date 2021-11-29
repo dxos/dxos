@@ -3,16 +3,16 @@
 //
 
 import { Client } from '@dxos/client';
+import { PartyProxy } from '@dxos/client/src/api/EchoProxy';
 import type { defs } from '@dxos/config';
 import { SecretProvider, SecretValidator } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
-import { Party } from '@dxos/echo-db';
 
 import { encodeInvitation } from '../utils';
 
 export interface ClientSetup {
   client: Client,
-  party: Party,
+  party: PartyProxy,
   invitation: string,
   secret: string
 }
@@ -20,7 +20,7 @@ export interface ClientSetup {
 export const setupClient = async (config?: defs.Config): Promise<ClientSetup> => {
   const client = new Client(config);
   await client.initialize();
-  await client.echo.halo.createProfile({ username: 'Client' });
+  await client.halo.createProfile({ username: 'Client' });
   await client.echo.open();
   const party = await client.echo.createParty();
 

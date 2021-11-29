@@ -21,7 +21,7 @@ export class ClientBot implements BotService {
     this.client = new Client(request.config);
 
     await this.client.initialize();
-    await this.client.echo.halo.createProfile({ username: 'Bot' });
+    await this.client.halo.createProfile({ username: 'Bot' });
 
     if (request.invitation?.invitationCode) {
       const secret = request.invitation.secret;

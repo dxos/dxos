@@ -11,9 +11,9 @@ import kill from 'tree-kill';
 import { promiseTimeout } from '@dxos/async';
 import { BotFactoryClient } from '@dxos/botkit-client-deprecated';
 import { Client } from '@dxos/client';
+import { PartyProxy } from '@dxos/client/src/api/EchoProxy';
 import { Invitation } from '@dxos/credentials';
 import { SIGNATURE_LENGTH, keyToBuffer, createKeyPair, keyToString, verify, sha256 } from '@dxos/crypto';
-import { Party } from '@dxos/echo-db';
 import { SpawnOptions } from '@dxos/protocol-plugin-bot-deprecated';
 
 import { Agent } from './agent';
@@ -48,7 +48,7 @@ export class Orchestrator {
   _builds = new Map();
   _client: Client;
   _localRun: boolean;
-  _party: Party;
+  _party: PartyProxy;
   _factoryClient: BotFactoryClient;
   _factory: any;
   _config: any;
