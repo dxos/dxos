@@ -29,6 +29,10 @@ export class HaloProxy {
     return `HaloProxy(${this._profile?.publicKey})`;
   }
 
+  get isInitialized (): boolean {
+    return this._serviceProvider.echo.halo.isInitialized;
+  }
+
   /**
    * User profile info.
   */

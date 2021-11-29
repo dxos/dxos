@@ -104,4 +104,8 @@ export class EchoProxy {
   queryParties (...args: Parameters<ECHO['queryParties']>) {
     return this._serviceProvider.echo.queryParties(...args);
   }
+
+  joinParty (...args: Parameters<ECHO['joinParty']>) {
+    return this._serviceProvider.echo.joinParty(...args);
+  }
 }
