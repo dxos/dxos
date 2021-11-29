@@ -102,7 +102,7 @@ ncu --deep -u '@storybook/*'
 
 ### Release process
 
-The `protocols` monorepo is set up to use our version of [Release Please](https://github.com/dxos/protocols/blob/main/docs/internal/getting-started.md#release-process) for releasing packages to NPM.
+The `protocols` monorepo is set up to use our version of [Release Please](https://github.com/dxos/eng/wiki/Tools-~-Release-Please) for releasing packages to NPM.
 
 The apps and storybooks are published to DXNS automatically using [this job](https://github.com/dxos/protocols/blob/main/.github/workflows/publish.yaml).
 
