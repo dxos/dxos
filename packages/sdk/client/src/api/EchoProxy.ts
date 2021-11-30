@@ -7,6 +7,7 @@ import { PublicKey } from '@dxos/crypto';
 import { ECHO } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
+import { ObjectModel } from '@dxos/object-model';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceProvider } from '../interfaces';
@@ -23,6 +24,8 @@ export class EchoProxy {
     private readonly _serviceProvider: ClientServiceProvider
   ) {
     this._modelFactory = _serviceProvider instanceof ClientServiceHost ? _serviceProvider.echo.modelFactory : new ModelFactory();
+
+    this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
   }
 
   get modelFactory (): ModelFactory {

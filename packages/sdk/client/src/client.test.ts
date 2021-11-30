@@ -12,6 +12,7 @@ import { afterTest } from '@dxos/testutils';
 import { Client } from './client';
 import { clientServiceBundle } from './interfaces';
 import { InvitationProcess } from './proto/gen/dxos/client';
+import { ObjectModel } from '@dxos/object-model';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -100,6 +101,22 @@ describe('Client', () => {
         await inviteeProfileLatch;
       }).timeout(5000);
     });
+
+    describe('data', () => {
+      test('create party and item', async () => {
+        const client = await createClient();
+        await client.initialize();
+        afterTest(() => client.destroy());
+
+        await client.halo.createProfile();
+        const party = await client.echo.createParty();
+
+        const item = await party.database.createItem({ model: ObjectModel });
+        await item.model.setProperty('foo', 'bar')
+
+        expect(item.model.getProperty('foo')).toEqual('bar');
+      })
+    })
   }
 
   describe('local', () => {
