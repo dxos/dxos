@@ -59,7 +59,7 @@ export class PartyProxy {
     return party!.createOfflineInvitation(...args);
   }
 
-  async queryMembers (...args: Parameters<EchoParty['queryMembers']>) {
+  queryMembers (...args: Parameters<EchoParty['queryMembers']>) {
     const party = this._serviceProvider.echo.getParty(this._partyKey);
     assert(party, 'Party not found');
     return party!.queryMembers(...args);
@@ -136,7 +136,7 @@ export class EchoProxy {
     return this._serviceProvider.echo.queryParties(...args);
   }
 
-  joinParty (...args: Parameters<ECHO['joinParty']>) {
+  async joinParty (...args: Parameters<ECHO['joinParty']>) {
     return this._serviceProvider.echo.joinParty(...args);
   }
 }
