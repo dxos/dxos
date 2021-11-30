@@ -1,5 +1,19 @@
 # Change Log
 
+### [2.18.2](https://www.github.com/dxos/protocols/compare/v2.18.1...v2.18.2) (2021-11-30)
+
+
+### Features
+
+* Remove invitation url slash ([#699](https://www.github.com/dxos/protocols/issues/699)) ([3f82802](https://www.github.com/dxos/protocols/commit/3f82802a434947d441d128be0b15ab4f8aad4a3d))
+
+
+### Bug Fixes
+
+* Add "chore" prefix to automatic job ([a720b44](https://www.github.com/dxos/protocols/commit/a720b44cc1f994dbefa2af230840915babb0ab8a))
+* Apply code-review comments for remote database PR ([#696](https://www.github.com/dxos/protocols/issues/696)) ([f5d2486](https://www.github.com/dxos/protocols/commit/f5d2486c4ea21073248bb049f7b71f204f38c59b))
+* remove model assertion ([#701](https://www.github.com/dxos/protocols/issues/701)) ([e264bc9](https://www.github.com/dxos/protocols/commit/e264bc9592fd171cc6176354b27b985a649c7f6e))
+
 ### [2.18.1](https://www.github.com/dxos/protocols/compare/v2.18.0...v2.18.1) (2021-11-26)
 
 
