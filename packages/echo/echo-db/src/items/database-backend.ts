@@ -7,9 +7,10 @@ import assert from 'assert';
 import { DatabaseSnapshot, DataService, EchoEnvelope, FeedWriter, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
-import { ItemDemuxer, ItemDemuxerOptions, ItemManager } from '..';
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
+import { ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
+import { ItemManager } from './item-manager';
 
 /**
  * Generic interface to represent a backend for the database.
