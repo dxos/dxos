@@ -46,6 +46,9 @@ describe('Client', () => {
       await invitee.echo.joinParty(invitation, defaultSecretProvider);
 
       expect(invitee.echo.queryParties().value.length).toEqual(1);
+
+      await inviter.destroy();
+      await invitee.destroy();
     }).timeout(2000);
   });
 
