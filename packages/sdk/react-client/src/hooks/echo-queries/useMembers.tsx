@@ -4,8 +4,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { Party, PartyMember } from '@dxos/echo-db';
 import { PartyProxy } from '@dxos/client';
+import { PartyMember } from '@dxos/echo-db';
 
 export const useMembers = (party: PartyProxy | undefined) => {
   const [members, setMembers] = useState<PartyMember[]>([]);

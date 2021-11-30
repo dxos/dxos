@@ -23,6 +23,7 @@ import {
 import { makeStyles } from '@mui/styles';
 
 import { PartyProxy } from '@dxos/client';
+import { Party } from '@dxos/echo-db';
 import { labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
 import { useSelection, searchSelector } from '@dxos/react-client';
@@ -38,7 +39,6 @@ import {
   graphSelector
 } from '../../src';
 import { createAdapter, TYPES } from './adapter';
-import { Party } from '@dxos/echo-db';
 
 // TODO(wittjosiah): Refactor, makeStyles is deprecated.
 const useStyles = makeStyles(theme => ({

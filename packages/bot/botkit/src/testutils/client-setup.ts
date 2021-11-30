@@ -2,8 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Client } from '@dxos/client';
-import { PartyProxy } from '@dxos/client/src/api/EchoProxy';
+import { Client, PartyProxy } from '@dxos/client';
 import type { defs } from '@dxos/config';
 import { SecretProvider, SecretValidator } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
