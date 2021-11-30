@@ -13,7 +13,7 @@ import { Party } from '@dxos/echo-db';
 import { Browser, ONLINE_CONFIG } from '../playwright/utils';
 
 const ROWS = parseInt(process.env.GRID_DEMO_ROWS ?? '2');
-const COLUMNS = parseInt(process.env.GRID_DEMO_COLUMS ?? '4');
+const COLUMNS = parseInt(process.env.GRID_DEMO_COLUMNS ?? '4');
 
 describe('Replication in a grid', function () {
   this.timeout(0);
