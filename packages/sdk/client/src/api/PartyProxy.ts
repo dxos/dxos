@@ -66,4 +66,16 @@ export class PartyProxy {
     assert(party, 'Party not found');
     return party!.queryMembers(...args);
   }
+
+  setTitle (...args: Parameters<EchoParty['setTitle']>) {
+    const party = this._serviceProvider.echo.getParty(this._partyKey);
+    assert(party, 'Party not found');
+    return party!.setTitle(...args);
+  }
+
+  setProperty (...args: Parameters<EchoParty['setProperty']>) {
+    const party = this._serviceProvider.echo.getParty(this._partyKey);
+    assert(party, 'Party not found');
+    return party!.setProperty(...args);
+  }
 }
