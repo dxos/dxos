@@ -43,17 +43,19 @@ export class PartyProxy {
     return this._database;
   }
 
-  async createInvitation (...args: Parameters<EchoParty['createInvitation']>) {
-    const party = this._serviceProvider.echo.getParty(this._partyKey);
-    assert(party, 'Party not found');
-    return party!.createInvitation(...args);
-  }
+  // Use client methods instead!
 
-  async createOfflineInvitation (...args: Parameters<EchoParty['createOfflineInvitation']>) {
-    const party = this._serviceProvider.echo.getParty(this._partyKey);
-    assert(party, 'Party not found');
-    return party!.createOfflineInvitation(...args);
-  }
+  // async createInvitation (...args: Parameters<EchoParty['createInvitation']>) {
+  //   const party = this._serviceProvider.echo.getParty(this._partyKey);
+  //   assert(party, 'Party not found');
+  //   return party!.createInvitation(...args);
+  // }
+
+  // async createOfflineInvitation (...args: Parameters<EchoParty['createOfflineInvitation']>) {
+  //   const party = this._serviceProvider.echo.getParty(this._partyKey);
+  //   assert(party, 'Party not found');
+  //   return party!.createOfflineInvitation(...args);
+  // }
 
   queryMembers (...args: Parameters<EchoParty['queryMembers']>) {
     const party = this._serviceProvider.echo.getParty(this._partyKey);

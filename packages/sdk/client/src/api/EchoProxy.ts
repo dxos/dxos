@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, latch } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { ECHO } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
@@ -62,10 +62,21 @@ export class EchoProxy {
    * Creates a new party.
    */
   async createParty (): Promise<PartyProxy> {
+    const [partyReceivedPromise, partyReceived] = latch();
+    
+
     const party = await this._serviceProvider.services.PartyService.CreateParty();
-    const partyProxy = this.createPartyProxy(party.publicKey);
-    await partyProxy.open();
-    return partyProxy;
+
+    const handler = () => {
+      if (this._parties.has(party.publicKey)){
+        partyReceived();
+      }
+    }
+    this._partiesChanged.on(handler)
+    await partyReceivedPromise;
+    this._partiesChanged.off(handler)
+
+    return this._parties.get(party.publicKey)!;
   }
 
   /**
