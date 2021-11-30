@@ -10,6 +10,7 @@ importers:
       '@dxos/rpc': link:../../common/rpc
       base-x: 3.0.9
       debug: 4.3.1
+      esbuild: 0.11.23
     devDependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -46,6 +47,7 @@ importers:
       assert: ^2.0.0
       base-x: ~3.0.9
       debug: ^4.1.1
+      esbuild: ^0.11.23
       expect: ~27.0.2
   ../../packages/common/async:
     dependencies:
@@ -423,6 +425,7 @@ importers:
       '@dxos/toolchain-node-library': workspace:*
   ../../packages/devtools/devtools:
     dependencies:
+      '@dxos/client': link:../../sdk/client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
@@ -465,6 +468,7 @@ importers:
       typescript: 4.5.2
     specifiers:
       '@babel/core': ~7.13.15
+      '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
@@ -738,6 +742,7 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/feed-store': link:../feed-store
+      '@dxos/proto': link:../../common/proto
       '@dxos/util': link:../../common/util
       '@types/debug': 4.1.5
       '@types/node': 14.14.45
@@ -761,6 +766,7 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/proto': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@dxos/util': workspace:*
@@ -1502,10 +1508,10 @@ importers:
       internal-ip: 6.2.0
       lodash.debounce: 4.0.8
       lodash.pick: 4.4.0
-      moleculer: 0.14.13
-      moleculer-apollo-server: 0.3.4_graphql@15.5.0+moleculer@0.14.13
+      moleculer: 0.14.18_debug@4.3.1
+      moleculer-apollo-server: 0.3.4_graphql@15.5.0+moleculer@0.14.18
       moleculer-repl: 0.6.4
-      moleculer-web: 0.9.1_moleculer@0.14.13
+      moleculer-web: 0.9.1_moleculer@0.14.18
       moment: 2.29.1
       monotonic-timestamp: 0.0.9
       nanomessage: 5.4.0
@@ -5530,7 +5536,7 @@ packages:
       hashlru: 2.3.0
       protocol-buffers-encodings: 1.1.1
       record-cache: 1.1.0
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
     dev: false
     resolution:
       integrity: sha512-wMBbz0m8rgQMERt/Ot6BGo5Y8+ovJSZmqxF0oA2xYPT8vCVBIr8g2F1BkQcLbX2iKRLXRnhic02OEq8b41M0sw==
@@ -5544,7 +5550,7 @@ packages:
       integrity: sha512-LM0DxxXYFEOZoUhN4g9VhHKGeM2mQIf8rnfSu/epBLmASAKNoKMijgGUZwhrh06wPROdBSJumjVzKl+8GPnRhA==
   /@hyperswarm/hypersign/2.1.1:
     dependencies:
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
     dev: false
     resolution:
       integrity: sha512-RcczqJsu2VScRoyJdLbxpYMBNq+73HJT3FVzDZXSOob/WqEeiN2WIvuDtvmFoufAuO/3YVfde/NpZFc/OPjmjw==
@@ -5552,7 +5558,7 @@ packages:
     dependencies:
       '@hyperswarm/discovery': 2.0.1
       nanoresource: 1.3.0
-      utp-native: 2.4.0
+      utp-native: 2.5.3
     dev: false
     resolution:
       integrity: sha512-TvRRRd//a3q+JhpSh5PaHJfnP4oLM/0eZikyDh2Z+eaJpIZP+vZwdlpPd10neTsPq1zfJX8weRjYLFHNpoMZVg==
@@ -11112,7 +11118,7 @@ packages:
   /blake2b-universal/1.0.1:
     dependencies:
       blake2b: 2.1.3
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
     dev: false
     resolution:
       integrity: sha512-vmMqpF8E9RCde8/+Su/s2rZRxOBwAYQsTyCgok4kLWhWrzMrX0CzID6pVheNJSESY0S0FNTOG4QfRJqnSLOjFA==
@@ -13756,7 +13762,7 @@ packages:
       ipv4-peers: 2.0.0
       k-bucket: 5.1.0
       protocol-buffers-encodings: 1.1.1
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
       speedometer: 1.1.0
       stream-collector: 1.0.1
       time-ordered-set: 1.0.2
@@ -14855,10 +14861,10 @@ packages:
     dev: false
     resolution:
       integrity: sha1-34xp7vFkeSPHFXuc6DhAYQsCzDk=
-  /eventemitter2/6.4.4:
+  /eventemitter2/6.4.5:
     dev: false
     resolution:
-      integrity: sha512-HLU3NDY6wARrLCEwyGKRBvuWYyvW6mHYv72SJJAH3iJN3a6eVUvkjFkcxah1bcTgGVBBrFdIopBJPhCQFMLyXw==
+      integrity: sha512-bXE7Dyc1i6oQElDG0jMRZJrRAn9QR2xyyFGmBdZleNmyQX0FqGYmhZIrIrpPfm/w//LTo4tVQGOGQcGCb5q9uw==
   /eventemitter3/3.1.2:
     dev: false
     resolution:
@@ -15184,10 +15190,10 @@ packages:
     dev: true
     resolution:
       integrity: sha1-9K8+qfNNiicc9YrSs3WfQx8LMY0=
-  /fastest-validator/1.11.0:
+  /fastest-validator/1.12.0:
     dev: false
     resolution:
-      integrity: sha512-iF4Gj2Viz2T8D3aLcRt5doTDwCJYBe9LgNv36j2lpoGoKvOroGKxG2oOGWcHoxGREsMVlNDrbUQOU9fDMmO7jw==
+      integrity: sha512-Qc7oCVO9hAPz5GUONmToIoa95YWzoe7SLsrjIXTfCFf6HFQXxxWePXe8D+Kp/XCrr5H/pMJwP2xprW07wYv/BQ==
   /fastq/1.11.0:
     dependencies:
       reusify: 1.0.4
@@ -15539,12 +15545,6 @@ packages:
       react: ^15.0.2 || ^16.0.0 || ^17.0.0
     resolution:
       integrity: sha512-u/ucO5ezm3nBvdaSGkWpDlzCePoV+a9x3KHmy13TV/5MzOaCZDN8Mfd94jmf0nOi8ZZay+nOKbBUkOe2VNaupQ==
-  /fn-args/5.0.0:
-    dev: false
-    engines:
-      node: '>=8'
-    resolution:
-      integrity: sha512-CtbfI3oFFc3nbdIoHycrfbrxiGgxXBXXuyOl49h47JawM1mYrqpiRqnH5CB2mBatdXvHHOUO6a+RiAuuvKt0lw==
   /follow-redirects/1.14.1_debug@4.3.1:
     dependencies:
       debug: 4.3.1
@@ -16003,7 +16003,6 @@ packages:
       minimatch: 3.0.4
       once: 1.4.0
       path-is-absolute: 1.0.1
-    dev: true
     resolution:
       integrity: sha512-lmLf6gtyrPq8tTjSmrO94wBeQbFR3HbLHbuyD69wuyQkImp2hWqMGB47OX65FBkPffO641IP9jWa1z4ivqG26Q==
   /global-modules/0.2.3:
@@ -16621,7 +16620,7 @@ packages:
   /hmac-blake2b/2.0.0:
     dependencies:
       nanoassert: 1.1.0
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
       sodium-universal: 3.0.4
     resolution:
       integrity: sha512-JbGNtM1YRd8EQH/2vNTAP1oy5lJVPlBFYZfCJTu3k8sqOUm0rRIf/3+MCd5noVykETwTbun6jEOc+4Tu78ubHA==
@@ -17006,7 +17005,7 @@ packages:
     dependencies:
       '@hyperswarm/network': 2.1.0
       shuffled-priority-queue: 2.1.0
-      utp-native: 2.4.0
+      utp-native: 2.5.3
     dev: false
     resolution:
       integrity: sha512-bESly7s6X7cLMWCn4dsAVE/ttNbbB13o6jku2B7fV2wIV/g7NVC/yF7S3NiknGlftKn/uLU3fhMmbOfdBvQ5IA==
@@ -17296,12 +17295,12 @@ packages:
       node: '>= 0.10'
     resolution:
       integrity: sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==
-  /ipaddr.js/2.0.0:
+  /ipaddr.js/2.0.1:
     dev: false
     engines:
       node: '>= 10'
     resolution:
-      integrity: sha512-S54H9mIj0rbxRIyrDMEuuER86LdlgUg9FSeZ8duQb6CUG2iRrA36MYVQBSprTF/ZeAwvyQ5mDGuNvIPM0BIl3w==
+      integrity: sha512-1qTgH9NG+IIJ4yfKs2e6Pp1bZg8wbDbKHT21HrLIeYBTRLgMYKnMTPAuI3Lcs61nfx5h1xlXnbJtH1kX5/d/ng==
   /ipv4-peers/2.0.0:
     dev: false
     resolution:
@@ -20124,7 +20123,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-hJaO0mwDXmZS4ghXsvPVriOhsxQ7ofcpQdm8dE+jISUOKopitvnXFQmpRR7jd2K6VBG6E26gU3IAbXXGIbu4sQ==
-  /moleculer-apollo-server/0.3.4_graphql@15.5.0+moleculer@0.14.13:
+  /moleculer-apollo-server/0.3.4_graphql@15.5.0+moleculer@0.14.18:
     dependencies:
       '@apollographql/graphql-playground-html': 1.6.28
       '@hapi/accept': 3.2.4
@@ -20136,7 +20135,7 @@ packages:
       graphql-tools: 4.0.8_graphql@15.5.0
       graphql-upload: 11.0.0_graphql@15.5.0
       lodash: 4.17.21
-      moleculer: 0.14.13
+      moleculer: 0.14.18_debug@4.3.1
       object-hash: 2.1.1
     dev: false
     engines:
@@ -20163,7 +20162,7 @@ packages:
       node: '>= 8.x.x'
     resolution:
       integrity: sha512-SxMwbWUzAkNZuMn3IFPUkl7gD1YOpKxT4ljBsz1ddafYd+iYi3ISxLuYjZAlz8dEHNbuTgkvMYyH4pzgkz2BGw==
-  /moleculer-web/0.9.1_moleculer@0.14.13:
+  /moleculer-web/0.9.1_moleculer@0.14.18:
     dependencies:
       body-parser: 1.19.0
       busboy: 0.3.1
@@ -20173,7 +20172,7 @@ packages:
       isstream: 0.1.2
       kleur: 3.0.3
       lodash: 4.17.21
-      moleculer: 0.14.13
+      moleculer: 0.14.18_debug@4.3.1
       path-to-regexp: 3.2.0
       qs: 6.10.1
       serve-static: 1.14.1
@@ -20184,15 +20183,14 @@ packages:
       moleculer: ^0.13.0 || ^0.14.0
     resolution:
       integrity: sha512-sq/NH4amE58mxaTl1JD7ohNpFqkE9K7VT9xkQKtonROjdf23imxz3r8WTh6zJv/FzmuklULlgf+LdIiPFZtI5A==
-  /moleculer/0.14.13:
+  /moleculer/0.14.18_debug@4.3.1:
     dependencies:
       args: 5.0.1
-      es6-error: 4.1.1
-      eventemitter2: 6.4.4
-      fastest-validator: 1.11.0
-      fn-args: 5.0.0
-      glob: 7.1.7
-      ipaddr.js: 2.0.0
+      debug: 4.3.1
+      eventemitter2: 6.4.5
+      fastest-validator: 1.12.0
+      glob: 7.2.0
+      ipaddr.js: 2.0.1
       kleur: 4.1.4
       lodash: 4.17.21
       lru-cache: 6.0.0
@@ -20202,8 +20200,76 @@ packages:
     engines:
       node: '>= 10.x.x'
     hasBin: true
+    peerDependencies:
+      amqplib: ^0.7.0 || ^0.8.0
+      avsc: ^5.0.0
+      bunyan: ^1.0.0
+      cbor-x: ^0.8.3
+      dd-trace: ^0.33.0 || ^0.34.0 || ^0.35.0 || ^0.36.0 || >=1.0.0 <1.6.0
+      debug: ^4.0.0
+      etcd3: ^1.0.0
+      ioredis: ^4.0.0
+      jaeger-client: ^3.0.0
+      kafka-node: ^5.0.0
+      log4js: ^6.0.0
+      mqtt: ^4.0.0
+      msgpack5: ^5.0.0
+      nats: ^1.0.0 || ^2.0.0
+      node-nats-streaming: ^0.0.51 || ^0.2.0 || ^0.3.0
+      notepack.io: 2.0.0
+      pino: ^6.0.0 || ^7.0.0
+      protobufjs: ^6.0.0
+      redlock: ^4.0.0
+      rhea-promise: ^1.0.0 || ^2.0.0
+      thrift: ^0.12.0
+      winston: ^3.0.0
+    peerDependenciesMeta:
+      amqplib:
+        optional: true
+      avsc:
+        optional: true
+      bunyan:
+        optional: true
+      cbor-x:
+        optional: true
+      dd-trace:
+        optional: true
+      debug:
+        optional: true
+      etcd3:
+        optional: true
+      ioredis:
+        optional: true
+      jaeger-client:
+        optional: true
+      kafka-node:
+        optional: true
+      log4js:
+        optional: true
+      mqtt:
+        optional: true
+      msgpack5:
+        optional: true
+      nats:
+        optional: true
+      node-nats-streaming:
+        optional: true
+      notepack.io:
+        optional: true
+      pino:
+        optional: true
+      protobufjs:
+        optional: true
+      redlock:
+        optional: true
+      rhea-promise:
+        optional: true
+      thrift:
+        optional: true
+      winston:
+        optional: true
     resolution:
-      integrity: sha512-ak5MIFWb0WwMBIIqw/cKlhFj+0huA7LjAYrv5bLSdluG0+aBRl3ZtST+6Ix4UA5qZ6cwhMsX+m9QtXGIs6CdVA==
+      integrity: sha512-5+bVT0TC1MfKq3YkOKQxCr9KbdCBmfs+9AZKJBYyO+ewEIiElHZBs3NuFeHLO+wO8ti0qMh2R31r28vEyCI2tA==
   /moment/2.29.1:
     resolution:
       integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
@@ -20609,6 +20675,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-MN6ZpzmfNCRM+3t57PTJHgHyw/h4OWnZ6mR8P5j/uZtqQr46RRuDE/P+g3n0YR/AiYXeWixZZzaip77gdICfRg==
+  /node-gyp-build/4.3.0:
+    hasBin: true
+    resolution:
+      integrity: sha512-iWjXZvmboq0ja1pUGULQBexmxq8CV4xBhX7VDOTbL7ZR4FOowwY/VOtRxBN/yKxmdGoIp4j5ysNT4u3S2pDQ3Q==
   /node-int64/0.4.0:
     resolution:
       integrity: sha1-h6kGXNs1XTGC2PlM4RGIuCXGijs=
@@ -22799,6 +22869,7 @@ packages:
     resolution:
       integrity: sha1-nsYfeQSYdXB9aUFFlv2Qek1xHnM=
   /querystring/0.2.0:
+    deprecated: The querystring API is considered Legacy. new code should use the URLSearchParams API instead.
     engines:
       node: '>=0.4.x'
     resolution:
@@ -24701,13 +24772,12 @@ packages:
       xsalsa20: 1.1.0
     resolution:
       integrity: sha512-J2Zzj61bo41oBO4yEM9hTaNo3J98AcmFctjRg3D7+0A5cXdB1jlQOHV1qo2NavDU3BpqCfxdHW5UXCv565zh6Q==
-  /sodium-native/3.2.1:
+  /sodium-native/3.3.0:
     dependencies:
-      ini: 1.3.8
-      node-gyp-build: 4.2.3
+      node-gyp-build: 4.3.0
     requiresBuild: true
     resolution:
-      integrity: sha512-EgDZ/Z7PxL2kCasKk7wnRkV8W9kvwuIlHuHXAxkQm3FF0MgVsjyLBXGjSRGhjE6u7rhSpk3KaMfFM23bfMysIQ==
+      integrity: sha512-rg6lCDM/qa3p07YGqaVD+ciAbUqm6SoO4xmlcfkbU5r1zIGrguXztLiEtaLYTV5U6k8KSIUFmnU3yQUSKmf6DA==
   /sodium-universal/3.0.4:
     dependencies:
       blake2b: 2.1.3
@@ -24718,7 +24788,7 @@ packages:
       sha512-universal: 1.1.2
       siphash24: 1.1.1
       sodium-javascript: 0.7.3
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
       xsalsa20: 1.1.0
     resolution:
       integrity: sha512-WnBQ0GDo/82shKQHZBZT9h4q4miCtxkbzcwVLsCBPWNq4qbq8BXhKICt9nPwQAsJ43ct/rF61FKu4t0druUBug==
@@ -26558,10 +26628,10 @@ packages:
       node: '>= 0.4.0'
     resolution:
       integrity: sha1-n5VxD1CiZ5R7LMwSR0HBAoQn5xM=
-  /utp-native/2.4.0:
+  /utp-native/2.5.3:
     dependencies:
       napi-macros: 2.0.0
-      node-gyp-build: 4.2.3
+      node-gyp-build: 4.3.0
       readable-stream: 3.6.0
       timeout-refresh: 1.0.3
       unordered-set: 2.0.1
@@ -26571,7 +26641,7 @@ packages:
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-jKwpFiEaDUuNH5S4vVk/+waAX+yA6f3Lw4flqOROH1ZE/jcT4mh0/hjIGSuPP9j9RbQcsBG6Fu6LaFk4ojXFxw==
+      integrity: sha512-sWTrWYXPhhWJh+cS2baPzhaZc89zwlWCfwSthUjGhLkZztyPhcQllo+XVVCbNGi7dhyRlxkWxN4NKU6FbA9Y8w==
   /uuid-browser/3.1.0:
     dev: true
     resolution:
@@ -27391,7 +27461,7 @@ packages:
       integrity: sha512-AsAqZfPAuWx7qB/0kyRDUEvoU3QKsHWzHU9smFlkaiprEpGfJ/NBbLze2Uq0rdkxCxkNM9uOLvz/KoNBCbZiLQ==
   /xsalsa20-universal/1.0.0:
     dependencies:
-      sodium-native: 3.2.1
+      sodium-native: 3.3.0
       xsalsa20: 1.1.0
     resolution:
       integrity: sha512-0M/X61wiKKAGAMqsxEyJ0kY6NtjpcMiKinYSSsl4K7ypgvqXDTMwQK6hxnYE1s1Jm7h6YKcN8obDUg2CC+jVGA==
