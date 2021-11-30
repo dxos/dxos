@@ -6,13 +6,13 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { latch } from '@dxos/async';
+import { ObjectModel } from '@dxos/object-model';
 import { createBundledRpcServer, createLinkedPorts, RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from './client';
 import { clientServiceBundle } from './interfaces';
 import { InvitationProcess } from './proto/gen/dxos/client';
-import { ObjectModel } from '@dxos/object-model';
 
 describe('Client', () => {
   function testSuite (createClient: () => Promise<Client>) {
@@ -112,11 +112,11 @@ describe('Client', () => {
         const party = await client.echo.createParty();
 
         const item = await party.database.createItem({ model: ObjectModel });
-        await item.model.setProperty('foo', 'bar')
+        await item.model.setProperty('foo', 'bar');
 
         expect(item.model.getProperty('foo')).toEqual('bar');
-      })
-    })
+      });
+    });
   }
 
   describe('local', () => {

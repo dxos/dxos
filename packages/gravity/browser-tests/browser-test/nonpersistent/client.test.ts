@@ -80,7 +80,7 @@ describe('Client - nonpersistent', () => {
       username: 'DXOS test 2'
     });
 
-    const invite = await party.createInvitation(defaultInvitationAuthenticator);
+    const invite = await client.createInvitation(party.key, defaultInvitationAuthenticator.secretProvider);
     const otherParty = await otherClient.echo.joinParty(invite, defaultSecretProvider);
 
     const otherItem = otherParty.database.select(s => s.filter({ type: 'dxn://test' }).items).getValue()[0];
@@ -112,7 +112,7 @@ describe('Client - nonpersistent', () => {
     // Online (adds contact).
     {
       const party1A = await clientA.echo.createParty();
-      const invite1 = await party1A.createInvitation(defaultInvitationAuthenticator);
+      const invite1 = await clientA.createInvitation(party1A.key, defaultInvitationAuthenticator.secretProvider);
       await clientB.echo.joinParty(invite1, defaultSecretProvider);
     }
 
@@ -121,7 +121,7 @@ describe('Client - nonpersistent', () => {
     // Offline (use existing contact).
     {
       const party2A = await clientA.echo.createParty();
-      const invite2 = await party2A.createOfflineInvitation(contact.publicKey);
+      const invite2 = await clientA.createOfflineInvitation(party2A.key, contact.publicKey);
       await clientB.echo.joinParty(invite2);
     }
 

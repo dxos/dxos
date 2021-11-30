@@ -26,7 +26,7 @@ import { PartyProxy } from '@dxos/client';
 import { Party } from '@dxos/echo-db';
 import { labels } from '@dxos/echo-testing';
 import { ObjectModel } from '@dxos/object-model';
-import { useSelection, searchSelector } from '@dxos/react-client';
+import { useSelection, searchSelector, useClient } from '@dxos/react-client';
 
 import {
   CardView,
@@ -94,6 +94,7 @@ interface MainProps {
 
 export const Main = ({ party, code }: MainProps) => {
   const classes = useStyles();
+  const client = useClient();
 
   const [adapter] = useState(createAdapter(party.database));
   const [search, setSearch] = useState<string | undefined>(undefined);
@@ -136,10 +137,7 @@ export const Main = ({ party, code }: MainProps) => {
 
   const handleCopyInvite = async () => {
     assert(code);
-    const invitation = await party.createInvitation({
-      secretProvider: async () => Buffer.from(code),
-      secretValidator: async () => true
-    });
+    const invitation = await client.createInvitation(party.key, async () => Buffer.from(code));
 
     const invitationText = JSON.stringify(invitation.toQueryParameters());
     await navigator.clipboard.writeText(invitationText);

@@ -10,6 +10,7 @@ import { Client, PartyProxy } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
 import { Browser, ONLINE_CONFIG } from '../playwright/utils';
+import { defaultInvitationAuthenticator } from '@dxos/echo-db';
 
 const ROWS = parseInt(process.env.GRID_DEMO_ROWS ?? '2');
 const COLUMNS = parseInt(process.env.GRID_DEMO_COLUMNS ?? '4');
@@ -30,10 +31,7 @@ describe('Replication in a grid', function () {
   let party: PartyProxy;
  
   const createInvitation = async () => {
-    const invitationDescriptor = await party.createInvitation({
-      secretProvider: async () => Buffer.from('0000'),
-      secretValidator: async () => true
-    });
+    const invitationDescriptor = await inviter.createInvitation(party.key, defaultInvitationAuthenticator.secretProvider);
     return JSON.stringify(invitationDescriptor.toQueryParameters());
   };
 

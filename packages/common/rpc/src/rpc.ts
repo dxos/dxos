@@ -198,15 +198,15 @@ export class RpcPeer {
     let response: Response;
     try {
       response = await Promise.race([promise, timeoutPromise]);
-    } catch(err) {
+    } catch (err) {
       console.log({
         err,
-        inst: err instanceof RpcClosedError,
-      })
-      if(err instanceof RpcClosedError) {
+        inst: err instanceof RpcClosedError
+      });
+      if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
-        const error = new RpcClosedError()
-        error.stack += `\n\nRpc client was closed at:\n${err.stack}`
+        const error = new RpcClosedError();
+        error.stack += `\n\nRpc client was closed at:\n${err.stack}`;
         throw error;
       }
       throw err;
@@ -256,11 +256,11 @@ export class RpcPeer {
 
       const stack = new StackTrace();
 
-      function closeStream(error?: Error) {
-        if(!error) {
+      function closeStream (error?: Error) {
+        if (!error) {
           close();
         } else {
-          error.stack += `\n\nError happened in the stream at:\n${stack.getStack()}`
+          error.stack += `\n\nError happened in the stream at:\n${stack.getStack()}`;
           close(error);
         }
       }
