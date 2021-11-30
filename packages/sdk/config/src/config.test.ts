@@ -35,6 +35,35 @@ test('Basic config', () => {
   });
 });
 
+test('Config v1', () => {
+  const config = new Config({
+    version: 1,
+    module: {
+      name: 'dxos:app.tasks',
+      record: {
+        app: {
+          contentType: ['dxos:type.chess.board']
+        }
+      }
+    }
+  }, {
+    runtime: {
+      services: {
+        signal: {
+          server: 'ws://localhost:4000'
+        }
+      }
+    }
+  });
+
+  expect(config.values).toEqual({
+    app: {
+      title: 'testing',
+      theme: 'light'
+    }
+  });
+});
+
 test('Mapping', () => {
   process.env.TEST_CLIENT_ID = '900';
   process.env.TEST_SERVER_ENDPOINT = 'http://localhost';

@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-package dxos.config;
+package dxos.configv1;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/descriptor.proto";
@@ -218,17 +218,4 @@ message Runtime {
   CLI cli = 4;
   Props props = 5;
   Services services = 6;
-}
-
-extend google.protobuf.FieldOptions {
-  /**
-   * Name of the system env variable this config option maps to.
-   * For nested defintions names are concatenated with underscores.
-   */
-  string env = 5001;
-
-  /**
-   * Regex to validate string options.
-   */
-  string regex = 5002;
 }

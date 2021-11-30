@@ -3,8 +3,9 @@
 //
 
 import type { Config as ConfigObject } from './proto/gen/dxos/config';
+import type { Config as ConfigV1Object } from './proto/gen/dxos/configv1';
 
-export type { ConfigObject };
+export type { ConfigObject, ConfigV1Object };
 
 type DotPrefix<T extends string> = T extends '' ? '' : `.${T}`
 
@@ -47,4 +48,4 @@ export type DeepIndex<T, KS extends Keys, Fail = undefined> =
 /**
  * Any nested dot separated key that can be in config.
  */
-export type ConfigKey = DotNestedKeys<ConfigObject>
+export type ConfigKey = DotNestedKeys<ConfigObject | ConfigV1Object>
