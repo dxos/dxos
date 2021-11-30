@@ -23,11 +23,14 @@ const log = debug('dxos:echo:items:data-service-host');
  */
 export class DataServiceHost {
   constructor (
-        private readonly _itemManager: ItemManager,
-        private readonly _itemDemuxer: ItemDemuxer,
-        private readonly _writeStream?: FeedWriter<EchoEnvelope>
-  ) {}
+    private readonly _itemManager: ItemManager,
+    private readonly _itemDemuxer: ItemDemuxer,
+    private readonly _writeStream?: FeedWriter<EchoEnvelope>
+  ) { }
 
+  /**
+   * Returns a stream with a list of active entities in the party.
+   */
   subscribeEntitySet (): Stream<SubscribeEntitySetResponse> {
     return new Stream(({ next }) => {
       const trackedSet = new Set<ItemID>();
@@ -75,6 +78,12 @@ export class DataServiceHost {
     });
   }
 
+  /**
+   * Returns a stream of uppdates for a single entity.
+   *
+   * First message is a snapshot of the entity.
+   * Subsequent messages are updates.
+   */
   subscribeEntityStream (request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
     return new Stream(({ next }) => {
       assert(request.itemId);
