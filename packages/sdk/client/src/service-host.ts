@@ -159,11 +159,14 @@ export class ClientServiceHost implements ClientServiceProvider {
           } else {
             return new Stream(({ next }) => {
               const subGroup = new SubscriptionGroup();
-              subGroup.push(this._echo.halo.identityReady.on(() => {
+
+              setImmediate(async () => {
+                await this._echo.halo.identityReady.waitForCondition(() => this._echo.halo.isInitialized);
+
                 const resultSet = this._echo.halo.queryContacts();
                 next({ contacts: resultSet.value });
                 subGroup.push(resultSet.update.on(() => next({ contacts: resultSet.value })));
-              }));
+              });
 
               return () => subGroup.unsubscribe();
             });

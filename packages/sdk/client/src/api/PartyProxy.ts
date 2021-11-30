@@ -4,12 +4,12 @@
 
 import assert from 'assert';
 
+import { PublicKey } from '@dxos/crypto';
 import { Database, Party as EchoParty, RemoteDatabaseBackend } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
 import { ClientServiceProvider } from '../interfaces';
-import { Party } from '../proto/gen/dxos/client';
 
 export class PartyProxy {
   private readonly _database: Database;
@@ -17,7 +17,7 @@ export class PartyProxy {
   constructor (
     private _serviceProvider: ClientServiceProvider,
     private _modelFactory: ModelFactory,
-    private _partyKey: Party['publicKey']
+    private _partyKey: PublicKey
   ) {
     this._database = new Database(
       this._modelFactory,
@@ -27,6 +27,10 @@ export class PartyProxy {
 
   async open () {
     await this._database.init();
+  }
+
+  async close () {
+    await this._database.destroy();
   }
 
   /**

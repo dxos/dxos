@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/crypto';
 import { ECHO } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceProvider } from '../interfaces';
 import { ClientServiceHost } from '../service-host';
@@ -17,6 +17,7 @@ export class EchoProxy {
   private readonly _modelFactory: ModelFactory;
   private _parties = new ComplexMap<PublicKey, PartyProxy>(key => key.toHex());
   private readonly _partiesChanged = new Event();
+  private readonly _subscriptions = new SubscriptionGroup();
 
   constructor (
     private readonly _serviceProvider: ClientServiceProvider
@@ -40,7 +41,10 @@ export class EchoProxy {
     return this.toString();
   }
 
-  open () {
+  /**
+   * @internal
+   */
+  _open () {
     const partiesStream = this._serviceProvider.services.PartyService.SubscribeParties();
     partiesStream.subscribe(async data => {
       for (const party of data.parties ?? []) {
@@ -52,6 +56,18 @@ export class EchoProxy {
       }
       this._partiesChanged.emit();
     }, () => {});
+    this._subscriptions.push(() => partiesStream.close());
+  }
+
+  /**
+   * @internal
+   */
+  async _close () {
+    for (const party of this._parties.values()) {
+      await party.close();
+    }
+
+    this._subscriptions.unsubscribe();
   }
 
   //
@@ -63,18 +79,17 @@ export class EchoProxy {
    */
   async createParty (): Promise<PartyProxy> {
     const [partyReceivedPromise, partyReceived] = latch();
-    
 
     const party = await this._serviceProvider.services.PartyService.CreateParty();
 
     const handler = () => {
-      if (this._parties.has(party.publicKey)){
+      if (this._parties.has(party.publicKey)) {
         partyReceived();
       }
-    }
-    this._partiesChanged.on(handler)
+    };
+    this._partiesChanged.on(handler);
     await partyReceivedPromise;
-    this._partiesChanged.off(handler)
+    this._partiesChanged.off(handler);
 
     return this._parties.get(party.publicKey)!;
   }

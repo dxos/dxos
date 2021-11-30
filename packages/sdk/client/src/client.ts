@@ -146,7 +146,8 @@ export class Client {
 
     await this._serviceProvider.open(onProgressCallback);
 
-    this._halo.open();
+    this._halo._open();
+    this._echo._open();
 
     this._initialized = true;
     clearInterval(timeout);
@@ -157,7 +158,8 @@ export class Client {
    */
   @synchronized
   async destroy () {
-    this._halo.close();
+    await this._echo._close();
+    this._halo._close();
 
     if (!this._initialized) {
       return;

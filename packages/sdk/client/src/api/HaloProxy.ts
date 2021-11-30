@@ -135,7 +135,7 @@ export class HaloProxy {
    *
    * @internal
    */
-  open () {
+  _open () {
     const profileStream = this._serviceProvider.services.ProfileService.SubscribeProfile();
     profileStream.subscribe(data => {
       this._profile = data.profile;
@@ -154,9 +154,9 @@ export class HaloProxy {
   /**
    * Destroy the instance and clean-up subscriptions.
    *
-   * @private
+   * @internal
    */
-  close () {
+  _close () {
     this._subscriptions.unsubscribe();
   }
 }
