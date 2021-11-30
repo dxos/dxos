@@ -20,6 +20,6 @@
     "experimentalDecorators": true,
     "stripInternal": true,
   },
-  "include": ["**/src/**/*.ts","**/src/**/*.tsx", "packages/bot/test-bot/build-bot.test.ts"],
+  "include": ["**/src/**/*.ts","**/src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }
