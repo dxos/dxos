@@ -20,13 +20,27 @@ import { BotFactoryClient, setupBroker, setupClient } from './testutils';
 describe('Build bot', () => {
   let outfile: string;
   const botPath = './bots/echo-bot.ts';
+  const outdir = path.join(require.resolve('.'), '..', '..', 'out');
+
+  before(() => {
+    if (!fs.existsSync(outdir)) {
+      fs.mkdirSync(outdir);
+    }
+  });
 
   beforeEach(() => {
-    outfile = path.join(path.dirname(require.resolve(botPath)), createId() + '.js');
+    outfile = path.join(outdir, createId() + '.js');
   });
 
   afterEach(() => {
     fs.unlinkSync(outfile);
+  });
+
+  it('Build benchmark', async () => {
+    await buildBot({
+      entryPoint: require.resolve(botPath),
+      outfile
+    });
   });
 
   it('Builds and runs a test bot', async () => {
