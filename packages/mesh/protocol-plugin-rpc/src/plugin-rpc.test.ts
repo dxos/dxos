@@ -101,14 +101,14 @@ describe('Protocol plugin rpc', () => {
       });
     });
     const { plugin: clientPeer } = createClientPeer(topic);
+
+    await waitForCondition(() => !!server);
+    assert(server);
     const clientPort = await clientPeer.getRpcPort();
 
     const client = createRpcClient(service, {
       port: clientPort
     });
-
-    await waitForCondition(() => !!server);
-    assert(server);
 
     await Promise.all([
       server.open(),
