@@ -58,9 +58,21 @@ test('Config v1', () => {
   });
 
   expect(config.values).toEqual({
-    app: {
-      title: 'testing',
-      theme: 'light'
+    version: 1,
+    module: {
+      name: 'dxos:app.tasks',
+      record: {
+        app: {
+          contentType: ['dxos:type.chess.board']
+        }
+      }
+    },
+    runtime: {
+      services: {
+        signal: {
+          server: 'ws://localhost:4000'
+        }
+      }
     }
   });
 });
