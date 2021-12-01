@@ -81,11 +81,11 @@ describe('Protocol plugin rpc', () => {
     await client.close();
     await server.close();
   });
-  
+
   it('Works with protobuf service', async () => {
     const service = schema.getService('dxos.rpc.test.TestService');
     const topic = PublicKey.random();
-  
+
     let server: RpcPeer | undefined;
     createServerPeer(topic, (port) => {
       server = createRpcServer({

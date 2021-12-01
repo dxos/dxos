@@ -5,7 +5,6 @@
 import { Event } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
 import { RpcPort } from '@dxos/rpc';
-import assert from 'assert';
 
 import { extensionName } from './extension-name';
 import { createPort, getPeerId } from './helpers';

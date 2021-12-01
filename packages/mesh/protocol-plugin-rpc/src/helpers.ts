@@ -7,6 +7,7 @@ import assert from 'assert';
 import { Event, waitForCondition } from '@dxos/async';
 import { Protocol } from '@dxos/protocol';
 import { RpcPort } from '@dxos/rpc';
+
 import { extensionName } from './extension-name';
 
 export interface SerializedObject {
@@ -18,7 +19,7 @@ export const getPeerId = (peer: Protocol) => {
   return peerId as string;
 };
 
-export const createPort  = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => {
+export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => {
   await waitForCondition(() => peer.connected);
   return {
     send: async (msg) => {
@@ -34,5 +35,5 @@ export const createPort  = async (peer: Protocol, receive: Event<SerializedObjec
       receive.on(adapterCallback);
       return () => receive.off(adapterCallback);
     }
-  }
+  };
 };
