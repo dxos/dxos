@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event, waitForCondition } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
 import { RpcPort } from '@dxos/rpc';
 
@@ -22,16 +22,16 @@ export class PluginRpcServer {
 
   constructor (private _onConnect: OnConnect) {}
 
-  createExtension(): Extension {
+  createExtension (): Extension {
     return new Extension(extensionName)
-    .setHandshakeHandler(this._onPeerConnect.bind(this))
-    .setMessageHandler(this._onMessage.bind(this))
-    .setCloseHandler(this._onPeerDisconnect.bind(this));
+      .setHandshakeHandler(this._onPeerConnect.bind(this))
+      .setMessageHandler(this._onMessage.bind(this))
+      .setCloseHandler(this._onPeerDisconnect.bind(this));
   }
 
   private async _onPeerConnect (peer: Protocol) {
     const receive = new Event<Uint8Array>();
-  
+
     const cleanup = await this._onConnect({
       send: () => {
         throw new Error('Port is not sendable');
@@ -41,9 +41,9 @@ export class PluginRpcServer {
         return () => receive.off(cb);
       }
     });
-  
+
     const peerId = getPeerId(peer);
-    
+
     this._peers.set(peerId, {
       peer,
       cleanup,
@@ -58,7 +58,7 @@ export class PluginRpcServer {
       await connection.cleanup();
     }
   }
-  
+
   private _onMessage (peer: Protocol, data: any) {
     const peerId = getPeerId(peer);
     const connection = this._peers.get(peerId);

@@ -6,17 +6,17 @@ import assert from 'assert';
 
 import { waitForCondition } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
+import { RpcPort } from '@dxos/rpc';
 
 import { extensionName } from './extension-name';
-import { RpcPort } from '@dxos/rpc';
 
 export class PluginRpcClient {
   private _peer: Protocol | undefined;
 
-  createExtension(): Extension {
+  createExtension (): Extension {
     return new Extension(extensionName)
-    .setHandshakeHandler(this._onPeerConnect.bind(this))
-    .setCloseHandler(this._onPeerDisconnect.bind(this));
+      .setHandshakeHandler(this._onPeerConnect.bind(this))
+      .setCloseHandler(this._onPeerDisconnect.bind(this));
   }
 
   private _onPeerConnect (peer: Protocol) {
@@ -45,9 +45,9 @@ export class PluginRpcClient {
   getRpcPort (): RpcPort {
     return {
       send: this.send.bind(this),
-      subscribe: () => { 
+      subscribe: () => {
         throw new Error('Port is not subscribable');
       }
-    }
+    };
   }
 }

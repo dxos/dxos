@@ -2,18 +2,18 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { afterTest } from '@dxos/testutils';
+import { waitForCondition } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
+import { afterTest } from '@dxos/testutils';
 
 import { PluginRpcClient } from './plugin-rpc-client';
 import { PluginRpcServer } from './plugin-rpc-server';
-import { waitForCondition } from '@dxos/async';
-import assert from 'assert';
 
 const createClientPeer = (topic: PublicKey) => {
   const networkManager = new NetworkManager();
@@ -31,7 +31,7 @@ const createClientPeer = (topic: PublicKey) => {
     topology: new StarTopology(topic)
   });
   return { plugin, networkManager };
-}
+};
 
 const createServerPeer = (topic: PublicKey, onConnect: (port: RpcPort) => void) => {
   const networkManager = new NetworkManager();
@@ -51,12 +51,14 @@ const createServerPeer = (topic: PublicKey, onConnect: (port: RpcPort) => void) 
     topology: new StarTopology(topic)
   });
   return { plugin, networkManager };
-}
+};
 
 describe('Protocol plugin rpc', () => {
   it('Sends a message via port', async () => {
     const topic = PublicKey.random();
-    const { networkManager: nms } = createServerPeer(topic, (port) => serverPort = port);
+    const { networkManager: nms } = createServerPeer(topic, (port) => {
+      serverPort = port;
+    });
     const { plugin: client, networkManager: nmc } = createClientPeer(topic);
     let serverPort: RpcPort | undefined;
     const clientPort = client.getRpcPort();
@@ -69,7 +71,7 @@ describe('Protocol plugin rpc', () => {
     serverPort.subscribe((msg) => {
       receivedMessage = msg;
     });
-    clientPort.send(message);
+    await clientPort.send(message);
 
     await waitForExpect(() => {
       expect(receivedMessage).toEqual(message);
