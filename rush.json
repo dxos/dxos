@@ -722,6 +722,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/protocol-plugin-rpc",
+      "projectFolder": "packages/mesh/protocol-plugin-rpc",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/signal",
       "projectFolder": "packages/mesh/signal",
       "shouldPublish": true,
