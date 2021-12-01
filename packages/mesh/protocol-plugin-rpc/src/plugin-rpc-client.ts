@@ -19,8 +19,9 @@ export class PluginRpcClient {
       .setCloseHandler(this._onPeerDisconnect.bind(this));
   }
 
-  private _onPeerConnect (peer: Protocol) {
+  private async _onPeerConnect (peer: Protocol) {
     this._peer = peer;
+    await peer.open();
   }
 
   private _onPeerDisconnect () {
@@ -28,7 +29,7 @@ export class PluginRpcClient {
   }
 
   async waitForConnection () {
-    await waitForCondition(() => !!this._peer);
+    await waitForCondition(() => !!this._peer?.connected);
   }
 
   async send (message: Uint8Array) {

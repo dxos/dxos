@@ -11,10 +11,14 @@ import { getPeerId } from './helpers';
 
 type OnConnect = (port: RpcPort) => Promise<() => Promise<void> | void>
 
+interface SerializedObject {
+  data: Buffer
+}
+
 interface Connection {
   peer: Protocol,
   cleanup: () => Promise<void> | void,
-  receive: Event<Uint8Array>
+  receive: Event<SerializedObject>
 }
 
 export class PluginRpcServer {
@@ -30,17 +34,22 @@ export class PluginRpcServer {
   }
 
   private async _onPeerConnect (peer: Protocol) {
-    const receive = new Event<Uint8Array>();
+    const receive = new Event<SerializedObject>();
 
     const cleanup = await this._onConnect({
       send: () => {
         throw new Error('Port is not sendable');
       },
       subscribe: (cb) => {
-        receive.on(cb);
-        return () => receive.off(cb);
+        const adapterCallback = (obj: SerializedObject) => {
+          cb(obj.data);
+        };
+        receive.on(adapterCallback);
+        return () => receive.off(adapterCallback);
       }
     });
+
+    await peer.open();
 
     const peerId = getPeerId(peer);
 
@@ -56,6 +65,7 @@ export class PluginRpcServer {
     const connection = this._peers.get(peerId);
     if (connection) {
       await connection.cleanup();
+      this._peers.delete(peerId);
     }
   }
 
@@ -68,6 +78,9 @@ export class PluginRpcServer {
   }
 
   async close () {
-    await Promise.all([]);
+    for (const connection of this._peers.values()) {
+      await connection.cleanup();
+      await connection.peer.close();
+    }
   }
 }

@@ -56,14 +56,16 @@ const createServerPeer = (topic: PublicKey, onConnect: (port: RpcPort) => void) 
 describe('Protocol plugin rpc', () => {
   it('Sends a message via port', async () => {
     const topic = PublicKey.random();
-    const { networkManager: nms } = createServerPeer(topic, (port) => {
+    let serverPort: RpcPort | undefined;
+    const { plugin: server } = createServerPeer(topic, (port) => {
       serverPort = port;
     });
-    const { plugin: client, networkManager: nmc } = createClientPeer(topic);
-    let serverPort: RpcPort | undefined;
+    const { plugin: client } = createClientPeer(topic);
     const clientPort = client.getRpcPort();
     await waitForCondition(() => !!serverPort);
     assert(serverPort);
+
+    await client.waitForConnection();
 
     const message = PublicKey.random().asUint8Array();
     let receivedMessage: Uint8Array | undefined;
@@ -74,9 +76,10 @@ describe('Protocol plugin rpc', () => {
     await clientPort.send(message);
 
     await waitForExpect(() => {
-      expect(receivedMessage).toEqual(message);
+      expect(receivedMessage && Buffer.from(receivedMessage).equals(message));
     });
 
-    await Promise.all([nmc.destroy(), nms.destroy()]);
+    await client.close();
+    await server.close();
   });
 });
