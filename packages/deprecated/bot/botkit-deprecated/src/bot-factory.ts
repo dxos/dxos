@@ -60,12 +60,12 @@ export class BotFactory {
   private _botManager?: BotManager;
   private _leaveSwarm?: () => void;
 
-  constructor (config: Config, botContainers: Record<string, BotContainer>) {
+  constructor (config: any, botContainers: Record<string, BotContainer>) {
     assert(config);
 
     log(`Started BotFactory with ${Object.keys(botContainers)} containers.`);
 
-    this._config = config;
+    this._config = new Config(config.values);
     this._topic = keyToBuffer(this._config.get('bot.topic'));
     // For simplicity of communication with BotFactory assume its PeerId is the same as topic.
     this._peerKey = this._topic;
