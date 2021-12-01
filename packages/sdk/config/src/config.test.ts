@@ -8,6 +8,7 @@ import { it as test } from 'mocha';
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
 import envmap from './testing/env_map.json';
 import defaults from './testing/test.json';
+import { ConfigV1Object } from './types';
 
 test('Empty config', () => {
   const config = new Config({});
@@ -31,6 +32,47 @@ test('Basic config', () => {
     app: {
       title: 'testing',
       theme: 'light'
+    }
+  });
+});
+
+test('Config v1', () => {
+  const config = new Config<ConfigV1Object>({
+    version: 1,
+    module: {
+      name: 'dxos:app.tasks',
+      record: {
+        app: {
+          contentType: ['dxos:type.chess.board']
+        }
+      }
+    }
+  }, {
+    runtime: {
+      services: {
+        signal: {
+          server: 'ws://localhost:4000'
+        }
+      }
+    }
+  });
+
+  expect(config.values).toEqual({
+    version: 1,
+    module: {
+      name: 'dxos:app.tasks',
+      record: {
+        app: {
+          contentType: ['dxos:type.chess.board']
+        }
+      }
+    },
+    runtime: {
+      services: {
+        signal: {
+          server: 'ws://localhost:4000'
+        }
+      }
     }
   });
 });
