@@ -5,9 +5,10 @@
 import { Event } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
 import { RpcPort } from '@dxos/rpc';
+import assert from 'assert';
 
 import { extensionName } from './extension-name';
-import { getPeerId } from './helpers';
+import { createPort, getPeerId } from './helpers';
 
 type OnConnect = (port: RpcPort) => Promise<() => Promise<void> | void>
 
@@ -36,18 +37,8 @@ export class PluginRpcServer {
   private async _onPeerConnect (peer: Protocol) {
     const receive = new Event<SerializedObject>();
 
-    const cleanup = await this._onConnect({
-      send: () => {
-        throw new Error('Port is not sendable');
-      },
-      subscribe: (cb) => {
-        const adapterCallback = (obj: SerializedObject) => {
-          cb(obj.data);
-        };
-        receive.on(adapterCallback);
-        return () => receive.off(adapterCallback);
-      }
-    });
+    const port = await createPort(peer, receive);
+    const cleanup = await this._onConnect(port);
 
     await peer.open();
 

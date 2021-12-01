@@ -32,6 +32,7 @@
     "expect": "~27.0.2",
     "@types/expect": "~24.3.0",
     "@dxos/toolchain-node-library": "workspace:*",
-    "@dxos/testutils": "workspace:*"
+    "@dxos/testutils": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*"
   }
 }

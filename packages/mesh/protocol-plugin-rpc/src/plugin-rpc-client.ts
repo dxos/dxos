@@ -4,18 +4,21 @@
 
 import assert from 'assert';
 
-import { waitForCondition } from '@dxos/async';
+import { Event, waitForCondition } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
 import { RpcPort } from '@dxos/rpc';
 
 import { extensionName } from './extension-name';
+import { createPort, SerializedObject } from './helpers';
 
 export class PluginRpcClient {
   private _peer: Protocol | undefined;
+  private _receive: Event<SerializedObject> = new Event();
 
   createExtension (): Extension {
     return new Extension(extensionName)
       .setHandshakeHandler(this._onPeerConnect.bind(this))
+      .setMessageHandler(this._onMessage.bind(this))
       .setCloseHandler(this._onPeerDisconnect.bind(this));
   }
 
@@ -28,27 +31,18 @@ export class PluginRpcClient {
     this._peer = undefined;
   }
 
-  async waitForConnection () {
-    await waitForCondition(() => !!this._peer?.connected);
-  }
-
-  async send (message: Uint8Array) {
-    assert(this._peer?.connected, 'Peer is not connected');
-    const extension = this._peer.getExtension(extensionName);
-    assert(extension, 'Extension is not set');
-    await extension.send(message);
+  private async _onMessage (peer: Protocol, data: any) {
+    this._receive.emit(data);
   }
 
   async close () {
     await this._peer?.close();
   }
 
-  getRpcPort (): RpcPort {
-    return {
-      send: this.send.bind(this),
-      subscribe: () => {
-        throw new Error('Port is not subscribable');
-      }
-    };
+  async getRpcPort (): Promise<RpcPort> {
+    await waitForCondition(() => this._peer);
+    assert(this._peer);
+    const port = await createPort(this._peer, this._receive);
+    return port;
   }
 }
