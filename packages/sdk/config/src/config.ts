@@ -8,7 +8,7 @@ import get from 'lodash.get';
 import set from 'lodash.set';
 
 import { sanitizeConfig, sanitizeV1Config } from './sanitizer';
-import { ConfigObject, ConfigV1Object, ConfigKey, DeepIndex, ParseKey } from './types';
+import { ConfigObject, ConfigKey, DeepIndex, ParseKey } from './types';
 
 type MappingSpec = Record<string, { path: string, type?: string }>;
 
@@ -87,7 +87,7 @@ export function mapToKeyValues (spec: MappingSpec, values: any) {
  * Global configuration object.
  * NOTE: Config objects are immutable.
  */
-export class Config {
+export class Config<T = ConfigObject> {
   private readonly _config: any;
 
   /**
@@ -95,18 +95,16 @@ export class Config {
    * @constructor
    * @param objects
    */
-  constructor (...objects: [ConfigV1Object, ...ConfigV1Object[]])
-  constructor (...objects: [ConfigObject, ...ConfigObject[]])
-
-  constructor (...objects: [any, ...any[]]) {
-    const sanitizeFunc = (objects[0].version) ? sanitizeV1Config : sanitizeConfig
+  constructor (...objects: [T, ...T[]]) {
+    const defaultConf = objects[0] as any;
+    const sanitizeFunc = (defaultConf.version) ? sanitizeV1Config : sanitizeConfig;
     this._config = sanitizeFunc(defaultsDeep(...objects));
   }
 
   /**
    * Returns an immutable config JSON object.
    */
-  get values (): ConfigObject | ConfigV1Object {
+  get values (): T {
     return this._config;
   }
 
@@ -117,7 +115,7 @@ export class Config {
    * @param defaultValue Default value to return if option is not present in the config.
    * @returns The config value or undefined if the option is not present.
    */
-  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigObject | ConfigV1Object, ParseKey<K>>): DeepIndex<ConfigObject | ConfigV1Object, ParseKey<K>> {
+  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<T, ParseKey<K>>): DeepIndex<T, ParseKey<K>> {
     return get(this._config, key, defaultValue);
   }
 
@@ -135,8 +133,8 @@ export class Config {
    *
    * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
    */
-  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<ConfigObject | ConfigV1Object, ParseKey<K>>, undefined> {
-    const value = this.get(this._config, key);
+  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<T, ParseKey<K>>, undefined> {
+    const value = get(this._config, key);
     if (!value) {
       throw new Error(`Config option not present: ${key}`);
     }
