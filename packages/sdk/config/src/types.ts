@@ -48,4 +48,5 @@ export type DeepIndex<T, KS extends Keys, Fail = undefined> =
 /**
  * Any nested dot separated key that can be in config.
  */
+// TODO(egorgripasov): Clean once old config deprecated.
 export type ConfigKey = DotNestedKeys<ConfigObject | ConfigV1Object>

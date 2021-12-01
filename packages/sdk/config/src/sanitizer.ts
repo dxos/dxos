@@ -13,29 +13,17 @@ export type { ConfigObject, ConfigV1Object };
 const configRootType = schema.getCodecForType('dxos.config.Config');
 const configV1RootType = schema.getCodecForType('dxos.configv1.Config');
 
-export function sanitizeConfig (value: any): ConfigObject {
-  const error = configRootType.protoType.verify(value);
+export function sanitizeConfig (value: any): ConfigObject | ConfigV1Object {
+  // TODO(egorgripasov): Clean once old config deprecated.
+  const confRootType = value?.version === 1 ? configV1RootType : configRootType;
+
+  const error = confRootType.protoType.verify(value);
   if (error) {
     console.warn(`Invalid config: ${error}`);
   }
 
   const ctx: Context = { errors: [] };
-  visitMessage(configRootType.protoType, value, '', ctx);
-  if (ctx.errors.length > 0) {
-    console.warn(`Invalid config:\n${ctx.errors.join('\n')}`);
-  }
-
-  return value;
-}
-
-export function sanitizeV1Config (value: any): ConfigV1Object {
-  const error = configV1RootType.protoType.verify(value);
-  if (error) {
-    console.warn(`Invalid config: ${error}`);
-  }
-
-  const ctx: Context = { errors: [] };
-  visitMessage(configV1RootType.protoType, value, '', ctx);
+  visitMessage(confRootType.protoType, value, '', ctx);
   if (ctx.errors.length > 0) {
     console.warn(`Invalid config:\n${ctx.errors.join('\n')}`);
   }

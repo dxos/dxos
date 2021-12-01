@@ -7,7 +7,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
 import set from 'lodash.set';
 
-import { sanitizeConfig, sanitizeV1Config } from './sanitizer';
+import { sanitizeConfig } from './sanitizer';
 import { ConfigObject, ConfigKey, DeepIndex, ParseKey } from './types';
 
 type MappingSpec = Record<string, { path: string, type?: string }>;
@@ -96,9 +96,7 @@ export class Config<T = ConfigObject> {
    * @param objects
    */
   constructor (...objects: [T, ...T[]]) {
-    const defaultConf = objects[0] as any;
-    const sanitizeFunc = (defaultConf.version) ? sanitizeV1Config : sanitizeConfig;
-    this._config = sanitizeFunc(defaultsDeep(...objects));
+    this._config = sanitizeConfig(defaultsDeep(...objects));
   }
 
   /**
