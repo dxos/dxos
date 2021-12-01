@@ -25,7 +25,7 @@ export const FACTORY_BOT_DIR = '.bots';
 // Config to override.
 export const OVERRIDE_CONFIG = {
   DX_SIGNAL_ENDPOINT: 'ws://localhost:4999',
-  DX_CLI_NODE_PATH: 'test'
+  DX_CLI_NODE_PATH: './test/path'
 };
 
 export const getTestConfig = async () => {
