@@ -200,10 +200,7 @@ export class RpcPeer {
     if (response.payload) {
       return response.payload;
     } else if (response.error) {
-      assert(response.error.name);
-      assert(response.error.message);
-      assert(response.error.stack);
-      throw new SerializedRpcError(response.error.name, response.error.message, response.error.stack, method);
+      throw new SerializedRpcError(response.error.name ?? 'UnknownError', response.error.message ?? 'Unknown Error', response.error.stack ?? '', method);
     } else {
       throw new Error('Malformed response.');
     }
