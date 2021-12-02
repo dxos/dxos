@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
 import { RpcPort } from '@dxos/rpc';
 
-type OnConnect = (port: RpcPort) => Promise<() => Promise<void> | void>
+type OnConnect = (port: RpcPort, peerId: string) => Promise<() => Promise<void> | void>
 
 interface SerializedObject {
   data: Buffer
@@ -58,14 +58,13 @@ export class PluginRpc {
   }
 
   private async _onPeerConnect (peer: Protocol) {
+    const peerId = getPeerId(peer);
     const receive = new Event<SerializedObject>();
 
     const port = await createPort(peer, receive);
-    const cleanup = await this._onConnect(port);
+    const cleanup = await this._onConnect(port, peerId);
 
     await peer.open();
-
-    const peerId = getPeerId(peer);
 
     this._peers.set(peerId, {
       peer,
