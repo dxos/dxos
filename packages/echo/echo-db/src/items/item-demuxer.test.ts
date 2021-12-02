@@ -9,7 +9,7 @@ import { it as test } from 'mocha';
 import { latch } from '@dxos/async';
 import { createId, createKeyPair, PublicKey, randomBytes } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream } from '@dxos/echo-protocol';
+import { createMockFeedWriterFromStream, EchoEnvelope, IEchoStream, MockFeedWriter } from '@dxos/echo-protocol';
 import { createTransform } from '@dxos/feed-store';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -25,27 +25,21 @@ const createPublicKey = () => PublicKey.from(createKeyPair().publicKey);
 
 describe('Item demuxer', () => {
   test('set-up', async () => {
-    const feedKey = createPublicKey();
-    const memberKey = createPublicKey();
+    const memberKey = PublicKey.random();
 
     const modelFactory = new ModelFactory()
       .registerModel(TestModel)
       .registerModel(DefaultModel);
 
-    const writeStream = createTransform<EchoEnvelope, IEchoStream>(
-      async (message: EchoEnvelope): Promise<IEchoStream> => ({
-        meta: {
-          feedKey: feedKey.asUint8Array(),
-          memberKey: memberKey.asUint8Array(),
-          seq: 0
-        },
-        data: message
-      })
-    );
-
-    const itemManager = new ItemManager(modelFactory, createMockFeedWriterFromStream(writeStream));
+    const feedWriter = new MockFeedWriter();
+    const itemManager = new ItemManager(modelFactory, feedWriter);
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
-    writeStream.pipe(itemDemuxer.open());
+
+    const inboundStream = itemDemuxer.open();
+    feedWriter.written.on(([msg, meta]) => inboundStream.write({
+      data: msg,
+      meta: { ...meta, memberKey }
+    } as any));
 
     //
     // Query for items.
@@ -66,7 +60,7 @@ describe('Item demuxer', () => {
         modelType: TestModel.meta.type
       }
     };
-    await writeStream.write(message);
+    await feedWriter.write(message);
 
     //
     // Wait for mutations to be processed.
