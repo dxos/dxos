@@ -12,7 +12,7 @@ export class SerializedRpcError extends Error {
     // https://stackoverflow.com/a/48342359
     Object.setPrototypeOf(this, new.target.prototype);
     this.name = name;
-    this.stack = remoteStack + `\n    ========[ RPC call: ${rpcMethod} ]========\n` + preprocessStack(this.stack!);
+    this.stack = remoteStack + `\n at RPC call: ${rpcMethod} \n` + preprocessStack(this.stack!);
   }
 }
 

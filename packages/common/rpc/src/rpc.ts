@@ -315,9 +315,19 @@ export class RpcPeer {
 }
 
 function encodeError (err: any): ErrorResponse {
-  return {
-    name: err.name,
-    message: err.message,
-    stack: err.stack
-  };
+  if (typeof err === 'object' && err?.message) {
+    return {
+      name: err.name,
+      message: err.message,
+      stack: err.stack
+    };
+  } else if (typeof err === 'string') {
+    return {
+      message: err
+    };
+  } else {
+    return {
+      message: JSON.stringify(err)
+    };
+  }
 }
