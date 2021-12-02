@@ -5,7 +5,9 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { latch } from '@dxos/async';
+import { latch, sleep, waitForCondition } from '@dxos/async';
+import { defs } from '@dxos/config';
+import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { createBundledRpcServer, createLinkedPorts, RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
@@ -143,5 +145,49 @@ describe('Client', () => {
 
       return new Client({ system: { remote: true } }, { rpcPort: proxyPort });
     });
+  });
+
+  test('late-register models after refresh', async () => {
+    const config: defs.Config = {
+      system: {
+        storage: {
+          persistent: true,
+          path: `/tmp/dxos-${Date.now()}`
+        }
+      }
+    };
+
+    {
+      const client = new Client(config).registerModel(TestModel);
+      await client.initialize();
+      await client.halo.createProfile({ username: 'test-user' });
+      const party = await client.echo.createParty();
+      const item = await party.database.createItem({ model: TestModel, type: 'test' });
+      await item.model.setProperty('prop', 'value1');
+
+      await client.destroy();
+    }
+
+    {
+      const client = new Client(config);
+      await client.initialize();
+      await waitForCondition(() => client.halo.hasProfile());
+      await sleep(10); // Make sure all events were processed.
+
+      client.registerModel(TestModel);
+
+      const party = client.echo.queryParties().first;
+      const selection = party.database.select(s => s.filter({ type: 'test' }).items);
+      await selection.update.waitForCondition(() => selection.getValue().length > 0);
+
+      const item = selection.expectOne();
+
+      expect(item.model.getProperty('prop')).toEqual('value1');
+
+      await item.model.setProperty('prop', 'value2');
+      expect(item.model.getProperty('prop')).toEqual('value2');
+
+      await client.destroy();
+    }
   });
 });

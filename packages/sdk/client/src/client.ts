@@ -7,7 +7,7 @@ import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
 import { Config, defs } from '@dxos/config';
-import { defaultSecretValidator, SecretProvider } from '@dxos/credentials';
+import { defaultSecretValidator } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { InvalidParameterError, raise, TimeoutError } from '@dxos/debug';
 import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
