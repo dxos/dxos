@@ -1,5 +1,15 @@
 # Change Log
 
+### [2.18.3](https://www.github.com/dxos/protocols/compare/v2.18.2...v2.18.3) (2021-12-02)
+
+
+### Bug Fixes
+
+* config v1. ([#705](https://www.github.com/dxos/protocols/issues/705)) ([33c09fc](https://www.github.com/dxos/protocols/commit/33c09fc7a14f4898d96ee7ccfcd9ee7f4c504a1d))
+* Incorrect model meta on re-hydrated models ([#712](https://www.github.com/dxos/protocols/issues/712)) ([ef09cea](https://www.github.com/dxos/protocols/commit/ef09cea7be45a43d1e313ce45ffb0583bcf9b4f8))
+* Remove asserts around error handling [#711](https://www.github.com/dxos/protocols/issues/711) ([0606dc8](https://www.github.com/dxos/protocols/commit/0606dc86332e4fa0368a63e56fa57a1e56884953))
+* Split bot definition and bot start ([#716](https://www.github.com/dxos/protocols/issues/716)) ([c5406d7](https://www.github.com/dxos/protocols/commit/c5406d7f28b7b1cf7a8bcc2ab0e75cfe861aa778))
+
 ### [2.18.2](https://www.github.com/dxos/protocols/compare/v2.18.1...v2.18.2) (2021-11-30)
 
 

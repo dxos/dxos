@@ -1,6 +1,6 @@
 {
   "name": "@dxos/testutils",
-  "version": "2.18.2",
+  "version": "2.18.3",
   "description": "Test utilities",
   "bugs": {
     "url": "'https://github.com/dxos/protocols/issues"
