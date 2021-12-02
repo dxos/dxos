@@ -20,10 +20,10 @@ const OBJECT_PERSON = 'dxn://dxos/object/person';
 const LINK_EMPLOYEE = 'dxn://dxos/link/employee';
 
 const createItem = (id: ItemID, type: ItemType) =>
-  new Item(id, type, ObjectModel.meta, new ObjectModel(ObjectModel.meta, id));
+  new Item(id, type, new ObjectModel(ObjectModel.meta, id));
 
 const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
-  const link = new Link(id, type, ObjectModel.meta, new ObjectModel(ObjectModel.meta, id), {
+  const link = new Link(id, type, new ObjectModel(ObjectModel.meta, id), {
     sourceId: source.id,
     targetId: target.id,
     source: source,

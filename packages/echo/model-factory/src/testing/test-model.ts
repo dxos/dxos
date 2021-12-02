@@ -32,10 +32,11 @@ export class TestModel extends Model<TestItemMutation> {
   }
 
   async setProperty (key: string, value: string) {
-    await this.write(checkType<TestItemMutation>({
+    const receipt = await this.write(checkType<TestItemMutation>({
       key,
       value
     }));
+    await receipt.waitToBeProcessed();
   }
 
   async _processMessage (meta: FeedMeta, message: TestItemMutation) {

@@ -19,7 +19,7 @@ import { BotFactoryClient, setupBroker, setupClient } from './testutils';
 
 describe('Build bot', () => {
   let outfile: string;
-  const botPath = './bots/echo-bot.ts';
+  const botPath = './bots/start-echo-bot.ts';
   const outdir = path.join(require.resolve('.'), '..', '..', 'out');
 
   before(() => {

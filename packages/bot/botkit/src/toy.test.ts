@@ -148,7 +148,7 @@ describe('Node', () => {
 
       const { id } = await botFactoryClient.botFactory.SpawnBot({
         package: {
-          localPath: require.resolve('./bots/echo-bot')
+          localPath: require.resolve('./bots/start-echo-bot')
         },
         invitation: {
           invitationCode: invitation,

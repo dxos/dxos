@@ -185,6 +185,8 @@ describe('ItemManager', () => {
 
       const reconstructedItem = itemManager.entities.get(item.id)!;
       expect(reconstructedItem.model).toBeInstanceOf(ObjectModel);
+
+      expect(reconstructedItem.modelMeta.type).toEqual(ObjectModel.meta.type);
     });
   });
 });
