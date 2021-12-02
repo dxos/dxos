@@ -54,7 +54,7 @@ describe('Protocol plugin rpc', () => {
       clientPort = port;
       connected.emit();
     });
-    Promise.all([serverConnected, clientConnected]);
+    await Promise.all([serverConnected, clientConnected]);
     assert(serverPort);
     assert(clientPort);
 
@@ -96,12 +96,12 @@ describe('Protocol plugin rpc', () => {
         },
         port
       });
-      await server.open(),
+      await server.open();
       connected.emit();
     });
     createPeer(topic, clientId, async (port) => {
       client = createRpcClient(service, { port });
-      await client.open()
+      await client.open();
       connected.emit();
     });
 

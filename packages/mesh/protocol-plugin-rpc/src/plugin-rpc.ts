@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Event } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
 import { RpcPort } from '@dxos/rpc';
-
-import { createPort, getPeerId } from './helpers';
 
 type OnConnect = (port: RpcPort) => Promise<() => Promise<void> | void>
 
@@ -19,6 +19,29 @@ interface Connection {
   cleanup: () => Promise<void> | void,
   receive: Event<SerializedObject>
 }
+
+export const getPeerId = (peer: Protocol) => {
+  const { peerId } = peer.getSession() ?? {};
+  return peerId as string;
+};
+
+export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => {
+  return {
+    send: async (msg) => {
+      assert(peer.connected, 'Peer is not connected');
+      const extension = peer.getExtension(PluginRpc.extensionName);
+      assert(extension, 'Extension is not set');
+      await extension.send(msg);
+    },
+    subscribe: (cb) => {
+      const adapterCallback = (obj: SerializedObject) => {
+        cb(obj.data);
+      };
+      receive.on(adapterCallback);
+      return () => receive.off(adapterCallback);
+    }
+  };
+};
 
 export class PluginRpc {
   static extensionName = 'dxos.protocol.rpc';
