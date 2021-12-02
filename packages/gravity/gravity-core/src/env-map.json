@@ -14,5 +14,8 @@
   },
   "DX_IPFS_GATEWAY": {
     "path": "services.ipfs.gateway"
+  },
+  "DX_CLI_NODE_PATH": {
+    "path": "cli.nodePath"
   }
 }
