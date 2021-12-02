@@ -21,6 +21,8 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.3.2",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.1",
     "assert": "^2.0.0",

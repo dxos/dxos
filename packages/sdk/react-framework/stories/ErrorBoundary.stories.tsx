@@ -3,9 +3,12 @@
 //
 
 import debug from 'debug';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Alert, Box, Button } from '@mui/material';
+
+import { Client } from '@dxos/client';
+import { ClientProvider } from '@dxos/react-client';
 
 import { ErrorBoundary, ErrorView, FrameworkContextProvider, useError } from '../src';
 
@@ -60,7 +63,7 @@ const TestApp = () => {
     }
   }, [trigger]);
 
-  // Trigger ErrorBoundary.
+  // Trigger ErrorBoundary: "Nothing was returned from render."
   if (trigger === ErrorType.Invalid) {
     return undefined;
   }
@@ -99,14 +102,27 @@ const TestApp = () => {
   );
 };
 
-export const Boundary = () => {
-  const App = TestApp as any; // Don't warn about undefined return value.
+// TODO(burdon): Enable error boundary callback to reset client.
+
+export const Primary = () => {
+  // Forward reference to client (since can't use context here).
+  const clientRef = useRef<Client>();
+
+  // Cast to any to suppress warning about undefined return value.
+  const App = TestApp as any;
 
   return (
-    <FrameworkContextProvider>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </FrameworkContextProvider>
+    <ClientProvider ref={clientRef}>
+      <FrameworkContextProvider>
+        <ErrorBoundary
+          onReset={async () => {
+            clientRef.current!.reset();
+            window.location.reload();
+          }}
+        >
+          <App />
+        </ErrorBoundary>
+      </FrameworkContextProvider>
+    </ClientProvider>
   );
 };

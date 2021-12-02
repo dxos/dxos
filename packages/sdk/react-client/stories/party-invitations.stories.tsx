@@ -13,6 +13,7 @@ import { PublicKey } from '@dxos/crypto';
 import { InvitationDescriptorType } from '@dxos/echo-db';
 
 import {
+  ClientProvider,
   ProfileInitializer,
   useClient,
   useContacts,

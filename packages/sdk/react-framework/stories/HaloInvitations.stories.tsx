@@ -7,12 +7,12 @@ import React, { useState } from 'react';
 import { Box, Button, Toolbar } from '@mui/material';
 
 import {
-  ClientProvider, ConfigProvider, ErrorBoundary, ProfileInitializer, useParties, useRemoteParties, useProfile
+  ClientProvider, ConfigProvider, ProfileInitializer, useParties, useRemoteParties, useProfile
 } from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
-  ErrorView,
+  ErrorBoundary,
   FrameworkContextProvider,
   HaloSharingDialog,
   JoinHaloDialog
@@ -127,7 +127,7 @@ export const Remote = () => {
     <FullScreen>
       <p>Caution: This story works with Wallet extension. It does not work when embedded in an iframe. Use story directly with /#/__story/ prefix.</p>
       <FrameworkContextProvider>
-        <ErrorBoundary errorComponent={ErrorView}>
+        <ErrorBoundary>
           <Box sx={{
             display: 'flex',
             justifyContent: 'space-around'

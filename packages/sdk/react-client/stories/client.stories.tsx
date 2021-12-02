@@ -5,7 +5,7 @@
 import React, { useEffect } from 'react';
 
 import { ClientProvider, useClient } from '../src';
-import { ClientPanel, ThemeProvider } from './helpers';
+import { ClientPanel } from './helpers';
 
 export default {
   title: 'react-client/ClientProvider'
@@ -27,10 +27,8 @@ const TestApp = () => {
 
 export const Primary = () => {
   return (
-    <ThemeProvider>
-      <ClientProvider>
-        <TestApp />
-      </ClientProvider>
-    </ThemeProvider>
+    <ClientProvider>
+      <TestApp />
+    </ClientProvider>
   );
 };

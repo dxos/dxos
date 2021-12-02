@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { MutableRefObject, ReactNode, useEffect, useState } from 'react';
 
 import { Client, ClientOptions } from '@dxos/client';
 import { Config, defs } from '@dxos/config';
@@ -16,6 +16,7 @@ export type ClientProvider = MaybeFunction<MaybePromise<Client>>
 export type ConfigProvider = MaybeFunction<MaybePromise<defs.Config | Config>>
 
 export interface ClientProviderProps {
+  ref?: MutableRefObject<Client | undefined>
   client?: ClientProvider
   config?: ConfigProvider
   options?: ClientOptions
@@ -27,6 +28,7 @@ export interface ClientProviderProps {
  * To be used with the `useClient` hook.
  */
 export const ClientProvider = ({
+  ref,
   client: clientProvider,
   config: configProvider,
   options,
@@ -41,12 +43,19 @@ export const ClientProvider = ({
       setImmediate(async () => {
         if (clientProvider) {
           // Asynchornously request client.
-          setClient(await getAsyncValue(clientProvider));
+          const client = await getAsyncValue(clientProvider);
+          if (ref) {
+            (ref as MutableRefObject<Client>).current = client;
+          }
+          setClient(client);
         } else {
           // Asynchronously construt client (config may be undefined).
           const config = await getAsyncValue(configProvider);
           const client = new Client(config, options);
           await client.initialize();
+          if (ref) {
+            (ref as MutableRefObject<Client>).current = client;
+          }
           setClient(client);
         }
       });
