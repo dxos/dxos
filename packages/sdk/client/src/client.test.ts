@@ -7,9 +7,9 @@ import { it as test } from 'mocha';
 
 import { sleep, waitForCondition } from '@dxos/async';
 import { defs } from '@dxos/config';
+import { TestModel } from '@dxos/model-factory';
 
 import { Client } from './client';
-import { TestModel } from '@dxos/model-factory';
 
 describe('Local client', () => {
   test('initialize and destroy in a reasonable time', async () => {
@@ -152,10 +152,10 @@ describe('Client with persistent storage', () => {
       await sleep(10); // Make sure all events were processed.
 
       client.registerModel(TestModel);
-      
+
       const party = client.echo.queryParties().first;
-      const selection = party.database.select(s => s.filter({ type: 'test' }).items)
-      await selection.update.waitForCondition(() => selection.getValue().length > 0)
+      const selection = party.database.select(s => s.filter({ type: 'test' }).items);
+      await selection.update.waitForCondition(() => selection.getValue().length > 0);
 
       const item = selection.expectOne();
 
@@ -163,8 +163,8 @@ describe('Client with persistent storage', () => {
 
       await item.model.setProperty('prop', 'value2');
       expect(item.model.getProperty('prop')).toEqual('value2');
-      
+
       await client.destroy();
     }
-  })
+  });
 });
