@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { ItemID, ItemType } from '@dxos/echo-protocol';
-import { Model, ModelMeta } from '@dxos/model-factory';
+import { Model } from '@dxos/model-factory';
 
 import { Entity } from './entity';
 import { Item } from './item';
