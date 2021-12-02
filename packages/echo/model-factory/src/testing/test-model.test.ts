@@ -3,11 +3,9 @@
 //
 
 import { latch } from '@dxos/async';
-import { createKeyPair, createId, zeroKey } from '@dxos/crypto';
-import { TestItemMutation, createMockFeedWriterFromStream } from '@dxos/echo-protocol';
-import { createTransform } from '@dxos/feed-store';
+import { createId, createKeyPair, zeroKey } from '@dxos/crypto';
+import { MockFeedWriter, TestItemMutation } from '@dxos/echo-protocol';
 
-import { ModelMessage } from '../types';
 import { TestModel } from './test-model';
 
 describe('test model', () => {
@@ -31,31 +29,16 @@ describe('test model', () => {
   });
 
   test('mutations feedback loop', async () => {
-    const { publicKey: feedKey } = createKeyPair();
     const itemId = createId();
+    const feedWriter = new MockFeedWriter<TestItemMutation>();
 
-    // Create transform that connects model output to model input.
-    let seq = 0;
-    const transform = createTransform<TestItemMutation, ModelMessage<TestItemMutation>>(
-      async mutation => {
-        const message: ModelMessage<TestItemMutation> = {
-          meta: {
-            memberKey: zeroKey(),
-            feedKey,
-            seq
-          },
-          mutation
-        };
+    const model = new TestModel(TestModel.meta, itemId, feedWriter);
 
-        seq++;
-        return message;
-      });
-
-    // Create a writeStream model.
-    const model = new TestModel(TestModel.meta, itemId, createMockFeedWriterFromStream(transform));
-
-    // Connect output to input processor.
-    transform.pipe(model.processor);
+    feedWriter.written.on(([message, meta]) => model.processMessage({
+      feedKey: meta.feedKey.asUint8Array(),
+      memberKey: zeroKey(),
+      seq: meta.seq
+    }, message));
 
     const [counter, updateCounter] = latch();
     const unsubscribe = model.subscribe(model => {
