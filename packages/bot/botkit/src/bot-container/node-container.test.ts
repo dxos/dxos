@@ -46,7 +46,7 @@ describe('Node container', () => {
 
       const container = new NodeContainer(['ts-node/register/transpile-only']);
       const handle = await container.spawn({
-        localPath: require.resolve('../bots/client-bot')
+        localPath: require.resolve('../bots/start-client-bot')
       });
 
       await handle.open();
@@ -70,7 +70,7 @@ describe('Node container', () => {
 
       const container = new NodeContainer(['ts-node/register/transpile-only']);
       const handle = await container.spawn({
-        localPath: require.resolve('../bots/echo-bot')
+        localPath: require.resolve('../bots/start-echo-bot')
       });
 
       await handle.open();
