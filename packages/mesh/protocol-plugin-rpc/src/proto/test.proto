@@ -8,21 +8,20 @@ package dxos.rpc.test;
 
 import "google/protobuf/empty.proto";
 
-service TestService {
-  // TODO(dmaretskyi): Rename to "Test".
-  rpc TestCall (TestRpcRequest) returns (TestRpcResponse);
+service Test {
+  rpc TestCall (TestRequest) returns (TestResponse);
 
   rpc VoidCall (google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
-message TestRpcRequest {
+message TestRequest {
   string data = 1;
 }
 
-message TestRpcResponse {
+message TestResponse {
   string data = 1;
 }
 
 service TestStreamService {
-  rpc TestCall (TestRpcRequest) returns (stream TestRpcResponse);
+  rpc TestCall (TestRequest) returns (stream TestResponse);
 }

@@ -6,21 +6,23 @@ import assert from 'assert';
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { waitForCondition } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/crypto';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
-import { RpcPeer, createRpcServer, createRpcClient, RpcPort } from '@dxos/rpc';
+import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcClient } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { PluginRpcClient } from './plugin-rpc-client';
-import { PluginRpcServer } from './plugin-rpc-server';
+import { PluginRpc } from './plugin-rpc';
 import { schema } from './proto/gen';
+import { Test } from './proto/gen/dxos/rpc/test';
 
-const createClientPeer = (topic: PublicKey) => {
+const createPeer = (topic: PublicKey, peerId: PublicKey, onConnect: (port: RpcPort) => void) => {
   const networkManager = new NetworkManager();
   afterTest(() => networkManager.destroy());
-  const plugin = new PluginRpcClient();
-  const peerId = PublicKey.random();
+  const plugin = new PluginRpc(async (port) => {
+    onConnect(port);
+    return () => {};
+  });
   networkManager.joinProtocolSwarm({
     topic,
     peerId,
@@ -34,37 +36,27 @@ const createClientPeer = (topic: PublicKey) => {
   return { plugin, networkManager };
 };
 
-const createServerPeer = (topic: PublicKey, onConnect: (port: RpcPort) => void) => {
-  const networkManager = new NetworkManager();
-  afterTest(() => networkManager.destroy());
-  const plugin = new PluginRpcServer(async (port) => {
-    onConnect(port);
-    return () => {};
-  });
-  networkManager.joinProtocolSwarm({
-    topic,
-    peerId: topic,
-    protocol: createProtocolFactory(
-      topic,
-      topic,
-      [plugin]
-    ),
-    topology: new StarTopology(topic)
-  });
-  return { plugin, networkManager };
-};
-
 describe('Protocol plugin rpc', () => {
   it('Works with rpc port', async () => {
     const topic = PublicKey.random();
+    const clientId = PublicKey.random();
     let serverPort: RpcPort | undefined;
-    const { plugin: server } = createServerPeer(topic, (port) => {
+    let clientPort: RpcPort | undefined;
+    const connected = new Event();
+    const serverConnected = connected.waitFor(() => !!clientPort);
+    const clientConnected = connected.waitFor(() => !!serverPort);
+
+    const { plugin: server } = createPeer(topic, topic, (port) => {
       serverPort = port;
+      connected.emit();
     });
-    const { plugin: client } = createClientPeer(topic);
-    const clientPort = await client.getRpcPort();
-    await waitForCondition(() => !!serverPort);
+    const { plugin: client } = createPeer(topic, clientId, (port) => {
+      clientPort = port;
+      connected.emit();
+    });
+    Promise.all([serverConnected, clientConnected]);
     assert(serverPort);
+    assert(clientPort);
 
     const message = PublicKey.random().asUint8Array();
     let receivedMessage: Uint8Array | undefined;
@@ -83,11 +75,16 @@ describe('Protocol plugin rpc', () => {
   });
 
   it('Works with protobuf service', async () => {
-    const service = schema.getService('dxos.rpc.test.TestService');
+    const service = schema.getService('dxos.rpc.test.Test');
     const topic = PublicKey.random();
-
+    const clientId = PublicKey.random();
+    const connected = new Event();
     let server: RpcPeer | undefined;
-    createServerPeer(topic, (port) => {
+    let client: ProtoRpcClient<Test> | undefined;
+    const serverConnected = connected.waitFor(() => !!server);
+    const clientConnected = connected.waitFor(() => !!client);
+
+    createPeer(topic, topic, async (port) => {
       server = createRpcServer({
         service,
         handlers: {
@@ -99,21 +96,17 @@ describe('Protocol plugin rpc', () => {
         },
         port
       });
+      await server.open(),
+      connected.emit();
     });
-    const { plugin: clientPeer } = createClientPeer(topic);
-
-    await waitForCondition(() => !!server);
-    assert(server);
-    const clientPort = await clientPeer.getRpcPort();
-
-    const client = createRpcClient(service, {
-      port: clientPort
+    createPeer(topic, clientId, async (port) => {
+      client = createRpcClient(service, { port });
+      await client.open()
+      connected.emit();
     });
 
-    await Promise.all([
-      server.open(),
-      client.open()
-    ]);
+    await Promise.all([serverConnected, clientConnected]);
+    assert(client);
 
     const response = await client.rpc.TestCall({ data: 'requestData' });
 

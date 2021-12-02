@@ -6,7 +6,6 @@ import { Event } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
 import { RpcPort } from '@dxos/rpc';
 
-import { extensionName } from './extension-name';
 import { createPort, getPeerId } from './helpers';
 
 type OnConnect = (port: RpcPort) => Promise<() => Promise<void> | void>
@@ -21,13 +20,15 @@ interface Connection {
   receive: Event<SerializedObject>
 }
 
-export class PluginRpcServer {
+export class PluginRpc {
+  static extensionName = 'dxos.protocol.rpc';
+
   private _peers: Map<string, Connection> = new Map();
 
   constructor (private _onConnect: OnConnect) {}
 
   createExtension (): Extension {
-    return new Extension(extensionName)
+    return new Extension(PluginRpc.extensionName)
       .setHandshakeHandler(this._onPeerConnect.bind(this))
       .setMessageHandler(this._onMessage.bind(this))
       .setCloseHandler(this._onPeerDisconnect.bind(this));
