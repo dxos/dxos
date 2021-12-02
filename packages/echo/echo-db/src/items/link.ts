@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { ItemID, ItemType } from '@dxos/echo-protocol';
-import { Model, ModelMeta } from '@dxos/model-factory';
+import { Model } from '@dxos/model-factory';
 
 import { Entity } from './entity';
 import { Item } from './item';
@@ -29,14 +29,12 @@ export class Link<M extends Model<any>, L extends Model<any> = any, R extends Mo
   constructor (
     itemId: ItemID,
     itemType: ItemType | undefined,
-    modelMeta: ModelMeta,
     model: M,
     link: LinkData
   ) {
     super(
       itemId,
       itemType,
-      modelMeta,
       model
     );
     this._link = link;
