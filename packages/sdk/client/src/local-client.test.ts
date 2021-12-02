@@ -39,7 +39,7 @@ describe('Client', () => {
       await invitee.halo.createProfile({ username: 'invitee' });
 
       const partyProxy = await inviter.echo.createParty();
-      const invitation = await inviter.createInvitation(partyProxy.key, defaultSecretProvider);
+      const invitation = await inviter.createInvitation(partyProxy.key, { secretProvider: defaultSecretProvider });
 
       expect(invitee.echo.queryParties().value.length).toEqual(0);
 
