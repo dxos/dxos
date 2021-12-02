@@ -96,17 +96,23 @@ describe('Protocol plugin rpc', () => {
         },
         port
       });
-      await server.open();
       connected.emit();
     });
     createPeer(topic, clientId, async (port) => {
       client = createRpcClient(service, { port });
-      await client.open();
       connected.emit();
     });
 
-    await Promise.all([serverConnected, clientConnected]);
+    await Promise.all([
+      serverConnected,
+      clientConnected
+    ]);
     assert(client);
+    assert(server);
+    await Promise.all([
+      server.open(),
+      client.open()
+    ]);
 
     const response = await client.rpc.TestCall({ data: 'requestData' });
 
