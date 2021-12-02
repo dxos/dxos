@@ -26,7 +26,7 @@ export const setupClient = async (config?: defs.Config): Promise<ClientSetup> =>
   const partySecret = Buffer.from(partySecretString);
   const secretProvider: SecretProvider = async () => partySecret;
 
-  const invitation = await client.createInvitation(party.key, secretProvider);
+  const invitation = await client.createInvitation(party.key, { secretProvider });
   return {
     client,
     party,

@@ -193,7 +193,7 @@ export class Orchestrator {
       return verify(message, signature, keyToBuffer(this._factory.topic));
     };
 
-    const invitation = await this._party.createInvitation({ secretValidator });
+    const invitation = await this._client.createInvitation(this._party.key, { secretValidator });
 
     await this._factoryClient.sendInvitationRequest(botId, this._party.key.toHex(), {}, invitation.toQueryParameters());
 

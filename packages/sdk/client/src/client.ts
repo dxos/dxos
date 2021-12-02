@@ -10,7 +10,7 @@ import { Config, defs } from '@dxos/config';
 import { defaultSecretValidator, SecretProvider } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { InvalidParameterError, raise, TimeoutError } from '@dxos/debug';
-import { InvitationDescriptor, InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
+import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
@@ -272,15 +272,16 @@ export class Client {
    * To be used with `client.echo.joinParty` on the invitee side.
    *
    * @param partyKey the Party to create the invitation for.
-   * @param secretProvider supplies the pin code
+   * @param auth.secretProvider supplies the pin code
+   * @param auth.secretValidator checks the pin code validity
    * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
    * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
    */
-  async createInvitation (partyKey: PublicKey, secretProvider: SecretProvider, options?: InvitationOptions) {
+  async createInvitation (partyKey: PublicKey, auth: Partial<InvitationAuthenticator>, options?: InvitationOptions) {
     const party = await this._serviceProvider.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
     return party.createInvitation({
-      secretValidator: defaultSecretValidator,
-      secretProvider
+      secretValidator: auth.secretValidator ?? defaultSecretValidator,
+      secretProvider: auth.secretProvider
     },
     options);
   }

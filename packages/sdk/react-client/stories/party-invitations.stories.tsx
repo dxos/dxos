@@ -59,7 +59,7 @@ const PartyInvitationContainer = () => {
     setImmediate(async () => {
       const invitation = (contact)
         ? await client.createOfflineInvitation(partyKey!, PublicKey.fromHex(contact!))
-        : await client.createInvitation(partyKey!, secretProvider, {
+        : await client.createInvitation(partyKey!, { secretProvider }, {
           onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
             setInvitationCode(undefined);
             resetPin();
