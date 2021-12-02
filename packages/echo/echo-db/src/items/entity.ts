@@ -21,7 +21,6 @@ export class Entity<M extends Model> {
   constructor (
     private readonly _id: ItemID,
     private readonly _type: ItemType | undefined,
-    private readonly _modelMeta: ModelMeta,
     private _model: M
   ) {
     // Model updates mean Item updates, so make sure we are subscribed as well.
@@ -37,7 +36,7 @@ export class Entity<M extends Model> {
   }
 
   get modelMeta (): ModelMeta {
-    return this._modelMeta;
+    return this._model.modelMeta;
   }
 
   get model (): M {

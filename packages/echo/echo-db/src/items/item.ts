@@ -49,12 +49,11 @@ export class Item<M extends Model> extends Entity<M> {
   constructor (
     itemId: ItemID,
     itemType: ItemType | undefined, // TODO(burdon): Why undefined?
-    modelMeta: ModelMeta,
     model: M,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null
   ) {
-    super(itemId, itemType, modelMeta, model);
+    super(itemId, itemType, model);
 
     this._updateParent(parent);
   }
