@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import React, { MutableRefObject, ReactNode, useEffect, useState } from 'react';
 
 import { Client, ClientOptions } from '@dxos/client';
@@ -10,16 +11,32 @@ import { MaybeFunction, MaybePromise, getAsyncValue } from '@dxos/util';
 
 import { ClientContext } from '../hooks';
 
+const log = debug('dxos:react-client');
+
 export type ClientProvider = MaybeFunction<MaybePromise<Client>>
 
 // TODO(burdon): Why defs?
 export type ConfigProvider = MaybeFunction<MaybePromise<defs.Config | Config>>
 
 export interface ClientProviderProps {
-  ref?: MutableRefObject<Client | undefined>
+  /**
+   * Forward reference to provide client object to outercontainer since it won't have access to the context.
+   */
+  clientRef?: MutableRefObject<Client | undefined>
+
+  /**
+   * Client object or async provider to enable to caller to do custom initialization.
+   */
   client?: ClientProvider
+
+  /**
+   * Config object or async provider.
+   */
   config?: ConfigProvider
+
+  // TODO(burdon): Move into config?
   options?: ClientOptions
+
   children?: ReactNode
 }
 
@@ -28,7 +45,7 @@ export interface ClientProviderProps {
  * To be used with the `useClient` hook.
  */
 export const ClientProvider = ({
-  ref,
+  clientRef,
   client: clientProvider,
   config: configProvider,
   options,
@@ -44,18 +61,20 @@ export const ClientProvider = ({
         if (clientProvider) {
           // Asynchornously request client.
           const client = await getAsyncValue(clientProvider);
-          if (ref) {
-            (ref as MutableRefObject<Client>).current = client;
+          if (clientRef) {
+            (clientRef as MutableRefObject<Client>).current = client;
           }
+          log(`Created client: ${client}`)
           setClient(client);
         } else {
           // Asynchronously construt client (config may be undefined).
           const config = await getAsyncValue(configProvider);
           const client = new Client(config, options);
           await client.initialize();
-          if (ref) {
-            (ref as MutableRefObject<Client>).current = client;
+          if (clientRef) {
+            (clientRef as MutableRefObject<Client>).current = client;
           }
+          log(`Created client: ${client}`)
           setClient(client);
         }
       });

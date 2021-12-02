@@ -16,22 +16,8 @@ export default {
   title: 'react-framework/ErrorBoundary'
 };
 
+// TODO(burdon): Unset by client.
 debug.enable('*');
-
-export const View = () => {
-  const error = new Error('Test Error');
-
-  return (
-    <ErrorView
-      error={error}
-      onReset={() => {}}
-      onRestart={() => {}}
-      context={{
-        testing: true
-      }}
-    />
-  );
-};
 
 enum ErrorType {
   Async,
@@ -102,8 +88,6 @@ const TestApp = () => {
   );
 };
 
-// TODO(burdon): Enable error boundary callback to reset client.
-
 export const Primary = () => {
   // Forward reference to client (since can't use context here).
   const clientRef = useRef<Client>();
@@ -112,7 +96,7 @@ export const Primary = () => {
   const App = TestApp as any;
 
   return (
-    <ClientProvider ref={clientRef}>
+    <ClientProvider clientRef={clientRef}>
       <FrameworkContextProvider>
         <ErrorBoundary
           onReset={async () => {
@@ -124,5 +108,20 @@ export const Primary = () => {
         </ErrorBoundary>
       </FrameworkContextProvider>
     </ClientProvider>
+  );
+};
+
+export const View = () => {
+  const error = new Error('Test Error');
+
+  return (
+    <ErrorView
+      error={error}
+      onReset={() => {}}
+      onRestart={() => {}}
+      context={{
+        testing: true
+      }}
+    />
   );
 };

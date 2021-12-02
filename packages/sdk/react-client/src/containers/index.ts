@@ -3,4 +3,3 @@
 //
 
 export * from './ClientProvider';
-export * from './ProfileInitializer';
