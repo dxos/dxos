@@ -21,7 +21,3 @@ message TestRequest {
 message TestResponse {
   string data = 1;
 }
-
-service TestStreamService {
-  rpc TestCall (TestRequest) returns (stream TestResponse);
-}
