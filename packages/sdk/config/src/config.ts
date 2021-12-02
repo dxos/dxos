@@ -87,7 +87,7 @@ export function mapToKeyValues (spec: MappingSpec, values: any) {
  * Global configuration object.
  * NOTE: Config objects are immutable.
  */
-export class Config {
+export class Config<T = ConfigObject> {
   private readonly _config: any;
 
   /**
@@ -95,14 +95,14 @@ export class Config {
    * @constructor
    * @param objects
    */
-  constructor (...objects: [ConfigObject, ...ConfigObject[]]) {
+  constructor (...objects: [T, ...T[]]) {
     this._config = sanitizeConfig(defaultsDeep(...objects));
   }
 
   /**
    * Returns an immutable config JSON object.
    */
-  get values (): ConfigObject {
+  get values (): T {
     return this._config;
   }
 
@@ -113,7 +113,7 @@ export class Config {
    * @param defaultValue Default value to return if option is not present in the config.
    * @returns The config value or undefined if the option is not present.
    */
-  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigObject, ParseKey<K>>): DeepIndex<ConfigObject, ParseKey<K>> {
+  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<T, ParseKey<K>>): DeepIndex<T, ParseKey<K>> {
     return get(this._config, key, defaultValue);
   }
 
@@ -131,8 +131,8 @@ export class Config {
    *
    * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
    */
-  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<ConfigObject, ParseKey<K>>, undefined> {
-    const value = this.get(this._config, key);
+  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<T, ParseKey<K>>, undefined> {
+    const value = get(this._config, key);
     if (!value) {
       throw new Error(`Config option not present: ${key}`);
     }

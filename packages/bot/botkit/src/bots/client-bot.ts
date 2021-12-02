@@ -10,7 +10,7 @@ import { Party } from '@dxos/echo-db';
 
 import { createIpcPort } from '../bot-container';
 import { BotService, InitializeRequest, SendCommandRequest, SendCommandResponse } from '../proto/gen/dxos/bot';
-import { decodeInvitation } from '../utils/intivitations';
+import { decodeInvitation } from '../utils';
 import { startBot } from './start-bot';
 
 export class ClientBot implements BotService {

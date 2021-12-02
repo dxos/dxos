@@ -24,17 +24,8 @@ describe('Echo Bot', () => {
     const command = PublicKey.random().asUint8Array();
     await bot.Command({ command: command });
 
-    await party.database.waitForItem({
-      type: TEST_ECHO_TYPE
-    });
-
-    const items = party.database.select(s => s
-      .filter({ type: TEST_ECHO_TYPE })
-      .items
-    ).getValue();
-
-    expect(items.length).toBe(1);
-    const payload = items[0].model.getProperty('payload');
+    const item = await party.database.waitForItem({ type: TEST_ECHO_TYPE });
+    const payload = item.model.getProperty('payload');
     expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
 
     await bot.Stop();
