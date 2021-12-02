@@ -16,7 +16,7 @@ import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { RpcPort } from '@dxos/rpc';
 
-import { CreateInvitationOptions, HaloProxy } from './api/HaloProxy';
+import { CreateInvitationOptions, HaloProxy } from './api';
 import { DevtoolsHook } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
 import { isNode } from './platform';
@@ -36,7 +36,8 @@ export const defaultTestingConfig: defs.Config = {
   }
 };
 
-export interface ClientConstructorOpts {
+// TODO(burdon): Why separate from config?
+export interface ClientOptions {
   /**
    * Only used when remote=true.
    */
@@ -44,14 +45,15 @@ export interface ClientConstructorOpts {
 }
 
 /**
- * Main DXOS client object.
- * An entrypoint to ECHO, HALO, DXNS.
+ * The main DXOS client API.
+ * An entrypoint to ECHO, HALO, MESH, and DXNS.
  */
 export class Client {
   private readonly _config: Config;
 
   private readonly _serviceProvider: ClientServiceProvider;
 
+  // TODO(burdon): Why is this different from a service provider?
   private readonly _halo: HaloProxy;
 
   private _initialized = false;
@@ -60,22 +62,21 @@ export class Client {
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  constructor (config: defs.Config | Config = {}, opts: ClientConstructorOpts = {}) {
-    if (config instanceof Config) {
-      this._config = config;
-    } else {
-      this._config = new Config(config);
-    }
-    debug.enable(this._config.values.system?.debug ?? process.env.DEBUG ?? '');
+  constructor (config: defs.Config | Config = {}, options: ClientOptions = {}) {
+    // TODO(burdon): Require caller to pass in correct type (or use external util).
+    this._config = (config instanceof Config) ? config : new Config(config);
 
+    // TODO(burdon): config.getProperty('system.debug', process.env.DEBUG, '');
+    debug.enable(this._config.values.system?.debug ?? process.env.DEBUG ?? '');
     if (this._config.values.system?.remote) {
-      if (!opts.rpcPort && isNode()) {
+      if (!options.rpcPort && isNode()) {
         throw new Error('RPC port is required to run client in remote mode on Node environment.');
       }
-      log('Creating client in *REMOTE* mode.');
-      this._serviceProvider = new ClientServiceProxy(opts.rpcPort ?? createWindowMessagePort());
+
+      log('Creating client proxy.');
+      this._serviceProvider = new ClientServiceProxy(options.rpcPort ?? createWindowMessagePort());
     } else {
-      log('Creating client in *LOCAL* mode.');
+      log('Creating client host.');
       this._serviceProvider = new ClientServiceHost(this._config);
     }
 
@@ -138,6 +139,7 @@ export class Client {
 
     const t = 10;
     const timeout = setTimeout(() => {
+      // TODO(burdon): Tie to global error handling (or event).
       throw new TimeoutError(`Initialize timed out after ${t}s.`);
     }, t * 1000);
 
@@ -145,7 +147,7 @@ export class Client {
 
     this._halo.open();
 
-    this._initialized = true;
+    this._initialized = true; // TODO(burdon): Initialized === halo.initialized?
     clearInterval(timeout);
   }
 

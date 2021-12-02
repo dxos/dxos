@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
-import { useClient, ClientInitializer, ProfileInitializer, useProfile } from '@dxos/react-client';
+import { ClientProvider, ProfileInitializer, useClient, useProfile } from '@dxos/react-client';
 
 import { ONLINE_CONFIG, StartDialog } from '../src';
 import { Main } from './helpers';
@@ -44,11 +44,11 @@ export const Primary = () => {
   };
 
   return (
-    <ClientInitializer>
+    <ClientProvider>
       <ProfileInitializer>
         <Story />
       </ProfileInitializer>
-    </ClientInitializer>
+    </ClientProvider>
   );
 };
 
@@ -96,10 +96,10 @@ export const Peers = () => {
   };
 
   return (
-    <ClientInitializer config={ONLINE_CONFIG}>
+    <ClientProvider config={ONLINE_CONFIG}>
       <ProfileInitializer>
         <Root />
       </ProfileInitializer>
-    </ClientInitializer>
+    </ClientProvider>
   );
 };

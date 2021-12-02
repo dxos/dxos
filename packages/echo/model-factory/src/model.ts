@@ -9,17 +9,70 @@ import { FeedWriter, ItemID, MutationMeta, WriteReceipt } from '@dxos/echo-proto
 import { createWritable } from '@dxos/feed-store';
 
 import { ModelMessage, ModelMeta } from './types';
+import { PublicKey } from '@dxos/crypto/dist';
 
 export interface MutationWriteReceipt extends WriteReceipt {
   waitToBeProcessed(): Promise<void>
 }
 
+// TODO(burdon): CLean-up:
+//   ModelMeta / registration (client.register and DXNS queries).
+//   Simplify API + remove inheritance?
+//   How to query/filter for items by type (of what?) Disambiguate item/model type from message type. Frames?
+//   Minimal test (how to write models).
+
+// TODO(burdon): Reset? rollback?
+interface StateMachine<T> {
+  state: () => T
+  toJson: () => Promise<string>
+  fromJson: (json: string) => Promise<void>
+  processMessage: () => Promise<void>
+}
+
+interface Result<T> {
+  optimistic: T | undefined
+  ready: Promise<T> // Resolved once mutations have been processed.
+}
+
+// TODO(burdon): Example.
+
+interface ChessState {
+  players: {
+    white: PublicKey
+    black: PublicKey
+  }
+  fen: string
+}
+
+/*
+// TODO(burdon): Distinguished from state machine.
+// TODO(burdon): This requires a writablestream but isn't required by the pipeline.
+interface ChessModel {
+  state: ChessState
+  setPlayers: (white: PublicKey, black: PublicKey) => Result<ChessState>
+  applyMove: (move: any) => Result<ChessState>
+}
+
+// TODO(burdon): Object binding? Example query?
+class ChessStateMachine implements StateMachine<ChessState> {}
+
+class ChessModelImpl implements ChessModel {
+  constructor (
+    private readonly writableStream: NodeJS.WritableStream,
+    private readonly
+  ) {}
+}
+
+const test = (Item<ChessModel>) => item.model.state.fen;
+*/
+
 /**
  * Abstract base class for Models.
- * Models define a root message type, which is contained in the partent Item's message envelope.
+ * Models define a root message type, which is contained in the parent Item's message envelope.
  */
 export abstract class Model<T = any> {
-  public readonly modelUpdate = new Event<Model<T>>();
+  public readonly update = new Event<Model<T>>();
+
   private readonly _processor: NodeJS.WritableStream;
 
   private readonly _meta: ModelMeta;
@@ -50,6 +103,20 @@ export abstract class Model<T = any> {
     });
   }
 
+  toString () {
+    return `Model(${JSON.stringify(this.toJSON())})`;
+  }
+
+  /**
+   * Overriden to not retun implementation details.
+   */
+  toJSON () {
+    return {
+      id: this.itemId,
+      type: this._meta.type
+    };
+  }
+
   get modelMeta (): ModelMeta {
     return this._meta;
   }
@@ -58,27 +125,29 @@ export abstract class Model<T = any> {
     return this._itemId;
   }
 
+  // TODO(burdon): Standardize (vs. isReadOnly methods in database).
   get readOnly (): boolean {
     return this._writeStream === undefined;
   }
 
-  // TODO(burdon): Rename.
   /**
    * @deprecated Use processMessage.
    */
+  // TODO(burdon): Rename.
   get processor (): NodeJS.WritableStream {
     return this._processor;
   }
 
   subscribe (listener: (result: this) => void) {
-    return this.modelUpdate.on(listener as any);
+    return this.update.on(listener as any);
   }
 
   async processMessage (meta: MutationMeta, message: T): Promise<void> {
     const modified = await this._processMessage(meta, message);
     if (modified) {
-      this.modelUpdate.emit(this);
+      this.update.emit(this);
     }
+
     this._messageProcessed.emit(meta);
   }
 
@@ -113,16 +182,6 @@ export abstract class Model<T = any> {
       waitToBeProcessed: async () => {
         await processed;
       }
-    };
-  }
-
-  /**
-   * Overriden to not retun implementation details.
-   */
-  toJSON () {
-    return {
-      id: this.itemId,
-      type: this._meta.type
     };
   }
 

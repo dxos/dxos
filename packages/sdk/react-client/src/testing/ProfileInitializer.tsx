@@ -10,14 +10,16 @@ import { useClient, useProfile } from '../hooks';
  * Automatically creates a random DXOS profile.
  * @deprecated
  */
-// TODO(burdon): Testing-only.
+// TODO(burdon): Testing-only (set as debug option for ClientProvider?)
 export const ProfileInitializer = ({ children }: { children: React.ReactNode }) => {
   const client = useClient();
   const profile = useProfile();
 
   useEffect(() => {
     if (!profile) {
-      void client.halo.createProfile();
+      setImmediate(async () => {
+        await client.halo.createProfile();
+      });
     }
   }, []);
 

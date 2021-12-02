@@ -20,6 +20,7 @@ type FrameworkContextState = {
  */
 export const FrameworkContext = createContext<FrameworkContextState | undefined>(undefined);
 
+// TODO(burdon): Maintain client object (set downstream?)
 export const FrameworkContextProvider = ({ children }: { children: ReactNode }) => {
   const errors = useState<Error | undefined>();
   const invitations = useState<PendingInvitation[]>([]);

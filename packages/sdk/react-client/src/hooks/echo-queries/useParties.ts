@@ -12,7 +12,7 @@ import { useResultSet } from '../util';
 
 /**
  * Get a specific Party.
- * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
+ * Requires ClientConext to be set via ClientProvider.
  */
 export const useParty = (partyKey?: PublicKeyLike) => {
   const client = useClient();
@@ -21,7 +21,7 @@ export const useParty = (partyKey?: PublicKeyLike) => {
 
 /**
  * Get all Parties available to current user.
- * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
+ * Requires ClientConext to be set via ClientProvider.
  */
 export const useParties = () => {
   const client = useClient();

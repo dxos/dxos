@@ -9,7 +9,7 @@ import * as colors from '@mui/material/colors';
 import { makeStyles } from '@mui/styles';
 
 import { Generator, OBJECT_ORG, OBJECT_PERSON, OBJECT_PROJECT, OBJECT_TASK } from '@dxos/echo-testing';
-import { ClientInitializer, ProfileInitializer, useSelection } from '@dxos/react-client';
+import { ClientProvider, ProfileInitializer, useSelection } from '@dxos/react-client';
 
 import {
   Node,
@@ -21,6 +21,7 @@ import {
   useGenerator,
   ONLINE_CONFIG
 } from '../src';
+import { ClientProvider } from '../../react-client/src';
 
 export default {
   title: 'demos/Links'
@@ -174,9 +175,9 @@ const Story = () => {
 };
 
 export const Primary = () => (
-  <ClientInitializer config={ONLINE_CONFIG}>
+  <ClientProvider config={ONLINE_CONFIG}>
     <ProfileInitializer>
       <Story />
     </ProfileInitializer>
-  </ClientInitializer>
+  </ClientProvider>
 );

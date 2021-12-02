@@ -8,7 +8,7 @@ import { useClient } from '../client';
 
 /**
  * Get all Parties available to current user.
- * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
+ * Requires ClientConext to be set via ClientProvider.
  */
 export const useRemoteParties = () => {
   const client = useClient();

@@ -58,7 +58,7 @@ describe('DataMirror', () => {
 
     // Mutate model
     await Promise.all([
-      mirroredItem!.model.modelUpdate.waitForCount(1),
+      mirroredItem!.model.update.waitForCount(1),
       item.model.setProperty('foo', 'bar')
     ]);
 

@@ -4,7 +4,7 @@ on:
   workflow_dispatch
 
 jobs:
-  pack_tutorial:
+  pack_tutorials:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -34,7 +34,7 @@ jobs:
         cd protocols
         set -e
 
-        cd packages/sdk/tutorials/apps/tasks-app/
+        cd packages/tutorials/tasks-app/
         rushx pack:app
 
         # Undo package.json changes that are made for packing purposes
@@ -56,9 +56,9 @@ jobs:
         git config --global user.email "ci@dxos.org"
         git config --global user.name "ci"
 
-        cp -R protocols/packages/sdk/tutorials/apps/tasks-app/package/* tutorial-tasks-app/
+        cp -R protocols/packages/tutorials/tasks-app/package/* tutorial-tasks-app/
         # copy dot files as well
-        cp -R protocols/packages/sdk/tutorials/apps/tasks-app/package/.[a-zA-Z0-9]* tutorial-tasks-app
+        cp -R protocols/packages/tutorials/tasks-app/package/.[a-zA-Z0-9]* tutorial-tasks-app
         cd tutorial-tasks-app
         git status
         git checkout -b ci/release

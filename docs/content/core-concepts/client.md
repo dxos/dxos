@@ -18,7 +18,11 @@ const config = {
 };
 
 const App = () => {
-  return <ClientInitializer config={config}>{/* your app goes here */}</ClientInitializer>;
+  return (
+    <ClientInitializer config={config}>
+      <div>App</div>
+    </ClientInitializer>
+  );
 };
 ```
 

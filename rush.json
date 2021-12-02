@@ -595,10 +595,6 @@
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
     },
-    {
-      "packageName": "@dxos/tutorials-tasks-app",
-      "projectFolder": "packages/sdk/tutorials/apps/tasks-app"
-    },
 
     //
     // echo

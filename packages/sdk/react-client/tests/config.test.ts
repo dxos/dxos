@@ -14,7 +14,7 @@ describe('Config hook', () => {
     const { result } = renderHook(render);
     // TODO(burdon): Do NOT test functionality by matching literal error messages.
     expect(result.error?.message)
-      .toEqual('`useConfig` hook is called outside of ClientContext. Wrap the component with `ClientProvider` or `ClientInitializer`');
+      .toEqual('`useConfig` hook is called outside of ClientContext. Use `ClientProvider`');
   });
 
   // TODO(burdon): Add test for context.

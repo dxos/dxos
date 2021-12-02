@@ -6,7 +6,9 @@ import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { ClientInitializer, ErrorBoundary, ProfileInitializer, useParties, useRemoteParties, useProfile, SuppliedConfig } from '@dxos/react-client';
+import {
+  ClientProvider, ConfigProvider, ErrorBoundary, ProfileInitializer, useParties, useRemoteParties, useProfile
+} from '@dxos/react-client';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
 import {
@@ -92,7 +94,7 @@ export const Primary = () => {
             display: 'flex',
             justifyContent: 'space-around'
           }}>
-            <ClientInitializer>
+            <ClientProvider>
               <ProfileInitializer>
                 <FrameworkContextProvider>
                   <Column>
@@ -100,13 +102,13 @@ export const Primary = () => {
                   </Column>
                 </FrameworkContextProvider>
               </ProfileInitializer>
-            </ClientInitializer>
+            </ClientProvider>
 
-            <ClientInitializer>
+            <ClientProvider>
               <Column>
                 <User joining />
               </Column>
-            </ClientInitializer>
+            </ClientProvider>
           </Box>
         </ErrorBoundary>
       </FrameworkContextProvider>
@@ -115,7 +117,7 @@ export const Primary = () => {
 };
 
 export const Remote = () => {
-  const remoteConfig: SuppliedConfig = {
+  const remoteConfig: ConfigProvider = {
     system: {
       remote: true
     }
@@ -130,11 +132,11 @@ export const Remote = () => {
             display: 'flex',
             justifyContent: 'space-around'
           }}>
-            <ClientInitializer config={remoteConfig}>
+            <ClientProvider config={remoteConfig}>
               <Column>
                 <User remote sharing joining />
               </Column>
-            </ClientInitializer>
+            </ClientProvider>
           </Box>
         </ErrorBoundary>
       </FrameworkContextProvider>
