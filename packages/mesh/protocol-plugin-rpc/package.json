@@ -1,0 +1,38 @@
+{
+  "name": "@dxos/protocol-plugin-rpc",
+  "version": "2.18.2",
+  "description": "Protocol plugin to be used with @dxos/rpc",
+  "license": "AGPL-3.0",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "toolchain build",
+    "build:test": "toolchain build:test",
+    "lint": "toolchain lint",
+    "test": "toolchain test"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
+  },
+  "dependencies": {
+    "@dxos/protocol": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/crypto": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.9",
+    "@types/mocha": "~8.2.2",
+    "@dxos/network-manager": "workspace:*",
+    "wait-for-expect": "^3.0.2",
+    "expect": "~27.0.2",
+    "@types/expect": "~24.3.0",
+    "@dxos/toolchain-node-library": "workspace:*",
+    "@dxos/testutils": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*"
+  }
+}
