@@ -34,7 +34,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
       return Promise.resolve(Buffer.from(pendingInvitation.pin));
     };
 
-    const invitation = await client.createInvitation(partyKey!, { secretProvider }, {
+    const invitation = await client.echo.createInvitation(partyKey!, { secretProvider }, {
       onFinish: () => { // TODO(burdon): Normalize callbacks (error, etc.)
       // Remove the pending invitation.
         setInvitations(invitations => invitations

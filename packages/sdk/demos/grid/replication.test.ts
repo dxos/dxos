@@ -31,7 +31,7 @@ describe('Replication in a grid', function () {
   let party: PartyProxy;
  
   const createInvitation = async () => {
-    const invitationDescriptor = await inviter.createInvitation(party.key, defaultInvitationAuthenticator);
+    const invitationDescriptor = await inviter.echo.createInvitation(party.key, defaultInvitationAuthenticator);
     return JSON.stringify(invitationDescriptor.toQueryParameters());
   };
 

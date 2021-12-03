@@ -7,10 +7,8 @@ import debug from 'debug';
 
 import { synchronized } from '@dxos/async';
 import { Config, defs } from '@dxos/config';
-import { defaultSecretValidator } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
-import { InvalidParameterError, raise, TimeoutError } from '@dxos/debug';
-import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions, OpenProgress, PartyNotFoundError, sortItemsTopologically } from '@dxos/echo-db';
+import { InvalidParameterError, TimeoutError } from '@dxos/debug';
+import { InvitationDescriptor, OpenProgress, sortItemsTopologically } from '@dxos/echo-db';
 import { DatabaseSnapshot } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
@@ -261,47 +259,6 @@ export class Client {
     }
 
     return party;
-  }
-
-  /**
-   * Creates an invitation to a given party.
-   * The Invitation flow requires the inviter and invitee to be online at the same time.
-   * If the invitee is known ahead of time, `createOfflineInvitation` can be used instead.
-   * The invitation flow is protected by a generated pin code.
-   *
-   * To be used with `client.echo.joinParty` on the invitee side.
-   *
-   * @param partyKey the Party to create the invitation for.
-   * @param auth.secretProvider supplies the pin code
-   * @param auth.secretValidator checks the pin code validity
-   * @param options.onFinish A function to be called when the invitation is closed (successfully or not).
-   * @param options.expiration Date.now()-style timestamp of when this invitation should expire.
-   */
-  async createInvitation (partyKey: PublicKey, auth: Partial<InvitationAuthenticator>, options?: InvitationOptions) {
-    const party = await this._serviceProvider.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
-    return party.createInvitation({
-      secretValidator: auth.secretValidator ?? defaultSecretValidator,
-      secretProvider: auth.secretProvider
-    },
-    options);
-  }
-
-  /**
-   * Function to create an Offline Invitation for a recipient to a given party.
-   * Offline Invitation, unlike regular invitation, does NOT require
-   * the inviter and invitee to be online at the same time - hence `Offline` Invitation.
-   * The invitee (recipient) needs to be known ahead of time.
-   * Invitation it not valid for other users.
-   *
-   * To be used with `client.echo.joinParty` on the invitee side.
-   *
-   * @param partyKey the Party to create the invitation for.
-   * @param recipientKey the invitee (recipient for the invitation).
-   */
-  // TODO(burdon): Move to party.
-  async createOfflineInvitation (partyKey: PublicKey, recipientKey: PublicKey) {
-    const party = await this._serviceProvider.echo.getParty(partyKey) ?? raise(new PartyNotFoundError(partyKey));
-    return party.createOfflineInvitation(recipientKey);
   }
 
   /**

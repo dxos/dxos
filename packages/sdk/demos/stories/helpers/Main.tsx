@@ -137,7 +137,7 @@ export const Main = ({ party, code }: MainProps) => {
 
   const handleCopyInvite = async () => {
     assert(code);
-    const invitation = await client.createInvitation(party.key, {
+    const invitation = await client.echo.createInvitation(party.key, {
       secretProvider: async () => Buffer.from(code)
     });
 
