@@ -6,7 +6,7 @@ import React, { createContext, useContext, useState } from 'react';
 
 import { Snackbar, Alert as MuiAlert, AlertProps } from '@mui/material';
 
-// TODO(burdon): Consider rewriting this abstraction.
+// TODO(burdon): Consider rewriting this abstraction (error context not UX context).
 
 const Alert = (props: AlertProps) => <MuiAlert elevation={6} variant='filled' {...props} />;
 

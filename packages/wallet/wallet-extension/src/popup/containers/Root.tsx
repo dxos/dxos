@@ -7,8 +7,7 @@ import React from 'react';
 import { ClientProvider } from '@dxos/react-client';
 
 import { AppBar } from '../components';
-import { WithSnackbarContext } from '../contexts';
-import { useExtensionPort } from '../hooks';
+import { WithSnackbarContext, useExtensionPort } from '../hooks';
 import { Main } from './Main';
 
 export const Root = () => {
