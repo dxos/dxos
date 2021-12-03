@@ -64,8 +64,6 @@ export class PluginRpc {
     const port = await createPort(peer, receive);
     const cleanup = await this._onConnect(port, peerId);
 
-    await peer.open();
-
     this._peers.set(peerId, {
       peer,
       cleanup,
