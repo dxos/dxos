@@ -129,6 +129,7 @@ const Controls = ({ port }: { port: RpcPort }) => {
     await client.halo.createProfile();
     const party = await client.echo.createParty();
     const root = await party.database.createItem({ model: ObjectModel, type: 'example:type.root' });
+    root.model.setProperty('name', 'root');
     await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: root.id });
     const child = await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: root.id });
     await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: child.id });
