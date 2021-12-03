@@ -59,7 +59,7 @@ export class DataMirror {
               itemId: addedEntitiy.itemId,
               itemType: addedEntitiy.genesis.itemType,
               modelType: addedEntitiy.genesis.modelType,
-              parentId: addedEntitiy.itemMutation?.parentId,
+              parentId: addedEntitiy.itemMutation?.parentId
             });
           }
 

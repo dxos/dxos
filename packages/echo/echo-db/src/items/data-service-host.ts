@@ -47,9 +47,9 @@ export class DataServiceHost {
               target: entity.targetId
             } : undefined
           },
-          itemMutation: entity instanceof Item ? { 
-            parentId: entity.parent?.id,
-          } : undefined,
+          itemMutation: entity instanceof Item ? {
+            parentId: entity.parent?.id
+          } : undefined
         };
       };
 
