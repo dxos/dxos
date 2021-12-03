@@ -5,11 +5,13 @@
 import assert from 'assert';
 
 import { PublicKey } from '@dxos/crypto';
+import { failUndefined } from '@dxos/debug';
 import { Database, Party as EchoParty, RemoteDatabaseBackend } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
 import { ClientServiceProvider } from '../interfaces';
+import { ClientServiceProxy } from '../service-proxy';
 
 export class PartyProxy {
   private readonly _database: Database;
@@ -19,18 +21,27 @@ export class PartyProxy {
     private _modelFactory: ModelFactory,
     private _partyKey: PublicKey
   ) {
-    this._database = new Database(
-      this._modelFactory,
-      new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._partyKey)
-    );
+    if (_serviceProvider instanceof ClientServiceProxy) {
+      this._database = new Database(
+        this._modelFactory,
+        new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._partyKey)
+      );
+    } else {
+      const party = this._serviceProvider.echo.getParty(this._partyKey) ?? failUndefined();
+      this._database = party.database;
+    }
   }
 
   async open () {
-    await this._database.init();
+    if (this._serviceProvider instanceof ClientServiceProxy) {
+      await this._database.init();
+    }
   }
 
   async close () {
-    await this._database.destroy();
+    if (this._serviceProvider instanceof ClientServiceProxy) {
+      await this._database.destroy();
+    }
   }
 
   /**
