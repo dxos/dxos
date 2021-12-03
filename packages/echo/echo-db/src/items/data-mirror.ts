@@ -58,7 +58,8 @@ export class DataMirror {
             entity = await this._itemManager.constructItem({
               itemId: addedEntitiy.itemId,
               itemType: addedEntitiy.genesis.itemType,
-              modelType: addedEntitiy.genesis.modelType
+              modelType: addedEntitiy.genesis.modelType,
+              parentId: addedEntitiy.itemMutation?.parentId
             });
           }
 
