@@ -130,7 +130,7 @@ const HaloAuthenticationContainer = () => {
 
 const TestApp = () => {
   const client = useClient();
-  const parties = useParties();
+  const parties = useParties().map(p => p.impl);
   const profile = useProfile();
 
   return (

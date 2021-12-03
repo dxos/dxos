@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { PublicKey } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import { Database, Party as EchoParty, RemoteDatabaseBackend } from '@dxos/echo-db';
+import { Database, Party as EchoParty, Party, RemoteDatabaseBackend } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 
@@ -30,6 +30,15 @@ export class PartyProxy {
       const party = this._serviceProvider.echo.getParty(this._partyKey) ?? failUndefined();
       this._database = party.database;
     }
+  }
+
+  /**
+   * Returns the ECHO version of the party if we are running in local mode.
+   * 
+   * @deprecated
+   */
+  get impl(): Party {
+    return this._serviceProvider.echo.getParty(this._partyKey) ?? failUndefined();
   }
 
   async open () {

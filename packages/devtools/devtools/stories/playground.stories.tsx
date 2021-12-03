@@ -125,6 +125,16 @@ const Controls = ({ port }: { port: RpcPort }) => {
     setItemModel('');
   };
 
+  async function handleTestSetup() {
+    await client.halo.createProfile();
+    const party = await client.echo.createParty();
+    const root = await party.database.createItem({ model: ObjectModel, type: 'example:type.root' });
+    await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: root.id });
+    const child = await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: root.id });
+    await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: child.id });
+    await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: child.id });
+  }
+
   return (
     <Box sx={{
       width: 500,
@@ -132,6 +142,7 @@ const Controls = ({ port }: { port: RpcPort }) => {
       borderLeft: '1px solid',
       borderLeftColor: 'primary.main'
     }}>
+      <Button onClick={handleTestSetup}>Create Test data</Button>
       <Button onClick={handleCreateProfile}>Create Profile</Button>
       {profile && <Button onClick={handleCreateParty}>Create Party</Button>}
       <Box sx={{ padding: 2 }}>

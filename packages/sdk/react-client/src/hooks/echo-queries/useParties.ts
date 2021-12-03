@@ -9,6 +9,7 @@ import { Party } from '@dxos/echo-db';
 
 import { useClient } from '../client';
 import { useResultSet } from '../util';
+import { PartyProxy } from '@dxos/client';
 
 /**
  * Get a specific Party.
@@ -25,7 +26,7 @@ export const useParty = (partyKey?: PublicKeyLike) => {
  */
 export const useParties = () => {
   const client = useClient();
-  const [parties, setParties] = useState<Party[]>([]);
+  const [parties, setParties] = useState<PartyProxy[]>([]);
 
   useEffect(() => {
     const result = client.echo.queryParties();
