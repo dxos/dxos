@@ -9,5 +9,28 @@
   "exclude": [
     "dist",
     "node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../protocol"
+    },
+    {
+      "path": "../../common/rpc"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../network-manager"
+    },
+    {
+      "path": "../../common/testutils"
+    }
   ]
 }
