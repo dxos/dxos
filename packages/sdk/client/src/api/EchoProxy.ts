@@ -91,6 +91,7 @@ export class EchoProxy {
       }
     };
     this._partiesChanged.on(handler);
+    handler();
     await partyReceivedPromise;
     this._partiesChanged.off(handler);
 
