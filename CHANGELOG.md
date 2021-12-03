@@ -1,5 +1,13 @@
 # Change Log
 
+### [2.18.4](https://www.github.com/dxos/protocols/compare/v2.18.3...v2.18.4) (2021-12-03)
+
+
+### Features
+
+* Protocol plugin RPC ([#707](https://www.github.com/dxos/protocols/issues/707)) ([3544390](https://www.github.com/dxos/protocols/commit/35443906a1a4010da969cca0b1a0ce23e5768290))
+* Support hierarchical items and links in remote databases ([#722](https://www.github.com/dxos/protocols/issues/722)) ([ed9b639](https://www.github.com/dxos/protocols/commit/ed9b6397a477719f54f888288276ac46441dd89d))
+
 ### [2.18.3](https://www.github.com/dxos/protocols/compare/v2.18.2...v2.18.3) (2021-12-02)
 
 
