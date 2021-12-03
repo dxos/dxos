@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "debug": "^4.1.1"
   },

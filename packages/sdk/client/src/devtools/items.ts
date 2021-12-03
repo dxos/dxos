@@ -5,9 +5,9 @@
 import { Stream } from '@dxos/codec-protobuf';
 
 import { SubscribeToItemsResponse } from '../proto/gen/dxos/devtools';
-import { DevtoolsHook, DevtoolsServiceDependencies } from './devtools-context';
+import { DevtoolsServiceDependencies } from './devtools-context';
 
-const getData = (echo: DevtoolsHook['client']['echo']): SubscribeToItemsResponse => {
+const getData = (echo: DevtoolsServiceDependencies['echo']): SubscribeToItemsResponse => {
   const result: any = {
     parties: []
   };
