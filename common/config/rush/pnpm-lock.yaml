@@ -1491,6 +1491,36 @@ importers:
       multi-read-stream: ^2.0.0
       pify: ~5.0.0
       wait-for-expect: ^3.0.2
+  ../../packages/mesh/protocol-plugin-rpc:
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/protocol': link:../protocol
+      '@dxos/rpc': link:../../common/rpc
+    devDependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/network-manager': link:../network-manager
+      '@dxos/testutils': link:../../common/testutils
+      '@dxos/toolchain-node-library': link:../../../toolchains/toolchain-node-library
+      '@types/expect': 24.3.0
+      '@types/mocha': 8.2.2
+      '@types/node': 14.14.45
+      expect: 27.0.2
+      wait-for-expect: 3.0.2
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocol': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/toolchain-node-library': workspace:*
+      '@types/expect': ~24.3.0
+      '@types/mocha': ~8.2.2
+      '@types/node': ^14.0.9
+      expect: ~27.0.2
+      wait-for-expect: ^3.0.2
   ../../packages/mesh/signal:
     dependencies:
       '@azure/abort-controller': 1.0.4
