@@ -140,7 +140,6 @@ export class Extension extends Nanomessage {
     return this;
   }
 
-
   /**
    * Sets the connected handler.
    * @param {Function<{protocol}>} connectedHandler - Async connected handler.
@@ -246,7 +245,7 @@ export class Extension extends Nanomessage {
 
   /**
    * Connected event.
-   */ 
+   */
   async onConnected () {
     if (this._connectedHandler) {
       assert(this._protocol);
