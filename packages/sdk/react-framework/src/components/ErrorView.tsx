@@ -32,12 +32,16 @@ const Code = styled('div')(({ theme }) => ({
 }));
 
 export interface ErrorViewProps {
-  onRestart?: () => void
+  onReload?: () => void
   onReset?: () => void
   error: Error | null
   title?: string
   context?: any
   issueLink?: string
+}
+
+const reload = () => {
+  window.location.reload();
 }
 
 /**
@@ -46,7 +50,7 @@ export interface ErrorViewProps {
  * Used in `ErrorBoundary`
  */
 export const ErrorView = ({
-  onRestart,
+  onReload = reload,
   onReset,
   error,
   title = DEFAULT_TITLE,
@@ -118,18 +122,21 @@ export const ErrorView = ({
         {(isDev && onReset) && (
           <Button
             variant='text'
-            onClick={onReset}
+            onClick={async () => {
+              await onReset()
+              onReload();
+            }}
           >
             Reset storage
           </Button>
         )}
-        {onRestart && (
+        {onReload && (
           <Button
             variant='contained'
             color='primary'
-            onClick={onRestart}
+            onClick={onReload}
           >
-            Restart
+            Reload
           </Button>
         )}
       </DialogActions>

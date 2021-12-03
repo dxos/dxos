@@ -10,29 +10,30 @@ import { Alert, Box, Button } from '@mui/material';
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
-import { ErrorBoundary, ErrorView, FrameworkContextProvider, useError } from '../src';
+import { ErrorBoundary, ErrorView, FrameworkContextProvider, useErrors } from '../src';
 
 export default {
   title: 'react-framework/ErrorBoundary'
 };
 
-// TODO(burdon): Unset by client.
 debug.enable('*');
 
 enum ErrorType {
-  Async,
-  Promise,
-  Invalid
+  Async = 1,
+  Promise = 2,
+  Invalid = 3
 }
 
 const TestApp = () => {
-  const [error, resetError] = useError();
+  const [errors, resetError] = useErrors();
   const [trigger, setTrigger] = useState<ErrorType | undefined>();
 
   useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
     switch (trigger) {
       case ErrorType.Async: {
-        setTimeout(() => {
+        t = setTimeout(() => {
+          setTrigger(undefined);
           throw new Error('Async error.');
         }, 1000);
         break;
@@ -40,13 +41,16 @@ const TestApp = () => {
 
       case ErrorType.Promise: {
         setImmediate(async () => await new Promise((resolve, reject) => {
-          setTimeout(() => {
+          t= setTimeout(() => {
+            setTrigger(undefined);
             reject(new Error('Promise rejected.'));
           }, 1000);
         }));
         break;
       }
     }
+
+    return () => clearTimeout(t);
   }, [trigger]);
 
   // Trigger ErrorBoundary: "Nothing was returned from render."
@@ -72,9 +76,11 @@ const TestApp = () => {
           </Button>
         </Box>
 
-        {error && (
+        {errors.length > 0 && (
           <Box>
-            <Alert severity='error'>{String(error)}</Alert>
+            {errors.map((error, i) => (
+              <Alert key={i} severity='error'>{String(error)}</Alert>
+            ))}
           </Box>
         )}
       </Box>
@@ -96,18 +102,17 @@ export const Primary = () => {
   const App = TestApp as any;
 
   return (
-    <ClientProvider clientRef={clientRef}>
-      <FrameworkContextProvider>
-        <ErrorBoundary
-          onReset={async () => {
-            clientRef.current!.reset();
-            window.location.reload();
-          }}
-        >
+    <ErrorBoundary
+      onReset={async () => {
+        clientRef.current!.reset();
+      }}
+    >
+      <ClientProvider clientRef={clientRef}>
+        <FrameworkContextProvider>
           <App />
-        </ErrorBoundary>
-      </FrameworkContextProvider>
-    </ClientProvider>
+        </FrameworkContextProvider>
+      </ClientProvider>
+    </ErrorBoundary>
   );
 };
 
@@ -117,8 +122,6 @@ export const View = () => {
   return (
     <ErrorView
       error={error}
-      onReset={() => {}}
-      onRestart={() => {}}
       context={{
         testing: true
       }}

@@ -21,7 +21,6 @@ import {
   useGenerator,
   ONLINE_CONFIG
 } from '../src';
-import { ClientProvider } from '../../react-client/src';
 
 export default {
   title: 'demos/Links'

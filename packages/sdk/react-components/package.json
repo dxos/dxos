@@ -12,6 +12,7 @@
     "src"
   ],
   "scripts": {
+    "book": "esbuild-server book",
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "build:watch": "tsc --watch",

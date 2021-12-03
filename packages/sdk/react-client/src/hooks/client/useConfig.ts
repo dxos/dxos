@@ -13,6 +13,6 @@ import { ClientContext } from './context';
  * Requires ClientConext to be set via ClientProvider.
  */
 export const useConfig = () => {
-  const { config } = useContext(ClientContext) ?? raise(new Error('ClientContext no set.'));
-  return config;
+  const { client } = useContext(ClientContext) ?? raise(new Error('Missing ClientContext.'));
+  return client.config;
 };

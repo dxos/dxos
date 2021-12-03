@@ -18,7 +18,7 @@
     "build": "tsc --noEmit && npm run book -- --build",
     "build:test": "pnpm run build && pnpm run lint && pnpm run test 2>&1",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
-    "grid:demo": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
+    "demo:grid": "mocha -r dotenv/config -r ts-node/register/transpile-only './grid/**/*.test.ts'",
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",
     "test": "exit 0",

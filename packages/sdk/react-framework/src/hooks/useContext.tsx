@@ -11,7 +11,6 @@ import { raise } from '@dxos/debug';
 type State<T> = [T, Dispatch<SetStateAction<T>>]
 
 type FrameworkContextState = {
-  errors: State<Error | undefined>,
   invitations: State<PendingInvitation[]>
 }
 
@@ -20,14 +19,14 @@ type FrameworkContextState = {
  */
 export const FrameworkContext = createContext<FrameworkContextState | undefined>(undefined);
 
-// TODO(burdon): Maintain client object (set downstream?)
+/**
+ * @deprecated
+ */
 export const FrameworkContextProvider = ({ children }: { children: ReactNode }) => {
-  const errors = useState<Error | undefined>();
   const invitations = useState<PendingInvitation[]>([]);
 
   const state = {
-    errors,
-    invitations
+    invitations // TODO(burdon): Move to ClientProvider.
   };
 
   return (
@@ -38,5 +37,5 @@ export const FrameworkContextProvider = ({ children }: { children: ReactNode }) 
 };
 
 export const useFrameworkContext = (): FrameworkContextState => {
-  return useContext(FrameworkContext) ?? raise(new Error('FrameworkContext not set.'));
+  return useContext(FrameworkContext) ?? raise(new Error('Missing FrameworkContext.'));
 };

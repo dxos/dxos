@@ -5,7 +5,8 @@
 import debug from 'debug';
 import React, { Component, ErrorInfo } from 'react';
 
-import { ErrorView } from '../components';
+import { ErrorIndicator, ErrorView, ErrorViewProps } from '../components';
+import { ErrorContext } from '../hooks';
 
 const logError = debug('dxos:react-framework:error');
 
@@ -17,14 +18,21 @@ const logError = debug('dxos:react-framework:error');
  * https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
  */
 
+// TODO(burdon): Remove Framework context and set error context here.
+// TODO(burdon): Add configurable error indicator.
+// TODO(burdon): Add Loading indicator (that can be reset downstream).
+
 interface Props {
-  onError: (error: Error, errorInfo: ErrorInfo) => void,
-  onRestart?: () => void,
+  view: React.FC<ErrorViewProps>
+  indicator: React.FC<ErrorViewProps>
+  onError: (error: Error, errorInfo: ErrorInfo) => void
+  onReload?: () => void
   onReset?: () => void
 }
 
 interface State {
-  error: Error | null
+  error: Error | undefined
+  errors: Error[]
 }
 
 /**
@@ -35,42 +43,63 @@ interface State {
 // TODO(burdon): Integrate with useError hook?
 //   https://github.com/tatethurston/react-use-error-boundary/blob/main/src/test.tsx
 export class ErrorBoundary extends Component<Props, State> {
-  override state = {
-    error: null
-  };
-
   static defaultProps = {
+    view: ErrorView,
+    indicator: undefined,
     onError: logError,
-    onRestart: () => {
-      window.location.href = '/';
-    },
+    onReload: undefined,
     onReset: undefined
   };
 
-  static getDerivedStateFromError (error: any) {
+  /**
+   * https://reactjs.org/docs/react-component.html#static-getderivedstatefromerror
+   */
+  static getDerivedStateFromError (error: Error) {
     return { error };
   }
 
+  override state = {
+    error: undefined, // Error during child rendering.
+    errors: [] // All runtime errors.
+  };
+
   override componentDidCatch (error: Error, errorInfo: ErrorInfo) {
     const { onError } = this.props;
+    const { errors } = this.state;
+
     onError(error, errorInfo);
+    this.setState({ errors: [error, ...errors] });
   }
 
   override render () {
-    const { children, onRestart, onReset } = this.props;
-    const { error } = this.state;
+    const { children, onReload, onReset, view: View } = this.props;
+    const { error, errors } = this.state;
 
-    // TODO(burdon): Customize view?
+    const addError = (error: Error) => {
+      this.setState({
+        errors: [error, ...errors]
+      })
+    };
+
+    const resetErrors = () => {
+      this.setState({ errors: [] });
+    };
+
     if (error) {
       return (
-        <ErrorView
+        <View
           error={error}
-          onRestart={onRestart}
+          onReload={onReload}
           onReset={onReset}
         />
       );
     }
 
-    return children;
+    return (
+      <ErrorContext.Provider value={{ errors, addError, resetErrors }}>
+        {children}
+        <ErrorIndicator errors={errors} onReset={resetErrors} />
+      </ErrorContext.Provider>
+    );
   }
 }

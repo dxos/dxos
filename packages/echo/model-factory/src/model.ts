@@ -9,7 +9,6 @@ import { FeedWriter, ItemID, MutationMeta, WriteReceipt } from '@dxos/echo-proto
 import { createWritable } from '@dxos/feed-store';
 
 import { ModelMessage, ModelMeta } from './types';
-import { PublicKey } from '@dxos/crypto/dist';
 
 export interface MutationWriteReceipt extends WriteReceipt {
   waitToBeProcessed(): Promise<void>
@@ -21,12 +20,14 @@ export interface MutationWriteReceipt extends WriteReceipt {
 //   How to query/filter for items by type (of what?) Disambiguate item/model type from message type. Frames?
 //   Minimal test (how to write models).
 
+/*
 // TODO(burdon): Reset? rollback?
-interface StateMachine<T> {
+interface StateMachine<T, S, M> {
+  messageType: string // DXN for M.
   state: () => T
-  toJson: () => Promise<string>
-  fromJson: (json: string) => Promise<void>
-  processMessage: () => Promise<void>
+  toSnapshot: () => Promise<S>
+  fromSnaphot: (data: S) => Promise<void>
+  processMessage: (message: M) => Promise<void> // From Item stream.
 }
 
 interface Result<T> {
@@ -44,7 +45,37 @@ interface ChessState {
   fen: string
 }
 
-/*
+package arena.chess;
+message ChessMessage
+{
+  oneof kind {
+    ChessGame
+    ChessMove
+  }
+
+  ChessGame {
+    PubKey whiteKey = 1
+    PubKey blackKey = 2
+  }
+
+  ChessMove {
+    enum Piece {
+      QUEEN = 1
+    }
+
+    from: string = 1
+    to: string = 2
+    promotion: Piece
+  }
+}
+
+class ChessStateMachinelImpl implements StateMachine<ChessState> {
+  constructor (
+    private readonly writer: Writer<ChessMessage>,
+    private readonly
+  ) {}
+}
+
 // TODO(burdon): Distinguished from state machine.
 // TODO(burdon): This requires a writablestream but isn't required by the pipeline.
 interface ChessModel {
@@ -53,14 +84,14 @@ interface ChessModel {
   applyMove: (move: any) => Result<ChessState>
 }
 
-// TODO(burdon): Object binding? Example query?
-class ChessStateMachine implements StateMachine<ChessState> {}
-
-class ChessModelImpl implements ChessModel {
+class ChessModelImpl  {
   constructor (
-    private readonly writableStream: NodeJS.WritableStream,
-    private readonly
+    private readonly _stateMachine: StateMachine<ChessState>
   ) {}
+
+  get state () {
+    return _stateMachine.state;
+  }
 }
 
 const test = (Item<ChessModel>) => item.model.state.fen;

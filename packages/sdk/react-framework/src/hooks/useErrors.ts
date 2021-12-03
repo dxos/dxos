@@ -3,32 +3,40 @@
 //
 
 import debug from 'debug';
-import { useEffect } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 
-import { useFrameworkContext } from './context';
+import { raise } from '@dxos/debug';
 
 const logError = debug('dxos:react-framework:error');
+
+export interface ErrorContextState {
+  errors: Error[] // TODO(burdon): Timestamp?
+  addError: (error: Error) => void
+  resetErrors: () => void
+}
+
+export const ErrorContext = createContext<ErrorContextState | undefined>(undefined);
 
 /**
  * Global error handling.
  * https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event
  */
-export const useError = (): [Error | undefined, () => void] => {
+export const useErrors = (): [Error[], () => void] => {
   const log = debug.enabled('dxos:react-framework:error') ? logError : console.error;
 
   // TODO(burdon): Post errors to montioring service.
-  const { errors: [error, setError] } = useFrameworkContext();
+  const { errors, addError, resetErrors } = useContext(ErrorContext) ?? raise(new Error('Missing ErrorContext.'));
 
   useEffect(() => {
     window.onerror = (message, source, lineno, colno, error?: Error) => {
       log('onerror', message);
-      setError(error);
+      addError(error!);
       return true; // Prevent default.
     };
 
     const listener = (event: any) => {
       log('unhandledrejection', event.reason);
-      setError(event.reason);
+      addError(event.reason);
       event.preventDefault();
     };
 
@@ -38,5 +46,5 @@ export const useError = (): [Error | undefined, () => void] => {
     };
   }, []);
 
-  return [error, () => setError(undefined)];
+  return [errors, () => resetErrors()];
 };
