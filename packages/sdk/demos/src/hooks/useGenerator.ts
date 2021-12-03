@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 
+import { PartyProxy } from '@dxos/client';
 import { InvitationDescriptor, Party } from '@dxos/echo-db';
 import { Generator } from '@dxos/echo-testing';
 import { useClient } from '@dxos/react-client';
@@ -15,7 +16,7 @@ import { useClient } from '@dxos/react-client';
 export const useGenerator = () => {
   const client = useClient();
 
-  const [party, setParty] = useState<Party | undefined>();
+  const [party, setParty] = useState<PartyProxy | Party | undefined>();
   const [generator, setGenerator] = useState<Generator | undefined>();
 
   const createParty = async (config = {}) => {

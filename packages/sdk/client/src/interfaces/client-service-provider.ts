@@ -3,12 +3,12 @@
 //
 
 import { ECHO, OpenProgress } from '@dxos/echo-db';
+import { DataService, schema as schemaProtocol } from '@dxos/echo-protocol';
 import { createServiceBundle } from '@dxos/rpc';
 
 import { schema } from '../proto/gen';
 import { PartyService, ProfileService, SystemService } from '../proto/gen/dxos/client';
 import { DevtoolsHost } from '../proto/gen/dxos/devtools';
-import { DataService } from '../proto/gen/dxos/echo/service';
 
 export interface ClientServices {
   SystemService: SystemService;
@@ -22,7 +22,8 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   SystemService: schema.getService('dxos.client.SystemService'),
   ProfileService: schema.getService('dxos.client.ProfileService'),
   PartyService: schema.getService('dxos.client.PartyService'),
-  DataService: schema.getService('dxos.echo.service.DataService'),
+  // DataService is provided and implemented internally in ECHO so we import it from there.
+  DataService: schemaProtocol.getService('dxos.echo.service.DataService'),
   DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost')
 });
 

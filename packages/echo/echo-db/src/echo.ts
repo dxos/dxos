@@ -340,7 +340,7 @@ export class ECHO {
    * @param invitationDescriptor Invitation descriptor passed from another peer.
    * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
    */
-  // TODO(burdon): Reconcile with `client.createInvitation` on client.
+  // TODO(burdon): Reconcile with `client.echo.createInvitation` on client.
   // TODO(burdon): Expose state machine for invitations.
   //   code const invitationProcess = client.joinParty(invitation);
   //   code invitationProcess.authenticate(code);

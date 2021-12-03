@@ -4,6 +4,8 @@
 
 import { useEffect, useState } from 'react';
 
+import { Party } from '@dxos/client/src/proto/gen/dxos/client';
+
 import { useClient } from '../client';
 
 /**
@@ -12,7 +14,7 @@ import { useClient } from '../client';
  */
 export const useRemoteParties = () => {
   const client = useClient();
-  const [parties, setParties] = useState<{key?: Uint8Array}[]>([]);
+  const [parties, setParties] = useState<Party[]>([]);
 
   useEffect(() => {
     const stream = client.services.PartyService.SubscribeParties();

@@ -29,7 +29,6 @@ describe('ClientProvider', () => {
     client = new Client();
     await client.initialize();
     await client.halo.createProfile({ username: 'test-user' });
-    await client.echo.open();
   });
 
   after(async () => {
