@@ -88,7 +88,7 @@ service ProfileService {
 //
 
 message Party {
-  bytes key = 1;
+  required dxos.halo.keys.PubKey publicKey = 1;
 }
 
 message SubscribePartiesResponse {
@@ -96,7 +96,7 @@ message SubscribePartiesResponse {
 }
 
 message CreateInvitationRequest {
-  bytes partyKey = 1;
+  required dxos.halo.keys.PubKey publicKey = 1;
 }
 
 service PartyService {

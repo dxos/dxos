@@ -7,6 +7,7 @@ import debug from 'debug';
 
 import { sleep, synchronized, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { StackTrace } from '@dxos/debug';
 
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
@@ -194,7 +195,22 @@ export class RpcPeer {
     const timeoutPromise = sleep(this._options.timeout ?? DEFAULT_TIMEOUT).then(() => Promise.reject(new Error('Timeout')));
     timeoutPromise.catch(() => {}); // Mute the promise.
 
-    const response = await Promise.race([promise, timeoutPromise]);
+    let response: Response;
+    try {
+      response = await Promise.race([promise, timeoutPromise]);
+    } catch (err) {
+      console.log({
+        err,
+        inst: err instanceof RpcClosedError
+      });
+      if (err instanceof RpcClosedError) {
+        // Rethrow the error here to have the correct stack-trace.
+        const error = new RpcClosedError();
+        error.stack += `\n\nRpc client was closed at:\n${err.stack}`;
+        throw error;
+      }
+      throw err;
+    }
     assert(response.id === id);
 
     if (response.payload) {
@@ -235,7 +251,18 @@ export class RpcPeer {
         }
       };
 
-      this._outgoingRequests.set(id, new RequestItem(onResponse, close, true));
+      const stack = new StackTrace();
+
+      function closeStream (error?: Error) {
+        if (!error) {
+          close();
+        } else {
+          error.stack += `\n\nError happened in the stream at:\n${stack.getStack()}`;
+          close(error);
+        }
+      }
+
+      this._outgoingRequests.set(id, new RequestItem(onResponse, closeStream, true));
 
       this._sendMessage({
         request: {

@@ -6,7 +6,6 @@ import expect from 'expect';
 import 'source-map-support/register';
 
 import { defaultTestingConfig, Client } from '@dxos/client';
-import { defaultSecretProvider } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { defaultInvitationAuthenticator } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
@@ -80,8 +79,8 @@ describe('Client - nonpersistent', () => {
       username: 'DXOS test 2'
     });
 
-    const invite = await party.createInvitation(defaultInvitationAuthenticator);
-    const otherParty = await otherClient.echo.joinParty(invite, defaultSecretProvider);
+    const invite = await client.echo.createInvitation(party.key, defaultInvitationAuthenticator);
+    const otherParty = await otherClient.echo.joinParty(invite, defaultInvitationAuthenticator.secretProvider);
 
     const otherItem = otherParty.database.select(s => s.filter({ type: 'dxn://test' }).items).getValue()[0];
     expect(otherItem.model.getProperty('foo')).toEqual('bar');
@@ -112,8 +111,8 @@ describe('Client - nonpersistent', () => {
     // Online (adds contact).
     {
       const party1A = await clientA.echo.createParty();
-      const invite1 = await party1A.createInvitation(defaultInvitationAuthenticator);
-      await clientB.echo.joinParty(invite1, defaultSecretProvider);
+      const invite1 = await clientA.echo.createInvitation(party1A.key, defaultInvitationAuthenticator);
+      await clientB.echo.joinParty(invite1, defaultInvitationAuthenticator.secretProvider);
     }
 
     const contact = (await contactPromise)[0];
@@ -121,7 +120,7 @@ describe('Client - nonpersistent', () => {
     // Offline (use existing contact).
     {
       const party2A = await clientA.echo.createParty();
-      const invite2 = await party2A.createOfflineInvitation(contact.publicKey);
+      const invite2 = await clientA.echo.createOfflineInvitation(party2A.key, contact.publicKey);
       await clientB.echo.joinParty(invite2);
     }
 

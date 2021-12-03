@@ -29,6 +29,10 @@ export class HaloProxy {
     return `HaloProxy(${this._profile?.publicKey})`;
   }
 
+  get isInitialized (): boolean {
+    return this._serviceProvider.echo.halo.isInitialized;
+  }
+
   /**
    * User profile info.
   */
@@ -129,9 +133,9 @@ export class HaloProxy {
   /**
    * Allocate resources and set-up internal subscriptions.
    *
-   * @private
+   * @internal
    */
-  open () {
+  _open () {
     const profileStream = this._serviceProvider.services.ProfileService.SubscribeProfile();
     profileStream.subscribe(data => {
       this._profile = data.profile;
@@ -150,9 +154,9 @@ export class HaloProxy {
   /**
    * Destroy the instance and clean-up subscriptions.
    *
-   * @private
+   * @internal
    */
-  close () {
+  _close () {
     this._subscriptions.unsubscribe();
   }
 }
