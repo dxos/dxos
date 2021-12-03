@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/protocol';
 import { RpcPort } from '@dxos/rpc';
 
-type OnConnect = (port: RpcPort, peerId: string) => Promise<() => Promise<void> | void>
+type OnConnect = (port: RpcPort, peerId: string) => (Promise<() => Promise<void> | void>) | void
 
 interface SerializedObject {
   data: Buffer
@@ -16,7 +16,7 @@ interface SerializedObject {
 
 interface Connection {
   peer: Protocol,
-  cleanup: () => Promise<void> | void,
+  cleanup?: () => Promise<void> | void,
   receive: Event<SerializedObject>
 }
 
@@ -52,7 +52,7 @@ export class PluginRpc {
 
   createExtension (): Extension {
     return new Extension(PluginRpc.extensionName)
-      .setHandshakeHandler(this._onPeerConnect.bind(this))
+      .setConnectedHandler(this._onPeerConnect.bind(this))
       .setMessageHandler(this._onMessage.bind(this))
       .setCloseHandler(this._onPeerDisconnect.bind(this));
   }
@@ -64,18 +64,25 @@ export class PluginRpc {
     const port = await createPort(peer, receive);
     const cleanup = await this._onConnect(port, peerId);
 
-    this._peers.set(peerId, {
-      peer,
-      cleanup,
-      receive
-    });
+    if (typeof cleanup === 'function') {
+      this._peers.set(peerId, {
+        peer,
+        cleanup,
+        receive
+      });
+    } else {
+      this._peers.set(peerId, {
+        peer,
+        receive
+      });
+    }
   }
 
   private async _onPeerDisconnect (peer: Protocol) {
     const peerId = getPeerId(peer);
     const connection = this._peers.get(peerId);
     if (connection) {
-      await connection.cleanup();
+      await connection.cleanup?.();
       this._peers.delete(peerId);
     }
   }
@@ -90,7 +97,7 @@ export class PluginRpc {
 
   async close () {
     for (const connection of this._peers.values()) {
-      await connection.cleanup();
+      await connection.cleanup?.();
       await connection.peer.close();
     }
   }

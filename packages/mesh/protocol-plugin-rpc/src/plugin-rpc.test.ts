@@ -23,10 +23,7 @@ const createPeer = (
 ) => {
   const networkManager = new NetworkManager();
   afterTest(() => networkManager.destroy());
-  const plugin = new PluginRpc(async (port, peerId) => {
-    onConnect(port, peerId);
-    return () => {};
-  });
+  const plugin = new PluginRpc(onConnect);
   networkManager.joinProtocolSwarm({
     topic,
     peerId,
@@ -134,7 +131,7 @@ describe('Protocol plugin rpc', () => {
     const client1Connected = connected.waitFor(() => !!client1);
     const client2Connected = connected.waitFor(() => !!client2);
 
-    createPeer(topic, topic, (port, peerId) => {
+    createPeer(topic, topic, async (port, peerId) => {
       const server = createRpcServer({
         service,
         handlers: {
@@ -146,25 +143,18 @@ describe('Protocol plugin rpc', () => {
         },
         port
       });
-      // The callback needs to finish before the port can be opened?
-      setTimeout(() => server.open(), 0);
+      await server.open();
     });
 
     createPeer(topic, client1Id, async (port) => {
       client1 = createRpcClient(service, { port });
-      // The callback needs to finish before the port can be opened?
-      setTimeout(async () => {
-        await client1!.open();
-        connected.emit();
-      }, 0);
+      await client1.open();
+      connected.emit();
     });
     createPeer(topic, client2Id, async (port) => {
       client2 = createRpcClient(service, { port });
-      // The callback needs to finish before the port can be opened?
-      setTimeout(async () => {
-        await client2!.open();
-        connected.emit();
-      }, 0);
+      await client2.open();
+      connected.emit();
     });
 
     await Promise.all([

@@ -330,6 +330,11 @@ export class Protocol {
     this.handshake.emit(this);
     this._connected = true;
 
+    for (const [name, extension] of this._extensionMap) {
+      log(`handshake extension "${name}": connected`);
+      await extension.onConnected();
+    }
+
     // TODO(unknown): Redo this.
     this._stream.on('feed', async (discoveryKey: Buffer) => {
       try {
