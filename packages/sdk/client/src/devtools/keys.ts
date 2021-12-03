@@ -9,12 +9,8 @@ import { DevtoolsServiceDependencies } from './devtools-context';
 
 export const subscribeToKeyringKeys = (hook: DevtoolsServiceDependencies) => {
   return new Stream<SubscribeToKeyringKeysResponse>(({ next }) => {
-    setImmediate(async () => {
-      hook.keyring.keysUpdate.on((keys) => {
-        next({ keys });
-      });
+    return hook.keyring.keysUpdate.on((keys) => {
+      next({ keys });
     });
-
-    // TODO(yivlad): Add cleanup logic.
   });
 };
