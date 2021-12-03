@@ -149,7 +149,7 @@ describe('Protocol plugin rpc', () => {
       // The callback needs to finish before the port can be opened?
       setTimeout(() => server.open(), 0);
     });
-    
+
     createPeer(topic, client1Id, async (port) => {
       client1 = createRpcClient(service, { port });
       // The callback needs to finish before the port can be opened?
@@ -177,7 +177,7 @@ describe('Protocol plugin rpc', () => {
     const responses = await Promise.all([
       client1.rpc.TestCall({ data: 'requestData' }),
       client2.rpc.TestCall({ data: 'requestData' }),
-      client1.rpc.TestCall({ data: 'requestData' }),
+      client1.rpc.TestCall({ data: 'requestData' })
     ]);
 
     const peerIds = responses.map((response) => response.data);
