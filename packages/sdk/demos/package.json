@@ -1,6 +1,6 @@
 {
   "name": "@dxos/demos",
-  "version": "2.18.2",
+  "version": "2.18.3",
   "private": true,
   "description": "SDK demos and storybooks.",
   "homepage": "https://github.com/dxos/protocols/tree/master/packages/echo",
@@ -70,7 +70,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.3.2",
+    "@dxos/esbuild-server": "~1.4.0",
     "@dxos/toolchain-node-library": "workspace:*",
     "@types/d3": "~7.0.0",
     "@types/faker": "^5.5.1",

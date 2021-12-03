@@ -200,10 +200,7 @@ export class RpcPeer {
     if (response.payload) {
       return response.payload;
     } else if (response.error) {
-      assert(response.error.name);
-      assert(response.error.message);
-      assert(response.error.stack);
-      throw new SerializedRpcError(response.error.name, response.error.message, response.error.stack, method);
+      throw new SerializedRpcError(response.error.name ?? 'UnknownError', response.error.message ?? 'Unknown Error', response.error.stack ?? '', method);
     } else {
       throw new Error('Malformed response.');
     }
@@ -318,9 +315,19 @@ export class RpcPeer {
 }
 
 function encodeError (err: any): ErrorResponse {
-  return {
-    name: err.name,
-    message: err.message,
-    stack: err.stack
-  };
+  if (typeof err === 'object' && err?.message) {
+    return {
+      name: err.name,
+      message: err.message,
+      stack: err.stack
+    };
+  } else if (typeof err === 'string') {
+    return {
+      message: err
+    };
+  } else {
+    return {
+      message: JSON.stringify(err)
+    };
+  }
 }

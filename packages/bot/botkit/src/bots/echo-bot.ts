@@ -6,10 +6,8 @@ import assert from 'assert';
 
 import { ObjectModel } from '@dxos/object-model';
 
-import { createIpcPort } from '../bot-container';
 import { SendCommandRequest } from '../proto/gen/dxos/bot';
 import { ClientBot } from './client-bot';
-import { startBot } from './start-bot';
 
 export class EchoBot extends ClientBot {
   constructor (private readonly _echoType: string) {
@@ -33,7 +31,3 @@ export class EchoBot extends ClientBot {
 }
 
 export const TEST_ECHO_TYPE = 'bot/text';
-
-if (typeof require !== 'undefined' && require.main === module) {
-  void startBot(new EchoBot(TEST_ECHO_TYPE), createIpcPort(process));
-}
