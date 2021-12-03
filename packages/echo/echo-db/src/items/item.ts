@@ -3,7 +3,7 @@
 //
 
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
-import { Model, ModelMeta } from '@dxos/model-factory';
+import { Model } from '@dxos/model-factory';
 
 import { Entity } from './entity';
 import type { Link } from './link';
@@ -49,12 +49,11 @@ export class Item<M extends Model> extends Entity<M> {
   constructor (
     itemId: ItemID,
     itemType: ItemType | undefined, // TODO(burdon): Why undefined?
-    modelMeta: ModelMeta,
     model: M,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>,
     parent?: Item<any> | null
   ) {
-    super(itemId, itemType, modelMeta, model);
+    super(itemId, itemType, model);
 
     this._updateParent(parent);
   }

@@ -94,14 +94,14 @@ jobs:
           echo "::endgroup::"
 
           # Quick build
-#          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to @dxos/tutorials-tasks-app
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to @dxos/tutorials-tasks-app
 
           # Test the Tasks App
-#          echo "::group::tasks-app"
-#          cd packages/tutorials/tasks-app
-#          ./scripts/start-and-wait.sh
-#          pnpm test:playwright
-#          echo "::endgroup::"
+          echo "::group::tutorials-tasks-app"
+          cd packages/tutorials/tutorials-tasks-app
+          ./scripts/start-and-wait.sh
+          pnpm test:playwright
+          echo "::endgroup::"
       - name: Cleanup
         run: |
           sudo apt-get install -y lsof

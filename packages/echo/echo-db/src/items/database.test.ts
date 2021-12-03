@@ -93,7 +93,7 @@ describe('Database', () => {
       expect(item.model.getProperty('foo')).toEqual('bar');
     });
 
-    test.skip('parent & child items', async () => {
+    test('parent & child items', async () => {
       const { frontend: database } = await setup();
 
       const parent = await database.createItem({ model: ObjectModel });
@@ -105,6 +105,18 @@ describe('Database', () => {
 
       expect(parent.children).toHaveLength(1);
       expect(parent.children[0] === child).toBeTruthy();
+    });
+
+    test('link', async () => {
+      const { frontend: database } = await setup();
+
+      const source = await database.createItem({ model: ObjectModel });
+      const target = await database.createItem({ model: ObjectModel });
+
+      const link = await database.createLink({ source, target });
+
+      expect(link.source).toBe(source);
+      expect(link.target).toBe(target);
     });
   });
 });

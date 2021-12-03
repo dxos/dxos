@@ -1,6 +1,6 @@
 {
   "name": "@dxos/registry-client",
-  "version": "2.18.2",
+  "version": "2.18.3",
   "description": "DXNS API",
   "license": "AGPL-3.0",
   "author": "DXOS.org",
@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.3.2",
+    "@dxos/esbuild-server": "~1.4.0",
     "@dxos/toolchain-node-library": "workspace:*",
     "@polkadot/typegen": "^4.17.1",
     "@types/chai": "^4.2.15",

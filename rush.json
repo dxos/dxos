@@ -718,6 +718,12 @@
       "versionPolicyName": "lockStepPolicy"
     },
     {
+      "packageName": "@dxos/protocol-plugin-rpc",
+      "projectFolder": "packages/mesh/protocol-plugin-rpc",
+      "shouldPublish": true,
+      "versionPolicyName": "lockStepPolicy"
+    },
+    {
       "packageName": "@dxos/signal",
       "projectFolder": "packages/mesh/signal",
       "shouldPublish": true,
@@ -770,6 +776,15 @@
       "projectFolder": "packages/deprecated/bot/test-bot-deprecated",
       "shouldPublish": true,
       "versionPolicyName": "lockStepPolicy"
+    },
+
+    //
+    // tutorials
+    //
+
+    {
+      "packageName": "@dxos/tutorials-tasks-app",
+      "projectFolder": "packages/tutorials/tutorials-tasks-app"
     },
 
     //

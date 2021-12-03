@@ -34,7 +34,7 @@ jobs:
         cd protocols
         set -e
 
-        cd packages/tutorials/tasks-app/
+        cd packages/tutorials/tutorials-tasks-app/
         rushx pack:app
 
         # Undo package.json changes that are made for packing purposes
@@ -44,9 +44,9 @@ jobs:
     - name: Checkout tutorial
       uses: actions/checkout@v2
       with:
-        repository: dxos/tutorial-tasks-app
+        repository: dxos/tutorials-tasks-app
         persist-credentials: true
-        path: tutorial-tasks-app
+        path: tutorials-tasks-app
         ref: master
         token: ${{ secrets.CREATE_PR_TOKEN }}
     - name: Copy and push packed app
@@ -56,10 +56,10 @@ jobs:
         git config --global user.email "ci@dxos.org"
         git config --global user.name "ci"
 
-        cp -R protocols/packages/tutorials/tasks-app/package/* tutorial-tasks-app/
+        cp -R protocols/packages/tutorials/tutorials-tasks-app/package/* tutorials-tasks-app/
         # copy dot files as well
-        cp -R protocols/packages/tutorials/tasks-app/package/.[a-zA-Z0-9]* tutorial-tasks-app
-        cd tutorial-tasks-app
+        cp -R protocols/packages/tutorials/tutorials-tasks-app/package/.[a-zA-Z0-9]* tutorials-tasks-app
+        cd tutorials-tasks-app
         git status
         git checkout -b ci/release
         git add -A

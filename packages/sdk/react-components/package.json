@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-components",
-  "version": "2.18.2",
+  "version": "2.18.3",
   "description": "Low-level material components.",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -37,7 +37,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
-    "@dxos/esbuild-server": "~1.3.2",
+    "@dxos/esbuild-server": "~1.4.0",
     "@dxos/react-client": "workspace:*",
     "@dxos/toolchain-node-library": "workspace:*",
     "@emotion/react": "^11.4.1",
