@@ -60,8 +60,7 @@ export const ClientProvider = ({
   options,
   onInitialize
 }: ClientProviderProps) => {
-  const [client, setClient] = useState<Client | undefined>(
-    typeof clientProvider !== 'function' ? clientProvider as Client : undefined);
+  const [client, setClient] = useState<Client | undefined>();
 
   // Async helpers.
   useEffect(() => {

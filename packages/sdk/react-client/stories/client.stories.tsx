@@ -32,3 +32,11 @@ export const Primary = () => {
     </ClientProvider>
   );
 };
+
+export const Secondary = () => {
+  return (
+    <ClientProvider config={() => ({})}>
+      <TestApp />
+    </ClientProvider>
+  );
+};
