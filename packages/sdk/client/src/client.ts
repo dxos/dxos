@@ -35,7 +35,7 @@ export const defaultTestingConfig: defs.Config = {
   }
 };
 
-// TODO(burdon): Why separate from config?
+// TODO(burdon): Add doc comment.
 export interface ClientOptions {
   /**
    * Only used when remote=true.
