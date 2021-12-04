@@ -25,6 +25,7 @@ message PartySnapshot {
   int32 timestamp = 3;
 
   HaloStateSnapshot halo = 11;
+  // TODO(dmaretskyi): Rename to EchoSnapshot.
   DatabaseSnapshot database = 12;
 }
 
