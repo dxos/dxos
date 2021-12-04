@@ -29,10 +29,10 @@
   ],
   "references": [
     {
-      "path": "../client"
+      "path": "../../sdk/client"
     },
     {
-      "path": "../config"
+      "path": "../../sdk/config"
     },
     {
       "path": "../../common/crypto"
@@ -50,13 +50,13 @@
       "path": "../../echo/object-model"
     },
     {
-      "path": "../react-client"
+      "path": "../../sdk/react-client"
     },
     {
-      "path": "../react-components"
+      "path": "../../sdk/react-components"
     },
     {
-      "path": "../react-framework"
+      "path": "../../sdk/react-framework"
     },
     {
       "path": "../../common/util"

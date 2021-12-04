@@ -1,6 +1,7 @@
 on:
   push:
 
+# TODO(burdon): Rename "checks" and make standard across repos.
 name: check
 jobs:
   check:
@@ -30,7 +31,8 @@ jobs:
           echo "::endgroup::"
 
           # Build with tests
-          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
+          # TODO(burdon): Move to separate action (run once per evening).
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose --except @dxos/tutorials-tasks-app
 
   check-storybooks:
     runs-on: [self-hosted, dind-actions-runner]
@@ -70,6 +72,7 @@ jobs:
           kill $(lsof -t -i:9001) || true
           kill $(lsof -t -i:8080) || true
 
+  # TODO(burdon): Run nightly.
   check-sdk-health:
     runs-on: [self-hosted, dind-actions-runner]
     timeout-minutes: 25

@@ -34,5 +34,31 @@
     "playwright",
     "src",
     "stories"
+  ],
+  "references": [
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-components"
+    },
+    {
+      "path": "../../sdk/react-framework"
+    }
   ]
 }
