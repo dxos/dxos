@@ -32,7 +32,7 @@ jobs:
 
           # Build with tests
           # TODO(burdon): Move to separate action (run once per evening).
-          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose --except @dxos/tutorials-tasks-app
+          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
 
   check-storybooks:
     runs-on: [self-hosted, dind-actions-runner]

@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "build": "SKIP_PREFLIGHT_CHECK=true craco build",
-    "build:test": "npm run build && npm run test",
+    "build:test": "",
+    "build:test:local": "npm run build && npm run test",
     "eject": "craco eject",
     "pack:app": "pnpm pack",
     "start": "SKIP_PREFLIGHT_CHECK=true craco start",
