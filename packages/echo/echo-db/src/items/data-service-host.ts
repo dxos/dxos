@@ -10,8 +10,10 @@ import { PublicKey } from '@dxos/crypto';
 import { failUndefined, raise } from '@dxos/debug';
 import { EchoEnvelope, FeedWriter, ItemID, MutationReceipt, SubscribeEntitySetResponse, SubscribeEntityStreamRequest, SubscribeEntityStreamResponse } from '@dxos/echo-protocol';
 
-import { ItemDemuxer, ItemManager } from '.';
-import { EntitiyNotFoundError } from '..';
+import { EntitiyNotFoundError } from '../errors';
+import { Item } from './item';
+import { ItemDemuxer } from './item-demuxer';
+import { ItemManager } from './item-manager';
 import { Link } from './link';
 
 const log = debug('dxos:echo:items:data-service-host');
@@ -46,7 +48,10 @@ export class DataServiceHost {
               source: entity.sourceId,
               target: entity.targetId
             } : undefined
-          }
+          },
+          itemMutation: entity instanceof Item ? {
+            parentId: entity.parent?.id
+          } : undefined
         };
       };
 

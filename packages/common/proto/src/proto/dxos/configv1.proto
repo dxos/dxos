@@ -66,6 +66,7 @@ message Module {
 
 message Build {
   string command = 1;
+  string out = 2;
 }
 
 message Runtime {

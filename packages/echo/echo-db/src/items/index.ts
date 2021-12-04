@@ -3,6 +3,7 @@
 //
 
 export * from './database';
+export * from './database-backend';
 export * from './item';
 export * from './item-demuxer';
 export * from './item-manager';
