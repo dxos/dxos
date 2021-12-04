@@ -50,20 +50,23 @@ TODO(burdon): Write up branch anaolgy.
 
 ### V0
 
-- [ ] Each model implements to/from snaphost (defined by protobuf)
-  - [ ] Models may decide to discard information
-- [ ] Party creates tree for item snapshots
-- [ ] Party records snapshot file, referenced by CID, which contains the following metadata
+- [ ] Each model implements to/from snaphost (defined by protobuf).
+  - [ ] Models may decide to discard information.
+- [ ] Party creates tree of item snapshots.
+- [ ] Party records snapshot file, referenced by CID, which contains the following metadata:.
   - Timeframe
   - Datetime
   - Previous snapshot CID
-- [ ] The epoch generator peer writes an epoch genesis message to its feed
-- [ ] When peers process the epoch genesis message they create the corresponding snapshot and store it locally
-- [ ] When peers join a party they may request the snapshot for a particular epoch
+  - Model versions
+- [ ] The epoch generator peer writes an epoch genesis message to its feed.
+- [ ] When peers process the epoch genesis message they create the corresponding snapshot and store it locally.
+- [ ] When peers join a party they may request the snapshot for a particular epoch.
+- [ ] Each peer stores the latest epoch genesis message for each party; this is used to bootstrap (and will be replaced later by the control feed).
 
-ISSUES:
+ISSUES
+- [ ] Who initiates an epoch.
 - [ ] What happens if peers join, but get "stale" messages from peers that have not yet joined the epoch?
-
+- [ ] What if the code changes for models.
 
 
 
