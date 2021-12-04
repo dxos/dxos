@@ -12,10 +12,10 @@ TODO(burdon): Write up branch anaolgy.
 
 ## Implementation
 
-### Control feed(s)
+### Control feeds
 
 - Split out HALO and other control messages (like epoch genesis) into own set of feeds.
-- Each peer has its own writable control feed.
+- Each peer has a writable control feed in addition to its data (ECHO) feed.
 - Control feeds can be read and processed independently from data feeds.
 - They are piped into PartyStateMachiene.
 
@@ -26,10 +26,50 @@ TODO(burdon): Write up branch anaolgy.
 
 ### Snapshots
 
-- Snapshots are content-addressed blobs of reified ECHO state.
+- Snapshots allow peers to bootstrap the ECHO state machiene from that point in time without reading feed messages before it.
+- Snapshots are content-addressed blobs consisting of a hierarchical set of reified HALO and ECHO models.
+  - HALO snapshots will be removed once control feeds are implemented.
+  - Each items outputs a snapshot from its corresponding model.
+  - If the model doesn't override the snapshot, then the list of messages is output.
 - They allow compression by removing history.
-  - For example ObjectModel will just save the current state instead of the list of mutations.
-- Snapshots can be split into a tree of blobs as an optimization for more efficient storage/replication.
+  - The ObjectModel will just save the current state instead of the list of mutations.
 - Peers participate in snapshot exchange protocol, similar to BitTorrent.
-- Snapshot allows a peer to bootstrap the ECHO state machiene from that point in time without reading feed messages before it.
+  - Based on party policy a particular peer may be authorized to declare snapshots (e.g., a bot); otherwise a peer election may be implemented.
+- Snapshots can be split into a tree of blobs as an optimization for more efficient storage/replication.
+  - This enables items to restore their models on demand (or for parties to only partially hydrate specific items).
+- Snapshots reference the hash of a previous snapshot, which may contain additional historical data.
+  - Certain models may decide to discard information when creating a snapshot.
+    - Examples: the MessengerModel may discard old messages; the ObjectModel may discard deleted objects.
+  - It may be possible for models to asynchronously load previous snapshots to retrieve historical information.
+- Snapshots may be analogous to blocks in a blockchain.
+- At the beginning of an epoch each model may decide to discard information (e.g., deleted items beyond a TTL); 
+  i.e,. that the snapshot currently being created omits certain data.
+
+
+## Milestones
+
+### V0
+
+- [ ] Each model implements to/from snaphost (defined by protobuf)
+  - [ ] Models may decide to discard information
+- [ ] Party creates tree for item snapshots
+- [ ] Party records snapshot file, referenced by CID, which contains the following metadata
+  - Timeframe
+  - Datetime
+  - Previous snapshot CID
+- [ ] The epoch generator peer writes an epoch genesis message to its feed
+- [ ] When peers process the epoch genesis message they create the corresponding snapshot and store it locally
+- [ ] When peers join a party they may request the snapshot for a particular epoch
+
+ISSUES:
+- [ ] What happens if peers join, but get "stale" messages from peers that have not yet joined the epoch?
+
+
+
+
+
+
+
+
+
 
