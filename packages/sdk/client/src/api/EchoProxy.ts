@@ -6,7 +6,7 @@ import { Event, latch } from '@dxos/async';
 import { defaultSecretValidator } from '@dxos/credentials';
 import { PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
-import { ECHO, InvitationAuthenticator, InvitationOptions, PartyNotFoundError } from '@dxos/echo-db';
+import { ECHO, InvitationAuthenticator, InvitationOptions, PartyNotFoundError, ResultSet } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -111,8 +111,8 @@ export class EchoProxy {
     return new PartyProxy(this._serviceProvider, this._modelFactory, partyKey);
   }
 
-  queryParties (...args: Parameters<ECHO['queryParties']>) {
-    return this._serviceProvider.echo.queryParties(...args);
+  queryParties (): ResultSet<PartyProxy> {
+    return new ResultSet(this._partiesChanged, () => Array.from(this._parties.values()));
   }
 
   async joinParty (...args: Parameters<ECHO['joinParty']>) {

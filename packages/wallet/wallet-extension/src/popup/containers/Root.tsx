@@ -4,32 +4,24 @@
 
 import React from 'react';
 
-import { LinearProgress } from '@mui/material';
-
-import { ClientInitializer } from '@dxos/react-client';
-import { ErrorView } from '@dxos/react-framework';
+import { ClientProvider } from '@dxos/react-client';
 
 import { AppBar } from '../components';
-import { WithSnackbarContext } from '../contexts';
-import { useExtensionPort } from '../hooks';
-import Main from './Main';
+import { WithSnackbarContext, useExtensionPort } from '../hooks';
+import { Main } from './Main';
 
-const Root = () => {
+export const Root = () => {
   const rpcPort = useExtensionPort();
 
   return (
-    <ClientInitializer
+    <ClientProvider
       config={{ system: { remote: true } }}
-      clientOpts={{ rpcPort }}
-      loaderComponent={() => <LinearProgress />}
-      errorComponent={ErrorView}
+      options={{ rpcPort }}
     >
       <WithSnackbarContext>
         <AppBar />
         <Main />
       </WithSnackbarContext>
-    </ClientInitializer>
+    </ClientProvider>
   );
 };
-
-export default Root;

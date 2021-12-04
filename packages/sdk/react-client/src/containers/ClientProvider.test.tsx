@@ -4,7 +4,6 @@
 
 import { screen, render } from '@testing-library/react';
 import expect from 'expect';
-// code import '@testing-library/jest-dom/extend-expect';
 import React from 'react';
 
 import { Client } from '@dxos/client';

@@ -6,7 +6,7 @@ import { Dispatch, SetStateAction } from 'react';
 
 import type { PendingInvitation } from '@dxos/client';
 
-import { useFrameworkContext } from './context';
+import { useFrameworkContext } from './useContext';
 
 export const usePendingInvitations = (): [PendingInvitation[], Dispatch<SetStateAction<PendingInvitation[]>>] => {
   const { invitations } = useFrameworkContext();
