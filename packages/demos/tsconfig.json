@@ -29,43 +29,43 @@
   ],
   "references": [
     {
-      "path": "../../sdk/client"
+      "path": "../sdk/client"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../sdk/config"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../common/crypto"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../echo/echo-db"
     },
     {
-      "path": "../../echo/echo-protocol"
+      "path": "../echo/echo-protocol"
     },
     {
-      "path": "../../echo/echo-testing"
+      "path": "../echo/echo-testing"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../echo/object-model"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-components"
+      "path": "../sdk/react-components"
     },
     {
-      "path": "../../sdk/react-framework"
+      "path": "../sdk/react-framework"
     },
     {
-      "path": "../../common/util"
+      "path": "../common/util"
     },
     {
-      "path": "../../common/async"
+      "path": "../common/async"
     },
     {
-      "path": "../../common/debug"
+      "path": "../common/debug"
     }
   ]
 }
