@@ -44,6 +44,7 @@ TODO(burdon): Write up branch anaolgy.
 - Snapshots may be analogous to blocks in a blockchain.
 - At the beginning of an epoch each model may decide to discard information (e.g., deleted items beyond a TTL); 
   i.e,. that the snapshot currently being created omits certain data.
+- Bots may become file storage servers for large data sets, e.g., implementing queries, paging in/out snapshots.
 
 
 ## Milestones
