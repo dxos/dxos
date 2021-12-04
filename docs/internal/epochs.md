@@ -12,8 +12,6 @@ TODO(burdon): Write up branch anaolgy.
 
 ## Implementation
 
-
-
 ### Control feed(s)
 
 - Split out HALO and other control messages (like epoch genesis) into own set of feeds.
@@ -26,9 +24,12 @@ TODO(burdon): Write up branch anaolgy.
 - When a peer wants to start a new epoch they write an `EpochGensisMessage` into the control feed.
 - It contains the timeframe of when the new epoch starts and CID of the data snapshot at that timeframe.
 
-### Snapshot
+### Snapshots
 
 - Snapshots are content-addressed blobs of reified ECHO state.
 - They allow compression by removing history.
   - For example ObjectModel will just save the current state instead of the list of mutations.
+- Snapshots can be split into a tree of blobs as an optimization for more efficient storage/replication.
+- Peers participate in snapshot exchange protocol, similar to BitTorrent.
+- Snapshot allows a peer to bootstrap the ECHO state machiene from that point in time without reading feed messages before it.
 
