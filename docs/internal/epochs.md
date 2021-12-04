@@ -62,6 +62,7 @@ TODO(burdon): Write up branch anaolgy.
 - [ ] When peers process the epoch genesis message they create the corresponding snapshot and store it locally.
 - [ ] When peers join a party they may request the snapshot for a particular epoch.
 - [ ] Each peer stores the latest epoch genesis message for each party; this is used to bootstrap (and will be replaced later by the control feed).
+- [ ] Ability to simulate multi-peer paries with epoch generation.
 
 ISSUES
 - [ ] Who initiates an epoch? E.g., leadership election; hardcoded (bot)?
