@@ -64,7 +64,7 @@ TODO(burdon): Write up branch anaolgy.
 - [ ] Each peer stores the latest epoch genesis message for each party; this is used to bootstrap (and will be replaced later by the control feed).
 
 ISSUES
-- [ ] Who initiates an epoch.
+- [ ] Who initiates an epoch? E.g., leadership election; hardcoded (bot)?
 - [ ] What happens if peers join, but get "stale" messages from peers that have not yet joined the epoch?
 - [ ] What if the code changes for models.
 
