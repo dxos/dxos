@@ -18,9 +18,8 @@ import {
   useTheme
 } from '@mui/material';
 
-import { clientServiceBundle } from '@dxos/client';
+import { PartyProxy, clientServiceBundle } from '@dxos/client';
 import { truncateString } from '@dxos/debug';
-import { Party } from '@dxos/echo-db';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
 import { ClientProvider, useClient, useParties, useProfile } from '@dxos/react-client';
@@ -107,7 +106,7 @@ const Controls = ({ port }: { port: RpcPort }) => {
     setItemModel(event.target.value as string);
   };
 
-  const handleCreateItem = (party: Party) => {
+  const handleCreateItem = (party: PartyProxy) => {
     switch (itemModel) {
       case 'ObjectModel':
         void party.database.createItem({
