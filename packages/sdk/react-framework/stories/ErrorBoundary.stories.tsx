@@ -104,7 +104,7 @@ export const Primary = () => {
   return (
     <ErrorBoundary
       onReset={async () => {
-        clientRef.current!.reset();
+        await clientRef.current!.reset();
       }}
     >
       <ClientProvider clientRef={clientRef}>
