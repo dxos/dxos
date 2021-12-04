@@ -34,4 +34,4 @@ export const ErrorIndicator = ({ errors, onReset }: { errors: Error[], onReset?:
       </IconButton>
     </Box>
   );
-}
+};

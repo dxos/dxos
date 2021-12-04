@@ -14,8 +14,7 @@ import { ModelConstructor } from '@dxos/model-factory';
 import { ValueUtil } from '@dxos/object-model';
 import { RpcPort } from '@dxos/rpc';
 
-import { EchoProxy } from './api';
-import { CreateInvitationOptions, HaloProxy } from './api';
+import { EchoProxy, CreateInvitationOptions, HaloProxy } from './api';
 import { DevtoolsHook } from './devtools';
 import { ClientServiceProvider, ClientServices } from './interfaces';
 import { isNode } from './platform';

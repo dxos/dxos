@@ -41,7 +41,7 @@ const TestApp = () => {
 
       case ErrorType.Promise: {
         setImmediate(async () => await new Promise((resolve, reject) => {
-          t= setTimeout(() => {
+          t = setTimeout(() => {
             setTrigger(undefined);
             reject(new Error('Promise rejected.'));
           }, 1000);

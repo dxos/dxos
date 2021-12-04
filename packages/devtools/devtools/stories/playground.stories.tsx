@@ -204,7 +204,8 @@ export const Primary = () => {
           {
             services: {
               signal: {
-                server: 'wss://enterprise.kube.dxos.network/dxos/signal' // TODO(burdon): Config?
+                // TODO(burdon): Move to config (overdependent on enterprise).
+                server: 'wss://enterprise.kube.dxos.network/dxos/signal'
               }
             }
           }

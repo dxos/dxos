@@ -66,13 +66,13 @@ export const ClientProvider = ({
   useEffect(() => {
     if (!client) {
       const done = async (client: Client) => {
-        log(`Created client: ${client}`)
+        log(`Created client: ${client}`);
         if (clientRef) {
           clientRef.current = client;
         }
         await onInitialize?.(client);
         setClient(client);
-      }
+      };
 
       // TODO(burdon): Error handling.
       setImmediate(async () => {
@@ -81,7 +81,7 @@ export const ClientProvider = ({
           const client = await getAsyncValue(clientProvider);
           await done(client);
         } else {
-          // Asynchronously construt client (config may be undefined).
+          // Asynchronously construct client (config may be undefined).
           const config = await getAsyncValue(configProvider);
           const client = new Client(config, options);
           await client.initialize();

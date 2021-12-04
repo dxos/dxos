@@ -42,7 +42,7 @@ export interface ErrorViewProps {
 
 const reload = () => {
   window.location.reload();
-}
+};
 
 /**
  * View component used to handle crashed app situations.
@@ -123,7 +123,7 @@ export const ErrorView = ({
           <Button
             variant='text'
             onClick={async () => {
-              await onReset()
+              await onReset();
               onReload();
             }}
           >

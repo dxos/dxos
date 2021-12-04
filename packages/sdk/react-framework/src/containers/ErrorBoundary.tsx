@@ -78,7 +78,7 @@ export class ErrorBoundary extends Component<Props, State> {
     const addError = (error: Error) => {
       this.setState({
         errors: [error, ...errors]
-      })
+      });
     };
 
     const resetErrors = () => {

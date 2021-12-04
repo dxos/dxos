@@ -56,13 +56,13 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
 };
 
 const topologyMap: Record<string, (topic: PublicKey) => any> = {
- 'Fully-connected': () => new FullyConnectedTopology(),
- 'MMST': () => new MMSTTopology(),
- 'Star': (topic) => new StarTopology(topic)
+  'Fully-connected': () => new FullyConnectedTopology(),
+  'MMST': () => new MMSTTopology(),
+  'Star': (topic) => new StarTopology(topic)
 };
 
 const GraphDemo = ({ topic }: { topic: PublicKey }) => {
-  const [topologyType, setTopologyType] = useState('Fully-connected')
+  const [topologyType, setTopologyType] = useState('Fully-connected');
   const [topology, setTopology] = useState<() => Topology>(() => () => new FullyConnectedTopology());
 
   const [controlPeer, setControlPeer] = useState<{
@@ -74,7 +74,7 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
 
   useEffect(() => {
     setTopology(topologyMap[topologyType](topic));
-  }, [topologyType])
+  }, [topologyType]);
 
   useEffect(() => {
     void createPeer(topic, topic, topology).then(peer => setControlPeer(peer));

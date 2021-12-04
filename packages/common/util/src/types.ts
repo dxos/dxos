@@ -23,4 +23,4 @@ export const getAsyncValue = async <T extends any>(value: MaybeFunction<MaybePro
   } else {
     return value;
   }
-}
+};

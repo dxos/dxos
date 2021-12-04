@@ -37,7 +37,7 @@ export class PartyProxy {
    *
    * @deprecated
    */
-  get impl(): EchoParty {
+  get impl (): EchoParty {
     return this._serviceProvider.echo.getParty(this._partyKey) ?? failUndefined();
   }
 
