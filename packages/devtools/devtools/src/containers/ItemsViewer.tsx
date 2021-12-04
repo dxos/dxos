@@ -15,11 +15,9 @@ import { Item } from '@dxos/echo-db';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { useClient, useParties, useSelection } from '@dxos/react-client';
+import { useParties, useSelection } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
-
-import { useStream } from '../hooks';
 
 export const ItemsViewer = () => {
   const [selectedParty, setSelectedParty] = useState<PartyProxy | undefined>();
