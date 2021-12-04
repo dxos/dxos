@@ -57,6 +57,7 @@ message ModelSnapshot {
     bytes custom = 1;
 
     // Fallback to storing array of mutations.
+    // TODO(dmaretskyi): Rename to "mutations".
     ModelMutationArray array = 2;
   }
 }
