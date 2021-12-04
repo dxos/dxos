@@ -4,29 +4,31 @@
 
 import React, { useState } from 'react';
 
-import { useClient, useParties, useSelection } from '@dxos/react-client';
-import { JsonTreeView } from '@dxos/react-components';
-import TreeView from '@mui/lab/TreeView';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TreeItem from '@mui/lab/TreeItem';
-import { useStream } from '../hooks';
+import TreeView from '@mui/lab/TreeView';
 import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+
 import { PartyProxy } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
+import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { useClient, useParties, useSelection } from '@dxos/react-client';
+import { JsonTreeView } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
-import { MessengerModel } from '@dxos/messenger-model';
+
+import { useStream } from '../hooks';
 
 export const ItemsViewer = () => {
-  const [selectedParty, setSelectedParty] = useState<PartyProxy | undefined>()
+  const [selectedParty, setSelectedParty] = useState<PartyProxy | undefined>();
 
   const items = useSelection(
     selectedParty?.database.select(s => s
       .filter(item => !item.parent)
       .items as Item<any>[]),
-   [selectedParty]) ?? [];
+    [selectedParty]) ?? [];
 
   const [selectedItem, setSelectedItem] = useState<Item<any> | undefined>();
 
@@ -94,7 +96,7 @@ const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
       ))}
     </TreeItem>
   );
-}
+};
 
 interface ItemDetailsProps {
   item: Item<Model<any>>
@@ -108,16 +110,16 @@ const ItemDetails = ({ item }: ItemDetailsProps) => (
     <p>Model class name: {Object.getPrototypeOf(item.model).constructor.name}</p>
     <JsonTreeView data={modelToObject(item.model)} />
   </>
-)
-  
+);
+
 const modelToObject = (model: Model<any>) => {
-  if(model instanceof ObjectModel) {
+  if (model instanceof ObjectModel) {
     return model.toObject();
-  } else if(model instanceof TextModel) {
+  } else if (model instanceof TextModel) {
     return model.textContent;
-  } else if(model instanceof MessengerModel) {
+  } else if (model instanceof MessengerModel) {
     return model.messages;
   }
 
   return model.toJSON();
-}
+};

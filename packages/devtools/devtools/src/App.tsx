@@ -25,6 +25,10 @@ import {
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
+import { MessengerModel } from '@dxos/messenger-model';
+import { useClient } from '@dxos/react-client';
+import { TextModel } from '@dxos/text-model';
+
 import {
   ConfigView,
   LoggingView,
@@ -35,9 +39,6 @@ import {
   SwarmDetails
   // SwarmGraph
 } from './containers';
-import { useClient } from '@dxos/react-client';
-import { TextModel } from '@dxos/text-model';
-import { MessengerModel } from '@dxos/messenger-model';
 
 // TODO(wittjosiah): Refactor, makeStyles is deprecated.
 const useStyles = makeStyles(theme => ({

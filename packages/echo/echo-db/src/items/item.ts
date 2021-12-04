@@ -4,8 +4,8 @@
 
 import { EchoEnvelope, ItemID, ItemMutation, ItemType, FeedWriter } from '@dxos/echo-protocol';
 import { Model } from '@dxos/model-factory';
-import { SelectionResult } from '.';
 
+import { SelectionResult } from '.';
 import { Entity } from './entity';
 import type { Link } from './link';
 import { Selection } from './selection';
@@ -87,7 +87,7 @@ export class Item<M extends Model> extends Entity<M> {
    * Returns a selection context, which can be used to traverse the object graph.
    * @param [filter] {SelectFilter}
    */
-   select<T> (selector: (selection: Selection<Item<any>>) => T): SelectionResult<T> {
+  select<T> (selector: (selection: Selection<Item<any>>) => T): SelectionResult<T> {
     const selection = new Selection(() => [this], this._onUpdate.discardParameter());
     return new SelectionResult(selection, selector);
   }

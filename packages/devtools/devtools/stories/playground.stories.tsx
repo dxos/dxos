@@ -125,7 +125,7 @@ const Controls = ({ port }: { port: RpcPort }) => {
     setItemModel('');
   };
 
-  async function handleTestSetup() {
+  async function handleTestSetup () {
     client.registerModel(TextModel);
     client.registerModel(MessengerModel);
     await client.halo.createProfile();

@@ -141,7 +141,7 @@ describe('Database', () => {
         await backendItem.model.sendMessage('foo');
         await backendItem.model.sendMessage('bar');
 
-        const frontendItem = await frontend.waitForItem(item => item.id === backendItem.id)
+        const frontendItem = await frontend.waitForItem(item => item.id === backendItem.id);
 
         expect(frontendItem.model.messages).toHaveLength(2);
       });

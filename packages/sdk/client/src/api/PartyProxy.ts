@@ -34,10 +34,10 @@ export class PartyProxy {
 
   /**
    * Returns the ECHO version of the party if we are running in local mode.
-   * 
+   *
    * @deprecated
    */
-  get impl(): Party {
+  get impl (): Party {
     return this._serviceProvider.echo.getParty(this._partyKey) ?? failUndefined();
   }
 
