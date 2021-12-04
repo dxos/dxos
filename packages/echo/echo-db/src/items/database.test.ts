@@ -61,7 +61,7 @@ describe('Database', () => {
 
       // Mutate model
       await Promise.all([
-        item!.model.modelUpdate.waitForCount(1),
+        item!.model.update.waitForCount(1),
         backendItem.model.setProperty('foo', 'bar')
       ]);
 

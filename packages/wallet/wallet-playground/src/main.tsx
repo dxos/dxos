@@ -5,20 +5,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { LinearProgress } from '@mui/material';
+import { ClientProvider } from '@dxos/react-client';
 
-import { ClientInitializer } from '@dxos/react-client';
-import { ErrorView } from '@dxos/react-framework';
-
-import App from './components/App';
-import { initConfig } from './config';
+import { App } from './components';
+import { configProvider } from './config';
 
 const start = () => {
   ReactDOM.render(
-    <ClientInitializer config={initConfig} loaderComponent={() => <LinearProgress />} errorComponent={ErrorView}>
+    <ClientProvider config={configProvider}>
       <App />
-    </ClientInitializer>,
-    document.getElementById('root'));
+    </ClientProvider>,
+    document.getElementById('root')
+  );
 };
 
 start();

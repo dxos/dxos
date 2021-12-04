@@ -10,9 +10,9 @@ import { ClientContext } from './context';
 
 /**
  * Hook returning config object used to initialize the DXOS client instance.
- * To be used with `ClientProvider` or `ClientInitializer` component wrapper.
+ * Requires ClientConext to be set via ClientProvider.
  */
 export const useConfig = () => {
-  const { config } = useContext(ClientContext) ?? raise(new Error('ClientContext no set.'));
-  return config;
+  const { client } = useContext(ClientContext) ?? raise(new Error('Missing ClientContext.'));
+  return client.config;
 };

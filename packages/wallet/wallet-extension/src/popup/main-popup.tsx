@@ -5,6 +5,6 @@
 import React from 'react';
 
 import { Popup } from './containers';
-import render from './render';
+import { render } from './render';
 
 render(<Popup />);

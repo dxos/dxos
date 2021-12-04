@@ -12,6 +12,7 @@
     "src"
   ],
   "scripts": {
+    "book": "esbuild-server book",
     "build": "toolchain build",
     "build:test": "toolchain build:test",
     "build:watch": "tsc --watch",
@@ -21,6 +22,8 @@
   "dependencies": {
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/esbuild-plugins": "workspace:*",
+    "@dxos/esbuild-server": "~1.4.0",
     "assert": "^2.0.0",
     "debug": "^4.1.1",
     "lodash.defaultsdeep": "^4.6.1",

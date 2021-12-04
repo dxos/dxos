@@ -19,11 +19,11 @@ rushx book
 The snippet below illustrates a self-contained DXOS application that uses providers to create the client and instantiate a user profile.
 
 ```javascript
-import { useClient, ClientInitializer, ProfileInitializer } from '@dxos/react-client';
+import { useClient, ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-const Test = () => {
+const App = () => {
   const client = useClient();
 
   return (
@@ -32,14 +32,14 @@ const Test = () => {
 };
 
 const Root = () => (
-  <ClientInitializer>
+  <ClientProvider>
     <ProfileInitializer>
-      <Root />
+      <App />
     </ProfileInitializer>
-  </ClientInitializer>,
+  </ClientProvider>
 );
 
-ReactDOM.render(<Root />, document.getElementById('root'));
+ReactDOM.render(<Root/>, document.getElementById('root'));
 ```
 
 ## Storybooks

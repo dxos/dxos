@@ -8,7 +8,7 @@ import { createTheme as createMuiTheme, ThemeProvider, CssBaseline } from '@mui/
 
 import { FullScreen as FullScreenComponent } from '@dxos/react-components';
 
-import Root from './Root';
+import { Root } from './Root';
 
 const baseTheme = createMuiTheme({
   components: {
@@ -33,5 +33,3 @@ export const Fullscreen = () => {
     </ThemeProvider>
   );
 };
-
-export default Fullscreen;
