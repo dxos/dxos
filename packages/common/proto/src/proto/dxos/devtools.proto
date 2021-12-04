@@ -31,7 +31,7 @@ service DevtoolsHost {
   // HALO
   //
 
-  rpc GetKeyringKeys(GetKeyringKeysRequest) returns (GetKeyringKeysResponse);
+  rpc SubscribeToKeyringKeys(SubscribeToKeyringKeysRequest) returns (stream SubscribeToKeyringKeysResponse);
 
   //
   // ECHO
@@ -83,9 +83,9 @@ message DisableDebugLoggingResponse {
   string enabledNamespaces = 1;
 }
 
-message GetKeyringKeysRequest {}
+message SubscribeToKeyringKeysRequest {}
 
-message GetKeyringKeysResponse {
+message SubscribeToKeyringKeysResponse {
   repeated KeyRecord keys = 1;
 }
 

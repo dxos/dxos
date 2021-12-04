@@ -2,64 +2,29 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-import { createTheme } from '@mui/material';
-import { makeStyles } from '@mui/styles';
+import { Typography } from '@mui/material';
 
-import { useClient, useProfile } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 
 import { KeyTable } from '../components';
-import { KeyRecord } from '../proto/gen/dxos/halo/keys';
-
-const useStyles = makeStyles(theme => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    overflow: 'hidden'
-  },
-
-  filter: {
-    display: 'flex',
-    flexShrink: 0,
-    padding: theme.spacing(1),
-    paddingTop: theme.spacing(2)
-  },
-
-  keys: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    overflow: 'hidden'
-  }
-}), { defaultTheme: createTheme({}) });
+import { useStream } from '../hooks';
 
 export const Keyring = () => {
-  const classes = useStyles();
   const client = useClient();
-  const profile = useProfile();
   const devtoolsHost = client.services.DevtoolsHost;
-  const [keys, setKeys] = useState<KeyRecord[]>([]);
 
-  useEffect(() => {
-    setImmediate(async () => {
-      const keyring = await devtoolsHost.GetKeyringKeys({});
-      if (keyring?.keys) {
-        setKeys(keyring.keys);
-      }
-    });
-  }, [profile]); // TODO(wittjosiah): Workaround for KeyringKeys not being a stream.
-
-  if (keys.length === 0) {
+  const result = useStream(() => devtoolsHost.SubscribeToKeyringKeys({}));
+  if (result === undefined || result.keys === undefined) {
     return (
-      <div className={classes.root}>
+      <Typography sx={{ padding: 2 }}>
         No keys to display.
-      </div>
+      </Typography>
     );
   }
 
   return (
-    <KeyTable keys={keys} />
+    <KeyTable keys={result.keys} />
   );
 };
