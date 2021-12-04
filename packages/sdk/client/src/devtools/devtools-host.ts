@@ -10,7 +10,7 @@ import { enableDebugLogging, disableDebugLogging } from './debug-logging';
 import { DevtoolsServiceDependencies } from './devtools-context';
 import { DevtoolsHostEvents } from './devtools-host-events';
 import { subscribeToItems } from './items';
-import { getKeyringKeys } from './keys';
+import { subscribeToKeyringKeys } from './keys';
 import {
   getNetworkPeers,
   subscribeToNetworkTopics,
@@ -44,8 +44,8 @@ export const createDevtoolsHost = (context: DevtoolsServiceDependencies, events:
       disableDebugLogging(context);
       return {};
     },
-    GetKeyringKeys: async () => {
-      return getKeyringKeys(context);
+    SubscribeToKeyringKeys: () => {
+      return subscribeToKeyringKeys(context);
     },
     SubscribeToItems: () => {
       return subscribeToItems(context);
