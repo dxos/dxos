@@ -108,7 +108,7 @@ describe('Database', () => {
     });
 
     test('link', async () => {
-      const { frontend: database, modelFactory } = await setup();
+      const { frontend: database } = await setup();
 
       const source = await database.createItem({ model: ObjectModel });
       const target = await database.createItem({ model: ObjectModel });
