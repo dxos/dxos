@@ -126,14 +126,21 @@ const Controls = ({ port }: { port: RpcPort }) => {
   };
 
   async function handleTestSetup() {
+    client.registerModel(TextModel);
+    client.registerModel(MessengerModel);
     await client.halo.createProfile();
     const party = await client.echo.createParty();
     const root = await party.database.createItem({ model: ObjectModel, type: 'example:type.root' });
     root.model.setProperty('name', 'root');
     await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: root.id });
     const child = await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: root.id });
-    await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: child.id });
-    await party.database.createItem({ model: ObjectModel, type: 'example:type.object', parent: child.id });
+    const text = await party.database.createItem({ model: TextModel, type: 'example:type.text', parent: child.id });
+    await text.model.insert(0, 'Hello world');
+    const messenger = await party.database.createItem({ model: MessengerModel, type: 'example:type.messenger', parent: child.id });
+    await messenger.model.sendMessage({
+      text: 'Hello world',
+      sender: 'Test'
+    });
   }
 
   return (

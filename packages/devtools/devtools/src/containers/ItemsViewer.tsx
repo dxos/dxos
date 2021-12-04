@@ -16,6 +16,8 @@ import { PartyProxy } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { TextModel } from '@dxos/text-model';
+import { MessengerModel } from '@dxos/messenger-model';
 
 export const ItemsViewer = () => {
   const [selectedParty, setSelectedParty] = useState<PartyProxy | undefined>()
@@ -111,10 +113,11 @@ const ItemDetails = ({ item }: ItemDetailsProps) => (
 const modelToObject = (model: Model<any>) => {
   if(model instanceof ObjectModel) {
     return model.toObject();
+  } else if(model instanceof TextModel) {
+    return model.textContent;
+  } else if(model instanceof MessengerModel) {
+    return model.messages;
   }
-  try {
-    return model.createSnapshot()
-  } catch (err) {
-    return model.toJSON();
-  }
+
+  return model.toJSON();
 }
