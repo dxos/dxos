@@ -8,7 +8,7 @@ import { Readable } from 'stream';
 
 import { PublicKey } from '@dxos/crypto';
 import { EchoEnvelope, MockFeedWriter } from '@dxos/echo-protocol';
-import { ModelFactory } from '@dxos/model-factory';
+import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
@@ -19,7 +19,7 @@ import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
 describe('Database', () => {
   describe('remote', () => {
     const setup = async () => {
-      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
 
       const feed = new MockFeedWriter<EchoEnvelope>();
       const inboundStream = new Readable({ read () {}, objectMode: true });
@@ -108,7 +108,7 @@ describe('Database', () => {
     });
 
     test('link', async () => {
-      const { frontend: database } = await setup();
+      const { frontend: database, modelFactory } = await setup();
 
       const source = await database.createItem({ model: ObjectModel });
       const target = await database.createItem({ model: ObjectModel });
@@ -117,6 +117,34 @@ describe('Database', () => {
 
       expect(link.source).toBe(source);
       expect(link.target).toBe(target);
+    });
+
+    describe('non-idempotent models', () => {
+      test('messages written from frontend', async () => {
+        const { frontend: database } = await setup();
+
+        const item = await database.createItem({ model: TestListModel });
+        expect(item.model.messages).toHaveLength(0);
+
+        await item.model.sendMessage('foo');
+        expect(item.model.messages).toHaveLength(1);
+
+        await item.model.sendMessage('bar');
+        expect(item.model.messages).toHaveLength(2);
+      });
+
+      test('messages written from backend', async () => {
+        const { frontend, backend } = await setup();
+
+        const backendItem = await backend.createItem({ model: TestListModel });
+
+        await backendItem.model.sendMessage('foo');
+        await backendItem.model.sendMessage('bar');
+
+        const frontendItem = await frontend.waitForItem(item => item.id === backendItem.id)
+
+        expect(frontendItem.model.messages).toHaveLength(2);
+      });
     });
   });
 });
