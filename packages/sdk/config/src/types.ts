@@ -28,8 +28,7 @@ type DotNestedKeys<T> = (
  * Example: 'services.signal.server' -> ['services', 'signal', 'server'].
  */
 export type ParseKey<K extends string> =
-    K extends `${infer L}.${infer Rest}` ? [L, ...ParseKey<Rest>]
-    : [K]
+  K extends `${infer L}.${infer Rest}` ? [L, ...ParseKey<Rest>] : [K]
 
 /**
  * Array of types that can act as an object key.

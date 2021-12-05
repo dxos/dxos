@@ -10,7 +10,7 @@ import { keyPairFromSeedPhrase } from '@dxos/crypto';
 import { useClient, useProfile } from '@dxos/react-client';
 import { RegistrationDialog, RegistrationDialogProps } from '@dxos/react-framework';
 
-const Main = () => {
+export const Main = () => {
   const client = useClient();
   const [parties, setParties] = useState<any[]>([]);
   const profile = useProfile();
@@ -97,5 +97,3 @@ const Main = () => {
     </div>
   );
 };
-
-export default Main;
