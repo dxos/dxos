@@ -1,7 +1,6 @@
 on:
   push:
 
-# TODO(burdon): Rename "checks" and make standard across repos.
 name: check
 jobs:
   check:
