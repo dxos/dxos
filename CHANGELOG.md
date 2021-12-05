@@ -6,13 +6,13 @@
 ### ⚠ BREAKING CHANGES
 
 * Introduce EchoProxy (#698)
+* Remove ClientInitializer. ([#718](https://www.github.com/dxos/protocols/issues/718)) ([6e75e8b](https://www.github.com/dxos/protocols/commit/6e75e8b7b498833d2fc4ac6f86de7de1c53b9376))
 
 ### Features
 
 * Add stream for keyring keys to devtools host service ([#719](https://www.github.com/dxos/protocols/issues/719)) ([5f49105](https://www.github.com/dxos/protocols/commit/5f49105e7ca4f590055809902d5fee52064fb761))
 * Introduce EchoProxy ([#698](https://www.github.com/dxos/protocols/issues/698)) ([117bc48](https://www.github.com/dxos/protocols/commit/117bc48e501a089c617ec281ce4fb7d28e76e294))
 * Protocol plugin RPC ([#707](https://www.github.com/dxos/protocols/issues/707)) ([3544390](https://www.github.com/dxos/protocols/commit/35443906a1a4010da969cca0b1a0ce23e5768290))
-* Remove ClientInitializer. ([#718](https://www.github.com/dxos/protocols/issues/718)) ([6e75e8b](https://www.github.com/dxos/protocols/commit/6e75e8b7b498833d2fc4ac6f86de7de1c53b9376))
 * Support hierarchical items and links in remote databases ([#722](https://www.github.com/dxos/protocols/issues/722)) ([ed9b639](https://www.github.com/dxos/protocols/commit/ed9b6397a477719f54f888288276ac46441dd89d))
 
 ### [2.18.3](https://www.github.com/dxos/protocols/compare/v2.18.2...v2.18.3) (2021-12-02)
