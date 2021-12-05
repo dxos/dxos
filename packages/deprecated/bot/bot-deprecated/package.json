@@ -20,7 +20,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-bot-deprecated": "workspace:*",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "debug": "^4.3.3",
     "lodash.defaultsdeep": "^4.6.1"

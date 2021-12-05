@@ -31,7 +31,7 @@
     "@dxos/protocol-plugin-bot-deprecated": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@types/chance": "^1.1.0",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/download": "^6.2.4",
     "@types/fs-extra": "^9.0.4",
     "@types/js-yaml": "^3.12.5",

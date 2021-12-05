@@ -39,7 +39,7 @@
     "@dxos/protocol-plugin-replicator": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/json-stable-stringify": "^1.0.32",
     "@types/lodash": "^4.14.175",
     "@types/node": "^14.0.9",

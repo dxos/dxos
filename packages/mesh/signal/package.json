@@ -69,7 +69,7 @@
   "devDependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
     "@geut/discovery-swarm-webrtc": "^4.0.2",
-    "@types/debug": "^4.1.1",
+    "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
     "@types/jest": "^26.0.7",
     "@types/lodash.debounce": "~4.0.6",
